@@ -9,6 +9,7 @@
 /subprojects/docs/src/snippets/**/build
 /subprojects/internal-android-performance-testing/build-android-libs
 
+
 */.gradle
 */build
 */buildSrc/build
@@ -17,6 +18,7 @@
 */subprojects/docs/src/samples/**/build
 */subprojects/docs/src/snippets/**/build
 */subprojects/internal-android-performance-testing/build-android-libs
+*/target
 
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf

@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.miotech.kun.metadata.models";
+package com.miotech.kun.metadata.models;
+
+enum DBType {
+    NULL_DBTYPE = 0;
+    POSTGRES = 1;
+    MYSQL = 2;
+    SQLSERVER = 3;
+    MONGO = 5;
+    ARANGO = 6;
+    ELASTICSEARCH = 7;
+    SPARKSQL = 8;
+    ATHENA = 9;
+    PRESTO = 10;
+    HIVE = 11;
+    KINESIS = 12;
+    KAFKA = 13;
+}
+
+enum DataType {
+    NULL_DATATYPE = 0;
+    BOOLEAN = 1;
+    STRING = 2;
+    NUMBER = 3;
+    FLOAT = 4;
+    DATE = 5;
+    STRUCT = 6;
+    BINARY = 7;
+}
+
+message Table {
+    string name = 1;
+    string schema = 2;
+    string description = 3;
+    repeated Field fields = 4;
+    string database = 5;
+    DBType DBType = 6;
+}
+
+message Field {
+    string name = 1;
+    string description = 2;
+    DataType dataType = 3;
+    bool is_active = 4;
+    bool is_nullable = 5;
+    bool is_unique = 6;
+    repeated Field subfields = 7;
+}
