@@ -1,0 +1,7 @@
+dependencies {
+    implementation "commons-dbutils:commons-dbutils"
+    implementation "com.zaxxer:HikariCP"
+
+    testRuntimeOnly "com.h2database:h2"
+    testImplementation "org.hamcrest:hamcrest"
+}

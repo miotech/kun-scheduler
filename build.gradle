@@ -1,19 +1,33 @@
-allprojects {
-    group = 'com.miotech'
-    version = '0.0.1'
-
-    apply plugin: 'java'
-    apply plugin: 'maven-publish'
-
+buildscript {
     repositories {
         mavenCentral()
     }
-
-    sourceCompatibility = 1.8
 }
 
+subprojects {
+    apply plugin: 'java'
 
+    group = 'com.miotech'
+    version = rootProject.version
 
-dependencies {
-    testCompile group: 'junit', name: 'junit', version: '4.12'
+    plugins.withType(JavaPlugin) {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+
+        dependencies {
+            constraints {
+                implementation "com.google.inject:guice:4.2.3"
+                implementation "org.slf4j:slf4j-api:1.7.30"
+                implementation "commons-dbutils:commons-dbutils:1.7"
+                implementation "com.zaxxer:HikariCP:3.4.5"
+
+                testImplementation "junit:junit:4.12"
+                testRuntimeOnly "com.h2database:h2:1.4.200"
+            }
+
+            implementation "com.google.inject:guice"
+            implementation "org.slf4j:slf4j-api"
+            testImplementation "junit:junit"
+            testImplementation "org.hamcrest:hamcrest:2.2"
+        }
+    }
 }
