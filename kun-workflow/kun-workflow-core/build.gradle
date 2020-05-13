@@ -1,0 +1,13 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+dependencies {
+    implementation 'com.google.guava:guava:28.2-jre'
+}
+
+test {
+    useJUnit()
+}

@@ -1,2 +1,6 @@
 rootProject.name = 'kun'
-include 'kun-metadata'
+include ':kun-metadata'
+include ':kun-workflow:kun-workflow-core'
+include ':kun-workflow:kun-workflow-db'
+include ':kun-workflow:kun-workflow-scheduler'
+include ':kun-workflow:kun-workflow-executor'
