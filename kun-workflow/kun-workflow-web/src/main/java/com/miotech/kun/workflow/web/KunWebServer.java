@@ -11,6 +11,8 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static com.miotech.kun.workflow.web.ServerContext.SERVER_CONTEXT;
+
 @Singleton
 public class KunWebServer {
     private static final Logger logger = LoggerFactory.getLogger(KunWebServer.class);
@@ -54,6 +56,7 @@ public class KunWebServer {
                 new KunWebServerModule()
         );
 
+        SERVER_CONTEXT.setInjector(injector);
         launch(injector.getInstance(KunWebServer.class));
     }
 

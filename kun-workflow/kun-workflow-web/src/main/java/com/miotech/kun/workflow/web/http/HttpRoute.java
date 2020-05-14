@@ -22,6 +22,11 @@ public class HttpRoute {
     }
 
     @Override
+    public String toString() {
+        return getMethod().toString() + " " + getUrl();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

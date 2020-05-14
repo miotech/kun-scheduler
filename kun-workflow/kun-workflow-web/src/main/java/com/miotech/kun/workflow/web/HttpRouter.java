@@ -14,11 +14,10 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.miotech.kun.workflow.web.ServerContext.SERVER_CONTEXT;
+
 class HttpRouter {
     private Logger logger = LoggerFactory.getLogger(HttpRouter.class);
-
-    // controller beans
-    private Map<String, Object> controllerBeans = new HashMap<>();
 
     // controller method for specific request route
     private Map<HttpRoute, HttpAction> routeMappings = new HashMap<>();
@@ -55,18 +54,17 @@ class HttpRouter {
                     String uri = requestMapping.url();
                     String httpMethod = requestMapping.method().toUpperCase();
 
-                    // initialize bean
-                    if (!controllerBeans.containsKey(clz.getName())) {
-                        controllerBeans.put(clz.getName(), clz.newInstance());
-                    }
-                    HttpAction action = new HttpAction(controllerBeans.get(clz.getName()), invokeMethod);
+                    Object instance = SERVER_CONTEXT.getInstance(clz);
+                    HttpAction action = new HttpAction(instance, invokeMethod);
                     HttpRoute route = new HttpRoute(uri, HttpMethod.resolve(httpMethod.toUpperCase()));
-                    logger.info("Found Request mapping for {} {} -> {}.{}",
-                            route.getMethod(),
-                            route.getUrl(),
+                    logger.info("Found Request mapping for {} -> {}.{}",
+                            route.toString(),
                             clz.getCanonicalName(),
                             invokeMethod.getName()
                     );
+                    if (routeMappings.get(route) != null) {
+                        throw new RuntimeException("Found duplicate route mapping for: " + route.toString());
+                    }
                     routeMappings.put(route, action);
                 }
             }

@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.web;
 
+import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.web.http.HttpAction;
 import com.miotech.kun.workflow.web.http.HttpMethod;
 import com.miotech.kun.workflow.web.http.HttpRoute;
@@ -11,6 +12,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,10 +77,24 @@ public class DispatchServlet extends HttpServlet {
             if (action.getNeedInjectionResp()) {
                 args.add(resp);
             }
-            action.call(args.toArray());
+            Object responseObj = action.call(args.toArray());
+            doResponse(responseObj, req, resp);
         } else {
             // respond with resource not found
             logger.debug("Cannot resolve url mapping for {}", req.getRequestURI());
+        }
+    }
+
+    private void doResponse(Object responseObj,
+                            final HttpServletRequest req,
+                            final HttpServletResponse resp) throws IOException {
+
+        if (responseObj != null) {
+            PrintWriter out = resp.getWriter();
+            resp.setContentType("application/json");
+            resp.setCharacterEncoding("UTF-8");
+            out.print(JSONUtils.toJsonString(responseObj));
+            out.flush();
         }
     }
 }

@@ -25,13 +25,13 @@ public class TaskDao {
         return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, tick.toString());
     }
 
-    public Task insertOneTask(Task task) {
-        String updateTaskSQL = "";
-        String updateTickTaskSQL = "";
-        dbOperator.transaction(() -> {
-            dbOperator.update()
-        });
-    ˆ}
+//    public Task insertOneTask(Task task) {
+//        String updateTaskSQL = "";
+//        String updateTickTaskSQL = "";
+//        dbOperator.transaction(() -> {
+//            dbOperator.update()
+//        });
+//    ˆ}
 
     private static class TaskMapper implements ResultSetMapper<Task> {
         public static TaskMapper INSTANCE = new TaskMapper();
@@ -43,6 +43,7 @@ public class TaskDao {
                     .name(rs.getString("name"))
                     .description(rs.getString("description"))
                     .operatorName(rs.getString("operatorName"))
+                    .build();
         }
     }
 }
