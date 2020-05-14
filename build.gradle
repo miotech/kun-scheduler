@@ -22,6 +22,11 @@ subprojects {
                 implementation "com.zaxxer:HikariCP:3.4.5"
                 implementation 'ch.qos.logback:logback-classic:1.2.3'
 
+                implementation 'com.google.guava:guava:28.2-jre'
+                implementation "org.eclipse.jetty:jetty-server:9.4.28.v20200408"
+                implementation "org.eclipse.jetty:jetty-servlet:9.4.28.v20200408"
+                implementation "org.eclipse.jetty:jetty-util:9.4.28.v20200408"
+                implementation "org.eclipse.jetty:jetty-webapp:9.4.28.v20200408"
                 testImplementation "junit:junit:4.12"
                 testImplementation "org.hamcrest:hamcrest:2.2"
                 testRuntimeOnly "com.h2database:h2:1.4.200"
@@ -33,5 +38,9 @@ subprojects {
             testImplementation "junit:junit"
             testImplementation "org.hamcrest:hamcrest"
         }
+        repositories {
+            mavenCentral()
+        }
     }
+    
 }

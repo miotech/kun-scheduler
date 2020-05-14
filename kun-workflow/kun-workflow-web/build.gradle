@@ -1,0 +1,11 @@
+dependencies {
+    implementation "com.google.inject:guice"
+    implementation "com.google.guava:guava"
+    implementation "org.eclipse.jetty:jetty-server"
+    implementation "org.eclipse.jetty:jetty-servlet"
+    implementation "org.eclipse.jetty:jetty-util"
+    implementation "org.eclipse.jetty:jetty-webapp"
+
+    testRuntimeOnly "com.h2database:h2"
+    testImplementation "org.hamcrest:hamcrest"
+}
