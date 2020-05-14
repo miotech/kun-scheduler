@@ -1,13 +1,4 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}
-
 dependencies {
-    implementation 'com.google.guava:guava:28.2-jre'
-}
-
-test {
-    useJUnit()
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation 'com.google.guava:guava'
 }

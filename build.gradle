@@ -16,18 +16,22 @@ subprojects {
         dependencies {
             constraints {
                 implementation "com.google.inject:guice:4.2.3"
+                implementation 'com.google.guava:guava:28.2-jre'
                 implementation "org.slf4j:slf4j-api:1.7.30"
                 implementation "commons-dbutils:commons-dbutils:1.7"
                 implementation "com.zaxxer:HikariCP:3.4.5"
+                implementation 'ch.qos.logback:logback-classic:1.2.3'
 
                 testImplementation "junit:junit:4.12"
+                testImplementation "org.hamcrest:hamcrest:2.2"
                 testRuntimeOnly "com.h2database:h2:1.4.200"
             }
 
             implementation "com.google.inject:guice"
             implementation "org.slf4j:slf4j-api"
+            implementation 'ch.qos.logback:logback-classic'
             testImplementation "junit:junit"
-            testImplementation "org.hamcrest:hamcrest:2.2"
+            testImplementation "org.hamcrest:hamcrest"
         }
     }
 }

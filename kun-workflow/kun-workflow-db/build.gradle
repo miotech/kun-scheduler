@@ -1,4 +1,5 @@
 dependencies {
+    implementation project(":kun-workflow:kun-workflow-utils")
     implementation "commons-dbutils:commons-dbutils"
     implementation "com.zaxxer:HikariCP"
 

@@ -22,9 +22,7 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
         operator.update("CREATE TABLE t1 (id bigint serial primary key, name varchar(256) unique);");
         int res = operator.update("insert into t1 (name) values (?)", "ye.ding");
         assertThat(res, is(1));
-        String name = operator.query("select * from t1", (rs) -> {
-            rs.next(); return rs.getString("name");
-        });
+        String name = operator.fetchOne("select * from t1", (rs) -> rs.getString("name"));
         assertThat(name, is("ye.ding"));
     }
 
@@ -39,17 +37,13 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
         int res = operator.update("insert into t1 (name) values (?)", "ye.ding");
         assertThat(res, is(1));
 
-        int cnt = operator.query("select count(*) as cnt from t1", (rs) -> {
-            rs.next(); return rs.getInt("cnt");
-        });
+        int cnt = operator.fetchOne("select count(*) as cnt from t1", (rs) -> rs.getInt("cnt"));
         assertThat(cnt, is(1));
 
         try {
-            operator.transaction(operator -> {
+            operator.transaction(() -> {
                 operator.update("insert into t1 (name) values (?)", "jiang.gu");
-                int c = operator.query("select count(*) as cnt from t1", (rs) -> {
-                    rs.next(); return rs.getInt("cnt");
-                });
+                int c = operator.fetchOne("select count(*) as cnt from t1", (rs) -> rs.getInt("cnt"));
                 assertThat(c, is(2));
                 throw new IllegalStateException(); // rollback
             });
@@ -57,9 +51,7 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
             assertThat(ex, instanceOf(IllegalStateException.class));
         }
 
-        cnt = operator.query("select count(*) as cnt from t1", (rs) -> {
-            rs.next(); return rs.getInt("cnt");
-        });
+        cnt = operator.fetchOne("select count(*) as cnt from t1", (rs) -> rs.getInt("cnt"));
         assertThat(cnt, is(1));
     }
 }
