@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.miotech.kun.workflow.utils.PropertyUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -11,22 +12,24 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.miotech.kun.workflow.web.ServerContext.SERVER_CONTEXT;
+import java.util.Properties;
 
 @Singleton
 public class KunWebServer {
     private static final Logger logger = LoggerFactory.getLogger(KunWebServer.class);
 
     private final Server server;
+    private final DispatchServlet dispatchServlet;
 
     @Inject
-    public KunWebServer(final Server server) {
+    public KunWebServer(final Server server, DispatchServlet dispatchServlet) {
         this.server = server;
+        this.dispatchServlet = dispatchServlet;
     }
 
     private void configureServlet() {
         final ServletContextHandler root = new ServletContextHandler(this.server, "/", ServletContextHandler.SESSIONS);
-        final ServletHolder dispatchServlet = new ServletHolder(new DispatchServlet());
+        final ServletHolder dispatchServlet = new ServletHolder(this.dispatchServlet);
         root.addServlet(dispatchServlet, "/*");
     }
 
@@ -52,11 +55,10 @@ public class KunWebServer {
         logger.info("Starting Jetty Kun Web Server...");
 
         /* Initialize Guice Injector */
+        Properties props = PropertyUtils.loadAppProps();
         final Injector injector = Guice.createInjector(
-                new KunWebServerModule()
+                new KunWebServerModule(props)
         );
-
-        SERVER_CONTEXT.setInjector(injector);
         launch(injector.getInstance(KunWebServer.class));
     }
 
