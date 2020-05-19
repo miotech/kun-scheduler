@@ -1,6 +1,6 @@
 package com.miotech.kun.workflow.db;
 
-import com.miotech.kun.workflow.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.slf4j.Logger;
