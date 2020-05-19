@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.extract.impl;
 
 import com.miotech.kun.metadata.client.ElasticsearchClient;
 import com.miotech.kun.metadata.extract.Extractor;
+import com.miotech.kun.metadata.model.bo.*;
 import com.miotech.kun.metadata.models.DBType;
 import com.miotech.kun.metadata.models.Table;
 import org.slf4j.Logger;
@@ -35,5 +36,25 @@ public class ElasticsearchExtractor implements Extractor {
             logger.error("Failed to get es indices", e);
         }
         return tables;
+    }
+
+    @Override
+    public List<DatasetInfo> extractDataset(DatasetExtractBO extractBO) {
+        return null;
+    }
+
+    @Override
+    public List<DatasetFieldInfo> extractFields(DatasetFieldExtractBO fieldExtractBO) {
+        return null;
+    }
+
+    @Override
+    public DatasetStatisticsInfo extractDatasetStatistics(DatasetStatisticsExtractBO statisticsExtractBO) {
+        return null;
+    }
+
+    @Override
+    public DatasetFieldStatisticsInfo extractDatasetFieldStatistics(DatasetFieldStatisticsExtractBO fieldStatisticsExtractBO) {
+        return null;
     }
 }
