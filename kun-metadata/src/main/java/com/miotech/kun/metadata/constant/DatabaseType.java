@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.constant;
 
 public enum  DatabaseType {
     POSTGRES("Postgres",1),
+    MYSQL("MySQL", 2),
     MONGO("Mongo", 5),
     ARANGO("Arango", 6),
     ELASTICSEARCH("ElasticsSearch", 7),

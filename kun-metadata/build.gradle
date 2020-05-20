@@ -23,6 +23,7 @@ dependencies {
     implementation 'io.grpc:grpc-protobuf'
     implementation 'org.postgresql:postgresql'
     implementation 'org.apache.hive:hive-jdbc'
+    implementation 'mysql:mysql-connector-java'
     testImplementation 'org.testng:testng'
 }
 

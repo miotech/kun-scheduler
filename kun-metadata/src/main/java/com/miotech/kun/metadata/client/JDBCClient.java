@@ -28,6 +28,8 @@ public class JDBCClient {
         switch (dbType) {
             case HIVE:
                 return "org.apache.hive.jdbc.HiveDriver";
+            case MYSQL:
+                return "com.mysql.jdbc.Driver";
             case POSTGRES:
                 return "org.postgresql.Driver";
             default:

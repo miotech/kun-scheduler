@@ -3,14 +3,13 @@ package com.miotech.kun.metadata.extract.impl;
 import com.miotech.kun.metadata.client.ElasticsearchClient;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.bo.*;
 import com.miotech.kun.metadata.models.DBType;
 import com.miotech.kun.metadata.models.Table;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -20,8 +19,7 @@ public class ElasticsearchExtractor implements Extractor {
     private static Logger logger = LoggerFactory.getLogger(ElasticsearchExtractor.class);
 
     @Override
-    public List<Dataset> extract() {
-        List<Dataset> tables = new ArrayList<>();
+    public Iterator<Dataset> extract() {
         try {
             // get Tables info
             List<String> tableStrs = ElasticsearchClient.getIndices("");
@@ -36,26 +34,7 @@ public class ElasticsearchExtractor implements Extractor {
         } catch (IOException e) {
             logger.error("Failed to get es indices", e);
         }
-        return tables;
-    }
-
-    @Override
-    public List<DatasetInfo> extractDataset(DatasetExtractBO extractBO) {
         return null;
     }
 
-    @Override
-    public List<DatasetFieldInfo> extractFields(DatasetFieldExtractBO fieldExtractBO) {
-        return null;
-    }
-
-    @Override
-    public DatasetStatisticsInfo extractDatasetStatistics(DatasetStatisticsExtractBO statisticsExtractBO) {
-        return null;
-    }
-
-    @Override
-    public DatasetFieldStatisticsInfo extractDatasetFieldStatistics(DatasetFieldStatisticsExtractBO fieldStatisticsExtractBO) {
-        return null;
-    }
 }
