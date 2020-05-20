@@ -22,8 +22,10 @@ subprojects {
                 implementation "com.zaxxer:HikariCP:3.4.5"
                 implementation 'ch.qos.logback:logback-classic:1.2.3'
 
+                implementation "org.yaml:snakeyaml:1.21"
                 implementation "com.fasterxml.jackson.core:jackson-core:2.11.0"
                 implementation "com.fasterxml.jackson.core:jackson-databind:2.11.0"
+                implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.0'
                 implementation "org.eclipse.jetty:jetty-server:9.4.28.v20200408"
                 implementation "org.eclipse.jetty:jetty-servlet:9.4.28.v20200408"
                 implementation "org.eclipse.jetty:jetty-util:9.4.28.v20200408"
