@@ -1,0 +1,10 @@
+
+dependencies {
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation 'com.google.guava:guava'
+    implementation 'com.squareup.okhttp3:okhttp:3.14.6'
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "junit:junit:4.12"
+    implementation "org.apache.hadoop:hadoop-client:2.7.3"
+}

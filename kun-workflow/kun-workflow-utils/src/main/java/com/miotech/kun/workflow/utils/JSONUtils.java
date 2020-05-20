@@ -1,7 +1,10 @@
 package com.miotech.kun.workflow.utils;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.slf4j.Logger;
@@ -16,7 +19,10 @@ public class JSONUtils {
     private JSONUtils() {}
 
     private static final Logger logger = LoggerFactory.getLogger(JSONUtils.class);
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            .setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
 
     public static <T> String toJsonString(T obj) {
         try {
