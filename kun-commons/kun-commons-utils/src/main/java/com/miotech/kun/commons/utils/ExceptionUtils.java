@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.utils;
+package com.miotech.kun.commons.utils;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
