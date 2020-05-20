@@ -19,7 +19,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 public abstract class DatabaseTestBase {
-    private final static Logger logger = LoggerFactory.getLogger(DatabaseTestBase.class);
+    private static final Logger logger = LoggerFactory.getLogger(DatabaseTestBase.class);
 
     protected Injector injector = Guice.createInjector(
             new TestDatabaseModule()
@@ -31,7 +31,7 @@ public abstract class DatabaseTestBase {
     private List<String> userTables;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         injector.injectMembers(this);
 
         // initialize database
@@ -40,7 +40,7 @@ public abstract class DatabaseTestBase {
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown() {
         truncateAllTables();
     }
 

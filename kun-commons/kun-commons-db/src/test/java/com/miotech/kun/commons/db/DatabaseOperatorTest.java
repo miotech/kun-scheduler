@@ -21,7 +21,7 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
     @Test
     public void testUpdate() throws SQLException {
         // prepare
-        operator.update("insert into kun_users (name, age) values (?, ?)", "user1", 20);
+        insertUser("user1", 20);
 
         // process
         String res = operator.fetchOne("select * from kun_users", (rs) -> rs.getString("name"));
@@ -33,8 +33,8 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
     @Test
     public void testFetchOne() {
         // prepare
-        operator.update("insert into kun_users (name, age) values (?, ?)", "user1", 20);
-        
+        insertUser("user1", 20);
+
         // process
         User res = operator.fetchOne("select * from kun_users", userMapper);
 
@@ -46,8 +46,8 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
     @Test
     public void testFetchAll() {
         // prepare
-        operator.update("insert into kun_users (name, age) values (?, ?)", "user1", 20);
-        operator.update("insert into kun_users (name, age) values (?, ?)", "user2", 30);
+        insertUser("user1", 20);
+        insertUser("user2", 30);
 
         // process
         List<User> res = operator.fetchAll("select * from kun_users", userMapper);
@@ -80,7 +80,7 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
     @Test
     public void testTransaction_commit() throws SQLException {
         // prepare
-        operator.update("insert into kun_users (name, age) values (?, ?)", "user1", 20);
+        insertUser("user1", 20);
         assertThat(getRowCount("kun_users"), is(1));
 
         // process
@@ -96,7 +96,7 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
     @Test
     public void testTransaction_rollback() throws SQLException {
         // prepare
-        operator.update("insert into kun_users (name, age) values (?, ?)", "user1", 20);
+        insertUser("user1", 20);
         assertThat(getRowCount("kun_users"), is(1));
 
         // process
@@ -116,6 +116,10 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
     
     private int getRowCount(String tableName) {
         return operator.fetchOne("select count(*) as cnt from " + tableName, (rs) -> rs.getInt("cnt"));
+    }
+
+    private void insertUser(String name, int age) {
+        operator.update("insert into kun_users (name, age) values (?, ?)", name, age);
     }
     
     private static class User {
@@ -140,7 +144,7 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
             return Objects.hash(name, age);
         }
     }
-    
-    private static ResultSetMapper<User> userMapper =
+
+    private static final ResultSetMapper<User> userMapper =
             rs -> new User(rs.getString("name"), rs.getInt("age"));
 }
