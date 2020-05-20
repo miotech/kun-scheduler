@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.extract.impl;
 
 import com.miotech.kun.metadata.client.ElasticsearchClient;
 import com.miotech.kun.metadata.extract.Extractor;
+import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.bo.*;
 import com.miotech.kun.metadata.models.DBType;
 import com.miotech.kun.metadata.models.Table;
@@ -19,8 +20,8 @@ public class ElasticsearchExtractor implements Extractor {
     private static Logger logger = LoggerFactory.getLogger(ElasticsearchExtractor.class);
 
     @Override
-    public List<Table> extract() {
-        List<Table> tables = new ArrayList<>();
+    public List<Dataset> extract() {
+        List<Dataset> tables = new ArrayList<>();
         try {
             // get Tables info
             List<String> tableStrs = ElasticsearchClient.getIndices("");

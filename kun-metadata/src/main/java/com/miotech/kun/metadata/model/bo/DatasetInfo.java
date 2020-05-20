@@ -1,12 +1,14 @@
 package com.miotech.kun.metadata.model.bo;
 
+import com.miotech.kun.metadata.model.DataStore;
+
 public class DatasetInfo {
 
     private String name;
 
     private Long databaseId;
 
-    private BaseDataStore dataStore;
+    private DataStore dataStore;
 
     public DatasetInfo(Builder builder) {
         this.name = builder.name;
@@ -19,7 +21,7 @@ public class DatasetInfo {
 
         private Long databaseId;
 
-        private BaseDataStore dataStore;
+        private DataStore dataStore;
 
         public Builder() {
         }
@@ -34,7 +36,7 @@ public class DatasetInfo {
             return this;
         }
 
-        public Builder setDataStore(BaseDataStore dataStore) {
+        public Builder setDataStore(DataStore dataStore) {
             this.dataStore = dataStore;
             return this;
         }

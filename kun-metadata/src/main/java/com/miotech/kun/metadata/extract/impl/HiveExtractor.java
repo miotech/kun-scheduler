@@ -1,6 +1,8 @@
 package com.miotech.kun.metadata.extract.impl;
 
 import com.miotech.kun.metadata.client.JDBCClient;
+import com.miotech.kun.metadata.model.Dataset;
+import com.miotech.kun.metadata.model.HiveDatabase;
 import com.miotech.kun.metadata.model.bo.*;
 import com.miotech.kun.metadata.models.Table;
 import org.slf4j.Logger;
@@ -16,10 +18,23 @@ import java.util.List;
 public class HiveExtractor extends JDBCExtractor {
     private static Logger logger = LoggerFactory.getLogger(HiveExtractor.class);
 
+    private HiveDatabase hiveDatabase;
+
+    private HiveExtractor() {};
+
+    public HiveExtractor(HiveDatabase hiveDatabase) {
+        init(hiveDatabase);
+    }
+
+    private void init(HiveDatabase hiveDatabase) {
+        //TODO verify the integrity of the data
+        this.hiveDatabase = hiveDatabase;
+    }
+
     @Override
-    public List<Table> extract() {
+    public List<Dataset> extract() {
         List<Table> tables = new ArrayList<>();
-        return tables;
+        return null;
     }
 
     @Override

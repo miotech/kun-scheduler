@@ -1,6 +1,8 @@
 package com.miotech.kun.metadata.model.bo;
 
-public class HiveDataStore extends BaseDataStore {
+import com.miotech.kun.metadata.model.DataStore;
+
+public class HiveDataStore extends DataStore {
 
     private String tableName;
 

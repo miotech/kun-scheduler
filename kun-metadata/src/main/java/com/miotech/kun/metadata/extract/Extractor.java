@@ -1,8 +1,8 @@
 package com.miotech.kun.metadata.extract;
 
 
+import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.bo.*;
-import com.miotech.kun.metadata.models.Table;
 
 import java.util.List;
 
@@ -14,7 +14,7 @@ public interface Extractor {
      * Get All the table metadata
      * @return
      */
-    List<Table> extract();
+    List<Dataset> extract();
 
     /**
      * Get the information of all tables under the database
@@ -43,4 +43,5 @@ public interface Extractor {
      * @return
      */
     DatasetFieldStatisticsInfo extractDatasetFieldStatistics(DatasetFieldStatisticsExtractBO fieldStatisticsExtractBO);
+
 }

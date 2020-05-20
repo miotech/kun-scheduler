@@ -1,7 +1,6 @@
 package com.miotech.kun.metadata.client;
 
 import com.miotech.kun.metadata.constant.DatabaseType;
-import com.miotech.kun.metadata.models.DBType;
 
 import java.sql.SQLException;
 
@@ -17,4 +16,5 @@ public class JDBCClientTest {
             sqlException.printStackTrace();
         }
     }
+
 }

@@ -1,6 +1,8 @@
 package com.miotech.kun.metadata.model.bo;
 
-public class MongoDataStore extends BaseDataStore {
+import com.miotech.kun.metadata.model.DataStore;
+
+public class MongoDataStore extends DataStore {
 
     private String collectionName;
 
