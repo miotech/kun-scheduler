@@ -64,6 +64,12 @@ public class Database {
         this.password = password;
     }
 
+    public Database() {
+    }
+
+    public Database(DatabaseType databaseType) {
+        this.databaseType = databaseType;
+    }
 
     public static final class Builder {
         private Long id;

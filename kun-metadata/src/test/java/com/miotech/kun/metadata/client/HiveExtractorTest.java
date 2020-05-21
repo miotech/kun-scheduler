@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.client;
 
 
 import com.miotech.kun.metadata.extract.impl.HiveExtractor;
-import com.miotech.kun.metadata.load.GenericLoader;
+import com.miotech.kun.metadata.load.PostgresLoader;
 import com.miotech.kun.metadata.load.Loader;
 import com.miotech.kun.metadata.model.Dataset;
 import org.testng.annotations.Test;
@@ -16,7 +16,7 @@ public class HiveExtractorTest {
         HiveExtractor hiveExtractor = new HiveExtractor(null);
         Iterator<Dataset> datasetIterator = hiveExtractor.extract();
 
-        Loader loader = new GenericLoader();
+        Loader loader = new PostgresLoader("url", "username", "password");
         while (datasetIterator.hasNext()) {
             Dataset dataset = datasetIterator.next();
 

@@ -4,8 +4,7 @@ import com.miotech.kun.metadata.constant.DatabaseType;
 
 public class PostgresDatabase extends Database {
 
-    {
-        super.setDatabaseType(DatabaseType.POSTGRES);
+    public PostgresDatabase() {
+        super(DatabaseType.POSTGRES);
     }
-
 }

@@ -4,8 +4,8 @@ import com.miotech.kun.metadata.constant.DatabaseType;
 
 public class HiveDatabase extends Database {
 
-    {
-        super.setDatabaseType(DatabaseType.HIVE);
+    public HiveDatabase() {
+        super(DatabaseType.HIVE);
     }
 
     private String metaStoreUrl;
