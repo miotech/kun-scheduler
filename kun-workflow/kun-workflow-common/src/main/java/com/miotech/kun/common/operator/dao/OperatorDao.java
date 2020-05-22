@@ -1,7 +1,7 @@
-package com.miotech.kun.common.dao;
+package com.miotech.kun.common.operator.dao;
 
 import com.google.common.base.Preconditions;
-import com.miotech.kun.common.filters.OperatorSearchFilter;
+import com.miotech.kun.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.db.ResultSetMapper;
@@ -17,8 +17,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.miotech.kun.common.helpers.OperatorDaoHelpers.jsonStringToParams;
-import static com.miotech.kun.common.helpers.OperatorDaoHelpers.paramsToJsonString;
+import static com.miotech.kun.common.operator.dao.OperatorDaoHelpers.jsonStringToParams;
+import static com.miotech.kun.common.operator.dao.OperatorDaoHelpers.paramsToJsonString;
 
 @Singleton
 public class OperatorDao {

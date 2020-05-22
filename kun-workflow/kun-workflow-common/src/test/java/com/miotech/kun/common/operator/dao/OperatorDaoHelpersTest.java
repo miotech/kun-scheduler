@@ -1,4 +1,4 @@
-package com.miotech.kun.common.helpers;
+package com.miotech.kun.common.operator.dao;
 
 import com.miotech.kun.workflow.core.model.common.Param;
 import org.junit.Test;

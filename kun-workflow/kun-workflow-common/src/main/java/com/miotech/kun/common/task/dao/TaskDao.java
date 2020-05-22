@@ -1,7 +1,7 @@
-package com.miotech.kun.common.dao;
+package com.miotech.kun.common.task.dao;
 
 import com.google.common.base.Preconditions;
-import com.miotech.kun.common.filters.TaskSearchFilter;
+import com.miotech.kun.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.db.DatabaseOperator;
@@ -17,7 +17,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 
-import static com.miotech.kun.common.helpers.TaskDaoHelpers.*;
+import static com.miotech.kun.common.task.dao.TaskDaoHelpers.*;
 
 @Singleton
 public class TaskDao {

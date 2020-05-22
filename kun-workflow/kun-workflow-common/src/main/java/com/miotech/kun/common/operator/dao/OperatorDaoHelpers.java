@@ -1,4 +1,4 @@
-package com.miotech.kun.common.helpers;
+package com.miotech.kun.common.operator.dao;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -14,12 +14,7 @@ public class OperatorDaoHelpers {
     private static final Logger logger = LoggerFactory.getLogger(OperatorDaoHelpers.class);
 
     public static List<Param> jsonStringToParams(String jsonStr) {
-        try {
-            return JSONUtils.jsonToObject(jsonStr, new TypeReference<List<Param>>() {});
-        } catch (JsonProcessingException e) {
-            logger.error(e.getMessage());
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
+        return JSONUtils.jsonToObject(jsonStr, new TypeReference<List<Param>>() {});
     }
 
     public static String paramsToJsonString(List<Param> params) {

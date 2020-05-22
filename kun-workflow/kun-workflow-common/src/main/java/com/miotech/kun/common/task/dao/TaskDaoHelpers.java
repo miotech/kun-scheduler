@@ -1,4 +1,4 @@
-package com.miotech.kun.common.helpers;
+package com.miotech.kun.common.task.dao;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -30,29 +30,14 @@ public class TaskDaoHelpers {
     }
 
     public static List<Variable> jsonStringToVariableDefs(String jsonStr) {
-        try {
-            return JSONUtils.jsonToObject(jsonStr, new TypeReference<List<Variable>>() {});
-        } catch (JsonProcessingException e) {
-            logger.error(e.getMessage());
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
+        return JSONUtils.jsonToObject(jsonStr, new TypeReference<List<Variable>>() {});
     }
 
     public static List<Param> jsonStringToArguments(String jsonStr) {
-        try {
-            return JSONUtils.jsonToObject(jsonStr, new TypeReference<List<Param>>() {});
-        } catch (JsonProcessingException e) {
-            logger.error(e.getMessage());
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
+        return JSONUtils.jsonToObject(jsonStr, new TypeReference<List<Param>>() {});
     }
 
     public static ScheduleConf jsonStringToScheduleConf(String jsonStr)  {
-        try {
-            return JSONUtils.jsonToObject(jsonStr, new TypeReference<ScheduleConf>() {});
-        } catch (JsonProcessingException e) {
-            logger.error(e.getMessage());
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
+        return JSONUtils.jsonToObject(jsonStr, new TypeReference<ScheduleConf>() {});
     }
 }

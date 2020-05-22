@@ -1,4 +1,4 @@
-package com.miotech.kun.common.dao;
+package com.miotech.kun.common;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;

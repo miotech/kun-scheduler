@@ -1,6 +1,7 @@
-package com.miotech.kun.common.dao;
+package com.miotech.kun.common.operator.dao;
 
-import com.miotech.kun.common.filters.OperatorSearchFilter;
+import com.miotech.kun.common.DatabaseTestBase;
+import com.miotech.kun.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.db.DatabaseOperator;
@@ -8,7 +9,6 @@ import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Test;
 
 import javax.inject.Inject;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;

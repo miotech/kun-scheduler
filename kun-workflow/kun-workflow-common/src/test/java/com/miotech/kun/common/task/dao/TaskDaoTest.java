@@ -1,10 +1,10 @@
-package com.miotech.kun.common.dao;
+package com.miotech.kun.common.task.dao;
 
-import com.miotech.kun.common.filters.TaskSearchFilter;
+import com.miotech.kun.common.DatabaseTestBase;
+import com.miotech.kun.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
-import org.junit.Before;
 import org.junit.Test;
 
 import javax.inject.Inject;

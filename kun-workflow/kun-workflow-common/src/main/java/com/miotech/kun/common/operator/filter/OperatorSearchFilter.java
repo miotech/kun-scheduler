@@ -1,4 +1,4 @@
-package com.miotech.kun.common.filters;
+package com.miotech.kun.common.operator.filter;
 
 public class OperatorSearchFilter {
     private final String keyword;

@@ -1,4 +1,4 @@
-package com.miotech.kun.common.entities.vo;
+package com.miotech.kun.common.operator.vo;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
