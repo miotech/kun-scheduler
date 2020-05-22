@@ -10,5 +10,6 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
 
+    testImplementation project(":kun-commons:kun-commons-testing")
     testRuntimeOnly "com.h2database:h2"
 }
