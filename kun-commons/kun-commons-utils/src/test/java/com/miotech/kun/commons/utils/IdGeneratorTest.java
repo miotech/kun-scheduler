@@ -37,7 +37,7 @@ public class IdGeneratorTest {
         /* A random reserved value */
         int reservedId = 0x0101;
 
-        long combinedId = IdGenerator.combine(baseId, reservedId);
+        long combinedId = IdGenerator.getInstance().combine(baseId, reservedId);
 
         /* combined id should contains base & reserved parts separately */
         assertThat((combinedId & RESERVED_MASK), is((long) reservedId));
@@ -51,8 +51,8 @@ public class IdGeneratorTest {
         IdGenerator generator = IdGenerator.getInstance();
         long baseId = generator.nextId();
         int reservedId = 0x0101;
-        long combinedId = IdGenerator.combine(baseId, reservedId);
+        long combinedId = IdGenerator.getInstance().combine(baseId, reservedId);
 
-        IdGenerator.combine(combinedId, reservedId);
+        IdGenerator.getInstance().combine(combinedId, reservedId);
     }
 }

@@ -1,4 +1,4 @@
-package com.miotech.kun.common.service;
+package com.miotech.kun.common.task.service;
 
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.core.model.bo.TaskInfo;

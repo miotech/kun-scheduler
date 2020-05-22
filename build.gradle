@@ -19,12 +19,15 @@ subprojects {
                 implementation 'com.google.guava:guava:28.2-jre'
                 implementation "org.slf4j:slf4j-api:1.7.30"
                 implementation "commons-dbutils:commons-dbutils:1.7"
+                implementation 'org.apache.commons:commons-lang3:3.10'
+                implementation 'org.apache.commons:commons-collections4:4.4'
                 implementation "com.zaxxer:HikariCP:3.4.5"
                 implementation 'ch.qos.logback:logback-classic:1.2.3'
 
                 implementation "org.yaml:snakeyaml:1.21"
                 implementation "com.fasterxml.jackson.core:jackson-core:2.11.0"
                 implementation "com.fasterxml.jackson.core:jackson-databind:2.11.0"
+                implementation 'com.fasterxml.jackson.core:jackson-annotations:2.11.0'
                 implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.11.0'
                 implementation "org.eclipse.jetty:jetty-server:9.4.28.v20200408"
                 implementation "org.eclipse.jetty:jetty-servlet:9.4.28.v20200408"
@@ -41,6 +44,9 @@ subprojects {
             implementation "com.google.inject:guice"
             implementation "org.slf4j:slf4j-api"
             implementation 'ch.qos.logback:logback-classic'
+            implementation 'org.apache.commons:commons-lang3'
+            implementation 'org.apache.commons:commons-collections4'
+
             testImplementation "junit:junit"
             testImplementation "org.hamcrest:hamcrest"
             testImplementation "org.hamcrest:hamcrest-library"

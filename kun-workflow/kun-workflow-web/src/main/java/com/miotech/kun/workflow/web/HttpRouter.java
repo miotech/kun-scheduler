@@ -3,7 +3,7 @@ package com.miotech.kun.workflow.web;
 import com.google.common.reflect.ClassPath;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.miotech.kun.workflow.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.web.http.HttpAction;
 import com.miotech.kun.workflow.web.http.HttpMethod;

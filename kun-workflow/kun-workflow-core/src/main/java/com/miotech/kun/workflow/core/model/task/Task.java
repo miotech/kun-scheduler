@@ -1,25 +1,30 @@
 package com.miotech.kun.workflow.core.model.task;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.collect.ImmutableList;
+import com.miotech.kun.workflow.core.model.common.Param;
+import com.miotech.kun.workflow.core.model.common.Variable;
 
 import java.util.List;
 
+@JsonDeserialize(builder = Task.TaskBuilder.class)
 public class Task {
-    private final String id;
+    private final Long id;
 
     private final String name;
 
     private final String description;
 
-    private final String operatorName;
+    private final Long operatorId;
 
-    private final List<Param> params;
+    private final List<Param> arguments;
 
-    private final List<Variable> variables;
+    private final List<Variable> variableDefs;
 
     private final ScheduleConf scheduleConf;
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
@@ -31,138 +36,101 @@ public class Task {
         return description;
     }
 
-    public String getOperatorName() {
-        return operatorName;
+    public Long getOperatorId() {
+        return operatorId;
     }
 
-    public List<Param> getParams() {
-        return params;
+    public List<Param> getArguments() {
+        return arguments;
     }
 
-    public List<Variable> getVariables() {
-        return variables;
+    public List<Variable> getVariableDefs() {
+        return variableDefs;
     }
 
     public ScheduleConf getScheduleConf() {
         return scheduleConf;
     }
 
-    public Task withId(String id) {
-        Task.Builder builder = cloneBuilder();
-        builder.id(id);
-        return builder.build();
-    }
-
-    public Task withName(String name) {
-        Task.Builder builder = cloneBuilder();
-        builder.name(name);
-        return builder.build();
-    }
-
-    public Task withDescription(String description) {
-        Task.Builder builder = cloneBuilder();
-        builder.description(description);
-        return builder.build();
-    }
-
-    public Task withOperatorName(String operatorName) {
-        Task.Builder builder = cloneBuilder();
-        builder.operatorName(operatorName);
-        return builder.build();
-    }
-
-    public Task withParams(List<Param> params) {
-        Task.Builder builder = cloneBuilder();
-        builder.params(params);
-        return builder.build();
-    }
-
-    public Task withVariables(List<Variable> variables) {
-        Task.Builder builder = cloneBuilder();
-        builder.variables(variables);
-        return builder.build();
-    }
-
-    public Task withScheduleConf(ScheduleConf scheduleConf) {
-        Task.Builder builder = cloneBuilder();
-        builder.scheduleConf(scheduleConf);
-        return builder.build();
-    }
-
-    private Task(String id, String name, String description, String operatorName, List<Param> params, List<Variable> variables, ScheduleConf scheduleConf) {
+    private Task(Long id, String name, String description, Long operatorId, List<Param> params, List<Variable> variableDefs, ScheduleConf scheduleConf) {
         this.id = id;
         this.name = name;
         this.description = description;
-        this.operatorName = operatorName;
-        this.params = ImmutableList.copyOf(params);
-        this.variables = ImmutableList.copyOf(variables);
+        this.operatorId = operatorId;
+        this.arguments = ImmutableList.copyOf(params);
+        this.variableDefs = ImmutableList.copyOf(variableDefs);
         this.scheduleConf = scheduleConf;
     }
 
-    public Task.Builder cloneBuilder() {
+    public TaskBuilder cloneBuilder() {
         return newBuilder()
-                .id(id)
-                .name(name)
-                .description(description)
-                .operatorName(operatorName)
-                .params(params)
-                .variables(variables)
-                .scheduleConf(scheduleConf);
+                .withId(id)
+                .withName(name)
+                .withDescription(description)
+                .withOperatorId(operatorId)
+                .withArguments(arguments)
+                .withVariableDefs(variableDefs)
+                .withScheduleConf(scheduleConf);
     }
 
-    public static Task.Builder newBuilder() {
-        return new Task.Builder();
+    public static TaskBuilder newBuilder() {
+        return new TaskBuilder();
     }
 
-    public static final class Builder {
-        private String id;
+    @JsonPOJOBuilder
+    public static final class TaskBuilder {
+        private Long id;
         private String name;
         private String description;
-        private String operatorName;
-        private List<Param> params;
-        private List<Variable> variables;
+        private Long operatorId;
+        private List<Param> arguments;
+        private List<Variable> variableDefs;
         private ScheduleConf scheduleConf;
 
-        private Builder() {
+        private TaskBuilder() {
         }
 
-        public Builder id(String id) {
+        public static TaskBuilder aTask() {
+            return new TaskBuilder();
+        }
+
+        public TaskBuilder withId(Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder name(String name) {
+        public TaskBuilder withName(String name) {
             this.name = name;
             return this;
         }
 
-        public Builder description(String description) {
+        public TaskBuilder withDescription(String description) {
             this.description = description;
             return this;
         }
 
-        public Builder operatorName(String operatorName) {
-            this.operatorName = operatorName;
+        public TaskBuilder withOperatorId(Long operatorId) {
+            this.operatorId = operatorId;
             return this;
         }
 
-        public Builder params(List<Param> params) {
-            this.params = ImmutableList.copyOf(params);
+        public TaskBuilder withArguments(List<Param> arguments) {
+            this.arguments = arguments;
             return this;
         }
 
-        public Builder variables(List<Variable> variables) {
-            this.variables = ImmutableList.copyOf(variables);
+        public TaskBuilder withVariableDefs(List<Variable> variableDefs) {
+            this.variableDefs = ImmutableList.copyOf(variableDefs);
             return this;
         }
 
-        public Builder scheduleConf(ScheduleConf scheduleConf) {
+        public TaskBuilder withScheduleConf(ScheduleConf scheduleConf) {
             this.scheduleConf = scheduleConf;
             return this;
         }
 
         public Task build() {
-            return new Task(id, name, description, operatorName, params, variables, scheduleConf);
+            return new Task(id, name, description, operatorId, arguments, variableDefs, scheduleConf);
         }
     }
 }
