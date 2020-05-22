@@ -1,10 +1,13 @@
 package com.miotech.kun.common.operator.dao;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.common.operator.filter.OperatorSearchFilter;
+import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.db.ResultSetMapper;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +19,6 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-
-import static com.miotech.kun.common.operator.dao.OperatorDaoHelpers.jsonStringToParams;
-import static com.miotech.kun.common.operator.dao.OperatorDaoHelpers.paramsToJsonString;
 
 @Singleton
 public class OperatorDao {
@@ -34,21 +34,21 @@ public class OperatorDao {
     }
 
     public Optional<Operator> getById(Long id) {
-        Preconditions.checkArgument(Objects.nonNull(id), "Invalid parameter `id`: found null object");
+        Preconditions.checkNotNull(id, "Invalid parameter `id`: found null object");
         String sql = String.format("SELECT id, name, description, params, class_name, package FROM %s WHERE id = ?;", DB_TABLE_NAME);
         Operator operator = dbOperator.fetchOne(sql, OperatorMapper.INSTANCE, id);
         return Optional.ofNullable(operator);
     }
 
     public Optional<Operator> getByName(String name) {
-        Preconditions.checkArgument(Objects.nonNull(name), "Invalid parameter `name`: found null object");
+        Preconditions.checkNotNull(name, "Invalid parameter `name`: found null object");
         String sql = String.format("SELECT id, name, description, params, class_name, package FROM %s WHERE name = ?;", DB_TABLE_NAME);
         Operator operator = dbOperator.fetchOne(sql, OperatorMapper.INSTANCE, name);
         return Optional.ofNullable(operator);
     }
 
     public List<Operator> search(OperatorSearchFilter filters) {
-        Preconditions.checkArgument(Objects.nonNull(filters), "Invalid parameter `filters`: found null object");
+        Preconditions.checkNotNull(filters, "Invalid parameter `filters`: found null object");
         Preconditions.checkArgument(Objects.nonNull(filters.getPageNum()) && filters.getPageNum() > 0, "Invalid page num: %d", filters.getPageNum());
         Preconditions.checkArgument(Objects.nonNull(filters.getPageSize()) && filters.getPageSize() > 0, "Invalid page size: %d", filters.getPageSize());
         boolean hasKeywordFilter = StringUtils.isNotEmpty(filters.getKeyword());
@@ -70,8 +70,8 @@ public class OperatorDao {
      * @param operator
      */
     public void create(Operator operator) {
-        Preconditions.checkArgument(Objects.nonNull(operator), "Invalid parameter `operator`: found null object");
-        Preconditions.checkArgument(Objects.nonNull(operator.getId()), "Invalid parameter `operator`: internal `id` not assigned");
+        Preconditions.checkNotNull(operator, "Invalid parameter `operator`: found null object");
+        Preconditions.checkNotNull(operator.getId(), "Invalid parameter `operator`: internal `id` not assigned");
         createWithId(operator, operator.getId());
     }
 
@@ -81,7 +81,9 @@ public class OperatorDao {
      * @param id an ID to override the internal value of `operator` object
      */
     public void createWithId(Operator operator, Long id) {
-        Preconditions.checkArgument(Objects.nonNull(operator), "Invalid parameter `operator`: found null object");
+        Preconditions.checkNotNull(operator, "Invalid parameter `operator`: found null object");
+        Preconditions.checkNotNull(id, "Invalid parameter `id`: found null object");
+
         String sql = String.format("INSERT INTO %s " +
                 "(id, name, description, params, class_name, package) " +
                 "VALUES (?, ?, ?, ?, ?, ?);", DB_TABLE_NAME);
@@ -90,32 +92,53 @@ public class OperatorDao {
                 id,
                 operator.getName(),
                 operator.getDescription(),
-                paramsToJsonString(operator.getParams()),
+                JSONUtils.toJsonString(operator.getParams()),
                 operator.getClassName(),
                 operator.getPackagePath()
         );
     }
 
-    public void updateById(Long id, Operator operator) {
-        Preconditions.checkArgument(Objects.nonNull(id), "Invalid parameter `id`: found null object");
-        Preconditions.checkArgument(Objects.nonNull(operator), "Invalid parameter `operator`: found null object");
+    /**
+     * Update an operator by given id with given props of an operator,
+     * returns `true` if target row is affected.
+     * returns `false` if target row not found.
+     * @param id
+     *          target operator id
+     * @param operator
+     *          an operator object as properties provider (except `id`)
+     * @return if target row is affected
+     */
+    public boolean updateById(Long id, Operator operator) {
+        // 1. Validate arguments
+        Preconditions.checkNotNull(id, "Invalid parameter `id`: found null object");
+        Preconditions.checkNotNull(operator, "Invalid parameter `operator`: found null object");
+
         String sql = String.format("UPDATE %s SET " +
                 "name = ?, description = ?, params = ?, class_name = ?, package = ? WHERE id = ?;", DB_TABLE_NAME);
-        dbOperator.update(
+        int affectedRows = dbOperator.update(
                 sql,
                 operator.getName(),
                 operator.getDescription(),
-                paramsToJsonString(operator.getParams()),
+                JSONUtils.toJsonString(operator.getParams()),
                 operator.getClassName(),
                 operator.getPackagePath(),
                 id
         );
+        return affectedRows > 0;
     }
 
-    public void deleteById(Long id) {
-        Preconditions.checkArgument(Objects.nonNull(id), "Invalid parameter `id`: found null object");
+    /**
+     * Delete an operator by given id with given props of an operator,
+     * returns `true` if target row is affected.
+     * returns `false` if target row not found.
+     * @param id target operator id
+     * @return if target row is affected
+     */
+    public boolean deleteById(Long id) {
+        Preconditions.checkNotNull(id, "Invalid parameter `id`: found null object");
         String sql = String.format("DELETE FROM %s WHERE id = ?;", DB_TABLE_NAME);
-        dbOperator.update(sql, id);
+        int affectedRows = dbOperator.update(sql, id);
+        return affectedRows > 0;
     }
 
     private static class OperatorMapper implements ResultSetMapper<Operator> {
@@ -126,7 +149,7 @@ public class OperatorDao {
             return Operator.newBuilder()
                     .withId(rs.getLong("id"))
                     .withName(rs.getString("name"))
-                    .withParams(jsonStringToParams(rs.getString("params")))
+                    .withParams(JSONUtils.jsonToObject(rs.getString("params"), new TypeReference<List<Param>>() {}))
                     .withDescription(rs.getString("description"))
                     .withClassName(rs.getString("class_name"))
                     .withPackagePath(rs.getString("package"))

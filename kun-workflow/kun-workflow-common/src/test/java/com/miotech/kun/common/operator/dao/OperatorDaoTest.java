@@ -4,7 +4,6 @@ import com.miotech.kun.common.DatabaseTestBase;
 import com.miotech.kun.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.operator.Operator;
-import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Test;
 
@@ -19,22 +18,20 @@ import static org.junit.Assert.*;
 
 public class OperatorDaoTest extends DatabaseTestBase {
     @Inject
-    DatabaseOperator dbOperator;
-
-    @Inject
     OperatorDao operatorDao;
 
     private void insertSampleData() {
-        dbOperator.batch(
-                "INSERT INTO kun_wf_operator (id, name, description, params, class_name, package) VALUES (?, ?, ?, ?, ?, ?);",
-                new Object[][]{
-                        {1L, "foo", "foo_desc", "[]", "com.miotech.kun.foo.BashOperator", "s3://storage.miotech.com/foo.jar"},
-                        {2L, "bar", "bar_desc", "[]", "com.miotech.kun.bar.BashOperator", "s3://storage.miotech.com/bar.jar"},
-                        {3L, "example3", "", "[]", "com.miotech.kun.example3.ExampleOperator", "s3://storage.miotech.com/example3.jar"},
-                        {4L, "example4", "", "[]", "com.miotech.kun.example4.ExampleOperator", "s3://storage.miotech.com/example4.jar"},
-                        {5L, "example5", "", "[]", "com.miotech.kun.example5.ExampleOperator", "s3://storage.miotech.com/example5.jar"}
-                }
-        );
+        List<Operator> operators = MockOperatorFactory.createOperators(5);
+
+        // Add "example" as prefix for 3 operators
+        for (int i = 2; i < 5; i += 1) {
+            Operator op = operators.get(i);
+            operators.set(i, op.cloneBuilder().withName("example" + op.getName()).build());
+        }
+
+        operators.forEach(operator -> {
+            operatorDao.create(operator);
+        });
     }
 
     @Test
@@ -200,22 +197,24 @@ public class OperatorDaoTest extends DatabaseTestBase {
         assertTrue(firstOperator.isPresent());
 
         // Process
-        operatorDao.deleteById(1L);
+        boolean rowAffected = operatorDao.deleteById(1L);
 
         // Validate
+        assertTrue(rowAffected);
         Optional<Operator> firstOperatorRemoved = operatorDao.getById(1L);
         assertThat(firstOperatorRemoved.isPresent(), is(false));
     }
 
     @Test
-    public void delete_WithNonExistId_shouldNotThrowException() {
+    public void delete_WithNonExistId_shouldAffectNoRow() {
         // Prepare
         insertSampleData();
         Optional<Operator> firstOperator = operatorDao.getById(1L);
         assertTrue(firstOperator.isPresent());
 
         // Process
-        operatorDao.deleteById(999L);
+        boolean rowAffected = operatorDao.deleteById(999L);
+        assertFalse(rowAffected);
     }
 
     @Test
@@ -230,9 +229,11 @@ public class OperatorDaoTest extends DatabaseTestBase {
                 .withName("fooUpdated")
                 .withPackagePath("s3://storage.miotech.com/fooUpdated.jar")
                 .build();
-        operatorDao.updateById(1L, updatedOperator);
+        boolean rowAffected = operatorDao.updateById(1L, updatedOperator);
 
         // Validate
+        assertTrue(rowAffected);
+
         Optional<Operator> updatedFirstOperatorOptional = operatorDao.getById(1L);
         assertTrue(updatedFirstOperatorOptional.isPresent());
 

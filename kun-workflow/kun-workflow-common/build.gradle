@@ -6,6 +6,9 @@ dependencies {
 
     implementation 'com.google.guava:guava'
     implementation "com.zaxxer:HikariCP"
+    implementation 'com.fasterxml.jackson.core:jackson-core'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'com.fasterxml.jackson.core:jackson-annotations'
 
     testRuntimeOnly "com.h2database:h2"
 }

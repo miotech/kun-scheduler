@@ -1,11 +1,16 @@
 package com.miotech.kun.common.task.dao;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.common.task.filter.TaskSearchFilter;
+import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.common.Variable;
+import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.db.ResultSetMapper;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -16,8 +21,6 @@ import javax.inject.Singleton;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-
-import static com.miotech.kun.common.task.dao.TaskDaoHelpers.*;
 
 @Singleton
 public class TaskDao {
@@ -84,9 +87,9 @@ public class TaskDao {
                 task.getName(),
                 task.getDescription(),
                 task.getOperatorId(),
-                argumentsToJson(task.getArguments()),
-                variableDefsToJson(task.getVariableDefs()),
-                scheduleConfToJson(task.getScheduleConf())
+                JSONUtils.toJsonString(task.getArguments()),
+                JSONUtils.toJsonString(task.getVariableDefs()),
+                JSONUtils.toJsonString(task.getScheduleConf())
         );
     }
 
@@ -99,9 +102,9 @@ public class TaskDao {
                 task.getName(),
                 task.getDescription(),
                 task.getOperatorId(),
-                argumentsToJson(task.getArguments()),
-                variableDefsToJson(task.getVariableDefs()),
-                scheduleConfToJson(task.getScheduleConf()),
+                JSONUtils.toJsonString(task.getArguments()),
+                JSONUtils.toJsonString(task.getVariableDefs()),
+                JSONUtils.toJsonString(task.getScheduleConf()),
                 task.getId()
         );
     }
@@ -121,9 +124,9 @@ public class TaskDao {
                     .withName(rs.getString("name"))
                     .withDescription(rs.getString("description"))
                     .withOperatorId(rs.getLong("operator_id"))
-                    .withArguments(jsonStringToArguments(rs.getString("arguments")))
-                    .withVariableDefs(jsonStringToVariableDefs(rs.getString("variable_defs")))
-                    .withScheduleConf(jsonStringToScheduleConf(rs.getString("schedule")))
+                    .withArguments(JSONUtils.jsonToObject(rs.getString("arguments"), new TypeReference<List<Param>>() {}))
+                    .withVariableDefs(JSONUtils.jsonToObject(rs.getString("variable_defs"), new TypeReference<List<Variable>>() {}))
+                    .withScheduleConf( JSONUtils.jsonToObject(rs.getString("schedule"), new TypeReference<ScheduleConf>() {}))
                     .build();
         }
     }

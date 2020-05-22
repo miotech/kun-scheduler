@@ -26,6 +26,7 @@ public class TaskDaoTest extends DatabaseTestBase {
     TaskDao taskDao;
 
     private void insertSampleData() {
+        /* TODO: implement this with factory */
         dbOperator.batch("INSERT INTO kun_wf_task (id, name, description, operator_id, arguments, variable_defs, schedule) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?);",
                 new Object[][]{
