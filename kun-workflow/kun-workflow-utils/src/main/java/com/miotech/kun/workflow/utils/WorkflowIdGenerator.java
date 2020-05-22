@@ -2,8 +2,16 @@ package com.miotech.kun.workflow.utils;
 
 import com.miotech.kun.commons.utils.IdGenerator;
 
-public class TaskIdGenerator {
-    private TaskIdGenerator() {
+public class WorkflowIdGenerator {
+    private WorkflowIdGenerator() {
+    }
+
+    /**
+     * Generate a snowflake ID for workflow Operator
+     * @return Snowflake ID
+     */
+    public static Long nextOperatorId() {
+        return IdGenerator.getInstance().nextId();
     }
 
     /**
@@ -30,6 +38,6 @@ public class TaskIdGenerator {
      * @return Snowflake ID with attempt as reserved id
      */
     public static Long nextTaskAttemptId(long taskRunId, int attempt) {
-        return IdGenerator.combine(taskRunId, attempt);
+        return IdGenerator.getInstance().combine(taskRunId, attempt);
     }
 }

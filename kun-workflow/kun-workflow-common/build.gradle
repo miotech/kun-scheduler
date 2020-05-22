@@ -1,5 +1,11 @@
 dependencies {
-    implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-commons:kun-commons-db')
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation project(':kun-workflow:kun-workflow-core')
+
     implementation 'com.google.guava:guava'
+    implementation "com.zaxxer:HikariCP"
+
+    testRuntimeOnly "com.h2database:h2"
 }
