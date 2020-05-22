@@ -15,7 +15,7 @@ public class Task {
 
     private final List<Param> params;
 
-    private final List<Var> variables;
+    private final List<Variable> variables;
 
     private final ScheduleConf scheduleConf;
 
@@ -39,7 +39,7 @@ public class Task {
         return params;
     }
 
-    public List<Var> getVariables() {
+    public List<Variable> getVariables() {
         return variables;
     }
 
@@ -77,7 +77,7 @@ public class Task {
         return builder.build();
     }
 
-    public Task withVariables(List<Var> variables) {
+    public Task withVariables(List<Variable> variables) {
         Task.Builder builder = cloneBuilder();
         builder.variables(variables);
         return builder.build();
@@ -89,13 +89,13 @@ public class Task {
         return builder.build();
     }
 
-    private Task(String id, String name, String description, String operatorName, List<Param> params, List<Var> variables, ScheduleConf scheduleConf) {
+    private Task(String id, String name, String description, String operatorName, List<Param> params, List<Variable> variables, ScheduleConf scheduleConf) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.operatorName = operatorName;
-        this.params = params;
-        this.variables = variables;
+        this.params = ImmutableList.copyOf(params);
+        this.variables = ImmutableList.copyOf(variables);
         this.scheduleConf = scheduleConf;
     }
 
@@ -120,7 +120,7 @@ public class Task {
         private String description;
         private String operatorName;
         private List<Param> params;
-        private List<Var> variables;
+        private List<Variable> variables;
         private ScheduleConf scheduleConf;
 
         private Builder() {
@@ -151,7 +151,7 @@ public class Task {
             return this;
         }
 
-        public Builder variables(List<Var> variables) {
+        public Builder variables(List<Variable> variables) {
             this.variables = ImmutableList.copyOf(variables);
             return this;
         }
