@@ -27,7 +27,7 @@ public class HiveDatasetStatExtractor implements DatasetStatExtractor {
     public DatasetStat extract() {
         DatasetStat datasetStat = new DatasetStat();
 
-        Connection connection;
+        Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -50,7 +50,7 @@ public class HiveDatasetStatExtractor implements DatasetStatExtractor {
         } catch (SQLException sqlException) {
             throw new RuntimeException(sqlException);
         } finally {
-            JDBCClient.close(statement, resultSet);
+            JDBCClient.close(connection, statement, resultSet);
         }
 
         return datasetStat;

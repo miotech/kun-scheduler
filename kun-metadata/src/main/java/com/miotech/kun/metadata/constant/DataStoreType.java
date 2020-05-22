@@ -1,8 +1,12 @@
 package com.miotech.kun.metadata.constant;
 
 public enum DataStoreType {
-    A("test");
-
+    TABLE("PostgresTable/MySQLTable/HiveTable"),
+    INDEX("ElasticsearchIndex"),
+    COLLECTION("ArangoCollection/MongoCollection"),
+    TOPIC("KafkaTopic"),
+    SHEET("GoogleSpreadSheet"),
+    FILE("File");
 
     private String type;
 

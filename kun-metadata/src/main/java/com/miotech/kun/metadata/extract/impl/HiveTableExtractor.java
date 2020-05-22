@@ -29,9 +29,9 @@ public class HiveTableExtractor implements DatasetExtractor {
     @Override
     public Dataset extract() {
         // Get statistics for table
-        DatasetStatRequest.Builder statBuilder = DatasetStatRequest.Builder.builder();
-        statBuilder.setTable(table).setUrl(database.getUrl()).setUsername(database.getUsername())
-                .setPassword(database.getPassword());
+        DatasetStatRequest.Builder statBuilder = DatasetStatRequest.newBuilder();
+        statBuilder.withTable(table).withUrl(database.getUrl()).withUsername(database.getUsername())
+                .withPassword(database.getPassword());
         DatasetStatExtractor statExtractor = new HiveDatasetStatExtractor(statBuilder.build());
         DatasetStat datasetStat = statExtractor.extract();
 

@@ -10,38 +10,32 @@ public class DatasetStatRequest {
 
     private String password;
 
-    public String getTable() {
-        return table;
+    public DatasetStatRequest(String table, String url, String username, String password) {
+        this.table = table;
+        this.url = url;
+        this.username = username;
+        this.password = password;
     }
 
-    public void setTable(String table) {
-        this.table = table;
+    public String getTable() {
+        return table;
     }
 
     public String getUrl() {
         return url;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
     public String getUsername() {
         return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
     }
 
     public String getPassword() {
         return password;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public static DatasetStatRequest.Builder newBuilder() {
+        return new DatasetStatRequest.Builder();
     }
-
 
     public static final class Builder {
         private String table;
@@ -52,37 +46,28 @@ public class DatasetStatRequest {
         private Builder() {
         }
 
-        public static Builder builder() {
-            return new Builder();
-        }
-
-        public Builder setTable(String table) {
+        public Builder withTable(String table) {
             this.table = table;
             return this;
         }
 
-        public Builder setUrl(String url) {
+        public Builder withUrl(String url) {
             this.url = url;
             return this;
         }
 
-        public Builder setUsername(String username) {
+        public Builder withUsername(String username) {
             this.username = username;
             return this;
         }
 
-        public Builder setPassword(String password) {
+        public Builder withPassword(String password) {
             this.password = password;
             return this;
         }
 
         public DatasetStatRequest build() {
-            DatasetStatRequest datasetStatRequest = new DatasetStatRequest();
-            datasetStatRequest.setTable(table);
-            datasetStatRequest.setUrl(url);
-            datasetStatRequest.setUsername(username);
-            datasetStatRequest.setPassword(password);
-            return datasetStatRequest;
+            return new DatasetStatRequest(table, url, username, password);
         }
     }
 }

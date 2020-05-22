@@ -42,6 +42,10 @@ public class DatasetField {
         this.datasetFieldStat = datasetFieldStat;
     }
 
+    public DatasetField(String type) {
+        this.type = type;
+    }
+
     public DatasetField(String name, String type, String description) {
         this.name = name;
         this.type = type;

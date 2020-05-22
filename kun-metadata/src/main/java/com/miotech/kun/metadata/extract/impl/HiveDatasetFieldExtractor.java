@@ -26,7 +26,7 @@ public class HiveDatasetFieldExtractor implements DatasetFieldExtractor {
     @Override
     public List<DatasetField> extract() {
         List<DatasetField> fields = new ArrayList<>();
-        Connection connection;
+        Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
@@ -75,7 +75,7 @@ public class HiveDatasetFieldExtractor implements DatasetFieldExtractor {
         } catch (SQLException sqlException) {
             throw new RuntimeException(sqlException);
         } finally {
-            JDBCClient.close(statement, resultSet);
+            JDBCClient.close(connection, statement, resultSet);
         }
 
         return fields;

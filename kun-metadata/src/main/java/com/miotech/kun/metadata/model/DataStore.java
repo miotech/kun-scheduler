@@ -5,14 +5,14 @@ import com.miotech.kun.metadata.constant.DataStoreType;
 public class DataStore {
 
     private final DataStoreType type;
-    private Database database;
+    private Cluster cluster;
 
     public DataStoreType getType() {
         return type;
     }
 
-    public Database getDatabase() {
-        return database;
+    public Cluster getCluster() {
+        return cluster;
     }
 
     public DataStore(DataStoreType type) {

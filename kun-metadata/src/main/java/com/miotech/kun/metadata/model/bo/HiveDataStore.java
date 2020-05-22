@@ -5,14 +5,16 @@ import com.miotech.kun.metadata.model.DataStore;
 
 public class HiveDataStore extends DataStore {
 
-    private String tableName;
+    private String database;
+
+    private String table;
 
     public HiveDataStore() {
-        super(DataStoreType.A);
+        super(DataStoreType.TABLE);
     }
 
-    public HiveDataStore(String tableName) {
+    public HiveDataStore(String table) {
         this();
-        this.tableName = tableName;
+        this.table = table;
     }
 }

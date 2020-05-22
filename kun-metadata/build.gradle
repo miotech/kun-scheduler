@@ -11,6 +11,7 @@ buildscript {
 }
 
 dependencies {
+    implementation project(":kun-workflow:kun-workflow-core")
     implementation 'com.typesafe:config'
     implementation 'org.json:json'
     implementation 'com.google.protobuf:protobuf-java'

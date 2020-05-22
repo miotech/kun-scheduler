@@ -37,12 +37,12 @@ public class HiveExtractor extends JDBCExtractor {
     public Iterator<Dataset> extract() {
         List<String> tables = new ArrayList<>();
 
-        Connection connection;
+        Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.MYSQL, hiveDatabase.getMetaStoreUrl(), hiveDatabase.getMetaStoreUsername(),
-                    hiveDatabase.getMetaStorePassword());
+            connection = JDBCClient.getConnection(DatabaseType.MYSQL, hiveDatabase.getMetaStoreUrl(),
+                    hiveDatabase.getMetaStoreUsername(), hiveDatabase.getMetaStorePassword());
             String sql = "SELECT t.TBL_NAME FROM TBLS t JOIN DBS d ON t.DB_ID = d.DB_ID where d.NAME = ?";
             statement = connection.prepareStatement(sql);
 
@@ -59,7 +59,7 @@ public class HiveExtractor extends JDBCExtractor {
         } catch (SQLException sqlException) {
             throw new RuntimeException(sqlException);
         } finally {
-            JDBCClient.close(statement, resultSet);
+            JDBCClient.close(connection, statement, resultSet);
         }
 
         return new ExtractIterator(tables, new HiveDatasetExtractorFactory(), hiveDatabase);
