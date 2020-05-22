@@ -58,7 +58,7 @@ public class TaskDaoTest extends DatabaseTestBase {
         insertSampleData();
 
         // Process
-        Optional<Task> taskOptional = taskDao.getById(1L);
+        Optional<Task> taskOptional = taskDao.fetchById(1L);
 
         // Validate
         assertTrue(taskOptional.isPresent());
@@ -85,7 +85,7 @@ public class TaskDaoTest extends DatabaseTestBase {
         taskDao.create(insertTask);
 
         // Validate
-        Optional<Task> persistedTaskOptional = taskDao.getById(id);
+        Optional<Task> persistedTaskOptional = taskDao.fetchById(id);
         assertTrue(persistedTaskOptional.isPresent());
 
         Task persistedTask = persistedTaskOptional.get();
@@ -134,15 +134,15 @@ public class TaskDaoTest extends DatabaseTestBase {
         // Prepare
         insertSampleData();
 
-        Task task = taskDao.getById(1L).get();
+        Task task = taskDao.fetchById(1L).get();
         assertThat(task.getName(), is("example1"));
 
         // Process
         Task taskToBeUpdated = task.cloneBuilder().withName("changedTaskName").build();
-        taskDao.updateById(1L, taskToBeUpdated);
+        taskDao.updateById(taskToBeUpdated);
 
         // Validate
-        Task updatedTask = taskDao.getById(1L).get();
+        Task updatedTask = taskDao.fetchById(1L).get();
         assertThat(updatedTask, samePropertyValuesAs(taskToBeUpdated));
     }
 
@@ -150,14 +150,14 @@ public class TaskDaoTest extends DatabaseTestBase {
     public void delete_WithExistedId_ShouldWork() {
         // Prepare
         insertSampleData();
-        Optional<Task> taskToBeDeleteOptional = taskDao.getById(3L);
+        Optional<Task> taskToBeDeleteOptional = taskDao.fetchById(3L);
         assertTrue(taskToBeDeleteOptional.isPresent());
 
         // Process
         taskDao.deleteById(3L);
 
         // Validate
-        Optional<Task> taskDeletedOptional = taskDao.getById(3L);
+        Optional<Task> taskDeletedOptional = taskDao.fetchById(3L);
         assertFalse(taskDeletedOptional.isPresent());
     }
 }

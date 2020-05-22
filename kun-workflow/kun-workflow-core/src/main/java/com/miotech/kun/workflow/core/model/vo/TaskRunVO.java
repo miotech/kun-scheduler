@@ -32,6 +32,8 @@ public class TaskRunVO {
 
     private List<TaskAttempt> attempts;
 
+    private List<Long> dependencyTaskRunIds;
+
     public Long getId() {
         return id;
     }
@@ -116,6 +118,14 @@ public class TaskRunVO {
         return new TaskRunVO.Builder();
     }
 
+    public List<Long> getDependencyTaskRunIds() {
+        return dependencyTaskRunIds;
+    }
+
+    public void setDependencyTaskRunIds(List<Long> dependencyTaskRunIds) {
+        this.dependencyTaskRunIds = dependencyTaskRunIds;
+    }
+
     public static final class Builder {
         private Long id;
         private Task task;
@@ -127,8 +137,13 @@ public class TaskRunVO {
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
         private List<TaskAttempt> attempts;
+        private List<Long> dependencyTaskRunIds;
 
         private Builder() {
+        }
+
+        public static Builder aTaskRunVO() {
+            return new Builder();
         }
 
         public Builder withId(Long id) {
@@ -181,6 +196,11 @@ public class TaskRunVO {
             return this;
         }
 
+        public Builder withDependencyTaskRunIds(List<Long> dependencyTaskRunIds) {
+            this.dependencyTaskRunIds = dependencyTaskRunIds;
+            return this;
+        }
+
         public TaskRunVO build() {
             TaskRunVO taskRunVO = new TaskRunVO();
             taskRunVO.setId(id);
@@ -193,6 +213,7 @@ public class TaskRunVO {
             taskRunVO.setStartAt(startAt);
             taskRunVO.setEndAt(endAt);
             taskRunVO.setAttempts(attempts);
+            taskRunVO.setDependencyTaskRunIds(dependencyTaskRunIds);
             return taskRunVO;
         }
     }

@@ -3,6 +3,8 @@ package com.miotech.kun.workflow.common.task.dao;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.google.common.collect.ImmutableList;
+import com.miotech.kun.common.dao.Constants;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
@@ -10,6 +12,8 @@ import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.db.ResultSetMapper;
+import com.miotech.kun.workflow.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.workflow.db.sql.SQLBuilder;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -20,24 +24,28 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @Singleton
 public class TaskDao {
     private final Logger logger = LoggerFactory.getLogger(TaskDao.class);
 
-    private final DatabaseOperator dbOperator;
+    public final static String TASK_TABLE_NAME = "kun_wf_task";
+    public final static String TASK_MODEL_NAME = "tasks";
 
-    private final String DB_TABLE_NAME = "kun_wf_task";
+    private static final List<String> taskCols = ImmutableList.copyOf(
+            new String[]{"id", "name", "description", "operator_id", "arguments", "variable_defs", "schedule"});
+
+    private final DatabaseOperator dbOperator;
 
     @Inject
     public TaskDao(DatabaseOperator dbOperator) {
         this.dbOperator = dbOperator;
     }
 
-    public List<Task> fetchScheduledTaskAtTick(Tick tick) {
-        String sql = String.format("select * from %s where scheduled_tick = ?", DB_TABLE_NAME);
-        return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, tick.toString());
+    public static List<String> getTaskCols() {
+        return taskCols;
     }
 
     public List<Task> getList(TaskSearchFilter filters) {
@@ -49,12 +57,11 @@ public class TaskDao {
         Integer pageNum = filters.getPageNum();
         Integer pageSize = filters.getPageSize();
         Integer offset = (pageNum - 1) * pageSize;
-        StringBuilder sqlBuilder = new StringBuilder();
         List<Object> params = new ArrayList<>();
-        sqlBuilder.append(String.format("SELECT id, name, description, operator_id, arguments, variable_defs, schedule FROM %s", DB_TABLE_NAME));
 
+        StringBuilder whereClause = new StringBuilder();
         if (filterContainsKeyword && !filterContainsTags) {
-            sqlBuilder.append(" WHERE name LIKE CONCAT('%', ?, '%')");
+            whereClause.append(" name LIKE CONCAT('%', ?, '%')");
             params.add(filters.getName());
         } else if (!filterContainsKeyword && filterContainsTags) {
             // TODO: allow filter by tags
@@ -64,23 +71,59 @@ public class TaskDao {
             throw new UnsupportedOperationException("Filter by tags not implemented yet.");
         }
         // else pass
+        String baseSelect = getSelectSQL(null);
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(baseSelect)
+                .where(whereClause.toString())
+                .limit(pageSize)
+                .offset(offset)
+                .asPrepared()
+                .getSQL();
+        Collections.addAll(params, pageSize, offset);
 
-        sqlBuilder.append(" LIMIT ?, ?");
-        Collections.addAll(params, offset, pageSize);
-
-        return dbOperator.fetchAll(sqlBuilder.toString(), TaskMapper.INSTANCE, params.toArray());
+        return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, params.toArray());
     }
 
-    public Optional<Task> getById(Long taskId) {
-        String sql = "SELECT id, name, description, operator_id, arguments, variable_defs, schedule " +
-                String.format("FROM %s t WHERE t.id = ?", DB_TABLE_NAME);
+    public Optional<Task> fetchById(Long taskId) {
+        String sql = getSelectSQL(TASK_MODEL_NAME + ".id = ?");
         Task task = dbOperator.fetchOne(sql, TaskMapper.INSTANCE, taskId);
         return Optional.ofNullable(task);
     }
 
+    public List<Task> fetchScheduledTaskAtTick(Tick tick) {
+        String sql = getSelectSQL(TASK_MODEL_NAME + ".scheduled_tick = ?");
+        return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, tick.toString());
+    }
+
+    private String getSelectSQL(String whereClause) {
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_MODEL_NAME, taskCols);
+        SQLBuilder builder =  DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .from(TASK_TABLE_NAME, TASK_MODEL_NAME)
+                .autoAliasColumns();
+
+        if (StringUtils.isNotBlank(whereClause)) {
+            builder.where(whereClause);
+        }
+
+        return builder.getSQL();
+    }
+
     public void create(Task task) {
-        String sql = String.format("INSERT INTO %s (id, name, description, operator_id, arguments, variable_defs, schedule) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)", DB_TABLE_NAME);
+        List<String> tableColumns = new ImmutableList.Builder<String>()
+                .addAll(taskCols)
+                .add(Constants.CREATE_COL)
+                .add(Constants.UPDATE_COL)
+                .build();
+
+        String sql = DefaultSQLBuilder.newBuilder()
+                .insert(tableColumns.toArray(new String[0]))
+                .into(TASK_TABLE_NAME)
+                .asPrepared()
+                .getSQL();
+
+        OffsetDateTime nowTime = OffsetDateTime.now();
         dbOperator.update(
                 sql,
                 task.getId(),
@@ -89,44 +132,63 @@ public class TaskDao {
                 task.getOperatorId(),
                 JSONUtils.toJsonString(task.getArguments()),
                 JSONUtils.toJsonString(task.getVariableDefs()),
-                JSONUtils.toJsonString(task.getScheduleConf())
+                JSONUtils.toJsonString(task.getScheduleConf()),
+                nowTime,
+                nowTime
         );
     }
 
-    public void updateById(Long id, Task task) {
-        String sql = String.format("UPDATE %s SET " +
-                "name = ?, description = ?, operator_id = ?, arguments = ?, variable_defs = ?, schedule = ? " +
-                "WHERE id = ?", DB_TABLE_NAME);
+    public void updateById(Task task) {
+
+        List<String> tableColumns = new ImmutableList.Builder<String>()
+                .addAll(taskCols)
+                .add(Constants.UPDATE_COL)
+                .build();
+
+        String sql = DefaultSQLBuilder .newBuilder()
+                .update(TASK_TABLE_NAME)
+                .set(tableColumns.toArray(new String[0]))
+                .where("id = ?")
+                .asPrepared()
+                .getSQL();
+
+        OffsetDateTime nowTime = OffsetDateTime.now();
         dbOperator.update(
                 sql,
+                task.getId(),
                 task.getName(),
                 task.getDescription(),
                 task.getOperatorId(),
                 JSONUtils.toJsonString(task.getArguments()),
                 JSONUtils.toJsonString(task.getVariableDefs()),
                 JSONUtils.toJsonString(task.getScheduleConf()),
+                nowTime,
                 task.getId()
         );
     }
 
     public void deleteById(Long taskId) {
-        String sql = String.format("DELETE FROM %s WHERE id = ?", DB_TABLE_NAME);
+        String sql = DefaultSQLBuilder .newBuilder()
+                .delete()
+                .from(TASK_TABLE_NAME)
+                .where("id = ?")
+                .getSQL();
         dbOperator.update(sql, taskId);
     }
 
-    private static class TaskMapper implements ResultSetMapper<Task> {
-        public static final TaskMapper INSTANCE = new TaskMapper();
+    public static class TaskMapper implements ResultSetMapper<Task> {
+        public static final TaskDao.TaskMapper INSTANCE = new TaskMapper();
 
         @Override
         public Task map(ResultSet rs) throws SQLException {
             return Task.newBuilder()
-                    .withId(rs.getLong("id"))
-                    .withName(rs.getString("name"))
-                    .withDescription(rs.getString("description"))
-                    .withOperatorId(rs.getLong("operator_id"))
-                    .withArguments(JSONUtils.jsonToObject(rs.getString("arguments"), new TypeReference<List<Param>>() {}))
-                    .withVariableDefs(JSONUtils.jsonToObject(rs.getString("variable_defs"), new TypeReference<List<Variable>>() {}))
-                    .withScheduleConf( JSONUtils.jsonToObject(rs.getString("schedule"), new TypeReference<ScheduleConf>() {}))
+                    .withId(rs.getLong(TASK_MODEL_NAME + "_id"))
+                    .withName(rs.getString(TASK_MODEL_NAME + "_name"))
+                    .withDescription(rs.getString(TASK_MODEL_NAME + "_description"))
+                    .withOperatorId(rs.getLong(TASK_MODEL_NAME + "_operator_id"))
+                    .withArguments(JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_arguments"), new TypeReference<List<Param>>() {}))
+                    .withVariableDefs(JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_variable_defs"), new TypeReference<List<Variable>>() {}))
+                    .withScheduleConf( JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_schedule"), new TypeReference<ScheduleConf>() {}))
                     .build();
         }
     }

@@ -3,6 +3,7 @@ dependencies {
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
+    implementation "commons-dbutils:commons-dbutils"
 
     implementation 'com.google.guava:guava'
     implementation "com.zaxxer:HikariCP"

@@ -46,7 +46,7 @@ class HttpRouter {
             }
         } catch (IOException | ClassNotFoundException e) {
             logger.error("Failed to add router in package {}", packageName, e);
-            ExceptionUtils.wrapIfChecked(e);
+            throw ExceptionUtils.wrapIfChecked(e);
         }
     }
 
