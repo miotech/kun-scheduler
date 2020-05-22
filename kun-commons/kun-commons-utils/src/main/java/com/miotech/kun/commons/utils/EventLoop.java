@@ -2,7 +2,7 @@ package com.miotech.kun.commons.utils;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import javafx.util.Pair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -103,7 +103,7 @@ public abstract class EventLoop<T, E> {
 
     protected void register(T key, EventListener<E> listener) {
         registry.putIfAbsent(key, new ConcurrentLinkedDeque<>());
-        registry.get(key).add(new Pair<>(currentWorker(), listener));
+        registry.get(key).add(Pair.of(currentWorker(), listener));
     }
 
     protected void unregister(T key) {
@@ -154,7 +154,7 @@ public abstract class EventLoop<T, E> {
         }
 
         public void post(E event, EventListener<E> listener) {
-            queue.offer(new Pair<>(event, listener));
+            queue.offer(Pair.of(event, listener));
         }
 
         public Thread getThread() {

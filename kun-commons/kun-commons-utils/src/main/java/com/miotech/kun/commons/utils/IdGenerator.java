@@ -48,7 +48,7 @@ public class IdGenerator {
         return ((timestamp - EPOCH) << TIMESTAMP_LEFT_SHIFT) | (serial << SERIAL_ID_LEFT_SHIT);
     }
 
-    public synchronized long combine(long baseId, int reserved) {
+    public long combine(long baseId, int reserved) {
         Preconditions.checkArgument(reserved > 0, "Reserved ID should be positive: %d", reserved);
         Preconditions.checkArgument(reserved <= MAX_RESERVED, "Reserved ID should not exceed max value %d, but found: %d", MAX_RESERVED, reserved);
         Preconditions.checkArgument((baseId & RESERVED_MASK) == 0, "Base ID should not contain any preset value, but found: %d", baseId & RESERVED_MASK);
