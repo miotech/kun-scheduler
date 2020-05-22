@@ -55,7 +55,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
         operatorDao.create(exampleOperator);
 
         // Validate
-        Optional<Operator> fetchResult = operatorDao.getById(id);
+        Optional<Operator> fetchResult = operatorDao.fetchById(id);
         assertThat(fetchResult.isPresent(), is(true));
         Operator result = fetchResult.get();
         assertThat(result, samePropertyValuesAs(exampleOperator));
@@ -194,7 +194,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
     public void delete_WithProperId_shouldSuccess() {
         // Prepare
         insertSampleData();
-        Optional<Operator> firstOperator = operatorDao.getById(1L);
+        Optional<Operator> firstOperator = operatorDao.fetchById(1L);
         assertTrue(firstOperator.isPresent());
 
         // Process
@@ -202,7 +202,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
 
         // Validate
         assertTrue(rowAffected);
-        Optional<Operator> firstOperatorRemoved = operatorDao.getById(1L);
+        Optional<Operator> firstOperatorRemoved = operatorDao.fetchById(1L);
         assertThat(firstOperatorRemoved.isPresent(), is(false));
     }
 
@@ -210,7 +210,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
     public void delete_WithNonExistId_shouldAffectNoRow() {
         // Prepare
         insertSampleData();
-        Optional<Operator> firstOperator = operatorDao.getById(1L);
+        Optional<Operator> firstOperator = operatorDao.fetchById(1L);
         assertTrue(firstOperator.isPresent());
 
         // Process
@@ -223,7 +223,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
         // Prepare
         insertSampleData();
 
-        Optional<Operator> firstOperator = operatorDao.getById(1L);
+        Optional<Operator> firstOperator = operatorDao.fetchById(1L);
 
         // Process
         Operator updatedOperator = firstOperator.get().cloneBuilder()
@@ -235,7 +235,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
         // Validate
         assertTrue(rowAffected);
 
-        Optional<Operator> updatedFirstOperatorOptional = operatorDao.getById(1L);
+        Optional<Operator> updatedFirstOperatorOptional = operatorDao.fetchById(1L);
         assertTrue(updatedFirstOperatorOptional.isPresent());
 
         Operator updatedFirstOperator = updatedFirstOperatorOptional.get();

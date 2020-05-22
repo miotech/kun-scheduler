@@ -39,10 +39,10 @@ public class TaskDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void search_withProperFilter_shouldSuccess() {
+    public void fetch_withProperFilter_shouldSuccess() {
         insertSampleData();
 
-        List<Task> results = taskDao.getList(TaskSearchFilter
+        List<Task> results = taskDao.fetchWithFilters(TaskSearchFilter
                 .newBuilder()
                 .withPageNum(1)
                 .withPageSize(10)
@@ -53,7 +53,7 @@ public class TaskDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void getById_withProperId_shouldSuccess() {
+    public void fetchById_withProperId_shouldSuccess() {
         // Prepare
         insertSampleData();
 
@@ -139,7 +139,7 @@ public class TaskDaoTest extends DatabaseTestBase {
 
         // Process
         Task taskToBeUpdated = task.cloneBuilder().withName("changedTaskName").build();
-        taskDao.updateById(taskToBeUpdated);
+        taskDao.update(taskToBeUpdated);
 
         // Validate
         Task updatedTask = taskDao.fetchById(1L).get();

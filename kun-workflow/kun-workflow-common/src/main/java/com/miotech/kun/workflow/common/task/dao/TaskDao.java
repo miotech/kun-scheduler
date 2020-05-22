@@ -48,7 +48,7 @@ public class TaskDao {
         return taskCols;
     }
 
-    public List<Task> getList(TaskSearchFilter filters) {
+    public List<Task> fetchWithFilters(TaskSearchFilter filters) {
         Preconditions.checkArgument(Objects.nonNull(filters.getPageNum()) && filters.getPageNum() > 0, "Invalid page num: %d", filters.getPageNum());
         Preconditions.checkArgument(Objects.nonNull(filters.getPageSize()) && filters.getPageSize() > 0, "Invalid page size: %d", filters.getPageSize());
         boolean filterContainsKeyword = StringUtils.isNotEmpty(filters.getName());
@@ -82,6 +82,12 @@ public class TaskDao {
         Collections.addAll(params, pageSize, offset);
 
         return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, params.toArray());
+    }
+
+    public List<Task> fetchWithOperatorId(Long operatorId) {
+        Preconditions.checkNotNull(operatorId, "Invalid argument `operatorId`: null");
+        String sql = getSelectSQL(TASK_MODEL_NAME + ".operator_id = ?");
+        return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, operatorId);
     }
 
     public Optional<Task> fetchById(Long taskId) {
@@ -138,8 +144,7 @@ public class TaskDao {
         );
     }
 
-    public void updateById(Task task) {
-
+    public boolean update(Task task) {
         List<String> tableColumns = new ImmutableList.Builder<String>()
                 .addAll(taskCols)
                 .add(Constants.UPDATE_COL)
@@ -153,7 +158,7 @@ public class TaskDao {
                 .getSQL();
 
         OffsetDateTime nowTime = OffsetDateTime.now();
-        dbOperator.update(
+        int affectedRows = dbOperator.update(
                 sql,
                 task.getId(),
                 task.getName(),
@@ -165,15 +170,17 @@ public class TaskDao {
                 nowTime,
                 task.getId()
         );
+        return affectedRows > 0;
     }
 
-    public void deleteById(Long taskId) {
+    public boolean deleteById(Long taskId) {
         String sql = DefaultSQLBuilder .newBuilder()
                 .delete()
                 .from(TASK_TABLE_NAME)
                 .where("id = ?")
                 .getSQL();
-        dbOperator.update(sql, taskId);
+        int affectedRows = dbOperator.update(sql, taskId);
+        return affectedRows > 0;
     }
 
     public static class TaskMapper implements ResultSetMapper<Task> {
