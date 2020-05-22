@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.load;
 
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
+import com.miotech.kun.metadata.load.tool.DatasetGidGenerator;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldPO;
@@ -22,6 +23,7 @@ public class PostgresLoader implements Loader {
     private String url;
     private String username;
     private String password;
+    private DatasetGidGenerator gidGenerator;
 
     private PostgresLoader() {
     }
@@ -35,7 +37,7 @@ public class PostgresLoader implements Loader {
     @Override
     public void load(Dataset dataset) {
         //TODO get gid
-        long gid = 0L;
+        long gid = gidGenerator.generate(dataset.getDataStore());
 
         Connection connection = null;
         PreparedStatement statement = null;

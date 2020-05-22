@@ -15,6 +15,8 @@ import java.util.List;
 public class TaskDao {
     private final DatabaseOperator dbOperator;
 
+    private final String _TASK_TABLE_NAME = "kun_wf_tasks";
+
     @Inject
     public TaskDao(DatabaseOperator dbOperator) {
         this.dbOperator = dbOperator;
@@ -26,10 +28,10 @@ public class TaskDao {
     }
 
 //    public Task insertOneTask(Task task) {
-//        String updateTaskSQL = "";
+//        String updateTaskSQL = "update kun_wf_tasks where id = ? ";
 //        String updateTickTaskSQL = "";
 //        dbOperator.transaction(() -> {
-//            dbOperator.update()
+//            dbOperator.update(updateTaskSQL);
 //        });
 //    ˆ}
 

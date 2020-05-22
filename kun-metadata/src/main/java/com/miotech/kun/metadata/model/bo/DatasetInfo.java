@@ -1,6 +1,6 @@
 package com.miotech.kun.metadata.model.bo;
 
-import com.miotech.kun.metadata.model.DataStore;
+import com.miotech.kun.workflow.core.model.entity.DataStore;
 
 public class DatasetInfo {
 

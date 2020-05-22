@@ -1,11 +1,10 @@
 package com.miotech.kun.metadata.extract.impl;
 
+import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
-import com.miotech.kun.metadata.extract.factory.HiveDatasetExtractorFactory;
-import com.miotech.kun.metadata.extract.iterator.ExtractIterator;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.HiveDatabase;
+import com.miotech.kun.workflow.core.model.entity.HiveCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,38 +19,36 @@ import java.util.List;
 public class HiveExtractor extends JDBCExtractor {
     private static Logger logger = LoggerFactory.getLogger(HiveExtractor.class);
 
-    private HiveDatabase hiveDatabase;
+    private HiveCluster cluster;
 
     private HiveExtractor() {};
 
-    public HiveExtractor(HiveDatabase hiveDatabase) {
-        init(hiveDatabase);
+    public HiveExtractor(HiveCluster cluster) {
+        init(cluster);
     }
 
-    private void init(HiveDatabase hiveDatabase) {
+    private void init(HiveCluster cluster) {
         //TODO verify the integrity of the data
-        this.hiveDatabase = hiveDatabase;
+        this.cluster = cluster;
     }
 
     @Override
     public Iterator<Dataset> extract() {
-        List<String> tables = new ArrayList<>();
+        List<String> databases = new ArrayList<>();
 
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.MYSQL, hiveDatabase.getMetaStoreUrl(),
-                    hiveDatabase.getMetaStoreUsername(), hiveDatabase.getMetaStorePassword());
-            String sql = "SELECT t.TBL_NAME FROM TBLS t JOIN DBS d ON t.DB_ID = d.DB_ID where d.NAME = ?";
-            statement = connection.prepareStatement(sql);
-
-            statement.setString(1, hiveDatabase.getName());
+            connection = JDBCClient.getConnection(DatabaseType.MYSQL, cluster.getMetaStoreUrl(),
+                    cluster.getMetaStoreUsername(), cluster.getMetaStorePassword());
+            String scanDatabase = "SELECT d.NAME FROM DBS d";
+            statement = connection.prepareStatement(scanDatabase);
             resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
-                String tableName = resultSet.getString(0);
-                tables.add(tableName);
+                String databaseName = resultSet.getString(1);
+                databases.add(databaseName);
             }
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.MYSQL.getName(), classNotFoundException);
@@ -62,7 +59,7 @@ public class HiveExtractor extends JDBCExtractor {
             JDBCClient.close(connection, statement, resultSet);
         }
 
-        return new ExtractIterator(tables, new HiveDatasetExtractorFactory(), hiveDatabase);
+        return Iterators.concat(databases.stream().map((databasesName) -> new HiveDatabaseExtractor(cluster, databasesName).extract()).iterator());
     }
 
 

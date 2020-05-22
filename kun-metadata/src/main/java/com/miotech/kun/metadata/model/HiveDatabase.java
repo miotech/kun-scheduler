@@ -38,4 +38,10 @@ public class HiveDatabase extends Database {
         this.metaStorePassword = metaStorePassword;
     }
 
+    public HiveDatabase(String metaStoreUrl, String metaStoreUsername, String metaStorePassword) {
+        this.metaStoreUrl = metaStoreUrl;
+        this.metaStoreUsername = metaStoreUsername;
+        this.metaStorePassword = metaStorePassword;
+    }
+
 }

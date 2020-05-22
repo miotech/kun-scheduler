@@ -25,6 +25,7 @@ dependencies {
     implementation 'org.postgresql:postgresql'
     implementation 'org.apache.hive:hive-jdbc'
     implementation 'mysql:mysql-connector-java'
+    implementation "org.apache.curator:curator-recipes"
     testImplementation 'org.testng:testng'
 }
 

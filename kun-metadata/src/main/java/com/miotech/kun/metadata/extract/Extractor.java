@@ -9,6 +9,7 @@ import java.util.Iterator;
  * Extractor Definition
  */
 public interface Extractor {
+
     /**
      * Get All the table metadata
      * @return

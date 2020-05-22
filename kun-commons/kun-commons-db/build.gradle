@@ -1,0 +1,9 @@
+dependencies {
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation "commons-dbutils:commons-dbutils"
+    implementation "com.zaxxer:HikariCP"
+    implementation "org.flywaydb:flyway-core"
+
+    testRuntimeOnly "com.h2database:h2"
+    testImplementation "org.hamcrest:hamcrest"
+}

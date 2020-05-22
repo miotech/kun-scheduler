@@ -1,5 +1,5 @@
 dependencies {
     implementation project(':kun-workflow:kun-workflow-core')
-    implementation project(':kun-workflow:kun-workflow-db')
+    implementation project(':kun-commons:kun-commons-db')
     implementation 'com.google.guava:guava'
 }
