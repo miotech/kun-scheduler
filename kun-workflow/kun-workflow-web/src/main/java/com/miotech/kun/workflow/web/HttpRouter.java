@@ -5,17 +5,18 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
-import com.miotech.kun.workflow.web.http.HttpAction;
-import com.miotech.kun.workflow.web.http.HttpMethod;
-import com.miotech.kun.workflow.web.http.HttpRoute;
+import com.miotech.kun.workflow.web.http.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
 
 
 class HttpRouter {
@@ -63,7 +64,7 @@ class HttpRouter {
 
                 Object instance = injector.getInstance(clz);
                 HttpAction action = new HttpAction(instance, invokeMethod);
-                HttpRoute route = new HttpRoute(uri, HttpMethod.resolve(httpMethod.toUpperCase()));
+                HttpRoute route = new HttpRoute(uri, HttpMethod.resolve(httpMethod.toUpperCase()), true);
                 logger.info("Found Request mapping for {} -> {}.{}",
                         route.toString(),
                         clz.getCanonicalName(),
@@ -77,7 +78,41 @@ class HttpRouter {
         }
     }
 
-    public HttpAction getRoute(HttpRoute route) {
+    public HttpAction getAction(HttpRoute route) {
         return routeMappings.get(route);
+    }
+
+    public HttpRequestMappingHandler getRequestMappingHandler(HttpServletRequest request) {
+        HttpRoute route = new HttpRoute(request.getRequestURI(), HttpMethod.resolve(request.getMethod()));
+        // using exactly match first, then do pattern match
+        HttpAction action = getAction(route);
+        if (action != null) {
+            return new HttpRequestMappingHandler(route, action,
+                    new HttpRequest(request, null));
+        } else {
+            return extractByPattern(request, route);
+        }
+    }
+
+    private HttpRequestMappingHandler extractByPattern(HttpServletRequest request, HttpRoute requestRoute) {
+        String requestUrl = requestRoute.getUrl();
+
+        for (HttpRoute route: routeMappings.keySet()) {
+
+            Matcher requestMatcher = route.getUrlPattern().matcher(requestUrl);
+            if (requestMatcher.find()
+                    && route.getMethod().equals(requestRoute.getMethod())) {
+
+                Map<String, String> pathVariables = new HashMap<>();
+                for (int i = 1; i <= requestMatcher.groupCount(); i++) {
+                    String pathVariableName = route.getPathVariablePlaceHolder().get(i-1);
+                    pathVariables.put(pathVariableName, requestMatcher.group(i));
+                }
+
+                return new HttpRequestMappingHandler(route, getAction(route),
+                        new HttpRequest(request, pathVariables));
+            }
+        }
+        return null;
     }
 }

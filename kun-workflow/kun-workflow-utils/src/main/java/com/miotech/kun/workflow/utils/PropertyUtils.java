@@ -19,8 +19,12 @@ public class PropertyUtils {
                 .getResourceAsStream(resourceName);
         Map<String, Object> yamlProps = yaml.load(inputStream);
         Properties properties = new Properties();
-
-        properties.putAll(flatten(yamlProps));
+        flatten(yamlProps)
+                .entrySet()
+                .forEach(x -> {
+            Object propValue = x.getValue() != null ? x.getValue(): "";
+            properties.put(x.getKey(), propValue);
+        });
         return properties;
     }
 
@@ -47,6 +51,7 @@ public class PropertyUtils {
     private static Map<String, Object> flatten(Map<String, Object> source) {
         Map<String, Object> result = new LinkedHashMap<>();
 
+        if (source == null) return result;
         for (String key : source.keySet()) {
             Object value = source.get(key);
 

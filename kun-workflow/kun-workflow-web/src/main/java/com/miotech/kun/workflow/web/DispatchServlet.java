@@ -4,11 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.miotech.kun.workflow.utils.ExceptionUtils;
+import com.miotech.kun.workflow.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.web.annotation.RequestBody;
-import com.miotech.kun.workflow.web.http.InternalErrorMessage;
-import com.miotech.kun.workflow.web.http.HttpAction;
-import com.miotech.kun.workflow.web.http.HttpMethod;
-import com.miotech.kun.workflow.web.http.HttpRoute;
+import com.miotech.kun.workflow.web.http.*;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,35 +64,48 @@ public class DispatchServlet extends HttpServlet {
                           HttpMethod method)
             throws ServletException, IOException {
         logger.debug("Receive request {} {}", method.toString(), req.getRequestURL());
-        HttpRoute route = new HttpRoute(req.getRequestURI(), method);
-        HttpAction action = router.getRoute(route);
-
-        if (action != null) {
-
-            // Invoke method with args
-            try {
+        try {
+            HttpRequestMappingHandler handler = router.getRequestMappingHandler(req);
+            if (handler != null) {
+                // Invoke method with args
                 List<Object> args = new ArrayList<>();
+                HttpAction action = handler.getAction();
                 for (Parameter parameter: action.getMethod().getParameters())
-                    args.add(resolveParameter(parameter, req, resp));
+                    args.add(resolveParameter(parameter, handler.getHttpRequest(), resp));
 
                 Object responseObj = action.call(args.toArray());
                 doResponse(responseObj, req, resp);
-            } catch (Exception e) {
-                logger.error("Server error in process: {} {} ",
-                        route.getMethod(),
-                        req.getRequestURI(), e);
+
+            } else {
+                String errorMsg = "Cannot resolve url mapping for: " + req.getRequestURI();
+                logger.info(errorMsg);
                 InternalErrorMessage errorMessage = new InternalErrorMessage(
-                        e.getMessage(),
+                        errorMsg,
                         req.getRequestURI(),
-                        LocalDateTime.now()
+                        LocalDateTime.now(),
+                        "Resource Not Found",
+                        400
                 );
-                resp.setStatus(errorMessage.getStatus());
-                doResponse(errorMessage, req, resp);
+                doError(errorMessage, req, resp);
             }
-        } else {
-            // TODO: respond with resource not found
-            logger.debug("Cannot resolve url mapping for {}", req.getRequestURI());
+        } catch (Exception e) {
+            logger.error("Server error in process: {} {} ",
+                    req.getMethod(),
+                    req.getRequestURI(), e);
+            InternalErrorMessage errorMessage = new InternalErrorMessage(
+                    e.getMessage(),
+                    req.getRequestURI(),
+                    LocalDateTime.now()
+            );
+            doError(errorMessage, req, resp);
         }
+    }
+
+    private void doError(InternalErrorMessage errorMessage,
+                         final HttpServletRequest req,
+                         final HttpServletResponse resp) throws IOException {
+        resp.setStatus(errorMessage.getStatus());
+        doResponse(errorMessage, req, resp);
     }
 
     private void doResponse(Object responseObj,
@@ -115,9 +127,10 @@ public class DispatchServlet extends HttpServlet {
     }
 
     private Object resolveParameter( Parameter parameter,
-                                     final HttpServletRequest req,
+                                     final HttpRequest req,
                                      final HttpServletResponse resp) throws IOException {
         Class<?> paramClz = parameter.getType();
+        HttpServletRequest httpServletRequest = req.getHttpServletRequest();
         if (paramClz == HttpServletRequest.class) {
             return req;
         }
@@ -128,7 +141,22 @@ public class DispatchServlet extends HttpServlet {
 
         for (Annotation annotation: parameter.getAnnotations()) {
             if (annotation.annotationType() == RequestBody.class) {
-                return objectMapper.readValue(req.getInputStream(), paramClz);
+                return objectMapper.readValue(httpServletRequest.getInputStream(), paramClz);
+            }
+            if (annotation.annotationType() == RouteVariable.class) {
+                String pathVariable = req.getPathVariables().get(parameter.getName());
+                switch (paramClz.getName()) {
+                    case "java.lang.String":
+                        return pathVariable;
+                    case "int":
+                    case "java.lang.Integer":
+                        return Integer.parseInt(pathVariable);
+                    case "long":
+                    case "java.lang.Long":
+                        return Long.parseLong(pathVariable);
+                    default:
+                        throw new RuntimeException("RouteVariable can not be type: " + paramClz.getName());
+                }
             }
         }
         return null;
