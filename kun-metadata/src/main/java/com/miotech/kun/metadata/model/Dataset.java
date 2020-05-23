@@ -6,13 +6,13 @@ import java.util.List;
 
 public class Dataset {
 
-    private String name;
+    private final String name;
 
-    private DataStore dataStore;
+    private final DataStore dataStore;
 
-    private List<DatasetField> fields;
+    private final List<DatasetField> fields;
 
-    private DatasetStat datasetStat;
+    private final DatasetStat datasetStat;
 
     public String getName() {
         return name;

@@ -6,14 +6,12 @@ import com.miotech.kun.metadata.extract.factory.ExtractorTemplate;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
+import com.miotech.kun.workflow.core.model.entity.DataStore;
 import com.miotech.kun.workflow.core.model.entity.HiveCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -22,10 +20,12 @@ public class HiveTableExtractor extends ExtractorTemplate {
     private static Logger logger = LoggerFactory.getLogger(HiveTableExtractor.class);
 
     private HiveCluster cluster;
+    private String database;
     private String table;
 
-    public HiveTableExtractor(HiveCluster cluster, String table) {
+    public HiveTableExtractor(HiveCluster cluster, String database, String table) {
         this.cluster = cluster;
+        this.database = database;
         this.table = table;
     }
 
@@ -73,7 +73,7 @@ public class HiveTableExtractor extends ExtractorTemplate {
                 String type = resultSet.getString(8);
                 String description = resultSet.getString(7);
 
-                DatasetField field = new DatasetField(name, type, description);
+                DatasetField field = new DatasetField(name, type, description, null);
                 fields.add(field);
             }
         } catch (ClassNotFoundException classNotFoundException) {
@@ -96,12 +96,15 @@ public class HiveTableExtractor extends ExtractorTemplate {
         ResultSet resultSet = null;
 
         try {
-            connection = JDBCClient.getConnection(DatabaseType.HIVE, cluster.getDataStoreUrl(), cluster.getDataStoreUsername(), cluster.getDataStorePassword());
-            String sql = "SELECT COUNT(*) FROM (SELECT ? FROM ? GROUP BY ?)";
+            connection = JDBCClient.getConnection(DatabaseType.HIVE, cluster.getDataStoreUrl() + "/" + database, cluster.getDataStoreUsername(), cluster.getDataStorePassword());
+            String useDatabase = "use " + database;
+            PreparedStatement useDatabaseStatement = connection.prepareStatement(useDatabase);
+            useDatabaseStatement.execute();
+
+            String sql = "SELECT COUNT(*) FROM (SELECT ? FROM " + table + " GROUP BY ?) t1";
             statement = connection.prepareStatement(sql);
             statement.setString(1, datasetField.getName());
-            statement.setString(2, table);
-            statement.setString(3, datasetField.getName());
+            statement.setString(2, datasetField.getName());
             resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
@@ -109,10 +112,9 @@ public class HiveTableExtractor extends ExtractorTemplate {
                 result.setDistinctCount(distinctCount);
             }
 
-            sql = "SELECT COUNT(*) FROM ? WHERE ? IS NOT NULL)";
+            sql = "SELECT COUNT(*) FROM " + table + " WHERE ? IS NOT NULL)";
             statement = connection.prepareStatement(sql);
-            statement.setString(1, table);
-            statement.setString(2, datasetField.getName());
+            statement.setString(1, datasetField.getName());
             resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
@@ -137,15 +139,13 @@ public class HiveTableExtractor extends ExtractorTemplate {
         DatasetStat datasetStat = new DatasetStat();
 
         Connection connection = null;
-        PreparedStatement statement = null;
+        Statement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.HIVE, cluster.getDataStoreUrl(), cluster.getDataStoreUsername(), cluster.getDataStorePassword());
-            String sql = "SELECT count(*) FROM ?";
-            statement = connection.prepareStatement(sql);
-
-            statement.setString(1, table);
-            resultSet = statement.executeQuery();
+            connection = JDBCClient.getConnection(DatabaseType.HIVE, cluster.getDataStoreUrl() + "/" + database, cluster.getDataStoreUsername(), cluster.getDataStorePassword());
+            String sql = "SELECT COUNT(*) FROM " + table;
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(sql);
 
             while (resultSet.next()) {
                 Long rowCount = resultSet.getLong(1);
@@ -162,6 +162,11 @@ public class HiveTableExtractor extends ExtractorTemplate {
         }
 
         return datasetStat;
+    }
+
+    @Override
+    protected DataStore getDataStore() {
+        return null;
     }
 
 }

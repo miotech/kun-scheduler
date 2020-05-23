@@ -1,20 +1,22 @@
 package com.miotech.kun.metadata.model;
 
-public class DatasetFieldPO extends DatasetField {
+public class DatasetFieldPO {
 
     private long id;
+
+    private String type;
 
     public long getId() {
         return id;
     }
 
-    public void setId(long id) {
-        this.id = id;
+    public String getType() {
+        return type;
     }
 
     public DatasetFieldPO(long id, String type) {
-        super(type);
         this.id = id;
+        this.type = type;
     }
 
 

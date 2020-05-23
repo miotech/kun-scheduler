@@ -4,6 +4,7 @@ import com.miotech.kun.metadata.extract.factory.ExtractorTemplate;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
+import com.miotech.kun.workflow.core.model.entity.DataStore;
 import com.miotech.kun.workflow.core.model.entity.PostgresCluster;
 
 import java.util.List;
@@ -30,6 +31,11 @@ public class PostgresTableExtractor extends ExtractorTemplate {
 
     @Override
     public DatasetStat getTableStats() {
+        return null;
+    }
+
+    @Override
+    protected DataStore getDataStore() {
         return null;
     }
 }

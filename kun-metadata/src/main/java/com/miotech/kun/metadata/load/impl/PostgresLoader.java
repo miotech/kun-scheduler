@@ -1,7 +1,8 @@
-package com.miotech.kun.metadata.load;
+package com.miotech.kun.metadata.load.impl;
 
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
+import com.miotech.kun.metadata.load.Loader;
 import com.miotech.kun.metadata.load.tool.DatasetGidGenerator;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.DatasetField;

@@ -1,6 +1,7 @@
-package com.miotech.kun.metadata.load;
+package com.miotech.kun.metadata.load.impl;
 
 import com.google.gson.Gson;
+import com.miotech.kun.metadata.load.Loader;
 import com.miotech.kun.metadata.model.Dataset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

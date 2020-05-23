@@ -58,7 +58,7 @@ public class HiveDatabaseExtractor implements Extractor {
             JDBCClient.close(connection, statement, resultSet);
         }
 
-        return Iterators.concat(tables.stream().map((tableName) -> new HiveTableExtractor(cluster, tableName).extract()).iterator());
+        return Iterators.concat(tables.stream().map((tableName) -> new HiveTableExtractor(cluster, databaseName, tableName).extract()).iterator());
     }
 
 }
