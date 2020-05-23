@@ -6,12 +6,9 @@ public class HiveTableStore extends DataStore {
 
     private String table;
 
-    public HiveTableStore() {
+    public HiveTableStore(String database, String table) {
         super(DataStoreType.TABLE);
-    }
-
-    public HiveTableStore(String table) {
-        this();
+        this.database = database;
         this.table = table;
     }
 }
