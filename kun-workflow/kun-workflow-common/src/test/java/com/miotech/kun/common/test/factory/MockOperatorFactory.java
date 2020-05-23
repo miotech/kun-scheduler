@@ -1,7 +1,6 @@
-package com.miotech.kun.common.operator.dao;
+package com.miotech.kun.common.test.factory;
 
 import com.miotech.kun.workflow.core.model.operator.Operator;
-import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 
 import java.util.ArrayList;
 import java.util.List;
