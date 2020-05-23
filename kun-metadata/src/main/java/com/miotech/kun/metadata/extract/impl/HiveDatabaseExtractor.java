@@ -39,7 +39,7 @@ public class HiveDatabaseExtractor implements Extractor {
         try {
             connection = JDBCClient.getConnection(DatabaseType.MYSQL, cluster.getMetaStoreUrl(),
                     cluster.getMetaStoreUsername(), cluster.getMetaStorePassword());
-            String scanDatabase = "SELECT t.TBL_NAME FROM TBLS t JOIN DBS d ON t.DB_ID = d.DB_ID where d.NAME = ?";
+            String scanDatabase = "SELECT t.TBL_NAME FROM TBLS t JOIN DBS d ON t.DB_ID = d.DB_ID where d.NAME = ? AND d.CTLG_NAME = 'hive'";
             statement = connection.prepareStatement(scanDatabase);
 
             statement.setString(1, databaseName);

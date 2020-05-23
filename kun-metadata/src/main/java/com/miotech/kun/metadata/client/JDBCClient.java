@@ -53,16 +53,14 @@ public class JDBCClient {
 
     public static void close(Connection connection, Statement statement, ResultSet resultSet) {
         try {
-            if (connection != null) {
-                connection.close();
+            if (resultSet != null) {
+                resultSet.close();
             }
-
             if (statement != null) {
                 statement.close();
             }
-
-            if (resultSet != null) {
-                resultSet.close();
+            if (connection != null) {
+                connection.close();
             }
         } catch (SQLException sqlException) {
             logger.error("JDBCClient release db resources exception", sqlException);

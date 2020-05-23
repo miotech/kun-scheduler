@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.*;
 
 public class JDBCClientTest {
-    private static Logger logger = LoggerFactory.getLogger(HiveDatabaseExtractor.class);
+    private static Logger logger = LoggerFactory.getLogger(JDBCClientTest.class);
 
     @org.testng.annotations.Test
     public void testGetConnection() {

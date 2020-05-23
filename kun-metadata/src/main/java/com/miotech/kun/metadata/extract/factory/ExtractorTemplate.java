@@ -1,6 +1,7 @@
 package com.miotech.kun.metadata.extract.factory;
 
 import com.google.common.collect.Iterators;
+import com.google.gson.Gson;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.DatasetField;
@@ -24,9 +25,28 @@ public abstract class ExtractorTemplate implements Extractor {
     @Override
     public Iterator<Dataset> extract() {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
-        datasetBuilder.withFields(getSchema())
-                .withDatasetStat(getTableStats())
-                .withDataStore(getDataStore());
-        return Iterators.forArray(datasetBuilder.build());
+
+        try {
+            List<DatasetField> schema = getSchema();
+            logger.info("extract schema: {}", new Gson().toJson(schema));
+            for (DatasetField datasetField : schema) {
+                getFieldStats(datasetField);
+            }
+
+            DatasetStat tableStats = getTableStats();
+            logger.info("extract tableStats: {}", new Gson().toJson(tableStats));
+
+            DataStore dataStore = getDataStore();
+            logger.info("extract dataStore: {}", new Gson().toJson(dataStore));
+            datasetBuilder.withFields(schema)
+                    .withDatasetStat(tableStats)
+                    .withDataStore(dataStore);
+
+            return Iterators.forArray(datasetBuilder.build());
+        } catch (Exception e) {
+            logger.error("extract error:", e);
+            throw new RuntimeException(e);
+        }
+
     }
 }

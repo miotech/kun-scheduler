@@ -71,9 +71,9 @@ public class HiveTableExtractor extends ExtractorTemplate {
             while (resultSet.next()) {
                 String name = resultSet.getString(6);
                 String type = resultSet.getString(8);
-                String description = resultSet.getString(7);
+                String description = resultSet.getString(9);
 
-                DatasetField field = new DatasetField(name, type, description, null);
+                DatasetField field = new DatasetField(name, type, description);
                 fields.add(field);
             }
         } catch (ClassNotFoundException classNotFoundException) {
@@ -92,43 +92,32 @@ public class HiveTableExtractor extends ExtractorTemplate {
     public DatasetFieldStat getFieldStats(DatasetField datasetField) {
         DatasetFieldStat result = new DatasetFieldStat();
         Connection connection;
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
-
         try {
             connection = JDBCClient.getConnection(DatabaseType.HIVE, cluster.getDataStoreUrl() + "/" + database, cluster.getDataStoreUsername(), cluster.getDataStorePassword());
-            String useDatabase = "use " + database;
-            PreparedStatement useDatabaseStatement = connection.prepareStatement(useDatabase);
-            useDatabaseStatement.execute();
+            String sql = "SELECT COUNT(*) FROM (SELECT " + datasetField.getName() + " FROM " + table + " GROUP BY " + datasetField.getName() + ") t1";
+            Statement distinctCountStatement = connection.createStatement();
+            ResultSet distinctCountResultSet = distinctCountStatement.executeQuery(sql);
 
-            String sql = "SELECT COUNT(*) FROM (SELECT ? FROM " + table + " GROUP BY ?) t1";
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, datasetField.getName());
-            statement.setString(2, datasetField.getName());
-            resultSet = statement.executeQuery();
-
-            while (resultSet.next()) {
-                Long distinctCount = resultSet.getLong(0);
+            while (distinctCountResultSet.next()) {
+                Long distinctCount = distinctCountResultSet.getLong(1);
                 result.setDistinctCount(distinctCount);
             }
 
-            sql = "SELECT COUNT(*) FROM " + table + " WHERE ? IS NOT NULL)";
-            statement = connection.prepareStatement(sql);
-            statement.setString(1, datasetField.getName());
-            resultSet = statement.executeQuery();
+            sql = "SELECT COUNT(*) FROM " + table + " WHERE " + datasetField.getName() + " IS NOT NULL";
+            Statement nonnullCountStatement = connection.createStatement();
+            ResultSet nonnullCountResultSet = nonnullCountStatement.executeQuery(sql);
 
-            while (resultSet.next()) {
-                Long nonnullCount = resultSet.getLong(1);
+            while (nonnullCountResultSet.next()) {
+                Long nonnullCount = nonnullCountResultSet.getLong(1);
                 result.setNonnullCount(nonnullCount);
             }
+            datasetField.setDatasetFieldStat(result);
 
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.MYSQL.getName(), classNotFoundException);
             throw new RuntimeException(classNotFoundException);
         } catch (SQLException sqlException) {
             throw new RuntimeException(sqlException);
-        } finally {
-            JDBCClient.close(statement, resultSet);
         }
 
         return result;

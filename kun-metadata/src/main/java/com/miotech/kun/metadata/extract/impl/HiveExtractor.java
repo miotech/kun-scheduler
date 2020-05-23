@@ -42,7 +42,7 @@ public class HiveExtractor extends JDBCExtractor {
         try {
             connection = JDBCClient.getConnection(DatabaseType.MYSQL, cluster.getMetaStoreUrl(),
                     cluster.getMetaStoreUsername(), cluster.getMetaStorePassword());
-            String scanDatabase = "SELECT d.NAME FROM DBS d";
+            String scanDatabase = "SELECT d.NAME FROM DBS d WHERE CTLG_NAME = 'hive'";
             statement = connection.prepareStatement(scanDatabase);
             resultSet = statement.executeQuery();
 
