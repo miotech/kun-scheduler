@@ -1,8 +1,12 @@
 dependencies {
+    implementation project(':kun-commons:kun-commons-utils')
+
     implementation 'com.google.guava:guava'
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "org.yaml:snakeyaml"
 
     implementation project(":kun-commons:kun-commons-utils")
+    implementation "com.fasterxml.jackson.core:jackson-annotations"
+    implementation "org.yaml:snakeyaml"
 }

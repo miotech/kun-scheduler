@@ -3,9 +3,9 @@ package com.miotech.kun.workflow.web.controller;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.common.service.TaskService;
+import com.miotech.kun.workflow.core.model.bo.TaskInfo;
 import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
-import com.miotech.kun.workflow.core.model.bo.TaskInfo;
 
 import javax.servlet.http.HttpServletRequest;
 

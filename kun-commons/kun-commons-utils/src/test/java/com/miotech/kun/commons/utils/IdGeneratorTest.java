@@ -51,6 +51,7 @@ public class IdGeneratorTest {
         IdGenerator generator = IdGenerator.getInstance();
         long baseId = generator.nextId();
         int reservedId = 0x0101;
+
         long combinedId = IdGenerator.combine(baseId, reservedId);
 
         IdGenerator.combine(combinedId, reservedId);
