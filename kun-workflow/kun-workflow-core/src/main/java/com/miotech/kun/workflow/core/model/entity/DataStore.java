@@ -13,8 +13,8 @@ public class DataStore {
         return cluster;
     }
 
-    public DataStore(DataStoreType type) {
+    public DataStore(DataStoreType type, Cluster cluster) {
         this.type = type;
+        this.cluster = cluster;
     }
-
 }

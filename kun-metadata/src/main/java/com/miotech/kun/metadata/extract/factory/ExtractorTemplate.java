@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.core.model.entity.DataStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,8 +30,9 @@ public abstract class ExtractorTemplate implements Extractor {
         try {
             List<DatasetField> schema = getSchema();
             logger.info("extract schema: {}", new Gson().toJson(schema));
+            List<DatasetFieldStat> fieldStats = new ArrayList<>();
             for (DatasetField datasetField : schema) {
-                getFieldStats(datasetField);
+                fieldStats.add(getFieldStats(datasetField));
             }
 
             DatasetStat tableStats = getTableStats();
@@ -39,6 +41,7 @@ public abstract class ExtractorTemplate implements Extractor {
             DataStore dataStore = getDataStore();
             logger.info("extract dataStore: {}", new Gson().toJson(dataStore));
             datasetBuilder.withFields(schema)
+                    .withFieldStats(fieldStats)
                     .withDatasetStat(tableStats)
                     .withDataStore(dataStore);
 

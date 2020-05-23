@@ -2,12 +2,12 @@ package com.miotech.kun.workflow.core.model.entity;
 
 public class HiveTableStore extends DataStore {
 
-    private String database;
+    private final String database;
 
-    private String table;
+    private final String table;
 
-    public HiveTableStore(String database, String table) {
-        super(DataStoreType.TABLE);
+    public HiveTableStore(String database, String table, HiveCluster cluster) {
+        super(DataStoreType.TABLE, cluster);
         this.database = database;
         this.table = table;
     }

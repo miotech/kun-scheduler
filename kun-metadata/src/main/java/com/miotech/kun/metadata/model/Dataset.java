@@ -12,6 +12,8 @@ public class Dataset {
 
     private final List<DatasetField> fields;
 
+    private final List<DatasetFieldStat> fieldStats;
+
     private final DatasetStat datasetStat;
 
     public String getName() {
@@ -26,14 +28,19 @@ public class Dataset {
         return fields;
     }
 
+    public List<DatasetFieldStat> getFieldStats() {
+        return fieldStats;
+    }
+
     public DatasetStat getDatasetStat() {
         return datasetStat;
     }
 
-    public Dataset(String name, DataStore dataStore, List<DatasetField> fields, DatasetStat datasetStat) {
+    public Dataset(String name, DataStore dataStore, List<DatasetField> fields, List<DatasetFieldStat> fieldStats, DatasetStat datasetStat) {
         this.name = name;
         this.dataStore = dataStore;
         this.fields = fields;
+        this.fieldStats = fieldStats;
         this.datasetStat = datasetStat;
     }
 
@@ -45,6 +52,7 @@ public class Dataset {
         private String name;
         private DataStore dataStore;
         private List<DatasetField> fields;
+        private List<DatasetFieldStat> fieldStats;
         private DatasetStat datasetStat;
 
         private Builder() {
@@ -69,13 +77,18 @@ public class Dataset {
             return this;
         }
 
+        public Builder withFieldStats(List<DatasetFieldStat> fieldStats) {
+            this.fieldStats = fieldStats;
+            return this;
+        }
+
         public Builder withDatasetStat(DatasetStat datasetStat) {
             this.datasetStat = datasetStat;
             return this;
         }
 
         public Dataset build() {
-            return new Dataset(name, dataStore, fields, datasetStat);
+            return new Dataset(name, dataStore, fields, fieldStats, datasetStat);
         }
     }
 }

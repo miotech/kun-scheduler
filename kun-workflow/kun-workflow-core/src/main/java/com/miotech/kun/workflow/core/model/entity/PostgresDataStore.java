@@ -2,11 +2,13 @@ package com.miotech.kun.workflow.core.model.entity;
 
 public class PostgresDataStore extends DataStore {
 
-    private String database;
+    private final String database;
 
-    private String tableName;
+    private final String tableName;
 
-    public PostgresDataStore(DataStoreType type) {
-        super(type);
+    public PostgresDataStore(DataStoreType type, PostgresCluster cluster, String database, String tableName) {
+        super(type, cluster);
+        this.database = database;
+        this.tableName = tableName;
     }
 }

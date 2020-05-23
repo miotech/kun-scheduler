@@ -8,6 +8,7 @@ import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
 import com.miotech.kun.workflow.core.model.entity.DataStore;
 import com.miotech.kun.workflow.core.model.entity.HiveCluster;
+import com.miotech.kun.workflow.core.model.entity.HiveTableStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,17 +91,17 @@ public class HiveTableExtractor extends ExtractorTemplate {
 
     @Override
     public DatasetFieldStat getFieldStats(DatasetField datasetField) {
-        DatasetFieldStat result = new DatasetFieldStat();
         Connection connection;
         try {
+            long distinctCount = 0;
+            long nonnullCount = 0;
             connection = JDBCClient.getConnection(DatabaseType.HIVE, cluster.getDataStoreUrl() + "/" + database, cluster.getDataStoreUsername(), cluster.getDataStorePassword());
             String sql = "SELECT COUNT(*) FROM (SELECT " + datasetField.getName() + " FROM " + table + " GROUP BY " + datasetField.getName() + ") t1";
             Statement distinctCountStatement = connection.createStatement();
             ResultSet distinctCountResultSet = distinctCountStatement.executeQuery(sql);
 
             while (distinctCountResultSet.next()) {
-                Long distinctCount = distinctCountResultSet.getLong(1);
-                result.setDistinctCount(distinctCount);
+                distinctCount = distinctCountResultSet.getLong(1);
             }
 
             sql = "SELECT COUNT(*) FROM " + table + " WHERE " + datasetField.getName() + " IS NOT NULL";
@@ -108,11 +109,11 @@ public class HiveTableExtractor extends ExtractorTemplate {
             ResultSet nonnullCountResultSet = nonnullCountStatement.executeQuery(sql);
 
             while (nonnullCountResultSet.next()) {
-                Long nonnullCount = nonnullCountResultSet.getLong(1);
-                result.setNonnullCount(nonnullCount);
+                nonnullCount = nonnullCountResultSet.getLong(1);
             }
-            datasetField.setDatasetFieldStat(result);
 
+            DatasetFieldStat result = new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, new Date());
+            return result;
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.MYSQL.getName(), classNotFoundException);
             throw new RuntimeException(classNotFoundException);
@@ -120,7 +121,6 @@ public class HiveTableExtractor extends ExtractorTemplate {
             throw new RuntimeException(sqlException);
         }
 
-        return result;
     }
 
     @Override
@@ -155,7 +155,7 @@ public class HiveTableExtractor extends ExtractorTemplate {
 
     @Override
     protected DataStore getDataStore() {
-        return null;
+        return new HiveTableStore(database, table, cluster);
     }
 
 }
