@@ -8,20 +8,21 @@ import com.miotech.kun.workflow.core.model.entity.CommonCluster;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class ArangoExtractor implements Extractor {
+public class ArangoDatabaseExtractor implements Extractor {
 
     private CommonCluster cluster;
+    private String database;
     private MioArangoClient client;
 
-    public ArangoExtractor(CommonCluster cluster){
+    public ArangoDatabaseExtractor(CommonCluster cluster, String database){
         this.cluster = cluster;
+        this.database = database;
         this.client = new MioArangoClient(cluster);
     }
 
     @Override
     public Iterator<Dataset> extract() {
-        ArrayList<String> databases = (ArrayList<String>) client.getDatabases();
-        return Iterators.concat(databases.stream().map((databasesName) -> new ArangoDatabaseExtractor(cluster, databasesName).extract()).iterator());
+        ArrayList<String> tables = (ArrayList<String>) client.getCollections(this.database);
+        return Iterators.concat(tables.stream().map((tableName) -> new ArangoCollectionExtractor(this.cluster, this.database, tableName).extract()).iterator());
     }
-
 }
