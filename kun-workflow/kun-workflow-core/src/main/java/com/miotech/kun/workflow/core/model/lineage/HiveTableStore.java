@@ -2,9 +2,11 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.miotech.kun.workflow.core.model.entity.Cluster;
 import com.miotech.kun.workflow.core.model.entity.HiveCluster;
 
 public class HiveTableStore extends DataStore {
+    private final String dataStoreUrl;
 
     private final String database;
 

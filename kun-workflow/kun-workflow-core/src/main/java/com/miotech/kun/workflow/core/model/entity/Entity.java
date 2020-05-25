@@ -2,6 +2,10 @@ package com.miotech.kun.workflow.core.model.entity;
 
 import javax.annotation.Nullable;
 
+/**
+ * @deprecated replaced by {@link com.miotech.kun.workflow.core.model.lineage.DataStore}
+ */
+@Deprecated
 public abstract class Entity {
     @Nullable
     private final Entity parent;
