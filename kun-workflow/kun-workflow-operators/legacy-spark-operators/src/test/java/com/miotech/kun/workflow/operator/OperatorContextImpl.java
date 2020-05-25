@@ -2,11 +2,9 @@ package com.miotech.kun.workflow.operator;
 
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
-import com.miotech.kun.workflow.core.model.entity.Entity;
-import com.miotech.kun.workflow.core.resource.Resource;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class OperatorContextImpl implements OperatorContext {
@@ -33,5 +31,10 @@ public class OperatorContextImpl implements OperatorContext {
     public String getVariable(String name){
         return vars.getOrDefault(name, "");
     }
+
+    public Logger getLogger() {
+        return (Logger) LoggerFactory.getLogger(OperatorContextImpl.class);
+    }
+
 
 }

@@ -1,16 +1,15 @@
 package com.miotech.kun.workflow.operator;
 
-import com.miotech.kun.workflow.core.model.entity.Entity;
-import com.miotech.kun.workflow.operator.model.clients.SparkClient;
-import com.miotech.kun.workflow.operator.model.models.SparkApp;
-import com.miotech.kun.workflow.operator.model.models.SparkJob;
-import com.miotech.kun.workflow.operator.model.clients.LivyClient;
+import com.google.common.base.Strings;
 import com.miotech.kun.workflow.core.execution.Operator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
+import com.miotech.kun.workflow.core.model.entity.Entity;
+import com.miotech.kun.workflow.operator.model.clients.LivyClient;
+import com.miotech.kun.workflow.operator.model.clients.SparkClient;
+import com.miotech.kun.workflow.operator.model.models.SparkApp;
+import com.miotech.kun.workflow.operator.model.models.SparkJob;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import com.miotech.kun.workflow.utils.StringUtils;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -40,14 +39,14 @@ public class SparkOperator implements Operator {
         String args = context.getParameter("args");
 
         String sessionName = context.getParameter("name");
-        if(!StringUtils.isNullOrEmpty(sessionName)){
+        if(!Strings.isNullOrEmpty(sessionName)){
             job.setName(sessionName);
         }
-        if (!StringUtils.isNullOrEmpty(jars)) {
+        if (!Strings.isNullOrEmpty(jars)) {
             job.setJars(Arrays.asList(jars.split(",")));
         }
         List<String> jobFiles = new ArrayList<>();
-        if (!StringUtils.isNullOrEmpty(files)) {
+        if (!Strings.isNullOrEmpty(files)) {
             jobFiles = Arrays.stream(files.split(","))
                     .map(String::trim)
                     .filter(x -> !x.isEmpty())
@@ -68,11 +67,11 @@ public class SparkOperator implements Operator {
                 job.setPyFiles(extraFiles);
             }
         }
-        if (!StringUtils.isNullOrEmpty(application)) {
+        if (!Strings.isNullOrEmpty(application)) {
             job.setClassName(application);
         }
         List<String> jobArgs = new ArrayList<>();
-        if (!StringUtils.isNullOrEmpty(args)) {
+        if (!Strings.isNullOrEmpty(args)) {
             List<String> trimArgs = Arrays.stream(args.split("\\s+"))
                     .filter(x -> !x.isEmpty())
                     .map(String::trim)
@@ -156,7 +155,7 @@ public class SparkOperator implements Operator {
                 line = br.readLine();
             }
         }catch (IOException e){
-            throw new RuntimeException(e.getMessage());
+            throw new RuntimeException(e);
         }
 
 //        context.report(inlets, outlets);
