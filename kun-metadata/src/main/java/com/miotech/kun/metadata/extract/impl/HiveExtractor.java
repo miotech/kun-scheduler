@@ -5,9 +5,11 @@ import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.workflow.core.model.entity.HiveCluster;
+import com.miotech.kun.workflow.db.DatabaseOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -19,18 +21,16 @@ import java.util.List;
 public class HiveExtractor extends JDBCExtractor {
     private static Logger logger = LoggerFactory.getLogger(HiveExtractor.class);
 
-    private HiveCluster cluster;
+    private final HiveCluster cluster;
 
-    private HiveExtractor() {};
+    private final DatabaseOperator operator;
 
-    public HiveExtractor(HiveCluster cluster) {
-        init(cluster);
-    }
-
-    private void init(HiveCluster cluster) {
-        //TODO verify the integrity of the data
+    @Inject
+    public HiveExtractor(HiveCluster cluster, DatabaseOperator operator) {
         this.cluster = cluster;
+        this.operator = operator;
     }
+
 
     @Override
     public Iterator<Dataset> extract() {

@@ -2,8 +2,8 @@ package com.miotech.kun.metadata.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
-import com.miotech.kun.metadata.load.tool.DataStoreJsonUtil;
-import com.miotech.kun.metadata.load.tool.SnowflakeGigGenerator;
+import com.miotech.kun.metadata.service.gid.DataStoreJsonUtil;
+import com.miotech.kun.metadata.service.gid.GidService;
 import com.miotech.kun.workflow.core.model.entity.DataStore;
 import com.miotech.kun.workflow.core.model.entity.HiveCluster;
 import com.miotech.kun.workflow.core.model.entity.HiveTableStore;
@@ -12,7 +12,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-public class SnowflakeGigGeneratorTest extends DatabaseTestBase {
+public class GidServiceTest extends DatabaseTestBase {
 
     @Inject
     private DatabaseOperator operator;
@@ -30,7 +30,7 @@ public class SnowflakeGigGeneratorTest extends DatabaseTestBase {
     @Test
     public void testGenerate_non_exist() {
         DataStore dataStore = new HiveTableStore("db1", "tb", new HiveCluster(123L, "abc", "123", "sdf", "dsf", "sdf", "wer"));
-        SnowflakeGigGenerator generator = new SnowflakeGigGenerator(operator);
+        GidService generator = new GidService(operator);
         long generate = generator.generate(dataStore);
         Assert.assertNotNull(generate);
     }
@@ -43,7 +43,7 @@ public class SnowflakeGigGeneratorTest extends DatabaseTestBase {
         String dataStoreJson = DataStoreJsonUtil.toJson(dataStore);
         operator.update("INSERT INTO kun_mt_dataset_gid(data_store, dataset_gid) VALUES (?, ?)", dataStoreJson, currentTime);
 
-        SnowflakeGigGenerator generator = new SnowflakeGigGenerator(operator);
+        GidService generator = new GidService(operator);
         long generate = generator.generate(dataStore);
         Assert.assertEquals(currentTime, generate);
     }

@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.miotech.kun.metadata.load.tool.DataStoreJsonUtil;
+import com.miotech.kun.metadata.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.workflow.core.model.entity.DataStore;
 import com.miotech.kun.workflow.core.model.entity.HiveCluster;
 import com.miotech.kun.workflow.core.model.entity.HiveTableStore;

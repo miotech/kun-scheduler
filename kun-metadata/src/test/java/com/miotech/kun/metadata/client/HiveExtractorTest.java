@@ -11,6 +11,8 @@ import java.util.Iterator;
 
 public class HiveExtractorTest {
 
+
+
     @Test
     public void testExtractor() {
         HiveCluster.Builder builder = HiveCluster.newBuilder();
@@ -22,11 +24,9 @@ public class HiveExtractorTest {
         Iterator<Dataset> datasetIterator = hiveExtractor.extract();
 
         Loader printLoader = new PrintLoader();
-//        Loader pgLoader = new PostgresLoader("jdbc:mysql://localhost:3306/unden?useSSL=false", "root", "123456");
         while (datasetIterator.hasNext()) {
             Dataset dataset = datasetIterator.next();
             printLoader.load(dataset);
-//            pgLoader.load(dataset);
         }
 
     }

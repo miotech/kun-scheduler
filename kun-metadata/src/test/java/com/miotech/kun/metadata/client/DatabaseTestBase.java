@@ -85,4 +85,17 @@ public abstract class DatabaseTestBase {
             return new HikariDataSource(config);
         }
     }
+
+    /*public static class TestDatabaseModule extends AbstractModule {
+        @Provides
+        @Singleton
+        public DataSource createDataSource() {
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl("jdbc:mysql://127.0.0.1:3306/unden?useSSL=false");
+            config.setUsername("root");
+            config.setPassword("123456");
+            config.setDriverClassName("com.mysql.jdbc.Driver");
+            return new HikariDataSource(config);
+        }
+    }*/
 }

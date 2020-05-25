@@ -1,7 +1,9 @@
 package com.miotech.kun.metadata.client;
 
+import com.google.inject.Inject;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.impl.HiveDatabaseExtractor;
+import com.miotech.kun.workflow.db.DatabaseOperator;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -9,8 +11,11 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.*;
 
-public class JDBCClientTest {
+public class JDBCClientTest extends DatabaseTestBase {
     private static Logger logger = LoggerFactory.getLogger(JDBCClientTest.class);
+
+    @Inject
+    private DatabaseOperator operator;
 
     @Test
     public void testGetConnection() {

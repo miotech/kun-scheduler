@@ -1,6 +1,7 @@
 package com.miotech.kun.metadata.model;
 
 import com.miotech.kun.workflow.core.model.entity.DataStore;
+import com.miotech.kun.workflow.core.model.task.Task;
 
 import java.util.List;
 
@@ -46,6 +47,15 @@ public class Dataset {
 
     public static Dataset.Builder newBuilder() {
         return new Dataset.Builder();
+    }
+
+    public Builder cloneBuilder() {
+        return newBuilder()
+                .withName(name)
+                .withDataStore(dataStore)
+                .withFields(fields)
+                .withFieldStats(fieldStats)
+                .withDatasetStat(datasetStat);
     }
 
     public static final class Builder {

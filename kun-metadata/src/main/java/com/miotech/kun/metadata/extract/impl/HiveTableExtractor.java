@@ -125,7 +125,7 @@ public class HiveTableExtractor extends ExtractorTemplate {
 
     @Override
     public DatasetStat getTableStats() {
-        DatasetStat datasetStat = new DatasetStat();
+        DatasetStat.Builder datasetStatBuilder = DatasetStat.newBuilder();
 
         Connection connection = null;
         Statement statement = null;
@@ -138,8 +138,8 @@ public class HiveTableExtractor extends ExtractorTemplate {
 
             while (resultSet.next()) {
                 Long rowCount = resultSet.getLong(1);
-                datasetStat.setRowCount(rowCount);
-                datasetStat.setStatDate(new Date());
+                datasetStatBuilder.withRowCount(rowCount);
+                datasetStatBuilder.withStatDate(new Date());
             }
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.HIVE.getName(), classNotFoundException);
@@ -150,7 +150,7 @@ public class HiveTableExtractor extends ExtractorTemplate {
             JDBCClient.close(connection, statement, resultSet);
         }
 
-        return datasetStat;
+        return datasetStatBuilder.build();
     }
 
     @Override

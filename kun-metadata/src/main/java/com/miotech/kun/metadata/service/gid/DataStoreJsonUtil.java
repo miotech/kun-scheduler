@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.load.tool;
+package com.miotech.kun.metadata.service.gid;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,11 +22,6 @@ public class DataStoreJsonUtil {
 
     public static DataStore toDataStore(String json) throws JsonProcessingException {
         return MAPPER.readValue(json, DataStore.class);
-    }
-
-    public static void main(String[] args) throws JsonProcessingException {
-        DataStore dataStore = new HiveTableStore("db", "tb", new HiveCluster(123L, "abc", "123", "sdf", "dsf", "sdf", "wer"));
-        System.out.println(MAPPER.writeValueAsString(dataStore));
     }
 
 }

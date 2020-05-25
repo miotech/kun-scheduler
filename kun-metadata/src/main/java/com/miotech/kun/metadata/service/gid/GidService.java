@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.load.tool;
+package com.miotech.kun.metadata.service.gid;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.miotech.kun.commons.utils.IdGenerator;
@@ -8,18 +8,19 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 
-public class SnowflakeGigGenerator extends DatasetGidGenerator {
-    private static Logger logger = LoggerFactory.getLogger(SnowflakeGigGenerator.class);
+@Singleton
+public class GidService {
+    private static Logger logger = LoggerFactory.getLogger(GidService.class);
 
     private final DatabaseOperator dbOperator;
 
     @Inject
-    public SnowflakeGigGenerator(DatabaseOperator dbOperator) {
+    public GidService(DatabaseOperator dbOperator) {
         this.dbOperator = dbOperator;
     }
 
-    @Override
     public long generate(DataStore dataStore) {
         // Convert dataStore to JSON
         String dataStoreJson;
@@ -39,6 +40,10 @@ public class SnowflakeGigGenerator extends DatasetGidGenerator {
         }
 
         return gid;
+    }
+
+    public void change(DataStore dataStore, long gid) {
+
     }
 
 }
