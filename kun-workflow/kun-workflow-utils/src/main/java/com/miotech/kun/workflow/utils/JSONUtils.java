@@ -82,4 +82,9 @@ public class JSONUtils {
             throw ExceptionUtils.wrapIfChecked(e);
         }
     }
+
+    public static JsonNode stringToJson(String s) throws JsonProcessingException {
+        return objectMapper.readTree(s);
+    }
+
 }

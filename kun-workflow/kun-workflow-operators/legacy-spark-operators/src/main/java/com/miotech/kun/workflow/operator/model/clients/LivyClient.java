@@ -1,13 +1,13 @@
 package com.miotech.kun.workflow.operator.model.clients;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.miotech.kun.workflow.operator.model.LivyApiException;
-import com.miotech.kun.workflow.utils.*;
-import com.miotech.kun.workflow.operator.model.models.*;
+import com.miotech.kun.workflow.operator.model.models.SparkApp;
+import com.miotech.kun.workflow.operator.model.models.SparkJob;
+import com.miotech.kun.workflow.utils.JSONUtils;
 
 import java.io.IOException;
 
@@ -38,11 +38,11 @@ public class LivyClient extends HttpApiClient {
 
     public SparkApp runSparkJob(SparkJob job) {
         try {
-            if (StringUtils.isNullOrEmpty(job.getQueue())
-                    && !StringUtils.isNullOrEmpty(queue)) {
+            if (Strings.isNullOrEmpty(job.getQueue())
+                    && !Strings.isNullOrEmpty(queue)) {
                 job.setQueue(queue);
             }
-            if (!StringUtils.isNullOrEmpty(proxyUser)) {
+            if (!Strings.isNullOrEmpty(proxyUser)) {
                 job.setProxyUser(proxyUser);
             }
 
