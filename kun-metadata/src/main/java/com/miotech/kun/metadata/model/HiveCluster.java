@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.core.model.entity;
+package com.miotech.kun.metadata.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

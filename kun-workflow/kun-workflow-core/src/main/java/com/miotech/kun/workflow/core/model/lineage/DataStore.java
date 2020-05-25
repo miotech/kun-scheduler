@@ -1,7 +1,6 @@
 package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.miotech.kun.workflow.core.model.entity.Cluster;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.CLASS;
@@ -15,7 +14,7 @@ public abstract class DataStore {
         return type;
     }
 
-    public DataStore(DataStoreType type, Cluster cluster) {
+    public DataStore(DataStoreType type) {
         this.type = type;
     }
 }
