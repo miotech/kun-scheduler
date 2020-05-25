@@ -1,17 +1,20 @@
 package com.miotech.kun.metadata.client;
 
+import com.google.inject.Inject;
 import com.miotech.kun.metadata.extract.impl.HiveExtractor;
 import com.miotech.kun.metadata.load.Loader;
 import com.miotech.kun.metadata.load.impl.PrintLoader;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.workflow.core.model.entity.HiveCluster;
+import com.miotech.kun.workflow.db.DatabaseOperator;
 import org.junit.Test;
 
 import java.util.Iterator;
 
-public class HiveExtractorTest {
+public class HiveExtractorTest extends DatabaseTestBase {
 
-
+    @Inject
+    private DatabaseOperator operator;
 
     @Test
     public void testExtractor() {
@@ -20,7 +23,7 @@ public class HiveExtractorTest {
                 .withMetaStoreUrl("jdbc:mysql://10.0.0.85:13306/hive").withMetaStoreUsername("miotech").withMetaStorePassword("Mi0Tech@2018")
                 .withClusterId(1L);
 
-        HiveExtractor hiveExtractor = new HiveExtractor(builder.build());
+        HiveExtractor hiveExtractor = new HiveExtractor(builder.build(), operator);
         Iterator<Dataset> datasetIterator = hiveExtractor.extract();
 
         Loader printLoader = new PrintLoader();
