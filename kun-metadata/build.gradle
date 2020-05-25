@@ -12,6 +12,8 @@ buildscript {
 
 dependencies {
     implementation project(":kun-workflow:kun-workflow-core")
+    implementation project(":kun-commons:kun-commons-db")
+    implementation project(":kun-commons:kun-commons-utils")
     implementation 'com.typesafe:config'
     implementation 'org.json:json'
     implementation 'com.google.protobuf:protobuf-java'
@@ -26,7 +28,9 @@ dependencies {
     implementation 'org.apache.hive:hive-jdbc'
     implementation 'mysql:mysql-connector-java'
     implementation "org.apache.curator:curator-recipes"
-    testImplementation 'org.testng:testng'
+    implementation "com.facebook.presto:presto-jdbc"
+    testImplementation "junit:junit"
+    testRuntimeOnly "com.h2database:h2"
 }
 
 test {

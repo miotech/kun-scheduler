@@ -6,6 +6,7 @@ public enum  DatabaseType {
     MONGO("Mongo", 5),
     ARANGO("Arango", 6),
     ELASTICSEARCH("ElasticsSearch", 7),
+    PRESTO("Presto", 10),
     HIVE("Hive", 11);
 
     private String name;

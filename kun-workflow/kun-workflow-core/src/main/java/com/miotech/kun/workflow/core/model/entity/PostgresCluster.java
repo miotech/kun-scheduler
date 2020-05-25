@@ -8,7 +8,8 @@ public class PostgresCluster extends Cluster {
 
     private String password;
 
-    public PostgresCluster(String url, String username, String password) {
+    public PostgresCluster(long clusterId, String url, String username, String password) {
+        super(clusterId);
         this.url = url;
         this.username = username;
         this.password = password;
@@ -36,11 +37,17 @@ public class PostgresCluster extends Cluster {
     }
 
     public static final class Builder {
+        private long clusterId;
         private String url;
         private String username;
         private String password;
 
         private Builder() {
+        }
+
+        public Builder withClusterId(long clusterId) {
+            this.clusterId = clusterId;
+            return this;
         }
 
         public Builder withUrl(String url) {
@@ -59,7 +66,7 @@ public class PostgresCluster extends Cluster {
         }
 
         public PostgresCluster build() {
-            return new PostgresCluster(url, username, password);
+            return new PostgresCluster(clusterId, url, username, password);
         }
     }
 }

@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.db;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
+import org.apache.commons.dbutils.handlers.ScalarHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,6 +60,20 @@ public class DatabaseOperator {
             } while (rs.next());
             return results;
         }, params);
+    }
+
+    public long create(String statement, Object... params) {
+        Connection conn = connInTrans.get();
+        try {
+            if (conn == null) {
+                return queryRunner.insert(statement, new ScalarHandler<>(), params);
+            } else {
+                return queryRunner.insert(conn, statement, new ScalarHandler<>(), params);
+            }
+        } catch (Exception ex) {
+            logger.error("Create failed. statement={}, params={}", statement, params, ex);
+            throw ExceptionUtils.wrapIfChecked(ex);
+        }
     }
 
     public int update(String statement, Object... params) {

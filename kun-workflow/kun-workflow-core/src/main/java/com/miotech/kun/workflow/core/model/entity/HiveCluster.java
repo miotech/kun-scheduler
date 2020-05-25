@@ -1,5 +1,8 @@
 package com.miotech.kun.workflow.core.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class HiveCluster extends Cluster {
 
     private String dataStoreUrl;
@@ -38,6 +41,47 @@ public class HiveCluster extends Cluster {
         return metaStorePassword;
     }
 
+    public void setDataStoreUrl(String dataStoreUrl) {
+        this.dataStoreUrl = dataStoreUrl;
+    }
+
+    public void setDataStoreUsername(String dataStoreUsername) {
+        this.dataStoreUsername = dataStoreUsername;
+    }
+
+    public void setDataStorePassword(String dataStorePassword) {
+        this.dataStorePassword = dataStorePassword;
+    }
+
+    public void setMetaStoreUrl(String metaStoreUrl) {
+        this.metaStoreUrl = metaStoreUrl;
+    }
+
+    public void setMetaStoreUsername(String metaStoreUsername) {
+        this.metaStoreUsername = metaStoreUsername;
+    }
+
+    public void setMetaStorePassword(String metaStorePassword) {
+        this.metaStorePassword = metaStorePassword;
+    }
+
+    @JsonCreator
+    public HiveCluster(@JsonProperty("clusterId") long clusterId,
+                       @JsonProperty("dataStoreUrl") String dataStoreUrl,
+                       @JsonProperty("dataStoreUsername") String dataStoreUsername,
+                       @JsonProperty("dataStorePassword") String dataStorePassword,
+                       @JsonProperty("metaStoreUrl") String metaStoreUrl,
+                       @JsonProperty("metaStoreUsername") String metaStoreUsername,
+                       @JsonProperty("metaStorePassword") String metaStorePassword) {
+        super(clusterId);
+        this.dataStoreUrl = dataStoreUrl;
+        this.dataStoreUsername = dataStoreUsername;
+        this.dataStorePassword = dataStorePassword;
+        this.metaStoreUrl = metaStoreUrl;
+        this.metaStoreUsername = metaStoreUsername;
+        this.metaStorePassword = metaStorePassword;
+    }
+
     public static HiveCluster.Builder newBuilder() {
         return new HiveCluster.Builder();
     }
@@ -48,6 +92,7 @@ public class HiveCluster extends Cluster {
     }
 
     public static final class Builder {
+        private long clusterId;
         private String dataStoreUrl;
         private String dataStoreUsername;
         private String dataStorePassword;
@@ -56,6 +101,11 @@ public class HiveCluster extends Cluster {
         private String metaStorePassword;
 
         private Builder() {
+        }
+
+        public Builder withClusterId(long clusterId) {
+            this.clusterId = clusterId;
+            return this;
         }
 
         public Builder withDataStoreUrl(String dataStoreUrl) {
@@ -89,14 +139,7 @@ public class HiveCluster extends Cluster {
         }
 
         public HiveCluster build() {
-            HiveCluster hiveCluster = new HiveCluster();
-            hiveCluster.metaStoreUrl = this.metaStoreUrl;
-            hiveCluster.dataStoreUrl = this.dataStoreUrl;
-            hiveCluster.metaStoreUsername = this.metaStoreUsername;
-            hiveCluster.metaStorePassword = this.metaStorePassword;
-            hiveCluster.dataStoreUsername = this.dataStoreUsername;
-            hiveCluster.dataStorePassword = this.dataStorePassword;
-            return hiveCluster;
+            return new HiveCluster(clusterId, dataStoreUrl, dataStoreUsername, dataStorePassword, metaStoreUrl, metaStoreUsername, metaStorePassword);
         }
     }
 }

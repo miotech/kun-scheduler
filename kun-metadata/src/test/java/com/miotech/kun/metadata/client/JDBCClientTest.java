@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.client;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.impl.HiveDatabaseExtractor;
 import org.junit.Assert;
+import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +12,7 @@ import java.sql.*;
 public class JDBCClientTest {
     private static Logger logger = LoggerFactory.getLogger(JDBCClientTest.class);
 
-    @org.testng.annotations.Test
+    @Test
     public void testGetConnection() {
         try {
             Connection connection = JDBCClient.getConnection(DatabaseType.HIVE, "jdbc:hive2://10.0.0.85:10000/dm", "hive", null);
@@ -23,7 +24,7 @@ public class JDBCClientTest {
         }
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testShowDatabases() {
         try {
             Connection connection = JDBCClient.getConnection(DatabaseType.HIVE, "jdbc:hive2://10.0.0.85:10000", "hive", null);
@@ -43,7 +44,7 @@ public class JDBCClientTest {
         }
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testShowTables() {
         try {
             Connection connection = JDBCClient.getConnection(DatabaseType.HIVE, "jdbc:hive2://10.0.0.85:10000/dw", "hive", null);
@@ -62,7 +63,7 @@ public class JDBCClientTest {
         }
     }
 
-    @org.testng.annotations.Test
+    @Test
     public void testTableStat() {
         try {
             Connection connection = JDBCClient.getConnection(DatabaseType.HIVE, "jdbc:hive2://10.0.0.85:10000/sys", "hive", null);
