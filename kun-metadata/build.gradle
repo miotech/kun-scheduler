@@ -8,6 +8,7 @@ dependencies {
     implementation project(":kun-workflow:kun-workflow-utils")
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-workflow:kun-workflow-utils")
     implementation 'com.typesafe:config'
     implementation 'org.json:json'
     implementation 'ch.qos.logback:logback-classic'
@@ -22,11 +23,11 @@ dependencies {
     implementation "org.jooq:joor-java-8:0.9.12"
     implementation "com.amazonaws:aws-java-sdk-glue"
     implementation "com.syncron.amazonaws:simba-athena-jdbc-driver"
+    implementation "com.arangodb:arangodb-java-driver"
     testImplementation "junit:junit"
     testRuntimeOnly "com.h2database:h2"
     testRuntimeOnly "org.mockito:mockito-core"
 }
-
 
 
 shadowJar {
