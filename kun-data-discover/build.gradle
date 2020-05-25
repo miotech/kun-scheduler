@@ -1,0 +1,41 @@
+buildscript {
+	repositories {
+		mavenLocal()
+		mavenCentral()
+	}
+	dependencies {
+		classpath "io.spring.gradle:dependency-management-plugin:1.0.9.RELEASE"
+		classpath "org.springframework.boot:spring-boot-gradle-plugin:2.2.2.RELEASE"
+	}
+}
+
+plugins {
+	id 'org.springframework.boot' version '2.2.2.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+	id 'java'
+	id "io.freefair.lombok" version "5.1.0"
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+	implementation project(':kun-commons:kun-commons-utils')
+	// tag::actuator[]
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	// end::actuator[]
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	// tag::tests[]
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+	implementation 'org.postgresql:postgresql:42.2.12'
+	implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+	implementation 'org.apache.commons:commons-lang3'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+	}
+	// end::tests[]
+}
+
+test {
+	useJUnitPlatform()
+}
