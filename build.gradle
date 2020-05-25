@@ -45,6 +45,7 @@ subprojects {
                 implementation "org.mongodb:mongo-java-driver:3.6.3"
                 implementation "com.amazonaws:aws-java-sdk-glue:1.11.792"
                 implementation "com.syncron.amazonaws:simba-athena-jdbc-driver:2.0.2"
+                implementation "com.arangodb:arangodb-java-driver:5.0.4"
 
                 testImplementation "junit:junit:4.12"
                 testImplementation "org.hamcrest:hamcrest:2.2"

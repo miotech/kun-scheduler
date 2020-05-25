@@ -41,10 +41,10 @@ public class TaskDao {
         @Override
         public Task map(ResultSet rs) throws SQLException {
             return Task.newBuilder()
-                    .id(rs.getString("id"))
-                    .name(rs.getString("name"))
-                    .description(rs.getString("description"))
-                    .operatorName(rs.getString("operatorName"))
+                    .withId(rs.getLong("id"))
+                    .withName(rs.getString("name"))
+                    .withDescription(rs.getString("description"))
+//                    .operatorName(rs.getString("operatorName"))
                     .build();
         }
     }
