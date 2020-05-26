@@ -4,15 +4,13 @@ import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.Extractor;
+import com.miotech.kun.metadata.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.PostgresCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -21,35 +19,33 @@ public class PostgresDatabaseExtractor implements Extractor {
     private static Logger logger = LoggerFactory.getLogger(PostgresDatabaseExtractor.class);
 
     private final PostgresCluster cluster;
-    private final String databaseName;
+    private final String database;
 
-    public PostgresDatabaseExtractor(PostgresCluster cluster, String databaseName) {
+    public PostgresDatabaseExtractor(PostgresCluster cluster, String database) {
         this.cluster = cluster;
-        this.databaseName = databaseName;
+        this.database = database;
     }
 
     @Override
     public Iterator<Dataset> extract() {
-        List<String> tables = new ArrayList<>();
+        List<String> schemas = new ArrayList<>();
 
         Connection connection = null;
-        PreparedStatement statement = null;
+        Statement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.MYSQL, cluster.getUrl(),
+            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useDatabase(cluster.getUrl(), database),
                     cluster.getUsername(), cluster.getPassword());
-            String scanDatabase = "SELECT t.TBL_NAME FROM TBLS t JOIN DBS d ON t.DB_ID = d.DB_ID where d.NAME = ?";
-            statement = connection.prepareStatement(scanDatabase);
-
-            statement.setString(1, databaseName);
-            resultSet = statement.executeQuery();
+            String scanDatabase = "SELECT SCHEMA_NAME FROM information_schema.schemata WHERE SCHEMA_NAME NOT LIKE 'pg_%' AND SCHEMA_NAME != 'information_schema'";
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(scanDatabase);
 
             while (resultSet.next()) {
-                String tableName = resultSet.getString(1);
-                tables.add(tableName);
+                String schema = resultSet.getString(1);
+                schemas.add(schema);
             }
         } catch (ClassNotFoundException classNotFoundException) {
-            logger.error("driver class not found, DatabaseType: {}", DatabaseType.MYSQL.getName(), classNotFoundException);
+            logger.error("driver class not found, DatabaseType: {}", DatabaseType.POSTGRES.getName(), classNotFoundException);
             throw new RuntimeException(classNotFoundException);
         } catch (SQLException sqlException) {
             throw new RuntimeException(sqlException);
@@ -57,6 +53,7 @@ public class PostgresDatabaseExtractor implements Extractor {
             JDBCClient.close(connection, statement, resultSet);
         }
 
-        return Iterators.concat(tables.stream().map((tableName) -> new PostgresTableExtractor(cluster, tableName).extract()).iterator());
+        return Iterators.concat(schemas.stream().map((schema) -> new PostgresSchemaExtractor(cluster, database, schema).extract()).iterator());
     }
+
 }

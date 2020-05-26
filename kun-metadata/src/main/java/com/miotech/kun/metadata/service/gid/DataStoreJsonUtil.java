@@ -3,8 +3,8 @@ package com.miotech.kun.metadata.service.gid;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
-import com.miotech.kun.metadata.model.MongoDataStore;
-import com.miotech.kun.metadata.model.PostgresDataStore;
+import com.miotech.kun.workflow.core.model.lineage.MongoDataStore;
+import com.miotech.kun.workflow.core.model.lineage.PostgresDataStore;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 

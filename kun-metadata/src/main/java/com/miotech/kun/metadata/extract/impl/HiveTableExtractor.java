@@ -20,9 +20,9 @@ import java.util.List;
 public class HiveTableExtractor extends ExtractorTemplate {
     private static Logger logger = LoggerFactory.getLogger(HiveTableExtractor.class);
 
-    private HiveCluster cluster;
-    private String database;
-    private String table;
+    private final HiveCluster cluster;
+    private final String database;
+    private final String table;
 
     public HiveTableExtractor(HiveCluster cluster, String database, String table) {
         this.cluster = cluster;
@@ -91,7 +91,9 @@ public class HiveTableExtractor extends ExtractorTemplate {
 
     @Override
     public DatasetFieldStat getFieldStats(DatasetField datasetField) {
-        Connection connection;
+        Connection connection = null;
+        Statement statement = null;
+        ResultSet resultSet = null;
         try {
             long distinctCount = 0;
             long nonnullCount = 0;
@@ -119,6 +121,8 @@ public class HiveTableExtractor extends ExtractorTemplate {
             throw new RuntimeException(classNotFoundException);
         } catch (SQLException sqlException) {
             throw new RuntimeException(sqlException);
+        } finally {
+            JDBCClient.close(connection, statement, resultSet);
         }
 
     }
