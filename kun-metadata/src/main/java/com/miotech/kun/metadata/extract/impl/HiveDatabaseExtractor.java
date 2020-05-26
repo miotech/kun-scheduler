@@ -5,8 +5,7 @@ import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.HiveDatabase;
-import com.miotech.kun.workflow.core.model.entity.HiveCluster;
+import com.miotech.kun.metadata.model.HiveCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -42,7 +42,7 @@ public class PostgresLoader implements Loader {
                 if (datasetExist) {
                     dbOperator.update("UPDATE kun_mt_dataset SET data_store = ?, `name` = ? WHERE gid = ?", DataStoreJsonUtil.toJson(dataset.getDataStore()), dataset.getName(), gid);
                 } else {
-                    dbOperator.update("INSERT INTO kun_mt_dataset(gid, `name`, cluster_id, data_store) VALUES(?, ?, ?, ?)", gid, dataset.getName(), dataset.getDataStore().getCluster().getClusterId(), DataStoreJsonUtil.toJson(dataset.getDataStore()));
+                    dbOperator.update("INSERT INTO kun_mt_dataset(gid, `name`, cluster_id, data_store) VALUES(?, ?, ?, ?)", gid, dataset.getName(), dataset.getClusterId(), DataStoreJsonUtil.toJson(dataset.getDataStore()));
                 }
 
                 dbOperator.update("INSERT INTO kun_mt_dataset_stats(dataset_gid, `row_count`, stats_date) VALUES (?, ?, ?)", gid, dataset.getDatasetStat().getRowCount(), dataset.getDatasetStat().getStatDate());

@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.core.model.entity;
+package com.miotech.kun.metadata.model;
 
 public class PostgresCluster extends Cluster {
 
@@ -32,8 +32,8 @@ public class PostgresCluster extends Cluster {
         return null;
     }
 
-    public static PostgresCluster.Builder newBuilder() {
-        return new PostgresCluster.Builder();
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
     public static final class Builder {

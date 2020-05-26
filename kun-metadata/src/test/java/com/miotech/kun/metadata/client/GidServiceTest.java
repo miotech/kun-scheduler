@@ -4,9 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import com.miotech.kun.metadata.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.metadata.service.gid.GidService;
-import com.miotech.kun.workflow.core.model.entity.DataStore;
-import com.miotech.kun.workflow.core.model.entity.HiveCluster;
-import com.miotech.kun.workflow.core.model.entity.HiveTableStore;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,7 +28,7 @@ public class GidServiceTest extends DatabaseTestBase {
 
     @Test
     public void testGenerate_non_exist() {
-        DataStore dataStore = new HiveTableStore("db1", "tb", new HiveCluster(123L, "abc", "123", "sdf", "dsf", "sdf", "wer"));
+        DataStore dataStore = new HiveTableStore("", "db1", "tb");
         GidService generator = new GidService(operator);
         long generate = generator.generate(dataStore);
         Assert.assertNotNull(generate);
@@ -37,7 +36,7 @@ public class GidServiceTest extends DatabaseTestBase {
 
     @Test
     public void testGenerate_existed() throws JsonProcessingException {
-        DataStore dataStore = new HiveTableStore("db1", "tb", new HiveCluster(123L, "abc", "123", "sdf", "dsf", "sdf", "wer"));
+        DataStore dataStore = new HiveTableStore("", "db1", "tb");
 
         long currentTime = System.currentTimeMillis();
         String dataStoreJson = DataStoreJsonUtil.toJson(dataStore);

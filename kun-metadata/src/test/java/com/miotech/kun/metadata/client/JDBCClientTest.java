@@ -1,26 +1,23 @@
 package com.miotech.kun.metadata.client;
 
-import com.google.inject.Inject;
 import com.miotech.kun.metadata.constant.DatabaseType;
-import com.miotech.kun.metadata.extract.impl.HiveDatabaseExtractor;
-import com.miotech.kun.workflow.db.DatabaseOperator;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
-public class JDBCClientTest extends DatabaseTestBase {
+public class JDBCClientTest {
     private static Logger logger = LoggerFactory.getLogger(JDBCClientTest.class);
-
-    @Inject
-    private DatabaseOperator operator;
 
     @Test
     public void testGetConnection() {
         try {
-            Connection connection = JDBCClient.getConnection(DatabaseType.HIVE, "jdbc:hive2://10.0.0.85:10000/dm", "hive", null);
+            Connection connection = JDBCClient.getConnection(DatabaseType.PRESTO, "jdbc:presto://10.0.0.85:8073/hive", "root", null);
             Assert.assertNotNull(connection);
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
@@ -32,7 +29,7 @@ public class JDBCClientTest extends DatabaseTestBase {
     @Test
     public void testShowDatabases() {
         try {
-            Connection connection = JDBCClient.getConnection(DatabaseType.HIVE, "jdbc:hive2://10.0.0.85:10000", "hive", null);
+            Connection connection = JDBCClient.getConnection(DatabaseType.PRESTO, "jdbc:presto://10.0.0.85:8073/hive", "root", null);
 
             String scanCluster = "show databases";
             Statement statement = connection.createStatement();
@@ -52,7 +49,7 @@ public class JDBCClientTest extends DatabaseTestBase {
     @Test
     public void testShowTables() {
         try {
-            Connection connection = JDBCClient.getConnection(DatabaseType.HIVE, "jdbc:hive2://10.0.0.85:10000/dw", "hive", null);
+            Connection connection = JDBCClient.getConnection(DatabaseType.PRESTO, "jdbc:presto://10.0.0.85:8073/hive/default", "root", null);
             String scanDatabase = "show tables";
             Statement statement = connection.createStatement();
 

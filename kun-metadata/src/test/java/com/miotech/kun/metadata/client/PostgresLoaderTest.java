@@ -7,9 +7,7 @@ import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
-import com.miotech.kun.workflow.core.model.entity.DataStore;
-import com.miotech.kun.workflow.core.model.entity.HiveCluster;
-import com.miotech.kun.workflow.core.model.entity.HiveTableStore;
+import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,7 +30,7 @@ public class PostgresLoaderTest extends DatabaseTestBase {
                         new DatasetField("name", "string", "姓名")))
                 .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", new Date()),
                         new DatasetFieldStat("name", 3, 67, "admin", new Date())))
-                .withDataStore(new HiveTableStore("db1", "tb", new HiveCluster(123L, "abc", "123", "sdf", "dsf", "sdf", "wer")));
+                .withDataStore(new HiveTableStore("", "db1", "tb"));
         dataset = datasetBuilder.build();
     }
 

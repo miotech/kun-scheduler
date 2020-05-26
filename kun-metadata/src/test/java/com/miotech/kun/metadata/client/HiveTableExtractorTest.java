@@ -2,11 +2,7 @@ package com.miotech.kun.metadata.client;
 
 import com.google.gson.Gson;
 import com.miotech.kun.metadata.extract.impl.HiveTableExtractor;
-import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.DatasetField;
-import com.miotech.kun.metadata.model.DatasetFieldStat;
-import com.miotech.kun.metadata.model.DatasetStat;
-import com.miotech.kun.workflow.core.model.entity.HiveCluster;
+import com.miotech.kun.metadata.model.*;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

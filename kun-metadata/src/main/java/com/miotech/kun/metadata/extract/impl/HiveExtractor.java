@@ -4,12 +4,10 @@ import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.workflow.core.model.entity.HiveCluster;
-import com.miotech.kun.workflow.db.DatabaseOperator;
+import com.miotech.kun.metadata.model.HiveCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,14 +21,9 @@ public class HiveExtractor extends JDBCExtractor {
 
     private final HiveCluster cluster;
 
-    private final DatabaseOperator operator;
-
-    @Inject
-    public HiveExtractor(HiveCluster cluster, DatabaseOperator operator) {
+    public HiveExtractor(HiveCluster cluster) {
         this.cluster = cluster;
-        this.operator = operator;
     }
-
 
     @Override
     public Iterator<Dataset> extract() {

@@ -1,11 +1,13 @@
 package com.miotech.kun.metadata.model;
 
-import com.miotech.kun.workflow.core.model.entity.DataStore;
-import com.miotech.kun.workflow.core.model.task.Task;
+
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
 
 import java.util.List;
 
 public class Dataset {
+
+    private final Long clusterId;
 
     private final String name;
 
@@ -16,6 +18,10 @@ public class Dataset {
     private final List<DatasetFieldStat> fieldStats;
 
     private final DatasetStat datasetStat;
+
+    public Long getClusterId() {
+        return clusterId;
+    }
 
     public String getName() {
         return name;
@@ -37,7 +43,8 @@ public class Dataset {
         return datasetStat;
     }
 
-    public Dataset(String name, DataStore dataStore, List<DatasetField> fields, List<DatasetFieldStat> fieldStats, DatasetStat datasetStat) {
+    public Dataset(Long clusterId, String name, DataStore dataStore, List<DatasetField> fields, List<DatasetFieldStat> fieldStats, DatasetStat datasetStat) {
+        this.clusterId = clusterId;
         this.name = name;
         this.dataStore = dataStore;
         this.fields = fields;
@@ -59,6 +66,7 @@ public class Dataset {
     }
 
     public static final class Builder {
+        private Long clusterId;
         private String name;
         private DataStore dataStore;
         private List<DatasetField> fields;
@@ -68,8 +76,9 @@ public class Dataset {
         private Builder() {
         }
 
-        public static Builder builder() {
-            return new Builder();
+        public Builder withCluster(Long clusterId) {
+            this.clusterId = clusterId;
+            return this;
         }
 
         public Builder withName(String name) {
@@ -98,7 +107,7 @@ public class Dataset {
         }
 
         public Dataset build() {
-            return new Dataset(name, dataStore, fields, fieldStats, datasetStat);
+            return new Dataset(clusterId, name, dataStore, fields, fieldStats, datasetStat);
         }
     }
 }

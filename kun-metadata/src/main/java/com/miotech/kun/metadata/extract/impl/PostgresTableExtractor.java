@@ -4,8 +4,8 @@ import com.miotech.kun.metadata.extract.factory.ExtractorTemplate;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
-import com.miotech.kun.workflow.core.model.entity.DataStore;
-import com.miotech.kun.workflow.core.model.entity.PostgresCluster;
+import com.miotech.kun.metadata.model.PostgresCluster;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
 
 import java.util.List;
 

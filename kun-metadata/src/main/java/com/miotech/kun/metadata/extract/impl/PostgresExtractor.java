@@ -4,9 +4,7 @@ import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.PostgresDatabase;
-import com.miotech.kun.metadata.models.Table;
-import com.miotech.kun.workflow.core.model.entity.PostgresCluster;
+import com.miotech.kun.metadata.model.PostgresCluster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

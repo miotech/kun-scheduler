@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.service.gid;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.workflow.core.model.entity.DataStore;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

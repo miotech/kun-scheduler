@@ -6,9 +6,9 @@ import com.miotech.kun.metadata.extract.factory.ExtractorTemplate;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
-import com.miotech.kun.workflow.core.model.entity.DataStore;
-import com.miotech.kun.workflow.core.model.entity.HiveCluster;
-import com.miotech.kun.workflow.core.model.entity.HiveTableStore;
+import com.miotech.kun.metadata.model.HiveCluster;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -155,7 +155,7 @@ public class HiveTableExtractor extends ExtractorTemplate {
 
     @Override
     protected DataStore getDataStore() {
-        return new HiveTableStore(database, table, cluster);
+        return new HiveTableStore(cluster.getDataStoreUrl(), database, table);
     }
 
 }
