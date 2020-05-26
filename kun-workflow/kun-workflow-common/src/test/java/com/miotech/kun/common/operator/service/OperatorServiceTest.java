@@ -2,7 +2,7 @@ package com.miotech.kun.common.operator.service;
 
 import com.google.inject.Inject;
 import com.miotech.kun.common.DatabaseTestBase;
-import com.miotech.kun.common.exception.DuplicatedNameException;
+import com.miotech.kun.common.exception.NameConflictException;
 import com.miotech.kun.common.exception.EntityNotFoundException;
 import com.miotech.kun.common.exception.RuleOperatorInUseException;
 import com.miotech.kun.common.operator.dao.MockOperatorFactory;
@@ -98,7 +98,7 @@ public class OperatorServiceTest extends DatabaseTestBase {
         // 3. Insert first operator
         operatorService.createOperator(operatorPropsVO);
         // 4. Insert second operator with same name
-        assertFailToCreateOperatorWithException(operatorPropsVOWithDuplicatedName, DuplicatedNameException.class);
+        assertFailToCreateOperatorWithException(operatorPropsVOWithDuplicatedName, NameConflictException.class);
     }
 
     @Test
@@ -216,7 +216,7 @@ public class OperatorServiceTest extends DatabaseTestBase {
         } catch (Exception e) {
             // Validate
             // 4. should throw `DuplicatedNameException`
-            assertThat(e, instanceOf(DuplicatedNameException.class));
+            assertThat(e, instanceOf(NameConflictException.class));
         }
     }
 

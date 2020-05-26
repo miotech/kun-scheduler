@@ -6,13 +6,14 @@ import com.miotech.kun.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.core.model.bo.TaskInfo;
 import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
+import com.miotech.kun.workflow.web.annotation.RouteVariable;
 
 import javax.servlet.http.HttpServletRequest;
 
 @Singleton
 public class OperatorController {
 
-    private OperatorService operatorService;
+    private final OperatorService operatorService;
 
     @Inject
     public OperatorController(OperatorService operatorService) {
@@ -29,9 +30,10 @@ public class OperatorController {
         return null;
     }
 
-    @RouteMapping(url= "/operators", method = "DELETE")
-    public Object deleteTask(HttpServletRequest request) {
-        return null;
+    @RouteMapping(url= "/operators/{operatorId}", method = "DELETE")
+    public Object deleteTask(@RouteVariable(required = true) long operatorId) {
+        operatorService.deleteOperatorById(operatorId);
+        return "";
     }
 
     @RouteMapping(url= "/operators", method = "PUT")
