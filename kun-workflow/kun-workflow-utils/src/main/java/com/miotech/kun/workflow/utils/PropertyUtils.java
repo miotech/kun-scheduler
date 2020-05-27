@@ -33,9 +33,7 @@ public class PropertyUtils {
             return loadPropsFromResource(applicationConfName);
         }
 
-        URL file = PropertyUtils.class
-                .getClass()
-                .getResource("/");
+        URL file = PropertyUtils.class.getResource("/");
         File[] configFiles = new File(file.getPath() + "../resources")
                 .listFiles(new PatternFilenameFilter(APP_CONFIG_PROPS_PATTERN));
         if (configFiles != null && configFiles.length > 0) {

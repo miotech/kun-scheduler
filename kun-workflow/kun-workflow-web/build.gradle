@@ -2,6 +2,14 @@ compileJava {
     options.compilerArgs << "-parameters"
 }
 
+apply plugin: 'java'
+
+sourceSets {
+    main {
+        output.resourcesDir = file("${java.outputDir}/../resources")
+    }
+}
+
 dependencies {
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
