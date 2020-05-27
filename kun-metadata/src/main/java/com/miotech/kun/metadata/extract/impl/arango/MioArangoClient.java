@@ -1,10 +1,10 @@
-package com.miotech.kun.metadata.extract.impl;
+package com.miotech.kun.metadata.extract.impl.arango;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.core.model.entity.CommonCluster;
+import com.miotech.kun.metadata.model.CommonCluster;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -17,9 +17,9 @@ public class MioArangoClient {
     @Inject
     public MioArangoClient(CommonCluster cluster){
         this.client = new ArangoDB.Builder()
-                .host(cluster.getHostname(), cluster.getPort())
-                .user(cluster.getUsername())
-                .password(cluster.getPassword())
+                .host(cluster.getDataStoreUrl().split(":")[0], Integer.parseInt(cluster.getDataStoreUrl().split(":")[1]))
+                .user(cluster.getDataStoreUsername())
+                .password(cluster.getDataStorePassword())
                 .build();
     }
 

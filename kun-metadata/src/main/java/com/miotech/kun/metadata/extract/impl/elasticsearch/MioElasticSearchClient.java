@@ -1,8 +1,8 @@
-package com.miotech.kun.metadata.extract.impl;
+package com.miotech.kun.metadata.extract.impl.elasticsearch;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.core.model.entity.CommonCluster;
+import com.miotech.kun.metadata.model.CommonCluster;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -29,12 +29,14 @@ public class MioElasticSearchClient {
     public MioElasticSearchClient(CommonCluster cluster){
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
             credentialsProvider.setCredentials(AuthScope.ANY,
-                new UsernamePasswordCredentials(cluster.getUsername(), cluster.getPassword()));
+                new UsernamePasswordCredentials(cluster.getDataStoreUsername(), cluster.getDataStorePassword()));
         RequestConfig.Builder requestBuilder = RequestConfig.custom();
             requestBuilder.setConnectTimeout(120000);
             requestBuilder.setConnectionRequestTimeout(120000);
 
-            RestClientBuilder builder = RestClient.builder(new HttpHost(cluster.getHostname(), cluster.getPort(), "http"))
+            RestClientBuilder builder = RestClient.builder(new HttpHost(cluster.getDataStoreUrl().split(":")[0],
+                    Integer.parseInt(cluster.getDataStoreUrl().split(":")[1]),
+                    "http"))
                 .setHttpClientConfigCallback(
                 httpClientBuilder -> httpClientBuilder
                 .setDefaultCredentialsProvider(credentialsProvider)

@@ -1,13 +1,13 @@
-package com.miotech.kun.metadata.extract.impl;
+package com.miotech.kun.metadata.extract.impl.elasticsearch;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.miotech.kun.metadata.extract.factory.ExtractorTemplate;
+import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
+import com.miotech.kun.metadata.model.CommonCluster;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
-import com.miotech.kun.workflow.core.model.entity.DataStore;
-import com.miotech.kun.workflow.core.model.entity.DataStoreType;
-import com.miotech.kun.workflow.core.model.entity.CommonCluster;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class ElasticSearchIndexExtractor extends ExtractorTemplate {
-    private static Logger logger = LoggerFactory.getLogger(HiveTableExtractor.class);
+    private static Logger logger = LoggerFactory.getLogger(ElasticSearchIndexExtractor.class);
 
     private String index;
     private CommonCluster cluster;
@@ -67,7 +67,6 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
 
     @Override
     public DatasetFieldStat getFieldStats(DatasetField datasetField){
-        DatasetFieldStat stat = new DatasetFieldStat();
 
         CountRequest countRequest = new CountRequest(index);
         String fieldName = datasetField.getName();
@@ -76,8 +75,9 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
         countRequest.source(searchSourceBuilder);
         Long count = client.count(countRequest);
 
-        stat.setNonnullCount(count);
-        stat.setStatDate(new Date());
+        DatasetFieldStat stat = DatasetFieldStat.newBuilder()
+                .withNonnullCount(count)
+                .withStatDate(new Date()).build();
 
         return stat;
     }
@@ -85,7 +85,6 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
 
     @Override
     public DatasetStat getTableStats(){
-        DatasetStat datasetStat = new DatasetStat();
 
         CountRequest countRequest = new CountRequest(index);
         SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
@@ -93,17 +92,22 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
         countRequest.source(searchSourceBuilder);
         Long rowCount = client.count(countRequest);
 
-        datasetStat.setRowCount(rowCount);
-        datasetStat.setStatDate(new Date());
+        DatasetStat datasetStat = DatasetStat.newBuilder()
+                .withRowCount(rowCount)
+                .withStatDate(new Date()).build();
 
         return datasetStat;
     }
 
     @Override
     public DataStore getDataStore(){
-        DataStore dataStore = new DataStore(DataStoreType.INDEX);
-        dataStore.setCluster(this.cluster);
+        DataStore dataStore = new ElasticSearchIndexStore(cluster.getDataStoreUrl(), index);
         return dataStore;
+    }
+
+    @Override
+    protected String getName() {
+        return index;
     }
 
 }

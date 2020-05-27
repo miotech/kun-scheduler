@@ -4,7 +4,9 @@ import com.google.common.base.Strings;
 import com.miotech.kun.workflow.core.execution.Operator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
-import com.miotech.kun.workflow.core.model.entity.Entity;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
+import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.operator.model.clients.LivyClient;
 import com.miotech.kun.workflow.operator.model.clients.SparkClient;
 import com.miotech.kun.workflow.operator.model.models.SparkApp;
@@ -121,6 +123,7 @@ public class SparkOperator implements Operator {
                         return false;
                     case "success":
                         System.out.println("success");
+                        lineangeAnalysis(context, app.getAppId());
                         return true;
                 }
             }
@@ -137,28 +140,93 @@ public class SparkOperator implements Operator {
     }
 
     public void lineangeAnalysis(OperatorContext context, String applicationId){
-        List<Entity> inlets = new ArrayList<>();
-        List<Entity> outlets = new ArrayList<>();
+        List<DataStore> inlets = new ArrayList<>();
+        List<DataStore> outlets = new ArrayList<>();
         String input = "/tmp" + applicationId + ".input.txt";
         String output = "/tmp/" + applicationId + ".output.txt";
 
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", "hdfs://localhost:8020");
-
         try {
-            FileSystem fs = FileSystem.get(conf);
-            BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(new Path(input))));
-            String line;
-            line = br.readLine();
-            while (line != null) {
-                System.out.println(line);
-                line = br.readLine();
-            }
+            inlets.addAll(genDataStore(input));
+            outlets.addAll(genDataStore(output));
         }catch (IOException e){
             throw new RuntimeException(e);
         }
 
-//        context.report(inlets, outlets);
+        context.report(inlets, outlets);
     }
+
+    public List<DataStore> genDataStore(String path) throws IOException {
+
+        List<DataStore> stores = new ArrayList<>();
+
+        Configuration conf = new Configuration();
+        conf.set("fs.defaultFS", "hdfs://localhost:8020");
+
+        FileSystem fs = FileSystem.get(conf);
+        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(new Path(path))));
+        String line;
+        line = br.readLine();
+        while (line != null) {
+            System.out.println(line);
+            String type = line.split("://")[0];
+            switch (type){
+                case "hdfs":
+                    stores.add(getHiveStore(line));
+                    break;
+                case "mongodb":
+                case "jdbc:postgresql":
+                    stores.add(getPGStore(line));
+                    break;
+                case "elasticsearch":
+                    stores.add(getESStore(line));
+                    break;
+                case "arango":
+                    break;
+                default:
+                    logger.error(String.format("unknow resource type %s", type));
+            }
+            line = br.readLine();
+        }
+
+        return stores;
+    }
+
+    public ElasticSearchIndexStore getESStore(String line){
+        String[] slices = line.split("/");
+        Integer length = slices.length;
+        String url = slices[length - 2];
+        String index = slices[length - 1];
+        return new ElasticSearchIndexStore(url,index);
+    }
+
+    public HiveTableStore getHiveStore(String line){
+        String[] slices = line.split("/");
+        Integer length = slices.length;
+        String url = slices[2];
+        String table = slices[length - 1];
+        String db = slices[length - 2].split(".")[0];
+        return new HiveTableStore(url, db, table);
+    }
+
+    public HiveTableStore getPGStore(String line){
+        String[] slices = line.split(":");
+        String table = slices[slices.length - 1];
+
+        slices = line.split("/");
+        Integer length = slices.length;
+        String url = slices[2];
+        String db = slices[3].split("\\?")[0];
+        return new HiveTableStore(url, db, table);
+    }
+
+    public HiveTableStore getMongoStore(String line){
+        String info = line.split("@")[1];
+        String[] slices = info.split("/");
+        String url = slices[0];
+        String db = slices[1].split(".")[0];
+        String table = slices[1].split(".")[1];
+        return new HiveTableStore(url, db, table);
+    }
+
 
 }

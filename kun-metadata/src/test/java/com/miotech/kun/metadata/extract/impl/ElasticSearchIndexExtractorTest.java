@@ -1,16 +1,15 @@
 package com.miotech.kun.metadata.extract.impl;
 
+import com.miotech.kun.metadata.extract.impl.elasticsearch.ElasticSearchIndexExtractor;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
-import com.miotech.kun.workflow.core.model.entity.CommonCluster;
+import com.miotech.kun.metadata.model.CommonCluster;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
-
-import static org.junit.Assert.*;
 
 public class ElasticSearchIndexExtractorTest {
 
@@ -19,11 +18,17 @@ public class ElasticSearchIndexExtractorTest {
     @Before
     public void setUp() throws Exception {
         CommonCluster cluster = CommonCluster.newBuilder()
-                .withHostname("<es_ip>")
-                .withPort(11005)
-                .withUsername("")
-                .withPassword("")
+                .withDataStoreUrl("<es_ip>:11005")
+                .withDataStoreUsername("")
+                .withDataStorePassword("")
                 .build();
+
+
+//                .withHostname("<es_ip>:11005")
+//                .withPort(11005)
+//                .withUsername("")
+//                .withPassword("")
+//                .build();
         this.extractor = new ElasticSearchIndexExtractor(cluster, "mio-narrative-cn");
     }
 

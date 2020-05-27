@@ -1,6 +1,10 @@
 package com.miotech.kun.workflow.core.execution;
 
 import com.miotech.kun.workflow.core.execution.logging.Logger;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.workflow.core.resource.Resource;
+
+import java.util.List;
 
 public interface OperatorContext {
     /**
@@ -26,6 +30,6 @@ public interface OperatorContext {
     /**
      * 报告任务的输入/输出信息
      */
-//    public void report(List<Entity> inlets, List<Entity> outlets);
+    public void report(List<DataStore> inlets, List<DataStore> outlets);
 
 }
