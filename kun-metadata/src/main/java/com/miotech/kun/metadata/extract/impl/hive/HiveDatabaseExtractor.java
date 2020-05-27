@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.extract.impl;
+package com.miotech.kun.metadata.extract.impl.hive;
 
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;
@@ -21,11 +21,11 @@ public class HiveDatabaseExtractor implements Extractor {
     private static Logger logger = LoggerFactory.getLogger(HiveDatabaseExtractor.class);
 
     private final HiveCluster cluster;
-    private final String databaseName;
+    private final String database;
 
-    public HiveDatabaseExtractor(HiveCluster cluster, String databaseName) {
+    public HiveDatabaseExtractor(HiveCluster cluster, String database) {
         this.cluster = cluster;
-        this.databaseName = databaseName;
+        this.database = database;
     }
 
     @Override
@@ -41,7 +41,7 @@ public class HiveDatabaseExtractor implements Extractor {
             String scanDatabase = "SELECT t.TBL_NAME FROM TBLS t JOIN DBS d ON t.DB_ID = d.DB_ID where d.NAME = ? AND d.CTLG_NAME = 'hive'";
             statement = connection.prepareStatement(scanDatabase);
 
-            statement.setString(1, databaseName);
+            statement.setString(1, database);
             resultSet = statement.executeQuery();
 
             while (resultSet.next()) {
@@ -57,7 +57,7 @@ public class HiveDatabaseExtractor implements Extractor {
             JDBCClient.close(connection, statement, resultSet);
         }
 
-        return Iterators.concat(tables.stream().map((tableName) -> new HiveTableExtractor(cluster, databaseName, tableName).extract()).iterator());
+        return Iterators.concat(tables.stream().map((tableName) -> new HiveTableExtractor(cluster, database, tableName).extract()).iterator());
     }
 
 }

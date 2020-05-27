@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.client;
 
 import com.google.gson.Gson;
-import com.miotech.kun.metadata.extract.impl.HiveTableExtractor;
+import com.miotech.kun.metadata.extract.impl.hive.HiveTableExtractor;
 import com.miotech.kun.metadata.model.*;
 import org.junit.Test;
 import org.slf4j.Logger;

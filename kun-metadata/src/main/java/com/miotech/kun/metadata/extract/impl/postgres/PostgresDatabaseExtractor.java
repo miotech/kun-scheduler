@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.extract.impl;
+package com.miotech.kun.metadata.extract.impl.postgres;
 
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;

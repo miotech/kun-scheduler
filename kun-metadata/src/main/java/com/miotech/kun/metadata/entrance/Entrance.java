@@ -2,8 +2,8 @@ package com.miotech.kun.metadata.entrance;
 
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
-import com.miotech.kun.metadata.extract.impl.HiveExtractor;
-import com.miotech.kun.metadata.extract.impl.PostgresExtractor;
+import com.miotech.kun.metadata.extract.impl.hive.HiveExtractor;
+import com.miotech.kun.metadata.extract.impl.postgres.PostgresExtractor;
 import com.miotech.kun.metadata.load.Loader;
 import com.miotech.kun.metadata.load.impl.PrintLoader;
 import com.miotech.kun.metadata.model.Cluster;
@@ -74,7 +74,7 @@ public class Entrance {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, url, username, password);
+            connection = JDBCClient.getConnection(DatabaseType.MYSQL, url, username, password);
             String sql = "SELECT id, `type`, url, username, password FROM kun_mt_cluster WHERE id = ?";
             statement = connection.prepareStatement(sql);
             statement.setLong(1, clusterId);
@@ -104,16 +104,20 @@ public class Entrance {
             return;
         }
 
+        Iterator<Dataset> datasetIterator = null;
         if (cluster instanceof HiveCluster) {
-            Iterator<Dataset> datasetIterator = new HiveExtractor((HiveCluster) cluster).extract();
+            datasetIterator = new HiveExtractor((HiveCluster) cluster).extract();
+        } else if (cluster instanceof PostgresCluster) {
+            datasetIterator = new PostgresExtractor((PostgresCluster) cluster).extract();
+        }
+        // TODO add others Extractor
+
+        if (datasetIterator != null) {
             while (datasetIterator.hasNext()) {
                 Dataset dataset = datasetIterator.next();
                 loader.load(dataset);
             }
-        } else if (cluster instanceof PostgresCluster) {
-            new PostgresExtractor((PostgresCluster) cluster).extract();
         }
-        // TODO add others Extractor
     }
 
     private Cluster buildCluster(ResultSet resultSet) throws SQLException {
@@ -136,7 +140,12 @@ public class Entrance {
                 return hiveClusterBuilder.build();
             case "postgres":
                 //TODO add PostgresCluster builder
-                return null;
+                PostgresCluster.Builder postgresClusterBuilder = PostgresCluster.newBuilder();
+                postgresClusterBuilder.withClusterId(id)
+                        .withUrl(url)
+                        .withUsername(username)
+                        .withPassword(password);
+                return postgresClusterBuilder.build();
             default:
                 return null;
         }

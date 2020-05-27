@@ -19,7 +19,6 @@ public class DataStoreJsonUtil {
     }
 
     public static String toJson(DataStore dataStore) throws JsonProcessingException {
-
         return MAPPER.writeValueAsString(dataStore);
     }
 

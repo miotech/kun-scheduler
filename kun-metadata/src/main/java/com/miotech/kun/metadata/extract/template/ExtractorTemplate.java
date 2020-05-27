@@ -1,8 +1,9 @@
-package com.miotech.kun.metadata.extract.factory;
+package com.miotech.kun.metadata.extract.template;
 
 import com.google.common.collect.Iterators;
 import com.google.gson.Gson;
 import com.miotech.kun.metadata.extract.Extractor;
+import com.miotech.kun.metadata.extract.tool.DatasetNameGenerator;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
@@ -23,6 +24,7 @@ public abstract class ExtractorTemplate implements Extractor {
     protected abstract DatasetFieldStat getFieldStats(DatasetField datasetField);
     protected abstract DatasetStat getTableStats();
     protected abstract DataStore getDataStore();
+    protected abstract String getName();
 
     @Override
     public Iterator<Dataset> extract() {
@@ -30,18 +32,22 @@ public abstract class ExtractorTemplate implements Extractor {
 
         try {
             List<DatasetField> schema = getSchema();
-            logger.info("extract schema: {}", new Gson().toJson(schema));
+            logger.debug("extract schema: {}", new Gson().toJson(schema));
             List<DatasetFieldStat> fieldStats = new ArrayList<>();
             for (DatasetField datasetField : schema) {
-                fieldStats.add(getFieldStats(datasetField));
+                DatasetFieldStat fieldStat = getFieldStats(datasetField);
+                if (fieldStat != null) {
+                    fieldStats.add(fieldStat);
+                }
             }
 
             DatasetStat tableStats = getTableStats();
-            logger.info("extract tableStats: {}", new Gson().toJson(tableStats));
+            logger.debug("extract tableStats: {}", new Gson().toJson(tableStats));
 
             DataStore dataStore = getDataStore();
-            logger.info("extract dataStore: {}", DataStoreJsonUtil.toJson(dataStore));
-            datasetBuilder.withFields(schema)
+            logger.debug("extract dataStore: {}", DataStoreJsonUtil.toJson(dataStore));
+            datasetBuilder.withName(getName())
+                    .withFields(schema)
                     .withFieldStats(fieldStats)
                     .withDatasetStat(tableStats)
                     .withDataStore(dataStore);

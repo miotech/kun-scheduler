@@ -1,6 +1,5 @@
 package com.miotech.kun.metadata.model;
 
-
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 
 import java.util.List;
@@ -76,7 +75,7 @@ public class Dataset {
         private Builder() {
         }
 
-        public Builder withCluster(Long clusterId) {
+        public Builder withClusterId(Long clusterId) {
             this.clusterId = clusterId;
             return this;
         }

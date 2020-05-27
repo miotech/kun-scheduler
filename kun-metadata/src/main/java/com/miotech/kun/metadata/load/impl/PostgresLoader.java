@@ -52,35 +52,40 @@ public class PostgresLoader implements Loader {
                 List<String> survivorFields = new ArrayList<>();
                 fill(dataset.getFields(), fieldInfos, deletedFields, survivorFields, gid);
 
+                for (String deletedField : deletedFields) {
+                    dbOperator.update("DELETE FROM kun_mt_dataset_field WHERE dataset_gid = ? and `name` = ?", gid, deletedField);
+                }
+
                 Map<String, DatasetFieldStat> fieldStatMap = new HashMap<>();
                 for (DatasetFieldStat fieldStat : dataset.getFieldStats()) {
                     fieldStatMap.put(fieldStat.getName(), fieldStat);
                 }
 
                 for (DatasetField datasetField : dataset.getFields()) {
-                    long id = 0;
+                    long id;
                     if (survivorFields.contains(datasetField.getName())) {
                         if (!fieldInfos.get(datasetField.getName()).getType().equals(datasetField.getType())) {
                             // update field type
-                            dbOperator.update("UPDATE kun_mt_dataset_field SET `type` = ? WHERE gid = ? and `name` = ?", datasetField.getType(), gid, datasetField.getName());
+                            dbOperator.update("UPDATE kun_mt_dataset_field SET `type` = ? WHERE dataset_gid = ? and `name` = ?", datasetField.getType(), gid, datasetField.getName());
                         }
                         id = fieldInfos.get(datasetField.getName()).getId();
                     } else {
                         // new field
-                        String addFieldSql = "INSERT INTO kun_mt_dataset_field(dataset_gid, `name`, `type`) VALUES(?, ?, ?)";
                         id = dbOperator.create("INSERT INTO kun_mt_dataset_field(dataset_gid, `name`, `type`) VALUES(?, ?, ?)", gid, datasetField.getName(), datasetField.getType());
                     }
 
                     DatasetFieldStat datasetFieldStat = fieldStatMap.get(datasetField.getName());
-                    BigDecimal nonnullPercentage = new BigDecimal("100.00");
-                    if (dataset.getDatasetStat().getRowCount() > 0) {
-                        if (datasetFieldStat.getNonnullCount() > dataset.getDatasetStat().getRowCount()) {
-                            logger.error("compute nonnullPercentage fail, nonnullCount > rowCount, nonnullCount: {}, rowCount: {}", datasetFieldStat.getNonnullCount(), dataset.getDatasetStat().getRowCount());
-                            throw new RuntimeException("nonnullCount > rowCount");
+                    if (datasetFieldStat != null) {
+                        BigDecimal nonnullPercentage = new BigDecimal("100.00");
+                        if (dataset.getDatasetStat().getRowCount() > 0) {
+                            if (datasetFieldStat.getNonnullCount() > dataset.getDatasetStat().getRowCount()) {
+                                logger.error("compute nonnullPercentage fail, nonnullCount > rowCount, nonnullCount: {}, rowCount: {}", datasetFieldStat.getNonnullCount(), dataset.getDatasetStat().getRowCount());
+                                throw new RuntimeException("nonnullCount > rowCount");
+                            }
+                            nonnullPercentage = new BigDecimal(datasetFieldStat.getNonnullCount()).multiply(new BigDecimal("100")).divide(new BigDecimal(dataset.getDatasetStat().getRowCount()), 2, BigDecimal.ROUND_HALF_UP);
                         }
-                        nonnullPercentage = new BigDecimal(datasetFieldStat.getNonnullCount()).multiply(new BigDecimal("100")).divide(new BigDecimal(dataset.getDatasetStat().getRowCount()), 2, BigDecimal.ROUND_HALF_UP);
+                        dbOperator.update("INSERT INTO kun_mt_dataset_field_stats(field_id, distinct_count, nonnull_count, nonnull_percentage) VALUES(?, ?, ?, ?)", id, datasetFieldStat.getDistinctCount(), datasetFieldStat.getNonnullCount(), nonnullPercentage);
                     }
-                    dbOperator.update("INSERT INTO kun_mt_dataset_field_stats(field_id, distinct_count, nonnull_count, nonnull_percentage) VALUES(?, ?, ?, ?)", id, datasetFieldStat.getDistinctCount(), datasetFieldStat.getNonnullCount(), nonnullPercentage);
                 }
             } catch (JsonProcessingException jsonProcessingException) {
                 throw new RuntimeException(jsonProcessingException);
@@ -99,20 +104,33 @@ public class PostgresLoader implements Loader {
                       List<String> survivorFields, long gid) {
         List<String> extractFields = fields.stream().map(field -> field.getName()).collect(Collectors.toList());
 
-        // get all field name
-        dbOperator.fetchOne("SELECT id, `name`, `type` FROM kun_mt_dataset_field WHERE dataset_gid = ?", (rs) -> {
+        //TODO bug(use fetchAll) get all field name
+        dbOperator.fetchAll("SELECT id, `name`, `type` FROM kun_mt_dataset_field WHERE dataset_gid = ?", (rs) -> {
             long id = rs.getLong(1);
             String fieldName = rs.getString(2);
             String fieldType = rs.getString(3);
-            deletedFields.add(fieldName);
             survivorFields.add(fieldName);
+            deletedFields.add(fieldName);
 
-            DatasetFieldPO fieldPO = new DatasetFieldPO(id, fieldType);
+            DatasetFieldPO fieldPO = new DatasetFieldPO(id, fieldName, fieldType);
             fieldInfos.put(fieldName, fieldPO);
             return null;
         }, gid);
         deletedFields.removeAll(extractFields);
         survivorFields.retainAll(extractFields);
+
+
+        /*List<DatasetFieldPO> fieldPOS = dbOperator.fetchAll("SELECT id, `name`, `type` FROM kun_mt_dataset_field WHERE dataset_gid = ?", (rs) -> {
+            long id = rs.getLong(1);
+            String fieldName = rs.getString(2);
+            String fieldType = rs.getString(3);
+            survivorFields.add(fieldName);
+
+            return new DatasetFieldPO(id, fieldName, fieldType);
+        }, gid);
+        deletedFields.removeAll(extractFields);
+        survivorFields.retainAll(extractFields);*/
+
     }
 
 }

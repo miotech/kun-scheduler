@@ -1,8 +1,9 @@
-package com.miotech.kun.metadata.extract.impl;
+package com.miotech.kun.metadata.extract.impl.hive;
 
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
-import com.miotech.kun.metadata.extract.factory.ExtractorTemplate;
+import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
+import com.miotech.kun.metadata.extract.tool.DatasetNameGenerator;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
@@ -99,19 +100,19 @@ public class HiveTableExtractor extends ExtractorTemplate {
             long nonnullCount = 0;
             connection = JDBCClient.getConnection(DatabaseType.HIVE, cluster.getDataStoreUrl() + "/" + database, cluster.getDataStoreUsername(), cluster.getDataStorePassword());
             String sql = "SELECT COUNT(*) FROM (SELECT " + datasetField.getName() + " FROM " + table + " GROUP BY " + datasetField.getName() + ") t1";
-            Statement distinctCountStatement = connection.createStatement();
-            ResultSet distinctCountResultSet = distinctCountStatement.executeQuery(sql);
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(sql);
 
-            while (distinctCountResultSet.next()) {
-                distinctCount = distinctCountResultSet.getLong(1);
+            while (resultSet.next()) {
+                distinctCount = resultSet.getLong(1);
             }
 
             sql = "SELECT COUNT(*) FROM " + table + " WHERE " + datasetField.getName() + " IS NOT NULL";
-            Statement nonnullCountStatement = connection.createStatement();
-            ResultSet nonnullCountResultSet = nonnullCountStatement.executeQuery(sql);
+            statement = connection.createStatement();
+            resultSet = statement.executeQuery(sql);
 
-            while (nonnullCountResultSet.next()) {
-                nonnullCount = nonnullCountResultSet.getLong(1);
+            while (resultSet.next()) {
+                nonnullCount = resultSet.getLong(1);
             }
 
             DatasetFieldStat result = new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, new Date());
@@ -160,6 +161,11 @@ public class HiveTableExtractor extends ExtractorTemplate {
     @Override
     protected DataStore getDataStore() {
         return new HiveTableStore(cluster.getDataStoreUrl(), database, table);
+    }
+
+    @Override
+    protected String getName() {
+        return DatasetNameGenerator.generateDatasetName(DatabaseType.HIVE, table);
     }
 
 }

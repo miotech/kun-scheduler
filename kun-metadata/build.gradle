@@ -29,6 +29,7 @@ dependencies {
     implementation 'mysql:mysql-connector-java'
     implementation "org.apache.curator:curator-recipes"
     implementation "com.facebook.presto:presto-jdbc"
+    implementation "org.mongodb:mongo-java-driver"
     testImplementation "junit:junit"
     testRuntimeOnly "com.h2database:h2"
 }

@@ -14,6 +14,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Date;
+import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class PostgresLoaderTest extends DatabaseTestBase {
 
@@ -26,7 +30,7 @@ public class PostgresLoaderTest extends DatabaseTestBase {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
         datasetBuilder.withName("datasetName")
                 .withDatasetStat(new DatasetStat(100L, new Date()))
-                .withFields(ImmutableList.of(new DatasetField("id", "bigint", "自增id"),
+                .withFields(ImmutableList.of(new DatasetField("id", "def", "自增id"),
                         new DatasetField("name", "string", "姓名")))
                 .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", new Date()),
                         new DatasetFieldStat("name", 3, 67, "admin", new Date())))
@@ -106,5 +110,25 @@ public class PostgresLoaderTest extends DatabaseTestBase {
         rowCount = operator.fetchOne("SELECT COUNT(*) FROM kun_mt_dataset", rs -> rs.getLong(1));
         Assert.assertEquals(rowCount, Long.valueOf(0));
 
+    }
+
+    /**
+     * 由于gid是snowflake生成的，为了测试该case，需修改PostgresLoader.load中gid的生成规则，固定成gid = 100L;
+     */
+    @Test
+    public void testLoad_updateField() {
+        PostgresLoader postgresLoader = new PostgresLoader(operator);
+        operator.update("INSERT INTO kun_mt_dataset_field(dataset_gid, `name`, `type`) VALUES(?, ?, ?)", 100L, "age", "int");
+        operator.update("INSERT INTO kun_mt_dataset_field(dataset_gid, `name`, `type`) VALUES(?, ?, ?)", 100L, "id", "abc");
+        Long id = operator.fetchOne("SELECT id FROM kun_mt_dataset_field WHERE dataset_gid = 100 AND `name` = 'age'", rs -> rs.getLong(1));
+        Assert.assertNotNull(id);
+
+        postgresLoader.load(dataset);
+        List<String> fieldNames = operator.fetchAll("SELECT `name` FROM kun_mt_dataset_field WHERE dataset_gid = 100", rs -> rs.getString(1));
+        List<String> types = operator.fetchAll("SELECT `type` FROM kun_mt_dataset_field WHERE dataset_gid = 100", rs -> rs.getString(1));
+        assertThat(fieldNames, containsInAnyOrder("id", "name"));
+        assertThat(types, containsInAnyOrder("def", "string"));
+        id = operator.fetchOne("SELECT id FROM kun_mt_dataset_field WHERE dataset_gid = 100 AND `name` = 'age'", rs -> rs.getLong(1));
+        Assert.assertNull(id);
     }
 }

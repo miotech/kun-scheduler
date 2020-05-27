@@ -8,8 +8,6 @@ public class DatasetField {
 
     private final String comment;
 
-    private DatasetFieldStat datasetFieldStat;
-
     public String getName() {
         return name;
     }
@@ -22,25 +20,10 @@ public class DatasetField {
         return comment;
     }
 
-    public DatasetFieldStat getDatasetFieldStat() {
-        return datasetFieldStat;
-    }
-
-    public void setDatasetFieldStat(DatasetFieldStat datasetFieldStat) {
-        this.datasetFieldStat = datasetFieldStat;
-    }
-
     public DatasetField(String name, String type, String comment) {
         this.name = name;
         this.type = type;
         this.comment = comment;
-    }
-
-    public DatasetField(String name, String type, String comment, DatasetFieldStat datasetFieldStat) {
-        this.name = name;
-        this.type = type;
-        this.comment = comment;
-        this.datasetFieldStat = datasetFieldStat;
     }
 
 }

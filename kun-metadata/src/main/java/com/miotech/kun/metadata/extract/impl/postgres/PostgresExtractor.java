@@ -1,9 +1,11 @@
-package com.miotech.kun.metadata.extract.impl;
+package com.miotech.kun.metadata.extract.impl.postgres;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
+import com.miotech.kun.metadata.extract.impl.JDBCExtractor;
+import com.miotech.kun.metadata.extract.impl.hive.HiveExtractor;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.PostgresCluster;
 import org.slf4j.Logger;

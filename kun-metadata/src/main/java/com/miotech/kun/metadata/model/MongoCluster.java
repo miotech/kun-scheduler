@@ -1,14 +1,14 @@
 package com.miotech.kun.metadata.model;
 
-public class PostgresCluster extends Cluster {
+public class MongoCluster extends Cluster {
 
-    private final String url;
+    private String url;
 
-    private final String username;
+    private String username;
 
-    private final String password;
+    private String password;
 
-    public PostgresCluster(long clusterId, String url, String username, String password) {
+    public MongoCluster(long clusterId, String url, String username, String password) {
         super(clusterId);
         this.url = url;
         this.username = username;
@@ -27,31 +27,30 @@ public class PostgresCluster extends Cluster {
         return password;
     }
 
+    public static MongoCluster.Builder newBuilder() {
+        return new MongoCluster.Builder();
+    }
+
     @Override
     public String toString() {
-        return "PostgresCluster{" +
+        return "MongoCluster{" +
                 "url='" + url + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 '}';
     }
 
-    public static Builder newBuilder() {
-        return new Builder();
-    }
-
     public static final class Builder {
-        private long clusterId;
         private String url;
         private String username;
         private String password;
+        private long clusterId;
 
         private Builder() {
         }
 
-        public Builder withClusterId(long clusterId) {
-            this.clusterId = clusterId;
-            return this;
+        public static Builder aMongoCluster() {
+            return new Builder();
         }
 
         public Builder withUrl(String url) {
@@ -69,8 +68,13 @@ public class PostgresCluster extends Cluster {
             return this;
         }
 
-        public PostgresCluster build() {
-            return new PostgresCluster(clusterId, url, username, password);
+        public Builder withClusterId(long clusterId) {
+            this.clusterId = clusterId;
+            return this;
+        }
+
+        public MongoCluster build() {
+            return new MongoCluster(clusterId, url, username, password);
         }
     }
 }

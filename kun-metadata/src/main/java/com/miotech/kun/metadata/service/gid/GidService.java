@@ -42,8 +42,4 @@ public class GidService {
         return gid;
     }
 
-    public void change(DataStore dataStore, long gid) {
-
-    }
-
 }

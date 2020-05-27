@@ -65,7 +65,14 @@ public class HiveCluster extends Cluster {
 
     @Override
     public String toString() {
-        return null;
+        return "HiveCluster{" +
+                "dataStoreUrl='" + dataStoreUrl + '\'' +
+                ", dataStoreUsername='" + dataStoreUsername + '\'' +
+                ", dataStorePassword='" + dataStorePassword + '\'' +
+                ", metaStoreUrl='" + metaStoreUrl + '\'' +
+                ", metaStoreUsername='" + metaStoreUsername + '\'' +
+                ", metaStorePassword='" + metaStorePassword + '\'' +
+                '}';
     }
 
     public static final class Builder {
