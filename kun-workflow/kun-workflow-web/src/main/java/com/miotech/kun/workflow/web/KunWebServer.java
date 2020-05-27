@@ -13,6 +13,13 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.Properties;
 
 @Singleton
@@ -61,7 +68,39 @@ public class KunWebServer {
                 new KunWebServerModule(props),
                 new CommonModule()
         );
+
+        // If in dev mode, initialize in-memory database
+        if (props.containsKey("devDB.init")) {
+            String initSqlFile = (String) props.get("devDB.init");
+            logger.debug("Initializing DEV DB with SQL file: {}", initSqlFile);
+            KunWebServer.createDevTables(injector, initSqlFile);
+        }
+
         launch(injector.getInstance(KunWebServer.class));
+    }
+
+    public static void createDevTables(Injector injector, String initSqlFile) {
+        DataSource dataSource = injector.getInstance(DataSource.class);
+
+        try (Connection conn = dataSource.getConnection()) {
+            InputStream inputStream = KunWebServer.class
+                    .getClassLoader()
+                    .getResourceAsStream(initSqlFile);
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            String createDDL = "";
+            String line;
+            while((line = reader.readLine())!=null) {
+                createDDL += line;
+            }
+
+            String createJsonbDomain = "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT;";
+            conn.createStatement().execute(createJsonbDomain);
+            conn.createStatement().execute(createDDL);
+        } catch (SQLException | IOException e) {
+            logger.error("Failed to establish connection.", e);
+            throw new RuntimeException(e);
+        }
     }
 
     public static void launch(final KunWebServer webServer) throws Exception {

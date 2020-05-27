@@ -161,7 +161,10 @@ public class OperatorService {
         }
 
         // 4. Update existed
-        Operator operator = convertPropsVOToOperator(vo);
+        Operator operator = convertPropsVOToOperator(vo)
+                .cloneBuilder()
+                .withId(operatorId)
+                .build();
         operatorDao.updateById(operatorId, operator);
         return operator;
     }
@@ -180,6 +183,7 @@ public class OperatorService {
         // 3. produce a "partially" updated operator from existing one as template
         Operator operator = fetchedOperator.get();
         Operator updatedOperator = operator.cloneBuilder()
+                .withId(operatorId)
                 .withName(StringUtils.isEmpty(vo.getName()) ? operator.getName() : vo.getName())
                 .withDescription(StringUtils.isEmpty(vo.getDescription()) ? operator.getDescription() : vo.getDescription())
                 .withClassName(StringUtils.isEmpty(vo.getClassName()) ? operator.getClassName() : vo.getClassName())
@@ -234,7 +238,7 @@ public class OperatorService {
         operatorDao.deleteById(id);
     }
 
-    public List<Operator> searchOperators(OperatorSearchFilter filters) {
+    public List<Operator> fetchOperatorsWithFilter(OperatorSearchFilter filters) {
         // 1. Filter should not be null
         Preconditions.checkNotNull(filters, "Cannot search operators with filter: null");
 
@@ -260,11 +264,11 @@ public class OperatorService {
                 .build();
 
         // 4. Search through DAO
-        return operatorDao.search(regularizedFilter);
+        return operatorDao.fetchWithFilter(regularizedFilter);
     }
 
     public List<Operator> getAllOperators() {
-        return operatorDao.search(
+        return operatorDao.fetchWithFilter(
                 OperatorSearchFilter.newBuilder()
                         .withPageSize(Integer.MAX_VALUE)
                         .withPageNum(1)

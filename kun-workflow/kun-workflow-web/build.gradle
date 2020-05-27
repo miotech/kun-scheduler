@@ -25,6 +25,8 @@ dependencies {
     implementation "org.eclipse.jetty:jetty-servlet"
     implementation "org.eclipse.jetty:jetty-util"
     implementation "org.eclipse.jetty:jetty-webapp"
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.commons:commons-collections4'
 
     implementation "com.h2database:h2"
     

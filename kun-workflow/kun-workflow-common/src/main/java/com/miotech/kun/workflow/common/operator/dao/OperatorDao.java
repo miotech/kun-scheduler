@@ -47,7 +47,7 @@ public class OperatorDao {
         return Optional.ofNullable(operator);
     }
 
-    public List<Operator> search(OperatorSearchFilter filters) {
+    public List<Operator> fetchWithFilter(OperatorSearchFilter filters) {
         Preconditions.checkNotNull(filters, "Invalid parameter `filters`: found null object");
         Preconditions.checkArgument(Objects.nonNull(filters.getPageNum()) && filters.getPageNum() > 0, "Invalid page num: %d", filters.getPageNum());
         Preconditions.checkArgument(Objects.nonNull(filters.getPageSize()) && filters.getPageSize() > 0, "Invalid page size: %d", filters.getPageSize());

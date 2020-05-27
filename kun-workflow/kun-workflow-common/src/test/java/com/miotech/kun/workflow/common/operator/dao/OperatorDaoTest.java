@@ -93,7 +93,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
                 .build();
 
         // Process
-        List<Operator> fullResults = operatorDao.search(defaultFilter);
+        List<Operator> fullResults = operatorDao.fetchWithFilter(defaultFilter);
 
         // Validate
         assertEquals(5, fullResults.size());
@@ -115,8 +115,8 @@ public class OperatorDaoTest extends DatabaseTestBase {
                 .build();
 
         // Process
-        List<Operator> firstPageResults = operatorDao.search(filterPageOne);
-        List<Operator> secondPageResults = operatorDao.search(filterPageTwo);
+        List<Operator> firstPageResults = operatorDao.fetchWithFilter(filterPageOne);
+        List<Operator> secondPageResults = operatorDao.fetchWithFilter(filterPageTwo);
 
         // Validate
         assertEquals(3, firstPageResults.size());
@@ -138,7 +138,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
 
         // Process
         try {
-            operatorDao.search(filterWithInvalidPageNum);
+            operatorDao.fetchWithFilter(filterWithInvalidPageNum);
             fail();
         } catch (Exception e) {
             // Validate
@@ -146,7 +146,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
         }
 
         try {
-            operatorDao.search(filterWithInvalidPageSize);
+            operatorDao.fetchWithFilter(filterWithInvalidPageSize);
             fail();
         } catch (Exception e) {
             // Validate
@@ -166,7 +166,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
                 .build();
 
         // Process
-        List<Operator> results = operatorDao.search(filter);
+        List<Operator> results = operatorDao.fetchWithFilter(filter);
 
         // Validate
         assertEquals(3, results.size());
@@ -184,7 +184,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
                 .build();
 
         // Process
-        List<Operator> results = operatorDao.search(filter);
+        List<Operator> results = operatorDao.fetchWithFilter(filter);
 
         // Validate
         assertEquals(0, results.size());

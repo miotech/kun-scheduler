@@ -2,6 +2,8 @@ package com.miotech.kun.workflow.core.model.operator;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.workflow.core.model.common.Param;
 
 import java.util.List;
@@ -9,6 +11,8 @@ import java.util.Objects;
 
 @JsonDeserialize(builder = Operator.OperatorBuilder.class)
 public class Operator {
+    // We don't need custom deserializer since the default deserializer can handle String to long
+    @JsonSerialize(using = ToStringSerializer.class)
     private final Long id;
 
     private final String name;

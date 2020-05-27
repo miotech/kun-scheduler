@@ -69,8 +69,9 @@ public class DispatchServlet extends HttpServlet {
                 // Invoke method with args
                 List<Object> args = new ArrayList<>();
                 HttpAction action = handler.getAction();
-                for (Parameter parameter: action.getMethod().getParameters())
+                for (Parameter parameter: action.getMethod().getParameters()) {
                     args.add(resolveParameter(parameter, handler.getHttpRequest(), resp));
+                }
 
                 Object responseObj = action.call(args.toArray());
                 doResponse(responseObj, req, resp);
@@ -117,7 +118,7 @@ public class DispatchServlet extends HttpServlet {
         if (responseObj != null) {
             PrintWriter out = resp.getWriter();
             // TODO: read content type from header and respond different format
-            resp.setContentType("application/json");
+            resp.setContentType("application/json;charset=utf-8");
             resp.setCharacterEncoding("UTF-8");
 
             out.print(objectMapper.writeValueAsString(responseObj));
@@ -131,7 +132,7 @@ public class DispatchServlet extends HttpServlet {
         Class<?> paramClz = parameter.getType();
         HttpServletRequest httpServletRequest = req.getHttpServletRequest();
         if (paramClz == HttpServletRequest.class) {
-            return req;
+            return req.getHttpServletRequest();
         }
 
         if (paramClz == HttpServletResponse.class) {
