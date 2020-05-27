@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.utils.ExceptionUtils;
 import com.miotech.kun.workflow.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.http.*;

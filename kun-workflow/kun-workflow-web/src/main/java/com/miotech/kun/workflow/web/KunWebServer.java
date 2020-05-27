@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.miotech.kun.common.CommonModule;
 import com.miotech.kun.workflow.utils.PropertyUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -57,7 +58,8 @@ public class KunWebServer {
         /* Initialize Guice Injector */
         Properties props = PropertyUtils.loadAppProps();
         final Injector injector = Guice.createInjector(
-                new KunWebServerModule(props)
+                new KunWebServerModule(props),
+                new CommonModule()
         );
         launch(injector.getInstance(KunWebServer.class));
     }
