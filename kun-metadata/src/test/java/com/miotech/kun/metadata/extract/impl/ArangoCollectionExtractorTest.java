@@ -1,9 +1,10 @@
 package com.miotech.kun.metadata.extract.impl;
 
+import com.miotech.kun.metadata.extract.impl.arango.ArangoCollectionExtractor;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
-import com.miotech.kun.workflow.core.model.entity.CommonCluster;
+import com.miotech.kun.metadata.model.CommonCluster;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,11 +18,11 @@ public class ArangoCollectionExtractorTest {
     @Before
     public void setUp() throws Exception {
         CommonCluster cluster = CommonCluster.newBuilder()
-                .withHostname("10.0.2.162")
-                .withPort(8529)
-                .withUsername("root")
-                .withPassword("d@ta")
+                .withDataStoreUrl("10.0.2.162:8529")
+                .withDataStoreUsername("root")
+                .withDataStorePassword("d@ta")
                 .build();
+
         this.extractor = new ArangoCollectionExtractor(cluster, "miograph_unmerged_two", "mio_people_family_relations");
 //        CommonCluster cluster = CommonCluster.newBuilder()
 //                .withHostname("localhost")

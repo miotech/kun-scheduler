@@ -1,14 +1,14 @@
-package com.miotech.kun.metadata.extract.impl;
+package com.miotech.kun.metadata.extract.impl.arango;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.miotech.kun.metadata.extract.factory.ExtractorTemplate;
+import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
+import com.miotech.kun.metadata.model.CommonCluster;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
-import com.miotech.kun.workflow.core.model.entity.CommonCluster;
-import com.miotech.kun.workflow.core.model.entity.DataStore;
-import com.miotech.kun.workflow.core.model.entity.DataStoreType;
+import com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.utils.JSONUtils;
 
 import java.util.ArrayList;
@@ -45,28 +45,37 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
 
     @Override
     public DatasetFieldStat getFieldStats(DatasetField datasetField){
-        DatasetFieldStat stat = new DatasetFieldStat();
         String query = String.format("FOR c IN %s FILTER c.%s != NULL COLLECT WITH COUNT INTO length RETURN length", collection, datasetField.getName());
         Integer count = client.count(dbName, query);
-        stat.setNonnullCount(count);
-        stat.setStatDate(new Date());
+
+        DatasetFieldStat stat = DatasetFieldStat.newBuilder()
+                .withNonnullCount(count)
+                .withStatDate(new Date())
+                .build();
+
         return stat;
     }
 
     @Override
     public DatasetStat getTableStats(){
-        DatasetStat stat = new DatasetStat();
         String query = String.format("RETURN LENGTH(%s)", collection);
         Integer count = client.count(dbName, query);
-        stat.setRowCount(count);
+        DatasetStat stat = DatasetStat.newBuilder()
+                .withRowCount(count)
+                .build();
+
         return stat;
     }
 
     @Override
     public DataStore getDataStore(){
-        DataStore dataStore = new DataStore(DataStoreType.COLLECTION);
-        dataStore.setCluster(this.cluster);
+        DataStore dataStore = new ArangoCollectionStore(cluster.getDataStoreUrl(), dbName, collection);
         return dataStore;
+    }
+
+    @Override
+    protected String getName() {
+        return collection;
     }
 
     public List<DatasetField> docToFields(JsonNode root, String parent){

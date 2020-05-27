@@ -1,9 +1,9 @@
-package com.miotech.kun.metadata.extract.impl;
+package com.miotech.kun.metadata.extract.impl.arango;
 
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.workflow.core.model.entity.CommonCluster;
+import com.miotech.kun.metadata.model.CommonCluster;
 
 import java.util.ArrayList;
 import java.util.Iterator;
