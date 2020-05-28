@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.extract.impl.mongo;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.model.Dataset;
@@ -12,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
+import java.util.List;
 
 public class MongoDatabaseExtractor implements Extractor {
     private static Logger logger = LoggerFactory.getLogger(MongoDatabaseExtractor.class);
@@ -29,13 +31,20 @@ public class MongoDatabaseExtractor implements Extractor {
     public Iterator<Dataset> extract() {
         MongoClient client = null;
         try {
+            List<String> collections = Lists.newArrayList();
             client = new MongoClient(new MongoClientURI(cluster.getUrl()));
-            MongoDatabase useDatabase = client.getDatabase(this.database);
-            MongoIterable<String> collections = useDatabase.listCollectionNames();
-            return Iterators.concat(collections.map((collection) -> new MongoCollectionExtractor(cluster, database, collection).extract()).iterator());
+            MongoDatabase usedDatabase = client.getDatabase(database);
+            MongoIterable<String> collectionIterable = usedDatabase.listCollectionNames();
+            for (String collection : collectionIterable) {
+                collections.add(collection);
+            }
+
+            return Iterators.concat(collections.stream().map((collection) -> new MongoCollectionExtractor(cluster, database, collection).extract()).iterator());
         } catch (Exception e) {
             logger.error("mongo operate error: ", e);
             throw new RuntimeException(e);
+        } finally {
+            client.close();
         }
     }
 }

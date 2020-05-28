@@ -1,102 +1,45 @@
 package com.miotech.kun.metadata.entrance;
 
-import com.miotech.kun.metadata.client.JDBCClient;
-import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.impl.hive.HiveExtractor;
+import com.miotech.kun.metadata.extract.impl.mongo.MongoExtractor;
 import com.miotech.kun.metadata.extract.impl.postgres.PostgresExtractor;
 import com.miotech.kun.metadata.load.Loader;
-import com.miotech.kun.metadata.load.impl.PrintLoader;
-import com.miotech.kun.metadata.model.Cluster;
-import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.HiveCluster;
-import com.miotech.kun.metadata.model.PostgresCluster;
+import com.miotech.kun.metadata.model.*;
+import com.miotech.kun.workflow.db.DatabaseOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 
 public class Entrance {
     private static Logger logger = LoggerFactory.getLogger(Entrance.class);
 
-    private final String url;
-    private final String username;
-    private final String password;
+    private final DatabaseOperator operator;
 
     private final Loader loader;
 
-    public Entrance(String url, String username, String password) {
-        this(url, username, password, new PrintLoader());
-    }
-
-    public Entrance(String url, String username, String password, Loader loader) {
-        this.url = url;
-        this.username = username;
-        this.password = password;
+    public Entrance(DatabaseOperator operator, Loader loader) {
+        this.operator = operator;
         this.loader = loader;
     }
 
     public void start() {
-        List<Cluster> clusters = new ArrayList<>();
-
-        Connection connection = null;
-        Statement statement = null;
-        ResultSet resultSet = null;
-        try {
-            connection = JDBCClient.getConnection(DatabaseType.MYSQL, url, username, password);
-            statement = connection.createStatement();
-            String sql = "SELECT id, `type`, url, username, password FROM kun_mt_cluster";
-            resultSet = statement.executeQuery(sql);
-
-            while (resultSet.next()) {
-                Cluster cluster = buildCluster(resultSet);
-                clusters.add(cluster);
-            }
-
-            clusters.stream().forEach(cluster -> start(cluster));
-        } catch (ClassNotFoundException classNotFoundException) {
-            logger.error("driver class not found, DatabaseType: {}", DatabaseType.POSTGRES.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
-        } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
-        } catch (Exception e) {
-            logger.error("etl error, url: {}", url, e);
-            throw new RuntimeException(e);
-        } finally {
-            JDBCClient.close(connection, statement, resultSet);
-        }
+        String sql = "SELECT id, `type`, url, username, password FROM kun_mt_cluster";
+        List<Cluster> clusters = operator.fetchAll(sql, rs -> buildCluster(rs));
+        clusters.stream().forEach(cluster -> start(cluster));
     }
 
     public void start(long clusterId) {
-        Connection connection = null;
-        PreparedStatement statement = null;
-        ResultSet resultSet = null;
-        try {
-            connection = JDBCClient.getConnection(DatabaseType.MYSQL, url, username, password);
-            String sql = "SELECT id, `type`, url, username, password FROM kun_mt_cluster WHERE id = ?";
-            statement = connection.prepareStatement(sql);
-            statement.setLong(1, clusterId);
-            resultSet = statement.executeQuery();
-
-            Cluster cluster = null;
-            while (resultSet.next()) {
-                cluster = buildCluster(resultSet);
-            }
-
-            start(cluster);
-        } catch (ClassNotFoundException classNotFoundException) {
-            logger.error("driver class not found, DatabaseType: {}", DatabaseType.POSTGRES.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
-        } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
-        } catch (Exception e) {
-            logger.error("etl error, url: {}", url, e);
-            throw new RuntimeException(e);
-        } finally {
-            JDBCClient.close(connection, statement, resultSet);
+        if (clusterId <= 0) {
+            throw new RuntimeException("clusterId must be a positive long, clusterId: " + clusterId);
         }
+
+        String sql = "SELECT id, `type`, url, username, password FROM kun_mt_cluster WHERE id = ?";
+        Cluster cluster = operator.fetchOne(sql, rs -> buildCluster(rs), clusterId);
+        start(cluster);
     }
 
     private void start(Cluster cluster) {
@@ -109,6 +52,8 @@ public class Entrance {
             datasetIterator = new HiveExtractor((HiveCluster) cluster).extract();
         } else if (cluster instanceof PostgresCluster) {
             datasetIterator = new PostgresExtractor((PostgresCluster) cluster).extract();
+        } else if (cluster instanceof MongoCluster) {
+            datasetIterator = new MongoExtractor((MongoCluster) cluster).extract();
         }
         // TODO add others Extractor
 
@@ -139,15 +84,23 @@ public class Entrance {
                         .withDataStorePassword(password.split(";")[0]);
                 return hiveClusterBuilder.build();
             case "postgres":
-                //TODO add PostgresCluster builder
                 PostgresCluster.Builder postgresClusterBuilder = PostgresCluster.newBuilder();
                 postgresClusterBuilder.withClusterId(id)
                         .withUrl(url)
                         .withUsername(username)
                         .withPassword(password);
                 return postgresClusterBuilder.build();
+            case "mongo":
+                MongoCluster.Builder mongoClusterBuilder = MongoCluster.newBuilder();
+                mongoClusterBuilder.withClusterId(id)
+                        .withUrl(url)
+                        .withUsername(username)
+                        .withPassword(password);
+                return mongoClusterBuilder.build();
+            //TODO add other cluster builder
             default:
-                return null;
+                logger.error("invalid cluster type: {}", type);
+                throw new RuntimeException("invalid cluster type: " + type);
         }
     }
 

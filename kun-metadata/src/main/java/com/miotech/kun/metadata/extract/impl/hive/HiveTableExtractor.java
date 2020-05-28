@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.extract.impl.hive;
 
+import com.beust.jcommander.internal.Lists;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
@@ -21,26 +22,27 @@ import java.util.List;
 public class HiveTableExtractor extends ExtractorTemplate {
     private static Logger logger = LoggerFactory.getLogger(HiveTableExtractor.class);
 
-    private final HiveCluster cluster;
     private final String database;
     private final String table;
+    private final HiveCluster hiveCluster;
 
     public HiveTableExtractor(HiveCluster cluster, String database, String table) {
-        this.cluster = cluster;
+        super(cluster);
         this.database = database;
         this.table = table;
+        this.hiveCluster = cluster;
     }
 
     @Override
     public List<DatasetField> getSchema() {
         // Get schema information of table
-        List<DatasetField> fields = new ArrayList<>();
+        List<DatasetField> fields = Lists.newArrayList();
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.MYSQL, cluster.getMetaStoreUrl(),
-                    cluster.getMetaStoreUsername(), cluster.getMetaStorePassword());
+            connection = JDBCClient.getConnection(DatabaseType.MYSQL, hiveCluster.getMetaStoreUrl(),
+                    hiveCluster.getMetaStoreUsername(), hiveCluster.getMetaStorePassword());
             String sql = "SELECT source.* FROM  " +
                     "    (SELECT t.TBL_ID, d.NAME as `schema`, t.TBL_NAME name, t.TBL_TYPE, tp.PARAM_VALUE as description,  " +
                     "           p.PKEY_NAME as col_name, p.INTEGER_IDX as col_sort_order,  " +
@@ -98,7 +100,7 @@ public class HiveTableExtractor extends ExtractorTemplate {
         try {
             long distinctCount = 0;
             long nonnullCount = 0;
-            connection = JDBCClient.getConnection(DatabaseType.HIVE, cluster.getDataStoreUrl() + "/" + database, cluster.getDataStoreUsername(), cluster.getDataStorePassword());
+            connection = JDBCClient.getConnection(DatabaseType.HIVE, hiveCluster.getDataStoreUrl() + "/" + database, hiveCluster.getDataStoreUsername(), hiveCluster.getDataStorePassword());
             String sql = "SELECT COUNT(*) FROM (SELECT " + datasetField.getName() + " FROM " + table + " GROUP BY " + datasetField.getName() + ") t1";
             statement = connection.createStatement();
             resultSet = statement.executeQuery(sql);
@@ -136,7 +138,7 @@ public class HiveTableExtractor extends ExtractorTemplate {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.HIVE, cluster.getDataStoreUrl() + "/" + database, cluster.getDataStoreUsername(), cluster.getDataStorePassword());
+            connection = JDBCClient.getConnection(DatabaseType.HIVE, hiveCluster.getDataStoreUrl() + "/" + database, hiveCluster.getDataStoreUsername(), hiveCluster.getDataStorePassword());
             String sql = "SELECT COUNT(*) FROM " + table;
             statement = connection.createStatement();
             resultSet = statement.executeQuery(sql);
@@ -160,12 +162,17 @@ public class HiveTableExtractor extends ExtractorTemplate {
 
     @Override
     protected DataStore getDataStore() {
-        return new HiveTableStore(cluster.getDataStoreUrl(), database, table);
+        return new HiveTableStore(hiveCluster.getDataStoreUrl(), database, table);
     }
 
     @Override
     protected String getName() {
         return DatasetNameGenerator.generateDatasetName(DatabaseType.HIVE, table);
+    }
+
+    @Override
+    protected long getClusterId() {
+        return cluster.getClusterId();
     }
 
 }

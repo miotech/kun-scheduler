@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.extract.impl.postgres;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
@@ -31,7 +32,7 @@ public class PostgresSchemaExtractor implements Extractor {
 
     @Override
     public Iterator<Dataset> extract() {
-        List<String> tables = new ArrayList<>();
+        List<String> tables = Lists.newArrayList();
 
         Connection connection = null;
         PreparedStatement statement = null;

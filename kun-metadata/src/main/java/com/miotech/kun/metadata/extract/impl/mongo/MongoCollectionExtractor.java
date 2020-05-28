@@ -1,6 +1,9 @@
 package com.miotech.kun.metadata.extract.impl.mongo;
 
 import com.beust.jcommander.internal.Lists;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
 import com.miotech.kun.metadata.extract.tool.DatasetNameGenerator;
@@ -24,14 +27,15 @@ import java.util.Map;
 public class MongoCollectionExtractor extends ExtractorTemplate {
     private static Logger logger = LoggerFactory.getLogger(MongoCollectionExtractor.class);
 
-    private final MongoCluster cluster;
+    private final MongoCluster mongoCluster;
 
     private final String database;
 
     private final String collection;
 
-    public MongoCollectionExtractor(MongoCluster cluster, String database, String collection) {
-        this.cluster = cluster;
+    public MongoCollectionExtractor(MongoCluster mongoCluster, String database, String collection) {
+        super(mongoCluster);
+        this.mongoCluster = mongoCluster;
         this.database = database;
         this.collection = collection;
     }
@@ -41,20 +45,21 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
         List<DatasetField> fields = Lists.newArrayList();
         MongoClient client = null;
         try {
-            client = new MongoClient(new MongoClientURI(cluster.getUrl()));
-            MongoCollection<Document> documents = client.getDatabase(database).getCollection(this.collection);
+            client = new MongoClient(new MongoClientURI(mongoCluster.getUrl()));
+            MongoCollection<Document> documents = client.getDatabase(database).getCollection(collection);
             Document document = documents.find().first();
             if (document != null) {
-                for (Map.Entry<String, Object> stringObjectEntry : document.entrySet()) {
-                    String key = stringObjectEntry.getKey();
-                    Object value = stringObjectEntry.getValue();
-                    logger.info("fields: {}", key);
+                JsonObject jsonObject = new JsonParser().parse(new Gson().toJson(document)).getAsJsonObject();
+                for (Map.Entry<String, Object> entry : document.entrySet()) {
+                    String key = entry.getKey();
                     fields.add(new DatasetField(key, "", ""));
                 }
             }
         } catch (Exception e) {
             logger.error("mongo operate error: ", e);
             throw new RuntimeException(e);
+        } finally {
+            client.close();
         }
         return fields;
     }
@@ -68,22 +73,29 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
     protected DatasetStat getTableStats() {
         MongoClient client = null;
         try {
-            client = new MongoClient(new MongoClientURI(cluster.getUrl()));
+            client = new MongoClient(new MongoClientURI(mongoCluster.getUrl()));
             long count = client.getDatabase(database).getCollection(collection).count();
             return new DatasetStat(count, new Date());
         } catch (Exception e) {
             logger.error("mongo operate error: ", e);
             throw new RuntimeException(e);
+        } finally {
+            client.close();
         }
     }
 
     @Override
     protected DataStore getDataStore() {
-        return new MongoDataStore(cluster.getUrl(), database, collection);
+        return new MongoDataStore(mongoCluster.getUrl(), database, collection);
     }
 
     @Override
     protected String getName() {
         return DatasetNameGenerator.generateDatasetName(DatabaseType.MONGO, collection);
+    }
+
+    @Override
+    protected long getClusterId() {
+        return cluster.getClusterId();
     }
 }

@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.extract.impl.postgres;
 
+import com.beust.jcommander.internal.Lists;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
@@ -20,13 +21,14 @@ import java.util.List;
 public class PostgresTableExtractor extends ExtractorTemplate {
     private static Logger logger = LoggerFactory.getLogger(PostgresTableExtractor.class);
 
-    private final PostgresCluster cluster;
+    private final PostgresCluster postgresCluster;
     private final String database;
     private final String schema;
     private final String table;
 
-    public PostgresTableExtractor(PostgresCluster cluster, String database, String schema, String table) {
-        this.cluster = cluster;
+    public PostgresTableExtractor(PostgresCluster postgresCluster, String database, String schema, String table) {
+        super(postgresCluster);
+        this.postgresCluster = postgresCluster;
         this.database = database;
         this.schema = schema;
         this.table = table;
@@ -35,12 +37,12 @@ public class PostgresTableExtractor extends ExtractorTemplate {
     @Override
     public List<DatasetField> getSchema() {
         // Get schema information of table
-        List<DatasetField> fields = new ArrayList<>();
+        List<DatasetField> fields = Lists.newArrayList();
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useDatabase(cluster.getUrl(), database), cluster.getUsername(), cluster.getPassword());
+            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useDatabase(postgresCluster.getUrl(), database), postgresCluster.getUsername(), postgresCluster.getPassword());
             String sql = "SELECT column_name, udt_name, '' FROM information_schema.columns WHERE table_name = ? AND table_schema = ?";
             statement = connection.prepareStatement(sql);
             statement.setString(1, table);
@@ -75,7 +77,7 @@ public class PostgresTableExtractor extends ExtractorTemplate {
         try {
             long distinctCount = 0;
             long nonnullCount = 0;
-            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useSchema(cluster.getUrl(), database, schema), cluster.getUsername(), cluster.getPassword());
+            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useSchema(postgresCluster.getUrl(), database, schema), postgresCluster.getUsername(), postgresCluster.getPassword());
             String sql = "SELECT COUNT(DISTINCT(" + StringUtil.convertUpperCase(datasetField.getName()) + ")) FROM " + StringUtil.convertUpperCase(table);
             if ("json".equals(datasetField.getType())) {
                 sql = "SELECT COUNT(DISTINCT(CAST(" + StringUtil.convertUpperCase(datasetField.getName()) + " AS VARCHAR))) FROM " + StringUtil.convertUpperCase(table);
@@ -118,7 +120,7 @@ public class PostgresTableExtractor extends ExtractorTemplate {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useSchema(cluster.getUrl(), database, schema), cluster.getUsername(), cluster.getPassword());
+            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useSchema(postgresCluster.getUrl(), database, schema), postgresCluster.getUsername(), postgresCluster.getPassword());
             String sql = "SELECT COUNT(*) FROM " + StringUtil.convertUpperCase(table);
             statement = connection.createStatement();
             resultSet = statement.executeQuery(sql);
@@ -142,11 +144,16 @@ public class PostgresTableExtractor extends ExtractorTemplate {
 
     @Override
     protected DataStore getDataStore() {
-        return new PostgresDataStore(cluster.getUrl(), database, schema, table);
+        return new PostgresDataStore(postgresCluster.getUrl(), database, schema, table);
     }
 
     @Override
     protected String getName() {
         return DatasetNameGenerator.generateDatasetName(DatabaseType.POSTGRES, table);
+    }
+
+    @Override
+    protected long getClusterId() {
+        return cluster.getClusterId();
     }
 }

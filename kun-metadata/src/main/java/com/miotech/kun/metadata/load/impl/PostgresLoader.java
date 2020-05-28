@@ -1,11 +1,9 @@
 package com.miotech.kun.metadata.load.impl;
 
+import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.miotech.kun.metadata.load.Loader;
-import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.DatasetField;
-import com.miotech.kun.metadata.model.DatasetFieldPO;
-import com.miotech.kun.metadata.model.DatasetFieldStat;
+import com.miotech.kun.metadata.model.*;
 import com.miotech.kun.metadata.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.metadata.service.gid.GidService;
 import com.miotech.kun.workflow.db.DatabaseOperator;
@@ -13,15 +11,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
+@Singleton
 public class PostgresLoader implements Loader {
     private static Logger logger = LoggerFactory.getLogger(PostgresLoader.class);
+    private static final BigDecimal HUNDRED = new BigDecimal("100.00");
 
     private final DatabaseOperator dbOperator;
     private final GidService gidGenerator;
@@ -45,11 +43,14 @@ public class PostgresLoader implements Loader {
                     dbOperator.update("INSERT INTO kun_mt_dataset(gid, `name`, cluster_id, data_store) VALUES(?, ?, ?, ?)", gid, dataset.getName(), dataset.getClusterId(), DataStoreJsonUtil.toJson(dataset.getDataStore()));
                 }
 
-                dbOperator.update("INSERT INTO kun_mt_dataset_stats(dataset_gid, `row_count`, stats_date) VALUES (?, ?, ?)", gid, dataset.getDatasetStat().getRowCount(), dataset.getDatasetStat().getStatDate());
+                DatasetStat datasetStat = dataset.getDatasetStat();
+                if (datasetStat != null) {
+                    dbOperator.update("INSERT INTO kun_mt_dataset_stats(dataset_gid, `row_count`, stats_date) VALUES (?, ?, ?)", gid, datasetStat.getRowCount(), datasetStat.getStatDate() == null ? new Date() : datasetStat.getStatDate());
+                }
 
                 Map<String, DatasetFieldPO> fieldInfos = new HashMap<>();
-                List<String> deletedFields = new ArrayList<>();
-                List<String> survivorFields = new ArrayList<>();
+                List<String> deletedFields = Lists.newArrayList();
+                List<String> survivorFields = Lists.newArrayList();
                 fill(dataset.getFields(), fieldInfos, deletedFields, survivorFields, gid);
 
                 for (String deletedField : deletedFields) {
@@ -82,7 +83,7 @@ public class PostgresLoader implements Loader {
                                 logger.error("compute nonnullPercentage fail, nonnullCount > rowCount, nonnullCount: {}, rowCount: {}", datasetFieldStat.getNonnullCount(), dataset.getDatasetStat().getRowCount());
                                 throw new RuntimeException("nonnullCount > rowCount");
                             }
-                            nonnullPercentage = new BigDecimal(datasetFieldStat.getNonnullCount()).multiply(new BigDecimal("100")).divide(new BigDecimal(dataset.getDatasetStat().getRowCount()), 2, BigDecimal.ROUND_HALF_UP);
+                            nonnullPercentage = new BigDecimal(datasetFieldStat.getNonnullCount()).multiply(HUNDRED).divide(new BigDecimal(dataset.getDatasetStat().getRowCount()), 2, BigDecimal.ROUND_HALF_UP);
                         }
                         dbOperator.update("INSERT INTO kun_mt_dataset_field_stats(field_id, distinct_count, nonnull_count, nonnull_percentage) VALUES(?, ?, ?, ?)", id, datasetFieldStat.getDistinctCount(), datasetFieldStat.getNonnullCount(), nonnullPercentage);
                     }
@@ -104,7 +105,6 @@ public class PostgresLoader implements Loader {
                       List<String> survivorFields, long gid) {
         List<String> extractFields = fields.stream().map(field -> field.getName()).collect(Collectors.toList());
 
-        //TODO bug(use fetchAll) get all field name
         dbOperator.fetchAll("SELECT id, `name`, `type` FROM kun_mt_dataset_field WHERE dataset_gid = ?", (rs) -> {
             long id = rs.getLong(1);
             String fieldName = rs.getString(2);
@@ -118,18 +118,6 @@ public class PostgresLoader implements Loader {
         }, gid);
         deletedFields.removeAll(extractFields);
         survivorFields.retainAll(extractFields);
-
-
-        /*List<DatasetFieldPO> fieldPOS = dbOperator.fetchAll("SELECT id, `name`, `type` FROM kun_mt_dataset_field WHERE dataset_gid = ?", (rs) -> {
-            long id = rs.getLong(1);
-            String fieldName = rs.getString(2);
-            String fieldType = rs.getString(3);
-            survivorFields.add(fieldName);
-
-            return new DatasetFieldPO(id, fieldName, fieldType);
-        }, gid);
-        deletedFields.removeAll(extractFields);
-        survivorFields.retainAll(extractFields);*/
 
     }
 

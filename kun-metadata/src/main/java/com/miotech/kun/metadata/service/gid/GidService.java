@@ -23,6 +23,10 @@ public class GidService {
 
     public long generate(DataStore dataStore) {
         // Convert dataStore to JSON
+        if (dataStore == null) {
+            throw new RuntimeException("dataStore can't be null");
+        }
+
         String dataStoreJson;
         try {
             dataStoreJson = DataStoreJsonUtil.toJson(dataStore);

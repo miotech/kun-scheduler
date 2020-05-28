@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.extract.impl.postgres;
 
+import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
@@ -28,7 +29,7 @@ public class PostgresDatabaseExtractor implements Extractor {
 
     @Override
     public Iterator<Dataset> extract() {
-        List<String> schemas = new ArrayList<>();
+        List<String> schemas = Lists.newArrayList();
 
         Connection connection = null;
         Statement statement = null;
@@ -36,7 +37,7 @@ public class PostgresDatabaseExtractor implements Extractor {
         try {
             connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useDatabase(cluster.getUrl(), database),
                     cluster.getUsername(), cluster.getPassword());
-            String scanDatabase = "SELECT SCHEMA_NAME FROM information_schema.schemata WHERE SCHEMA_NAME NOT LIKE 'pg_%' AND SCHEMA_NAME != 'information_schema'";
+            String scanDatabase = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name != 'information_schema'";
             statement = connection.createStatement();
             resultSet = statement.executeQuery(scanDatabase);
 
