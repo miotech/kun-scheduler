@@ -2,6 +2,7 @@
 # ------
 .gradle
 /build
+/out
 /buildSrc/build
 /buildSrc/subprojects/*/build
 /subprojects/*/build
@@ -12,6 +13,7 @@
 
 **/.gradle
 **/build
+**/out
 **/buildSrc/build
 **/buildSrc/subprojects/*/build
 **/subprojects/*/build
