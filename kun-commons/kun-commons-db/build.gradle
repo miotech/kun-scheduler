@@ -5,4 +5,5 @@ dependencies {
     implementation "org.flywaydb:flyway-core"
 
     testRuntimeOnly "com.h2database:h2"
+    testImplementation project(":kun-commons:kun-commons-testing")
 }

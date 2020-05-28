@@ -1,6 +1,7 @@
 package com.miotech.kun.commons.db;
 
 import com.google.inject.Inject;
+import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.db.ResultSetMapper;
 import org.junit.Test;
@@ -10,9 +11,9 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
 
 public class DatabaseOperatorTest extends DatabaseTestBase {
     @Inject
