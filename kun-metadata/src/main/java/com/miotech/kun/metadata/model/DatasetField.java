@@ -26,4 +26,12 @@ public class DatasetField {
         this.comment = comment;
     }
 
+    @Override
+    public String toString() {
+        return "DatasetField{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                ", comment='" + comment + '\'' +
+                '}';
+    }
 }

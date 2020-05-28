@@ -37,7 +37,7 @@ public class EntranceTest extends DatabaseTestBase {
     @Test
     public void testStart_id() {
         Entrance entrance = new Entrance(operator, new PrintLoader());
-        entrance.start(1L);
+        entrance.start(0L);
     }
 
 }

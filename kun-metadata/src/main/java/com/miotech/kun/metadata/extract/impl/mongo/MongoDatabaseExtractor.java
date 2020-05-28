@@ -22,17 +22,20 @@ public class MongoDatabaseExtractor implements Extractor {
 
     private final String database;
 
+    private MongoClient client;
+
     public MongoDatabaseExtractor(MongoCluster cluster, String database) {
         this.cluster = cluster;
         this.database = database;
+        if (cluster != null) {
+            this.client = new MongoClient(new MongoClientURI(cluster.getUrl()));
+        }
     }
 
     @Override
     public Iterator<Dataset> extract() {
-        MongoClient client = null;
         try {
             List<String> collections = Lists.newArrayList();
-            client = new MongoClient(new MongoClientURI(cluster.getUrl()));
             MongoDatabase usedDatabase = client.getDatabase(database);
             MongoIterable<String> collectionIterable = usedDatabase.listCollectionNames();
             for (String collection : collectionIterable) {

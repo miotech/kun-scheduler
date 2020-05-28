@@ -1,28 +1,22 @@
 package com.miotech.kun.metadata.constant;
 
 public enum  DatabaseType {
-    POSTGRES("Postgres",1),
-    MYSQL("MySQL", 2),
-    MONGO("Mongo", 5),
-    ARANGO("Arango", 6),
-    ELASTICSEARCH("ElasticsSearch", 7),
-    PRESTO("Presto", 10),
-    HIVE("Hive", 11);
+    POSTGRES("Postgres"),
+    MYSQL("MySQL"),
+    MONGO("Mongo"),
+    ARANGO("Arango"),
+    ELASTICSEARCH("ElasticsSearch"),
+    PRESTO("Presto"),
+    HIVE("Hive");
 
     private String name;
-    private int value;
 
-    DatabaseType(String name, int value) {
+    DatabaseType(String name) {
         this.name = name;
-        this.value = value;
     }
 
     public String getName() {
         return name;
-    }
-
-    public int getValue() {
-        return value;
     }
 
 }

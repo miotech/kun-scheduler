@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.entrance;
 
+import com.google.common.base.Preconditions;
 import com.miotech.kun.metadata.extract.impl.hive.HiveExtractor;
 import com.miotech.kun.metadata.extract.impl.mongo.MongoExtractor;
 import com.miotech.kun.metadata.extract.impl.postgres.PostgresExtractor;
@@ -33,9 +34,7 @@ public class Entrance {
     }
 
     public void start(long clusterId) {
-        if (clusterId <= 0) {
-            throw new RuntimeException("clusterId must be a positive long, clusterId: " + clusterId);
-        }
+        Preconditions.checkArgument(clusterId > 0L, "clusterId must be a positive long, clusterId: %s", clusterId);
 
         String sql = "SELECT id, `type`, url, username, password FROM kun_mt_cluster WHERE id = ?";
         Cluster cluster = operator.fetchOne(sql, rs -> buildCluster(rs), clusterId);
@@ -43,26 +42,29 @@ public class Entrance {
     }
 
     private void start(Cluster cluster) {
-        if (cluster == null) {
-            return;
-        }
+        Preconditions.checkNotNull(cluster, "cluster should not be null.");
 
-        Iterator<Dataset> datasetIterator = null;
-        if (cluster instanceof HiveCluster) {
-            datasetIterator = new HiveExtractor((HiveCluster) cluster).extract();
-        } else if (cluster instanceof PostgresCluster) {
-            datasetIterator = new PostgresExtractor((PostgresCluster) cluster).extract();
-        } else if (cluster instanceof MongoCluster) {
-            datasetIterator = new MongoExtractor((MongoCluster) cluster).extract();
-        }
-        // TODO add others Extractor
-
-        if (datasetIterator != null) {
-            while (datasetIterator.hasNext()) {
-                Dataset dataset = datasetIterator.next();
-                loader.load(dataset);
+        try {
+            Iterator<Dataset> datasetIterator = null;
+            if (cluster instanceof HiveCluster) {
+                datasetIterator = new HiveExtractor((HiveCluster) cluster).extract();
+            } else if (cluster instanceof PostgresCluster) {
+                datasetIterator = new PostgresExtractor((PostgresCluster) cluster).extract();
+            } else if (cluster instanceof MongoCluster) {
+                datasetIterator = new MongoExtractor((MongoCluster) cluster).extract();
             }
+            // TODO add others Extractor
+
+            if (datasetIterator != null) {
+                while (datasetIterator.hasNext()) {
+                    Dataset dataset = datasetIterator.next();
+                    loader.load(dataset);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("start etl error: ", e);
         }
+
     }
 
     private Cluster buildCluster(ResultSet resultSet) throws SQLException {

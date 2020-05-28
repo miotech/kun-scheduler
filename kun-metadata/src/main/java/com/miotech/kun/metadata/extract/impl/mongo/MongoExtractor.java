@@ -18,17 +18,19 @@ public class MongoExtractor implements Extractor {
     private static Logger logger = LoggerFactory.getLogger(MongoExtractor.class);
 
     private final MongoCluster cluster;
+    private MongoClient client;
 
     public MongoExtractor(MongoCluster cluster) {
         this.cluster = cluster;
+        if (cluster != null) {
+            this.client = new MongoClient(new MongoClientURI(cluster.getUrl()));
+        }
     }
 
     @Override
     public Iterator<Dataset> extract() {
-        MongoClient client = null;
         try {
             List<String> databases = Lists.newArrayList();
-            client = new MongoClient(new MongoClientURI(cluster.getUrl()));
             MongoIterable<String> databaseIterable = client.listDatabaseNames();
             for (String database : databaseIterable) {
                 databases.add(database);

@@ -49,7 +49,6 @@ subprojects {
                 implementation "com.facebook.presto:presto-jdbc:0.232"
                 implementation "org.mongodb:mongo-java-driver:3.6.3"
 
-                testImplementation 'org.testng:testng:6.14.2'
                 testImplementation "junit:junit:4.12"
                 testImplementation "org.hamcrest:hamcrest:2.2"
                 testImplementation "org.hamcrest:hamcrest-library:1.3"
