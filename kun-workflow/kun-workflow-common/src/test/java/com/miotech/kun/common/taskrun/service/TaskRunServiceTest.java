@@ -6,6 +6,7 @@ import com.miotech.kun.common.task.dao.TaskDao;
 import com.miotech.kun.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -44,7 +45,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withName("test task")
                 .withDescription("")
                 .withOperatorId(1L)
-                .withScheduleConf(new ScheduleConf())
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withArguments(Collections.emptyList())
                 .withVariableDefs(Collections.emptyList())
                 .build();

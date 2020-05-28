@@ -4,6 +4,8 @@ DROP TABLE IF EXISTS kun_wf_operator;
 
 DROP TABLE IF EXISTS kun_wf_task;
 
+DROP TABLE IF EXISTS kun_wf_tick_task_mapping;
+
 CREATE TABLE kun_wf_operator (
     id BIGINT PRIMARY KEY,
     name VARCHAR(128) UNIQUE,
@@ -25,4 +27,10 @@ CREATE TABLE kun_wf_task (
     schedule JSONB NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+CREATE TABLE kun_wf_tick_task_mapping (
+    scheduled_tick VARCHAR(64) NOT NULL,
+    task_id BIGINT NOT NULL,
+    PRIMARY KEY (scheduled_tick, task_id)
 );

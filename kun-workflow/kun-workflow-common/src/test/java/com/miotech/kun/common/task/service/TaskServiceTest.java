@@ -5,7 +5,7 @@ import com.miotech.kun.common.DatabaseTestBase;
 import com.miotech.kun.common.exception.EntityNotFoundException;
 import com.miotech.kun.common.operator.dao.MockOperatorFactory;
 import com.miotech.kun.common.operator.dao.OperatorDao;
-import com.miotech.kun.common.task.dao.MockTaskFactory;
+import com.miotech.kun.workflow.common.task.dao.MockTaskFactory;
 import com.miotech.kun.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.model.operator.Operator;

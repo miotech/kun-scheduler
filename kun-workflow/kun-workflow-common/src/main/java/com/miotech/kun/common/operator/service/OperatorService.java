@@ -225,7 +225,7 @@ public class OperatorService {
         }
 
         // 3. If there is any remaining usage reference from tasks, throw exception
-        List<Task> relatedTasks = taskDao.fetchWithOperatorId(id);
+        List<Task> relatedTasks = taskDao.fetchByOperatorId(id);
         if (CollectionUtils.isNotEmpty(relatedTasks)) {
             throw new RuleOperatorInUseException(String.format(
                     "Operator with id \"%d\" is used by %d tasks already. Remove these tasks first or replace internal operators by another operator.",

@@ -7,7 +7,7 @@ import com.miotech.kun.common.exception.EntityNotFoundException;
 import com.miotech.kun.common.exception.RuleOperatorInUseException;
 import com.miotech.kun.common.operator.dao.MockOperatorFactory;
 import com.miotech.kun.common.operator.vo.OperatorPropsVO;
-import com.miotech.kun.common.task.dao.MockTaskFactory;
+import com.miotech.kun.workflow.common.task.dao.MockTaskFactory;
 import com.miotech.kun.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
