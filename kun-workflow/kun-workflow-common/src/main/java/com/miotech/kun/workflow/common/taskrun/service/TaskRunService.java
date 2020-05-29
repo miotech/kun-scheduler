@@ -30,7 +30,7 @@ public class TaskRunService {
                 .withStatus(taskRun.getStatus())
                 .withInlets(taskRun.getInlets())
                 .withOutlets(taskRun.getOutlets())
-                .withDependencyTaskRunIds(taskRun.getDependencies())
+                .withDependencyTaskRunIds(taskRun.getDependentTaskRunIds())
                 .withStartAt(taskRun.getStartAt())
                 .withEndAt(taskRun.getEndAt())
                 .withAttempts(attempts)

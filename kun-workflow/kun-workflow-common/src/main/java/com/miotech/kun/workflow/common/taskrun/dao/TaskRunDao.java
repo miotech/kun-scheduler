@@ -53,7 +53,7 @@ public class TaskRunDao {
 
         List<Long>  dependencies = fetchTaskRunDependencies(id);
         return taskRun.cloneBuilder()
-                .withDependencies(dependencies)
+                .withDependentTaskRunIds(dependencies)
                 .build();
     }
 
@@ -101,7 +101,7 @@ public class TaskRunDao {
                     nowTime
             );
 
-            createTaskRunDependencies(taskRun.getId(), taskRun.getDependencies());
+            createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds());
             return taskRun;
         });
 
@@ -138,7 +138,7 @@ public class TaskRunDao {
             );
 
             deleteTaskRunDependencies(taskRun.getId());
-            createTaskRunDependencies(taskRun.getId(), taskRun.getDependencies());
+            createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds());
             return taskRun;
         });
 
@@ -279,7 +279,7 @@ public class TaskRunDao {
                     .withStatus(TaskRunStatus.resolve(rs.getString(TASK_RUN_MODEL_NAME + "_status")))
                     .withInlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_inlets"), new TypeReference<List<Entity>>() {}))
                     .withOutlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_outlets"), new TypeReference<List<Entity>>() {}))
-                    .withDependencies(Collections.emptyList())
+                    .withDependentTaskRunIds(Collections.emptyList())
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_end_at")))
                     .build();
