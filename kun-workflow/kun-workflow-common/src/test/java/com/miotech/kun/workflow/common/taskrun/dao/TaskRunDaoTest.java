@@ -4,22 +4,17 @@ import com.google.common.collect.Lists;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
-import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
-import org.apache.commons.lang3.ArrayUtils;
+import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import org.junit.Test;
 
 import javax.inject.Inject;
-
 import java.time.Clock;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,33 +34,6 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         return Clock.fixed(Instant.parse("2020-01-01T00:00:00.00Z"), ZoneId.of("UTC"));
     }
 
-    private TaskRun generateSampleTaskRun(Long id, Task task, Clock mockClock) {
-        return TaskRun.newBuilder()
-                .withId(id)
-                .withTask(task)
-                .withInlets(new ArrayList<>())
-                .withOutlets(new ArrayList<>())
-                .withDependentTaskRunIds(new ArrayList<>())
-                .withScheduledTick(new Tick(OffsetDateTime.now(mockClock)))
-                .withStartAt(OffsetDateTime.now(mockClock))
-                .withEndAt(OffsetDateTime.now(mockClock))
-                .withStatus(TaskRunStatus.QUEUED)
-                .withVariables(new ArrayList<>())
-                .build();
-    }
-
-    private TaskAttempt generateTaskAttempt(Long id, TaskRun taskRun, int attempt, Clock mockClock) {
-        return TaskAttempt.newBuilder()
-                .withId(id)
-                .withTaskRun(taskRun)
-                .withAttempt(attempt)
-                .withStartAt(OffsetDateTime.now(mockClock))
-                .withEndAt(OffsetDateTime.now(mockClock).plusHours(1))
-                .withLogPath("/var/log_" + taskRun + "_" + attempt + ".log")
-                .withStatus(TaskRunStatus.RUNNING)
-                .build();
-    }
-
     @Test
     public void createTaskRun_withValidProperties_shouldSuccess() {
         // Prepare
@@ -73,7 +41,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         Clock mockClock = getMockClock();
         taskDao.create(task);
 
-        TaskRun sampleTaskRun = generateSampleTaskRun(1L, task, mockClock);
+        TaskRun sampleTaskRun = MockTaskRunFactory.generateSampleTaskRun(1L, task, mockClock);
 
         // Process
         taskRunDao.createTaskRun(sampleTaskRun);
@@ -92,7 +60,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         Clock mockClock = getMockClock();
 
         // 1. if task is null, should throw NullPointerException
-        TaskRun sampleTaskRun = generateSampleTaskRun(1L, null, mockClock);
+        TaskRun sampleTaskRun = MockTaskRunFactory.generateSampleTaskRun(1L, null, mockClock);
 
         try {
             taskRunDao.createTaskRun(sampleTaskRun);
@@ -114,9 +82,9 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskDao.create(task);
 
         TaskRun[] sampleTaskRuns = {
-                generateSampleTaskRun(1L, task, mockClock),
-                generateSampleTaskRun(2L, task, mockClock),
-                generateSampleTaskRun(3L, task, mockClock)
+                MockTaskRunFactory.generateSampleTaskRun(1L, task, mockClock),
+                MockTaskRunFactory.generateSampleTaskRun(2L, task, mockClock),
+                MockTaskRunFactory.generateSampleTaskRun(3L, task, mockClock)
         };
 
         taskRunDao.createTaskRun(sampleTaskRuns[0]);
@@ -125,7 +93,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         // 2. create run attempts (12 attempts in total, 4 attempts each run)
         for (int i = 0; i < 12; i += 1) {
-            TaskAttempt attempt = generateTaskAttempt((long) i + 1, sampleTaskRuns[i / 4], (i % 4) + 1, mockClock);
+            TaskAttempt attempt = MockTaskRunFactory.generateTaskAttempt((long) i + 1, sampleTaskRuns[i / 4], (i % 4) + 1, mockClock);
             taskRunDao.createAttempt(attempt);
         }
 

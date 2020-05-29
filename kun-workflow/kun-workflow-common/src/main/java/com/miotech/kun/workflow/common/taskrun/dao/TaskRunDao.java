@@ -117,6 +117,13 @@ public class TaskRunDao {
         return taskRun;
     }
 
+    public void createTaskRuns(List<TaskRun> taskRuns) {
+        // TODO: implement this method
+        // TODO: 同时插入task_run和task_run_relations
+        taskRuns.forEach(run -> createTaskRun(run));
+        return;
+    }
+
     public TaskRun updateTaskRun(TaskRun taskRun) {
         dbOperator.transaction( () -> {
             List<String> tableColumns = new ImmutableList.Builder<String>()
@@ -309,12 +316,6 @@ public class TaskRunDao {
         logger.debug("fetchLatestTaskAttempt query SQL = \n{}", sql);
 
         return dbOperator.fetchAll(sql, TaskAttemptPropsMapper.INSTANCE, taskRunIds.toArray());
-    }
-
-    public void createTaskRuns(List<TaskRun> taskRuns) {
-        // TODO: implement this method
-        // TODO: 同时插入task_run和task_run_relations
-        return;
     }
 
     public static class TaskRunMapper implements ResultSetMapper<TaskRun> {
