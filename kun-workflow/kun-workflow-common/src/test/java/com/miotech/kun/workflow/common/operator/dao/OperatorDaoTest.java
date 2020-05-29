@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.common.operator.dao;
 
-import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;

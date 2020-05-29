@@ -52,6 +52,7 @@ subprojects {
             testImplementation "org.hamcrest:hamcrest"
             testImplementation "org.hamcrest:hamcrest-library"
             testImplementation "org.mockito:mockito-core"
+            testImplementation "org.awaitility:awaitility"
         }
         repositories {
             mavenCentral()
