@@ -11,8 +11,6 @@ import java.util.Objects;
 
 @JsonDeserialize(builder = Operator.OperatorBuilder.class)
 public class Operator {
-    // We don't need custom deserializer since the default deserializer can handle String to long
-    @JsonSerialize(using = ToStringSerializer.class)
     private final Long id;
 
     private final String name;

@@ -56,10 +56,9 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withTask(task)
                 .withStatus(TaskRunStatus.CREATED)
                 .withVariables(Collections.emptyList())
-                .withDependencies(Collections.emptyList())
+                .withDependentTaskRunIds(Collections.emptyList())
                 .withInlets(Collections.emptyList())
                 .withOutlets(Collections.emptyList())
-                .withDependencies(Collections.singletonList(2L))
                 .withScheduledTick(new Tick(""))
                 .build();
         taskRun = taskRunDao.createTaskRun(taskRun);

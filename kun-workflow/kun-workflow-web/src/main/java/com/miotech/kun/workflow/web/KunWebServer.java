@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.miotech.kun.common.CommonModule;
+import com.miotech.kun.workflow.common.CommonModule;
 import com.miotech.kun.workflow.utils.PropertyUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;

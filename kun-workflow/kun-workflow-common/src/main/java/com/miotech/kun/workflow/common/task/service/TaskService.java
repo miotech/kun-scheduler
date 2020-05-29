@@ -38,11 +38,12 @@ public class TaskService {
                 .withArguments(vo.getArguments())
                 .withScheduleConf(vo.getScheduleConf())
                 .withVariableDefs(vo.getVariableDefs())
+                .withDependencies(vo.getDependencies())
                 .build();
     }
 
     private void validateTaskIntegrity(Task task) {
-        Preconditions.checkArgument(Objects.nonNull(task.getId()), "Invalid task with property `id`: null");
+        Preconditions.checkNotNull(task.getId(), "Invalid task with property `id`: null");
         TaskPropsVO vo = TaskPropsVO.from(task);
         validateTaskPropsVOIntegrity(vo);
     }
@@ -55,6 +56,7 @@ public class TaskService {
         Preconditions.checkArgument(Objects.nonNull(vo.getArguments()), "Invalid task property object with property `arguments`: null");
         Preconditions.checkArgument(Objects.nonNull(vo.getScheduleConf()), "Invalid task property object with property `scheduleConf`: null");
         Preconditions.checkArgument(Objects.nonNull(vo.getVariableDefs()), "Invalid task property object with property `variableDefs`: null");
+        Preconditions.checkArgument(Objects.nonNull(vo.getDependencies()), "Invalid task property object with property `dependencies`: null");
     }
 
     /**
@@ -124,7 +126,7 @@ public class TaskService {
         }
 
         // 4. Fetch updated task
-        return taskDao.fetchById(task.getId()).orElse(null);
+        return taskDao.fetchById(task.getId()).orElseThrow(IllegalStateException::new);
     }
 
     /**

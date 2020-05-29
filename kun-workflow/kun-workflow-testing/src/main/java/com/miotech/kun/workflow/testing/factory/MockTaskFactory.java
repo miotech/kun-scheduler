@@ -19,6 +19,7 @@ public class MockTaskFactory {
                 .withArguments(new ArrayList<>())
                 .withOperatorId(mockOperatorId)
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withDependencies(new ArrayList<>())
                 .build();
     }
 
@@ -33,6 +34,7 @@ public class MockTaskFactory {
                 .withArguments(new ArrayList<>())
                 .withOperatorId(mockOperatorId)
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withDependencies(new ArrayList<>())
                 .build();
     }
 }

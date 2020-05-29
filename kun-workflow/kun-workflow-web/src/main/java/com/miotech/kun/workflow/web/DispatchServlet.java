@@ -1,9 +1,9 @@
 package com.miotech.kun.workflow.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.web.http.*;
@@ -29,15 +29,12 @@ public class DispatchServlet extends HttpServlet {
 
     private HttpRouter router;
 
-    private ObjectMapper objectMapper;
-
     private final Injector injector;
 
     @Inject
-    public DispatchServlet(Injector injector, HttpRouter router, ObjectMapper objectMapper) {
+    public DispatchServlet(Injector injector, HttpRouter router) {
         this.injector = injector;
         this.router = router;
-        this.objectMapper = objectMapper;
     }
 
     @Override
@@ -121,7 +118,7 @@ public class DispatchServlet extends HttpServlet {
             resp.setContentType("application/json;charset=utf-8");
             resp.setCharacterEncoding("UTF-8");
 
-            out.print(objectMapper.writeValueAsString(responseObj));
+            out.print(JSONUtils.toJsonString(responseObj));
             out.flush();
         }
     }
@@ -141,7 +138,7 @@ public class DispatchServlet extends HttpServlet {
 
         for (Annotation annotation: parameter.getAnnotations()) {
             if (annotation.annotationType() == RequestBody.class) {
-                return objectMapper.readValue(httpServletRequest.getInputStream(), paramClz);
+                return JSONUtils.jsonToObject(httpServletRequest.getInputStream(), paramClz);
             }
             if (annotation.annotationType() == RouteVariable.class) {
                 String pathVariable = req.getPathVariables().get(parameter.getName());

@@ -4,6 +4,7 @@ import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskDependency;
 
 import java.util.List;
 
@@ -14,14 +15,16 @@ public class TaskPropsVO {
     private final List<Param> arguments;
     private final List<Variable> variableDefs;
     private final ScheduleConf scheduleConf;
+    private final List<TaskDependency> dependencies;
 
-    public TaskPropsVO(String name, String description, Long operatorId, List<Param> arguments, List<Variable> variableDefs, ScheduleConf scheduleConf) {
+    public TaskPropsVO(String name, String description, Long operatorId, List<Param> arguments, List<Variable> variableDefs, ScheduleConf scheduleConf, List<TaskDependency> dependencies) {
         this.name = name;
         this.description = description;
         this.operatorId = operatorId;
         this.arguments = arguments;
         this.variableDefs = variableDefs;
         this.scheduleConf = scheduleConf;
+        this.dependencies = dependencies;
     }
 
     public static TaskPropsVOBuilder newBuilder() {
@@ -35,7 +38,8 @@ public class TaskPropsVO {
                 task.getOperatorId(),
                 task.getArguments(),
                 task.getVariableDefs(),
-                task.getScheduleConf()
+                task.getScheduleConf(),
+                task.getDependencies()
         );
     }
 
@@ -46,7 +50,8 @@ public class TaskPropsVO {
                 .withOperatorId(operatorId)
                 .withArguments(arguments)
                 .withVariableDefs(variableDefs)
-                .withScheduleConf(scheduleConf);
+                .withScheduleConf(scheduleConf)
+                .withDependencies(dependencies);
     }
 
     public String getName() {
@@ -73,6 +78,8 @@ public class TaskPropsVO {
         return scheduleConf;
     }
 
+    public List<TaskDependency> getDependencies() { return dependencies; }
+
     public static final class TaskPropsVOBuilder {
         private String name;
         private String description;
@@ -80,6 +87,7 @@ public class TaskPropsVO {
         private List<Param> arguments;
         private List<Variable> variableDefs;
         private ScheduleConf scheduleConf;
+        private List<TaskDependency> dependencies;
 
         private TaskPropsVOBuilder() {
         }
@@ -114,8 +122,13 @@ public class TaskPropsVO {
             return this;
         }
 
+        public TaskPropsVOBuilder withDependencies(List<TaskDependency> dependencies) {
+            this.dependencies = dependencies;
+            return this;
+        }
+
         public TaskPropsVO build() {
-            return new TaskPropsVO(name, description, operatorId, arguments, variableDefs, scheduleConf);
+            return new TaskPropsVO(name, description, operatorId, arguments, variableDefs, scheduleConf, dependencies);
         }
     }
 }
