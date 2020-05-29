@@ -1,0 +1,3 @@
+dependencies {
+    implementation project(':kun-workflow:kun-workflow-core')
+}

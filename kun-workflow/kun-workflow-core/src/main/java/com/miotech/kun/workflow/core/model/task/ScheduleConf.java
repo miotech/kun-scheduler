@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.core.model.task;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import javax.annotation.Nullable;
@@ -12,7 +14,9 @@ public class ScheduleConf {
     @Nullable
     private final String cronExpr;
 
-    public ScheduleConf(ScheduleType type, @Nullable String cronExpr) {
+    @JsonCreator
+    public ScheduleConf(@JsonProperty("type") ScheduleType type,
+                        @JsonProperty("cronExpr") @Nullable String cronExpr) {
         this.type = type;
         this.cronExpr = cronExpr;
     }
