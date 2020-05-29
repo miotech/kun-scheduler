@@ -1,15 +1,15 @@
-package com.miotech.kun.common.task.service;
+package com.miotech.kun.workflow.common.task.service;
 
 import com.google.inject.Inject;
-import com.miotech.kun.common.DatabaseTestBase;
-import com.miotech.kun.common.exception.EntityNotFoundException;
-import com.miotech.kun.common.operator.dao.MockOperatorFactory;
-import com.miotech.kun.common.operator.dao.OperatorDao;
-import com.miotech.kun.workflow.common.task.dao.MockTaskFactory;
-import com.miotech.kun.common.task.filter.TaskSearchFilter;
-import com.miotech.kun.common.task.vo.TaskPropsVO;
+import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
+import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
+import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;

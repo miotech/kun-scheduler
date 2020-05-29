@@ -1,7 +1,8 @@
 package com.miotech.kun.workflow.testing.factory;
 
-import com.miotech.kun.common.operator.vo.OperatorPropsVO;
+import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
 import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 
 import java.util.ArrayList;
 import java.util.List;

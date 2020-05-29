@@ -1,4 +1,4 @@
-package com.miotech.kun.common.dao;
+package com.miotech.kun.workflow.common.constant;
 
 public class Constants {
 

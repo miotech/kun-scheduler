@@ -1,13 +1,13 @@
-package com.miotech.kun.common.operator.service;
+package com.miotech.kun.workflow.common.operator.service;
 
 import com.google.common.base.Preconditions;
-import com.miotech.kun.common.exception.RuleOperatorInUseException;
-import com.miotech.kun.common.operator.dao.OperatorDao;
-import com.miotech.kun.common.operator.vo.OperatorPropsVO;
-import com.miotech.kun.common.exception.NameConflictException;
-import com.miotech.kun.common.exception.EntityNotFoundException;
-import com.miotech.kun.common.operator.filter.OperatorSearchFilter;
-import com.miotech.kun.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.common.exception.RuleOperatorInUseException;
+import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
+import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
+import com.miotech.kun.workflow.common.exception.NameConflictException;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
+import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;

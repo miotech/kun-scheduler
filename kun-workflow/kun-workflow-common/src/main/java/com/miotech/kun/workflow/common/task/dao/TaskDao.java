@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.common.dao.Constants;
+import com.miotech.kun.workflow.common.constant.Constants;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;

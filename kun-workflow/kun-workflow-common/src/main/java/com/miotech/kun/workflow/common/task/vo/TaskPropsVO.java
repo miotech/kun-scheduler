@@ -1,4 +1,4 @@
-package com.miotech.kun.common.task.vo;
+package com.miotech.kun.workflow.common.task.vo;
 
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Variable;

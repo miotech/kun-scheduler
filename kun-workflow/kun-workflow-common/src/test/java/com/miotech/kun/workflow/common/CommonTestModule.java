@@ -1,4 +1,4 @@
-package com.miotech.kun.common;
+package com.miotech.kun.workflow.common;
 
 import com.miotech.kun.workflow.utils.PropertyUtils;
 

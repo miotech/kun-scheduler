@@ -1,10 +1,8 @@
-package com.miotech.kun.common;
+package com.miotech.kun.workflow.common;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.PropertyUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -18,7 +16,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Properties;

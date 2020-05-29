@@ -1,4 +1,4 @@
-package com.miotech.kun.common.exception;
+package com.miotech.kun.workflow.common.exception;
 
 public class NameConflictException extends RuntimeException {
 

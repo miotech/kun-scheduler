@@ -1,9 +1,8 @@
 package com.miotech.kun.workflow.common.task.dao;
 
-import com.miotech.kun.workflow.common.task.dao.MockTaskFactory;
-import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.google.common.collect.Lists;
+import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
@@ -11,11 +10,15 @@ import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.db.DatabaseOperator;
+import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Test;
 
 import javax.inject.Inject;
-import java.time.*;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
