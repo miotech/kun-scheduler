@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.miotech.kun.common.AppModule;
+import com.miotech.kun.workflow.common.AppModule;
 import org.eclipse.jetty.server.Server;
 
 import java.util.Properties;
