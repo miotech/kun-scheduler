@@ -18,7 +18,6 @@ public class DatabaseTaskGraph implements TaskGraph {
 
     @Override
     public List<Task> tasksScheduledAt(Tick tick) {
-        // TODO
-        return null;
+        return taskDao.fetchScheduledTaskAtTick(tick);
     }
 }
