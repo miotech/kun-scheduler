@@ -8,7 +8,6 @@ import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.operator.model.clients.LivyClient;
-import com.miotech.kun.workflow.operator.model.clients.SparkClient;
 import com.miotech.kun.workflow.operator.model.models.SparkApp;
 import com.miotech.kun.workflow.operator.model.models.SparkJob;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -30,10 +29,10 @@ public class SparkOperator implements Operator {
     Logger logger;
     SparkApp app;
     LivyClient livyClient;
-    SparkClient sparkClient;
 
     public void init(OperatorContext context){
         logger = context.getLogger();
+        logger.info("Start init spark job params");
 
         String jars = context.getParameter("jars");
         String files = context.getParameter("files");
@@ -87,15 +86,11 @@ public class SparkOperator implements Operator {
             job.setArgs(jobArgs);
         }
 
-        String livy_host = context.getParameter("LIVY_HOST");
+        String livy_host = context.getParameter("livyHost");
         livyClient = new LivyClient(livy_host);
-        String spark_host = context.getParameter("SPARK_MASTER");
-        String spark_port = context.getParameter("SPARK_PORT");
-        sparkClient = new SparkClient(spark_host, Integer.parseInt(spark_port));
     }
 
     public boolean run(OperatorContext context){
-
         try {
             app = livyClient.runSparkJob(job);
             int jobId = app.getId();
@@ -136,10 +131,12 @@ public class SparkOperator implements Operator {
     }
 
     public void onAbort(OperatorContext context){
+        logger.info("Delete spark batch job, id: " + app.getId());
         livyClient.deleteBatch(app.getId());
     }
 
     public void lineangeAnalysis(OperatorContext context, String applicationId){
+        logger.info("Start lineage analysis for batch id: " + app.getId());
         List<DataStore> inlets = new ArrayList<>();
         List<DataStore> outlets = new ArrayList<>();
         String input = "/tmp" + applicationId + ".input.txt";
