@@ -23,10 +23,6 @@ public enum TaskRunStatus {
 
     private static final Map<String, TaskRunStatus> mappings = new HashMap<>(16);
 
-    public boolean isSuccess() {
-        return this == SUCCESS || this == SKIPPED;
-    }
-
     @Nullable
     public static TaskRunStatus resolve(@Nullable String status) {
         return (status != null ? mappings.get(status) : null);
@@ -34,5 +30,9 @@ public enum TaskRunStatus {
 
     public boolean matches(String status) {
         return (this == resolve(status));
+    }
+
+    public boolean isSuccess() {
+        return this == SUCCESS || this == SKIPPED;
     }
 }

@@ -1,11 +1,13 @@
 package com.miotech.kun.workflow.common.taskrun.dao;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.common.constant.Constants;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptInfo;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.entity.Entity;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -282,6 +284,23 @@ public class TaskRunDao {
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_end_at")))
                     .build();
         }
+    }
+
+    public TaskRun fetchLatestTaskRun(Long taskId) {
+        // TODO: implement this method
+        Preconditions.checkNotNull(taskId, "taskId should not be null.");
+        return null;
+    }
+
+    public List<TaskAttemptInfo> fetchLatestTaskAttempt(List<Long> taskRunIds) {
+        // TODO: implement this method
+        return null;
+    }
+
+    public void createTaskRuns(List<TaskRun> taskRuns) {
+        // TODO: implement this method
+        // TODO: 同时插入task_run和task_run_relations
+        return;
     }
 
     private static class TaskAttemptMapper implements ResultSetMapper<TaskAttempt> {

@@ -3,7 +3,6 @@ package com.miotech.kun.workflow.core.model.taskrun;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.entity.Entity;
-import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.Task;
 
 import java.time.OffsetDateTime;
