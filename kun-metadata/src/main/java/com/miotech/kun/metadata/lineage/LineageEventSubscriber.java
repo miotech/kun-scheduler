@@ -6,24 +6,26 @@ import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.EventReceiver;
 import com.miotech.kun.workflow.core.event.LineageEvent;
 import com.miotech.kun.workflow.core.publish.EventSubscriber;
-import com.miotech.kun.workflow.core.publish.KafkaEventSubscriber;
-
-import javax.inject.Named;
 
 @Singleton
 public class LineageEventSubscriber {
+
+    @Inject
     private EventSubscriber subscriber;
 
-    @Named("kafka.topic")
-    private String topic;
+//    @Named("kafka.topic")
+//    private String topic;
+//
+//    @Named("kafka.properties")
+//    private Properties props;
 
     @Inject
     private LineageLoader loader;
 
-    public LineageEventSubscriber(){
-        this.topic = topic;
-        subscriber = new KafkaEventSubscriber(topic, props);
-    }
+//    public LineageEventSubscriber(){
+//        this.topic = topic;
+//        subscriber = new KafkaEventSubscriber(topic, props);
+//    }
 
     public void subscribe(){
         EventReceiver receiver = new LineageEventReceiver();
