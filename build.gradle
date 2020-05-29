@@ -34,13 +34,8 @@ subprojects {
                 implementation "org.eclipse.jetty:jetty-webapp:9.4.28.v20200408"
                 implementation 'com.typesafe:config:1.4.0'
                 implementation 'org.json:json:20190722'
-                implementation 'com.google.protobuf:protobuf-java:3.4.0'
-                implementation 'com.google.protobuf:protobuf-java-util:3.4.0'
-                implementation 'io.grpc:grpc-stub:1.0.0-pre2'
-                implementation 'io.grpc:grpc-protobuf:1.0.0-pre2'
                 implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.6.1'
                 implementation 'org.apache.commons:commons-lang3:3.9'
-                implementation 'io.grpc:grpc-protobuf:1.10.0'
                 implementation 'org.postgresql:postgresql:42.2.5'
                 implementation 'org.apache.hive:hive-jdbc:2.3.4'
                 implementation 'mysql:mysql-connector-java:5.1.46'

@@ -50,15 +50,15 @@ public class JDBCClientTest {
     @Test
     public void testShowDatabases_presto() {
         Connection connection = null;
-        PreparedStatement statement = null;
+        Statement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.PRESTO, "jdbc:presto://10.0.0.85:8073/hive", "hive", null);
+            connection = JDBCClient.getConnection(DatabaseType.PRESTO, "jdbc:presto://10.0.0.85:8073/hive", "root", null);
 
             String scanCluster = "show schemas";
-            statement = connection.prepareStatement(scanCluster);
+            statement = connection.createStatement();
 
-            resultSet = statement.executeQuery();
+            resultSet = statement.executeQuery(scanCluster);
             List<String> databases = Lists.newArrayList();
             while (resultSet.next()) {
                 String database = resultSet.getString(1);

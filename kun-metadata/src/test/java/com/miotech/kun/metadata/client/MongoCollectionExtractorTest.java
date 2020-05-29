@@ -57,15 +57,4 @@ public class MongoCollectionExtractorTest {
                 new DatasetField("datasetStat.statDate", "STRING", "")));
     }
 
-    @Test
-    public void testOne() {
-        MongoExtractor mongoExtractor = new MongoExtractor(new MongoCluster(1L, "mongodb://127.0.0.1:27017", "", ""));
-        Iterator<Dataset> extract = mongoExtractor.extract();
-        PrintLoader printLoader = new PrintLoader();
-        while (extract.hasNext()) {
-            Dataset next = extract.next();
-            printLoader.load(next);
-        }
-    }
-
 }
