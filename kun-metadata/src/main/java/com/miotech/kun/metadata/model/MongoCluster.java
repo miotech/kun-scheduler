@@ -2,11 +2,11 @@ package com.miotech.kun.metadata.model;
 
 public class MongoCluster extends Cluster {
 
-    private String url;
+    private final String url;
 
-    private String username;
+    private final String username;
 
-    private String password;
+    private final String password;
 
     public MongoCluster(long clusterId, String url, String username, String password) {
         super(clusterId);

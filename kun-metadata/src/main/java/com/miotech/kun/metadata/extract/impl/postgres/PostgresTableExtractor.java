@@ -1,6 +1,8 @@
 package com.miotech.kun.metadata.extract.impl.postgres;
 
 import com.beust.jcommander.internal.Lists;
+import com.google.common.base.Preconditions;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
@@ -10,6 +12,7 @@ import com.miotech.kun.metadata.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.PostgresDataStore;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +31,7 @@ public class PostgresTableExtractor extends ExtractorTemplate {
 
     public PostgresTableExtractor(PostgresCluster postgresCluster, String database, String schema, String table) {
         super(postgresCluster);
+        Preconditions.checkNotNull(cluster, "cluster should not be null.");
         this.postgresCluster = postgresCluster;
         this.database = database;
         this.schema = schema;
@@ -42,6 +46,8 @@ public class PostgresTableExtractor extends ExtractorTemplate {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
+            logger.debug("PostgresTableExtractor getSchema start. cluster: {}, database: {}, schema: {}, table: {}",
+                JSONUtils.toJsonString(cluster), database, schema, table);
             connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useDatabase(postgresCluster.getUrl(), database), postgresCluster.getUsername(), postgresCluster.getPassword());
             String sql = "SELECT column_name, udt_name, '' FROM information_schema.columns WHERE table_name = ? AND table_schema = ?";
             statement = connection.prepareStatement(sql);
@@ -59,13 +65,14 @@ public class PostgresTableExtractor extends ExtractorTemplate {
             }
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.POSTGRES.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
+            throw ExceptionUtils.wrapIfChecked(classNotFoundException);
         } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
+            throw ExceptionUtils.wrapIfChecked(sqlException);
         } finally {
             JDBCClient.close(connection, statement, resultSet);
         }
 
+        logger.debug("PostgresTableExtractor getSchema end. fields: {}", JSONUtils.toJsonString(fields));
         return fields;
     }
 
@@ -75,6 +82,8 @@ public class PostgresTableExtractor extends ExtractorTemplate {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
+            logger.debug("PostgresTableExtractor getFieldStats start. cluster: {}, database: {}, schema: {}, table: {}, datasetField: {}",
+                    JSONUtils.toJsonString(cluster), database, schema, table, JSONUtils.toJsonString(datasetField));
             long distinctCount = 0;
             long nonnullCount = 0;
             connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useSchema(postgresCluster.getUrl(), database, schema), postgresCluster.getUsername(), postgresCluster.getPassword());
@@ -99,14 +108,15 @@ public class PostgresTableExtractor extends ExtractorTemplate {
                 nonnullCount = resultSet.getLong(1);
             }
 
-            DatasetFieldStat result = new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, new Date());
-            return result;
+            DatasetFieldStat fieldStat = new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, new Date());
+
+            logger.debug("PostgresTableExtractor getFieldStats end. fieldStat: {}", JSONUtils.toJsonString(fieldStat));
+            return fieldStat;
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.POSTGRES.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
+            throw ExceptionUtils.wrapIfChecked(classNotFoundException);
         } catch (SQLException sqlException) {
-            logger.error("sqlException, DatabaseType: {}, database: {}, table: {}", DatabaseType.POSTGRES.getName(), database, table, sqlException);
-            throw new RuntimeException(sqlException);
+            throw ExceptionUtils.wrapIfChecked(sqlException);
         } finally {
             JDBCClient.close(connection, statement, resultSet);
         }
@@ -120,6 +130,8 @@ public class PostgresTableExtractor extends ExtractorTemplate {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
+            logger.debug("PostgresTableExtractor getTableStats start. cluster: {}, database: {}, schema: {}, table: {}",
+                    JSONUtils.toJsonString(cluster), database, schema, table);
             connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useSchema(postgresCluster.getUrl(), database, schema), postgresCluster.getUsername(), postgresCluster.getPassword());
             String sql = "SELECT COUNT(*) FROM " + StringUtil.convertUpperCase(table);
             statement = connection.createStatement();
@@ -132,14 +144,16 @@ public class PostgresTableExtractor extends ExtractorTemplate {
             }
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.POSTGRES.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
+            throw ExceptionUtils.wrapIfChecked(classNotFoundException);
         } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
+            throw ExceptionUtils.wrapIfChecked(sqlException);
         } finally {
             JDBCClient.close(connection, statement, resultSet);
         }
 
-        return datasetStatBuilder.build();
+        DatasetStat datasetStat = datasetStatBuilder.build();
+        logger.debug("PostgresTableExtractor getTableStats end. datasetStat: {}", JSONUtils.toJsonString(datasetStat));
+        return datasetStat;
     }
 
     @Override

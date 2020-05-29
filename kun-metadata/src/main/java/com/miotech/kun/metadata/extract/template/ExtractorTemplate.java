@@ -2,11 +2,12 @@ package com.miotech.kun.metadata.extract.template;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Iterators;
-import com.google.gson.Gson;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.model.*;
 import com.miotech.kun.metadata.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,55 +18,60 @@ public abstract class ExtractorTemplate implements Extractor {
     private static final Logger logger = LoggerFactory.getLogger(ExtractorTemplate.class);
 
     protected final Cluster cluster;
-    private static final Gson gson = new Gson();
 
     public ExtractorTemplate(Cluster cluster) {
         this.cluster = cluster;
     }
 
     protected abstract List<DatasetField> getSchema();
+
     protected abstract DatasetFieldStat getFieldStats(DatasetField datasetField);
+
     protected abstract DatasetStat getTableStats();
+
     protected abstract DataStore getDataStore();
+
     protected abstract String getName();
+
     protected long getClusterId() {
         return cluster.getClusterId();
-    };
+    }
 
     @Override
     public Iterator<Dataset> extract() {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
 
         try {
-            List<DatasetField> schema = getSchema();
-            logger.debug("extract schema: {}", gson.toJson(schema));
+            List<DatasetField> fields = getSchema();
+            logger.debug("ExtractorTemplate extract getSchema: {}", JSONUtils.toJsonString(fields));
             List<DatasetFieldStat> fieldStats = Lists.newArrayList();
 
-            if (schema != null) {
-                for (DatasetField datasetField : schema) {
+            if (fields != null) {
+                for (DatasetField datasetField : fields) {
                     DatasetFieldStat fieldStat = getFieldStats(datasetField);
+                    logger.debug("ExtractorTemplate extract getFieldStats: {}", JSONUtils.toJsonString(fieldStat));
                     if (fieldStat != null) {
                         fieldStats.add(fieldStat);
                     }
                 }
             }
 
-            DatasetStat tableStats = getTableStats();
-            logger.debug("extract tableStats: {}", gson.toJson(tableStats));
+            DatasetStat tableStat = getTableStats();
+            logger.debug("ExtractorTemplate extract getTableStats: {}", JSONUtils.toJsonString(tableStat));
 
             DataStore dataStore = getDataStore();
-            logger.debug("extract dataStore: {}", DataStoreJsonUtil.toJson(dataStore));
+            logger.debug("ExtractorTemplate extract getDataStore: {}", DataStoreJsonUtil.toJson(dataStore));
             datasetBuilder.withName(getName())
                     .withClusterId(getClusterId())
-                    .withFields(schema)
+                    .withFields(fields)
                     .withFieldStats(fieldStats)
-                    .withDatasetStat(tableStats)
+                    .withDatasetStat(tableStat)
                     .withDataStore(dataStore);
 
             return Iterators.forArray(datasetBuilder.build());
         } catch (Exception e) {
-            logger.error("extract error:", e);
-            throw new RuntimeException(e);
+            logger.error("ExtractorTemplate extract error:", e);
+            throw ExceptionUtils.wrapIfChecked(e);
         }
 
     }

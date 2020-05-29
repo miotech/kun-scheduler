@@ -30,6 +30,6 @@ public class TaskIdGenerator {
      * @return Snowflake ID with attempt as reserved id
      */
     public static Long nextTaskAttemptId(long taskRunId, int attempt) {
-        return IdGenerator.combine(taskRunId, attempt);
+        return IdGenerator.getInstance().combine(taskRunId, attempt);
     }
 }

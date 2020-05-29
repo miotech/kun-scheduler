@@ -1,6 +1,7 @@
 package com.miotech.kun.metadata.extract.impl.postgres;
 
 import com.beust.jcommander.internal.Lists;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
@@ -8,6 +9,7 @@ import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.PostgresCluster;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,12 +25,15 @@ public class PostgresDatabaseExtractor implements Extractor {
     private final String database;
 
     public PostgresDatabaseExtractor(PostgresCluster cluster, String database) {
+        Preconditions.checkNotNull(cluster, "cluster should not be null.");
         this.cluster = cluster;
         this.database = database;
     }
 
     @Override
     public Iterator<Dataset> extract() {
+        logger.debug("PostgresDatabaseExtractor extract start. cluster: {}, database: {}",
+                JSONUtils.toJsonString(cluster), database);
         List<String> schemas = Lists.newArrayList();
 
         Connection connection = null;
@@ -54,6 +59,7 @@ public class PostgresDatabaseExtractor implements Extractor {
             JDBCClient.close(connection, statement, resultSet);
         }
 
+        logger.debug("PostgresDatabaseExtractor extract end. schemas: {}", JSONUtils.toJsonString(schemas));
         return Iterators.concat(schemas.stream().map((schema) -> new PostgresSchemaExtractor(cluster, database, schema).extract()).iterator());
     }
 

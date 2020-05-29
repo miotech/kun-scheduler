@@ -3,10 +3,9 @@ package com.miotech.kun.metadata.extract.impl.mongo;
 import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.miotech.kun.metadata.client.ObjectMapperClient;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
 import com.miotech.kun.metadata.extract.tool.DatasetNameGenerator;
@@ -17,6 +16,7 @@ import com.miotech.kun.metadata.model.DatasetStat;
 import com.miotech.kun.metadata.model.MongoCluster;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.MongoDataStore;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import com.mongodb.client.MongoCollection;
@@ -24,10 +24,8 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public class MongoCollectionExtractor extends ExtractorTemplate {
     private static Logger logger = LoggerFactory.getLogger(MongoCollectionExtractor.class);
@@ -39,52 +37,54 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
 
     private final String collection;
 
-    private MongoClient client;
-
-
+    private final MongoClient client;
 
     public MongoCollectionExtractor(MongoCluster mongoCluster, String database, String collection) {
         super(mongoCluster);
+        Preconditions.checkNotNull(mongoCluster, "mongoCluster should not be null.");
         this.mongoCluster = mongoCluster;
         this.database = database;
         this.collection = collection;
-        if (mongoCluster != null) {
-            this.client = new MongoClient(new MongoClientURI(mongoCluster.getUrl()));
-        }
+        this.client = new MongoClient(new MongoClientURI(mongoCluster.getUrl()));
     }
 
     @Override
+    @VisibleForTesting
     public List<DatasetField> getSchema() {
+        logger.debug("MongoCollectionExtractor getSchema start. cluster: {}, database: {}, collection: {}",
+                JSONUtils.toJsonString(cluster), database, collection);
         List<DatasetField> fields = Lists.newArrayList();
-        try {
-            MongoCollection<Document> documents = client.getDatabase(database).getCollection(collection);
-            Document document = documents.find().first();
-            if (document != null) {
-                JsonNode jsonNode = objectMapper.convertValue(document, JsonNode.class);
-                fields = FieldFlatUtil.flatFields(jsonNode, null);
-            }
-        } catch (Exception e) {
-            logger.error("mongo operate error: ", e);
-            throw new RuntimeException(e);
-        } finally {
-            client.close();
+
+        MongoCollection<Document> documents = client.getDatabase(database).getCollection(collection);
+        Document document = documents.find().first();
+        if (document != null) {
+            JsonNode jsonNode = objectMapper.convertValue(document, JsonNode.class);
+            fields = FieldFlatUtil.flatFields(jsonNode, null);
         }
+
+        logger.debug("MongoCollectionExtractor getSchema end. fields: {}", JSONUtils.toJsonString(fields));
         return fields;
     }
 
     @Override
-    protected DatasetFieldStat getFieldStats(DatasetField datasetField) {
+    public DatasetFieldStat getFieldStats(DatasetField datasetField) {
         return null;
     }
 
     @Override
-    protected DatasetStat getTableStats() {
+    @VisibleForTesting
+    public DatasetStat getTableStats() {
         try {
+            logger.debug("MongoCollectionExtractor getTableStats start. cluster: {}, database: {}, collection: {}",
+                    JSONUtils.toJsonString(cluster), database, collection);
             long count = client.getDatabase(database).getCollection(collection).count();
-            return new DatasetStat(count, new Date());
+
+            DatasetStat datasetStat = new DatasetStat(count, new Date());
+            logger.debug("MongoCollectionExtractor getTableStats end. datasetStat: {}", JSONUtils.toJsonString(datasetStat));
+            return datasetStat;
         } catch (Exception e) {
-            logger.error("mongo operate error: ", e);
-            throw new RuntimeException(e);
+            logger.error("MongoCollectionExtractor getTableStats error: ", e);
+            throw ExceptionUtils.wrapIfChecked(e);
         } finally {
             client.close();
         }

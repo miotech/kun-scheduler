@@ -1,13 +1,16 @@
 package com.miotech.kun.metadata.extract.impl.postgres;
 
 import com.beust.jcommander.internal.Lists;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.PostgresCluster;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +28,7 @@ public class PostgresSchemaExtractor implements Extractor {
     private final String schema;
 
     public PostgresSchemaExtractor(PostgresCluster cluster, String database, String schema) {
+        Preconditions.checkNotNull(cluster, "cluster should not be null.");
         this.cluster = cluster;
         this.database = database;
         this.schema = schema;
@@ -38,6 +42,8 @@ public class PostgresSchemaExtractor implements Extractor {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
+            logger.debug("PostgresSchemaExtractor extract start. cluster: {}, database: {}, schema: {}",
+                JSONUtils.toJsonString(cluster), database, schema);
             connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useDatabase(cluster.getUrl(), database),
                     cluster.getUsername(), cluster.getPassword());
             String scanDatabase = "SELECT tablename FROM pg_tables WHERE schemaname = ?";
@@ -51,13 +57,14 @@ public class PostgresSchemaExtractor implements Extractor {
             }
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.POSTGRES.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
+            throw ExceptionUtils.wrapIfChecked(classNotFoundException);
         } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
+            throw ExceptionUtils.wrapIfChecked(sqlException);
         } finally {
             JDBCClient.close(connection, statement, resultSet);
         }
 
+        logger.debug("PostgresSchemaExtractor extract end. tables: {}", JSONUtils.toJsonString(tables));
         return Iterators.concat(tables.stream().map((table) -> new PostgresTableExtractor(cluster, database, schema, table).extract()).iterator());
     }
 }

@@ -1,5 +1,7 @@
 package com.miotech.kun.metadata.model;
 
+import java.util.Objects;
+
 public class DatasetField {
 
     private final String name;
@@ -33,5 +35,20 @@ public class DatasetField {
                 ", type='" + type + '\'' +
                 ", comment='" + comment + '\'' +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DatasetField that = (DatasetField) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(comment, that.comment);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, type, comment);
     }
 }

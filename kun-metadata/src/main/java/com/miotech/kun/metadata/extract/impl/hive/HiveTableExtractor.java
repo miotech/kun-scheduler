@@ -1,6 +1,8 @@
 package com.miotech.kun.metadata.extract.impl.hive;
 
 import com.beust.jcommander.internal.Lists;
+import com.google.common.annotations.VisibleForTesting;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
@@ -11,6 +13,7 @@ import com.miotech.kun.metadata.model.DatasetStat;
 import com.miotech.kun.metadata.model.HiveCluster;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +37,10 @@ public class HiveTableExtractor extends ExtractorTemplate {
     }
 
     @Override
+    @VisibleForTesting
     public List<DatasetField> getSchema() {
+        logger.debug("HiveTableExtractor getSchema start. cluster: {}, database: {}, table: {}",
+                JSONUtils.toJsonString(cluster), database, table);
         // Get schema information of table
         List<DatasetField> fields = Lists.newArrayList();
         Connection connection = null;
@@ -82,18 +88,22 @@ public class HiveTableExtractor extends ExtractorTemplate {
             }
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.MYSQL.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
+            throw ExceptionUtils.wrapIfChecked(classNotFoundException);
         } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
+            throw ExceptionUtils.wrapIfChecked(sqlException);
         } finally {
             JDBCClient.close(connection, statement, resultSet);
         }
 
+        logger.debug("HiveTableExtractor getSchema end. fields: {}", JSONUtils.toJsonString(fields));
         return fields;
     }
 
     @Override
+    @VisibleForTesting
     public DatasetFieldStat getFieldStats(DatasetField datasetField) {
+        logger.debug("HiveTableExtractor getFieldStats start. cluster: {}, database: {}, table: {}, datasetField: {}",
+                JSONUtils.toJsonString(cluster), database, table, JSONUtils.toJsonString(datasetField));
         Connection connection = null;
         Statement statement = null;
         ResultSet resultSet = null;
@@ -117,13 +127,15 @@ public class HiveTableExtractor extends ExtractorTemplate {
                 nonnullCount = resultSet.getLong(1);
             }
 
-            DatasetFieldStat result = new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, new Date());
-            return result;
+            DatasetFieldStat fieldStat = new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, new Date());
+
+            logger.debug("HiveTableExtractor getFieldStats end. fieldStat: {}", JSONUtils.toJsonString(fieldStat));
+            return fieldStat;
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.MYSQL.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
+            throw ExceptionUtils.wrapIfChecked(classNotFoundException);
         } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
+            throw ExceptionUtils.wrapIfChecked(sqlException);
         } finally {
             JDBCClient.close(connection, statement, resultSet);
         }
@@ -131,7 +143,10 @@ public class HiveTableExtractor extends ExtractorTemplate {
     }
 
     @Override
+    @VisibleForTesting
     public DatasetStat getTableStats() {
+        logger.debug("HiveTableExtractor getFieldStats start. cluster: {}, database: {}, table: {}",
+                JSONUtils.toJsonString(cluster), database, table);
         DatasetStat.Builder datasetStatBuilder = DatasetStat.newBuilder();
 
         Connection connection = null;
@@ -150,13 +165,15 @@ public class HiveTableExtractor extends ExtractorTemplate {
             }
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.HIVE.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
+            throw ExceptionUtils.wrapIfChecked(classNotFoundException);
         } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
+            throw ExceptionUtils.wrapIfChecked(sqlException);
         } finally {
             JDBCClient.close(connection, statement, resultSet);
         }
 
+        logger.debug("HiveTableExtractor getFieldStats end. datasetStat: {}",
+                JSONUtils.toJsonString(datasetStatBuilder.build()));
         return datasetStatBuilder.build();
     }
 

@@ -1,6 +1,9 @@
 package com.miotech.kun.metadata.extract.tool;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import com.miotech.kun.metadata.model.DatasetField;
 
 import java.util.ArrayList;
@@ -12,7 +15,7 @@ public class FieldFlatUtil {
     public static List<DatasetField> flatFields(JsonNode root, String parent) {
         List<DatasetField> fieldList = new ArrayList<>();
         Iterator<String> fieldNames = root.fieldNames();
-        while(fieldNames.hasNext()) {
+        while (fieldNames.hasNext()) {
             String fieldName = fieldNames.next();
             String keyName = parent == null ? fieldName : String.format("%s.%s", parent, fieldName);
             JsonNode node = root.get(fieldName);
@@ -22,15 +25,19 @@ public class FieldFlatUtil {
                 if (node.isEmpty()) {
                     fieldList.add(new DatasetField(keyName, "ARRAY", ""));
                 }
-                for(JsonNode n : node){
-                    fieldList.addAll(flatFields(n, keyName));
+                for (JsonNode n : node) {
+                    if (n instanceof ObjectNode) {
+                        fieldList.addAll(flatFields(n, keyName));
+                    } else {
+                        fieldList.add(new DatasetField(keyName, "ARRAY", ""));
+                    }
+                    break;
                 }
             } else {
                 String fieldType = null;
-                if (node.isNull()){
+                if (node.isNull()) {
                     fieldType = "UNKNOW";
-                }
-                else {
+                } else {
                     if (node.isNumber())
                         fieldType = "NUMBER";
                     else if (node.isTextual() || node.isBinary())

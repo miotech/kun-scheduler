@@ -1,12 +1,15 @@
 package com.miotech.kun.metadata.extract.impl.hive;
 
 import com.beust.jcommander.internal.Lists;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.HiveCluster;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,12 +28,14 @@ public class HiveDatabaseExtractor implements Extractor {
     private final String database;
 
     public HiveDatabaseExtractor(HiveCluster cluster, String database) {
+        Preconditions.checkNotNull(cluster, "cluster should not be null.");
         this.cluster = cluster;
         this.database = database;
     }
 
     @Override
     public Iterator<Dataset> extract() {
+        logger.debug("HiveDatabaseExtractor extract start. cluster: {}, database: {}", JSONUtils.toJsonString(cluster), database);
         List<String> tables = Lists.newArrayList();
 
         Connection connection = null;
@@ -51,13 +56,14 @@ public class HiveDatabaseExtractor implements Extractor {
             }
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.MYSQL.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
+            throw ExceptionUtils.wrapIfChecked(classNotFoundException);
         } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
+            throw ExceptionUtils.wrapIfChecked(sqlException);
         } finally {
             JDBCClient.close(connection, statement, resultSet);
         }
 
+        logger.debug("HiveDatabaseExtractor extract end. tables: {}", JSONUtils.toJsonString(tables));
         return Iterators.concat(tables.stream().map((tableName) -> new HiveTableExtractor(cluster, database, tableName).extract()).iterator());
     }
 

@@ -2,18 +2,23 @@ package com.miotech.kun.metadata.load.impl;
 
 import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.load.Loader;
 import com.miotech.kun.metadata.model.*;
 import com.miotech.kun.metadata.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.metadata.service.gid.GidService;
 import com.miotech.kun.workflow.db.DatabaseOperator;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -32,20 +37,24 @@ public class PostgresLoader implements Loader {
 
     @Override
     public void load(Dataset dataset) {
+        logger.debug("PostgresLoader load start. dataset: {}", JSONUtils.toJsonString(dataset));
         long gid = gidGenerator.generate(dataset.getDataStore());
         boolean datasetExist = judgeDatasetExisted(gid);
 
         dbOperator.transaction(() -> {
             try {
                 if (datasetExist) {
-                    dbOperator.update("UPDATE kun_mt_dataset SET data_store = ?, `name` = ? WHERE gid = ?", DataStoreJsonUtil.toJson(dataset.getDataStore()), dataset.getName(), gid);
+                    dbOperator.update("UPDATE kun_mt_dataset SET data_store = ?, `name` = ? WHERE gid = ?",
+                            DataStoreJsonUtil.toJson(dataset.getDataStore()), dataset.getName(), gid);
                 } else {
-                    dbOperator.update("INSERT INTO kun_mt_dataset(gid, `name`, cluster_id, data_store) VALUES(?, ?, ?, ?)", gid, dataset.getName(), dataset.getClusterId(), DataStoreJsonUtil.toJson(dataset.getDataStore()));
+                    dbOperator.update("INSERT INTO kun_mt_dataset(gid, `name`, cluster_id, data_store) VALUES(?, ?, ?, ?)",
+                            gid, dataset.getName(), dataset.getClusterId(), DataStoreJsonUtil.toJson(dataset.getDataStore()));
                 }
 
                 DatasetStat datasetStat = dataset.getDatasetStat();
                 if (datasetStat != null) {
-                    dbOperator.update("INSERT INTO kun_mt_dataset_stats(dataset_gid, `row_count`, stats_date) VALUES (?, ?, ?)", gid, datasetStat.getRowCount(), datasetStat.getStatDate() == null ? new Date() : datasetStat.getStatDate());
+                    dbOperator.update("INSERT INTO kun_mt_dataset_stats(dataset_gid, `row_count`, stats_date) VALUES (?, ?, ?)",
+                            gid, datasetStat.getRowCount(), datasetStat.getStatDate() == null ? new Date() : datasetStat.getStatDate());
                 }
 
                 Map<String, DatasetFieldPO> fieldInfos = new HashMap<>();
@@ -67,12 +76,14 @@ public class PostgresLoader implements Loader {
                     if (survivorFields.contains(datasetField.getName())) {
                         if (!fieldInfos.get(datasetField.getName()).getType().equals(datasetField.getType())) {
                             // update field type
-                            dbOperator.update("UPDATE kun_mt_dataset_field SET `type` = ? WHERE dataset_gid = ? and `name` = ?", datasetField.getType(), gid, datasetField.getName());
+                            dbOperator.update("UPDATE kun_mt_dataset_field SET `type` = ? WHERE dataset_gid = ? and `name` = ?",
+                                    datasetField.getType(), gid, datasetField.getName());
                         }
                         id = fieldInfos.get(datasetField.getName()).getId();
                     } else {
                         // new field
-                        id = dbOperator.create("INSERT INTO kun_mt_dataset_field(dataset_gid, `name`, `type`) VALUES(?, ?, ?)", gid, datasetField.getName(), datasetField.getType());
+                        id = dbOperator.create("INSERT INTO kun_mt_dataset_field(dataset_gid, `name`, `type`) VALUES(?, ?, ?)",
+                                gid, datasetField.getName(), datasetField.getType());
                     }
 
                     DatasetFieldStat datasetFieldStat = fieldStatMap.get(datasetField.getName());
@@ -80,20 +91,23 @@ public class PostgresLoader implements Loader {
                         BigDecimal nonnullPercentage = new BigDecimal("100.00");
                         if (dataset.getDatasetStat().getRowCount() > 0) {
                             if (datasetFieldStat.getNonnullCount() > dataset.getDatasetStat().getRowCount()) {
-                                logger.error("compute nonnullPercentage fail, nonnullCount > rowCount, nonnullCount: {}, rowCount: {}", datasetFieldStat.getNonnullCount(), dataset.getDatasetStat().getRowCount());
-                                throw new RuntimeException("nonnullCount > rowCount");
+                                logger.error("compute nonnullPercentage fail, nonnullCount > rowCount, nonnullCount: {}, rowCount: {}",
+                                        datasetFieldStat.getNonnullCount(), dataset.getDatasetStat().getRowCount());
+                                throw new RuntimeException("logic exception(nonnullCount > rowCount), dataset: " + JSONUtils.toJsonString(dataset));
                             }
-                            nonnullPercentage = new BigDecimal(datasetFieldStat.getNonnullCount()).multiply(HUNDRED).divide(new BigDecimal(dataset.getDatasetStat().getRowCount()), 2, BigDecimal.ROUND_HALF_UP);
+                            nonnullPercentage = new BigDecimal(datasetFieldStat.getNonnullCount()).multiply(HUNDRED)
+                                    .divide(new BigDecimal(dataset.getDatasetStat().getRowCount()), 2, BigDecimal.ROUND_HALF_UP);
                         }
-                        dbOperator.update("INSERT INTO kun_mt_dataset_field_stats(field_id, distinct_count, nonnull_count, nonnull_percentage) VALUES(?, ?, ?, ?)", id, datasetFieldStat.getDistinctCount(), datasetFieldStat.getNonnullCount(), nonnullPercentage);
+                        dbOperator.update("INSERT INTO kun_mt_dataset_field_stats(field_id, distinct_count, nonnull_count, nonnull_percentage) VALUES(?, ?, ?, ?)",
+                                id, datasetFieldStat.getDistinctCount(), datasetFieldStat.getNonnullCount(), nonnullPercentage);
                     }
                 }
             } catch (JsonProcessingException jsonProcessingException) {
-                throw new RuntimeException(jsonProcessingException);
+                throw ExceptionUtils.wrapIfChecked(jsonProcessingException);
             }
             return null;
         });
-
+        logger.debug("PostgresLoader load end. dataset: {}", JSONUtils.toJsonString(dataset));
     }
 
     private boolean judgeDatasetExisted(long gid) {

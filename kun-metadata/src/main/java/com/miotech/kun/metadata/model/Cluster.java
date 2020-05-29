@@ -10,7 +10,7 @@ public abstract class Cluster {
 
     private final long clusterId;
 
-    public long getClusterId() {
+    public final long getClusterId() {
         return clusterId;
     }
 

@@ -7,11 +7,16 @@ import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
+import com.miotech.kun.metadata.service.gid.GidService;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.db.DatabaseOperator;
+import org.hamcrest.MatcherAssert;
+import org.hamcrest.Matchers;
+import org.joor.Reflect;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.util.Date;
 import java.util.List;
@@ -106,15 +111,13 @@ public class PostgresLoaderTest extends DatabaseTestBase {
                             new DatasetFieldStat("name", 3, 167, "admin", new Date()))).build();
             postgresLoader.load(dataset);
         } catch (RuntimeException e) {
+            MatcherAssert.assertThat(e.getMessage(), Matchers.startsWith("logic exception(nonnullCount > rowCount)"));
         }
         rowCount = operator.fetchOne("SELECT COUNT(*) FROM kun_mt_dataset", rs -> rs.getLong(1));
         Assert.assertEquals(rowCount, Long.valueOf(0));
 
     }
 
-    /**
-     * 由于gid是snowflake生成的，为了测试该case，需修改PostgresLoader.load中gid的生成规则，固定成gid = 100L;
-     */
     @Test
     public void testLoad_updateField() {
         PostgresLoader postgresLoader = new PostgresLoader(operator);
@@ -122,6 +125,11 @@ public class PostgresLoaderTest extends DatabaseTestBase {
         operator.update("INSERT INTO kun_mt_dataset_field(dataset_gid, `name`, `type`) VALUES(?, ?, ?)", 100L, "id", "abc");
         Long id = operator.fetchOne("SELECT id FROM kun_mt_dataset_field WHERE dataset_gid = 100 AND `name` = 'age'", rs -> rs.getLong(1));
         Assert.assertNotNull(id);
+
+        GidService mockGidService = Mockito.mock(GidService.class);
+        Mockito.when(mockGidService.generate(dataset.getDataStore())).thenReturn(100L);
+
+        Reflect.on(postgresLoader).set("gidGenerator", mockGidService);
 
         postgresLoader.load(dataset);
         List<String> fieldNames = operator.fetchAll("SELECT `name` FROM kun_mt_dataset_field WHERE dataset_gid = 100", rs -> rs.getString(1));
