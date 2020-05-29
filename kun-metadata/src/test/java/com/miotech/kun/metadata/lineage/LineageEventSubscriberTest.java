@@ -1,53 +1,63 @@
 package com.miotech.kun.metadata.lineage;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
+import com.google.inject.AbstractModule;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.miotech.kun.metadata.testbase.DatabaseTestBase;
+import com.miotech.kun.workflow.core.publish.EventSubscriber;
+import com.miotech.kun.workflow.core.publish.KafkaEventSubscriber;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
+import javax.inject.Inject;
 import java.util.Properties;
 
-public class LineageEventSubscriberTest {
+public class LineageEventSubscriberTest extends DatabaseTestBase {
 
-    Properties kafkaConf;
+    @Inject
+    LineageEventSubscriber subscriber;
 
 
-    @Before
-    public void setUp() throws Exception {
-        kafkaConf = new Properties();
-        kafkaConf.put("bootstrap.servers", "localhost:9092");
-        kafkaConf.put("acks", "all");
-        kafkaConf.put("retries", 0);
-        kafkaConf.put("batch.size", 16384);
-        kafkaConf.put("linger.ms", 1);
-        kafkaConf.put("buffer.memory", 33554432);
-        kafkaConf.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        kafkaConf.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        kafkaConf.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        kafkaConf.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-
-        kafkaConf.put("group.id", "test-group");
-        kafkaConf.put("enable.auto.commit", "true");
-        kafkaConf.put("auto.commit.interval.ms", "1000");
+    @Override
+    protected void configuration() {
+        super.configuration();
+        addModules(new ProviderModule());
     }
 
     @After
-    public void tearDown() throws Exception {
+    public void tearDown()  {
     }
 
     @Test
     public void subscribe() {
-        Injector injector = Guice.createInjector();
 
-        LineageEventSubscriber subscriber = new LineageEventSubscriber("test", kafkaConf);
         subscriber.subscribe();
     }
 
-//    class LineageModule extends AbstractModule{
-//        @Override
-//        protected void configure(){
-//            bind(SpellChecker.class).to(WinWordSpellChecker.class);
-//        }
-//    }
+
+    public static class ProviderModule extends AbstractModule {
+        @Provides
+        @Singleton
+        public EventSubscriber createEventSubscriber() {
+
+            Properties kafkaConf = new Properties();
+            kafkaConf.put("bootstrap.servers", "localhost:9092");
+            kafkaConf.put("acks", "all");
+            kafkaConf.put("retries", 0);
+            kafkaConf.put("batch.size", 16384);
+            kafkaConf.put("linger.ms", 1);
+            kafkaConf.put("buffer.memory", 33554432);
+            kafkaConf.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+            kafkaConf.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+            kafkaConf.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+            kafkaConf.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+
+            kafkaConf.put("group.id", "test-group");
+            kafkaConf.put("enable.auto.commit", "true");
+            kafkaConf.put("auto.commit.interval.ms", "1000");
+
+            return new KafkaEventSubscriber("test", kafkaConf);
+        }
+    }
+
 }

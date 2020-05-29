@@ -18,7 +18,7 @@ public class LineageLoader {
     private static Logger logger = LoggerFactory.getLogger(LineageLoader.class);
 
     @Inject
-    private final DatabaseOperator dbOperator;
+    private DatabaseOperator dbOperator;
 
     @Inject
     public LineageLoader(DatabaseOperator dbOperator) {
