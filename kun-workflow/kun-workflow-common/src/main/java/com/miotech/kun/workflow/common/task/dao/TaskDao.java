@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.db.ResultSetMapper;
 import com.miotech.kun.workflow.db.sql.DefaultSQLBuilder;
@@ -42,6 +43,10 @@ public class TaskDao {
 
     public static final String TICK_TASK_MAPPING_TABLE_ALIAS = "tick_task_mapping";
 
+    public static final String TASK_RELATION_TABLE_NAME = "kun_wf_task_relations";
+
+    public static final String TASK_RELATION_MODEL_NAME = "task_relation";
+
     private static final List<String> taskCols = ImmutableList.copyOf(
             new String[]{"id", "name", "description", "operator_id", "arguments", "variable_defs", "schedule"});
 
@@ -49,7 +54,20 @@ public class TaskDao {
             new String[]{"task_id", "scheduled_tick"}
     );
 
+    private static final List<String> taskRelationCols = ImmutableList.copyOf(
+            new String[]{"upstream_task_id", "downstream_task_id", "dependency_function"}
+    );
+
     private final DatabaseOperator dbOperator;
+
+    @Inject
+    public TaskDao(DatabaseOperator dbOperator) {
+        this.dbOperator = dbOperator;
+    }
+
+    public static List<String> getTaskCols() {
+        return taskCols;
+    }
 
     private void insertTickTaskRecordByScheduleConf(Long taskId, ScheduleConf scheduleConf, Clock clock) {
         boolean shouldInsertTickTask;
@@ -105,13 +123,23 @@ public class TaskDao {
         return affectedRows > 0;
     }
 
-    @Inject
-    public TaskDao(DatabaseOperator dbOperator) {
-        this.dbOperator = dbOperator;
+    private void insertDependencyRecords(Long taskId, List<TaskDependency> dependencies) {
+        // TODO: implement this
     }
 
-    public static List<String> getTaskCols() {
-        return taskCols;
+    private String getSelectSQL(String whereClause) {
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_MODEL_NAME, taskCols);
+        SQLBuilder builder =  DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .from(TASK_TABLE_NAME, TASK_MODEL_NAME)
+                .autoAliasColumns();
+
+        if (StringUtils.isNotBlank(whereClause)) {
+            builder.where(whereClause);
+        }
+
+        return builder.getSQL();
     }
 
     public List<Task> fetchWithFilters(TaskSearchFilter filters) {
@@ -162,30 +190,16 @@ public class TaskDao {
         return Optional.ofNullable(task);
     }
 
-    private String getSelectSQL(String whereClause) {
-        Map<String, List<String>> columnsMap = new HashMap<>();
-        columnsMap.put(TASK_MODEL_NAME, taskCols);
-        SQLBuilder builder =  DefaultSQLBuilder.newBuilder()
-                .columns(columnsMap)
-                .from(TASK_TABLE_NAME, TASK_MODEL_NAME)
-                .autoAliasColumns();
-
-        if (StringUtils.isNotBlank(whereClause)) {
-            builder.where(whereClause);
-        }
-
-        return builder.getSQL();
-    }
-
     public void create(Task task) {
         create(task, Clock.systemDefaultZone());
     }
 
     public void create(Task task, Clock mockClock) {
         /*
-         * Creating a task consists of 2 steps:
+         * Creating a task consists of following steps:
          * 1. Insert task record into database
          * 2. Insert a tick-task mapping record according to schedule config
+         * 3. For each dependency, insert a record into table `kun_wf_task_relations`
          * Note: if any of the steps above failed, the entire insertion operation should be aborted and reverted.
          * */
         List<String> tableColumns = new ImmutableList.Builder<String>()
@@ -319,7 +333,6 @@ public class TaskDao {
                     .withArguments(JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_arguments"), new TypeReference<List<Param>>() {}))
                     .withVariableDefs(JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_variable_defs"), new TypeReference<List<Variable>>() {}))
                     .withScheduleConf( JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_schedule"), new TypeReference<ScheduleConf>() {}))
-                    // TODO: load state from persist
                     .withDependencies(new ArrayList<>())
                     .build();
         }

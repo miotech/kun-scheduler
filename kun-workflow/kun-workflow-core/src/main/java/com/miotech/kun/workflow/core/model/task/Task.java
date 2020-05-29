@@ -6,6 +6,7 @@ import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Variable;
 
 import java.util.List;
+import java.util.Objects;
 
 @JsonDeserialize(builder = Task.TaskBuilder.class)
 public class Task {
@@ -83,6 +84,26 @@ public class Task {
 
     public static TaskBuilder newBuilder() {
         return new TaskBuilder();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Task task = (Task) o;
+        return Objects.equals(id, task.id) &&
+                Objects.equals(name, task.name) &&
+                Objects.equals(description, task.description) &&
+                Objects.equals(operatorId, task.operatorId) &&
+                Objects.equals(arguments, task.arguments) &&
+                Objects.equals(variableDefs, task.variableDefs) &&
+                Objects.equals(scheduleConf, task.scheduleConf) &&
+                Objects.equals(dependencies, task.dependencies);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, description, operatorId, arguments, variableDefs, scheduleConf, dependencies);
     }
 
     public static final class TaskBuilder {

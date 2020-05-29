@@ -63,8 +63,8 @@ CREATE TABLE kun_wf_task_run (
     status VARCHAR(64) NULL,
     start_at TIMESTAMP NULL,
     end_at TIMESTAMP NULL,
-    inlet JSONB NULL,
-    outlet JSONB NULL,
+    inlets JSONB NULL,
+    outlets JSONB NULL,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP NOT NULL
 );

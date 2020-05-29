@@ -7,6 +7,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.vo.TaskRunVO;
 import java.util.List;
+import java.util.Optional;
 
 @Singleton
 public class TaskRunService {
@@ -15,9 +16,9 @@ public class TaskRunService {
     private TaskRunDao taskRunDao;
 
 
-    public TaskRunVO getTaskRunDetail(Long taskRunId) {
-        TaskRun taskRun = taskRunDao.fetchById(taskRunId);
-        return convertToVO(taskRun);
+    public Optional<TaskRunVO> getTaskRunDetail(Long taskRunId) {
+        Optional<TaskRun> taskRun = taskRunDao.fetchById(taskRunId);
+        return taskRun.map(this::convertToVO);
     }
 
     public TaskRunVO convertToVO(TaskRun taskRun) {
@@ -33,6 +34,7 @@ public class TaskRunService {
                 .withDependencyTaskRunIds(taskRun.getDependentTaskRunIds())
                 .withStartAt(taskRun.getStartAt())
                 .withEndAt(taskRun.getEndAt())
+                .withVariables(taskRun.getVariables())
                 .withAttempts(attempts)
                 .build();
     }

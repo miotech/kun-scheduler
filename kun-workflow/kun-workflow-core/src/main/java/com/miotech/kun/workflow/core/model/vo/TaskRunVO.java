@@ -1,10 +1,10 @@
 package com.miotech.kun.workflow.core.model.vo;
 
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.entity.Entity;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.time.OffsetDateTime;
@@ -16,7 +16,7 @@ public class TaskRunVO {
 
     private Task task;
 
-    private String variables;
+    private List<Variable> variables;
 
     private Tick scheduledTick;
 
@@ -50,11 +50,11 @@ public class TaskRunVO {
         this.task = task;
     }
 
-    public String getVariables() {
+    public List<Variable> getVariables() {
         return variables;
     }
 
-    public void setVariables(String variables) {
+    public void setVariables(List<Variable> variables) {
         this.variables = variables;
     }
 
@@ -129,7 +129,7 @@ public class TaskRunVO {
     public static final class Builder {
         private Long id;
         private Task task;
-        private String variables;
+        private List<Variable> variables;
         private Tick scheduledTick;
         private TaskRunStatus status;
         private List<Entity> inlets;
@@ -156,7 +156,7 @@ public class TaskRunVO {
             return this;
         }
 
-        public Builder withVariables(String variables) {
+        public Builder withVariables(List<Variable> variables) {
             this.variables = variables;
             return this;
         }
