@@ -1,5 +1,11 @@
 package com.miotech.kun.workflow.core.event;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
+import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.CLASS;
+
+@JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
 public abstract class Event {
     private final long timestamp;
 
