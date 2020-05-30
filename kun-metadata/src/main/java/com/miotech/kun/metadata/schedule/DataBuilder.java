@@ -85,10 +85,10 @@ public class DataBuilder {
         clusters.stream().forEach(cluster -> build(cluster));
     }
 
-    public void scheduleAtRate(long period, TimeUnit unit) {
+    public void scheduleAtRate(long initialDelay, long period, TimeUnit unit) {
         if (scheduled.compareAndSet(false, true)) {
             logger.info("Start scheduling buildAll task. period={}, unit={}", period, unit);
-            scheduler.scheduleAtFixedRate(this::buildAll, 0, period, unit);
+            scheduler.scheduleAtFixedRate(this::buildAll, initialDelay, period, unit);
         } else {
             throw new IllegalStateException("BuildAll task is already scheduled.");
         }

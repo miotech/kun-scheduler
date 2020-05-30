@@ -1,42 +1,33 @@
 package com.miotech.kun.metadata.schedule;
 
-import com.google.common.base.Preconditions;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.concurrent.TimeUnit;
 
 public class DataBuilderScheduler {
     private static Logger logger = LoggerFactory.getLogger(DataBuilderScheduler.class);
-
-    @Inject
-    private DataBuilder dataBuilder;
+    private static final long period = 86400L;
+    private static long initialDelay = LocalDateTime.now().plusDays(1).withHour(0).withMinute(0).withSecond(0).toEpochSecond(ZoneOffset.of("+8")) - LocalDateTime.now().toEpochSecond(ZoneOffset.of("+8"));
 
     public static void main(String[] args) {
-        long period = Long.MAX_VALUE;
-        Preconditions.checkState(args != null && args.length == 1, "period should not be null");
         try {
-            Long.parseLong(args[0]);
+            if (args != null && args.length == 1) {
+                initialDelay = Long.parseLong(args[0]);
+            }
         } catch (NumberFormatException numberFormatException) {
-            logger.error("period should be number: " + args[0]);
+            logger.error("initialDelay should be number");
             throw ExceptionUtils.wrapIfChecked(numberFormatException);
         }
-        period = Long.parseLong(args[0]);
 
         // load datasource
-        DataBuilderScheduler scheduler = new DataBuilderScheduler();
-        scheduler.loadDataSource();
-
-        scheduler.dataBuilder.scheduleAtRate(period, TimeUnit.SECONDS);
-    }
-
-    private void loadDataSource() {
         Injector injector = Guice.createInjector(new DataSourceModule());
-        injector.injectMembers(this);
+        DataBuilder dataBuilder = injector.getInstance(DataBuilder.class);
+        dataBuilder.scheduleAtRate(initialDelay, period, TimeUnit.SECONDS);
     }
-
 }
