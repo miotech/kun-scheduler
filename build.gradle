@@ -41,7 +41,7 @@ subprojects {
                 implementation 'mysql:mysql-connector-java:5.1.46'
                 implementation "org.flywaydb:flyway-core:6.4.2"
                 implementation "org.apache.curator:curator-recipes:4.2.0"
-                implementation "com.facebook.presto:presto-jdbc:0.232"
+                implementation "io.prestosql:presto-jdbc:333"
                 implementation "org.mongodb:mongo-java-driver:3.6.3"
 
                 testImplementation "junit:junit:4.12"

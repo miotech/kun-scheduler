@@ -33,7 +33,7 @@ public class JDBCClient {
             case POSTGRES:
                 return "org.postgresql.Driver";
             case PRESTO:
-                return "com.facebook.presto.jdbc.PrestoDriver";
+                return "io.prestosql.jdbc.PrestoDriver";
             default:
                 throw new RuntimeException("invalid dbType: " + dbType.getName());
         }

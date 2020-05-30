@@ -1,3 +1,8 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'java'
+}
+
 dependencies {
     implementation project(":kun-workflow:kun-workflow-core")
     implementation project(":kun-workflow:kun-workflow-utils")
@@ -12,10 +17,24 @@ dependencies {
     implementation 'org.apache.hive:hive-jdbc'
     implementation 'mysql:mysql-connector-java'
     implementation "org.apache.curator:curator-recipes"
-    implementation "com.facebook.presto:presto-jdbc"
+    implementation "io.prestosql:presto-jdbc"
     implementation "org.mongodb:mongo-java-driver"
     implementation "org.jooq:joor-java-8:0.9.12"
     testImplementation "junit:junit"
     testRuntimeOnly "com.h2database:h2"
     testRuntimeOnly "org.mockito:mockito-core"
+}
+
+
+
+shadowJar {
+    baseName = 'kun-metadata'
+    classifier = null
+    version = 1.0
+    manifest {
+        attributes(
+                'Main-Class': 'com.miotech.kun.metadata.schedule.DataBuilderScheduler'
+        )
+    }
+    zip64 true
 }

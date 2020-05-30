@@ -109,7 +109,7 @@ public class JDBCClientTest {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.PRESTO, "jdbc:presto://10.0.0.85:8073/hive", "root", null);
+            connection = JDBCClient.getConnection(DatabaseType.PRESTO, "jdbc:presto://10.0.0.85:8073/hive/dm", "root", null);
             String scanDatabase = "show tables";
             statement = connection.createStatement();
 

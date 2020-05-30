@@ -35,12 +35,12 @@ public class GidService {
             throw new RuntimeException("serialize fail, ", e);
         }
 
-        Long gid = dbOperator.fetchOne("SELECT dataset_gid FROM kun_mt_dataset_gid WHERE data_store = ?", rs -> rs.getLong(1), dataStoreJson);
+        Long gid = dbOperator.fetchOne("SELECT dataset_gid FROM kun_mt_dataset_gid WHERE data_store = ?::jsonb", rs -> rs.getLong(1), dataStoreJson);
         if (gid != null && gid > 0) {
             return gid;
         } else {
             gid = IdGenerator.getInstance().nextId();
-            dbOperator.update("INSERT INTO kun_mt_dataset_gid(data_store, dataset_gid) VALUES (?, ?)", dataStoreJson, gid);
+            dbOperator.update("INSERT INTO kun_mt_dataset_gid(data_store, dataset_gid) VALUES (?::jsonb, ?)", dataStoreJson, gid);
         }
 
         return gid;
