@@ -98,15 +98,17 @@ public class SparkOperator implements Operator {
             logger.info("Execution job : {}", JSONUtils.toJsonString(job));
             while(true) {
                 String state = app.getState();
-                if(state == null)
+                if(state == null){
                     // job might be deleted
+                    logger.debug("cannot get spark job state, batch id: " + app.getId());
                     return false;
+                }
                 switch (state) {
                     case "not_started":
                     case "starting":
                     case "busy":
                     case "idle":
-                        System.out.println("running");
+                        logger.debug("spark job running, batch id: " + app.getId());
                         app = livyClient.getSparkJob(jobId);
                         Thread.sleep(10000);
                         break;
@@ -114,11 +116,15 @@ public class SparkOperator implements Operator {
                     case "killed":
                     case "dead":
                     case "error":
-                        System.out.println("fail");
+                        logger.info("spark job failed, batch id: " + app.getId());
                         return false;
                     case "success":
-                        System.out.println("success");
-                        lineangeAnalysis(context, app.getAppId());
+                        logger.info("spark job succeed, batch id: " + app.getId());
+                        try {
+                            lineangeAnalysis(context, app.getAppId());
+                        }catch (Exception e){
+                            logger.error("failed on lineage analysis", e);
+                        }
                         return true;
                 }
             }
@@ -137,14 +143,16 @@ public class SparkOperator implements Operator {
 
     public void lineangeAnalysis(OperatorContext context, String applicationId){
         logger.info("Start lineage analysis for batch id: " + app.getId());
+
+        String hdfsAddr = context.getParameter("hdfsAddr");
         List<DataStore> inlets = new ArrayList<>();
         List<DataStore> outlets = new ArrayList<>();
-        String input = "/tmp" + applicationId + ".input.txt";
+        String input = "/tmp/" + applicationId + ".input.txt";
         String output = "/tmp/" + applicationId + ".output.txt";
 
         try {
-            inlets.addAll(genDataStore(input));
-            outlets.addAll(genDataStore(output));
+            inlets.addAll(genDataStore(input, hdfsAddr));
+            outlets.addAll(genDataStore(output, hdfsAddr));
         }catch (IOException e){
             throw new RuntimeException(e);
         }
@@ -152,12 +160,12 @@ public class SparkOperator implements Operator {
         context.report(inlets, outlets);
     }
 
-    public List<DataStore> genDataStore(String path) throws IOException {
+    public List<DataStore> genDataStore(String path, String hdfsAddr) throws IOException {
 
         List<DataStore> stores = new ArrayList<>();
 
         Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", "hdfs://localhost:8020");
+        conf.set("fs.defaultFS", hdfsAddr);
 
         FileSystem fs = FileSystem.get(conf);
         BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(new Path(path))));
@@ -171,6 +179,8 @@ public class SparkOperator implements Operator {
                     stores.add(getHiveStore(line));
                     break;
                 case "mongodb":
+                    stores.add(getMongoStore(line));
+                    break;
                 case "jdbc:postgresql":
                     stores.add(getPGStore(line));
                     break;
@@ -191,8 +201,8 @@ public class SparkOperator implements Operator {
     public ElasticSearchIndexStore getESStore(String line){
         String[] slices = line.split("/");
         Integer length = slices.length;
-        String url = slices[length - 2];
-        String index = slices[length - 1];
+        String url = slices[length - 3];
+        String index = slices[length - 2];
         return new ElasticSearchIndexStore(url,index);
     }
 
@@ -220,8 +230,8 @@ public class SparkOperator implements Operator {
         String info = line.split("@")[1];
         String[] slices = info.split("/");
         String url = slices[0];
-        String db = slices[1].split(".")[0];
-        String table = slices[1].split(".")[1];
+        String db = slices[1].split("\\.")[0];
+        String table = slices[1].split("\\.")[1];
         return new HiveTableStore(url, db, table);
     }
 
