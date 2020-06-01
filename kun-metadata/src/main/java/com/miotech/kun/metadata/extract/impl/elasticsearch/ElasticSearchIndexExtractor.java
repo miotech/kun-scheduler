@@ -49,13 +49,17 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
             JsonNode root = JSONUtils.stringToJson(json);
 
             List<DatasetField> fields = new ArrayList<>();
-            for(final JsonNode node : root.get("rows")){
-                Iterator<JsonNode> it = node.iterator();
-                String name = it.next().asText();
-                if (name.endsWith("keyword"))
-                    continue;
-                String type = it.next().asText();
-                fields.add(new DatasetField(name, type, ""));
+            if(!root.get("rows").isEmpty()){
+                for(final JsonNode node : root.get("rows")){
+                    Iterator<JsonNode> it = node.iterator();
+                    String name = it.next().asText();
+                    if (name.endsWith("keyword"))
+                        continue;
+                    String type = it.next().asText();
+                    if(type.equals("STRUCT"))
+                        continue;
+                    fields.add(new DatasetField(name, type, ""));
+                }
             }
             return fields;
         }catch (IOException e){

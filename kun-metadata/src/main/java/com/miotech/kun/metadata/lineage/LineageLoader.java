@@ -41,14 +41,20 @@ public class LineageLoader {
         //TODO: kun_mt_dataset_relations, bigint -> array(bigint)
         System.out.println("save to db, taskId: " + taskId);
 
-        List<Object[]> params = new ArrayList<>();
-        for(long inlet : inletDataSetIds){
+        Object[][] params = new Object[inletDataSetIds.size()][];
+//        List<List<Object>> params = new ArrayList<>();
+        for(int i = 0; i < inletDataSetIds.size(); i++){
+            List<Object> param = new ArrayList<>();
+            long inlet = inletDataSetIds.get(i);
             for(long outlet : outletDataSetIds){
-                params.add(new Object[]{inlet, outlet, taskId});
+                param.add(inlet);
+                param.add(outlet);
+                param.add(taskId);
             }
+            params[i] = param.toArray();
         }
         dbOperator.batch("INSERT INTO kun_mt_dataset_relations(upstream_dataset_gid, downstream_dataset_gid, task_id) VALUES (?, ?, ?)",
-                params.toArray());
+                params);
 
     }
 
@@ -61,7 +67,7 @@ public class LineageLoader {
             logger.error("unknown data store error", e);
             return 0;
         }
-        Long gid = dbOperator.fetchOne("SELECT dataset_gid FROM kun_mt_dataset_gid WHERE data_store = ?", rs -> rs.getLong(1), dataStoreJson);
+        Long gid = dbOperator.fetchOne("SELECT gid FROM kun_mt_dataset WHERE data_store = ?::jsonb", rs -> rs.getLong(1), dataStoreJson);
         if (gid != null && gid > 0) {
             return gid;
         }
