@@ -15,13 +15,13 @@ public enum TaskRunStatus {
     ABORTING,
     ABORTED;
 
+    private static final Map<String, TaskRunStatus> mappings = new HashMap<>(16);
+
     static {
         for (TaskRunStatus status : values()) {
             mappings.put(status.name(), status);
         }
     }
-
-    private static final Map<String, TaskRunStatus> mappings = new HashMap<>(16);
 
     @Nullable
     public static TaskRunStatus resolve(@Nullable String status) {
