@@ -6,8 +6,10 @@ import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.vo.TaskRunVO;
+
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Singleton
 public class TaskRunService {
@@ -22,7 +24,20 @@ public class TaskRunService {
     }
 
     public TaskRunVO convertToVO(TaskRun taskRun) {
-        List<TaskAttempt> attempts = taskRunDao.fetchAttemptsByTaskRunId(taskRun.getId());
+        List<TaskAttempt> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRun.getId())
+                .stream()
+                .map(props -> TaskAttempt.newBuilder()
+                        .withId(props.getId())
+                        // TODO: recheck this
+                        .withTaskRun(null)
+                        .withLogPath(props.getLogPath())
+                        .withStatus(props.getStatus())
+                        .withStartAt(props.getStartAt())
+                        .withEndAt(props.getEndAt())
+                        .withAttempt(props.getAttempt())
+                        .build()
+                )
+                .collect(Collectors.toList());
 
         return TaskRunVO.newBuilder()
                 .withTask(taskRun.getTask())

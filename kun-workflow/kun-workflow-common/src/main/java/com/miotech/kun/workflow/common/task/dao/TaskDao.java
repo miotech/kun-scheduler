@@ -47,16 +47,11 @@ public class TaskDao {
 
     public static final String TASK_RELATION_MODEL_NAME = "task_relation";
 
-    private static final List<String> taskCols = ImmutableList.copyOf(
-            new String[]{"id", "name", "description", "operator_id", "arguments", "variable_defs", "schedule"});
+    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "arguments", "variable_defs", "schedule");
 
-    private static final List<String> tickTaskCols = ImmutableList.copyOf(
-            new String[]{"task_id", "scheduled_tick"}
-    );
+    private static final List<String> tickTaskCols = ImmutableList.of("task_id", "scheduled_tick");
 
-    private static final List<String> taskRelationCols = ImmutableList.copyOf(
-            new String[]{"upstream_task_id", "downstream_task_id", "dependency_function"}
-    );
+    private static final List<String> taskRelationCols = ImmutableList.of("upstream_task_id", "downstream_task_id", "dependency_function");
 
     private final DatabaseOperator dbOperator;
 

@@ -18,6 +18,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.db.ResultSetMapper;
 import com.miotech.kun.workflow.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.workflow.db.sql.SQLBuilder;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
@@ -34,18 +35,15 @@ import java.util.stream.Collectors;
 public class TaskRunDao {
     private static final Logger logger = LoggerFactory.getLogger(TaskRunDao.class);
     private static final String TASK_RUN_MODEL_NAME = "taskrun";
-    private static final String TASKRUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.copyOf(
-            new String[]{"id", "task_id", "scheduled_tick", "status", "start_at", "end_at", "variables", "inlets", "outlets"});
+    private static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "start_at", "end_at", "variables", "inlets", "outlets");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
-    private static final List<String> taskAttemptCols = ImmutableList.copyOf(
-            new String[]{"id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path"});
+    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path");
 
     private static final String RELATION_TABLE_NAME = "kun_wf_task_run_relations";
-    private static final List<String> taskRunRelationCols = ImmutableList.copyOf(
-            new String[]{"upstream_task_run_id", "downstream_task_run_id"});
+    private static final List<String> taskRunRelationCols = ImmutableList.of("upstream_task_run_id", "downstream_task_run_id");
 
     @Inject
     private TaskDao taskDao;
@@ -53,18 +51,20 @@ public class TaskRunDao {
     @Inject
     private DatabaseOperator dbOperator;
 
-    private String getSelectSQL(String whereClause) {
+    private SQLBuilder getTaskRunSQLBuilderWithDefaultConfig() {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
         columnsMap.put(TaskDao.TASK_MODEL_NAME, TaskDao.getTaskCols());
 
         return DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
-                .from(TASKRUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
                 .join("LEFT OUTER", taskDao.TASK_TABLE_NAME, taskDao.TASK_MODEL_NAME)
-                .autoAliasColumns()
-                .where(whereClause)
-                .getSQL();
+                .autoAliasColumns();
+    }
+
+    private String getSelectSQL(String whereClause) {
+        return getTaskRunSQLBuilderWithDefaultConfig().where(whereClause).getSQL();
     }
 
     public Optional<TaskRun> fetchById(Long id) {
@@ -90,7 +90,7 @@ public class TaskRunDao {
 
             String sql = DefaultSQLBuilder .newBuilder()
                     .insert(tableColumns.toArray(new String[0]))
-                    .into(TASKRUN_TABLE_NAME)
+                    .into(TASK_RUN_TABLE_NAME)
                     .asPrepared()
                     .getSQL();
 
@@ -132,7 +132,7 @@ public class TaskRunDao {
                     .build();
 
             String sql = DefaultSQLBuilder .newBuilder()
-                    .update(TASKRUN_TABLE_NAME)
+                    .update(TASK_RUN_TABLE_NAME)
                     .set(tableColumns.toArray(new String[0]))
                     .where("id = ?")
                     .asPrepared()
@@ -168,14 +168,14 @@ public class TaskRunDao {
             deleteTaskAttempts(taskRunId);
             String deleteSQL = DefaultSQLBuilder.newBuilder()
                     .delete()
-                    .from(TASKRUN_TABLE_NAME)
+                    .from(TASK_RUN_TABLE_NAME)
                     .where("id = ?")
                     .getSQL();
-            return dbOperator.update(deleteSQL, taskRunId) >= 0;
+            return dbOperator.update(deleteSQL, taskRunId) > 0;
         });
     }
 
-    public List<TaskAttempt> fetchAttemptsByTaskRunId(Long taskRunId) {
+    public List<TaskAttemptProps> fetchAttemptsPropByTaskRunId(Long taskRunId) {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
 
@@ -185,20 +185,25 @@ public class TaskRunDao {
                 .autoAliasColumns()
                 .where(TASK_ATTEMPT_MODEL_NAME + ".task_run_id = ?")
                 .getSQL();
-        return dbOperator.fetchAll(sql, TaskAttemptMapper.INSTANCE, taskRunId);
+
+        return dbOperator.fetchAll(sql, TaskAttemptPropsMapper.INSTANCE, taskRunId);
     }
 
-    public TaskAttempt fetchAttemptById(Long attemptId) {
+    // TODO: return integrated TaskAttempt object with all properties of `taskRun`
+    public Optional<TaskAttempt> fetchAttemptById(Long attemptId) {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
+        columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
 
         String sql = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_ATTEMPT_TABLE_NAME, TASK_ATTEMPT_MODEL_NAME)
+                .join("INNER", TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
                 .autoAliasColumns()
                 .where(TASK_ATTEMPT_MODEL_NAME + ".id = ?")
                 .getSQL();
-        return dbOperator.fetchOne(sql, TaskAttemptMapper.INSTANCE, attemptId);
+
+        return Optional.ofNullable(dbOperator.fetchOne(sql, TaskAttemptMapper.INSTANCE, attemptId));
     }
 
     public TaskAttempt createAttempt(TaskAttempt taskAttempt) {
@@ -281,9 +286,8 @@ public class TaskRunDao {
 
     public TaskRun fetchLatestTaskRun(Long taskId) {
         Preconditions.checkNotNull(taskId, "taskId should not be null.");
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select(taskRunCols.toArray(new String[0]))
-                .from(TASKRUN_TABLE_NAME)
+
+        String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where("task_id = ?")
                 .orderBy("start_at DESC")
                 .limit(1)
@@ -353,6 +357,7 @@ public class TaskRunDao {
                     .withAttempt(rs.getInt(TASK_ATTEMPT_MODEL_NAME + "_attempt"))
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_ATTEMPT_MODEL_NAME + "_start_at")))
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_ATTEMPT_MODEL_NAME + "_end_at")))
+                    .withLogPath(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_log_path"))
                     .build();
         }
     }
