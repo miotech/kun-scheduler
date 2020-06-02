@@ -43,7 +43,7 @@ public class TaskServiceTest extends DatabaseTestBase {
 
     private Pair<Task, List<Operator>> mockOperatorsAndCreateSingleTask() {
         List<Operator> availableOperators = insertSampleOperators();
-        TaskPropsVO vo = MockTaskFactory.createMockTaskPropsVO().cloneBuilder()
+        TaskPropsVO vo = MockTaskFactory.createTaskPropsVO().cloneBuilder()
                 .withOperatorId(availableOperators.get(0).getId())
                 .build();
         Task createdTask = taskService.createTask(vo);
@@ -54,7 +54,7 @@ public class TaskServiceTest extends DatabaseTestBase {
         List<Operator> availableOperators = insertSampleOperators();
         List<Task> createdTasks = new ArrayList<>();
         for (int i = 0; i < taskNum; i += 1) {
-            TaskPropsVO vo = MockTaskFactory.createMockTaskPropsVO().cloneBuilder()
+            TaskPropsVO vo = MockTaskFactory.createTaskPropsVO().cloneBuilder()
                     .withOperatorId(availableOperators.get(i % availableOperators.size()).getId())
                     .build();
             Task createdTask = taskService.createTask(vo);
@@ -69,7 +69,7 @@ public class TaskServiceTest extends DatabaseTestBase {
         List<Operator> preparedOperators = insertSampleOperators();
 
         // 1. create a valid task value object
-        TaskPropsVO vo = MockTaskFactory.createMockTaskPropsVO().cloneBuilder()
+        TaskPropsVO vo = MockTaskFactory.createTaskPropsVO().cloneBuilder()
                 .withOperatorId(preparedOperators.get(0).getId())
                 .build();
 
@@ -90,7 +90,7 @@ public class TaskServiceTest extends DatabaseTestBase {
         Long nonExistOperatorId = WorkflowIdGenerator.nextOperatorId();
 
         // 2. create a valid task value object
-        TaskPropsVO vo = MockTaskFactory.createMockTaskPropsVO().cloneBuilder()
+        TaskPropsVO vo = MockTaskFactory.createTaskPropsVO().cloneBuilder()
                 .withOperatorId(nonExistOperatorId)
                 .build();
 
@@ -183,7 +183,7 @@ public class TaskServiceTest extends DatabaseTestBase {
         // Prepare
         // 1. create a valid task value object
         List<Operator> existOperators = insertSampleOperators();
-        TaskPropsVO vo = MockTaskFactory.createMockTaskPropsVO().cloneBuilder()
+        TaskPropsVO vo = MockTaskFactory.createTaskPropsVO().cloneBuilder()
                 .withOperatorId(existOperators.get(0).getId())
                 .build();
         Task createdTask = taskService.createTask(vo);

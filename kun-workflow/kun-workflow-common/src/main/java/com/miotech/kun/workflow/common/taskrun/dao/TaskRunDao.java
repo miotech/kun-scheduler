@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.common.constant.Constants;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.core.model.common.Tick;
@@ -23,7 +22,6 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -84,8 +82,6 @@ public class TaskRunDao {
         dbOperator.transaction( () -> {
             List<String> tableColumns = new ImmutableList.Builder<String>()
                     .addAll(taskRunCols)
-                    .add(Constants.CREATE_COL)
-                    .add(Constants.UPDATE_COL)
                     .build();
 
             String sql = DefaultSQLBuilder .newBuilder()
@@ -128,7 +124,6 @@ public class TaskRunDao {
         dbOperator.transaction( () -> {
             List<String> tableColumns = new ImmutableList.Builder<String>()
                     .addAll(taskRunCols)
-                    .add(Constants.UPDATE_COL)
                     .build();
 
             String sql = DefaultSQLBuilder .newBuilder()
@@ -209,8 +204,6 @@ public class TaskRunDao {
     public TaskAttempt createAttempt(TaskAttempt taskAttempt) {
         List<String> tableColumns = new ImmutableList.Builder<String>()
                 .addAll(taskAttemptCols)
-                .add(Constants.CREATE_COL)
-                .add(Constants.UPDATE_COL)
                 .build();
 
         String sql = DefaultSQLBuilder .newBuilder()
@@ -265,8 +258,6 @@ public class TaskRunDao {
         if (dependencies.isEmpty()) return;
         List<String> tableColumns = new ImmutableList.Builder<String>()
                 .addAll(taskRunRelationCols)
-                .add(Constants.CREATE_COL)
-                .add(Constants.UPDATE_COL)
                 .build();
 
         String dependencySQL = DefaultSQLBuilder .newBuilder()

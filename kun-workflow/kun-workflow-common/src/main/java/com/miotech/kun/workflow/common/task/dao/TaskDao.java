@@ -118,10 +118,6 @@ public class TaskDao {
         return affectedRows > 0;
     }
 
-    private void insertDependencyRecords(Long taskId, List<TaskDependency> dependencies) {
-        // TODO: implement this
-    }
-
     private String getSelectSQL(String whereClause) {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_MODEL_NAME, taskCols);
@@ -199,8 +195,6 @@ public class TaskDao {
          * */
         List<String> tableColumns = new ImmutableList.Builder<String>()
                 .addAll(taskCols)
-                .add(Constants.CREATE_COL)
-                .add(Constants.UPDATE_COL)
                 .build();
 
         String sql = DefaultSQLBuilder.newBuilder()
@@ -236,7 +230,6 @@ public class TaskDao {
     public boolean update(Task task, Clock mockClock) {
         List<String> tableColumns = new ImmutableList.Builder<String>()
                 .addAll(taskCols)
-                .add(Constants.UPDATE_COL)
                 .build();
 
         String sql = DefaultSQLBuilder .newBuilder()

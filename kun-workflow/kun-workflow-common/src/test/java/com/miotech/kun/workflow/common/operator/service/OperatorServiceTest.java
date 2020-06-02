@@ -291,7 +291,7 @@ public class OperatorServiceTest extends DatabaseTestBase {
         OperatorPropsVO operatorPropsVO = MockOperatorFactory.createOperatorPropsVO();
         Operator operator = operatorService.createOperator(operatorPropsVO);
         // 2. create a task and use the operator we created
-        Task task = MockTaskFactory.createMockTask().cloneBuilder()
+        Task task = MockTaskFactory.createTask().cloneBuilder()
                 .withOperatorId(operator.getId())
                 .build();
         taskDao.create(task);

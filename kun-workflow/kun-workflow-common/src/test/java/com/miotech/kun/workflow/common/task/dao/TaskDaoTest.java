@@ -67,7 +67,7 @@ public class TaskDaoTest extends DatabaseTestBase {
 
         // insert more tasks
         for (int i = 0; i < 10; i += 1) {
-            Task task = MockTaskFactory.createMockTask();
+            Task task = MockTaskFactory.createTask();
             taskDao.create(task);
         }
     }

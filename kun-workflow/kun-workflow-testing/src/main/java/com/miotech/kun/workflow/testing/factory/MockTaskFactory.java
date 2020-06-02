@@ -15,7 +15,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 
 public class MockTaskFactory {
-    public static TaskPropsVO createMockTaskPropsVO() {
+    public static TaskPropsVO createTaskPropsVO() {
         Long mockId = WorkflowIdGenerator.nextTaskId();
         Long mockOperatorId = WorkflowIdGenerator.nextOperatorId();
         return TaskPropsVO.newBuilder()
@@ -29,7 +29,7 @@ public class MockTaskFactory {
                 .build();
     }
 
-    public static Task createMockTask() {
+    public static Task createTask() {
         Long mockId = WorkflowIdGenerator.nextTaskId();
         Long mockOperatorId = WorkflowIdGenerator.nextOperatorId();
         return Task.newBuilder()
@@ -41,33 +41,6 @@ public class MockTaskFactory {
                 .withOperatorId(mockOperatorId)
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withDependencies(new ArrayList<>())
-                .build();
-    }
-
-    public static TaskRun createTaskAttempt(Long id, Task task, Clock mockClock) {
-        return TaskRun.newBuilder()
-                .withId(id)
-                .withTask(task)
-                .withInlets(new ArrayList<>())
-                .withOutlets(new ArrayList<>())
-                .withDependentTaskRunIds(new ArrayList<>())
-                .withScheduledTick(new Tick(OffsetDateTime.now(mockClock)))
-                .withStartAt(OffsetDateTime.now(mockClock))
-                .withEndAt(OffsetDateTime.now(mockClock))
-                .withStatus(TaskRunStatus.QUEUED)
-                .withVariables(new ArrayList<>())
-                .build();
-    }
-
-    public static TaskAttempt createTaskAttempt(Long id, TaskRun taskRun, int attempt, Clock mockClock) {
-        return TaskAttempt.newBuilder()
-                .withId(id)
-                .withTaskRun(taskRun)
-                .withAttempt(attempt)
-                .withStartAt(OffsetDateTime.now(mockClock))
-                .withEndAt(OffsetDateTime.now(mockClock).plusHours(1))
-                .withLogPath("/var/log_" + taskRun + "_" + attempt + ".log")
-                .withStatus(TaskRunStatus.RUNNING)
                 .build();
     }
 }
