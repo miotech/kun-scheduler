@@ -22,7 +22,7 @@ public class PropertyUtils {
         flatten(yamlProps)
                 .entrySet()
                 .forEach(x -> {
-            Object propValue = x.getValue() != null ? x.getValue(): "";
+            Object propValue = x.getValue() != null ? x.getValue().toString() : "";
             properties.put(x.getKey(), propValue);
         });
         return properties;

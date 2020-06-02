@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -39,6 +40,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     public void setUp() {
         // initialize database
         DatabaseSetup setup = new DatabaseSetup(dataSource, "sql/");
+        createH2Domain();
         setup.start();
     }
 
@@ -71,6 +73,17 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
             }
             userTables = ImmutableList.copyOf(tables);
             return userTables;
+        } catch (SQLException e) {
+            logger.error("Failed to establish connection.", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void createH2Domain() {
+        try (Connection conn = dataSource.getConnection()) {
+
+            String createJsonbDomain = "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT;";
+            conn.createStatement().execute(createJsonbDomain);
         } catch (SQLException e) {
             logger.error("Failed to establish connection.", e);
             throw new RuntimeException(e);
