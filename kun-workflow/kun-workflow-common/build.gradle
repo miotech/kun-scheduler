@@ -3,12 +3,14 @@ dependencies {
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
+    implementation "commons-dbutils:commons-dbutils"
 
     implementation 'com.google.guava:guava'
     implementation "com.zaxxer:HikariCP"
     implementation 'com.fasterxml.jackson.core:jackson-core'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
+    implementation "com.cronutils:cron-utils"
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")

@@ -23,6 +23,9 @@ public class HttpAction {
     }
 
     public Object call(Object... args) throws InvocationTargetException, IllegalAccessException {
+        logger.debug("controller object = {}", object);
+        logger.debug("method = {}", method.toString());
+        logger.debug("args.length = {}", args.length);
         return method.invoke(object, args);
     }
 }

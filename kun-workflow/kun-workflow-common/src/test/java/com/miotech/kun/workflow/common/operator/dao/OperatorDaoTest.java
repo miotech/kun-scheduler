@@ -55,7 +55,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
         operatorDao.create(exampleOperator);
 
         // Validate
-        Optional<Operator> fetchResult = operatorDao.getById(id);
+        Optional<Operator> fetchResult = operatorDao.fetchById(id);
         assertThat(fetchResult.isPresent(), is(true));
         Operator result = fetchResult.get();
         assertThat(result, samePropertyValuesAs(exampleOperator));
@@ -93,7 +93,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
                 .build();
 
         // Process
-        List<Operator> fullResults = operatorDao.search(defaultFilter);
+        List<Operator> fullResults = operatorDao.fetchWithFilter(defaultFilter);
 
         // Validate
         assertEquals(5, fullResults.size());
@@ -115,8 +115,8 @@ public class OperatorDaoTest extends DatabaseTestBase {
                 .build();
 
         // Process
-        List<Operator> firstPageResults = operatorDao.search(filterPageOne);
-        List<Operator> secondPageResults = operatorDao.search(filterPageTwo);
+        List<Operator> firstPageResults = operatorDao.fetchWithFilter(filterPageOne);
+        List<Operator> secondPageResults = operatorDao.fetchWithFilter(filterPageTwo);
 
         // Validate
         assertEquals(3, firstPageResults.size());
@@ -138,7 +138,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
 
         // Process
         try {
-            operatorDao.search(filterWithInvalidPageNum);
+            operatorDao.fetchWithFilter(filterWithInvalidPageNum);
             fail();
         } catch (Exception e) {
             // Validate
@@ -146,7 +146,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
         }
 
         try {
-            operatorDao.search(filterWithInvalidPageSize);
+            operatorDao.fetchWithFilter(filterWithInvalidPageSize);
             fail();
         } catch (Exception e) {
             // Validate
@@ -166,7 +166,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
                 .build();
 
         // Process
-        List<Operator> results = operatorDao.search(filter);
+        List<Operator> results = operatorDao.fetchWithFilter(filter);
 
         // Validate
         assertEquals(3, results.size());
@@ -184,7 +184,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
                 .build();
 
         // Process
-        List<Operator> results = operatorDao.search(filter);
+        List<Operator> results = operatorDao.fetchWithFilter(filter);
 
         // Validate
         assertEquals(0, results.size());
@@ -194,7 +194,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
     public void delete_WithProperId_shouldSuccess() {
         // Prepare
         insertSampleData();
-        Optional<Operator> firstOperator = operatorDao.getById(1L);
+        Optional<Operator> firstOperator = operatorDao.fetchById(1L);
         assertTrue(firstOperator.isPresent());
 
         // Process
@@ -202,7 +202,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
 
         // Validate
         assertTrue(rowAffected);
-        Optional<Operator> firstOperatorRemoved = operatorDao.getById(1L);
+        Optional<Operator> firstOperatorRemoved = operatorDao.fetchById(1L);
         assertThat(firstOperatorRemoved.isPresent(), is(false));
     }
 
@@ -210,7 +210,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
     public void delete_WithNonExistId_shouldAffectNoRow() {
         // Prepare
         insertSampleData();
-        Optional<Operator> firstOperator = operatorDao.getById(1L);
+        Optional<Operator> firstOperator = operatorDao.fetchById(1L);
         assertTrue(firstOperator.isPresent());
 
         // Process
@@ -223,7 +223,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
         // Prepare
         insertSampleData();
 
-        Optional<Operator> firstOperator = operatorDao.getById(1L);
+        Optional<Operator> firstOperator = operatorDao.fetchById(1L);
 
         // Process
         Operator updatedOperator = firstOperator.get().cloneBuilder()
@@ -235,7 +235,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
         // Validate
         assertTrue(rowAffected);
 
-        Optional<Operator> updatedFirstOperatorOptional = operatorDao.getById(1L);
+        Optional<Operator> updatedFirstOperatorOptional = operatorDao.fetchById(1L);
         assertTrue(updatedFirstOperatorOptional.isPresent());
 
         Operator updatedFirstOperator = updatedFirstOperatorOptional.get();

@@ -1,3 +1,15 @@
+compileJava {
+    options.compilerArgs << "-parameters"
+}
+
+apply plugin: 'java'
+
+sourceSets {
+    main {
+        output.resourcesDir = file("${java.outputDir}/../resources")
+    }
+}
+
 dependencies {
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
@@ -13,7 +25,10 @@ dependencies {
     implementation "org.eclipse.jetty:jetty-servlet"
     implementation "org.eclipse.jetty:jetty-util"
     implementation "org.eclipse.jetty:jetty-webapp"
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.apache.commons:commons-collections4'
 
-    testRuntimeOnly "com.h2database:h2"
+    implementation "com.h2database:h2"
+    
     testImplementation "org.hamcrest:hamcrest"
 }

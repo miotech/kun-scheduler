@@ -1,22 +1,46 @@
 package com.miotech.kun.workflow.testing.factory;
 
+import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.task.ScheduleConf;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 
+import java.time.Clock;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.List;
 
 public class MockTaskFactory {
-    public static Task createTask() {
-        return createTasks(1).get(0);
+    public static TaskPropsVO createTaskPropsVO() {
+        Long mockId = WorkflowIdGenerator.nextTaskId();
+        Long mockOperatorId = WorkflowIdGenerator.nextOperatorId();
+        return TaskPropsVO.newBuilder()
+                .withName("task_" + mockId)
+                .withDescription("task_description_" + mockId)
+                .withVariableDefs(new ArrayList<>())
+                .withArguments(new ArrayList<>())
+                .withOperatorId(mockOperatorId)
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withDependencies(new ArrayList<>())
+                .build();
     }
 
-    public static List<Task> createTasks(int num) {
-        List<Task> tasks = new ArrayList<>();
-
-        for (int i = 0; i < num; i++) {
-            tasks.add(Task.newBuilder()
-                    .build());
-        }
-        return tasks;
+    public static Task createTask() {
+        Long mockId = WorkflowIdGenerator.nextTaskId();
+        Long mockOperatorId = WorkflowIdGenerator.nextOperatorId();
+        return Task.newBuilder()
+                .withId(mockId)
+                .withName("task_" + mockId)
+                .withDescription("task_description_" + mockId)
+                .withVariableDefs(new ArrayList<>())
+                .withArguments(new ArrayList<>())
+                .withOperatorId(mockOperatorId)
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withDependencies(new ArrayList<>())
+                .build();
     }
 }

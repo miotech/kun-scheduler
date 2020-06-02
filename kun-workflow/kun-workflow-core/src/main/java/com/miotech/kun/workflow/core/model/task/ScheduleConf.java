@@ -3,11 +3,12 @@ package com.miotech.kun.workflow.core.model.task;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
 
-@JsonDeserialize
+@JsonDeserialize(builder = ScheduleConf.ScheduleConfBuilder.class)
 public class ScheduleConf {
     private final ScheduleType type;
 
@@ -42,5 +43,32 @@ public class ScheduleConf {
     @Override
     public int hashCode() {
         return Objects.hash(type, cronExpr);
+    }
+
+    @JsonPOJOBuilder
+    public static final class ScheduleConfBuilder {
+        private ScheduleType type;
+        private String cronExpr;
+
+        private ScheduleConfBuilder() {
+        }
+
+        public static ScheduleConfBuilder aScheduleConf() {
+            return new ScheduleConfBuilder();
+        }
+
+        public ScheduleConfBuilder withType(ScheduleType type) {
+            this.type = type;
+            return this;
+        }
+
+        public ScheduleConfBuilder withCronExpr(String cronExpr) {
+            this.cronExpr = cronExpr;
+            return this;
+        }
+
+        public ScheduleConf build() {
+            return new ScheduleConf(type, cronExpr);
+        }
     }
 }

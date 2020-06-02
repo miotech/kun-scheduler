@@ -1,3 +1,5 @@
 dependencies {
     implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-common')
+    implementation project(':kun-workflow:kun-workflow-utils')
 }

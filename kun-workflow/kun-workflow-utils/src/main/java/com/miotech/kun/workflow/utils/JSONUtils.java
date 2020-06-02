@@ -1,23 +1,32 @@
 package com.miotech.kun.workflow.utils;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
-import com.miotech.kun.commons.utils.ExceptionUtils;
-
 import java.util.HashMap;
 import java.util.Map;
 
 public class JSONUtils {
-    private JSONUtils() {}
+    private JSONUtils() { }
 
     private static final Logger logger = LoggerFactory.getLogger(JSONUtils.class);
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    static {
+        SimpleModule simpleModule = new SimpleModule();
+        simpleModule.addSerializer(Long.class, ToStringSerializer.instance);
+        simpleModule.addSerializer(Long.TYPE, ToStringSerializer.instance);
+        objectMapper.registerModule(simpleModule);
+    }
 
     public static <T> String toJsonString(T obj) {
         try {

@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
  * </br>
  * 字段并不完全，目前选取的是最常用的字段。可随业务需求发展添加新的字段。
  */
-public class TaskAttemptInfo {
+public class TaskAttemptProps {
     private final Long id;
 
     private final Long taskRunId;
@@ -64,8 +64,8 @@ public class TaskAttemptInfo {
         return endAt;
     }
 
-    public TaskAttemptInfo(Long id, Long taskRunId, Long taskId, String taskName, int attempt, TaskRunStatus status,
-                           String logPath, OffsetDateTime startAt, OffsetDateTime endAt) {
+    public TaskAttemptProps(Long id, Long taskRunId, Long taskId, String taskName, int attempt, TaskRunStatus status,
+                            String logPath, OffsetDateTime startAt, OffsetDateTime endAt) {
         this.id = id;
         this.taskRunId = taskRunId;
         this.taskId = taskId;
@@ -140,8 +140,8 @@ public class TaskAttemptInfo {
             return this;
         }
 
-        public TaskAttemptInfo build() {
-            return new TaskAttemptInfo(id, taskRunId, taskId, taskName, attempt, status, logPath, startAt, endAt);
+        public TaskAttemptProps build() {
+            return new TaskAttemptProps(id, taskRunId, taskId, taskName, attempt, status, logPath, startAt, endAt);
         }
     }
 }
