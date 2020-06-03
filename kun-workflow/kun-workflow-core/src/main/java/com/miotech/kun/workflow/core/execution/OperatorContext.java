@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.core.execution;
 
 import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
-import com.miotech.kun.workflow.core.resource.Resource;
 
 import java.util.List;
 

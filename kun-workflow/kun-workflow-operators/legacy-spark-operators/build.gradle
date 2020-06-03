@@ -7,4 +7,5 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "junit:junit:4.12"
     implementation "org.apache.hadoop:hadoop-client:2.7.3"
+    implementation "com.amazonaws:aws-java-sdk-s3:1.11.306"
 }
