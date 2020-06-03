@@ -50,7 +50,7 @@ public class DataBuilder {
     public void build(long clusterId) {
         Preconditions.checkArgument(clusterId > 0L, "clusterId must be a positive long, clusterId: %s", clusterId);
 
-        String sql = "SELECT id, type, connection_info FROM kun_mt_cluster WHERE id = ?";
+        String sql = "SELECT kmc.id, kmct.name, kmc.connection_info FROM kun_mt_cluster kmc join kun_mt_cluster_type kmct on kmc.type_id = kmct.id WHERE kmc.id = ?";
         Cluster cluster = operator.fetchOne(sql, rs -> buildCluster(rs), clusterId);
         build(cluster);
     }
@@ -85,7 +85,7 @@ public class DataBuilder {
     }
 
     public void buildAll() {
-        String sql = "SELECT id, type, connection_info FROM kun_mt_cluster";
+        String sql = "SELECT kmc.id, kmct.name, kmc.connection_info FROM kun_mt_cluster kmc join kun_mt_cluster_type kmct on kmc.type_id = kmct.id";
         List<Cluster> clusters = operator.fetchAll(sql, rs -> buildCluster(rs));
         clusters.stream().forEach(cluster -> build(cluster));
     }
@@ -105,7 +105,7 @@ public class DataBuilder {
         String connStr = resultSet.getString(3);
         ClusterConnection connection = JSONUtils.jsonToObject(connStr, ClusterConnection.class);
 
-        switch (type) {
+        switch (type.toLowerCase()) {
             case "hive":
                 HiveCluster.Builder hiveClusterBuilder = HiveCluster.newBuilder();
                 hiveClusterBuilder.withClusterId(id)
