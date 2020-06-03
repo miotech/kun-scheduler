@@ -20,6 +20,8 @@ dependencies {
     implementation "io.prestosql:presto-jdbc"
     implementation "org.mongodb:mongo-java-driver"
     implementation "org.jooq:joor-java-8:0.9.12"
+    implementation "com.amazonaws:aws-java-sdk-glue"
+    implementation "com.syncron.amazonaws:simba-athena-jdbc-driver"
     testImplementation "junit:junit"
     testRuntimeOnly "com.h2database:h2"
     testRuntimeOnly "org.mockito:mockito-core"

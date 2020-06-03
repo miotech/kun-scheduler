@@ -2,20 +2,32 @@ package com.miotech.kun.metadata.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.miotech.kun.metadata.constant.DatabaseType;
+import com.miotech.kun.metadata.constant.HiveAnalysisEngine;
+import com.miotech.kun.metadata.constant.MetaStoreType;
+import io.prestosql.jdbc.$internal.guava.base.Preconditions;
 
 public class HiveCluster extends Cluster {
 
-    private String dataStoreUrl;
+    private HiveAnalysisEngine hiveAnalysisEngine;
 
-    private String dataStoreUsername;
+    private final String dataStoreUrl;
 
-    private String dataStorePassword;
+    private final String dataStoreUsername;
 
-    private String metaStoreUrl;
+    private final String dataStorePassword;
 
-    private String metaStoreUsername;
+    private MetaStoreType metaStoreType;
 
-    private String metaStorePassword;
+    private final String metaStoreUrl;
+
+    private final String metaStoreUsername;
+
+    private final String metaStorePassword;
+
+    public HiveAnalysisEngine getHiveAnalysisEngine() {
+        return hiveAnalysisEngine;
+    }
 
     public String getDataStoreUrl() {
         return dataStoreUrl;
@@ -27,6 +39,10 @@ public class HiveCluster extends Cluster {
 
     public String getDataStorePassword() {
         return dataStorePassword;
+    }
+
+    public MetaStoreType getMetaStoreType() {
+        return metaStoreType;
     }
 
     public String getMetaStoreUrl() {
@@ -41,6 +57,50 @@ public class HiveCluster extends Cluster {
         return metaStorePassword;
     }
 
+    private void setHiveAnalysisEngine(String dataStoreUrl) {
+        Preconditions.checkNotNull(dataStoreUrl, "dataStoreUrl should not be null");
+        String[] infos = dataStoreUrl.split(":");
+        if (infos.length <= 1) {
+            throw new RuntimeException("invalid dataStoreUrl: " + dataStoreUrl);
+        }
+
+        switch (infos[1]) {
+            case "hive2":
+                this.hiveAnalysisEngine = HiveAnalysisEngine.HIVE;
+                break;
+            case "presto":
+                this.hiveAnalysisEngine = HiveAnalysisEngine.PRESTO;
+                break;
+            case "awsathena":
+                this.hiveAnalysisEngine = HiveAnalysisEngine.ATHENA;
+                break;
+            default:
+                throw new RuntimeException("Unsupported data source type");
+        }
+    }
+
+    private void setMetaStoreType(String metaStoreUrl) {
+        Preconditions.checkNotNull(metaStoreUrl, "metaStoreUrl should not be null");
+        if (metaStoreUrl.startsWith("jdbc")) {
+            this.metaStoreType = MetaStoreType.MYSQL;
+        } else {
+            this.metaStoreType = MetaStoreType.GLUE;
+        }
+
+    }
+
+    public static DatabaseType convertFromAnalysisEngine(HiveAnalysisEngine hiveAnalysisEngine) {
+        switch (hiveAnalysisEngine) {
+            case HIVE:
+                return DatabaseType.HIVE;
+            case PRESTO:
+                return DatabaseType.PRESTO;
+            case ATHENA:
+                return DatabaseType.ATHENA;
+            default:
+                throw new RuntimeException("Invalid HiveAnalysisEngine: " + hiveAnalysisEngine);
+        }
+    }
 
     @JsonCreator
     public HiveCluster(@JsonProperty("clusterId") long clusterId,
@@ -51,6 +111,8 @@ public class HiveCluster extends Cluster {
                        @JsonProperty("metaStoreUsername") String metaStoreUsername,
                        @JsonProperty("metaStorePassword") String metaStorePassword) {
         super(clusterId);
+        setHiveAnalysisEngine(dataStoreUrl);
+        setMetaStoreType(metaStoreUrl);
         this.dataStoreUrl = dataStoreUrl;
         this.dataStoreUsername = dataStoreUsername;
         this.dataStorePassword = dataStorePassword;
@@ -66,9 +128,11 @@ public class HiveCluster extends Cluster {
     @Override
     public String toString() {
         return "HiveCluster{" +
-                "dataStoreUrl='" + dataStoreUrl + '\'' +
+                "hiveAnalysisEngine=" + hiveAnalysisEngine +
+                ", dataStoreUrl='" + dataStoreUrl + '\'' +
                 ", dataStoreUsername='" + dataStoreUsername + '\'' +
                 ", dataStorePassword='" + dataStorePassword + '\'' +
+                ", metaStoreType=" + metaStoreType +
                 ", metaStoreUrl='" + metaStoreUrl + '\'' +
                 ", metaStoreUsername='" + metaStoreUsername + '\'' +
                 ", metaStorePassword='" + metaStorePassword + '\'' +
@@ -123,7 +187,8 @@ public class HiveCluster extends Cluster {
         }
 
         public HiveCluster build() {
-            return new HiveCluster(clusterId, dataStoreUrl, dataStoreUsername, dataStorePassword, metaStoreUrl, metaStoreUsername, metaStorePassword);
+            return new HiveCluster(clusterId, dataStoreUrl, dataStoreUsername, dataStorePassword, metaStoreUrl,
+                    metaStoreUsername, metaStorePassword);
         }
     }
 }

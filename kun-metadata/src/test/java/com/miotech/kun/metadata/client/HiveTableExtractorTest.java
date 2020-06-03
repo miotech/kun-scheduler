@@ -22,7 +22,7 @@ public class HiveTableExtractorTest {
                 .withDataStoreUrl("jdbc:hive2://10.0.0.85:10000")
                 .withDataStoreUsername("hive")
                 .withDataStorePassword(null);
-        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs");
+        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs", null);
         List<DatasetField> schema = extractor.getSchema();
         logger.info("schema:" + new Gson().toJson(schema));
     }
@@ -36,7 +36,7 @@ public class HiveTableExtractorTest {
                 .withDataStoreUrl("jdbc:hive2://10.0.0.85:10000")
                 .withDataStoreUsername("hive")
                 .withDataStorePassword(null);
-        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs");
+        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs", null);
         DatasetStat tableStats = extractor.getTableStats();
         logger.info("tableStats:" + new Gson().toJson(tableStats));
     }
@@ -51,8 +51,8 @@ public class HiveTableExtractorTest {
                 .withDataStoreUrl("jdbc:hive2://10.0.0.85:10000")
                 .withDataStoreUsername("hive")
                 .withDataStorePassword(null);
-        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs");
-        DatasetField field = new DatasetField("db_id", "string", null);
+        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs", null);
+        DatasetField field = new DatasetField("db_id", new DatasetFieldType(DatasetFieldType.convertRawType("string"), "string"), null);
         DatasetFieldStat fieldStats = extractor.getFieldStats(field);
         logger.info("fieldStats:" + new Gson().toJson(fieldStats));
     }
@@ -66,8 +66,8 @@ public class HiveTableExtractorTest {
                 .withDataStoreUrl("jdbc:hive2://10.0.0.85:10000")
                 .withDataStoreUsername("hive")
                 .withDataStorePassword(null);
-        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs");
-        DatasetField field = new DatasetField("db_id", "string", null);
+        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs", null);
+        DatasetField field = new DatasetField("db_id", new DatasetFieldType(DatasetFieldType.convertRawType("string"), "string"), null);
         Iterator<Dataset> extract = extractor.extract();
         while (extract.hasNext()) {
             Dataset next = extract.next();

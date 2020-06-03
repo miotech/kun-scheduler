@@ -34,6 +34,8 @@ public class JDBCClient {
                 return "org.postgresql.Driver";
             case PRESTO:
                 return "io.prestosql.jdbc.PrestoDriver";
+            case ATHENA:
+                return "com.simba.athena.jdbc.Driver";
             default:
                 throw new RuntimeException("invalid dbType: " + dbType.getName());
         }

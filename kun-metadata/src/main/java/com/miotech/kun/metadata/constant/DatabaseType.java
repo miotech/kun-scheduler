@@ -7,7 +7,9 @@ public enum  DatabaseType {
     ARANGO("Arango"),
     ELASTICSEARCH("ElasticsSearch"),
     PRESTO("Presto"),
-    HIVE("Hive");
+    HIVE("Hive"),
+    GLUE("Glue"),
+    ATHENA("Athena");
 
     private String name;
 

@@ -7,6 +7,7 @@ import com.miotech.kun.metadata.extract.impl.mongo.MongoExtractor;
 import com.miotech.kun.metadata.load.impl.PrintLoader;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.DatasetField;
+import com.miotech.kun.metadata.model.DatasetFieldType;
 import com.miotech.kun.metadata.model.MongoCluster;
 import com.mongodb.MongoClient;
 import org.bson.Document;
@@ -43,18 +44,18 @@ public class MongoCollectionExtractorTest {
         Reflect.on(extractor).set("client", mockClient);
 
         List<DatasetField> fields = extractor.getSchema();
-        assertThat(fields, containsInAnyOrder(new DatasetField("_id.timestamp", "NUMBER", ""),
-                new DatasetField("_id.machineIdentifier", "NUMBER", ""),
-                new DatasetField("_id.processIdentifier", "NUMBER", ""),
-                new DatasetField("_id.counter", "NUMBER", ""),
-                new DatasetField("dataStore.url", "STRING", ""),
-                new DatasetField("dataStore.database", "STRING", ""),
-                new DatasetField("dataStore.collection", "STRING", ""),
-                new DatasetField("dataStore.type", "STRING", ""),
-                new DatasetField("fields", "ARRAY", ""),
-                new DatasetField("fieldStats", "ARRAY", ""),
-                new DatasetField("datasetStat.rowCount", "NUMBER", ""),
-                new DatasetField("datasetStat.statDate", "STRING", "")));
+        assertThat(fields, containsInAnyOrder(new DatasetField("_id.timestamp", new DatasetFieldType(DatasetFieldType.convertRawType("NUMBER"), "NUMBER"), ""),
+                new DatasetField("_id.machineIdentifier", new DatasetFieldType(DatasetFieldType.convertRawType("NUMBER"), "NUMBER"), ""),
+                new DatasetField("_id.processIdentifier", new DatasetFieldType(DatasetFieldType.convertRawType("NUMBER"), "NUMBER"), ""),
+                new DatasetField("_id.counter", new DatasetFieldType(DatasetFieldType.convertRawType("NUMBER"), "NUMBER"), ""),
+                new DatasetField("dataStore.url", new DatasetFieldType(DatasetFieldType.convertRawType("STRING"), "STRING"), ""),
+                new DatasetField("dataStore.database", new DatasetFieldType(DatasetFieldType.convertRawType("STRING"), "STRING"), ""),
+                new DatasetField("dataStore.collection", new DatasetFieldType(DatasetFieldType.convertRawType("STRING"), "STRING"), ""),
+                new DatasetField("dataStore.type", new DatasetFieldType(DatasetFieldType.convertRawType("STRING"), "STRING"), ""),
+                new DatasetField("fields", new DatasetFieldType(DatasetFieldType.convertRawType("ARRAY"), "ARRAY"), ""),
+                new DatasetField("fieldStats", new DatasetFieldType(DatasetFieldType.convertRawType("ARRAY"), "ARRAY"), ""),
+                new DatasetField("datasetStat.rowCount", new DatasetFieldType(DatasetFieldType.convertRawType("NUMBER"), "NUMBER"), ""),
+                new DatasetField("datasetStat.statDate", new DatasetFieldType(DatasetFieldType.convertRawType("STRING"), "STRING"), "")));
     }
 
 }

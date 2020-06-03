@@ -38,6 +38,10 @@ public class PostgresLoader implements Loader {
     @Override
     public void load(Dataset dataset) {
         logger.debug("PostgresLoader load start. dataset: {}", JSONUtils.toJsonString(dataset));
+        if (dataset == null || dataset.getDataStore() == null) {
+            return;
+        }
+
         long gid = gidGenerator.generate(dataset.getDataStore());
         boolean datasetExist = judgeDatasetExisted(gid);
 
@@ -75,16 +79,16 @@ public class PostgresLoader implements Loader {
                 for (DatasetField datasetField : dataset.getFields()) {
                     long id;
                     if (survivorFields.contains(datasetField.getName())) {
-                        if (!fieldInfos.get(datasetField.getName()).getType().equals(datasetField.getType())) {
+                        if (!fieldInfos.get(datasetField.getName()).getType().equals(datasetField.getFieldType().getRawType())) {
                             // update field type
-                            dbOperator.update("UPDATE kun_mt_dataset_field SET type = ? WHERE dataset_gid = ? and name = ?",
-                                    datasetField.getType(), gid, datasetField.getName());
+                            dbOperator.update("UPDATE kun_mt_dataset_field SET type = ?, raw_type = ? WHERE dataset_gid = ? and name = ?",
+                                    datasetField.getFieldType().getType().toString(), datasetField.getFieldType().getRawType(), gid, datasetField.getName());
                         }
                         id = fieldInfos.get(datasetField.getName()).getId();
                     } else {
                         // new field
-                        id = dbOperator.create("INSERT INTO kun_mt_dataset_field(dataset_gid, name, type) VALUES(?, ?, ?)",
-                                gid, datasetField.getName(), datasetField.getType());
+                        id = dbOperator.create("INSERT INTO kun_mt_dataset_field(dataset_gid, name, type, raw_type) VALUES(?, ?, ?, ?)",
+                                gid, datasetField.getName(), datasetField.getFieldType().getType().toString(), datasetField.getFieldType().getRawType());
                     }
 
                     DatasetFieldStat datasetFieldStat = fieldStatMap.get(datasetField.getName());

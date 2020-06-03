@@ -18,9 +18,32 @@ public class DatasetFieldType {
     }
 
     public enum Type {
+
         NUMBER,
         CHARACTER,
         BINARY,
-        DATETIME
+        STRUCT,
+        ARRAY,
+        DATETIME,
+        BOOLEAN
+    }
+
+    public static Type convertRawType(String rawType) {
+        if ("string".equals(rawType) || "STRING".equals(rawType) || rawType.startsWith("varchar") || rawType.startsWith("char")) {
+            return Type.CHARACTER;
+        } else if ("timestamp".equals(rawType)) {
+            return Type.DATETIME;
+        } else if (rawType.startsWith("array") || "ARRAY".equals(rawType)) {
+            return Type.ARRAY;
+        } else if (rawType.startsWith("decimal") || "double".equals(rawType) || "number".equals(rawType) ||
+                "NUMBER".equals(rawType) || "int".equals(rawType) || "bigint".equals(rawType)) {
+            return Type.NUMBER;
+        } else if (rawType.startsWith("struct")) {
+            return Type.STRUCT;
+        } else if ("boolean".equals(rawType) || "BOOL".equals(rawType)) {
+            return Type.BOOLEAN;
+        } else {
+            throw new RuntimeException("unknown type: " + rawType);
+        }
     }
 }

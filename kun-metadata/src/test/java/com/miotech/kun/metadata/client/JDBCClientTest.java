@@ -55,7 +55,7 @@ public class JDBCClientTest {
         try {
             connection = JDBCClient.getConnection(DatabaseType.PRESTO, "jdbc:presto://10.0.0.85:8073/hive", "root", null);
 
-            String scanCluster = "show schemas";
+            String scanCluster = "select companyname from dw.sp_ciqcompanytest";
             statement = connection.createStatement();
 
             resultSet = statement.executeQuery(scanCluster);
@@ -81,7 +81,7 @@ public class JDBCClientTest {
         Statement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.HIVE, "jdbc:hive2://10.0.0.85:10000", "hive", null);
+            connection = JDBCClient.getConnection(DatabaseType.HIVE, "jdbc:hive2://13.231.163.20:10000", "hive", null);
             String scanCluster = "SHOW DATABASES";
             statement = connection.createStatement();
 
@@ -93,7 +93,7 @@ public class JDBCClientTest {
                 logger.info("database:" + database);
                 databases.add(database);
             }
-            assertThat(databases, containsInAnyOrder("default", "dm", "dw", "sys"));
+//            assertThat(databases, containsInAnyOrder("default", "dm", "dw", "sys"));
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException sqlException) {
@@ -144,7 +144,7 @@ public class JDBCClientTest {
                 logger.info("table:" + table);
                 tables.add(table);
             }
-            assertThat(tables, containsInAnyOrder("tst"));
+            assertThat(tables, is(7010));
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException sqlException) {
@@ -155,13 +155,14 @@ public class JDBCClientTest {
     }
 
     @Test
-    public void testTableStat() {
+    public void testTableStat_athena() {
         Connection connection = null;
         Statement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.HIVE, "jdbc:hive2://10.0.0.85:10000", "hive", null);
-            String sql = "SELECT COUNT(*) FROM sys.dbs";
+            connection = JDBCClient.getConnection(DatabaseType.ATHENA, "jdbc:awsathena://athena.ap-northeast-1.amazonaws.com:443;S3OutputLocation=s3://com.miotech.data.prd/Database/DEFAULT/", "AKIAIL42HPN4LO3XUIHQ", "yFfJ74UD80NWmPuhH2dLKr2JYJU8RU/qj0QVzOE8");
+            String sql = "select count(*) from (select tag from dm.\"2017_ratio\" group by tag) t1";
+//            String sql = "select count(*) from (select companyid from dw.a_shareholder_foreign group by companyid) t1";
             statement = connection.createStatement();
 
             resultSet = statement.executeQuery(sql);
@@ -171,7 +172,7 @@ public class JDBCClientTest {
                 logger.info("rowCount:" + rowCount);
             }
 
-            assertThat(rowCount, is(9L));
+            assertThat(rowCount, is(7010L));
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } catch (SQLException sqlException) {

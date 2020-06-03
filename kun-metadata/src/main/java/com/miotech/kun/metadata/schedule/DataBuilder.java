@@ -9,6 +9,7 @@ import com.miotech.kun.metadata.load.Loader;
 import com.miotech.kun.metadata.load.impl.PostgresLoader;
 import com.miotech.kun.metadata.model.*;
 import com.miotech.kun.workflow.db.DatabaseOperator;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,7 +50,7 @@ public class DataBuilder {
     public void build(long clusterId) {
         Preconditions.checkArgument(clusterId > 0L, "clusterId must be a positive long, clusterId: %s", clusterId);
 
-        String sql = "SELECT id, type, url, username, password FROM kun_mt_cluster WHERE id = ?";
+        String sql = "SELECT id, type, connection_info FROM kun_mt_cluster WHERE id = ?";
         Cluster cluster = operator.fetchOne(sql, rs -> buildCluster(rs), clusterId);
         build(cluster);
     }
@@ -70,8 +71,12 @@ public class DataBuilder {
 
             if (datasetIterator != null) {
                 while (datasetIterator.hasNext()) {
-                    Dataset dataset = datasetIterator.next();
-                    loader.load(dataset);
+                    try {
+                        Dataset dataset = datasetIterator.next();
+                        loader.load(dataset);
+                    } catch (Exception e) {
+                        logger.error("etl next error: ", e);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -80,7 +85,7 @@ public class DataBuilder {
     }
 
     public void buildAll() {
-        String sql = "SELECT id, type, url, username, password FROM kun_mt_cluster";
+        String sql = "SELECT id, type, connection_info FROM kun_mt_cluster";
         List<Cluster> clusters = operator.fetchAll(sql, rs -> buildCluster(rs));
         clusters.stream().forEach(cluster -> build(cluster));
     }
@@ -97,34 +102,33 @@ public class DataBuilder {
     private Cluster buildCluster(ResultSet resultSet) throws SQLException {
         long id = resultSet.getLong(1);
         String type = resultSet.getString(2);
-        String url = resultSet.getString(3);
-        String username = resultSet.getString(4);
-        String password = resultSet.getString(5);
+        String connStr = resultSet.getString(3);
+        ClusterConnection connection = JSONUtils.jsonToObject(connStr, ClusterConnection.class);
 
         switch (type) {
             case "hive":
                 HiveCluster.Builder hiveClusterBuilder = HiveCluster.newBuilder();
                 hiveClusterBuilder.withClusterId(id)
-                        .withMetaStoreUrl(url.split(";")[1])
-                        .withMetaStoreUsername(username.split(";")[1])
-                        .withMetaStorePassword(password.split(";")[1])
-                        .withDataStoreUrl(url.split(";")[0])
-                        .withDataStoreUsername(username.split(";")[0])
-                        .withDataStorePassword(password.split(";")[0]);
+                        .withDataStoreUrl(connection.getDataStoreUrl())
+                        .withDataStoreUsername(connection.getDataStoreUsername())
+                        .withDataStorePassword(connection.getDataStorePassword())
+                        .withMetaStoreUrl(connection.getMetaStoreUrl())
+                        .withMetaStoreUsername(connection.getMetaStoreUsername())
+                        .withMetaStorePassword(connection.getMetaStorePassword());
                 return hiveClusterBuilder.build();
             case "postgres":
                 PostgresCluster.Builder postgresClusterBuilder = PostgresCluster.newBuilder();
                 postgresClusterBuilder.withClusterId(id)
-                        .withUrl(url)
-                        .withUsername(username)
-                        .withPassword(password);
+                        .withUrl(connection.getDataStoreUrl())
+                        .withUsername(connection.getDataStoreUsername())
+                        .withPassword(connection.getDataStorePassword());
                 return postgresClusterBuilder.build();
             case "mongo":
                 MongoCluster.Builder mongoClusterBuilder = MongoCluster.newBuilder();
                 mongoClusterBuilder.withClusterId(id)
-                        .withUrl(url)
-                        .withUsername(username)
-                        .withPassword(password);
+                        .withUrl(connection.getDataStoreUrl())
+                        .withUsername(connection.getDataStoreUsername())
+                        .withPassword(connection.getDataStorePassword());
                 return mongoClusterBuilder.build();
             //TODO add other cluster builder
             default:
