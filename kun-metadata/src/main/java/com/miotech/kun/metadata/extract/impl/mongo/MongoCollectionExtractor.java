@@ -24,7 +24,7 @@ import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 public class MongoCollectionExtractor extends ExtractorTemplate {
@@ -79,7 +79,7 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
                     JSONUtils.toJsonString(cluster), database, collection);
             long count = client.getDatabase(database).getCollection(collection).count();
 
-            DatasetStat datasetStat = new DatasetStat(count, new Date());
+            DatasetStat datasetStat = new DatasetStat(count, LocalDate.now());
             logger.debug("MongoCollectionExtractor getTableStats end. datasetStat: {}", JSONUtils.toJsonString(datasetStat));
             return datasetStat;
         } catch (Exception e) {

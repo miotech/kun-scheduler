@@ -15,7 +15,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,11 +31,11 @@ public class PostgresLoaderTest extends DatabaseTestBase {
     {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
         datasetBuilder.withName("datasetName")
-                .withDatasetStat(new DatasetStat(100L, new Date()))
+                .withDatasetStat(new DatasetStat(100L, LocalDate.now()))
                 .withFields(ImmutableList.of(new DatasetField("id", new DatasetFieldType(DatasetFieldType.convertRawType("int"), "int"), "自增id"),
                         new DatasetField("name", new DatasetFieldType(DatasetFieldType.convertRawType("string"), "string"), "姓名")))
-                .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", new Date()),
-                        new DatasetFieldStat("name", 3, 67, "admin", new Date())))
+                .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", LocalDate.now()),
+                        new DatasetFieldStat("name", 3, 67, "admin", LocalDate.now())))
                 .withDataStore(new HiveTableStore("", "db1", "tb"));
         dataset = datasetBuilder.build();
     }
@@ -103,9 +103,9 @@ public class PostgresLoaderTest extends DatabaseTestBase {
         Assert.assertEquals(rowCount, Long.valueOf(0));
 
         try {
-            dataset = dataset.cloneBuilder().withDatasetStat(new DatasetStat(100L, new Date()))
-                    .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", new Date()),
-                            new DatasetFieldStat("name", 3, 167, "admin", new Date()))).build();
+            dataset = dataset.cloneBuilder().withDatasetStat(new DatasetStat(100L, LocalDate.now()))
+                    .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", LocalDate.now()),
+                            new DatasetFieldStat("name", 3, 167, "admin", LocalDate.now()))).build();
             postgresLoader.load(dataset);
         } catch (RuntimeException e) {
             MatcherAssert.assertThat(e.getMessage(), Matchers.startsWith("logic exception(nonnullCount > rowCount)"));

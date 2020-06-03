@@ -25,13 +25,14 @@ public class DatasetFieldType {
         STRUCT,
         ARRAY,
         DATETIME,
-        BOOLEAN
+        BOOLEAN,
+        UNKNOW
     }
 
     public static Type convertRawType(String rawType) {
         if ("string".equals(rawType) || "STRING".equals(rawType) || rawType.startsWith("varchar") || rawType.startsWith("char")) {
             return Type.CHARACTER;
-        } else if ("timestamp".equals(rawType)) {
+        } else if ("timestamp".equals(rawType) || "date".equals(rawType)) {
             return Type.DATETIME;
         } else if (rawType.startsWith("array") || "ARRAY".equals(rawType)) {
             return Type.ARRAY;
@@ -42,6 +43,8 @@ public class DatasetFieldType {
             return Type.STRUCT;
         } else if ("boolean".equals(rawType) || "BOOL".equals(rawType)) {
             return Type.BOOLEAN;
+        } else if ("UNKNOW".equals(rawType)) {
+            return Type.UNKNOW;
         } else {
             throw new RuntimeException("unknown type: " + rawType);
         }
