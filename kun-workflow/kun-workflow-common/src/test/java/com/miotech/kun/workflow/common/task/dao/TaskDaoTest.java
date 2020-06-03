@@ -61,6 +61,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withVariableDefs(variableDefs)
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?"))
                 .withOperatorId(1L)
+                .withDependencies(new ArrayList<>())
                 .build();
 
         taskDao.create(taskExample, clock);
@@ -116,6 +117,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withArguments(new ArrayList<>())
                 .withVariableDefs(new ArrayList<>())
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withDependencies(new ArrayList<>())
                 .build();
 
         // Process

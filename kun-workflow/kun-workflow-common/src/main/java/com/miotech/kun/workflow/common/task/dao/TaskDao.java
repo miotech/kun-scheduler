@@ -201,8 +201,6 @@ public class TaskDao {
                 .asPrepared()
                 .getSQL();
 
-        OffsetDateTime nowTime = OffsetDateTime.now(mockClock);
-
         dbOperator.transaction(() -> {
             dbOperator.update(
                     sql,
@@ -212,9 +210,7 @@ public class TaskDao {
                     task.getOperatorId(),
                     JSONUtils.toJsonString(task.getArguments()),
                     JSONUtils.toJsonString(task.getVariableDefs()),
-                    JSONUtils.toJsonString(task.getScheduleConf()),
-                    nowTime,
-                    nowTime
+                    JSONUtils.toJsonString(task.getScheduleConf())
             );
             insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf(), mockClock);
             return null;
@@ -237,7 +233,6 @@ public class TaskDao {
                 .asPrepared()
                 .getSQL();
 
-        OffsetDateTime nowTime = OffsetDateTime.now();
         int affectedRows = dbOperator.transaction(() -> {
             int updatedRows = dbOperator.update(
                     sql,
@@ -248,7 +243,6 @@ public class TaskDao {
                     JSONUtils.toJsonString(task.getArguments()),
                     JSONUtils.toJsonString(task.getVariableDefs()),
                     JSONUtils.toJsonString(task.getScheduleConf()),
-                    nowTime,
                     task.getId()
             );
 
