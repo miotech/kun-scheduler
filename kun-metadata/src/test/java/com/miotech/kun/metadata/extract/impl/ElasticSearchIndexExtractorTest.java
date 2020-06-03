@@ -1,10 +1,7 @@
 package com.miotech.kun.metadata.extract.impl;
 
 import com.miotech.kun.metadata.extract.impl.elasticsearch.ElasticSearchIndexExtractor;
-import com.miotech.kun.metadata.model.DatasetField;
-import com.miotech.kun.metadata.model.DatasetFieldStat;
-import com.miotech.kun.metadata.model.DatasetStat;
-import com.miotech.kun.metadata.model.CommonCluster;
+import com.miotech.kun.metadata.model.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,7 +41,7 @@ public class ElasticSearchIndexExtractorTest {
 
     @Test
     public void getFieldStats() {
-        DatasetField datasetField = new DatasetField("labelExtendInfo.companyId", "Text", "");
+        DatasetField datasetField = new DatasetField("labelExtendInfo.companyId", new DatasetFieldType(DatasetFieldType.Type.CHARACTER, "TEXT"), "");
         DatasetFieldStat stat = extractor.getFieldStats(datasetField);
         assert stat.getNonnullCount() > 0;
     }
