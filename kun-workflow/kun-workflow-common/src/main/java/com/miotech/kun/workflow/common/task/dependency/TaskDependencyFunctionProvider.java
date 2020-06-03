@@ -1,13 +1,24 @@
 package com.miotech.kun.workflow.common.task.dependency;
 
+import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.model.task.DependencyFunction;
+import com.miotech.kun.workflow.db.sql.SQLBuilder;
 
+import javax.inject.Inject;
+import javax.inject.Singleton;
+
+@Singleton
 public class TaskDependencyFunctionProvider {
-    public static DependencyFunction getTaskDependencyFunctionFrom(String functionType) {
-        // TODO: implement this
+    @Inject
+    private Injector injector;
+
+    public DependencyFunction from(String functionType) {
         switch (functionType) {
+            case "latestTaskRun":
+                return injector.getInstance(LatestTaskRunDependencyFunction.class);
+            // TODO: Add other dependency functions
             default:
-                return null;
+                throw new IllegalStateException(String.format("Unknown dependency function type: \"%s\"", functionType));
         }
     }
 }

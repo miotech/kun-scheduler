@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.common.task.dao;
 
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Tick;
@@ -9,6 +10,7 @@ import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -26,8 +28,7 @@ import java.util.Optional;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TaskDaoTest extends DatabaseTestBase {
     @Inject
@@ -35,6 +36,9 @@ public class TaskDaoTest extends DatabaseTestBase {
 
     @Inject
     TaskDao taskDao;
+
+    @Inject
+    TaskDependencyFunctionProvider dependencyFunctionProvider;
 
     private Clock getMockClock() {
         return Clock.fixed(Instant.parse("2020-01-01T00:00:00.00Z"), ZoneId.of("UTC"));
@@ -71,6 +75,30 @@ public class TaskDaoTest extends DatabaseTestBase {
             Task task = MockTaskFactory.createTask();
             taskDao.create(task);
         }
+    }
+
+    /**
+     * @return a list of 4 mock tasks: A, B, C, D
+     * Task B, Task C has upstream dependency Task A
+     * Task D has upstream dependencies (Task B, Task C)
+     */
+    private List<Task> getSampleTasksWithDependencies() {
+        Task taskA = MockTaskFactory.createTask()
+                .cloneBuilder().withId(1L).withDependencies(new ArrayList<>()).build();
+        Task taskB = MockTaskFactory.createTask()
+                .cloneBuilder().withId(2L).withDependencies(Lists.newArrayList(
+                        new TaskDependency(1L, dependencyFunctionProvider.from("latestTaskRun"))
+                )).build();
+        Task taskC = MockTaskFactory.createTask()
+                .cloneBuilder().withId(3L).withDependencies(Lists.newArrayList(
+                        new TaskDependency(1L, dependencyFunctionProvider.from("latestTaskRun"))
+                )).build();
+        Task taskD = MockTaskFactory.createTask()
+                .cloneBuilder().withId(4L).withDependencies(Lists.newArrayList(
+                        new TaskDependency(2L, dependencyFunctionProvider.from("latestTaskRun")),
+                        new TaskDependency(3L, dependencyFunctionProvider.from("latestTaskRun"))
+                )).build();
+        return Lists.newArrayList(taskA, taskB, taskC, taskD);
     }
 
     @Test
@@ -169,6 +197,51 @@ public class TaskDaoTest extends DatabaseTestBase {
     }
 
     @Test
+    public void create_withValidTaskDependencies_shouldSuccess() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        // Process
+        tasks.forEach(task -> taskDao.create(task));
+        // Validate
+        Optional<Task> taskDOptional = taskDao.fetchById(4L);
+        assertTrue(taskDOptional.isPresent());
+        Task taskD = taskDOptional.get();
+        assertThat(taskD.getDependencies().size(), is(2));
+        assertThat(taskD.getDependencies().get(0).getUpstreamTaskId(), is(2L));
+        assertThat(taskD.getDependencies().get(1).getUpstreamTaskId(), is(3L));
+    }
+
+    @Test
+    public void fetchWithFilter_tasksHaveDependencies_shouldIncludeDependenciesProperly() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        // Process
+        tasks.forEach(task -> taskDao.create(task));
+        List<Task> fetchedTasks = taskDao.fetchWithFilters(
+                TaskSearchFilter.newBuilder().withPageNum(1).withPageSize(10).build());
+        fetchedTasks.forEach(task -> {
+            List<TaskDependency> deps = task.getDependencies();
+            switch (task.getId().intValue()) {
+                case 1:
+                    assertThat(deps.size(), is(0));
+                    break;
+                case 2:
+                case 3:
+                    assertThat(deps.size(), is(1));
+                    assertThat(deps.get(0).getUpstreamTaskId(), is(1L));
+                    break;
+                case 4:
+                    assertThat(deps.size(), is(2));
+                    assertThat(deps.get(0).getUpstreamTaskId(), is(2L));
+                    assertThat(deps.get(1).getUpstreamTaskId(), is(3L));
+                    break;
+                default:
+                    fail();
+            }
+        });
+    }
+
+    @Test
     public void update_WithProperId_shouldSuccess() {
         // Prepare
         insertSampleData();
@@ -198,6 +271,25 @@ public class TaskDaoTest extends DatabaseTestBase {
         // Validate
         Optional<Task> taskDeletedOptional = taskDao.fetchById(1L);
         assertFalse(taskDeletedOptional.isPresent());
+    }
+
+    @Test
+    public void delete_TaskWithDependencies_ShouldDeleteRelations() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        tasks.forEach(task -> taskDao.create(task));
+
+        // Process
+        taskDao.deleteById(3L);
+
+        // Validate
+        Optional<Task> taskCOptional = taskDao.fetchById(3L);
+        assertFalse(taskCOptional.isPresent());
+
+        Task taskD = taskDao.fetchById(4L).get();
+        // Originally task D has 2 dependencies. After deletion, dependency of task C should be removed
+        assertThat(taskD.getDependencies().size(), is(1));
+        assertThat(taskD.getDependencies().get(0).getUpstreamTaskId(), is(2L));
     }
 
     @Test
