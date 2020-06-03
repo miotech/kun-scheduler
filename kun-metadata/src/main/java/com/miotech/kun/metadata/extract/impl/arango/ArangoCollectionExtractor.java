@@ -3,16 +3,13 @@ package com.miotech.kun.metadata.extract.impl.arango;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
-import com.miotech.kun.metadata.model.CommonCluster;
-import com.miotech.kun.metadata.model.DatasetField;
-import com.miotech.kun.metadata.model.DatasetFieldStat;
-import com.miotech.kun.metadata.model.DatasetStat;
+import com.miotech.kun.metadata.model.*;
 import com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.utils.JSONUtils;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -24,6 +21,7 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
     private MioArangoClient client;
 
     public ArangoCollectionExtractor(CommonCluster cluster, String dbNAme, String collection){
+        super(cluster);
         this.cluster = cluster;
         this.dbName = dbNAme;
         this.collection = collection;
@@ -50,7 +48,7 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
 
         DatasetFieldStat stat = DatasetFieldStat.newBuilder()
                 .withNonnullCount(count)
-                .withStatDate(new Date())
+                .withStatDate(LocalDate.now())
                 .build();
 
         return stat;
@@ -88,23 +86,30 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
             if (node.isObject()) {
                 fieldList.addAll(docToFields(node, keyName));
             } else if (node.isArray()) {
-                for(JsonNode n : node){
-                    fieldList.addAll(docToFields(n, keyName));
-                }
+                DatasetField field = new DatasetField(keyName, new DatasetFieldType(DatasetFieldType.Type.ARRAY, "ARRAY"), "");
+                fieldList.add(field);
             } else {
-                String fieldType = null;
+                DatasetFieldType.Type fieldType = null;
+                String rawType = null;
                 if (node.isNull()){
-                    fieldType = "UNKNOW";
+                    fieldType = DatasetFieldType.Type.UNKNOW;
+                    rawType = "UNKNOW";
                 }
                 else {
-                    if (node.isNumber())
-                        fieldType = "NUMBER";
-                    else if (node.isTextual() || node.isBinary())
-                        fieldType = "STRING";
-                    else if (node.isBoolean())
-                        fieldType = "BOOL";
+                    if (node.isNumber()){
+                        fieldType = DatasetFieldType.Type.NUMBER;
+                        rawType = "NUMBER";
+                    }
+                    else if (node.isTextual() || node.isBinary()) {
+                        fieldType = DatasetFieldType.Type.CHARACTER;
+                        rawType = "STRING";
+                    }
+                    else if (node.isBoolean()){
+                        fieldType = DatasetFieldType.Type.BOOLEAN;
+                        rawType = "BOOLEAN";
+                    }
                 }
-                DatasetField field = new DatasetField(keyName, fieldType, "");
+                DatasetField field = new DatasetField(keyName, new DatasetFieldType(fieldType, rawType), "");
                 fieldList.add(field);
             }
         }

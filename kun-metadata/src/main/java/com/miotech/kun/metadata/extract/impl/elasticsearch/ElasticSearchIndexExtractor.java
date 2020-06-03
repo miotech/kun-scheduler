@@ -2,10 +2,7 @@ package com.miotech.kun.metadata.extract.impl.elasticsearch;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.miotech.kun.metadata.extract.template.ExtractorTemplate;
-import com.miotech.kun.metadata.model.CommonCluster;
-import com.miotech.kun.metadata.model.DatasetField;
-import com.miotech.kun.metadata.model.DatasetFieldStat;
-import com.miotech.kun.metadata.model.DatasetStat;
+import com.miotech.kun.metadata.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -19,8 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,6 +30,7 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
 
 
     public ElasticSearchIndexExtractor(CommonCluster cluster, String index) {
+        super(cluster);
         this.index = index;
         this.cluster = cluster;
         this.client = new MioElasticSearchClient(cluster);
@@ -58,7 +56,29 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
                     String type = it.next().asText();
                     if(type.equals("STRUCT"))
                         continue;
-                    fields.add(new DatasetField(name, type, ""));
+                    DatasetFieldType.Type fieldType = null;
+                    switch (type){
+                        case "VARCHAR":
+                        case "VARBINARY":
+                            fieldType = DatasetFieldType.Type.CHARACTER;
+                            break;
+                        case "REAL":
+                        case "TINYINT":
+                        case "SMALLINT":
+                        case "INTEGER":
+                        case "BIGINT":
+                        case "DOUBLE":
+                        case "FLOAT":
+                            fieldType = DatasetFieldType.Type.NUMBER;
+                            break;
+                        case "BOOLEAN":
+                            fieldType = DatasetFieldType.Type.BOOLEAN;
+                        case "TIMESTAMP":
+                            fieldType = DatasetFieldType.Type.DATETIME;
+                        default:
+                            fieldType = DatasetFieldType.Type.UNKNOW;
+                    }
+                    fields.add(new DatasetField(name, new DatasetFieldType(fieldType, type), ""));
                 }
             }
             return fields;
@@ -81,7 +101,7 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
 
         DatasetFieldStat stat = DatasetFieldStat.newBuilder()
                 .withNonnullCount(count)
-                .withStatDate(new Date()).build();
+                .withStatDate(LocalDate.now()).build();
 
         return stat;
     }
@@ -98,7 +118,7 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
 
         DatasetStat datasetStat = DatasetStat.newBuilder()
                 .withRowCount(rowCount)
-                .withStatDate(new Date()).build();
+                .withStatDate(LocalDate.now()).build();
 
         return datasetStat;
     }
