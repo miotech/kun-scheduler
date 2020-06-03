@@ -10,6 +10,7 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FieldFlatUtilTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
@@ -20,10 +21,9 @@ public class FieldFlatUtilTest {
         JsonNode jsonNode = MAPPER.readTree(json);
 
         List<DatasetField> fields = FieldFlatUtil.flatFields(jsonNode, null);
-        MatcherAssert.assertThat(fields, Matchers.containsInAnyOrder(new DatasetField("id", "NUMBER", ""),
-                new DatasetField("name", "STRING", ""),
-                new DatasetField("hobbies", "ARRAY", ""),
-                new DatasetField("married", "BOOL", "")));
+        List<String> fieldStrs = datasetField2String(fields);
+
+        MatcherAssert.assertThat(fieldStrs, Matchers.containsInAnyOrder("id-NUMBER-", "name-STRING-", "hobbies-ARRAY-", "married-BOOL-"));
     }
 
     @Test
@@ -32,10 +32,9 @@ public class FieldFlatUtilTest {
         JsonNode jsonNode = MAPPER.readTree(json);
 
         List<DatasetField> fields = FieldFlatUtil.flatFields(jsonNode, null);
-        MatcherAssert.assertThat(fields, Matchers.containsInAnyOrder(new DatasetField("id", "NUMBER", ""),
-                new DatasetField("name", "STRING", ""),
-                new DatasetField("hobbies.name", "STRING", ""),
-                new DatasetField("married", "BOOL", "")));
+        List<String> fieldStrs = datasetField2String(fields);
+
+        MatcherAssert.assertThat(fieldStrs, Matchers.containsInAnyOrder("id-NUMBER-", "name-STRING-", "hobbies.name-STRING-", "married-BOOL-"));
     }
 
     @Test
@@ -44,10 +43,18 @@ public class FieldFlatUtilTest {
         JsonNode jsonNode = MAPPER.readTree(json);
 
         List<DatasetField> fields = FieldFlatUtil.flatFields(jsonNode, null);
-        MatcherAssert.assertThat(fields, Matchers.containsInAnyOrder(new DatasetField("id", "NUMBER", ""),
-                new DatasetField("name", "STRING", ""),
-                new DatasetField("hobbies", "ARRAY", ""),
-                new DatasetField("married", "BOOL", "")));
+        List<String> fieldStrs = datasetField2String(fields);
+
+        MatcherAssert.assertThat(fieldStrs, Matchers.containsInAnyOrder("id-NUMBER-", "name-STRING-", "hobbies-ARRAY-", "married-BOOL-"));
+    }
+
+    private List<String> datasetField2String(List<DatasetField> fields) {
+        return fields.stream().map(field -> {
+            String name = field.getName();
+            String rawType = field.getFieldType().getRawType();
+            String comment = field.getComment();
+            return name + "-" + rawType + "-" + comment;
+        }).collect(Collectors.toList());
     }
 
 }

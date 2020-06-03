@@ -3,10 +3,7 @@ package com.miotech.kun.metadata.client;
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
 import com.miotech.kun.metadata.load.impl.PostgresLoader;
-import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.DatasetField;
-import com.miotech.kun.metadata.model.DatasetFieldStat;
-import com.miotech.kun.metadata.model.DatasetStat;
+import com.miotech.kun.metadata.model.*;
 import com.miotech.kun.metadata.service.gid.GidService;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.db.DatabaseOperator;
@@ -35,8 +32,8 @@ public class PostgresLoaderTest extends DatabaseTestBase {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
         datasetBuilder.withName("datasetName")
                 .withDatasetStat(new DatasetStat(100L, new Date()))
-                .withFields(ImmutableList.of(new DatasetField("id", "def", "自增id"),
-                        new DatasetField("name", "string", "姓名")))
+                .withFields(ImmutableList.of(new DatasetField("id", new DatasetFieldType(DatasetFieldType.convertRawType("int"), "int"), "自增id"),
+                        new DatasetField("name", new DatasetFieldType(DatasetFieldType.convertRawType("string"), "string"), "姓名")))
                 .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", new Date()),
                         new DatasetFieldStat("name", 3, 67, "admin", new Date())))
                 .withDataStore(new HiveTableStore("", "db1", "tb"));

@@ -60,7 +60,7 @@ public class PostgresTableExtractor extends ExtractorTemplate {
                 String type = resultSet.getString(2);
                 String description = resultSet.getString(3);
 
-                DatasetField field = new DatasetField(name, type, description);
+                DatasetField field = new DatasetField(name, new DatasetFieldType(DatasetFieldType.convertRawType(type), type), description);
                 fields.add(field);
             }
         } catch (ClassNotFoundException classNotFoundException) {
@@ -88,9 +88,9 @@ public class PostgresTableExtractor extends ExtractorTemplate {
             long nonnullCount = 0;
             connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useSchema(postgresCluster.getUrl(), database, schema), postgresCluster.getUsername(), postgresCluster.getPassword());
             String sql = "SELECT COUNT(DISTINCT(" + StringUtil.convertUpperCase(datasetField.getName()) + ")) FROM " + StringUtil.convertUpperCase(table);
-            if ("json".equals(datasetField.getType())) {
+            if ("json".equals(datasetField.getFieldType().getRawType())) {
                 sql = "SELECT COUNT(DISTINCT(CAST(" + StringUtil.convertUpperCase(datasetField.getName()) + " AS VARCHAR))) FROM " + StringUtil.convertUpperCase(table);
-            } else if ("graphid".equals(datasetField.getType())) {
+            } else if ("graphid".equals(datasetField.getFieldType().getRawType())) {
                 return new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, new Date());
             }
             statement = connection.createStatement();

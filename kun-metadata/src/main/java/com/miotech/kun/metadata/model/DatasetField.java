@@ -6,7 +6,7 @@ public class DatasetField {
 
     private final String name;
 
-    private final String type;
+    private final DatasetFieldType fieldType;
 
     private final String comment;
 
@@ -14,17 +14,17 @@ public class DatasetField {
         return name;
     }
 
-    public String getType() {
-        return type;
+    public DatasetFieldType getFieldType() {
+        return fieldType;
     }
 
     public String getComment() {
         return comment;
     }
 
-    public DatasetField(String name, String type, String comment) {
+    public DatasetField(String name, DatasetFieldType fieldType, String comment) {
         this.name = name;
-        this.type = type;
+        this.fieldType = fieldType;
         this.comment = comment;
     }
 
@@ -32,7 +32,7 @@ public class DatasetField {
     public String toString() {
         return "DatasetField{" +
                 "name='" + name + '\'' +
-                ", type='" + type + '\'' +
+                ", fieldType=" + fieldType +
                 ", comment='" + comment + '\'' +
                 '}';
     }
@@ -41,14 +41,14 @@ public class DatasetField {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        DatasetField that = (DatasetField) o;
-        return Objects.equals(name, that.name) &&
-                Objects.equals(type, that.type) &&
-                Objects.equals(comment, that.comment);
+        DatasetField field = (DatasetField) o;
+        return Objects.equals(name, field.name) &&
+                Objects.equals(fieldType, field.fieldType) &&
+                Objects.equals(comment, field.comment);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, type, comment);
+        return Objects.hash(name, fieldType, comment);
     }
 }
