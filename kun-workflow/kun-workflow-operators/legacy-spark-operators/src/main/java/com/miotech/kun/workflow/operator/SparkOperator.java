@@ -1,9 +1,14 @@
 package com.miotech.kun.workflow.operator;
 
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.base.Strings;
 import com.miotech.kun.workflow.core.execution.Operator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
-import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
@@ -14,6 +19,8 @@ import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import com.miotech.kun.workflow.core.execution.logging.Logger;
+
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -144,31 +151,64 @@ public class SparkOperator implements Operator {
     public void lineangeAnalysis(OperatorContext context, String applicationId){
         logger.info("Start lineage analysis for batch id: " + app.getId());
 
-        String hdfsAddr = context.getParameter("hdfsAddr");
         List<DataStore> inlets = new ArrayList<>();
         List<DataStore> outlets = new ArrayList<>();
-        String input = "/tmp/" + applicationId + ".input.txt";
-        String output = "/tmp/" + applicationId + ".output.txt";
+        String dispatcher = context.getParameter("dispatcher");
 
-        try {
-            inlets.addAll(genDataStore(input, hdfsAddr));
-            outlets.addAll(genDataStore(output, hdfsAddr));
-        }catch (IOException e){
-            throw new RuntimeException(e);
+        if(dispatcher.equals("hdfs")){
+            try {
+                String hdfsAddr = context.getParameter("hdfsAddr");
+                String input = "/tmp/" + applicationId + ".input.txt";
+                String output = "/tmp/" + applicationId + ".output.txt";
+
+                Configuration conf = new Configuration();
+                conf.set("fs.defaultFS", hdfsAddr);
+                FileSystem fs = FileSystem.get(conf);
+                BufferedReader inBufferReader = new BufferedReader(new InputStreamReader(fs.open(new Path(input))));
+                BufferedReader outBufferReader = new BufferedReader(new InputStreamReader(fs.open(new Path(output))));
+                inlets.addAll(genDataStore(inBufferReader));
+                outlets.addAll(genDataStore(outBufferReader));
+            }catch (IOException e){
+                logger.error("lineage analysis from hdfs failed", e);
+            }
+        }else if(dispatcher.equals("s3")){
+            try{
+                AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
+                        .withRegion("ap-northeast-1")
+                        .withCredentials(new AWSStaticCredentialsProvider(
+                                new BasicAWSCredentials("AKIAIL42HPN4LO3XUIHQ", "yFfJ74UD80NWmPuhH2dLKr2JYJU8RU/qj0QVzOE8")
+                        ))
+                        .build();
+                String inputPath = "lineage/" + applicationId + ".input.txt";
+                String outputPath = "lineage/" + applicationId + ".output.txt";
+
+                BufferedReader inBufferReader;
+                try (S3Object inObject = s3Client.getObject(new GetObjectRequest("com.miotech.data.prd", inputPath))) {
+                    inBufferReader = new BufferedReader(new InputStreamReader(inObject.getObjectContent()));
+                    inlets.addAll(genDataStore(inBufferReader));
+                } catch (IOException e) {
+                    logger.error("get s3 inlets file failed", e);
+                }
+                BufferedReader outBufferReader;
+                try (S3Object outObject = s3Client.getObject(new GetObjectRequest("com.miotech.data.prd", outputPath))) {
+                    outBufferReader = new BufferedReader(new InputStreamReader(outObject.getObjectContent()));
+                    outlets.addAll(genDataStore(outBufferReader));
+                } catch (IOException e) {
+                    logger.error("get s3 outlets file failed", e);
+                    e.printStackTrace();
+                }
+            }catch (Exception e){
+                logger.error("lineage analysis from s3 failed", e);
+            }
         }
 
         context.report(inlets, outlets);
     }
 
-    public List<DataStore> genDataStore(String path, String hdfsAddr) throws IOException {
+    public List<DataStore> genDataStore(BufferedReader br) throws IOException {
 
         List<DataStore> stores = new ArrayList<>();
 
-        Configuration conf = new Configuration();
-        conf.set("fs.defaultFS", hdfsAddr);
-
-        FileSystem fs = FileSystem.get(conf);
-        BufferedReader br = new BufferedReader(new InputStreamReader(fs.open(new Path(path))));
         String line;
         line = br.readLine();
         while (line != null) {
@@ -188,6 +228,9 @@ public class SparkOperator implements Operator {
                     stores.add(getESStore(line));
                     break;
                 case "arango":
+                    break;
+                case "s3":
+                    stores.add(getS3Store(line));
                     break;
                 default:
                     logger.error(String.format("unknow resource type %s", type));
@@ -235,5 +278,13 @@ public class SparkOperator implements Operator {
         return new HiveTableStore(url, db, table);
     }
 
+    public HiveTableStore getS3Store(String line){
+        String[] slices = line.split("/");
+        Integer length = slices.length;
+        String table = slices[length - 1];
+        String db = slices[length - 2].split(".")[0].toLowerCase();
+        String url = line.split(":")[1].substring(2);
+        return new HiveTableStore(url, db, table);
+    }
 
 }

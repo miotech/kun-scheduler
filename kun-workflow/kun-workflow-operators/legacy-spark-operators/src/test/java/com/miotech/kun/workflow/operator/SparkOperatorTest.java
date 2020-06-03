@@ -12,17 +12,12 @@ public class SparkOperatorTest {
     public void setUp(){
         context = new OperatorContextImpl();
         operator = new SparkOperator();
+        operator.init(context);
     }
 
-    @Test
-    public void init() {
-    }
 
     @Test
     public void run() {
-//        OperatorContextImpl context = new OperatorContextImpl();
-//        Operator operator = new SparkOperator();
-        operator.init(context);
         operator.run(context);
     }
 
@@ -33,8 +28,8 @@ public class SparkOperatorTest {
     @Test
     public void lineangeAnalysis(){
         // test es
-//        String esApplicationId = "local-1590805766018";
-//        operator.lineangeAnalysis(context, esApplicationId);
+        String esApplicationId = "local-1590805766018";
+        operator.lineangeAnalysis(context, esApplicationId);
 
         //test mongo
         String mongoApplicationId = "local-1590806862049";
