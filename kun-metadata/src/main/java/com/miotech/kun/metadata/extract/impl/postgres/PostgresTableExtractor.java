@@ -17,8 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.Date;
+import java.time.LocalDate;
 import java.util.List;
 
 public class PostgresTableExtractor extends ExtractorTemplate {
@@ -91,7 +90,7 @@ public class PostgresTableExtractor extends ExtractorTemplate {
             if ("json".equals(datasetField.getFieldType().getRawType())) {
                 sql = "SELECT COUNT(DISTINCT(CAST(" + StringUtil.convertUpperCase(datasetField.getName()) + " AS VARCHAR))) FROM " + StringUtil.convertUpperCase(table);
             } else if ("graphid".equals(datasetField.getFieldType().getRawType())) {
-                return new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, new Date());
+                return new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, LocalDate.now());
             }
             statement = connection.createStatement();
             resultSet = statement.executeQuery(sql);
@@ -108,7 +107,7 @@ public class PostgresTableExtractor extends ExtractorTemplate {
                 nonnullCount = resultSet.getLong(1);
             }
 
-            DatasetFieldStat fieldStat = new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, new Date());
+            DatasetFieldStat fieldStat = new DatasetFieldStat(datasetField.getName(), distinctCount, nonnullCount, null, LocalDate.now());
 
             logger.debug("PostgresTableExtractor getFieldStats end. fieldStat: {}", JSONUtils.toJsonString(fieldStat));
             return fieldStat;
@@ -140,7 +139,7 @@ public class PostgresTableExtractor extends ExtractorTemplate {
             while (resultSet.next()) {
                 Long rowCount = resultSet.getLong(1);
                 datasetStatBuilder.withRowCount(rowCount);
-                datasetStatBuilder.withStatDate(new Date());
+                datasetStatBuilder.withStatDate(LocalDate.now());
             }
         } catch (ClassNotFoundException classNotFoundException) {
             logger.error("driver class not found, DatabaseType: {}", DatabaseType.POSTGRES.getName(), classNotFoundException);

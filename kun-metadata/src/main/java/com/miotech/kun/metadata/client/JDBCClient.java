@@ -1,10 +1,15 @@
 package com.miotech.kun.metadata.client;
 
+import com.google.common.collect.Maps;
 import com.miotech.kun.metadata.constant.DatabaseType;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.sql.*;
+import java.util.Map;
 
 /**
  * Universal JDBC connection tool, which adapts to Hive and Postgres
@@ -12,6 +17,7 @@ import java.sql.*;
  */
 public class JDBCClient {
     private static Logger logger = LoggerFactory.getLogger(JDBCClient.class);
+    private static final Map<String, DataSource> dataSourceCache = Maps.newConcurrentMap();
 
     public static Connection getConnection(DatabaseType dbType, String url, String user, String password)
             throws ClassNotFoundException, SQLException {
@@ -22,6 +28,22 @@ public class JDBCClient {
         String driverName = selectSpecificDriver(dbType);
         Class.forName(driverName);
         return DriverManager.getConnection(url, user, password);
+    }
+
+    public static DataSource getDataSource(String url, String username, String password, DatabaseType dbType) {
+        String key = url + username + password;
+        if (dataSourceCache.containsKey(key)) {
+            return dataSourceCache.get(key);
+        }
+        HikariConfig config = new HikariConfig();
+        config.setJdbcUrl(url);
+        config.setUsername(username);
+        config.setPassword(password);
+        config.setDriverClassName(selectSpecificDriver(dbType));
+        HikariDataSource hikariDataSource = new HikariDataSource(config);
+
+        dataSourceCache.put(key, hikariDataSource);
+        return hikariDataSource;
     }
 
     private static String selectSpecificDriver(DatabaseType dbType) {

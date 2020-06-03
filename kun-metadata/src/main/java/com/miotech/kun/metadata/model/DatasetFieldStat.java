@@ -1,6 +1,6 @@
 package com.miotech.kun.metadata.model;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public class DatasetFieldStat {
 
@@ -12,7 +12,7 @@ public class DatasetFieldStat {
 
     private final String updatedBy;
 
-    private final Date statDate;
+    private final LocalDate statDate;
 
     public String getName() {
         return name;
@@ -30,11 +30,11 @@ public class DatasetFieldStat {
         return updatedBy;
     }
 
-    public Date getStatDate() {
+    public LocalDate getStatDate() {
         return statDate;
     }
 
-    public DatasetFieldStat(String name, long distinctCount, long nonnullCount, String updatedBy, Date statDate) {
+    public DatasetFieldStat(String name, long distinctCount, long nonnullCount, String updatedBy, LocalDate statDate) {
         this.name = name;
         this.distinctCount = distinctCount;
         this.nonnullCount = nonnullCount;
@@ -51,12 +51,12 @@ public class DatasetFieldStat {
         private long distinctCount;
         private long nonnullCount;
         private String updatedBy;
-        private Date statDate;
+        private LocalDate statDate;
 
         public Builder() {
         }
 
-        public Builder withDistinctCount(String name) {
+        public Builder withName(String name) {
             this.name = name;
             return this;
         }
@@ -76,7 +76,7 @@ public class DatasetFieldStat {
             return this;
         }
 
-        public Builder withStatDate(Date statDate) {
+        public Builder withStatDate(LocalDate statDate) {
             this.statDate = statDate;
             return this;
         }

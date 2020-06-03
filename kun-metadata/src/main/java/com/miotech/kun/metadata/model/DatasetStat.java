@@ -1,22 +1,22 @@
 package com.miotech.kun.metadata.model;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public class DatasetStat {
 
     private final long rowCount;
 
-    private final Date statDate;
+    private final LocalDate statDate;
 
     public long getRowCount() {
         return rowCount;
     }
 
-    public Date getStatDate() {
+    public LocalDate getStatDate() {
         return statDate;
     }
 
-    public DatasetStat(long rowCount, Date statDate) {
+    public DatasetStat(long rowCount, LocalDate statDate) {
         this.rowCount = rowCount;
         this.statDate = statDate;
     }
@@ -27,7 +27,7 @@ public class DatasetStat {
 
     public static final class Builder {
         private long rowCount;
-        private Date statDate;
+        private LocalDate statDate;
 
         private Builder() {
         }
@@ -41,7 +41,7 @@ public class DatasetStat {
             return this;
         }
 
-        public Builder withStatDate(Date statDate) {
+        public Builder withStatDate(LocalDate statDate) {
             this.statDate = statDate;
             return this;
         }
