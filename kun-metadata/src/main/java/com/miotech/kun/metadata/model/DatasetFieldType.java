@@ -31,6 +31,7 @@ public class DatasetFieldType {
         ARRAY,
         DATETIME,
         BOOLEAN,
+        JSON,
         UNKNOW
     }
 

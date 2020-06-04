@@ -6,7 +6,7 @@ import com.google.common.collect.Iterators;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.MongoCluster;
+import com.miotech.kun.metadata.model.MongoDataSource;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
@@ -21,24 +21,24 @@ import java.util.List;
 public class MongoDatabaseExtractor implements Extractor {
     private static Logger logger = LoggerFactory.getLogger(MongoDatabaseExtractor.class);
 
-    private final MongoCluster cluster;
+    private final MongoDataSource dataSource;
 
     private final String database;
 
     private final MongoClient client;
 
-    public MongoDatabaseExtractor(MongoCluster cluster, String database) {
-        Preconditions.checkNotNull(cluster, "mongoCluster should not be null.");
-        this.cluster = cluster;
+    public MongoDatabaseExtractor(MongoDataSource dataSource, String database) {
+        Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
+        this.dataSource = dataSource;
         this.database = database;
-        this.client = new MongoClient(new MongoClientURI(cluster.getUrl()));
+        this.client = new MongoClient(new MongoClientURI(dataSource.getUrl()));
     }
 
     @Override
     public Iterator<Dataset> extract() {
         try {
-            logger.debug("MongoDatabaseExtractor extract start. cluster: {}, database: {}",
-                    JSONUtils.toJsonString(cluster), database);
+            logger.debug("MongoDatabaseExtractor extract start. dataSource: {}, database: {}",
+                    JSONUtils.toJsonString(dataSource), database);
             List<String> collections = Lists.newArrayList();
             MongoDatabase usedDatabase = client.getDatabase(database);
             MongoIterable<String> collectionIterable = usedDatabase.listCollectionNames();
@@ -48,7 +48,7 @@ public class MongoDatabaseExtractor implements Extractor {
 
             logger.debug("MongoDatabaseExtractor extract end. collections: {}", collections);
             return Iterators.concat(collections.stream().map((collection) ->
-                    new MongoCollectionExtractor(cluster, database, collection).extract()).iterator());
+                    new MongoCollectionExtractor(dataSource, database, collection).extract()).iterator());
         } catch (Exception e) {
             logger.error("MongoDatabaseExtractor extract error: ", e);
             throw ExceptionUtils.wrapIfChecked(e);

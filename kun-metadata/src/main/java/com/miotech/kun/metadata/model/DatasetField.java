@@ -51,4 +51,36 @@ public class DatasetField {
     public int hashCode() {
         return Objects.hash(name, fieldType, comment);
     }
+
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private String name;
+        private DatasetFieldType fieldType;
+        private String comment;
+
+        private Builder() {
+        }
+
+        public Builder withName(String name) {
+            this.name = name;
+            return this;
+        }
+
+        public Builder withFieldType(DatasetFieldType fieldType) {
+            this.fieldType = fieldType;
+            return this;
+        }
+
+        public Builder withComment(String comment) {
+            this.comment = comment;
+            return this;
+        }
+
+        public DatasetField build() {
+            return new DatasetField(name, fieldType, comment);
+        }
+    }
 }

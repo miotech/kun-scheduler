@@ -15,28 +15,17 @@ public class HiveTableExtractorTest {
 
     @Test
     public void testGetSchema() {
-        HiveCluster.Builder clusterBuilder = HiveCluster.newBuilder();
-        clusterBuilder.withMetaStoreUrl("jdbc:mysql://10.0.0.85:13306/hive")
-                .withMetaStoreUsername("miotech")
-                .withMetaStorePassword("Mi0Tech@2018")
-                .withDataStoreUrl("jdbc:hive2://10.0.0.85:10000")
-                .withDataStoreUsername("hive")
-                .withDataStorePassword(null);
-        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs", null);
+        ConfigurableDataSource.Builder clusterBuilder = ConfigurableDataSource.newBuilder();
+
+        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs");
         List<DatasetField> schema = extractor.getSchema();
         logger.info("schema:" + new Gson().toJson(schema));
     }
 
     @Test
     public void testGetTableStats() {
-        HiveCluster.Builder clusterBuilder = HiveCluster.newBuilder();
-        clusterBuilder.withMetaStoreUrl("jdbc:mysql://10.0.0.85:13306/hive")
-                .withMetaStoreUsername("miotech")
-                .withMetaStorePassword("Mi0Tech@2018")
-                .withDataStoreUrl("jdbc:hive2://10.0.0.85:10000")
-                .withDataStoreUsername("hive")
-                .withDataStorePassword(null);
-        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs", null);
+        ConfigurableDataSource.Builder clusterBuilder = ConfigurableDataSource.newBuilder();
+        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs");
         DatasetStat tableStats = extractor.getTableStats();
         logger.info("tableStats:" + new Gson().toJson(tableStats));
     }
@@ -44,14 +33,8 @@ public class HiveTableExtractorTest {
 
     @Test
     public void testGetFieldStats() {
-        HiveCluster.Builder clusterBuilder = HiveCluster.newBuilder();
-        clusterBuilder.withMetaStoreUrl("jdbc:mysql://10.0.0.85:13306/hive")
-                .withMetaStoreUsername("miotech")
-                .withMetaStorePassword("Mi0Tech@2018")
-                .withDataStoreUrl("jdbc:hive2://10.0.0.85:10000")
-                .withDataStoreUsername("hive")
-                .withDataStorePassword(null);
-        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs", null);
+        ConfigurableDataSource.Builder clusterBuilder = ConfigurableDataSource.newBuilder();
+        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs");
         DatasetField field = new DatasetField("db_id", new DatasetFieldType(DatasetFieldType.convertRawType("string"), "string"), null);
         DatasetFieldStat fieldStats = extractor.getFieldStats(field);
         logger.info("fieldStats:" + new Gson().toJson(fieldStats));
@@ -59,14 +42,8 @@ public class HiveTableExtractorTest {
 
     @Test
     public void testExtract() {
-        HiveCluster.Builder clusterBuilder = HiveCluster.newBuilder();
-        clusterBuilder.withMetaStoreUrl("jdbc:mysql://10.0.0.85:13306/hive")
-                .withMetaStoreUsername("miotech")
-                .withMetaStorePassword("Mi0Tech@2018")
-                .withDataStoreUrl("jdbc:hive2://10.0.0.85:10000")
-                .withDataStoreUsername("hive")
-                .withDataStorePassword(null);
-        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs", null);
+        ConfigurableDataSource.Builder clusterBuilder = ConfigurableDataSource.newBuilder();
+        HiveTableExtractor extractor = new HiveTableExtractor(clusterBuilder.build(), "sys", "dbs");
         DatasetField field = new DatasetField("db_id", new DatasetFieldType(DatasetFieldType.convertRawType("string"), "string"), null);
         Iterator<Dataset> extract = extractor.extract();
         while (extract.hasNext()) {
