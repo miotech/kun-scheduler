@@ -7,9 +7,7 @@ public class DatabaseIdentifierProcessor {
     public static String processTableNameIdentifier(String table, DatabaseType dbType) {
         switch (dbType) {
             case ATHENA:
-                if (table.startsWith("_")) {
-                    return "`" + table + "`";
-                } else if (Character.isDigit(table.charAt(0))) {
+                if (Character.isDigit(table.charAt(0))) {
                     return "\"" + table + "\"";
                 } else {
                     return table;

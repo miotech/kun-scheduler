@@ -1,6 +1,11 @@
 package com.miotech.kun.metadata.model;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class DatasetFieldType {
+    private static final Logger logger = LoggerFactory.getLogger(DatasetFieldType.class);
+
     private final Type type;
     private final String rawType;
 
@@ -46,7 +51,8 @@ public class DatasetFieldType {
         } else if ("UNKNOW".equals(rawType)) {
             return Type.UNKNOW;
         } else {
-            throw new RuntimeException("unknown type: " + rawType);
+            logger.warn("unknown type: " + rawType);
+            return Type.UNKNOW;
         }
     }
 }
