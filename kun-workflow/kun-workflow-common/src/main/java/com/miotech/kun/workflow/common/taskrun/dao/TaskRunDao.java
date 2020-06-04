@@ -57,7 +57,7 @@ public class TaskRunDao {
         return DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
-                .join("LEFT OUTER", taskDao.TASK_TABLE_NAME, taskDao.TASK_MODEL_NAME)
+                .join("LEFT OUTER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
                 .autoAliasColumns();
     }
 
@@ -90,8 +90,6 @@ public class TaskRunDao {
                     .asPrepared()
                     .getSQL();
 
-            OffsetDateTime nowTime = OffsetDateTime.now();
-
             dbOperator.update(sql,
                     taskRun.getId(),
                     taskRun.getTask().getId(),
@@ -101,9 +99,7 @@ public class TaskRunDao {
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getVariables()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
-                    JSONUtils.toJsonString(taskRun.getOutlets()),
-                    nowTime,
-                    nowTime
+                    JSONUtils.toJsonString(taskRun.getOutlets())
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds());
@@ -133,7 +129,6 @@ public class TaskRunDao {
                     .asPrepared()
                     .getSQL();
 
-            OffsetDateTime nowTime = OffsetDateTime.now();
             dbOperator.update(sql,
                     taskRun.getId(),
                     taskRun.getTask().getId(),
@@ -144,7 +139,6 @@ public class TaskRunDao {
                     JSONUtils.toJsonString(taskRun.getVariables()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets()),
-                    nowTime,
                     taskRun.getId()
             );
 
@@ -181,7 +175,7 @@ public class TaskRunDao {
                 .where(TASK_ATTEMPT_MODEL_NAME + ".task_run_id = ?")
                 .getSQL();
 
-        return dbOperator.fetchAll(sql, TaskAttemptPropsMapper.INSTANCE, taskRunId);
+        return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(true), taskRunId);
     }
 
     // TODO: return integrated TaskAttempt object with all properties of `taskRun`
@@ -212,7 +206,6 @@ public class TaskRunDao {
                 .asPrepared()
                 .getSQL();
 
-        OffsetDateTime nowTime = OffsetDateTime.now();
         dbOperator.update(sql,
                 taskAttempt.getId(),
                 taskAttempt.getTaskRun().getId(),
@@ -220,9 +213,7 @@ public class TaskRunDao {
                 taskAttempt.getStatus().toString(),
                 taskAttempt.getStartAt(),
                 taskAttempt.getEndAt(),
-                taskAttempt.getLogPath(),
-                nowTime,
-                nowTime
+                taskAttempt.getLogPath()
         );
         return taskAttempt;
     }
@@ -267,9 +258,8 @@ public class TaskRunDao {
                 .getSQL();
 
         Object[][] params = new Object[dependencies.size()][2];
-        OffsetDateTime nowTime = OffsetDateTime.now();
         for (int i = 0; i < dependencies.size(); i++) {
-            params[i] = new Object[]{dependencies.get(i), taskRunId, nowTime, nowTime};
+            params[i] = new Object[]{dependencies.get(i), taskRunId};
         }
 
         dbOperator.batch(dependencySQL, params);
@@ -310,12 +300,12 @@ public class TaskRunDao {
 
         logger.debug("fetchLatestTaskAttempt query SQL = \n{}", sql);
 
-        return dbOperator.fetchAll(sql, TaskAttemptPropsMapper.INSTANCE, taskRunIds.toArray());
+        return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(false), taskRunIds.toArray());
     }
 
     public static class TaskRunMapper implements ResultSetMapper<TaskRun> {
         public static final TaskRunDao.TaskRunMapper INSTANCE = new TaskRunDao.TaskRunMapper();
-        private TaskDao.TaskMapper taskMapper = TaskDao.TaskMapper.INSTANCE;
+        private final TaskDao.TaskMapper taskMapper = TaskDao.TaskMapper.INSTANCE;
 
         @Override
         public TaskRun map(ResultSet rs) throws SQLException {
@@ -354,19 +344,35 @@ public class TaskRunDao {
     }
 
     private static class TaskAttemptPropsMapper implements ResultSetMapper<TaskAttemptProps> {
-        public static TaskRunDao.TaskAttemptPropsMapper INSTANCE = new TaskAttemptPropsMapper();
+        private boolean withColumnAliased;
+
+        public TaskAttemptPropsMapper(boolean withColumnAliased) {
+            this.withColumnAliased = withColumnAliased;
+        }
 
         @Override
         public TaskAttemptProps map(ResultSet rs) throws SQLException {
-            return TaskAttemptProps.newBuilder()
-                    .withId(rs.getLong("id"))
-                    .withTaskRunId(rs.getLong("task_run_id"))
-                    .withAttempt(rs.getInt("attempt"))
-                    .withStatus(TaskRunStatus.valueOf(rs.getString("status")))
-                    .withLogPath(rs.getString("log_path"))
-                    .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp( "start_at")))
-                    .withEndAt(DateTimeUtils.fromTimestamp( rs.getTimestamp("end_at")))
-                    .build();
+            if (withColumnAliased) {
+                return TaskAttemptProps.newBuilder()
+                        .withId(rs.getLong(TASK_ATTEMPT_MODEL_NAME + "_id"))
+                        .withTaskRunId(rs.getLong(TASK_ATTEMPT_MODEL_NAME + "_task_run_id"))
+                        .withAttempt(rs.getInt(TASK_ATTEMPT_MODEL_NAME + "_attempt"))
+                        .withStatus(TaskRunStatus.valueOf(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_status")))
+                        .withLogPath(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_log_path"))
+                        .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp( TASK_ATTEMPT_MODEL_NAME + "_start_at")))
+                        .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_ATTEMPT_MODEL_NAME + "_end_at")))
+                        .build();
+            } else {
+                return TaskAttemptProps.newBuilder()
+                        .withId(rs.getLong("id"))
+                        .withTaskRunId(rs.getLong("task_run_id"))
+                        .withAttempt(rs.getInt("attempt"))
+                        .withStatus(TaskRunStatus.valueOf(rs.getString("status")))
+                        .withLogPath(rs.getString("log_path"))
+                        .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp( "start_at")))
+                        .withEndAt(DateTimeUtils.fromTimestamp( rs.getTimestamp("end_at")))
+                        .build();
+            }
         }
     }
 }

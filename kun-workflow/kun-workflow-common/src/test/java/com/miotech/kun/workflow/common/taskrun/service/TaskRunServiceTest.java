@@ -13,6 +13,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.vo.TaskRunVO;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
 
 import static org.junit.Assert.*;
@@ -48,6 +49,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withArguments(Collections.emptyList())
                 .withVariableDefs(Collections.emptyList())
+                .withDependencies(new ArrayList<>())
                 .build();
         taskDao.create(task);
 
