@@ -4,6 +4,7 @@ import org.junit.Test;
 
 import java.util.*;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class DefaultSQLBuilderTest {
@@ -128,6 +129,37 @@ public class DefaultSQLBuilderTest {
                 .from("test", "testalias")
                 .join("inner", "test2", "testalias2")
                 .getSQL());
+    }
+
+    @Test
+    public void join_shouldHaveAccompaniedOnClauseBeforeNextJoin() {
+        // Prepare
+        SQLBuilder sqlBuilder = DefaultSQLBuilder.newBuilder()
+                .select("a", "b")
+                .from("test", "testalias")
+                .join("inner", "test2", "testalias2");
+
+        try {
+            // 1. try to insert another join clause without providing ON clause for the first join
+            sqlBuilder.join("inner", "test3", "testalias3");
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalStateException.class));
+        }
+
+        // 2. it should be okay if the first JOIN clause follows an ON clause
+        sqlBuilder
+                .on("testalias2.tid = test.id")
+                .join("inner", "test3", "testalias3");
+        String sql = sqlBuilder.getSQL();
+        assertEquals(
+                "SELECT a, b\n" +
+                "FROM test AS testalias\n" +
+                "inner JOIN test2 AS testalias2\n" +
+                "ON testalias2.tid = test.id\n" +
+                "inner JOIN test3 AS testalias3",
+                sql
+        );
     }
 
     @Test

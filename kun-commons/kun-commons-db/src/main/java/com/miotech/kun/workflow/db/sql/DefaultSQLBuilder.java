@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.db.sql;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
@@ -24,12 +25,7 @@ public class DefaultSQLBuilder implements SQLBuilder {
     private Map<String, List<String>> columnsMap;
     private String fromTable;
     private String fromTableAlias;
-    /*
-    private String joinType;
-    private String joinTable;
-    private String joinTableAlias;
-    private String onClause;
-    */
+
     private List<String> joinTypes = new ArrayList<>();
     private List<String> joinTables = new ArrayList<>();
     private List<String> joinTableAliases = new ArrayList<>();
@@ -122,6 +118,13 @@ public class DefaultSQLBuilder implements SQLBuilder {
 
     @Override
     public SQLBuilder join(String joinType, String tableName, String alias) {
+        // Before inserting next join clause,
+        // ensure that the last join clause should have an 'on' clause accompanied
+        Preconditions.checkState(
+                onClauses.size() == joinTables.size(),
+                "The last join clause should have an accompanied 'on' clause before adding another join clause"
+        );
+
         this.joinTypes.add(joinType);
         this.joinTables.add(tableName);
         this.joinTableAliases.add(alias);
@@ -302,27 +305,6 @@ public class DefaultSQLBuilder implements SQLBuilder {
             }
         }
 
-        // join clause
-        /*
-        if (StringUtils.isNotBlank(joinTable)) {
-            stringBuilder.append("\n");
-            if (StringUtils.isNotBlank(joinType)) {
-                stringBuilder.append(joinType).append(" ");
-            }
-            stringBuilder.append("JOIN ");
-            stringBuilder.append(joinTable);
-            if (StringUtils.isNotBlank(joinTableAlias)) {
-                stringBuilder.append(" AS ");
-                stringBuilder.append(joinTableAlias);
-            }
-
-            if (StringUtils.isNotBlank(onClause)) {
-                stringBuilder.append("\n");
-                stringBuilder.append("ON ");
-                stringBuilder.append(onClause);
-            }
-        }
-        */
         if (!joinTables.isEmpty()) {
             for (int i = 0; i < joinTables.size(); i += 1) {
                 stringBuilder.append("\n");
