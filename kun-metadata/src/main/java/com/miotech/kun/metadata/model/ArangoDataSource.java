@@ -3,18 +3,18 @@ package com.miotech.kun.metadata.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class ElasticSearchCluster extends Cluster{
+public class ArangoDataSource extends DataSource{
     final String dataStoreUrl;
     final String dataStoreUsername;
     final String dataStorePassword;
 
 
     @JsonCreator
-    public ElasticSearchCluster(@JsonProperty("clusterId") long clusterId,
+    public ArangoDataSource(@JsonProperty("clusterId") long clusterId,
                          @JsonProperty("dataStoreUrl") String dataStoreUrl,
                          @JsonProperty("dataStoreUsername") String dataStoreUsername,
                          @JsonProperty("dataStorePassword") String dataStorePassword) {
-        super(clusterId);
+        super(clusterId, Type.Arango);
         this.dataStoreUrl = dataStoreUrl;
         this.dataStoreUsername = dataStoreUsername;
         this.dataStorePassword = dataStorePassword;
@@ -34,53 +34,53 @@ public class ElasticSearchCluster extends Cluster{
 
     @Override
     public String toString() {
-        return "ElasticSearchCluster{" +
+        return "ArangoDataSource{" +
                 ", dataStoreUrl='" + dataStoreUrl + '\'' +
                 ", dataStoreUsername='" + dataStoreUsername + '\'' +
                 ", dataStorePassword='" + dataStorePassword + '\'' +
                 '}';
     }
 
-    public static ElasticSearchCluster.ElasticSearchClusterBuilder newBuilder() {
-        return new ElasticSearchCluster.ElasticSearchClusterBuilder();
+    public static ArangoDataSource.ArangoDataSourceBuilder newBuilder() {
+        return new ArangoDataSource.ArangoDataSourceBuilder();
     }
 
 
-    public static final class ElasticSearchClusterBuilder {
+    public static final class ArangoDataSourceBuilder {
         String dataStoreUrl;
         String dataStoreUsername;
         String dataStorePassword;
         private long clusterId;
 
-        private ElasticSearchClusterBuilder() {
+        private ArangoDataSourceBuilder() {
         }
 
-        public static ElasticSearchCluster.ElasticSearchClusterBuilder aElasticSearchCluster() {
-            return new ElasticSearchCluster.ElasticSearchClusterBuilder();
+        public static ArangoDataSource.ArangoDataSourceBuilder ArangoDataSource() {
+            return new ArangoDataSource.ArangoDataSourceBuilder();
         }
 
-        public ElasticSearchCluster.ElasticSearchClusterBuilder withDataStoreUrl(String dataStoreUrl) {
+        public ArangoDataSource.ArangoDataSourceBuilder withDataStoreUrl(String dataStoreUrl) {
             this.dataStoreUrl = dataStoreUrl;
             return this;
         }
 
-        public ElasticSearchCluster.ElasticSearchClusterBuilder withDataStoreUsername(String dataStoreUsername) {
+        public ArangoDataSource.ArangoDataSourceBuilder withDataStoreUsername(String dataStoreUsername) {
             this.dataStoreUsername = dataStoreUsername;
             return this;
         }
 
-        public ElasticSearchCluster.ElasticSearchClusterBuilder withDataStorePassword(String dataStorePassword) {
+        public ArangoDataSource.ArangoDataSourceBuilder withDataStorePassword(String dataStorePassword) {
             this.dataStorePassword = dataStorePassword;
             return this;
         }
 
-        public ElasticSearchCluster.ElasticSearchClusterBuilder withClusterId(long clusterId) {
+        public ArangoDataSource.ArangoDataSourceBuilder withClusterId(long clusterId) {
             this.clusterId = clusterId;
             return this;
         }
 
-        public ElasticSearchCluster build() {
-            return new ElasticSearchCluster(clusterId, dataStoreUrl, dataStoreUsername, dataStorePassword);
+        public ArangoDataSource build() {
+            return new ArangoDataSource(clusterId, dataStoreUrl, dataStoreUsername, dataStorePassword);
         }
     }
 }

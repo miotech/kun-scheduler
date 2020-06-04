@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.extract.impl.arango;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
-import com.miotech.kun.metadata.model.ArangoCluster;
+import com.miotech.kun.metadata.model.ArangoDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +14,7 @@ public class MioArangoClient {
     private ArangoDB client;
     private static Logger logger = LoggerFactory.getLogger(MioArangoClient.class);
 
-    public MioArangoClient(ArangoCluster cluster){
+    public MioArangoClient(ArangoDataSource cluster){
         this.client = new ArangoDB.Builder()
                 .host(cluster.getDataStoreUrl().split(":")[0], Integer.parseInt(cluster.getDataStoreUrl().split(":")[1]))
                 .user(cluster.getDataStoreUsername())

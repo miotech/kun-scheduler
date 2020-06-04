@@ -25,12 +25,12 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
     private static Logger logger = LoggerFactory.getLogger(ElasticSearchIndexExtractor.class);
 
     private String index;
-    private ElasticSearchCluster cluster;
+    private ElasticSearchDataSource cluster;
     private MioElasticSearchClient client;
 
 
-    public ElasticSearchIndexExtractor(ElasticSearchCluster cluster, String index) {
-        super(cluster);
+    public ElasticSearchIndexExtractor(ElasticSearchDataSource cluster, String index) {
+        super(cluster.getId());
         this.index = index;
         this.cluster = cluster;
         this.client = new MioElasticSearchClient(cluster);

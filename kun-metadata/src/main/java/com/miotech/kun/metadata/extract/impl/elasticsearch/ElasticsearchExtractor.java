@@ -3,7 +3,7 @@ package com.miotech.kun.metadata.extract.impl.elasticsearch;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.ElasticSearchCluster;
+import com.miotech.kun.metadata.model.ElasticSearchDataSource;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
 public class ElasticsearchExtractor implements Extractor {
     private static Logger logger = LoggerFactory.getLogger(ElasticsearchExtractor.class);
 
-    private ElasticSearchCluster cluster;
+    private ElasticSearchDataSource cluster;
     private MioElasticSearchClient client;
 
-    public ElasticsearchExtractor(ElasticSearchCluster cluster){
+    public ElasticsearchExtractor(ElasticSearchDataSource cluster){
         this.cluster = cluster;
         this.client = new MioElasticSearchClient(cluster);
     }
