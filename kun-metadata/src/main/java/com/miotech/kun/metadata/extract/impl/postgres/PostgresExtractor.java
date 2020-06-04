@@ -10,7 +10,7 @@ import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.extract.impl.hive.HiveExtractor;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.PostgresCluster;
+import com.miotech.kun.metadata.model.PostgresDataSource;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +25,7 @@ import java.util.List;
 public class PostgresExtractor implements Extractor {
     private static Logger logger = LoggerFactory.getLogger(HiveExtractor.class);
 
-    private final PostgresCluster cluster;
+    private final PostgresDataSource dataSource;
 
     private static final List<String> filterDatabase;
 
@@ -33,22 +33,22 @@ public class PostgresExtractor implements Extractor {
         filterDatabase = ImmutableList.of("postgres", "agens", "mdp_test", "northwind");
     }
 
-    public PostgresExtractor(PostgresCluster cluster) {
-        Preconditions.checkNotNull(cluster, "cluster should not be null.");
-        this.cluster = cluster;
+    public PostgresExtractor(PostgresDataSource dataSource) {
+        Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
+        this.dataSource = dataSource;
     }
 
     @Override
     public Iterator<Dataset> extract() {
-        logger.debug("PostgresExtractor extract start. cluster: {}", JSONUtils.toJsonString(cluster));
+        logger.debug("PostgresExtractor extract start. dataSource: {}", JSONUtils.toJsonString(dataSource));
         List<String> databases = Lists.newArrayList();
 
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
-            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, cluster.getUrl(),
-                    cluster.getUsername(), cluster.getPassword());
+            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, dataSource.getUrl(),
+                    dataSource.getUsername(), dataSource.getPassword());
             String scanDatabase = "SELECT datname FROM pg_database WHERE datistemplate = FALSE";
             statement = connection.prepareStatement(scanDatabase);
             resultSet = statement.executeQuery();
@@ -69,7 +69,7 @@ public class PostgresExtractor implements Extractor {
         }
 
         logger.debug("PostgresExtractor extract end. databases: {}", JSONUtils.toJsonString(databases));
-        return Iterators.concat(databases.stream().map((databasesName) -> new PostgresDatabaseExtractor(cluster, databasesName).extract()).iterator());
+        return Iterators.concat(databases.stream().map((databasesName) -> new PostgresDatabaseExtractor(dataSource, databasesName).extract()).iterator());
     }
 
 }

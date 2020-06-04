@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.schedule;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
-import com.miotech.kun.metadata.extract.impl.hive.HiveExtractor;
+import com.miotech.kun.metadata.extract.impl.ConfigurableExtractor;
 import com.miotech.kun.metadata.extract.impl.mongo.MongoExtractor;
 import com.miotech.kun.metadata.extract.impl.postgres.PostgresExtractor;
 import com.miotech.kun.metadata.load.Loader;
@@ -51,21 +51,20 @@ public class DataBuilder {
         Preconditions.checkArgument(clusterId > 0L, "clusterId must be a positive long, clusterId: %s", clusterId);
 
         String sql = "SELECT kmc.id, kmct.name, kmc.connection_info FROM kun_mt_cluster kmc join kun_mt_cluster_type kmct on kmc.type_id = kmct.id WHERE kmc.id = ?";
-        Cluster cluster = operator.fetchOne(sql, rs -> buildCluster(rs), clusterId);
-        build(cluster);
+        DataSource dataSource = operator.fetchOne(sql, rs -> buildDataSource(rs), clusterId);
+        build(dataSource);
     }
 
-    private void build(Cluster cluster) {
-        Preconditions.checkNotNull(cluster, "cluster should not be null.");
-
+    private void build(DataSource dataSource) {
+        Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
         try {
             Iterator<Dataset> datasetIterator = null;
-            if (cluster instanceof HiveCluster) {
-                datasetIterator = new HiveExtractor((HiveCluster) cluster).extract();
-            } else if (cluster instanceof PostgresCluster) {
-                datasetIterator = new PostgresExtractor((PostgresCluster) cluster).extract();
-            } else if (cluster instanceof MongoCluster) {
-                datasetIterator = new MongoExtractor((MongoCluster) cluster).extract();
+            if (dataSource instanceof ConfigurableDataSource) {
+                datasetIterator = new ConfigurableExtractor((ConfigurableDataSource) dataSource).extract();
+            } else if (dataSource instanceof PostgresDataSource) {
+                datasetIterator = new PostgresExtractor((PostgresDataSource) dataSource).extract();
+            } else if (dataSource instanceof MongoDataSource) {
+                datasetIterator = new MongoExtractor((MongoDataSource) dataSource).extract();
             }
             // TODO add others Extractor
 
@@ -82,12 +81,13 @@ public class DataBuilder {
         } catch (Exception e) {
             logger.error("start etl error: ", e);
         }
+
     }
 
     public void buildAll() {
-        String sql = "SELECT kmc.id, kmct.name, kmc.connection_info FROM kun_mt_cluster kmc join kun_mt_cluster_type kmct on kmc.type_id = kmct.id";
-        List<Cluster> clusters = operator.fetchAll(sql, rs -> buildCluster(rs));
-        clusters.stream().forEach(cluster -> build(cluster));
+        String sql = "SELECT kmc.id, kmct.name, kmc.connection_info FROM kun_mt_cluster kmc JOIN kun_mt_cluster_type kmct ON kmc.type_id = kmct.id";
+        List<DataSource> dataSources = operator.fetchAll(sql, rs -> buildDataSource(rs));
+        dataSources.stream().forEach(dataSource -> build(dataSource));
     }
 
     public void scheduleAtRate(long initialDelay, long period, TimeUnit unit) {
@@ -99,33 +99,30 @@ public class DataBuilder {
         }
     }
 
-    private Cluster buildCluster(ResultSet resultSet) throws SQLException {
+    private DataSource buildDataSource(ResultSet resultSet) throws SQLException {
         long id = resultSet.getLong(1);
-        String type = resultSet.getString(2);
+        DataSource.Type type = DataSource.Type.valueOf(resultSet.getString(2));
+
         String connStr = resultSet.getString(3);
         ClusterConnection connection = JSONUtils.jsonToObject(connStr, ClusterConnection.class);
 
-        switch (type.toLowerCase()) {
-            case "hive":
-                HiveCluster.Builder hiveClusterBuilder = HiveCluster.newBuilder();
-                hiveClusterBuilder.withClusterId(id)
-                        .withDataStoreUrl(connection.getDataStoreUrl())
-                        .withDataStoreUsername(connection.getDataStoreUsername())
-                        .withDataStorePassword(connection.getDataStorePassword())
-                        .withMetaStoreUrl(connection.getMetaStoreUrl())
-                        .withMetaStoreUsername(connection.getMetaStoreUsername())
-                        .withMetaStorePassword(connection.getMetaStorePassword());
-                return hiveClusterBuilder.build();
-            case "postgres":
-                PostgresCluster.Builder postgresClusterBuilder = PostgresCluster.newBuilder();
-                postgresClusterBuilder.withClusterId(id)
+        switch (type) {
+            case Configurable:
+                ConfigurableDataSource.Builder configurableDataSourceBuilder = ConfigurableDataSource.newBuilder();
+                configurableDataSourceBuilder.withId(id)
+                        .withCatalog(convertToCatalog(connection))
+                        .withQueryEngine(convertToQueryEngine(connection));
+                return configurableDataSourceBuilder.build();
+            case Postgres:
+                PostgresDataSource.Builder postgresClusterBuilder = PostgresDataSource.newBuilder();
+                postgresClusterBuilder.withId(id)
                         .withUrl(connection.getDataStoreUrl())
                         .withUsername(connection.getDataStoreUsername())
                         .withPassword(connection.getDataStorePassword());
                 return postgresClusterBuilder.build();
-            case "mongo":
-                MongoCluster.Builder mongoClusterBuilder = MongoCluster.newBuilder();
-                mongoClusterBuilder.withClusterId(id)
+            case Mongo:
+                MongoDataSource.Builder mongoClusterBuilder = MongoDataSource.newBuilder();
+                mongoClusterBuilder.withId(id)
                         .withUrl(connection.getDataStoreUrl())
                         .withUsername(connection.getDataStoreUsername())
                         .withPassword(connection.getDataStorePassword());
@@ -133,7 +130,67 @@ public class DataBuilder {
             //TODO add other cluster builder
             default:
                 logger.error("invalid cluster type: {}", type);
-                throw new RuntimeException("invalid cluster type: " + type);
+                throw new RuntimeException("Invalid cluster type: " + type);
+        }
+    }
+
+    private QueryEngine convertToQueryEngine(ClusterConnection connection) {
+        String url = connection.getDataStoreUrl();
+        String username = connection.getDataStoreUsername();
+        String password = connection.getDataStorePassword();
+
+        QueryEngine.Type queryEngineType = parseQueryEngineTypeFromUrl(url);
+        switch (queryEngineType) {
+            case Athena:
+                AthenaQueryEngine.Builder athenaQueryEngineBuilder = AthenaQueryEngine.newBuilder();
+                athenaQueryEngineBuilder.withUrl(url).withUsername(username).withPassword(password);
+                return athenaQueryEngineBuilder.build();
+            default:
+                throw new IllegalArgumentException("Invalid QueryEngine.Type: " + queryEngineType);
+        }
+
+    }
+
+    private QueryEngine.Type parseQueryEngineTypeFromUrl(String url) {
+        String[] infos = url.split(":");
+        if (infos.length <= 1) {
+            throw new RuntimeException("Invalid dataStoreUrl: " + url);
+        }
+
+        switch (infos[1]) {
+            case "awsathena":
+                return QueryEngine.Type.Athena;
+            default:
+                throw new IllegalArgumentException("Unsupported data source type:" + infos[1]);
+        }
+    }
+
+    private Catalog convertToCatalog(ClusterConnection connection) {
+        String url = connection.getMetaStoreUrl();
+        String username = connection.getMetaStoreUsername();
+        String password = connection.getMetaStorePassword();
+
+        Catalog.Type catalogType = parseCatalogTypeFromUrl(url);
+        switch (catalogType) {
+            case Glue:
+                GlueCatalog.Builder glueCatalogBuilder = GlueCatalog.newBuilder();
+                glueCatalogBuilder.withRegion(url).withAccessKey(username).withSecretKey(password);
+                return glueCatalogBuilder.build();
+            case MetaStore:
+                MetaStoreCatalog.Builder metaStoreCatalogBuilder = MetaStoreCatalog.newBuilder();
+                metaStoreCatalogBuilder.withUrl(url).withUsername(username).withPassword(password);
+                return metaStoreCatalogBuilder.build();
+            default:
+                throw new IllegalArgumentException("Invalid Catalog.Type: " + catalogType);
+        }
+
+    }
+
+    private Catalog.Type parseCatalogTypeFromUrl(String url) {
+        if (url.startsWith("jdbc")) {
+            return Catalog.Type.MetaStore;
+        } else {
+            return Catalog.Type.Glue;
         }
     }
 

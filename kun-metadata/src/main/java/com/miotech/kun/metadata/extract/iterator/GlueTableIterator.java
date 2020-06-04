@@ -6,60 +6,75 @@ import com.amazonaws.services.glue.model.SearchTablesResult;
 import com.amazonaws.services.glue.model.Table;
 import com.google.common.collect.Lists;
 import com.miotech.kun.metadata.client.GlueClient;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 
 import java.util.Iterator;
 import java.util.List;
 
-public class GlueTableIterator implements Iterator<List<Table>> {
+public class GlueTableIterator implements Iterator<Table> {
+
+    private final String accessKey;
+
+    private final String secretKey;
+
+    private final String region;
+
+    private List<Table> tables = Lists.newArrayList();
 
     private String nextToken;
 
-    private String database;
+    private int cursor;
 
-    private String accessKey;
-
-    private String secretKey;
-
-    private String region;
-
-    private boolean initFlag = true;
-
-    public GlueTableIterator(String database, String accessKey, String secretKey, String region) {
-        this.database = database;
+    public GlueTableIterator(String accessKey, String secretKey, String region) {
         this.accessKey = accessKey;
         this.secretKey = secretKey;
         this.region = region;
+        this.nextToken = searchTables();
     }
 
     @Override
     public boolean hasNext() {
-        return initFlag ? true : nextToken != null;
+        if (StringUtils.isBlank(nextToken)) {
+            return cursor != tables.size();
+        }
+
+        if (cursor < tables.size()) {
+            return true;
+        }
+
+        nextToken = searchTables();
+        return !tables.isEmpty();
     }
 
     @Override
-    public List<Table> next() {
-        List<Table> tables = Lists.newArrayList();
-        AWSGlue awsGlueClient = GlueClient.getAWSGlue(accessKey,
-                secretKey, region);
+    public Table next() {
+        Table resultTable = tables.get(cursor);
+        cursor += 1;
+        return resultTable;
+    }
+
+    private String searchTables() {
+        AWSGlue awsGlueClient = GlueClient.getAWSGlue(accessKey, secretKey, region);
         /* Filter not available, because Comparator can only apply to time fields
            reference: https://docs.aws.amazon.com/zh_cn/glue/latest/webapi/API_SearchTables.html */
-        SearchTablesRequest searchTablesRequest = new SearchTablesRequest();
-        searchTablesRequest.withNextToken(nextToken);
-
-        SearchTablesResult searchTablesResult = awsGlueClient.searchTables(searchTablesRequest);
+        SearchTablesResult searchTablesResult = awsGlueClient.searchTables(new SearchTablesRequest().withNextToken(nextToken));
         if (searchTablesResult == null) {
-            return tables;
+            throw new RuntimeException("SearchTablesResult should not be null");
         }
 
-        if (searchTablesResult.getTableList() != null) {
-            for (Table table : searchTablesResult.getTableList()) {
-                if (database.equals(table.getDatabaseName())) {
-                    tables.add(table);
-                }
-            }
+        fillTables(searchTablesResult);
+
+        // reset cursor
+        cursor = 0;
+        return searchTablesResult.getNextToken();
+    }
+
+    private void fillTables(SearchTablesResult searchTablesResult) {
+        if (CollectionUtils.isNotEmpty(searchTablesResult.getTableList())) {
+            tables = searchTablesResult.getTableList();
+        } else {
+            tables = Lists.newArrayList();
         }
-        nextToken = searchTablesResult.getNextToken();
-        initFlag = false;
-        return tables;
     }
 }

@@ -17,10 +17,10 @@ import java.util.List;
 public abstract class ExtractorTemplate implements Extractor {
     private static final Logger logger = LoggerFactory.getLogger(ExtractorTemplate.class);
 
-    protected final Cluster cluster;
+    private final long clusterId;
 
-    public ExtractorTemplate(Cluster cluster) {
-        this.cluster = cluster;
+    public ExtractorTemplate(long clusterId) {
+        this.clusterId = clusterId;
     }
 
     protected abstract List<DatasetField> getSchema();
@@ -32,10 +32,6 @@ public abstract class ExtractorTemplate implements Extractor {
     protected abstract DataStore getDataStore();
 
     protected abstract String getName();
-
-    protected long getClusterId() {
-        return cluster.getClusterId();
-    }
 
     @Override
     public Iterator<Dataset> extract() {
@@ -62,7 +58,7 @@ public abstract class ExtractorTemplate implements Extractor {
             DataStore dataStore = getDataStore();
             logger.debug("ExtractorTemplate extract getDataStore: {}", DataStoreJsonUtil.toJson(dataStore));
             datasetBuilder.withName(getName())
-                    .withClusterId(getClusterId())
+                    .withClusterId(clusterId)
                     .withFields(fields)
                     .withFieldStats(fieldStats)
                     .withDatasetStat(tableStat)

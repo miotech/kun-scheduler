@@ -1,6 +1,6 @@
 package com.miotech.kun.metadata.model;
 
-public class PostgresCluster extends Cluster {
+public class MetaStoreCatalog extends Catalog {
 
     private final String url;
 
@@ -8,8 +8,8 @@ public class PostgresCluster extends Cluster {
 
     private final String password;
 
-    public PostgresCluster(long clusterId, String url, String username, String password) {
-        super(clusterId);
+    public MetaStoreCatalog(String url, String username, String password) {
+        super(Type.MetaStore);
         this.url = url;
         this.username = username;
         this.password = password;
@@ -29,7 +29,7 @@ public class PostgresCluster extends Cluster {
 
     @Override
     public String toString() {
-        return "PostgresCluster{" +
+        return "MetaStoreCatalog{" +
                 "url='" + url + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
@@ -41,17 +41,11 @@ public class PostgresCluster extends Cluster {
     }
 
     public static final class Builder {
-        private long clusterId;
         private String url;
         private String username;
         private String password;
 
         private Builder() {
-        }
-
-        public Builder withClusterId(long clusterId) {
-            this.clusterId = clusterId;
-            return this;
         }
 
         public Builder withUrl(String url) {
@@ -69,8 +63,8 @@ public class PostgresCluster extends Cluster {
             return this;
         }
 
-        public PostgresCluster build() {
-            return new PostgresCluster(clusterId, url, username, password);
+        public MetaStoreCatalog build() {
+            return new MetaStoreCatalog(url, username, password);
         }
     }
 }

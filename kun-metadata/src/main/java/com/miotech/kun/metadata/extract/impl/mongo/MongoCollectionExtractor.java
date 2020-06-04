@@ -13,7 +13,7 @@ import com.miotech.kun.metadata.extract.tool.FieldFlatUtil;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldStat;
 import com.miotech.kun.metadata.model.DatasetStat;
-import com.miotech.kun.metadata.model.MongoCluster;
+import com.miotech.kun.metadata.model.MongoDataSource;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.MongoDataStore;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -31,7 +31,7 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
     private static Logger logger = LoggerFactory.getLogger(MongoCollectionExtractor.class);
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    private final MongoCluster mongoCluster;
+    private final MongoDataSource dataSource;
 
     private final String database;
 
@@ -39,20 +39,20 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
 
     private final MongoClient client;
 
-    public MongoCollectionExtractor(MongoCluster mongoCluster, String database, String collection) {
-        super(mongoCluster);
-        Preconditions.checkNotNull(mongoCluster, "mongoCluster should not be null.");
-        this.mongoCluster = mongoCluster;
+    public MongoCollectionExtractor(MongoDataSource dataSource, String database, String collection) {
+        super(dataSource.getId());
+        Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
+        this.dataSource = dataSource;
         this.database = database;
         this.collection = collection;
-        this.client = new MongoClient(new MongoClientURI(mongoCluster.getUrl()));
+        this.client = new MongoClient(new MongoClientURI(dataSource.getUrl()));
     }
 
     @Override
     @VisibleForTesting
     public List<DatasetField> getSchema() {
-        logger.debug("MongoCollectionExtractor getSchema start. cluster: {}, database: {}, collection: {}",
-                JSONUtils.toJsonString(cluster), database, collection);
+        logger.debug("MongoCollectionExtractor getSchema start. dataSource: {}, database: {}, collection: {}",
+                JSONUtils.toJsonString(dataSource), database, collection);
         List<DatasetField> fields = Lists.newArrayList();
 
         MongoCollection<Document> documents = client.getDatabase(database).getCollection(collection);
@@ -75,8 +75,8 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
     @VisibleForTesting
     public DatasetStat getTableStats() {
         try {
-            logger.debug("MongoCollectionExtractor getTableStats start. cluster: {}, database: {}, collection: {}",
-                    JSONUtils.toJsonString(cluster), database, collection);
+            logger.debug("MongoCollectionExtractor getTableStats start. dataSource: {}, database: {}, collection: {}",
+                    JSONUtils.toJsonString(dataSource), database, collection);
             long count = client.getDatabase(database).getCollection(collection).count();
 
             DatasetStat datasetStat = new DatasetStat(count, LocalDate.now());
@@ -92,7 +92,7 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
 
     @Override
     protected DataStore getDataStore() {
-        return new MongoDataStore(mongoCluster.getUrl(), database, collection);
+        return new MongoDataStore(dataSource.getUrl(), database, collection);
     }
 
     @Override
@@ -100,8 +100,4 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
         return DatasetNameGenerator.generateDatasetName(DatabaseType.MONGO, collection);
     }
 
-    @Override
-    protected long getClusterId() {
-        return cluster.getClusterId();
-    }
 }

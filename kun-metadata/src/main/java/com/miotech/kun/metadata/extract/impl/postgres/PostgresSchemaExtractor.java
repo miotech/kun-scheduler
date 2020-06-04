@@ -9,13 +9,15 @@ import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.PostgresCluster;
+import com.miotech.kun.metadata.model.PostgresDataSource;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.*;
-import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -23,13 +25,13 @@ public class PostgresSchemaExtractor implements Extractor {
 
     private static Logger logger = LoggerFactory.getLogger(PostgresSchemaExtractor.class);
 
-    private final PostgresCluster cluster;
+    private final PostgresDataSource dataSource;
     private final String database;
     private final String schema;
 
-    public PostgresSchemaExtractor(PostgresCluster cluster, String database, String schema) {
-        Preconditions.checkNotNull(cluster, "cluster should not be null.");
-        this.cluster = cluster;
+    public PostgresSchemaExtractor(PostgresDataSource dataSource, String database, String schema) {
+        Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
+        this.dataSource = dataSource;
         this.database = database;
         this.schema = schema;
     }
@@ -42,10 +44,10 @@ public class PostgresSchemaExtractor implements Extractor {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
-            logger.debug("PostgresSchemaExtractor extract start. cluster: {}, database: {}, schema: {}",
-                JSONUtils.toJsonString(cluster), database, schema);
-            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useDatabase(cluster.getUrl(), database),
-                    cluster.getUsername(), cluster.getPassword());
+            logger.debug("PostgresSchemaExtractor extract start. dataSource: {}, database: {}, schema: {}",
+                JSONUtils.toJsonString(dataSource), database, schema);
+            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useDatabase(dataSource.getUrl(), database),
+                    dataSource.getUsername(), dataSource.getPassword());
             String scanDatabase = "SELECT tablename FROM pg_tables WHERE schemaname = ?";
             statement = connection.prepareStatement(scanDatabase);
             statement.setString(1, schema);
@@ -65,6 +67,6 @@ public class PostgresSchemaExtractor implements Extractor {
         }
 
         logger.debug("PostgresSchemaExtractor extract end. tables: {}", JSONUtils.toJsonString(tables));
-        return Iterators.concat(tables.stream().map((table) -> new PostgresTableExtractor(cluster, database, schema, table).extract()).iterator());
+        return Iterators.concat(tables.stream().map((table) -> new PostgresTableExtractor(dataSource, database, schema, table).extract()).iterator());
     }
 }

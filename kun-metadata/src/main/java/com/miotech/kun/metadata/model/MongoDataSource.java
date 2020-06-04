@@ -1,6 +1,6 @@
 package com.miotech.kun.metadata.model;
 
-public class MongoCluster extends Cluster {
+public class MongoDataSource extends DataSource {
 
     private final String url;
 
@@ -8,8 +8,8 @@ public class MongoCluster extends Cluster {
 
     private final String password;
 
-    public MongoCluster(long clusterId, String url, String username, String password) {
-        super(clusterId);
+    public MongoDataSource(long id, String url, String username, String password) {
+        super(id, Type.Mongo);
         this.url = url;
         this.username = username;
         this.password = password;
@@ -27,30 +27,17 @@ public class MongoCluster extends Cluster {
         return password;
     }
 
-    public static MongoCluster.Builder newBuilder() {
-        return new MongoCluster.Builder();
-    }
-
-    @Override
-    public String toString() {
-        return "MongoCluster{" +
-                "url='" + url + '\'' +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                '}';
+    public static Builder newBuilder() {
+        return new Builder();
     }
 
     public static final class Builder {
         private String url;
         private String username;
         private String password;
-        private long clusterId;
+        private long id;
 
         private Builder() {
-        }
-
-        public static Builder aMongoCluster() {
-            return new Builder();
         }
 
         public Builder withUrl(String url) {
@@ -68,13 +55,13 @@ public class MongoCluster extends Cluster {
             return this;
         }
 
-        public Builder withClusterId(long clusterId) {
-            this.clusterId = clusterId;
+        public Builder withId(long id) {
+            this.id = id;
             return this;
         }
 
-        public MongoCluster build() {
-            return new MongoCluster(clusterId, url, username, password);
+        public MongoDataSource build() {
+            return new MongoDataSource(id, url, username, password);
         }
     }
 }

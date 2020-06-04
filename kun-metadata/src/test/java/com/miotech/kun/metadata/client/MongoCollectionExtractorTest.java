@@ -3,19 +3,15 @@ package com.miotech.kun.metadata.client;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.metadata.extract.impl.mongo.MongoCollectionExtractor;
-import com.miotech.kun.metadata.extract.impl.mongo.MongoExtractor;
-import com.miotech.kun.metadata.load.impl.PrintLoader;
-import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.DatasetField;
 import com.miotech.kun.metadata.model.DatasetFieldType;
-import com.miotech.kun.metadata.model.MongoCluster;
+import com.miotech.kun.metadata.model.MongoDataSource;
 import com.mongodb.MongoClient;
 import org.bson.Document;
 import org.joor.Reflect;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.util.Iterator;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -38,9 +34,9 @@ public class MongoCollectionExtractorTest {
         MongoClient mockClient = mock(MongoClient.class, Mockito.RETURNS_DEEP_STUBS);
         when(mockClient.getDatabase("unden").getCollection("account").find().first()).thenReturn(document);
 
-        MongoCluster mongoCluster = new MongoCluster(1L, "mongodb://127.0.0.1:27017", "", "");
+        MongoDataSource mongoDataSource = new MongoDataSource(1L, "mongodb://127.0.0.1:27017", "", "");
 
-        MongoCollectionExtractor extractor = new MongoCollectionExtractor(mongoCluster, "unden", "account");
+        MongoCollectionExtractor extractor = new MongoCollectionExtractor(mongoDataSource, "unden", "account");
         Reflect.on(extractor).set("client", mockClient);
 
         List<DatasetField> fields = extractor.getSchema();
