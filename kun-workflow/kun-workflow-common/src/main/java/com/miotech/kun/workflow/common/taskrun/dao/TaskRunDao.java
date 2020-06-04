@@ -177,7 +177,6 @@ public class TaskRunDao {
         return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(true), taskRunId);
     }
 
-    // TODO: return integrated TaskAttempt object with all properties of `taskRun`
     public Optional<TaskAttempt> fetchAttemptById(Long attemptId) {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
@@ -300,8 +299,6 @@ public class TaskRunDao {
                 .autoAliasColumns()
                 .orderBy(orderClause)
                 .getSQL();
-
-        logger.debug("fetchLatestTaskAttempt query SQL = \n{}", sql);
 
         return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(false), taskRunIds.toArray());
     }

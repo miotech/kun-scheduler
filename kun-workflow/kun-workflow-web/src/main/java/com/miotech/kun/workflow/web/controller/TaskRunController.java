@@ -19,11 +19,7 @@ public class TaskRunController {
     @RouteMapping(url = "/taskruns/{taskRunId}", method = "GET")
     public TaskRunVO getTaskRunDetail(@RouteVariable long taskRunId) {
         Optional<TaskRunVO> voOptional = taskRunService.getTaskRunDetail(taskRunId);
-        if (voOptional.isPresent()) {
-            return voOptional.get();
-        } else {
-            throw new EntityNotFoundException();
-        }
+        return voOptional.orElseThrow(EntityNotFoundException::new);
     }
 
     @RouteMapping(url = "/taskruns", method = "GET")
