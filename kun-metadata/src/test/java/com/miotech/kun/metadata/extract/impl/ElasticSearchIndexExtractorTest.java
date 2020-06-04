@@ -14,7 +14,7 @@ public class ElasticSearchIndexExtractorTest {
 
     @Before
     public void setUp() throws Exception {
-        CommonCluster cluster = CommonCluster.newBuilder()
+        ElasticSearchCluster cluster = ElasticSearchCluster.newBuilder()
                 .withDataStoreUrl("<es_ip>:11005")
                 .withDataStoreUsername("")
                 .withDataStorePassword("")

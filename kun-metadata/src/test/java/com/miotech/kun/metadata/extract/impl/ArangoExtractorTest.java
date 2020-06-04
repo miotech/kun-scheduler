@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.extract.impl;
 
 import com.miotech.kun.metadata.extract.impl.arango.ArangoExtractor;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.CommonCluster;
+import com.miotech.kun.metadata.model.ArangoCluster;
 import org.junit.Test;
 
 import java.util.Iterator;
@@ -11,7 +11,7 @@ public class ArangoExtractorTest {
 
     @Test
     public void extract() {
-        CommonCluster cluster = CommonCluster.newBuilder()
+        ArangoCluster cluster = ArangoCluster.newBuilder()
                 .withDataStoreUrl("10.0.2.162:8529")
                 .withDataStoreUsername("root")
                 .withDataStorePassword("d@ta")

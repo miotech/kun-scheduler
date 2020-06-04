@@ -25,11 +25,11 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
     private static Logger logger = LoggerFactory.getLogger(ElasticSearchIndexExtractor.class);
 
     private String index;
-    private CommonCluster cluster;
+    private ElasticSearchCluster cluster;
     private MioElasticSearchClient client;
 
 
-    public ElasticSearchIndexExtractor(CommonCluster cluster, String index) {
+    public ElasticSearchIndexExtractor(ElasticSearchCluster cluster, String index) {
         super(cluster);
         this.index = index;
         this.cluster = cluster;
@@ -73,8 +73,10 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
                             break;
                         case "BOOLEAN":
                             fieldType = DatasetFieldType.Type.BOOLEAN;
+                            break;
                         case "TIMESTAMP":
                             fieldType = DatasetFieldType.Type.DATETIME;
+                            break;
                         default:
                             fieldType = DatasetFieldType.Type.UNKNOW;
                     }
@@ -100,6 +102,7 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
         Long count = client.count(countRequest);
 
         DatasetFieldStat stat = DatasetFieldStat.newBuilder()
+                .withName(datasetField.getName())
                 .withNonnullCount(count)
                 .withStatDate(LocalDate.now()).build();
 

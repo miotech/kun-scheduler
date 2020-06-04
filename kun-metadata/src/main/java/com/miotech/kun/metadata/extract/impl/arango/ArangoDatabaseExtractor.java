@@ -3,18 +3,18 @@ package com.miotech.kun.metadata.extract.impl.arango;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.extract.Extractor;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.CommonCluster;
+import com.miotech.kun.metadata.model.ArangoCluster;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 
 public class ArangoDatabaseExtractor implements Extractor {
 
-    private CommonCluster cluster;
+    private ArangoCluster cluster;
     private String database;
     private MioArangoClient client;
 
-    public ArangoDatabaseExtractor(CommonCluster cluster, String database){
+    public ArangoDatabaseExtractor(ArangoCluster cluster, String database){
         this.cluster = cluster;
         this.database = database;
         this.client = new MioArangoClient(cluster);
