@@ -15,6 +15,7 @@ import org.junit.Test;
 import javax.inject.Inject;
 import java.time.*;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -224,6 +225,12 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertTrue(attemptOptional.isPresent());
         TaskAttempt attempt = attemptOptional.get();
         TaskAttempt baselineModel = MockTaskRunFactory.createTaskAttempt(3L, sampleTaskRun, 3, mockClock);
-        assertThat(attempt, samePropertyValuesAs(baselineModel, "startAt", "endAt"));
+        assertThat(attempt, samePropertyValuesAs(baselineModel, "startAt", "endAt", "taskRun"));
+        // TaskRun instance should be nested inside
+        assertTrue(Objects.nonNull(attempt.getTaskRun()));
+        assertThat(attempt.getTaskRun(), samePropertyValuesAs(sampleTaskRun, "startAt", "endAt"));
+        // And Task model object should be nested inside that TaskRun object
+        assertTrue(Objects.nonNull(attempt.getTaskRun().getTask()));
+        assertThat(attempt.getTaskRun().getTask(), samePropertyValuesAs(task));
     }
 }

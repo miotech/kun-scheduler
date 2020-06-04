@@ -25,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -183,16 +182,20 @@ public class TaskRunDao {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
         columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
+        columnsMap.put(TaskDao.TASK_MODEL_NAME, TaskDao.getTaskCols());
 
         String sql = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_ATTEMPT_TABLE_NAME, TASK_ATTEMPT_MODEL_NAME)
                 .join("INNER", TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".id = " + TASK_ATTEMPT_MODEL_NAME + ".task_run_id")
+                .join("INNER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
+                .on(TaskDao.TASK_MODEL_NAME + ".id = " + TASK_RUN_MODEL_NAME + ".task_id")
                 .autoAliasColumns()
                 .where(TASK_ATTEMPT_MODEL_NAME + ".id = ?")
                 .getSQL();
 
-        return Optional.ofNullable(dbOperator.fetchOne(sql, TaskAttemptMapper.INSTANCE, attemptId));
+        return Optional.ofNullable(dbOperator.fetchOne(sql, new TaskAttemptMapper(true), attemptId));
     }
 
     public TaskAttempt createAttempt(TaskAttempt taskAttempt) {
@@ -328,18 +331,34 @@ public class TaskRunDao {
     }
 
     private static class TaskAttemptMapper implements ResultSetMapper<TaskAttempt> {
-        public static TaskRunDao.TaskAttemptMapper INSTANCE = new TaskRunDao.TaskAttemptMapper();
+        private boolean withColumnAliased;
+
+        public TaskAttemptMapper(boolean withColumnAliased) {
+            this.withColumnAliased = withColumnAliased;
+        }
 
         @Override
         public TaskAttempt map(ResultSet rs) throws SQLException {
-            return TaskAttempt.newBuilder()
-                    .withId(rs.getLong(TASK_ATTEMPT_MODEL_NAME + "_id"))
-                    .withStatus(TaskRunStatus.resolve(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_status")))
-                    .withAttempt(rs.getInt(TASK_ATTEMPT_MODEL_NAME + "_attempt"))
-                    .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_ATTEMPT_MODEL_NAME + "_start_at")))
-                    .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_ATTEMPT_MODEL_NAME + "_end_at")))
-                    .withLogPath(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_log_path"))
-                    .build();
+            if (withColumnAliased) {
+                return TaskAttempt.newBuilder()
+                        .withId(rs.getLong(TASK_ATTEMPT_MODEL_NAME + "_id"))
+                        .withStatus(TaskRunStatus.resolve(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_status")))
+                        .withTaskRun(TaskRunMapper.INSTANCE.map(rs))
+                        .withAttempt(rs.getInt(TASK_ATTEMPT_MODEL_NAME + "_attempt"))
+                        .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_ATTEMPT_MODEL_NAME + "_start_at")))
+                        .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_ATTEMPT_MODEL_NAME + "_end_at")))
+                        .withLogPath(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_log_path"))
+                        .build();
+            } else {
+                return TaskAttempt.newBuilder()
+                        .withId(rs.getLong("id"))
+                        .withStatus(TaskRunStatus.resolve(rs.getString("status")))
+                        .withAttempt(rs.getInt("attempt"))
+                        .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("start_at")))
+                        .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("end_at")))
+                        .withLogPath(rs.getString("log_path"))
+                        .build();
+            }
         }
     }
 
