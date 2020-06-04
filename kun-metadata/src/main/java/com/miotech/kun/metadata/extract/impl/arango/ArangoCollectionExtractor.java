@@ -15,12 +15,12 @@ import java.util.List;
 
 public class ArangoCollectionExtractor extends ExtractorTemplate {
 
-    private CommonCluster cluster;
+    private ArangoCluster cluster;
     private String dbName;
     private String collection;
     private MioArangoClient client;
 
-    public ArangoCollectionExtractor(CommonCluster cluster, String dbNAme, String collection){
+    public ArangoCollectionExtractor(ArangoCluster cluster, String dbNAme, String collection){
         super(cluster);
         this.cluster = cluster;
         this.dbName = dbNAme;
@@ -32,6 +32,8 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
     public List<DatasetField> getSchema(){
         String query = String.format("FOR c IN %s LIMIT 10 RETURN c", collection);
         String doc = client.getDoc(dbName, query);
+        if(doc == null)
+            return new ArrayList<DatasetField>();
         JsonNode json = null;
         try {
             json = JSONUtils.stringToJson(doc);
@@ -47,6 +49,7 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
         Integer count = client.count(dbName, query);
 
         DatasetFieldStat stat = DatasetFieldStat.newBuilder()
+                .withName(datasetField.getName())
                 .withNonnullCount(count)
                 .withStatDate(LocalDate.now())
                 .build();

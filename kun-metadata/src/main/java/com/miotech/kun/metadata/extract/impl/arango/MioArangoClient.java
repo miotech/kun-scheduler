@@ -4,7 +4,7 @@ import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.metadata.model.CommonCluster;
+import com.miotech.kun.metadata.model.ArangoCluster;
 
 import java.util.Collection;
 import java.util.stream.Collectors;
@@ -15,7 +15,7 @@ public class MioArangoClient {
     private ArangoDB client;
 
     @Inject
-    public MioArangoClient(CommonCluster cluster){
+    public MioArangoClient(ArangoCluster cluster){
         this.client = new ArangoDB.Builder()
                 .host(cluster.getDataStoreUrl().split(":")[0], Integer.parseInt(cluster.getDataStoreUrl().split(":")[1]))
                 .user(cluster.getDataStoreUsername())
@@ -30,7 +30,7 @@ public class MioArangoClient {
 
     public String getDoc(String dbName, String query){
         ArangoCursor<String> cursor = client.db(dbName).query(query, String.class);
-        return cursor.next();
+        return cursor.hasNext() ? cursor.next() : null;
     }
 
     public Collection<String> getDatabases(){

@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.extract.impl;
 
 import com.miotech.kun.metadata.extract.impl.elasticsearch.ElasticsearchExtractor;
 import com.miotech.kun.metadata.model.Dataset;
-import com.miotech.kun.metadata.model.CommonCluster;
+import com.miotech.kun.metadata.model.ElasticSearchCluster;
 import org.junit.Test;
 
 import java.util.Iterator;
@@ -11,7 +11,7 @@ public class ElasticsearchExtractorTest {
 
     @Test
     public void testExtract() {
-        CommonCluster cluster = CommonCluster.newBuilder()
+        ElasticSearchCluster cluster = ElasticSearchCluster.newBuilder()
                 .withDataStoreUrl("<es_ip>:11005")
                 .withDataStoreUsername("")
                 .withDataStorePassword("")

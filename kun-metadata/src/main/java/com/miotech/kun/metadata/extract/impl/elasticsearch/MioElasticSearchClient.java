@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.extract.impl.elasticsearch;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.metadata.model.CommonCluster;
+import com.miotech.kun.metadata.model.ElasticSearchCluster;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -26,7 +26,7 @@ public class MioElasticSearchClient {
     private RestClient lowLevelClient;
 
     @Inject
-    public MioElasticSearchClient(CommonCluster cluster){
+    public MioElasticSearchClient(ElasticSearchCluster cluster){
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
             credentialsProvider.setCredentials(AuthScope.ANY,
                 new UsernamePasswordCredentials(cluster.getDataStoreUsername(), cluster.getDataStorePassword()));

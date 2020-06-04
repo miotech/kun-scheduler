@@ -3,6 +3,9 @@ package com.miotech.kun.metadata.schedule;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.miotech.kun.metadata.extract.impl.ConfigurableExtractor;
+import com.miotech.kun.metadata.extract.impl.arango.ArangoExtractor;
+import com.miotech.kun.metadata.extract.impl.elasticsearch.ElasticsearchExtractor;
+import com.miotech.kun.metadata.extract.impl.hive.HiveExtractor;
 import com.miotech.kun.metadata.extract.impl.mongo.MongoExtractor;
 import com.miotech.kun.metadata.extract.impl.postgres.PostgresExtractor;
 import com.miotech.kun.metadata.load.Loader;
@@ -65,8 +68,11 @@ public class DataBuilder {
                 datasetIterator = new PostgresExtractor((PostgresDataSource) dataSource).extract();
             } else if (dataSource instanceof MongoDataSource) {
                 datasetIterator = new MongoExtractor((MongoDataSource) dataSource).extract();
+            }else if(cluster instanceof ElasticSearchCluster){
+                datasetIterator = new ElasticsearchExtractor((ElasticSearchCluster) cluster).extract();
+            }else if(cluster instanceof ArangoCluster){
+                datasetIterator = new ArangoExtractor((ArangoCluster) cluster).extract();
             }
-            // TODO add others Extractor
 
             if (datasetIterator != null) {
                 while (datasetIterator.hasNext()) {
@@ -127,7 +133,22 @@ public class DataBuilder {
                         .withUsername(connection.getDataStoreUsername())
                         .withPassword(connection.getDataStorePassword());
                 return mongoClusterBuilder.build();
-            //TODO add other cluster builder
+            case "elasticsearch":
+                ElasticSearchCluster elasticSearchCluster = ElasticSearchCluster.newBuilder()
+                        .withClusterId(id)
+                        .withDataStoreUrl(connection.getDataStoreUrl())
+                        .withDataStoreUsername(connection.getDataStoreUsername())
+                        .withDataStorePassword(connection.getDataStorePassword())
+                        .build();
+                return elasticSearchCluster;
+            case "arango":
+                ArangoCluster arangoCluster = ArangoCluster.newBuilder()
+                        .withClusterId(id)
+                        .withDataStoreUrl(connection.getDataStoreUrl())
+                        .withDataStoreUsername(connection.getDataStoreUsername())
+                        .withDataStorePassword(connection.getDataStorePassword())
+                        .build();
+                return arangoCluster;
             default:
                 logger.error("invalid cluster type: {}", type);
                 throw new RuntimeException("Invalid cluster type: " + type);

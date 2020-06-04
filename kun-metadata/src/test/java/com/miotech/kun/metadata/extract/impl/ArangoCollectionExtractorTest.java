@@ -14,14 +14,14 @@ public class ArangoCollectionExtractorTest {
 
     @Before
     public void setUp() throws Exception {
-        CommonCluster cluster = CommonCluster.newBuilder()
+        ArangoCluster cluster = ArangoCluster.newBuilder()
                 .withDataStoreUrl("10.0.2.162:8529")
                 .withDataStoreUsername("root")
                 .withDataStorePassword("d@ta")
                 .build();
 
         this.extractor = new ArangoCollectionExtractor(cluster, "miograph_unmerged_two", "mio_people_family_relations");
-//        CommonCluster cluster = CommonCluster.newBuilder()
+//        ArangoCluster cluster = ArangoCluster.newBuilder()
 //                .withHostname("localhost")
 //                .withPort(8529)
 //                .withUsername("")
