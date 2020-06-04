@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
@@ -380,5 +381,83 @@ public class TaskDaoTest extends DatabaseTestBase {
         // Validate
         List<Task> tasksToExecuteOn1015AfterDelete = taskDao.fetchScheduledTaskAtTick(new Tick(time1015));
         assertThat(tasksToExecuteOn1015AfterDelete.size(), is(0));
+    }
+
+    @Test
+    public void fetchUpstreamTasks_withGivenDistance_shouldWork() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        tasks.forEach(task -> taskDao.create(task));
+
+        Task taskA = tasks.get(0);
+        Task taskD = tasks.get(3);
+
+        // Process
+        List<Task> upstreamTasksOfTaskAInDistance1 = taskDao.fetchUpstreamTasks(taskA);
+        List<Task> upstreamTasksOfTaskDInDistance1 = taskDao.fetchUpstreamTasks(taskD);
+        List<Task> upstreamTasksOfTaskDInDistance2 = taskDao.fetchUpstreamTasks(taskD, 2);
+        List<Task> upstreamTasksOfTaskDInDistance2AndItself = taskDao.fetchUpstreamTasks(taskD, 2, true);
+        List<Task> upstreamTasksOfTaskDInDistance3AndItself = taskDao.fetchUpstreamTasks(taskD, 3, true);
+
+        // Validate
+        assertThat(upstreamTasksOfTaskAInDistance1.size(), is(0)); // A is the root of DAG
+        assertThat(upstreamTasksOfTaskDInDistance1.size(), is(2)); // Task B and Task C
+        assertThat(upstreamTasksOfTaskDInDistance2.size(), is(3)); // Task A, Task B and Task C
+        assertThat(upstreamTasksOfTaskDInDistance2AndItself.size(), is(4));  // Task A, Task B, Task C and Task D
+        assertThat(upstreamTasksOfTaskDInDistance3AndItself.size(), is(4));  // Task A, Task B, Task C and Task D
+    }
+
+    @Test
+    public void fetchDownstreamTasks_withGivenDistance_shouldWork() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        tasks.forEach(task -> taskDao.create(task));
+
+        Task taskA = tasks.get(0);
+        Task taskD = tasks.get(3);
+
+        // Process
+        List<Task> downstreamTasksOfTaskDInDistance1 = taskDao.fetchDownstreamTasks(taskD);
+        List<Task> downstreamTasksOfTaskAInDistance1 = taskDao.fetchDownstreamTasks(taskA);
+        List<Task> downstreamTasksOfTaskAInDistance2 = taskDao.fetchDownstreamTasks(taskA, 2);
+        List<Task> downstreamTasksOfTaskAInDistance2AndItself = taskDao.fetchDownstreamTasks(taskA, 2, true);
+
+        // Validate
+        assertThat(downstreamTasksOfTaskDInDistance1.size(), is(0)); // A is the root of DAG
+        assertThat(downstreamTasksOfTaskAInDistance1.size(), is(2)); // Task B and Task C
+        assertThat(downstreamTasksOfTaskAInDistance2.size(), is(3)); // Task B, Task C and Task D
+        assertThat(downstreamTasksOfTaskAInDistance2AndItself.size(), is(4));  // Task A, Task B, Task C and Task D
+    }
+
+    @Test
+    public void fetchUpOrDownstreamTasks_withIllegalArgument_shouldThrowExceptions() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        tasks.forEach(task -> taskDao.create(task));
+        Task taskD = tasks.get(3);
+
+        // Process & Validate
+        // 1. should throw NullPointerException when source task is null
+        try {
+            taskDao.fetchUpstreamTasks(null);
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(NullPointerException.class));
+        }
+
+        // 2. should throw IllegalArgumentException when distance is 0 or negative
+        try {
+            taskDao.fetchUpstreamTasks(taskD, 0);
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+        }
+
+        try {
+            taskDao.fetchUpstreamTasks(taskD, -1);
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+        }
     }
 }

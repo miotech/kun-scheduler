@@ -4,6 +4,7 @@ import com.cronutils.model.Cron;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Param;
@@ -148,6 +149,98 @@ public class TaskDao {
                     .toArray(new Object[0][0]);
             dbOperator.batch(sqlInsert, params);
         }
+    }
+
+    private enum DependencyDirection {
+        UPSTREAM,
+        DOWNSTREAM
+    }
+
+    /**
+     * Internal use only. Retrieve task ids within the maximum distance from the given source task.
+     * @param srcTask source task
+     * @param distance maximum distance
+     * @param queryDirection upstream or downstream
+     * @param includeSelf include source task or not
+     * @return Set of task ids in range
+     */
+    private Set<Long> retrieveTaskIdsWithinDependencyDistance(Task srcTask, int distance, DependencyDirection queryDirection, boolean includeSelf) {
+        Preconditions.checkNotNull(srcTask, "Invalid argument `srcTask`: null");
+        Preconditions.checkArgument(distance > 0, "Argument `distance` should be positive, but found: %d", distance);
+
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_RELATION_MODEL_NAME, taskRelationCols);
+
+        int remainingIteration = distance;
+        Set<Long> resultTaskIds = new HashSet<>();
+        List<Long> inClauseIdSet = Lists.newArrayList(srcTask.getId());
+        String whereCol = queryDirection == DependencyDirection.UPSTREAM ? "downstream_task_id" : "upstream_task_id";
+        if (includeSelf) {
+            resultTaskIds.add(srcTask.getId());
+        }
+
+        while (remainingIteration > 0) {
+            String idsFieldsPlaceholder = "(" + inClauseIdSet.stream().map(id -> "?")
+                    .collect(Collectors.joining(", ")) + ")";
+
+            String sql = DefaultSQLBuilder.newBuilder()
+                    .columns(columnsMap)
+                    .from(TASK_RELATION_TABLE_NAME, TASK_RELATION_MODEL_NAME)
+                    .where(TASK_RELATION_MODEL_NAME + "." + whereCol + " IN " + idsFieldsPlaceholder)
+                    .autoAliasColumns()
+                    .asPrepared()
+                    .getSQL();
+            List<TaskDependency> results = dbOperator.fetchAll(
+                    sql,
+                    TaskDependencyMapper.getInstance(functionProvider),
+                    inClauseIdSet.toArray()
+            );
+            for (TaskDependency dependency : results) {
+                resultTaskIds.add((queryDirection == DependencyDirection.UPSTREAM) ?
+                        dependency.getUpstreamTaskId() : dependency.getDownstreamTaskId()
+                );
+            }
+            inClauseIdSet = results.stream().map((queryDirection == DependencyDirection.UPSTREAM) ?
+                    TaskDependency::getUpstreamTaskId : TaskDependency::getDownstreamTaskId)
+                    .collect(Collectors.toList());
+            remainingIteration -= 1;
+        }
+
+        return resultTaskIds;
+    }
+
+    private List<Task> fetchTasksByIds(Collection<Long> taskIds) {
+        Preconditions.checkNotNull(taskIds, "Invalid argument `taskIds`: null");
+        if (taskIds.size() == 0) {
+            return new ArrayList<>();
+        }
+
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_MODEL_NAME, taskCols);
+
+        String idsFieldsPlaceholder = "(" + taskIds.stream().map(id -> "?")
+                .collect(Collectors.joining(", ")) + ")";
+        String sql = DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .from(TASK_TABLE_NAME, TASK_MODEL_NAME)
+                .where(TASK_MODEL_NAME + ".id IN " + idsFieldsPlaceholder)
+                .autoAliasColumns()
+                .asPrepared()
+                .getSQL();
+
+        // TODO: wrap following lines of code into individual method
+        List<Task> plainTasks = dbOperator.fetchAll(sql, TaskMapper.INSTANCE, taskIds.toArray());
+
+        // Retrieve all relations whose downstream ids are involved in result tasks
+        List<Long> plainTaskIds = plainTasks.stream().map(task -> task.getId()).collect(Collectors.toList());
+        Map<Long, List<TaskDependency>> dependenciesMap = fetchAllRelationsFromDownstreamTaskIds(plainTaskIds);
+
+        // re-construct all tasks with full properties
+        return plainTasks.stream()
+                .map(t -> t.cloneBuilder()
+                        .withDependencies(dependenciesMap.get(t.getId()))
+                        .build())
+                .collect(Collectors.toList());
     }
 
     /**
@@ -419,6 +512,78 @@ public class TaskDao {
                 .where(TICK_TASK_MAPPING_TABLE_ALIAS + ".scheduled_tick <= ?")
                 .getSQL();
         return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, tick.toString());
+    }
+
+    /**
+     * Fetch and return list of one-hop upstream tasks with given source task (source task not included)
+     * @param srcTask source task
+     * @return list of upstream tasks
+     */
+    public List<Task> fetchUpstreamTasks(Task srcTask) {
+        return fetchUpstreamTasks(srcTask, 1, false);
+    }
+
+    /**
+     * Fetch and return upstream tasks within maximum distance from given source task (source task not included)
+     * @param srcTask source task
+     * @param distance max distance from source task, required to be positive
+     * @throws IllegalArgumentException when distance is not positive
+     * @return list of upstream tasks
+     */
+    public List<Task> fetchUpstreamTasks(Task srcTask, int distance) {
+        return fetchUpstreamTasks(srcTask, distance, false);
+    }
+
+    /**
+     * Fetch and return upstream tasks within maximum distance from given source task
+     * @param srcTask source task
+     * @param distance max distance from source task, required to be positive
+     * @param includeSelf whether source task should be included
+     * @throws IllegalArgumentException when distance is not positive
+     * @return list of upstream tasks
+     */
+    public List<Task> fetchUpstreamTasks(Task srcTask, int distance, boolean includeSelf) {
+        Preconditions.checkNotNull(srcTask, "Invalid argument `srcTask`: null");
+        Preconditions.checkArgument(distance > 0, "Argument `distance` should be positive, but found: %d", distance);
+
+        Set<Long> upstreamTaskIds = retrieveTaskIdsWithinDependencyDistance(srcTask, distance, DependencyDirection.UPSTREAM, includeSelf);
+        return fetchTasksByIds(upstreamTaskIds);
+    }
+
+    /**
+     *  Fetch and return list of one-hop downstream tasks with given source task (source task not included)
+     * @param srcTask source task
+     * @return list of downstream tasks
+     */
+    public List<Task> fetchDownstreamTasks(Task srcTask) {
+        return fetchDownstreamTasks(srcTask, 1, false);
+    }
+
+    /**
+     * Fetch and return downstream tasks within maximum distance from given source task (source task not included)
+     * @param srcTask source task
+     * @param distance max distance from source task, required to be positive
+     * @throws IllegalArgumentException when distance is not positive
+     * @return list of downstream tasks
+     */
+    public List<Task> fetchDownstreamTasks(Task srcTask, int distance) {
+        return fetchDownstreamTasks(srcTask, distance, false);
+    }
+
+    /**
+     * Fetch and return downstream tasks within maximum distance from given source task
+     * @param srcTask source task
+     * @param distance max distance from source task, required to be positive
+     * @param includeSelf whether source task should be included
+     * @throws IllegalArgumentException when distance is illegal
+     * @return list of downstream tasks
+     */
+    public List<Task> fetchDownstreamTasks(Task srcTask, int distance, boolean includeSelf) {
+        Preconditions.checkNotNull(srcTask, "Invalid argument `srcTask`: null");
+        Preconditions.checkArgument(distance > 0, "Argument `distance` should be positive, but found: %d", distance);
+
+        Set<Long> downstreamTaskIds = retrieveTaskIdsWithinDependencyDistance(srcTask, distance, DependencyDirection.DOWNSTREAM, includeSelf);
+        return fetchTasksByIds(downstreamTaskIds);
     }
 
     public static class TaskMapper implements ResultSetMapper<Task> {
