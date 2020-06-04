@@ -4,12 +4,15 @@ import com.cronutils.model.Cron;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.db.ResultSetMapper;
 import com.miotech.kun.workflow.db.sql.DefaultSQLBuilder;
@@ -28,9 +31,11 @@ import java.sql.SQLException;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Singleton
 public class TaskDao {
+
     private final Logger logger = LoggerFactory.getLogger(TaskDao.class);
 
     public static final String TASK_TABLE_NAME = "kun_wf_task";
@@ -53,9 +58,12 @@ public class TaskDao {
 
     private final DatabaseOperator dbOperator;
 
+    private final TaskDependencyFunctionProvider functionProvider;
+
     @Inject
-    public TaskDao(DatabaseOperator dbOperator) {
+    public TaskDao(DatabaseOperator dbOperator, TaskDependencyFunctionProvider functionProvider) {
         this.dbOperator = dbOperator;
+        this.functionProvider = functionProvider;
     }
 
     public static List<String> getTaskCols() {
@@ -106,6 +114,166 @@ public class TaskDao {
         }
     }
 
+    private void updateTaskUpstreamDependencies(Task task, List<TaskDependency> taskDependencies) {
+        Preconditions.checkNotNull(task, "Invalid argument `task`: null");
+        Preconditions.checkNotNull(taskDependencies, "Invalid argument `taskDependencies`: null");
+        // 1. Clear all previous task upstream relations, if any
+        String sqlRemove = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from(TASK_RELATION_TABLE_NAME)
+                .where("downstream_task_id = ?")
+                .getSQL();
+
+        // 2. then insert updated task upstream relations
+        String sqlInsert = DefaultSQLBuilder.newBuilder()
+                .insert(taskRelationCols.toArray(new String[0]))
+                .into(TASK_RELATION_TABLE_NAME)
+                .valueSize(taskRelationCols.size())
+                .asPrepared()
+                .getSQL();
+
+        // 3. execute with database operator
+        dbOperator.update(sqlRemove, task.getId());
+        if (!taskDependencies.isEmpty()) {
+            Object[][] params = taskDependencies
+                    .stream()
+                    .map(taskDependency -> new Object[]{
+                            // upstream_task_id
+                            taskDependency.getUpstreamTaskId(),
+                            // downstream_task_id
+                            task.getId(),
+                            // dependency_function
+                            taskDependency.getDependencyFunction().toFunctionType()
+                    })
+                    .collect(Collectors.toList())
+                    .toArray(new Object[0][0]);
+            dbOperator.batch(sqlInsert, params);
+        }
+    }
+
+    private enum DependencyDirection {
+        UPSTREAM,
+        DOWNSTREAM
+    }
+
+    /**
+     * Internal use only. Retrieve task ids within the maximum distance from the given source task.
+     * @param srcTask source task
+     * @param distance maximum distance
+     * @param queryDirection upstream or downstream
+     * @param includeSelf include source task or not
+     * @return Set of task ids in range
+     */
+    private Set<Long> retrieveTaskIdsWithinDependencyDistance(Task srcTask, int distance, DependencyDirection queryDirection, boolean includeSelf) {
+        Preconditions.checkNotNull(srcTask, "Invalid argument `srcTask`: null");
+        Preconditions.checkArgument(distance > 0, "Argument `distance` should be positive, but found: %d", distance);
+
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_RELATION_MODEL_NAME, taskRelationCols);
+
+        int remainingIteration = distance;
+        Set<Long> resultTaskIds = new HashSet<>();
+        List<Long> inClauseIdSet = Lists.newArrayList(srcTask.getId());
+        String whereCol = queryDirection == DependencyDirection.UPSTREAM ? "downstream_task_id" : "upstream_task_id";
+        if (includeSelf) {
+            resultTaskIds.add(srcTask.getId());
+        }
+
+        while (remainingIteration > 0) {
+            String idsFieldsPlaceholder = "(" + inClauseIdSet.stream().map(id -> "?")
+                    .collect(Collectors.joining(", ")) + ")";
+
+            String sql = DefaultSQLBuilder.newBuilder()
+                    .columns(columnsMap)
+                    .from(TASK_RELATION_TABLE_NAME, TASK_RELATION_MODEL_NAME)
+                    .where(TASK_RELATION_MODEL_NAME + "." + whereCol + " IN " + idsFieldsPlaceholder)
+                    .autoAliasColumns()
+                    .asPrepared()
+                    .getSQL();
+            List<TaskDependency> results = dbOperator.fetchAll(
+                    sql,
+                    TaskDependencyMapper.getInstance(functionProvider),
+                    inClauseIdSet.toArray()
+            );
+            for (TaskDependency dependency : results) {
+                resultTaskIds.add((queryDirection == DependencyDirection.UPSTREAM) ?
+                        dependency.getUpstreamTaskId() : dependency.getDownstreamTaskId()
+                );
+            }
+            inClauseIdSet = results.stream().map((queryDirection == DependencyDirection.UPSTREAM) ?
+                    TaskDependency::getUpstreamTaskId : TaskDependency::getDownstreamTaskId)
+                    .collect(Collectors.toList());
+            remainingIteration -= 1;
+        }
+
+        return resultTaskIds;
+    }
+
+    private List<Task> fetchTasksByIds(Collection<Long> taskIds) {
+        Preconditions.checkNotNull(taskIds, "Invalid argument `taskIds`: null");
+        if (taskIds.size() == 0) {
+            return new ArrayList<>();
+        }
+
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_MODEL_NAME, taskCols);
+
+        String idsFieldsPlaceholder = "(" + taskIds.stream().map(id -> "?")
+                .collect(Collectors.joining(", ")) + ")";
+        String sql = DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .from(TASK_TABLE_NAME, TASK_MODEL_NAME)
+                .where(TASK_MODEL_NAME + ".id IN " + idsFieldsPlaceholder)
+                .autoAliasColumns()
+                .asPrepared()
+                .getSQL();
+
+        // TODO: wrap following lines of code into individual method
+        List<Task> plainTasks = dbOperator.fetchAll(sql, TaskMapper.INSTANCE, taskIds.toArray());
+
+        // Retrieve all relations whose downstream ids are involved in result tasks
+        List<Long> plainTaskIds = plainTasks.stream().map(task -> task.getId()).collect(Collectors.toList());
+        Map<Long, List<TaskDependency>> dependenciesMap = fetchAllRelationsFromDownstreamTaskIds(plainTaskIds);
+
+        // re-construct all tasks with full properties
+        return plainTasks.stream()
+                .map(t -> t.cloneBuilder()
+                        .withDependencies(dependenciesMap.get(t.getId()))
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Fetch all relations in a `id - [dependencies]` hashmap whose downstream task ID is included in the given list
+     * @param taskIds list of downstream task IDs
+     * @return
+     */
+    private Map<Long, List<TaskDependency>> fetchAllRelationsFromDownstreamTaskIds(List<Long> taskIds) {
+        Map<Long, List<TaskDependency>> taskIdToDependenciesMap = new HashMap<>();
+        taskIds.forEach(taskId -> {
+            taskIdToDependenciesMap.put(taskId, new ArrayList<>());
+        });
+        String idsFieldsPlaceholder = "(" + taskIds.stream().map(id -> "?")
+                .collect(Collectors.joining(", ")) + ")";
+        Map<String, List<String>> taskRelationColumnsMap = new HashMap<>();
+        taskRelationColumnsMap.put(TASK_RELATION_MODEL_NAME, taskRelationCols);
+        String sql = DefaultSQLBuilder.newBuilder()
+                .columns(taskRelationColumnsMap)
+                .from(TASK_RELATION_TABLE_NAME, TASK_RELATION_MODEL_NAME)
+                .autoAliasColumns()
+                .where(TASK_RELATION_MODEL_NAME + ".downstream_task_id IN " + idsFieldsPlaceholder)
+                .orderBy(TASK_RELATION_MODEL_NAME + ".upstream_task_id ASC")
+                .asPrepared()
+                .getSQL();
+        List<TaskDependency> allDeps = dbOperator.fetchAll(sql, TaskDependencyMapper.getInstance(functionProvider), taskIds.toArray());
+        allDeps.forEach(dep -> {
+            List<TaskDependency> dependencyList = taskIdToDependenciesMap.get(dep.getDownstreamTaskId());
+            dependencyList.add(dep);
+            taskIdToDependenciesMap.put(dep.getDownstreamTaskId(), dependencyList);
+        });
+        return taskIdToDependenciesMap;
+    }
+
     private boolean deleteTickTaskMappingRecord(Long taskId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .delete()
@@ -113,6 +281,16 @@ public class TaskDao {
                 .where("task_id = ?")
                 .getSQL();
         int affectedRows = dbOperator.update(sql, taskId);
+        return affectedRows > 0;
+    }
+
+    private boolean deleteTaskRelations(Long taskId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from(TASK_RELATION_TABLE_NAME)
+                .where("(upstream_task_id = ?) OR (downstream_task_id = ?)")
+                .getSQL();
+        int affectedRows = dbOperator.update(sql, taskId, taskId);
         return affectedRows > 0;
     }
 
@@ -164,7 +342,19 @@ public class TaskDao {
                 .getSQL();
         Collections.addAll(params, pageSize, offset);
 
-        return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, params.toArray());
+        // For all tasks we directly fetched from task table, property `dependencies` will always be null
+        List<Task> plainTasks = dbOperator.fetchAll(sql, TaskMapper.INSTANCE, params.toArray());
+
+        // Retrieve all relations whose downstream ids are involved in result tasks
+        List<Long> taskIds = plainTasks.stream().map(task -> task.getId()).collect(Collectors.toList());
+        Map<Long, List<TaskDependency>> dependenciesMap = fetchAllRelationsFromDownstreamTaskIds(taskIds);
+
+        // re-construct all tasks with full properties
+        return plainTasks.stream()
+                .map(t -> t.cloneBuilder()
+                    .withDependencies(dependenciesMap.get(t.getId()))
+                    .build())
+                .collect(Collectors.toList());
     }
 
     public List<Task> fetchByOperatorId(Long operatorId) {
@@ -176,7 +366,28 @@ public class TaskDao {
     public Optional<Task> fetchById(Long taskId) {
         String sql = getSelectSQL(TASK_MODEL_NAME + ".id = ?");
         Task task = dbOperator.fetchOne(sql, TaskMapper.INSTANCE, taskId);
-        return Optional.ofNullable(task);
+        if (Objects.isNull(task)) {
+            return Optional.empty();
+        }
+        // else
+        Map<String, List<String>> taskRelationColumnsMap = new HashMap<>();
+        taskRelationColumnsMap.put(TASK_RELATION_MODEL_NAME, taskRelationCols);
+        String dependenciesQuerySQL = DefaultSQLBuilder.newBuilder()
+                .columns(taskRelationColumnsMap)
+                .from(TASK_RELATION_TABLE_NAME, TASK_RELATION_MODEL_NAME)
+                .autoAliasColumns()
+                .where(TASK_RELATION_MODEL_NAME + ".downstream_task_id = ?")
+                .orderBy(TASK_RELATION_MODEL_NAME + ".upstream_task_id ASC")
+                .asPrepared()
+                .getSQL();
+
+        List<TaskDependency> dependencies = dbOperator.fetchAll(
+                dependenciesQuerySQL,
+                TaskDependencyMapper.getInstance(functionProvider),
+                taskId
+        );
+
+        return Optional.of(task.cloneBuilder().withDependencies(dependencies).build());
     }
 
     public void create(Task task) {
@@ -188,7 +399,7 @@ public class TaskDao {
          * Creating a task consists of following steps:
          * 1. Insert task record into database
          * 2. Insert a tick-task mapping record according to schedule config
-         * 3. For each dependency, insert a record into table `kun_wf_task_relations`
+         * 3. For each dependency, insert records into table `kun_wf_task_relations`
          * Note: if any of the steps above failed, the entire insertion operation should be aborted and reverted.
          * */
         List<String> tableColumns = new ImmutableList.Builder<String>()
@@ -201,8 +412,6 @@ public class TaskDao {
                 .asPrepared()
                 .getSQL();
 
-        OffsetDateTime nowTime = OffsetDateTime.now(mockClock);
-
         dbOperator.transaction(() -> {
             dbOperator.update(
                     sql,
@@ -212,11 +421,10 @@ public class TaskDao {
                     task.getOperatorId(),
                     JSONUtils.toJsonString(task.getArguments()),
                     JSONUtils.toJsonString(task.getVariableDefs()),
-                    JSONUtils.toJsonString(task.getScheduleConf()),
-                    nowTime,
-                    nowTime
+                    JSONUtils.toJsonString(task.getScheduleConf())
             );
             insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf(), mockClock);
+            updateTaskUpstreamDependencies(task, task.getDependencies());
             return null;
         });
     }
@@ -237,7 +445,6 @@ public class TaskDao {
                 .asPrepared()
                 .getSQL();
 
-        OffsetDateTime nowTime = OffsetDateTime.now();
         int affectedRows = dbOperator.transaction(() -> {
             int updatedRows = dbOperator.update(
                     sql,
@@ -248,7 +455,6 @@ public class TaskDao {
                     JSONUtils.toJsonString(task.getArguments()),
                     JSONUtils.toJsonString(task.getVariableDefs()),
                     JSONUtils.toJsonString(task.getScheduleConf()),
-                    nowTime,
                     task.getId()
             );
 
@@ -272,6 +478,8 @@ public class TaskDao {
             int affectedRows = dbOperator.update(sql, taskId);
             // remove existing task mappings, if any
             deleteTickTaskMappingRecord(taskId);
+            // remove existing task relations, if any
+            deleteTaskRelations(taskId);
             return affectedRows > 0;
         });
     }
@@ -306,6 +514,78 @@ public class TaskDao {
         return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, tick.toString());
     }
 
+    /**
+     * Fetch and return list of one-hop upstream tasks with given source task (source task not included)
+     * @param srcTask source task
+     * @return list of upstream tasks
+     */
+    public List<Task> fetchUpstreamTasks(Task srcTask) {
+        return fetchUpstreamTasks(srcTask, 1, false);
+    }
+
+    /**
+     * Fetch and return upstream tasks within maximum distance from given source task (source task not included)
+     * @param srcTask source task
+     * @param distance max distance from source task, required to be positive
+     * @throws IllegalArgumentException when distance is not positive
+     * @return list of upstream tasks
+     */
+    public List<Task> fetchUpstreamTasks(Task srcTask, int distance) {
+        return fetchUpstreamTasks(srcTask, distance, false);
+    }
+
+    /**
+     * Fetch and return upstream tasks within maximum distance from given source task
+     * @param srcTask source task
+     * @param distance max distance from source task, required to be positive
+     * @param includeSelf whether source task should be included
+     * @throws IllegalArgumentException when distance is not positive
+     * @return list of upstream tasks
+     */
+    public List<Task> fetchUpstreamTasks(Task srcTask, int distance, boolean includeSelf) {
+        Preconditions.checkNotNull(srcTask, "Invalid argument `srcTask`: null");
+        Preconditions.checkArgument(distance > 0, "Argument `distance` should be positive, but found: %d", distance);
+
+        Set<Long> upstreamTaskIds = retrieveTaskIdsWithinDependencyDistance(srcTask, distance, DependencyDirection.UPSTREAM, includeSelf);
+        return fetchTasksByIds(upstreamTaskIds);
+    }
+
+    /**
+     *  Fetch and return list of one-hop downstream tasks with given source task (source task not included)
+     * @param srcTask source task
+     * @return list of downstream tasks
+     */
+    public List<Task> fetchDownstreamTasks(Task srcTask) {
+        return fetchDownstreamTasks(srcTask, 1, false);
+    }
+
+    /**
+     * Fetch and return downstream tasks within maximum distance from given source task (source task not included)
+     * @param srcTask source task
+     * @param distance max distance from source task, required to be positive
+     * @throws IllegalArgumentException when distance is not positive
+     * @return list of downstream tasks
+     */
+    public List<Task> fetchDownstreamTasks(Task srcTask, int distance) {
+        return fetchDownstreamTasks(srcTask, distance, false);
+    }
+
+    /**
+     * Fetch and return downstream tasks within maximum distance from given source task
+     * @param srcTask source task
+     * @param distance max distance from source task, required to be positive
+     * @param includeSelf whether source task should be included
+     * @throws IllegalArgumentException when distance is illegal
+     * @return list of downstream tasks
+     */
+    public List<Task> fetchDownstreamTasks(Task srcTask, int distance, boolean includeSelf) {
+        Preconditions.checkNotNull(srcTask, "Invalid argument `srcTask`: null");
+        Preconditions.checkArgument(distance > 0, "Argument `distance` should be positive, but found: %d", distance);
+
+        Set<Long> downstreamTaskIds = retrieveTaskIdsWithinDependencyDistance(srcTask, distance, DependencyDirection.DOWNSTREAM, includeSelf);
+        return fetchTasksByIds(downstreamTaskIds);
+    }
+
     public static class TaskMapper implements ResultSetMapper<Task> {
         public static final TaskDao.TaskMapper INSTANCE = new TaskMapper();
 
@@ -321,6 +601,32 @@ public class TaskDao {
                     .withScheduleConf( JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_schedule"), new TypeReference<ScheduleConf>() {}))
                     .withDependencies(new ArrayList<>())
                     .build();
+        }
+    }
+
+    public static class TaskDependencyMapper implements ResultSetMapper<TaskDependency> {
+        private TaskDependencyFunctionProvider functionProvider;
+
+        private static TaskDependencyMapper instance;
+
+        private TaskDependencyMapper(TaskDependencyFunctionProvider functionProvider) {
+            this.functionProvider = functionProvider;
+        }
+
+        public static TaskDependencyMapper getInstance(TaskDependencyFunctionProvider functionProvider) {
+            if (instance == null) {
+                instance = new TaskDependencyMapper(functionProvider);
+            }
+            return instance;
+        }
+
+        @Override
+        public TaskDependency map(ResultSet rs) throws SQLException {
+            return new TaskDependency(
+                    rs.getLong(TASK_RELATION_MODEL_NAME + "_upstream_task_id"),
+                    functionProvider.from(rs.getString(TASK_RELATION_MODEL_NAME + "_dependency_function")),
+                    rs.getLong(TASK_RELATION_MODEL_NAME + "_downstream_task_id")
+            );
         }
     }
 }

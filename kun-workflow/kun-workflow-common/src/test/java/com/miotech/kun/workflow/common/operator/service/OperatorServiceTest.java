@@ -307,7 +307,7 @@ public class OperatorServiceTest extends DatabaseTestBase {
             assertThat(e, instanceOf(RuleOperatorInUseException.class));
             // 5. message should include specific number of tasks
             assertThat(e.getMessage(), is(
-                    String.format("Operator with id \"%d\" is used by at least one task already. Remove these tasks first or replace internal operator of each task to another.", operator.getId())
+                    String.format("Operator with id \"%s\" is used by 1 tasks already. Remove these tasks first or replace internal operators by another operator.", operator.getId())
             ));
         }
     }

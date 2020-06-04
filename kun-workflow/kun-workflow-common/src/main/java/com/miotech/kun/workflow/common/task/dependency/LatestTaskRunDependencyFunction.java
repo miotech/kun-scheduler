@@ -31,4 +31,9 @@ public class LatestTaskRunDependencyFunction implements DependencyFunction {
         TaskRun upstreamTaskRun = taskRunDao.fetchLatestTaskRun(upstreamTaskId);
         return Lists.newArrayList(upstreamTaskRun.getId());
     }
+
+    @Override
+    public String toFunctionType() {
+        return "latestTaskRun";
+    }
 }

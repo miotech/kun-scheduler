@@ -65,8 +65,8 @@ CREATE TABLE kun_wf_task_run (
     end_at TIMESTAMP NULL,
     inlets JSONB NULL,
     outlets JSONB NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE kun_wf_task_attempt (
@@ -77,15 +77,15 @@ CREATE TABLE kun_wf_task_attempt (
     log_path VARCHAR(1024) NULL,
     start_at TIMESTAMP NULL,
     end_at TIMESTAMP NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE kun_wf_task_run_relations (
     upstream_task_run_id BIGINT NOT NULL,
     downstream_task_run_id BIGINT NOT NULL,
-    created_at TIMESTAMP NOT NULL,
-    updated_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (upstream_task_run_id, downstream_task_run_id)
 );
 
