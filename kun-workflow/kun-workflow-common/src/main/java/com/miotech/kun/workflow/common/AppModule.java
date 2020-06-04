@@ -18,6 +18,5 @@ public abstract class AppModule extends AbstractModule {
     protected void configure() {
         Names.bindProperties(binder(), props);
         bind(Properties.class).toInstance(props);
-        bind(ResourceLoader.class).to(ResourceLoaderImpl.class);
     }
 }

@@ -16,11 +16,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -92,7 +88,7 @@ public class ExceptionHandler {
     }
 
     private Map<Class<?>, Method> scanHandler() {
-        Map<Class<?>, Method> exceptionHandlers = new ConcurrentHashMap<>();
+        Map<Class<?>, Method> exceptionHandlers = new HashMap<>();
         Method[] methods = ExceptionHandler.class.getDeclaredMethods();
         for (Method method: methods) {
            Annotation exceptionAnnotation = method.getAnnotation(ResponseException.class);

@@ -53,8 +53,7 @@ public class DispatchServlet extends HttpServlet {
 
     private void doAction(final HttpServletRequest req,
                           final HttpServletResponse resp,
-                          HttpMethod method)
-            throws IOException {
+                          HttpMethod method) {
         logger.debug("Receive request {} {}", method.toString(), req.getRequestURL());
         try {
             HttpRequestMappingHandler handler = router.getRequestMappingHandler(req);
@@ -92,7 +91,7 @@ public class DispatchServlet extends HttpServlet {
 
     private void handleException(HttpServletRequest req,
                                  HttpServletResponse resp,
-                                 Throwable e) throws IOException {
+                                 Throwable e) {
         Throwable finalExeception;
 
         try {
@@ -114,13 +113,13 @@ public class DispatchServlet extends HttpServlet {
     }
 
     private void doError(InternalErrorMessage errorMessage,
-                         final HttpServletResponse resp) throws IOException {
+                         final HttpServletResponse resp) {
         resp.setStatus(errorMessage.getStatus());
         doResponse(errorMessage, resp);
     }
 
     private void doResponse(Object responseObj,
-                            final HttpServletResponse resp) throws IOException {
+                            final HttpServletResponse resp) {
         if (resp.getStatus() <= 0) {
             resp.setStatus(HttpStatus.OK_200);
         }

@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.common.resource;
 
+import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 
+@Singleton
 public class ResourceLoaderImpl implements ResourceLoader {
 
     private final Logger logger = LoggerFactory.getLogger(ResourceLoaderImpl.class);

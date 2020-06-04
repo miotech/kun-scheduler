@@ -34,8 +34,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
     protected void configuration() {
         super.configuration();
         Properties props = PropertyUtils.loadAppProps("application-test.yaml");
-        addModules(new KunWebServerModule(props));
-        addModules(new DatabaseModule());
+        addModules(new KunWebServerModule(props), new DatabaseModule());
     }
 
     @Before
@@ -84,7 +83,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
     }
 
     private String buildUrl(String url) {
-        int port = props.containsKey(ConfigurationKeys.PROP_SERVER_PORT) ? Integer.parseInt(props.getProperty(ConfigurationKeys.PROP_SERVER_PORT)) : 8088;
+        String port = props.getProperty(ConfigurationKeys.PROP_SERVER_PORT, "8088");
         if (!url.startsWith("/")) {
             url = "/" + url;
         }

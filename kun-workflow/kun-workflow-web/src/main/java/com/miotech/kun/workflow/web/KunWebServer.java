@@ -16,8 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
 import java.util.Properties;
 
 @Singleton
@@ -47,23 +45,8 @@ public class KunWebServer {
     }
 
     private void configureDB() {
-        String migrationDir = props.containsKey(ConfigurationKeys.PROP_FLYWAY_MIRGRATION)
-                ? props.getProperty(ConfigurationKeys.PROP_FLYWAY_MIRGRATION)
-                : "sql/";
+        String migrationDir = props.getProperty(ConfigurationKeys.PROP_FLYWAY_MIRGRATION, "sql/");
         DatabaseSetup setup = new DatabaseSetup(dataSource, migrationDir);
-
-        // adpat for h2
-        String driverClass = props.getProperty(ConfigurationKeys.PROP_DATASOURCE_DRIVER);
-        if (driverClass.equals("org.h2.Driver")) {
-            logger.info("Create Domain JSONB for H2");
-            try (Connection conn = dataSource.getConnection()) {
-                String createJsonbDomain = "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT;";
-                conn.createStatement().execute(createJsonbDomain);
-            } catch (SQLException e) {
-                logger.error("Failed to establish connection.", e);
-                throw new RuntimeException(e);
-            }
-        }
         setup.start();
     }
 
@@ -72,8 +55,8 @@ public class KunWebServer {
             configureDB();
             configureServlet();
             ServerConnector connector = new ServerConnector(server);
-            int port = props.containsKey(ConfigurationKeys.PROP_SERVER_PORT) ? Integer.parseInt(props.getProperty(ConfigurationKeys.PROP_SERVER_PORT)) : 8088;
-            boolean enableStdErr = props.containsKey(ConfigurationKeys.PROP_SERVER_DUMP_STDERR) && props.getProperty(ConfigurationKeys.PROP_SERVER_DUMP_STDERR).equals("true");
+            int port = Integer.parseInt(props.getProperty(ConfigurationKeys.PROP_SERVER_PORT, "8088"));
+            boolean enableStdErr = props.getProperty(ConfigurationKeys.PROP_SERVER_DUMP_STDERR, "false").equals("true");
 
             logger.info("Server listen on: {}", port);
             connector.setPort(port);
