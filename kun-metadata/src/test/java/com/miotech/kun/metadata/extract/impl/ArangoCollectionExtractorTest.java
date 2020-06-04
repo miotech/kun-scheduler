@@ -14,7 +14,7 @@ public class ArangoCollectionExtractorTest {
 
     @Before
     public void setUp() throws Exception {
-        ArangoCluster cluster = ArangoCluster.newBuilder()
+        ArangoDataSource cluster = ArangoDataSource.newBuilder()
                 .withDataStoreUrl("10.0.2.162:8529")
                 .withDataStoreUsername("root")
                 .withDataStorePassword("d@ta")

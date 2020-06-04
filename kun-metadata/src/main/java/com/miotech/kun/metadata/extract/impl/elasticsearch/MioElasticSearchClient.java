@@ -1,6 +1,6 @@
 package com.miotech.kun.metadata.extract.impl.elasticsearch;
 
-import com.miotech.kun.metadata.model.ElasticSearchCluster;
+import com.miotech.kun.metadata.model.ElasticSearchDataSource;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -21,7 +21,7 @@ public class MioElasticSearchClient {
     private RestHighLevelClient highLevelClient;
     private RestClient lowLevelClient;
 
-    public MioElasticSearchClient(ElasticSearchCluster cluster){
+    public MioElasticSearchClient(ElasticSearchDataSource cluster){
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
             credentialsProvider.setCredentials(AuthScope.ANY,
                 new UsernamePasswordCredentials(cluster.getDataStoreUsername(), cluster.getDataStorePassword()));

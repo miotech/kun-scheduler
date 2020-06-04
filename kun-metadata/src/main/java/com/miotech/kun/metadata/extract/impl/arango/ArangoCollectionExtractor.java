@@ -15,13 +15,13 @@ import java.util.List;
 
 public class ArangoCollectionExtractor extends ExtractorTemplate {
 
-    private ArangoCluster cluster;
+    private ArangoDataSource cluster;
     private String dbName;
     private String collection;
     private MioArangoClient client;
 
-    public ArangoCollectionExtractor(ArangoCluster cluster, String dbNAme, String collection){
-        super(cluster);
+    public ArangoCollectionExtractor(ArangoDataSource cluster, String dbNAme, String collection){
+        super(cluster.getId());
         this.cluster = cluster;
         this.dbName = dbNAme;
         this.collection = collection;
