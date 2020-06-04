@@ -1,7 +1,5 @@
 package com.miotech.kun.metadata.extract.impl.elasticsearch;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.miotech.kun.metadata.model.ElasticSearchCluster;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
@@ -17,15 +15,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-
-@Singleton
 public class MioElasticSearchClient {
     private static Logger logger = LoggerFactory.getLogger(MioElasticSearchClient.class);
 
     private RestHighLevelClient highLevelClient;
     private RestClient lowLevelClient;
 
-    @Inject
     public MioElasticSearchClient(ElasticSearchCluster cluster){
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
             credentialsProvider.setCredentials(AuthScope.ANY,
@@ -50,6 +45,7 @@ public class MioElasticSearchClient {
         try {
             return lowLevelClient.performRequest(request);
         }catch (IOException e){
+            logger.error("elasticseatch low level api call failed, query -> " + request.getEndpoint(), e);
             throw new RuntimeException(e);
         }
     }
@@ -60,6 +56,7 @@ public class MioElasticSearchClient {
             CountResponse response = highLevelClient.count(request, RequestOptions.DEFAULT);
             return response.getCount();
         }catch (IOException e){
+            logger.error("elasticseatch high level api call failed", e);
             throw new RuntimeException(e);
         }
     }

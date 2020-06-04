@@ -34,8 +34,11 @@ public class ElasticSearchCluster extends Cluster{
 
     @Override
     public String toString() {
-        //TODO
-        return null;
+        return "ElasticSearchCluster{" +
+                ", dataStoreUrl='" + dataStoreUrl + '\'' +
+                ", dataStoreUsername='" + dataStoreUsername + '\'' +
+                ", dataStorePassword='" + dataStorePassword + '\'' +
+                '}';
     }
 
     public static ElasticSearchCluster.ElasticSearchClusterBuilder newBuilder() {

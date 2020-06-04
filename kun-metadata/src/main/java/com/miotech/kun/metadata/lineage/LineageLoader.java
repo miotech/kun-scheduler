@@ -29,7 +29,6 @@ public class LineageLoader {
         List<Long> inletDataSetIds = new ArrayList<>();
         List<Long> outletDataSetIds = new ArrayList<>();
         long taskId = lineageEvent.getTaskId();
-//        LineageEvent lineageEvent = (LineageEvent) event;
         for(DataStore store : lineageEvent.getInlets()){
             long id = findDataSetId(store);
             if (id > 0) inletDataSetIds.add(id);
@@ -38,11 +37,9 @@ public class LineageLoader {
             long id = findDataSetId(store);
             if (id > 0) outletDataSetIds.add(id);
         }
-        //TODO: kun_mt_dataset_relations, bigint -> array(bigint)
         System.out.println("save to db, taskId: " + taskId);
 
         Object[][] params = new Object[inletDataSetIds.size()][];
-//        List<List<Object>> params = new ArrayList<>();
         for(int i = 0; i < inletDataSetIds.size(); i++){
             List<Object> param = new ArrayList<>();
             long inlet = inletDataSetIds.get(i);
@@ -58,10 +55,9 @@ public class LineageLoader {
 
     }
 
-    public long findDataSetId(DataStore store){
+    private long findDataSetId(DataStore store){
         String dataStoreJson = null;
         try {
-            //TODO: circular dependency of metadata project
             dataStoreJson = DataStoreJsonUtil.toJson(store);
         } catch (JsonProcessingException e) {
             logger.error("unknown data store error", e);
