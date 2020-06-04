@@ -34,8 +34,11 @@ public class ArangoCluster extends Cluster{
 
     @Override
     public String toString() {
-        //TODO
-        return null;
+        return "ArangoCluster{" +
+                ", dataStoreUrl='" + dataStoreUrl + '\'' +
+                ", dataStoreUsername='" + dataStoreUsername + '\'' +
+                ", dataStorePassword='" + dataStorePassword + '\'' +
+                '}';
     }
 
     public static ArangoCluster.ArangoClusterBuilder newBuilder() {

@@ -76,7 +76,7 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
 
     @Override
     protected String getName() {
-        return collection;
+        return dbName + "." + collection;
     }
 
     public List<DatasetField> docToFields(JsonNode root, String parent){

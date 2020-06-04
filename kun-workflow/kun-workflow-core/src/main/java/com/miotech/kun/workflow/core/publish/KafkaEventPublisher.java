@@ -30,12 +30,11 @@ public class KafkaEventPublisher implements EventPublisher {
 
     @Override
     public void publish(Event event) {
-        // TODO: need implementation
         ProducerRecord record = null;
         try {
             record = new ProducerRecord<String, String>(topic, "", EventMapper.toJson(event));
         } catch (JsonProcessingException e) {
-            logger.error("send msg to kafka failed", e);
+            logger.error("convert kafka event msg", e);
         }
         Future<RecordMetadata> result =  producer.send(record);
         try {

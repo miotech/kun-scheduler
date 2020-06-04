@@ -24,7 +24,6 @@ public class KafkaEventSubscriber implements EventSubscriber {
 
     @Override
     public void subscribe(EventReceiver receiver) {
-        // TODO: need implementation
         consumer.subscribe(Arrays.asList(topic));
         while (true) {
             ConsumerRecords<String, String> records = consumer.poll(1000);
