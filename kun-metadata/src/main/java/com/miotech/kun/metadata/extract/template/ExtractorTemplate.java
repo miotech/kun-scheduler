@@ -68,7 +68,8 @@ public abstract class ExtractorTemplate implements Extractor {
                     .withDatasetStat(tableStat)
                     .withDataStore(dataStore);
         } catch (Exception e) {
-            logger.error("ExtractorTemplate extract error:", e);
+            logger.error("ExtractorTemplate extract error dataStore: {}", getDataStore(), e);
+            // TODO add retry
         }
         return Iterators.forArray(datasetBuilder.build());
     }
