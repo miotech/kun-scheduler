@@ -3,7 +3,7 @@ package com.miotech.kun.metadata.lineage;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.miotech.kun.metadata.testbase.DatabaseTestBase;
+import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.core.publish.EventSubscriber;
 import com.miotech.kun.workflow.core.publish.KafkaEventSubscriber;
 import org.junit.After;

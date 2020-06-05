@@ -2,24 +2,14 @@ package com.miotech.kun.metadata.client;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
-import com.miotech.kun.metadata.load.impl.PostgresLoader;
+import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.model.*;
-import com.miotech.kun.metadata.service.gid.GidService;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.db.DatabaseOperator;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
-import org.joor.Reflect;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import java.time.LocalDate;
-import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
 
 public class PostgresLoaderTest extends DatabaseTestBase {
 
@@ -85,55 +75,16 @@ public class PostgresLoaderTest extends DatabaseTestBase {
 
     @Test
     public void testLoad_commit() {
-        PostgresLoader postgresLoader = new PostgresLoader(operator);
-
-        Long rowCount = operator.fetchOne("SELECT COUNT(*) FROM kun_mt_dataset", rs -> rs.getLong(1));
-        Assert.assertEquals(rowCount, Long.valueOf(0));
-        postgresLoader.load(dataset);
-        rowCount = operator.fetchOne("SELECT COUNT(*) FROM kun_mt_dataset", rs -> rs.getLong(1));
-        Assert.assertEquals(rowCount, Long.valueOf(1));
 
     }
 
     @Test
     public void testLoad_rollback() {
-        PostgresLoader postgresLoader = new PostgresLoader(operator);
-
-        Long rowCount = operator.fetchOne("SELECT COUNT(*) FROM kun_mt_dataset", rs -> rs.getLong(1));
-        Assert.assertEquals(rowCount, Long.valueOf(0));
-
-        try {
-            dataset = dataset.cloneBuilder().withDatasetStat(new DatasetStat(100L, LocalDate.now()))
-                    .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", LocalDate.now()),
-                            new DatasetFieldStat("name", 3, 167, "admin", LocalDate.now()))).build();
-            postgresLoader.load(dataset);
-        } catch (RuntimeException e) {
-            MatcherAssert.assertThat(e.getMessage(), Matchers.startsWith("logic exception(nonnullCount > rowCount)"));
-        }
-        rowCount = operator.fetchOne("SELECT COUNT(*) FROM kun_mt_dataset", rs -> rs.getLong(1));
-        Assert.assertEquals(rowCount, Long.valueOf(0));
 
     }
 
     @Test
     public void testLoad_updateField() {
-        PostgresLoader postgresLoader = new PostgresLoader(operator);
-        operator.update("INSERT INTO kun_mt_dataset_field(dataset_gid, `name`, `type`) VALUES(?, ?, ?)", 100L, "age", "int");
-        operator.update("INSERT INTO kun_mt_dataset_field(dataset_gid, `name`, `type`) VALUES(?, ?, ?)", 100L, "id", "abc");
-        Long id = operator.fetchOne("SELECT id FROM kun_mt_dataset_field WHERE dataset_gid = 100 AND `name` = 'age'", rs -> rs.getLong(1));
-        Assert.assertNotNull(id);
 
-        GidService mockGidService = Mockito.mock(GidService.class);
-        Mockito.when(mockGidService.generate(dataset.getDataStore())).thenReturn(100L);
-
-        Reflect.on(postgresLoader).set("gidGenerator", mockGidService);
-
-        postgresLoader.load(dataset);
-        List<String> fieldNames = operator.fetchAll("SELECT `name` FROM kun_mt_dataset_field WHERE dataset_gid = 100", rs -> rs.getString(1));
-        List<String> types = operator.fetchAll("SELECT `type` FROM kun_mt_dataset_field WHERE dataset_gid = 100", rs -> rs.getString(1));
-        assertThat(fieldNames, containsInAnyOrder("id", "name"));
-        assertThat(types, containsInAnyOrder("def", "string"));
-        id = operator.fetchOne("SELECT id FROM kun_mt_dataset_field WHERE dataset_gid = 100 AND `name` = 'age'", rs -> rs.getLong(1));
-        Assert.assertNull(id);
     }
 }

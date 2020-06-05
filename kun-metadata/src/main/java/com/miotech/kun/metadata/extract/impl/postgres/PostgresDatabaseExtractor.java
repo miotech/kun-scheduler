@@ -1,22 +1,18 @@
 package com.miotech.kun.metadata.extract.impl.postgres;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.client.JDBCClient;
 import com.miotech.kun.metadata.constant.DatabaseType;
 import com.miotech.kun.metadata.extract.Extractor;
-import com.miotech.kun.metadata.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.model.Dataset;
 import com.miotech.kun.metadata.model.PostgresDataSource;
+import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import javax.sql.DataSource;
 import java.util.Iterator;
 import java.util.List;
 
@@ -36,30 +32,10 @@ public class PostgresDatabaseExtractor implements Extractor {
     public Iterator<Dataset> extract() {
         logger.debug("PostgresDatabaseExtractor extract start. dataSource: {}, database: {}",
                 JSONUtils.toJsonString(dataSource), database);
-        List<String> schemas = Lists.newArrayList();
-
-        Connection connection = null;
-        Statement statement = null;
-        ResultSet resultSet = null;
-        try {
-            connection = JDBCClient.getConnection(DatabaseType.POSTGRES, UseDatabaseUtil.useDatabase(dataSource.getUrl(), database),
-                    dataSource.getUsername(), dataSource.getPassword());
-            String scanDatabase = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name != 'information_schema'";
-            statement = connection.createStatement();
-            resultSet = statement.executeQuery(scanDatabase);
-
-            while (resultSet.next()) {
-                String schema = resultSet.getString(1);
-                schemas.add(schema);
-            }
-        } catch (ClassNotFoundException classNotFoundException) {
-            logger.error("driver class not found, DatabaseType: {}", DatabaseType.POSTGRES.getName(), classNotFoundException);
-            throw new RuntimeException(classNotFoundException);
-        } catch (SQLException sqlException) {
-            throw new RuntimeException(sqlException);
-        } finally {
-            JDBCClient.close(connection, statement, resultSet);
-        }
+        DataSource pgDataSource = JDBCClient.getDataSource(this.dataSource.getUrl(), this.dataSource.getUsername(), this.dataSource.getPassword(), DatabaseType.POSTGRES);
+        DatabaseOperator dbOperator = new DatabaseOperator(pgDataSource);
+        String showSchemas = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name != 'information_schema'";
+        List<String> schemas = dbOperator.fetchAll(showSchemas, rs -> rs.getString(1));
 
         logger.debug("PostgresDatabaseExtractor extract end. schemas: {}", JSONUtils.toJsonString(schemas));
         return Iterators.concat(schemas.stream().map((schema) -> new PostgresSchemaExtractor(dataSource, database, schema).extract()).iterator());

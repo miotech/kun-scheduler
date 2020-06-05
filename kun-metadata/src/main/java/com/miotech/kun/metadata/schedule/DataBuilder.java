@@ -49,11 +49,11 @@ public class DataBuilder {
         this.loader = new PostgresLoader(operator);
     }
 
-    public void build(long clusterId) {
-        Preconditions.checkArgument(clusterId > 0L, "clusterId must be a positive long, clusterId: %s", clusterId);
+    public void build(long datasourceId) {
+        Preconditions.checkArgument(datasourceId > 0L, "datasourceId must be a positive long, datasourceId: %s", datasourceId);
 
-        String sql = "SELECT kmc.id, kmct.name, kmc.connection_info FROM kun_mt_cluster kmc join kun_mt_cluster_type kmct on kmc.type_id = kmct.id WHERE kmc.id = ?";
-        DataSource dataSource = operator.fetchOne(sql, rs -> buildDataSource(rs), clusterId);
+        String sql = "SELECT kmc.id, kmct.name, kmc.connection_info FROM kun_mt_datasource kmc JOIN kun_mt_datasource_type kmct ON kmc.type_id = kmct.id WHERE kmc.id = ?";
+        DataSource dataSource = operator.fetchOne(sql, rs -> buildDataSource(rs), datasourceId);
         build(dataSource);
     }
 
@@ -90,7 +90,7 @@ public class DataBuilder {
     }
 
     public void buildAll() {
-        String sql = "SELECT kmc.id, kmct.name, kmc.connection_info FROM kun_mt_cluster kmc JOIN kun_mt_cluster_type kmct ON kmc.type_id = kmct.id";
+        String sql = "SELECT kmc.id, kmct.name, kmc.connection_info FROM kun_mt_datasource kmc JOIN kun_mt_datasource_type kmct ON kmc.type_id = kmct.id";
         List<DataSource> dataSources = operator.fetchAll(sql, rs -> buildDataSource(rs));
         dataSources.stream().forEach(dataSource -> build(dataSource));
     }
@@ -119,19 +119,19 @@ public class DataBuilder {
                         .withQueryEngine(convertToQueryEngine(connection));
                 return configurableDataSourceBuilder.build();
             case Postgres:
-                PostgresDataSource.Builder postgresClusterBuilder = PostgresDataSource.newBuilder();
-                postgresClusterBuilder.withId(id)
+                PostgresDataSource.Builder postgresDataSourceBuilder = PostgresDataSource.newBuilder();
+                postgresDataSourceBuilder.withId(id)
                         .withUrl(connection.getDataStoreUrl())
                         .withUsername(connection.getDataStoreUsername())
                         .withPassword(connection.getDataStorePassword());
-                return postgresClusterBuilder.build();
+                return postgresDataSourceBuilder.build();
             case Mongo:
-                MongoDataSource.Builder mongoClusterBuilder = MongoDataSource.newBuilder();
-                mongoClusterBuilder.withId(id)
+                MongoDataSource.Builder mongoDataSourceBuilder = MongoDataSource.newBuilder();
+                mongoDataSourceBuilder.withId(id)
                         .withUrl(connection.getDataStoreUrl())
                         .withUsername(connection.getDataStoreUsername())
                         .withPassword(connection.getDataStorePassword());
-                return mongoClusterBuilder.build();
+                return mongoDataSourceBuilder.build();
             case ElasticSearch:
                 ElasticSearchDataSource elasticSearchCluster = ElasticSearchDataSource.newBuilder()
                         .withClusterId(id)
@@ -149,8 +149,8 @@ public class DataBuilder {
                         .build();
                 return arangoDataSource;
             default:
-                logger.error("invalid cluster type: {}", type);
-                throw new RuntimeException("Invalid cluster type: " + type);
+                logger.error("invalid datasource type: {}", type);
+                throw new RuntimeException("Invalid datasource type: " + type);
         }
     }
 

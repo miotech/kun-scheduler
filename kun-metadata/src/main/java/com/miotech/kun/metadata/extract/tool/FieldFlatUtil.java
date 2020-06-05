@@ -37,7 +37,7 @@ public class FieldFlatUtil {
             } else {
                 String fieldType = null;
                 if (node.isNull()) {
-                    fieldType = "UNKNOW";
+                    fieldType = "UNKNOWN";
                 } else {
                     if (node.isNumber())
                         fieldType = "NUMBER";
