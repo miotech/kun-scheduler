@@ -7,11 +7,13 @@ import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.core.publish.EventSubscriber;
 import com.miotech.kun.workflow.core.publish.KafkaEventSubscriber;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.inject.Inject;
 import java.util.Properties;
 
+@Ignore
 public class LineageEventSubscriberTest extends DatabaseTestBase {
 
     @Inject
