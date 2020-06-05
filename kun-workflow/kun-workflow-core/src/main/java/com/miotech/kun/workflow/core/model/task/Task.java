@@ -1,15 +1,16 @@
 package com.miotech.kun.workflow.core.model.task;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Variable;
 
 import java.util.List;
+import java.util.Objects;
 
 @JsonDeserialize(builder = Task.TaskBuilder.class)
 public class Task {
+
     private final Long id;
 
     private final String name;
@@ -23,6 +24,8 @@ public class Task {
     private final List<Variable> variableDefs;
 
     private final ScheduleConf scheduleConf;
+
+    private final List<TaskDependency> dependencies;
 
     public Long getId() {
         return id;
@@ -52,14 +55,19 @@ public class Task {
         return scheduleConf;
     }
 
-    private Task(Long id, String name, String description, Long operatorId, List<Param> params, List<Variable> variableDefs, ScheduleConf scheduleConf) {
+    public List<TaskDependency> getDependencies() {
+        return dependencies;
+    }
+
+    private Task(Long id, String name, String description, Long operatorId, List<Param> arguments, List<Variable> variableDefs, ScheduleConf scheduleConf, List<TaskDependency> dependencies) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.operatorId = operatorId;
-        this.arguments = ImmutableList.copyOf(params);
+        this.arguments = ImmutableList.copyOf(arguments);
         this.variableDefs = ImmutableList.copyOf(variableDefs);
         this.scheduleConf = scheduleConf;
+        this.dependencies = ImmutableList.copyOf(dependencies);
     }
 
     public TaskBuilder cloneBuilder() {
@@ -70,14 +78,34 @@ public class Task {
                 .withOperatorId(operatorId)
                 .withArguments(arguments)
                 .withVariableDefs(variableDefs)
-                .withScheduleConf(scheduleConf);
+                .withScheduleConf(scheduleConf)
+                .withDependencies(dependencies);
     }
 
     public static TaskBuilder newBuilder() {
         return new TaskBuilder();
     }
 
-    @JsonPOJOBuilder
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Task task = (Task) o;
+        return Objects.equals(id, task.id) &&
+                Objects.equals(name, task.name) &&
+                Objects.equals(description, task.description) &&
+                Objects.equals(operatorId, task.operatorId) &&
+                Objects.equals(arguments, task.arguments) &&
+                Objects.equals(variableDefs, task.variableDefs) &&
+                Objects.equals(scheduleConf, task.scheduleConf) &&
+                Objects.equals(dependencies, task.dependencies);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, description, operatorId, arguments, variableDefs, scheduleConf, dependencies);
+    }
+
     public static final class TaskBuilder {
         private Long id;
         private String name;
@@ -86,12 +114,9 @@ public class Task {
         private List<Param> arguments;
         private List<Variable> variableDefs;
         private ScheduleConf scheduleConf;
+        private List<TaskDependency> dependencies;
 
         private TaskBuilder() {
-        }
-
-        public static TaskBuilder aTask() {
-            return new TaskBuilder();
         }
 
         public TaskBuilder withId(Long id) {
@@ -120,7 +145,7 @@ public class Task {
         }
 
         public TaskBuilder withVariableDefs(List<Variable> variableDefs) {
-            this.variableDefs = ImmutableList.copyOf(variableDefs);
+            this.variableDefs = variableDefs;
             return this;
         }
 
@@ -129,8 +154,13 @@ public class Task {
             return this;
         }
 
+        public TaskBuilder withDependencies(List<TaskDependency> dependencies) {
+            this.dependencies = dependencies;
+            return this;
+        }
+
         public Task build() {
-            return new Task(id, name, description, operatorId, arguments, variableDefs, scheduleConf);
+            return new Task(id, name, description, operatorId, arguments, variableDefs, scheduleConf, dependencies);
         }
     }
 }

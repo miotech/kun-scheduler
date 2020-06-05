@@ -1,22 +1,35 @@
 package com.miotech.kun.workflow.common.task.dao;
 
-import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.google.common.collect.Lists;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
+import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.miotech.kun.workflow.core.model.common.Param;
+import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.common.Variable;
+import com.miotech.kun.workflow.core.model.task.ScheduleConf;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.db.DatabaseOperator;
+import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Test;
 
 import javax.inject.Inject;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TaskDaoTest extends DatabaseTestBase {
     @Inject
@@ -25,40 +38,92 @@ public class TaskDaoTest extends DatabaseTestBase {
     @Inject
     TaskDao taskDao;
 
+    @Inject
+    TaskDependencyFunctionProvider dependencyFunctionProvider;
+
+    private Clock getMockClock() {
+        return Clock.fixed(Instant.parse("2020-01-01T00:00:00.00Z"), ZoneId.of("UTC"));
+    }
+
     private void insertSampleData() {
-        /* TODO: implement this with factory */
-        dbOperator.batch("INSERT INTO kun_wf_task (id, name, description, operator_id, arguments, variable_defs, schedule) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?);",
-                new Object[][]{
-                        {1L, "example1", "example1_desc", 1L, "[]", "[{\"key\": \"PATH\", \"defaultValue\": \"/usr/bin\"}]", "{}"},
-                        {2L, "example2", "example2_desc", 1L, "[]", "[]", "{}"},
-                        {3L, "example3", "example3_desc", 1L, "[]", "[]", "{}"}
-                }
+        // mock up a system clock
+        Clock clock = getMockClock();
+
+        // insert task with specific id
+        List<Param> args = Lists.newArrayList(
+                Param.newBuilder().withName("VERSION").withValue("1.0").build()
         );
 
+        List<Variable> variableDefs = Lists.newArrayList(
+                Variable.newBuilder().withKey("PATH").withDefaultValue("/usr/bin").build()
+        );
+
+        Task taskExample = Task.newBuilder()
+                .withId(1L)
+                .withName("example1")
+                .withDescription("example1_desc")
+                .withArguments(args)
+                .withVariableDefs(variableDefs)
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?"))
+                .withOperatorId(1L)
+                .withDependencies(new ArrayList<>())
+                .build();
+
+        taskDao.create(taskExample, clock);
+
+        // insert more tasks
+        for (int i = 0; i < 10; i += 1) {
+            Task task = MockTaskFactory.createTask();
+            taskDao.create(task);
+        }
+    }
+
+    /**
+     * @return a list of 4 mock tasks: A, B, C, D
+     * Task B, Task C has upstream dependency Task A
+     * Task D has upstream dependencies (Task B, Task C)
+     */
+    private List<Task> getSampleTasksWithDependencies() {
+        Task taskA = MockTaskFactory.createTask()
+                .cloneBuilder().withId(1L).withDependencies(new ArrayList<>()).build();
+        Task taskB = MockTaskFactory.createTask()
+                .cloneBuilder().withId(2L).withDependencies(Lists.newArrayList(
+                        new TaskDependency(1L, dependencyFunctionProvider.from("latestTaskRun"))
+                )).build();
+        Task taskC = MockTaskFactory.createTask()
+                .cloneBuilder().withId(3L).withDependencies(Lists.newArrayList(
+                        new TaskDependency(1L, dependencyFunctionProvider.from("latestTaskRun"))
+                )).build();
+        Task taskD = MockTaskFactory.createTask()
+                .cloneBuilder().withId(4L).withDependencies(Lists.newArrayList(
+                        new TaskDependency(2L, dependencyFunctionProvider.from("latestTaskRun")),
+                        new TaskDependency(3L, dependencyFunctionProvider.from("latestTaskRun"))
+                )).build();
+        return Lists.newArrayList(taskA, taskB, taskC, taskD);
     }
 
     @Test
-    public void search_withProperFilter_shouldSuccess() {
+    public void fetch_withProperFilter_shouldSuccess() {
         insertSampleData();
 
-        List<Task> results = taskDao.getList(TaskSearchFilter
+        // 11 records in total
+        List<Task> results = taskDao.fetchWithFilters(TaskSearchFilter
                 .newBuilder()
-                .withPageNum(1)
-                .withPageSize(10)
+                .withPageNum(2)
+                .withPageSize(6)
                 .build());
 
         // should return all of 3 records
-        assertThat(results.size(), is(3));
+        assertThat(results.size(), is(5));
     }
 
     @Test
-    public void getById_withProperId_shouldSuccess() {
+    public void fetchById_withProperId_shouldSuccess() {
         // Prepare
         insertSampleData();
 
         // Process
-        Optional<Task> taskOptional = taskDao.getById(1L);
+        Optional<Task> taskOptional = taskDao.fetchById(1L);
 
         // Validate
         assertTrue(taskOptional.isPresent());
@@ -66,6 +131,7 @@ public class TaskDaoTest extends DatabaseTestBase {
         assertThat(task.getName(), is("example1"));
         assertThat(task.getVariableDefs().get(0).getKey(), is("PATH"));
         assertThat(task.getVariableDefs().get(0).getDefaultValue(), is("/usr/bin"));
+        assertThat(task.getScheduleConf().getCronExpr(), is("0 15 10 * * ?"));
     }
 
     @Test
@@ -79,13 +145,15 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withOperatorId(1L)
                 .withArguments(new ArrayList<>())
                 .withVariableDefs(new ArrayList<>())
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withDependencies(new ArrayList<>())
                 .build();
 
         // Process
         taskDao.create(insertTask);
 
         // Validate
-        Optional<Task> persistedTaskOptional = taskDao.getById(id);
+        Optional<Task> persistedTaskOptional = taskDao.fetchById(id);
         assertTrue(persistedTaskOptional.isPresent());
 
         Task persistedTask = persistedTaskOptional.get();
@@ -130,19 +198,64 @@ public class TaskDaoTest extends DatabaseTestBase {
     }
 
     @Test
+    public void create_withValidTaskDependencies_shouldSuccess() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        // Process
+        tasks.forEach(task -> taskDao.create(task));
+        // Validate
+        Optional<Task> taskDOptional = taskDao.fetchById(4L);
+        assertTrue(taskDOptional.isPresent());
+        Task taskD = taskDOptional.get();
+        assertThat(taskD.getDependencies().size(), is(2));
+        assertThat(taskD.getDependencies().get(0).getUpstreamTaskId(), is(2L));
+        assertThat(taskD.getDependencies().get(1).getUpstreamTaskId(), is(3L));
+    }
+
+    @Test
+    public void fetchWithFilter_tasksHaveDependencies_shouldIncludeDependenciesProperly() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        // Process
+        tasks.forEach(task -> taskDao.create(task));
+        List<Task> fetchedTasks = taskDao.fetchWithFilters(
+                TaskSearchFilter.newBuilder().withPageNum(1).withPageSize(10).build());
+        fetchedTasks.forEach(task -> {
+            List<TaskDependency> deps = task.getDependencies();
+            switch (task.getId().intValue()) {
+                case 1:
+                    assertThat(deps.size(), is(0));
+                    break;
+                case 2:
+                case 3:
+                    assertThat(deps.size(), is(1));
+                    assertThat(deps.get(0).getUpstreamTaskId(), is(1L));
+                    break;
+                case 4:
+                    assertThat(deps.size(), is(2));
+                    assertThat(deps.get(0).getUpstreamTaskId(), is(2L));
+                    assertThat(deps.get(1).getUpstreamTaskId(), is(3L));
+                    break;
+                default:
+                    fail();
+            }
+        });
+    }
+
+    @Test
     public void update_WithProperId_shouldSuccess() {
         // Prepare
         insertSampleData();
 
-        Task task = taskDao.getById(1L).get();
+        Task task = taskDao.fetchById(1L).get();
         assertThat(task.getName(), is("example1"));
 
         // Process
         Task taskToBeUpdated = task.cloneBuilder().withName("changedTaskName").build();
-        taskDao.updateById(1L, taskToBeUpdated);
+        taskDao.update(taskToBeUpdated);
 
         // Validate
-        Task updatedTask = taskDao.getById(1L).get();
+        Task updatedTask = taskDao.fetchById(1L).get();
         assertThat(updatedTask, samePropertyValuesAs(taskToBeUpdated));
     }
 
@@ -150,14 +263,201 @@ public class TaskDaoTest extends DatabaseTestBase {
     public void delete_WithExistedId_ShouldWork() {
         // Prepare
         insertSampleData();
-        Optional<Task> taskToBeDeleteOptional = taskDao.getById(3L);
+        Optional<Task> taskToBeDeleteOptional = taskDao.fetchById(1L);
         assertTrue(taskToBeDeleteOptional.isPresent());
+
+        // Process
+        taskDao.deleteById(1L);
+
+        // Validate
+        Optional<Task> taskDeletedOptional = taskDao.fetchById(1L);
+        assertFalse(taskDeletedOptional.isPresent());
+    }
+
+    @Test
+    public void delete_TaskWithDependencies_ShouldDeleteRelations() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        tasks.forEach(task -> taskDao.create(task));
 
         // Process
         taskDao.deleteById(3L);
 
         // Validate
-        Optional<Task> taskDeletedOptional = taskDao.getById(3L);
-        assertFalse(taskDeletedOptional.isPresent());
+        Optional<Task> taskCOptional = taskDao.fetchById(3L);
+        assertFalse(taskCOptional.isPresent());
+
+        Task taskD = taskDao.fetchById(4L).get();
+        // Originally task D has 2 dependencies. After deletion, dependency of task C should be removed
+        assertThat(taskD.getDependencies().size(), is(1));
+        assertThat(taskD.getDependencies().get(0).getUpstreamTaskId(), is(2L));
+    }
+
+    @Test
+    public void fetchScheduledTaskAtTick_ShouldWork() {
+        // Prepare
+        // 1. A prepared task has a scheduled execution on 10:15 everyday.
+        insertSampleData();
+
+        // 2. We prepare 3 ticks: on 8:00 am, on 10:15, on 11:00.
+        OffsetDateTime mockNow = OffsetDateTime.now(getMockClock());
+
+        OffsetDateTime time0800 = mockNow.withHour(8).withMinute(0).withSecond(0);
+        OffsetDateTime time1015 = mockNow.withHour(10).withMinute(15).withSecond(0);
+        OffsetDateTime time1100 = mockNow.withHour(11).withMinute(0).withSecond(0);
+
+        Tick preExecutionTick = new Tick(time0800);
+        Tick onExecutionTick = new Tick(time1015);
+        Tick postExecutionTick = new Tick(time1100);
+
+        // Process
+        // 3. fetch list of tasks from dao that scheduled before 08:00 (expect to be empty)
+        List<Task> tasksToExecuteOn0800 = taskDao.fetchScheduledTaskAtTick(preExecutionTick);
+
+        // 4. fetch list of tasks from dao that scheduled on 10:15
+        List<Task> tasksToExecuteOn1015 = taskDao.fetchScheduledTaskAtTick(onExecutionTick);
+
+        // 5.  fetch list of tasks from dao that scheduled on 10:15
+        List<Task> tasksToExecuteOn1100 = taskDao.fetchScheduledTaskAtTick(postExecutionTick);
+
+        // Validate
+        assertThat(tasksToExecuteOn0800.size(), is(0));
+        assertThat(tasksToExecuteOn1015.size(), is(1));
+        assertThat(tasksToExecuteOn1015.get(0).getId(), is(1L));
+        assertThat(tasksToExecuteOn1100.size(), is(1));
+        assertThat(tasksToExecuteOn1100.get(0).getId(), is(1L));
+    }
+
+    @Test
+    public void updateTask_withScheduledConfUpdated_shouldReinsertTickMapping() {
+        // Prepare
+        // 1. Create a task with scheduled execution on 10:15 everyday.
+        insertSampleData();
+
+        OffsetDateTime mockNow = OffsetDateTime.now(getMockClock());
+        OffsetDateTime time1015 = mockNow.withHour(10).withMinute(15).withSecond(0);
+        OffsetDateTime time1115 = mockNow.withHour(11).withMinute(15).withSecond(0);
+
+        List<Task> tasksToExecuteOn1015 = taskDao.fetchScheduledTaskAtTick(new Tick(time1015));
+        List<Task> tasksToExecuteOn1115 = taskDao.fetchScheduledTaskAtTick(new Tick(time1115));
+
+        assertThat(tasksToExecuteOn1015.size(), is(1));
+        assertThat(tasksToExecuteOn1015.get(0).getId(), is(1L));
+        assertThat(tasksToExecuteOn1115.size(), is(1));
+        assertThat(tasksToExecuteOn1115.get(0).getId(), is(1L));
+
+        // Process
+        // 2. We update the task to execute on 11:00 instead of 10:15 everyday
+        Task taskToUpdate = tasksToExecuteOn1015.get(0).cloneBuilder().withScheduleConf(
+                new ScheduleConf(ScheduleType.SCHEDULED, "0 0 11 * * ?")
+        ).build();
+        taskDao.update(taskToUpdate, getMockClock());
+
+        // Validate
+        List<Task> tasksToExecuteOn1015AfterUpdate = taskDao.fetchScheduledTaskAtTick(new Tick(time1015));
+        List<Task> tasksToExecuteOn1115AfterUpdate = taskDao.fetchScheduledTaskAtTick(new Tick(time1115));
+
+        assertThat(tasksToExecuteOn1015AfterUpdate.size(), is(0));
+        assertThat(tasksToExecuteOn1115AfterUpdate.size(), is(1));
+        assertThat(tasksToExecuteOn1115AfterUpdate.get(0).getId(), is(1L));
+    }
+
+    @Test
+    public void deleteTaskById_withScheduledConfAssigned_shouldRemoveTickMapping() {
+        // Prepare
+        // 1. Create a task with scheduled execution on 10:15 everyday.
+        insertSampleData();
+
+        OffsetDateTime mockNow = OffsetDateTime.now(getMockClock());
+        OffsetDateTime time1015 = mockNow.withHour(10).withMinute(15).withSecond(0);
+        List<Task> tasksToExecuteOn1015 = taskDao.fetchScheduledTaskAtTick(new Tick(time1015));
+
+        assertThat(tasksToExecuteOn1015.size(), is(1));
+        assertThat(tasksToExecuteOn1015.get(0).getId(), is(1L));
+
+        // Process
+        taskDao.deleteById(1L);
+
+        // Validate
+        List<Task> tasksToExecuteOn1015AfterDelete = taskDao.fetchScheduledTaskAtTick(new Tick(time1015));
+        assertThat(tasksToExecuteOn1015AfterDelete.size(), is(0));
+    }
+
+    @Test
+    public void fetchUpstreamTasks_withGivenDistance_shouldWork() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        tasks.forEach(task -> taskDao.create(task));
+
+        Task taskA = tasks.get(0);
+        Task taskD = tasks.get(3);
+
+        // Process
+        List<Task> upstreamTasksOfTaskAInDistance1 = taskDao.fetchUpstreamTasks(taskA);
+        List<Task> upstreamTasksOfTaskDInDistance1 = taskDao.fetchUpstreamTasks(taskD);
+        List<Task> upstreamTasksOfTaskDInDistance2 = taskDao.fetchUpstreamTasks(taskD, 2);
+        List<Task> upstreamTasksOfTaskDInDistance2AndItself = taskDao.fetchUpstreamTasks(taskD, 2, true);
+        List<Task> upstreamTasksOfTaskDInDistance3AndItself = taskDao.fetchUpstreamTasks(taskD, 3, true);
+
+        // Validate
+        assertThat(upstreamTasksOfTaskAInDistance1.size(), is(0)); // A is the root of DAG
+        assertThat(upstreamTasksOfTaskDInDistance1.size(), is(2)); // Task B and Task C
+        assertThat(upstreamTasksOfTaskDInDistance2.size(), is(3)); // Task A, Task B and Task C
+        assertThat(upstreamTasksOfTaskDInDistance2AndItself.size(), is(4));  // Task A, Task B, Task C and Task D
+        assertThat(upstreamTasksOfTaskDInDistance3AndItself.size(), is(4));  // Task A, Task B, Task C and Task D
+    }
+
+    @Test
+    public void fetchDownstreamTasks_withGivenDistance_shouldWork() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        tasks.forEach(task -> taskDao.create(task));
+
+        Task taskA = tasks.get(0);
+        Task taskD = tasks.get(3);
+
+        // Process
+        List<Task> downstreamTasksOfTaskDInDistance1 = taskDao.fetchDownstreamTasks(taskD);
+        List<Task> downstreamTasksOfTaskAInDistance1 = taskDao.fetchDownstreamTasks(taskA);
+        List<Task> downstreamTasksOfTaskAInDistance2 = taskDao.fetchDownstreamTasks(taskA, 2);
+        List<Task> downstreamTasksOfTaskAInDistance2AndItself = taskDao.fetchDownstreamTasks(taskA, 2, true);
+
+        // Validate
+        assertThat(downstreamTasksOfTaskDInDistance1.size(), is(0)); // A is the root of DAG
+        assertThat(downstreamTasksOfTaskAInDistance1.size(), is(2)); // Task B and Task C
+        assertThat(downstreamTasksOfTaskAInDistance2.size(), is(3)); // Task B, Task C and Task D
+        assertThat(downstreamTasksOfTaskAInDistance2AndItself.size(), is(4));  // Task A, Task B, Task C and Task D
+    }
+
+    @Test
+    public void fetchUpOrDownstreamTasks_withIllegalArgument_shouldThrowExceptions() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        tasks.forEach(task -> taskDao.create(task));
+        Task taskD = tasks.get(3);
+
+        // Process & Validate
+        // 1. should throw NullPointerException when source task is null
+        try {
+            taskDao.fetchUpstreamTasks(null);
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(NullPointerException.class));
+        }
+
+        // 2. should throw IllegalArgumentException when distance is 0 or negative
+        try {
+            taskDao.fetchUpstreamTasks(taskD, 0);
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+        }
+
+        try {
+            taskDao.fetchUpstreamTasks(taskD, -1);
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+        }
     }
 }

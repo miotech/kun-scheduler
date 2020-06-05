@@ -1,46 +1,38 @@
 package com.miotech.kun.workflow.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.web.annotation.RequestBody;
-import com.miotech.kun.workflow.web.http.InternalErrorMessage;
-import com.miotech.kun.workflow.web.http.HttpAction;
-import com.miotech.kun.workflow.web.http.HttpMethod;
-import com.miotech.kun.workflow.web.http.HttpRoute;
+import com.miotech.kun.workflow.web.http.*;
+import com.miotech.kun.workflow.web.serializer.JsonSerializer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
 @Singleton
 public class DispatchServlet extends HttpServlet {
     private Logger logger = LoggerFactory.getLogger(DispatchServlet.class);
 
+    @Inject
     private HttpRouter router;
 
-    private ObjectMapper objectMapper;
-
-    private final Injector injector;
+    @Inject
+    private ParameterResolver parameterResolver;
 
     @Inject
-    public DispatchServlet(Injector injector, HttpRouter router, ObjectMapper objectMapper) {
-        this.injector = injector;
-        this.router = router;
-        this.objectMapper = objectMapper;
-    }
+    private ExceptionHandler exceptionHandler;
+
+    @Inject
+    private JsonSerializer jsonSerializer;
 
     @Override
     public void init() {
@@ -48,9 +40,8 @@ public class DispatchServlet extends HttpServlet {
         router.scanPackage(basePackageName + ".controller");
     }
 
-
     @Override
-    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws IOException {
         HttpMethod httpMethod = HttpMethod.resolve(request.getMethod());
 
         if (HttpMethod.HEAD == httpMethod) {
@@ -62,75 +53,80 @@ public class DispatchServlet extends HttpServlet {
 
     private void doAction(final HttpServletRequest req,
                           final HttpServletResponse resp,
-                          HttpMethod method)
-            throws ServletException, IOException {
+                          HttpMethod method) {
         logger.debug("Receive request {} {}", method.toString(), req.getRequestURL());
-        HttpRoute route = new HttpRoute(req.getRequestURI(), method);
-        HttpAction action = router.getRoute(route);
-
-        if (action != null) {
-
-            // Invoke method with args
-            try {
+        try {
+            HttpRequestMappingHandler handler = router.getRequestMappingHandler(req);
+            if (handler != null) {
+                // Invoke method with args
                 List<Object> args = new ArrayList<>();
-                for (Parameter parameter: action.getMethod().getParameters())
-                    args.add(resolveParameter(parameter, req, resp));
+                HttpAction action = handler.getAction();
+                for (Parameter parameter: action.getMethod().getParameters()) {
+                    args.add(parameterResolver.resolveRequestParameter(
+                            parameter,
+                            handler.getHttpRequest(),
+                            resp));
+                }
 
                 Object responseObj = action.call(args.toArray());
-                doResponse(responseObj, req, resp);
-            } catch (Exception e) {
-                logger.error("Server error in process: {} {} ",
-                        route.getMethod(),
-                        req.getRequestURI(), e);
+                doResponse(responseObj, resp);
+            } else {
+                String errorMsg = "Cannot resolve url mapping for: " + req.getRequestURI();
+                logger.info(errorMsg);
                 InternalErrorMessage errorMessage = new InternalErrorMessage(
-                        e.getMessage(),
+                        errorMsg,
                         req.getRequestURI(),
-                        LocalDateTime.now()
+                        LocalDateTime.now(),
+                        "Resource Not Found",
+                        400
                 );
-                resp.setStatus(errorMessage.getStatus());
-                doResponse(errorMessage, req, resp);
+                doError(errorMessage, resp);
             }
-        } else {
-            // TODO: respond with resource not found
-            logger.debug("Cannot resolve url mapping for {}", req.getRequestURI());
+        } catch (Throwable e) {
+            logger.debug("{}, Handle exception {}", req.getRequestURI(), e.getClass().getName());
+            handleException(req, resp, e);
+        }
+
+    }
+
+    private void handleException(HttpServletRequest req,
+                                 HttpServletResponse resp,
+                                 Throwable e) {
+        Throwable finalExeception;
+
+        try {
+            finalExeception = exceptionHandler.handleException(req, resp, e);
+        } catch (Exception ex) {
+            finalExeception = ex;
+        }
+        if (finalExeception != null) {
+            logger.error("Server error in process: {} {} ",
+                    req.getMethod(),
+                    req.getRequestURI(), e);
+            InternalErrorMessage errorMessage = new InternalErrorMessage(
+                    e.getMessage(),
+                    req.getRequestURI(),
+                    LocalDateTime.now()
+            );
+            doError(errorMessage, resp);
         }
     }
 
+    private void doError(InternalErrorMessage errorMessage,
+                         final HttpServletResponse resp) {
+        resp.setStatus(errorMessage.getStatus());
+        doResponse(errorMessage, resp);
+    }
+
     private void doResponse(Object responseObj,
-                            final HttpServletRequest req,
-                            final HttpServletResponse resp) throws IOException {
+                            final HttpServletResponse resp) {
         if (resp.getStatus() <= 0) {
             resp.setStatus(HttpStatus.OK_200);
         }
 
         if (responseObj != null) {
-            PrintWriter out = resp.getWriter();
             // TODO: read content type from header and respond different format
-            resp.setContentType("application/json");
-            resp.setCharacterEncoding("UTF-8");
-
-            out.print(objectMapper.writeValueAsString(responseObj));
-            out.flush();
+            jsonSerializer.writeResponseAsJson(resp, responseObj);
         }
-    }
-
-    private Object resolveParameter( Parameter parameter,
-                                     final HttpServletRequest req,
-                                     final HttpServletResponse resp) throws IOException {
-        Class<?> paramClz = parameter.getType();
-        if (paramClz == HttpServletRequest.class) {
-            return req;
-        }
-
-        if (paramClz == HttpServletResponse.class) {
-            return resp;
-        }
-
-        for (Annotation annotation: parameter.getAnnotations()) {
-            if (annotation.annotationType() == RequestBody.class) {
-                return objectMapper.readValue(req.getInputStream(), paramClz);
-            }
-        }
-        return null;
     }
 }

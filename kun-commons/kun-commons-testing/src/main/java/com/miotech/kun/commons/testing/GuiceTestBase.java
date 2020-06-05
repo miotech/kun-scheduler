@@ -12,7 +12,7 @@ import java.util.*;
 
 public abstract class GuiceTestBase {
     private final List<Module> modules = new ArrayList<>();
-    private final Map<Class, Object> mocks = new HashMap<>();
+    private final Map<Object, Object> mocks = new HashMap<>();
 
     protected Injector injector;
 
@@ -44,8 +44,12 @@ public abstract class GuiceTestBase {
     private class InjectMockModule extends AbstractModule {
         @Override
         protected void configure() {
-            for (Class clazz : mocks.keySet()) {
-                bind(clazz).toInstance(mocks.get(clazz));
+            for (Object key : mocks.keySet()) {
+                if (key instanceof Class) {
+                    bind((Class<Object>) key).toInstance(mocks.get(key));
+                } else {
+                    throw new UnsupportedOperationException("Unsupported binding key: " + key);
+                }
             }
         }
     }

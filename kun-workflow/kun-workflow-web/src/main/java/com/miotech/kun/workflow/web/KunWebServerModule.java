@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.internal.AbstractBindingBuilder;
 import com.miotech.kun.workflow.common.AppModule;
 import org.eclipse.jetty.server.Server;
 
@@ -23,22 +24,5 @@ public class KunWebServerModule extends AppModule {
     @Singleton
     public Server getJettyServer() {
         return new Server();
-    }
-
-    @Provides
-    @Singleton
-    public ObjectMapper getJsonObjectMapper() {
-
-        ObjectMapper objectMapper = new ObjectMapper();
-        // allow empty field
-        objectMapper.setVisibility(PropertyAccessor.FIELD,
-                JsonAutoDetect.Visibility.ANY);
-
-        // default serialize datetime as iso date
-        objectMapper.registerModule(new JavaTimeModule());
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.setDateFormat(new StdDateFormat().withColonInTimeZone(true));
-
-        return objectMapper;
     }
 }

@@ -4,8 +4,23 @@ buildscript {
     }
 }
 
-subprojects {
+plugins {
+    id 'com.github.ksoichiro.console.reporter' version '0.6.2'
+}
+
+allprojects {
     apply plugin: 'java'
+    apply plugin: 'jacoco'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    test {
+        finalizedBy jacocoTestReport
+    }
 
     group = 'com.miotech'
     version = rootProject.version
@@ -48,16 +63,19 @@ subprojects {
                 implementation "com.arangodb:arangodb-java-driver:5.0.4"
                 implementation "org.apache.kafka:kafka-clients:2.5.0"
                 implementation "io.sentry:sentry-logback:1.7.30"
+                implementation "com.h2database:h2:1.4.200"
+                implementation "com.cronutils:cron-utils:9.0.2"
 
                 testImplementation "junit:junit:4.12"
                 testImplementation "org.hamcrest:hamcrest:2.2"
                 testImplementation "org.hamcrest:hamcrest-library:1.3"
                 testImplementation "junit:junit:4.12"
+                testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
                 testImplementation "org.hamcrest:hamcrest:2.2"
                 testImplementation "org.hamcrest:hamcrest-library:1.3"
                 testImplementation "org.mockito:mockito-core:3.3.3"
                 testImplementation "org.awaitility:awaitility:4.0.3"
-                testRuntimeOnly "com.h2database:h2:1.4.200"
+//                testRuntimeOnly "com.h2database:h2:1.4.200"
             }
 
             implementation "com.google.inject:guice"
@@ -70,10 +88,28 @@ subprojects {
             testImplementation "org.hamcrest:hamcrest"
             testImplementation "org.hamcrest:hamcrest-library"
             testImplementation "org.mockito:mockito-core"
-        }
-        repositories {
-            mavenCentral()
+            testImplementation "org.awaitility:awaitility"
         }
     }
-    
+}
+
+// Referenced from: https://gist.github.com/aalmiray/e6f54aa4b3803be0bcac#gistcomment-3207693
+task codeCoverageReport(type: JacocoReport) {
+    // Gather execution data from all subprojects
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+
+    // Add all relevant sourcesets from the subprojects
+    subprojects.each {
+        sourceSets it.sourceSets.main
+    }
+
+    reports {
+        xml.enabled true
+        html.enabled true
+        csv.enabled false
+    }
+}
+
+codeCoverageReport.dependsOn {
+    subprojects*.test
 }
