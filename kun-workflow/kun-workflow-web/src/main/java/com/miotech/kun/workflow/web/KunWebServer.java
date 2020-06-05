@@ -4,6 +4,8 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.miotech.kun.workflow.SchedulerManager;
+import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.common.CommonModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
 import com.miotech.kun.workflow.db.DatabaseSetup;
@@ -26,16 +28,19 @@ public class KunWebServer {
     private final DispatchServlet dispatchServlet;
     private final Properties props;
     private final DataSource dataSource;
+    private final SchedulerManager schedulerManager;
 
     @Inject
     public KunWebServer(final Properties props,
                         final DataSource dataSource,
+                        final SchedulerManager schedulerManager,
                         final Server server,
                         final DispatchServlet dispatchServlet) {
         this.server = server;
         this.dispatchServlet = dispatchServlet;
         this.props = props;
         this.dataSource = dataSource;
+        this.schedulerManager = schedulerManager;
     }
 
     private void configureServlet() {
@@ -53,6 +58,7 @@ public class KunWebServer {
     public void start() {
         try {
             configureDB();
+            schedulerManager.start();
             configureServlet();
             ServerConnector connector = new ServerConnector(server);
             int port = Integer.parseInt(props.getProperty(ConfigurationKeys.PROP_SERVER_PORT, "8088"));
@@ -93,7 +99,8 @@ public class KunWebServer {
         Properties props = PropertyUtils.loadAppProps();
         final Injector injector = Guice.createInjector(
                 new KunWebServerModule(props),
-                new CommonModule()
+                new CommonModule(),
+                new SchedulerModule()
         );
 
         launch(injector.getInstance(KunWebServer.class));

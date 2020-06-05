@@ -1,12 +1,15 @@
 package com.miotech.kun.workflow.common.taskrun.dao;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
+import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
@@ -28,6 +31,7 @@ import javax.annotation.Nullable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -54,6 +58,11 @@ public class TaskRunDao {
     @Inject
     private DatabaseOperator dbOperator;
 
+    private enum DependencyDirection {
+        UPSTREAM,
+        DOWNSTREAM
+    }
+
     private SQLBuilder getTaskRunSQLBuilderWithDefaultConfig() {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
@@ -71,7 +80,82 @@ public class TaskRunDao {
         return getTaskRunSQLBuilderWithDefaultConfig().where(whereClause).getSQL();
     }
 
-    public Optional<TaskRun> fetchById(Long id) {
+    private List<Optional<TaskRun>> fetchTaskRunsByIds(Collection<Long> taskRunIds) {
+        List<Optional<TaskRun>> runs = new ArrayList<>();
+        for (Long id : taskRunIds) {
+            runs.add(fetchTaskRunById(id));
+        }
+        return runs;
+    }
+
+    /**
+     * Internal use only. Retrieve task run ids within the maximum distance from the given source task run.
+     * @param srcTaskRunId
+     * @param distance
+     * @param direction
+     * @param includeSelf
+     * @return
+     */
+    private Set<Long> retrieveTaskRunIdsWithinDependencyDistance(Long srcTaskRunId, int distance, DependencyDirection direction, boolean includeSelf) {
+        Preconditions.checkNotNull(srcTaskRunId, "Invalid argument `srcTaskRunId`: null");
+        Preconditions.checkArgument(distance > 0, "Argument `distance` should be positive, but found: %d", distance);
+
+        int remainingIteration = distance;
+        Set<Long> resultTaskRunIds = new HashSet<>();
+        List<Long> inClauseIdSet = Lists.newArrayList(srcTaskRunId);
+        String selectCol = (direction == DependencyDirection.UPSTREAM) ? "upstream_task_run_id" : "downstream_task_run_id";
+        String whereCol = (direction == DependencyDirection.UPSTREAM) ? "downstream_task_run_id" : "upstream_task_run_id";
+        if (includeSelf) {
+            resultTaskRunIds.add(srcTaskRunId);
+        }
+
+        while ((remainingIteration > 0) && (!inClauseIdSet.isEmpty())) {
+            String idsFieldsPlaceholder = "(" + inClauseIdSet.stream().map(id -> "?")
+                    .collect(Collectors.joining(", ")) + ")";
+            String sql = DefaultSQLBuilder.newBuilder()
+                    .select(selectCol)
+                    .from(RELATION_TABLE_NAME)
+                    .where(whereCol + " IN " + idsFieldsPlaceholder)
+                    .getSQL();
+            List<Long> results = dbOperator.fetchAll(sql, r -> r.getLong(selectCol), inClauseIdSet.toArray());
+            resultTaskRunIds.addAll(results);
+            inClauseIdSet = new ArrayList<>(results);
+            remainingIteration -= 1;
+        }
+
+        return resultTaskRunIds;
+    }
+
+
+    /**
+     * Internal use only. Retrieve upstream/downstream task runs by given source task run id, direction and iteration times.
+     * @param taskRunId
+     * @param distance
+     * @param direction
+     * @param includeSelf
+     * @return
+     */
+    private List<TaskRun> fetchDependentTaskRunsById(Long taskRunId, int distance, DependencyDirection direction, boolean includeSelf) {
+        Preconditions.checkNotNull(taskRunId);
+        Optional<TaskRun> taskRunOptional = fetchTaskRunById(taskRunId);
+        if (!taskRunOptional.isPresent()) {
+            throw new EntityNotFoundException(String.format("Cannot find task run with id: %s", taskRunId));
+        }
+
+        Set<Long> upstreamTaskIds = retrieveTaskRunIdsWithinDependencyDistance(taskRunId, distance, direction, includeSelf);
+        List<Optional<TaskRun>> upstreamRuns = fetchTaskRunsByIds(upstreamTaskIds);
+        return upstreamRuns.stream()
+                .map(r -> r.orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Fetch TaskRun instance with given id
+     * @param id id of target task run instance
+     * @return the query result of TaskRun instance, empty represents not found
+     */
+    public Optional<TaskRun> fetchTaskRunById(Long id) {
         TaskRun taskRun = dbOperator.fetchOne(getSelectSQL(TASK_RUN_MODEL_NAME + ".id = ?"), TaskRunMapper.INSTANCE, id);
 
         List<Long>  dependencies = fetchTaskRunDependencies(id);
@@ -84,6 +168,12 @@ public class TaskRunDao {
         }
     }
 
+    /**
+     * Persist TaskRun instance in database
+     * @param taskRun instance of TaskRun model to be stored
+     * @throws RuntimeException if primary key (id) is duplicated
+     * @return TaskRun instance itself
+     */
     public TaskRun createTaskRun(TaskRun taskRun) {
         dbOperator.transaction( () -> {
             List<String> tableColumns = new ImmutableList.Builder<String>()
@@ -119,6 +209,11 @@ public class TaskRunDao {
         return taskRuns.stream().map(this::createTaskRun).collect(Collectors.toList());
     }
 
+    /**
+     * Update a TaskRun instance
+     * @param taskRun TaskRun instance with properties updated
+     * @return
+     */
     public TaskRun updateTaskRun(TaskRun taskRun) {
         dbOperator.transaction( () -> {
             List<String> tableColumns = new ImmutableList.Builder<String>()
@@ -153,6 +248,11 @@ public class TaskRunDao {
         return taskRun;
     }
 
+    /**
+     * Delete a TaskRun instance by ID
+     * @param taskRunId ID of target TaskRun instance
+     * @return
+     */
     public boolean deleteTaskRun(Long taskRunId) {
         return dbOperator.transaction(() -> {
 
@@ -167,6 +267,59 @@ public class TaskRunDao {
         });
     }
 
+    /**
+     * Search task runs by given filter (pagination, date range, task ids, status, tags, etc.)
+     * @param filter filter value object
+     * @return filtered list of task runs
+     */
+    public List<TaskRun> fetchTaskRunsByFilter(TaskRunSearchFilter filter) {
+        Preconditions.checkNotNull(filter, "Invalid argument `filter`: null");
+
+        List<String> whereConditions = new ArrayList<>();
+        List<Object> sqlArgs = new ArrayList<>();
+        if (Objects.nonNull(filter.getTaskIds()) && (!filter.getTaskIds().isEmpty())) {
+            String idsFieldsPlaceholder = "(" + filter.getTaskIds().stream().map(id -> "?")
+                    .collect(Collectors.joining(", ")) + ")";
+            sqlArgs.addAll(filter.getTaskIds());
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".task_id IN " + idsFieldsPlaceholder + " )");
+        }
+        // DON'T USE BETWEEN, see: https://wiki.postgresql.org/wiki/Don't_Do_This#Don.27t_use_BETWEEN_.28especially_with_timestamps.29
+        if (Objects.nonNull(filter.getDateFrom())) {
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".start_at >= ? )");
+            sqlArgs.add(filter.getDateFrom().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        }
+        if (Objects.nonNull(filter.getDateTo())) {
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".end_at <= ? )");
+            sqlArgs.add(filter.getDateTo().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+        }
+        if (Objects.nonNull(filter.getStatus())) {
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".status = ? )");
+            sqlArgs.add(filter.getStatus().toString());
+        }
+
+        int pageNum = Objects.nonNull(filter.getPageNum()) ? filter.getPageNum() : 1;
+        int pageSize = Objects.nonNull(filter.getPageSize()) ? filter.getPageSize() : 100;
+
+        String whereClause;
+        if (whereConditions.isEmpty()) {
+            whereClause = "1 = 1";
+        } else {
+            whereClause = String.join(" AND ", whereConditions.toArray(new String[0]));
+        }
+        String sql = getTaskRunSQLBuilderWithDefaultConfig()
+                .where(whereClause)
+                .limit(pageSize)
+                .offset((pageNum - 1) * pageSize)
+                .getSQL();
+
+        return dbOperator.fetchAll(sql, TaskRunMapper.INSTANCE, sqlArgs.toArray());
+    }
+
+    /**
+     * Returns a list of value object
+     * @param taskRunId
+     * @return
+     */
     public List<TaskAttemptProps> fetchAttemptsPropByTaskRunId(Long taskRunId) {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
@@ -181,6 +334,12 @@ public class TaskRunDao {
         return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(true), taskRunId);
     }
 
+    /**
+     * Fetch TaskAttempt instance by given id,
+     * a TaskAttempt instance is nested with the TaskRun and Task model it derived from.
+     * @param attemptId
+     * @return
+     */
     public Optional<TaskAttempt> fetchAttemptById(Long attemptId) {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
@@ -390,6 +549,36 @@ public class TaskRunDao {
                 .getSQL();
 
         return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(false), taskRunIds.toArray());
+    }
+
+    /**
+     * Fetch and return upstream task runs within maximum distance from given source
+     * @param srcTaskRunId id of source task run
+     * @param distance max distance from source task, required to be positive
+     * @param includeSelf whether source task run should be included
+     * @throws IllegalArgumentException when distance is illegal
+     * @return list of upstream task runs
+     */
+    public List<TaskRun> fetchUpstreamTaskRunsById(Long srcTaskRunId, int distance, boolean includeSelf) {
+        Preconditions.checkNotNull(srcTaskRunId, "Invalid argument `srcTaskRunId`: null");
+        Preconditions.checkArgument(distance > 0, "Argument `distance` should be positive, but found: %d", distance);
+
+        return fetchDependentTaskRunsById(srcTaskRunId, distance, DependencyDirection.UPSTREAM, includeSelf);
+    }
+
+    /**
+     * Fetch and return downstream task runs within maximum distance from given source
+     * @param srcTaskRunId id of source task run
+     * @param distance max distance from source task, required to be positive
+     * @param includeSelf whether source task run should be included
+     * @throws IllegalArgumentException when distance is illegal
+     * @return  list of downstream task runs
+     */
+    public List<TaskRun> fetchDownstreamTaskRunsById(Long srcTaskRunId, int distance, boolean includeSelf) {
+        Preconditions.checkNotNull(srcTaskRunId, "Invalid argument `srcTaskRunId`: null");
+        Preconditions.checkArgument(distance > 0, "Argument `distance` should be positive, but found: %d", distance);
+
+        return fetchDependentTaskRunsById(srcTaskRunId, distance, DependencyDirection.DOWNSTREAM, includeSelf);
     }
 
     public static class TaskRunMapper implements ResultSetMapper<TaskRun> {

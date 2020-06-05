@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.common.task.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
@@ -8,6 +10,7 @@ import com.miotech.kun.workflow.core.model.task.TaskDependency;
 
 import java.util.List;
 
+@JsonDeserialize(builder = TaskPropsVO.TaskPropsVOBuilder.class)
 public class TaskPropsVO {
     private final String name;
     private final String description;
@@ -80,6 +83,7 @@ public class TaskPropsVO {
 
     public List<TaskDependency> getDependencies() { return dependencies; }
 
+    @JsonPOJOBuilder
     public static final class TaskPropsVOBuilder {
         private String name;
         private String description;

@@ -1,6 +1,9 @@
 package com.miotech.kun.workflow.utils;
 
 import com.google.common.io.PatternFilenameFilter;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.File;
@@ -10,9 +13,14 @@ import java.util.*;
 
 public class PropertyUtils {
 
+    private static final Logger logger = LoggerFactory.getLogger(PropertyUtils.class);
+
     public static final String APP_CONFIG_PROPS_PATTERN = "application(-[a-z]+)?\\.yaml";
+    public static final String APP_CONFIG_ENV = "APP_CONFIG_ENV";
+    public static final String APP_CONFIG_FILE = "application.config.file";
 
     public static Properties loadPropsFromResource(String resourceName) {
+        logger.info("Loading props from {}", resourceName);
         Yaml yaml = new Yaml();
         InputStream inputStream = PropertyUtils.class
                 .getClassLoader()
@@ -30,7 +38,19 @@ public class PropertyUtils {
 
     public static Properties loadAppProps(String applicationConfName) {
         if (applicationConfName != null) {
+            logger.info("Using application config file: {}", applicationConfName);
             return loadPropsFromResource(applicationConfName);
+        }
+
+
+        String applicationConfigFile = System.getProperty(APP_CONFIG_FILE);
+        if (StringUtils.isNotBlank(applicationConfigFile)) {
+            return loadAppProps(applicationConfigFile);
+        }
+        String applicationConfigEnv = System.getenv(APP_CONFIG_ENV);
+        if (StringUtils.isNotBlank(applicationConfigEnv)) {
+            logger.info("Using application env: {}", applicationConfigEnv);
+            return loadAppProps(String.format("application-%s.yaml", applicationConfigEnv));
         }
 
         URL file = PropertyUtils.class.getResource("/");
