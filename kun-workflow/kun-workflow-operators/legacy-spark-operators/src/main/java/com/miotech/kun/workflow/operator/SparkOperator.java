@@ -93,8 +93,10 @@ public class SparkOperator implements Operator {
             job.setArgs(jobArgs);
         }
 
-        String livy_host = context.getParameter("livyHost");
-        livyClient = new LivyClient(livy_host);
+        String livyHost = context.getParameter("livyHost");
+        String queue = context.getParameter("queue").isEmpty() ? "default" : context.getParameter("queue");
+        String proxyUser = context.getParameter("proxyUser").isEmpty() ? "hadoop" : context.getParameter("proxyUser");
+        livyClient = new LivyClient(livyHost, queue, proxyUser);
     }
 
     public boolean run(OperatorContext context){
@@ -115,6 +117,7 @@ public class SparkOperator implements Operator {
                     case "starting":
                     case "busy":
                     case "idle":
+                    case "running":
                         logger.debug("spark job running, batch id: " + app.getId());
                         app = livyClient.getSparkJob(jobId);
                         Thread.sleep(10000);
@@ -133,6 +136,9 @@ public class SparkOperator implements Operator {
                             logger.error("failed on lineage analysis", e);
                         }
                         return true;
+                    default:
+                        logger.error("unknown livy job status -> " + state);
+                        return false;
                 }
             }
 
@@ -195,7 +201,6 @@ public class SparkOperator implements Operator {
                     outlets.addAll(genDataStore(outBufferReader));
                 } catch (IOException e) {
                     logger.error("get s3 outlets file failed", e);
-                    e.printStackTrace();
                 }
             }catch (Exception e){
                 logger.error("lineage analysis from s3 failed", e);
@@ -282,8 +287,8 @@ public class SparkOperator implements Operator {
         String[] slices = line.split("/");
         Integer length = slices.length;
         String table = slices[length - 1];
-        String db = slices[length - 2].split(".")[0].toLowerCase();
-        String url = line.split(":")[1].substring(2);
+        String db = slices[length - 2].toLowerCase();
+        String url = line;
         return new HiveTableStore(url, db, table);
     }
 

@@ -23,12 +23,11 @@ public class OperatorContextImpl implements OperatorContext {
 //        params.put("dispatcher", "s3");
 //        vars.put("STEP", "CHOICE_DM_FULLY_UPDATE_STEP");
 
-        params.put("files", "local:/Users/aijiaguo/git/spline-spark-agent/bundle-2.4/target/spark-2.4-spline-agent-bundle_2.11-0.6.0-SNAPSHOT.jar");
-        params.put("application", "za.co.absa.spline.example.EsJob");
-        params.put("args", "--packages org.elasticsearch:elasticsearch-hadoop:7.6.0");
-        params.put("name", "test_operator");
-        params.put("queue", "narrative");
-        params.put("livyHost", "http://localhost:8998");
+        params.put("files", "s3://com.miotech.data.prd/Project/miotech/aijia/knowledge-graph-etl-1.0.jar");
+        params.put("application", "com.miotech.etl.knowledge_graph.app.Application");
+        params.put("args", "-e DEV -m TASK_CENTER -s CHOICE_DM_FULLY_UPDATE_STEP -i 51257436958359552");
+        params.put("proxyUser", "hadoop");
+        params.put("livyHost", "http://<livy_ip>:8998");
         params.put("dispatcher", "s3");
 
 
@@ -46,7 +45,11 @@ public class OperatorContextImpl implements OperatorContext {
         return (Logger) LoggerFactory.getLogger(OperatorContextImpl.class);
     }
 
-    public void report(List<DataStore> inlets, List<DataStore> outlets){}
+    public void report(List<DataStore> inlets, List<DataStore> outlets){
+        System.out.println("printing lineage result");
+        System.out.println(inlets);
+        System.out.println(outlets);
+    }
 
 
 }
