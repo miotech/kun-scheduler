@@ -1,5 +1,8 @@
 package com.miotech.kun.workflow.common.resource;
 
+import com.google.inject.ImplementedBy;
+
+@ImplementedBy(ResourceLoaderImpl.class)
 public interface ResourceLoader {
     /**
      * 通过资源路径获取资源。如果不存在，则抛错。

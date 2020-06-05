@@ -51,19 +51,19 @@ public class OperatorController {
     }
 
     @RouteMapping(url= "/operators/{operatorId}", method = "DELETE")
-    public Object deleteOperator(@RouteVariable(required = true) Long operatorId) {
+    public Object deleteOperator(@RouteVariable Long operatorId) {
         operatorService.deleteOperatorById(operatorId);
         return new AcknowledgementVO();
     }
 
     @RouteMapping(url= "/operators/{operatorId}", method = "PUT")
-    public Object updateOperator(@RouteVariable(required = true) Long operatorId, @RequestBody OperatorPropsVO operatorPropsVO) {
+    public Object updateOperator(@RouteVariable Long operatorId, @RequestBody OperatorPropsVO operatorPropsVO) {
         Preconditions.checkNotNull(operatorId, "Received invalid operator ID in path parameter.");
         return operatorService.fullUpdateOperator(operatorId, operatorPropsVO);
     }
 
     @RouteMapping(url= "/operators/{operatorId}", method = "PATCH")
-    public Object patchOperator(@RouteVariable(required = true) Long operatorId, @RequestBody OperatorPropsVO operatorPropsVO) {
+    public Object patchOperator(@RouteVariable Long operatorId, @RequestBody OperatorPropsVO operatorPropsVO) {
         Preconditions.checkNotNull(operatorId, "Received invalid operator ID in path parameter.");
         return operatorService.partialUpdateOperator(operatorId, operatorPropsVO);
     }

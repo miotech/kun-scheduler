@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.web;
 import com.google.common.reflect.ClassPath;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.web.http.*;
@@ -19,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 
 
+@Singleton
 class HttpRouter {
     private Logger logger = LoggerFactory.getLogger(HttpRouter.class);
 
@@ -36,7 +38,7 @@ class HttpRouter {
      * scan for all routesMapping under a package
      * @param packageName
      */
-    public void scanPackage(String packageName) {
+    void scanPackage(String packageName) {
         final ClassLoader loader = Thread.currentThread()
                 .getContextClassLoader();
         try {
@@ -52,8 +54,9 @@ class HttpRouter {
 
     /**
      * add routesMapping for a controller class
+     * declare public for testing
      */
-    private void addRouter(Class<?> clz) {
+    public void addRouter(Class<?> clz) {
         Method[] methods = clz.getDeclaredMethods();
         for (Method invokeMethod : methods) {
             Annotation[] annotations = invokeMethod.getAnnotationsByType(RouteMapping.class);
@@ -78,10 +81,6 @@ class HttpRouter {
         }
     }
 
-    public HttpAction getAction(HttpRoute route) {
-        return routeMappings.get(route);
-    }
-
     public HttpRequestMappingHandler getRequestMappingHandler(HttpServletRequest request) {
         HttpRoute route = new HttpRoute(request.getRequestURI(), HttpMethod.resolve(request.getMethod()));
         // using exactly match first, then do pattern match
@@ -97,6 +96,10 @@ class HttpRouter {
     private HttpRequestMappingHandler extractByPattern(HttpServletRequest request, HttpRoute requestRoute) {
         String requestUrl = requestRoute.getUrl();
 
+        // only remove tailing "/"
+        if (requestUrl.endsWith("/")) {
+            requestUrl = requestUrl.replaceAll("/$", "");
+        }
         for (HttpRoute route: routeMappings.keySet()) {
 
             Matcher requestMatcher = route.getUrlPattern().matcher(requestUrl);
@@ -115,4 +118,9 @@ class HttpRouter {
         }
         return null;
     }
+
+    private HttpAction getAction(HttpRoute route) {
+        return routeMappings.get(route);
+    }
+
 }
