@@ -109,6 +109,17 @@ export const dataDiscovery = {
       ...state,
       ...payload,
     }),
+    updateFilter: (
+      state: DataDiscoveryState,
+      payload: { key: keyof DataDiscoveryState; value: any },
+    ) => ({
+      ...state,
+      [payload.key]: payload.value,
+      pagination: {
+        ...state.pagination,
+        pageNumber: 1,
+      },
+    }),
   },
 
   effects: (dispatch: RootDispatch) => ({
@@ -203,7 +214,6 @@ export const dataDiscovery = {
       const resp = await searchDatasetsService(searchParams, pagination);
       if (resp) {
         const { datasets, pageSize, pageNumber, totalCount } = resp;
-
         dispatch.dataDiscovery.batchUpdateState({
           datasetList: datasets as Dataset[],
           pagination: {

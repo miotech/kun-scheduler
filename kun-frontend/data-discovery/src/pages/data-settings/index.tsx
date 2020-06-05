@@ -30,6 +30,16 @@ export default function DataSettings() {
 
   const [searchFuncLoading, setSearchFuncLoading] = useState(false);
 
+  useEffect(() => {
+    dispatch.dataSettings.updateState({
+      key: 'pagination',
+      value: {
+        pageSize: pagination.pageSize,
+        pageNumber: 1,
+      },
+    });
+  }, [dispatch.dataSettings, pagination.pageSize, searchContent]);
+
   const searchFunc = useMemo(
     () =>
       _.debounce(async (theDispatch: RematchDispatch<RootModel>) => {
