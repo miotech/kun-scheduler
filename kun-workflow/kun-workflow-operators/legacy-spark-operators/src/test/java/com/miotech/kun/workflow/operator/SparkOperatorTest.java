@@ -1,8 +1,10 @@
 package com.miotech.kun.workflow.operator;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
+@Ignore
 public class SparkOperatorTest {
 
     OperatorContextImpl context;

@@ -4,10 +4,12 @@ import com.miotech.kun.workflow.operator.model.models.SparkApp;
 import com.miotech.kun.workflow.operator.model.models.SparkJob;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
+@Ignore
 public class LivyClientTest {
 
     private LivyClient client = new LivyClient("http://<livy_ip>:8998");

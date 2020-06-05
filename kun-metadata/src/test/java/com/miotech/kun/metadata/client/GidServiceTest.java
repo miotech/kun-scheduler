@@ -4,8 +4,9 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import org.junit.Before;
-import org.junit.Test;
+import org.junit.Ignore;
 
+@Ignore
 public class GidServiceTest extends DatabaseTestBase {
 
     @Inject
@@ -13,14 +14,6 @@ public class GidServiceTest extends DatabaseTestBase {
 
     @Before
     public void createTable() {
-        operator.update("CREATE TABLE kun_mt_dataset_gid (\n" +
-                "  \"data_store\" jsonb as json NOT NULL,\n" +
-                "  \"dataset_gid\" int8 NOT NULL\n" +
-                ")");
-    }
-
-    @Test
-    public void test() {
 
     }
 

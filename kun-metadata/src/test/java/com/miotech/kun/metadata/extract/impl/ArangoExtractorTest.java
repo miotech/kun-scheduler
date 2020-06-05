@@ -3,10 +3,12 @@ package com.miotech.kun.metadata.extract.impl;
 import com.miotech.kun.metadata.extract.impl.arango.ArangoExtractor;
 import com.miotech.kun.metadata.model.ArangoDataSource;
 import com.miotech.kun.metadata.model.Dataset;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Iterator;
 
+@Ignore
 public class ArangoExtractorTest {
 
     @Test

@@ -3,12 +3,14 @@ package com.miotech.kun.workflow.operator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import org.junit.Ignore;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@Ignore
 public class OperatorContextImpl implements OperatorContext {
 
     private Map<String, String> params = new HashMap();
