@@ -8,4 +8,15 @@ public class TickEvent extends Event {
     public TickEvent(Tick tick) {
         this.tick = tick;
     }
+
+    public Tick getTick() {
+        return tick;
+    }
+
+    @Override
+    public String toString() {
+        return "TickEvent{" +
+                "tick=" + tick +
+                '}';
+    }
 }

@@ -6,9 +6,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Deque;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -19,7 +17,7 @@ public abstract class EventLoop<T, E> {
     private final int size;
     private final List<Worker> workers;
     private final Map<Thread, Worker> threadMap;
-    private final ConcurrentMap<T, Deque<Pair<Worker, EventListener<E>>>> registry;
+    private final ConcurrentMap<T, Set<Pair<Worker, EventListener<E>>>> registry;
     private final AtomicBoolean stopped;
 
     public EventLoop(String name, int nThreads) {
@@ -90,7 +88,7 @@ public abstract class EventLoop<T, E> {
         worker.post(event, this::onReceive);
 
         // dispatch to listeners
-        Deque<Pair<Worker, EventListener<E>>> listeners = registry.get(key);
+        Set<Pair<Worker, EventListener<E>>> listeners = registry.get(key);
         if (listeners != null) {
             for (Pair<Worker, EventListener<E>> pair : listeners) {
                 worker = pair.getKey();
@@ -102,7 +100,7 @@ public abstract class EventLoop<T, E> {
     }
 
     protected void register(T key, EventListener<E> listener) {
-        registry.putIfAbsent(key, new ConcurrentLinkedDeque<>());
+        registry.putIfAbsent(key, Collections.newSetFromMap(new ConcurrentHashMap<>()));
         registry.get(key).add(Pair.of(currentWorker(), listener));
     }
 

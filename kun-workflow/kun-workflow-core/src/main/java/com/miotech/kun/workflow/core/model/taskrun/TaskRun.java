@@ -1,10 +1,9 @@
 package com.miotech.kun.workflow.core.model.taskrun;
 
-import com.google.common.collect.ImmutableList;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.Variable;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -28,7 +27,7 @@ public class TaskRun {
 
     private final List<DataStore> outlets;
 
-    private final List<Long> dependencies;
+    private final List<Long> dependentTaskRunIds;
 
     public Long getId() {
         return id;
@@ -66,12 +65,13 @@ public class TaskRun {
         return outlets;
     }
 
-    public List<Long> getDependencies() {
-        return dependencies;
+    public List<Long> getDependentTaskRunIds() {
+        return dependentTaskRunIds;
     }
 
     public TaskRun(Long id, Task task, List<Variable> variables, Tick scheduledTick, TaskRunStatus status,
-                   OffsetDateTime startAt, OffsetDateTime endAt, List<DataStore> inlets, List<DataStore> outlets, List<Long> dependencies) {
+                   OffsetDateTime startAt, OffsetDateTime endAt, List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds) {
+
         this.id = id;
         this.task = task;
         this.variables = variables;
@@ -79,17 +79,17 @@ public class TaskRun {
         this.status = status;
         this.startAt = startAt;
         this.endAt = endAt;
-        this.inlets = ImmutableList.copyOf(inlets);
-        this.outlets = ImmutableList.copyOf(outlets);
-        this.dependencies = ImmutableList.copyOf(dependencies);
+        this.inlets = inlets;
+        this.outlets = outlets;
+        this.dependentTaskRunIds = dependentTaskRunIds;
     }
 
-    public static TaskRun.Builder newBuilder() {
-        return new TaskRun.Builder();
+    public static TaskRunBuilder newBuilder() {
+        return new TaskRunBuilder();
     }
 
-    public TaskRun.Builder cloneBuilder() {
-        return new Builder()
+    public TaskRunBuilder cloneBuilder() {
+        return newBuilder()
                 .withId(id)
                 .withTask(task)
                 .withVariables(variables)
@@ -99,10 +99,10 @@ public class TaskRun {
                 .withEndAt(endAt)
                 .withInlets(inlets)
                 .withOutlets(outlets)
-                .withDependencies(dependencies);
+                .withDependentTaskRunIds(dependentTaskRunIds);
     }
 
-    public static final class Builder {
+    public static final class TaskRunBuilder {
         private Long id;
         private Task task;
         private List<Variable> variables;
@@ -112,63 +112,67 @@ public class TaskRun {
         private OffsetDateTime endAt;
         private List<DataStore> inlets;
         private List<DataStore> outlets;
-        private List<Long> dependencies;
+        private List<Long> dependentTaskRunIds;
 
-        private Builder() {
+        private TaskRunBuilder() {
         }
 
-        public Builder withId(Long id) {
+        public static TaskRunBuilder aTaskRun() {
+            return new TaskRunBuilder();
+        }
+
+        public TaskRunBuilder withId(Long id) {
             this.id = id;
             return this;
         }
 
-        public Builder withTask(Task task) {
+        public TaskRunBuilder withTask(Task task) {
             this.task = task;
             return this;
         }
 
-        public Builder withVariables(List<Variable> variables) {
+        public TaskRunBuilder withVariables(List<Variable> variables) {
             this.variables = variables;
             return this;
         }
 
-        public Builder withScheduledTick(Tick scheduledTick) {
+        public TaskRunBuilder withScheduledTick(Tick scheduledTick) {
             this.scheduledTick = scheduledTick;
             return this;
         }
 
-        public Builder withStatus(TaskRunStatus status) {
+        public TaskRunBuilder withStatus(TaskRunStatus status) {
             this.status = status;
             return this;
         }
 
-        public Builder withStartAt(OffsetDateTime startAt) {
+        public TaskRunBuilder withStartAt(OffsetDateTime startAt) {
             this.startAt = startAt;
             return this;
         }
 
-        public Builder withEndAt(OffsetDateTime endAt) {
+        public TaskRunBuilder withEndAt(OffsetDateTime endAt) {
             this.endAt = endAt;
             return this;
         }
 
-        public Builder withInlets(List<DataStore> inlets) {
+        public TaskRunBuilder withInlets(List<DataStore> inlets) {
             this.inlets = inlets;
             return this;
         }
 
-        public Builder withOutlets(List<DataStore> outlets) {
+        public TaskRunBuilder withOutlets(List<DataStore> outlets) {
             this.outlets = outlets;
             return this;
         }
 
-        public Builder withDependencies(List<Long> dependencies) {
-            this.dependencies = dependencies;
+        public TaskRunBuilder withDependentTaskRunIds(List<Long> dependentTaskRunIds) {
+            this.dependentTaskRunIds = dependentTaskRunIds;
             return this;
         }
 
         public TaskRun build() {
-            return new TaskRun(id, task, variables, scheduledTick, status, startAt, endAt, inlets, outlets, dependencies);
+            return new TaskRun(id, task, variables, scheduledTick, status, startAt, endAt, inlets, outlets, dependentTaskRunIds);
         }
     }
 }

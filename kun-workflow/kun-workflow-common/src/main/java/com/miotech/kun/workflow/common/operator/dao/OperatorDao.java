@@ -33,21 +33,21 @@ public class OperatorDao {
         this.dbOperator = dbOperator;
     }
 
-    public Optional<Operator> getById(Long id) {
+    public Optional<Operator> fetchById(Long id) {
         Preconditions.checkNotNull(id, "Invalid parameter `id`: found null object");
         String sql = String.format("SELECT id, name, description, params, class_name, package FROM %s WHERE id = ?;", DB_TABLE_NAME);
         Operator operator = dbOperator.fetchOne(sql, OperatorMapper.INSTANCE, id);
         return Optional.ofNullable(operator);
     }
 
-    public Optional<Operator> getByName(String name) {
+    public Optional<Operator> fetchByName(String name) {
         Preconditions.checkNotNull(name, "Invalid parameter `name`: found null object");
         String sql = String.format("SELECT id, name, description, params, class_name, package FROM %s WHERE name = ?;", DB_TABLE_NAME);
         Operator operator = dbOperator.fetchOne(sql, OperatorMapper.INSTANCE, name);
         return Optional.ofNullable(operator);
     }
 
-    public List<Operator> search(OperatorSearchFilter filters) {
+    public List<Operator> fetchWithFilter(OperatorSearchFilter filters) {
         Preconditions.checkNotNull(filters, "Invalid parameter `filters`: found null object");
         Preconditions.checkArgument(Objects.nonNull(filters.getPageNum()) && filters.getPageNum() > 0, "Invalid page num: %d", filters.getPageNum());
         Preconditions.checkArgument(Objects.nonNull(filters.getPageSize()) && filters.getPageSize() > 0, "Invalid page size: %d", filters.getPageSize());
