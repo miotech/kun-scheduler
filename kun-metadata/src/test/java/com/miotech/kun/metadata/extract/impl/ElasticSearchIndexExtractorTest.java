@@ -20,12 +20,6 @@ public class ElasticSearchIndexExtractorTest {
                 .withDataStorePassword("")
                 .build();
 
-
-//                .withHostname("<es_ip>:11005")
-//                .withPort(11005)
-//                .withUsername("")
-//                .withPassword("")
-//                .build();
         this.extractor = new ElasticSearchIndexExtractor(cluster, "mio-narrative-cn");
     }
 

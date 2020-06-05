@@ -20,7 +20,7 @@ public class ElasticsearchExtractorTest {
         ElasticsearchExtractor extractor = new ElasticsearchExtractor( cluster);
         Iterator<Dataset> it = extractor.extract();
 
-        while (it.hasNext()) {
+        if (it.hasNext()) {
             Dataset dataset = it.next();
             System.out.println(dataset);
         }

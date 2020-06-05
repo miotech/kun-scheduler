@@ -1,11 +1,15 @@
 package com.miotech.kun.workflow.operator.model.clients;
 
 
+import com.miotech.kun.workflow.operator.model.LivyApiException;
 import okhttp3.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public abstract class HttpApiClient {
+    private static final Logger logger = LoggerFactory.getLogger(HttpApiClient.class);
 
     public static final MediaType JSON
             = MediaType.get("application/json; charset=utf-8");
@@ -24,6 +28,10 @@ public abstract class HttpApiClient {
                 .addHeader("Accept-charset", "UTF-8")
                 .build();
         try (Response response = restClient.newCall(request).execute()) {
+            if(response.code() != 201){
+                logger.error("post method failed, error msg -> " + response.message() + ", url -> " + url + ", request -> " + message);
+                throw new LivyApiException(response.message());
+            }
             return response.body().string();
         }
 
