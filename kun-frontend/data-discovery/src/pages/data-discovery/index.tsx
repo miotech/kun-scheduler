@@ -1,7 +1,5 @@
-import React, { useCallback, useMemo, useEffect, useState } from 'react';
+import React, { useCallback, useMemo, useEffect } from 'react';
 import { Link } from 'umi';
-import { RematchDispatch } from '@rematch/core';
-import _ from 'lodash';
 import { Input, Select, Table, Tag, Spin } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { PaginationProps } from 'antd/es/pagination';
@@ -12,9 +10,11 @@ import { Mode, Dataset, Watermark } from '@/rematch/models/dataDiscovery';
 import color from '@/styles/color';
 
 import useI18n from '@/hooks/useI18n';
+import useEffectAction from '@/hooks/useEffectAction';
+import useDebounce from '@/hooks/useDebounce';
 
 import Card from '@/components/Card/Card';
-import { RootModel, DbType } from '@/rematch/models';
+import { DbType } from '@/rematch/models';
 import { watermarkFormatter } from '@/utils';
 import TimeSelect from './components/TimeSelect/TimeSelect';
 
@@ -66,40 +66,29 @@ export default function DataDisvocery() {
     dispatch.dataDiscovery.fetchAllTagList();
   }, [dispatch.dataDiscovery]);
 
-  const [dataListFetchLoading, setDataListFetchLoading] = useState(false);
+  const debounceDbTypeLis = useDebounce(dbTypeList, 500);
+  const debounceTagList = useDebounce(tagList, 500);
+  const debounceOwnerListLis = useDebounce(ownerList, 500);
+  const debounceSearchContent = useDebounce(searchContent, 1000);
 
-  const searchFunc = useMemo(
-    () =>
-      _.debounce(async (theDispatch: RematchDispatch<RootModel>) => {
-        setDataListFetchLoading(true);
-        theDispatch.dataDiscovery.searchDatasets().then(() => {
-          setDataListFetchLoading(false);
-        });
-      }, 500),
-    [],
-  );
-
-  const handleSearch = useCallback(() => {
-    searchFunc(dispatch);
-  }, [dispatch, searchFunc]);
-
-  useEffect(() => {
-    handleSearch();
-  }, [
-    handleSearch,
-    wartermarkMode,
-    wartermarkAbsoluteValue,
-    wartermarkQuickeValue,
-    dbTypeList,
-    ownerList,
-    tagList,
-    pagination.pageSize,
-    pagination.pageNumber,
-  ]);
+  const dataListFetchLoading = useEffectAction({
+    action: dispatch.dataDiscovery.searchDatasets,
+    effectBody: {
+      wartermarkMode,
+      wartermarkAbsoluteValue,
+      wartermarkQuickeValue,
+      debounceDbTypeLis,
+      debounceOwnerListLis,
+      debounceTagList,
+      debounceSearchContent,
+      pageSize: pagination.pageSize,
+      pageNumber: pagination.pageNumber,
+    },
+  });
 
   const handleChangeSearch = useCallback(
     e => {
-      dispatch.dataDiscovery.updateState({
+      dispatch.dataDiscovery.updateFilter({
         key: 'searchContent',
         value: e.target.value,
       });
@@ -109,7 +98,7 @@ export default function DataDisvocery() {
 
   const handleChangeWatermarkMode = useCallback(
     mode => {
-      dispatch.dataDiscovery.updateState({
+      dispatch.dataDiscovery.updateFilter({
         key: 'wartermarkMode',
         value: mode,
       });
@@ -128,13 +117,13 @@ export default function DataDisvocery() {
   const handleChangeWatermarkValue = useCallback(
     (v, mode) => {
       if (mode === Mode.ABSOLUTE) {
-        dispatch.dataDiscovery.updateState({
+        dispatch.dataDiscovery.updateFilter({
           key: 'wartermarkAbsoluteValue',
           value: v,
         });
       }
       if (mode === Mode.QUICK) {
-        dispatch.dataDiscovery.updateState({
+        dispatch.dataDiscovery.updateFilter({
           key: 'wartermarkQuickeValue',
           value: v,
         });
@@ -295,7 +284,6 @@ export default function DataDisvocery() {
           <Search
             size="large"
             placeholder={t('dataDiscovery.searchContent')}
-            onSearch={handleSearch}
             onChange={handleChangeSearch}
             value={searchContent}
             style={{ width: '70%' }}

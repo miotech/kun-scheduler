@@ -3,6 +3,7 @@ import path from 'path';
 const { PROXY_TARGET } = process.env;
 
 export default defineConfig({
+  dynamicImport: {},
   nodeModulesTransform: {
     type: 'none',
   },
