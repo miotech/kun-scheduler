@@ -2,7 +2,7 @@ package com.miotech.kun.workflow.core.model.taskrun;
 
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
-import com.miotech.kun.workflow.core.model.entity.Entity;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.task.Task;
 
 import java.time.OffsetDateTime;
@@ -23,9 +23,9 @@ public class TaskRun {
 
     private final OffsetDateTime endAt;
 
-    private final List<Entity> inlets;
+    private final List<DataStore> inlets;
 
-    private final List<Entity> outlets;
+    private final List<DataStore> outlets;
 
     private final List<Long> dependentTaskRunIds;
 
@@ -57,11 +57,11 @@ public class TaskRun {
         return endAt;
     }
 
-    public List<Entity> getInlets() {
+    public List<DataStore> getInlets() {
         return inlets;
     }
 
-    public List<Entity> getOutlets() {
+    public List<DataStore> getOutlets() {
         return outlets;
     }
 
@@ -70,7 +70,8 @@ public class TaskRun {
     }
 
     public TaskRun(Long id, Task task, List<Variable> variables, Tick scheduledTick, TaskRunStatus status,
-                   OffsetDateTime startAt, OffsetDateTime endAt, List<Entity> inlets, List<Entity> outlets, List<Long> dependentTaskRunIds) {
+                   OffsetDateTime startAt, OffsetDateTime endAt, List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds) {
+
         this.id = id;
         this.task = task;
         this.variables = variables;
@@ -109,8 +110,8 @@ public class TaskRun {
         private TaskRunStatus status;
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
-        private List<Entity> inlets;
-        private List<Entity> outlets;
+        private List<DataStore> inlets;
+        private List<DataStore> outlets;
         private List<Long> dependentTaskRunIds;
 
         private TaskRunBuilder() {
@@ -155,12 +156,12 @@ public class TaskRun {
             return this;
         }
 
-        public TaskRunBuilder withInlets(List<Entity> inlets) {
+        public TaskRunBuilder withInlets(List<DataStore> inlets) {
             this.inlets = inlets;
             return this;
         }
 
-        public TaskRunBuilder withOutlets(List<Entity> outlets) {
+        public TaskRunBuilder withOutlets(List<DataStore> outlets) {
             this.outlets = outlets;
             return this;
         }

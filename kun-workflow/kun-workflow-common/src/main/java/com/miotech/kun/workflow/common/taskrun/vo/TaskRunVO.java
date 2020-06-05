@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.taskrun.vo;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.entity.Entity;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -22,9 +23,9 @@ public class TaskRunVO {
 
     private TaskRunStatus status;
 
-    private List<Entity> inlets;
+    private List<DataStore> inlets;
 
-    private List<Entity> outlets;
+    private List<DataStore> outlets;
 
     private OffsetDateTime startAt;
 
@@ -74,19 +75,19 @@ public class TaskRunVO {
         this.status = status;
     }
 
-    public List<Entity> getInlets() {
+    public List<DataStore> getInlets() {
         return inlets;
     }
 
-    public void setInlets(List<Entity> inlets) {
+    public void setInlets(List<DataStore> inlets) {
         this.inlets = inlets;
     }
 
-    public List<Entity> getOutlets() {
+    public List<DataStore> getOutlets() {
         return outlets;
     }
 
-    public void setOutlets(List<Entity> outlets) {
+    public void setOutlets(List<DataStore> outlets) {
         this.outlets = outlets;
     }
 
@@ -132,8 +133,8 @@ public class TaskRunVO {
         private List<Variable> variables;
         private Tick scheduledTick;
         private TaskRunStatus status;
-        private List<Entity> inlets;
-        private List<Entity> outlets;
+        private List<DataStore> inlets;
+        private List<DataStore> outlets;
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
         private List<TaskAttempt> attempts;
@@ -171,12 +172,12 @@ public class TaskRunVO {
             return this;
         }
 
-        public Builder withInlets(List<Entity> inlets) {
+        public Builder withInlets(List<DataStore> inlets) {
             this.inlets = inlets;
             return this;
         }
 
-        public Builder withOutlets(List<Entity> outlets) {
+        public Builder withOutlets(List<DataStore> outlets) {
             this.outlets = outlets;
             return this;
         }
