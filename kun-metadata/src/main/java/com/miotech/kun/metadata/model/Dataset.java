@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Dataset {
 
-    private final Long clusterId;
+    private final Long datasourceId;
 
     private final String name;
 
@@ -18,8 +18,8 @@ public class Dataset {
 
     private final DatasetStat datasetStat;
 
-    public Long getClusterId() {
-        return clusterId;
+    public Long getDatasourceId() {
+        return datasourceId;
     }
 
     public String getName() {
@@ -42,8 +42,8 @@ public class Dataset {
         return datasetStat;
     }
 
-    public Dataset(Long clusterId, String name, DataStore dataStore, List<DatasetField> fields, List<DatasetFieldStat> fieldStats, DatasetStat datasetStat) {
-        this.clusterId = clusterId;
+    public Dataset(Long datasourceId, String name, DataStore dataStore, List<DatasetField> fields, List<DatasetFieldStat> fieldStats, DatasetStat datasetStat) {
+        this.datasourceId = datasourceId;
         this.name = name;
         this.dataStore = dataStore;
         this.fields = fields;

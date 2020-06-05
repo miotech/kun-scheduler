@@ -27,14 +27,14 @@ public class FieldFlatUtilTest {
     }
 
     @Test
-    public void testFlatFields_unknow() throws JsonProcessingException {
+    public void testFlatFields_unknown() throws JsonProcessingException {
         String json = "{\"id\":null,\"name\":\"unden\",\"hobbies\":[\"rubik\",\"cooking\"],\"married\":false}";
         JsonNode jsonNode = MAPPER.readTree(json);
 
         List<DatasetField> fields = FieldFlatUtil.flatFields(jsonNode, null);
         List<String> fieldStrs = datasetField2String(fields);
 
-        MatcherAssert.assertThat(fieldStrs, Matchers.containsInAnyOrder("id-UNKNOW-", "name-STRING-", "hobbies-ARRAY-", "married-BOOL-"));
+        MatcherAssert.assertThat(fieldStrs, Matchers.containsInAnyOrder("id-UNKNOWN-", "name-STRING-", "hobbies-ARRAY-", "married-BOOL-"));
     }
 
     @Test
