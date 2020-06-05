@@ -4,8 +4,23 @@ buildscript {
     }
 }
 
-subprojects {
+plugins {
+    id 'com.github.ksoichiro.console.reporter' version '0.6.2'
+}
+
+allprojects {
     apply plugin: 'java'
+    apply plugin: 'jacoco'
+
+    repositories {
+        mavenCentral()
+    }
+}
+
+subprojects {
+    test {
+        finalizedBy jacocoTestReport
+    }
 
     group = 'com.miotech'
     version = rootProject.version
@@ -57,9 +72,26 @@ subprojects {
             testImplementation "org.mockito:mockito-core"
             testImplementation "org.awaitility:awaitility"
         }
-        repositories {
-            mavenCentral()
-        }
     }
-    
+}
+
+// Referenced from: https://gist.github.com/aalmiray/e6f54aa4b3803be0bcac#gistcomment-3207693
+task codeCoverageReport(type: JacocoReport) {
+    // Gather execution data from all subprojects
+    executionData fileTree(project.rootDir.absolutePath).include("**/build/jacoco/*.exec")
+
+    // Add all relevant sourcesets from the subprojects
+    subprojects.each {
+        sourceSets it.sourceSets.main
+    }
+
+    reports {
+        xml.enabled true
+        html.enabled true
+        csv.enabled false
+    }
+}
+
+codeCoverageReport.dependsOn {
+    subprojects*.test
 }

@@ -184,9 +184,9 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskDao.create(task);
 
         List<TaskRun> sampleTaskRuns = Lists.newArrayList(
-                MockTaskRunFactory.createTaskRun(1L, task, Clock.systemDefaultZone()),
-                MockTaskRunFactory.createTaskRun(2L, task, Clock.systemDefaultZone()),
-                MockTaskRunFactory.createTaskRun(3L, task, Clock.systemDefaultZone())
+                MockTaskRunFactory.createTaskRun(1L, task, Clock.fixed(Instant.parse("2020-01-01T00:00:01.00Z"), ZoneId.of("UTC"))),
+                MockTaskRunFactory.createTaskRun(2L, task, Clock.fixed(Instant.parse("2020-01-01T00:00:02.00Z"), ZoneId.of("UTC"))),
+                MockTaskRunFactory.createTaskRun(3L, task, Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")))
         );
 
         taskRunDao.createTaskRuns(sampleTaskRuns);
