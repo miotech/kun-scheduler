@@ -34,6 +34,7 @@ public class DatabaseSetup {
             Flyway flyway = Flyway.configure()
                     .dataSource(dataSource)
                     .locations(locations)
+                    .baselineOnMigrate(true)
                     .load();
 
             flyway.migrate();

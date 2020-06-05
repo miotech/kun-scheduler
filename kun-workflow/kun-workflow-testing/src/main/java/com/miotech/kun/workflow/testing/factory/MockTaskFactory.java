@@ -79,7 +79,7 @@ public class MockTaskFactory {
                     .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                     .withDependencies(
                             selectItems(ids, parsed.get(i)).stream()
-                                    .map(upId -> new TaskDependency(upId, depFuncProvider.from("latestTaskRun"), taskId))
+                                    .map(upId -> new TaskDependency(upId, taskId, depFuncProvider.from("latestTaskRun")))
                                     .collect(Collectors.toList())
                     )
                     .build());

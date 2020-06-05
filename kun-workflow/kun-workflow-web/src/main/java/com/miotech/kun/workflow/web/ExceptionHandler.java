@@ -2,8 +2,10 @@ package com.miotech.kun.workflow.web;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.workflow.common.exception.BadRequestException;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.exception.ExceptionResponse;
+import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.web.annotation.ResponseException;
 import com.miotech.kun.workflow.web.annotation.ResponseStatus;
 import com.miotech.kun.workflow.web.serializer.JsonSerializer;
@@ -84,6 +86,22 @@ public class ExceptionHandler {
     private void entityNotFoundHandler(HttpServletResponse resp,
                                    EntityNotFoundException e) {
         ExceptionResponse responseObj = new ExceptionResponse(404, e.getMessage());
+        jsonSerializer.writeResponseAsJson(resp, responseObj);
+    }
+
+    @ResponseStatus(code = 409)
+    @ResponseException(NameConflictException.class)
+    private void namingConflictException(HttpServletResponse resp,
+                                         NameConflictException e) {
+        ExceptionResponse responseObj = new ExceptionResponse(409, e.getMessage());
+        jsonSerializer.writeResponseAsJson(resp, responseObj);
+    }
+
+    @ResponseStatus(code = 400)
+    @ResponseException(BadRequestException.class)
+    private void badRequestHandler(HttpServletResponse resp,
+                                   BadRequestException e) {
+        ExceptionResponse responseObj = new ExceptionResponse(400, e.getMessage());
         jsonSerializer.writeResponseAsJson(resp, responseObj);
     }
 

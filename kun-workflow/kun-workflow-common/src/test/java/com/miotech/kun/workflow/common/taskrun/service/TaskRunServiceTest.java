@@ -82,7 +82,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withOutlets(Collections.emptyList())
                 .withScheduledTick(new Tick(""))
                 .build();
-        Mockito.when(taskRunDao.fetchById(taskRun.getId()))
+        Mockito.when(taskRunDao.fetchTaskRunById(taskRun.getId()))
                 .thenReturn(Optional.of(taskRun));
         return taskRun;
     }
