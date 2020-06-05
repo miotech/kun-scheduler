@@ -1,0 +1,33 @@
+.sider {
+  min-height: calc(100vh - 55px - 64px);
+  border-right: 1px solid #ebebeb;
+
+  :global {
+    .ant-layout-sider-trigger {
+      border-right: 1px solid @borderColor;
+    }
+    .ant-menu {
+      margin-right: 1px;
+    }
+    .ant-menu-inline-collapsed {
+      width: 100%;
+    }
+    .ant-menu-item {
+      // margin-right: 1px;
+      &:hover {
+        color: @primary;
+      }
+
+      a {
+        color: @primary !important;
+      }
+    }
+    .ant-menu-item-selected {
+      background-color: rgba(179, 198, 216, 0.1) !important;
+      color: @primary;
+      &::after {
+        display: none;
+      }
+    }
+  }
+}

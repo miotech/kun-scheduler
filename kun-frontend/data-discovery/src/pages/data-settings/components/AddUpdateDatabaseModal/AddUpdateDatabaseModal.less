@@ -1,0 +1,38 @@
+.modalBody {
+  background-color: @modalBackgroundColor;
+  padding: 20px 76px 20px 40px;
+  border-bottom: 1px solid @borderColor;
+
+  .inputItem {
+    display: flex;
+    align-items: center;
+    &:not(:last-child) {
+      margin-bottom: 20px;
+    }
+
+    .inputTitle {
+      flex: 0 0 135px;
+      font-size: 16px;
+      color: @secondary;
+    }
+
+    .inputComp {
+      flex: 1;
+    }
+  }
+}
+
+.modalTitle {
+  color: @primary;
+  font-size: 20px;
+  font-weight: bold;
+  padding-left: 16px;
+}
+
+.footer {
+  height: 80px;
+  padding: 20px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}

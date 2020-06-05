@@ -1,0 +1,32 @@
+@timeSelectWidth: 500px;
+@modeSelectWidth: 127px;
+@inputAreaWidth: @timeSelectWidth - @modeSelectWidth;
+
+
+.timeSelect {
+  box-shadow: 0 0 0 1px @borderColor;
+  border-radius: 5px;
+  display: flex;
+  width: @timeSelectWidth;
+
+  .modeSelect {
+    flex: 0 0 @modeSelectWidth;
+  }
+
+  .seporater {
+    flex: 0 0 0px;
+    border-right: 1px solid @borderColor;
+  }
+
+  .rangePicker {
+    flex: 0 0 @inputAreaWidth;
+    display: flex;
+    align-items: center;
+    .dataPicker {
+      flex: 1;
+    }
+  }
+  .quickSelector {
+    flex: 0 0 @inputAreaWidth;
+  }
+}

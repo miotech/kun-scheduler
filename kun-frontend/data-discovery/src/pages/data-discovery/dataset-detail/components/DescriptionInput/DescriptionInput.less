@@ -1,0 +1,30 @@
+.dataDiscoveryComponent-descriptionInput {
+  margin-bottom: 16px;
+
+  .dataDiscoveryComponent-baseItemTitle {
+    line-height: 21px;
+    font-size: 14px;
+    font-weight: bold;
+    color: @primary;
+    margin-bottom: 8px;
+  }
+
+  .dataDiscoveryComponent-baseContent {
+    line-height: 21px;
+    font-size: 14px;
+    color: @secondary;
+    &:not(:last-child) {
+      margin-bottom: 8px;
+    }
+
+    .dataDiscoveryComponent-buttonRow {
+      display: flex;
+      justify-content: flex-end;
+
+      .dataDiscoveryComponent-cancelButton {
+        color: @third;
+        margin-right: 12px;
+      }
+    }
+  }
+}
