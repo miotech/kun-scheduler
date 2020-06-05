@@ -1,0 +1,50 @@
+@selectWidth: 224px;
+
+.page {
+  padding: 20px;
+  .content {
+    .searchArea {
+      padding: 20px 24px;
+      border-bottom: 1px solid @borderColor;
+    }
+    .tableArea {
+      padding: 16px 24px;
+      .filterRow {
+        margin-bottom: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        .filterItem {
+          margin-right: 16px;
+          .filterItemTitle {
+            height: 21px;
+            line-height: 21px;
+            font-size: 14px;
+            color: @third;
+          }
+          .filterItemSelect {
+            width: @selectWidth;
+            :global{
+              .ant-select {
+                width: 100%;
+              }
+            }
+          }
+        }
+      }
+
+      .resultRow {
+        margin-top: 16px;
+        color: @third;
+        font-size: 14px;
+      }
+
+      .table {
+        margin-top: 20px;
+        .nameLink {
+          color: @darkBlue;
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}

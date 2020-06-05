@@ -1,0 +1,61 @@
+.page {
+  padding: 20px;
+  .functionsArea {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+
+    .functionItem {
+      width: 384px;
+      height: 216px;
+      padding: 56px 0;
+      flex-direction: column;
+      border: 1px solid @lightBorderColor;
+      cursor: pointer;
+      margin-right: 24px;
+      background-color: @white;
+
+      .flexCenter();
+      .tst();
+
+      .functionItemIcon {
+        color: @third;
+        font-size: 48px;
+        .tst();
+      }
+
+      .functionItemTitle {
+        line-height: 37px;
+        font-size: 24px;
+        color: @third;
+        font-weight: bold;
+        .tst();
+      }
+
+      &:hover {
+        border: 1px solid @darkBlue;
+        .functionItemIcon {
+          color: @darkBlue;
+        }
+        .functionItemTitle {
+          color: @primary;
+        }
+      }
+    }
+  }
+
+  .recentHistoryArea {
+    .recentHistoryAreaTitle {
+      height: 70px;
+      padding: 20px 40px;
+      line-height: 30px;
+      font-size: 20px;
+      color: @primary;
+      font-weight: bold;
+      border-bottom: 1px solid @borderColor;
+    }
+    .historyTable {
+      padding: 20px 32px;
+    }
+  }
+}

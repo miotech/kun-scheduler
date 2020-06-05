@@ -1,0 +1,60 @@
+.column {
+  border-bottom: 1px solid @borderColor;
+  padding: 12px 24px;
+
+  .titleRow {
+    display: flex;
+    align-items: center;
+    .columnName {
+      margin-right: 24px;
+      font-size: 14px;
+      font-weight: bold;
+      color: @primary;
+    }
+    .watermark {
+      font-size: 14px;
+      color: @third;
+    }
+  }
+
+  .contentArea {
+    display: flex;
+
+    .titleItem {
+      line-height: 21px;
+      font-size: 14px;
+      color: @third;
+    }
+
+    .contentItem {
+      line-height: 21px;
+      font-size: 14px;
+      color: @primary;
+    }
+
+    .notNullCount {
+      flex: 0 0 120px;
+    }
+
+    .notNullPer {
+      flex: 0 0 150px;
+    }
+
+    .type {
+      flex: 0 0 150px;
+    }
+
+    .description {
+      flex: 1;
+      :global{
+        .dataDiscoveryComponent-baseItemTitle {
+          color: @third;
+          margin-bottom: 0;
+        }
+        .dataDiscoveryComponent-descriptionInput {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+}

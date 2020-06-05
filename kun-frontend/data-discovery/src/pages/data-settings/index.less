@@ -1,0 +1,36 @@
+.page {
+  padding: 20px;
+
+  .searchBar {
+    padding: 20px 24px;
+    border-bottom: 1px solid @borderColor;
+    display: flex;
+    align-items: center;
+    height: 80px;
+
+    .searchInput {
+      flex: 0 0 60%;
+    }
+
+    .addDatabaseButton {
+      margin-left: auto;
+      background-color: @darkBlue;
+      color: @white;
+    }
+  }
+
+  .databasesArea {
+    padding: 12px 16px;
+    .databasesCount {
+      padding: 0 8px;
+      color: @third;
+      font-size: 14px;
+    }
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 24px;
+  }
+}

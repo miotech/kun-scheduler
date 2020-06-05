@@ -1,0 +1,119 @@
+key,en-US,zh-CN
+common.app.name,MioTech Data Platform,妙盈数据平台
+common.loading,Loading...,载入中...
+common.operateSuccess,Successful Operation,操作成功
+,,
+common.button.cancel,Cancel,取消
+common.button.confirm,Confirm,确认
+common.button.save,Save,保存
+common.button.update,Update,更新
+common.button.add,Add,添加
+common.button.delete,Delete,删除
+common.button.change,Modify,修改
+,,
+common.pageTitle.homepage,Homepage,首页
+common.pageTitle.dataDiscovery,Data Discovery,数据挖掘
+common.pageTitle.datasetDetail,Dataset Detail,Dataset Detail
+common.pageTitle.login,Login,登录
+common.pageTitle.dataSettings,Settings,设置
+,,
+,,
+,,
+,,
+common.webMessage.200,服务器成功返回请求的数据。,服务器成功返回请求的数据。
+common.webMessage.201,新建或修改数据成功。,新建或修改数据成功。
+common.webMessage.202,一个请求已经进入后台排队（异步任务）。,一个请求已经进入后台排队（异步任务）。
+common.webMessage.204,删除数据成功。,删除数据成功。
+common.webMessage.400,发出的请求有错误，服务器没有进行新建或修改数据的操作。,发出的请求有错误，服务器没有进行新建或修改数据的操作。
+common.webMessage.401,用户没有权限（令牌、用户名、密码错误）。,用户没有权限（令牌、用户名、密码错误）。
+common.webMessage.403,用户得到授权，但是访问是被禁止的。,用户得到授权，但是访问是被禁止的。
+common.webMessage.404,发出的请求针对的是不存在的记录，服务器没有进行操作。,发出的请求针对的是不存在的记录，服务器没有进行操作。
+common.webMessage.406,请求的格式不可得。,请求的格式不可得。
+common.webMessage.410,请求的资源被永久删除，且不会再得到的。,请求的资源被永久删除，且不会再得到的。
+common.webMessage.422,当创建一个对象时，发生一个验证错误。,当创建一个对象时，发生一个验证错误。
+common.webMessage.500,服务器发生错误，请检查服务器。,服务器发生错误，请检查服务器。
+common.webMessage.502,网关错误。,网关错误。
+common.webMessage.503,服务不可用，服务器暂时过载或维护。,服务不可用，服务器暂时过载或维护。
+common.webMessage.504,网关超时。,网关超时。
+common.webMessage.unknown,未知错误。,未知错误。
+,,
+,,
+login.welcome,Welcome to MioTech Data Platform,欢迎来到妙盈数据平台
+login.userName,User Name,用户名
+login.password,Password,密码
+login.confirmButton,Login,登录
+,,
+dataDiscovery.searchContent,Search Content,Search Content
+dataDiscovery.waterMark,Watermark,Watermark
+dataDiscovery.mode.quick,Quick,Quick
+dataDiscovery.mode.absolute,Absolute,Absolute
+dataDiscovery.mode.quickOption.LAST_30_M,last 30 minutes,last 30 minutes
+dataDiscovery.mode.quickOption.LAST_4_H,last 4 hours,last 4 hours
+dataDiscovery.mode.quickOption.LAST_1_D,last day,last day
+dataDiscovery.mode.quickOption.LAST_1_W,last week,last week
+dataDiscovery.mode.quickOption.LAST_1_MON,last month,last month
+dataDiscovery.lifecycle,Lifecycle,Lifecycle
+dataDiscovery.lifecycle.collection,Collection,Collection
+dataDiscovery.lifecycle.storage,Storage,Storage
+dataDiscovery.lifecycle.process,Process,Process
+dataDiscovery.lifecycle.analysis,Analysis,Analysis
+dataDiscovery.lifecycle.retire,Retire,Retire
+dataDiscovery.pleaseSelect,Please select,请选择
+,,
+dataDiscovery.owners,Owners,Owners
+dataDiscovery.tags,Tags,Tags
+,,
+dataDiscovery.popularDatasets,Popular Datasets,Popular Datasets
+dataDiscovery.datasetsTable.header.name,Name,Name
+dataDiscovery.datasetsTable.header.schema,Schema,Schema
+dataDiscovery.datasetsTable.header.description,Description Info,Description Info
+dataDiscovery.datasetsTable.header.owners,Owners,Owners
+dataDiscovery.datasetsTable.header.watermark,Watermark,Watermark
+dataDiscovery.datasetsTable.header.lifecycle,Lifecycle,Lifecycle
+dataDiscovery.datasetsTable.header.databaseReference,Database Reference,Database Reference
+dataDiscovery.datasetsTable.header.tags,Tags,Tags
+,,
+dataDiscovery.datasetsTable.resultCount,{count} Search Results Found,共搜索到{count}个结果
+,,
+dataDetail.back,回到列表,回到列表
+dataDetail.button.pull,Pull,Pull
+dataDetail.button.pullDuration,Pull 耗时{time}毫秒,Pull 耗时{time}毫秒
+dataDetail.button.pullLoading,Pulling...,Pulling...
+,,
+dataDetail.baseItem.title.lineage,Lineage,Lineage
+dataDetail.baseItem.title.task,Task,Task
+dataDetail.baseItem.title.schema,Schema,Schema
+dataDetail.baseItem.title.dbType,DB Type,DB Type
+dataDetail.baseItem.title.description,Description,Description
+dataDetail.baseItem.title.owners,Owners,Owners
+dataDetail.baseItem.title.tags,Tags,Tags
+dataDetail.baseItem.title.lifecycle,Lifecycle,Lifecycle
+dataDetail.baseItem.title.rowCount,Row Count,Row Count
+dataDetail.baseItem.title.database,Database Reference,Database Reference
+,,
+dataDetail.column.notNullCount,Not Null Count,Not Null Count
+dataDetail.column.notNullPer,Not Null Percentage,Not Null Percentage
+dataDetail.column.description,Description,Description
+,,
+dataSettings.addDatabase,Add Database,Add Database
+dataSettings.databasesCount,{count} databases,{count} databases
+dataSettings.updateUser,Update User,Update User
+,,
+,,
+,,
+,,
+dataSettings.addUpdate.name,Name,Name
+dataSettings.addUpdate.ipAddr,IP Address,IP Address
+dataSettings.addUpdate.dbType,DB Type,DB Type
+dataSettings.addUpdate.username,User Name(RO),User Name(RO)
+dataSettings.addUpdate.password,Password(RO),Password(RO)
+dataSettings.addUpdate.tags,Tags,Tags
+dataSettings.addUpdate.createUser,Create User,Create User
+dataSettings.addUpdate.createTime,Create Time,Create Time
+dataSettings.addUpdate.updateUser,Update User,Update User
+dataSettings.addUpdate.updateTime,Update Time,Update Time
+,,
+dataSettings.databaseItem.updatedOn,Updated on {time},Updated on {time}
+dataSettings.databaseItem.pulling,Pulling in Progress,Pulling in Progress
+dataSettings.databaseItem.pullingIntoProgress,Successfully put into the pull queue,已成功放入拉取队列
+dataSettings.databaseItem.confirmDelete,Are you sure you want to delete the database? (The operation cannot be undone),确定要删除该数据库吗? (无法撤销该操作)

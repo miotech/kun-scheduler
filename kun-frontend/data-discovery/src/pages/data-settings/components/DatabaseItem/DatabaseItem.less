@@ -1,0 +1,59 @@
+.database {
+  padding: 12px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid @borderColor;
+
+  .infoArea {
+    flex: 0 0 auto;
+  }
+
+  .nameRow {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+
+    .name {
+      font-size: 14px;
+      color: @primary;
+      font-weight: bold;
+      margin-right: 16px;
+    }
+    .ip {
+      font-size: 14px;
+      color: @third;
+    }
+  }
+
+  .updateUser {
+    font-size: 14px;
+    color: @fourth;
+  }
+
+  .operateArea {
+    display: flex;
+    align-items: center;
+    color: @fourth;
+
+    .updateTime {
+      font-size: 12px;
+      margin-right: 8px;
+    }
+
+    .deleteButton {
+      color: @warning;
+      font-size: 14px;
+      text-decoration: underline;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+
+    .changeButton {
+      color: @darkBlue;
+      font-size: 14px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  }
+}
