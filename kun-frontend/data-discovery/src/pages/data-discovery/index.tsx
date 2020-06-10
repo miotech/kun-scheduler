@@ -167,6 +167,12 @@ export default function DataDisvocery() {
           width: 80,
         },
         {
+          title: t('dataDiscovery.datasetsTable.header.dbName'),
+          dataIndex: 'database_name',
+          key: 'database_name',
+          width: 120,
+        },
+        {
           title: t('dataDiscovery.datasetsTable.header.dbtype'),
           dataIndex: 'type',
           key: 'type',

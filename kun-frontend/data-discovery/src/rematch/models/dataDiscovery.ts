@@ -35,6 +35,7 @@ export interface Dataset {
   id: string;
   name: string;
   schema: string;
+  database_name: string;
   description: string;
   type: string;
   tags: string[];
