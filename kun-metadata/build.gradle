@@ -1,58 +1,45 @@
-apply plugin: 'com.google.protobuf'
-apply plugin: 'idea'
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.8.12'
-    }
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'java'
 }
 
 dependencies {
-    implementation 'com.typesafe:config:1.4.0'
-    implementation 'org.json:json:20190722'
-    implementation 'com.google.protobuf:protobuf-java:3.4.0'
-    implementation 'com.google.protobuf:protobuf-java-util:3.4.0'
-    implementation 'io.grpc:grpc-stub:1.0.0-pre2'
-    implementation 'io.grpc:grpc-protobuf:1.0.0-pre2'
-    implementation 'ch.qos.logback:logback-classic:1.2.3'
-    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.6.1'
-    implementation 'org.apache.commons:commons-lang3:3.9'
-    implementation 'io.grpc:grpc-protobuf:1.10.0'
-    testImplementation 'org.testng:testng:6.14.2'
+    implementation project(":kun-workflow:kun-workflow-core")
+    implementation project(":kun-workflow:kun-workflow-utils")
+    implementation project(":kun-commons:kun-commons-db")
+    implementation project(":kun-commons:kun-commons-testing")
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-workflow:kun-workflow-utils")
+    implementation 'com.typesafe:config'
+    implementation 'org.json:json'
+    implementation 'ch.qos.logback:logback-classic'
+    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.postgresql:postgresql'
+    implementation 'org.apache.hive:hive-jdbc'
+    implementation 'mysql:mysql-connector-java'
+    implementation "org.apache.curator:curator-recipes"
+    implementation "io.prestosql:presto-jdbc"
+    implementation "org.mongodb:mongo-java-driver"
+    implementation "org.jooq:joor-java-8:0.9.12"
+    implementation "com.amazonaws:aws-java-sdk-glue"
+    implementation "com.syncron.amazonaws:simba-athena-jdbc-driver"
+    implementation "com.arangodb:arangodb-java-driver"
+    implementation "io.sentry:sentry-logback"
+    testImplementation "junit:junit"
+    testRuntimeOnly "com.h2database:h2"
+    testRuntimeOnly "org.mockito:mockito-core"
 }
 
-test {
-    useTestNG()
-}
 
-protobuf {
-    protoc {
-        // The artifact spec for the Protobuf Compiler
-        artifact = 'com.google.protobuf:protoc:3.0.0'
+shadowJar {
+    baseName = 'kun-metadata'
+    classifier = null
+    version = 1.0
+    manifest {
+        attributes(
+                'Main-Class': 'com.miotech.kun.metadata.schedule.DataBuilderScheduler'
+        )
     }
-
-    plugins {
-        // Locate a plugin with name 'grpc'. This step is optional.
-        // If you don't locate it, protoc will try to use "protoc-gen-grpc" from
-        // system search path.
-        grpc {
-            artifact = 'io.grpc:protoc-gen-grpc-java:1.0.0-pre2'
-            // or
-            // path = 'tools/protoc-gen-grpc-java'
-        }
-        // Any other plugins
-    }
-
-    generateProtoTasks {
-        ofSourceSet('main')*.plugins {
-            // Apply the "grpc" plugin whose spec is defined above, without
-            // options.  Note the braces cannot be omitted, otherwise the
-            // plugin will not be added. This is because of the implicit way
-            // NamedDomainObjectContainer binds the methods.
-            grpc { }
-        }
-    }
+    zip64 true
 }
