@@ -1,17 +1,19 @@
 package com.miotech.kun.metadata.extract;
 
 
-import com.miotech.kun.metadata.models.Table;
+import com.miotech.kun.metadata.model.Dataset;
 
-import java.util.List;
+import java.util.Iterator;
 
 /**
  * Extractor Definition
  */
 public interface Extractor {
+
     /**
      * Get All the table metadata
      * @return
      */
-    List<Table> extract();
+    Iterator<Dataset> extract();
+
 }

@@ -1,0 +1,16 @@
+stages:
+  - verify
+
+test:
+  stage: verify
+  image: gradle:6.5.0-jdk8
+  except:
+    - master
+    - release
+    - production
+    - tags
+  allow_failure: false
+  script:
+    - ./gradlew test
+    - ./gradlew check
+    - ./gradlew codeCoverageReport
