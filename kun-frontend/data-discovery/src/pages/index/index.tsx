@@ -12,7 +12,7 @@ function Homepage() {
     () => [
       {
         key: 'dataDiscovery',
-        title: t('common.pageTitle.dataDiscovery'),
+        title: t('common.pageTitle.datasets'),
         path: '/data-discovery',
         icon: (
           <DatabaseOutlined
@@ -47,9 +47,9 @@ function Homepage() {
           {t('homepage.recentHistory')}
         </div>
 
-        <div className={styles.historyTable}>
+        {/* <div className={styles.historyTable}>
           <div>134</div>
-        </div>
+        </div> */}
       </Card>
     </div>
   );

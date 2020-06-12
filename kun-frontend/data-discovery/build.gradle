@@ -1,0 +1,30 @@
+plugins {
+  id "com.github.node-gradle.node" version "2.2.4"
+}
+
+node {
+    version = "12.13.0"
+    yarnVersion = "1.9.4"
+    download = true
+}
+
+task execTask(type: Exec) {
+	workingDir './'
+  def commands = []
+  if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+    commands << 'cmd'
+    commands << '/c'
+    commands << 'yarn install'
+  } else {
+    commands << 'bash'
+    commands << '-c'
+    commands << 'yarn install'
+  }
+  commandLine = commands
+}
+
+//调用yarn run build命令的Gradle任务
+task yarnBuild(type: YarnTask, dependsOn: [execTask, yarn]) {
+  group = 'node'
+  args = ['run', 'build']
+}
