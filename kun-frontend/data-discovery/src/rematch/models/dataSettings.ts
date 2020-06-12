@@ -4,17 +4,51 @@ import {
   updateDatabaseService,
   pullDatasetsFromDatabaseService,
   deleteDatabaseService,
+  fetchDatabaseTypesService,
 } from '@/services/dataSettings';
 import { Watermark } from './dataDiscovery';
 import { Pagination, DbType } from './index';
 import { RootDispatch, RootState } from '../store';
 
+export enum DatabaseTypeItemFieldItemFormat {
+  INPUT = 'INPUT',
+}
+
+export enum DatabaseField {
+  HOST = 'host',
+  PORT = 'port',
+  USERNAME = 'username',
+  PASSWORD = 'password',
+  GLUE_ACCESS_KEY = 'glueAccessKey',
+  GLUE_SECRET_KEY = 'glueSecretKey',
+  GLUE_REGION = 'glueRegion',
+  ATHENA_URL = 'athenaUrl',
+  ATHENA_USERNAME = 'athenaUsername',
+  ATHENA_PASSWORD = 'athenaPassword',
+}
+
+export interface DatabaseTypeItemFieldItem {
+  key: DatabaseField;
+  order: number;
+  format: DatabaseTypeItemFieldItemFormat;
+}
+
+export interface DatabaseTypeItem {
+  id: string;
+  type: DbType;
+  fields: DatabaseTypeItemFieldItem[];
+}
+
+export type DatabaseTypeList = DatabaseTypeItem[];
+
+export type DatabaseInfomation = {
+  [k in DatabaseField]?: string;
+};
+
 export interface DatabaseInfo {
-  type: DbType | null;
+  typeId: string | null;
   name: string;
-  ip: string;
-  username: string;
-  password: string;
+  information: DatabaseInfomation;
   tags: string[];
 }
 
@@ -31,14 +65,18 @@ export interface DataBase extends UpdateDatabaseInfo {
 }
 
 export interface DataSettingsState {
+  searchLoading: boolean;
   searchContent: string;
   pagination: Pagination;
   dataBaseList: DataBase[];
   currentDatabase: DataBase | null;
+  databaseTypeFieldMapList: DatabaseTypeList;
+  fetchDatabaseTypeLoading: boolean;
 }
 
 export const dataSettings = {
   state: {
+    searchLoading: false,
     searchContent: '',
     pagination: {
       pageNumber: 1,
@@ -47,8 +85,21 @@ export const dataSettings = {
     },
     dataBaseList: [],
     currentDatabase: null,
+    fetchDatabaseTypeLoading: false,
+    databaseTypeFieldMapList: [],
   } as DataSettingsState,
   reducers: {
+    updateFilter: (
+      state: DataSettingsState,
+      payload: { key: keyof DataSettingsState; value: any },
+    ) => ({
+      ...state,
+      [payload.key]: payload.value,
+      pagination: {
+        ...state.pagination,
+        pageNumber: 1,
+      },
+    }),
     updateState: (
       state: DataSettingsState,
       payload: { key: keyof DataSettingsState; value: any },
@@ -64,53 +115,85 @@ export const dataSettings = {
       ...payload,
     }),
   },
-  effects: (dispatch: RootDispatch) => ({
-    async searchDataBases(_payload: any, rootState: RootState) {
-      const { searchContent, pagination } = rootState.dataSettings;
-      const resp = await searchDataBasesService(searchContent, pagination);
-      if (resp) {
-        const { databases, pageNumber, pageSize, totalCount } = resp;
-        dispatch.dataSettings.batchUpdateState({
-          dataBaseList: databases as DataBase[],
-          pagination: {
-            pageSize,
-            pageNumber,
-            totalCount,
-          },
+  effects: (dispatch: RootDispatch) => {
+    let searchDataBasesFlag = 0;
+    return {
+      async fetchDatabaseTypeList() {
+        dispatch.dataSettings.updateState({
+          key: 'fetchDatabaseTypeLoading',
+          value: true,
         });
-      }
-    },
+        const resp = await fetchDatabaseTypesService();
+        dispatch.dataSettings.updateState({
+          key: 'fetchDatabaseTypeLoading',
+          value: false,
+        });
+        if (resp) {
+          dispatch.dataSettings.updateState({
+            key: 'databaseTypeFieldMapList',
+            value: resp,
+          });
+        }
+      },
+      async searchDataBases(_payload: any, rootState: RootState) {
+        const { searchContent, pagination } = rootState.dataSettings;
+        dispatch.dataSettings.updateState({
+          key: 'searchLoading',
+          value: true,
+        });
+        searchDataBasesFlag += 1;
+        const currentSearchDataBasesFlag = searchDataBasesFlag;
+        const resp = await searchDataBasesService(searchContent, pagination);
+        if (currentSearchDataBasesFlag === searchDataBasesFlag) {
+          dispatch.dataSettings.updateState({
+            key: 'searchLoading',
+            value: false,
+          });
+          if (resp) {
+            const { databases, pageNumber, pageSize, totalCount } = resp;
+            dispatch.dataSettings.batchUpdateState({
+              dataBaseList: databases as DataBase[],
+              pagination: {
+                pageSize,
+                pageNumber,
+                totalCount,
+              },
+            });
+          }
+        }
+      },
 
-    async addDatabase(newDatabase: DatabaseInfo) {
-      const resp = await addDatabaseService(newDatabase);
-      if (resp) {
-        return resp;
-      }
-      return null;
-    },
+      async addDatabase(newDatabase: DatabaseInfo) {
+        const resp = await addDatabaseService(newDatabase);
+        if (resp) {
+          return resp;
+        }
+        return null;
+      },
 
-    async updateDatabase(newDatabase: UpdateDatabaseInfo) {
-      const resp = await updateDatabaseService(newDatabase);
-      if (resp) {
-        return resp;
-      }
-      return null;
-    },
+      async updateDatabase(newDatabase: UpdateDatabaseInfo) {
+        const resp = await updateDatabaseService(newDatabase);
+        if (resp) {
+          return resp;
+        }
+        return null;
+      },
 
-    async pullDatasetsFromDatabase(id: string) {
-      const resp = await pullDatasetsFromDatabaseService(id);
-      if (resp) {
-        return resp;
-      }
-      return null;
-    },
+      async pullDatasetsFromDatabase(id: string) {
+        const resp = await pullDatasetsFromDatabaseService(id);
+        if (resp) {
+          return resp;
+        }
+        return null;
+      },
 
-    async deleteDatabase(id: string) {
-      const resp = await deleteDatabaseService(id);
-      if (resp) {
-        return resp;
-      }
-      return null;
-    },
-  }),
+      async deleteDatabase(id: string) {
+        const resp = await deleteDatabaseService(id);
+        if (resp) {
+          return resp;
+        }
+        return null;
+      },
+    };
+  },
 };

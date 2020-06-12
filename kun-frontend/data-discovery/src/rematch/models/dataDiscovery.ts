@@ -1,4 +1,4 @@
-// import produce from 'immer';
+import produce from 'immer';
 import moment from 'moment';
 import {
   fetchAllTagsService,
@@ -6,7 +6,7 @@ import {
   searchDatasetsService,
 } from '@/services/dataDiscovery';
 import { Pagination, DbType } from './index';
-import { RootDispatch, RootState } from '../store';
+import { RootDispatch } from '../store';
 
 export interface DataRange {
   startTime: number | null;
@@ -43,6 +43,17 @@ export interface Dataset {
   high_watermark: Watermark;
 }
 
+export interface SearchParams {
+  searchContent?: string;
+  ownerList?: string[];
+  tagList?: string[];
+  dbTypeList?: DbType[];
+  wartermarkMode?: Mode;
+  wartermarkAbsoluteValue?: DataRange;
+  wartermarkQuickeValue?: Quick;
+  pagination: Pagination;
+}
+
 export interface SearchParamsObj {
   searchContent?: string;
   watermarkStart?: number;
@@ -68,6 +79,8 @@ export interface DataDiscoveryState {
   pagination: Pagination;
 
   datasetList: Dataset[];
+
+  dataListFetchLoading: boolean;
 }
 
 export const dataDiscovery = {
@@ -92,6 +105,7 @@ export const dataDiscovery = {
     },
 
     datasetList: [],
+    dataListFetchLoading: false,
   } as DataDiscoveryState,
 
   reducers: {
@@ -120,109 +134,122 @@ export const dataDiscovery = {
         pageNumber: 1,
       },
     }),
+    updateDataListFetchLoading: produce(
+      (draftState: DataDiscoveryState, payload: boolean) => {
+        draftState.dataListFetchLoading = payload;
+      },
+    ),
   },
 
-  effects: (dispatch: RootDispatch) => ({
-    async fetchAllOwnerList() {
-      const resp = await fetchAllUsersService();
-      if (resp) {
-        dispatch.dataDiscovery.updateState({
-          key: 'allOwnerList',
-          value: resp.users,
-        });
-      }
-    },
-    async fetchAllTagList() {
-      const resp = await fetchAllTagsService();
-      if (resp) {
-        dispatch.dataDiscovery.updateState({
-          key: 'allTagList',
-          value: resp.tags,
-        });
-      }
-    },
-
-    async searchDatasets(_payload: any, rootState: RootState) {
-      const {
-        searchContent,
-        ownerList,
-        tagList,
-        dbTypeList,
-        wartermarkMode,
-        wartermarkAbsoluteValue,
-        wartermarkQuickeValue,
-        pagination,
-      } = rootState.dataDiscovery;
-      let watermarkStart: number | undefined;
-      let watermarkEnd: number | undefined;
-      if (wartermarkMode === Mode.ABSOLUTE) {
-        if (wartermarkAbsoluteValue?.startTime) {
-          watermarkStart = wartermarkAbsoluteValue.startTime;
+  effects: (dispatch: RootDispatch) => {
+    let seachDatasetsFlag = 0;
+    return {
+      async fetchAllOwnerList() {
+        const resp = await fetchAllUsersService();
+        if (resp) {
+          dispatch.dataDiscovery.updateState({
+            key: 'allOwnerList',
+            value: resp.users,
+          });
         }
-        if (wartermarkAbsoluteValue?.endTime) {
-          watermarkEnd = wartermarkAbsoluteValue.endTime;
+      },
+      async fetchAllTagList() {
+        const resp = await fetchAllTagsService();
+        if (resp) {
+          dispatch.dataDiscovery.updateState({
+            key: 'allTagList',
+            value: resp.tags,
+          });
         }
-      }
+      },
 
-      if (wartermarkMode === Mode.QUICK) {
-        switch (wartermarkQuickeValue) {
-          case Quick.LAST_30_M:
-            watermarkStart = moment()
-              .subtract(30, 'minutes')
-              .valueOf();
-            break;
-
-          case Quick.LAST_4_H:
-            watermarkStart = moment()
-              .subtract(4, 'hours')
-              .valueOf();
-            break;
-
-          case Quick.LAST_1_D:
-            watermarkStart = moment()
-              .subtract(1, 'day')
-              .valueOf();
-            break;
-
-          case Quick.LAST_1_W:
-            watermarkStart = moment()
-              .subtract(1, 'week')
-              .valueOf();
-            break;
-
-          case Quick.LAST_1_MON:
-            watermarkStart = moment()
-              .subtract(1, 'month')
-              .valueOf();
-            break;
-
-          default:
-            break;
+      async searchDatasets(payload: SearchParams) {
+        const {
+          searchContent,
+          ownerList,
+          tagList,
+          dbTypeList,
+          wartermarkMode,
+          wartermarkAbsoluteValue,
+          wartermarkQuickeValue,
+          pagination,
+        } = payload;
+        let watermarkStart: number | undefined;
+        let watermarkEnd: number | undefined;
+        if (wartermarkMode === Mode.ABSOLUTE) {
+          if (wartermarkAbsoluteValue?.startTime) {
+            watermarkStart = wartermarkAbsoluteValue.startTime;
+          }
+          if (wartermarkAbsoluteValue?.endTime) {
+            watermarkEnd = wartermarkAbsoluteValue.endTime;
+          }
         }
-        watermarkEnd = moment().valueOf();
-      }
 
-      const searchParams: SearchParamsObj = {
-        searchContent,
-        watermarkStart,
-        watermarkEnd,
-        ownerList,
-        tagList,
-        dbTypeList,
-      };
+        if (wartermarkMode === Mode.QUICK) {
+          switch (wartermarkQuickeValue) {
+            case Quick.LAST_30_M:
+              watermarkStart = moment()
+                .subtract(30, 'minutes')
+                .valueOf();
+              break;
 
-      const resp = await searchDatasetsService(searchParams, pagination);
-      if (resp) {
-        const { datasets, pageSize, pageNumber, totalCount } = resp;
-        dispatch.dataDiscovery.batchUpdateState({
-          datasetList: datasets as Dataset[],
-          pagination: {
-            pageSize,
-            pageNumber,
-            totalCount,
-          },
-        });
-      }
-    },
-  }),
+            case Quick.LAST_4_H:
+              watermarkStart = moment()
+                .subtract(4, 'hours')
+                .valueOf();
+              break;
+
+            case Quick.LAST_1_D:
+              watermarkStart = moment()
+                .subtract(1, 'day')
+                .valueOf();
+              break;
+
+            case Quick.LAST_1_W:
+              watermarkStart = moment()
+                .subtract(1, 'week')
+                .valueOf();
+              break;
+
+            case Quick.LAST_1_MON:
+              watermarkStart = moment()
+                .subtract(1, 'month')
+                .valueOf();
+              break;
+
+            default:
+              break;
+          }
+          watermarkEnd = moment().valueOf();
+        }
+
+        const searchParams: SearchParamsObj = {
+          searchContent,
+          watermarkStart,
+          watermarkEnd,
+          ownerList,
+          tagList,
+          dbTypeList,
+        };
+        seachDatasetsFlag += 1;
+        const currentSeachDatasetsFlag = seachDatasetsFlag;
+        dispatch.dataDiscovery.updateDataListFetchLoading(true);
+        const resp = await searchDatasetsService(searchParams, pagination);
+        if (currentSeachDatasetsFlag === seachDatasetsFlag) {
+          dispatch.dataDiscovery.updateDataListFetchLoading(false);
+          if (resp) {
+            const { datasets, pageSize, pageNumber, totalCount } = resp;
+            dispatch.dataDiscovery.batchUpdateState({
+              datasetList: datasets as Dataset[],
+              pagination: {
+                pageSize,
+                pageNumber,
+                totalCount,
+              },
+            });
+          }
+        }
+      },
+    };
+  },
 };

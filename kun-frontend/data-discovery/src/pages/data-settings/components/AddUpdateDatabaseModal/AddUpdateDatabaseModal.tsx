@@ -1,17 +1,18 @@
 import React, { memo, useMemo, useState, useEffect, useCallback } from 'react';
 
 import { Modal, Input, Select, Button } from 'antd';
+import _ from 'lodash';
 
 import { watermarkFormatter } from '@/utils';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
-import { DbType } from '@/rematch/models';
 
 import {
   UpdateDatabaseInfo,
   DatabaseInfo,
   DataBase,
+  DatabaseTypeItemFieldItem,
 } from '@/rematch/models/dataSettings';
 import styles from './AddUpdateDatabaseModal.less';
 
@@ -23,11 +24,9 @@ interface Props {
 }
 
 const initDatabaseInfo: DatabaseInfo = {
-  type: null,
+  typeId: null,
   name: '',
-  ip: '',
-  username: '',
-  password: '',
+  information: {},
   tags: [],
 };
 
@@ -43,6 +42,7 @@ export default memo(function AddUpdateDatabaseModal({
 
   const { selector, dispatch } = useRedux(state => ({
     allTagList: state.dataDiscovery.allTagList,
+    databaseTypeFieldMapList: state.dataSettings.databaseTypeFieldMapList,
   }));
 
   const modalTitle = useMemo(
@@ -65,6 +65,27 @@ export default memo(function AddUpdateDatabaseModal({
     }
   }, [database, dispatch.dataDiscovery, visible]);
 
+  const [
+    currentDatabaseTypeFieldMap,
+    setCurrentDatabaseTypeFieldMap,
+  ] = useState<DatabaseTypeItemFieldItem[]>([]);
+
+  useEffect(() => {
+    const currentFiledMap = selector.databaseTypeFieldMapList.find(
+      mapItem => mapItem.id === newDatabase.typeId,
+    );
+    if (currentFiledMap) {
+      setCurrentDatabaseTypeFieldMap(currentFiledMap.fields);
+    } else {
+      setCurrentDatabaseTypeFieldMap([]);
+    }
+  }, [newDatabase.typeId, selector.databaseTypeFieldMapList]);
+
+  const allDatabaseTypes = useMemo(
+    () => selector.databaseTypeFieldMapList || [],
+    [selector.databaseTypeFieldMapList],
+  );
+
   const handleUpdateNewDatabase = useCallback((v, k) => {
     setNewDatabase(b => ({
       ...b,
@@ -74,37 +95,81 @@ export default memo(function AddUpdateDatabaseModal({
 
   const handleChangeFuncMaps = useMemo(
     () => ({
+      type: (v: string) => handleUpdateNewDatabase(v, 'typeId'),
+      tags: (v: string[]) => handleUpdateNewDatabase(v, 'tags'),
       name: (e: React.ChangeEvent<HTMLInputElement>) =>
         handleUpdateNewDatabase(e.target.value, 'name'),
-      ip: (e: React.ChangeEvent<HTMLInputElement>) =>
-        handleUpdateNewDatabase(e.target.value, 'ip'),
-      username: (e: React.ChangeEvent<HTMLInputElement>) =>
-        handleUpdateNewDatabase(e.target.value, 'username'),
-      password: (e: React.ChangeEvent<HTMLInputElement>) =>
-        handleUpdateNewDatabase(e.target.value, 'password'),
-      type: (v: DbType) => handleUpdateNewDatabase(v, 'type'),
-      tags: (v: string[]) => handleUpdateNewDatabase(v, 'tags'),
     }),
     [handleUpdateNewDatabase],
   );
 
-  const handleClickConfirm = useCallback(() => {
-    onConfirm(newDatabase);
-  }, [newDatabase, onConfirm]);
+  const handleUpdateNewDatabaseInformation = useCallback((v, k) => {
+    setNewDatabase(b => ({
+      ...b,
+      information: {
+        ...b.information,
+        [k]: v,
+      },
+    }));
+  }, []);
 
-  const disableConfirm = useMemo(
+  const handleChangeInformationFuncMaps = useMemo(() => {
+    const resultMap: any = {};
+    currentDatabaseTypeFieldMap.forEach(field => {
+      resultMap[field.key] = (e: any) =>
+        handleUpdateNewDatabaseInformation(e.target.value, field.key);
+    });
+    return resultMap;
+  }, [currentDatabaseTypeFieldMap, handleUpdateNewDatabaseInformation]);
+
+  const handleClickConfirm = useCallback(() => {
+    const { information, typeId, ...otherParams } = newDatabase;
+    const currentFiledMap = selector.databaseTypeFieldMapList.find(
+      mapItem => mapItem.id === typeId,
+    );
+    const currrentFieldList = currentFiledMap?.fields;
+    const newInformation: any = {};
+    currrentFieldList?.forEach(field => {
+      newInformation[field.key] = information[field.key] ?? null;
+    });
+    const resultDatabase = {
+      information: newInformation,
+      typeId,
+      ...otherParams,
+    };
+    onConfirm(resultDatabase);
+  }, [newDatabase, onConfirm, selector.databaseTypeFieldMapList]);
+
+  const disableConfirm = useMemo(() => {
+    let disable = false;
+    currentDatabaseTypeFieldMap.forEach(field => {
+      if (!newDatabase.information[field.key]) {
+        disable = true;
+      }
+    });
+    return disable;
+  }, [currentDatabaseTypeFieldMap, newDatabase.information]);
+
+  const informationCompList = useMemo(
     () =>
-      !newDatabase.name ||
-      !newDatabase.ip ||
-      !newDatabase.username ||
-      !newDatabase.password ||
-      !newDatabase.type,
+      _.orderBy(currentDatabaseTypeFieldMap, 'order').map(field => (
+        <div key={field.key} className={styles.inputItem}>
+          <div className={styles.inputTitle}>
+            {t(`dataSettings.field.${field.key}`)}
+          </div>
+          <div className={styles.inputComp}>
+            <Input
+              value={newDatabase.information[field.key]}
+              onChange={handleChangeInformationFuncMaps[field.key]}
+            />
+          </div>
+        </div>
+      )),
     [
-      newDatabase.ip,
-      newDatabase.name,
-      newDatabase.password,
-      newDatabase.type,
-      newDatabase.username,
+      currentDatabaseTypeFieldMap,
+      handleChangeInformationFuncMaps,
+      newDatabase.information,
+      t,
     ],
   );
 
@@ -132,56 +197,24 @@ export default memo(function AddUpdateDatabaseModal({
 
         <div className={styles.inputItem}>
           <div className={styles.inputTitle}>
-            {t('dataSettings.addUpdate.ipAddr')}
-          </div>
-          <div className={styles.inputComp}>
-            <Input value={newDatabase.ip} onChange={handleChangeFuncMaps.ip} />
-          </div>
-        </div>
-
-        <div className={styles.inputItem}>
-          <div className={styles.inputTitle}>
             {t('dataSettings.addUpdate.dbType')}
           </div>
           <div className={styles.inputComp}>
             <Select
               style={{ width: '100%' }}
-              value={newDatabase.type || undefined}
+              value={newDatabase.typeId || undefined}
               onChange={handleChangeFuncMaps.type}
             >
-              {Object.values(DbType).map(type => (
-                <Option key={type} value={type}>
-                  {type}
+              {allDatabaseTypes.map(type => (
+                <Option key={type.id} value={type.id}>
+                  {type.type}
                 </Option>
               ))}
             </Select>
           </div>
         </div>
 
-        <div className={styles.inputItem}>
-          <div className={styles.inputTitle}>
-            {t('dataSettings.addUpdate.username')}
-          </div>
-          <div className={styles.inputComp}>
-            <Input
-              value={newDatabase.username}
-              onChange={handleChangeFuncMaps.username}
-            />
-          </div>
-        </div>
-
-        <div className={styles.inputItem}>
-          <div className={styles.inputTitle}>
-            {t('dataSettings.addUpdate.password')}
-          </div>
-          <div className={styles.inputComp}>
-            <Input
-              value={newDatabase.password}
-              onChange={handleChangeFuncMaps.password}
-              type="password"
-            />
-          </div>
-        </div>
+        {informationCompList}
 
         {database && (
           <>
