@@ -1,4 +1,5 @@
 import React, { memo, useCallback } from 'react';
+import numeral from 'numeral';
 import { message } from 'antd';
 import { watermarkFormatter } from '@/utils';
 import useRedux from '@/hooks/useRedux';
@@ -56,7 +57,7 @@ export default memo(function ColumnItem({ column, onFinishUpdate }: Props) {
             {t('dataDetail.column.notNullPer')}
           </div>
           <div className={styles.contentItem}>
-            {`${column.not_null_percentage * 100}%`}
+            {numeral(column.not_null_percentage).format('0.00%')}
           </div>
         </div>
 
