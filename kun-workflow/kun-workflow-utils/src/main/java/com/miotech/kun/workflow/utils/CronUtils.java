@@ -8,7 +8,6 @@ import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
 import com.google.common.base.Preconditions;
 
-import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.Optional;
@@ -58,17 +57,7 @@ public class CronUtils {
      * @return an optional ZonedDateTime that represents the time for next execution
      */
     public static Optional<OffsetDateTime> getNextExecutionTimeFromNow(Cron cron) {
-        return getNextExecutionTime(cron, OffsetDateTime.now());
-    }
-
-    /**
-     * Get a OffsetDateTime object (optional) that represents the time for next execution from current time (given by clock) by given cron expression
-     * @param cron cron object
-     * @param clock a clock object for mock up
-     * @return an optional ZonedDateTime that represents the time for next execution
-     */
-    public static Optional<OffsetDateTime> getNextExecutionTimeFromNow(Cron cron, Clock clock) {
-        return getNextExecutionTime(cron, OffsetDateTime.now(clock));
+        return getNextExecutionTime(cron, DateTimeUtils.now());
     }
 
     /**
@@ -92,17 +81,7 @@ public class CronUtils {
      * @return an optional ZonedDateTime that represents the time for last execution
      */
     public static Optional<OffsetDateTime> getLastExecutionTimeFromNow(Cron cron) {
-        return getLastExecutionTime(cron, OffsetDateTime.now());
-    }
-
-    /**
-     * Get a OffsetDateTime object (optional) that represents the time for last execution from current time (given by clock) by given cron expression
-     * @param cron cron object
-     * @param clock a clock object for mock up
-     * @return an optional ZonedDateTime that represents the time for last execution
-     */
-    public static Optional<OffsetDateTime> getLastExecutionTimeFromNow(Cron cron, Clock clock) {
-        return getLastExecutionTime(cron, OffsetDateTime.now(clock));
+        return getLastExecutionTime(cron, DateTimeUtils.now());
     }
 
     /**
