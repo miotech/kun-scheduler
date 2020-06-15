@@ -6,6 +6,7 @@ buildscript {
 	dependencies {
 		classpath "io.spring.gradle:dependency-management-plugin:1.0.9.RELEASE"
 		classpath "org.springframework.boot:spring-boot-gradle-plugin:2.2.2.RELEASE"
+		classpath "com.bmuschko:gradle-docker-plugin:6.4.0"
 	}
 }
 
@@ -38,4 +39,25 @@ dependencies {
 
 test {
 	useJUnitPlatform()
+}
+
+apply plugin: "com.bmuschko.docker-remote-api"
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+task buildDockerImage(type: DockerBuildImage) {
+    inputDir = file('.')
+    images.add(System.getenv("DOCKER_URL")+'/mioyingtech/'+project.name+':'+System.getenv("TAG_DATA_DISCOVERY"))
+    
+}
+docker {
+     registryCredentials {
+     	url = System.getenv("DOCKER_URL")
+        username = System.getenv("DOCKER_USER")
+        password = System.getenv("DOCKER_PASS")
+     }
+ } 
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+task buildPushImage(type: DockerPushImage) {
+    dependsOn buildDockerImage
+    images.add(System.getenv("DOCKER_URL")+'/mioyingtech/'+project.name+':'+System.getenv("TAG_DATA_DISCOVERY"))
+    
 }
