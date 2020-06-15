@@ -41,6 +41,7 @@ test {
 	useJUnitPlatform()
 }
 
+println System.getenv("DOCKER_URL")
 apply plugin: "com.bmuschko.docker-remote-api"
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 task buildDockerImage(type: DockerBuildImage) {
