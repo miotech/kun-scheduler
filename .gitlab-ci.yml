@@ -1,11 +1,12 @@
 stages:
   - verify
   - build
-default:
-  before_script:
-    - export DOCKER_USER=$CI_BUILD_DOCKER_USER
-    - export DOCKER_PASS=$CI_BUILD_TOKEN
-    - export DOCKER_URL=$CI_BUILD_DOCKER_URL
+
+before_script:
+  - export DOCKER_USER=$CI_BUILD_DOCKER_USER
+  - export DOCKER_PASS=$CI_BUILD_TOKEN
+  - export DOCKER_URL=$CI_BUILD_DOCKER_URL
+
 verify:
   stage: verify
   image: gradle:6.5.0-jdk8
