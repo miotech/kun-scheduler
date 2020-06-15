@@ -23,7 +23,7 @@ verify:
 
 
 docker build:
-  stage: verify
+  stage: build
   image: gradle:6.5.0-jdk8
   script:
     - gradle kun-data-discover:bootJar
