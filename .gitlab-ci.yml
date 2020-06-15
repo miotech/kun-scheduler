@@ -32,4 +32,3 @@ docker build:
   rules:
     - changes:
       - kun-data-discover/*
-      when: manual
