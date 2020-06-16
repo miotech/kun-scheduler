@@ -28,7 +28,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -70,7 +69,7 @@ public class TaskDao {
         return taskCols;
     }
 
-    private void insertTickTaskRecordByScheduleConf(Long taskId, ScheduleConf scheduleConf, Clock clock) {
+    private void insertTickTaskRecordByScheduleConf(Long taskId, ScheduleConf scheduleConf) {
         boolean shouldInsertTickTask;
 
         switch (scheduleConf.getType()) {
@@ -95,7 +94,7 @@ public class TaskDao {
                     .asPrepared()
                     .getSQL();
 
-            Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextExecutionTimeFromNow(cron, clock);
+            Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextExecutionTimeFromNow(cron);
             String formattedScheduleTick;
             if (nextExecutionTimeOptional.isPresent()) {
                 OffsetDateTime nextExecutionTime = nextExecutionTimeOptional.get();
@@ -391,10 +390,6 @@ public class TaskDao {
     }
 
     public void create(Task task) {
-        create(task, Clock.systemDefaultZone());
-    }
-
-    public void create(Task task, Clock mockClock) {
         /*
          * Creating a task consists of following steps:
          * 1. Insert task record into database
@@ -423,17 +418,13 @@ public class TaskDao {
                     JSONUtils.toJsonString(task.getVariableDefs()),
                     JSONUtils.toJsonString(task.getScheduleConf())
             );
-            insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf(), mockClock);
+            insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
             updateTaskUpstreamDependencies(task, task.getDependencies());
             return null;
         });
     }
 
     public boolean update(Task task) {
-        return update(task, Clock.systemDefaultZone());
-    }
-
-    public boolean update(Task task, Clock mockClock) {
         List<String> tableColumns = new ImmutableList.Builder<String>()
                 .addAll(taskCols)
                 .build();
@@ -461,7 +452,7 @@ public class TaskDao {
             // remove existing task mappings, if any
             deleteTickTaskMappingRecord(task.getId());
             // and re-insert by updated schedule configuration
-            insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf(), mockClock);
+            insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
 
             return updatedRows;
         });
