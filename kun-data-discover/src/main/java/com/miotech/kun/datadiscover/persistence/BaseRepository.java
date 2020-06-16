@@ -1,18 +1,28 @@
 package com.miotech.kun.datadiscover.persistence;
 
+import com.miotech.kun.datadiscover.common.util.DateUtil;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 /**
- * @author: JieChen
+ * @author: Jie Chen
  * @created: 6/12/20
  */
 public abstract class BaseRepository {
+
+    public static final String COLUMN_PARENT_ID = "parent_id";
+
+    public static final String DO_NOTHING = "do nothing";
 
     public String toLikeSql(String keyword) {
         return "%" + keyword + "%";
@@ -76,7 +86,7 @@ public abstract class BaseRepository {
         return stringBuilder.toString();
     }
 
-    public String pageInfoToSql(int pageNum, int pageSize) {
+    public String toLimitSql(int pageNum, int pageSize) {
         StringBuilder pageSql = new StringBuilder();
         pageSql.append("limit ").append(pageSize).append(" offset ").append((pageNum - 1) * pageSize);
         return pageSql.toString();
@@ -87,5 +97,13 @@ public abstract class BaseRepository {
             return Arrays.asList(sql.split(","));
         }
         return null;
+    }
+
+    public Long timestampToMillis(ResultSet rs, String columnLabel) throws SQLException {
+        return DateUtil.dateTimeToMillis(rs.getObject(columnLabel, OffsetDateTime.class));
+    }
+
+    public LocalDateTime millisToTimestamp(Long millis) {
+        return ObjectUtils.defaultIfNull(DateUtil.millisToLocalDateTime(millis), null);
     }
 }

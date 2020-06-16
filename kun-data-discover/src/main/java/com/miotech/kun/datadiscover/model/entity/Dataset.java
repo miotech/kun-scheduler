@@ -15,7 +15,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
-public class Dataset extends DatasetBasic{
+public class Dataset extends DatasetBasic {
 
     @JsonProperty("low_watermark")
     private Watermark lowWatermark;

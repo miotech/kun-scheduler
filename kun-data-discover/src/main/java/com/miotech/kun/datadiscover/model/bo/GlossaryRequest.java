@@ -1,27 +1,23 @@
 package com.miotech.kun.datadiscover.model.bo;
 
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.json.simple.JSONObject;
 
 import java.util.List;
 
 /**
- * @author: Melo
- * @created: 5/26/20
+ * @author: Jie Chen
+ * @created: 2020/6/17
  */
-
 @Data
-@NoArgsConstructor
-public class DatabaseRequest {
-
-    private Long typeId;
+public class GlossaryRequest {
 
     private String name;
 
-    private JSONObject information;
+    private String description;
 
-    private List<String> tags;
+    private Long parentId;
+
+    private List<Long> assetIds;
 
     private String createUser;
 
