@@ -15,14 +15,16 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	// end::actuator[]
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	// tag::tests[]
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 	implementation 'org.postgresql:postgresql:42.2.12'
 	implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 	implementation 'org.apache.commons:commons-lang3'
+	implementation 'com.google.code.gson:gson'
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
+	testImplementation enforcedPlatform('io.zonky.test.postgres:embedded-postgres-binaries-bom:11.6.0')
+	testImplementation 'io.zonky.test:embedded-database-spring-test:1.5.4'
 	// end::tests[]
 }
 

@@ -3,15 +3,15 @@ package com.miotech.kun.datadiscover.model;
 import lombok.Data;
 
 /**
- * @author: JieChen
+ * @author: Jie Chen
  * @created: 6/12/20
  */
 @Data
 public class PageInfo {
 
-    private Integer pageNumber;
+    private Integer pageNumber = 1;
 
-    private Integer pageSize;
+    private Integer pageSize = 25;
 
     private Long totalCount;
 }

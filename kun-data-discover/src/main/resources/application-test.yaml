@@ -1,0 +1,9 @@
+server:
+  port: 8081
+
+spring:
+  datasource:
+     schema: classpath:test-ddl.sql, classpath:test-dml.sql
+     initialization-mode: always
+  flyway:
+    enabled: false

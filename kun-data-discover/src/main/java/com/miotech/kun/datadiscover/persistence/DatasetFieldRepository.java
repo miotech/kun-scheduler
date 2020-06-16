@@ -1,6 +1,5 @@
 package com.miotech.kun.datadiscover.persistence;
 
-import com.miotech.kun.datadiscover.common.util.DateUtil;
 import com.miotech.kun.datadiscover.model.bo.DatasetColumnRequest;
 import com.miotech.kun.datadiscover.model.entity.DatasetColumn;
 import com.miotech.kun.datadiscover.model.entity.Watermark;
@@ -9,13 +8,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 /**
- * @author: JieChen
+ * @author: Jie Chen
  * @created: 6/12/20
  */
 @Repository
@@ -56,7 +53,7 @@ public class DatasetFieldRepository extends BaseRepository {
                 column.setDescription(rs.getString("description"));
                 column.setType(rs.getString("type"));
                 Watermark watermark = new Watermark();
-                watermark.setTime(DateUtil.dateTimeToMillis(rs.getObject("high_watermark", OffsetDateTime.class)));
+                watermark.setTime(timestampToMillis(rs, "high_watermark"));
                 column.setHighWatermark(watermark);
                 column.setDistinctCount(rs.getLong("distinct_count"));
                 column.setNotNullCount(rs.getLong("nonnull_count"));
@@ -73,10 +70,7 @@ public class DatasetFieldRepository extends BaseRepository {
 
     public DatasetColumn update(Long id, DatasetColumnRequest datasetColumnRequest) {
         String sql = "update kun_mt_dataset_field set description = ? where id = ?";
-        jdbcTemplate.update(sql, ps -> {
-            ps.setString(1, datasetColumnRequest.getDescription());
-            ps.setLong(2, id);
-        });
+        jdbcTemplate.update(sql, datasetColumnRequest, id);
         return find(id);
     }
 
