@@ -30,14 +30,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SparkOperator implements Operator {
+public class SparkOperator extends Operator {
 
     SparkJob job = new SparkJob();
     Logger logger;
     SparkApp app;
     LivyClient livyClient;
 
-    public void init(OperatorContext context){
+    @Override
+    public void init(){
+        OperatorContext context = getContext();
+
         logger = context.getLogger();
         logger.info("Start init spark job params");
 
@@ -99,7 +102,10 @@ public class SparkOperator implements Operator {
         livyClient = new LivyClient(livyHost, queue, proxyUser);
     }
 
-    public boolean run(OperatorContext context){
+    @Override
+    public boolean run(){
+        OperatorContext context = getContext();
+
         try {
             app = livyClient.runSparkJob(job);
             int jobId = app.getId();

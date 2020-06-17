@@ -1,5 +1,0 @@
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-}

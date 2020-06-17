@@ -1,0 +1,12 @@
+dependencies {
+    implementation project(":kun-commons:kun-commons-db")
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-workflow:kun-workflow-core")
+    implementation project(":kun-workflow:kun-workflow-common")
+    implementation project(":kun-workflow:kun-workflow-utils")
+
+    testImplementation project(":kun-commons:kun-commons-testing")
+    testImplementation project(":kun-workflow:kun-workflow-testing")
+    testRuntimeOnly "com.h2database:h2"
+    testImplementation "net.bytebuddy:byte-buddy"
+}
