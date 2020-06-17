@@ -44,6 +44,18 @@ public class IdGeneratorTest {
         assertThat((combinedId & ~RESERVED_MASK), is(baseId));
     }
 
+    @Test
+    public void testSplit() {
+        IdGenerator generator = IdGenerator.getInstance();
+        long baseId = generator.nextId();
+        int reservedId = 0x0101;
+        long combinedId = generator.combine(baseId, reservedId);
+
+        long[] result = generator.split(combinedId);
+        assertThat(result[0], is(baseId));
+        assertThat(result[1], is((long) reservedId));
+    }
+
     @Test(expected = IllegalArgumentException.class)
     public void testCombine_whenExceptionThrows() {
         /* `IdGenerator.combine` should raise exceptions

@@ -10,6 +10,8 @@ import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.db.DatabaseSetup;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.h2.tools.Server;
 import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
@@ -79,9 +81,19 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     }
 
     public static class TestDatabaseModule extends AbstractModule {
+        static {
+            // start H2 web console
+            try {
+                Server.createWebServer("-webPort", "8082", "-webDaemon").start();
+            } catch (SQLException e) {
+                ExceptionUtils.wrapAndThrow(e);
+            }
+        }
+
         @Provides
         @Singleton
         public DataSource createDataSource() {
+
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl("jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE");
             config.setUsername("sa");

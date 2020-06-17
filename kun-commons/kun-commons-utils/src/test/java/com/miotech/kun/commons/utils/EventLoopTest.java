@@ -3,20 +3,39 @@ package com.miotech.kun.commons.utils;
 import com.google.common.collect.Iterables;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 public class EventLoopTest {
     private static final String REGISTER = "REGISTER";
     private static final String UNREGISTER = "UNREGISTER";
     private static final Integer MAGIC_NUMBER = 42;
+
+    @Test
+    public void testAddConsumers_already_added() {
+        // prepare
+        EventLoop<Integer, String> eventLoop = new EventLoop<>("test");
+        eventLoop.addConsumers(Collections.emptyList());
+
+        // process
+        try {
+            eventLoop.addConsumers(Collections.emptyList());
+            fail();
+        } catch (Exception exception) {
+            assertThat(exception, instanceOf(IllegalStateException.class));
+        }
+    }
 
     @Test
     public void testOnReceive_post_to_single_worker() {
@@ -142,19 +161,11 @@ public class EventLoopTest {
     private static class EchoEventLoop extends EventLoop<Integer, String> {
         private final ConcurrentMap<Thread, ConcurrentLinkedQueue<String>> received = new ConcurrentHashMap<>();
 
-        public EchoEventLoop(int nThreads) {
-            super("echo", nThreads);
-        }
-
-        @Override
-        protected void onReceive(String event) {
-            addEvent(event);
-
-            if (REGISTER.equals(event)) {
-                register(MAGIC_NUMBER, this::addEvent);
-            } else if (UNREGISTER.equals(event)) {
-                unregister(MAGIC_NUMBER);
-            }
+        public EchoEventLoop(int n) {
+            super("echo");
+            addConsumers(IntStream.range(0, n)
+                    .mapToObj((i) -> new EchoEventConsumer())
+                    .collect(Collectors.toList()));
         }
 
         private void addEvent(String event) {
@@ -165,6 +176,19 @@ public class EventLoopTest {
 
         public ConcurrentMap<Thread, ConcurrentLinkedQueue<String>> getReceived() {
             return received;
+        }
+
+        private class EchoEventConsumer extends EventConsumer<Integer, String> {
+            @Override
+            public void onReceive(String event) {
+                addEvent(event);
+
+                if (REGISTER.equals(event)) {
+                    listenTo(MAGIC_NUMBER, EchoEventLoop.this::addEvent);
+                } else if (UNREGISTER.equals(event)) {
+                    unlistenTo(MAGIC_NUMBER);
+                }
+            }
         }
     }
 
