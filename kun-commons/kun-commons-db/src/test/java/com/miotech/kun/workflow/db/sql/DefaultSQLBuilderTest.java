@@ -73,6 +73,17 @@ public class DefaultSQLBuilderTest {
     }
 
     @Test
+    public void test_update_multiple_calls() {
+        assertEquals("UPDATE test\n" +
+                "SET a = ?, b = ?", DefaultSQLBuilder.newBuilder()
+                .update("test")
+                .set("a")
+                .set("b")
+                .asPrepared()
+                .getSQL());
+    }
+
+    @Test
     public void test_columns() {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put("a", Collections.singletonList("id"));

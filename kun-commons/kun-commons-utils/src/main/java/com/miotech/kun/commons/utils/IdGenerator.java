@@ -55,6 +55,13 @@ public class IdGenerator {
         return (baseId | ((long) reserved));
     }
 
+    public long[] split(long combined) {
+        long[] parts = new long[2];
+        parts[0] = combined & ~RESERVED_MASK;
+        parts[1] = combined & RESERVED_MASK;
+        return parts;
+    }
+
     private long tilNextMillis (long lastTimestamp) {
         long timestamp = timeGen();
         while (timestamp <= lastTimestamp) {

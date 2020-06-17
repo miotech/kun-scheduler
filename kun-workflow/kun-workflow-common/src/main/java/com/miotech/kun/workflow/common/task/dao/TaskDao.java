@@ -227,8 +227,11 @@ public class TaskDao {
                 .asPrepared()
                 .getSQL();
 
-        // TODO: wrap following lines of code into individual method
-        List<Task> plainTasks = dbOperator.fetchAll(sql, TaskMapper.INSTANCE, taskIds.toArray());
+        return fetchTasksJoinDependencies(sql, taskIds.toArray());
+    }
+
+    private List<Task> fetchTasksJoinDependencies(String preparedSql, Object... params) {
+        List<Task> plainTasks = dbOperator.fetchAll(preparedSql, TaskMapper.INSTANCE, params);
 
         // Retrieve all relations whose downstream ids are involved in result tasks
         List<Long> plainTaskIds = plainTasks.stream().map(task -> task.getId()).collect(Collectors.toList());
@@ -248,6 +251,10 @@ public class TaskDao {
      * @return
      */
     private Map<Long, List<TaskDependency>> fetchAllRelationsFromDownstreamTaskIds(List<Long> taskIds) {
+        if (taskIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
         Map<Long, List<TaskDependency>> taskIdToDependenciesMap = new HashMap<>();
         taskIds.forEach(taskId -> {
             taskIdToDependenciesMap.put(taskId, new ArrayList<>());
@@ -341,19 +348,7 @@ public class TaskDao {
                 .getSQL();
         Collections.addAll(params, pageSize, offset);
 
-        // For all tasks we directly fetched from task table, property `dependencies` will always be null
-        List<Task> plainTasks = dbOperator.fetchAll(sql, TaskMapper.INSTANCE, params.toArray());
-
-        // Retrieve all relations whose downstream ids are involved in result tasks
-        List<Long> taskIds = plainTasks.stream().map(task -> task.getId()).collect(Collectors.toList());
-        Map<Long, List<TaskDependency>> dependenciesMap = fetchAllRelationsFromDownstreamTaskIds(taskIds);
-
-        // re-construct all tasks with full properties
-        return plainTasks.stream()
-                .map(t -> t.cloneBuilder()
-                    .withDependencies(dependenciesMap.get(t.getId()))
-                    .build())
-                .collect(Collectors.toList());
+        return fetchTasksJoinDependencies(sql, params.toArray());
     }
 
     public List<Task> fetchByOperatorId(Long operatorId) {
@@ -483,9 +478,9 @@ public class TaskDao {
                 .orderBy("scheduled_tick ASC")
                 .limit(1)
                 .toString();
-        String nextExecutionTimeString = (String) dbOperator.fetchOne(
+        String nextExecutionTimeString = dbOperator.fetchOne(
                 sql,
-                (ResultSetMapper) rs -> rs.getString("scheduled_tick"),
+                rs -> rs.getString("scheduled_tick"),
                 taskId
         );
         if (Objects.nonNull(nextExecutionTimeString)) {
@@ -502,7 +497,7 @@ public class TaskDao {
                 .on(TASK_MODEL_NAME + ".id = " + TICK_TASK_MAPPING_TABLE_ALIAS + ".task_id")
                 .where(TICK_TASK_MAPPING_TABLE_ALIAS + ".scheduled_tick <= ?")
                 .getSQL();
-        return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, tick.toString());
+        return fetchTasksJoinDependencies(sql, tick.toString());
     }
 
     /**

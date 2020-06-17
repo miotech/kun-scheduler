@@ -13,7 +13,10 @@ import java.util.List;
 
 @Singleton
 public class LatestTaskRunDependencyFunction implements DependencyFunction {
-    private final TaskRunDao taskRunDao;
+    private final String functionType = "latestTaskRun";
+
+    // place modifier 'transient` here because matcher sameBeanAs() in shazamcrest can't serialize this field properly.
+    private transient final TaskRunDao taskRunDao;
 
     @Inject
     public LatestTaskRunDependencyFunction(TaskRunDao taskRunDao) {
@@ -34,6 +37,6 @@ public class LatestTaskRunDependencyFunction implements DependencyFunction {
 
     @Override
     public String toFunctionType() {
-        return "latestTaskRun";
+        return functionType;
     }
 }
