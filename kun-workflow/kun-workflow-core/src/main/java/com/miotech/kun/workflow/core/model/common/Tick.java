@@ -4,13 +4,11 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 public class Tick {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
-    private static final ZoneOffset ZONE_OFFSET = DateTimeUtils.now().getOffset();
 
     private final String time;
 
@@ -23,7 +21,7 @@ public class Tick {
     }
 
     public long toEpochSecond() {
-        return LocalDateTime.parse(time, FORMATTER).toEpochSecond(ZONE_OFFSET);
+        return LocalDateTime.parse(time, FORMATTER).toEpochSecond(DateTimeUtils.systemDefaultOffset());
     }
 
     @Override

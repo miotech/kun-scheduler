@@ -67,15 +67,13 @@ subprojects {
                 implementation "com.cronutils:cron-utils:9.0.2"
 
                 testImplementation "junit:junit:4.12"
-                testImplementation "org.hamcrest:hamcrest:2.2"
-                testImplementation "org.hamcrest:hamcrest-library:1.3"
-                testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
                 testImplementation "org.hamcrest:hamcrest:2.2"
                 testImplementation "org.hamcrest:hamcrest-library:1.3"
+                testImplementation 'com.shazam:shazamcrest:0.11'
                 testImplementation "org.mockito:mockito-core:3.3.3"
                 testImplementation "org.awaitility:awaitility:4.0.3"
-//                testRuntimeOnly "com.h2database:h2:1.4.200"
+                testImplementation "net.bytebuddy:byte-buddy:1.10.10"
             }
 
             implementation "com.google.inject:guice"
@@ -87,6 +85,7 @@ subprojects {
             testImplementation "junit:junit"
             testImplementation "org.hamcrest:hamcrest"
             testImplementation "org.hamcrest:hamcrest-library"
+            testImplementation 'com.shazam:shazamcrest'
             testImplementation "org.mockito:mockito-core"
             testImplementation "org.awaitility:awaitility"
         }

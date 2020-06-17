@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.common.resource;
 
 import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.workflow.core.resource.Resource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,7 @@ public class FileResource implements Resource {
 
 
     public FileResource(String fileLocation, boolean createIfNotExists) {
-        Preconditions.checkNotNull(fileLocation);
+        Preconditions.checkNotNull(fileLocation, "fileLocation should not be null.");
         this.fileLocation = fileLocation;
         this.resourceFile = new File(fileLocation);
 

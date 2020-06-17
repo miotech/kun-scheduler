@@ -2,6 +2,8 @@ package com.miotech.kun.workflow.core.model.taskrun;
 
 import java.time.OffsetDateTime;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class TaskAttempt {
     private final Long id;
 
@@ -18,6 +20,8 @@ public class TaskAttempt {
     private final OffsetDateTime endAt;
 
     public TaskAttempt(Long id, TaskRun taskRun, int attempt, TaskRunStatus status, String logPath, OffsetDateTime startAt, OffsetDateTime endAt) {
+        checkNotNull(taskRun, "taskRun should not be null.");
+        checkNotNull(taskRun.getTask(), "task should not be null.");
         this.id = id;
         this.taskRun = taskRun;
         this.attempt = attempt;
@@ -53,6 +57,14 @@ public class TaskAttempt {
 
     public OffsetDateTime getEndAt() {
         return endAt;
+    }
+
+    public Long getTaskId() {
+        return getTaskRun().getTask().getId();
+    }
+
+    public String getTaskName() {
+        return getTaskRun().getTask().getName();
     }
 
     public static TaskAttempt.Builder newBuilder() {
