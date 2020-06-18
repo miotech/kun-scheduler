@@ -1,4 +1,5 @@
 FROM hub.miotech.com/library/openjdk:8u181-jdk
+
 ARG sentry_dsn
 ARG sentry_env
 ARG sentry_release
