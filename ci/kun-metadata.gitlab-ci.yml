@@ -19,7 +19,7 @@ verify-test:
     - ./gradlew codeCoverageReport -p kun-metadata
   only:
     changes:
-      - kun-metadata/*
+      - ./kun-metadata/*
 
 verify-sonar:
   stage: verify
@@ -37,7 +37,7 @@ verify-sonar:
       fi
   only:
     changes:
-      - kun-metadata/*
+      - ./kun-metadata/*
 
 .build_job:
   stage: build-images
@@ -51,7 +51,7 @@ verify-sonar:
       - release
       - tags
     changes:
-      - kun-metadata/*
+      - ./kun-metadata/*
 
 docker build:
   extends: .build_job
