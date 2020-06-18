@@ -18,7 +18,7 @@ verify-kun-data-discover-test:
     - ./gradlew check -p kun-data-discover
   only:
     changes:
-      - ./kun-data-discover/*
+      - kun-data-discover/*
 
 verify-kun-data-discover-sonar:
   stage: verify
@@ -36,7 +36,7 @@ verify-kun-data-discover-sonar:
       fi
   only:
     changes:
-      - ./kun-data-discover/*
+      - kun-data-discover/*
 
 .kun-data-discover-build-job:
   stage: build-images
@@ -50,7 +50,7 @@ verify-kun-data-discover-sonar:
       - release
       - tags
     changes:
-      - ./kun-data-discover/*
+      - kun-data-discover/*
 
 kun-data-discover-build:
   extends: .kun-data-discover-build-job
