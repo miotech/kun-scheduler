@@ -4,7 +4,7 @@
 #     - changes:
 #       - kun-metadata/*
 
-verify-test:
+verify-kun-metadata-test:
   stage: verify
   image: gradle:6.5.0-jdk8
   except:
@@ -16,12 +16,11 @@ verify-test:
   script:
     - ./gradlew test -p kun-metadata
     - ./gradlew check -p kun-metadata
-    - ./gradlew codeCoverageReport -p kun-metadata
   # only:
   #   changes:
   #     - ./kun-metadata/*
 
-verify-sonar:
+verify-kun-metadata-sonar:
   stage: verify
   image: mioyingtech/gradle-sonar:0.1-build
   except:
@@ -39,7 +38,7 @@ verify-sonar:
     changes:
       - ./kun-metadata/*
 
-.build_job:
+.kun-metadata-build-job:
   stage: build-images
   script:
     - ./gradlew :kun-metadata:shadowJar
@@ -53,8 +52,8 @@ verify-sonar:
     changes:
       - ./kun-metadata/*
 
-docker build:
-  extends: .build_job
+kun-metadata-build:
+  extends: .kun-metadata-build-job
   image: gradle:6.5.0-jdk8
   tags:
     - docker-push
