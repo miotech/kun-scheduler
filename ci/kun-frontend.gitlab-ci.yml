@@ -1,3 +1,9 @@
+
+# workflow:
+#   rules:
+#     - changes:
+#       - kun-metadata/*
+
 verify-test:
   stage: verify
   image: gradle:6.5.0-jdk8
@@ -8,4 +14,52 @@ verify-test:
     - tags
   allow_failure: false
   script:
-    - echo "hello"
+    - ./gradlew test -p kun-frontend
+    - ./gradlew check -p kun-frontend
+  only:
+    changes:
+      - ./kun-frontend/*
+
+verify-sonar:
+  stage: verify
+  image: mioyingtech/gradle-sonar:0.1-build
+  except:
+    - release
+    - production
+    - tags
+  allow_failure: false
+  script:
+    - >
+      if [ $CI_COMMIT_REF_NAME ="master" ]; then 
+          ./gradlew sonarqube -p kun-frontend -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=publish -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-frontend -Dsonar.projectName='kun-frontend' -Dsonar.sources=./kun-frontend/data-discovery/ -Dsonar.sourceEncoding=UTF-8 
+      else ./gradlew sonarqube -p kun-frontend -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=preview -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-frontend -Dsonar.projectName='kun-frontend' -Dsonar.sources=./kun-frontend/data-discovery/ -Dsonar.sourceEncoding=UTF-8
+      fi
+  only:
+    changes:
+      - ./kun-frontend/*
+
+.build_job:
+  stage: build-images
+  script:
+    - ./gradlew :kun-frontend:shadowJar
+    - mkdir -p /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
+    - cp kun-frontend/data-discovery/nginx.conf /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
+    - cp -r kun-frontend/data-discovery/build/dist /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
+  only:
+    refs:
+      - master
+      - release
+      - tags
+    changes:
+      - ./kun-frontend/*
+
+docker build:
+  extends: .build_job
+  image: gradle:6.5.0-jdk8
+  tags:
+    - docker-push
+  script:
+    - mkdir -p build/
+    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/ build/
+    - export TAG_METADATA=$CI_COMMIT_REF_NAME
+    - ./gradlew :kun-frontend:buildPushImage

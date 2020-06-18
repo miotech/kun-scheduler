@@ -9,5 +9,7 @@ before_script:
   - export DOCKER_URL=$CI_BUILD_DOCKER_URL
 
 
-include: kun-metadata.gitlab-ci.yml
+include: ci/kun-metadata.gitlab-ci.yml
 include: ci/kun-frontend.gitlab-ci.yml
+include: ci/kun-data-discover.gitlab-ci.yml
+include: ci/kun-data-discover.gitlab-ci.yml
