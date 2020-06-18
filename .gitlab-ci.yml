@@ -12,4 +12,4 @@ before_script:
 include:
   - local: ci/kun-data-discover.gitlab-ci.yml
   - local: ci/kun-frontend.gitlab-ci.yml
-  - local: ci/kun-metadata.gitlab-ci.yml
+  - local: kun-metadata.gitlab-ci.yml
