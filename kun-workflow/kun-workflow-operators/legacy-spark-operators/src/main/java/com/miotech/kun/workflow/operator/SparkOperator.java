@@ -9,6 +9,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.base.Strings;
 import com.miotech.kun.workflow.core.execution.Operator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
@@ -213,7 +214,11 @@ public class SparkOperator extends Operator {
             }
         }
 
-        context.report(inlets, outlets);
+        TaskAttemptReport taskAttemptReport = TaskAttemptReport.newBuilder()
+                .withInlets(inlets)
+                .withOutlets(outlets)
+                .build();
+        report(taskAttemptReport);
     }
 
     public List<DataStore> genDataStore(BufferedReader br) throws IOException {

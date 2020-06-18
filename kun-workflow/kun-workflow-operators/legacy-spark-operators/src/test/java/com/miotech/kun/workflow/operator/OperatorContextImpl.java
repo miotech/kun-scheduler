@@ -2,13 +2,11 @@ package com.miotech.kun.workflow.operator;
 
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.resource.Resource;
 import org.junit.Ignore;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Ignore
@@ -55,13 +53,4 @@ public class OperatorContextImpl implements OperatorContext {
     public Logger getLogger() {
         return (Logger) LoggerFactory.getLogger(OperatorContextImpl.class);
     }
-
-    @Override
-    public void report(List<DataStore> inlets, List<DataStore> outlets){
-        System.out.println("printing lineage result");
-        System.out.println(inlets);
-        System.out.println(outlets);
-    }
-
-
 }

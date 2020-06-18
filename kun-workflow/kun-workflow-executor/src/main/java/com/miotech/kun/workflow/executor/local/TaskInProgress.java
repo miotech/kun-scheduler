@@ -1,10 +1,13 @@
 package com.miotech.kun.workflow.executor.local;
 
+import com.google.common.eventbus.EventBus;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.execution.Operator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
@@ -34,6 +37,9 @@ public class TaskInProgress implements Runnable {
     @Inject
     private CommonService commonService;
 
+    @Inject
+    private EventBus eventBus;
+
     public TaskInProgress(TaskAttempt attempt) {
         this.attempt = attempt;
     }
@@ -62,6 +68,7 @@ public class TaskInProgress implements Runnable {
             logger.debug("Fetched operator's details. operatorId={}, details={}", operatorId, operatorDetail);
 
             TaskRunStatus finalStatus;
+            TaskAttemptReport report = TaskAttemptReport.BLANK;
             try {
                 // 加载Operator
                 Operator operator = loadOperator(operatorDetail.getPackagePath(), operatorDetail.getClassName());
@@ -77,6 +84,7 @@ public class TaskInProgress implements Runnable {
                 logger.debug("Operator execution finished. operatorId={}, success={}", operatorId, success);
 
                 finalStatus = success ? TaskRunStatus.SUCCESS : TaskRunStatus.FAILED;
+                report = operator.getReport().orElse(TaskAttemptReport.BLANK);
             } catch (Throwable e) {
                 logger.debug("Operator execution terminated. operatorId={}", operatorId, e);
                 context.getLogger().error("Unexpected exception occurred. OperatorName={}, TaskRunId={}",
@@ -90,7 +98,12 @@ public class TaskInProgress implements Runnable {
             commonService.changeTaskAttemptStatus(attemptId, finalStatus, null, endAt);
 
             // 处理Report内容（输入/输出）
-            processReport(context);
+            if (finalStatus.isSuccess()) {
+                processReport(attempt, report);
+            }
+
+            // 通知任务已完成
+            notifyFinished(attempt, finalStatus, report);
         } catch (Throwable ex) {
             logger.error("Unexpected exception occurs in operator execution. attemptId={}", attempt.getId(), ex);
         }
@@ -120,7 +133,21 @@ public class TaskInProgress implements Runnable {
         return String.format("file:logs/%s/%s", date, attemptId);
     }
 
-    private void processReport(OperatorContext context) {
-        // TODO: need to implement
+    private void processReport(TaskAttempt attempt, TaskAttemptReport report) {
+        logger.debug("Update task's inlets/outlets. taskRunId={}, inlets={}, outlets={}",
+                attempt.getTaskRun().getId(), report.getInlets(), report.getOutlets());
+        taskRunDao.updateTaskRunInletsOutlets(attempt.getTaskRun().getId(),
+                report.getInlets(), report.getOutlets());
+    }
+
+    private void notifyFinished(TaskAttempt attempt, TaskRunStatus status, TaskAttemptReport report) {
+        TaskAttemptFinishedEvent event = new TaskAttemptFinishedEvent(
+                attempt.getId(),
+                status,
+                report.getInlets(),
+                report.getOutlets()
+        );
+        logger.debug("Post taskAttemptFinishedEvent. attemptId={}, event={}", attempt.getId(), event);
+        eventBus.post(event);
     }
 }
