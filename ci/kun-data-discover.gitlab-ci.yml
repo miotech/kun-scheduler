@@ -30,7 +30,7 @@ verify-kun-data-discover-sonar:
   allow_failure: false
   script:
     - >
-      if [ $CI_COMMIT_REF_NAME ="master" ]; then 
+      if [ $CI_COMMIT_REF_NAME == "master" ]; then 
           ./gradlew sonarqube -p kun-data-discover -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=publish -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-data-discover -Dsonar.projectName='kun-data-discover' -Dsonar.sources=./kun-data-discover/src/main -Dsonar.sourceEncoding=UTF-8 -Dsonar.java.binaries=./kun-data-discover/build;
       else ./gradlew sonarqube -p kun-data-discover -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=preview -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-data-discover -Dsonar.projectName='kun-data-discover' -Dsonar.sources=./kun-data-discover/src/main -Dsonar.sourceEncoding=UTF-8 -Dsonar.java.binaries=./kun-data-discover/build;  
       fi
