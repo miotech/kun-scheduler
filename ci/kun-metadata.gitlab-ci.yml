@@ -1,3 +1,9 @@
+
+# workflow:
+#   rules:
+#     - changes:
+#       - kun-metadata/*
+
 verify-test:
   stage: verify
   image: gradle:6.5.0-jdk8
@@ -39,8 +45,6 @@ verify-sonar:
     - ./gradlew :kun-metadata:shadowJar
     - mkdir -p /builds/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/
     - cp kun-metadata/build/libs/*.jar /builds/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/
-  rules:
-    - 
   only:
     refs:
       - master
