@@ -13,7 +13,7 @@ verify-kun-frontend-test:
     - ./gradlew check -p kun-frontend
   only:
     changes:
-      - kun-frontend/*
+      - kun-frontend/data-discovery/*
 
 verify-kun-frontend-sonar:
   stage: verify
@@ -31,7 +31,7 @@ verify-kun-frontend-sonar:
       fi
   only:
     changes:
-      - kun-frontend/*
+      - kun-frontend/data-discovery/*
 
 .kun-frontend-build-job:
   stage: build-images
@@ -46,7 +46,7 @@ verify-kun-frontend-sonar:
       - release
       - tags
     changes:
-      - kun-frontend/*
+      - kun-frontend/data-discovery/*
 
 kun-frontend-build:
   extends: .kun-frontend-build-job
