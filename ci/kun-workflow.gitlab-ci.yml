@@ -18,7 +18,7 @@ verify-kun-workflow-test:
     - ./gradlew check -p kun-workflow
   only:
     changes:
-      - ./kun-workflow/*
+      - kun-workflow/*
 
 # verify-sonar:
 #   stage: verify
