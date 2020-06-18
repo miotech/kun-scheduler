@@ -25,4 +25,4 @@ task buildPushImage(type: DockerPushImage) {
     
 }
 
-apply plugin: "org.sonarqube"
+// apply plugin: "org.sonarqube"
