@@ -31,8 +31,8 @@ verify-kun-metadata-sonar:
   script:
     - >
       if [ $CI_COMMIT_REF_NAME ="master" ]; then 
-          ./gradlew sonarqube -p kun-metadata -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=publish -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-metadata -Dsonar.projectName='kun-metadata' -Dsonar.sources=./kun-metadata/src/main -Dsonar.sourceEncoding=UTF-8 -Dsonar.java.binaries=./kun-metadata/build
-      else ./gradlew sonarqube -p kun-metadata -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=preview -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-metadata -Dsonar.projectName='kun-metadata' -Dsonar.sources=./kun-metadata/src/main -Dsonar.sourceEncoding=UTF-8 -Dsonar.java.binaries=./kun-metadata/build  
+          ./gradlew sonarqube -p kun-metadata -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=publish -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-metadata -Dsonar.projectName='kun-metadata' -Dsonar.sources=./kun-metadata/src/main -Dsonar.sourceEncoding=UTF-8 -Dsonar.java.binaries=./kun-metadata/build;
+      else ./gradlew sonarqube -p kun-metadata -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=preview -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-metadata -Dsonar.projectName='kun-metadata' -Dsonar.sources=./kun-metadata/src/main -Dsonar.sourceEncoding=UTF-8 -Dsonar.java.binaries=./kun-metadata/build;  
       fi
   only:
     changes:
