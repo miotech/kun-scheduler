@@ -17,9 +17,9 @@ verify-test:
     - ./gradlew test -p kun-metadata
     - ./gradlew check -p kun-metadata
     - ./gradlew codeCoverageReport -p kun-metadata
-  only:
-    changes:
-      - ./kun-metadata/*
+  # only:
+  #   changes:
+  #     - ./kun-metadata/*
 
 verify-sonar:
   stage: verify
