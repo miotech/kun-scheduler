@@ -1,4 +1,11 @@
-workflow:
-  rules:
-    - changes:
-      - kun-frontend/*
+verify-test:
+  stage: verify
+  image: gradle:6.5.0-jdk8
+  except:
+    - master
+    - release
+    - production
+    - tags
+  allow_failure: false
+  script:
+    - echo "hello"
