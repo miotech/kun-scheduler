@@ -28,3 +28,26 @@ task yarnBuild(type: YarnTask, dependsOn: [execTask, yarn]) {
   group = 'node'
   args = ['run', 'build']
 }
+
+apply plugin: "com.bmuschko.docker-remote-api"
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+task buildDockerImage(type: DockerBuildImage) {
+    inputDir = file('.')
+    images.add(System.getenv("DOCKER_URL")+'mioyingtech/'+'kun-data-discovery-frontend'+':'+System.getenv("TAG_DATA_DISCOVERY_FRONTEND"))
+    
+}
+docker {
+     registryCredentials {
+      url = System.getenv("DOCKER_URL")
+        username = System.getenv("DOCKER_USER")
+        password = System.getenv("DOCKER_PASS")
+     }
+ } 
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+task buildPushImage(type: DockerPushImage) {
+    dependsOn buildDockerImage
+    images.add(System.getenv("DOCKER_URL")+'mioyingtech/'+'kun-data-discovery-frontend'+':'+System.getenv("TAG_DATA_DISCOVERY_FRONTEND"))
+    
+}
+
+apply plugin: "org.sonarqube"

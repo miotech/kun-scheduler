@@ -2,10 +2,14 @@ buildscript {
     repositories {
         mavenCentral()
     }
+    dependencies {
+        classpath "com.bmuschko:gradle-docker-plugin:6.4.0"
+    }
 }
 
 plugins {
     id 'com.github.ksoichiro.console.reporter' version '0.6.2'
+    id "org.sonarqube" version "2.7"
 }
 
 allprojects {
