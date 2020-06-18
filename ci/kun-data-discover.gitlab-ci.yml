@@ -4,7 +4,7 @@
 #     - changes:
 #       - kun-metadata/*
 
-verify-test:
+verify-kun-data-discover-test:
   stage: verify
   image: gradle:6.5.0-jdk8
   except:
@@ -20,7 +20,7 @@ verify-test:
     changes:
       - ./kun-data-discover/*
 
-verify-sonar:
+verify-kun-data-discover-sonar:
   stage: verify
   image: mioyingtech/gradle-sonar:0.1-build
   except:
@@ -38,7 +38,7 @@ verify-sonar:
     changes:
       - ./kun-data-discover/*
 
-.build_job:
+.kun-data-discover-build-job:
   stage: build-images
   script:
     - ./gradlew :kun-data-discover:bootJars
@@ -52,8 +52,8 @@ verify-sonar:
     changes:
       - ./kun-data-discover/*
 
-docker build:
-  extends: .build_job
+kun-data-discover-build:
+  extends: .kun-data-discover-build-job
   image: gradle:6.5.0-jdk8
   tags:
     - docker-push

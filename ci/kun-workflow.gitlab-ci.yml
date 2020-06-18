@@ -4,7 +4,7 @@
 #     - changes:
 #       - kun-metadata/*
 
-verify-test:
+verify-kun-workflow-test:
   stage: verify
   image: gradle:6.5.0-jdk8
   except:

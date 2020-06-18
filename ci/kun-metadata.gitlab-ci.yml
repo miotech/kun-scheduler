@@ -16,9 +16,9 @@ verify-kun-metadata-test:
   script:
     - ./gradlew test -p kun-metadata
     - ./gradlew check -p kun-metadata
-  # only:
-  #   changes:
-  #     - ./kun-metadata/*
+  only:
+    changes:
+      - ./kun-metadata/*
 
 verify-kun-metadata-sonar:
   stage: verify
