@@ -10,3 +10,4 @@ before_script:
 
 
 include: kun-metadata.gitlab-ci.yml
+include: ci/kun-frontend.gitlab-ci.yml
