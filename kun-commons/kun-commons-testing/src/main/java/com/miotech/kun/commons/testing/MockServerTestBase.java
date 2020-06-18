@@ -7,8 +7,6 @@ import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
 import org.mockserver.model.HttpResponse;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.concurrent.TimeUnit;
 
 import static org.mockserver.integration.ClientAndServer.startClientAndServer;
