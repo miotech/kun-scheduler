@@ -1,0 +1,34 @@
+stages:
+  - verify
+  - build
+
+before_script:
+  - export DOCKER_USER=$CI_BUILD_DOCKER_USER
+  - export DOCKER_PASS=$CI_BUILD_TOKEN
+  - export DOCKER_URL=$CI_BUILD_DOCKER_URL
+
+verify:
+  stage: verify
+  image: gradle:6.5.0-jdk8
+  except:
+    - master
+    - release
+    - production
+    - tags
+  allow_failure: false
+  script:
+    - ./gradlew test
+    - ./gradlew check
+    - ./gradlew codeCoverageReport
+
+
+docker build:
+  stage: build
+  image: gradle:6.5.0-jdk8
+  script:
+    - gradle kun-data-discover:bootJar
+    - export TAG_DATA_DISCOVERY=$CI_COMMIT_REF_NAME
+    - gradle kun-data-discover:buildPushImage
+  rules:
+    - changes:
+      - kun-data-discover/*

@@ -31,7 +31,6 @@ dependencies {
     testRuntimeOnly "org.mockito:mockito-core"
 }
 
-
 shadowJar {
     baseName = 'kun-metadata'
     classifier = null
@@ -43,3 +42,26 @@ shadowJar {
     }
     zip64 true
 }
+
+apply plugin: "com.bmuschko.docker-remote-api"
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+task buildDockerImage(type: DockerBuildImage) {
+    inputDir = file('.')
+    images.add(System.getenv("DOCKER_URL")+'mioyingtech/'+project.name+':'+System.getenv("TAG_METADATA"))
+    
+}
+docker {
+     registryCredentials {
+        url = System.getenv("DOCKER_URL")
+        username = System.getenv("DOCKER_USER")
+        password = System.getenv("DOCKER_PASS")
+     }
+ } 
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+task buildPushImage(type: DockerPushImage) {
+    dependsOn buildDockerImage
+    images.add(System.getenv("DOCKER_URL")+'mioyingtech/'+project.name+':'+System.getenv("TAG_METADATA"))
+    
+}
+
+apply plugin: "org.sonarqube"
