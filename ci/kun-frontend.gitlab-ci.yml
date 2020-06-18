@@ -16,9 +16,9 @@ verify-test:
   script:
     - ./gradlew test -p kun-frontend
     - ./gradlew check -p kun-frontend
-  only:
-    changes:
-      - kun-frontend/*
+  # only:
+  #   changes:
+  #     - kun-frontend/*
 
 verify-sonar:
   stage: verify
