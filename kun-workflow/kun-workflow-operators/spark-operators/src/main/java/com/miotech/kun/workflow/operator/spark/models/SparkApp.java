@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.operator.model.models;
+package com.miotech.kun.workflow.operator.spark.models;
 
 import java.util.List;
 
