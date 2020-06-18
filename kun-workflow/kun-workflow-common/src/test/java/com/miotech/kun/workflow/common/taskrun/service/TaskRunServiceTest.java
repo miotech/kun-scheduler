@@ -54,8 +54,6 @@ public class TaskRunServiceTest extends CommonTestBase {
         TaskRunVO existedRun = taskRunService.getTaskRunDetail(taskRun.getId()).get();
         assertNotNull(existedRun);
         assertNotNull(existedRun.getTask());
-
-        taskRunDao.deleteTaskRun(taskRun.getId());
     }
 
     private TaskRun prepareData() {
