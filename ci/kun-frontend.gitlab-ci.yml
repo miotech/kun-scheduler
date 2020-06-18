@@ -13,7 +13,7 @@ verify-kun-frontend-test:
     - ./gradlew check -p kun-frontend
   only:
     changes:
-      - kun-frontend/*
+      - ./kun-frontend/*
 
 verify-kun-frontend-sonar:
   stage: verify
