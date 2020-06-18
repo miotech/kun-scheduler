@@ -18,7 +18,7 @@ verify-kun-metadata-test:
     - ./gradlew check -p kun-metadata
   only:
     changes:
-      - ./kun-metadata/*
+      - kun-metadata/*
 
 verify-kun-metadata-sonar:
   stage: verify
@@ -36,7 +36,7 @@ verify-kun-metadata-sonar:
       fi
   only:
     changes:
-      - ./kun-metadata/*
+      - kun-metadata/*
 
 .kun-metadata-build-job:
   stage: build-images
