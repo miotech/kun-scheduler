@@ -1,5 +1,6 @@
 plugins {
   id "com.github.node-gradle.node" version "2.2.4"
+  id "org.sonarqube" version "2.7"
 }
 
 node {
