@@ -61,5 +61,5 @@ docker build:
   script:
     - mkdir -p build/
     - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/ build/
-    - export TAG_METADATA=$CI_COMMIT_REF_NAME
+    - export TAG_DATA_DISCOVERY_FRONTEND=$CI_COMMIT_REF_NAME
     - ./gradlew :kun-frontend:buildPushImage
