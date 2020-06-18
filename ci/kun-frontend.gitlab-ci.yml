@@ -1,5 +1,5 @@
 
-verify-test:
+verify-kun-frontend-test:
   stage: verify
   image: gradle:6.5.0-jdk8
   except:
@@ -11,11 +11,11 @@ verify-test:
   script:
     - ./gradlew test -p kun-frontend
     - ./gradlew check -p kun-frontend
-  only:
-    changes:
-      - kun-frontend/*
+  # only:
+  #   changes:
+  #     - kun-frontend/*
 
-verify-sonar:
+verify-kun-frontend-sonar:
   stage: verify
   image: mioyingtech/gradle-sonar:0.1-build
   except:
@@ -33,7 +33,7 @@ verify-sonar:
     changes:
       - ./kun-frontend/*
 
-.build_job:
+.kun-frontend-build-job:
   stage: build-images
   script:
     - ./gradlew :kun-frontend:shadowJar
@@ -48,8 +48,8 @@ verify-sonar:
     changes:
       - ./kun-frontend/*
 
-docker build:
-  extends: .build_job
+kun-frontend-build:
+  extends: .kun-frontend-build-job
   image: gradle:6.5.0-jdk8
   tags:
     - docker-push
