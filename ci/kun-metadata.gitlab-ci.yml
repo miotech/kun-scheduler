@@ -55,7 +55,7 @@ kun-metadata-build:
 kun-metadata-push:
   extends: .only-deploy
   stage: build-images
-  image: mioyingtech/docker:latest
+  image: mioyingtech/gradle:latest
   tags:
     - docker-push
   script:
