@@ -18,4 +18,6 @@ public class DatasourceTypeField {
     private Integer sequenceOrder;
 
     private String format;
+
+    private Boolean require;
 }

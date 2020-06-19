@@ -88,7 +88,8 @@ public class DatasourceRepository extends BaseRepository {
         String sql = "select kmdt.name as type, \n" +
                 "       kmdtf.name as field_key, \n" +
                 "       kmdtf.sequence_order as sequence_order, \n" +
-                "       kmdtf.format as format\n" +
+                "       kmdtf.format as format, \n" +
+                "       kmdtf.require as require\n" +
                 "     from kun_mt_datasource_type kmdt\n" +
                 "         left join kun_mt_datasource_type_fields kmdtf on kmdt.id = kmdtf.type_id";
 
@@ -102,6 +103,7 @@ public class DatasourceRepository extends BaseRepository {
                 field.setName(rs.getString("field_key"));
                 field.setSequenceOrder(rs.getInt("sequence_order"));
                 field.setFormat(rs.getString("format"));
+                field.setRequire(rs.getBoolean("require"));
                 datasourceType.addField(field);
             }
         });
