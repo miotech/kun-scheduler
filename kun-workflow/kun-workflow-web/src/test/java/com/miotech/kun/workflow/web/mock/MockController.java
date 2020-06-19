@@ -6,6 +6,8 @@ import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.web.annotation.RouteVariable;
 
+import java.util.List;
+
 /**
  * Only for test usage
  */
@@ -42,6 +44,10 @@ public class MockController {
     public void getWithQueryParameter(@QueryParameter(defaultValue = "0") String id,
                                       @QueryParameter(name = "idx", defaultValue = "0") int id2
                                       ) { }
+
+    @RouteMapping(url = "/test/queryList", method = "GET")
+    public void getWithListQueryParameter(@QueryParameter(name = "ids") List<Long> ids
+    ) { }
 
     @RouteMapping(url = "/test/{id}", method = "GET")
     public void getWithRouteVariable(@RouteVariable String id) { }
