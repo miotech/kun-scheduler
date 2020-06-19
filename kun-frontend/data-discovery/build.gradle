@@ -3,26 +3,34 @@ plugins {
   id "org.sonarqube" version "2.7"
 }
 
+buildscript {
+  dependencies {
+    classpath "com.github.node-gradle:gradle-node-plugin:2.2.4"
+  }
+}
+
+apply plugin: 'com.github.node-gradle.node'
+
 node {
     version = "12.13.0"
     yarnVersion = "1.9.4"
     download = true
 }
 
-task installYarn(type: Exec) {
-  workingDir './'
-  def commands = []
-  if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
-    commands << 'cmd'
-    commands << '/c'
-    commands << 'npm install -g yarn'
-  } else {
-    commands << 'bash'
-    commands << '-c'
-    commands << 'npm install -g yarn'
-  }
-  commandLine = commands
-}
+// task installYarn(type: Exec) {
+//   workingDir './'
+//   def commands = []
+//   if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+//     commands << 'cmd'
+//     commands << '/c'
+//     commands << 'npm install -g yarn'
+//   } else {
+//     commands << 'bash'
+//     commands << '-c'
+//     commands << 'npm install -g yarn'
+//   }
+//   commandLine = commands
+// }
 
 task execTask(type: Exec, dependsOn: [installYarn]) {
 	workingDir './'
