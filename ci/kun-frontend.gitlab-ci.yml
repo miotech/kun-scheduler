@@ -33,8 +33,10 @@ verify-kun-frontend-sonar:
     changes:
       - kun-frontend/data-discovery/*
 
-.kun-frontend-build-job:
-  stage: build-images
+kun-frontend-build:
+  extends: .only-deploy
+  stage: build
+  image: gradle:6.5.0-jdk8
   tags:
     - build
   script:
@@ -43,16 +45,13 @@ verify-kun-frontend-sonar:
     - cp kun-frontend/data-discovery/nginx.conf /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
     - cp -r kun-frontend/data-discovery/build/dist /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
   only:
-    refs:
-      - master
-      - release
-      - tags
     changes:
       - kun-frontend/data-discovery/*
 
-kun-frontend-build:
-  extends: .kun-frontend-build-job
-  image: gradle:6.5.0-jdk8
+kun-frontend-push:
+  extends: .only-deploy
+  stage: build-images
+  image: mioyingtech/docker:latest
   tags:
     - docker-push
   script:
@@ -60,3 +59,38 @@ kun-frontend-build:
     - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/ build/
     - export TAG_DATA_DISCOVERY_FRONTEND=$CI_COMMIT_REF_NAME
     - ./gradlew :kun-frontend:buildPushImage
+  only:
+    changes:
+      - kun-frontend/data-discovery/*
+
+kun-frontend-set-tag:
+  stage: set-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  script:
+      - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-data-discovery-frontend
+  only:
+    - production
+      
+kun-frontend-set-tag-hotfix:
+  stage: set-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  script:
+      - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-data-discovery-frontend
+  only:
+    - /^HOTFIX+.*/
+  when: manual
+
+kun-frontend-save-tag:
+  stage: save-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  only:
+    - tags
+  script:
+    - python /tmp/saveTag.py --appName=kun-data-discovery-frontend --tag=${CI_COMMIT_REF_NAME}
+  allow_failure: true
