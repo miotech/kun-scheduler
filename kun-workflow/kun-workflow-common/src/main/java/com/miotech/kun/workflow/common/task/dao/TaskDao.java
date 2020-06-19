@@ -178,7 +178,7 @@ public class TaskDao {
             resultTaskIds.add(srcTask.getId());
         }
 
-        while (remainingIteration > 0) {
+        while ((remainingIteration > 0) && (!inClauseIdSet.isEmpty())) {
             String idsFieldsPlaceholder = "(" + inClauseIdSet.stream().map(id -> "?")
                     .collect(Collectors.joining(", ")) + ")";
 
@@ -328,7 +328,7 @@ public class TaskDao {
 
         StringBuilder whereClause = new StringBuilder();
         if (filterContainsKeyword && !filterContainsTags) {
-            whereClause.append(" name LIKE CONCAT('%', ?, '%')");
+            whereClause.append(" name LIKE CONCAT('%', CAST(? AS TEXT), '%')");
             params.add(filters.getName());
         } else if (!filterContainsKeyword && filterContainsTags) {
             // TODO: allow filter by tags
@@ -382,6 +382,13 @@ public class TaskDao {
         );
 
         return Optional.of(task.cloneBuilder().withDependencies(dependencies).build());
+    }
+
+    public Optional<Task> fetchByName(String name) {
+        Preconditions.checkNotNull(name, "Invalid parameter `name`: found null object");
+        String sql = getSelectSQL(TASK_MODEL_NAME + ".name = ?");
+        Task task = dbOperator.fetchOne(sql, TaskMapper.INSTANCE, name);
+        return Optional.ofNullable(task);
     }
 
     public void create(Task task) {
@@ -610,8 +617,8 @@ public class TaskDao {
         public TaskDependency map(ResultSet rs) throws SQLException {
             return new TaskDependency(
                     rs.getLong(TASK_RELATION_MODEL_NAME + "_upstream_task_id"),
-                    functionProvider.from(rs.getString(TASK_RELATION_MODEL_NAME + "_dependency_function")),
-                    rs.getLong(TASK_RELATION_MODEL_NAME + "_downstream_task_id")
+                    rs.getLong(TASK_RELATION_MODEL_NAME + "_downstream_task_id"),
+                    functionProvider.from(rs.getString(TASK_RELATION_MODEL_NAME + "_dependency_function"))
             );
         }
     }

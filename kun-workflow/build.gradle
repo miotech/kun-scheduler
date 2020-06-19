@@ -4,6 +4,11 @@ buildscript {
     }
 }
 
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'java'
+}
+
 apply plugin: "com.bmuschko.docker-remote-api"
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 task buildDockerImage(type: DockerBuildImage) {
@@ -25,4 +30,25 @@ task buildPushImage(type: DockerPushImage) {
     
 }
 
-// apply plugin: "org.sonarqube"
+dependencies {
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation project(':kun-workflow:kun-workflow-testing')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-common')
+    implementation project(':kun-workflow:kun-workflow-scheduler')
+    implementation project(':kun-workflow:kun-workflow-executor')
+    implementation project(':kun-workflow:kun-workflow-web')
+}
+
+shadowJar {
+    baseName = 'kun-workflow'
+    classifier = null
+    
+    version = 0.1
+    manifest {
+        attributes(
+                'Main-Class': 'com.miotech.kun.workflow.web.KunWebServer'
+        )
+    }
+    zip64 true
+}

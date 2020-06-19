@@ -19,6 +19,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import javax.inject.Inject;
+import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -96,16 +97,16 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .cloneBuilder().withId(1L).withDependencies(new ArrayList<>()).build();
         Task taskB = MockTaskFactory.createTask()
                 .cloneBuilder().withId(2L).withDependencies(Lists.newArrayList(
-                        new TaskDependency(1L, dependencyFunctionProvider.from("latestTaskRun"))
+                        new TaskDependency(1L, 2L, dependencyFunctionProvider.from("latestTaskRun"))
                 )).build();
         Task taskC = MockTaskFactory.createTask()
                 .cloneBuilder().withId(3L).withDependencies(Lists.newArrayList(
-                        new TaskDependency(1L, dependencyFunctionProvider.from("latestTaskRun"))
+                        new TaskDependency(1L, 3L, dependencyFunctionProvider.from("latestTaskRun"))
                 )).build();
         Task taskD = MockTaskFactory.createTask()
                 .cloneBuilder().withId(4L).withDependencies(Lists.newArrayList(
-                        new TaskDependency(2L, dependencyFunctionProvider.from("latestTaskRun")),
-                        new TaskDependency(3L, dependencyFunctionProvider.from("latestTaskRun"))
+                        new TaskDependency(2L, 4L, dependencyFunctionProvider.from("latestTaskRun")),
+                        new TaskDependency(3L, 4L, dependencyFunctionProvider.from("latestTaskRun"))
                 )).build();
         return Lists.newArrayList(taskA, taskB, taskC, taskD);
     }
@@ -177,6 +178,8 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withOperatorId(1L)
                 .withArguments(new ArrayList<>())
                 .withVariableDefs(new ArrayList<>())
+                .withDependencies(new ArrayList<>())
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .build();
 
         // Process
@@ -195,6 +198,8 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withOperatorId(1L)
                 .withArguments(new ArrayList<>())
                 .withVariableDefs(new ArrayList<>())
+                .withDependencies(new ArrayList<>())
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .build();
         Task duplicatedTask = insertTask.cloneBuilder().build();
 

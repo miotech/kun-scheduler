@@ -50,7 +50,7 @@ CREATE TABLE kun_wf_task_relations (
     PRIMARY KEY (upstream_task_id, downstream_task_id)
 );
 
-CREATE INDEX kun_wf_task_relations_downstream_task_id_idx
+CREATE INDEX IF NOT EXISTS kun_wf_task_relations_downstream_task_id_idx
     ON kun_wf_task_relations (downstream_task_id);
 
 CREATE TABLE kun_wf_task_run (
@@ -87,6 +87,6 @@ CREATE TABLE kun_wf_task_run_relations (
     PRIMARY KEY (upstream_task_run_id, downstream_task_run_id)
 );
 
-CREATE INDEX kun_wf_task_run_relations_downstream_task_run_id_idx
+CREATE INDEX IF NOT EXISTS kun_wf_task_run_relations_downstream_task_run_id_idx
     ON kun_wf_task_run_relations (downstream_task_run_id);
 
