@@ -1,7 +1,9 @@
 package com.miotech.kun.workflow.web;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.workflow.common.exception.BadRequestException;
 import com.miotech.kun.workflow.web.annotation.QueryParameter;
 import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteVariable;
@@ -17,6 +19,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Parameter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 @Singleton
@@ -54,7 +61,11 @@ class ParameterResolver {
         for (Annotation annotation: parameter.getAnnotations()) {
             if (annotation.annotationType() == RequestBody.class) {
                 logger.debug("Resolve parameter from request body parameter");
-                return jsonSerializer.toObject(httpServletRequest.getInputStream(), paramClz);
+                try {
+                    return jsonSerializer.toObject(httpServletRequest.getInputStream(), paramClz);
+                } catch (RuntimeException e) {
+                    throw new BadRequestException(e);
+                }
             }
             if (annotation.annotationType() == QueryParameter.class) {
                 logger.debug("Resolve parameter from request query parameter");
@@ -82,7 +93,7 @@ class ParameterResolver {
         String parameterValue = req.getParameter(parameterName);
         if (parameterValue == null) {
             if (queryParameter.required()) {
-                throw new RuntimeException("No parameter specified while defined as required " + parameterName);
+                throw new BadRequestException("No parameter specified while defined as required " + parameterName);
             }
             if (!defaultValue.equals(VALUE_DEFAULT.DEFAULT_NONE)) {
                 parameterValue = defaultValue;
@@ -92,8 +103,11 @@ class ParameterResolver {
     }
 
     private Object toParameterValue(Parameter parameter, String variable) {
+        return toParameterValue(parameter, parameter.getType().getName(), variable);
+    }
+
+    private Object toParameterValue(Parameter parameter, String paramClzName, String variable) {
         if (variable == null) return null;
-        String paramClzName = parameter.getType().getName();
 
         switch (paramClzName) {
             case "java.lang.String":
@@ -104,8 +118,23 @@ class ParameterResolver {
             case "long":
             case "java.lang.Long":
                 return Long.parseLong(variable);
+            case "java.util.List":
+                return toParameterListValues(parameter, variable);
             default:
-                throw new RuntimeException("Parameter can not be type: " + paramClzName);
+                throw new BadRequestException("Parameter can not be type: " + paramClzName);
         }
+    }
+
+    private List<Object> toParameterListValues(Parameter parameter, String variable) {
+        ParameterizedType paramType = (ParameterizedType) parameter.getParameterizedType();
+        Type[] paramArgTypes = paramType.getActualTypeArguments();
+        if (paramArgTypes.length == 0) {
+            throw new IllegalStateException("Cannot get actual type for generic parameter type: List");
+        }
+        String[] argumentList = variable.split(",");
+        return Lists.newArrayList(argumentList)
+                .stream()
+                .map(x -> toParameterValue(null, paramArgTypes[0].getTypeName(), x))
+                .collect(Collectors.toList());
     }
 }

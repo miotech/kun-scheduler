@@ -10,6 +10,7 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.taskrun.factory.TaskRunLogVOFactory;
 import com.miotech.kun.workflow.common.taskrun.factory.TaskRunStateVOFactory;
+import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
@@ -39,12 +40,12 @@ public class TaskRunService {
     private ResourceLoader resourceLoader;
 
     public Optional<TaskRunVO> getTaskRunDetail(Long taskRunId) {
-        Optional<TaskRun> taskRun = taskRunDao.fetchById(taskRunId);
+        Optional<TaskRun> taskRun = taskRunDao.fetchTaskRunById(taskRunId);
         return taskRun.map(this::convertToVO);
     }
 
     public Optional<TaskRunStateVO> getTaskStatus(Long taskRunId) {
-        Optional<TaskRun> taskRun = taskRunDao.fetchById(taskRunId);
+        Optional<TaskRun> taskRun = taskRunDao.fetchTaskRunById(taskRunId);
         return taskRun.map(x -> TaskRunStateVOFactory.create(x.getStatus()));
     }
 
@@ -116,5 +117,17 @@ public class TaskRunService {
                 .withVariables(taskRun.getVariables())
                 .withAttempts(attempts)
                 .build();
+    }
+
+    public List<TaskRun> getUpstreamTaskRuns(TaskRun taskRun, int distance) {
+        return taskRunDao.fetchUpstreamTaskRunsById(taskRun.getId(), distance, false);
+    }
+
+    public List<TaskRun> getDownstreamTaskRuns(TaskRun taskRun, int distance) {
+        return taskRunDao.fetchDownstreamTaskRunsById(taskRun.getId(), distance, false);
+    }
+
+    public List<TaskRun> searchTaskRuns(TaskRunSearchFilter filter) {
+        return taskRunDao.fetchTaskRunsByFilter(filter);
     }
 }

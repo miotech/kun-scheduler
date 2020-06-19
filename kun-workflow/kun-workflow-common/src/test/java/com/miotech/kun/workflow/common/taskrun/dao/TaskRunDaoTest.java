@@ -2,8 +2,10 @@ package com.miotech.kun.workflow.common.taskrun.dao;
 
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
+import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -20,6 +22,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,6 +40,49 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
     private Clock getMockClock() {
         return Clock.fixed(Instant.parse("2020-01-01T00:00:00.00Z"), ZoneId.of("UTC"));
+    }
+
+    private List<TaskRun> prepareTaskRunsWithDependencyRelations() {
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+        return prepareTaskRunsWithDependencyRelations(task);
+    }
+
+    private List<TaskRun> prepareTaskRunsWithDependencyRelations(Task task) {
+        TaskRun taskRunA = MockTaskRunFactory.createTaskRun(1L, task)
+                .cloneBuilder()
+                .withDependentTaskRunIds(new ArrayList<>())
+                .withStartAt(DateTimeUtils.now().plusHours(1))
+                .withEndAt(DateTimeUtils.now().plusHours(2))
+                .withStatus(TaskRunStatus.SUCCESS)
+                .build();
+        TaskRun taskRunB = MockTaskRunFactory.createTaskRun(2L, task)
+                .cloneBuilder()
+                .withDependentTaskRunIds(Lists.newArrayList(1L))
+                .withStartAt(DateTimeUtils.now().plusHours(2))
+                .withEndAt(DateTimeUtils.now().plusHours(3))
+                .withStatus(TaskRunStatus.RUNNING)
+                .build();
+        TaskRun taskRunC = MockTaskRunFactory.createTaskRun(3L, task)
+                .cloneBuilder()
+                .withDependentTaskRunIds(Lists.newArrayList(1L))
+                .withStartAt(DateTimeUtils.now().plusHours(2))
+                .withEndAt(DateTimeUtils.now().plusHours(4))
+                .withStatus(TaskRunStatus.RUNNING)
+                .build();
+        TaskRun taskRunD = MockTaskRunFactory.createTaskRun(4L, task)
+                .cloneBuilder()
+                .withDependentTaskRunIds(Lists.newArrayList(2L, 3L))
+                .withStartAt(DateTimeUtils.now().plusHours(4))
+                .withEndAt(DateTimeUtils.now().plusHours(5))
+                .withStatus(TaskRunStatus.CREATED)
+                .build();
+        taskRunDao.createTaskRun(taskRunA);
+        taskRunDao.createTaskRun(taskRunB);
+        taskRunDao.createTaskRun(taskRunC);
+        taskRunDao.createTaskRun(taskRunD);
+
+        return Lists.newArrayList(taskRunA, taskRunB, taskRunC, taskRunD);
     }
 
     @After
@@ -63,7 +109,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskRunDao.createTaskRun(sampleTaskRun);
 
         // Validate
-        Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchById(1L);
+        Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchTaskRunById(1L);
         assertTrue(persistedTaskRunOptional.isPresent());
 
         TaskRun persistedTaskRun = persistedTaskRunOptional.get();
@@ -148,7 +194,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         // Validate
         // 4. fetch and validate
-        Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchById(1L);
+        Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchTaskRunById(1L);
         assertTrue(persistedTaskRunOptional.isPresent());
         TaskRun persistedTaskRun = persistedTaskRunOptional.get();
         assertThat(persistedTaskRun, samePropertyValuesAs(taskRunWithUpdatedProps, "startAt", "endAt"));
@@ -179,7 +225,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertTrue(deletionSuccess);
 
         // 4. fetch and validate
-        Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchById(1L);
+        Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchTaskRunById(1L);
         assertFalse(persistedTaskRunOptional.isPresent());
 
         // 5. Multiple deletions on same id should be idempotent, but returns false flag
@@ -304,7 +350,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskRunDao.createAttempt(taskAttempt);
         taskDao.create(taskRun.getTask());
 
-        TaskRun runRec = taskRunDao.fetchById(taskRun.getId()).get();
+        TaskRun runRec = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
         TaskAttemptProps attemptRec = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
 
         assertThat(runRec.getStatus(), is(nullValue()));
@@ -319,7 +365,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskRunStatus prev = taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.RUNNING).get();
 
         // verify
-        runRec = taskRunDao.fetchById(taskRun.getId()).get();
+        runRec = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
         attemptRec = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
 
         assertThat(prev, is(TaskRunStatus.CREATED));
@@ -336,7 +382,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskRunDao.createAttempt(taskAttempt);
         taskDao.create(taskRun.getTask());
 
-        TaskRun runRec = taskRunDao.fetchById(taskRun.getId()).get();
+        TaskRun runRec = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
         TaskAttemptProps attemptRec = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
 
         assertThat(runRec.getStatus(), is(nullValue()));
@@ -354,7 +400,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 TaskRunStatus.RUNNING, startAt, endAt).get();
 
         // verify
-        runRec = taskRunDao.fetchById(taskRun.getId()).get();
+        runRec = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
         attemptRec = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
 
         assertThat(prev, is(TaskRunStatus.CREATED));
@@ -366,5 +412,139 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertThat(attemptRec.getStatus(), is(TaskRunStatus.RUNNING));
         assertThat(attemptRec.getStartAt(), is(startAt));
         assertThat(attemptRec.getEndAt(), is(endAt));
+    }
+
+    @Test
+    public void fetchUpstreamAndDownstreamTaskRuns_WithDistance_shouldWork() {
+        // Prepare
+        // 1. create task runs
+        prepareTaskRunsWithDependencyRelations();
+
+        // Process
+        // 2. Fetch upstream tasks of task run D
+        List<TaskRun> upstreamRunsOfD = taskRunDao.fetchUpstreamTaskRunsById(4L, 1, false);
+        List<TaskRun> allUpstreamRunsOfD = taskRunDao.fetchUpstreamTaskRunsById(4L, 10, false);
+        List<TaskRun> allUpstreamRunsOfDIncludeItself = taskRunDao.fetchUpstreamTaskRunsById(4L, 10, true);
+        List<TaskRun> downstreamRunsOfD = taskRunDao.fetchDownstreamTaskRunsById(4L, 100, false);
+
+        // Validate
+        assertThat(upstreamRunsOfD.size(), is(2));
+        assertThat(allUpstreamRunsOfD.size(), is(3));
+        assertThat(allUpstreamRunsOfDIncludeItself.size(), is(4));
+        assertThat(downstreamRunsOfD.size(), is(0));
+    }
+
+    @Test
+    public void fetchUpstreamAndDownstreamTaskRuns_onInvalidCases_shouldThrowExceptions() {
+        // Prepare
+        // 1. create task runs
+        prepareTaskRunsWithDependencyRelations();
+
+        try {
+            // 2. distance should be positive
+            taskRunDao.fetchUpstreamTaskRunsById(4L, 0, false);
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+        }
+
+        try {
+            // 3. source task run id should exists
+            taskRunDao.fetchUpstreamTaskRunsById(5L, 1, false);
+        } catch (Exception e) {
+            assertThat(e, instanceOf(EntityNotFoundException.class));
+        }
+    }
+
+    @Test
+    public void fetchTaskRunsByFilter_withEmptyFilter_shouldReturnTaskRuns() {
+        // prepare
+        prepareTaskRunsWithDependencyRelations();
+
+        // process
+        List<TaskRun> allTaskRuns = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter.newBuilder().build());
+
+        // validate
+        assertThat(allTaskRuns.size(), is(4));
+    }
+
+    @Test
+    public void fetchTaskRunsByFilter_withDateRangeFilter_shouldReturnFilterTaskRuns() {
+        // prepare
+        DateTimeUtils.setClock(getMockClock());
+        prepareTaskRunsWithDependencyRelations();
+
+        // process
+        List<TaskRun> runsStarted2HoursLater = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withDateFrom(DateTimeUtils.now().plusHours(2))
+                .build());
+
+        List<TaskRun> runsEnded2HoursLater = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withDateTo(DateTimeUtils.now().plusHours(2))
+                .build());
+
+        List<TaskRun> runsWithinDateRange = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withDateFrom(DateTimeUtils.now().plusHours(2))
+                .withDateTo(DateTimeUtils.now().plusHours(4))
+                .build());
+
+        // validate
+        assertThat(runsStarted2HoursLater.size(), is(3));
+        assertThat(runsEnded2HoursLater.size(), is(1));
+        assertThat(runsWithinDateRange.size(), is(2));
+    }
+
+    @Test
+    public void fetchTaskRunsByFilter_withStatusFilter_shouldReturnFilteredTaskRuns() {
+        // prepare
+        DateTimeUtils.setClock(getMockClock());
+        prepareTaskRunsWithDependencyRelations();
+
+        // process
+        List<TaskRun> runsWithRunningStatus = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withStatus(TaskRunStatus.RUNNING)
+                .build());
+        List<TaskRun> runsWithFailedStatus = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withStatus(TaskRunStatus.FAILED)
+                .build());
+
+        // validate
+        assertThat(runsWithRunningStatus.size(), is(2));
+        assertThat(runsWithFailedStatus.size(), is(0));
+    }
+
+    @Test
+    public void fetchTaskRunsByFilter_withIdsFilter_shouldReturnFilteredTaskRuns() {
+        // Prepare
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+        prepareTaskRunsWithDependencyRelations(task);
+
+        // Process
+        List<TaskRun> filteredTaskRuns = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withTaskIds(Lists.newArrayList(task.getId(), 1234L))
+                .build());
+
+        List<TaskRun> filteredTaskRunsWithEmptyTaskIds = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withTaskIds(Lists.newArrayList())
+                .build());
+
+        List<TaskRun> filteredTaskRunsWithNonExistTaskIds = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withTaskIds(Lists.newArrayList(1234L, 2345L))
+                .build());
+
+        // Validate
+        assertThat(filteredTaskRuns.size(), is(4));
+        // if no task id is in the filter, perform full match query
+        assertThat(filteredTaskRunsWithEmptyTaskIds.size(), is(4));
+        assertThat(filteredTaskRunsWithNonExistTaskIds.size(), is(0));
     }
 }

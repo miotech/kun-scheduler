@@ -1,22 +1,28 @@
 package com.miotech.kun.workflow.common.task.service;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.bo.RunTaskInfo;
+import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 @Singleton
 public class TaskService {
@@ -25,6 +31,9 @@ public class TaskService {
 
     @Inject
     private OperatorDao operatorDao;
+
+    @Inject
+    private TaskRunDao taskRunDao;
 
     private void validateTaskPropsVONotNull(TaskPropsVO vo) {
         Preconditions.checkNotNull(vo, "Invalid TaskPropsVO argument: null");
@@ -73,13 +82,18 @@ public class TaskService {
             throw new EntityNotFoundException(String.format("Cannot create task with operator id: %d, target operator not found.", vo.getOperatorId()));
         }
 
-        // 3. convert value object to task object and assign a new task id
+        // 3. Task name should not conflict
+        if (taskDao.fetchByName(vo.getName()).isPresent()) {
+            throw new NameConflictException(String.format("Cannot create task with duplicated name: \"%s\"", vo.getName()));
+        }
+
+        // 4. convert value object to task object and assign a new task id
         Task taskWithProps = convertTaskPropsVoToTask(vo);
         Task task = taskWithProps.cloneBuilder()
                 .withId(WorkflowIdGenerator.nextTaskId())
                 .build();
 
-        // 4. persist with DAO and return
+        // 5. persist with DAO and return
         taskDao.create(task);
         return task;
     }
@@ -108,6 +122,20 @@ public class TaskService {
 
         // 4. perform update
         return fullUpdateTask(taskToUpdate);
+    }
+
+    public Task fullUpdateTaskById(Long taskId, TaskPropsVO vo) {
+        Task task = Task.newBuilder()
+                .withId(taskId)
+                .withName(vo.getName())
+                .withScheduleConf(vo.getScheduleConf())
+                .withDependencies(vo.getDependencies())
+                .withVariableDefs(vo.getVariableDefs())
+                .withDescription(vo.getDescription())
+                .withArguments(vo.getArguments())
+                .withOperatorId(vo.getOperatorId())
+                .build();
+        return fullUpdateTask(task);
     }
 
     public Task fullUpdateTask(Task task) {
@@ -152,14 +180,18 @@ public class TaskService {
     public void deleteTask(Task task) {
         // TODO: recheck this
         validateTaskIntegrity(task);
-        boolean entityDeleted = taskDao.deleteById(task.getId());
+        this.deleteTaskById(task.getId());
+    }
+
+    public void deleteTaskById(Long taskId) {
+        boolean entityDeleted = taskDao.deleteById(taskId);
         if (!entityDeleted) {
-            throw new EntityNotFoundException(String.format("Cannot delete non-exist task with id: %d", task.getId()));
+            throw new EntityNotFoundException(String.format("Cannot delete non-exist task with id: %d", taskId));
         }
     }
 
     public Task runTasks(List<RunTaskInfo> runTaskInfos) {
         // TODO: implement this
-        return Task.newBuilder().build();
+        return null;
     }
 }

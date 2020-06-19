@@ -7,15 +7,14 @@ import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
 import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.web.annotation.QueryParameter;
 import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
-import com.miotech.kun.workflow.web.utils.RequestQueryParameterUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 
 @Singleton
 public class OperatorController {
@@ -30,14 +29,15 @@ public class OperatorController {
     }
 
     @RouteMapping(url= "/operators", method = "GET")
-    public Object getOperators(HttpServletRequest request) {
-        Integer pageNum = RequestQueryParameterUtils.parsePageNumFromRequestOrAssignDefault(request);
-        Integer pageSize = RequestQueryParameterUtils.parsePageSizeFromRequestOrAssignDefault(request);
+    public Object getOperators(@QueryParameter(defaultValue = "1") int pageNum,
+                               @QueryParameter(defaultValue = "100") int pageSize,
+                               @QueryParameter String name) {
 
         return operatorService.fetchOperatorsWithFilter(
                 OperatorSearchFilter.newBuilder()
                     .withPageNum(pageNum)
                     .withPageSize(pageSize)
+                    .withKeyword(name)
                     .build()
         );
     }
@@ -53,7 +53,7 @@ public class OperatorController {
     @RouteMapping(url= "/operators/{operatorId}", method = "DELETE")
     public Object deleteOperator(@RouteVariable Long operatorId) {
         operatorService.deleteOperatorById(operatorId);
-        return new AcknowledgementVO();
+        return new AcknowledgementVO("Delete success");
     }
 
     @RouteMapping(url= "/operators/{operatorId}", method = "PUT")
