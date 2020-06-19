@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.web;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.Lists;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.web.mock.*;
@@ -85,6 +86,17 @@ public class DispatchServletTest extends GuiceTestBase {
         dispatchServlet.service(request, response);
         Mockito.verify(mockController)
                 .getWithQueryParameter("1", 2);
+    }
+
+    @Test
+    public void service_withListQueryParameter() throws IOException {
+        MockHttpServletRequest request ;
+        request = new MockHttpServletRequest("GET", "/test/queryList");
+        request.setParameter("ids", "1,2,3");
+
+        dispatchServlet.service(request, response);
+        Mockito.verify(mockController)
+                .getWithListQueryParameter(Lists.newArrayList(1L, 2L, 3L));
     }
 
     @Test

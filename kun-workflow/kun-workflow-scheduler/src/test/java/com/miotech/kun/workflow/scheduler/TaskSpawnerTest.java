@@ -111,7 +111,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
 
-        TaskRun saved = taskRunDao.fetchById(submitted.getId()).get();
+        TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         assertThat(submitted, sameBeanAs(saved));
     }
     
@@ -152,7 +152,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
 
-        TaskRun saved = taskRunDao.fetchById(submitted.getId()).get();
+        TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         assertThat(submitted, sameBeanAs(saved));
 
         // task2
@@ -164,7 +164,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
 
-        saved = taskRunDao.fetchById(submitted.getId()).get();
+        saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         assertThat(submitted, sameBeanAs(saved));
     }
     
@@ -211,7 +211,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
 
-        TaskRun saved = taskRunDao.fetchById(submitted.getId()).get();
+        TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         // TODO: non-passed yet @Josh Ouyang
         // assertThat(submitted, sameBeanAs(saved));
 
@@ -258,7 +258,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
 
-        TaskRun saved = taskRunDao.fetchById(submitted.getId()).get();
+        TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         assertThat(submitted, sameBeanAs(saved));
 
         // task2
@@ -270,7 +270,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
 
-        saved = taskRunDao.fetchById(submitted.getId()).get();
+        saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         // TODO: non-passed yet @Josh Ouyang
         // assertThat(submitted, sameBeanAs(saved));
 

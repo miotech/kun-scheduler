@@ -56,11 +56,11 @@ public class OperatorDao {
         String baseSql = String.format("SELECT id, name, description, params, class_name, package FROM %s ", DB_TABLE_NAME);
         List<Operator> results;
         if (hasKeywordFilter) {
-            String sql = baseSql + "WHERE name LIKE CONCAT('%', ?, '%') LIMIT ?, ?";
-            results = dbOperator.fetchAll(sql, OperatorMapper.INSTANCE, filters.getKeyword(), offset, filters.getPageSize());
+            String sql = baseSql + "WHERE name LIKE CONCAT('%', CAST(? AS TEXT), '%') LIMIT ? OFFSET ?";
+            results = dbOperator.fetchAll(sql, OperatorMapper.INSTANCE, filters.getKeyword(), filters.getPageSize(), offset);
         } else {
-            String sql = baseSql + "LIMIT ?, ?";
-            results = dbOperator.fetchAll(sql, OperatorMapper.INSTANCE, offset, filters.getPageSize());
+            String sql = baseSql + "LIMIT ? OFFSET ?";
+            results = dbOperator.fetchAll(sql, OperatorMapper.INSTANCE, filters.getPageSize(), offset);
         }
         return results;
     }

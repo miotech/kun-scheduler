@@ -110,8 +110,6 @@ public class TaskRunner {
         public void onReceive(Event event) {
             if (event instanceof StartWatchEvent) {
                 startWatch(((StartWatchEvent) event).getTaskAttempt());
-            } else if (event instanceof TaskAttemptStatusChangeEvent) {
-                onUpstreamStatusChange(event);
             }
         }
 
