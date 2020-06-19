@@ -1,7 +1,9 @@
 stages:
   - verify
   - set-tag
+  - build
   - build-images
+  - save-tag
 
 before_script:
   - export DOCKER_USER=$CI_BUILD_DOCKER_USER
@@ -17,3 +19,11 @@ include:
   - ci/kun-workflow.gitlab-ci.yml
 # include: ci/kun-data-discover.gitlab-ci.yml
 # include: ci/kun-workflow.gitlab-ci.yml
+
+.only-deploy:
+  only:
+    refs:
+      - master
+      - release
+      - tags
+

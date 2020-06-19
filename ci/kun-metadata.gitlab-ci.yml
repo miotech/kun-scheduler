@@ -40,6 +40,7 @@ verify-kun-metadata-sonar:
 
 .kun-metadata-build-job:
   stage: build-images
+  image: gradle:6.5.0-jdk8
   tags:
     - build
   script:
@@ -56,7 +57,7 @@ verify-kun-metadata-sonar:
 
 kun-metadata-build:
   extends: .kun-metadata-build-job
-  image: gradle:6.5.0-jdk8
+  image: mioyingtech/docker:latest
   tags:
     - docker-push
   script:
@@ -64,3 +65,35 @@ kun-metadata-build:
     - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/ build/libs/
     - export TAG_METADATA=$CI_COMMIT_REF_NAME
     - ./gradlew :kun-metadata:buildPushImage
+
+kun-metadata-set-tag:
+  stage: set-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  script:
+    - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-metadata
+  only:
+    - production
+      
+kun-metadata-set-tag-hotfix:
+  stage: set-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  script:
+    - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-metadata
+  only:
+    - /^HOTFIX+.*/
+  when: manual
+
+kun-metadata-save-tag:
+  stage: save-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  only:
+    - tags
+  script:
+    - python /tmp/saveTag.py --appName=kun-metadata --tag=${CI_COMMIT_REF_NAME}
+  allow_failure: true
