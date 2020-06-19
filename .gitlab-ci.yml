@@ -1,16 +1,19 @@
 stages:
   - verify
+  - set-tag
+  - build-images
 
-test:
-  stage: verify
-  image: gradle:6.5.0-jdk8
-  except:
-    - master
-    - release
-    - production
-    - tags
-  allow_failure: false
-  script:
-    - ./gradlew test
-    - ./gradlew check
-    - ./gradlew codeCoverageReport
+before_script:
+  - export DOCKER_USER=$CI_BUILD_DOCKER_USER
+  - export DOCKER_PASS=$CI_BUILD_TOKEN
+  - export DOCKER_URL=$CI_BUILD_DOCKER_URL
+
+
+#include: ci/kun-metadata.gitlab-ci.yml
+include: 
+  - ci/kun-frontend.gitlab-ci.yml
+  - ci/kun-metadata.gitlab-ci.yml
+  - ci/kun-data-discover.gitlab-ci.yml
+  - ci/kun-workflow.gitlab-ci.yml
+# include: ci/kun-data-discover.gitlab-ci.yml
+# include: ci/kun-workflow.gitlab-ci.yml

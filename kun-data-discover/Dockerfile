@@ -6,4 +6,5 @@ ARG sentry_release
 COPY build/libs/kun-data-discover.jar /server/target/
 WORKDIR /server/target
 EXPOSE 8080
+
 CMD SENTRY_DSN=${sentry_dsn} SENTRY_ENVIRONMENT=${env} SENTRY_RELEASE=${tag} java ${JAVA_OPTS} -jar /server/target/kun-data-discover.jar -Dapp=kun-data-discover-server -Dtag=${tag} -Denv=${env}
