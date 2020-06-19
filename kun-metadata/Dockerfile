@@ -5,7 +5,6 @@ ARG sentry_env
 ARG sentry_release
 
 COPY build/libs/kun-metadata-1.0.jar /server/target/
-
 WORKDIR /server/target
 EXPOSE 8084
 
