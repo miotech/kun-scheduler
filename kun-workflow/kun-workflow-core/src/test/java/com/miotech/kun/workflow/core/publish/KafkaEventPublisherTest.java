@@ -5,6 +5,7 @@ import com.miotech.kun.workflow.core.event.LineageEvent;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -36,6 +37,7 @@ public class KafkaEventPublisherTest {
     }
 
     @Test
+    @Ignore
     public void publish() {
 
         KafkaEventPublisher publisher = new KafkaEventPublisher("test", kafkaConf);

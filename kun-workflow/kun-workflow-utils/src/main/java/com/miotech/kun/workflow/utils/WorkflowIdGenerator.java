@@ -10,7 +10,7 @@ public class WorkflowIdGenerator {
      * Generate a snowflake ID for workflow Operator
      * @return Snowflake ID
      */
-    public static Long nextOperatorId() {
+    public static long nextOperatorId() {
         return IdGenerator.getInstance().nextId();
     }
 
@@ -18,7 +18,7 @@ public class WorkflowIdGenerator {
      * Generate a snowflake ID for workflow Task
      * @return Snowflake ID
      */
-    public static Long nextTaskId() {
+    public static long nextTaskId() {
         return IdGenerator.getInstance().nextId();
     }
 
@@ -26,7 +26,7 @@ public class WorkflowIdGenerator {
      * Generate a snowflake ID for workflow TaskRun
      * @return Snowflake ID
      */
-    public static Long nextTaskRunId() {
+    public static long nextTaskRunId() {
         return IdGenerator.getInstance().nextId();
     }
 
@@ -37,7 +37,11 @@ public class WorkflowIdGenerator {
      * @param attempt ordinal of current attempt
      * @return Snowflake ID with attempt as reserved id
      */
-    public static Long nextTaskAttemptId(long taskRunId, int attempt) {
+    public static long nextTaskAttemptId(long taskRunId, int attempt) {
         return IdGenerator.getInstance().combine(taskRunId, attempt);
+    }
+
+    public static long taskRunIdFromTaskAttemptId(long taskAttemptId) {
+        return IdGenerator.getInstance().split(taskAttemptId)[0];
     }
 }

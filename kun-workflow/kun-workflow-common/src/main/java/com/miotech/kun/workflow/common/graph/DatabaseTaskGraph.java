@@ -6,8 +6,10 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.List;
 
+@Singleton
 public class DatabaseTaskGraph implements TaskGraph {
     private final TaskDao taskDao;
 

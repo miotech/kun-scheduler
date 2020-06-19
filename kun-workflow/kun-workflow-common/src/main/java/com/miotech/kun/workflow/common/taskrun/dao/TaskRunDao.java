@@ -1,15 +1,14 @@
 package com.miotech.kun.workflow.common.taskrun.dao;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
-import com.miotech.kun.workflow.core.model.entity.Entity;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -21,13 +20,19 @@ import com.miotech.kun.workflow.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.workflow.db.sql.SQLBuilder;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
+import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkNotNull;
+import static com.miotech.kun.workflow.utils.StringUtils.toNullableString;
 
 @Singleton
 public class TaskRunDao {
@@ -57,7 +62,8 @@ public class TaskRunDao {
         return DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
-                .join("LEFT OUTER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
+                .join("INNER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".task_id = " + TaskDao.TASK_MODEL_NAME + ".id")
                 .autoAliasColumns();
     }
 
@@ -94,7 +100,7 @@ public class TaskRunDao {
                     taskRun.getId(),
                     taskRun.getTask().getId(),
                     taskRun.getScheduledTick().toString(),
-                    taskRun.getStatus().toString(),
+                    toNullableString(taskRun.getStatus()),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getVariables()),
@@ -109,11 +115,8 @@ public class TaskRunDao {
         return taskRun;
     }
 
-    public void createTaskRuns(List<TaskRun> taskRuns) {
-        // TODO: implement this method
-        // TODO: 同时插入task_run和task_run_relations
-        taskRuns.forEach(run -> createTaskRun(run));
-        return;
+    public List<TaskRun> createTaskRuns(List<TaskRun> taskRuns) {
+        return taskRuns.stream().map(this::createTaskRun).collect(Collectors.toList());
     }
 
     public TaskRun updateTaskRun(TaskRun taskRun) {
@@ -133,7 +136,7 @@ public class TaskRunDao {
                     taskRun.getId(),
                     taskRun.getTask().getId(),
                     taskRun.getScheduledTick().toString(),
-                    taskRun.getStatus().toString(),
+                    toNullableString(taskRun.getStatus()),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getVariables()),
@@ -213,12 +216,87 @@ public class TaskRunDao {
                 taskAttempt.getId(),
                 taskAttempt.getTaskRun().getId(),
                 taskAttempt.getAttempt(),
-                taskAttempt.getStatus().toString(),
+                toNullableString(taskAttempt.getStatus()),
                 taskAttempt.getStartAt(),
                 taskAttempt.getEndAt(),
                 taskAttempt.getLogPath()
         );
         return taskAttempt;
+    }
+
+    public Optional<TaskRunStatus> fetchTaskAttemptStatus(Long taskAttemptId) {
+        checkNotNull(taskAttemptId, "taskAttemptId should not be null.");
+
+        String sql = new DefaultSQLBuilder()
+                .select("status")
+                .from(TASK_ATTEMPT_TABLE_NAME)
+                .where("id = ?")
+                .getSQL();
+
+        return Optional.ofNullable(
+                dbOperator.fetchOne(sql, (rs) -> TaskRunStatus.valueOf(rs.getString("status")), taskAttemptId));
+    }
+
+    public Optional<TaskRunStatus> updateTaskAttemptStatus(Long taskAttemptId, TaskRunStatus status) {
+        return updateTaskAttemptStatus(taskAttemptId, status, null, null);
+    }
+
+    public Optional<TaskRunStatus> updateTaskAttemptStatus(Long taskAttemptId, TaskRunStatus status,
+                                                           @Nullable OffsetDateTime startAt, @Nullable OffsetDateTime endAt) {
+        checkNotNull(taskAttemptId, "taskAttemptId should not be null.");
+        checkNotNull(status, "status should not be null.");
+
+        long taskRunId = WorkflowIdGenerator.taskRunIdFromTaskAttemptId(taskAttemptId);
+        List<Object> pmTa = Lists.newArrayList();
+        List<Object> pmTr = Lists.newArrayList();
+
+        SQLBuilder sbTa = DefaultSQLBuilder.newBuilder()
+                .update(TASK_ATTEMPT_TABLE_NAME)
+                .set("status")
+                .where("id = ?");
+        pmTa.add(status.toString());
+
+        SQLBuilder sbTr = DefaultSQLBuilder.newBuilder()
+                .update(TASK_RUN_TABLE_NAME)
+                .set("status")
+                .where("id = ?");
+        pmTr.add(status.toString());
+
+        if (startAt != null) {
+            sbTa.set("start_at");
+            pmTa.add(startAt);
+            sbTr.set("start_at");
+            pmTr.add(startAt);
+        }
+
+        if (endAt != null) {
+            sbTa.set("end_at");
+            pmTa.add(endAt);
+            sbTr.set("end_at");
+            pmTr.add(endAt);
+        }
+
+        pmTa.add(taskAttemptId);
+        pmTr.add(taskRunId);
+
+        return dbOperator.transaction(() -> {
+            Optional<TaskRunStatus> prev = fetchTaskAttemptStatus(taskAttemptId);
+            if (prev.isPresent()) {
+                dbOperator.update(sbTa.asPrepared().getSQL(), pmTa.toArray());
+                dbOperator.update(sbTr.asPrepared().getSQL(), pmTr.toArray());
+            }
+            return prev;
+        });
+    }
+
+    public boolean updateTaskAttemptLogPath(Long taskAttemptId, String logPath) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update(TASK_ATTEMPT_TABLE_NAME)
+                .set("log_path")
+                .where("id = ?")
+                .asPrepared()
+                .getSQL();
+        return dbOperator.update(sql, logPath, taskAttemptId) >= 0;
     }
 
     private boolean deleteTaskAttempts(Long taskRunId) {
@@ -269,7 +347,7 @@ public class TaskRunDao {
     }
 
     public TaskRun fetchLatestTaskRun(Long taskId) {
-        Preconditions.checkNotNull(taskId, "taskId should not be null.");
+        checkNotNull(taskId, "taskId should not be null.");
 
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where("task_id = ?")
@@ -279,7 +357,17 @@ public class TaskRunDao {
         return dbOperator.fetchOne(sql, TaskRunMapper.INSTANCE, taskId);
     }
 
+    public TaskAttemptProps fetchLatestTaskAttempt(Long taskRunId) {
+        return fetchLatestTaskAttempt(Lists.newArrayList(taskRunId)).get(0);
+    }
+
     public List<TaskAttemptProps> fetchLatestTaskAttempt(List<Long> taskRunIds) {
+        checkNotNull(taskRunIds, "taskRunIds should not be null.");
+
+        if (taskRunIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         String idsFieldsPlaceholder = "(" + taskRunIds.stream().map(id -> "?")
                 .collect(Collectors.joining(", ")) + ")";
 

@@ -35,4 +35,8 @@ public enum TaskRunStatus {
     public boolean isSuccess() {
         return this == SUCCESS || this == SKIPPED;
     }
+
+    public boolean isFailure() {
+        return this == FAILED || this == ABORTED;
+    }
 }

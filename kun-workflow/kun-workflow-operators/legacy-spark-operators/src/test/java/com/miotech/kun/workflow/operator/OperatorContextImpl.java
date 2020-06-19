@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.operator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.workflow.core.resource.Resource;
 import org.junit.Ignore;
 import org.slf4j.LoggerFactory;
 
@@ -35,18 +36,27 @@ public class OperatorContextImpl implements OperatorContext {
 
     }
 
+    @Override
+    public Resource getResource(String path) {
+        throw new UnsupportedOperationException("Not implemented yet.");
+    }
+
+    @Override
     public String getParameter(String name){
         return params.getOrDefault(name, "");
     }
 
+    @Override
     public String getVariable(String name){
         return vars.getOrDefault(name, "");
     }
 
+    @Override
     public Logger getLogger() {
         return (Logger) LoggerFactory.getLogger(OperatorContextImpl.class);
     }
 
+    @Override
     public void report(List<DataStore> inlets, List<DataStore> outlets){
         System.out.println("printing lineage result");
         System.out.println(inlets);

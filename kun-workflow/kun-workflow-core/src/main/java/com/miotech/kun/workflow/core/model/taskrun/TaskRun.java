@@ -8,6 +8,8 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkNotNull;
+
 public class TaskRun {
     private final Long id;
 
@@ -70,8 +72,9 @@ public class TaskRun {
     }
 
     public TaskRun(Long id, Task task, List<Variable> variables, Tick scheduledTick, TaskRunStatus status,
-                   OffsetDateTime startAt, OffsetDateTime endAt, List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds) {
-
+                   OffsetDateTime startAt, OffsetDateTime endAt, List<DataStore> inlets, List<DataStore> outlets,
+                   List<Long> dependentTaskRunIds) {
+        checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
         this.variables = variables;
@@ -115,10 +118,6 @@ public class TaskRun {
         private List<Long> dependentTaskRunIds;
 
         private TaskRunBuilder() {
-        }
-
-        public static TaskRunBuilder aTaskRun() {
-            return new TaskRunBuilder();
         }
 
         public TaskRunBuilder withId(Long id) {

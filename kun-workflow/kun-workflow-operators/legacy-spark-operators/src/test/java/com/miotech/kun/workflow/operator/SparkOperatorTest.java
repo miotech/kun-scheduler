@@ -14,13 +14,13 @@ public class SparkOperatorTest {
     public void setUp(){
         context = new OperatorContextImpl();
         operator = new SparkOperator();
-        operator.init(context);
+        operator.init();
     }
 
 
     @Test
     public void run() {
-        operator.run(context);
+        operator.run();
     }
 
     @Test
