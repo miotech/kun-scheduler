@@ -3,6 +3,7 @@ plugins {
 	id 'io.spring.dependency-management' version '1.0.9.RELEASE'
 	id 'java'
 	id "io.freefair.lombok" version "5.1.0"
+	id "org.sonarqube" version "2.7"
 }
 
 sourceCompatibility = 1.8
@@ -28,3 +29,26 @@ dependencies {
 test {
 	useJUnitPlatform()
 }
+
+apply plugin: "com.bmuschko.docker-remote-api"
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+task buildDockerImage(type: DockerBuildImage) {
+    inputDir = file('.')
+    images.add(System.getenv("DOCKER_URL")+'mioyingtech/'+project.name+':'+System.getenv("TAG_DATA_DISCOVERY"))
+    
+}
+docker {
+     registryCredentials {
+     	url = System.getenv("DOCKER_URL")
+        username = System.getenv("DOCKER_USER")
+        password = System.getenv("DOCKER_PASS")
+     }
+ } 
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+task buildPushImage(type: DockerPushImage) {
+    dependsOn buildDockerImage
+    images.add(System.getenv("DOCKER_URL")+'mioyingtech/'+project.name+':'+System.getenv("TAG_DATA_DISCOVERY"))
+    
+}
+
+apply plugin: "org.sonarqube"

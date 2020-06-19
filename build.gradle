@@ -2,6 +2,9 @@ buildscript {
     repositories {
         mavenCentral()
     }
+    dependencies {
+        classpath "com.bmuschko:gradle-docker-plugin:6.4.0"
+    }
 }
 
 plugins {
