@@ -39,7 +39,7 @@ verify-kun-data-discover-sonar:
       - kun-data-discover/*
 
 kun-data-discover-build:
-  extends: .onlt-deploy
+  extends: .only-deploy
   stage: build
   image: gradle:6.5.0-jdk8
   tags:
