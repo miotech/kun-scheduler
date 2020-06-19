@@ -169,19 +169,21 @@ public class SparkOperator extends Operator {
         String dispatcher = context.getParameter("dispatcher");
 
         if(dispatcher.equals("hdfs")){
-            try {
-                String hdfsAddr = context.getParameter("hdfsAddr");
-                String input = "/tmp/" + applicationId + ".input.txt";
-                String output = "/tmp/" + applicationId + ".output.txt";
+            String hdfsAddr = context.getParameter("hdfsAddr");
+            String input = "/tmp/" + applicationId + ".input.txt";
+            String output = "/tmp/" + applicationId + ".output.txt";
 
-                Configuration conf = new Configuration();
-                conf.set("fs.defaultFS", hdfsAddr);
+            Configuration conf = new Configuration();
+            conf.set("fs.defaultFS", hdfsAddr);
+            try {
                 FileSystem fs = FileSystem.get(conf);
-                BufferedReader inBufferReader = new BufferedReader(new InputStreamReader(fs.open(new Path(input))));
-                BufferedReader outBufferReader = new BufferedReader(new InputStreamReader(fs.open(new Path(output))));
-                inlets.addAll(genDataStore(inBufferReader));
-                outlets.addAll(genDataStore(outBufferReader));
-            }catch (IOException e){
+                try(BufferedReader inBufferReader = new BufferedReader(new InputStreamReader(fs.open(new Path(input))))) {
+                    inlets.addAll(genDataStore(inBufferReader));
+                }
+                try(BufferedReader outBufferReader = new BufferedReader(new InputStreamReader(fs.open(new Path(output))))) {
+                    outlets.addAll(genDataStore(outBufferReader));
+                }
+            } catch (IOException e){
                 logger.error("lineage analysis from hdfs failed", e);
             }
         }else if(dispatcher.equals("s3")){

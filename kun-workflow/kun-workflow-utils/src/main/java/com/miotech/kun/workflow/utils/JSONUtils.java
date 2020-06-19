@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class JSONUtils {
-    private JSONUtils() { }
+    private JSONUtils() {}
 
     private static final Logger logger = LoggerFactory.getLogger(JSONUtils.class);
     private static final ObjectMapper objectMapper = new ObjectMapper()
