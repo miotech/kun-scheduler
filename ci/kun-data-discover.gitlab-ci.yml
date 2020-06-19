@@ -54,7 +54,7 @@ kun-data-discover-build:
 
 kun-data-discover-push:
   extends: .only-deploy
-  image: mioyingtech/docker:latest
+  image: mioyingtech/gradle:latest
   stage: build-images
   tags:
     - docker-push
