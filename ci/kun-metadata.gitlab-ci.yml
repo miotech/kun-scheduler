@@ -56,7 +56,7 @@ kun-metadata-build:
     changes:
       - kun-metadata/*
 
-kun-metadata-build:
+kun-metadata-push:
   extends: .only-deploy
   stage: build-images
   image: mioyingtech/docker:latest
