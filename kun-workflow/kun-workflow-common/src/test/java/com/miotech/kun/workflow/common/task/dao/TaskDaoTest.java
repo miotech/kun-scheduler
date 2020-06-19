@@ -13,7 +13,9 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
+import org.junit.After;
 import org.junit.Test;
 
 import javax.inject.Inject;
@@ -45,6 +47,12 @@ public class TaskDaoTest extends DatabaseTestBase {
         return Clock.fixed(Instant.parse("2020-01-01T00:00:00.00Z"), ZoneId.of("UTC"));
     }
 
+    @After
+    public void resetClock() {
+        // reset global clock after each test
+        DateTimeUtils.resetClock();
+    }
+
     private void insertSampleData() {
         // mock up a system clock
         Clock clock = getMockClock();
@@ -69,7 +77,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withDependencies(new ArrayList<>())
                 .build();
 
-        taskDao.create(taskExample, clock);
+        taskDao.create(taskExample);
 
         // insert more tasks
         for (int i = 0; i < 10; i += 1) {
@@ -296,11 +304,13 @@ public class TaskDaoTest extends DatabaseTestBase {
     @Test
     public void fetchScheduledTaskAtTick_ShouldWork() {
         // Prepare
+        DateTimeUtils.setClock(getMockClock());
+
         // 1. A prepared task has a scheduled execution on 10:15 everyday.
         insertSampleData();
 
         // 2. We prepare 3 ticks: on 8:00 am, on 10:15, on 11:00.
-        OffsetDateTime mockNow = OffsetDateTime.now(getMockClock());
+        OffsetDateTime mockNow = DateTimeUtils.now();
 
         OffsetDateTime time0800 = mockNow.withHour(8).withMinute(0).withSecond(0);
         OffsetDateTime time1015 = mockNow.withHour(10).withMinute(15).withSecond(0);
@@ -331,10 +341,12 @@ public class TaskDaoTest extends DatabaseTestBase {
     @Test
     public void updateTask_withScheduledConfUpdated_shouldReinsertTickMapping() {
         // Prepare
+        DateTimeUtils.setClock(getMockClock());
+
         // 1. Create a task with scheduled execution on 10:15 everyday.
         insertSampleData();
 
-        OffsetDateTime mockNow = OffsetDateTime.now(getMockClock());
+        OffsetDateTime mockNow = DateTimeUtils.now();
         OffsetDateTime time1015 = mockNow.withHour(10).withMinute(15).withSecond(0);
         OffsetDateTime time1115 = mockNow.withHour(11).withMinute(15).withSecond(0);
 
@@ -351,7 +363,7 @@ public class TaskDaoTest extends DatabaseTestBase {
         Task taskToUpdate = tasksToExecuteOn1015.get(0).cloneBuilder().withScheduleConf(
                 new ScheduleConf(ScheduleType.SCHEDULED, "0 0 11 * * ?")
         ).build();
-        taskDao.update(taskToUpdate, getMockClock());
+        taskDao.update(taskToUpdate);
 
         // Validate
         List<Task> tasksToExecuteOn1015AfterUpdate = taskDao.fetchScheduledTaskAtTick(new Tick(time1015));
@@ -365,10 +377,12 @@ public class TaskDaoTest extends DatabaseTestBase {
     @Test
     public void deleteTaskById_withScheduledConfAssigned_shouldRemoveTickMapping() {
         // Prepare
+        DateTimeUtils.setClock(getMockClock());
+
         // 1. Create a task with scheduled execution on 10:15 everyday.
         insertSampleData();
 
-        OffsetDateTime mockNow = OffsetDateTime.now(getMockClock());
+        OffsetDateTime mockNow = DateTimeUtils.now();
         OffsetDateTime time1015 = mockNow.withHour(10).withMinute(15).withSecond(0);
         List<Task> tasksToExecuteOn1015 = taskDao.fetchScheduledTaskAtTick(new Tick(time1015));
 

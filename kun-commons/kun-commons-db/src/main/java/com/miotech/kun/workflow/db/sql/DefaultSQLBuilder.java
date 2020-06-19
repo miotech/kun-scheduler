@@ -8,6 +8,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -19,7 +20,7 @@ public class DefaultSQLBuilder implements SQLBuilder {
     private List<String[]> insertValues;
     private Integer valueSize;
 
-    private List<String> updateColumns;
+    private List<String> updateColumns = new ArrayList<>();
     private String updateTargetName;
     private List<String> selectedFields;
     private Map<String, List<String>> columnsMap;
@@ -77,7 +78,7 @@ public class DefaultSQLBuilder implements SQLBuilder {
 
     @Override
     public SQLBuilder set(String... cols) {
-        this.updateColumns = ImmutableList.copyOf(cols);
+        this.updateColumns.addAll(Arrays.asList(cols));
         return this;
     }
 

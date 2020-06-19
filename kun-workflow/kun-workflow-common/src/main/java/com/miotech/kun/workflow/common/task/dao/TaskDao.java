@@ -28,7 +28,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -70,7 +69,7 @@ public class TaskDao {
         return taskCols;
     }
 
-    private void insertTickTaskRecordByScheduleConf(Long taskId, ScheduleConf scheduleConf, Clock clock) {
+    private void insertTickTaskRecordByScheduleConf(Long taskId, ScheduleConf scheduleConf) {
         boolean shouldInsertTickTask;
 
         switch (scheduleConf.getType()) {
@@ -95,7 +94,7 @@ public class TaskDao {
                     .asPrepared()
                     .getSQL();
 
-            Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextExecutionTimeFromNow(cron, clock);
+            Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextExecutionTimeFromNow(cron);
             String formattedScheduleTick;
             if (nextExecutionTimeOptional.isPresent()) {
                 OffsetDateTime nextExecutionTime = nextExecutionTimeOptional.get();
@@ -228,8 +227,11 @@ public class TaskDao {
                 .asPrepared()
                 .getSQL();
 
-        // TODO: wrap following lines of code into individual method
-        List<Task> plainTasks = dbOperator.fetchAll(sql, TaskMapper.INSTANCE, taskIds.toArray());
+        return fetchTasksJoinDependencies(sql, taskIds.toArray());
+    }
+
+    private List<Task> fetchTasksJoinDependencies(String preparedSql, Object... params) {
+        List<Task> plainTasks = dbOperator.fetchAll(preparedSql, TaskMapper.INSTANCE, params);
 
         // Retrieve all relations whose downstream ids are involved in result tasks
         List<Long> plainTaskIds = plainTasks.stream().map(task -> task.getId()).collect(Collectors.toList());
@@ -249,6 +251,10 @@ public class TaskDao {
      * @return
      */
     private Map<Long, List<TaskDependency>> fetchAllRelationsFromDownstreamTaskIds(List<Long> taskIds) {
+        if (taskIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
         Map<Long, List<TaskDependency>> taskIdToDependenciesMap = new HashMap<>();
         taskIds.forEach(taskId -> {
             taskIdToDependenciesMap.put(taskId, new ArrayList<>());
@@ -342,19 +348,7 @@ public class TaskDao {
                 .getSQL();
         Collections.addAll(params, pageSize, offset);
 
-        // For all tasks we directly fetched from task table, property `dependencies` will always be null
-        List<Task> plainTasks = dbOperator.fetchAll(sql, TaskMapper.INSTANCE, params.toArray());
-
-        // Retrieve all relations whose downstream ids are involved in result tasks
-        List<Long> taskIds = plainTasks.stream().map(task -> task.getId()).collect(Collectors.toList());
-        Map<Long, List<TaskDependency>> dependenciesMap = fetchAllRelationsFromDownstreamTaskIds(taskIds);
-
-        // re-construct all tasks with full properties
-        return plainTasks.stream()
-                .map(t -> t.cloneBuilder()
-                    .withDependencies(dependenciesMap.get(t.getId()))
-                    .build())
-                .collect(Collectors.toList());
+        return fetchTasksJoinDependencies(sql, params.toArray());
     }
 
     public List<Task> fetchByOperatorId(Long operatorId) {
@@ -391,10 +385,6 @@ public class TaskDao {
     }
 
     public void create(Task task) {
-        create(task, Clock.systemDefaultZone());
-    }
-
-    public void create(Task task, Clock mockClock) {
         /*
          * Creating a task consists of following steps:
          * 1. Insert task record into database
@@ -423,17 +413,13 @@ public class TaskDao {
                     JSONUtils.toJsonString(task.getVariableDefs()),
                     JSONUtils.toJsonString(task.getScheduleConf())
             );
-            insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf(), mockClock);
+            insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
             updateTaskUpstreamDependencies(task, task.getDependencies());
             return null;
         });
     }
 
     public boolean update(Task task) {
-        return update(task, Clock.systemDefaultZone());
-    }
-
-    public boolean update(Task task, Clock mockClock) {
         List<String> tableColumns = new ImmutableList.Builder<String>()
                 .addAll(taskCols)
                 .build();
@@ -461,7 +447,7 @@ public class TaskDao {
             // remove existing task mappings, if any
             deleteTickTaskMappingRecord(task.getId());
             // and re-insert by updated schedule configuration
-            insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf(), mockClock);
+            insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
 
             return updatedRows;
         });
@@ -492,9 +478,9 @@ public class TaskDao {
                 .orderBy("scheduled_tick ASC")
                 .limit(1)
                 .toString();
-        String nextExecutionTimeString = (String) dbOperator.fetchOne(
+        String nextExecutionTimeString = dbOperator.fetchOne(
                 sql,
-                (ResultSetMapper) rs -> rs.getString("scheduled_tick"),
+                rs -> rs.getString("scheduled_tick"),
                 taskId
         );
         if (Objects.nonNull(nextExecutionTimeString)) {
@@ -511,7 +497,7 @@ public class TaskDao {
                 .on(TASK_MODEL_NAME + ".id = " + TICK_TASK_MAPPING_TABLE_ALIAS + ".task_id")
                 .where(TICK_TASK_MAPPING_TABLE_ALIAS + ".scheduled_tick <= ?")
                 .getSQL();
-        return dbOperator.fetchAll(sql, TaskMapper.INSTANCE, tick.toString());
+        return fetchTasksJoinDependencies(sql, tick.toString());
     }
 
     /**

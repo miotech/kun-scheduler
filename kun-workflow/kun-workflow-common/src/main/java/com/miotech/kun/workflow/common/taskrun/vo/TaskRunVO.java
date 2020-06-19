@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.common.taskrun.vo;
 
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
-import com.miotech.kun.workflow.core.model.entity.Entity;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;

@@ -1,5 +1,6 @@
 package com.miotech.kun.commons.testing;
 
+import com.google.common.collect.Lists;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -8,11 +9,17 @@ import com.google.inject.util.Modules;
 import org.junit.Before;
 import org.mockito.Mockito;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+@SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class GuiceTestBase {
-    private final List<Module> modules = new ArrayList<>();
+    private final EmbeddedModule ebdMod = new EmbeddedModule();
     private final Map<Object, Object> mocks = new HashMap<>();
+    private final Map<Object, Object> bindings = new HashMap<>();
+    private final List<Module> modules = Lists.newArrayList(ebdMod);
 
     protected Injector injector;
 
@@ -24,6 +31,8 @@ public abstract class GuiceTestBase {
         Module[] mods = modules.toArray(new Module[0]);
         injector = Guice.createInjector(Modules.override(mods).with(new InjectMockModule()));
         injector.injectMembers(this);
+
+        Unsafe.setInjector(injector);
     }
 
     protected void addModules(Module... mods) {
@@ -36,11 +45,34 @@ public abstract class GuiceTestBase {
         return mockObj;
     }
 
+    protected <T> void bind(Class<? super T> clazz, Class<T> clazz2) {
+        bindings.put(clazz, clazz2);
+    }
+
+    protected <T> void bind(Class<? super T> clazz, T instance) {
+        bindings.put(clazz, instance);
+    }
+
     protected void configuration() {
         // do nothing
     }
 
-    @SuppressWarnings("unchecked")
+    private class EmbeddedModule extends AbstractModule {
+        @Override
+        protected void configure() {
+            for (Object key : bindings.keySet()) {
+                Object val = bindings.get(key);
+                if (isInterfaceToImplementation(key, val)) {
+                    bind((Class) key).to((Class) val);
+                } else if (isInterfaceToInstance(key, val)) {
+                    bind((Class) key).toInstance(val);
+                } else {
+                    throw new  UnsupportedOperationException("Not supported yet. Please implement it yourself.");
+                }
+            }
+        }
+    }
+
     private class InjectMockModule extends AbstractModule {
         @Override
         protected void configure() {
@@ -52,5 +84,13 @@ public abstract class GuiceTestBase {
                 }
             }
         }
+    }
+
+    private boolean isInterfaceToImplementation(Object key, Object value) {
+        return key instanceof Class && value instanceof Class && ((Class) key).isAssignableFrom((Class) value);
+    }
+
+    private boolean isInterfaceToInstance(Object key, Object value) {
+        return key instanceof Class && ((Class) key).isAssignableFrom(value.getClass());
     }
 }

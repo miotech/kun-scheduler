@@ -8,18 +8,22 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
+import org.junit.After;
 import org.junit.Test;
 
 import javax.inject.Inject;
-import java.time.*;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.Assert.*;
@@ -35,14 +39,22 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         return Clock.fixed(Instant.parse("2020-01-01T00:00:00.00Z"), ZoneId.of("UTC"));
     }
 
+    @After
+    public void resetGlobalClock() {
+        // Reset global clock after each test
+        DateTimeUtils.resetClock();
+    }
+
     @Test
     public void createTaskRun_withValidProperties_shouldSuccess() {
         // Prepare
-        Task task = MockTaskFactory.createTask();
         Clock mockClock = getMockClock();
+        DateTimeUtils.setClock(mockClock);
+
+        Task task = MockTaskFactory.createTask();
         taskDao.create(task);
 
-        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(1L, task, mockClock)
+        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(1L, task)
                 .cloneBuilder()
                 .withDependentTaskRunIds(Lists.newArrayList(Long.valueOf(1L)))
                 .build();
@@ -61,34 +73,29 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     @Test
     public void createTaskRun_withInvalidProperties_shouldThrowException() {
         // Prepare
-        Clock mockClock = getMockClock();
-
-        // 1. if task is null, should throw NullPointerException
-        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(1L, null, mockClock);
-
         try {
+            TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(null);
             taskRunDao.createTaskRun(sampleTaskRun);
             fail();
         } catch (Exception e) {
             assertThat(e, instanceOf(NullPointerException.class));
         }
-
-        // TODO: add more cases
     }
 
     @Test
     public void fetchLatestTaskAttempt_withArrayOfTaskIds_shouldReturnAttemptVOInCorrectOrder() {
         // Prepare
+        Clock mockClock = getMockClock();
+        DateTimeUtils.setClock(mockClock);
 
         // 1. create task runs
         Task task = MockTaskFactory.createTask();
-        Clock mockClock = getMockClock();
         taskDao.create(task);
 
         TaskRun[] sampleTaskRuns = {
-                MockTaskRunFactory.createTaskRun(1L, task, mockClock),
-                MockTaskRunFactory.createTaskRun(2L, task, mockClock),
-                MockTaskRunFactory.createTaskRun(3L, task, mockClock)
+                MockTaskRunFactory.createTaskRun(1L, task),
+                MockTaskRunFactory.createTaskRun(2L, task),
+                MockTaskRunFactory.createTaskRun(3L, task)
         };
 
         taskRunDao.createTaskRun(sampleTaskRuns[0]);
@@ -97,7 +104,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         // 2. create run attempts (12 attempts in total, 4 attempts each run)
         for (int i = 0; i < 12; i += 1) {
-            TaskAttempt attempt = MockTaskRunFactory.createTaskAttempt((long) i + 1, sampleTaskRuns[i / 4], (i % 4) + 1, mockClock);
+            TaskAttempt attempt = MockTaskRunFactory.createTaskAttempt((long) i + 1, sampleTaskRuns[i / 4], (i % 4) + 1);
             taskRunDao.createAttempt(attempt);
         }
 
@@ -120,19 +127,21 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     @Test
     public void updateTaskRun_withValidObject_shouldSuccess() {
         // Prepare
+        Clock mockClock = getMockClock();
+        DateTimeUtils.setClock(mockClock);
+
         // 1. create task runs
         Task task = MockTaskFactory.createTask();
-        Clock mockClock = getMockClock();
         taskDao.create(task);
 
         // 2. create task run
-        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(1L, task, mockClock);
+        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(1L, task);
         taskRunDao.createTaskRun(sampleTaskRun);
 
         // Process
         // 3. Update task run
         TaskRun taskRunWithUpdatedProps = sampleTaskRun.cloneBuilder()
-                .withStartAt(OffsetDateTime.now(mockClock).plusHours(1))
+                .withStartAt(DateTimeUtils.now().plusHours(1))
                 .withStatus(TaskRunStatus.ABORTED)
                 .build();
         taskRunDao.updateTaskRun(taskRunWithUpdatedProps);
@@ -151,13 +160,15 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     @Test
     public void deleteTaskRun_byExistingId_shouldReturnRemovedRowNum() {
         // Prepare
+        Clock mockClock = getMockClock();
+        DateTimeUtils.setClock(mockClock);
+
         // 1. create task runs
         Task task = MockTaskFactory.createTask();
-        Clock mockClock = getMockClock();
         taskDao.create(task);
 
         // 2. create task run
-        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(1L, task, mockClock);
+        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(1L, task);
         taskRunDao.createTaskRun(sampleTaskRun);
 
         // Process
@@ -183,11 +194,16 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         Task task = MockTaskFactory.createTask();
         taskDao.create(task);
 
-        List<TaskRun> sampleTaskRuns = Lists.newArrayList(
-                MockTaskRunFactory.createTaskRun(1L, task, Clock.fixed(Instant.parse("2020-01-01T00:00:01.00Z"), ZoneId.of("UTC"))),
-                MockTaskRunFactory.createTaskRun(2L, task, Clock.fixed(Instant.parse("2020-01-01T00:00:02.00Z"), ZoneId.of("UTC"))),
-                MockTaskRunFactory.createTaskRun(3L, task, Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")))
-        );
+        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:01.00Z"), ZoneId.of("UTC")));
+        TaskRun taskrun1 = MockTaskRunFactory.createTaskRun(1L, task);
+
+        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:02.00Z"), ZoneId.of("UTC")));
+        TaskRun taskrun2 = MockTaskRunFactory.createTaskRun(2L, task);
+
+        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")));
+        TaskRun taskrun3 = MockTaskRunFactory.createTaskRun(3L, task);
+
+        List<TaskRun> sampleTaskRuns = Lists.newArrayList(taskrun1, taskrun2, taskrun3);
 
         taskRunDao.createTaskRuns(sampleTaskRuns);
 
@@ -200,18 +216,19 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     @Test
     public void fetchAttempts_ByIdOrList_shouldReturnListOfAttempts() {
         // Prepare
+        Clock mockClock = getMockClock();
+        DateTimeUtils.setClock(mockClock);
 
         // 1. create sample task run
         Task task = MockTaskFactory.createTask();
-        Clock mockClock = getMockClock();
         taskDao.create(task);
 
-        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(1L, task, mockClock);
+        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(1L, task);
         taskRunDao.createTaskRun(sampleTaskRun);
 
         // 2. create 4 run attempts
         for (int i = 1; i <= 4; i += 1) {
-            TaskAttempt attempt = MockTaskRunFactory.createTaskAttempt((long) i, sampleTaskRun, i, mockClock);
+            TaskAttempt attempt = MockTaskRunFactory.createTaskAttempt((long) i, sampleTaskRun, i);
             taskRunDao.createAttempt(attempt);
         }
 
@@ -225,7 +242,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         assertTrue(attemptOptional.isPresent());
         TaskAttempt attempt = attemptOptional.get();
-        TaskAttempt baselineModel = MockTaskRunFactory.createTaskAttempt(3L, sampleTaskRun, 3, mockClock);
+        TaskAttempt baselineModel = MockTaskRunFactory.createTaskAttempt(3L, sampleTaskRun, 3);
         assertThat(attempt, samePropertyValuesAs(baselineModel, "startAt", "endAt", "taskRun"));
         // TaskRun instance should be nested inside
         assertThat(attempt.getTaskRun(), notNullValue());
@@ -233,5 +250,121 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         // And Task model object should be nested inside that TaskRun object
         assertThat(attempt.getTaskRun().getTask(), notNullValue());
         assertThat(attempt.getTaskRun().getTask(), samePropertyValuesAs(task));
+    }
+
+    public void fetchTaskAttemptStatus_ok() {
+        // prepare
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt();
+        TaskRun taskRun = taskAttempt.getTaskRun();
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+        taskDao.create(taskRun.getTask());
+
+        // process
+        Optional<TaskRunStatus> result = taskRunDao.fetchTaskAttemptStatus(taskAttempt.getId());
+
+        // verify
+        assertThat(result.isPresent(), is(true));
+        assertThat(result.get(), is(taskAttempt.getStatus()));
+    }
+
+    @Test
+    public void fetchTaskAttemptStatus_not_found() {
+        // process
+        Optional<TaskRunStatus> result = taskRunDao.fetchTaskAttemptStatus(-1L);
+
+        // verify
+        assertThat(result.isPresent(), is(false));
+    }
+
+    @Test
+    public void updateTaskAttemptLogPath() {
+        // prepare
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt();
+        TaskRun taskRun = taskAttempt.getTaskRun();
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+        taskDao.create(taskRun.getTask());
+
+        // process
+        String logPath = "file:/path";
+        taskRunDao.updateTaskAttemptLogPath(taskAttempt.getId(), logPath);
+
+        // verify
+        TaskAttempt result = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+        assertThat(result.getLogPath(), is(logPath));
+    }
+
+    @Test
+    public void updateTaskAttemptStatus_status_only() {
+        // prepare
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt();
+        TaskRun taskRun = taskAttempt.getTaskRun();
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+        taskDao.create(taskRun.getTask());
+
+        TaskRun runRec = taskRunDao.fetchById(taskRun.getId()).get();
+        TaskAttemptProps attemptRec = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+
+        assertThat(runRec.getStatus(), is(nullValue()));
+        assertThat(runRec.getStartAt(), is(nullValue()));
+        assertThat(runRec.getEndAt(), is(nullValue()));
+
+        assertThat(attemptRec.getStatus(), is(TaskRunStatus.CREATED));
+        assertThat(attemptRec.getStartAt(), is(nullValue()));
+        assertThat(attemptRec.getEndAt(), is(nullValue()));
+
+        // process
+        TaskRunStatus prev = taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.RUNNING).get();
+
+        // verify
+        runRec = taskRunDao.fetchById(taskRun.getId()).get();
+        attemptRec = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+
+        assertThat(prev, is(TaskRunStatus.CREATED));
+        assertThat(runRec.getStatus(), is(TaskRunStatus.RUNNING));
+        assertThat(attemptRec.getStatus(), is(TaskRunStatus.RUNNING));
+    }
+
+    @Test
+    public void updateTaskAttemptStatus_status_with_both_start_at_and_end_at() {
+        // prepare
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt();
+        TaskRun taskRun = taskAttempt.getTaskRun();
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+        taskDao.create(taskRun.getTask());
+
+        TaskRun runRec = taskRunDao.fetchById(taskRun.getId()).get();
+        TaskAttemptProps attemptRec = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+
+        assertThat(runRec.getStatus(), is(nullValue()));
+        assertThat(runRec.getStartAt(), is(nullValue()));
+        assertThat(runRec.getEndAt(), is(nullValue()));
+
+        assertThat(attemptRec.getStatus(), is(TaskRunStatus.CREATED));
+        assertThat(attemptRec.getStartAt(), is(nullValue()));
+        assertThat(attemptRec.getEndAt(), is(nullValue()));
+
+        // process
+        OffsetDateTime startAt = OffsetDateTime.of(2020, 5, 1, 0, 0, 0, 0, DateTimeUtils.systemDefaultOffset());
+        OffsetDateTime endAt = OffsetDateTime.of(2020, 5, 1, 12, 0, 0, 0, DateTimeUtils.systemDefaultOffset());
+        TaskRunStatus prev = taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(),
+                TaskRunStatus.RUNNING, startAt, endAt).get();
+
+        // verify
+        runRec = taskRunDao.fetchById(taskRun.getId()).get();
+        attemptRec = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+
+        assertThat(prev, is(TaskRunStatus.CREATED));
+
+        assertThat(runRec.getStatus(), is(TaskRunStatus.RUNNING));
+        assertThat(runRec.getStartAt(), is(startAt));
+        assertThat(runRec.getEndAt(), is(endAt));
+
+        assertThat(attemptRec.getStatus(), is(TaskRunStatus.RUNNING));
+        assertThat(attemptRec.getStartAt(), is(startAt));
+        assertThat(attemptRec.getEndAt(), is(endAt));
     }
 }

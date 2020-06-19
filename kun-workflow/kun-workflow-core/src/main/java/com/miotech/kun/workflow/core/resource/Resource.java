@@ -6,6 +6,11 @@ import java.io.OutputStream;
 
 public interface Resource {
     /**
+     * 获得资源的路径。
+     */
+    String getLocation();
+
+    /**
      * 读取资源
      */
     InputStream getInputStream() throws IOException;
