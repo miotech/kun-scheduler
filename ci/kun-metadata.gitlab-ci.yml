@@ -40,6 +40,8 @@ verify-kun-metadata-sonar:
 
 .kun-metadata-build-job:
   stage: build-images
+  tags:
+    - build
   script:
     - ./gradlew :kun-metadata:shadowJar
     - mkdir -p /builds/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/
