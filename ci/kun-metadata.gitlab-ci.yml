@@ -52,7 +52,7 @@ verify-kun-metadata-sonar:
       - release
       - tags
     changes:
-      - ./kun-metadata/*
+      - kun-metadata/*
 
 kun-metadata-build:
   extends: .kun-metadata-build-job

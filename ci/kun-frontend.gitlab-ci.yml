@@ -35,6 +35,8 @@ verify-kun-frontend-sonar:
 
 .kun-frontend-build-job:
   stage: build-images
+  tags:
+    - build
   script:
     - ./gradlew :kun-frontend:shadowJar
     - mkdir -p /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/

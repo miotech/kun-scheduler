@@ -40,6 +40,8 @@ verify-kun-data-discover-sonar:
 
 .kun-data-discover-build-job:
   stage: build-images
+  tags:
+    - build
   script:
     - ./gradlew :kun-data-discover:bootJars
     - mkdir -p /builds/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/

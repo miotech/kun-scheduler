@@ -52,3 +52,10 @@ task buildPushImage(type: DockerPushImage) {
 }
 
 apply plugin: "org.sonarqube"
+sonarqube {
+    properties {
+        property "sonar.sourceEncoding", "src/main"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.java.binaries", "build"
+    }
+}
