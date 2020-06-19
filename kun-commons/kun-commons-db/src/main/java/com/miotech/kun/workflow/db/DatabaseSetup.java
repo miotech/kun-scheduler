@@ -12,12 +12,20 @@ import java.sql.SQLException;
 public class DatabaseSetup {
     private final Logger logger = LoggerFactory.getLogger(DatabaseSetup.class);
 
+    public static final String DEFAULT_SCHEMA_HISTORY_TABLE = "flyway_schema_history";
     private final DataSource dataSource;
     private final String[] locations;
     private final AtomicBoolean initialized;
+    private final String tableName;
+
 
     public DatabaseSetup(DataSource dataSource, String... locations) {
+        this(DEFAULT_SCHEMA_HISTORY_TABLE, dataSource, locations);
+    }
+
+    public DatabaseSetup(String tableName, DataSource dataSource, String... locations) {
         this.dataSource = dataSource;
+        this.tableName = tableName;
         this.locations = locations;
         this.initialized = new AtomicBoolean(false);
     }
@@ -34,6 +42,7 @@ public class DatabaseSetup {
             Flyway flyway = Flyway.configure()
                     .dataSource(dataSource)
                     .locations(locations)
+                    .table(tableName)
                     .baselineOnMigrate(true)
                     .load();
 

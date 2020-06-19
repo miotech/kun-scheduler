@@ -10,6 +10,8 @@ public class DateTimeUtils {
 
     private static Clock globalClock = Clock.systemDefaultZone();
 
+    private DateTimeUtils() {}
+
     public static ZoneOffset systemDefaultOffset() {
         return ZONE_OFFSET;
     }

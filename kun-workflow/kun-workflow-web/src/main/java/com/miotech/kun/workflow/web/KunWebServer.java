@@ -51,7 +51,8 @@ public class KunWebServer {
 
     private void configureDB() {
         String migrationDir = props.getProperty(ConfigurationKeys.PROP_FLYWAY_MIRGRATION, "sql/");
-        DatabaseSetup setup = new DatabaseSetup(dataSource, migrationDir);
+        String schemaHistory = props.getProperty(ConfigurationKeys.PROP_FLYWAY_TABLENAME, DatabaseSetup.DEFAULT_SCHEMA_HISTORY_TABLE);
+        DatabaseSetup setup = new DatabaseSetup(schemaHistory, dataSource, migrationDir);
         setup.start();
     }
 
