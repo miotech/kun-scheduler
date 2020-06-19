@@ -49,10 +49,6 @@ kun-metadata-build:
     - mkdir -p /builds/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/
     - cp kun-metadata/build/libs/*.jar /builds/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/
   only:
-    refs:
-      - master
-      - release
-      - tags
     changes:
       - kun-metadata/*
 
@@ -67,6 +63,9 @@ kun-metadata-push:
     - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/ build/libs/
     - export TAG_METADATA=$CI_COMMIT_REF_NAME
     - ./gradlew :kun-metadata:buildPushImage
+  only:
+    changes:
+      - kun-metadata/*
 
 kun-metadata-set-tag:
   stage: set-tag
