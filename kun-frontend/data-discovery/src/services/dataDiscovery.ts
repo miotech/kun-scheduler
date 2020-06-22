@@ -1,5 +1,9 @@
 import { Pagination, Sort } from '@/rematch/models';
-import { Dataset, SearchParamsObj } from '@/rematch/models/dataDiscovery';
+import {
+  Dataset,
+  SearchParamsObj,
+  dbFilterItem,
+} from '@/rematch/models/dataDiscovery';
 import { get } from './utils';
 
 export interface FetchAllTagsServiceRespBody {
@@ -69,4 +73,16 @@ export async function searchDatasetsService(
   //   sortColumn: 'name',
   //   sortOrder: 'ASC',
   // };
+}
+
+export interface SearchAllDbServiceResp {
+  databases: dbFilterItem[];
+}
+
+export async function searchAllDbService(keyword: string) {
+  const resp = await get<SearchAllDbServiceResp>('/metadata/databases/search', {
+    keyword,
+    pageSize: 1000000,
+  });
+  return resp;
 }

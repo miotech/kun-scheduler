@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useState, useEffect, useCallback } from 'react';
 
-import { Modal, Input, Select, Button } from 'antd';
+import { Modal, Input, Select, Button, InputNumber } from 'antd';
 import _ from 'lodash';
 
 import { watermarkFormatter } from '@/utils';
@@ -116,8 +116,13 @@ export default memo(function AddUpdateDatabaseModal({
   const handleChangeInformationFuncMaps = useMemo(() => {
     const resultMap: any = {};
     currentDatabaseTypeFieldMap.forEach(field => {
-      resultMap[field.key] = (e: any) =>
-        handleUpdateNewDatabaseInformation(e.target.value, field.key);
+      if (field.format === 'NUMBER_INPUT') {
+        resultMap[field.key] = (v: number) =>
+          handleUpdateNewDatabaseInformation(v, field.key);
+      } else {
+        resultMap[field.key] = (e: any) =>
+          handleUpdateNewDatabaseInformation(e.target.value, field.key);
+      }
     });
     return resultMap;
   }, [currentDatabaseTypeFieldMap, handleUpdateNewDatabaseInformation]);
@@ -143,35 +148,92 @@ export default memo(function AddUpdateDatabaseModal({
   const disableConfirm = useMemo(() => {
     let disable = false;
     currentDatabaseTypeFieldMap.forEach(field => {
-      if (!newDatabase.information[field.key]) {
+      if (!newDatabase.information[field.key] && field.require) {
         disable = true;
       }
     });
+    if (!newDatabase.name) {
+      disable = true;
+    }
+    if (!newDatabase.typeId) {
+      disable = true;
+    }
     return disable;
-  }, [currentDatabaseTypeFieldMap, newDatabase.information]);
+  }, [
+    currentDatabaseTypeFieldMap,
+    newDatabase.information,
+    newDatabase.name,
+    newDatabase.typeId,
+  ]);
 
-  const informationCompList = useMemo(
-    () =>
-      _.orderBy(currentDatabaseTypeFieldMap, 'order').map(field => (
-        <div key={field.key} className={styles.inputItem}>
-          <div className={styles.inputTitle}>
-            {t(`dataSettings.field.${field.key}`)}
+  const inputComp = (field: DatabaseTypeItemFieldItem) => {
+    let comp: any;
+    switch (field.format) {
+      case 'INPUT':
+        comp = (
+          <div key={field.key} className={styles.inputItem}>
+            <div className={styles.inputTitle}>
+              {t(`dataSettings.field.${field.key}`)}
+              {field.require && <span className={styles.required}>*</span>}
+            </div>
+            <div className={styles.inputComp}>
+              <Input
+                value={newDatabase.information[field.key]}
+                onChange={handleChangeInformationFuncMaps[field.key]}
+              />
+            </div>
           </div>
-          <div className={styles.inputComp}>
-            <Input
-              value={newDatabase.information[field.key]}
-              onChange={handleChangeInformationFuncMaps[field.key]}
-            />
+        );
+        break;
+      case 'PASSWORD':
+        comp = (
+          <div key={field.key} className={styles.inputItem}>
+            <div className={styles.inputTitle}>
+              {t(`dataSettings.field.${field.key}`)}
+              {field.require && <span className={styles.required}>*</span>}
+            </div>
+            <div className={styles.inputComp}>
+              <Input
+                type="password"
+                value={newDatabase.information[field.key]}
+                onChange={handleChangeInformationFuncMaps[field.key]}
+              />
+            </div>
           </div>
-        </div>
-      )),
-    [
-      currentDatabaseTypeFieldMap,
-      handleChangeInformationFuncMaps,
-      newDatabase.information,
-      t,
-    ],
-  );
+        );
+        break;
+      case 'NUMBER_INPUT':
+        comp = (
+          <div key={field.key} className={styles.inputItem}>
+            <div className={styles.inputTitle}>
+              {t(`dataSettings.field.${field.key}`)}
+              {field.require && <span className={styles.required}>*</span>}
+            </div>
+            <div className={styles.inputComp}>
+              <InputNumber
+                style={{ width: '100%' }}
+                value={
+                  newDatabase.information[field.key]
+                    ? Number(newDatabase.information[field.key])
+                    : undefined
+                }
+                onChange={handleChangeInformationFuncMaps[field.key]}
+              />
+            </div>
+          </div>
+        );
+        break;
+
+      default:
+        break;
+    }
+    return comp;
+  };
+
+  const informationCompList = _.orderBy(
+    currentDatabaseTypeFieldMap,
+    'order',
+  ).map(field => inputComp(field));
 
   return (
     <Modal
@@ -186,6 +248,7 @@ export default memo(function AddUpdateDatabaseModal({
         <div className={styles.inputItem}>
           <div className={styles.inputTitle}>
             {t('dataSettings.addUpdate.name')}
+            <span className={styles.required}>*</span>
           </div>
           <div className={styles.inputComp}>
             <Input
@@ -198,6 +261,7 @@ export default memo(function AddUpdateDatabaseModal({
         <div className={styles.inputItem}>
           <div className={styles.inputTitle}>
             {t('dataSettings.addUpdate.dbType')}
+            <span className={styles.required}>*</span>
           </div>
           <div className={styles.inputComp}>
             <Select

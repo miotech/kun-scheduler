@@ -34,8 +34,11 @@ export default function DataDisvocery() {
     dbTypeList,
     ownerList,
     tagList,
+    dbIdList,
+
     allOwnerList,
     allTagList,
+    allDbList,
 
     datasetList,
 
@@ -52,8 +55,11 @@ export default function DataDisvocery() {
       dbTypeList: state.dataDiscovery.dbTypeList,
       ownerList: state.dataDiscovery.ownerList,
       tagList: state.dataDiscovery.tagList,
+      dbIdList: state.dataDiscovery.dbIdList,
+
       allOwnerList: state.dataDiscovery.allOwnerList,
       allTagList: state.dataDiscovery.allTagList,
+      allDbList: state.dataDiscovery.allDbList,
 
       datasetList: state.dataDiscovery.datasetList,
       pagination: state.dataDiscovery.pagination,
@@ -67,11 +73,13 @@ export default function DataDisvocery() {
     dispatch.dataDiscovery.fetchAllOwnerList();
     dispatch.dataDiscovery.fetchAllTagList();
     dispatch.dataSettings.fetchDatabaseTypeList();
+    dispatch.dataDiscovery.fetchAllDb('');
   }, [dispatch.dataDiscovery, dispatch.dataSettings]);
 
   const debounceDbTypeLis = useDebounce(dbTypeList, 500);
   const debounceTagList = useDebounce(tagList, 500);
   const debounceOwnerListLis = useDebounce(ownerList, 500);
+  const debounceDbIdListLis = useDebounce(dbIdList, 500);
   const debounceSearchContent = useDebounce(searchContent, 1000);
 
   useEffect(() => {
@@ -80,6 +88,7 @@ export default function DataDisvocery() {
       ownerList: debounceOwnerListLis,
       tagList: debounceTagList,
       dbTypeList: debounceDbTypeLis,
+      dbIdList: debounceDbIdListLis,
       wartermarkMode,
       wartermarkAbsoluteValue,
       wartermarkQuickeValue,
@@ -89,6 +98,7 @@ export default function DataDisvocery() {
       },
     });
   }, [
+    debounceDbIdListLis,
     debounceDbTypeLis,
     debounceOwnerListLis,
     debounceSearchContent,
@@ -292,7 +302,10 @@ export default function DataDisvocery() {
     ],
   );
 
-  const allDatabaseTypes = databaseTypes.map(item => item.type);
+  const allDatabaseTypes = databaseTypes.map(item => ({
+    name: item.type,
+    id: item.id,
+  }));
 
   return (
     <div className={styles.page}>
@@ -324,6 +337,33 @@ export default function DataDisvocery() {
 
             <div className={styles.filterItem}>
               <div className={styles.filterItemTitle}>
+                {t('dataDiscovery.dbname')}
+              </div>
+              <div className={styles.filterItemSelect}>
+                <Select
+                  value={dbIdList}
+                  mode="multiple"
+                  size="large"
+                  onChange={v => {
+                    dispatch.dataDiscovery.updateState({
+                      key: 'dbIdList',
+                      value: v,
+                    });
+                  }}
+                  placeholder={t('dataDiscovery.pleaseSelect')}
+                  allowClear
+                >
+                  {allDbList.map(option => (
+                    <Option key={option.id} value={option.id}>
+                      {option.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            <div className={styles.filterItem}>
+              <div className={styles.filterItemTitle}>
                 {t('dataDiscovery.dbtype')}
               </div>
               <div className={styles.filterItemSelect}>
@@ -341,8 +381,8 @@ export default function DataDisvocery() {
                   allowClear
                 >
                   {allDatabaseTypes.map(option => (
-                    <Option key={option} value={option}>
-                      {option}
+                    <Option key={option.id} value={option.id}>
+                      {option.name}
                     </Option>
                   ))}
                 </Select>
