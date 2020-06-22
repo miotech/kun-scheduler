@@ -1,0 +1,25 @@
+.lineList {
+  .itemContainer {
+    // height: 21px;
+    position: relative;
+    margin-left: 24px;
+    &::before {
+      content: '';
+      position: absolute;
+      top: calc(-50% - 13px);
+      left: -24px;
+      width: 16px;
+      height: calc(100% + 13px);
+      display: inline-block;
+      border-bottom: 1px dotted @secondary2;
+    }
+    &:not(:first-child) {
+      &::before {
+        border-left: 1px dotted @secondary2;
+      }
+    }
+    &:not(:last-child) {
+      margin-bottom: 13px;
+    }
+  }
+}

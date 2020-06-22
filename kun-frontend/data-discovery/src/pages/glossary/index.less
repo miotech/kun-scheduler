@@ -1,0 +1,36 @@
+.page {
+  height: 100%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+
+  .titleRow {
+    padding: 16px 20px 16px 34px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    flex: 0 0 auto;
+
+    .title {
+      font-weight: bold;
+      .font(20px, 30px, @primary);
+    }
+
+    .createButton {
+      width: 128px;
+      margin-left: auto;
+    }
+  }
+
+  .autosuggestInputContainer {
+    flex: 0 0 auto;
+    margin-bottom: 12px;
+  }
+
+  .glossaryTreeContainer {
+    flex: 1;
+    min-height: 480px;
+    max-height: 1200px;
+    padding: 8px;
+  }
+}

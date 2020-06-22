@@ -1,0 +1,79 @@
+.container {
+  height: 100%;
+  padding: 20px;
+
+  .backButoonRow {
+    margin-bottom: 16px;
+    .font(14px, 20px, @secondary);
+
+    .backButton {
+      cursor: pointer;
+    }
+  }
+
+  .titleArea {
+    display: flex;
+    align-items: center;
+    padding: 24px 24px 24px 32px;
+    margin-bottom: 20px;
+    border-radius: 3px;
+    .title {
+      font-weight: bold;
+      .font(20px, 30px, @primary);
+    }
+  }
+
+  .contentArea {
+    display: flex;
+    .leftArea {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100% - 168px);
+      margin-right: 16px;
+      .descArea {
+        padding: 20px 32px 32px 32px;
+        border-radius: 3px;
+        flex: 0 0 320px;
+        height: 320px;
+        margin-bottom: 16px;
+        .descLabel {
+          margin-bottom: 12px;
+          font-weight: bold;
+          .font(14px, 20px, @primary)
+        }
+        .descInputContainer {
+          height: calc(100% - 32px);
+          overflow: auto;
+
+          .descInput {
+            height: 100%;
+            display: block;
+          }
+        }
+      }
+
+      .glossaryTreeContainer {
+        flex: 1;
+        min-height: 480px;
+        max-height: 1200px;
+        padding: 8px;
+      }
+    }
+
+    .rightArea {
+      flex: 0 0 450px;
+      border-radius: 3px;
+      padding: 32px;
+
+      .inputBlock {
+        margin-bottom: 20px;
+        .label {
+          margin-bottom: 8px;
+          .font(14px, 21px, @primary)
+        }
+      }
+
+    }
+  }
+}

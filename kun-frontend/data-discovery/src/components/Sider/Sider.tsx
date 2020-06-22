@@ -3,7 +3,11 @@ import { useSelector } from 'react-redux';
 import { IRoute, Link } from 'umi';
 import { Layout, Menu } from 'antd';
 import _ from 'lodash';
-import { FileTextOutlined, SettingOutlined } from '@ant-design/icons';
+import {
+  FileTextOutlined,
+  SettingOutlined,
+  SnippetsOutlined,
+} from '@ant-design/icons';
 import { RootState } from '@/rematch/store';
 
 import css from './Sider.less';
@@ -18,6 +22,7 @@ interface IconCompMap {
 const iconCompMap: IconCompMap = {
   FileTextOutlined: <FileTextOutlined />,
   SettingOutlined: <SettingOutlined />,
+  SnippetsOutlined: <SnippetsOutlined />,
 };
 
 interface Props {
