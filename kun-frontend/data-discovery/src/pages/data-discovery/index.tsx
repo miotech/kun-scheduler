@@ -10,11 +10,9 @@ import { Mode, Dataset, Watermark } from '@/rematch/models/dataDiscovery';
 import color from '@/styles/color';
 
 import useI18n from '@/hooks/useI18n';
-import useEffectAction from '@/hooks/useEffectAction';
 import useDebounce from '@/hooks/useDebounce';
 
 import Card from '@/components/Card/Card';
-import { DbType } from '@/rematch/models';
 import { watermarkFormatter } from '@/utils';
 import TimeSelect from './components/TimeSelect/TimeSelect';
 
@@ -42,6 +40,8 @@ export default function DataDisvocery() {
     datasetList,
 
     pagination,
+    dataListFetchLoading,
+    databaseTypes,
   } = useSelector(
     (state: RootState) => ({
       searchContent: state.dataDiscovery.searchContent,
@@ -57,6 +57,8 @@ export default function DataDisvocery() {
 
       datasetList: state.dataDiscovery.datasetList,
       pagination: state.dataDiscovery.pagination,
+      dataListFetchLoading: state.dataDiscovery.dataListFetchLoading,
+      databaseTypes: state.dataSettings.databaseTypeFieldMapList,
     }),
     shallowEqual,
   );
@@ -64,27 +66,40 @@ export default function DataDisvocery() {
   useEffect(() => {
     dispatch.dataDiscovery.fetchAllOwnerList();
     dispatch.dataDiscovery.fetchAllTagList();
-  }, [dispatch.dataDiscovery]);
+    dispatch.dataSettings.fetchDatabaseTypeList();
+  }, [dispatch.dataDiscovery, dispatch.dataSettings]);
 
   const debounceDbTypeLis = useDebounce(dbTypeList, 500);
   const debounceTagList = useDebounce(tagList, 500);
   const debounceOwnerListLis = useDebounce(ownerList, 500);
   const debounceSearchContent = useDebounce(searchContent, 1000);
 
-  const dataListFetchLoading = useEffectAction({
-    action: dispatch.dataDiscovery.searchDatasets,
-    effectBody: {
+  useEffect(() => {
+    dispatch.dataDiscovery.searchDatasets({
+      searchContent: debounceSearchContent,
+      ownerList: debounceOwnerListLis,
+      tagList: debounceTagList,
+      dbTypeList: debounceDbTypeLis,
       wartermarkMode,
       wartermarkAbsoluteValue,
       wartermarkQuickeValue,
-      debounceDbTypeLis,
-      debounceOwnerListLis,
-      debounceTagList,
-      debounceSearchContent,
-      pageSize: pagination.pageSize,
-      pageNumber: pagination.pageNumber,
-    },
-  });
+      pagination: {
+        pageSize: pagination.pageSize,
+        pageNumber: pagination.pageNumber || 1,
+      },
+    });
+  }, [
+    debounceDbTypeLis,
+    debounceOwnerListLis,
+    debounceSearchContent,
+    debounceTagList,
+    dispatch.dataDiscovery,
+    pagination.pageNumber,
+    pagination.pageSize,
+    wartermarkAbsoluteValue,
+    wartermarkMode,
+    wartermarkQuickeValue,
+  ]);
 
   const handleChangeSearch = useCallback(
     e => {
@@ -277,6 +292,8 @@ export default function DataDisvocery() {
     ],
   );
 
+  const allDatabaseTypes = databaseTypes.map(item => item.type);
+
   return (
     <div className={styles.page}>
       <Card className={styles.content}>
@@ -323,7 +340,7 @@ export default function DataDisvocery() {
                   placeholder={t('dataDiscovery.pleaseSelect')}
                   allowClear
                 >
-                  {Object.values(DbType).map(option => (
+                  {allDatabaseTypes.map(option => (
                     <Option key={option} value={option}>
                       {option}
                     </Option>

@@ -2,6 +2,7 @@ import {
   DataBase,
   DatabaseInfo,
   UpdateDatabaseInfo,
+  DatabaseTypeList,
 } from '@/rematch/models/dataSettings';
 import { Pagination, Sort } from '@/rematch/models';
 
@@ -9,6 +10,12 @@ import { get, post, deleteFunc } from './utils';
 
 export interface SearchDataBasesRespBody extends Pagination, Sort {
   databases: DataBase[];
+}
+
+export async function fetchDatabaseTypesService() {
+  const resp = await get<DatabaseTypeList>('/metadata/database/types');
+
+  return resp;
 }
 
 export async function searchDataBasesService(
@@ -29,32 +36,6 @@ export async function searchDataBasesService(
   );
 
   return resp;
-
-  // TODO: 假数据
-  // return {
-  //   databases: [
-  //     {
-  //       id: '1',
-  //       type: 'Arrango',
-  //       name: 'DEV Arrango',
-  //       ip: '1.1.1.1',
-  //       username: 'root',
-  //       password: 'root',
-  //       create_user: 'admin',
-  //       create_time: 14000000000,
-  //       update_user: 'admin',
-  //       update_time: 14000000000,
-  //       high_watermark: {
-  //         user: 'admin',
-  //         time: 14000000000,
-  //       },
-  //       tags: ['a', 'b', 'c'],
-  //     },
-  //   ],
-  //   pageSize,
-  //   pageNumber,
-  //   totalCount: 150,
-  // };
 }
 
 export async function addDatabaseService(reqBody: DatabaseInfo) {
