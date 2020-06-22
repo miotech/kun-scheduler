@@ -1,0 +1,17 @@
+.container {
+  display: flex;
+  align-items: center;
+  .autoComplete {
+    margin-right: 12px;
+    flex: 1;
+  }
+  .deleteButton {
+    cursor: pointer;
+    flex-shrink: 0;
+    height: 28px;
+    width: 28px;
+    border: 1px solid @borderColor;
+    background-color: rgba(231, 231, 231, 0.3);
+    .flexCenter();
+  }
+}

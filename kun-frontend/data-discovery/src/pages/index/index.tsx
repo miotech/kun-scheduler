@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { DatabaseOutlined } from '@ant-design/icons';
+import { DatabaseOutlined, FileTextOutlined } from '@ant-design/icons';
 import { Link } from 'umi';
 import Card from '@/components/Card/Card';
 import useI18n from '@/hooks/useI18n';
@@ -16,6 +16,17 @@ function Homepage() {
         path: '/data-discovery',
         icon: (
           <DatabaseOutlined
+            className={styles.functionItemIcon}
+            style={{ marginBottom: 20 }}
+          />
+        ),
+      },
+      {
+        key: 'glossary',
+        title: t('common.pageTitle.glossary'),
+        path: '/glossary',
+        icon: (
+          <FileTextOutlined
             className={styles.functionItemIcon}
             style={{ marginBottom: 20 }}
           />
