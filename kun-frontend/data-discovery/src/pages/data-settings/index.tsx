@@ -1,9 +1,5 @@
-import React, { useMemo, useCallback, useState, useEffect } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { Input, Button, Spin, message, Pagination } from 'antd';
-import _ from 'lodash';
-import { RematchDispatch } from '@rematch/core';
-
-import { RootModel } from '@/rematch/models';
 import {
   DatabaseInfo,
   UpdateDatabaseInfo,
@@ -12,6 +8,7 @@ import {
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
+import useDebounce from '@/hooks/useDebounce';
 
 import Card from '@/components/Card/Card';
 
@@ -26,38 +23,33 @@ export default function DataSettings() {
   const t = useI18n();
   const { selector, dispatch } = useRedux(state => state.dataSettings);
 
-  const { searchContent, pagination, currentDatabase } = selector;
-
-  const [searchFuncLoading, setSearchFuncLoading] = useState(false);
-
   useEffect(() => {
-    dispatch.dataSettings.updateState({
-      key: 'pagination',
-      value: {
-        pageSize: pagination.pageSize,
-        pageNumber: 1,
-      },
-    });
-  }, [dispatch.dataSettings, pagination.pageSize, searchContent]);
+    dispatch.dataSettings.fetchDatabaseTypeList();
+  }, [dispatch.dataSettings]);
 
-  const searchFunc = useMemo(
-    () =>
-      _.debounce(async (theDispatch: RematchDispatch<RootModel>) => {
-        setSearchFuncLoading(true);
-        theDispatch.dataSettings.searchDataBases().then(() => {
-          setSearchFuncLoading(false);
-        });
-      }, 500),
-    [],
-  );
+  const {
+    searchContent,
+    pagination,
+    currentDatabase,
+    searchLoading,
+    fetchDatabaseTypeLoading,
+  } = selector;
 
   const handleSearch = useCallback(() => {
-    searchFunc(dispatch);
-  }, [dispatch, searchFunc]);
+    dispatch.dataSettings.searchDataBases();
+  }, [dispatch]);
+
+  const debounceSearchContent = useDebounce(searchContent, 300);
 
   useEffect(() => {
-    searchFunc(dispatch);
-  }, [dispatch, searchFunc, pagination.pageNumber, pagination.pageSize]);
+    handleSearch();
+  }, [
+    dispatch,
+    pagination.pageNumber,
+    pagination.pageSize,
+    handleSearch,
+    debounceSearchContent,
+  ]);
 
   const [addDatabaseModalVisible, setAddDatabaseModalVisible] = useState(false);
 
@@ -105,8 +97,8 @@ export default function DataSettings() {
 
   const handleConfirmUpdateDatabaseModal = useCallback(
     (newDatabase: UpdateDatabaseInfo) => {
-      const { id, type, name, ip, username, password, tags } = newDatabase;
-      const params = { id, type, name, ip, username, password, tags };
+      const { id, typeId, name, information, tags } = newDatabase;
+      const params = { id, typeId, name, information, tags };
       dispatch.dataSettings.updateDatabase(params).then(resp => {
         if (resp) {
           message.success(t('common.operateSuccess'));
@@ -168,7 +160,6 @@ export default function DataSettings() {
                 value: e.target.value,
               })
             }
-            onSearch={handleSearch}
           />
           <Button
             size="large"
@@ -180,7 +171,7 @@ export default function DataSettings() {
         </div>
 
         <div className={styles.databasesArea}>
-          <Spin spinning={searchFuncLoading}>
+          <Spin spinning={searchLoading || fetchDatabaseTypeLoading}>
             <div className={styles.databasesCount}>
               {t('dataSettings.databasesCount', {
                 count: selector.dataBaseList.length,
