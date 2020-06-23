@@ -45,7 +45,7 @@ kun-data-discover-build:
   tags:
     - build
   script:
-    - ./gradlew :kun-data-discover:bootJars
+    - ./gradlew :kun-data-discover:bootJar
     - mkdir -p /builds/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/
     - cp kun-data-discover/build/libs/*.jar /builds/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/
   only:
