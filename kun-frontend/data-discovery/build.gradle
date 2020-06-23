@@ -18,22 +18,22 @@ node {
     download = true
 }
 
-// task installYarn(type: Exec) {
-//   workingDir './'
-//   def commands = []
-//   if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
-//     commands << 'cmd'
-//     commands << '/c'
-//     commands << 'npm install -g yarn'
-//   } else {
-//     commands << 'bash'
-//     commands << '-c'
-//     commands << 'npm install -g yarn'
-//   }
-//   commandLine = commands
-// }
+task installYarn(type: Exec) {
+  workingDir './'
+  def commands = []
+  if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+    commands << 'cmd'
+    commands << '/c'
+    commands << 'npm install -g yarn'
+  } else {
+    commands << 'bash'
+    commands << '-c'
+    commands << 'npm install -g yarn'
+  }
+  commandLine = commands
+}
 
-task yarnBuild(type: Exec) {
+task yarnBuild(type: Exec, dependsOn: [installYarn]) {
 	workingDir './'
   def commands = []
   if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
