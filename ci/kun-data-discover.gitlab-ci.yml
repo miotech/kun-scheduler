@@ -59,8 +59,8 @@ kun-data-discover-push:
   tags:
     - docker-push
   script:
-    - mkdir -p kun-data-discover/build/libs/
-    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/ kun-data-discover/build/libs/
+    - mkdir -p /builds/kun-data-discover/build/libs/
+    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/ /builds/kun-data-discover/build/libs/
     - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery:$CI_COMMIT_REF_NAME /builds/kun-data-discover/
     - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery:$CI_COMMIT_REF_NAME
   only:
