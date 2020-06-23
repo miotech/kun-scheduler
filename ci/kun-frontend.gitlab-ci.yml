@@ -51,7 +51,7 @@ kun-frontend-build:
 kun-frontend-push:
   extends: .only-deploy
   stage: build-images
-  image: mioyingtech/gradle:latest
+  image: mioyingtech/docker:latest
   tags:
     - docker-push
   script:
