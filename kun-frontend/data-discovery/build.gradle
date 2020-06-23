@@ -18,41 +18,41 @@ node {
     download = true
 }
 
-task installYarn(type: Exec) {
-  workingDir './'
-  def commands = []
-  if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
-    commands << 'cmd'
-    commands << '/c'
-    commands << 'npm install -g yarn'
-  } else {
-    commands << 'bash'
-    commands << '-c'
-    commands << 'npm install -g yarn'
-  }
-  commandLine = commands
-}
+// task installYarn(type: Exec) {
+//   workingDir './'
+//   def commands = []
+//   if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+//     commands << 'cmd'
+//     commands << '/c'
+//     commands << 'npm install -g yarn'
+//   } else {
+//     commands << 'bash'
+//     commands << '-c'
+//     commands << 'npm install -g yarn'
+//   }
+//   commandLine = commands
+// }
 
-task yarnBuild(type: Exec, dependsOn: [installYarn]) {
-	workingDir './'
-  def commands = []
-  if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
-    commands << 'cmd'
-    commands << '/c'
-    commands << 'yarn run build'
-  } else {
-    commands << 'bash'
-    commands << '-c'
-    commands << 'yarn run build'
-  }
-  commandLine = commands
-}
+// task yarnBuild(type: YarnTask) {
+// 	workingDir './'
+//   def commands = []
+//   if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
+//     commands << 'cmd'
+//     commands << '/c'
+//     commands << 'yarn run build'
+//   } else {
+//     commands << 'bash'
+//     commands << '-c'
+//     commands << 'yarn run build'
+//   }
+//   commandLine = commands
+// }
 
 // //调用yarn run build命令的Gradle任务
-// task yarnBuild(type: YarnTask, dependsOn: [execTask, yarn]) {
-//   group = 'node'
-//   args = ['run', 'build']
-// }
+task yarnBuild(type: YarnTask) {
+  group = 'node'
+  args = ['run', 'build']
+}
 
 apply plugin: "com.bmuschko.docker-remote-api"
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
