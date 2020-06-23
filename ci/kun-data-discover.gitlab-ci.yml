@@ -54,15 +54,15 @@ kun-data-discover-build:
 
 kun-data-discover-push:
   extends: .only-deploy
-  image: mioyingtech/gradle:latest
+  image: mioyingtech/docker:latest
   stage: build-images
   tags:
     - docker-push
   script:
-    - mkdir -p build/libs/
-    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/ build/libs/
-    - export TAG_DATA_DISCOVERY=$CI_COMMIT_REF_NAME
-    - ./gradlew :kun-data-discover:buildPushImage
+    - mkdir -p kun-data-discover/build/libs/
+    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/ kun-data-discover/build/libs/
+    - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery:$CI_COMMIT_REF_NAME /builds/kun-data-discover/
+    - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery:$CI_COMMIT_REF_NAME
   only:
     changes:
       - kun-data-discover/*
