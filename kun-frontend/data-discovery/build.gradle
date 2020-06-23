@@ -53,6 +53,7 @@ task yarnBuild(type: YarnTask) {
   group = 'node'
   args = ['run', 'build']
 }
+yarnBuild.dependsOn(yarn_install)
 
 apply plugin: "com.bmuschko.docker-remote-api"
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
