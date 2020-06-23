@@ -33,7 +33,7 @@ task installYarn(type: Exec) {
   commandLine = commands
 }
 
-task yarnBuild(type: Exec, dependsOn installYarn) {
+task yarnBuild(type: Exec, dependsOn: [installYarn]) {
 	workingDir './'
   def commands = []
   if (System.getProperty("os.name").toLowerCase().startsWith("windows")) {
