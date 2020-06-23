@@ -55,8 +55,8 @@ kun-frontend-push:
   tags:
     - docker-push
   script:
-    - mkdir -p kun-frontend/build/
-    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/ kun-frontend/build/
+    - mkdir -p /builds/kun-frontend/build/
+    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/ /builds/kun-frontend/build/
     - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery-frontend:$CI_COMMIT_REF_NAME /builds/kun-frontend/
     - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery-frontend:$CI_COMMIT_REF_NAME
   only:
