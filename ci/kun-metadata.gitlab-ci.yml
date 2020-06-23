@@ -59,10 +59,10 @@ kun-metadata-push:
   tags:
     - docker-push
   script:
-    - mkdir -p build/libs/
-    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/ build/libs/
-    - export TAG_METADATA=$CI_COMMIT_REF_NAME
-    - ./gradlew :kun-metadata:buildPushImage
+    - mkdir -p /builds/kun-metadata/build/libs/
+    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/ /builds/kun-metadata/build/libs/
+    - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-metadata:$CI_COMMIT_REF_NAME /builds/kun-metadata/
+    - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-metadata:$CI_COMMIT_REF_NAME
   only:
     changes:
       - kun-metadata/*
