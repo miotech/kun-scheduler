@@ -3,6 +3,7 @@ import { route } from './route';
 import { dataDiscovery } from './dataDiscovery';
 import { datasetDetail } from './datasetDetail';
 import { dataSettings } from './dataSettings';
+import { glossary } from './glossary';
 
 export interface RootModel {
   user: typeof user;
@@ -10,6 +11,7 @@ export interface RootModel {
   dataDiscovery: typeof dataDiscovery;
   datasetDetail: typeof datasetDetail;
   dataSettings: typeof dataSettings;
+  glossary: typeof glossary;
 }
 
 export const models: RootModel = {
@@ -18,6 +20,7 @@ export const models: RootModel = {
   dataDiscovery,
   datasetDetail,
   dataSettings,
+  glossary,
 };
 
 // some common types

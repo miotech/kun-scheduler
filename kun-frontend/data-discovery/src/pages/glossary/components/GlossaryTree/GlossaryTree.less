@@ -1,0 +1,58 @@
+.glossaryTree {
+  height: 100%;
+  width: 100%;
+
+  .scaleButtonRow {
+    display: flex;
+    align-items: center;
+    margin: 12px 24px;
+    height: 20px;
+
+    .scaleButton {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background-color: rgba(224, 224, 224, 0.2);
+      border: 1px solid rgba(224, 224, 224, 0.8);
+      cursor: pointer;
+      .flexCenter();
+
+      &:not(:last-child) {
+        margin-right: 8px;
+      }
+
+      .scaleButtonIcon {
+        font-size: 10px;
+      }
+    }
+  }
+
+  .treeContainer {
+    height: calc(100% - 44px);
+  }
+
+  .glossaryIcon {
+    height: 16px;
+    width: 16px;
+    transform: translate(16px, 12px);
+  }
+  .nodeName {
+    font-size: 14px;
+    color: @secondary;
+  }
+  .nodeText {
+    cursor: pointer;
+  }
+  .minusPlusIcon {
+    height: 10px;
+    width: 10px;
+    transform: translate(5px, 5px);
+  }
+  .buttonG {
+    cursor: pointer;
+    transform: translate(134px, 10px);
+  }
+  .refreshButton {
+    margin-left: 24px;
+  }
+}
