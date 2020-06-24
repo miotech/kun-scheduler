@@ -16,7 +16,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RequestResult<T> extends PageInfo implements Serializable {
+public class RequestResult<T> implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

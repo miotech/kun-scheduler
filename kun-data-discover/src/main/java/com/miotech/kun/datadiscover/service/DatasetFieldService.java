@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * @author: JieChen
+ * @author: Jie Chen
  * @created: 6/12/20
  */
 @Service

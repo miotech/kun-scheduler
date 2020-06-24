@@ -1,6 +1,5 @@
 package com.miotech.kun.datadiscover.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
@@ -10,20 +9,17 @@ import java.util.List;
 
 /**
  * @author: Jie Chen
- * @created: 6/12/20
+ * @created: 2020/6/18
  */
 @Data
-public class DatasourceType {
+public class GlossaryChildren {
 
     @JsonSerialize(using= ToStringSerializer.class)
-    private Long id;
+    private Long parentId;
 
-    @JsonProperty("type")
-    private String name;
+    private List<GlossaryBasic> children = new ArrayList<>();
 
-    List<DatasourceTypeField> fields = new ArrayList<>();
-
-    public void addField(DatasourceTypeField field) {
-        fields.add(field);
+    public void add(GlossaryBasic child) {
+        children.add(child);
     }
 }

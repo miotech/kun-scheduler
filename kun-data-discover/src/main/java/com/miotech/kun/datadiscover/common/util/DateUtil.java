@@ -4,7 +4,7 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 /**
- * @author: JieChen
+ * @author: Jie Chen
  * @created: 6/12/20
  */
 public class DateUtil {

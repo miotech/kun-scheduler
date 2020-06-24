@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -32,28 +33,33 @@ public class DataSourceController {
     @Autowired
     DatasourceService datasourceService;
 
+    @GetMapping("/metadata/databases/search")
+    public RequestResult<DatasourceBasicPage> searchDatabases(BasicSearchRequest basicSearchRequest) {
+        return RequestResult.success(datasourceService.search(basicSearchRequest));
+    }
+
     @GetMapping("/metadata/databases")
     public RequestResult<DatasourcePage> getDatabases(DatabaseSearchRequest databaseSearchRequest) {
         return RequestResult.success(datasourceService.search(databaseSearchRequest));
     }
 
     @PostMapping("/metadata/database/add")
-    public RequestResult<DatasourceVO> addDatabase(@RequestBody DatabaseRequest databaseRequest) {
-        RequestResult<DatasourceVO> requestResult = RequestResult.success();
-        return requestResult;
+    public RequestResult<Datasource> addDatabase(@RequestBody DatabaseRequest databaseRequest) throws SQLException {
+        return RequestResult.success(datasourceService.add(databaseRequest));
     }
 
     @PostMapping("/metadata/database/{id}/update")
-    public RequestResult<DatasourceVO> updateDatabase(@PathVariable String id,
-                                                      @RequestBody DatabaseRequest databaseRequest) {
-        RequestResult<DatasourceVO> requestResult = RequestResult.success();
-        return requestResult;
+    public RequestResult<Datasource> updateDatabase(@PathVariable Long id,
+                                                    @RequestBody DatabaseRequest databaseRequest) throws SQLException {
+        return RequestResult.success(datasourceService.update(id, databaseRequest));
     }
 
     @DeleteMapping("/metadata/database/{id}")
-    public RequestResult<IdVO> deleteDatabase(@PathVariable String id) {
-        RequestResult<IdVO> requestResult = RequestResult.success();
-        return requestResult;
+    public RequestResult<IdVO> deleteDatabase(@PathVariable Long id) {
+        datasourceService.delete(id);
+        IdVO idVO = new IdVO();
+        idVO.setId(id);
+        return RequestResult.success(idVO);
     }
 
     @PostMapping("/metadata/database/{id}/pull")
@@ -65,6 +71,11 @@ public class DataSourceController {
     @GetMapping("/metadata/database/types")
     public RequestResult<List<DatasourceType>> getDatasourceTypes() {
         return RequestResult.success(datasourceService.getAllTypes());
+    }
+
+    @GetMapping("/metadata/datasets/search")
+    public RequestResult<DatasetBasicPage> searchDatasets(BasicSearchRequest basicSearchRequest) {
+        return RequestResult.success(datasetService.search(basicSearchRequest));
     }
 
     @GetMapping("/metadata/datasets")

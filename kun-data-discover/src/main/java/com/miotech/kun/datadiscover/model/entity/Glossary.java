@@ -5,25 +5,31 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author: Jie Chen
- * @created: 6/12/20
+ * @created: 2020/6/17
  */
 @Data
-public class DatasourceType {
+public class Glossary {
 
     @JsonSerialize(using= ToStringSerializer.class)
     private Long id;
 
-    @JsonProperty("type")
     private String name;
 
-    List<DatasourceTypeField> fields = new ArrayList<>();
+    private String description;
 
-    public void addField(DatasourceTypeField field) {
-        fields.add(field);
-    }
+    private Glossary parent;
+
+    String createUser;
+
+    Long createTime;
+
+    String updateUser;
+
+    Long updateTime;
+
+    List<Asset> assets;
 }
