@@ -4,6 +4,7 @@ const { PROXY_TARGET } = process.env;
 
 export default defineConfig({
   dynamicImport: {},
+  hash: true,
   nodeModulesTransform: {
     type: 'none',
   },
@@ -82,6 +83,36 @@ export default defineConfig({
           icon: 'SettingOutlined',
           component: 'data-settings/index',
           wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+        },
+        {
+          title: 'common.pageTitle.glossary',
+          path: '/glossary',
+          menuDisplay: true,
+          icon: 'SnippetsOutlined',
+          showChildren: false,
+          routes: [
+            {
+              title: 'common.pageTitle.glossary',
+              path: '.',
+              component: 'glossary/index',
+              exact: true,
+              wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+            },
+            {
+              title: 'common.pageTitle.glossaryCreate',
+              path: '/glossary/create',
+              component: 'glossary/glossary-detail/index',
+              exact: true,
+              wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+            },
+            {
+              title: 'common.pageTitle.glossaryDetail',
+              path: ':glossaryId',
+              component: 'glossary/glossary-detail/index',
+              exact: true,
+              wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+            },
+          ],
         },
         {
           title: 'common.pageTitle.login',

@@ -13,9 +13,9 @@ import useDebounce from '@/hooks/useDebounce';
 import Card from '@/components/Card/Card';
 
 import AddUpdateDatabaseModal from './components/AddUpdateDatabaseModal/AddUpdateDatabaseModal';
+import DatabaseItem from './components/DatabaseItem/DatabaseItem';
 
 import styles from './index.less';
-import DatabaseItem from './components/DatabaseItem/DatabaseItem';
 
 const { Search } = Input;
 
@@ -189,19 +189,17 @@ export default function DataSettings() {
           </Spin>
         </div>
 
-        {(pagination.totalCount || 0) > pagination.pageSize && (
-          <div className={styles.pagination}>
-            <Pagination
-              size="small"
-              total={pagination.totalCount}
-              showSizeChanger
-              showQuickJumper
-              onChange={handleChangePagination}
-              pageSize={pagination.pageSize}
-              pageSizeOptions={['25', '50', '100', '200']}
-            />
-          </div>
-        )}
+        <div className={styles.pagination}>
+          <Pagination
+            size="small"
+            total={pagination.totalCount}
+            showSizeChanger
+            showQuickJumper
+            onChange={handleChangePagination}
+            pageSize={pagination.pageSize}
+            pageSizeOptions={['25', '50', '100', '200']}
+          />
+        </div>
       </Card>
 
       <AddUpdateDatabaseModal
