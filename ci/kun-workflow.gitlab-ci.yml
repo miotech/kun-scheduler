@@ -14,7 +14,6 @@ verify-kun-workflow-test:
     - tags
   allow_failure: false
   script:
-    - ./gradlew test -p kun-workflow
     - ./gradlew check -p kun-workflow
   only:
     changes:

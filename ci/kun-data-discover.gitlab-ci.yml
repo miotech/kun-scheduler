@@ -14,7 +14,6 @@ verify-kun-data-discover-test:
     - tags
   allow_failure: false
   script:
-    - ./gradlew test -p kun-data-discover
     - ./gradlew check -p kun-data-discover
   only:
     changes:
