@@ -14,7 +14,6 @@ verify-kun-metadata-test:
     - tags
   allow_failure: false
   script:
-    - ./gradlew test -p kun-metadata
     - ./gradlew check -p kun-metadata
   only:
     changes:
