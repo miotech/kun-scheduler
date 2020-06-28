@@ -4,6 +4,7 @@ import {
   fetchAllTagsService,
   fetchAllUsersService,
   searchDatasetsService,
+  searchAllDbService,
 } from '@/services/dataDiscovery';
 import { Pagination, DbType } from './index';
 import { RootDispatch } from '../store';
@@ -47,7 +48,8 @@ export interface SearchParams {
   searchContent?: string;
   ownerList?: string[];
   tagList?: string[];
-  dbTypeList?: DbType[];
+  dbTypeList?: string[];
+  dbIdList?: string[];
   wartermarkMode?: Mode;
   wartermarkAbsoluteValue?: DataRange;
   wartermarkQuickeValue?: Quick;
@@ -60,7 +62,13 @@ export interface SearchParamsObj {
   watermarkEnd?: number;
   ownerList?: string[];
   tagList?: string[];
-  dbTypeList?: DbType[];
+  dbTypeList?: string[];
+  dbIdList?: string[];
+}
+
+export interface dbFilterItem {
+  id: string;
+  name: string;
 }
 
 export interface DataDiscoveryState {
@@ -72,9 +80,11 @@ export interface DataDiscoveryState {
   ownerList?: string[];
   tagList?: string[];
   dbTypeList?: DbType[];
+  dbIdList?: string[];
 
   allOwnerList: string[];
   allTagList: string[];
+  allDbList: dbFilterItem[];
 
   pagination: Pagination;
 
@@ -94,9 +104,11 @@ export const dataDiscovery = {
     ownerList: undefined,
     tagList: undefined,
     dbTypeList: undefined,
+    dbIdList: undefined,
 
     allOwnerList: [],
     allTagList: [],
+    allDbList: [],
 
     pagination: {
       pageNumber: 1,
@@ -169,6 +181,7 @@ export const dataDiscovery = {
           ownerList,
           tagList,
           dbTypeList,
+          dbIdList,
           wartermarkMode,
           wartermarkAbsoluteValue,
           wartermarkQuickeValue,
@@ -230,6 +243,7 @@ export const dataDiscovery = {
           ownerList,
           tagList,
           dbTypeList,
+          dbIdList,
         };
         seachDatasetsFlag += 1;
         const currentSeachDatasetsFlag = seachDatasetsFlag;
@@ -248,6 +262,15 @@ export const dataDiscovery = {
               },
             });
           }
+        }
+      },
+      async fetchAllDb(payload: string) {
+        const resp = await searchAllDbService(payload);
+        if (resp) {
+          dispatch.dataDiscovery.updateState({
+            key: 'allDbList',
+            value: resp.databases,
+          });
         }
       },
     };

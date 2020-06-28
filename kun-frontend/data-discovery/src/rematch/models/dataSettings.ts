@@ -12,6 +12,8 @@ import { RootDispatch, RootState } from '../store';
 
 export enum DatabaseTypeItemFieldItemFormat {
   INPUT = 'INPUT',
+  PASSWORD = 'PASSWORD',
+  NUMBER_INPUT = 'NUMBER_INPUT',
 }
 
 export enum DatabaseField {
@@ -31,6 +33,7 @@ export interface DatabaseTypeItemFieldItem {
   key: DatabaseField;
   order: number;
   format: DatabaseTypeItemFieldItemFormat;
+  require: boolean;
 }
 
 export interface DatabaseTypeItem {
@@ -42,7 +45,7 @@ export interface DatabaseTypeItem {
 export type DatabaseTypeList = DatabaseTypeItem[];
 
 export type DatabaseInfomation = {
-  [k in DatabaseField]?: string;
+  [k in DatabaseField]?: string | number;
 };
 
 export interface DatabaseInfo {
