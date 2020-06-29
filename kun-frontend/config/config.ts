@@ -1,14 +1,37 @@
 import { IConfig, defineConfig } from 'umi';
+import fs from 'fs';
 import path from 'path';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { appRoutes } from './routes';
 import { theme } from './theme';
-import { certConfig } from './certConfig';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
+import { define } from './define';
 
-const { PROXY_TARGET, PROXY_PDF_TARGET, HTTPS, PORT } = process.env;
+let certConfigTemplate = {
+  key: undefined,
+  cert: undefined,
+};
+if (fs.existsSync(path.resolve(__dirname, './certConfig.json'))) {
+  certConfigTemplate = {
+    ...JSON.parse(fs.readFileSync(path.resolve(__dirname, './certConfig.json'), { encoding: 'utf-8' }))
+  };
+}
+
+const {
+  PROXY_TARGET,
+  USE_MOCK,
+  PROXY_PDF_TARGET,
+  PATH_REWRITE,
+  NO_PROXY,
+  PORT,
+  HTTPS,
+  HTTPS_KEY,
+  HTTPS_CERT,
+} = process.env;
 
 export default defineConfig({
-  dynamicImport: {},
+  dynamicImport: {
+    loading: '@/layouts/LoadingLayout/index',
+  },
   hash: true,
   nodeModulesTransform: {
     type: 'none',
@@ -24,27 +47,26 @@ export default defineConfig({
         ],
       },
     ]);
-    // memo.module
-    //   .rule('parse-pdf')
-    //   .test(/\.(pdf)$/)
-    //   .use('file-loader')
-    //   .options({
-    //     name: '[name].[ext]',
-    //   });
   },
   targets: {
     ie: 11,
   },
-  proxy: {
+  proxy: (!NO_PROXY) ? {
+    '/kun/api/v1/': {
+      target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
+      changeOrigin: true,
+      pathRewrite: PATH_REWRITE ? { '^/kun/api/v1/' : '' } : undefined,
+    },
+    '/kun/api/data-platform/': {
+      target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
+      changeOrigin: true,
+      pathRewrite: PATH_REWRITE ? { '^/kun/api/data-platform/' : '' } : undefined,
+    },
     '/kun/api/v1/pdf/': {
       target: PROXY_PDF_TARGET || 'http://kun-dev.miotech.com/',
       changeOrigin: true,
     },
-    '/kun/api/v1/': {
-      target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
-      changeOrigin: true,
-    },
-  },
+  } : {},
   theme,
   lessLoader: {
     modifyVars: {
@@ -62,13 +84,15 @@ export default defineConfig({
   title: 'common.app.name',
   routes: appRoutes,
   devServer: {
-    host: HTTPS ? 'dev.localhost.com' : '0.0.0.0',
+    host: HTTPS ? 'dev.localhost.com' : undefined,
     port: PORT ? parseInt(PORT, 10) : 8000,
     https: HTTPS
       ? {
-          key: certConfig.key,
-          cert: certConfig.cert,
+          key: HTTPS_KEY || certConfigTemplate.key,
+          cert: HTTPS_CERT || certConfigTemplate.cert,
         }
       : undefined,
   },
+  define,
+  mock: (USE_MOCK === 'true') ? {} : false,
 }) as IConfig;

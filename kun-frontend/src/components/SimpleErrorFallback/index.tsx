@@ -4,11 +4,11 @@ const SimpleErrorFallbackComponent: React.FC<any> = ({ componentStack, error }) 
   return (
     <div>
       <p>
-        <strong>Oops! An error occured!</strong>
+        <strong>Oops! An error occurred!</strong>
       </p>
       <p>Here’s what we know…</p>
       <p>
-        <strong>Error:</strong> {error.toString()}
+        <strong>Error:</strong> {`${error}`}
       </p>
       <p>
         <strong>Stacktrace:</strong>

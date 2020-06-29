@@ -157,7 +157,7 @@ export default function GlossaryDetail({ match }: Props) {
 
   const getParams = useCallback(() => {
     const { name, description, parent, assets } = inputtingDetail;
-    const assetIds = assets?.filter(i => !!i).map(i => i!.id);
+    const assetIds = assets?.filter(i => !!i).map(i => i.id);
     const parentId = parent?.id;
     return { name, description, assetIds, parentId };
   }, [inputtingDetail]);
