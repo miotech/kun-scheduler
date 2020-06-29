@@ -1,0 +1,20 @@
+@import './variables.less';
+
+.container {
+  position: relative;
+}
+
+.codemirrorWrapper {
+}
+
+.codemirrorWrapper.WithToolbar {
+  padding-top: @codemirror-toolbar-height;
+}
+
+.codemirror {
+  :global {
+    .CodeMirror-code, .CodeMirror-line {
+      font-family: "Source Code Pro", Consolas, -apple-system, sans-serif;
+    }
+  }
+}

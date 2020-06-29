@@ -1,0 +1,42 @@
+import { DataStore } from '@/definitions/DataStore.type';
+import { Tick } from '@/definitions/Tick.type';
+import { RunStatusEnum } from '@/definitions/StatEnums.type';
+import { Tag } from '@/definitions/Tag.type';
+import { TaskVariable } from '@/definitions/Task.type';
+import { TaskAttempt } from '@/definitions/TaskAttempt.type';
+import { TaskDefinition } from '@/definitions/TaskDefinition.type';
+
+export interface TaskRun {
+  id: string;
+  attempts: TaskAttempt[];
+  dependencyTaskRunIds: string[];
+  inlets: DataStore[];
+  outlets: DataStore[];
+  scheduledTick: Tick;
+  startAt: string; // ISO Date
+  endAt: string;   // ISO Date
+  status: RunStatusEnum;
+  tags: Tag[];
+  variable: TaskVariable[];
+  task: TaskDefinition;
+}
+
+export interface TaskRunLog {
+  attempt: number;
+  endLine: number;
+  logs: string[];
+  startLine: number;
+  taskRunId: string | number;
+  isTerminated: boolean;
+  status: RunStatusEnum;
+}
+
+export interface TaskRunDependency {
+  downStreamTaskRunId: string;
+  upstreamTaskRunId: string;
+}
+
+export interface TaskRunDAG {
+  nodes: TaskRun[];
+  edges: TaskRunDependency[];
+}

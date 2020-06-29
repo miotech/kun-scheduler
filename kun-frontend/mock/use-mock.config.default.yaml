@@ -1,0 +1,6 @@
+'*': false
+'task-definitions.*': false
+'task-tries.*': false
+'task-templates.*': false
+'deployed-tasks.*': false
+'users.*': false

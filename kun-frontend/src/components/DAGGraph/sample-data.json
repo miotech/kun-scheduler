@@ -1,0 +1,69 @@
+{
+  "nodes": [
+    {
+      "id": "a",
+      "name": "Task A"
+    },
+    {
+      "id": "b",
+      "name": "Task B"
+    },
+    {
+      "id": "c",
+      "name": "Task C"
+    },
+    {
+      "id": "d",
+      "name": "Task D"
+    },
+    {
+      "id": "e",
+      "name": "Task E"
+    },
+    {
+      "id": "f",
+      "name": "Task F"
+    },
+    {
+      "id": "g",
+      "name": "Task G"
+    }
+  ],
+  "relations": [
+    {
+      "id": "a-b",
+      "upstreamTaskId": "a",
+      "downstreamTaskId": "b"
+    },
+    {
+      "id": "b-c",
+      "upstreamTaskId": "b",
+      "downstreamTaskId": "c"
+    },
+    {
+      "id": "a-f",
+      "upstreamTaskId": "a",
+      "downstreamTaskId": "f"
+    },
+    {
+      "id": "a-c",
+      "upstreamTaskId": "a",
+      "downstreamTaskId": "c"
+    },
+    {
+      "id": "c-d",
+      "upstreamTaskId": "c",
+      "downstreamTaskId": "d"
+    },
+    {
+      "id": "d-e",
+      "upstreamTaskId": "d",
+      "downstreamTaskId": "e"
+    },
+    {
+      "id": "c-g",
+      "upstreamTaskId": "c",
+      "downstreamTaskId": "g"
+    }
+  ]
+}

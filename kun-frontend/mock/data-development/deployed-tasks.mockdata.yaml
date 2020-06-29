@@ -1,0 +1,55 @@
+-
+  id: '1420041600000'
+  isArchived: false
+  name: 'Task A'
+  owner: 1
+  taskPayload:
+    scheduleConfig:
+      cronExpr: '0 8 * * *'
+      inputNodes: []
+      type: ''
+    taskConfig: {}
+  taskTemplateName: 'SparkSQL'
+  latestRunTime: '2020-07-29T08:00:00+08:00'
+
+-
+  id: '1420041600001'
+  isArchived: false
+  name: 'Task B'
+  owner: 1
+  taskPayload:
+    scheduleConfig:
+      cronExpr: '0 8 * * *'
+      inputNodes: []
+      type: ''
+    taskConfig: {}
+  taskTemplateName: 'SparkSQL'
+  latestRunTime: '2020-07-29T19:35:07+00:00'
+
+-
+  id: '1420041600002'
+  isArchived: false
+  name: 'Task C'
+  owner: 2
+  taskPayload:
+    scheduleConfig:
+      cronExpr: '0 0 * * *'
+      inputNodes: []
+      type: ''
+    taskConfig: {}
+  taskTemplateName: 'SparkSQL'
+  latestRunTime: '2020-07-29T08:00:00+08:00'
+
+-
+  id: '1420041600003'
+  isArchived: false
+  name: 'Task D'
+  owner: 2
+  taskPayload:
+    scheduleConfig:
+      cronExpr: 'aaa'
+      inputNodes: []
+      type: ''
+    taskConfig: {}
+  taskTemplateName: 'SparkSQL'
+  latestRunTime: '2020-07-29T08:00:00+08:00'

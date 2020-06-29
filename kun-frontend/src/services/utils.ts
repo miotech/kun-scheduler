@@ -2,12 +2,16 @@ import { history, formatMessage } from 'umi';
 import { notification } from 'antd';
 import axios, { AxiosResponse } from 'axios';
 import qs from 'qs';
+import { LogUtils } from '@/utils/logUtils';
+import { ServiceRespPromise } from '@/definitions/common-types';
 
 export const baseURL = '/kun/api/v1';
 
 export const axiosInstance = axios.create({
   baseURL,
 });
+
+const errorLog = LogUtils.getErrorLogger('commonHttp');
 
 export interface CommonResponse<T> {
   code: string;
@@ -21,7 +25,7 @@ async function commonHttp<T>(
   params?: object,
   defaultValue?: T | null,
   options: object = {},
-): Promise<T | null> {
+): ServiceRespPromise<T> {
   let accessBody;
   switch (method) {
     case 'get':
@@ -75,6 +79,7 @@ async function commonHttp<T>(
           id: `common.webMessage.${resp.status}`,
           defaultMessage: formatMessage({ id: 'common.webMessage.unknown' }),
         }),
+        description: resp?.data?.note ?? '',
       });
 
       return null;
@@ -86,7 +91,6 @@ async function commonHttp<T>(
       notification.error({
         message: data.note,
       });
-
       return null;
     }
 
@@ -103,19 +107,18 @@ async function commonHttp<T>(
           }
           return null;
         }
-
         notification.error({
           message: formatMessage({
             id: `common.webMessage.${error.response.status}`,
             defaultMessage: formatMessage({ id: 'common.webMessage.unknown' }),
           }),
+          description: '',
         });
-
         return null;
       }
     }
-    // eslint-disable-next-line
-    console.log('error: ', error);
+
+    errorLog('[Request Error]: %o', error);
 
     return null;
   }

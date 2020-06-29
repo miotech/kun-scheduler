@@ -1,0 +1,26 @@
+@import '../view-common.less';
+
+.TaskDefinitionListPanel {
+  .aside-panel();
+  display: flex;
+  flex-direction: column;
+}
+
+.ListHeading {
+  .list-heading-common();
+}
+
+.ListBody {
+  position: relative;
+  flex: 1 1;
+  overflow: auto;
+}
+
+.Footer {
+  flex: 0 0 32px;
+  line-height: 32px;
+  width: 100%;
+  border-top: 1px solid @borderColor;
+  vertical-align: middle;
+  text-align: center;
+}

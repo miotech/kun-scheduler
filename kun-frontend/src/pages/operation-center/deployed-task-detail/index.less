@@ -1,0 +1,55 @@
+.View {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  :global {
+    .reflex-container.vertical > .reflex-splitter,
+    .reflex-splitter {
+      border: 0;
+      width: 8px;
+      background: @background;
+      cursor: col-resize;
+    }
+  }
+}
+
+.ContentContainer {
+  display: flex;
+  flex-direction: row;
+  flex: 1 1;
+  margin: 0 18px 12px 18px;
+  //height: auto;
+}
+
+.TableContainer {
+  position: relative;
+  background: @white;
+  height: 100%;
+  margin: 0;
+}
+
+.RightPanel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  width: 100%;
+}
+
+.DAGContainer {
+  position: relative;
+  flex: 1 1 300px;
+  border: 1px dashed @borderColor;
+  overflow: hidden;
+}
+
+.DAGInnerWrapper {
+  position: relative;
+  .max-size();
+}
+
+.LogContainer {
+  position: relative;
+  flex: 1 1;
+}
