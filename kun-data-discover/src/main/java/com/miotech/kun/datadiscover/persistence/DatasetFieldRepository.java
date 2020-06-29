@@ -1,8 +1,11 @@
 package com.miotech.kun.datadiscover.persistence;
 
-import com.miotech.kun.datadiscover.model.bo.DatasetColumnRequest;
-import com.miotech.kun.datadiscover.model.entity.DatasetColumn;
+import com.miotech.kun.datadiscover.model.bo.DatasetFieldRequest;
+import com.miotech.kun.datadiscover.model.bo.DatasetFieldSearchRequest;
+import com.miotech.kun.datadiscover.model.entity.DatasetField;
+import com.miotech.kun.datadiscover.model.entity.DatasetFieldPage;
 import com.miotech.kun.datadiscover.model.entity.Watermark;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -21,7 +24,7 @@ public class DatasetFieldRepository extends BaseRepository {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    public List<DatasetColumn> findByDatasetGid(Long datasetGid) {
+    public DatasetFieldPage findByDatasetGid(Long datasetGid, DatasetFieldSearchRequest searchRequest) {
         String getRowCountSql = "select row_count from kun_mt_dataset_stats where dataset_gid = ?";
         Long rowCount = jdbcTemplate.query(getRowCountSql, ps -> ps.setLong(1, datasetGid), rs -> {
             if (rs.next()) {
@@ -30,24 +33,50 @@ public class DatasetFieldRepository extends BaseRepository {
             return null;
         });
 
+        DatasetFieldPage datasetFieldPage = new DatasetFieldPage();
+        List<Object> pstmtArgs = new ArrayList<>();
         String sql = "select kmdf.*,\n" +
                 "       kmdfs.stats_date as high_watermark,\n" +
                 "       kmdfs.distinct_count,\n" +
                 "       kmdfs.nonnull_count\n" +
                 "     from kun_mt_dataset_field kmdf\n" +
                 "         left join kun_mt_dataset_field_stats kmdfs on kmdf.id = kmdfs.field_id\n" +
-                "         right join (select field_id, max(stats_date) as max_time\n" +
-                "                     from kun_mt_dataset_field_stats\n" +
+                "         inner join (select field_id, max(stats_date) as max_time\n" +
+                "                     from (select kmdfs.*\n" +
+                "                           from kun_mt_dataset_field_stats kmdfs\n" +
+                "                                    right join kun_mt_dataset_field kmdf\n" +
+                "                                               on kmdfs.field_id = kmdf.id and kmdf.dataset_gid = ?) as kmdfs\n" +
                 "                     group by field_id) watermark\n" +
                 "                    on (kmdf.id = watermark.field_id and kmdfs.stats_date = watermark.max_time) or\n" +
                 "                       kmdfs.stats_date is null\n";
         String whereClause = "where kmdf.dataset_gid = ?\n";
-        String groupByClause = "group by kmdf.id, high_watermark, kmdfs.distinct_count, kmdfs.nonnull_count";
+        pstmtArgs.add(datasetGid);
+        pstmtArgs.add(datasetGid);
+        if (StringUtils.isNotEmpty(searchRequest.getKeyword())) {
+            whereClause += "and upper(kmdf.name) like ?\n";
+            pstmtArgs.add(toLikeSql(searchRequest.getKeyword().toUpperCase()));
+        }
+        String groupByClause = "group by kmdf.id, high_watermark, kmdfs.distinct_count, kmdfs.nonnull_count\n";
 
-        return jdbcTemplate.query(sql + whereClause + groupByClause, ps -> ps.setLong(1, datasetGid), rs -> {
-            List<DatasetColumn> columns = new ArrayList<>();
+        sql += whereClause + groupByClause;
+
+        String totalCountSql = "select count(1) as total_count from kun_mt_dataset_field kmdf " + whereClause;
+        Long totalCount = jdbcTemplate.query(totalCountSql, rs -> {
+            if (rs.next()) {
+                return rs.getLong("total_count");
+            }
+            return null;
+        }, pstmtArgs.subList(1, pstmtArgs.size()).toArray());
+
+        String orderByClause = "order by kmdf.name\n";
+        String limitSql = toLimitSql(searchRequest.getPageNumber(), searchRequest.getPageSize());
+
+        sql += orderByClause + limitSql;
+
+        List<DatasetField> datasetFields = jdbcTemplate.query(sql, rs -> {
+            List<DatasetField> columns = new ArrayList<>();
             while (rs.next()) {
-                DatasetColumn column = new DatasetColumn();
+                DatasetField column = new DatasetField();
                 column.setId(rs.getLong("id"));
                 column.setName(rs.getString("name"));
                 column.setDescription(rs.getString("description"));
@@ -59,33 +88,38 @@ public class DatasetFieldRepository extends BaseRepository {
                 column.setNotNullCount(rs.getLong("nonnull_count"));
                 if (rowCount != null && rowCount != 0L) {
                     double nonnullPercentage = rs.getLong("nonnull_count") * 1.0 / rowCount;
-                    BigDecimal bigDecimal = new BigDecimal(nonnullPercentage);
+                    BigDecimal bigDecimal = BigDecimal.valueOf(nonnullPercentage);
                     column.setNotNullPercentage(bigDecimal.setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue());
                 }
                 columns.add(column);
             }
             return columns;
-        });
+        }, pstmtArgs.toArray());
+        datasetFieldPage.setPageNumber(searchRequest.getPageNumber());
+        datasetFieldPage.setPageSize(searchRequest.getPageSize());
+        datasetFieldPage.setTotalCount(totalCount);
+        datasetFieldPage.setDatasetFields(datasetFields);
+        return datasetFieldPage;
     }
 
-    public DatasetColumn update(Long id, DatasetColumnRequest datasetColumnRequest) {
+    public DatasetField update(Long id, DatasetFieldRequest datasetFieldRequest) {
         String sql = "update kun_mt_dataset_field set description = ? where id = ?";
-        jdbcTemplate.update(sql, datasetColumnRequest, id);
+        jdbcTemplate.update(sql, datasetFieldRequest, id);
         return find(id);
     }
 
-    public DatasetColumn find(Long id) {
+    public DatasetField find(Long id) {
         String sql = "select id, name, type, description from kun_mt_dataset_field where id = ?";
 
         return jdbcTemplate.query(sql, ps -> ps.setLong(1, id), rs -> {
-            DatasetColumn datasetColumn = new DatasetColumn();
+            DatasetField datasetField = new DatasetField();
             if (rs.next()) {
-                datasetColumn.setId(rs.getLong("id"));
-                datasetColumn.setName(rs.getString("name"));
-                datasetColumn.setType(rs.getString("type"));
-                datasetColumn.setDescription(rs.getString("description"));
+                datasetField.setId(rs.getLong("id"));
+                datasetField.setName(rs.getString("name"));
+                datasetField.setType(rs.getString("type"));
+                datasetField.setDescription(rs.getString("description"));
             }
-            return datasetColumn;
+            return datasetField;
         });
     }
 }

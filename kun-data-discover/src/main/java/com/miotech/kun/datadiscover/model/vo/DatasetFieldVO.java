@@ -1,6 +1,6 @@
 package com.miotech.kun.datadiscover.model.vo;
 
-import com.miotech.kun.datadiscover.model.entity.DatasetColumn;
+import com.miotech.kun.datadiscover.model.entity.DatasetField;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -13,5 +13,5 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @NoArgsConstructor
-public class DatasetColumnVO extends DatasetColumn {
+public class DatasetFieldVO extends DatasetField {
 }
