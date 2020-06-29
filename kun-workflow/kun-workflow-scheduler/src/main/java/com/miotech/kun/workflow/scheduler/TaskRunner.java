@@ -99,7 +99,7 @@ public class TaskRunner {
 
         @Subscribe
         public void onReceive(TaskAttemptStatusChangeEvent event) {
-            post(event.getTaskAttemptId(), event);
+            post(event.getAttemptId(), event);
         }
     }
 
@@ -143,10 +143,10 @@ public class TaskRunner {
             if (e instanceof TaskAttemptStatusChangeEvent) {
                 TaskAttemptStatusChangeEvent event = (TaskAttemptStatusChangeEvent) e;
                 logger.debug("TaskAttempt status changed. TaskAttemptId={}, from={}, to={}",
-                        event.getTaskAttemptId(), event.getFromStatus(), event.getToStatus());
+                        event.getAttemptId(), event.getFromStatus(), event.getToStatus());
 
                 if (event.getToStatus().isSuccess()) {
-                    Long taskAttemptId = event.getTaskAttemptId();
+                    Long taskAttemptId = event.getAttemptId();
                     waitingList.removeWait(taskAttemptId);
                     unlistenTo(taskAttemptId);
                 }

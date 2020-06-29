@@ -23,14 +23,22 @@ public class JSONUtils {
     private static final Logger logger = LoggerFactory.getLogger(JSONUtils.class);
     private static final ObjectMapper objectMapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-            .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            .setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
+            .setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     static {
         SimpleModule simpleModule = new SimpleModule();
         simpleModule.addSerializer(Long.class, ToStringSerializer.instance);
         simpleModule.addSerializer(Long.TYPE, ToStringSerializer.instance);
         objectMapper.registerModule(simpleModule);
+    }
+
+    public static <T> String toJsonString(T obj, TypeReference<T> typeRef) {
+        try {
+            return objectMapper.writerFor(typeRef).writeValueAsString(obj);
+        } catch (JsonProcessingException e) {
+            logger.error("Error occurs when converting object to JSON string: ", e);
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
     }
 
     public static <T> String toJsonString(T obj) {

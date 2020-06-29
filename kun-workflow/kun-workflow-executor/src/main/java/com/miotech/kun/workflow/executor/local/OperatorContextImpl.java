@@ -1,11 +1,9 @@
 package com.miotech.kun.workflow.executor.local;
 
-import com.google.common.collect.ImmutableList;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Variable;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.resource.Resource;
 
@@ -18,8 +16,6 @@ public class OperatorContextImpl implements OperatorContext {
     private final Map<String, Variable> variables;
     private final Map<String, Param> parameters;
     private final Logger logger;
-    private List<DataStore> inlets;
-    private List<DataStore> outlets;
 
     public OperatorContextImpl(TaskAttempt attempt, Resource logResource) {
         this.variables = buildVariables(attempt.getTaskRun().getVariables());
@@ -54,12 +50,6 @@ public class OperatorContextImpl implements OperatorContext {
     @Override
     public Resource getResource(String path) {
         throw new UnsupportedOperationException("Not implemented yet.");
-    }
-
-    @Override
-    public void report(List<DataStore> inlets, List<DataStore> outlets) {
-        this.inlets = ImmutableList.copyOf(inlets);
-        this.outlets = ImmutableList.copyOf(outlets);
     }
 
     private Logger buildLogger(TaskAttempt attempt, Resource logResource) {

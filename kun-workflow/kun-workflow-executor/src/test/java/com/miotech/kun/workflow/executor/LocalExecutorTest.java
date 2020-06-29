@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor;
 
+import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -9,7 +10,9 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -31,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -107,6 +111,18 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
+
+        TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt.getId());
+        assertThat(finishedEvent.getAttemptId(), is(attempt.getId()));
+        assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(finishedEvent.getInlets(), hasSize(2));
+        assertThat(finishedEvent.getOutlets(), hasSize(1));
+
+        // inlets/outlets
+        List<DataStore> inlets = taskRun.getInlets();
+        List<DataStore> outlets = taskRun.getOutlets();
+        assertThat(finishedEvent.getInlets(), sameBeanAs(inlets));
+        assertThat(finishedEvent.getOutlets(), sameBeanAs(outlets));
     }
 
     @Test
@@ -145,11 +161,23 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
 
+        TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt1.getId());
+        assertThat(finishedEvent.getAttemptId(), is(attempt1.getId()));
+        assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(finishedEvent.getInlets(), hasSize(2));
+        assertThat(finishedEvent.getOutlets(), hasSize(1));
+
         assertStatusProgress(attempt2.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
+
+        finishedEvent = getFinishedEvent(attempt2.getId());
+        assertThat(finishedEvent.getAttemptId(), is(attempt2.getId()));
+        assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.FAILED));
+        assertThat(finishedEvent.getInlets(), hasSize(0));
+        assertThat(finishedEvent.getOutlets(), hasSize(0));
     }
 
     @Test
@@ -288,19 +316,26 @@ public class LocalExecutorTest extends DatabaseTestBase {
         checkArgument(asserts.length > 1);
 
         List<Event> events = eventCollector.getEvents();
-        assertThat(events, everyItem(instanceOf(TaskAttemptStatusChangeEvent.class)));
 
         List<Event> eventsOfAttempt = events.stream()
                 .filter(e -> e instanceof TaskAttemptStatusChangeEvent &&
-                        ((TaskAttemptStatusChangeEvent) e).getTaskAttemptId() == attemptId)
+                        ((TaskAttemptStatusChangeEvent) e).getAttemptId() == attemptId)
                 .collect(Collectors.toList());
 
         for (int i = 0; i < asserts.length - 1; i++) {
             TaskAttemptStatusChangeEvent event = (TaskAttemptStatusChangeEvent) eventsOfAttempt.get(i);
-            assertThat(event.getTaskAttemptId(), is(attemptId));
+            assertThat(event.getAttemptId(), is(attemptId));
             assertThat(event.getFromStatus(), is(asserts[i]));
             assertThat(event.getToStatus(), is(asserts[i + 1]));
         }
+    }
+
+    private TaskAttemptFinishedEvent getFinishedEvent(Long attemptId) {
+        List<Event> events = eventCollector.getEvents().stream()
+                .filter(e -> e instanceof TaskAttemptFinishedEvent &&
+                        ((TaskAttemptFinishedEvent) e).getAttemptId() == attemptId)
+                .collect(Collectors.toList());
+        return (TaskAttemptFinishedEvent) Iterables.getOnlyElement(events);
     }
 
     private String findTestJarFile() {
