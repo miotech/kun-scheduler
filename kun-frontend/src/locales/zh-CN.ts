@@ -15,6 +15,7 @@ export default {
   'common.button.edit': '编辑',
   'common.pageTitle.homepage': '首页',
   'common.pageTitle.dataDiscovery': '数据探索',
+  'common.pageTitle.dataDevelopment': '数据开发',
   'common.pageTitle.datasets': '数据集',
   'common.pageTitle.datasetDetail': '数据集信息',
   'common.pageTitle.glossary': '标签集',

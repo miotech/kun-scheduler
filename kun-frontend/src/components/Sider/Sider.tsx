@@ -7,6 +7,7 @@ import {
   FileTextOutlined,
   SettingOutlined,
   SnippetsOutlined,
+  ToolOutlined,
 } from '@ant-design/icons';
 import { RootState } from '@/rematch/store';
 
@@ -23,6 +24,7 @@ const iconCompMap: IconCompMap = {
   FileTextOutlined: <FileTextOutlined />,
   SettingOutlined: <SettingOutlined />,
   SnippetsOutlined: <SnippetsOutlined />,
+  ToolOutlined: <ToolOutlined />,
 };
 
 interface Props {
