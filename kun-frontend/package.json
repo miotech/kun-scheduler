@@ -88,6 +88,6 @@
     "eslint-plugin-unicorn": "^20.0.0",
     "googleapis": "^51.0.0",
     "husky": "^4.2.5",
-    "typescript": "^3.9.3"
+    "typescript": "3.8.3"
   }
 }

@@ -29,6 +29,8 @@ export default function Glossary() {
 
   const refreshTree = useCallback(() => {
     dispatch.glossary.fetchRootNodeChildGlossary();
+    // TODO: @wangchen: Why are you dispatching a non-existing action to reducer?
+    // @ts-ignore
     dispatch.glossary.updateNeedRefresh(false);
   }, [dispatch.glossary]);
 
@@ -52,6 +54,7 @@ export default function Glossary() {
       <Card className={styles.glossaryTreeContainer}>
         <GlossaryTree
           rootNode={selector.glossaryData}
+          // @ts-ignore
           needRefresh={selector.isNeedRefreshTree}
           handleRefresh={refreshTree}
         />
