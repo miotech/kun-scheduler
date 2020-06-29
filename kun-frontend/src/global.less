@@ -1,5 +1,8 @@
+@import './components/KunLoading/KunLoading.global.less';
+
 body {
   font-family: Titillium Web, Roboto, PingFangSC, sans-serif;
+  min-width: 1024px;
 }
 
 .app-root {
@@ -16,6 +19,23 @@ body {
   }
 }
 
+.app-root {
+  height: 100%;
+  overflow: auto;
+}
+
+.app-root .ant-layout-sider-trigger {
+  position: absolute;
+}
+
+.app-root .ant-breadcrumb > span:last-child a {
+  color: #262a2f;
+}
+
+.app-root .ant-layout {
+  height: 100vh;
+}
+
 .light-blue-tag {
   background-color: @tagBackground !important;
   border: 1px solid @tagBorder !important;
@@ -25,4 +45,47 @@ body {
 
 .gray-background-color {
   background-color: fade(@borderColor, 30);
+}
+
+.layout-loading {
+  position: relative;
+  background: @white;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  z-index: 100;
+}
+
+.layout-loading__inner-wrapper {
+  //position: absolute;
+  //  //left: 50%;
+  //  //top: 50%;
+  //  //transform: translate(-50%,-50%);
+}
+
+.layout-loading__svg {
+  position: relative;
+  padding-top: 120px;
+  width: 100%;
+  text-align: center;
+
+  svg {
+    width: 320px;
+  }
+}
+
+.layout-loading__text {
+  margin-top: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.full-height {
+  height: 100%;
+}
+
+.gutter-row {
+  padding: 0 4px;
 }

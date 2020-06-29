@@ -9,6 +9,9 @@ import { pdfExtract } from './pdfExtract';
 import { pdfBatchTask } from './pdfBatchTask';
 import { pdfFileTask } from './pdfFileTask';
 import { pdfNew } from './pdfNew';
+import { dataDevelopment } from './dataDevelopment';
+import { scheduledTasks } from './operationCenter/scheduledTasks';
+import { deployedTaskDetail } from './operationCenter/deployedTaskDetail';
 
 export interface RootModel {
   user: typeof user;
@@ -17,6 +20,9 @@ export interface RootModel {
   datasetDetail: typeof datasetDetail;
   dataSettings: typeof dataSettings;
   glossary: typeof glossary;
+  dataDevelopment: typeof dataDevelopment;
+  scheduledTasks: typeof scheduledTasks;
+  deployedTaskDetail: typeof deployedTaskDetail;
   pdfTryout: typeof pdfTryout;
   pdfExtract: typeof pdfExtract;
   pdfBatchTask: typeof pdfBatchTask;
@@ -31,6 +37,9 @@ export const models: RootModel = {
   datasetDetail,
   dataSettings,
   glossary,
+  dataDevelopment,
+  scheduledTasks,
+  deployedTaskDetail,
   pdfTryout,
   pdfExtract,
   pdfBatchTask,

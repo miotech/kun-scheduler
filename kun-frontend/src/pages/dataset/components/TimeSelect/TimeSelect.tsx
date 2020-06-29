@@ -92,8 +92,9 @@ export default memo(function TimeSelect({
             size="large"
             className={styles.dataPicker}
             bordered={false}
+            // @ts-ignore
             showTime={{ defaultValue: moment().startOf('day') }}
-            value={startTime ? moment(Number(startTime)) : null}
+            value={startTime ? moment(startTime) : null}
             suffixIcon={null}
             onChange={handleChangeStartTime as any}
             placeholder={t('dataDiscovery.datapicker.please.start')}

@@ -1,0 +1,17 @@
+# Mock data for get task templates
+
+-
+  name: SparkSQL
+  templateType: sql
+  templateGroup: development
+  displayParameters:
+    -
+      name: sparkSQL
+      type: sql
+      displayName: SQL Script
+      required: true
+    -
+      name: description
+      type: text
+      displayName: Description
+      required: false

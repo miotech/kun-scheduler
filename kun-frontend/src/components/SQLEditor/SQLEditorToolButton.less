@@ -1,0 +1,26 @@
+@import './variables.less';
+
+.toolButton {
+  display: inline-block;
+  position: relative;
+  min-width: @codemirror-toolbar-height - 4px;
+  height: @codemirror-toolbar-height - 4px;
+  background-color: @background;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 0 8px;
+  margin: 2px;
+  outline: none;
+  cursor: pointer;
+
+  transition: background 0.2s ease-in, border 0.2s ease-in;
+
+  &:hover, &:focus {
+    background: @white;
+    border: 1px solid @borderColor;
+  }
+
+  & *[role="img"] {
+    margin-right: 4px;
+  }
+}

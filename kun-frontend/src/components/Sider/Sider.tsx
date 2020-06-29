@@ -8,6 +8,9 @@ import {
   SettingOutlined,
   SnippetsOutlined,
   FilePdfOutlined,
+  CalendarOutlined,
+  ApartmentOutlined,
+  ToolOutlined,
 } from '@ant-design/icons';
 import { RootState } from '@/rematch/store';
 import { hasOptionalPermissions } from '@/utils';
@@ -26,6 +29,9 @@ const iconCompMap: IconCompMap = {
   SettingOutlined: <SettingOutlined />,
   SnippetsOutlined: <SnippetsOutlined />,
   FilePdfOutlined: <FilePdfOutlined />,
+  CalendarOutlined: <CalendarOutlined />,
+  ToolOutlined: <ToolOutlined />,
+  ApartmentOutlined: <ApartmentOutlined />,
 };
 
 interface Props {

@@ -1,0 +1,26 @@
+.MainContent {
+  display: flex;
+  position: relative;
+  height: calc(100vh - 171px);
+  min-height: 650px;
+  margin: 0 18px;
+  padding: 0 0 18px 0;
+}
+
+.TableContainer {
+  margin: 0 5px 0 0;
+  flex: 1 1 600px;
+
+  :global {
+    .ant-card-body {
+      padding: 0;
+    }
+  }
+}
+
+.DAGContainer {
+  position: relative;
+  margin: 0 0 0 5px;
+  flex: 0 0 400px;
+  border: 1px dashed @borderColor;
+}
