@@ -15,7 +15,7 @@ import java.util.List;
 public class LatestTaskRunDependencyFunction implements DependencyFunction {
     private final String functionType = "latestTaskRun";
 
-    // place modifier 'transient` here because matcher sameBeanAs() in shazamcrest can't serialize this field properly.
+    // make this field 'transient' to avoid serialization failure of matcher sameBeanAs() in testing
     private transient final TaskRunDao taskRunDao;
 
     @Inject

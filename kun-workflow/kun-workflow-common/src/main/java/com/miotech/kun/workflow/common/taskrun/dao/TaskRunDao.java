@@ -248,6 +248,21 @@ public class TaskRunDao {
         return taskRun;
     }
 
+    public void updateTaskRunInletsOutlets(long taskRunId, List<DataStore> inlets, List<DataStore> outlets) {
+        String sql = DefaultSQLBuilder .newBuilder()
+                .update(TASK_RUN_TABLE_NAME)
+                .set("inlets", "outlets")
+                .where("id = ?")
+                .asPrepared()
+                .getSQL();
+
+        dbOperator.update(sql,
+                JSONUtils.toJsonString(inlets, new TypeReference<List<DataStore>>(){}),
+                JSONUtils.toJsonString(outlets, new TypeReference<List<DataStore>>(){}),
+                taskRunId
+        );
+    }
+
     /**
      * Delete a TaskRun instance by ID
      * @param taskRunId ID of target TaskRun instance
