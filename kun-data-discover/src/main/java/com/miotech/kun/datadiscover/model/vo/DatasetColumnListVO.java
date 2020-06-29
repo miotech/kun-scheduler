@@ -1,6 +1,6 @@
 package com.miotech.kun.datadiscover.model.vo;
 
-import com.miotech.kun.datadiscover.model.entity.DatasetColumn;
+import com.miotech.kun.datadiscover.model.entity.DatasetField;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,5 +14,5 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 public class DatasetColumnListVO {
-    private List<DatasetColumn> columns;
+    private List<DatasetField> columns;
 }

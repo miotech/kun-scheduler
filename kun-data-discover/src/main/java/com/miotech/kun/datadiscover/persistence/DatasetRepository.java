@@ -62,13 +62,14 @@ public class DatasetRepository extends BaseRepository {
         StringBuilder searchGroupSql = new StringBuilder("group by gid").append("\n");
         StringBuilder whereClause = new StringBuilder("where 1=1").append("\n");
         List<Object> pstmtArgs = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(datasetSearchRequest.getDbIdList())) {
+        if (!CollectionUtils.isEmpty(datasetSearchRequest.getDbIdList()) || !CollectionUtils.isEmpty(datasetSearchRequest.getDbTypeList())) {
             searchSql.append("inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id").append("\n");
-            searchSql.append("and kmdsrc.id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDbIdList())).append("\n");
-        }
-        if (!CollectionUtils.isEmpty(datasetSearchRequest.getDbTypeList())) {
-            searchSql.append("inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id").append("\n");
-            searchSql.append("and kmdsrc.type_id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDbTypeList())).append("\n");
+            if (!CollectionUtils.isEmpty(datasetSearchRequest.getDbIdList())) {
+                searchSql.append("and kmdsrc.id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDbIdList())).append("\n");
+            }
+            if (!CollectionUtils.isEmpty(datasetSearchRequest.getDbTypeList())) {
+                searchSql.append("and kmdsrc.type_id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDbTypeList())).append("\n");
+            }
         }
         if (!CollectionUtils.isEmpty(datasetSearchRequest.getOwnerList())) {
             searchSql.append("inner join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid").append("\n");
