@@ -16,7 +16,7 @@ export default memo(function ChildrenGlossaryList({ childList }: Props) {
         <div className={styles.childItem} key={child.id}>
           {/* <FileTextOutlined /> */}
           <CopyOutlined />
-          <Link to={`/glossary/${child.id}`}>
+          <Link to={`/data-discovery/glossary/${child.id}`}>
             <span className={styles.name}>{child.name}</span>
           </Link>
         </div>

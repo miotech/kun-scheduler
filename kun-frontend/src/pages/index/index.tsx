@@ -13,7 +13,7 @@ function Homepage() {
       {
         key: 'dataDiscovery',
         title: t('common.pageTitle.datasets'),
-        path: '/data-discovery',
+        path: '/data-discovery/dataset',
         icon: (
           <DatabaseOutlined
             className={styles.functionItemIcon}
@@ -24,7 +24,7 @@ function Homepage() {
       {
         key: 'glossary',
         title: t('common.pageTitle.glossary'),
-        path: '/glossary',
+        path: '/data-discovery/glossary',
         icon: (
           <FileTextOutlined
             className={styles.functionItemIcon}

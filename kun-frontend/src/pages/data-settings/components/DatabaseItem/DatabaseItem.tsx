@@ -22,7 +22,9 @@ export default memo(function DatabaseItem({
 }: Props) {
   const t = useI18n();
 
-  const { dispatch } = useRedux(() => null);
+  const { selector, dispatch } = useRedux(state => ({
+    databaseTypeFieldMapList: state.dataSettings.databaseTypeFieldMapList,
+  }));
 
   const [pullLoading, setPullLoading] = useState(false);
 
@@ -47,12 +49,17 @@ export default memo(function DatabaseItem({
     });
   }, [database.id, onClickDelete, t]);
 
+  const getDbType = (typeId: string | null) =>
+    typeId
+      ? selector.databaseTypeFieldMapList.find(i => i.id === typeId)?.type
+      : '';
+
   return (
     <div className={styles.database}>
       <div className={styles.infoArea}>
         <div className={styles.nameRow}>
           <span className={styles.name}>{database.name}</span>
-          <span className={styles.ip}>{database.ip}</span>
+          <span className={styles.dbType}>{getDbType(database.typeId)}</span>
         </div>
         <div className={styles.updateUser}>
           {`${t('dataSettings.updateUser')}: ${database.update_user}`}

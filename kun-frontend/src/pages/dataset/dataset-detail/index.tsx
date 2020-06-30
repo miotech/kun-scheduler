@@ -1,13 +1,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { RouteComponentProps } from 'react-router';
 import { Link } from 'umi';
-import { Spin, Button, message, Select } from 'antd';
+import { Spin, Button, message, Select, Pagination, Input } from 'antd';
 import Card from '@/components/Card/Card';
 
 import { watermarkFormatter } from '@/utils';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
+import useDebounce from '@/hooks/useDebounce';
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnItem from './components/ColumnItem/ColumnItem';
 
@@ -32,6 +33,8 @@ export default function DatasetDetail({ match }: Props) {
     allTagList: state.dataDiscovery.allTagList,
   }));
 
+  const debounceColumnKeyword = useDebounce(selector.columnsKeyword, 500);
+
   const currentId = match.params.datasetId;
 
   const [fetchDetailLoading, setFetchDetailLoading] = useState(false);
@@ -39,6 +42,32 @@ export default function DatasetDetail({ match }: Props) {
   const [updateLoading, setUpdateLoading] = useState(false);
 
   const [forceReFetchInfoFlag, setForceReFetchInfoFlag] = useState(1);
+
+  useEffect(() => {
+    dispatch.datasetDetail.updatePagination({ pageNumber: 1 });
+  }, [dispatch.datasetDetail, debounceColumnKeyword, forceReFetchInfoFlag]);
+
+  useEffect(() => {
+    setFetchColumnsLoading(true);
+    const params = {
+      id: currentId,
+      keyword: debounceColumnKeyword,
+      pagination: {
+        pageNumber: selector.columnsPagination.pageNumber,
+        pageSize: selector.columnsPagination.pageSize,
+      },
+    };
+    dispatch.datasetDetail.fetchDatasetColumns(params).then(() => {
+      setFetchColumnsLoading(false);
+    });
+  }, [
+    currentId,
+    debounceColumnKeyword,
+    dispatch.datasetDetail,
+    selector.columnsPagination.pageNumber,
+    selector.columnsPagination.pageSize,
+    forceReFetchInfoFlag,
+  ]);
 
   useEffect(() => {
     dispatch.dataDiscovery.fetchAllOwnerList();
@@ -55,11 +84,7 @@ export default function DatasetDetail({ match }: Props) {
     dispatch.datasetDetail.fetchDatasetDetail(currentId).then(() => {
       setFetchDetailLoading(false);
     });
-    setFetchColumnsLoading(true);
-    dispatch.datasetDetail.fetchDatasetColumns(currentId).then(() => {
-      setFetchColumnsLoading(false);
-    });
-  }, [currentId, dispatch.datasetDetail, forceReFetchInfoFlag]);
+  }, [currentId, dispatch.datasetDetail]);
 
   const handleClickPull = useCallback(() => {
     const diss = message.loading(t('dataDetail.button.pullLoading'), 0);
@@ -119,15 +144,54 @@ export default function DatasetDetail({ match }: Props) {
 
   const handleFinishUpdate = useCallback(() => {
     setFetchColumnsLoading(true);
-    dispatch.datasetDetail.fetchDatasetColumns(currentId).then(() => {
+    const params = {
+      id: currentId,
+      keyword: debounceColumnKeyword,
+      pagination: selector.columnsPagination,
+    };
+    dispatch.datasetDetail.fetchDatasetColumns(params).then(() => {
       setFetchColumnsLoading(false);
     });
-  }, [currentId, dispatch.datasetDetail]);
+  }, [
+    currentId,
+    debounceColumnKeyword,
+    dispatch.datasetDetail,
+    selector.columnsPagination,
+  ]);
+
+  const handleChangePagination = useCallback(
+    (pageNumber: number, pageSize?: number) => {
+      dispatch.datasetDetail.updatePagination({
+        pageNumber,
+        pageSize: pageSize || 25,
+      });
+    },
+    [dispatch.datasetDetail],
+  );
+  const handleChangePageSize = useCallback(
+    (pageSize: number) => {
+      dispatch.datasetDetail.updatePagination({
+        pageNumber: 1,
+        pageSize: pageSize || 25,
+      });
+    },
+    [dispatch.datasetDetail],
+  );
+
+  const handleChangeColumnKeyword = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      dispatch.datasetDetail.updateState({
+        key: 'columnsKeyword',
+        value: e.target.value,
+      });
+    },
+    [dispatch.datasetDetail],
+  );
 
   return (
     <div className={styles.page}>
       <div className={styles.backButtonRow}>
-        <Link to="/data-discovery">
+        <Link to="/data-discovery/dataset">
           {'< '}
           {t('dataDetail.back')}
         </Link>
@@ -261,6 +325,14 @@ export default function DatasetDetail({ match }: Props) {
 
             <div className={styles.columnsArea}>
               <div className={styles.columnsAreaInner}>
+                <div className={styles.columnSearch}>
+                  <Input.Search
+                    style={{ width: '70%', maxWidth: 620 }}
+                    value={selector.columnsKeyword}
+                    onChange={handleChangeColumnKeyword}
+                    size="large"
+                  />
+                </div>
                 <Spin spinning={fetchColumnsLoading}>
                   {selector.columns?.map(column => (
                     <ColumnItem
@@ -269,6 +341,18 @@ export default function DatasetDetail({ match }: Props) {
                       onFinishUpdate={handleFinishUpdate}
                     />
                   ))}
+                  <div className={styles.pagination}>
+                    <Pagination
+                      size="small"
+                      total={selector.columnsPagination.totalCount}
+                      showSizeChanger
+                      showQuickJumper
+                      onChange={handleChangePagination}
+                      onShowSizeChange={handleChangePageSize}
+                      pageSize={selector.columnsPagination.pageSize}
+                      pageSizeOptions={['25', '50', '100', '200']}
+                    />
+                  </div>
                 </Spin>
               </div>
             </div>

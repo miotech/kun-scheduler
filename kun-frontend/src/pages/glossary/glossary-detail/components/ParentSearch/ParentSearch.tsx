@@ -55,7 +55,7 @@ export default memo(function ParentSearch({
     return () => {
       ignore = true;
     };
-  }, [debounceKeyword]);
+  }, [debounceKeyword, disabledId]);
 
   const handleChange = useCallback(v => {
     setKeyword(v);
@@ -92,7 +92,7 @@ export default memo(function ParentSearch({
   return (
     <div className={styles.noEditName}>
       <CopyOutlined />
-      <Link to={`/glossary/${selectedParent!.id}`}>
+      <Link to={`/data-discovery/glossary/${selectedParent!.id}`}>
         <span className={styles.name}>{selectedParent!.name}</span>
       </Link>
     </div>

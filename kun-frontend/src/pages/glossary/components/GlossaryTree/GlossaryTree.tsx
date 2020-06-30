@@ -4,11 +4,9 @@ import { useHistory } from 'umi';
 import React, { memo, useEffect, useRef, useCallback } from 'react';
 import * as d3 from 'd3';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
-import { Button, Tooltip } from 'antd';
 
 import { GlossaryNode } from '@/rematch/models/glossary';
 import useRedux from '@/hooks/useRedux';
-import useI18n from '@/hooks/useI18n';
 
 import glossarySvg from './glossary.svg';
 import minus from './minus.svg';
@@ -18,17 +16,10 @@ import styles from './GlossaryTree.less';
 
 export interface Props {
   rootNode: GlossaryNode | null;
-  needRefresh?: boolean;
-  handleRefresh?: () => void;
 }
 
-export default memo(function GlossaryTree({
-  rootNode,
-  needRefresh,
-  handleRefresh,
-}: Props) {
+export default memo(function GlossaryTree({ rootNode }: Props) {
   const history = useHistory();
-  const t = useI18n();
 
   const svgContentRef = useRef(null);
   const svgRef = useRef(null);
@@ -171,7 +162,7 @@ export default memo(function GlossaryTree({
             const canNode = d3.select(this);
 
             canNode.attr('class', styles.nodeText).on('click', n => {
-              history.push(`/glossary/${n.data.id}`);
+              history.push(`/data-discovery/glossary/${n.data.id}`);
             });
           }
         });
@@ -406,13 +397,6 @@ export default memo(function GlossaryTree({
         <div className={styles.scaleButton} onClick={handleClickSub}>
           <MinusOutlined className={styles.scaleButtonIcon} />
         </div>
-        {needRefresh && (
-          <div className={styles.refreshButton}>
-            <Tooltip title={t('glossary.needRefresh')}>
-              <Button onClick={handleRefresh}>{t('glossary.refresh')}</Button>
-            </Tooltip>
-          </div>
-        )}
       </div>
 
       <div id="tree" className={styles.treeContainer} />

@@ -1,4 +1,4 @@
-import {post, CommonResponse} from './utils';
+import { post } from './utils';
 
 export interface LoginServiceReqBody {
   username: string;
@@ -10,7 +10,7 @@ export async function loginService(reqBody: LoginServiceReqBody) {
   return resp;
 }
 
-export interface whoamiServiceRespBody extends CommonResponse {
+export interface whoamiServiceRespBody {
   name: string;
 }
 
