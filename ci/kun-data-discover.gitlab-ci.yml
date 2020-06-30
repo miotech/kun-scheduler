@@ -34,9 +34,7 @@ verify-kun-data-discover-sonar:
       fi
 
 kun-data-discover-build:
-  extends: 
-    - .build-kun-data-discover
-    - .only-deploy
+  extends: .build-kun-data-discover
   stage: build
   image: gradle:6.5.0-jdk8
   tags:
@@ -45,11 +43,14 @@ kun-data-discover-build:
     - ./gradlew :kun-data-discover:bootJar
     - mkdir -p /builds/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/
     - cp kun-data-discover/build/libs/*.jar /builds/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/
+  only:
+    refs:
+      - master
+      - release
+      - tags
 
 kun-data-discover-push:
-  extends: 
-    - .build-kun-data-discover
-    - .only-deploy
+  extends: .build-kun-data-discover
   image: mioyingtech/docker:latest
   stage: build-images
   tags:
@@ -61,8 +62,10 @@ kun-data-discover-push:
     - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery:$CI_COMMIT_REF_NAME /builds/kun-data-discover/
     - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery:$CI_COMMIT_REF_NAME
   only:
-    changes:
-      - kun-data-discover/*
+    refs:
+      - master
+      - release
+      - tags
 
 kun-data-discover-set-tag:
   extends: .build-kun-data-discover
