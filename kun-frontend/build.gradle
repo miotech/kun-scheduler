@@ -29,7 +29,7 @@ yarnBuild.dependsOn(yarn_install)
 apply plugin: "org.sonarqube"
 sonarqube {
     properties {
-        property "sonar.sourceEncoding", "."
+        property "sonar.sources", "."
         property "sonar.sourceEncoding", "UTF-8"
     }
 }
