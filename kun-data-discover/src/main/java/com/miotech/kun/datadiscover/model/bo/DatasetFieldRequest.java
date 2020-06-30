@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class DatasetColumnRequest {
+public class DatasetFieldRequest {
     private String description;
 }

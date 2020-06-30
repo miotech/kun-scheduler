@@ -1,12 +1,12 @@
 package com.miotech.kun.datadiscover.service;
 
-import com.miotech.kun.datadiscover.model.bo.DatasetColumnRequest;
-import com.miotech.kun.datadiscover.model.entity.DatasetColumn;
+import com.miotech.kun.datadiscover.model.bo.DatasetFieldRequest;
+import com.miotech.kun.datadiscover.model.bo.DatasetFieldSearchRequest;
+import com.miotech.kun.datadiscover.model.entity.DatasetField;
+import com.miotech.kun.datadiscover.model.entity.DatasetFieldPage;
 import com.miotech.kun.datadiscover.persistence.DatasetFieldRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 /**
  * @author: Jie Chen
@@ -18,11 +18,11 @@ public class DatasetFieldService {
     @Autowired
     DatasetFieldRepository datasetFieldRepository;
 
-    public List<DatasetColumn> find(Long datasetGid) {
-        return datasetFieldRepository.findByDatasetGid(datasetGid);
+    public DatasetFieldPage find(Long datasetGid, DatasetFieldSearchRequest searchRequest) {
+        return datasetFieldRepository.findByDatasetGid(datasetGid, searchRequest);
     }
 
-    public DatasetColumn update(Long id, DatasetColumnRequest datasetColumnRequest) {
-        return datasetFieldRepository.update(id, datasetColumnRequest);
+    public DatasetField update(Long id, DatasetFieldRequest datasetFieldRequest) {
+        return datasetFieldRepository.update(id, datasetFieldRequest);
     }
 }
