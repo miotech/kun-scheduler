@@ -5,6 +5,7 @@
 #       - kun-metadata/*
 
 verify-kun-data-discover-test:
+  extends: .build-kun-data-discover
   stage: verify
   image: gradle:6.5.0-jdk8
   except:
@@ -15,11 +16,9 @@ verify-kun-data-discover-test:
   allow_failure: false
   script:
     - ./gradlew check -p kun-data-discover
-  only:
-    changes:
-      - kun-data-discover/*
 
 verify-kun-data-discover-sonar:
+  extends: .build-kun-data-discover
   stage: verify
   image: mioyingtech/gradle-sonar:0.1-build
   except:
@@ -33,12 +32,11 @@ verify-kun-data-discover-sonar:
           ./gradlew sonarqube -p kun-data-discover -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=publish -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-data-discover -Dsonar.projectName='kun-data-discover';
       else ./gradlew sonarqube -p kun-data-discover -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=preview -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-data-discover -Dsonar.projectName='kun-data-discover';  
       fi
-  only:
-    changes:
-      - kun-data-discover/*
 
 kun-data-discover-build:
-  extends: .only-deploy
+  extends: 
+    - .build-kun-data-discover
+    - .only-deploy
   stage: build
   image: gradle:6.5.0-jdk8
   tags:
@@ -47,12 +45,11 @@ kun-data-discover-build:
     - ./gradlew :kun-data-discover:bootJar
     - mkdir -p /builds/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/
     - cp kun-data-discover/build/libs/*.jar /builds/artifacts/kun-data-discover/${CI_COMMIT_REF_NAME}/
-  only:
-    changes:
-      - kun-data-discover/*
 
 kun-data-discover-push:
-  extends: .only-deploy
+  extends: 
+    - .build-kun-data-discover
+    - .only-deploy
   image: mioyingtech/docker:latest
   stage: build-images
   tags:
@@ -68,6 +65,7 @@ kun-data-discover-push:
       - kun-data-discover/*
 
 kun-data-discover-set-tag:
+  extends: .build-kun-data-discover
   stage: set-tag
   tags:
     - build
@@ -78,6 +76,7 @@ kun-data-discover-set-tag:
     - production
       
 kun-data-discover-set-tag-hotfix:
+  extends: .build-kun-data-discover
   stage: set-tag
   tags:
     - build
@@ -89,6 +88,7 @@ kun-data-discover-set-tag-hotfix:
   when: manual
 
 kun-data-discover-save-tag:
+  extends: .build-kun-data-discover
   stage: save-tag
   tags:
     - build

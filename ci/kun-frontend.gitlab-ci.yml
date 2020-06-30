@@ -1,5 +1,6 @@
 
 verify-kun-frontend-test:
+  extends: .build-kun-frontend
   stage: verify
   image: gradle:6.5.0-jdk8
   except:
@@ -11,11 +12,9 @@ verify-kun-frontend-test:
   script:
     - ./gradlew yarn_install -p kun-frontend
     - ./gradlew check -p kun-frontend
-  only:
-    changes:
-      - kun-frontend/data-discovery/*
 
 verify-kun-frontend-sonar:
+  extends: .build-kun-frontend
   stage: verify
   image: mioyingtech/gradle-sonar:0.1-build
   except:
@@ -29,12 +28,11 @@ verify-kun-frontend-sonar:
           ./gradlew sonarqube -p kun-frontend -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=publish -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-frontend -Dsonar.projectName='kun-frontend'; 
       else ./gradlew sonarqube -p kun-frontend -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=preview -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-frontend -Dsonar.projectName='kun-frontend';
       fi
-  only:
-    changes:
-      - kun-frontend/data-discovery/*
 
 kun-frontend-build:
-  extends: .only-deploy
+  extends: 
+    - .build-kun-frontend
+    - .only-deploy
   stage: build
   image: gradle:6.5.0-jdk8
   tags:
@@ -44,12 +42,11 @@ kun-frontend-build:
     - mkdir -p /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
     - cp kun-frontend/data-discovery/nginx.conf /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
     - cp -r kun-frontend/data-discovery/dist /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
-  only:
-    changes:
-      - kun-frontend/data-discovery/*
 
 kun-frontend-push:
-  extends: .only-deploy
+  extends: 
+    - .build-kun-frontend
+    - .only-deploy
   stage: build-images
   image: mioyingtech/docker:latest
   tags:
@@ -60,11 +57,9 @@ kun-frontend-push:
     - docker login -u $CI_BUILD_DOCKER_USER -p $CI_BUILD_TOKEN $CI_BUILD_DOCKER_URL
     - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery-frontend:$CI_COMMIT_REF_NAME /builds/kun-frontend/
     - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery-frontend:$CI_COMMIT_REF_NAME
-  only:
-    changes:
-      - kun-frontend/data-discovery/*
 
 kun-frontend-set-tag:
+  extends: .build-kun-frontend
   stage: set-tag
   tags:
     - build
@@ -75,6 +70,7 @@ kun-frontend-set-tag:
     - production
       
 kun-frontend-set-tag-hotfix:
+  extends: .build-kun-frontend
   stage: set-tag
   tags:
     - build
@@ -86,6 +82,7 @@ kun-frontend-set-tag-hotfix:
   when: manual
 
 kun-frontend-save-tag:
+  extends: .build-kun-frontend
   stage: save-tag
   tags:
     - build
