@@ -20,6 +20,26 @@ include:
 # include: ci/kun-data-discover.gitlab-ci.yml
 # include: ci/kun-workflow.gitlab-ci.yml
 
+.build-kun-frontend:
+  only:
+    changes:
+      - kun-frontend/data-discovery/**/*
+
+.build-kun-data-discover:
+  only:
+    changes:
+      - kun-data-discover/**/*
+
+.build-kun-metadata:
+  only:
+    changes:
+      -  kun-metadata/**/*
+
+.build-kun-workflow:
+  only:
+    changes:
+      - kun-workflow/**/*
+                  
 .only-deploy:
   only:
     refs:

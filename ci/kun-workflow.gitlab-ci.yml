@@ -5,6 +5,7 @@
 #       - kun-metadata/*
 
 verify-kun-workflow-test:
+  extends: .build-kun-workflow
   stage: verify
   image: gradle:6.5.0-jdk8
   except:
@@ -15,9 +16,6 @@ verify-kun-workflow-test:
   allow_failure: false
   script:
     - ./gradlew check -p kun-workflow
-  only:
-    changes:
-      - kun-workflow/*
 
 # verify-sonar:
 #   stage: verify
