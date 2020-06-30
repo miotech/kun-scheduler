@@ -102,16 +102,15 @@ public class DataSourceController {
     }
 
     @GetMapping("/metadata/dataset/{id}/columns")
-    public RequestResult<DatasetColumnListVO> getDatasetColumns(@PathVariable Long id) {
-        DatasetColumnListVO vo = new DatasetColumnListVO();
-        vo.setColumns(datasetFieldService.find(id));
-        return RequestResult.success(vo);
+    public RequestResult<DatasetFieldPage> getDatasetColumns(@PathVariable Long id,
+                                                             DatasetFieldSearchRequest searchRequest) {
+        return RequestResult.success(datasetFieldService.find(id, searchRequest));
     }
 
     @PostMapping("/metadata/column/{id}/update")
-    public RequestResult<DatasetColumn> updateDatasetColumn(@PathVariable Long id,
-                                                            @RequestBody DatasetColumnRequest datasetColumnRequest) {
-        return RequestResult.success(datasetFieldService.update(id, datasetColumnRequest));
+    public RequestResult<DatasetField> updateDatasetColumn(@PathVariable Long id,
+                                                           @RequestBody DatasetFieldRequest datasetFieldRequest) {
+        return RequestResult.success(datasetFieldService.update(id, datasetFieldRequest));
     }
 
     @GetMapping("/metadata/dataset/{id}/lineages")
