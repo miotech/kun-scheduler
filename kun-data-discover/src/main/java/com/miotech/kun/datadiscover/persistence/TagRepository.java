@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscover.persistence;
 
+import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.commons.utils.IdGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;

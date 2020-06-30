@@ -1,11 +1,13 @@
 package com.miotech.kun.datadiscover.controller;
 
-import com.miotech.kun.datadiscover.model.RequestResult;
+import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.datadiscover.model.vo.TagListVO;
-import com.miotech.kun.datadiscover.model.vo.UserListVO;
 import com.miotech.kun.datadiscover.service.TagService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author: Melo
@@ -26,9 +28,4 @@ public class ReferenceController {
         return RequestResult.success(vo);
     }
 
-    @GetMapping("/metadata/users/search")
-    public RequestResult<UserListVO> getUsers(@RequestParam("keyword") String keyword) {
-        RequestResult<UserListVO> requestResult = RequestResult.success();
-        return requestResult;
-    }
 }

@@ -1,7 +1,8 @@
 package com.miotech.kun.datadiscover.persistence;
 
+import com.miotech.kun.common.BaseRepository;
+import com.miotech.kun.common.util.JSONUtil;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.datadiscover.common.util.JSONUtil;
 import com.miotech.kun.datadiscover.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscover.model.bo.DatabaseRequest;
 import com.miotech.kun.datadiscover.model.bo.DatabaseSearchRequest;
