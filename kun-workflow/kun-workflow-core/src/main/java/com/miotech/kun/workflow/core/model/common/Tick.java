@@ -24,6 +24,10 @@ public class Tick {
         return LocalDateTime.parse(time, FORMATTER).toEpochSecond(DateTimeUtils.systemDefaultOffset());
     }
 
+    public OffsetDateTime toOffsetDateTime() {
+        return OffsetDateTime.of(LocalDateTime.parse(time, FORMATTER), DateTimeUtils.systemDefaultOffset());
+    }
+
     @Override
     public String toString() {
         return time;
