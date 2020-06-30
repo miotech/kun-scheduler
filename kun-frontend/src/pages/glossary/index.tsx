@@ -24,15 +24,8 @@ export default function Glossary() {
   }, [dispatch.glossary, selector.glossaryData]);
 
   const handleClickCreate = useCallback(() => {
-    history.push('/glossary/create');
+    history.push('/data-discovery/glossary/create');
   }, []);
-
-  const refreshTree = useCallback(() => {
-    dispatch.glossary.fetchRootNodeChildGlossary();
-    // TODO: @wangchen: Why are you dispatching a non-existing action to reducer?
-    // @ts-ignore
-    dispatch.glossary.updateNeedRefresh(false);
-  }, [dispatch.glossary]);
 
   return (
     <div className={styles.page}>
@@ -52,12 +45,7 @@ export default function Glossary() {
       </div>
 
       <Card className={styles.glossaryTreeContainer}>
-        <GlossaryTree
-          rootNode={selector.glossaryData}
-          // @ts-ignore
-          needRefresh={selector.isNeedRefreshTree}
-          handleRefresh={refreshTree}
-        />
+        <GlossaryTree rootNode={selector.glossaryData} />
       </Card>
     </div>
   );

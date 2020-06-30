@@ -9,6 +9,7 @@ import {
   updateColumnService,
 } from '@/services/datasetDetail';
 import { Watermark } from './dataDiscovery';
+import { Pagination } from './index';
 import { RootDispatch, RootState } from '../store';
 
 export interface Flow {
@@ -45,6 +46,8 @@ export interface DatasetDetail {
 
 export interface DatasetDetailState extends DatasetDetail {
   columns?: Column[];
+  columnsPagination: Pagination;
+  columnsKeyword: string;
 }
 
 export const datasetDetail = {
@@ -65,6 +68,12 @@ export const datasetDetail = {
     flows: null,
 
     columns: [],
+    columnsPagination: {
+      pageNumber: 1,
+      pageSize: 25,
+      totalCount: 0,
+    },
+    columnsKeyword: '',
   } as DatasetDetailState,
 
   reducers: {
@@ -82,64 +91,96 @@ export const datasetDetail = {
       ...state,
       ...payload,
     }),
+    updatePagination: (
+      state: DatasetDetailState,
+      payload: Partial<Pagination>,
+    ) => ({
+      ...state,
+      columnsPagination: {
+        ...state.columnsPagination,
+        ...payload,
+      },
+    }),
   },
 
-  effects: (dispatch: RootDispatch) => ({
-    async fetchDatasetDetail(id: string) {
-      const resp = await fetchDatasetDetailService(id);
-      if (resp) {
-        dispatch.datasetDetail.batchUpdateState(resp);
-      }
-    },
-    async fetchDatasetColumns(id: string) {
-      const resp = await fetchDatasetColumnsService(id);
-      if (resp) {
-        dispatch.datasetDetail.updateState({
-          key: 'columns',
-          value: resp.columns,
-        });
-      }
-    },
-    async pullDataset(id: string) {
-      const resp = await pullDatasetService(id);
-      if (resp) {
-        message.success(
-          formatMessage(
-            {
-              id: `dataDetail.button.pullDuration`,
-            },
-            { time: resp.duration },
-          ),
-        );
-        return resp;
-      }
-      return null;
-    },
-    async updateDataset(
-      payload: { id: string; updateParams: Partial<UpdateDatasetReqBody> },
-      rootState: RootState,
-    ) {
-      const { id, updateParams } = payload;
-      const { description, owners, tags } = rootState.datasetDetail;
-      const reqBody = {
-        description,
-        owners,
-        tags,
-        ...updateParams,
-      };
-      const resp = await updateDatasetService(id, reqBody);
-      if (resp) {
-        dispatch.datasetDetail.batchUpdateState(resp);
-      }
-    },
+  effects: (dispatch: RootDispatch) => {
+    let fetchDatasetColumnsServiceCountFlag = 1;
+    return {
+      async fetchDatasetDetail(id: string) {
+        const resp = await fetchDatasetDetailService(id);
+        if (resp) {
+          dispatch.datasetDetail.batchUpdateState(resp);
+        }
+      },
+      async fetchDatasetColumns(payload: {
+        id: string;
+        keyword: string;
+        pagination: Pagination;
+      }) {
+        const { id, keyword, pagination } = payload;
+        fetchDatasetColumnsServiceCountFlag += 1;
+        const currentFetchDatasetColumnsServiceCountFlag = fetchDatasetColumnsServiceCountFlag;
+        const resp = await fetchDatasetColumnsService(id, keyword, pagination);
+        if (
+          currentFetchDatasetColumnsServiceCountFlag ===
+          fetchDatasetColumnsServiceCountFlag
+        ) {
+          if (resp) {
+            const { columns, pageNumber, pageSize, totalCount } = resp;
 
-    async updateColumn(payload: { id: string; description: string }) {
-      const { id, description } = payload;
-      const resp = await updateColumnService(id, { description });
-      if (resp) {
-        return resp;
-      }
-      return null;
-    },
-  }),
+            dispatch.datasetDetail.updateState({
+              key: 'columns',
+              value: columns,
+            });
+            dispatch.datasetDetail.updatePagination({
+              pageNumber,
+              pageSize,
+              totalCount,
+            });
+          }
+        }
+      },
+      async pullDataset(id: string) {
+        const resp = await pullDatasetService(id);
+        if (resp) {
+          message.success(
+            formatMessage(
+              {
+                id: `dataDetail.button.pullDuration`,
+              },
+              { time: resp.duration },
+            ),
+          );
+          return resp;
+        }
+        return null;
+      },
+      async updateDataset(
+        payload: { id: string; updateParams: Partial<UpdateDatasetReqBody> },
+        rootState: RootState,
+      ) {
+        const { id, updateParams } = payload;
+        const { description, owners, tags } = rootState.datasetDetail;
+        const reqBody = {
+          description,
+          owners,
+          tags,
+          ...updateParams,
+        };
+        const resp = await updateDatasetService(id, reqBody);
+        if (resp) {
+          dispatch.datasetDetail.batchUpdateState(resp);
+        }
+      },
+
+      async updateColumn(payload: { id: string; description: string }) {
+        const { id, description } = payload;
+        const resp = await updateColumnService(id, { description });
+        if (resp) {
+          return resp;
+        }
+        return null;
+      },
+    };
+  },
 };

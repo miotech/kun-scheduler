@@ -55,7 +55,7 @@ export default memo(function AssetList({
           .map(asset => (
             <div className={styles.childItem} key={asset!.id}>
               <FileTextOutlined />
-              <Link to={`/data-discovery/${asset!.id}`}>
+              <Link to={`/data-discovery/dataset/${asset!.id}`}>
                 <span className={styles.name}>{asset!.name}</span>
               </Link>
             </div>

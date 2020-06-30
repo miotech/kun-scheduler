@@ -17,6 +17,7 @@ function Breadcrumb({ route }: Props) {
       currentPath: state.route.currentMatchPath,
       currentParams: state.route.currentParams,
       datasetName: state.datasetDetail.name,
+      glossaryName: state.glossary.currentGlossaryDetail?.name,
     }),
     shallowEqual,
   );
@@ -50,12 +51,24 @@ function Breadcrumb({ route }: Props) {
     pathToRegexp.compile(path)(params);
 
   const getLinkComp = (routeItem: IRoute) => {
-    if (routeItem.path === '/data-discovery/:datasetId') {
+    if (routeItem.path === '/') {
+      return null;
+    }
+    if (routeItem.path === '/data-discovery/dataset/:datasetId') {
       return (
         <Link
           to={realPth(routeItem.path || '/', selectedData.currentParams || {})}
         >
           {selectedData.datasetName ?? routeItem.title}
+        </Link>
+      );
+    }
+    if (routeItem.path === '/data-discovery/glossary/:glossaryId') {
+      return (
+        <Link
+          to={realPth(routeItem.path || '/', selectedData.currentParams || {})}
+        >
+          {selectedData.glossaryName ?? routeItem.title}
         </Link>
       );
     }

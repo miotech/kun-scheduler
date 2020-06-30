@@ -1,4 +1,5 @@
 import { DatasetDetail, Column } from '@/rematch/models/datasetDetail';
+import { Pagination } from '@/rematch/models';
 import { get, post } from './utils';
 
 export interface FetchDatasetDetailRespBody extends DatasetDetail {}
@@ -37,13 +38,24 @@ export async function fetchDatasetDetailService(detailId: string) {
   // } as FetchDatasetDetailRespBody;
 }
 
-export interface FetchDatasetColumnsRespBody {
+export interface FetchDatasetColumnsRespBody extends Pagination {
   columns: Column[];
 }
 
-export async function fetchDatasetColumnsService(datasetId: string) {
+export async function fetchDatasetColumnsService(
+  datasetId: string,
+  keyword: string,
+  pagination: Pagination,
+) {
+  const { pageSize, pageNumber } = pagination;
+  const params = {
+    keyword,
+    pageSize,
+    pageNumber,
+  };
   const resp = await get<FetchDatasetColumnsRespBody>(
     `/metadata/dataset/${datasetId}/columns`,
+    params,
   );
   return resp;
   // // TODO: jiashuju
@@ -69,7 +81,7 @@ export interface PullDatasetRespBody {
 }
 
 export async function pullDatasetService(datasetId: string) {
-  const resp = await get<PullDatasetRespBody>(
+  const resp = await post<PullDatasetRespBody>(
     `/metadata/dataset/${datasetId}/pull`,
   );
   return resp;

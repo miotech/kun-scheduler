@@ -82,7 +82,7 @@ export default function GlossaryDetail({ match }: Props) {
   }, [currentId, dispatch.glossary]);
 
   const handleClickBack = useCallback(() => {
-    history.push('/glossary');
+    history.push('/data-discovery/glossary');
   }, [history]);
 
   const updateInputtingDetail = (key: keyof IGlossaryDetail, value: any) => {
@@ -113,7 +113,7 @@ export default function GlossaryDetail({ match }: Props) {
       dispatch.glossary.deleteGlossary(currentId).then(resp => {
         if (resp) {
           message.success(t('common.operateSuccess'));
-          history.push('/glossary');
+          history.push('/data-discovery/glossary');
         }
       });
     }
@@ -159,7 +159,7 @@ export default function GlossaryDetail({ match }: Props) {
   }, [dispatch.glossary, getParams, inputtingDetail, t]);
 
   const handleClickCreateCancel = useCallback(() => {
-    history.push('/glossary');
+    history.push('/data-discovery/glossary');
   }, [history]);
 
   const handleClickCreate = useCallback(() => {
@@ -171,7 +171,7 @@ export default function GlossaryDetail({ match }: Props) {
       if (resp) {
         message.success(t('common.operateSuccess'));
         setIsEditing(false);
-        history.replace(`/glossary/${resp.id}`);
+        history.replace(`/data-discovery/glossary/${resp.id}`);
       }
     });
   }, [dispatch.glossary, getParams, history, t]);

@@ -168,7 +168,7 @@ export default function DataDisvocery() {
           render: (name: string, record: Dataset) => (
             <Link
               className={styles.nameLink}
-              to={`/data-discovery/${record.id}`}
+              to={`/data-discovery/dataset/${record.id}`}
             >
               {name}
             </Link>

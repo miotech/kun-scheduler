@@ -9,7 +9,7 @@
     "test:coverage": "umi-test --coverage",
     "lint-staged": "lint-staged",
     "lint-staged:js": "eslint --ext .js,.jsx,.ts,.tsx ",
-    "start:local-backend-chenjie": "PROXY_TARGET=\"http://192.168.1.123:8080\" PORT=9801 umi dev",
+    "start:local-backend-chenjie": "PROXY_TARGET=\"http://192.168.1.60:8080\" PORT=9801 umi dev",
     "start:local": "PROXY_TARGET=\"http://localhost:8080\" PORT=9801 umi dev",
     "i18n": "node i18n-updater/index.js"
   },
