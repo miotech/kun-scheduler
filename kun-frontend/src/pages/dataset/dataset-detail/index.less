@@ -1,0 +1,99 @@
+.page {
+  padding: 20px;
+
+  .backButtonRow {
+    a {
+      font-size: 14px;
+      color: @secondary;
+      font-weight: bold;
+    }
+  }
+
+  .pageContent {
+    margin-top: 16px;
+    border-radius: 3px;
+
+    .titleRow {
+      display: flex;
+      align-items: center;
+      padding: 0 32px 0 40px;
+      height: 70px;
+      border-bottom: 1px solid @borderColor;
+
+      .titleAndWatermark {
+        display: flex;
+        align-items: center;
+        .title {
+          color: @primary;
+          font-size: 20px;
+          font-weight: bold;
+          margin-right: 24px;
+        }
+        .watermark {
+          color: @third;
+          font-size: 16px;
+        }
+      }
+
+      .pullButton {
+        margin-left: auto;
+        background-color: @darkBlue;
+        width: 128px;
+        color: @white;
+      }
+    }
+
+    .detailInfoArea {
+      display: flex;
+
+      .baseInfoArea {
+        flex: 0 0 432px;
+        width: 432px;
+        border-right: 1px solid @borderColor;
+        padding: 12px 16px 12px 32px;
+
+        .baseItem {
+          &:not(:last-child) {
+            margin-bottom: 16px;
+          }
+
+          .baseItemTitle {
+            line-height: 21px;
+            font-size: 14px;
+            font-weight: bold;
+            color: @primary;
+            margin-bottom: 8px;
+          }
+
+          .baseContent {
+            line-height: 21px;
+            font-size: 14px;
+            color: @secondary;
+            &:not(:last-child) {
+              margin-bottom: 8px;
+            }
+          }
+        }
+      }
+
+      .columnsArea {
+        flex: 1;
+        .columnsAreaInner {
+          height: 100%;
+          overflow: auto;
+
+          .columnSearch {
+            padding: 20px 24px;
+            border-bottom: 1px solid @borderColor;
+          }
+        }
+      }
+    }
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 24px;
+  }
+}
