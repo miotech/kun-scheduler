@@ -38,7 +38,7 @@ kun-frontend-build:
   tags:
     - build
   script:
-    - ./gradlew :kun-frontend:data-discovery:yarnBuild
+    - ./gradlew :kun-frontend:yarnBuild
     - mkdir -p /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
     - cp kun-frontend/data-discovery/nginx.conf /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
     - cp -r kun-frontend/data-discovery/dist /builds/artifacts/kun-frontend/${CI_COMMIT_REF_NAME}/
