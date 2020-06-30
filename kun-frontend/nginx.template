@@ -1,0 +1,44 @@
+server_tokens off;
+
+gzip  on;
+gzip_vary          on;
+gzip_comp_level    6;
+gzip_static        on;
+gzip_min_length    1000;
+gzip_proxied       any;
+gzip_disable       "MSIE [1-6]\.";
+gzip_http_version  1.0;
+gzip_types         text/plain text/css application/json application/x-javascript text/xml application/xml application/xml+rss text/javascript application/javascript image/svg+xml;
+
+server {
+    listen       80;
+
+    client_max_body_size 50M;
+
+    root /app/dist;
+
+    location / {
+               try_files $uri $uri/ /index.html;
+    }
+
+    location /kun/api {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Scheme $scheme;
+        proxy_redirect http:// https://;
+        add_header cache-control public;
+        proxy_pass http://kun-data-discovery:${DATA_DISCOVERY_PORT};
+        proxy_redirect off;
+    }
+
+    location /status {
+    stub_status on;
+    access_log off;
+    }
+
+    error_page   500 502 503 504  /50x.html;
+    location = /50x.html {
+        root   html;
+    }
+
+}
