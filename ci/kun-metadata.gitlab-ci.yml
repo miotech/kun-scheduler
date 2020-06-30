@@ -5,6 +5,7 @@
 #       - kun-metadata/*
 
 verify-kun-metadata-test:
+  extends: .build-kun-metadata
   stage: verify
   image: gradle:6.5.0-jdk8
   except:
@@ -15,11 +16,9 @@ verify-kun-metadata-test:
   allow_failure: false
   script:
     - ./gradlew check -p kun-metadata
-  only:
-    changes:
-      - kun-metadata/*
 
 verify-kun-metadata-sonar:
+  extends: .build-kun-metadata
   stage: verify
   image: mioyingtech/gradle-sonar:0.1-build
   except:
@@ -33,13 +32,12 @@ verify-kun-metadata-sonar:
           ./gradlew sonarqube -p kun-metadata -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=publish -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-metadata -Dsonar.projectName='kun-metadata';
       else ./gradlew sonarqube -p kun-metadata -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=preview -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-metadata -Dsonar.projectName='kun-metadata';  
       fi
-  only:
-    changes:
-      - kun-metadata/*
 
 kun-metadata-build:
   stage: build
-  extends: .only-deploy
+  extends: 
+    - .build-kun-metadata
+    - .only-deploy
   image: gradle:6.5.0-jdk8
   tags:
     - build
@@ -47,12 +45,11 @@ kun-metadata-build:
     - ./gradlew :kun-metadata:shadowJar
     - mkdir -p /builds/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/
     - cp kun-metadata/build/libs/*.jar /builds/artifacts/kun-metadata/${CI_COMMIT_REF_NAME}/
-  only:
-    changes:
-      - kun-metadata/*
 
 kun-metadata-push:
-  extends: .only-deploy
+  extends: 
+    - .build-kun-metadata
+    - .only-deploy
   stage: build-images
   image: mioyingtech/docker:latest
   tags:
@@ -63,11 +60,9 @@ kun-metadata-push:
     - docker login -u $CI_BUILD_DOCKER_USER -p $CI_BUILD_TOKEN $CI_BUILD_DOCKER_URL
     - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-metadata:$CI_COMMIT_REF_NAME /builds/kun-metadata/
     - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-metadata:$CI_COMMIT_REF_NAME
-  only:
-    changes:
-      - kun-metadata/*
 
 kun-metadata-set-tag:
+  extends: .build-kun-metadata
   stage: set-tag
   tags:
     - build
@@ -78,6 +73,7 @@ kun-metadata-set-tag:
     - production
       
 kun-metadata-set-tag-hotfix:
+  extends: .build-kun-metadata
   stage: set-tag
   tags:
     - build
@@ -89,6 +85,7 @@ kun-metadata-set-tag-hotfix:
   when: manual
 
 kun-metadata-save-tag:
+  extends: .build-kun-metadata
   stage: save-tag
   tags:
     - build
