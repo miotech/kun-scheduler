@@ -14,3 +14,6 @@ include ':kun-workflow:kun-workflow-web'
 include ':kun-workflow:kun-workflow-operators'
 include ':kun-workflow:kun-workflow-operators:legacy-spark-operators'
 include ':kun-data-discover'
+include ':kun-security'
+include ':kun-app-common'
+

@@ -1,9 +1,11 @@
 package com.miotech.kun.datadiscover.controller;
 
-import com.miotech.kun.datadiscover.model.RequestResult;
+import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.datadiscover.model.bo.*;
 import com.miotech.kun.datadiscover.model.entity.*;
-import com.miotech.kun.datadiscover.model.vo.*;
+import com.miotech.kun.datadiscover.model.vo.DatasetLineageVO;
+import com.miotech.kun.datadiscover.model.vo.IdVO;
+import com.miotech.kun.datadiscover.model.vo.PullDataVO;
 import com.miotech.kun.datadiscover.service.DatasetFieldService;
 import com.miotech.kun.datadiscover.service.DatasetService;
 import com.miotech.kun.datadiscover.service.DatasourceService;
@@ -97,8 +99,7 @@ public class DataSourceController {
 
     @PostMapping("/metadata/dataset/{id}/pull")
     public RequestResult<PullDataVO> pullDataset(@PathVariable String id) {
-        RequestResult<PullDataVO> requestResult = RequestResult.success();
-        return requestResult;
+        return RequestResult.success();
     }
 
     @GetMapping("/metadata/dataset/{id}/columns")

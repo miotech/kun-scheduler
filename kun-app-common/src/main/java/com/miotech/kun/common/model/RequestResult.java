@@ -1,12 +1,10 @@
-package com.miotech.kun.datadiscover.model;
+package com.miotech.kun.common.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.datadiscover.constant.ErrorCode;
+import com.miotech.kun.common.constant.ErrorCode;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.io.Serializable;
 
 /**
  * @author: Melo
@@ -16,9 +14,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = false)
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RequestResult<T> implements Serializable {
-
-    private static final long serialVersionUID = 1L;
+public class RequestResult<T> {
 
     /**
      * 返回代码
@@ -38,7 +34,7 @@ public class RequestResult<T> implements Serializable {
     @JsonProperty("result")
     private T result;
 
-    private RequestResult (int code, String note) {
+    private RequestResult(int code, String note) {
         this.code = code;
         this.note = note;
     }
