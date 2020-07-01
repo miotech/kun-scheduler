@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 
 public class DateTimeUtils {
     private static final ZoneOffset ZONE_OFFSET = OffsetDateTime.now().getOffset();
+    private static final DateTimeFormatter MINUTE_PRECISION_DATETIME_PATTERN = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
     private static Clock globalClock = Clock.systemDefaultZone();
 
@@ -45,8 +46,7 @@ public class DateTimeUtils {
      * @return
      */
     public static OffsetDateTime freezeAt(String dateTimeString) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
-        OffsetDateTime dt = LocalDateTime.parse(dateTimeString, formatter).atOffset(ZONE_OFFSET);
+        OffsetDateTime dt = LocalDateTime.parse(dateTimeString, MINUTE_PRECISION_DATETIME_PATTERN).atOffset(ZONE_OFFSET);
         Clock fixed = Clock.fixed(dt.toInstant(), ZoneId.systemDefault());
         setClock(fixed);
         return dt;

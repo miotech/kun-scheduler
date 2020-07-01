@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +51,7 @@ public class TaskInProgress implements Runnable {
             long attemptId = attempt.getId();
 
             // 更新任务状态为RUNNING，开始时间
-            OffsetDateTime startAt = OffsetDateTime.now();
+            OffsetDateTime startAt = DateTimeUtils.now();
             logger.debug("Change TaskAttempt's status to RUNNING. taskAttempt={}, startAt={}", attempt, startAt);
             commonService.changeTaskAttemptStatus(attemptId, TaskRunStatus.RUNNING, startAt, null);
 
@@ -93,7 +94,7 @@ public class TaskInProgress implements Runnable {
             }
 
             // 更新任务状态为SUCCESS/FAILED，结束时间
-            OffsetDateTime endAt = OffsetDateTime.now();
+            OffsetDateTime endAt = DateTimeUtils.now();
             logger.debug("Change TaskAttempt's status to {}. taskAttempt={}, endAt={}", finalStatus, attempt, endAt);
             commonService.changeTaskAttemptStatus(attemptId, finalStatus, null, endAt);
 
@@ -129,7 +130,7 @@ public class TaskInProgress implements Runnable {
     }
 
     private String newLogPath(long attemptId) {
-        String date = OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String date = DateTimeUtils.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         return String.format("file:logs/%s/%s", date, attemptId);
     }
 

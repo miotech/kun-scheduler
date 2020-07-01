@@ -229,10 +229,10 @@ public class TaskDao {
                 .asPrepared()
                 .getSQL();
 
-        return fetchTasksJoinDependencies(sql, taskIds.toArray());
+        return fetchTasksJoiningDependencies(sql, taskIds.toArray());
     }
 
-    private List<Task> fetchTasksJoinDependencies(String preparedSql, Object... params) {
+    private List<Task> fetchTasksJoiningDependencies(String preparedSql, Object... params) {
         List<Task> plainTasks = dbOperator.fetchAll(preparedSql, TaskMapper.INSTANCE, params);
 
         // Retrieve all relations whose downstream ids are involved in result tasks
@@ -350,7 +350,7 @@ public class TaskDao {
                 .getSQL();
         Collections.addAll(params, pageSize, offset);
 
-        return fetchTasksJoinDependencies(sql, params.toArray());
+        return fetchTasksJoiningDependencies(sql, params.toArray());
     }
 
     public List<Task> fetchByOperatorId(Long operatorId) {
@@ -384,6 +384,34 @@ public class TaskDao {
         );
 
         return Optional.of(task.cloneBuilder().withDependencies(dependencies).build());
+    }
+
+    public Map<Long, Optional<Task>> fetchByIds(List<Long> taskIds) {
+        if (taskIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+
+        String idList = taskIds.stream()
+                .map(Object::toString)
+                .collect(Collectors.joining(","));
+
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(getSelectSQL(null))
+                .where("id IN (" + idList + ")")
+                .getSQL();
+
+        List<Task> fetched = fetchTasksJoiningDependencies(sql);
+
+        Map<Long, Optional<Task>> result = fetched.stream()
+                .collect(Collectors.toMap(Task::getId, Optional::of));
+
+        for (Long taskId : taskIds) {
+            if (!result.containsKey(taskId)) {
+                result.put(taskId, Optional.empty());
+            }
+        }
+
+        return result;
     }
 
     public Optional<Task> fetchByName(String name) {
@@ -569,7 +597,7 @@ public class TaskDao {
                 .on(TASK_MODEL_NAME + ".id = " + TICK_TASK_MAPPING_TABLE_ALIAS + ".task_id")
                 .where(TICK_TASK_MAPPING_TABLE_ALIAS + ".scheduled_tick <= ?")
                 .getSQL();
-        return fetchTasksJoinDependencies(sql, tick.toString());
+        return fetchTasksJoiningDependencies(sql, tick.toString());
     }
 
     /**

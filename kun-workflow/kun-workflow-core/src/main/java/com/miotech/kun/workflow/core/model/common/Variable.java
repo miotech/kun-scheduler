@@ -15,10 +15,24 @@ public class Variable {
         return key;
     }
 
-    public String getValue() { return value; }
+    public String getValue() {
+        return value;
+    }
 
     public String getDefaultValue() {
         return defaultValue;
+    }
+
+    public Variable withValue(String value) {
+        return cloneBuilder().withValue(value).build();
+    }
+
+    public static Variable of(String key, String value, String defaultValue) {
+        return newBuilder()
+                .withKey(key)
+                .withValue(value)
+                .withDefaultValue(defaultValue)
+                .build();
     }
 
     public static VariableBuilder newBuilder() {
