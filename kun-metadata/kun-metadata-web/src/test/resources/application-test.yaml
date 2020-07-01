@@ -1,0 +1,8 @@
+server:
+  port: 18088
+
+datasource:
+  jdbcUrl: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+  username: sa
+  password:
+  driverClassName: org.h2.Driver

@@ -1,0 +1,35 @@
+plugins {
+    id 'java'
+}
+
+sourceSets {
+    main {
+        output.resourcesDir = file("${java.outputDir}/../resources")
+    }
+}
+
+dependencies {
+    implementation project(":kun-commons:kun-commons-db")
+    implementation project(":kun-commons:kun-commons-testing")
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-commons:kun-commons-web")
+    implementation project(":kun-metadata:kun-metadata-databuilder")
+    implementation project(":kun-workflow:kun-workflow-core")
+    implementation project(":kun-workflow:kun-workflow-utils")
+    implementation project(":kun-workflow:kun-workflow-common")
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation "org.eclipse.jetty:jetty-server"
+    implementation "org.eclipse.jetty:jetty-servlet"
+    implementation "org.eclipse.jetty:jetty-util"
+    implementation "org.eclipse.jetty:jetty-webapp"
+    implementation "org.yaml:snakeyaml"
+    implementation 'com.google.guava:guava'
+    implementation "com.amazonaws:aws-java-sdk-glue"
+    implementation "com.h2database:h2"
+    implementation "com.zaxxer:HikariCP"
+    implementation "org.flywaydb:flyway-core"
+    testImplementation "junit:junit"
+    testRuntimeOnly "org.mockito:mockito-core"
+}
