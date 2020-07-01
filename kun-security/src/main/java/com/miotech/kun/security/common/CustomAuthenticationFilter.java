@@ -38,7 +38,9 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (authentication != null && StringUtils.isNotEmpty(authentication.getName()) && !StringUtils.equals(authentication.getName(), "anonymousUser")) {
+        if (authentication != null
+                && StringUtils.isNotEmpty(authentication.getName())
+                && !StringUtils.equals(authentication.getName(), "anonymousUser")) {
             UserInfo savedUser = securityService.getOrSave(authentication.getName());
             UsernamePasswordAuthenticationToken newAuthentication = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(),
                     authentication.getCredentials(),

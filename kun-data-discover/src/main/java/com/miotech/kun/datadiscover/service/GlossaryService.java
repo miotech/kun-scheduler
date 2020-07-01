@@ -6,6 +6,7 @@ import com.miotech.kun.datadiscover.model.entity.Glossary;
 import com.miotech.kun.datadiscover.model.entity.GlossaryChildren;
 import com.miotech.kun.datadiscover.model.entity.GlossaryPage;
 import com.miotech.kun.datadiscover.persistence.GlossaryRepository;
+import com.miotech.kun.security.service.BaseSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +15,7 @@ import org.springframework.stereotype.Service;
  * @created: 2020/6/17
  */
 @Service
-public class GlossaryService {
-
-    public static final String DEFAULT_USER = "jiechen";
+public class GlossaryService extends BaseSecurityService {
 
     @Autowired
     GlossaryRepository glossaryRepository;
@@ -27,9 +26,9 @@ public class GlossaryService {
 
     public Glossary add(GlossaryRequest glossaryRequest) {
         long timestamp = System.currentTimeMillis();
-        glossaryRequest.setCreateUser(DEFAULT_USER);
+        glossaryRequest.setCreateUser(getCurrentUser());
         glossaryRequest.setCreateTime(timestamp);
-        glossaryRequest.setUpdateUser(DEFAULT_USER);
+        glossaryRequest.setUpdateUser(getCurrentUser());
         glossaryRequest.setUpdateTime(timestamp);
         return glossaryRepository.insert(glossaryRequest);
     }
@@ -43,7 +42,7 @@ public class GlossaryService {
     }
 
     public Glossary update(Long id, GlossaryRequest glossaryRequest) {
-        glossaryRequest.setUpdateUser(DEFAULT_USER);
+        glossaryRequest.setUpdateUser(getCurrentUser());
         glossaryRequest.setUpdateTime(System.currentTimeMillis());
         return glossaryRepository.update(id, glossaryRequest);
     }
