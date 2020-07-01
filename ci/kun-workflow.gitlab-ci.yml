@@ -27,9 +27,6 @@ verify-kun-workflow-sonar:
           ./gradlew sonarqube -p kun-workflow -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=publish -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-workflow -Dsonar.projectName='kun-workflow';
       else ./gradlew sonarqube -p kun-workflow -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=preview -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-workflow -Dsonar.projectName='kun-workflow';  
       fi
-  only:
-    changes:
-      - kun-workflow/*
 
 kun-workflow-build:
   extends: .build-kun-workflow
