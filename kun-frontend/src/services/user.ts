@@ -1,4 +1,4 @@
-import { post } from './utils';
+import { get, post } from './utils';
 
 export interface LoginServiceReqBody {
   username: string;
@@ -11,10 +11,15 @@ export async function loginService(reqBody: LoginServiceReqBody) {
 }
 
 export interface whoamiServiceRespBody {
-  name: string;
+  username: string;
 }
 
 export async function whoamiService() {
-  const resp = await post<whoamiServiceRespBody>('/user/whoami');
+  const resp = await get<whoamiServiceRespBody>('/user/whoami');
+  return resp;
+}
+
+export async function logoutService() {
+  const resp = await post<{}>('/user/logout', {}, {});
   return resp;
 }
