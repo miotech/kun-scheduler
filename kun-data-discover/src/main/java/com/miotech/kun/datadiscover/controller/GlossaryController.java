@@ -1,6 +1,6 @@
 package com.miotech.kun.datadiscover.controller;
 
-import com.miotech.kun.datadiscover.model.RequestResult;
+import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.datadiscover.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscover.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscover.model.entity.Glossary;

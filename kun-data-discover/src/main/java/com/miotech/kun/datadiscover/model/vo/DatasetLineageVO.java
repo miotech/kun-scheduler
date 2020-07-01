@@ -1,19 +1,11 @@
 package com.miotech.kun.datadiscover.model.vo;
 
-import com.miotech.kun.datadiscover.model.entity.Lineage;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import java.util.List;
 
 /**
- * @author: Melo
- * @created: 5/26/20
+ * @author: Jie Chen
+ * @created: 2020/7/1
  */
-
 @Data
-@NoArgsConstructor
 public class DatasetLineageVO {
-    private List<Lineage> upstream;
-    private List<Lineage> downstream;
 }

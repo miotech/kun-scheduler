@@ -1,4 +1,4 @@
-package com.miotech.kun.datadiscover.constant;
+package com.miotech.kun.common.constant;
 
 /**
  * @author: Melo
