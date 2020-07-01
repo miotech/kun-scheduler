@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscover.persistence;
 
+import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.datadiscover.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscover.model.bo.DatasetRequest;
 import com.miotech.kun.datadiscover.model.bo.DatasetSearchRequest;

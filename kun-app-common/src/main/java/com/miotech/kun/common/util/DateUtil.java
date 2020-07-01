@@ -1,4 +1,4 @@
-package com.miotech.kun.datadiscover.common.util;
+package com.miotech.kun.common.util;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -8,6 +8,8 @@ import java.time.format.DateTimeFormatter;
  * @created: 6/12/20
  */
 public class DateUtil {
+
+    private DateUtil() {}
 
     public static String dateTimeMillisToString(Long dateTime) {
         return Instant.ofEpochMilli(dateTime).atZone(ZoneOffset.UTC).format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);

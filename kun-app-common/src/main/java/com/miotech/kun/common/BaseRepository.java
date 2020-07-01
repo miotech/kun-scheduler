@@ -1,6 +1,6 @@
-package com.miotech.kun.datadiscover.persistence;
+package com.miotech.kun.common;
 
-import com.miotech.kun.datadiscover.common.util.DateUtil;
+import com.miotech.kun.common.util.DateUtil;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -96,7 +97,7 @@ public abstract class BaseRepository {
         if (StringUtils.isNotEmpty(sql)) {
             return Arrays.asList(sql.split(","));
         }
-        return null;
+        return Collections.emptyList();
     }
 
     public Long timestampToMillis(ResultSet rs, String columnLabel) throws SQLException {
