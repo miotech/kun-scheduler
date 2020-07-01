@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class PropertyUtils {
 
@@ -18,6 +20,10 @@ public class PropertyUtils {
     public static final String APP_CONFIG_PROPS_PATTERN = "application(-[a-z]+)?\\.yaml";
     public static final String APP_CONFIG_ENV = "APP_CONFIG_ENV";
     public static final String APP_CONFIG_FILE = "application.config.file";
+
+    public static final Pattern ENV_CONFIG_PATTERN = Pattern.compile("\\$\\{([^\\}]+)}");
+
+    private PropertyUtils() {}
 
     public static Properties loadPropsFromResource(String resourceName) {
         logger.info("Loading props from {}", resourceName);
@@ -30,10 +36,27 @@ public class PropertyUtils {
         flatten(yamlProps)
                 .entrySet()
                 .forEach(x -> {
-            Object propValue = x.getValue() != null ? x.getValue().toString() : "";
+            String propValue = x.getValue() != null ? x.getValue().toString() : "";
+            propValue = replaceValueFromEnvironment(propValue);
             properties.put(x.getKey(), propValue);
         });
         return properties;
+    }
+
+    public static String replaceValueFromEnvironment(String rawText) {
+        final Matcher matcher = ENV_CONFIG_PATTERN.matcher(rawText);
+
+        String result = rawText;
+        while (matcher.find()) {
+            for (int i = 1; i <= matcher.groupCount(); i++) {
+                String envKey = matcher.group(i);
+                String envValue = System.getenv(envKey);
+                if (envValue != null) {
+                    result = result.replace(String.format("${%s}", envKey), envValue);
+                }
+            }
+        }
+        return result;
     }
 
     public static Properties loadAppProps(String applicationConfName) {

@@ -6,5 +6,6 @@ public class ConfigurationKeys {
     public static final String PROP_SERVER_DUMP_STDERR = "server.dumpStdErr";
 
     public static final String PROP_FLYWAY_MIRGRATION = "flyway.migration";
+    public static final String PROP_FLYWAY_TABLENAME = "flyway.tableName";
 
 }

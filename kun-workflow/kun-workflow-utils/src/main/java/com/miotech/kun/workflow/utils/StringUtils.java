@@ -2,6 +2,8 @@ package com.miotech.kun.workflow.utils;
 
 public class StringUtils {
 
+    private StringUtils() {}
+
     public static String[] repeat(String str, int times) {
         if (str == null) return null;
         if (times <= 0) return new String[]{};
