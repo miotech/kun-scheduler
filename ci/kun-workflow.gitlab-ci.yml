@@ -13,6 +13,7 @@ verify-kun-workflow-test:
 
 
 verify-kun-workflow-sonar:
+  extends: .build-kun-workflow
   stage: verify
   image: mioyingtech/gradle-sonar:0.1-build
   except:
@@ -31,21 +32,23 @@ verify-kun-workflow-sonar:
       - kun-workflow/*
 
 kun-workflow-build:
-  extends: .only-deploy
+  extends: .build-kun-workflow
   stage: build
   image: gradle:6.5.0-jdk8
   tags:
     - build
   script:
-    - ./gradlew :kun-workflow:bootJar
+    - ./gradlew :kun-workflow:shadowJar
     - mkdir -p /builds/artifacts/kun-workflow/${CI_COMMIT_REF_NAME}/
     - cp kun-workflow/build/libs/*.jar /builds/artifacts/kun-workflow/${CI_COMMIT_REF_NAME}/
   only:
-    changes:
-      - kun-workflow/*
+    refs:
+      - master
+      - release
+      - tags 
 
 kun-workflow-push:
-  extends: .only-deploy
+  extends: .build-kun-workflow
   image: mioyingtech/docker:latest
   stage: build-images
   tags:
@@ -57,10 +60,13 @@ kun-workflow-push:
     - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-workflow:$CI_COMMIT_REF_NAME /builds/kun-workflow/
     - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-workflowy:$CI_COMMIT_REF_NAME
   only:
-    changes:
-      - kun-workflow/*
+    refs:
+      - master
+      - release
+      - tags 
 
 kun-workflow-set-tag:
+  extends: .build-kun-workflow
   stage: set-tag
   tags:
     - build
@@ -82,6 +88,7 @@ kun-workflow-set-tag-hotfix:
   when: manual
 
 kun-workflow-save-tag:
+  extends: .build-kun-workflow
   stage: save-tag
   tags:
     - build
