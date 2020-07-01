@@ -7,6 +7,7 @@ buildscript {
 plugins {
     id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'java'
+    id "org.sonarqube" version "2.7"
 }
 
 apply plugin: "com.bmuschko.docker-remote-api"
@@ -51,4 +52,14 @@ shadowJar {
         )
     }
     zip64 true
+}
+
+
+apply plugin: "org.sonarqube"
+sonarqube {
+    properties {
+        property "sonar.sourceEncoding", "src/main"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.java.binaries", "build"
+    }
 }

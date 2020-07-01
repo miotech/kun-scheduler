@@ -6,6 +6,8 @@ import java.io.InputStreamReader;
 import java.util.stream.Stream;
 
 public class ResourceUtils {
+    private ResourceUtils() {}
+
     public static Stream<String> lines(InputStream inputStream) {
         return new BufferedReader(new InputStreamReader(inputStream)).lines();
     }
