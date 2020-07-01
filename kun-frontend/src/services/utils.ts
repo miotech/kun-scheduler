@@ -17,6 +17,7 @@ async function commonHttp<T>(
   method: string,
   url: string,
   params?: object,
+  defaultValue?: T | null,
   options: object = {},
 ): Promise<T | null> {
   let accessBody;
@@ -61,7 +62,9 @@ async function commonHttp<T>(
 
     if (resp.status !== 200) {
       if (resp.status === 401) {
-        history.push('/login');
+        if (url !== '/login') {
+          history.push('/login');
+        }
         return null;
       }
 
@@ -82,12 +85,17 @@ async function commonHttp<T>(
       return null;
     }
 
-    return data.result;
+    if (data.result) {
+      return data.result;
+    }
+    return defaultValue || null;
   } catch (error) {
     if (error.response && error.response.status) {
       if (error.response.status !== 200) {
         if (error.response.status === 401) {
-          history.push('/login');
+          if (url !== '/login') {
+            history.push('/login');
+          }
           return null;
         }
         message.error(
@@ -109,44 +117,67 @@ async function commonHttp<T>(
 export async function get<T>(
   url: string,
   params?: object,
+  defaultValue?: T | null,
   options: object = {},
 ): Promise<T | null> {
-  const result = await commonHttp<T>('get', url, params, options);
+  const result = await commonHttp<T>('get', url, params, defaultValue, options);
   return result;
 }
 
 export async function post<T>(
   url: string,
   params?: object,
+  defaultValue?: T | null,
   options: object = {},
 ): Promise<T | null> {
-  const result = await commonHttp<T>('post', url, params, options);
+  const result = await commonHttp<T>(
+    'post',
+    url,
+    params,
+    defaultValue,
+    options,
+  );
   return result;
 }
 
 export async function put<T>(
   url: string,
   params?: object,
+  defaultValue?: T | null,
   options: object = {},
 ): Promise<T | null> {
-  const result = await commonHttp<T>('put', url, params, options);
+  const result = await commonHttp<T>('put', url, params, defaultValue, options);
   return result;
 }
 
 export async function patch<T>(
   url: string,
   params?: object,
+  defaultValue?: T | null,
   options: object = {},
 ): Promise<T | null> {
-  const result = await commonHttp<T>('patch', url, params, options);
+  const result = await commonHttp<T>(
+    'patch',
+    url,
+    params,
+    defaultValue,
+    options,
+  );
   return result;
 }
 
 export async function deleteFunc<T>(
   url: string,
   params?: object,
+  defaultValue?: T | null,
   options: object = {},
 ): Promise<T | null> {
-  const result = await commonHttp<T>('delete', url, params, options);
+  const result = await commonHttp<T>(
+    'delete',
+    url,
+    params,
+    defaultValue,
+    options,
+  );
   return result;
 }

@@ -22,10 +22,9 @@ export interface FetchAllUsersServiceRespBody {
 }
 
 export async function fetchAllUsersService() {
-  const resp = await get<FetchAllUsersServiceRespBody>(
-    '/metadata/users/search',
-    { keyword: '' },
-  );
+  const resp = await get<FetchAllUsersServiceRespBody>('/user/search', {
+    keyword: '',
+  });
   return resp;
 }
 
