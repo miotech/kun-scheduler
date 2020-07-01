@@ -58,7 +58,7 @@ kun-workflow-push:
     - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-workflow/${CI_COMMIT_REF_NAME}/ /builds/kun-workflow/build/libs/
     - docker login -u $CI_BUILD_DOCKER_USER -p $CI_BUILD_TOKEN $CI_BUILD_DOCKER_URL
     - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-workflow:$CI_COMMIT_REF_NAME /builds/kun-workflow/
-    - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-workflowy:$CI_COMMIT_REF_NAME
+    - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-workflow:$CI_COMMIT_REF_NAME
   only:
     refs:
       - master
