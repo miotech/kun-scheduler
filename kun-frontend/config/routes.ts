@@ -98,6 +98,7 @@ export const appRoutes = [
         path: '/login',
         component: 'login/index',
         exact: true,
+        wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
       },
     ],
   },
