@@ -19,15 +19,16 @@ import org.junit.After;
 import org.junit.Test;
 
 import javax.inject.Inject;
-import java.sql.SQLException;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -54,9 +55,8 @@ public class TaskDaoTest extends DatabaseTestBase {
         DateTimeUtils.resetClock();
     }
 
-    private void insertSampleData() {
-        // mock up a system clock
-        Clock clock = getMockClock();
+    private List<Task> insertSampleData() {
+        List<Task> created = new ArrayList<>();
 
         // insert task with specific id
         List<Param> args = Lists.newArrayList(
@@ -78,13 +78,17 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withDependencies(new ArrayList<>())
                 .build();
 
+        created.add(taskExample);
         taskDao.create(taskExample);
 
         // insert more tasks
         for (int i = 0; i < 10; i += 1) {
             Task task = MockTaskFactory.createTask();
+            created.add(task);
             taskDao.create(task);
         }
+
+        return created;
     }
 
     /**
@@ -141,6 +145,45 @@ public class TaskDaoTest extends DatabaseTestBase {
         assertThat(task.getVariableDefs().get(0).getKey(), is("PATH"));
         assertThat(task.getVariableDefs().get(0).getDefaultValue(), is("/usr/bin"));
         assertThat(task.getScheduleConf().getCronExpr(), is("0 15 10 * * ?"));
+    }
+
+    @Test
+    public void fetchByIds_empty() {
+        // Prepare
+        List<Task> tasks = insertSampleData();
+
+        // process
+        Map<Long, Optional<Task>> result = taskDao.fetchByIds(Lists.newArrayList());
+
+        // verify
+        assertThat(result.size(), is(0));
+    }
+
+    @Test
+    public void fetchByIds_success() {
+        // Prepare
+        List<Task> tasks = insertSampleData();
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1);
+        Task task5 = tasks.get(4);
+        Task task7 = tasks.get(6);
+
+        // process
+        Map<Long, Optional<Task>> result = taskDao.fetchByIds(Lists.newArrayList(
+                task1.getId(),
+                task2.getId(),
+                task5.getId(),
+                task7.getId(),
+                -1L
+        ));
+
+        // verify
+        assertThat(result.size(), is(5));
+        assertThat(result.get(task1.getId()).get(), sameBeanAs(task1));
+        assertThat(result.get(task2.getId()).get(), sameBeanAs(task2));
+        assertThat(result.get(task5.getId()).get(), sameBeanAs(task5));
+        assertThat(result.get(task7.getId()).get(), sameBeanAs(task7));
+        assertThat(result.get(-1L).isPresent(), is(false));
     }
 
     @Test

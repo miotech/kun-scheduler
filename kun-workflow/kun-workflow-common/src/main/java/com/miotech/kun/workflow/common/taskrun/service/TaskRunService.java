@@ -39,6 +39,8 @@ public class TaskRunService {
     @Inject
     private ResourceLoader resourceLoader;
 
+    /* ----------- public methods ------------ */
+
     public Optional<TaskRunVO> getTaskRunDetail(Long taskRunId) {
         Optional<TaskRun> taskRun = taskRunDao.fetchTaskRunById(taskRunId);
         return taskRun.map(this::convertToVO);
@@ -88,7 +90,21 @@ public class TaskRunService {
         }
     }
 
-    public TaskRunVO convertToVO(TaskRun taskRun) {
+    public List<TaskRun> getUpstreamTaskRuns(TaskRun taskRun, int distance) {
+        return taskRunDao.fetchUpstreamTaskRunsById(taskRun.getId(), distance, false);
+    }
+
+    public List<TaskRun> getDownstreamTaskRuns(TaskRun taskRun, int distance) {
+        return taskRunDao.fetchDownstreamTaskRunsById(taskRun.getId(), distance, false);
+    }
+
+    public List<TaskRun> searchTaskRuns(TaskRunSearchFilter filter) {
+        return taskRunDao.fetchTaskRunsByFilter(filter);
+    }
+
+    /* ----------- private methods ------------ */
+
+    private TaskRunVO convertToVO(TaskRun taskRun) {
         List<TaskAttempt> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRun.getId())
                 .stream()
                 .map(props -> TaskAttempt.newBuilder()
@@ -119,15 +135,4 @@ public class TaskRunService {
                 .build();
     }
 
-    public List<TaskRun> getUpstreamTaskRuns(TaskRun taskRun, int distance) {
-        return taskRunDao.fetchUpstreamTaskRunsById(taskRun.getId(), distance, false);
-    }
-
-    public List<TaskRun> getDownstreamTaskRuns(TaskRun taskRun, int distance) {
-        return taskRunDao.fetchDownstreamTaskRunsById(taskRun.getId(), distance, false);
-    }
-
-    public List<TaskRun> searchTaskRuns(TaskRunSearchFilter filter) {
-        return taskRunDao.fetchTaskRunsByFilter(filter);
-    }
 }

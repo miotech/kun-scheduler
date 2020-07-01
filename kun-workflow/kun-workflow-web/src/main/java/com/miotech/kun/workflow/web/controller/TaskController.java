@@ -5,8 +5,8 @@ import com.google.inject.Singleton;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.service.TaskService;
+import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
-import com.miotech.kun.workflow.core.model.bo.RunTaskInfo;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.web.annotation.QueryParameter;
 import com.miotech.kun.workflow.web.annotation.RequestBody;
@@ -67,7 +67,7 @@ public class TaskController {
     }
 
     @RouteMapping(url= "/tasks/_run", method = "POST")
-    public Object runTasks(@RequestBody List<RunTaskInfo> taskInfoList) {
-        return taskService.runTasks(taskInfoList);
+    public Object runTasks(@RequestBody List<RunTaskVO> runTaskVOs) {
+        return taskService.runTasks(runTaskVOs);
     }
 }

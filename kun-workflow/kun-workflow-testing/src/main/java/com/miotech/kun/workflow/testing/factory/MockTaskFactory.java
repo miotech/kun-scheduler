@@ -54,6 +54,12 @@ public class MockTaskFactory {
         return tasks;
     }
 
+    /**
+     * 创建n个相互依赖的任务。例如"0>>1"表示创建的第1个任务依赖第0个任务（即0是上游，1是下游）。支持"0>>1;2>>1;"表示多个依赖。
+     * @param num
+     * @param relations
+     * @return
+     */
     public static List<Task> createTasksWithRelations(int num, String relations) {
         Map<Integer, List<Integer>> parsed = MockFactoryUtils.parseRelations(relations);
 
