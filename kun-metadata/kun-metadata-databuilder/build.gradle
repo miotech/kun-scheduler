@@ -1,0 +1,60 @@
+plugins {
+    id 'com.github.johnrengelman.shadow'
+    id 'java'
+    id "org.sonarqube"
+}
+
+dependencies {
+    implementation project(":kun-workflow:kun-workflow-core")
+    implementation project(":kun-workflow:kun-workflow-utils")
+    implementation project(":kun-commons:kun-commons-db")
+    implementation project(":kun-commons:kun-commons-testing")
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-commons:kun-commons-web")
+    implementation project(":kun-workflow:kun-workflow-utils")
+    implementation 'com.typesafe:config'
+    implementation 'org.json:json'
+    implementation 'ch.qos.logback:logback-classic'
+    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client'
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.postgresql:postgresql'
+    implementation 'org.apache.hive:hive-jdbc'
+    implementation 'mysql:mysql-connector-java'
+    implementation "org.apache.curator:curator-recipes"
+    implementation "io.prestosql:presto-jdbc"
+    implementation "org.mongodb:mongo-java-driver"
+    implementation "org.jooq:joor-java-8:0.9.12"
+    implementation "com.amazonaws:aws-java-sdk-glue"
+    implementation "com.syncron.amazonaws:simba-athena-jdbc-driver"
+    implementation "com.arangodb:arangodb-java-driver"
+    implementation "io.sentry:sentry-logback"
+    testImplementation "junit:junit"
+    testRuntimeOnly "com.h2database:h2"
+    testRuntimeOnly "org.mockito:mockito-core"
+    testImplementation "org.testcontainers:testcontainers"
+    testImplementation "org.testcontainers:mongodb"
+    testImplementation "org.testcontainers:postgresql"
+    testImplementation "org.testcontainers:elasticsearch"
+    testImplementation "com.github.goodforgod:arangodb-testcontainer"
+}
+
+shadowJar {
+    archiveBaseName = 'kun-metadata-databuilder'
+    archiveClassifier = null
+    version = 1.0
+    manifest {
+        attributes(
+                'Main-Class': 'com.miotech.kun.metadata.databuilder.schedule.DataBuilderScheduler'
+        )
+    }
+    zip64 true
+}
+
+apply plugin: "org.sonarqube"
+sonarqube {
+    properties {
+        property "sonar.sourceEncoding", "src/main"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.java.binaries", "build"
+    }
+}

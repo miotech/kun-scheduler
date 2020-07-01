@@ -34,7 +34,7 @@ public class PostgresDataStore extends DataStore {
                              @JsonProperty("database") String database,
                              @JsonProperty("schema") String schema,
                              @JsonProperty("tableName") String tableName) {
-        super(DataStoreType.TABLE);
+        super(DataStoreType.POSTGRES_TABLE);
         this.url = url;
         this.database = database;
         this.schema = schema;

@@ -4,8 +4,8 @@ ARG sentry_dsn
 ARG sentry_env
 ARG sentry_release
 
-COPY build/libs/kun-metadata-1.0.jar /server/target/
+COPY build/libs/kun-metadata-web-1.0.jar /server/target/
 WORKDIR /server/target
 EXPOSE 8084
 
-CMD SENTRY_DSN=${sentry_dsn} SENTRY_ENVIRONMENT=${env} SENTRY_RELEASE=${tag} java ${JAVA_OPTS} -jar /server/target/kun-metadata-1.0.jar -Dapp=kun-metadata-server -Dtag=${tag} -Denv=${env}
+CMD SENTRY_DSN=${sentry_dsn} SENTRY_ENVIRONMENT=${env} SENTRY_RELEASE=${tag} java ${JAVA_OPTS} -jar /server/target/kun-metadata-web-1.0.jar -Dapp=kun-metadata-server -Dtag=${tag} -Denv=${env}

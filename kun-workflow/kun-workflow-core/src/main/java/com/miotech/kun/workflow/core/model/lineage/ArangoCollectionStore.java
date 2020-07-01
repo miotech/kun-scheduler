@@ -27,7 +27,7 @@ public class ArangoCollectionStore extends DataStore{
     public ArangoCollectionStore(@JsonProperty("dataStoreUrl") String dataStoreUrl,
                           @JsonProperty("database") String database,
                           @JsonProperty("collection") String collection) {
-        super(DataStoreType.COLLECTION);
+        super(DataStoreType.ARANGO_COLLECTION);
         this.dataStoreUrl = dataStoreUrl;
         this.database = database;
         this.collection = collection;
