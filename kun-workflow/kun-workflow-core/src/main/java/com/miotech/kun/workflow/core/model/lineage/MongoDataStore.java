@@ -27,7 +27,7 @@ public class MongoDataStore extends DataStore {
     public MongoDataStore(@JsonProperty("url") String url,
                           @JsonProperty("database") String database,
                           @JsonProperty("collection") String collection) {
-        super(DataStoreType.COLLECTION);
+        super(DataStoreType.MONGO_COLLECTION);
         this.url = url;
         this.database = database;
         this.collection = collection;

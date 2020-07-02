@@ -27,7 +27,7 @@ public class HiveTableStore extends DataStore {
     public HiveTableStore(@JsonProperty("dataStoreUrl") String dataStoreUrl,
                           @JsonProperty("database") String database,
                           @JsonProperty("table") String table) {
-        super(DataStoreType.TABLE);
+        super(DataStoreType.HIVE_TABLE);
         this.dataStoreUrl = dataStoreUrl;
         this.database = database;
         this.table = table;

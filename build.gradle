@@ -18,6 +18,14 @@ allprojects {
     repositories {
         mavenCentral()
     }
+
+    compileJava {
+        options.compilerArgs << "-parameters"
+    }
+
+    compileTestJava {
+        options.compilerArgs << "-parameters"
+    }
 }
 
 subprojects {
@@ -68,6 +76,7 @@ subprojects {
                 implementation "io.sentry:sentry-logback:1.7.30"
                 implementation "com.h2database:h2:1.4.200"
                 implementation "com.cronutils:cron-utils:9.0.2"
+                implementation 'org.apache.httpcomponents:httpclient:4.5.12'
                 implementation "org.postgresql:postgresql:42.2.14"
 
                 testImplementation "junit:junit:4.12"
@@ -78,6 +87,11 @@ subprojects {
                 testImplementation "org.mockito:mockito-core:3.3.3"
                 testImplementation "org.awaitility:awaitility:4.0.3"
                 testImplementation "net.bytebuddy:byte-buddy:1.10.10"
+                testImplementation "org.testcontainers:testcontainers:1.14.3"
+                testImplementation "org.testcontainers:mongodb:1.14.3"
+                testImplementation "org.testcontainers:postgresql:1.14.3"
+                testImplementation "org.testcontainers:elasticsearch:1.14.3"
+                testImplementation "com.github.goodforgod:arangodb-testcontainer:1.1.0"
             }
 
             implementation "com.google.inject:guice"

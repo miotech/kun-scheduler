@@ -2,12 +2,15 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 public enum DataStoreType {
 
-    // PostgresTable/MySQLTable/HiveTable
-    TABLE,
+    // Table
+    HIVE_TABLE,
+    MYSQL_TABLE,
+    POSTGRES_TABLE,
     // ElasticsearchIndex
-    INDEX,
-    // ArangoCollection/MongoCollection
-    COLLECTION,
+    ELASTICSEARCH_INDEX,
+    // Collection
+    ARANGO_COLLECTION,
+    MONGO_COLLECTION,
     // KafkaTopic
     TOPIC,
     // GoogleSpreadsheet
