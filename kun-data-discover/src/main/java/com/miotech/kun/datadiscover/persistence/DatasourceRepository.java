@@ -53,9 +53,7 @@ public class DatasourceRepository extends BaseRepository {
         String limitSql = toLimitSql(1, basicSearchRequest.getPageSize());
         sql += limitSql;
 
-        return jdbcTemplate.query(sql, ps -> {
-            ps.setString(1, toLikeSql(basicSearchRequest.getKeyword().toUpperCase()));
-        }, rs -> {
+        return jdbcTemplate.query(sql, rs -> {
             DatasourceBasicPage page = new DatasourceBasicPage();
             while (rs.next()) {
                 DatasourceBasic basic = new DatasourceBasic();
@@ -64,7 +62,7 @@ public class DatasourceRepository extends BaseRepository {
                 page.add(basic);
             }
             return page;
-        });
+        }, toLikeSql(basicSearchRequest.getKeyword().toUpperCase()));
     }
 
     public DatasourcePage search(DatabaseSearchRequest databaseSearchRequest) {
