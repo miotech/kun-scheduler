@@ -19,7 +19,7 @@ public class ElasticSearchIndexStore extends DataStore{
     @JsonCreator
     public ElasticSearchIndexStore(@JsonProperty("dataStoreUrl") String dataStoreUrl,
                           @JsonProperty("index") String index) {
-        super(DataStoreType.INDEX);
+        super(DataStoreType.ELASTICSEARCH_INDEX);
         this.dataStoreUrl = dataStoreUrl;
         this.index = index;
     }
