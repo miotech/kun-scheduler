@@ -100,6 +100,7 @@ export default {
   'dataDetail.column.notNullPer': '非空百分比',
   'dataDetail.column.type': '类别',
   'dataDetail.column.description': '描述信息',
+  'dataDetail.column.total': '共有{total}个列',
   'dataSettings.addDatabase': '新建数据源',
   'dataSettings.databasesCount': '{count} 数据源',
   'dataSettings.updateUser': '更新用户',
