@@ -47,7 +47,7 @@ kun-data-discover-build:
     refs:
       - master
       - release
-      - tags
+      - /v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-data-discover.*$/
 
 kun-data-discover-push:
   extends: .build-kun-data-discover
@@ -65,7 +65,7 @@ kun-data-discover-push:
     refs:
       - master
       - release
-      - tags
+      - /v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-data-discover.*$/
 
 kun-data-discover-set-tag:
   extends: .build-kun-data-discover
