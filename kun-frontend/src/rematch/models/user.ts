@@ -50,7 +50,6 @@ export const user = {
       if (resp) {
         dispatch.user.updateLogin(true);
         dispatch.user.updateUserInfo({ username: resp.username });
-        history.push('/');
       }
     },
 
