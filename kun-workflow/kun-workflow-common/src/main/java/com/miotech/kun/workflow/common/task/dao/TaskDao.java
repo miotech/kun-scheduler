@@ -31,6 +31,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Singleton
 public class TaskDao {
@@ -55,6 +56,7 @@ public class TaskDao {
 
     private static final List<String> taskRelationCols = ImmutableList.of("upstream_task_id", "downstream_task_id", "dependency_function");
 
+    private static final String TASK_ID_QUERY = " task_id = ? ";
     private final DatabaseOperator dbOperator;
 
     private final TaskDependencyFunctionProvider functionProvider;
@@ -284,7 +286,7 @@ public class TaskDao {
         String sql = DefaultSQLBuilder.newBuilder()
                 .delete()
                 .from(TICK_TASK_MAPPING_TABLE_NAME)
-                .where("task_id = ?")
+                .where(TASK_ID_QUERY)
                 .getSQL();
         int affectedRows = dbOperator.update(sql, taskId);
         return affectedRows > 0;
@@ -477,11 +479,74 @@ public class TaskDao {
         });
     }
 
+    /**
+     * update task scheduled_tick only if next execution time is larger than currentTick.
+     * delete tasks which is never called again
+     * @param currentTick
+     * @param tasks: tasks to be updated or deleted
+     */
+    public void updateTasksNextExecutionTick(Tick currentTick, List<Task> tasks) {
+
+        if (tasks.isEmpty()) {
+            return;
+        }
+
+        List<Object[]> taskToBeDeleted = new ArrayList<>();
+        List<Object[]> taskToBeUpdated = new ArrayList<>();
+        for (Task task: tasks) {
+            ScheduleConf scheduleConf = task.getScheduleConf();
+            Long taskId = task.getId();
+            switch (scheduleConf.getType()) {
+                case ONESHOT:
+                    // for ONESHOT type, should delete tick task after invocation once
+                    logger.debug("Delete oneshot task {} schedule tick at {}", taskId, currentTick);
+                    taskToBeDeleted.add(new Object[]{taskId});
+                    break;
+                case SCHEDULED:
+                    String cronExpression = scheduleConf.getCronExpr();
+                    Cron cron = CronUtils.convertStringToCron(cronExpression);
+                    Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextExecutionTime(cron,
+                            currentTick.toOffsetDateTime());
+
+                    if (nextExecutionTimeOptional.isPresent()) {
+                        Tick nextTick = new Tick(nextExecutionTimeOptional.get());
+                        logger.debug("Update scheduled task {} next schedule tick to {} at current {}", taskId, nextTick, currentTick);
+                        taskToBeUpdated.add(new Object[]{nextTick.toString(), taskId});
+                    } else {
+                        logger.debug("Delete scheduled task {} schedule tick at {}", taskId, currentTick);
+                        taskToBeDeleted.add(new Object[]{taskId});
+                    }
+                    break;
+                default:
+                    throw new RuntimeException(String.format("invalid task %s schedule type %s ", taskId, scheduleConf.getType()));
+            }
+        }
+
+        String tickTaskUpdateSql = DefaultSQLBuilder.newBuilder()
+                .update(TICK_TASK_MAPPING_TABLE_NAME)
+                .set("scheduled_tick")
+                .where(TASK_ID_QUERY)
+                .asPrepared()
+                .getSQL();
+        String deleteTickTask = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from(TICK_TASK_MAPPING_TABLE_NAME)
+                .where(TASK_ID_QUERY)
+                .asPrepared()
+                .getSQL();
+
+        dbOperator.transaction(() -> {
+            dbOperator.batch(tickTaskUpdateSql, taskToBeUpdated.stream().toArray(Object[][]::new));
+            dbOperator.batch(deleteTickTask, taskToBeDeleted.stream().toArray(Object[][]::new));
+            return true;
+        });
+    }
+
     public Optional<Tick> fetchNextExecutionTickByTaskId(Long taskId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("scheduled_tick")
                 .from(TICK_TASK_MAPPING_TABLE_NAME)
-                .where("task_id = ?")
+                .where(TASK_ID_QUERY)
                 .orderBy("scheduled_tick ASC")
                 .limit(1)
                 .toString();
