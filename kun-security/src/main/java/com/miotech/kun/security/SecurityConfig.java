@@ -41,17 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .disable();
         http
                 .authorizeRequests()
-                .antMatchers("/",
-                        "/v2/api-docs",
-                        "/configuration/ui",
-                        "/swagger-resources/**",
-                        "/configuration/**",
-                        "/swagger-ui.html",
-                        "/webjars/**")
-                .permitAll()
-                .and()
-                .authorizeRequests()
-                .anyRequest()
+                .antMatchers("/kun/api/**")
                 .authenticated()
                 .and()
                 .addFilterBefore(
