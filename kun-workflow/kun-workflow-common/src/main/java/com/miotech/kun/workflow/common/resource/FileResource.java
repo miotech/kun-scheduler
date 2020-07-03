@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 
 public class FileResource implements Resource {
-    public final static String FILE_SCHEME = "file";
 
     private final Logger logger = LoggerFactory.getLogger(FileResource.class);
     private final String fileLocation;
@@ -54,6 +53,6 @@ public class FileResource implements Resource {
 
     @Override
     public String getLocation() {
-        return FILE_SCHEME + "://" + this.fileLocation;
+        return ResourceType.FILE.getType() + "://" + this.fileLocation;
     }
 }
