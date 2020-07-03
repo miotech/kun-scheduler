@@ -97,7 +97,7 @@ kun-metadata-save-tag:
     - build
   image: mioyingtech/python-gitlab:0.1-build
   only:
-    - tags
+    - /v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-metadata.*$/
   script:
     - python /tmp/saveTag.py --appName=kun-metadata --tag=${CI_COMMIT_REF_NAME}
   allow_failure: true
