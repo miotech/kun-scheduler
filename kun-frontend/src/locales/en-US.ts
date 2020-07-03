@@ -101,6 +101,7 @@ export default {
   'dataDetail.column.notNullPer': 'Not Null Percentage',
   'dataDetail.column.type': 'Type',
   'dataDetail.column.description': 'Description',
+  'dataDetail.column.total': 'Total {total} columns',
   'dataSettings.addDatabase': 'Add Datasource',
   'dataSettings.databasesCount': '{count} datasources',
   'dataSettings.updateUser': 'Update User',
