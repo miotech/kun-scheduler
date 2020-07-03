@@ -169,7 +169,7 @@ export default function DatasetDetail({ match }: Props) {
     [dispatch.datasetDetail],
   );
   const handleChangePageSize = useCallback(
-    (pageSize: number) => {
+    (_pageNumber: number, pageSize: number) => {
       dispatch.datasetDetail.updatePagination({
         pageNumber: 1,
         pageSize: pageSize || 25,
@@ -345,6 +345,9 @@ export default function DatasetDetail({ match }: Props) {
                     <Pagination
                       size="small"
                       total={selector.columnsPagination.totalCount}
+                      showTotal={total =>
+                        t('dataDetail.column.total', { total })
+                      }
                       showSizeChanger
                       showQuickJumper
                       onChange={handleChangePagination}
