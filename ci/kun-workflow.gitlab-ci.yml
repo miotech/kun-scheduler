@@ -42,7 +42,7 @@ kun-workflow-build:
     refs:
       - master
       - release
-      - tags 
+      - /v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-workflow.*$/
 
 kun-workflow-push:
   extends: .build-kun-workflow
@@ -60,7 +60,7 @@ kun-workflow-push:
     refs:
       - master
       - release
-      - tags 
+      - /v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-workflow.*$/ 
 
 kun-workflow-set-tag:
   extends: .build-kun-workflow

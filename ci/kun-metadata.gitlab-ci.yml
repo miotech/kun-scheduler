@@ -47,7 +47,7 @@ kun-metadata-build:
     refs:
       - master
       - release
-      - tags
+      - /v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-metadata.*$/
 
 kun-metadata-push:
   extends: .build-kun-metadata
@@ -65,7 +65,7 @@ kun-metadata-push:
     refs:
       - master
       - release
-      - tags
+      - /v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-metadata.*$/
 
 kun-metadata-set-tag:
   extends: .build-kun-metadata
