@@ -66,8 +66,7 @@ public class DataSourceController {
 
     @PostMapping("/metadata/database/{id}/pull")
     public RequestResult<PullDataVO> pullDatabase(@PathVariable String id) {
-        RequestResult<PullDataVO> requestResult = RequestResult.success();
-        return requestResult;
+        return RequestResult.success();
     }
 
     @GetMapping("/metadata/database/types")
@@ -116,8 +115,7 @@ public class DataSourceController {
 
     @GetMapping("/metadata/dataset/{id}/lineages")
     public RequestResult<DatasetLineageVO> getDatasetLineages(@PathVariable String id) {
-        RequestResult<DatasetLineageVO> requestResult = RequestResult.success();
-        return requestResult;
+        return RequestResult.success();
     }
 
 }
