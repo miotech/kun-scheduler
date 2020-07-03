@@ -1,6 +1,7 @@
 package com.miotech.kun.datadiscover.persistence;
 
 import com.miotech.kun.common.BaseRepository;
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscover.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscover.model.bo.DatasetRequest;
 import com.miotech.kun.datadiscover.model.bo.DatasetSearchRequest;
@@ -12,6 +13,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.sql.ResultSet;
@@ -180,9 +182,29 @@ public class DatasetRepository extends BaseRepository {
                 "on conflict (dataset_gid)\n" +
                 "do update set description = ?";
         jdbcTemplate.update(sql, gid, datasetRequest.getDescription(), datasetRequest.getDescription());
+        overwriteOwners(gid, datasetRequest.getOwners());
         tagRepository.save(datasetRequest.getTags());
         tagRepository.overwriteDataset(gid, datasetRequest.getTags());
         return find(gid);
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void overwriteOwners(Long gid, List<String> owners) {
+        String sql = "delete from kun_mt_dataset_owners where dataset_gid = ?";
+        jdbcTemplate.update(sql, gid);
+
+        if (!CollectionUtils.isEmpty(owners)) {
+            String addOwnerRefSql = "insert into kun_mt_dataset_owners values " + toValuesSql(owners.size(), 3);
+
+            jdbcTemplate.update(addOwnerRefSql, ps -> {
+                int paramIndex = 0;
+                for (String owner : owners) {
+                    ps.setLong(++paramIndex, IdGenerator.getInstance().nextId());
+                    ps.setLong(++paramIndex, gid);
+                    ps.setString(++paramIndex, owner);
+                }
+            });
+        }
     }
 
     private void setDatasetBasicField(DatasetBasic datasetBasic, ResultSet rs) throws SQLException {

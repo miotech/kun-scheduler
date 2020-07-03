@@ -45,20 +45,18 @@ public class TagRepository extends BaseRepository {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void overwriteDataset(Long datasetId, List<String> tags) {
+    public void overwriteDataset(Long gid, List<String> tags) {
         String deleteTagRefSql = "delete from kun_mt_dataset_tags where dataset_gid = ?";
-        jdbcTemplate.update(deleteTagRefSql, datasetId);
+        jdbcTemplate.update(deleteTagRefSql, gid);
 
         if (!CollectionUtils.isEmpty(tags)) {
-            String addTagRefSql = "insert into kun_mt_dataset_tags values " + toValuesSql(tags.size(), 3) + "\n" +
-                    "on conflict (dataset_gid, tag)\n" +
-                    DO_NOTHING;
+            String addTagRefSql = "insert into kun_mt_dataset_tags values " + toValuesSql(tags.size(), 3);
 
             jdbcTemplate.update(addTagRefSql, ps -> {
                 int paramIndex = 0;
                 for (String tag : tags) {
                     ps.setLong(++paramIndex, IdGenerator.getInstance().nextId());
-                    ps.setLong(++paramIndex, datasetId);
+                    ps.setLong(++paramIndex, gid);
                     ps.setString(++paramIndex, tag);
                 }
             });
@@ -71,9 +69,7 @@ public class TagRepository extends BaseRepository {
         jdbcTemplate.update(deleteTagRefSql, datasourceId);
 
         if (!CollectionUtils.isEmpty(tags)) {
-            String addTagRefSql = "insert into kun_mt_datasource_tags values " + toValuesSql(tags.size(), 3) + "\n" +
-                    "on conflict (datasource_id, tag)\n" +
-                    DO_NOTHING;
+            String addTagRefSql = "insert into kun_mt_datasource_tags values " + toValuesSql(tags.size(), 3);
 
             jdbcTemplate.update(addTagRefSql, ps -> {
                 int paramIndex = 0;
