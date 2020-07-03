@@ -43,7 +43,7 @@ kun-frontend-build:
     refs:
       - master
       - release
-      - tags    
+      - /v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-data-discovery-frontend.*$/   
 
 kun-frontend-push:
   extends: .build-kun-frontend
@@ -61,7 +61,7 @@ kun-frontend-push:
     refs:
       - master
       - release
-      - tags
+      - /v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-data-discovery-frontend.*$/
 
 kun-frontend-set-tag:
   extends: .build-kun-frontend
