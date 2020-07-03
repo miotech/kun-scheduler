@@ -43,7 +43,6 @@ public class DatabaseSetup {
                     .dataSource(dataSource)
                     .locations(locations)
                     .table(tableName)
-                    .baselineOnMigrate(true)
                     .load();
 
             flyway.migrate();

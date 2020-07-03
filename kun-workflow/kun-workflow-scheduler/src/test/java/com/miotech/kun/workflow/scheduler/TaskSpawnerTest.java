@@ -14,6 +14,7 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -28,10 +29,12 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 public class TaskSpawnerTest extends SchedulerTestBase {
     private static final String CRON_EVERY_MINUTE = "0 * * ? * * *";
+    private static final String CRON_EVERY_THREE_MINUTE = "0 */3 * ? * * *";
 
     @Inject
     private TaskSpawner taskSpawner;
@@ -113,6 +116,43 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         assertThat(submitted, sameBeanAs(saved));
+    }
+
+
+    @Test
+    public void testCreateTaskRuns_single_task_scheduled_3min() {
+        DateTimeUtils.freeze();
+        // prepare
+        Task task = MockTaskFactory.createTask().cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_THREE_MINUTE))
+                .build();
+        taskDao.create(task);
+
+        DatabaseTaskGraph graph = injector.getInstance(DatabaseTaskGraph.class);
+        taskSpawner.add(graph);
+
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+
+        // process
+        // emit 3 tick event, one minute each
+        final int executionTime = 4;
+        for (int i = 0; i < executionTime; i ++) {
+            OffsetDateTime current = DateTimeUtils.now().plusSeconds(60*i);
+            Tick tick = new Tick(current);
+            eventBus.post(new TickEvent(tick));
+        }
+
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskRunner, times(executionTime))
+                .submit(captor.capture());
+
+        List<List<TaskRun>> result = captor.getAllValues();
+        assertThat(result.size(), is(executionTime));
+
+        assertThat(result.stream().filter(x -> !x.isEmpty()).count(), is(1L));
+
+        DateTimeUtils.resetClock();
     }
     
     @Test

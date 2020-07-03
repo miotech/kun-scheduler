@@ -28,6 +28,30 @@ public class DateTimeUtils {
         globalClock = Clock.systemDefaultZone();
     }
 
+    /**
+     * 固定时钟在当前时刻。
+     * @return
+     */
+    public static OffsetDateTime freeze() {
+        OffsetDateTime now = OffsetDateTime.now();
+        Clock fixed = Clock.fixed(now.toInstant(), ZoneId.systemDefault());
+        setClock(fixed);
+        return now;
+    }
+
+    /**
+     * 固定时钟在某一用户指定的时刻。支持的格式为"yyyyMMdd HH:mm:ss"。
+     * @param dateTimeString
+     * @return
+     */
+    public static OffsetDateTime freezeAt(String dateTimeString) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd HH:mm:ss");
+        OffsetDateTime dt = LocalDateTime.parse(dateTimeString, formatter).atOffset(ZONE_OFFSET);
+        Clock fixed = Clock.fixed(dt.toInstant(), ZoneId.systemDefault());
+        setClock(fixed);
+        return dt;
+    }
+
     public static OffsetDateTime now() {
         return OffsetDateTime.now(globalClock);
     }
