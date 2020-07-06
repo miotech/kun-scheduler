@@ -50,6 +50,9 @@ public class PostgresLoaderTest extends DatabaseTestBase {
         postgresLoader.load(dataset);
         rowCount = operator.fetchOne("SELECT COUNT(*) FROM kun_mt_dataset", rs -> rs.getLong(1));
         Assert.assertEquals(rowCount, Long.valueOf(1));
+
+        String databaseInfo = operator.fetchOne("SELECT database_name FROM kun_mt_dataset", rs -> rs.getString(1));
+        Assert.assertEquals(databaseInfo, dataset.getDatabaseName());
     }
 
     @Test

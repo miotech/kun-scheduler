@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.databuilder.model;
 
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 public class Dataset {
@@ -40,6 +41,11 @@ public class Dataset {
 
     public DatasetStat getDatasetStat() {
         return datasetStat;
+    }
+
+    @Nullable
+    public String getDatabaseName() {
+        return dataStore.getDatabaseName();
     }
 
     public Dataset(Long datasourceId, String name, DataStore dataStore, List<DatasetField> fields, List<DatasetFieldStat> fieldStats, DatasetStat datasetStat) {
