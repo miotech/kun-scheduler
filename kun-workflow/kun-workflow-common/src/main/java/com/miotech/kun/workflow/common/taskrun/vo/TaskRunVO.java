@@ -1,5 +1,9 @@
 package com.miotech.kun.workflow.common.taskrun.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
@@ -10,8 +14,9 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+@JsonDeserialize(builder = TaskRunVO.Builder.class)
 public class TaskRunVO {
-
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     private Task task;
@@ -32,7 +37,8 @@ public class TaskRunVO {
 
     private List<TaskAttempt> attempts;
 
-    private List<Long> dependencyTaskRunIds;
+    @JsonSerialize(contentUsing = ToStringSerializer.class)
+    private List<Long> dependentTaskRunIds;
 
     public Long getId() {
         return id;
@@ -118,14 +124,15 @@ public class TaskRunVO {
         return new TaskRunVO.Builder();
     }
 
-    public List<Long> getDependencyTaskRunIds() {
-        return dependencyTaskRunIds;
+    public List<Long> getDependentTaskRunIds() {
+        return dependentTaskRunIds;
     }
 
-    public void setDependencyTaskRunIds(List<Long> dependencyTaskRunIds) {
-        this.dependencyTaskRunIds = dependencyTaskRunIds;
+    public void setDependentTaskRunIds(List<Long> dependencyTaskRunIds) {
+        this.dependentTaskRunIds = dependencyTaskRunIds;
     }
 
+    @JsonPOJOBuilder
     public static final class Builder {
         private Long id;
         private Task task;
@@ -137,7 +144,7 @@ public class TaskRunVO {
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
         private List<TaskAttempt> attempts;
-        private List<Long> dependencyTaskRunIds;
+        private List<Long> dependentTaskRunIds;
 
         private Builder() {
         }
@@ -196,8 +203,8 @@ public class TaskRunVO {
             return this;
         }
 
-        public Builder withDependencyTaskRunIds(List<Long> dependencyTaskRunIds) {
-            this.dependencyTaskRunIds = dependencyTaskRunIds;
+        public Builder withDependentTaskRunIds(List<Long> dependencyTaskRunIds) {
+            this.dependentTaskRunIds = dependencyTaskRunIds;
             return this;
         }
 
@@ -213,7 +220,7 @@ public class TaskRunVO {
             taskRunVO.setStartAt(startAt);
             taskRunVO.setEndAt(endAt);
             taskRunVO.setAttempts(attempts);
-            taskRunVO.setDependencyTaskRunIds(dependencyTaskRunIds);
+            taskRunVO.setDependentTaskRunIds(dependentTaskRunIds);
             return taskRunVO;
         }
     }

@@ -241,4 +241,42 @@ public class OperatorDaoTest extends DatabaseTestBase {
         Operator updatedFirstOperator = updatedFirstOperatorOptional.get();
         assertThat(updatedFirstOperator, samePropertyValuesAs(updatedOperator));
     }
+
+    @Test
+    public void fetchOperatorTotalCount_shouldReturnCountOfPersistedOperators() {
+        // Prepare
+        insertSampleData();
+        // Process
+        int count = operatorDao.fetchOperatorTotalCount();
+        // Validate
+        assertEquals(5, count);
+    }
+
+    @Test
+    public void fetchOperatorTotalCountWithFilter_shouldReturnCountOfMatchedRecords() {
+        // Prepare
+        // 5 rows, 3 rows with name including substring "example"
+        insertSampleData();
+
+        // create a filter with pagination, but count should returns total num
+        OperatorSearchFilter paginationOnlyFilter = OperatorSearchFilter.newBuilder()
+                .withPageNum(1)
+                .withPageSize(2)
+                .build();
+        // create a filter with keyword and pagination,
+        // total count should be number of records that matches keyword filter
+        OperatorSearchFilter filter = OperatorSearchFilter.newBuilder()
+                .withKeyword("example")
+                .withPageNum(1)
+                .withPageSize(2)
+                .build();
+
+        // Process
+        int totalCount = operatorDao.fetchOperatorTotalCountWithFilter(paginationOnlyFilter);
+        int filteredCount = operatorDao.fetchOperatorTotalCountWithFilter(filter);
+
+        // Validate
+        assertEquals(5, totalCount);
+        assertEquals(3, filteredCount);
+    }
 }

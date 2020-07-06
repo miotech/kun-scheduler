@@ -12,8 +12,11 @@ import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
+import com.miotech.kun.workflow.web.entity.PaginationVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 
 @Singleton
@@ -33,21 +36,26 @@ public class OperatorController {
                                @QueryParameter(defaultValue = "100") int pageSize,
                                @QueryParameter String name) {
 
-        return operatorService.fetchOperatorsWithFilter(
-                OperatorSearchFilter.newBuilder()
-                    .withPageNum(pageNum)
-                    .withPageSize(pageSize)
-                    .withKeyword(name)
-                    .build()
-        );
+        OperatorSearchFilter filter = OperatorSearchFilter.newBuilder()
+                .withPageNum(pageNum)
+                .withPageSize(pageSize)
+                .withKeyword(name)
+                .build();
+        List<Operator> operators = operatorService.fetchOperatorsWithFilter(filter);
+        Integer totalCount = operatorService.fetchOperatorTotalCount(filter);
+        return PaginationVO.<Operator>newBuilder()
+                .withRecords(operators)
+                .withTotalCount(totalCount)
+                .withPageSize(pageSize)
+                .withPageNumber(pageNum)
+                .build();
     }
 
     @RouteMapping(url= "/operators", method = "POST")
     public Object createOperator(@RequestBody OperatorPropsVO operatorPropsVO) {
         Preconditions.checkNotNull(operatorPropsVO, "Received invalid operator properties: null");
         logger.debug("operatorPropsVO = {}", operatorPropsVO);
-        Operator operator = operatorService.createOperator(operatorPropsVO);
-        return operator;
+        return operatorService.createOperator(operatorPropsVO);
     }
 
     @RouteMapping(url= "/operators/{operatorId}", method = "DELETE")

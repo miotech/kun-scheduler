@@ -102,6 +102,15 @@ public class TaskRunService {
         return taskRunDao.fetchTaskRunsByFilter(filter);
     }
 
+    public Integer fetchTotalCount() {
+        return taskRunDao.fetchTotalCount();
+    }
+
+    public Integer fetchTotalCount(TaskRunSearchFilter filter) {
+        return taskRunDao.fetchTotalCountByFilter(filter);
+    }
+
+
     /* ----------- private methods ------------ */
 
     private TaskRunVO convertToVO(TaskRun taskRun) {
@@ -127,7 +136,7 @@ public class TaskRunService {
                 .withStatus(taskRun.getStatus())
                 .withInlets(taskRun.getInlets())
                 .withOutlets(taskRun.getOutlets())
-                .withDependencyTaskRunIds(taskRun.getDependentTaskRunIds())
+                .withDependentTaskRunIds(taskRun.getDependentTaskRunIds())
                 .withStartAt(taskRun.getStartAt())
                 .withEndAt(taskRun.getEndAt())
                 .withVariables(taskRun.getVariables())

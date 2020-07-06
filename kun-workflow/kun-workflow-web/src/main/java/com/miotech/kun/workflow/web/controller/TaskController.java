@@ -13,13 +13,15 @@ import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
+import com.miotech.kun.workflow.web.entity.PaginationVO;
 
 import java.util.List;
+import java.util.Objects;
 
 @Singleton
 public class TaskController {
 
-    private TaskService taskService;
+    private final TaskService taskService;
 
     @Inject
     public TaskController(TaskService taskService) {
@@ -27,15 +29,41 @@ public class TaskController {
     }
 
     @RouteMapping(url= "/tasks", method = "GET")
-    public List<Task> getTask(@QueryParameter(defaultValue = "1") int pageNum,
-                              @QueryParameter(defaultValue = "100") int pageSize,
-                              @QueryParameter String name) {
-
-        return taskService.fetchTasksByFilters(TaskSearchFilter.newBuilder()
+    public PaginationVO<Task> getTask(@QueryParameter(defaultValue = "1") int pageNum,
+                                @QueryParameter(defaultValue = "100") int pageSize,
+                                @QueryParameter String name) {
+        TaskSearchFilter filter = TaskSearchFilter.newBuilder()
                 .withName(name)
                 .withPageNum(pageNum)
                 .withPageSize(pageSize)
-                .build());
+                .build();
+        List<Task> tasks = taskService.fetchTasksByFilters(filter);
+        Integer count = taskService.fetchTaskTotalCount(filter);
+
+        return PaginationVO.<Task>newBuilder()
+                .withRecords(tasks)
+                .withPageNumber(pageNum)
+                .withPageSize(pageSize)
+                .withTotalCount(count)
+                .build();
+    }
+
+    @RouteMapping(url = "/tasks/_search", method = "POST")
+    public PaginationVO<Task> searchTask(@RequestBody TaskSearchFilter taskSearchRequestBody) {
+        // Assign default pagination values if not specified in request body
+        TaskSearchFilter searchFilter = taskSearchRequestBody.cloneBuilder()
+                .withPageNum(Objects.isNull(taskSearchRequestBody.getPageNum()) ? 1 : taskSearchRequestBody.getPageNum())
+                .withPageSize(Objects.isNull(taskSearchRequestBody.getPageSize()) ? 100 : taskSearchRequestBody.getPageSize())
+                .build();
+        List<Task> tasks = taskService.fetchTasksByFilters(searchFilter);
+        Integer count = taskService.fetchTaskTotalCount(searchFilter);
+
+        return PaginationVO.<Task>newBuilder()
+                .withRecords(tasks)
+                .withPageNumber(searchFilter.getPageNum())
+                .withPageSize(searchFilter.getPageSize())
+                .withTotalCount(count)
+                .build();
     }
 
     @RouteMapping(url = "/tasks/{taskId}", method = "GET")

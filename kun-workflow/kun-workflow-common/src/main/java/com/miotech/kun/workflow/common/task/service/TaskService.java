@@ -139,6 +139,24 @@ public class TaskService {
     }
 
     /**
+     * Fetch count number of all tasks
+     * @return total count number
+     */
+    public Integer fetchTaskTotalCount() {
+        return taskDao.fetchTotalCount();
+    }
+
+    /**
+     * Fetch tasks of tasks that matches filter constraints
+     * @param filters filter instance
+     * @return total number of records that matches filter constraints
+     */
+    public Integer fetchTaskTotalCount(TaskSearchFilter filters) {
+        Preconditions.checkNotNull(filters, "Invalid argument `filters`: null");
+        return taskDao.fetchTotalCountWithFilters(filters);
+    }
+
+    /**
      * Fetch single task by id, returns optional
      * @param taskId Task id
      * @return task optional
@@ -203,6 +221,7 @@ public class TaskService {
                 .withScheduleConf(vo.getScheduleConf())
                 .withVariableDefs(vo.getVariableDefs())
                 .withDependencies(vo.getDependencies())
+                .withTags(vo.getTags())
                 .build();
     }
 
@@ -221,5 +240,15 @@ public class TaskService {
         Preconditions.checkArgument(Objects.nonNull(vo.getScheduleConf()), "Invalid task property object with property `scheduleConf`: null");
         Preconditions.checkArgument(Objects.nonNull(vo.getVariableDefs()), "Invalid task property object with property `variableDefs`: null");
         Preconditions.checkArgument(Objects.nonNull(vo.getDependencies()), "Invalid task property object with property `dependencies`: null");
+        Preconditions.checkArgument(Objects.nonNull(vo.getTags()), "Invalid task property object with property `tags`: null");
+        // Validate tags property of task VO
+        Set<String> tagKeys = new HashSet<>();
+        vo.getTags().forEach(tag -> {
+            if (tagKeys.contains(tag.getKey())) {
+                throw new IllegalArgumentException(String.format("Found key conflict: \"%s\"", tag.getKey()));
+            }
+            // else
+            tagKeys.add(tag.getKey());
+        });
     }
 }

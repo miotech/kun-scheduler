@@ -33,6 +33,8 @@ public class DefaultSQLBuilder implements SQLBuilder {
     private List<String> onClauses = new ArrayList<>();
 
     private String filterClause;
+    private String groupByClause;
+    private String havingClause;
 
     private boolean asPrepared = false;
     private boolean asPlain = false;
@@ -173,6 +175,18 @@ public class DefaultSQLBuilder implements SQLBuilder {
     @Override
     public SQLBuilder orderBy(String... orderClause) {
         this.orderByClause = orderClause;
+        return this;
+    }
+
+    @Override
+    public SQLBuilder groupBy(String groupByClause) {
+        this.groupByClause = groupByClause;
+        return this;
+    }
+
+    @Override
+    public SQLBuilder having(String havingClause) {
+        this.havingClause = havingClause;
         return this;
     }
 
@@ -330,6 +344,18 @@ public class DefaultSQLBuilder implements SQLBuilder {
             stringBuilder.append("\n");
             stringBuilder.append("WHERE ");
             stringBuilder.append(filterClause);
+        }
+
+        if (StringUtils.isNotBlank(groupByClause)) {
+            stringBuilder.append("\n");
+            stringBuilder.append("GROUP BY ");
+            stringBuilder.append(groupByClause);
+        }
+
+        if (StringUtils.isNotBlank(havingClause)) {
+            stringBuilder.append("\n");
+            stringBuilder.append("HAVING ");
+            stringBuilder.append(havingClause);
         }
 
         if (ArrayUtils.isNotEmpty(orderByClause)) {

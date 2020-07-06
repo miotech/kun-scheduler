@@ -283,4 +283,12 @@ public class OperatorService {
         // 2. Get optional operator through DAO
         return operatorDao.fetchById(id);
     }
+
+    public Integer fetchOperatorTotalCount() {
+        return operatorDao.fetchOperatorTotalCount();
+    }
+
+    public Integer fetchOperatorTotalCount(OperatorSearchFilter filter) {
+        return operatorDao.fetchOperatorTotalCountWithFilter(filter);
+    }
 }

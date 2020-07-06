@@ -67,6 +67,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withArguments(Collections.emptyList())
                 .withVariableDefs(Collections.emptyList())
                 .withDependencies(new ArrayList<>())
+                .withTags(new ArrayList<>())
                 .build();
         taskDao.create(task);
 
