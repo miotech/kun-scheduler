@@ -8,7 +8,7 @@ import {
   updateDatasetService,
   updateColumnService,
 } from '@/services/datasetDetail';
-import { Watermark } from './dataDiscovery';
+import { Watermark, GlossaryItem } from './dataDiscovery';
 import { Pagination } from './index';
 import { RootDispatch, RootState } from '../store';
 
@@ -38,6 +38,8 @@ export interface DatasetDetail {
 
   owners: string[] | null;
   tags: string[] | null;
+  glossaries: GlossaryItem[] | null;
+  datasource: string | null;
   database: string | null;
 
   row_count: number | null;
@@ -62,6 +64,8 @@ export const datasetDetail = {
 
     owners: null,
     tags: null,
+    glossaries: null,
+    datasource: null,
     database: null,
 
     row_count: null,
