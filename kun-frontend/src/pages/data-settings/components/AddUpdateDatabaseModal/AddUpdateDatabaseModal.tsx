@@ -46,7 +46,7 @@ export default memo(function AddUpdateDatabaseModal({
   }));
 
   const modalTitle = useMemo(
-    () => (database ? database.name : t('dataSettings.addDatabase')),
+    () => (database ? database.name : t('dataSettings.addDatasource')),
     [database, t],
   );
 
