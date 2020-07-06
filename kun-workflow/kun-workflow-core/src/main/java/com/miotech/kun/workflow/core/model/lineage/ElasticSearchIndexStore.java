@@ -23,4 +23,9 @@ public class ElasticSearchIndexStore extends DataStore{
         this.dataStoreUrl = dataStoreUrl;
         this.index = index;
     }
+
+    @Override
+    public String getDatabaseName() {
+        return null;
+    }
 }

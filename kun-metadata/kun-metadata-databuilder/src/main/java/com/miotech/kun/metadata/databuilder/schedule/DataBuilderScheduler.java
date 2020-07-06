@@ -3,10 +3,7 @@ package com.miotech.kun.metadata.databuilder.schedule;
 import com.google.common.collect.Maps;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.utils.PropertyUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -15,7 +12,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 public class DataBuilderScheduler {
-    private static Logger logger = LoggerFactory.getLogger(DataBuilderScheduler.class);
     private static long period = 86400L;
     private static long initialDelay = calculateCurrent2TomorrowSeconds();
     private static final String DEFAULT_ENV = "dev";
