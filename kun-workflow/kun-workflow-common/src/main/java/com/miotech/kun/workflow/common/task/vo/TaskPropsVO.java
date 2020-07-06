@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.task.vo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.miotech.kun.workflow.core.model.common.Param;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -19,15 +20,17 @@ public class TaskPropsVO {
     private final List<Variable> variableDefs;
     private final ScheduleConf scheduleConf;
     private final List<TaskDependency> dependencies;
+    private final List<Tag> tags;
 
-    public TaskPropsVO(String name, String description, Long operatorId, List<Param> arguments, List<Variable> variableDefs, ScheduleConf scheduleConf, List<TaskDependency> dependencies) {
-        this.name = name;
-        this.description = description;
-        this.operatorId = operatorId;
-        this.arguments = arguments;
-        this.variableDefs = variableDefs;
-        this.scheduleConf = scheduleConf;
-        this.dependencies = dependencies;
+    private TaskPropsVO(TaskPropsVOBuilder builder) {
+        this.name = builder.name;
+        this.description = builder.description;
+        this.operatorId = builder.operatorId;
+        this.arguments = builder.arguments;
+        this.variableDefs = builder.variableDefs;
+        this.scheduleConf = builder.scheduleConf;
+        this.dependencies = builder.dependencies;
+        this.tags = builder.tags;
     }
 
     public static TaskPropsVOBuilder newBuilder() {
@@ -35,15 +38,16 @@ public class TaskPropsVO {
     }
 
     public static TaskPropsVO from(Task task) {
-        return new TaskPropsVO(
-                task.getName(),
-                task.getDescription(),
-                task.getOperatorId(),
-                task.getArguments(),
-                task.getVariableDefs(),
-                task.getScheduleConf(),
-                task.getDependencies()
-        );
+        return new TaskPropsVOBuilder()
+                .withName(task.getName())
+                .withDescription(task.getDescription())
+                .withOperatorId(task.getOperatorId())
+                .withArguments(task.getArguments())
+                .withVariableDefs(task.getVariableDefs())
+                .withScheduleConf(task.getScheduleConf())
+                .withDependencies(task.getDependencies())
+                .withTags(task.getTags())
+                .build();
     }
 
     public TaskPropsVOBuilder cloneBuilder() {
@@ -54,7 +58,8 @@ public class TaskPropsVO {
                 .withArguments(arguments)
                 .withVariableDefs(variableDefs)
                 .withScheduleConf(scheduleConf)
-                .withDependencies(dependencies);
+                .withDependencies(dependencies)
+                .withTags(tags);
     }
 
     public String getName() {
@@ -81,6 +86,10 @@ public class TaskPropsVO {
         return scheduleConf;
     }
 
+    public List<Tag> getTags() {
+        return tags;
+    }
+
     public List<TaskDependency> getDependencies() { return dependencies; }
 
     @JsonPOJOBuilder
@@ -92,6 +101,7 @@ public class TaskPropsVO {
         private List<Variable> variableDefs;
         private ScheduleConf scheduleConf;
         private List<TaskDependency> dependencies;
+        private List<Tag> tags;
 
         private TaskPropsVOBuilder() {
         }
@@ -131,8 +141,13 @@ public class TaskPropsVO {
             return this;
         }
 
+        public TaskPropsVOBuilder withTags(List<Tag> tags) {
+            this.tags = tags;
+            return this;
+        }
+
         public TaskPropsVO build() {
-            return new TaskPropsVO(name, description, operatorId, arguments, variableDefs, scheduleConf, dependencies);
+            return new TaskPropsVO(this);
         }
     }
 }

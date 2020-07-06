@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.Scheduler;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.RunTaskContext;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -278,6 +279,68 @@ public class TaskServiceTest extends DatabaseTestBase {
 
         // Validate
         assertEquals(10, filteredTasks.size());
+    }
+
+    @Test
+    public void fetchTasksByFilters_withTagsFilter_shouldReturnFilteredTasks() {
+        // Prepare
+        // 1. create a list of 100 tasks and persist
+        Pair<List<Task>, List<Operator>> preparedEntities = mockOperatorsAndCreateMultipleTasks(100);
+        List<Task> preparedTasks = preparedEntities.getLeft();
+        // 2. Update 10 task entities with specific name prefix
+        for (int i = 5; i < 15; i += 1) {
+            Task taskToBeUpdate = preparedTasks.get(i);
+            taskService.fullUpdateTask(taskToBeUpdate.cloneBuilder()
+                    .withName("name_prefix_" + i)
+                    .withTags(Lists.newArrayList(
+                            new Tag("version", String.valueOf(i % 2 + 1)),
+                            new Tag("priority", String.valueOf(i % 3 + 1)),
+                            new Tag("owner", "foo")
+                    ))
+                    .build()
+            );
+        }
+        // 3. create a tag filter
+        TaskSearchFilter versionTagFilter = TaskSearchFilter.newBuilder()
+                .withTags(Lists.newArrayList(
+                        new Tag("version", "1")
+                ))
+                .withPageNum(1).withPageSize(100).build();
+
+        TaskSearchFilter ownerTagFilter = TaskSearchFilter.newBuilder()
+                .withTags(Lists.newArrayList(
+                        new Tag("owner", "foo")
+                ))
+                .withPageNum(1).withPageSize(100).build();
+
+        TaskSearchFilter multipleTagsFilter = TaskSearchFilter.newBuilder()
+                .withTags(Lists.newArrayList(
+                        new Tag("version", "2"),
+                        new Tag("priority", "3"),
+                        new Tag("owner", "foo")
+                ))
+                .withPageNum(1).withPageSize(100).build();
+
+        TaskSearchFilter TagAndNameFilter = TaskSearchFilter.newBuilder()
+                .withName("name_prefix_10")
+                .withTags(Lists.newArrayList(
+                        new Tag("owner", "foo")
+                ))
+                .withPageNum(1).withPageSize(100).build();
+
+
+        // Process
+        // 4. fetch all tasks by tag filter
+        List<Task> filteredTasksWithVersionTag = taskService.fetchTasksByFilters(versionTagFilter);
+        List<Task> filteredTasksWithOwnerTag = taskService.fetchTasksByFilters(ownerTagFilter);
+        List<Task> filteredTasksWithMultipleTags = taskService.fetchTasksByFilters(multipleTagsFilter);
+        List<Task> filteredTasksWithJointConditions = taskService.fetchTasksByFilters(TagAndNameFilter);
+
+        // Validate
+        assertEquals(5, filteredTasksWithVersionTag.size());
+        assertEquals(10, filteredTasksWithOwnerTag.size());
+        assertEquals(2, filteredTasksWithMultipleTags.size());
+        assertEquals(1, filteredTasksWithJointConditions.size());
     }
 
     @Test

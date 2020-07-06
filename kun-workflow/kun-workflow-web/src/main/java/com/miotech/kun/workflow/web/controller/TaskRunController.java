@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.web.controller;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.common.exception.BadRequestException;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.service.TaskRunService;
@@ -12,14 +11,12 @@ import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
-import com.miotech.kun.workflow.web.annotation.QueryParameter;
-import com.miotech.kun.workflow.web.annotation.RouteMapping;
-import com.miotech.kun.workflow.web.annotation.RouteVariable;
-import com.miotech.kun.workflow.web.annotation.VALUE_DEFAULT;
+import com.miotech.kun.workflow.web.annotation.*;
+import com.miotech.kun.workflow.web.entity.PaginationVO;
 import org.apache.commons.lang3.StringUtils;
 
-import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Objects;
 
 @Singleton
 public class TaskRunController {
@@ -57,7 +54,7 @@ public class TaskRunController {
     }
 
     @RouteMapping(url = "/taskruns", method = "GET")
-    public List<TaskRun> searchTaskRuns(
+    public PaginationVO<TaskRun> getTaskRuns(
             @QueryParameter(defaultValue = "1") int pageNum,
             @QueryParameter(defaultValue = "100") int pageSize,
             @QueryParameter String status,
@@ -65,30 +62,52 @@ public class TaskRunController {
             @QueryParameter String dateFrom,
             @QueryParameter String dateTo
             ) {
-        try {
-            TaskRunSearchFilter.Builder filterBuilder = TaskRunSearchFilter.newBuilder()
-                    .withPageNum(pageNum)
-                    .withPageSize(pageSize);
+        TaskRunSearchFilter.Builder filterBuilder = TaskRunSearchFilter.newBuilder()
+                .withPageNum(pageNum)
+                .withPageSize(pageSize);
 
-            if (StringUtils.isNoneBlank(status)) {
-                filterBuilder
-                        .withStatus(TaskRunStatus.valueOf(status));
-            }
-            if (StringUtils.isNoneBlank(dateFrom)) {
-                filterBuilder
-                        .withDateFrom(DateTimeUtils.fromISODateTimeString(dateFrom));
-            }
-            if (StringUtils.isNoneBlank(dateFrom)) {
-                filterBuilder
-                        .withDateTo(DateTimeUtils.fromISODateTimeString(dateTo));
-            }
-            if (taskIds != null && !taskIds.isEmpty()) {
-                filterBuilder
-                        .withTaskIds(taskIds);
-            }
-            return taskRunService.searchTaskRuns(filterBuilder.build());
-        } catch (DateTimeParseException e) {
-            throw new BadRequestException(e);
+        if (StringUtils.isNoneBlank(status)) {
+            filterBuilder
+                    .withStatus(TaskRunStatus.valueOf(status));
         }
+        if (StringUtils.isNoneBlank(dateFrom)) {
+            filterBuilder
+                    .withDateFrom(DateTimeUtils.fromISODateTimeString(dateFrom));
+        }
+        if (StringUtils.isNoneBlank(dateFrom)) {
+            filterBuilder
+                    .withDateTo(DateTimeUtils.fromISODateTimeString(dateTo));
+        }
+        if (taskIds != null && !taskIds.isEmpty()) {
+            filterBuilder
+                    .withTaskIds(taskIds);
+        }
+        TaskRunSearchFilter filter = filterBuilder.build();
+        List<TaskRun> taskRuns = taskRunService.searchTaskRuns(filter);
+        Integer count = taskRunService.fetchTotalCount(filter);
+
+        return PaginationVO.<TaskRun>newBuilder()
+                .withRecords(taskRuns)
+                .withPageSize(pageSize)
+                .withPageNumber(pageNum)
+                .withTotalCount(count)
+                .build();
+    }
+
+    @RouteMapping(url = "/taskruns/_search", method = "POST")
+    public PaginationVO<TaskRun> searchTaskRuns(@RequestBody TaskRunSearchFilter requestFilter) {
+        TaskRunSearchFilter filter = requestFilter.cloneBuilder()
+                .withPageNum(Objects.nonNull(requestFilter.getPageNum()) ? requestFilter.getPageNum() : 1)
+                .withPageSize(Objects.nonNull(requestFilter.getPageSize()) ? requestFilter.getPageSize() : 100)
+                .build();
+        List<TaskRun> taskRuns = taskRunService.searchTaskRuns(filter);
+        Integer count = taskRunService.fetchTotalCount(filter);
+
+        return PaginationVO.<TaskRun>newBuilder()
+                .withRecords(taskRuns)
+                .withPageSize(filter.getPageSize())
+                .withPageNumber(filter.getPageNum())
+                .withTotalCount(count)
+                .build();
     }
 }

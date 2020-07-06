@@ -5,6 +5,7 @@ import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Param;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
@@ -76,6 +77,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?"))
                 .withOperatorId(1L)
                 .withDependencies(new ArrayList<>())
+                .withTags(new ArrayList<>())
                 .build();
 
         created.add(taskExample);
@@ -83,7 +85,12 @@ public class TaskDaoTest extends DatabaseTestBase {
 
         // insert more tasks
         for (int i = 0; i < 10; i += 1) {
-            Task task = MockTaskFactory.createTask();
+            Task task = MockTaskFactory.createTask().cloneBuilder()
+                    .withName("demo_task_" + i)
+                    .withTags(Lists.newArrayList(
+                            new Tag("version", String.valueOf(i % 2 + 1))
+                    ))
+                    .build();
             created.add(task);
             taskDao.create(task);
         }
@@ -98,17 +105,17 @@ public class TaskDaoTest extends DatabaseTestBase {
      */
     private List<Task> getSampleTasksWithDependencies() {
         Task taskA = MockTaskFactory.createTask()
-                .cloneBuilder().withId(1L).withDependencies(new ArrayList<>()).build();
+                .cloneBuilder().withId(1L).withName("task-A").withDependencies(new ArrayList<>()).build();
         Task taskB = MockTaskFactory.createTask()
-                .cloneBuilder().withId(2L).withDependencies(Lists.newArrayList(
+                .cloneBuilder().withId(2L).withName("task-B").withDependencies(Lists.newArrayList(
                         new TaskDependency(1L, 2L, dependencyFunctionProvider.from("latestTaskRun"))
                 )).build();
         Task taskC = MockTaskFactory.createTask()
-                .cloneBuilder().withId(3L).withDependencies(Lists.newArrayList(
+                .cloneBuilder().withId(3L).withName("task-C").withDependencies(Lists.newArrayList(
                         new TaskDependency(1L, 3L, dependencyFunctionProvider.from("latestTaskRun"))
                 )).build();
         Task taskD = MockTaskFactory.createTask()
-                .cloneBuilder().withId(4L).withDependencies(Lists.newArrayList(
+                .cloneBuilder().withId(4L).withName("task-D").withDependencies(Lists.newArrayList(
                         new TaskDependency(2L, 4L, dependencyFunctionProvider.from("latestTaskRun")),
                         new TaskDependency(3L, 4L, dependencyFunctionProvider.from("latestTaskRun"))
                 )).build();
@@ -199,6 +206,10 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withVariableDefs(new ArrayList<>())
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withDependencies(new ArrayList<>())
+                .withTags(Lists.newArrayList(
+                        new Tag("owner", "foo"),
+                        new Tag("version", "1")
+                ))
                 .build();
 
         // Process
@@ -223,6 +234,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withVariableDefs(new ArrayList<>())
                 .withDependencies(new ArrayList<>())
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withTags(new ArrayList<>())
                 .build();
 
         // Process
@@ -243,6 +255,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withVariableDefs(new ArrayList<>())
                 .withDependencies(new ArrayList<>())
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withTags(new ArrayList<>())
                 .build();
         Task duplicatedTask = insertTask.cloneBuilder().build();
 
@@ -251,6 +264,36 @@ public class TaskDaoTest extends DatabaseTestBase {
         taskDao.create(duplicatedTask);
 
         // Expect exception thrown
+    }
+
+    @Test
+    public void create_taskWithDuplicatedTagKeys_shouldFail() {
+        // Prepare
+        Task insertTask = Task.newBuilder()
+                .withId(1L)
+                .withName("foo")
+                .withDescription("foo desc")
+                .withOperatorId(1L)
+                .withArguments(new ArrayList<>())
+                .withVariableDefs(new ArrayList<>())
+                .withDependencies(new ArrayList<>())
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                // duplicated tags
+                .withTags(Lists.newArrayList(
+                        new Tag("foo", "bar"),
+                        new Tag("foo", "rab")
+                ))
+                .build();
+        // Process
+        try {
+            taskDao.create(insertTask);
+            fail();
+        } catch (Exception e) {
+            // Validate
+            assertThat(e, instanceOf(RuntimeException.class));
+            Optional<Task> taskOptional = taskDao.fetchById(1L);
+            assertFalse(taskOptional.isPresent());
+        }
     }
 
     @Test
@@ -299,6 +342,24 @@ public class TaskDaoTest extends DatabaseTestBase {
     }
 
     @Test
+    public void fetchWithFilter_filterByTaskName_shouldReturnFilteredResultsProperly() {
+        // Prepare
+        List<Task> tasks = getSampleTasksWithDependencies();
+        tasks.forEach(task -> taskDao.create(task));
+
+        // Process
+        List<Task> fetchedTasks = taskDao.fetchWithFilters(
+                TaskSearchFilter.newBuilder().withName("task").withPageNum(1).withPageSize(10).build());
+
+        List<Task> noMatchResults = taskDao.fetchWithFilters(
+                TaskSearchFilter.newBuilder().withName("RANDOM_STRING_TO_SEARCH").withPageNum(1).withPageSize(10).build());
+
+        // Validate
+        assertThat(fetchedTasks.size(), is(4));
+        assertThat(noMatchResults.size(), is(0));
+    }
+
+    @Test
     public void update_WithProperId_shouldSuccess() {
         // Prepare
         insertSampleData();
@@ -307,12 +368,21 @@ public class TaskDaoTest extends DatabaseTestBase {
         assertThat(task.getName(), is("example1"));
 
         // Process
-        Task taskToBeUpdated = task.cloneBuilder().withName("changedTaskName").build();
+        Task taskToBeUpdated = task.cloneBuilder()
+                .withName("changedTaskName")
+                .withTags(Lists.newArrayList(
+                        new Tag("foo", "bar"),
+                        new Tag("a", "b")
+                ))
+                .build();
         taskDao.update(taskToBeUpdated);
 
         // Validate
         Task updatedTask = taskDao.fetchById(1L).get();
-        assertThat(updatedTask, samePropertyValuesAs(taskToBeUpdated));
+        // Validate properties except tags, since ordinals are not guaranteed to be same
+        assertThat(updatedTask, samePropertyValuesAs(taskToBeUpdated, "tags"));
+        // Convert tags to map and compare
+        assertThat(updatedTask.getTagsMap(), sameBeanAs(taskToBeUpdated.getTagsMap()));
     }
 
     @Test
@@ -521,5 +591,42 @@ public class TaskDaoTest extends DatabaseTestBase {
         } catch (Exception e) {
             assertThat(e, instanceOf(IllegalArgumentException.class));
         }
+    }
+
+    @Test
+    public void fetchTotalCount_shouldReturnTotalRecordsNum() {
+        // Prepare
+        List<Task> insertedTasks = insertSampleData();
+        // Process
+        int count = taskDao.fetchTotalCount();
+        // Validate
+        assertEquals(insertedTasks.size(), count);
+    }
+
+    @Test
+    public void fetchTotalCountWithFilters_shouldReturnTotalRecordsNum() {
+        // Prepare
+        List<Task> insertedTasks = insertSampleData();
+        // Process
+        TaskSearchFilter testFilter1 = TaskSearchFilter.newBuilder()
+                .withPageNum(1)
+                // pagination should not affect
+                .withPageSize(1)
+                .withName("demo_task")
+                .build();
+        TaskSearchFilter testFilter2 = TaskSearchFilter.newBuilder()
+                .withPageNum(1)
+                // pagination should not affect
+                .withPageSize(2)
+                .withTags(Lists.newArrayList(
+                        new Tag("version", "1")
+                ))
+                .build();
+
+        int count1 = taskDao.fetchTotalCountWithFilters(testFilter1);
+        int count2 = taskDao.fetchTotalCountWithFilters(testFilter2);
+
+        assertEquals(insertedTasks.size() - 1, count1);
+        assertEquals((insertedTasks.size() - 1) / 2, count2);
     }
 }

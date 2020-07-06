@@ -51,7 +51,7 @@ public class OperatorDao {
         Preconditions.checkNotNull(filters, "Invalid parameter `filters`: found null object");
         Preconditions.checkArgument(Objects.nonNull(filters.getPageNum()) && filters.getPageNum() > 0, "Invalid page num: %d", filters.getPageNum());
         Preconditions.checkArgument(Objects.nonNull(filters.getPageSize()) && filters.getPageSize() > 0, "Invalid page size: %d", filters.getPageSize());
-        boolean hasKeywordFilter = StringUtils.isNotEmpty(filters.getKeyword());
+        boolean hasKeywordFilter = StringUtils.isNotBlank(filters.getKeyword());
         Integer offset = (filters.getPageNum() - 1) * filters.getPageSize();
         String baseSql = String.format("SELECT id, name, description, params, class_name, package FROM %s ", DB_TABLE_NAME);
         List<Operator> results;
@@ -63,6 +63,24 @@ public class OperatorDao {
             results = dbOperator.fetchAll(sql, OperatorMapper.INSTANCE, filters.getPageSize(), offset);
         }
         return results;
+    }
+
+    public Integer fetchOperatorTotalCount() {
+        return dbOperator.fetchOne("SELECT count(*) FROM " + DB_TABLE_NAME, rs -> rs.getInt(1));
+    }
+
+    public Integer fetchOperatorTotalCountWithFilter(OperatorSearchFilter filters) {
+        Preconditions.checkNotNull(filters, "Invalid parameter `filters`: found null object");
+        boolean hasKeywordFilter = StringUtils.isNotBlank(filters.getKeyword());
+        String baseSql = String.format("SELECT count(*) FROM %s ", DB_TABLE_NAME);
+        Integer count;
+        if (hasKeywordFilter) {
+            String sql = baseSql + "WHERE name LIKE CONCAT('%', CAST(? AS TEXT), '%')";
+            count = dbOperator.fetchOne(sql, rs -> rs.getInt(1), filters.getKeyword());
+        } else {
+            count = dbOperator.fetchOne(baseSql, rs -> rs.getInt(1));
+        }
+        return count;
     }
 
     /**
