@@ -15,7 +15,7 @@ stages:
 include:
   - ci/kun-frontend.gitlab-ci.yml
   - ci/kun-metadata.gitlab-ci.yml
-  - ci/kun-data-discover.gitlab-ci.yml
+  - ci/kun-data-discovery.gitlab-ci.yml
   - ci/kun-workflow.gitlab-ci.yml
 # include: ci/kun-data-discover.gitlab-ci.yml
 # include: ci/kun-workflow.gitlab-ci.yml
@@ -25,10 +25,10 @@ include:
     changes:
       - kun-frontend/**/*
 
-.build-kun-data-discover:
+.build-kun-data-discovery:
   only:
     changes:
-      - kun-data-discover/**/*
+      - kun-data-discovery/**/*
 
 .build-kun-metadata:
   only:
