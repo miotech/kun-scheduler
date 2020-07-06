@@ -1,29 +1,37 @@
 package com.miotech.kun.workflow.common.task.service;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
+import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.core.model.task.RunTaskContext;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.hamcrest.Matchers.samePropertyValuesAs;
-import static org.junit.Assert.*;
-
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 
 public class TaskServiceTest extends DatabaseTestBase {
@@ -31,7 +39,12 @@ public class TaskServiceTest extends DatabaseTestBase {
     private TaskService taskService;
 
     @Inject
+    private TaskDao taskDao;
+
+    @Inject
     private OperatorDao operatorDao;
+
+    private Scheduler scheduler = mock(Scheduler.class);
 
     private List<Operator> insertSampleOperators() {
         List<Operator> operators = MockOperatorFactory.createOperators(10);
@@ -316,5 +329,53 @@ public class TaskServiceTest extends DatabaseTestBase {
             // Validate
             assertThat(e, instanceOf(EntityNotFoundException.class));
         }
+    }
+
+    @Test
+    public void runTask_task_does_not_exist() {
+        RunTaskVO vo = new RunTaskVO();
+        vo.setTaskId(1L);
+
+        // process
+        try {
+            taskService.runTasks(Lists.newArrayList(vo));
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+        }
+    }
+
+    @Test
+    public void runTask_single_task_no_variables() {
+        // prepare
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+
+        RunTaskVO vo = new RunTaskVO();
+        vo.setTaskId(task.getId());
+
+        ArgumentCaptor<TaskGraph> captor1 = ArgumentCaptor.forClass(TaskGraph.class);
+        ArgumentCaptor<RunTaskContext> captor2 = ArgumentCaptor.forClass(RunTaskContext.class);
+
+        // process
+        taskService.runTasks(Lists.newArrayList(vo));
+        verify(scheduler, times(1))
+                .run(captor1.capture(), captor2.capture());
+        DirectTaskGraph graph = (DirectTaskGraph) captor1.getValue();
+        RunTaskContext context = captor2.getValue();
+
+        // verify
+        assertThat(graph.getTasks(), contains(task));
+        assertThat(context.getConfiguredVariables(task.getId()), hasSize(0));
+    }
+
+    @Test
+    public void runTask_single_task_with_variables() {
+
+    }
+
+    @Test
+    public void runTask_multiple_tasks() {
+
     }
 }
