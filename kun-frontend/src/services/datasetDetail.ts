@@ -9,33 +9,6 @@ export async function fetchDatasetDetailService(detailId: string) {
     `/metadata/dataset/${detailId}`,
   );
   return resp;
-  // // TODO: 假数据
-  // return {
-  //   id: '1',
-  //   name: 'table1',
-  //   schema: 'public',
-  //   type: 'Postgres',
-  //   high_watermark: {
-  //     user: 'admin',
-  //     time: 14000000000,
-  //   },
-  //   low_watermark: {
-  //     user: 'admin',
-  //     time: 14000000000,
-  //   },
-  //   description: 'dummy description',
-  //   lifecycle: Lifecycle.PROCESS,
-  //   owners: ['admin'],
-  //   tags: ['a', 'b', 'c'],
-  //   database: 'DEV Postgres',
-  //   row_count: 1484,
-  //   flows: [
-  //     {
-  //       flow_id: '1',
-  //       flow_name: 'xxx',
-  //     },
-  //   ],
-  // } as FetchDatasetDetailRespBody;
 }
 
 export interface FetchDatasetColumnsRespBody extends Pagination {
@@ -58,22 +31,6 @@ export async function fetchDatasetColumnsService(
     params,
   );
   return resp;
-  // // TODO: jiashuju
-  // return {
-  //   columns: [
-  //     {
-  //       id: '1',
-  //       name: 'table1',
-  //       high_watermark: {
-  //         user: 'admin',
-  //         time: 140000000000,
-  //       },
-  //       description: 'dummy description',
-  //       not_null_count: 1484,
-  //       not_null_percentage: 0.99,
-  //     },
-  //   ],
-  // };
 }
 
 export interface PullDatasetRespBody {

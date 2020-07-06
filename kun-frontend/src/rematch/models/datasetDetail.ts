@@ -8,6 +8,7 @@ import {
   updateDatasetService,
   updateColumnService,
 } from '@/services/datasetDetail';
+import { deleteQualityService } from '@/services/dataQuality';
 import { Watermark, GlossaryItem } from './dataDiscovery';
 import { Pagination } from './index';
 import { RootDispatch, RootState } from '../store';
@@ -15,6 +16,11 @@ import { RootDispatch, RootState } from '../store';
 export interface Flow {
   flow_id: string;
   flow_name: string;
+}
+
+export interface DataQualityItem {
+  id: string;
+  name: string;
 }
 
 export interface Column {
@@ -44,6 +50,8 @@ export interface DatasetDetail {
 
   row_count: number | null;
   flows: Flow[] | null;
+
+  dataQualities: DataQualityItem[] | null;
 }
 
 export interface DatasetDetailState extends DatasetDetail {
@@ -70,6 +78,8 @@ export const datasetDetail = {
 
     row_count: null,
     flows: null,
+
+    dataQualities: null,
 
     columns: [],
     columnsPagination: {
@@ -180,6 +190,15 @@ export const datasetDetail = {
       async updateColumn(payload: { id: string; description: string }) {
         const { id, description } = payload;
         const resp = await updateColumnService(id, { description });
+        if (resp) {
+          return resp;
+        }
+        return null;
+      },
+
+      async deleteDataQuality(payload: { id: string; datasetId: string }) {
+        const { id, datasetId } = payload;
+        const resp = await deleteQualityService(id, { datasetId });
         if (resp) {
           return resp;
         }
