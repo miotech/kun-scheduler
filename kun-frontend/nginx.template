@@ -37,7 +37,7 @@ server {
         proxy_set_header X-Scheme $scheme;
         proxy_redirect http:// https://;
         add_header cache-control public;
-        rewrite /kun/api/workflow/(.*) $1 break;                                                                                                                 
+        rewrite /kun/api/workflow/(.*) /$1 break;                                                                                                                 
         proxy_pass http://kun-workflow:${WORKFLOW_PORT}/;
         proxy_redirect off;
     }
