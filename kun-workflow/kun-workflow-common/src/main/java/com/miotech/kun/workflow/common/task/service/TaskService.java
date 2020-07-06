@@ -1,28 +1,27 @@
 package com.miotech.kun.workflow.common.task.service;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.exception.NameConflictException;
+import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
-import com.miotech.kun.workflow.core.model.bo.RunTaskInfo;
-import com.miotech.kun.workflow.core.model.common.Variable;
+import com.miotech.kun.workflow.core.Scheduler;
+import com.miotech.kun.workflow.core.model.task.RunTaskContext;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Singleton
 public class TaskService {
@@ -35,38 +34,10 @@ public class TaskService {
     @Inject
     private TaskRunDao taskRunDao;
 
-    private void validateTaskPropsVONotNull(TaskPropsVO vo) {
-        Preconditions.checkNotNull(vo, "Invalid TaskPropsVO argument: null");
-    }
+    @Inject
+    private Scheduler scheduler;
 
-    private Task convertTaskPropsVoToTask(TaskPropsVO vo) {
-        return Task.newBuilder()
-                .withName(vo.getName())
-                .withDescription(vo.getDescription())
-                .withOperatorId(vo.getOperatorId())
-                .withArguments(vo.getArguments())
-                .withScheduleConf(vo.getScheduleConf())
-                .withVariableDefs(vo.getVariableDefs())
-                .withDependencies(vo.getDependencies())
-                .build();
-    }
-
-    private void validateTaskIntegrity(Task task) {
-        Preconditions.checkNotNull(task.getId(), "Invalid task with property `id`: null");
-        TaskPropsVO vo = TaskPropsVO.from(task);
-        validateTaskPropsVOIntegrity(vo);
-    }
-
-    private void validateTaskPropsVOIntegrity(TaskPropsVO vo) {
-        validateTaskPropsVONotNull(vo);
-        Preconditions.checkArgument(Objects.nonNull(vo.getName()), "Invalid task property object with property `name`: null");
-        Preconditions.checkArgument(Objects.nonNull(vo.getDescription()),"Invalid task property object with property `description`: null" );
-        Preconditions.checkArgument(Objects.nonNull(vo.getOperatorId()), "Invalid task property object with property `operatorId`: null");
-        Preconditions.checkArgument(Objects.nonNull(vo.getArguments()), "Invalid task property object with property `arguments`: null");
-        Preconditions.checkArgument(Objects.nonNull(vo.getScheduleConf()), "Invalid task property object with property `scheduleConf`: null");
-        Preconditions.checkArgument(Objects.nonNull(vo.getVariableDefs()), "Invalid task property object with property `variableDefs`: null");
-        Preconditions.checkArgument(Objects.nonNull(vo.getDependencies()), "Invalid task property object with property `dependencies`: null");
-    }
+    /* ----------- public methods ------------ */
 
     /**
      * Create a task by given task properties value object, will throw exception if required properties or binding operator not found
@@ -190,8 +161,65 @@ public class TaskService {
         }
     }
 
-    public Task runTasks(List<RunTaskInfo> runTaskInfos) {
-        // TODO: implement this
-        return null;
+    public List<Long> runTasks(List<RunTaskVO> runTaskVOs) {
+        List<Long> taskIds = new ArrayList<>();
+        RunTaskContext.Builder contextBuilder = RunTaskContext.newBuilder();
+
+        for (RunTaskVO vo : runTaskVOs) {
+            Long taskId = vo.getTaskId();
+            taskIds.add(taskId);
+            contextBuilder.addVariables(taskId, vo.getVariables());
+        }
+
+        // fetch tasks
+        Map<Long, Optional<Task>> fetched = taskDao.fetchByIds(taskIds);
+        List<Task> tasks = fetched.entrySet().stream()
+                .map(e -> e.getValue()
+                        .orElseThrow(() -> new IllegalArgumentException("Task does not exist for id: " + e.getKey()))
+                )
+                .collect(Collectors.toList());
+
+        // create graph
+        DirectTaskGraph graph = new DirectTaskGraph(tasks);
+
+        // run graph
+        List<TaskRun> taskRuns = scheduler.run(graph, contextBuilder.build());
+
+        return taskRuns.stream().map(TaskRun::getId).collect(Collectors.toList());
+    }
+
+    /* ----------- private methods ------------ */
+
+    private void validateTaskPropsVONotNull(TaskPropsVO vo) {
+        Preconditions.checkNotNull(vo, "Invalid TaskPropsVO argument: null");
+    }
+
+    private Task convertTaskPropsVoToTask(TaskPropsVO vo) {
+        return Task.newBuilder()
+                .withName(vo.getName())
+                .withDescription(vo.getDescription())
+                .withOperatorId(vo.getOperatorId())
+                .withArguments(vo.getArguments())
+                .withScheduleConf(vo.getScheduleConf())
+                .withVariableDefs(vo.getVariableDefs())
+                .withDependencies(vo.getDependencies())
+                .build();
+    }
+
+    private void validateTaskIntegrity(Task task) {
+        Preconditions.checkNotNull(task.getId(), "Invalid task with property `id`: null");
+        TaskPropsVO vo = TaskPropsVO.from(task);
+        validateTaskPropsVOIntegrity(vo);
+    }
+
+    private void validateTaskPropsVOIntegrity(TaskPropsVO vo) {
+        validateTaskPropsVONotNull(vo);
+        Preconditions.checkArgument(Objects.nonNull(vo.getName()), "Invalid task property object with property `name`: null");
+        Preconditions.checkArgument(Objects.nonNull(vo.getDescription()),"Invalid task property object with property `description`: null" );
+        Preconditions.checkArgument(Objects.nonNull(vo.getOperatorId()), "Invalid task property object with property `operatorId`: null");
+        Preconditions.checkArgument(Objects.nonNull(vo.getArguments()), "Invalid task property object with property `arguments`: null");
+        Preconditions.checkArgument(Objects.nonNull(vo.getScheduleConf()), "Invalid task property object with property `scheduleConf`: null");
+        Preconditions.checkArgument(Objects.nonNull(vo.getVariableDefs()), "Invalid task property object with property `variableDefs`: null");
+        Preconditions.checkArgument(Objects.nonNull(vo.getDependencies()), "Invalid task property object with property `dependencies`: null");
     }
 }

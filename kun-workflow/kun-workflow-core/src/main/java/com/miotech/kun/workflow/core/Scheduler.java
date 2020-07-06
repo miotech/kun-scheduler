@@ -1,10 +1,22 @@
 package com.miotech.kun.workflow.core;
 
-import com.miotech.kun.workflow.core.model.common.Environment;
+import com.miotech.kun.workflow.core.model.task.RunTaskContext;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+
+import java.util.List;
 
 public interface Scheduler {
+    /**
+     * 对一个Graph进行定时调度。
+     * @param graph
+     */
     public void schedule(TaskGraph graph);
 
-    public void run(TaskGraph graph, Environment environment);
+    /**
+     * 立刻运行一个Graph。
+     * @param graph
+     * @param context
+     */
+    public List<TaskRun> run(TaskGraph graph, RunTaskContext context);
 }

@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,7 +37,7 @@ public class SchedulerClock {
     }
 
     private void emitTick() {
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = DateTimeUtils.now();
         try {
             TickEvent event = new TickEvent(new Tick(now));
             logger.debug("Post TickEvent to TaskFactory. event={}", event);
