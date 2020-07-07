@@ -9,14 +9,14 @@ public enum ErrorCode {
     SUCCESS(0, "Operation Successful"),
     FAILED(1, "Operation Failed");
 
-    private final int code;
+    private final Integer code;
     private final String note;
     ErrorCode(int code, String note) {
         this.code = code;
         this.note = note;
     }
 
-    public int getCode() {
+    public Integer getCode() {
         return code;
     }
 
