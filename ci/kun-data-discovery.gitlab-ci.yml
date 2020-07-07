@@ -1,10 +1,9 @@
-
 # workflow:
 #   rules:
 #     - changes:
 #       - kun-metadata/*
 
-verify-kun-data-discover-test:
+verify-kun-data-discovery-test:
   extends: .build-kun-data-discovery
   stage: verify
   image: gradle:6.5.0-jdk8
