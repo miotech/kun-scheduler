@@ -33,4 +33,8 @@ public class ArangoCollectionStore extends DataStore{
         this.collection = collection;
     }
 
+    @Override
+    public String getDatabaseName() {
+        return getDatabase();
+    }
 }
