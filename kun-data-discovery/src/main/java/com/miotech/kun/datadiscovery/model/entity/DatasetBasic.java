@@ -22,8 +22,9 @@ public class DatasetBasic {
 
     private String name;
 
-    @JsonProperty("database_name")
-    private String databaseName;
+    private String datasource;
+
+    private String database;
 
     private String schema;
 
