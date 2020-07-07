@@ -20,8 +20,6 @@ public class Dataset extends DatasetBasic {
     @JsonProperty("low_watermark")
     private Watermark lowWatermark;
 
-    private String database;
-
     @JsonProperty("row_count")
     private Long rowCount;
 
