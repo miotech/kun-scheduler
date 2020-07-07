@@ -32,4 +32,9 @@ public class MongoDataStore extends DataStore {
         this.database = database;
         this.collection = collection;
     }
+
+    @Override
+    public String getDatabaseName() {
+        return getDatabase();
+    }
 }

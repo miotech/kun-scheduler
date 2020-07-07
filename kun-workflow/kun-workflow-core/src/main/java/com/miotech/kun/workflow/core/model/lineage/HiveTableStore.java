@@ -32,4 +32,9 @@ public class HiveTableStore extends DataStore {
         this.database = database;
         this.table = table;
     }
+
+    @Override
+    public String getDatabaseName() {
+        return getDatabase();
+    }
 }

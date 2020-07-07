@@ -9,13 +9,11 @@ import com.miotech.kun.metadata.databuilder.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.metadata.databuilder.service.gid.GidService;
 import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import io.prestosql.jdbc.$internal.guava.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,11 +48,11 @@ public class PostgresLoader implements Loader {
         dbOperator.transaction(() -> {
             try {
                 if (datasetExist) {
-                    dbOperator.update("UPDATE kun_mt_dataset SET data_store = ?::jsonb, name = ? WHERE gid = ?",
-                            DataStoreJsonUtil.toJson(dataset.getDataStore()), dataset.getName(), gid);
+                    dbOperator.update("UPDATE kun_mt_dataset SET data_store = ?::jsonb, name = ?, database_name = ? WHERE gid = ?",
+                            DataStoreJsonUtil.toJson(dataset.getDataStore()), dataset.getName(), dataset.getDatabaseName(), gid);
                 } else {
-                    dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store) VALUES(?, ?, ?, ?::jsonb)",
-                            gid, dataset.getName(), dataset.getDatasourceId(), DataStoreJsonUtil.toJson(dataset.getDataStore()));
+                    dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name) VALUES(?, ?, ?, ?::jsonb, ?)",
+                            gid, dataset.getName(), dataset.getDatasourceId(), DataStoreJsonUtil.toJson(dataset.getDataStore()), dataset.getDatabaseName());
                 }
 
                 DatasetStat datasetStat = dataset.getDatasetStat();
