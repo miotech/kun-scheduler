@@ -246,9 +246,9 @@ export default function DatasetDetail({ match }: Props) {
 
                 <div className={styles.baseItem}>
                   <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.schema')}
+                    {t('dataDetail.baseItem.title.database')}
                   </div>
-                  <div className={styles.baseContent}>{selector.schema}</div>
+                  <div className={styles.baseContent}>{selector.database}</div>
                 </div>
 
                 <div className={styles.baseItem}>
@@ -316,9 +316,11 @@ export default function DatasetDetail({ match }: Props) {
 
                 <div className={styles.baseItem}>
                   <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.database')}
+                    {t('dataDetail.baseItem.title.datasource')}
                   </div>
-                  <div className={styles.baseContent}>{selector.database}</div>
+                  <div className={styles.baseContent}>
+                    {selector.datasource}
+                  </div>
                 </div>
               </Spin>
             </div>
