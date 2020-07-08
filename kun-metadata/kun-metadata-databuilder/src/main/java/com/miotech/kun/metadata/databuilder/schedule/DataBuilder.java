@@ -26,7 +26,7 @@ import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.metadata.databuilder.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.workflow.core.model.lineage.*;
-import com.miotech.kun.workflow.db.DatabaseOperator;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

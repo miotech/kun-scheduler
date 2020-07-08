@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.db;
+package com.miotech.kun.commons.db;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.commons.dbutils.QueryRunner;
