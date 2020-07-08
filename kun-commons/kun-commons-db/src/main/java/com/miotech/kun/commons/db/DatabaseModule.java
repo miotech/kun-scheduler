@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.db;
+package com.miotech.kun.commons.db;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;

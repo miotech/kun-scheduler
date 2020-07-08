@@ -1,6 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.databuilder.TestContainerUtil;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
@@ -12,7 +13,6 @@ import com.miotech.kun.metadata.databuilder.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
 import com.miotech.kun.metadata.databuilder.model.DatasetStat;
 import com.miotech.kun.metadata.databuilder.model.PostgresDataSource;
-import com.miotech.kun.workflow.db.DatabaseOperator;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
