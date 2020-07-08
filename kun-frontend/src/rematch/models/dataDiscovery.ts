@@ -32,16 +32,23 @@ export interface Watermark {
   time: number;
 }
 
+export interface GlossaryItem {
+  id: string;
+  name: string;
+}
+
 export interface Dataset {
   id: string;
   name: string;
   schema: string;
-  database_name: string;
   description: string;
   type: string;
-  tags: string[];
-  owners: string[];
+  datasource: string;
+  database: string;
   high_watermark: Watermark;
+  owners: string[];
+  tags: string[];
+  glossaries: GlossaryItem[];
 }
 
 export interface SearchParams {
@@ -49,7 +56,7 @@ export interface SearchParams {
   ownerList?: string[];
   tagList?: string[];
   dbTypeList?: string[];
-  dbIdList?: string[];
+  dsIdList?: string[];
   wartermarkMode?: Mode;
   wartermarkAbsoluteValue?: DataRange;
   wartermarkQuickeValue?: Quick;
@@ -63,7 +70,7 @@ export interface SearchParamsObj {
   ownerList?: string[];
   tagList?: string[];
   dbTypeList?: string[];
-  dbIdList?: string[];
+  dsIdList?: string[];
 }
 
 export interface dbFilterItem {
@@ -80,7 +87,7 @@ export interface DataDiscoveryState {
   ownerList?: string[];
   tagList?: string[];
   dbTypeList?: DbType[];
-  dbIdList?: string[];
+  dsIdList?: string[];
 
   allOwnerList: string[];
   allTagList: string[];
@@ -104,7 +111,7 @@ export const dataDiscovery = {
     ownerList: undefined,
     tagList: undefined,
     dbTypeList: undefined,
-    dbIdList: undefined,
+    dsIdList: undefined,
 
     allOwnerList: [],
     allTagList: [],
@@ -181,7 +188,7 @@ export const dataDiscovery = {
           ownerList,
           tagList,
           dbTypeList,
-          dbIdList,
+          dsIdList,
           wartermarkMode,
           wartermarkAbsoluteValue,
           wartermarkQuickeValue,
@@ -243,7 +250,7 @@ export const dataDiscovery = {
           ownerList,
           tagList,
           dbTypeList,
-          dbIdList,
+          dsIdList,
         };
         seachDatasetsFlag += 1;
         const currentSeachDatasetsFlag = seachDatasetsFlag;

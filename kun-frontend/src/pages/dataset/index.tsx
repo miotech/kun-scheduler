@@ -34,7 +34,7 @@ export default function DataDisvocery() {
     dbTypeList,
     ownerList,
     tagList,
-    dbIdList,
+    dsIdList,
 
     allOwnerList,
     allTagList,
@@ -55,7 +55,7 @@ export default function DataDisvocery() {
       dbTypeList: state.dataDiscovery.dbTypeList,
       ownerList: state.dataDiscovery.ownerList,
       tagList: state.dataDiscovery.tagList,
-      dbIdList: state.dataDiscovery.dbIdList,
+      dsIdList: state.dataDiscovery.dsIdList,
 
       allOwnerList: state.dataDiscovery.allOwnerList,
       allTagList: state.dataDiscovery.allTagList,
@@ -79,7 +79,7 @@ export default function DataDisvocery() {
   const debounceDbTypeLis = useDebounce(dbTypeList, 500);
   const debounceTagList = useDebounce(tagList, 500);
   const debounceOwnerListLis = useDebounce(ownerList, 500);
-  const debounceDbIdListLis = useDebounce(dbIdList, 500);
+  const debounceDsIdListLis = useDebounce(dsIdList, 500);
   const debounceSearchContent = useDebounce(searchContent, 1000);
 
   useEffect(() => {
@@ -88,7 +88,7 @@ export default function DataDisvocery() {
       ownerList: debounceOwnerListLis,
       tagList: debounceTagList,
       dbTypeList: debounceDbTypeLis,
-      dbIdList: debounceDbIdListLis,
+      dsIdList: debounceDsIdListLis,
       wartermarkMode,
       wartermarkAbsoluteValue,
       wartermarkQuickeValue,
@@ -98,7 +98,7 @@ export default function DataDisvocery() {
       },
     });
   }, [
-    debounceDbIdListLis,
+    debounceDsIdListLis,
     debounceDbTypeLis,
     debounceOwnerListLis,
     debounceSearchContent,
@@ -175,15 +175,15 @@ export default function DataDisvocery() {
           ),
         },
         {
-          title: t('dataDiscovery.datasetsTable.header.schema'),
-          dataIndex: 'schema',
-          key: 'schema',
+          title: t('dataDiscovery.datasetsTable.header.database'),
+          dataIndex: 'database',
+          key: 'database',
           width: 80,
         },
         {
-          title: t('dataDiscovery.datasetsTable.header.dbName'),
-          dataIndex: 'database_name',
-          key: 'database_name',
+          title: t('dataDiscovery.datasetsTable.header.datasource'),
+          dataIndex: 'datasource',
+          key: 'datasource',
           width: 120,
         },
         {
@@ -337,16 +337,16 @@ export default function DataDisvocery() {
 
             <div className={styles.filterItem}>
               <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.dbname')}
+                {t('dataDiscovery.datasource')}
               </div>
               <div className={styles.filterItemSelect}>
                 <Select
-                  value={dbIdList}
+                  value={dsIdList}
                   mode="multiple"
                   size="large"
                   onChange={v => {
                     dispatch.dataDiscovery.updateState({
-                      key: 'dbIdList',
+                      key: 'dsIdList',
                       value: v,
                     });
                   }}
