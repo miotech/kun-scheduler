@@ -7,7 +7,6 @@ import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.workflow.core.execution.Operator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
-import com.miotech.kun.workflow.utils.PropertyUtils;
 
 import java.util.Properties;
 

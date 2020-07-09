@@ -24,14 +24,11 @@ public class ConfigurableExtractor implements Extractor {
     public Iterator<Dataset> extract() {
 
         Catalog.Type catalogType = dataSource.getCatalog().getType();
-        switch (catalogType) {
-            case META_STORE:
-                return new HiveExtractor(dataSource).extract();
-            case GLUE:
-                return new GlueExtractor(dataSource).extract();
-            default:
-                throw new IllegalArgumentException("Invalid Catalog.Type: " + catalogType);
+        if (catalogType.equals(Catalog.Type.META_STORE)) {
+            return new HiveExtractor(dataSource).extract();
         }
+
+        throw new IllegalArgumentException("Invalid Catalog.Type: " + catalogType);
     }
 
 }

@@ -83,8 +83,7 @@ public class PostgresTableExtractor extends ExtractorTemplate {
             distinctCountSql = String.format("SELECT COUNT(DISTINCT(CAST(%s AS VARCHAR))) FROM " + TableOrFieldNameEscapeUtil.escape(table),
                     TableOrFieldNameEscapeUtil.escape(datasetField.getName()));
         }
-//        datasetFieldBuilder.withDistinctCount(dbOperator.fetchOne(sql, rs -> rs.getLong(1)));
-        //TODO Temporarily close distinct count
+        // Temporarily close distinct count
         datasetFieldBuilder.withDistinctCount(0L);
 
         String nonNullCountSql = String.format("SELECT COUNT(*) FROM %s WHERE %s IS NOT NULL", TableOrFieldNameEscapeUtil.escape(table),
@@ -105,17 +104,11 @@ public class PostgresTableExtractor extends ExtractorTemplate {
     }
 
     private boolean isSpecialType(DatasetFieldType.Type type) {
-        if (type == DatasetFieldType.Type.JSON) {
-            return true;
-        }
-        return false;
+        return type == DatasetFieldType.Type.JSON;
     }
 
     private boolean isIgnoredType(DatasetFieldType.Type type) {
-        if (type == DatasetFieldType.Type.STRUCT) {
-            return true;
-        }
-        return false;
+        return type == DatasetFieldType.Type.STRUCT;
     }
 
     @Override
@@ -131,7 +124,7 @@ public class PostgresTableExtractor extends ExtractorTemplate {
         String sql = "SELECT COUNT(*) FROM " + TableOrFieldNameEscapeUtil.escape(table);
         datasetStatBuilder.withRowCount(dbOperator.fetchOne(sql, rs -> rs.getLong(1)));
         if (logger.isDebugEnabled()) {
-            logger.debug("PostgresTableExtractor.getTableStats rowCountSql: {}" + sql);
+            logger.debug("PostgresTableExtractor.getTableStats rowCountSql: {}", sql);
         }
 
         DatasetStat result = datasetStatBuilder.build();

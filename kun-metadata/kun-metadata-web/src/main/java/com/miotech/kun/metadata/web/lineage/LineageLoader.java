@@ -37,7 +37,7 @@ public class LineageLoader {
             long id = findDataSetId(store);
             if (id > 0) outletDataSetIds.add(id);
         }
-        logger.debug("save to db, taskId: %s", taskId);
+        logger.debug("save to db, taskId: {}", taskId);
 
         Object[][] params = new Object[inletDataSetIds.size()][];
         for (int i = 0; i < inletDataSetIds.size(); i++) {
@@ -63,7 +63,7 @@ public class LineageLoader {
             logger.error("unknown data store error: ", e);
             return 0;
         }
-        Long gid = dbOperator.fetchOne("SELECT gid FROM kun_mt_dataset WHERE data_store = ?::jsonb", rs -> rs.getLong(1), dataStoreJson);
+        Long gid = dbOperator.fetchOne("SELECT gid FROM kun_mt_dataset WHERE data_store = CAST(? AS JSONB)", rs -> rs.getLong(1), dataStoreJson);
         if (gid != null && gid > 0) {
             return gid;
         }

@@ -1,7 +1,6 @@
 package com.miotech.kun.metadata.databuilder.client;
 
 import com.google.common.collect.Maps;
-import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -9,7 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Map;
 
 /**
