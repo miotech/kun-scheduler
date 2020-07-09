@@ -63,10 +63,10 @@ public class DatasetRepository extends BaseRepository {
         StringBuilder searchGroupSql = new StringBuilder("group by gid").append("\n");
         StringBuilder whereClause = new StringBuilder("where 1=1").append("\n");
         List<Object> pstmtArgs = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(datasetSearchRequest.getDbIdList()) || !CollectionUtils.isEmpty(datasetSearchRequest.getDbTypeList())) {
+        if (!CollectionUtils.isEmpty(datasetSearchRequest.getDsIdList()) || !CollectionUtils.isEmpty(datasetSearchRequest.getDbTypeList())) {
             searchSql.append("inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id").append("\n");
-            if (!CollectionUtils.isEmpty(datasetSearchRequest.getDbIdList())) {
-                searchSql.append("and kmdsrc.id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDbIdList())).append("\n");
+            if (!CollectionUtils.isEmpty(datasetSearchRequest.getDsIdList())) {
+                searchSql.append("and kmdsrc.id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDsIdList())).append("\n");
             }
             if (!CollectionUtils.isEmpty(datasetSearchRequest.getDbTypeList())) {
                 searchSql.append("and kmdsrc.type_id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDbTypeList())).append("\n");
@@ -109,7 +109,7 @@ public class DatasetRepository extends BaseRepository {
 
         String sql = "select kmd.*, " +
                 "kmdsrct.name as type, " +
-                "kmdsrca.name as db_name, " +
+                "kmdsrca.name as datasource_name, " +
                 "kmda.description as description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
                 "kmds.stats_date as high_watermark, " +
@@ -123,7 +123,7 @@ public class DatasetRepository extends BaseRepository {
                 "         left join kun_mt_dataset_stats kmds on kmd.gid = kmds.dataset_gid\n" +
                 "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
                 "         inner join (select dataset_gid, max(stats_date) as max_time from kun_mt_dataset_stats group by dataset_gid) watermark on (kmd.gid = watermark.dataset_gid and kmds.stats_date = watermark.max_time)\n" +
-                "group by kmd.gid, kmd.name, kmd.datasource_id, kmd.schema, kmd.data_store, type, db_name, description, high_watermark\n";
+                "group by kmd.gid, kmd.name, kmd.datasource_id, kmd.schema, kmd.data_store, kmd.database_name, type, datasource_name, description, high_watermark\n";
 
         sql += orderByClause;
         DatasetBasicPage pageResult = new DatasetBasicPage();
@@ -143,7 +143,7 @@ public class DatasetRepository extends BaseRepository {
     public Dataset find(Long gid) {
         String sql = "select kmd.*, " +
                 "kmdsrct.name as type, " +
-                "kmdsrca.name as db_name, " +
+                "kmdsrca.name as datasource_name, " +
                 "kmda.description as description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
                 "kmds.row_count as row_count, " +
@@ -161,7 +161,7 @@ public class DatasetRepository extends BaseRepository {
                 "         inner join (select dataset_gid, max(stats_date) as max_time, min(stats_date) as min_time from kun_mt_dataset_stats where dataset_gid = ? group by dataset_gid) watermark on kmd.gid = watermark.dataset_gid\n";
 
         String whereClause = "where kmd.gid = ?\n";
-        String groupByClause = "group by kmd.gid, type, db_name, description, row_count, high_watermark, low_watermark";
+        String groupByClause = "group by kmd.gid, type, datasource_name, description, row_count, high_watermark, low_watermark";
         return jdbcTemplate.query(sql + whereClause + groupByClause, rs -> {
             Dataset dataset = new Dataset();
             if (rs.next()) {
@@ -169,7 +169,6 @@ public class DatasetRepository extends BaseRepository {
                 Watermark watermark = new Watermark();
                 watermark.setTime(timestampToMillis(rs, "low_watermark"));
                 dataset.setLowWatermark(watermark);
-                dataset.setDatabase(rs.getString("db_name"));
                 dataset.setRowCount(rs.getLong("row_count"));
                 return dataset;
             }
@@ -210,10 +209,10 @@ public class DatasetRepository extends BaseRepository {
     private void setDatasetBasicField(DatasetBasic datasetBasic, ResultSet rs) throws SQLException {
         datasetBasic.setGid(rs.getLong("gid"));
         datasetBasic.setType(rs.getString("type"));
-        datasetBasic.setDatabaseName(rs.getString("db_name"));
+        datasetBasic.setDatasource(rs.getString("datasource_name"));
         datasetBasic.setDescription(rs.getString("description"));
         datasetBasic.setName(rs.getString("name"));
-        datasetBasic.setSchema(rs.getString("schema"));
+        datasetBasic.setDatabase(rs.getString("database_name"));
         datasetBasic.setOwners(sqlToList(rs.getString("owners")));
         datasetBasic.setTags(sqlToList(rs.getString("tags")));
         Watermark watermark = new Watermark();
