@@ -25,7 +25,7 @@ public class DatasetSearchRequest extends PageInfo {
 
     private List<Long> dbTypeList;
 
-    private List<Long> dbIdList;
+    private List<Long> dsIdList;
 
     private Long watermarkStart;
 
