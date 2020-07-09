@@ -21,7 +21,7 @@ public class ArangoExtractor implements Extractor {
     @Override
     public Iterator<Dataset> extract() {
         ArrayList<String> databases = (ArrayList<String>) client.getDatabases();
-        return Iterators.concat(databases.stream().filter(db -> !db.startsWith("_")).map((databasesName) -> new ArangoDatabaseExtractor(cluster, databasesName).extract()).iterator());
+        return Iterators.concat(databases.stream().filter(db -> !db.startsWith("_")).map(databasesName -> new ArangoDatabaseExtractor(cluster, databasesName).extract()).iterator());
     }
 
 }

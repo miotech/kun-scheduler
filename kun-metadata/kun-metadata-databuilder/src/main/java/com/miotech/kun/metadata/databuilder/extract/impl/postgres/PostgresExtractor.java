@@ -40,7 +40,7 @@ public class PostgresExtractor implements Extractor {
         if (logger.isDebugEnabled()) {
             logger.debug("PostgresExtractor extract end. databases: {}", JSONUtils.toJsonString(databases));
         }
-        return Iterators.concat(databases.stream().map((databasesName) -> new PostgresDatabaseExtractor(dataSource, databasesName).extract()).iterator());
+        return Iterators.concat(databases.stream().map(databasesName -> new PostgresDatabaseExtractor(dataSource, databasesName).extract()).iterator());
     }
 
 }

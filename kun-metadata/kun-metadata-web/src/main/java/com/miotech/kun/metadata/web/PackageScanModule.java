@@ -1,12 +1,9 @@
 package com.miotech.kun.metadata.web;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.BindingAnnotation;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.web.annotation.BasePackageScan;
-
-import javax.inject.Qualifier;
 
 public class PackageScanModule extends AbstractModule {
 

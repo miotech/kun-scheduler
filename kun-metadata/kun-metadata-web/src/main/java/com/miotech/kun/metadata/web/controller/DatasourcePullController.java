@@ -22,7 +22,7 @@ public class DatasourcePullController {
 
     @RouteMapping(url = "/datasources/{id}/_pull", method = "POST")
     public Object pull(@RouteVariable Long id) throws JsonProcessingException {
-        logger.debug("DatasetPullController pull received id: " + id);
+        logger.debug("DatasetPullController pull received id: {}", id);
 
         Preconditions.checkNotNull(id, "Invalid parameter `id`: found null object");
         String resultStr = processService.submit(id, DataBuilderDeployMode.DATASET);

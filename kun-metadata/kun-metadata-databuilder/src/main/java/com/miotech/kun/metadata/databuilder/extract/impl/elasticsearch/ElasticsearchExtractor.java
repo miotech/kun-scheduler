@@ -9,8 +9,6 @@ import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -45,7 +43,7 @@ public class ElasticsearchExtractor implements Extractor {
                 .filter(index -> !index.startsWith("."))
                 .collect(Collectors.toSet());
 
-        return Iterators.concat(indices.stream().map((index) ->
+        return Iterators.concat(indices.stream().map(index ->
                 new ElasticSearchIndexExtractor(cluster, index, client).extract()).iterator());
     }
 
