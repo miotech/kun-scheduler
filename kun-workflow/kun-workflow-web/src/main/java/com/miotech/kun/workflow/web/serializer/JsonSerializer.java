@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.util.StdDateFormat;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.workflow.common.exception.UnhandledTypeException;
 import org.eclipse.jetty.http.MimeTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +18,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
 
 @Singleton
 public class JsonSerializer {
@@ -45,10 +49,21 @@ public class JsonSerializer {
         }
     }
 
-    public <T> T toObject(InputStream inputStream, Class<T> clz) {
+    public <T> T toObject(InputStream inputStream, Type type) {
         try {
-            return objectMapper.readValue(inputStream, clz);
-        } catch (IOException e) {
+            if (type instanceof ParameterizedType) {
+                ParameterizedType parameterizedType = (ParameterizedType) type;
+                Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+                return objectMapper.readValue(inputStream,
+                        objectMapper.getTypeFactory().constructCollectionType(List.class,
+                                (Class) actualTypeArguments[0]));
+
+            } else if (type instanceof Class) {
+                return (T) objectMapper.readValue(inputStream, (Class) type);
+            } else {
+                throw new UnhandledTypeException("Unhandled Type: " + type.getTypeName());
+            }
+        } catch (Exception e) {
             logger.error("Failed to deserialize object: ", e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
