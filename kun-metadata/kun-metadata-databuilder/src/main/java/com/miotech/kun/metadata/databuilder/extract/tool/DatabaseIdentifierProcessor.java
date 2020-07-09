@@ -7,30 +7,16 @@ public class DatabaseIdentifierProcessor {
     private DatabaseIdentifierProcessor() {
     }
 
-    public static String processTableNameIdentifier(String table, DatabaseType dbType) {
+    public static String escape(String name, DatabaseType dbType) {
         switch (dbType) {
             case ATHENA:
-                if (Character.isDigit(table.charAt(0))) {
-                    return "\"" + table + "\"";
-                } else {
-                    return table;
-                }
+                return "\"" + name + "\"";
             case HIVE:
             case POSTGRES:
             case PRESTO:
-                return "`" + table + "`";
+                return "`" + name + "`";
             default:
-                return table;
-        }
-    }
-
-    public static String processFieldNameIdentifier(String fieldName, DatabaseType databaseType) {
-        if (databaseType.equals(DatabaseType.ATHENA)) {
-            return  "\"" + fieldName + "\"";
-        } else if (databaseType.equals(DatabaseType.HIVE)) {
-            return  "`" + fieldName + "`";
-        } else {
-            return fieldName;
+                return name;
         }
     }
 

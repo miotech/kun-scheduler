@@ -1,12 +1,16 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.arango;
 
+import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.utils.JSONUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -14,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public class ArangoCollectionExtractor extends ExtractorTemplate {
+    private static final Logger logger = LoggerFactory.getLogger(ArangoCollectionExtractor.class);
 
     private ArangoDataSource cluster;
     private String dbName;
@@ -33,12 +38,13 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
         String query = String.format("FOR c IN %s LIMIT 10 RETURN c", collection);
         String doc = client.getDoc(dbName, query);
         if (doc == null)
-            return new ArrayList<DatasetField>();
+            return Lists.newArrayList();
         JsonNode json = null;
         try {
             json = JSONUtils.stringToJson(doc);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            logger.error("Doc to Json error: ", e);
+            throw ExceptionUtils.wrapIfChecked(e);
         }
         return docToFields(json, null);
     }
@@ -48,31 +54,27 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
         String query = String.format("FOR c IN %s FILTER c.%s != NULL COLLECT WITH COUNT INTO length RETURN length", collection, datasetField.getName());
         Integer count = client.count(dbName, query);
 
-        DatasetFieldStat stat = DatasetFieldStat.newBuilder()
+        return DatasetFieldStat.newBuilder()
                 .withName(datasetField.getName())
                 .withNonnullCount(count)
                 .withStatDate(LocalDateTime.now())
                 .build();
-
-        return stat;
     }
 
     @Override
     public DatasetStat getTableStats() {
         String query = String.format("RETURN LENGTH(%s)", collection);
         Integer count = client.count(dbName, query);
-        DatasetStat stat = DatasetStat.newBuilder()
+
+        return DatasetStat.newBuilder()
                 .withRowCount(count)
                 .withStatDate(LocalDateTime.now())
                 .build();
-
-        return stat;
     }
 
     @Override
     public DataStore getDataStore() {
-        DataStore dataStore = new ArangoCollectionStore(cluster.getUrl(), dbName, collection);
-        return dataStore;
+        return new ArangoCollectionStore(cluster.getUrl(), dbName, collection);
     }
 
     @Override

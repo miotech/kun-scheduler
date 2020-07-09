@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.databuilder.extract.impl.arango;
 
 import com.arangodb.ArangoCursor;
 import com.arangodb.ArangoDB;
+import com.arangodb.entity.CollectionEntity;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
 import org.slf4j.Logger;
@@ -54,7 +55,7 @@ public class MioArangoClient {
 
     public Collection<String> getCollections(String dbName){
         try{
-            return client.db(dbName).getCollections().stream().map(entity -> entity.getName()).collect(Collectors.toList());
+            return client.db(dbName).getCollections().stream().map(CollectionEntity::getName).collect(Collectors.toList());
         }catch (Exception e){
             logger.error("get collection list failed, db -> " + dbName, e);
             throw ExceptionUtils.wrapIfChecked(e);

@@ -42,7 +42,7 @@ public class HiveDatabaseExtractor implements Extractor {
         if (logger.isDebugEnabled()) {
             logger.debug("HiveDatabaseExtractor extract end. tables: {}", JSONUtils.toJsonString(tablesOnMySQL));
         }
-        return Iterators.concat(tablesOnMySQL.stream().map((tableName) -> new HiveTableExtractor(dataSource, database, tableName).extract()).iterator());
+        return Iterators.concat(tablesOnMySQL.stream().map(tableName -> new HiveTableExtractor(dataSource, database, tableName).extract()).iterator());
     }
 
     private List<String> extractTablesOnMySQL(String database) {

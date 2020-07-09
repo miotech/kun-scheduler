@@ -21,7 +21,7 @@ public class DatasetPullController {
 
     @RouteMapping(url = "/datasets/{gid}/_pull", method = "POST")
     public Object pull(@RouteVariable Long gid) throws JsonProcessingException {
-        logger.debug("DatasetPullController pull received gid: " + gid);
+        logger.debug("DatasetPullController pull received gid: {}", gid);
 
         Preconditions.checkNotNull(gid, "Invalid parameter `gid`: found null object");
         String resultStr = processService.submit(gid, DataBuilderDeployMode.DATASET);

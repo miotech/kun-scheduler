@@ -5,6 +5,9 @@ import io.prestosql.jdbc.$internal.guava.base.Preconditions;
 
 public class DatasetNameGenerator {
 
+    private DatasetNameGenerator() {
+    }
+
     public static String generateDatasetName(DatabaseType databaseType, String table) {
         Preconditions.checkNotNull(databaseType, "invalid DatabaseType: null");
 
