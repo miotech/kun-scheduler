@@ -7,7 +7,7 @@ public class UseDatabaseUtil {
 
     public static String useDatabase(String url, String database) {
         url = fixUrl(url);
-        return url.substring(0, url.lastIndexOf("/") + 1) + database;
+        return url.substring(0, url.lastIndexOf('/') + 1) + database;
     }
 
     public static String useSchema(String url, String database, String schema) {
