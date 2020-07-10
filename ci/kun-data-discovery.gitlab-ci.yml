@@ -73,7 +73,7 @@ kun-data-discovery-set-tag:
     - build
   image: mioyingtech/python-gitlab:0.1-build
   script:
-    - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-data-discover
+    - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-data-discovery
   only:
     - production
       
