@@ -27,9 +27,9 @@ export default function DataDisvocery() {
   const dispatch = useDispatch<RootDispatch>();
   const {
     searchContent,
-    wartermarkMode,
-    wartermarkAbsoluteValue,
-    wartermarkQuickeValue,
+    watermarkMode,
+    watermarkAbsoluteValue,
+    watermarkQuickeValue,
 
     dbTypeList,
     ownerList,
@@ -48,9 +48,9 @@ export default function DataDisvocery() {
   } = useSelector(
     (state: RootState) => ({
       searchContent: state.dataDiscovery.searchContent,
-      wartermarkMode: state.dataDiscovery.wartermarkMode,
-      wartermarkAbsoluteValue: state.dataDiscovery.wartermarkAbsoluteValue,
-      wartermarkQuickeValue: state.dataDiscovery.wartermarkQuickeValue,
+      watermarkMode: state.dataDiscovery.watermarkMode,
+      watermarkAbsoluteValue: state.dataDiscovery.watermarkAbsoluteValue,
+      watermarkQuickeValue: state.dataDiscovery.watermarkQuickeValue,
 
       dbTypeList: state.dataDiscovery.dbTypeList,
       ownerList: state.dataDiscovery.ownerList,
@@ -76,39 +76,35 @@ export default function DataDisvocery() {
     dispatch.dataDiscovery.fetchAllDb('');
   }, [dispatch.dataDiscovery, dispatch.dataSettings]);
 
-  const debounceDbTypeLis = useDebounce(dbTypeList, 500);
-  const debounceTagList = useDebounce(tagList, 500);
-  const debounceOwnerListLis = useDebounce(ownerList, 500);
-  const debounceDsIdListLis = useDebounce(dsIdList, 500);
   const debounceSearchContent = useDebounce(searchContent, 1000);
 
   useEffect(() => {
     dispatch.dataDiscovery.searchDatasets({
       searchContent: debounceSearchContent,
-      ownerList: debounceOwnerListLis,
-      tagList: debounceTagList,
-      dbTypeList: debounceDbTypeLis,
-      dsIdList: debounceDsIdListLis,
-      wartermarkMode,
-      wartermarkAbsoluteValue,
-      wartermarkQuickeValue,
+      ownerList,
+      tagList,
+      dbTypeList,
+      dsIdList,
+      watermarkMode,
+      watermarkAbsoluteValue,
+      watermarkQuickeValue,
       pagination: {
         pageSize: pagination.pageSize,
         pageNumber: pagination.pageNumber || 1,
       },
     });
   }, [
-    debounceDsIdListLis,
-    debounceDbTypeLis,
-    debounceOwnerListLis,
+    dbTypeList,
     debounceSearchContent,
-    debounceTagList,
     dispatch.dataDiscovery,
+    dsIdList,
+    ownerList,
     pagination.pageNumber,
     pagination.pageSize,
-    wartermarkAbsoluteValue,
-    wartermarkMode,
-    wartermarkQuickeValue,
+    tagList,
+    watermarkAbsoluteValue,
+    watermarkMode,
+    watermarkQuickeValue,
   ]);
 
   const handleChangeSearch = useCallback(
@@ -124,7 +120,7 @@ export default function DataDisvocery() {
   const handleChangeWatermarkMode = useCallback(
     mode => {
       dispatch.dataDiscovery.updateFilter({
-        key: 'wartermarkMode',
+        key: 'watermarkMode',
         value: mode,
       });
     },
@@ -133,23 +129,23 @@ export default function DataDisvocery() {
 
   const timeSelectValue = useMemo(
     () =>
-      wartermarkMode === Mode.ABSOLUTE
-        ? wartermarkAbsoluteValue
-        : wartermarkQuickeValue,
-    [wartermarkMode, wartermarkAbsoluteValue, wartermarkQuickeValue],
+      watermarkMode === Mode.ABSOLUTE
+        ? watermarkAbsoluteValue
+        : watermarkQuickeValue,
+    [watermarkMode, watermarkAbsoluteValue, watermarkQuickeValue],
   );
 
   const handleChangeWatermarkValue = useCallback(
     (v, mode) => {
       if (mode === Mode.ABSOLUTE) {
         dispatch.dataDiscovery.updateFilter({
-          key: 'wartermarkAbsoluteValue',
+          key: 'watermarkAbsoluteValue',
           value: v,
         });
       }
       if (mode === Mode.QUICK) {
         dispatch.dataDiscovery.updateFilter({
-          key: 'wartermarkQuickeValue',
+          key: 'watermarkQuickeValue',
           value: v,
         });
       }
@@ -327,7 +323,7 @@ export default function DataDisvocery() {
               </div>
               <div>
                 <TimeSelect
-                  mode={wartermarkMode}
+                  mode={watermarkMode}
                   onModeChange={handleChangeWatermarkMode}
                   value={timeSelectValue}
                   onChange={handleChangeWatermarkValue}
@@ -345,7 +341,7 @@ export default function DataDisvocery() {
                   mode="multiple"
                   size="large"
                   onChange={v => {
-                    dispatch.dataDiscovery.updateState({
+                    dispatch.dataDiscovery.updateFilter({
                       key: 'dsIdList',
                       value: v,
                     });
@@ -372,7 +368,7 @@ export default function DataDisvocery() {
                   mode="multiple"
                   size="large"
                   onChange={v => {
-                    dispatch.dataDiscovery.updateState({
+                    dispatch.dataDiscovery.updateFilter({
                       key: 'dbTypeList',
                       value: v,
                     });
@@ -399,7 +395,7 @@ export default function DataDisvocery() {
                   mode="multiple"
                   size="large"
                   onChange={v => {
-                    dispatch.dataDiscovery.updateState({
+                    dispatch.dataDiscovery.updateFilter({
                       key: 'ownerList',
                       value: v,
                     });
@@ -426,7 +422,7 @@ export default function DataDisvocery() {
                   mode="multiple"
                   size="large"
                   onChange={v => {
-                    dispatch.dataDiscovery.updateState({
+                    dispatch.dataDiscovery.updateFilter({
                       key: 'tagList',
                       value: v,
                     });
