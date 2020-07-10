@@ -76,7 +76,8 @@ kun-metadata-set-tag:
   script:
     - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-metadata
   only:
-    - production
+    refs:
+      - production
       
 kun-metadata-set-tag-hotfix:
   extends: .build-kun-metadata
@@ -87,7 +88,8 @@ kun-metadata-set-tag-hotfix:
   script:
     - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-metadata
   only:
-    - /^HOTFIX+.*/
+    refs:
+      - /^HOTFIX+.*/
   when: manual
 
 kun-metadata-save-tag:
