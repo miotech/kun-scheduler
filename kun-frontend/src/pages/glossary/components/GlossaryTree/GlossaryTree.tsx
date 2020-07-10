@@ -140,7 +140,16 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           .attr('rx', 3)
           .attr('ry', 3)
           .attr('width', 166)
-          .attr('height', 40);
+          .attr('height', 40)
+          .each(function textfunc(d) {
+            if (d.data.id !== 'root') {
+              const canNode = d3.select(this);
+
+              canNode.attr('class', styles.nodeText).on('click', n => {
+                history.push(`/data-discovery/glossary/${n.data.id}`);
+              });
+            }
+          });
 
         nodeEnter
           .append('image')

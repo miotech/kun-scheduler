@@ -1,14 +1,18 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useHistory } from 'umi';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
+import { useHistory, Link } from 'umi';
 import { RouteComponentProps } from 'react-router';
 
 import { Spin, Button, Input, Modal, message } from 'antd';
 
 import Card from '@/components/Card/Card';
+import BackButton from '@/components/BackButton/BackButton';
+
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
+import useBackPath from '@/hooks/useBackPath';
+import useBackUrlFunc from '@/hooks/useBackUrlFunc';
 
 import {
   getInitGlossaryDetail,
@@ -37,6 +41,14 @@ export default function GlossaryDetail({ match }: Props) {
 
   const history = useHistory();
 
+  const { backUrl } = useBackUrlFunc();
+
+  const query = useMemo(() => (history.location as any)?.query ?? {}, [
+    history.location,
+  ]);
+
+  const { getBackPath } = useBackPath();
+
   const { selector, dispatch } = useRedux(state => state.glossary);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -48,11 +60,20 @@ export default function GlossaryDetail({ match }: Props) {
   useEffect(() => {
     if (currentGlossaryDetail) {
       setInputtingDetail(currentGlossaryDetail);
+    } else if (query.parentId && query.parentName) {
+      setInputtingDetail(i => ({
+        ...i,
+        parent: {
+          id: query.parentId,
+          name: query.parentName,
+        },
+      }));
     }
+
     return () => {
       setInputtingDetail(getInitGlossaryDetail());
     };
-  }, [currentGlossaryDetail]);
+  }, [currentGlossaryDetail, query]);
 
   const currentId = match.params.glossaryId;
 
@@ -80,10 +101,6 @@ export default function GlossaryDetail({ match }: Props) {
       });
     };
   }, [currentId, dispatch.glossary]);
-
-  const handleClickBack = useCallback(() => {
-    history.push('/data-discovery/glossary');
-  }, [history]);
 
   const updateInputtingDetail = (key: keyof IGlossaryDetail, value: any) => {
     setInputtingDetail(detail => ({
@@ -145,18 +162,26 @@ export default function GlossaryDetail({ match }: Props) {
     return { name, description, assetIds, parentId };
   }, [inputtingDetail]);
 
+  const saveFunc = useCallback(
+    (id, params) => {
+      const diss = message.loading(t('common.loading'), 0);
+
+      dispatch.glossary.editGlossary({ id, params }).then(resp => {
+        diss();
+        if (resp) {
+          message.success(t('common.operateSuccess'));
+          setIsEditing(false);
+        }
+      });
+    },
+    [dispatch.glossary, t],
+  );
+
   const handleClickSave = useCallback(() => {
     const { id } = inputtingDetail;
-    const diss = message.loading(t('common.loading'), 0);
     const params = getParams();
-    dispatch.glossary.editGlossary({ id, params }).then(resp => {
-      diss();
-      if (resp) {
-        message.success(t('common.operateSuccess'));
-        setIsEditing(false);
-      }
-    });
-  }, [dispatch.glossary, getParams, inputtingDetail, t]);
+    saveFunc(id, params);
+  }, [getParams, inputtingDetail, saveFunc]);
 
   const handleClickCreateCancel = useCallback(() => {
     history.push('/data-discovery/glossary');
@@ -171,10 +196,13 @@ export default function GlossaryDetail({ match }: Props) {
       if (resp) {
         message.success(t('common.operateSuccess'));
         setIsEditing(false);
-        history.replace(`/data-discovery/glossary/${resp.id}`);
+        const newUrl = backUrl
+          ? `/data-discovery/glossary/${resp.id}?backUrl=${backUrl}`
+          : `/data-discovery/glossary/${resp.id}`;
+        history.replace(newUrl);
       }
     });
-  }, [dispatch.glossary, getParams, history, t]);
+  }, [backUrl, dispatch.glossary, getParams, history, t]);
 
   const buttonList = () => {
     if (isEditing) {
@@ -238,17 +266,36 @@ export default function GlossaryDetail({ match }: Props) {
     );
   };
 
-  // 渲染的地方都用inputtingDetail 替代 currentGlossaryDetail
+  const handleDeleteSingleAsset = useCallback(
+    assetId => {
+      const { id, name, description, parent, assets } = inputtingDetail;
+      const newAssets = assets?.filter(asset => asset.id !== assetId) ?? [];
+      const parentId = parent?.id;
+      const assetIds = newAssets?.filter(i => !!i).map(i => i!.id);
+      const params = { name, description, assetIds, parentId };
+      saveFunc(id, params);
+    },
+    [inputtingDetail, saveFunc],
+  );
+  const handleAddSingleAsset = useCallback(
+    asset => {
+      const { id, name, description, parent, assets } = inputtingDetail;
+      const newAssets = assets ? [...assets, asset] : [asset];
+      const parentId = parent?.id;
+      const assetIds = newAssets?.filter(i => !!i).map(i => i!.id);
+      const params = { name, description, assetIds, parentId };
+      saveFunc(id, params);
+    },
+    [inputtingDetail, saveFunc],
+  );
+
+  // 渲染的地方都用 inputtingDetail 替代 currentGlossaryDetail
   return (
     <Spin
       wrapperClassName={styles.container}
       spinning={fetchCurrentGlossaryDetailLoading}
     >
-      <div className={styles.backButoonRow}>
-        <span className={styles.backButton} onClick={handleClickBack}>
-          {`< ${t('common.back')}`}
-        </span>
-      </div>
+      <BackButton defaultUrl="/data-discovery/glossary" />
 
       <Card className={styles.titleArea}>
         {isEditing && !currentId && (
@@ -291,45 +338,57 @@ export default function GlossaryDetail({ match }: Props) {
         </div>
 
         <Card className={styles.rightArea}>
-          {(currentGlossaryDetail?.parent || isEditing) && (
+          {(inputtingDetail?.parent || isEditing) && (
             <div className={styles.inputBlock}>
               <div className={styles.label}>{t('glossary.parent')}</div>
               <div>
                 <ParentSearch
                   isEditting={isEditing}
-                  selectedParent={currentGlossaryDetail?.parent}
+                  selectedParent={inputtingDetail?.parent}
                   onChange={handleChangeParent}
-                  disabledId={currentGlossaryDetail?.id}
+                  disabledId={inputtingDetail?.id}
                 />
               </div>
             </div>
           )}
 
-          {glossaryNode?.children && (
-            <div className={styles.inputBlock}>
-              <div className={styles.label} style={{ marginBottom: 14 }}>
+          <div className={styles.inputBlock}>
+            <div className={styles.funcTitleRow}>
+              <div className={styles.funcTitleRowlabel}>
                 {t('glossary.childGlossary')}
               </div>
-              <div>
-                <ChildrenGlossaryList childList={glossaryNode.children} />
-              </div>
-            </div>
-          )}
 
-          {((inputtingDetail?.assets?.length ?? 0) > 0 || isEditing) && (
-            <div className={styles.inputBlock}>
-              <div className={styles.label} style={{ marginBottom: 14 }}>
-                {t('glossary.assets')}
-              </div>
-              <div>
-                <AssetList
-                  isEditting={isEditing}
-                  assetList={inputtingDetail?.assets || []}
-                  onChange={handleChangeAssets}
-                />
-              </div>
+              {!isEditing && (
+                <Link
+                  to={getBackPath(
+                    `/data-discovery/glossary/create?parentName=${inputtingDetail.name}&&parentId=${inputtingDetail.id}`,
+                  )}
+                >
+                  <Button size="small">
+                    {t('glossary.childGlossary.create')}
+                  </Button>
+                </Link>
+              )}
             </div>
-          )}
+            <div>
+              <ChildrenGlossaryList childList={glossaryNode?.children ?? []} />
+            </div>
+          </div>
+
+          <div className={styles.inputBlock}>
+            <div className={styles.label} style={{ marginBottom: 14 }}>
+              {t('glossary.assets')}
+            </div>
+            <div>
+              <AssetList
+                isEditting={isEditing}
+                assetList={inputtingDetail?.assets || []}
+                onChange={handleChangeAssets}
+                onDeleteSingleAsset={handleDeleteSingleAsset}
+                onAddSingleAsset={handleAddSingleAsset}
+              />
+            </div>
+          </div>
         </Card>
       </div>
     </Spin>
