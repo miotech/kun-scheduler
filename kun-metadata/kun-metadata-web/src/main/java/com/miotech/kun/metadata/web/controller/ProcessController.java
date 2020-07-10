@@ -22,8 +22,7 @@ public class ProcessController {
     public Object getProcessStatus(@RouteVariable String processId) throws JsonProcessingException {
         logger.debug("DatasetPullController getProcessStatus received id: {}", processId);
         Preconditions.checkNotNull(processId, "Invalid parameter `id`: found null object");
-        String resultStr = processService.fetchStatus(processId);
-        return JSONUtils.stringToJson(resultStr);
+        return JSONUtils.stringToJson(processService.fetchStatus(processId));
     }
 
 }
