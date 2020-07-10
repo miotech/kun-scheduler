@@ -1,3 +1,5 @@
+package not.a.valid.path;
+
 import com.miotech.kun.workflow.core.execution.Operator;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
 
