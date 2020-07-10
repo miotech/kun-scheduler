@@ -22,7 +22,6 @@ import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 
@@ -62,7 +61,7 @@ class ParameterResolver {
             if (annotation.annotationType() == RequestBody.class) {
                 logger.debug("Resolve parameter from request body parameter");
                 try {
-                    return jsonSerializer.toObject(httpServletRequest.getInputStream(), paramClz);
+                    return jsonSerializer.toObject(httpServletRequest.getInputStream(), parameter.getParameterizedType());
                 } catch (RuntimeException e) {
                     throw new BadRequestException(e);
                 }
