@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.databuilder.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 
 import javax.annotation.Nullable;
@@ -44,6 +45,7 @@ public class Dataset {
     }
 
     @Nullable
+    @JsonIgnore
     public String getDatabaseName() {
         return dataStore.getDatabaseName();
     }
