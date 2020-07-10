@@ -102,8 +102,9 @@ public class LocalExecutorTest extends DatabaseTestBase {
         // logs
         Resource log = resourceLoader.getResource(attemptProps.getLogPath());
         List<String> content = ResourceUtils.lines(log.getInputStream()).collect(Collectors.toList());
-        assertThat(content.size(), is(1));
+        assertThat(content.size(), is(2));
         assertThat(content.get(0), containsString("Hello, world!"));
+        assertThat(content.get(1), containsString("ContextClassLoader: java.net.FactoryURLClassLoader"));
 
         // events
         assertStatusProgress(attempt.getId(),

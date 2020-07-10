@@ -1,3 +1,5 @@
+package not.a.valid.path;
+
 import com.google.common.collect.Lists;
 import com.miotech.kun.workflow.core.execution.Operator;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
@@ -17,7 +19,8 @@ public class TestOperator1 extends Operator {
 
     public boolean run() {
         final String name = "world";
-        this.logger.info("Hello, {}!", new Object[] { name });
+        logger.info("Hello, {}!", new Object[] { name });
+        logger.info("ContextClassLoader: {}", Thread.currentThread().getContextClassLoader());
         report(prepareReport());
         return true;
     }
