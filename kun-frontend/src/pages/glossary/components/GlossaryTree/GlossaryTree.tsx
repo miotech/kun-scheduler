@@ -160,6 +160,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           .append('g')
           .attr('clip-path', 'url(#text-clip)')
           .append('text')
+          .attr('class', styles.textnode)
           .text(d => d.data.name)
           .attr('x', 42)
           .attr('y', 25)
