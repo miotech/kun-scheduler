@@ -1,7 +1,9 @@
 package com.miotech.kun.commons.web.utils;
 
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.http.Consts;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -21,11 +23,13 @@ public class HttpClientUtil {
 
     public String doGet(String url) {
         HttpGet httpGet = new HttpGet(url);
-        String result = "";
+        httpGet.setConfig(RequestConfig.custom().setSocketTimeout(10000).setConnectTimeout(10000).build());
+        String result;
         try (CloseableHttpResponse response = httpClient.execute(httpGet)) {
             result = EntityUtils.toString(response.getEntity(), Consts.UTF_8);
         } catch (Exception e) {
-            logger.error("HttpClientUtil.doGet error:", e);
+            logger.error("HttpClientUtil.doGet url={} error:", url, e);
+            throw ExceptionUtils.wrapIfChecked(e);
         }
 
         return result;
@@ -33,13 +37,15 @@ public class HttpClientUtil {
 
     public String doPost(String url, String json) {
         HttpPost httpPost = new HttpPost(url);
+        httpPost.setConfig(RequestConfig.custom().setSocketTimeout(10000).setConnectTimeout(10000).build());
         StringEntity entity = new StringEntity(json, ContentType.APPLICATION_JSON);
         httpPost.setEntity(entity);
-        String result = "";
+        String result;
         try (CloseableHttpResponse response = httpClient.execute(httpPost)) {
             result = EntityUtils.toString(response.getEntity(), Consts.UTF_8);
         } catch (Exception e) {
-            logger.error("HttpClientUtil.doGet error:", e);
+            logger.error("HttpClientUtil.doPost url={} json={} error:", url, json, e);
+            throw ExceptionUtils.wrapIfChecked(e);
         }
 
         return result;
