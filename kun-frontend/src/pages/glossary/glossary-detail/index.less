@@ -16,6 +16,7 @@
     align-items: center;
     padding: 24px 24px 24px 32px;
     margin-bottom: 20px;
+    margin-top: 16px;
     border-radius: 3px;
     .title {
       font-weight: bold;
@@ -40,7 +41,7 @@
         .descLabel {
           margin-bottom: 12px;
           font-weight: bold;
-          .font(14px, 20px, @primary)
+          .font(14px, 20px, @primary);
         }
         .descInputContainer {
           height: calc(100% - 32px);
@@ -70,10 +71,18 @@
         margin-bottom: 20px;
         .label {
           margin-bottom: 8px;
-          .font(14px, 21px, @primary)
+          .font(14px, 21px, @primary);
+        }
+        .funcTitleRow {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 14px;
+          .funcTitleRowlabel {
+            .font(14px, 21px, @primary);
+          }
         }
       }
-
     }
   }
 }

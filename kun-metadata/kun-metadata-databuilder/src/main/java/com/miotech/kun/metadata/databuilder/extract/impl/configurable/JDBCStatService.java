@@ -22,10 +22,10 @@ public class JDBCStatService {
     private final DatabaseType databaseType;
 
     public JDBCStatService(String database, String table, DatabaseType databaseType) {
-        this.database = database;
+        this.database = DatabaseIdentifierProcessor.escape(database, databaseType);
         this.table = table;
         this.databaseType = databaseType;
-        this.tableNameWithIdentifier = DatabaseIdentifierProcessor.processTableNameIdentifier(table, databaseType);
+        this.tableNameWithIdentifier = DatabaseIdentifierProcessor.escape(table, databaseType);
     }
 
     public DatasetFieldStat getFieldStats(DatasetField datasetField, QueryEngine queryEngine) {
@@ -43,7 +43,7 @@ public class JDBCStatService {
         }
 
         /* reference: https://docs.aws.amazon.com/zh_cn/athena/latest/ug/tables-databases-columns-names.html */
-        String fieldName = DatabaseIdentifierProcessor.processFieldNameIdentifier(datasetField.getName(), databaseType);
+        String fieldName = DatabaseIdentifierProcessor.escape(datasetField.getName(), databaseType);
 
         DataSource dataSource = buildDataSource(databaseType, queryEngine);
         DatabaseOperator dbOperator = new DatabaseOperator(dataSource);
@@ -53,8 +53,7 @@ public class JDBCStatService {
         if (logger.isDebugEnabled()) {
             logger.debug("HiveTableExtractor getFieldStats distinctCount sql: {}", distinctCountSql);
         }
-//        fieldStatBuilder.withDistinctCount(dbOperator.fetchOne(sql, rs -> rs.getLong(1)));
-        //TODO Temporarily close distinct count
+        // Temporarily close distinct count
         fieldStatBuilder.withDistinctCount(0L);
 
         String nonNullCountSql = String.format("SELECT COUNT(*) FROM %s.%s WHERE %s IS NOT NULL",

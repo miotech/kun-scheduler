@@ -37,7 +37,7 @@ public class HiveExtractor implements Extractor {
         if (logger.isDebugEnabled()) {
             logger.debug("HiveExtractor extract end. databases: {}", JSONUtils.toJsonString(databases));
         }
-        return Iterators.concat(databases.stream().map((databasesName) -> new HiveDatabaseExtractor(dataSource, databasesName).extract()).iterator());
+        return Iterators.concat(databases.stream().map(databasesName -> new HiveDatabaseExtractor(dataSource, databasesName).extract()).iterator());
     }
 
     private List<String> extractDatabasesOnMySQL() {

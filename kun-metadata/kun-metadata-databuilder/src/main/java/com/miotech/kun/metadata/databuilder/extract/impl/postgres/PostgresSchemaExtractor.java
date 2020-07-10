@@ -42,6 +42,6 @@ public class PostgresSchemaExtractor implements Extractor {
         if (logger.isDebugEnabled()) {
             logger.debug("PostgresSchemaExtractor extract end. tables: {}", JSONUtils.toJsonString(tables));
         }
-        return Iterators.concat(tables.stream().map((table) -> new PostgresTableExtractor(dataSource, database, schema, table, dbOperator).extract()).iterator());
+        return Iterators.concat(tables.stream().map(table -> new PostgresTableExtractor(dataSource, database, schema, table, dbOperator).extract()).iterator());
     }
 }

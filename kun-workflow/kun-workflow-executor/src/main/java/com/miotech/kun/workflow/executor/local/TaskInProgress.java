@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +25,8 @@ public class TaskInProgress implements Runnable {
     private static final Logger logger = LoggerFactory.getLogger(TaskInProgress.class);
 
     private final TaskAttempt attempt;
+
+    private volatile Thread thread;
 
     @Inject
     private TaskRunDao taskRunDao;
@@ -48,9 +51,10 @@ public class TaskInProgress implements Runnable {
     public void run() {
         try {
             long attemptId = attempt.getId();
+            thread = Thread.currentThread();
 
             // 更新任务状态为RUNNING，开始时间
-            OffsetDateTime startAt = OffsetDateTime.now();
+            OffsetDateTime startAt = DateTimeUtils.now();
             logger.debug("Change TaskAttempt's status to RUNNING. taskAttempt={}, startAt={}", attempt, startAt);
             commonService.changeTaskAttemptStatus(attemptId, TaskRunStatus.RUNNING, startAt, null);
 
@@ -69,11 +73,16 @@ public class TaskInProgress implements Runnable {
 
             TaskRunStatus finalStatus;
             TaskAttemptReport report = TaskAttemptReport.BLANK;
+
+            ClassLoader origCtxCl = thread.getContextClassLoader();
             try {
                 // 加载Operator
                 Operator operator = loadOperator(operatorDetail.getPackagePath(), operatorDetail.getClassName());
                 operator.setContext(context);
                 logger.debug("Loaded operator's class. operatorId={}", operatorId);
+
+                // 设置Operator的ClassLoader为ContextClassLoader
+                thread.setContextClassLoader(operator.getClass().getClassLoader());
 
                 // 初始化Operator
                 operator.init();
@@ -90,10 +99,12 @@ public class TaskInProgress implements Runnable {
                 context.getLogger().error("Unexpected exception occurred. OperatorName={}, TaskRunId={}",
                         operatorDetail.getName(), attempt.getTaskRun().getId(), e);
                 finalStatus = TaskRunStatus.FAILED;
+            } finally {
+                thread.setContextClassLoader(origCtxCl);
             }
 
             // 更新任务状态为SUCCESS/FAILED，结束时间
-            OffsetDateTime endAt = OffsetDateTime.now();
+            OffsetDateTime endAt = DateTimeUtils.now();
             logger.debug("Change TaskAttempt's status to {}. taskAttempt={}, endAt={}", finalStatus, attempt, endAt);
             commonService.changeTaskAttemptStatus(attemptId, finalStatus, null, endAt);
 
@@ -129,7 +140,7 @@ public class TaskInProgress implements Runnable {
     }
 
     private String newLogPath(long attemptId) {
-        String date = OffsetDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        String date = DateTimeUtils.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         return String.format("file:logs/%s/%s", date, attemptId);
     }
 

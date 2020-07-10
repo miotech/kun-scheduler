@@ -12,6 +12,9 @@ public class ConnectUrlUtil {
     public static final String POSTGRESQL_PREFIX = "postgresql";
     public static final String COLON = ":";
 
+    private ConnectUrlUtil() {
+    }
+
     public static String convertToConnectUrl(String host, int port, String username, String password, DatabaseType dbType) {
         Preconditions.checkNotNull(dbType, "DatabaseType should not be null");
         switch (dbType) {

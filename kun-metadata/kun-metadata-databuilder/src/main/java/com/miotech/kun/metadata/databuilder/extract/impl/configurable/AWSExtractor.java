@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.databuilder.extract.impl.configurable;
 
 import com.amazonaws.services.glue.model.Table;
 import com.google.common.collect.Lists;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
 import com.miotech.kun.metadata.databuilder.extract.iterator.GlueTableIterator;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
@@ -56,6 +57,7 @@ public class AWSExtractor implements Extractor {
             countDownLatch.await();
         } catch (InterruptedException e) {
             logger.error("AWSExtractor countDownLatch.await error:", e);
+            throw ExceptionUtils.wrapIfChecked(e);
         }
         return datasets.iterator();
     }

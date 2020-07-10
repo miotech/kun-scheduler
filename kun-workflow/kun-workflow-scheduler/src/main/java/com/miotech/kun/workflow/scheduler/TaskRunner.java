@@ -52,6 +52,8 @@ public class TaskRunner {
         this.eventBus.register(this.eventLoop);
     }
 
+    /* ----------- public methods ------------ */
+
     public void submit(List<TaskRun> taskRuns) {
         // 生成对应的TaskAttempt
         List<TaskAttempt> taskAttempts = taskRuns.stream()
@@ -65,6 +67,8 @@ public class TaskRunner {
             logger.debug("Submitted TaskAttempt to EventLoop. taskAttemptId={}", ta.getId());
         }
     }
+
+    /* ----------- private methods ------------ */
 
     private TaskAttempt createTaskAttempt(TaskRun taskRun) {
         checkNotNull(taskRun, "taskRun should not be null.");

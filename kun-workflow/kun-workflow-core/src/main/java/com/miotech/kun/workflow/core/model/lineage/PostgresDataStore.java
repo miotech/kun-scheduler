@@ -40,4 +40,9 @@ public class PostgresDataStore extends DataStore {
         this.schema = schema;
         this.tableName = tableName;
     }
+
+    @Override
+    public String getDatabaseName() {
+        return String.format("%s.%s", database, schema);
+    }
 }
