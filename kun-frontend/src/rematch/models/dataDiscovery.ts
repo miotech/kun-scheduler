@@ -57,9 +57,9 @@ export interface SearchParams {
   tagList?: string[];
   dbTypeList?: string[];
   dsIdList?: string[];
-  wartermarkMode?: Mode;
-  wartermarkAbsoluteValue?: DataRange;
-  wartermarkQuickeValue?: Quick;
+  watermarkMode?: Mode;
+  watermarkAbsoluteValue?: DataRange;
+  watermarkQuickeValue?: Quick;
   pagination: Pagination;
 }
 
@@ -80,9 +80,9 @@ export interface dbFilterItem {
 
 export interface DataDiscoveryState {
   searchContent: string;
-  wartermarkMode: Mode;
-  wartermarkAbsoluteValue?: DataRange;
-  wartermarkQuickeValue?: Quick;
+  watermarkMode: Mode;
+  watermarkAbsoluteValue?: DataRange;
+  watermarkQuickeValue?: Quick;
 
   ownerList?: string[];
   tagList?: string[];
@@ -104,9 +104,9 @@ export const dataDiscovery = {
   state: {
     searchContent: '',
 
-    wartermarkMode: Mode.ABSOLUTE,
-    wartermarkAbsoluteValue: undefined,
-    wartermarkQuickeValue: undefined,
+    watermarkMode: Mode.ABSOLUTE,
+    watermarkAbsoluteValue: undefined,
+    watermarkQuickeValue: undefined,
 
     ownerList: undefined,
     tagList: undefined,
@@ -189,24 +189,24 @@ export const dataDiscovery = {
           tagList,
           dbTypeList,
           dsIdList,
-          wartermarkMode,
-          wartermarkAbsoluteValue,
-          wartermarkQuickeValue,
+          watermarkMode,
+          watermarkAbsoluteValue,
+          watermarkQuickeValue,
           pagination,
         } = payload;
         let watermarkStart: number | undefined;
         let watermarkEnd: number | undefined;
-        if (wartermarkMode === Mode.ABSOLUTE) {
-          if (wartermarkAbsoluteValue?.startTime) {
-            watermarkStart = wartermarkAbsoluteValue.startTime;
+        if (watermarkMode === Mode.ABSOLUTE) {
+          if (watermarkAbsoluteValue?.startTime) {
+            watermarkStart = watermarkAbsoluteValue.startTime;
           }
-          if (wartermarkAbsoluteValue?.endTime) {
-            watermarkEnd = wartermarkAbsoluteValue.endTime;
+          if (watermarkAbsoluteValue?.endTime) {
+            watermarkEnd = watermarkAbsoluteValue.endTime;
           }
         }
 
-        if (wartermarkMode === Mode.QUICK) {
-          switch (wartermarkQuickeValue) {
+        if (watermarkMode === Mode.QUICK) {
+          switch (watermarkQuickeValue) {
             case Quick.LAST_30_M:
               watermarkStart = moment()
                 .subtract(30, 'minutes')
