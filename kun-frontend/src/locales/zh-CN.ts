@@ -122,6 +122,7 @@ export default {
   'dataDetail.dataQuality.validate.field': '字段',
   'dataDetail.dataQuality.validate.oprator': '操作符',
   'dataDetail.dataQuality.validate.add': '添加校验规则',
+  'dataDetail.dataQuality.validate.noUseable': '没有可用的校验规则',
   'dataDetail.dataQuality.relatedTable': '相关数据表',
   'dataSettings.addDatasource': '新建数据源',
   'dataSettings.datasourceCount': '{count} 数据源',
@@ -160,6 +161,7 @@ export default {
   'glossary.desc': '描述',
   'glossary.parent': '父级',
   'glossary.childGlossary': '子级标签集',
+  'glossary.childGlossary.create': '创建子级标签集',
   'glossary.assets': '相关资源',
   'glossary.delete.title': 'Do you want to delete this glossary?',
   'glossary.delete.content':

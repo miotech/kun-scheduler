@@ -123,6 +123,7 @@ export default {
   'dataDetail.dataQuality.validate.field': 'Field',
   'dataDetail.dataQuality.validate.oprator': 'Operator',
   'dataDetail.dataQuality.validate.add': 'Add Validation',
+  'dataDetail.dataQuality.validate.noUseable': 'No useable validation rule',
   'dataDetail.dataQuality.relatedTable': 'Related Tables',
   'dataSettings.addDatasource': 'Add Datasource',
   'dataSettings.datasourceCount': '{count} datasources',
@@ -162,6 +163,7 @@ export default {
   'glossary.desc': 'Description',
   'glossary.parent': 'Parent',
   'glossary.childGlossary': 'Child Glossary',
+  'glossary.childGlossary.create': 'Create Child Glossary',
   'glossary.assets': 'Associated Assets',
   'glossary.delete.title': 'Do you want to delete this glossary?',
   'glossary.delete.content':
