@@ -49,7 +49,7 @@ public class MongoDatabaseExtractor implements Extractor {
             if (logger.isDebugEnabled()) {
                 logger.debug("MongoDatabaseExtractor extract end. collections: {}", collections);
             }
-            return Iterators.concat(collections.stream().map((collection) ->
+            return Iterators.concat(collections.stream().map(collection ->
                     new MongoCollectionExtractor(dataSource, database, collection).extract()).iterator());
         } catch (Exception e) {
             logger.error("MongoDatabaseExtractor extract error: ", e);

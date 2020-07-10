@@ -1,6 +1,6 @@
 package com.miotech.kun.metadata.databuilder.constant;
 
-import javax.annotation.Nullable;
+import io.prestosql.jdbc.$internal.guava.base.Preconditions;
 
 public enum  DataBuilderDeployMode {
 
@@ -8,7 +8,8 @@ public enum  DataBuilderDeployMode {
     DATASOURCE,
     DATASET;
 
-    public static DataBuilderDeployMode resolve(@Nullable String method) {
+    public static DataBuilderDeployMode resolve(String method) {
+        Preconditions.checkNotNull(method);
         return valueOf(method.toUpperCase());
     }
 

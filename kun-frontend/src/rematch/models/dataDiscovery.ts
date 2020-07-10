@@ -32,16 +32,23 @@ export interface Watermark {
   time: number;
 }
 
+export interface GlossaryItem {
+  id: string;
+  name: string;
+}
+
 export interface Dataset {
   id: string;
   name: string;
   schema: string;
-  database_name: string;
   description: string;
   type: string;
-  tags: string[];
-  owners: string[];
+  datasource: string;
+  database: string;
   high_watermark: Watermark;
+  owners: string[];
+  tags: string[];
+  glossaries: GlossaryItem[];
 }
 
 export interface SearchParams {
@@ -49,10 +56,10 @@ export interface SearchParams {
   ownerList?: string[];
   tagList?: string[];
   dbTypeList?: string[];
-  dbIdList?: string[];
-  wartermarkMode?: Mode;
-  wartermarkAbsoluteValue?: DataRange;
-  wartermarkQuickeValue?: Quick;
+  dsIdList?: string[];
+  watermarkMode?: Mode;
+  watermarkAbsoluteValue?: DataRange;
+  watermarkQuickeValue?: Quick;
   pagination: Pagination;
 }
 
@@ -63,7 +70,7 @@ export interface SearchParamsObj {
   ownerList?: string[];
   tagList?: string[];
   dbTypeList?: string[];
-  dbIdList?: string[];
+  dsIdList?: string[];
 }
 
 export interface dbFilterItem {
@@ -73,14 +80,14 @@ export interface dbFilterItem {
 
 export interface DataDiscoveryState {
   searchContent: string;
-  wartermarkMode: Mode;
-  wartermarkAbsoluteValue?: DataRange;
-  wartermarkQuickeValue?: Quick;
+  watermarkMode: Mode;
+  watermarkAbsoluteValue?: DataRange;
+  watermarkQuickeValue?: Quick;
 
   ownerList?: string[];
   tagList?: string[];
   dbTypeList?: DbType[];
-  dbIdList?: string[];
+  dsIdList?: string[];
 
   allOwnerList: string[];
   allTagList: string[];
@@ -97,14 +104,14 @@ export const dataDiscovery = {
   state: {
     searchContent: '',
 
-    wartermarkMode: Mode.ABSOLUTE,
-    wartermarkAbsoluteValue: undefined,
-    wartermarkQuickeValue: undefined,
+    watermarkMode: Mode.ABSOLUTE,
+    watermarkAbsoluteValue: undefined,
+    watermarkQuickeValue: undefined,
 
     ownerList: undefined,
     tagList: undefined,
     dbTypeList: undefined,
-    dbIdList: undefined,
+    dsIdList: undefined,
 
     allOwnerList: [],
     allTagList: [],
@@ -181,25 +188,25 @@ export const dataDiscovery = {
           ownerList,
           tagList,
           dbTypeList,
-          dbIdList,
-          wartermarkMode,
-          wartermarkAbsoluteValue,
-          wartermarkQuickeValue,
+          dsIdList,
+          watermarkMode,
+          watermarkAbsoluteValue,
+          watermarkQuickeValue,
           pagination,
         } = payload;
         let watermarkStart: number | undefined;
         let watermarkEnd: number | undefined;
-        if (wartermarkMode === Mode.ABSOLUTE) {
-          if (wartermarkAbsoluteValue?.startTime) {
-            watermarkStart = wartermarkAbsoluteValue.startTime;
+        if (watermarkMode === Mode.ABSOLUTE) {
+          if (watermarkAbsoluteValue?.startTime) {
+            watermarkStart = watermarkAbsoluteValue.startTime;
           }
-          if (wartermarkAbsoluteValue?.endTime) {
-            watermarkEnd = wartermarkAbsoluteValue.endTime;
+          if (watermarkAbsoluteValue?.endTime) {
+            watermarkEnd = watermarkAbsoluteValue.endTime;
           }
         }
 
-        if (wartermarkMode === Mode.QUICK) {
-          switch (wartermarkQuickeValue) {
+        if (watermarkMode === Mode.QUICK) {
+          switch (watermarkQuickeValue) {
             case Quick.LAST_30_M:
               watermarkStart = moment()
                 .subtract(30, 'minutes')
@@ -243,7 +250,7 @@ export const dataDiscovery = {
           ownerList,
           tagList,
           dbTypeList,
-          dbIdList,
+          dsIdList,
         };
         seachDatasetsFlag += 1;
         const currentSeachDatasetsFlag = seachDatasetsFlag;

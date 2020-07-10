@@ -43,7 +43,7 @@ public class GlueClient {
             nextToken = searchTablesResult.getNextToken();
         } while (StringUtils.isNotBlank(nextToken));
 
-        throw new TableNotFoundException(String.format("Table not found, database: {}, table: {}", targetDatabase, targetTable));
+        throw new TableNotFoundException(String.format("Table not found, database: %s, table: %s", targetDatabase, targetTable));
     }
 
 }

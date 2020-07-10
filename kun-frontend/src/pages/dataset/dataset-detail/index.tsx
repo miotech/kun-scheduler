@@ -9,6 +9,8 @@ import { watermarkFormatter } from '@/utils';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 import useDebounce from '@/hooks/useDebounce';
+import BackButton from '@/components/BackButton/BackButton';
+
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnItem from './components/ColumnItem/ColumnItem';
 
@@ -190,12 +192,8 @@ export default function DatasetDetail({ match }: Props) {
 
   return (
     <div className={styles.page}>
-      <div className={styles.backButtonRow}>
-        <Link to="/data-discovery/dataset">
-          {'< '}
-          {t('dataDetail.back')}
-        </Link>
-      </div>
+      <BackButton defaultUrl="/data-discovery/dataset" />
+
       <Spin spinning={fetchDetailLoading}>
         <Card className={styles.pageContent}>
           <div className={styles.titleRow}>
@@ -246,9 +244,9 @@ export default function DatasetDetail({ match }: Props) {
 
                 <div className={styles.baseItem}>
                   <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.schema')}
+                    {t('dataDetail.baseItem.title.database')}
                   </div>
-                  <div className={styles.baseContent}>{selector.schema}</div>
+                  <div className={styles.baseContent}>{selector.database}</div>
                 </div>
 
                 <div className={styles.baseItem}>
@@ -316,9 +314,11 @@ export default function DatasetDetail({ match }: Props) {
 
                 <div className={styles.baseItem}>
                   <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.database')}
+                    {t('dataDetail.baseItem.title.datasource')}
                   </div>
-                  <div className={styles.baseContent}>{selector.database}</div>
+                  <div className={styles.baseContent}>
+                    {selector.datasource}
+                  </div>
                 </div>
               </Spin>
             </div>

@@ -166,14 +166,14 @@ export default function DataSettings() {
             className={styles.addDatabaseButton}
             onClick={() => setAddDatabaseModalVisible(true)}
           >
-            {t('dataSettings.addDatabase')}
+            {t('dataSettings.addDatasource')}
           </Button>
         </div>
 
         <div className={styles.databasesArea}>
           <Spin spinning={searchLoading || fetchDatabaseTypeLoading}>
             <div className={styles.databasesCount}>
-              {t('dataSettings.databasesCount', {
+              {t('dataSettings.datasourceCount', {
                 count: selector.dataBaseList.length,
               })}
             </div>

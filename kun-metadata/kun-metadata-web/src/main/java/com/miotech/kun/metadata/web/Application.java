@@ -7,6 +7,12 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.web.KunWebServer;
 import com.miotech.kun.commons.web.module.CommonModule;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
+import com.miotech.kun.commons.web.utils.HttpClientUtil;
+import com.miotech.kun.metadata.web.constant.PropKey;
+import com.miotech.kun.metadata.web.constant.WorkflowApiParam;
+import com.miotech.kun.metadata.web.service.ProcessService;
+import com.miotech.kun.metadata.web.util.WorkflowApiResponseParseUtil;
+import com.miotech.kun.metadata.web.util.WorkflowUrlGenerator;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
 import com.miotech.kun.workflow.db.DatabaseSetup;
 import com.miotech.kun.workflow.utils.PropertyUtils;
@@ -22,11 +28,18 @@ public class Application {
 
     private final Properties props;
     private final DataSource dataSource;
+    private WorkflowUrlGenerator workflowUrlGenerator;
+    private HttpClientUtil httpClientUtil;
+    private ProcessService processService;
 
     @Inject
-    public Application(Properties props, DataSource dataSource) {
+    public Application(Properties props, DataSource dataSource, WorkflowUrlGenerator workflowUrlGenerator,
+                       HttpClientUtil httpClientUtil, ProcessService processService) {
         this.props = props;
         this.dataSource = dataSource;
+        this.workflowUrlGenerator = workflowUrlGenerator;
+        this.httpClientUtil = httpClientUtil;
+        this.processService = processService;
     }
 
     public static void main(String[] args) {
@@ -40,8 +53,37 @@ public class Application {
                 new PackageScanModule()
         );
 
-        injector.getInstance(Application.class).configureDB();
+        injector.getInstance(Application.class).start();
         injector.getInstance(KunWebServer.class).start();
+    }
+
+    private void start() {
+        checkOperator();
+        checkTask();
+        configureDB();
+    }
+
+    private void checkOperator() {
+        String result = httpClientUtil.doGet(workflowUrlGenerator.generateSearchOperatorUrl(WorkflowApiParam.OPERATOR_NAME));
+        logger.debug("Call Search Operator result: {}", result);
+        if (!WorkflowApiResponseParseUtil.judgeOperatorExists(result, WorkflowApiParam.OPERATOR_NAME)) {
+            processService.createOperator();
+            logger.info("Create Operator Success");
+        } else {
+            props.setProperty(PropKey.OPERATOR_ID, WorkflowApiResponseParseUtil.parseOperatorIdAfterSearch(result, WorkflowApiParam.OPERATOR_NAME).toString());
+        }
+    }
+
+    private void checkTask() {
+        String result = httpClientUtil.doGet(workflowUrlGenerator.generateSearchTaskUrl());
+        logger.debug("Call Search Task result: {}", result);
+        if (!WorkflowApiResponseParseUtil.judgeTaskExists(result, props.getProperty(PropKey.OPERATOR_ID), WorkflowApiParam.TASK_NAME)) {
+            processService.createTask();
+            logger.info("Create Task Success");
+        } else {
+            props.setProperty(PropKey.TASK_ID, WorkflowApiResponseParseUtil.parseTaskIdAfterSearch(result,
+                    Long.parseLong(props.getProperty(PropKey.OPERATOR_ID)), WorkflowApiParam.TASK_NAME).toString());
+        }
     }
 
     private void configureDB() {
