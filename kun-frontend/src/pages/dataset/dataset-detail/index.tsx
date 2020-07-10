@@ -9,6 +9,8 @@ import { watermarkFormatter } from '@/utils';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 import useDebounce from '@/hooks/useDebounce';
+import BackButton from '@/components/BackButton/BackButton';
+
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnItem from './components/ColumnItem/ColumnItem';
 
@@ -190,12 +192,8 @@ export default function DatasetDetail({ match }: Props) {
 
   return (
     <div className={styles.page}>
-      <div className={styles.backButtonRow}>
-        <Link to="/data-discovery/dataset">
-          {'< '}
-          {t('dataDetail.back')}
-        </Link>
-      </div>
+      <BackButton defaultUrl="/data-discovery/dataset" />
+
       <Spin spinning={fetchDetailLoading}>
         <Card className={styles.pageContent}>
           <div className={styles.titleRow}>

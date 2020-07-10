@@ -10,11 +10,16 @@ interface Props {
 export default memo(function LineList({ children }: Props) {
   return (
     <div className={styles.lineList}>
-      {React.Children.map(children, (child, i) => (
-        <div key={i} className={styles.itemContainer}>
-          {child}
-        </div>
-      ))}
+      {React.Children.map(children, (child, i) => {
+        if (child) {
+          return (
+            <div key={i} className={styles.itemContainer}>
+              {child}
+            </div>
+          );
+        }
+        return null;
+      })}
     </div>
   );
 });
