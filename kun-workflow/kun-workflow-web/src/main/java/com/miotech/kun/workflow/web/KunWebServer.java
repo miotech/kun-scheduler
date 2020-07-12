@@ -89,7 +89,9 @@ public class KunWebServer {
         }
     }
 
-    public boolean isServerRunning() { return this.server.isRunning(); }
+    public boolean isServerRunning() {
+        return this.server.isRunning();
+    }
 
     public static void main(final String[] args) {
         // Redirect all std out and err messages into log4j

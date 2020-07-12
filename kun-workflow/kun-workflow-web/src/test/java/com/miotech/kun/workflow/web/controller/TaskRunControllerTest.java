@@ -340,7 +340,6 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
                         .map(taskRunService::convertToVO).collect(Collectors.toList()),
                 allTaskRunCollection.size()
         );
-        Mockito.doReturn(200).when(taskRunService).fetchTotalCount(eq(defaultPaginatedFilter));
 
         // Process
         String response = get("/taskruns");
