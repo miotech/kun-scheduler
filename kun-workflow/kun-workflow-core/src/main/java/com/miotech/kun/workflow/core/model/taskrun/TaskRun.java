@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.core.model.taskrun;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
@@ -11,6 +13,7 @@ import java.util.List;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 public class TaskRun {
+    @JsonSerialize(using = ToStringSerializer.class)
     private final Long id;
 
     private final Task task;
@@ -29,6 +32,7 @@ public class TaskRun {
 
     private final List<DataStore> outlets;
 
+    @JsonSerialize(contentUsing = ToStringSerializer.class)
     private final List<Long> dependentTaskRunIds;
 
     public Long getId() {

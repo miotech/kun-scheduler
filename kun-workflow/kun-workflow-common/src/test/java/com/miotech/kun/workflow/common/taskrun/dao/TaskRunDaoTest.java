@@ -6,6 +6,7 @@ import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -197,7 +198,8 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchTaskRunById(1L);
         assertTrue(persistedTaskRunOptional.isPresent());
         TaskRun persistedTaskRun = persistedTaskRunOptional.get();
-        assertThat(persistedTaskRun, samePropertyValuesAs(taskRunWithUpdatedProps, "startAt", "endAt"));
+        assertThat(persistedTaskRun, samePropertyValuesAs(taskRunWithUpdatedProps, "startAt", "endAt", "task"));
+        assertThat(persistedTaskRun.getTask(), samePropertyValuesAs(taskRunWithUpdatedProps.getTask()));
         // Here startAt & endAt may differ since database converts datetime offset to system default,
         // but epoch second will guaranteed to be the same
         assertEquals(persistedTaskRun.getStartAt().toEpochSecond(), taskRunWithUpdatedProps.getStartAt().toEpochSecond());
@@ -546,5 +548,46 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         // if no task id is in the filter, perform full match query
         assertThat(filteredTaskRunsWithEmptyTaskIds.size(), is(4));
         assertThat(filteredTaskRunsWithNonExistTaskIds.size(), is(0));
+    }
+
+    @Test
+    public void fetchTaskRunsByFilter_withTaskTags_shouldReturnFilteredTaskRuns() {
+        // Prepare
+        Task task = MockTaskFactory.createTask()
+                .cloneBuilder()
+                .withTags(Lists.newArrayList(
+                        new Tag("version", "1.0"),
+                        new Tag("owner", "foo")
+                )).build();
+        taskDao.create(task);
+        prepareTaskRunsWithDependencyRelations(task);
+
+        List<TaskRun> filteredTaskRunsWithSingleTag = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withTags(Lists.newArrayList(
+                        new Tag("version", "1.0")
+                ))
+                .build());
+
+        List<TaskRun> filteredTaskRunsWithMultiTags = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withTags(Lists.newArrayList(
+                        new Tag("version", "1.0"),
+                        new Tag("owner", "foo")
+                ))
+                .build());
+
+        List<TaskRun> filteredTaskRunsWithNonExistMultiTags = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withTags(Lists.newArrayList(
+                        new Tag("version", "1.0"),
+                        new Tag("owner", "bar")
+                ))
+                .build());
+
+        // Validate
+        assertThat(filteredTaskRunsWithSingleTag.size(), is(4));
+        assertThat(filteredTaskRunsWithMultiTags.size(), is(4));
+        assertThat(filteredTaskRunsWithNonExistMultiTags.size(), is(0));
     }
 }
