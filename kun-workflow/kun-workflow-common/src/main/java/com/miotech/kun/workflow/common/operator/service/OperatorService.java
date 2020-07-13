@@ -8,6 +8,7 @@ import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -238,7 +239,7 @@ public class OperatorService {
         operatorDao.deleteById(id);
     }
 
-    public List<Operator> fetchOperatorsWithFilter(OperatorSearchFilter filters) {
+    public PaginationVO<Operator> fetchOperatorsWithFilter(OperatorSearchFilter filters) {
         // 1. Filter should not be null
         Preconditions.checkNotNull(filters, "Cannot search operators with filter: null");
 
@@ -264,7 +265,12 @@ public class OperatorService {
                 .build();
 
         // 4. Search through DAO
-        return operatorDao.fetchWithFilter(regularizedFilter);
+        return PaginationVO.<Operator>newBuilder()
+                .withRecords(operatorDao.fetchWithFilter(regularizedFilter))
+                .withPageNumber(pageNum)
+                .withPageSize(pageSize)
+                .withTotalCount(operatorDao.fetchOperatorTotalCountWithFilter(regularizedFilter))
+                .build();
     }
 
     public List<Operator> getAllOperators() {
@@ -282,5 +288,13 @@ public class OperatorService {
 
         // 2. Get optional operator through DAO
         return operatorDao.fetchById(id);
+    }
+
+    public Integer fetchOperatorTotalCount() {
+        return operatorDao.fetchOperatorTotalCount();
+    }
+
+    public Integer fetchOperatorTotalCount(OperatorSearchFilter filter) {
+        return operatorDao.fetchOperatorTotalCountWithFilter(filter);
     }
 }

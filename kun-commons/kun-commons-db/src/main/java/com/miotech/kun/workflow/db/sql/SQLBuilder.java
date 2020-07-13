@@ -48,6 +48,10 @@ public interface SQLBuilder {
 
     SQLBuilder orderBy(String ...orderClause);
 
+    SQLBuilder groupBy(String groupByClause);
+
+    SQLBuilder having(String havingClause);
+
     SQLBuilder asPrepared();
 
     SQLBuilder asPlain();
