@@ -6,9 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
-import com.miotech.kun.metadata.databuilder.extract.tool.DatasetNameGenerator;
 import com.miotech.kun.metadata.databuilder.extract.tool.FieldFlatUtil;
 import com.miotech.kun.metadata.databuilder.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
@@ -106,8 +104,8 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
     }
 
     @Override
-    protected String getName() {
-        return DatasetNameGenerator.generateDatasetName(DatabaseType.MONGO, collection);
+    public String getName() {
+        return collection;
     }
 
 }

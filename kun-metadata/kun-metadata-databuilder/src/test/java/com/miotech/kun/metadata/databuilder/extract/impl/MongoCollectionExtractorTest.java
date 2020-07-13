@@ -9,14 +9,16 @@ import com.miotech.kun.metadata.databuilder.extract.tool.ConnectUrlUtil;
 import com.miotech.kun.metadata.databuilder.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.model.DatasetStat;
 import com.miotech.kun.metadata.databuilder.model.MongoDataSource;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.testcontainers.containers.MongoDBContainer;
 
 import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class MongoCollectionExtractorTest extends DatabaseTestBase {
 
@@ -27,6 +29,9 @@ public class MongoCollectionExtractorTest extends DatabaseTestBase {
 
     private MongoCollectionExtractor mongoCollectionExtractor;
 
+    private String database = "admin";
+    private String collection = "system.keys";
+
     @Before
     public void setUp() {
         super.setUp();
@@ -36,7 +41,7 @@ public class MongoCollectionExtractorTest extends DatabaseTestBase {
                 .withId(1L)
                 .withUrl(ConnectUrlUtil.convertToConnectUrl(
                         mongoDBContainer.getHost(), mongoDBContainer.getFirstMappedPort(), "", "", DatabaseType.MONGO))
-                .build(), "admin", "system.keys");
+                .build(), database, collection);
     }
 
     @After
@@ -51,14 +56,21 @@ public class MongoCollectionExtractorTest extends DatabaseTestBase {
         List<DatasetField> schema = mongoCollectionExtractor.getSchema();
 
         // verify
-        MatcherAssert.assertThat(schema.size(), Matchers.is(27));
+        assertThat(schema.size(), is(27));
     }
 
     @Test
     public void testGetTableStats() {
         // execute biz logic
         DatasetStat tableStats = mongoCollectionExtractor.getTableStats();
-        MatcherAssert.assertThat(tableStats, Matchers.notNullValue());
+        assertThat(tableStats, notNullValue());
+    }
+
+    @Test
+    public void testGetName() {
+        // execute biz logic
+        String collectionName = mongoCollectionExtractor.getName();
+        assertThat(collectionName, is(collection));
     }
 
 
