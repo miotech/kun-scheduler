@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.taskrun.factory.TaskRunLogVOFactory;
@@ -14,7 +15,6 @@ import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
-import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import org.slf4j.Logger;
@@ -98,8 +98,27 @@ public class TaskRunService {
         return taskRunDao.fetchDownstreamTaskRunsById(taskRun.getId(), distance, false);
     }
 
-    public List<TaskRun> searchTaskRuns(TaskRunSearchFilter filter) {
-        return taskRunDao.fetchTaskRunsByFilter(filter);
+    public PaginationVO<TaskRun> searchTaskRuns(TaskRunSearchFilter filter) {
+        Preconditions.checkNotNull(filter, "Invalid argument `filter`: null");
+        Preconditions.checkNotNull(filter.getPageNum(), "Invalid argument `pageNum`: null");
+        Preconditions.checkNotNull(filter.getPageSize(), "Invalid argument `pageSize`: null");
+
+        return PaginationVO.<TaskRun>newBuilder()
+                .withPageNumber(filter.getPageNum())
+                .withPageSize(filter.getPageSize())
+                .withRecords(taskRunDao.fetchTaskRunsByFilter(filter))
+                .withTotalCount(taskRunDao.fetchTotalCountByFilter(filter))
+                .build();
+    }
+
+    public PaginationVO<TaskRunVO> searchTaskRunVOs(TaskRunSearchFilter filter) {
+        PaginationVO<TaskRun> runsPage = searchTaskRuns(filter);
+        return PaginationVO.<TaskRunVO>newBuilder()
+                .withPageNumber(filter.getPageNum())
+                .withPageSize(filter.getPageSize())
+                .withRecords(runsPage.getRecords().stream().map(this::convertToVO).collect(Collectors.toList()))
+                .withTotalCount(runsPage.getTotalCount())
+                .build();
     }
 
     public Integer fetchTotalCount() {
@@ -110,25 +129,16 @@ public class TaskRunService {
         return taskRunDao.fetchTotalCountByFilter(filter);
     }
 
-
-    /* ----------- private methods ------------ */
-
-    private TaskRunVO convertToVO(TaskRun taskRun) {
-        List<TaskAttempt> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRun.getId())
+    public TaskRunVO convertToVO(TaskRun taskRun) {
+        List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRun.getId())
                 .stream()
-                .map(props -> TaskAttempt.newBuilder()
-                        .withId(props.getId())
-                        // TODO: recheck this
-                        .withTaskRun(null)
-                        .withLogPath(props.getLogPath())
-                        .withStatus(props.getStatus())
-                        .withStartAt(props.getStartAt())
-                        .withEndAt(props.getEndAt())
-                        .withAttempt(props.getAttempt())
-                        .build()
-                )
+                // Part of id properties are missing after fetched from storage
+                .map(attempt -> attempt.cloneBuilder()
+                        .withTaskRunId(taskRun.getId())
+                        .withTaskId(taskRun.getTask().getId())
+                        .withTaskName(taskRun.getTask().getName())
+                        .build())
                 .collect(Collectors.toList());
-
         return TaskRunVO.newBuilder()
                 .withTask(taskRun.getTask())
                 .withId(taskRun.getId())

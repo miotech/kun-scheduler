@@ -7,7 +7,7 @@ import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
-import com.miotech.kun.workflow.web.entity.PaginationVO;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.web.serializer.JsonSerializer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
@@ -74,9 +74,14 @@ public class OperatorControllerTest extends KunWebServerTestBase {
     public void defineBehaviors() {
         // mock fetch behavior of operator service
         Mockito.when(operatorService.fetchOperatorsWithFilter(argThat(new IsEmptyOperatorSearchFilter())))
-                .thenAnswer((Answer<List<Operator>>) invocation -> {
+                .thenAnswer((Answer<PaginationVO<Operator>>) invocation -> {
                     OperatorSearchFilter filter = invocation.getArgument(0);
-                    return mockFetchFilteredList(filter);
+                    return PaginationVO.<Operator>newBuilder()
+                            .withPageSize(filter.getPageSize())
+                            .withPageNumber(filter.getPageNum())
+                            .withRecords(mockFetchFilteredList(filter))
+                            .withTotalCount(mockFetchFilteredList(filter, false).size())
+                            .build();
                 });
         Mockito.doAnswer(invocation -> 200)
                 .when(operatorService).fetchOperatorTotalCount();

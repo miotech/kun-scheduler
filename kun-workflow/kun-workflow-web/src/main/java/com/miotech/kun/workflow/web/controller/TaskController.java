@@ -13,7 +13,7 @@ import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
-import com.miotech.kun.workflow.web.entity.PaginationVO;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 
 import java.util.List;
 import java.util.Objects;
@@ -37,15 +37,7 @@ public class TaskController {
                 .withPageNum(pageNum)
                 .withPageSize(pageSize)
                 .build();
-        List<Task> tasks = taskService.fetchTasksByFilters(filter);
-        Integer count = taskService.fetchTaskTotalCount(filter);
-
-        return PaginationVO.<Task>newBuilder()
-                .withRecords(tasks)
-                .withPageNumber(pageNum)
-                .withPageSize(pageSize)
-                .withTotalCount(count)
-                .build();
+        return taskService.fetchTasksByFilters(filter);
     }
 
     @RouteMapping(url = "/tasks/_search", method = "POST")
@@ -55,15 +47,7 @@ public class TaskController {
                 .withPageNum(Objects.isNull(taskSearchRequestBody.getPageNum()) ? 1 : taskSearchRequestBody.getPageNum())
                 .withPageSize(Objects.isNull(taskSearchRequestBody.getPageSize()) ? 100 : taskSearchRequestBody.getPageSize())
                 .build();
-        List<Task> tasks = taskService.fetchTasksByFilters(searchFilter);
-        Integer count = taskService.fetchTaskTotalCount(searchFilter);
-
-        return PaginationVO.<Task>newBuilder()
-                .withRecords(tasks)
-                .withPageNumber(searchFilter.getPageNum())
-                .withPageSize(searchFilter.getPageSize())
-                .withTotalCount(count)
-                .build();
+        return taskService.fetchTasksByFilters(searchFilter);
     }
 
     @RouteMapping(url = "/tasks/{taskId}", method = "GET")

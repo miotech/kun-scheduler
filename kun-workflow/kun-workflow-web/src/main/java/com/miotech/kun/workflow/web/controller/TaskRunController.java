@@ -3,16 +3,15 @@ package com.miotech.kun.workflow.web.controller;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.service.TaskRunService;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.web.annotation.*;
-import com.miotech.kun.workflow.web.entity.PaginationVO;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
@@ -54,7 +53,7 @@ public class TaskRunController {
     }
 
     @RouteMapping(url = "/taskruns", method = "GET")
-    public PaginationVO<TaskRun> getTaskRuns(
+    public PaginationVO<TaskRunVO> getTaskRuns(
             @QueryParameter(defaultValue = "1") int pageNum,
             @QueryParameter(defaultValue = "100") int pageSize,
             @QueryParameter String status,
@@ -83,31 +82,15 @@ public class TaskRunController {
                     .withTaskIds(taskIds);
         }
         TaskRunSearchFilter filter = filterBuilder.build();
-        List<TaskRun> taskRuns = taskRunService.searchTaskRuns(filter);
-        Integer count = taskRunService.fetchTotalCount(filter);
-
-        return PaginationVO.<TaskRun>newBuilder()
-                .withRecords(taskRuns)
-                .withPageSize(pageSize)
-                .withPageNumber(pageNum)
-                .withTotalCount(count)
-                .build();
+        return taskRunService.searchTaskRunVOs(filter);
     }
 
     @RouteMapping(url = "/taskruns/_search", method = "POST")
-    public PaginationVO<TaskRun> searchTaskRuns(@RequestBody TaskRunSearchFilter requestFilter) {
+    public PaginationVO<TaskRunVO> searchTaskRuns(@RequestBody TaskRunSearchFilter requestFilter) {
         TaskRunSearchFilter filter = requestFilter.cloneBuilder()
                 .withPageNum(Objects.nonNull(requestFilter.getPageNum()) ? requestFilter.getPageNum() : 1)
                 .withPageSize(Objects.nonNull(requestFilter.getPageSize()) ? requestFilter.getPageSize() : 100)
                 .build();
-        List<TaskRun> taskRuns = taskRunService.searchTaskRuns(filter);
-        Integer count = taskRunService.fetchTotalCount(filter);
-
-        return PaginationVO.<TaskRun>newBuilder()
-                .withRecords(taskRuns)
-                .withPageSize(filter.getPageSize())
-                .withPageNumber(filter.getPageNum())
-                .withTotalCount(count)
-                .build();
+        return taskRunService.searchTaskRunVOs(filter);
     }
 }

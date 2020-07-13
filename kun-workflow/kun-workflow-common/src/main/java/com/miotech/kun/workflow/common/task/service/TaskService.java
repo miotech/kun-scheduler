@@ -9,6 +9,7 @@ import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -129,21 +130,18 @@ public class TaskService {
     }
 
     /**
-     * Fetch tasks with filters
+     * Fetch task page with filters
      * @param filters
      * @return
      */
-    public List<Task> fetchTasksByFilters(TaskSearchFilter filters) {
+    public PaginationVO<Task> fetchTasksByFilters(TaskSearchFilter filters) {
         Preconditions.checkNotNull(filters, "Invalid argument `filters`: null");
-        return taskDao.fetchWithFilters(filters);
-    }
-
-    /**
-     * Fetch count number of all tasks
-     * @return total count number
-     */
-    public Integer fetchTaskTotalCount() {
-        return taskDao.fetchTotalCount();
+        return PaginationVO.<Task>newBuilder()
+                .withPageNumber(filters.getPageNum())
+                .withPageSize(filters.getPageSize())
+                .withRecords(taskDao.fetchWithFilters(filters))
+                .withTotalCount(taskDao.fetchTotalCountWithFilters(filters))
+                .build();
     }
 
     /**
