@@ -4,11 +4,11 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.time.OffsetDateTime;
@@ -35,7 +35,7 @@ public class TaskRunVO {
 
     private OffsetDateTime endAt;
 
-    private List<TaskAttempt> attempts;
+    private List<TaskAttemptProps> attempts;
 
     @JsonSerialize(contentUsing = ToStringSerializer.class)
     private List<Long> dependentTaskRunIds;
@@ -112,11 +112,11 @@ public class TaskRunVO {
         this.endAt = endAt;
     }
 
-    public List<TaskAttempt> getAttempts() {
+    public List<TaskAttemptProps> getAttempts() {
         return attempts;
     }
 
-    public void setAttempts(List<TaskAttempt> attempts) {
+    public void setAttempts(List<TaskAttemptProps> attempts) {
         this.attempts = attempts;
     }
 
@@ -143,7 +143,7 @@ public class TaskRunVO {
         private List<DataStore> outlets;
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
-        private List<TaskAttempt> attempts;
+        private List<TaskAttemptProps> attempts;
         private List<Long> dependentTaskRunIds;
 
         private Builder() {
@@ -198,7 +198,7 @@ public class TaskRunVO {
             return this;
         }
 
-        public Builder withAttempts(List<TaskAttempt> attempts) {
+        public Builder withAttempts(List<TaskAttemptProps> attempts) {
             this.attempts = attempts;
             return this;
         }

@@ -18,7 +18,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
-import com.miotech.kun.workflow.web.entity.PaginationVO;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.web.serializer.JsonSerializer;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -49,11 +49,17 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
     /**
      * A utility function to define search behaviors for taskrun service
      * @param filterToMatch
-     * @param thenReturn
+     * @param records
+     * @param count
      */
-    private void setupMockitoWithTaskRunSearchFilter(TaskRunSearchFilter filterToMatch, List<TaskRun> thenReturn) {
-        Mockito.when(taskRunService.searchTaskRuns(ArgumentMatchers.eq(filterToMatch)))
-                .thenReturn(thenReturn);
+    private void setupMockitoWithTaskRunSearchFilter(TaskRunSearchFilter filterToMatch, List<TaskRunVO> records, int count) {
+        Mockito.when(taskRunService.searchTaskRunVOs(ArgumentMatchers.eq(filterToMatch)))
+                .thenReturn(PaginationVO.<TaskRunVO>newBuilder()
+                        .withPageNumber(filterToMatch.getPageNum())
+                        .withPageSize(filterToMatch.getPageSize())
+                        .withRecords(records)
+                        .withTotalCount(count)
+                        .build());
     }
 
     private PaginationVO<TaskRunVO> jsonToPaginationVO(String json) {
@@ -80,31 +86,43 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
                 .withPageNum(1)
                 .withPageSize(100)
                 .build();
-        setupMockitoWithTaskRunSearchFilter(defaultPaginatedFilter, allTaskRunCollection.subList(0, 100));
+        setupMockitoWithTaskRunSearchFilter(
+                defaultPaginatedFilter,
+                allTaskRunCollection.subList(0, 100)
+                        .stream().map(taskRunService::convertToVO).collect(Collectors.toList()),
+                allTaskRunCollection.size()
+        );
         // When matches running status filter
         TaskRunSearchFilter createdStatusFilter = defaultPaginatedFilter.cloneBuilder()
                 .withStatus(TaskRunStatus.CREATED).build();
+        List<TaskRunVO> taskRunsWithStatusCreated = allTaskRunCollection.stream()
+                .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.CREATED))
+                .map(taskRunService::convertToVO)
+                .collect(Collectors.toList());
         setupMockitoWithTaskRunSearchFilter(
                 createdStatusFilter,
-                allTaskRunCollection.stream()
-                        .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.CREATED))
-                        .collect(Collectors.toList()));
+                taskRunsWithStatusCreated,
+                taskRunsWithStatusCreated.size()
+        );
+
         // When matches running status filter
         TaskRunSearchFilter runningStatusFilter = defaultPaginatedFilter.cloneBuilder()
                 .withStatus(TaskRunStatus.RUNNING).build();
-        setupMockitoWithTaskRunSearchFilter(
-                runningStatusFilter,
-                allTaskRunCollection.stream()
-                        .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.RUNNING))
-                        .collect(Collectors.toList()));
+        List<TaskRunVO> taskRunsWithStatusRunning = allTaskRunCollection.stream()
+                .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.RUNNING))
+                .map(taskRunService::convertToVO)
+                .collect(Collectors.toList());
+        setupMockitoWithTaskRunSearchFilter(runningStatusFilter, taskRunsWithStatusRunning, taskRunsWithStatusRunning.size());
+
         // When matches success status filter
         TaskRunSearchFilter successStatusFilter = defaultPaginatedFilter.cloneBuilder()
                 .withStatus(TaskRunStatus.SUCCESS).build();
+        List<TaskRunVO> taskRunsWithStatusSuccess = allTaskRunCollection.stream()
+                .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.SUCCESS))
+                .map(taskRunService::convertToVO)
+                .collect(Collectors.toList());
         setupMockitoWithTaskRunSearchFilter(
-                successStatusFilter,
-                allTaskRunCollection.stream()
-                        .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.SUCCESS))
-                        .collect(Collectors.toList()));
+                successStatusFilter, taskRunsWithStatusSuccess, taskRunsWithStatusSuccess.size());
     }
 
     private void prepareMockTaskRunsWithTimeRange() {
@@ -128,22 +146,30 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         TaskRunSearchFilter filterDateFromMarch10th = defaultPaginatedFilter.cloneBuilder()
                 .withDateFrom(timePointMarch10th)
                 .build();
+        List<TaskRunVO> taskRunsFilteredFromMarch10th = allTaskRunCollection.stream()
+                .filter(run -> run.getStartAt().isAfter(timePointMarch10th))
+                .map(taskRunService::convertToVO)
+                .collect(Collectors.toList());
         setupMockitoWithTaskRunSearchFilter(
                 filterDateFromMarch10th,
-                allTaskRunCollection.stream()
-                        .filter(run -> run.getStartAt().isAfter(timePointMarch10th))
-                        .collect(Collectors.toList()));
+                taskRunsFilteredFromMarch10th,
+                taskRunsFilteredFromMarch10th.size()
+        );
 
         OffsetDateTime timePointApril10th = OffsetDateTime.of(2021, 4, 10, 0, 0, 0, 0, ZoneOffset.ofHours(0));
         TaskRunSearchFilter filterDateToApril10th = defaultPaginatedFilter.cloneBuilder()
                 .withDateFrom(timePointMarch10th)
                 .withDateTo(timePointApril10th)
                 .build();
+        List<TaskRunVO> taskRunsFilteredToApril10th = allTaskRunCollection.stream()
+                .filter(run -> run.getStartAt().isAfter(timePointMarch10th) && run.getEndAt().isBefore(timePointApril10th))
+                .map(taskRunService::convertToVO)
+                .collect(Collectors.toList());
         setupMockitoWithTaskRunSearchFilter(
                 filterDateToApril10th,
-                allTaskRunCollection.stream()
-                        .filter(run -> run.getStartAt().isAfter(timePointMarch10th) && run.getEndAt().isBefore(timePointApril10th))
-                        .collect(Collectors.toList()));
+                taskRunsFilteredToApril10th,
+                taskRunsFilteredToApril10th.size()
+        );
     }
 
     private static final class IsTaskRunSearchFilterWithTags implements ArgumentMatcher<TaskRunSearchFilter> {
@@ -198,8 +224,14 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
 
         Mockito.doAnswer(invocation -> {
             TaskRunSearchFilter filter = invocation.getArgument(0);
-            return mockFilterTaskRuns(allTaskRunCollection, filter);
-        }).when(taskRunService).searchTaskRuns(argThat(new IsTaskRunSearchFilterWithTags()));
+            List<TaskRun> records = mockFilterTaskRuns(allTaskRunCollection, filter);
+            return PaginationVO.<TaskRun>newBuilder()
+                    .withRecords(records)
+                    .withPageNumber(filter.getPageNum())
+                    .withPageSize(filter.getPageSize())
+                    .withTotalCount(records.size())
+                    .build();
+        }).when(taskRunService).searchTaskRunVOs(argThat(new IsTaskRunSearchFilterWithTags()));
     }
 
     @Test
@@ -301,10 +333,13 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         for (int i = 0; i < 200; i += 1) {
             allTaskRunCollection.add(MockTaskRunFactory.createTaskRun());
         }
-        // By default, an empty search filter will return all task runs
-        setupMockitoWithTaskRunSearchFilter(emptyFilter, allTaskRunCollection);
         // Our REST API should provide an default pagination configuration with page size = 100
-        setupMockitoWithTaskRunSearchFilter(defaultPaginatedFilter, allTaskRunCollection.subList(0, 100));
+        setupMockitoWithTaskRunSearchFilter(
+                defaultPaginatedFilter,
+                allTaskRunCollection.subList(0, 100).stream()
+                        .map(taskRunService::convertToVO).collect(Collectors.toList()),
+                allTaskRunCollection.size()
+        );
         Mockito.doReturn(200).when(taskRunService).fetchTotalCount(eq(defaultPaginatedFilter));
 
         // Process

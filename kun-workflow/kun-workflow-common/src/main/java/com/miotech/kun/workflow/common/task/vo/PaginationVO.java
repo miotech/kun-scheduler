@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.web.entity;
+package com.miotech.kun.workflow.common.task.vo;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -9,11 +9,11 @@ import java.util.Objects;
 @JsonDeserialize(builder = PaginationVO.PaginationVOBuilder.class)
 public class PaginationVO<T> {
 
-    private final int pageNumber;
+    private final Integer pageNumber;
 
-    private final int pageSize;
+    private final Integer pageSize;
 
-    private final int totalCount;
+    private final Integer totalCount;
 
     private final List<T> records;
 
@@ -24,15 +24,15 @@ public class PaginationVO<T> {
         this.records = builder.records;
     }
 
-    public int getPageNumber() {
+    public Integer getPageNumber() {
         return pageNumber;
     }
 
-    public int getPageSize() {
+    public Integer getPageSize() {
         return pageSize;
     }
 
-    public int getTotalCount() {
+    public Integer getTotalCount() {
         return totalCount;
     }
 
@@ -70,25 +70,25 @@ public class PaginationVO<T> {
 
     @JsonPOJOBuilder
     public static final class PaginationVOBuilder<T> {
-        private int pageNumber;
-        private int pageSize;
-        private int totalCount;
+        private Integer pageNumber;
+        private Integer pageSize;
+        private Integer totalCount;
         private List<T> records;
 
         private PaginationVOBuilder() {
         }
 
-        public PaginationVOBuilder<T> withPageNumber(int pageNumber) {
+        public PaginationVOBuilder<T> withPageNumber(Integer pageNumber) {
             this.pageNumber = pageNumber;
             return this;
         }
 
-        public PaginationVOBuilder<T> withPageSize(int pageSize) {
+        public PaginationVOBuilder<T> withPageSize(Integer pageSize) {
             this.pageSize = pageSize;
             return this;
         }
 
-        public PaginationVOBuilder<T> withTotalCount(int totalCount) {
+        public PaginationVOBuilder<T> withTotalCount(Integer totalCount) {
             this.totalCount = totalCount;
             return this;
         }

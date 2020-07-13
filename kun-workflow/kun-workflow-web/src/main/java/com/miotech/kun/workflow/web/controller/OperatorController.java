@@ -6,17 +6,13 @@ import com.google.inject.Singleton;
 import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
-import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.web.annotation.QueryParameter;
 import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
-import com.miotech.kun.workflow.web.entity.PaginationVO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 
 @Singleton
@@ -41,14 +37,7 @@ public class OperatorController {
                 .withPageSize(pageSize)
                 .withKeyword(name)
                 .build();
-        List<Operator> operators = operatorService.fetchOperatorsWithFilter(filter);
-        Integer totalCount = operatorService.fetchOperatorTotalCount(filter);
-        return PaginationVO.<Operator>newBuilder()
-                .withRecords(operators)
-                .withTotalCount(totalCount)
-                .withPageSize(pageSize)
-                .withPageNumber(pageNum)
-                .build();
+        return operatorService.fetchOperatorsWithFilter(filter);
     }
 
     @RouteMapping(url= "/operators", method = "POST")

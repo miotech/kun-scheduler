@@ -16,7 +16,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
 import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
-import com.miotech.kun.workflow.web.entity.PaginationVO;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.web.serializer.JsonSerializer;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
@@ -126,22 +126,19 @@ public class TaskControllerTest extends KunWebServerTestBase {
         Mockito.doThrow(new NullPointerException())
                 .when(taskService)
                 .fetchTasksByFilters((TaskSearchFilter) argThat(Null.NULL));
-        // For empty task search filters, returns all tasks (not expected to happen)
-        Mockito.doReturn(mockOperatorList)
-                .when(taskService)
-                .fetchTasksByFilters(argThat(new IsEmptyTaskSearchFilter()));
         // For paginated search filters, return expected range
-        Mockito.doAnswer((Answer<List<Task>>) invocation -> {
+        Mockito.doAnswer((Answer<PaginationVO<Task>>) invocation -> {
             TaskSearchFilter filter = invocation.getArgument(0);
-            return mockSearchTasks(filter, true);
+            List<Task> matchedTasks = mockSearchTasks(filter, true);
+            int count = mockSearchTasks(filter, false).size();
+            return PaginationVO.<Task>newBuilder()
+                    .withRecords(matchedTasks)
+                    .withPageNumber(filter.getPageNum())
+                    .withPageSize(filter.getPageSize())
+                    .withTotalCount(count).build();
         })
                 .when(taskService)
                 .fetchTasksByFilters(argThat(new IsValidSearchFilter()));
-        Mockito.doAnswer((Answer<Integer>) invocation -> {
-            return mockTaskList.size();
-        })
-                .when(taskService)
-                .fetchTaskTotalCount();
 
         Mockito.doAnswer((Answer<Integer>) invocation -> {
             TaskSearchFilter filter = invocation.getArgument(0);

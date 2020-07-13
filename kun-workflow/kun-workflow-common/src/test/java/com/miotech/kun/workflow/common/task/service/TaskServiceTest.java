@@ -8,6 +8,7 @@ import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.Scheduler;
@@ -275,10 +276,10 @@ public class TaskServiceTest extends DatabaseTestBase {
 
         // Process
         // 4. fetch all tasks by name filter
-        List<Task> filteredTasks = taskService.fetchTasksByFilters(nameFilter);
+        PaginationVO<Task> filteredTasks = taskService.fetchTasksByFilters(nameFilter);
 
         // Validate
-        assertEquals(10, filteredTasks.size());
+        assertEquals(10, filteredTasks.getRecords().size());
     }
 
     @Test
@@ -331,16 +332,16 @@ public class TaskServiceTest extends DatabaseTestBase {
 
         // Process
         // 4. fetch all tasks by tag filter
-        List<Task> filteredTasksWithVersionTag = taskService.fetchTasksByFilters(versionTagFilter);
-        List<Task> filteredTasksWithOwnerTag = taskService.fetchTasksByFilters(ownerTagFilter);
-        List<Task> filteredTasksWithMultipleTags = taskService.fetchTasksByFilters(multipleTagsFilter);
-        List<Task> filteredTasksWithJointConditions = taskService.fetchTasksByFilters(TagAndNameFilter);
+        PaginationVO<Task> filteredTasksWithVersionTag = taskService.fetchTasksByFilters(versionTagFilter);
+        PaginationVO<Task> filteredTasksWithOwnerTag = taskService.fetchTasksByFilters(ownerTagFilter);
+        PaginationVO<Task> filteredTasksWithMultipleTags = taskService.fetchTasksByFilters(multipleTagsFilter);
+        PaginationVO<Task> filteredTasksWithJointConditions = taskService.fetchTasksByFilters(TagAndNameFilter);
 
         // Validate
-        assertEquals(5, filteredTasksWithVersionTag.size());
-        assertEquals(10, filteredTasksWithOwnerTag.size());
-        assertEquals(2, filteredTasksWithMultipleTags.size());
-        assertEquals(1, filteredTasksWithJointConditions.size());
+        assertEquals(5, filteredTasksWithVersionTag.getRecords().size());
+        assertEquals(10, filteredTasksWithOwnerTag.getRecords().size());
+        assertEquals(2, filteredTasksWithMultipleTags.getRecords().size());
+        assertEquals(1, filteredTasksWithJointConditions.getRecords().size());
     }
 
     @Test

@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.core.model.taskrun;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 
@@ -7,6 +9,7 @@ import java.time.OffsetDateTime;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+@JsonDeserialize(builder = TaskAttempt.Builder.class)
 public class TaskAttempt {
     @JsonSerialize(using = ToStringSerializer.class)
     private final Long id;
@@ -86,6 +89,7 @@ public class TaskAttempt {
                 .withEndAt(endAt);
     }
 
+    @JsonPOJOBuilder
     public static final class Builder {
         private Long id;
         private TaskRun taskRun;
