@@ -1,9 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.postgres;
 
 import com.google.common.base.Preconditions;
-import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
-import com.miotech.kun.metadata.databuilder.extract.tool.DatasetNameGenerator;
 import com.miotech.kun.metadata.databuilder.extract.tool.TableOrFieldNameEscapeUtil;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
@@ -141,8 +139,8 @@ public class PostgresTableExtractor extends ExtractorTemplate {
     }
 
     @Override
-    protected String getName() {
-        return DatasetNameGenerator.generateDatasetName(DatabaseType.POSTGRES, table);
+    public String getName() {
+        return table;
     }
 
     private DatasetFieldType.Type convertRawType(String rawType) {

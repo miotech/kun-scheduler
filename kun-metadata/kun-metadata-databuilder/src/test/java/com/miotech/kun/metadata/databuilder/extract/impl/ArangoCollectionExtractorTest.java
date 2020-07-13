@@ -9,14 +9,16 @@ import com.miotech.kun.metadata.databuilder.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
 import com.miotech.kun.metadata.databuilder.model.DatasetStat;
 import io.testcontainers.arangodb.containers.ArangoContainer;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 @Ignore
 public class ArangoCollectionExtractorTest extends DatabaseTestBase {
@@ -28,6 +30,9 @@ public class ArangoCollectionExtractorTest extends DatabaseTestBase {
 
     private ArangoCollectionExtractor arangoCollectionExtractor;
 
+    private String database = "test_db";
+    private String collection = "test_collection";
+
     @Before
     public void setUp() {
         super.setUp();
@@ -38,7 +43,7 @@ public class ArangoCollectionExtractorTest extends DatabaseTestBase {
                 .withUrl(arangoContainer.getHost() + ":" + arangoContainer.getPort())
                 .withUsername(arangoContainer.getUser())
                 .withPassword("")
-                .build(), "test_db", "test_collection");
+                .build(), database, collection);
     }
 
     @After
@@ -53,7 +58,7 @@ public class ArangoCollectionExtractorTest extends DatabaseTestBase {
         List<DatasetField> schema = arangoCollectionExtractor.getSchema();
 
         // verify
-        MatcherAssert.assertThat(schema.size(), Matchers.is(4));
+        assertThat(schema.size(), is(4));
     }
 
     @Test
@@ -62,7 +67,7 @@ public class ArangoCollectionExtractorTest extends DatabaseTestBase {
         List<DatasetField> schema = arangoCollectionExtractor.getSchema();
         for (DatasetField datasetField : schema) {
             DatasetFieldStat fieldStats = arangoCollectionExtractor.getFieldStats(datasetField);
-            MatcherAssert.assertThat(fieldStats, Matchers.notNullValue());
+            assertThat(fieldStats, notNullValue());
         }
     }
 
@@ -70,7 +75,14 @@ public class ArangoCollectionExtractorTest extends DatabaseTestBase {
     public void getTableStats() {
         // execute biz logic
         DatasetStat tableStats = arangoCollectionExtractor.getTableStats();
-        MatcherAssert.assertThat(tableStats, Matchers.notNullValue());
+        assertThat(tableStats, notNullValue());
+    }
+
+    @Test
+    public void getName() {
+        // execute biz logic
+        String collectionName = arangoCollectionExtractor.getName();
+        assertThat(collectionName, is(collection));
     }
 
 }
