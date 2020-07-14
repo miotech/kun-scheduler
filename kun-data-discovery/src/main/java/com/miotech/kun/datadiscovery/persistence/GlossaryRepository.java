@@ -25,6 +25,9 @@ public class GlossaryRepository extends BaseRepository {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    DatasetRepository datasetRepository;
+
     public Long getParentId(Long id) {
         String sql = "select parent_id from kun_mt_glossary where id = ?";
 
@@ -40,10 +43,9 @@ public class GlossaryRepository extends BaseRepository {
     }
 
     public Glossary find(Long id, int recursionTimes, boolean needRelation) {
-        String sql = "select kmg.*, kmd.gid as dataset_id, kmd.name as dataset_name\n" +
+        String sql = "select kmg.*, kmgtdr.dataset_id as dataset_id\n" +
                 "     from kun_mt_glossary kmg\n" +
-                "         left join kun_mt_glossary_to_dataset_ref kmgtdr on kmg.id = kmgtdr.glossary_id\n" +
-                "         left join kun_mt_dataset kmd on kmgtdr.dataset_id = kmd.gid\n";
+                "         left join kun_mt_glossary_to_dataset_ref kmgtdr on kmg.id = kmgtdr.glossary_id\n";
 
         String whereClause = "where kmg.id = ?";
 
@@ -64,10 +66,12 @@ public class GlossaryRepository extends BaseRepository {
                     List<Asset> assets = new ArrayList<>();
                     if (rs.getLong("dataset_id") != 0) {
                         do {
+                            DatasetBasic dataset = datasetRepository.findBasic(rs.getLong("dataset_id"));
                             Asset asset = new Asset();
-                            asset.setId(rs.getLong("dataset_id"));
+                            asset.setId(dataset.getGid());
                             asset.setType("dataset");
-                            asset.setName(rs.getString("dataset_name"));
+                            asset.setName(dataset.getName());
+                            asset.setDatasource(dataset.getDatasource());
                             assets.add(asset);
                         } while (rs.next());
                     }
