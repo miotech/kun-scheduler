@@ -4,6 +4,7 @@ import { Asset } from '@/rematch/models/glossary';
 import useDebounce from '@/hooks/useDebounce';
 import { searchAssetsService } from '@/services/glossary';
 import { MinusOutlined } from '@ant-design/icons';
+import { getAssetNameWithDatasource } from '@/utils/assetUtils';
 import styles from './AssetAutoSuggest.less';
 
 interface Props {
@@ -70,7 +71,7 @@ export default memo(function AssetAutoSuggest({
   }, [index, onDelete]);
 
   const options = assetList.map(item => ({
-    value: item.name,
+    value: getAssetNameWithDatasource(item),
     asset: item,
   }));
 
