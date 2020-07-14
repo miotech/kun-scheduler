@@ -35,12 +35,14 @@ public class DatasetRepository extends BaseRepository {
     TagRepository tagRepository;
 
     public DatasetBasicPage search(BasicSearchRequest basicSearchRequest) {
-        String sql = "select gid, name from kun_mt_dataset\n";
+        String sql = "select kmd.gid, kmd.name as dataset_name, kmdsrca.name as datasource_name from kun_mt_dataset kmd\n" +
+                "inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
+                "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n";
 
-        String whereClause = "where upper(name) like ?\n";
+        String whereClause = "where upper(kmd.name) like ?\n";
         sql += whereClause;
 
-        String orderClause = "order by name asc\n";
+        String orderClause = "order by kmd.name asc\n";
         sql += orderClause;
 
         String limitSql = toLimitSql(1, basicSearchRequest.getPageSize());
@@ -51,7 +53,8 @@ public class DatasetRepository extends BaseRepository {
             while (rs.next()) {
                 DatasetBasic basic = new DatasetBasic();
                 basic.setGid(rs.getLong("gid"));
-                basic.setName(rs.getString("name"));
+                basic.setName(rs.getString("dataset_name"));
+                basic.setDatasource(rs.getString("datasource_name"));
                 page.add(basic);
             }
             return page;
@@ -138,6 +141,25 @@ public class DatasetRepository extends BaseRepository {
             }
             return pageResult;
         }, pstmtArgs.toArray());
+    }
+
+    public DatasetBasic findBasic(Long gid) {
+        String sql = "select kmd.gid, kmd.name as dataset_name, kmdsrca.name as datasource_name from kun_mt_dataset kmd\n" +
+                "inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
+                "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n";
+
+        String whereClause = "where kmd.gid = ?\n";
+        sql += whereClause;
+
+        return jdbcTemplate.query(sql, rs -> {
+            DatasetBasic basic = new DatasetBasic();
+            if (rs.next()) {
+                basic.setGid(rs.getLong("gid"));
+                basic.setName(rs.getString("dataset_name"));
+                basic.setDatasource(rs.getString("datasource_name"));
+            }
+            return basic;
+        }, gid);
     }
 
     public Dataset find(Long gid) {

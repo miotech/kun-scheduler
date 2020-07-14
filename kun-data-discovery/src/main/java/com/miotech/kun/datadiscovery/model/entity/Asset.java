@@ -17,4 +17,6 @@ public class Asset {
     private String type;
 
     private String name;
+
+    private String datasource;
 }
