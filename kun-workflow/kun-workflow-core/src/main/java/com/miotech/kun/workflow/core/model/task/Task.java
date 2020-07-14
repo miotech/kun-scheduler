@@ -2,8 +2,6 @@ package com.miotech.kun.workflow.core.model.task;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.workflow.core.model.common.Param;
@@ -17,14 +15,12 @@ import java.util.Objects;
 
 @JsonDeserialize(builder = Task.TaskBuilder.class)
 public class Task {
-    @JsonSerialize(using= ToStringSerializer.class)
     private final Long id;
 
     private final String name;
 
     private final String description;
 
-    @JsonSerialize(using= ToStringSerializer.class)
     private final Long operatorId;
 
     private final List<Param> arguments;
