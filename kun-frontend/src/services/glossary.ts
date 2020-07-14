@@ -3,7 +3,7 @@ import {
   GlossaryChild,
   SearchGlossaryItem,
   GlossaryDetail,
-  AssetItem,
+  Asset,
 } from '@/rematch/models/glossary';
 import { get, post, deleteFunc } from './utils';
 
@@ -78,7 +78,7 @@ export async function addGlossaryService(params: EditGlossaryReqBody) {
 }
 
 export interface SearchAssetsServicePesp {
-  datasets: AssetItem[];
+  datasets: Asset[];
 }
 
 export async function searchAssetsService(keyword: string) {
