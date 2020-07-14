@@ -178,7 +178,7 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
     }
 
     @Override
-    protected String getName() {
+    public String getName() {
         return index;
     }
 

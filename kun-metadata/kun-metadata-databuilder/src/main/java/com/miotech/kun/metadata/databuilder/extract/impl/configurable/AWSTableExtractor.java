@@ -4,9 +4,8 @@ import com.amazonaws.services.glue.model.Column;
 import com.amazonaws.services.glue.model.Table;
 import com.beust.jcommander.internal.Lists;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
-import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
-import com.miotech.kun.metadata.databuilder.extract.tool.DatasetNameGenerator;
+import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import org.apache.commons.collections4.CollectionUtils;
@@ -64,7 +63,7 @@ public class AWSTableExtractor extends ExtractorTemplate {
 
     @Override
     protected String getName() {
-        return DatasetNameGenerator.generateDatasetName(DatabaseType.HIVE, table.getName());
+        return table.getName();
     }
 
     private DatasetFieldType.Type convertRawType(String rawType) {

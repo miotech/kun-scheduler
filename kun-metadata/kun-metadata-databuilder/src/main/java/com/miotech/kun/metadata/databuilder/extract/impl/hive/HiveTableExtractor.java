@@ -3,10 +3,9 @@ package com.miotech.kun.metadata.databuilder.extract.impl.hive;
 import com.google.common.annotations.VisibleForTesting;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
-import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.metadata.databuilder.extract.impl.configurable.JDBCStatService;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
-import com.miotech.kun.metadata.databuilder.extract.tool.DatasetNameGenerator;
+import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.db.DatabaseOperator;
@@ -108,7 +107,7 @@ public class HiveTableExtractor extends ExtractorTemplate {
 
     @Override
     protected String getName() {
-        return DatasetNameGenerator.generateDatasetName(DatabaseType.HIVE, table);
+        return table;
     }
 
 }
