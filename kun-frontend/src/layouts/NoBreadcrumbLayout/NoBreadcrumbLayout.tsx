@@ -8,9 +8,8 @@ import useI18n from '@/hooks/useI18n';
 
 import Header from '@/components/Header/Header';
 import Sider from '@/components/Sider/Sider';
-import Breadcrumb from '@/components/Breadcrumb/Breadcrumb';
 
-import css from './DefaultLayout.less';
+import css from './NoBreadcrumbLayout.less';
 
 const { Content } = Layout;
 
@@ -19,7 +18,7 @@ interface Props {
   route: IRoute;
 }
 
-export default memo(function DefaultLayout({ children, route }: Props) {
+export default memo(function NoBreadcrumbLayout({ children, route }: Props) {
   const isLoading = useSelector((state: RootState) => state.user.whoamiLoading);
 
   const t = useI18n();
@@ -31,9 +30,6 @@ export default memo(function DefaultLayout({ children, route }: Props) {
         <Layout className={css.siderAndContent}>
           <Sider route={route} />
           <Content className={css.content}>
-            <div className={css.subHeader}>
-              <Breadcrumb route={route} />
-            </div>
             <div>{children}</div>
           </Content>
         </Layout>
