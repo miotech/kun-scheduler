@@ -2,7 +2,9 @@ package com.miotech.kun.workflow.executor;
 
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
+import com.google.common.io.ByteStreams;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -23,10 +25,12 @@ import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.utils.ResourceUtils;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import javax.inject.Inject;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.List;
 import java.util.Optional;
@@ -40,6 +44,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class LocalExecutorTest extends DatabaseTestBase {
+    private final static String TEST_OPERATOR1 = "TestOperator1";
+    private final static String TEST_OPERATOR2 = "TestOperator2";
+    private final static String TEST_OPERATOR3 = "TestOperator3";
+
     @Inject
     private Executor executor;
 
@@ -57,6 +65,9 @@ public class LocalExecutorTest extends DatabaseTestBase {
 
     @Inject
     private EventBus eventBus;
+
+    @Rule
+    public TemporaryFolder tempFolder = new TemporaryFolder();
 
     private EventCollector eventCollector;
 
@@ -78,7 +89,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
     @Test
     public void testSubmit_ok() throws IOException {
         // prepare
-        TaskAttempt attempt = prepareAttempt("TestOperator1");
+        TaskAttempt attempt = prepareAttempt(TEST_OPERATOR1);
 
         // process
         executor.submit(attempt);
@@ -126,11 +137,40 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getOutlets(), sameBeanAs(outlets));
     }
 
+
+    @Test
+    public void testSubmit_then_overwriteOperatorJar() throws IOException {
+        // prepare
+        TaskAttempt attempt = prepareAttempt(TEST_OPERATOR1);
+
+        // process
+        executor.submit(attempt);
+        awaitUntilAttemptDone(attempt.getId());
+        TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
+        Resource log = resourceLoader.getResource(attemptProps.getLogPath());
+        List<String> content = ResourceUtils.lines(log.getInputStream()).collect(Collectors.toList());
+        assertThat(content.get(0), containsString("Hello, world!"));
+
+        // overwrite operator jar
+        attempt = prepareAttempt(TEST_OPERATOR1);
+        overwriteTestJarFile();
+        executor.submit(attempt);
+        awaitUntilAttemptDone(attempt.getId());
+
+        // task_run and task_attempt
+        attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
+
+        // logs
+        log = resourceLoader.getResource(attemptProps.getLogPath());
+        content = ResourceUtils.lines(log.getInputStream()).collect(Collectors.toList());
+        assertThat(content.get(0), containsString("Hello, world2!"));
+    }
+
     @Test
     public void testSubmit_ok_concurrent_running() throws IOException {
         // prepare
-        TaskAttempt attempt1 = prepareAttempt("TestOperator1");
-        TaskAttempt attempt2 = prepareAttempt("TestOperator2");
+        TaskAttempt attempt1 = prepareAttempt(TEST_OPERATOR1);
+        TaskAttempt attempt2 = prepareAttempt(TEST_OPERATOR2);
 
         // process
         executor.submit(attempt1);
@@ -184,7 +224,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
     @Test
     public void testSubmit_fail_running_failure() throws IOException {
         // prepare
-        TaskAttempt attempt = prepareAttempt("TestOperator2");
+        TaskAttempt attempt = prepareAttempt(TEST_OPERATOR2);
 
         // process
         executor.submit(attempt);
@@ -222,7 +262,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
     @Test
     public void testSubmit_fail_unexpected_exception() throws IOException {
         // prepare
-        TaskAttempt attempt = prepareAttempt("TestOperator3");
+        TaskAttempt attempt = prepareAttempt(TEST_OPERATOR3);
 
         // process
         executor.submit(attempt);
@@ -342,7 +382,33 @@ public class LocalExecutorTest extends DatabaseTestBase {
     private String findTestJarFile() {
         String fileName = "testOperators.jar";
         URL url = getClass().getClassLoader().getResource(fileName);
-        return url.toString();
+        File file = createTempFile(fileName, url);
+        return "file:" + file.getPath();
+    }
+
+    private String overwriteTestJarFile() {
+        String fileName = "testOperators2.jar";
+        String targetFileName = "testOperators.jar";
+        URL url = getClass().getClassLoader().getResource(fileName);
+        File file = createTempFile(targetFileName, url);
+        return "file:" + file.getPath();
+    }
+
+    private File createTempFile(String fileName, URL url) {
+        File file = new File(tempFolder.getRoot().getPath() + "/"  + fileName);
+        if (file.exists()) {
+            file.delete();
+        }
+        Resource outputResource = resourceLoader.getResource("file://" + file.getPath(),
+                true);
+        Resource inputResource = resourceLoader.getResource(url.toString(),
+                false);
+        try {
+            ByteStreams.copy(inputResource.getInputStream(), outputResource.getOutputStream());
+        } catch (IOException e) {
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
+        return file;
     }
 
     private void awaitUntilAttemptDone(long attemptId) {
