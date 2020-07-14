@@ -6,10 +6,10 @@
     &::before {
       content: '';
       position: absolute;
-      top: calc(-50% - 13px);
+      bottom: 50%;
       left: -24px;
       width: 16px;
-      height: calc(100% + 13px);
+      height: calc(50% + 6px);
       display: inline-block;
       border-bottom: 1px dotted @secondary2;
     }
@@ -18,6 +18,22 @@
         border-left: 1px dotted @secondary2;
       }
     }
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: -24px;
+      width: 16px;
+      height: calc(50% + 6px);
+      display: inline-block;
+    }
+    &:not(:last-child) {
+      &::after {
+        border-left: 1px dotted @secondary2;
+      }
+    }
+
     &:not(:last-child) {
       margin-bottom: 13px;
     }

@@ -8,6 +8,7 @@ import {
 import { Asset } from '@/rematch/models/glossary';
 import LineList from '@/components/LineList/LineList';
 import useBackPath from '@/hooks/useBackPath';
+import { getAssetNameWithDatasource } from '@/utils/assetUtils';
 import AssetAutoSuggest from '../AssetAutoSuggest/AssetAutoSuggest';
 import styles from './AssetList.less';
 
@@ -84,7 +85,9 @@ export default memo(function AssetList({
             <div className={styles.childItem} key={asset!.id}>
               <FileTextOutlined />
               <Link to={getBackPath(`/data-discovery/dataset/${asset!.id}`)}>
-                <span className={styles.name}>{asset!.name}</span>
+                <span className={styles.name}>
+                  {getAssetNameWithDatasource(asset)}
+                </span>
               </Link>
               <CloseOutlined
                 style={{ marginLeft: 4 }}
