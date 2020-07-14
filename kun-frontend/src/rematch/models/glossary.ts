@@ -17,11 +17,6 @@ import {
 } from '@/utils';
 import { RootDispatch, RootState } from '../store';
 
-export interface AssetItem {
-  id: string;
-  name: string;
-}
-
 export interface GlossaryChild {
   id: string;
   name: string;
@@ -51,6 +46,7 @@ export interface Asset {
   id: string;
   name: string;
   type: AssetType;
+  datasource?: string;
 }
 
 export interface GlossaryDetail {
