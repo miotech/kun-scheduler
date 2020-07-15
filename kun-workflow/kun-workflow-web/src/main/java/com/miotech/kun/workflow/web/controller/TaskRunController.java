@@ -93,4 +93,9 @@ public class TaskRunController {
                 .build();
         return taskRunService.searchTaskRunVOs(filter);
     }
+
+    @RouteMapping(url = "/taskruns/{taskRunId}/_abort", method = "PUT")
+    public Boolean abortTaskRuns(@RouteVariable long taskRunId) {
+        return taskRunService.abortTaskRun(taskRunId);
+    }
 }
