@@ -17,6 +17,7 @@ public class PropKey {
     public static final String DATASOURCE_ID = "datasourceId";
     public static final String GID = "gid";
     public static final String WORKFLOW_URL = "workflow.url";
+    public static final String RECORDS = "records";
 
 
 }
