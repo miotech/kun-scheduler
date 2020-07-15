@@ -7,14 +7,15 @@ import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
-import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.util.Properties;
 
 public class DataBuilderOperator extends KunOperator {
-    private Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(DataBuilderOperator.class);
     private OperatorContext operatorContext;
     private static final String DEPLOY_MODE = "deploy-mode";
     private static final String DATASOURCE_ID = "datasourceId";
@@ -25,7 +26,6 @@ public class DataBuilderOperator extends KunOperator {
 
     @Override
     public void init() {
-        logger = getContext().getLogger();
         operatorContext = getContext();
     }
 

@@ -2,12 +2,12 @@ package com.miotech.kun.workflow.scheduler;
 
 import java.util.*;
 
-public class WaitingList<W, T> {
+public class WaitList<W, T> {
     private final Map<W, Collection<T>> waiterToTarget;
     private final Map<T, Collection<W>> targetToWaiter;
     private final List<W> nextToPop;
 
-    public WaitingList() {
+    public WaitList() {
         this.waiterToTarget = new HashMap<>();
         this.targetToWaiter = new HashMap<>();
         this.nextToPop = new ArrayList<>();
