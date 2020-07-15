@@ -106,6 +106,7 @@ public class ProcessService {
                 .withVariableDefs(variables)
                 .withScheduleConf(ScheduleConf.ScheduleConfBuilder.aScheduleConf().withType(ScheduleType.NONE).build())
                 .withDependencies(Lists.newArrayList())
+                .withTags(Lists.newArrayList())
                 .build();
 
         return JSONUtils.toJsonString(taskPropsVO);
