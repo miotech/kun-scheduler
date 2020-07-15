@@ -1,5 +1,8 @@
 package com.miotech.kun.workflow.testing.executor;
 
+import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.OutputStreamAppender;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.resource.ResourceLoaderImpl;
@@ -33,8 +36,8 @@ public class OperatorRunner {
     public OperatorRunner(KunOperator operator) {
        this.resource = prepareResource();
        this.operator = operator;
-        this.context = new MockOperatorContextImpl(resource, operator);
-        operator.setContext(context);
+       this.context = new MockOperatorContextImpl(operator);
+       operator.setContext(context);
     }
 
     public void setConfigKey(String key, String value) {
@@ -57,6 +60,11 @@ public class OperatorRunner {
     }
 
     public boolean run() {
+        try {
+            appendLogger(this.resource);
+        } catch (IOException e) {
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
         logger.info("Init operator ");
         this.operator.init();
         logger.info("Run operator ");
@@ -90,5 +98,23 @@ public class OperatorRunner {
         } catch (IOException e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
+    }
+
+    public void appendLogger(Resource resource) throws IOException {
+        ch.qos.logback.classic.Logger rootLogger
+                = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+
+        PatternLayoutEncoder encoder = new PatternLayoutEncoder();
+        encoder.setContext(rootLogger.getLoggerContext());
+        encoder.setPattern("%d{HH:mm:ss.SSS} %-5level - %msg%n");
+        encoder.start();
+
+        OutputStreamAppender<ILoggingEvent> appender = new OutputStreamAppender<>();
+        appender.setOutputStream(resource.getOutputStream());
+        appender.setImmediateFlush(true);
+        appender.setEncoder(encoder);
+        appender.setContext(rootLogger.getLoggerContext());
+        appender.start();
+        rootLogger.addAppender(appender);
     }
 }

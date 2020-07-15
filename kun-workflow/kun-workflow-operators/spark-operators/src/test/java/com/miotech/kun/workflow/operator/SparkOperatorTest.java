@@ -53,7 +53,7 @@ public class SparkOperatorTest extends MockServerTestBase {
         boolean isSuccess = operatorRunner.run();
         assertTrue(isSuccess);
         assertTrue(operatorRunner.getLog().size() > 0);
-        assertTrue(operatorRunner.getLog().get(0).contains("Livy client connect to \"http://localhost:10180\" to queue \"default\" as user \"hadoop\""));
+        assertTrue(String.join("\n", operatorRunner.getLog()).contains("Livy client connect to \"http://localhost:10180\" to queue \"default\" as user \"hadoop\""));
     }
 
     @Test
