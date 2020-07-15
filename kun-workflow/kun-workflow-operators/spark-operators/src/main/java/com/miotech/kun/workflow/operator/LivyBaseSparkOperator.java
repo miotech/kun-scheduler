@@ -1,26 +1,24 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Preconditions;
-import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
-import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.operator.spark.clients.LivyClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 abstract class LivyBaseSparkOperator extends KunOperator {
     public static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([^\\}]+)}");
+    private final static Logger logger = LoggerFactory.getLogger(LivyBaseSparkOperator.class);
 
     protected LivyClient livyClient;
-    protected Logger logger;
 
     @Override
     public void init() {
         OperatorContext context = getContext();
-
-        logger = context.getLogger();
         String livyHost = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_HOST);
         Preconditions.checkNotNull(livyHost, "Livy host should not be null");
         String queue = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_YARN_QUEUE);

@@ -3,7 +3,6 @@ package com.miotech.kun.workflow.operator;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
-import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.operator.spark.models.SparkApp;
@@ -13,6 +12,8 @@ import com.miotech.kun.workflow.operator.spark.models.Statement;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
@@ -22,6 +23,8 @@ import java.util.stream.Collectors;
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
 public class SparkSQLOperator extends LivyBaseSparkOperator {
+
+    private final static Logger logger = LoggerFactory.getLogger(SparkSQLOperator.class);
 
     private AtomicInteger currentActiveSessionId = new AtomicInteger(-1);
     private boolean isSharedSession;
@@ -79,7 +82,6 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
     }
 
     public boolean execute() {
-        Logger logger = getContext().getLogger();
 
         SparkJob job = new SparkJob();
         logger.info("Submit spark session: {}", JSONUtils.toJsonString(job));
@@ -136,7 +138,6 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
      * or close the current active session if not in shared session mode
      */
     public void cleanup() {
-        Logger logger = getContext().getLogger();
         if (isSharedSession && StringUtils.isNotBlank(currentActiveStatementId)) {
             String[] sessionAndStat = currentActiveStatementId.split("-");
             logger.info("Cancel current active statement {}", currentActiveStatementId);

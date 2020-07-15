@@ -18,6 +18,8 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 import java.io.BufferedReader;
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
 public class SparkOperator extends LivyBaseSparkOperator {
+    private final static Logger logger = LoggerFactory.getLogger(SparkOperator.class);
 
     private SparkApp app;
 

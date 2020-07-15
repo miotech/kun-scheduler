@@ -150,9 +150,6 @@ public class TaskInProgress implements Runnable {
                 setState(TaskRunStatus.FAILED);
             } finally {
                 runThread.setContextClassLoader(origCtxCl);
-                if (Objects.nonNull(runOperator)) {
-                    ((URLClassLoader) runOperator.getClass().getClassLoader()).close();
-                }
                 if (mdcc != null) {
                     mdcc.close();
                 }
