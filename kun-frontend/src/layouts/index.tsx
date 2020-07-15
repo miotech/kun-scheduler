@@ -5,6 +5,7 @@ import { store } from '@/rematch/store';
 import useI18n from '@/hooks/useI18n';
 
 import DefaultLayout from './DefaultLayout/DefaultLayout';
+import NoBreadcrumbLayout from './NoBreadcrumbLayout/NoBreadcrumbLayout';
 
 export default function Layout({
   children,
@@ -19,6 +20,16 @@ export default function Layout({
 
   if (location.pathname === '/login') {
     return <Provider store={store}>{children}</Provider>;
+  }
+
+  if (location.pathname.startsWith('/pdf')) {
+    return (
+      <Provider store={store}>
+        <NoBreadcrumbLayout route={route as IRoute}>
+          {children}
+        </NoBreadcrumbLayout>
+      </Provider>
+    );
   }
 
   return (
