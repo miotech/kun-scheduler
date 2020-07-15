@@ -14,15 +14,16 @@ public class WorkflowApiResponseParseUtil {
 
     public static Long parseOperatorIdAfterSearch(String result, String operatorName) {
         JsonNode root = parseJson(result);
-        for (JsonNode jsonNode : root) {
+        JsonNode records = root.get(PropKey.RECORDS);
+        for (JsonNode jsonNode : records) {
             JsonNode id = jsonNode.get(PropKey.ID);
             JsonNode name = jsonNode.get(PropKey.NAME);
-            if (id == null || !id.isLong() || name == null || !name.isTextual()) {
+            if (id == null || name == null || !name.isTextual()) {
                 throw new IllegalStateException("attribute `id`|`name` not found");
             }
 
             if (operatorName.equals(name.textValue())) {
-                return id.longValue();
+                return Long.parseLong(id.textValue());
             }
         }
 
@@ -32,25 +33,26 @@ public class WorkflowApiResponseParseUtil {
     public static Long parseIdAfterCreate(String result) {
         JsonNode root = parseJson(result);
         JsonNode id = root.get(PropKey.ID);
-        if (id == null || !id.isLong()) {
+        if (id == null) {
             throw new IllegalStateException("attribute `id` not found");
         }
 
-        return id.longValue();
+        return Long.parseLong(id.textValue());
     }
 
     public static Long parseTaskIdAfterSearch(String result, Long operatorId, String taskName) {
         JsonNode root = parseJson(result);
-        for (JsonNode jsonNode : root) {
+        JsonNode records = root.get(PropKey.RECORDS);
+        for (JsonNode jsonNode : records) {
             JsonNode id = jsonNode.get(PropKey.ID);
             JsonNode name = jsonNode.get(PropKey.NAME);
             JsonNode operatorIdNode = jsonNode.get(PropKey.OPERATOR_ID);
-            if (id == null || !id.isLong() || name == null || !name.isTextual() || operatorIdNode == null || !operatorIdNode.isLong()) {
+            if (id == null || name == null || !name.isTextual() || operatorIdNode == null) {
                 throw new IllegalStateException("attribute `id`|`name`|`operatorId` not found");
             }
 
-            if (taskName.equals(name.textValue()) && operatorId.equals(operatorIdNode.longValue())) {
-                return id.longValue();
+            if (taskName.equals(name.textValue()) && operatorId.equals(Long.parseLong(operatorIdNode.textValue()))) {
+                return Long.parseLong(id.textValue());
             }
         }
 
@@ -63,7 +65,8 @@ public class WorkflowApiResponseParseUtil {
         }
 
         JsonNode root = parseJson(result);
-        for (JsonNode jsonNode : root) {
+        JsonNode records = root.get(PropKey.RECORDS);
+        for (JsonNode jsonNode : records) {
             if (jsonNode == null || jsonNode.isEmpty()) {
                 return false;
             }
@@ -87,19 +90,20 @@ public class WorkflowApiResponseParseUtil {
         }
 
         JsonNode root = parseJson(result);
-        for (JsonNode jsonNode : root) {
+        JsonNode records = root.get(PropKey.RECORDS);
+        for (JsonNode jsonNode : records) {
             if (jsonNode == null || jsonNode.isEmpty()) {
                 return false;
             }
 
             JsonNode name = jsonNode.get(PropKey.NAME);
             JsonNode operatorId = jsonNode.get(PropKey.OPERATOR_ID);
-            if (name == null || !name.isTextual() || operatorId == null || !operatorId.isLong()) {
+            if (name == null || !name.isTextual() || operatorId == null) {
                 return false;
             }
 
             if (taskName.equals(name.textValue()) &&
-                    (StringUtils.isNotBlank(operatorIdStr) && Long.parseLong(operatorIdStr) == operatorId.longValue())) {
+                    (StringUtils.isNotBlank(operatorIdStr) && Long.parseLong(operatorIdStr) == Long.parseLong(operatorId.textValue()))) {
                 return true;
             }
         }
@@ -137,10 +141,6 @@ public class WorkflowApiResponseParseUtil {
         }
 
         JsonNode code = root.get("code");
-        if (code != null && code.isInt() && code.intValue() != 200) {
-            return false;
-        }
-
-        return true;
+        return !(code != null && code.isInt() && code.intValue() != 200);
     }
 }
