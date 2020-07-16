@@ -1,14 +1,44 @@
 # KUN
 
-## 简介
+### Build a single source of trust with a simple and powerful data governance platform.
 
-KUN 是一个数据治理的平台，其中包含数据开发，元数据管理，数据质量，调度系统等主要模块。KUN 是以解决异构系统的数据血缘的追踪为核心指导思想所构建的数据治理解决方案。计算与存储的异构是现代大数据平台的显著特征，由于计算与存储的异构，使得数据的流动与加工在开发与执行的过程中很多表之间的依赖关系缺失。而依赖关系的缺失会导致数据治理无从开展。
+Kun is a open source data governance platform.
 
-## 文档
-https://mioying.gitbook.io/miostack/
+## Installation
+The easiest way for using Kun is using DockerHub.
 
-## MileStone
-- MAY
-- JUNE
-- JULY
-- AUGEST
+## Usage
+1. Config Data storage and computation engine
+2. Setup User Access Management
+3. Setup Data discovery
+4. Setup Data Quality
+5. Write a Hello World Pipeline
+5. Good to go!
+
+## Contributing
+We open source Kun because it solve our own data management problem. We hope the other organizations can benefit from the project as well. We are thankful for any contributions from the community.
+
+### [Code of Conduct](CODE_OF_CONDUCT.md)
+
+We are very serious about the code of conduct. Please read the full text so that you can understand what actions will and will not be tolerated.
+
+# Contact
+
+We have a few channels for contact:
+* Wechat Group
+* Wechat Account
+* Twitter
+* Facebook Page
+
+
+# Contributors
+This project exists thanks to all the people who contribute.
+
+# Sponsors
+
+## Miotech
+## ...
+## ...
+
+## License
+[Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
