@@ -1,8 +1,17 @@
 package com.miotech.kun.workflow.core.model.task;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
+
 public class TaskDependency {
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long upstreamTaskId;
 
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long downstreamTaskId;
 
     private final DependencyFunction dependencyFunc;
