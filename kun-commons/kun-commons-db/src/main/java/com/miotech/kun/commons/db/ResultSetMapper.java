@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.db;
+package com.miotech.kun.commons.db;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;

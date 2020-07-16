@@ -1,9 +1,8 @@
-package com.miotech.kun.workflow.db.sql;
+package com.miotech.kun.commons.db.sql;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.ListUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 

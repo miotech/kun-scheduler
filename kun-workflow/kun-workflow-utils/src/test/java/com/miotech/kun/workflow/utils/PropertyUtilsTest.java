@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.utils;
 
+import com.miotech.kun.commons.utils.PropertyUtils;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 
