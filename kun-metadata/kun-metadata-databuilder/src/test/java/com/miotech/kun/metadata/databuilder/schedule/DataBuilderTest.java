@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.databuilder.TestContainerUtil;
-import com.miotech.kun.workflow.db.DatabaseOperator;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import io.testcontainers.arangodb.containers.ArangoContainer;
 import org.junit.Ignore;
 import org.junit.Test;

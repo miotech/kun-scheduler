@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.db.sql;
+package com.miotech.kun.commons.db.sql;
 
 import org.junit.Test;
 

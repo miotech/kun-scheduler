@@ -14,8 +14,8 @@ import com.miotech.kun.metadata.web.service.ProcessService;
 import com.miotech.kun.metadata.web.util.WorkflowApiResponseParseUtil;
 import com.miotech.kun.metadata.web.util.WorkflowUrlGenerator;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
-import com.miotech.kun.workflow.db.DatabaseSetup;
-import com.miotech.kun.workflow.utils.PropertyUtils;
+import com.miotech.kun.commons.db.DatabaseSetup;
+import com.miotech.kun.commons.utils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
