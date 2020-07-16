@@ -110,4 +110,9 @@ public class HiveTableExtractor extends ExtractorTemplate {
         return table;
     }
 
+    @Override
+    protected void close() {
+        // Do nothing
+    }
+
 }

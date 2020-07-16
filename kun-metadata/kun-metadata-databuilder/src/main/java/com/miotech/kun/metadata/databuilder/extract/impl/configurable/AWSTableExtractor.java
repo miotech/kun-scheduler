@@ -66,6 +66,11 @@ public class AWSTableExtractor extends ExtractorTemplate {
         return table.getName();
     }
 
+    @Override
+    protected void close() {
+        // Do nothing
+    }
+
     private DatasetFieldType.Type convertRawType(String rawType) {
         if ("string".equals(rawType) ||
                 rawType.startsWith("varchar") ||

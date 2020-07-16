@@ -82,6 +82,11 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
         return collection;
     }
 
+    @Override
+    protected void close() {
+        // Do nothing
+    }
+
     public List<DatasetField> docToFields(JsonNode root, String parent) {
         List<DatasetField> fieldList = new ArrayList<>();
         Iterator<String> fieldNames = root.fieldNames();
