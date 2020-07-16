@@ -38,11 +38,11 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
     private HttpClientUtil httpClientUtil;
 
     @Inject
-    public ElasticSearchIndexExtractor(ElasticSearchDataSource dataSource, String index, MioElasticSearchClient client) {
+    public ElasticSearchIndexExtractor(ElasticSearchDataSource dataSource, String index) {
         super(dataSource.getId());
         this.index = index;
         this.dataSource = dataSource;
-        this.client = client;
+        this.client = new MioElasticSearchClient(dataSource);
         this.httpClientUtil = Guice.createInjector().getInstance(HttpClientUtil.class);
     }
 
@@ -180,6 +180,11 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
     @Override
     public String getName() {
         return index;
+    }
+
+    @Override
+    protected void close() {
+        client.close();
     }
 
 }
