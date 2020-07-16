@@ -108,4 +108,9 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
         return collection;
     }
 
+    @Override
+    protected void close() {
+        // Do nothing
+    }
+
 }

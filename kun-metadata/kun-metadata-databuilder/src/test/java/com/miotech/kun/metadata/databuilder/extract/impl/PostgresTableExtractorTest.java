@@ -52,7 +52,7 @@ public class PostgresTableExtractorTest extends DatabaseTestBase {
                         postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword(), DatabaseType.POSTGRES))
                 .withUsername(postgreSQLContainer.getUsername())
                 .withPassword(postgreSQLContainer.getPassword())
-                .build(), "test", "public", table, new DatabaseOperator(pgDataSource));
+                .build(), "test", "public", table);
     }
 
     @After

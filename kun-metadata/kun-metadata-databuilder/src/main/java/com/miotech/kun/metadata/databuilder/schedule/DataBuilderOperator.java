@@ -7,7 +7,9 @@ import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.workflow.core.execution.Operator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
+import com.zaxxer.hikari.HikariDataSource;
 
+import javax.sql.DataSource;
 import java.util.Properties;
 
 public class DataBuilderOperator extends Operator {
@@ -22,10 +24,12 @@ public class DataBuilderOperator extends Operator {
 
     @Override
     public boolean run() {
+        DataSource dataSource = null;
         try {
             Properties props = buildPropsFromVariable();
 
             Injector injector = Guice.createInjector(new DataSourceModule(props));
+            dataSource = injector.getInstance(DataSource.class);
             DataBuilder dataBuilder = injector.getInstance(DataBuilder.class);
 
             String deployModeStr = operatorContext.getVariable("deploy-mode");
@@ -50,6 +54,10 @@ public class DataBuilderOperator extends Operator {
         } catch (Exception e) {
             logger.error("DataBuilderOperator run error:", e);
             throw ExceptionUtils.wrapIfChecked(e);
+        } finally {
+            if (dataSource instanceof HikariDataSource) {
+                ((HikariDataSource) dataSource).close();
+            }
         }
 
     }

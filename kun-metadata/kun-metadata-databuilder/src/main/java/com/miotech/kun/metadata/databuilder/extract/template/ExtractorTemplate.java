@@ -35,6 +35,8 @@ public abstract class ExtractorTemplate implements Extractor {
 
     protected abstract String getName();
 
+    protected abstract void close();
+
     @Override
     public Iterator<Dataset> extract() {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
@@ -79,6 +81,8 @@ public abstract class ExtractorTemplate implements Extractor {
         } catch (Exception e) {
             logger.error("ExtractorTemplate extract error dataStore: {}", getDataStore(), e);
             // TODO add retry
+        } finally {
+            close();
         }
         return Iterators.forArray(datasetBuilder.build());
     }
