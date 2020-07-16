@@ -17,6 +17,7 @@ public class WorkflowUrlGeneratorTest {
 
     private WorkflowUrlGenerator generator;
     private static final String operatorName = "Test Operator";
+    private static final String taskName = "Test Task";
 
     @Before
     public void setUp() {
@@ -52,8 +53,8 @@ public class WorkflowUrlGeneratorTest {
 
     @Test
     public void testGenerateSearchTaskUrl() {
-        String url = generator.generateSearchTaskUrl();
-        assertThat(url, is("http://your-domain/tasks?name%3DMetadata+DataBuilder+Task"));
+        String url = generator.generateSearchTaskUrl(taskName);
+        assertThat(url, is("http://your-domain/tasks?name%3DTest+Task"));
     }
 
     @Test
