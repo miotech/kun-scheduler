@@ -1,6 +1,6 @@
 package com.miotech.kun.workflow.testing.operator;
 
-import com.miotech.kun.workflow.core.execution.Operator;
+import com.miotech.kun.workflow.core.execution.KunOperator;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
@@ -28,7 +28,7 @@ public class OperatorCompiler {
      * @param className 重命名后的类名（完整package名）
      * @return
      */
-    public static String compileJar(Class<? extends Operator> operatorClass, String className) {
+    public static String compileJar(Class<? extends KunOperator> operatorClass, String className) {
         return buildJar(className, getBytesWithClassName(operatorClass, className));
     }
 
@@ -41,7 +41,7 @@ public class OperatorCompiler {
         }
 
         try (FileOutputStream fout = new FileOutputStream(target);
-             JarOutputStream jarOut = new JarOutputStream(fout))  {
+             JarOutputStream jarOut = new JarOutputStream(fout)) {
             String path = classPathOf(className);
             int i = path.lastIndexOf('/');
             if (i > -1) {

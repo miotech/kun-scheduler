@@ -6,10 +6,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
+import com.miotech.kun.workflow.core.execution.Config;
 
 import java.util.HashMap;
 import java.util.List;
@@ -30,9 +29,7 @@ public class Task {
     @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long operatorId;
 
-    private final List<Param> arguments;
-
-    private final List<Variable> variableDefs;
+    private final Config config;
 
     private final ScheduleConf scheduleConf;
 
@@ -56,12 +53,8 @@ public class Task {
         return operatorId;
     }
 
-    public List<Param> getArguments() {
-        return arguments;
-    }
-
-    public List<Variable> getVariableDefs() {
-        return variableDefs;
+    public Config getConfig() {
+        return config;
     }
 
     public ScheduleConf getScheduleConf() {
@@ -81,8 +74,7 @@ public class Task {
         this.name = builder.name;
         this.description = builder.description;
         this.operatorId = builder.operatorId;
-        this.arguments = ImmutableList.copyOf(builder.arguments);
-        this.variableDefs = ImmutableList.copyOf(builder.variableDefs);
+        this.config = builder.config;
         this.scheduleConf = builder.scheduleConf;
         this.dependencies = ImmutableList.copyOf(builder.dependencies);
         this.tags = builder.tags;
@@ -94,8 +86,7 @@ public class Task {
                 .withName(name)
                 .withDescription(description)
                 .withOperatorId(operatorId)
-                .withArguments(arguments)
-                .withVariableDefs(variableDefs)
+                .withConfig(config)
                 .withScheduleConf(scheduleConf)
                 .withDependencies(dependencies)
                 .withTags(tags);
@@ -135,8 +126,7 @@ public class Task {
                 Objects.equals(name, task.name) &&
                 Objects.equals(description, task.description) &&
                 Objects.equals(operatorId, task.operatorId) &&
-                Objects.equals(arguments, task.arguments) &&
-                Objects.equals(variableDefs, task.variableDefs) &&
+                Objects.equals(config, task.config) &&
                 Objects.equals(scheduleConf, task.scheduleConf) &&
                 Objects.equals(dependencies, task.dependencies) &&
                 Objects.equals(tags, task.tags);
@@ -144,16 +134,16 @@ public class Task {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, operatorId, arguments, variableDefs, scheduleConf, dependencies, tags);
+        return Objects.hash(id, name, description, operatorId, config, scheduleConf, dependencies);
     }
+
 
     public static final class TaskBuilder {
         private Long id;
         private String name;
         private String description;
         private Long operatorId;
-        private List<Param> arguments;
-        private List<Variable> variableDefs;
+        private Config config;
         private ScheduleConf scheduleConf;
         private List<TaskDependency> dependencies;
         private List<Tag> tags;
@@ -181,13 +171,8 @@ public class Task {
             return this;
         }
 
-        public TaskBuilder withArguments(List<Param> arguments) {
-            this.arguments = arguments;
-            return this;
-        }
-
-        public TaskBuilder withVariableDefs(List<Variable> variableDefs) {
-            this.variableDefs = variableDefs;
+        public TaskBuilder withConfig(Config config) {
+            this.config = config;
             return this;
         }
 

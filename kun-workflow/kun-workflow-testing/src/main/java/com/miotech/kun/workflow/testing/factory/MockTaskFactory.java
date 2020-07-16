@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.testing.factory;
 import com.miotech.kun.commons.testing.Unsafe;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -23,9 +24,8 @@ public class MockTaskFactory {
         return TaskPropsVO.newBuilder()
                 .withName("task_" + mockId)
                 .withDescription("task_description_" + mockId)
-                .withVariableDefs(new ArrayList<>())
-                .withArguments(new ArrayList<>())
                 .withOperatorId(mockOperatorId)
+                .withConfig(Config.EMPTY)
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
@@ -36,7 +36,15 @@ public class MockTaskFactory {
         return createTasks(1).get(0);
     }
 
+    public static Task createTask(Long operatorId) {
+        return createTasks(1, operatorId).get(0);
+    }
+
     public static List<Task> createTasks(int num) {
+        return createTasks(num, WorkflowIdGenerator.nextOperatorId());
+    }
+
+    public static List<Task> createTasks(int num, Long operatorId) {
         List<Task> tasks = new ArrayList<>();
 
         for (int i = 0; i < num; i++) {
@@ -45,9 +53,8 @@ public class MockTaskFactory {
                     .withId(taskId)
                     .withName("task_" + taskId)
                     .withDescription("task_description_" + taskId)
-                    .withVariableDefs(new ArrayList<>())
-                    .withArguments(new ArrayList<>())
-                    .withOperatorId(WorkflowIdGenerator.nextOperatorId())
+                    .withConfig(Config.EMPTY)
+                    .withOperatorId(operatorId)
                     .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                     .withDependencies(new ArrayList<>())
                     .withTags(new ArrayList<>())
@@ -63,6 +70,17 @@ public class MockTaskFactory {
      * @return
      */
     public static List<Task> createTasksWithRelations(int num, String relations) {
+        return createTasksWithRelations(num, WorkflowIdGenerator.nextOperatorId(), relations);
+    }
+
+    /**
+     * 创建n个相互依赖的任务。例如"0>>1"表示创建的第1个任务依赖第0个任务（即0是上游，1是下游）。支持"0>>1;2>>1;"表示多个依赖。
+     * @param num
+     * @param operatorId
+     * @param relations
+     * @return
+     */
+    public static List<Task> createTasksWithRelations(int num, Long operatorId, String relations) {
         Map<Integer, List<Integer>> parsed = MockFactoryUtils.parseRelations(relations);
 
         List<Long> ids = new ArrayList<>();
@@ -81,9 +99,8 @@ public class MockTaskFactory {
                     .withId(taskId)
                     .withName("task_" + taskId)
                     .withDescription("task_description_" + taskId)
-                    .withVariableDefs(new ArrayList<>())
-                    .withArguments(new ArrayList<>())
-                    .withOperatorId(WorkflowIdGenerator.nextOperatorId())
+                    .withConfig(Config.EMPTY)
+                    .withOperatorId(operatorId)
                     .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                     .withDependencies(
                             selectItems(ids, parsed.get(i)).stream()
