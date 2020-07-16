@@ -5,9 +5,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -45,12 +45,12 @@ public class TaskRunMapper implements ResultSetMapper<TaskRun> {
                 .withId(rs.getLong(TASK_RUN_MODEL_NAME + "_id"))
                 .withScheduledTick(new Tick(rs.getString(TASK_RUN_MODEL_NAME + "_scheduled_tick")))
                 .withStatus(TaskRunStatus.resolve(rs.getString(TASK_RUN_MODEL_NAME + "_status")))
+                .withConfig(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_config"), Config.class))
                 .withInlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_inlets"), new TypeReference<List<DataStore>>() {}))
                 .withOutlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_outlets"), new TypeReference<List<DataStore>>() {}))
                 .withDependentTaskRunIds(Collections.emptyList())
                 .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
                 .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_end_at")))
-                .withVariables(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_variables"), new TypeReference<List<Variable>>() {}))
                 .build();
     }
 }

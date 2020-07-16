@@ -2,9 +2,8 @@ package com.miotech.kun.workflow.common.task.vo;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.core.model.common.Variable;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskDependency;
@@ -16,8 +15,7 @@ public class TaskPropsVO {
     private final String name;
     private final String description;
     private final Long operatorId;
-    private final List<Param> arguments;
-    private final List<Variable> variableDefs;
+    private final Config config;
     private final ScheduleConf scheduleConf;
     private final List<TaskDependency> dependencies;
     private final List<Tag> tags;
@@ -26,8 +24,7 @@ public class TaskPropsVO {
         this.name = builder.name;
         this.description = builder.description;
         this.operatorId = builder.operatorId;
-        this.arguments = builder.arguments;
-        this.variableDefs = builder.variableDefs;
+        this.config = builder.config;
         this.scheduleConf = builder.scheduleConf;
         this.dependencies = builder.dependencies;
         this.tags = builder.tags;
@@ -42,8 +39,7 @@ public class TaskPropsVO {
                 .withName(task.getName())
                 .withDescription(task.getDescription())
                 .withOperatorId(task.getOperatorId())
-                .withArguments(task.getArguments())
-                .withVariableDefs(task.getVariableDefs())
+                .withConfig(task.getConfig())
                 .withScheduleConf(task.getScheduleConf())
                 .withDependencies(task.getDependencies())
                 .withTags(task.getTags())
@@ -55,8 +51,7 @@ public class TaskPropsVO {
                 .withName(name)
                 .withDescription(description)
                 .withOperatorId(operatorId)
-                .withArguments(arguments)
-                .withVariableDefs(variableDefs)
+                .withConfig(config)
                 .withScheduleConf(scheduleConf)
                 .withDependencies(dependencies)
                 .withTags(tags);
@@ -74,12 +69,8 @@ public class TaskPropsVO {
         return operatorId;
     }
 
-    public List<Param> getArguments() {
-        return arguments;
-    }
-
-    public List<Variable> getVariableDefs() {
-        return variableDefs;
+    public Config getConfig() {
+        return config;
     }
 
     public ScheduleConf getScheduleConf() {
@@ -97,8 +88,7 @@ public class TaskPropsVO {
         private String name;
         private String description;
         private Long operatorId;
-        private List<Param> arguments;
-        private List<Variable> variableDefs;
+        private Config config;
         private ScheduleConf scheduleConf;
         private List<TaskDependency> dependencies;
         private List<Tag> tags;
@@ -121,13 +111,8 @@ public class TaskPropsVO {
             return this;
         }
 
-        public TaskPropsVOBuilder withArguments(List<Param> arguments) {
-            this.arguments = arguments;
-            return this;
-        }
-
-        public TaskPropsVOBuilder withVariableDefs(List<Variable> variableDefs) {
-            this.variableDefs = variableDefs;
+        public TaskPropsVOBuilder withConfig(Config config) {
+            this.config = config;
             return this;
         }
 

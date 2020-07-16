@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow;
 
 import com.miotech.kun.workflow.core.Scheduler;
-import com.miotech.kun.workflow.core.model.task.RunTaskContext;
+import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.scheduler.TaskSpawner;
@@ -26,8 +26,8 @@ public class LocalScheduler implements Scheduler {
     }
 
     @Override
-    public List<TaskRun> run(TaskGraph graph, RunTaskContext context) {
-        logger.info("run graph {} with variables {}", graph, context);
-        return taskSpawner.run(graph, context);
+    public List<TaskRun> run(TaskGraph graph, TaskRunEnv env) {
+        logger.info("run graph {} with env {}", graph, env);
+        return taskSpawner.run(graph, env);
     }
 }

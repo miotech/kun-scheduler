@@ -1,17 +1,15 @@
 package com.miotech.kun.workflow.common.task.dao;
 
 import com.cronutils.model.Cron;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.vo.TagVO;
-import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskDependency;
@@ -55,7 +53,7 @@ public class TaskDao {
 
     public static final String TASK_TAGS_MODEL_NAME = "task_tags";
 
-    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "arguments", "variable_defs", "schedule");
+    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule");
 
     private static final List<String> taskTagCols = ImmutableList.of("task_id", "tag_key", "tag_value");
 
@@ -551,7 +549,7 @@ public class TaskDao {
         return Optional.of(task.cloneBuilder().withDependencies(dependencies).withTags(tags).build());
     }
 
-    public Map<Long, Optional<Task>> fetchByIds(List<Long> taskIds) {
+    public Map<Long, Optional<Task>> fetchByIds(Collection<Long> taskIds) {
         if (taskIds.isEmpty()) {
             return Collections.emptyMap();
         }
@@ -612,8 +610,7 @@ public class TaskDao {
                     task.getName(),
                     task.getDescription(),
                     task.getOperatorId(),
-                    JSONUtils.toJsonString(task.getArguments()),
-                    JSONUtils.toJsonString(task.getVariableDefs()),
+                    JSONUtils.toJsonString(task.getConfig()),
                     JSONUtils.toJsonString(task.getScheduleConf())
             );
             insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
@@ -644,8 +641,7 @@ public class TaskDao {
                     task.getName(),
                     task.getDescription(),
                     task.getOperatorId(),
-                    JSONUtils.toJsonString(task.getArguments()),
-                    JSONUtils.toJsonString(task.getVariableDefs()),
+                    JSONUtils.toJsonString(task.getConfig()),
                     JSONUtils.toJsonString(task.getScheduleConf()),
                     task.getId()
             );
@@ -853,9 +849,8 @@ public class TaskDao {
                     .withName(rs.getString(TASK_MODEL_NAME + "_name"))
                     .withDescription(rs.getString(TASK_MODEL_NAME + "_description"))
                     .withOperatorId(rs.getLong(TASK_MODEL_NAME + "_operator_id"))
-                    .withArguments(JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_arguments"), new TypeReference<List<Param>>() {}))
-                    .withVariableDefs(JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_variable_defs"), new TypeReference<List<Variable>>() {}))
-                    .withScheduleConf( JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_schedule"), new TypeReference<ScheduleConf>() {}))
+                    .withConfig(JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_config"), Config.class))
+                    .withScheduleConf(JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_schedule"), ScheduleConf.class))
                     .withDependencies(new ArrayList<>())
                     .withTags(new ArrayList<>())
                     .build();

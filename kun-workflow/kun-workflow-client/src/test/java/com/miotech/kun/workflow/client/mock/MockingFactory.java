@@ -3,30 +3,26 @@ package com.miotech.kun.workflow.client.mock;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
-import com.miotech.kun.workflow.core.model.common.Param;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
+import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 public class MockingFactory {
     private MockingFactory() {}
 
+    private static final String nopOperatorClassName = NopOperator.class.getSimpleName();
+    private static final String nopOperatorPath = OperatorCompiler.compileJar(NopOperator.class, nopOperatorClassName);
 
     public static Operator mockOperator() {
         return Operator.newBuilder()
                 .withId(1L)
                 .withName("test")
                 .withDescription("test")
-                .withClassName("test")
-                .withPackagePath("file:/test.jar")
-                .withParams(Collections.singletonList(
-                        Param.newBuilder()
-                                .withName("test")
-                                .withDescription("test param")
-                                .build()
-                ))
+                .withClassName(nopOperatorClassName)
+                .withPackagePath(nopOperatorPath)
                 .build();
     }
 
@@ -39,8 +35,7 @@ public class MockingFactory {
                 .withId(1L)
                 .withName("test")
                 .withDescription("")
-                .withArguments(new ArrayList<>())
-                .withVariableDefs(new ArrayList<>())
+                .withConfig(Config.EMPTY)
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?"))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())

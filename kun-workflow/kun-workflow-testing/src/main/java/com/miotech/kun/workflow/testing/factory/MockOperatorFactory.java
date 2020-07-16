@@ -17,7 +17,6 @@ public class MockOperatorFactory {
         return OperatorPropsVO.newBuilder()
                 .withName("Operator_" + id)
                 .withDescription("Operator" + id + "_description")
-                .withParams(new ArrayList<>())
                 .withClassName("com.miotech.kun.Operator" + id)
                 .withPackagePath("s3://storage.miotech.com/Operator")
                 .build();
@@ -36,7 +35,6 @@ public class MockOperatorFactory {
                     .withName(namePrefix + "_" + i)
                     .withDescription(descriptionPrefix + num)
                     .withClassName(classNamePrefix + num)
-                    .withParams(new ArrayList<>())
                     .withPackagePath(packagePathPrefix + num + ".jar")
                     .build()
             );
