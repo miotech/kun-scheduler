@@ -10,6 +10,7 @@ import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -17,6 +18,7 @@ import java.util.List;
 @JsonDeserialize(builder = TaskRunVO.Builder.class)
 public class TaskRunVO {
     @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private Long id;
 
     private Task task;
