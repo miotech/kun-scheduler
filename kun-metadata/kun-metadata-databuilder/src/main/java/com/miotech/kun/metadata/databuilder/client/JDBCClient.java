@@ -1,6 +1,5 @@
 package com.miotech.kun.metadata.databuilder.client;
 
-import com.google.common.collect.Maps;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
@@ -12,7 +11,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Universal JDBC connection tool, which adapts to Hive and Postgres
@@ -20,25 +19,19 @@ import java.util.Map;
  */
 public class JDBCClient {
     private static Logger logger = LoggerFactory.getLogger(JDBCClient.class);
-    private static final Map<String, DataSource> dataSourceCache = Maps.newConcurrentMap();
-
     private JDBCClient() {
     }
 
     public static DataSource getDataSource(String url, String username, String password, DatabaseType dbType) {
-        String key = url + username + password;
-        if (dataSourceCache.containsKey(key)) {
-            return dataSourceCache.get(key);
-        }
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(url);
         config.setUsername(username);
         config.setPassword(password);
         config.setDriverClassName(selectSpecificDriver(dbType));
-        HikariDataSource hikariDataSource = new HikariDataSource(config);
-
-        dataSourceCache.put(key, hikariDataSource);
-        return hikariDataSource;
+        config.setMaximumPoolSize(2);
+        config.setMinimumIdle(0);
+        config.setIdleTimeout(TimeUnit.SECONDS.toMillis(10));
+        return new HikariDataSource(config);
     }
 
     private static String selectSpecificDriver(DatabaseType dbType) {

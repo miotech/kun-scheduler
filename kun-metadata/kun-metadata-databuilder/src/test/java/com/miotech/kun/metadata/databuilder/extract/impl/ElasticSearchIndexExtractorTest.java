@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.databuilder.TestContainerUtil;
 import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticSearchIndexExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.MioElasticSearchClient;
 import com.miotech.kun.metadata.databuilder.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
 import com.miotech.kun.metadata.databuilder.model.DatasetStat;
@@ -44,7 +43,7 @@ public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
                 .withPassword("changeme")
                 .build();
 
-        elasticSearchIndexExtractor = new ElasticSearchIndexExtractor(dataSource, index, new MioElasticSearchClient(dataSource));
+        elasticSearchIndexExtractor = new ElasticSearchIndexExtractor(dataSource, index);
     }
 
     @After
