@@ -65,7 +65,8 @@ public enum DataSourceType {
     private static JDBCConnectionInfo parseFormalConnectionInfo(DataSourceType dataSourceType,
                                                                 MetadataConnectionInfo mcInfo) {
         JSONObject rawValue = mcInfo.getConnectionInfo();
-        String url = parseFormalURL(dataSourceType.getProtocalHeader(), (String) rawValue.get("host"), ((Long) rawValue.get("port")).intValue(), mcInfo.getDatabaseName());
+
+        String url = parseFormalURL(dataSourceType.getProtocalHeader(), (String) rawValue.get("host"), ((Long) rawValue.get("port")).intValue(), mcInfo.getUrlPostfix());
         String username = (String) rawValue.get("username");
         String password = (String) rawValue.get("password");
         JDBCConnectionInfo connectionInfo = new JDBCConnectionInfo();
