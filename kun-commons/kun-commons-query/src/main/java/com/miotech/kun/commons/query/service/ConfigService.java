@@ -12,7 +12,9 @@ public class ConfigService {
 
     private Properties properties;
 
-    private ConfigService() {}
+    private ConfigService() {
+        properties = System.getProperties();
+    }
 
     private static class SingletonHolder {
         private static ConfigService instance = new ConfigService();
@@ -27,9 +29,22 @@ public class ConfigService {
     }
 
     public Properties getProperties() {
-        if (properties == null) {
-            properties = PropertyUtils.loadAppProps();
-        }
         return properties;
+    }
+
+    public void setMetadataDataSourceUrl(String url) {
+        this.properties.setProperty("metadata.datasource.url", url);
+    }
+
+    public void setMetadataDataSourceUsername(String username) {
+        this.properties.setProperty("metadata.datasource.username", username);
+    }
+
+    public void setMetadataDataSourcePassword(String password) {
+        this.properties.setProperty("metadata.datasource.password", password);
+    }
+
+    public void setMetadataDataSourceDriverClass(String driverClass) {
+        this.properties.setProperty("metadata.datasource.driver-class-name", driverClass);
     }
 }

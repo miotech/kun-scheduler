@@ -6,10 +6,26 @@ plugins {
     id "org.sonarqube" version "2.7"
 }
 
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
+    implementation project(':kun-workflow:kun-workflow-client')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation project(':kun-security')
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(":kun-commons:kun-commons-db")
+    implementation project(':kun-app-common')
+
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'com.google.code.gson:gson'

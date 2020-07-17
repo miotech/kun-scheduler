@@ -9,6 +9,7 @@ import com.miotech.kun.datadiscovery.model.entity.Dataset;
 import com.miotech.kun.datadiscovery.model.entity.DatasetBasic;
 import com.miotech.kun.datadiscovery.model.entity.DatasetBasicPage;
 import com.miotech.kun.datadiscovery.model.entity.Watermark;
+import com.miotech.kun.dataquality.persistence.DataQualityRepository;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,6 +21,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author: Jie Chen
@@ -30,6 +32,9 @@ public class DatasetRepository extends BaseRepository {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    DataQualityRepository dataQualityRepository;
 
     @Autowired
     TagRepository tagRepository;
@@ -113,7 +118,7 @@ public class DatasetRepository extends BaseRepository {
         String sql = "select kmd.*, " +
                 "kmdsrct.name as type, " +
                 "kmdsrca.name as datasource_name, " +
-                "kmda.description as description, " +
+                "kmda.description as dataset_description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
                 "kmds.stats_date as high_watermark, " +
                 "string_agg(distinct(kmdt.tag), ',') as tags\n" +
@@ -126,7 +131,7 @@ public class DatasetRepository extends BaseRepository {
                 "         left join kun_mt_dataset_stats kmds on kmd.gid = kmds.dataset_gid\n" +
                 "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
                 "         inner join (select dataset_gid, max(stats_date) as max_time from kun_mt_dataset_stats group by dataset_gid) watermark on (kmd.gid = watermark.dataset_gid and kmds.stats_date = watermark.max_time)\n" +
-                "group by kmd.gid, kmd.name, kmd.datasource_id, kmd.schema, kmd.data_store, kmd.database_name, type, datasource_name, description, high_watermark\n";
+                "group by kmd.gid, kmd.name, kmd.datasource_id, kmd.schema, kmd.data_store, kmd.database_name, type, datasource_name, dataset_description, high_watermark\n";
 
         sql += orderByClause;
         DatasetBasicPage pageResult = new DatasetBasicPage();
@@ -166,12 +171,13 @@ public class DatasetRepository extends BaseRepository {
         String sql = "select kmd.*, " +
                 "kmdsrct.name as type, " +
                 "kmdsrca.name as datasource_name, " +
-                "kmda.description as description, " +
+                "kmda.description as dataset_description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
                 "kmds.row_count as row_count, " +
                 "watermark.max_time as high_watermark, " +
                 "watermark.min_time as low_watermark, " +
-                "string_agg(distinct(kmdt.tag), ',') as tags\n" +
+                "string_agg(distinct(kmdt.tag), ',') as tags, " +
+                "string_agg(distinct(kdcad.case_id::text), ',') as dq_case_ids \n" +
                 "from kun_mt_dataset kmd\n" +
                 "         inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
                 "         inner join kun_mt_datasource_type kmdsrct on kmdsrct.id = kmdsrc.type_id\n" +
@@ -180,10 +186,11 @@ public class DatasetRepository extends BaseRepository {
                 "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
                 "         left join kun_mt_dataset_stats kmds on kmd.gid = kmds.dataset_gid\n" +
                 "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
-                "         inner join (select dataset_gid, max(stats_date) as max_time, min(stats_date) as min_time from kun_mt_dataset_stats where dataset_gid = ? group by dataset_gid) watermark on kmd.gid = watermark.dataset_gid\n";
+                "         inner join (select dataset_gid, max(stats_date) as max_time, min(stats_date) as min_time from kun_mt_dataset_stats where dataset_gid = ? group by dataset_gid) watermark on kmd.gid = watermark.dataset_gid\n" +
+                "         left join kun_dq_case_associated_dataset kdcad on kmd.gid = kdcad.dataset_id\n";
 
         String whereClause = "where kmd.gid = ?\n";
-        String groupByClause = "group by kmd.gid, type, datasource_name, description, row_count, high_watermark, low_watermark";
+        String groupByClause = "group by kmd.gid, type, datasource_name, dataset_description, row_count, high_watermark, low_watermark";
         return jdbcTemplate.query(sql + whereClause + groupByClause, rs -> {
             Dataset dataset = new Dataset();
             if (rs.next()) {
@@ -192,6 +199,8 @@ public class DatasetRepository extends BaseRepository {
                 watermark.setTime(timestampToMillis(rs, "low_watermark"));
                 dataset.setLowWatermark(watermark);
                 dataset.setRowCount(rs.getLong("row_count"));
+                List<Long> dqCaseIds = sqlToList(rs.getString("dq_case_ids")).stream().map(Long::valueOf).collect(Collectors.toList());
+                dataset.setDataQualities(dataQualityRepository.getCaseBasics(dqCaseIds));
                 return dataset;
             }
             return dataset;
@@ -232,7 +241,7 @@ public class DatasetRepository extends BaseRepository {
         datasetBasic.setGid(rs.getLong("gid"));
         datasetBasic.setType(rs.getString("type"));
         datasetBasic.setDatasource(rs.getString("datasource_name"));
-        datasetBasic.setDescription(rs.getString("description"));
+        datasetBasic.setDescription(rs.getString("dataset_description"));
         datasetBasic.setName(rs.getString("name"));
         datasetBasic.setDatabase(rs.getString("database_name"));
         datasetBasic.setOwners(sqlToList(rs.getString("owners")));

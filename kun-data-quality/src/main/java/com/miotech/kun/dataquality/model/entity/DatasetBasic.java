@@ -1,5 +1,6 @@
-package com.miotech.kun.datadiscovery.model.vo;
+package com.miotech.kun.dataquality.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
@@ -12,8 +13,12 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class IdVO {
-
+public class DatasetBasic {
+    @JsonProperty("id")
     @JsonSerialize(using= ToStringSerializer.class)
-    private Long id;
+    private Long gid;
+
+    private String name;
+
+    private String datasource;
 }

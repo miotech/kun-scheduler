@@ -1,6 +1,8 @@
 package com.miotech.kun.datadiscovery.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,6 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class DatasetField {
 
+    @JsonSerialize(using= ToStringSerializer.class)
     private Long id;
 
     private String name;
