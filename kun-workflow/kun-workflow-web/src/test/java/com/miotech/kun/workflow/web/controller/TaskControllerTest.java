@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.web.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
@@ -164,6 +165,8 @@ public class TaskControllerTest extends KunWebServerTestBase {
     private void mockUpdateBehavior() {
         Mockito.doAnswer(invocation -> {
             TaskPropsVO vo = invocation.getArgument(0);
+            Preconditions.checkArgument(vo.getName() != null, "Invalid task property \"name\"");
+
             Task task = Task.newBuilder()
                     .withId(WorkflowIdGenerator.nextTaskId())
                     .withName(vo.getName())
