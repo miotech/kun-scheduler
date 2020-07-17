@@ -121,14 +121,6 @@ public class TaskRunService {
                 .build();
     }
 
-    public Integer fetchTotalCount() {
-        return taskRunDao.fetchTotalCount();
-    }
-
-    public Integer fetchTotalCount(TaskRunSearchFilter filter) {
-        return taskRunDao.fetchTotalCountByFilter(filter);
-    }
-
     public TaskRunVO convertToVO(TaskRun taskRun) {
         List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRun.getId())
                 .stream()
@@ -139,6 +131,7 @@ public class TaskRunService {
                         .withTaskName(taskRun.getTask().getName())
                         .build())
                 .collect(Collectors.toList());
+
         return TaskRunVO.newBuilder()
                 .withTask(taskRun.getTask())
                 .withId(taskRun.getId())

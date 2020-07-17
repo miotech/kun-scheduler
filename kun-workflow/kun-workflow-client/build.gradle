@@ -1,0 +1,15 @@
+dependencies {
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation 'com.squareup.okhttp3:okhttp'
+
+    testImplementation project(':kun-commons:kun-commons-testing')
+    testImplementation project(':kun-commons:kun-commons-db')
+    testImplementation project(':kun-workflow:kun-workflow-scheduler')
+    testImplementation project(':kun-workflow:kun-workflow-common')
+    testImplementation project(':kun-workflow:kun-workflow-web')
+    testImplementation 'com.shazam:shazamcrest'
+}
