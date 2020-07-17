@@ -45,8 +45,7 @@ export enum AssetType {
 export interface Asset {
   id: string;
   name: string;
-  type: AssetType;
-  datasource?: string;
+  datasource: string;
 }
 
 export interface GlossaryDetail {
