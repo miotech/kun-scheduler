@@ -4,11 +4,16 @@
 
   .titleRow {
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     .columnName {
-      margin-right: 24px;
+      margin-right: 8px;
       font-size: 14px;
       font-weight: bold;
+      color: @primary;
+    }
+    .type {
+      margin-right: 24px;
+      font-size: 14px;
       color: @primary;
     }
     .watermark {
@@ -40,16 +45,13 @@
       flex: 0 0 150px;
     }
 
-    .type {
-      flex: 0 0 150px;
-    }
-
     .description {
       flex: 1;
       :global{
         .dataDiscoveryComponent-baseItemTitle {
           color: @third;
           margin-bottom: 0;
+          font-weight: normal;
         }
         .dataDiscoveryComponent-descriptionInput {
           margin-bottom: 0;

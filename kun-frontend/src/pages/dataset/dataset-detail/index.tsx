@@ -1,7 +1,16 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { RouteComponentProps } from 'react-router';
 import { Link } from 'umi';
-import { Spin, Button, message, Select, Pagination, Input } from 'antd';
+import { CloseOutlined } from '@ant-design/icons';
+import {
+  Spin,
+  Button,
+  message,
+  Select,
+  Pagination,
+  Input,
+  Popconfirm,
+} from 'antd';
 import Card from '@/components/Card/Card';
 
 import { watermarkFormatter } from '@/utils';
@@ -13,6 +22,7 @@ import BackButton from '@/components/BackButton/BackButton';
 
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnItem from './components/ColumnItem/ColumnItem';
+import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
 
 import styles from './index.less';
 
@@ -44,8 +54,20 @@ export default function DatasetDetail({ match }: Props) {
   const [updateLoading, setUpdateLoading] = useState(false);
 
   const [forceReFetchInfoFlag, setForceReFetchInfoFlag] = useState(1);
+  const [forceUpdateAllTagListFlag, setForceUpdateAllTagListFlag] = useState(1);
+  const [forceReFetchDetailFlag, setForceReFetchDetailFlag] = useState(1);
+
+  const [AddDataQualityModalVisible, setAddDataQualityModalVisible] = useState(
+    false,
+  );
+
+  // 编辑 dataquality 用
+  const [currentDataQualityId, setCurrentDataQualityId] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
+    // 如果更改了搜索关键词, 那么强制切换页码数为1
     dispatch.datasetDetail.updatePagination({ pageNumber: 1 });
   }, [dispatch.datasetDetail, debounceColumnKeyword, forceReFetchInfoFlag]);
 
@@ -75,8 +97,6 @@ export default function DatasetDetail({ match }: Props) {
     dispatch.dataDiscovery.fetchAllOwnerList();
   }, [dispatch.dataDiscovery]);
 
-  const [forceUpdateAllTagListFlag, setForceUpdateAllTagListFlag] = useState(1);
-
   useEffect(() => {
     dispatch.dataDiscovery.fetchAllTagList();
   }, [dispatch.dataDiscovery, forceUpdateAllTagListFlag]);
@@ -86,7 +106,7 @@ export default function DatasetDetail({ match }: Props) {
     dispatch.datasetDetail.fetchDatasetDetail(currentId).then(() => {
       setFetchDetailLoading(false);
     });
-  }, [currentId, dispatch.datasetDetail]);
+  }, [currentId, dispatch.datasetDetail, forceReFetchDetailFlag]);
 
   const handleClickPull = useCallback(() => {
     const diss = message.loading(t('dataDetail.button.pullLoading'), 0);
@@ -190,6 +210,52 @@ export default function DatasetDetail({ match }: Props) {
     [dispatch.datasetDetail],
   );
 
+  const handleClickAddDataQuality = useCallback(() => {
+    setCurrentDataQualityId(null);
+    setAddDataQualityModalVisible(true);
+  }, []);
+  const handleCloseAddDataQuality = useCallback(() => {
+    setCurrentDataQualityId(null);
+    setAddDataQualityModalVisible(false);
+  }, []);
+
+  const handleClickEditDataQuality = useCallback((dqId: string) => {
+    setCurrentDataQualityId(dqId);
+    setAddDataQualityModalVisible(true);
+  }, []);
+
+  const defaultRelatedTable = useMemo(
+    () => ({
+      id: selector.id || '',
+      name: selector.name || '',
+      datasource: selector.datasource || '',
+    }),
+    [selector.datasource, selector.id, selector.name],
+  );
+
+  const handleConfirmAddDataQuality = useCallback(() => {
+    setForceReFetchDetailFlag(i => i + 1);
+  }, []);
+
+  const handleConfirmDeleteDataQuality = useCallback(
+    qualityId => {
+      dispatch.datasetDetail
+        .deleteDataQuality({ id: qualityId, datasetId: currentId })
+        .then(resp => {
+          if (resp) {
+            const newDataQualities = selector.dataQualities?.filter(
+              i => i.id !== resp.id,
+            );
+            dispatch.datasetDetail.updateState({
+              key: 'dataQualities',
+              value: newDataQualities,
+            });
+          }
+        });
+    },
+    [currentId, dispatch.datasetDetail, selector.dataQualities],
+  );
+
   return (
     <div className={styles.page}>
       <BackButton defaultUrl="/data-discovery/dataset" />
@@ -234,7 +300,10 @@ export default function DatasetDetail({ match }: Props) {
                     </div>
                     <div className={styles.baseContent}>
                       {selector.flows?.map(flow => (
-                        <Link to={`/flow-and-operator/flow/${flow.flow_id}`}>
+                        <Link
+                          key={flow.flow_id}
+                          to={`/flow-and-operator/flow/${flow.flow_id}`}
+                        >
                           {flow.flow_name}
                         </Link>
                       ))}
@@ -261,6 +330,40 @@ export default function DatasetDetail({ match }: Props) {
                     value={selector.description || ''}
                     onChange={handleChangeDescription}
                   />
+                </div>
+
+                <div className={styles.baseItem}>
+                  <div className={styles.baseItemTitle}>
+                    {t('dataDetail.baseItem.title.dataQuality')}
+                    <span
+                      className={styles.addButton}
+                      onClick={handleClickAddDataQuality}
+                    >
+                      {t('common.button.add')}
+                    </span>
+                  </div>
+                  <div className={styles.baseContent}>
+                    {selector.dataQualities?.map(item => (
+                      <div key={item.id}>
+                        <span
+                          className={styles.dataQualityItem}
+                          onClick={() => handleClickEditDataQuality(item.id)}
+                        >
+                          {item.name}
+                        </span>
+                        <Popconfirm
+                          title={t('dataDetail.dataquality.delete.title')}
+                          onConfirm={() =>
+                            handleConfirmDeleteDataQuality(item.id)
+                          }
+                          okText={t('common.button.confirm')}
+                          cancelText={t('common.button.cancel')}
+                        >
+                          <CloseOutlined style={{ marginLeft: 4 }} />
+                        </Popconfirm>
+                      </div>
+                    ))}
+                  </div>
                 </div>
 
                 <div className={styles.baseItem}>
@@ -361,6 +464,15 @@ export default function DatasetDetail({ match }: Props) {
             </div>
           </div>
         </Card>
+        <AddDataQualityModal
+          visible={AddDataQualityModalVisible}
+          onClose={handleCloseAddDataQuality}
+          datasourceType={selector.type}
+          relatedTable={defaultRelatedTable}
+          onConfirm={handleConfirmAddDataQuality}
+          datasetId={currentId}
+          dataQualityId={currentDataQualityId}
+        />
       </Spin>
     </div>
   );
