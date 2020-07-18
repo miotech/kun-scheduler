@@ -8,14 +8,14 @@ public class QuerySite {
 
     private Long datasourceId;
 
-    private String databaseName;
+    private String urlPostfix;
 
     public Long getDatasourceId() {
         return datasourceId;
     }
 
-    public String getDatabaseName() {
-        return databaseName;
+    public String getUrlPostfix() {
+        return urlPostfix;
     }
 
     public static Builder newBuilder() {
@@ -24,7 +24,8 @@ public class QuerySite {
 
     public static final class Builder {
         private Long datasourceId;
-        private String databaseName;
+
+        private String urlPostfix;
 
         private Builder() {
         }
@@ -34,15 +35,15 @@ public class QuerySite {
             return this;
         }
 
-        public Builder databaseName(String databaseName) {
-            this.databaseName = databaseName;
+        public Builder urlPostfix(String urlPostfix) {
+            this.urlPostfix = urlPostfix;
             return this;
         }
 
         public QuerySite build() {
             QuerySite querySite = new QuerySite();
             querySite.datasourceId = this.datasourceId;
-            querySite.databaseName = this.databaseName;
+            querySite.urlPostfix = this.urlPostfix;
             return querySite;
         }
     }

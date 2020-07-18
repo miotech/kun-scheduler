@@ -18,7 +18,7 @@ public class MetadataService {
 
     public MetadataConnectionInfo getConnectionInfo(QuerySite querySite) {
         MetadataConnectionInfo connectionInfo = metadataRepository.getConnectionInfo(querySite.getDatasourceId());
-        connectionInfo.setDatabaseName(querySite.getDatabaseName());
+        connectionInfo.setUrlPostfix(querySite.getUrlPostfix());
         return connectionInfo;
     }
 }

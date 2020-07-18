@@ -10,7 +10,7 @@ public class MetadataConnectionInfo {
 
     private JSONObject connectionInfo;
 
-    private String databaseName;
+    private String urlPostfix;
 
     private String type;
 
@@ -22,12 +22,12 @@ public class MetadataConnectionInfo {
         this.connectionInfo = connectionInfo;
     }
 
-    public String getDatabaseName() {
-        return databaseName;
+    public String getUrlPostfix() {
+        return urlPostfix;
     }
 
-    public void setDatabaseName(String databaseName) {
-        this.databaseName = databaseName;
+    public void setUrlPostfix(String urlPostfix) {
+        this.urlPostfix = urlPostfix;
     }
 
     public String getType() {

@@ -10,7 +10,7 @@ import java.util.Map;
  */
 public class QueryResultSet {
 
-    public List<Map<String, ?>> resultSet = new ArrayList<>();
+    private List<Map<String, ?>> resultSet = new ArrayList<>();
 
     public void addRow(Map<String, ?> map) {
         resultSet.add(map);
