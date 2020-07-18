@@ -40,4 +40,10 @@ public class MetadataDataSource {
         config.setDriverClassName(props.getProperty("metadata.datasource.driver-class-name"));
         this.metadataDataSource = new HikariDataSource(config);
     }
+
+    public void cleanUp() {
+        if (metadataDataSource != null) {
+            ((HikariDataSource) metadataDataSource).close();
+        }
+    }
 }

@@ -69,6 +69,12 @@ public class DataSourceContainer {
     }
 
     private String getCacheId(QuerySite querySite) {
-        return querySite.getDatasourceId() + ":" + querySite.getDatabaseName();
+        return querySite.getDatasourceId() + ":" + querySite.getUrlPostfix();
+    }
+
+    public void cleanUp() {
+        for (DataSource dataSource : queryDataSourceCache.values()) {
+            ((HikariDataSource) dataSource).close();
+        }
     }
 }
