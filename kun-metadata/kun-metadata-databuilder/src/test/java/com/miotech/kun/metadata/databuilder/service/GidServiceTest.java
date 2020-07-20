@@ -7,7 +7,7 @@ import com.miotech.kun.metadata.databuilder.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.metadata.databuilder.service.gid.GidService;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
-import com.miotech.kun.workflow.db.DatabaseOperator;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import org.junit.Assert;
 import org.junit.Test;
 

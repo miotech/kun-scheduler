@@ -3,9 +3,9 @@ package com.miotech.kun.metadata.databuilder.schedule;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.databuilder.client.GlueClient;
-import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.impl.arango.ArangoCollectionExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.arango.ArangoExtractor;
@@ -14,26 +14,22 @@ import com.miotech.kun.metadata.databuilder.extract.impl.configurable.AWSTableEx
 import com.miotech.kun.metadata.databuilder.extract.impl.configurable.ConfigurableExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticSearchIndexExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticsearchExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.MioElasticSearchClient;
 import com.miotech.kun.metadata.databuilder.extract.impl.mongo.MongoCollectionExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.mongo.MongoExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.postgres.PostgresExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.postgres.PostgresTableExtractor;
 import com.miotech.kun.metadata.databuilder.extract.tool.ConnectUrlUtil;
-import com.miotech.kun.metadata.databuilder.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.metadata.databuilder.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.workflow.core.model.lineage.*;
-import com.miotech.kun.workflow.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
@@ -186,13 +182,10 @@ public class DataBuilder {
             } else if (dataSource instanceof PostgresDataSource) {
                 PostgresDataSource pgDataSource = (PostgresDataSource) dataSource;
                 PostgresDataStore pgDataStore = (PostgresDataStore) dataStore;
-                javax.sql.DataSource source = JDBCClient.getDataSource(UseDatabaseUtil.useSchema(pgDataSource.getUrl(), pgDataStore.getDatabase(),
-                        pgDataStore.getSchema()), pgDataSource.getUsername(), pgDataSource.getPassword(), DatabaseType.POSTGRES);
                 dataset = new PostgresTableExtractor(pgDataSource,
                         pgDataStore.getDatabase(),
                         pgDataStore.getSchema(),
-                        pgDataStore.getTableName(),
-                        new DatabaseOperator(source)
+                        pgDataStore.getTableName()
                 ).extract().next();
             } else if (dataSource instanceof MongoDataSource) {
                 dataset = new MongoCollectionExtractor(((MongoDataSource) dataSource),
@@ -202,8 +195,7 @@ public class DataBuilder {
             } else if (dataSource instanceof ElasticSearchDataSource) {
                 ElasticSearchDataSource elasticSearchDataSource = (ElasticSearchDataSource) dataSource;
                 dataset = new ElasticSearchIndexExtractor(elasticSearchDataSource,
-                        ((ElasticSearchIndexStore) dataStore).getIndex(),
-                        new MioElasticSearchClient(elasticSearchDataSource)
+                        ((ElasticSearchIndexStore) dataStore).getIndex()
                 ).extract().next();
             } else if (dataSource instanceof ArangoDataSource) {
                 dataset = new ArangoCollectionExtractor(((ArangoDataSource) dataSource),
@@ -224,7 +216,6 @@ public class DataBuilder {
 
     private void build(DataSource dataSource) {
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
-        MioElasticSearchClient mioElasticSearchClient = null;
         try {
             Iterator<Dataset> datasetIterator = null;
             if (dataSource instanceof AWSDataSource) {
@@ -237,8 +228,7 @@ public class DataBuilder {
                 datasetIterator = new MongoExtractor((MongoDataSource) dataSource).extract();
             } else if (dataSource instanceof ElasticSearchDataSource) {
                 ElasticSearchDataSource elasticSearchDataSource = (ElasticSearchDataSource) dataSource;
-                mioElasticSearchClient = new MioElasticSearchClient(elasticSearchDataSource);
-                datasetIterator = new ElasticsearchExtractor(elasticSearchDataSource, mioElasticSearchClient).extract();
+                datasetIterator = new ElasticsearchExtractor(elasticSearchDataSource).extract();
             } else if (dataSource instanceof ArangoDataSource) {
                 datasetIterator = new ArangoExtractor((ArangoDataSource) dataSource).extract();
             }
@@ -255,15 +245,6 @@ public class DataBuilder {
             }
         } catch (Exception e) {
             logger.error("start etl error: ", e);
-        } finally {
-            if (mioElasticSearchClient != null) {
-                try {
-                    mioElasticSearchClient.getHighLevelClient().close();
-                    mioElasticSearchClient.getLowLevelClient().close();
-                } catch (IOException e) {
-                    logger.error("ElasticSearchClient close error:", e);
-                }
-            }
         }
     }
 

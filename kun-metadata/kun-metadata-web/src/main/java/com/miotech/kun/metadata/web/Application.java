@@ -4,18 +4,19 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.db.DatabaseSetup;
+import com.miotech.kun.commons.utils.PropertyUtils;
 import com.miotech.kun.commons.web.KunWebServer;
 import com.miotech.kun.commons.web.module.CommonModule;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
 import com.miotech.kun.commons.web.utils.HttpClientUtil;
-import com.miotech.kun.metadata.web.constant.PropKey;
+import com.miotech.kun.metadata.web.constant.ConfigurationKeys;
+import com.miotech.kun.metadata.web.constant.OperatorParam;
+import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.constant.WorkflowApiParam;
 import com.miotech.kun.metadata.web.service.ProcessService;
 import com.miotech.kun.metadata.web.util.WorkflowApiResponseParseUtil;
 import com.miotech.kun.metadata.web.util.WorkflowUrlGenerator;
-import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
-import com.miotech.kun.workflow.db.DatabaseSetup;
-import com.miotech.kun.workflow.utils.PropertyUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -58,31 +59,36 @@ public class Application {
     }
 
     private void start() {
-        checkOperator();
-        checkTask();
+        checkOperator(WorkflowApiParam.OPERATOR_NAME_REFRESH, WorkflowApiParam.OPERATOR_NAME_BUILD_ALL);
+        checkTask(WorkflowApiParam.TASK_NAME_REFRESH, WorkflowApiParam.TASK_NAME_BUILD_ALL);
         configureDB();
     }
 
-    private void checkOperator() {
-        String result = httpClientUtil.doGet(workflowUrlGenerator.generateSearchOperatorUrl(WorkflowApiParam.OPERATOR_NAME));
-        logger.debug("Call Search Operator result: {}", result);
-        if (!WorkflowApiResponseParseUtil.judgeOperatorExists(result, WorkflowApiParam.OPERATOR_NAME)) {
-            processService.createOperator();
-            logger.info("Create Operator Success");
-        } else {
-            props.setProperty(PropKey.OPERATOR_ID, WorkflowApiResponseParseUtil.parseOperatorIdAfterSearch(result, WorkflowApiParam.OPERATOR_NAME).toString());
+    private void checkOperator(String... operatorNames) {
+        for (String operatorName : operatorNames) {
+            String result = httpClientUtil.doGet(workflowUrlGenerator.generateSearchOperatorUrl(operatorName));
+            logger.debug("Call Search Operator result: {}", result);
+            if (!WorkflowApiResponseParseUtil.judgeOperatorExists(result, operatorName)) {
+                processService.createOperator(operatorName, OperatorParam.get(operatorName).getPackagePath());
+                logger.info("Create Operator Success");
+            } else {
+                props.setProperty(OperatorParam.get(operatorName).getOperatorKey(),
+                        WorkflowApiResponseParseUtil.parseOperatorIdAfterSearch(result, operatorName).toString());
+            }
         }
     }
 
-    private void checkTask() {
-        String result = httpClientUtil.doGet(workflowUrlGenerator.generateSearchTaskUrl());
-        logger.debug("Call Search Task result: {}", result);
-        if (!WorkflowApiResponseParseUtil.judgeTaskExists(result, props.getProperty(PropKey.OPERATOR_ID), WorkflowApiParam.TASK_NAME)) {
-            processService.createTask();
-            logger.info("Create Task Success");
-        } else {
-            props.setProperty(PropKey.TASK_ID, WorkflowApiResponseParseUtil.parseTaskIdAfterSearch(result,
-                    Long.parseLong(props.getProperty(PropKey.OPERATOR_ID)), WorkflowApiParam.TASK_NAME).toString());
+    private void checkTask(String... taskNames) {
+        for (String taskName : taskNames) {
+            String result = httpClientUtil.doGet(workflowUrlGenerator.generateSearchTaskUrl(taskName));
+            logger.debug("Call Search Task result: {}", result);
+            if (!WorkflowApiResponseParseUtil.judgeTaskExists(result, props.getProperty(TaskParam.get(taskName).getOperatorKey()), taskName)) {
+                processService.createTask(taskName, Long.parseLong(props.getProperty(TaskParam.get(taskName).getOperatorKey())));
+                logger.info("Create Task Success");
+            } else {
+                props.setProperty(TaskParam.get(taskName).getTaskKey(), WorkflowApiResponseParseUtil.parseTaskIdAfterSearch(result,
+                        Long.parseLong(props.getProperty(TaskParam.get(taskName).getOperatorKey())), taskName).toString());
+            }
         }
     }
 

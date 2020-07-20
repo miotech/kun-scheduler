@@ -2,80 +2,65 @@ package com.miotech.kun.workflow.common.taskrun.filter;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Objects;
 
 @JsonDeserialize(builder = TaskRunSearchFilter.Builder.class)
 public class TaskRunSearchFilter {
-    private List<Long> taskIds;
+    private final List<Long> taskIds;
 
-    private TaskRunStatus status;
+    private final TaskRunStatus status;
 
-    private OffsetDateTime dateFrom;
+    private final OffsetDateTime dateFrom;
 
-    private OffsetDateTime dateTo;
+    private final OffsetDateTime dateTo;
 
-    private Integer pageNum;
+    private final Integer pageNum;
 
-    private Integer pageSize;
+    private final Integer pageSize;
 
-    public TaskRunSearchFilter(List<Long> taskIds, TaskRunStatus status, OffsetDateTime dateFrom, OffsetDateTime dateTo, Integer pageNum, Integer pageSize) {
-        this.taskIds = taskIds;
-        this.status = status;
-        this.dateFrom = dateFrom;
-        this.dateTo = dateTo;
-        this.pageNum = pageNum;
-        this.pageSize = pageSize;
+    private final List<Tag> tags;
+
+    public TaskRunSearchFilter(TaskRunSearchFilter.Builder builder) {
+        this.taskIds = builder.taskIds;
+        this.status = builder.status;
+        this.dateFrom = builder.dateFrom;
+        this.dateTo = builder.dateTo;
+        this.pageNum = builder.pageNum;
+        this.pageSize = builder.pageSize;
+        this.tags = builder.tags;
     }
 
     public List<Long> getTaskIds() {
         return taskIds;
     }
 
-    public void setTaskIds(List<Long> taskIds) {
-        this.taskIds = taskIds;
-    }
-
     public TaskRunStatus getStatus() {
         return status;
-    }
-
-    public void setStatus(TaskRunStatus status) {
-        this.status = status;
     }
 
     public OffsetDateTime getDateFrom() {
         return dateFrom;
     }
 
-    public void setDateFrom(OffsetDateTime dateFrom) {
-        this.dateFrom = dateFrom;
-    }
-
     public OffsetDateTime getDateTo() {
         return dateTo;
-    }
-
-    public void setDateTo(OffsetDateTime dateTo) {
-        this.dateTo = dateTo;
     }
 
     public Integer getPageNum() {
         return pageNum;
     }
 
-    public void setPageNum(Integer pageNum) {
-        this.pageNum = pageNum;
-    }
-
     public Integer getPageSize() {
         return pageSize;
     }
 
-    public void setPageSize(Integer pageSize) {
-        this.pageSize = pageSize;
+    public List<Tag> getTags() {
+        return tags;
     }
 
     public static Builder newBuilder() {
@@ -89,7 +74,27 @@ public class TaskRunSearchFilter {
                 .withDateTo(dateTo)
                 .withStatus(status)
                 .withPageNum(pageNum)
-                .withPageSize(pageSize);
+                .withPageSize(pageSize)
+                .withTags(tags);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TaskRunSearchFilter that = (TaskRunSearchFilter) o;
+        return Objects.equals(taskIds, that.taskIds) &&
+                status == that.status &&
+                Objects.equals(dateFrom, that.dateFrom) &&
+                Objects.equals(dateTo, that.dateTo) &&
+                Objects.equals(pageNum, that.pageNum) &&
+                Objects.equals(pageSize, that.pageSize) &&
+                Objects.equals(tags, that.tags);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(taskIds, status, dateFrom, dateTo, pageNum, pageSize);
     }
 
     @JsonPOJOBuilder
@@ -100,6 +105,7 @@ public class TaskRunSearchFilter {
         private OffsetDateTime dateTo;
         private Integer pageNum;
         private Integer pageSize;
+        private List<Tag> tags;
 
         private Builder() {
         }
@@ -134,8 +140,13 @@ public class TaskRunSearchFilter {
             return this;
         }
 
+        public Builder withTags(List<Tag> tags) {
+            this.tags = tags;
+            return this;
+        }
+
         public TaskRunSearchFilter build() {
-            return new TaskRunSearchFilter(taskIds, status, dateFrom, dateTo, pageNum, pageSize);
+            return new TaskRunSearchFilter(this);
         }
     }
 }

@@ -1,15 +1,14 @@
 package com.miotech.kun.metadata.web;
 
 import com.google.inject.Inject;
+import com.miotech.kun.commons.db.DatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.PropertyUtils;
 import com.miotech.kun.commons.web.KunWebServer;
+import com.miotech.kun.commons.web.constant.ConfigurationKeys;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
-import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
-import com.miotech.kun.workflow.db.DatabaseModule;
-import com.miotech.kun.workflow.utils.PropertyUtils;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;

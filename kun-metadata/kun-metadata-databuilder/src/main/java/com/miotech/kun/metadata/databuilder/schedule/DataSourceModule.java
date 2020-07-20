@@ -8,33 +8,27 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import javax.sql.DataSource;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 public class DataSourceModule extends AbstractModule {
 
-    private String username;
-    private String password;
-    private String url;
-    private Properties props;
+    private final Properties props;
 
     public DataSourceModule(Properties props) {
         this.props = props;
-        init();
-    }
-
-    private void init() {
-        url = props.getProperty("datasource.jdbcUrl");
-        username = props.getProperty("datasource.username");
-        password = props.getProperty("datasource.password");
     }
 
     @Provides
     @Singleton
     public DataSource createDataSource() {
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(url);
-        config.setUsername(username);
-        config.setPassword(password);
+        config.setJdbcUrl(props.getProperty("datasource.jdbcUrl"));
+        config.setUsername(props.getProperty("datasource.username"));
+        config.setPassword(props.getProperty("datasource.password"));
         config.setDriverClassName(props.getProperty("datasource.driverClassName"));
+        config.setMaximumPoolSize(2);
+        config.setMinimumIdle(0);
+        config.setIdleTimeout(TimeUnit.SECONDS.toMillis(10));
         return new HikariDataSource(config);
     }
 

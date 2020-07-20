@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.common.task.dependency;
 
 import com.google.inject.Injector;
 import com.miotech.kun.workflow.core.model.task.DependencyFunction;
-import com.miotech.kun.workflow.db.sql.SQLBuilder;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

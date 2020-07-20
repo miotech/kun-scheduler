@@ -4,7 +4,7 @@ import com.arangodb.ArangoDB;
 import com.arangodb.entity.BaseDocument;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.db.DatabaseOperator;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import io.testcontainers.arangodb.containers.ArangoContainer;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.index.IndexRequest;

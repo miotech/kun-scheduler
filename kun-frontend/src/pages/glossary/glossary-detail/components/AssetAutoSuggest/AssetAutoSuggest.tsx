@@ -7,6 +7,8 @@ import { MinusOutlined } from '@ant-design/icons';
 import { getAssetNameWithDatasource } from '@/utils/assetUtils';
 import styles from './AssetAutoSuggest.less';
 
+const { Option } = AutoComplete;
+
 interface Props {
   index: number;
   asset: Asset | null;
@@ -61,7 +63,7 @@ export default memo(function AssetAutoSuggest({
   const handleSelect = useCallback(
     (v, option) => {
       setKeyword(v);
-      onChange(option.asset, index);
+      onChange(option.option.asset, index);
     },
     [index, onChange],
   );
@@ -83,8 +85,14 @@ export default memo(function AssetAutoSuggest({
         onSelect={handleSelect}
         onChange={handleChange}
         value={keyword}
-        options={options}
-      />
+        // options={options}
+      >
+        {options.map(option => (
+          <Option key={option.value} value={option.value} option={option}>
+            <div className={styles.autoOption}>{option.value}</div>
+          </Option>
+        ))}
+      </AutoComplete>
 
       <div className={styles.deleteButton} onClick={handleClickDelete}>
         <MinusOutlined style={{ fontSize: 12 }} />

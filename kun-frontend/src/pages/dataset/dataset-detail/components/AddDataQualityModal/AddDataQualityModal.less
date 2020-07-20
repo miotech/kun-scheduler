@@ -1,0 +1,116 @@
+.titleRow {
+  padding: 25px 40px;
+  background-color: @white;
+  font-weight: bold;
+  border-bottom: 1px solid @borderColor;
+  .font(20px, 28px, @primary);
+}
+
+.buttonRow {
+  padding: 25px 40px;
+  background-color: @white;
+  border-top: 1px solid @borderColor;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.fieldArea {
+  padding: 20px 40px;
+  background-color: @modalBackgroundColor;
+}
+
+.fieldItem {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.fieldTitle {
+  flex: 0 0 110px;
+  margin-right: 8px;
+  .font(16px, 32px, @secondary);
+}
+
+.required {
+  margin-left: 4px;
+  .font(16px, 22px, @brand);
+}
+
+.fieldContent {
+  flex: 1;
+  min-height: 32px;
+}
+
+.dimensionFieldContent {
+  flex: 1;
+  min-height: 32px;
+  padding-left: 30px;
+}
+
+.centerItem {
+  line-height: 32px;
+}
+
+.separator {
+  border-bottom: 1px solid @lightBorderColor;
+  margin-bottom: 16px;
+}
+
+.codeEditorContainer {
+  width: 457px;
+  border-radius: 3px;
+}
+
+.codeEditor {
+  height: 140px;
+  :global {
+    .CodeMirror {
+      height: 100% !important;
+    }
+  }
+}
+
+.sqlValidateButtonRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.validateSQLSuccess {
+  margin-right: 16px;
+  .font(14px, 32px, @green);
+}
+
+.validateSQLFaild {
+  margin-right: 16px;
+  .font(14px, 32px, @warning);
+}
+
+.validateFieldContentContainer {
+  flex: 1;
+  min-height: 32px;
+  padding-left: 30px;
+}
+
+.validateFieldContent {
+  display: flex;
+  position: relative;
+}
+
+.validateRuleContainer {
+  width: calc(100% - 40px);
+  flex-shrink: 0;
+}
+
+.validateRuleIndex {
+  position: absolute;
+  left: -24px;
+  top: 8px;
+  .font(14px, 14px, @secondary);
+}
+
+.validateRuleError {
+  margin-left: 24px;
+  .font(14px, 32px, @warning);
+}
