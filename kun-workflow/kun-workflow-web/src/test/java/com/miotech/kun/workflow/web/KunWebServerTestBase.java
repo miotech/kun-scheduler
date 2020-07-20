@@ -83,7 +83,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
         return request(new HttpDelete(buildUrl(url)));
     }
 
-    private String buildUrl(String url) {
+    protected String buildUrl(String url) {
         String port = props.getProperty(ConfigurationKeys.PROP_SERVER_PORT, "8088");
         if (!url.startsWith("/")) {
             url = "/" + url;

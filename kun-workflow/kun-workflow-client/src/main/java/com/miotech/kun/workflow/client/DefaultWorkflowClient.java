@@ -10,6 +10,7 @@ import com.miotech.kun.workflow.core.model.common.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +40,16 @@ public class DefaultWorkflowClient implements WorkflowClient {
             newOperator = wfApi.createOperator(operator);
         }
         return newOperator;
+    }
+
+    @Override
+    public void updateOperatorJar(String name, File jarFile) {
+        Optional<Operator> optionalOperator = getOperator(name);
+        if (optionalOperator.isPresent()) {
+            wfApi.uploadJar(optionalOperator.get().getId(), jarFile);
+        } else {
+            throw new IllegalArgumentException("Operator not found with name " + name);
+        }
     }
 
     @Override
@@ -96,17 +107,15 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
-    public TaskRun executeTask(Task task, Map<String, String> taskConfig) {
+    public TaskRun executeTask(Task task, Map<String, Object> taskConfig) {
         Task saved = wfApi.createTask(task);
         return executeTask(saved.getId(), taskConfig);
     }
 
     @Override
-    public TaskRun executeTask(Long taskId, Map<String, String> taskConfig) {
+    public TaskRun executeTask(Long taskId, Map<String, Object> taskConfig) {
         RunTaskRequest request = new RunTaskRequest();
-        if (taskConfig == null) {
-            request.addTaskVariable(taskId, Maps.newHashMap());
-        }
+        request.addTaskVariable(taskId, taskConfig != null ? taskConfig : Maps.newHashMap());
         List<Long> taskRunIds = wfApi.runTasks(request);
         if (taskRunIds.isEmpty()) {
             throw new WorkflowClientException("No task run found after execution for task: " + taskId);
@@ -149,5 +158,15 @@ public class DefaultWorkflowClient implements WorkflowClient {
                 .withAttempt(-1)
                 .build();
         return wfApi.getTaskRunLog(request);
+    }
+
+    @Override
+    public TaskRunLog getTaskRunLog(TaskRunLogRequest logRequest) {
+        return wfApi.getTaskRunLog(logRequest);
+    }
+
+    @Override
+    public TaskRun stopTaskRun(Long taskRunId) {
+        return wfApi.stopTaskRun(taskRunId);
     }
 }

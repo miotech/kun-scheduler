@@ -83,6 +83,8 @@ subprojects {
                 implementation "org.ow2.asm:asm:8.0.1"
                 implementation "org.ow2.asm:asm-commons:8.0.1"
                 implementation'com.alibaba:druid:1.1.22'
+                implementation 'commons-fileupload:commons-fileupload:1.4'
+
                 testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
                 testImplementation "org.hamcrest:hamcrest:2.2"

@@ -5,13 +5,13 @@ import java.util.Map;
 public class RunTaskInfo {
         private long taskId;
 
-        private Map<String, String> variables;
+        private Map<String, Object> config;
 
         public RunTaskInfo() {}
 
-        public RunTaskInfo(long taskId, Map<String, String> variables) {
+        public RunTaskInfo(long taskId, Map<String, Object> config) {
             this.taskId = taskId;
-            this.variables = variables;
+            this.config = config;
         }
 
     public long getTaskId() {
@@ -22,11 +22,11 @@ public class RunTaskInfo {
         this.taskId = taskId;
     }
 
-    public Map<String, String> getVariables() {
-        return variables;
+    public Map<String, Object> getConfig() {
+        return config;
     }
 
-    public void setVariables(Map<String, String> variables) {
-        this.variables = variables;
+    public void setConfig(Map<String, Object> config) {
+        this.config = config;
     }
 }

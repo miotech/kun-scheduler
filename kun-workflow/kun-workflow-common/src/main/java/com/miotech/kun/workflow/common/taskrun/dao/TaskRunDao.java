@@ -348,6 +348,7 @@ public class TaskRunDao {
 
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where(whereClause)
+                .orderBy("start_at desc")
                 .limit(pageSize)
                 .offset((pageNum - 1) * pageSize)
                 .getSQL();

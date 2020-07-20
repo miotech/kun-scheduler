@@ -26,6 +26,9 @@ public class WorkflowApiTest extends MockServerTestBase {
         mockPost("/operators", JSONUtils.toJsonString(operator), JSONUtils.toJsonString(operator));
         Operator result = wfApi.createOperator(operator);
         assertTrue(result.getId() > 0);
+        assertThat(result.getName(), is(operator.getName()));
+        assertThat(result.getClassName(), is(operator.getClassName()));
+        assertThat(result.getDescription(), is(operator.getDescription()));
     }
 
     @Test
@@ -42,6 +45,9 @@ public class WorkflowApiTest extends MockServerTestBase {
         assertThat(result.getRecords().size(), is(1));
         Operator op = result.getRecords().get(0);
         assertTrue(op.getId() > 0);
+        assertThat(op.getName(), is(operator.getName()));
+        assertThat(op.getClassName(), is(operator.getClassName()));
+        assertThat(op.getDescription(), is(operator.getDescription()));
     }
 
     @Test
@@ -70,6 +76,11 @@ public class WorkflowApiTest extends MockServerTestBase {
         mockPost("/tasks", JSONUtils.toJsonString(task),  JSONUtils.toJsonString(task));
         Task result = wfApi.createTask(task);
         assertTrue(result.getId() > 0);
+        assertThat(result.getName(), is(task.getName()));
+        assertThat(result.getDependencies(), is(task.getDependencies()));
+        assertThat(result.getDescription(), is(task.getDescription()));
+        assertThat(result.getScheduleConf(), is(task.getScheduleConf()));
+        assertThat(result.getTags(), is(task.getTags()));
     }
 
     @Test
@@ -78,6 +89,11 @@ public class WorkflowApiTest extends MockServerTestBase {
         mockGet("/tasks/1" , JSONUtils.toJsonString(task));
         Task result = wfApi.getTask(1L);
         assertTrue(result.getId() > 0);
+        assertThat(result.getName(), is(task.getName()));
+        assertThat(result.getDependencies(), is(task.getDependencies()));
+        assertThat(result.getDescription(), is(task.getDescription()));
+        assertThat(result.getScheduleConf(), is(task.getScheduleConf()));
+        assertThat(result.getTags(), is(task.getTags()));
     }
 
     @Test
@@ -86,6 +102,11 @@ public class WorkflowApiTest extends MockServerTestBase {
         mockPut("/tasks/1", JSONUtils.toJsonString(task),  JSONUtils.toJsonString(task));
         Task result = wfApi.updateTask(task.getId(), task);
         assertTrue(result.getId() > 0);
+        assertThat(result.getName(), is(task.getName()));
+        assertThat(result.getDependencies(), is(task.getDependencies()));
+        assertThat(result.getDescription(), is(task.getDescription()));
+        assertThat(result.getScheduleConf(), is(task.getScheduleConf()));
+        assertThat(result.getTags(), is(task.getTags()));
     }
 
     @Test
@@ -129,6 +150,13 @@ public class WorkflowApiTest extends MockServerTestBase {
         mockGet("/taskruns/1" , JSONUtils.toJsonString(taskRun));
         TaskRun result = wfApi.getTaskRun(1L);
         assertTrue(result.getId() > 0);
+        assertThat(result.getInlets(), sameBeanAs(taskRun.getInlets()));
+        assertThat(result.getOutlets(), sameBeanAs(taskRun.getOutlets()));
+        assertThat(result.getTask(), sameBeanAs(taskRun.getTask()));
+        assertThat(result.getDependencyTaskRunIds(), is(taskRun.getDependencyTaskRunIds()));
+        assertThat(result.getAttempts(), is(taskRun.getAttempts()));
+        assertThat(result.getEndAt(), is(taskRun.getEndAt()));
+        assertThat(result.getStartAt(), is(taskRun.getStartAt()));
     }
 
     @Test

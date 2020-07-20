@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.web.controller;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.service.TaskService;
 import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
@@ -52,9 +51,7 @@ public class TaskController {
 
     @RouteMapping(url = "/tasks/{taskId}", method = "GET")
     public Task getTaskById(@RouteVariable Long taskId) {
-        return taskService.fetchTaskById(taskId).orElseThrow(() ->
-                new EntityNotFoundException(String.format("Cannot find task with id: %s", taskId))
-        );
+        return taskService.find(taskId);
     }
 
     @RouteMapping(url= "/tasks", method = "POST")

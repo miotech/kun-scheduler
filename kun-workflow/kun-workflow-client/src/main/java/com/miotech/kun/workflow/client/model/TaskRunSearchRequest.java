@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.client.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.util.List;
 
@@ -20,6 +21,8 @@ public class TaskRunSearchRequest {
 
     private final List<Tag> tags;
 
+    private final TaskRunStatus status;
+
     private TaskRunSearchRequest(Builder builder) {
         this.name = builder.name;
         this.pageSize = builder.pageSize;
@@ -27,6 +30,7 @@ public class TaskRunSearchRequest {
         this.taskRunIds = builder.taskRunIds;
         this.taskIds = builder.taskIds;
         this.tags = builder.tags;
+        this.status = builder.status;
     }
 
     public String getName() {
@@ -53,6 +57,10 @@ public class TaskRunSearchRequest {
         return tags;
     }
 
+    public TaskRunStatus getStatus() {
+        return status;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -64,6 +72,7 @@ public class TaskRunSearchRequest {
         private List<Long> taskRunIds;
         private List<Long> taskIds;
         private List<Tag> tags;
+        private TaskRunStatus status;
 
         private Builder() {
         }
@@ -99,6 +108,11 @@ public class TaskRunSearchRequest {
 
         public Builder withTags(List<Tag> tags) {
             this.tags = tags;
+            return this;
+        }
+
+        public Builder withStatus(TaskRunStatus status) {
+            this.status = status;
             return this;
         }
     }

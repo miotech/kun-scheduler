@@ -34,7 +34,6 @@ public class OperatorServiceTest extends DatabaseTestBase {
         return OperatorPropsVO.newBuilder()
                 .withName(operator.getName())
                 .withDescription(operator.getDescription())
-                .withPackagePath(operator.getPackagePath())
                 .withClassName(operator.getClassName())
                 .build();
     }
@@ -44,7 +43,6 @@ public class OperatorServiceTest extends DatabaseTestBase {
                 .withName("BashOperator")
                 .withDescription("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
                 .withClassName("com.miotech.kun.example.BashOperator")
-                .withPackagePath("s3://storage.miotech.com")
                 .build();
     }
 
@@ -88,7 +86,6 @@ public class OperatorServiceTest extends DatabaseTestBase {
                 // and different properties
                 .withDescription("Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.")
                 .withClassName("com.miotech.kun.example.BashOperator2")
-                .withPackagePath("s3://storage2.miotech.com")
                 .build();
 
         // Process & Validate
@@ -113,16 +110,11 @@ public class OperatorServiceTest extends DatabaseTestBase {
         OperatorPropsVO voWithEmptyClassName = generateExampleOperatorPropsVO().cloneBuilder()
                 .withClassName("")
                 .build();
-        // case 4: Empty package name
-        OperatorPropsVO voWithEmptyPackagePath = generateExampleOperatorPropsVO().cloneBuilder()
-                .withPackagePath("")
-                .build();
 
         // Process & Validate
         assertFailToCreateOperatorWithException(voWithEmptyName, IllegalArgumentException.class);
         assertFailToCreateOperatorWithException(voWithNullDescription, IllegalArgumentException.class);
         assertFailToCreateOperatorWithException(voWithEmptyClassName, IllegalArgumentException.class);
-        assertFailToCreateOperatorWithException(voWithEmptyPackagePath, IllegalArgumentException.class);
     }
 
     @Test
@@ -137,8 +129,8 @@ public class OperatorServiceTest extends DatabaseTestBase {
         Operator operator = Operator.newBuilder()
                 .withName(operatorPropsVO.getName())
                 .withDescription(operatorPropsVO.getDescription())
-                .withPackagePath(operatorPropsVO.getPackagePath())
                 .withClassName(operatorPropsVO.getClassName())
+                .withPackagePath("")
                 .build();
 
         // Process
