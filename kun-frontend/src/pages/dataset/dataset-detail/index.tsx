@@ -13,7 +13,7 @@ import {
 } from 'antd';
 import Card from '@/components/Card/Card';
 
-import { watermarkFormatter } from '@/utils';
+import { watermarkFormatter } from '@/utils/glossaryUtiles';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';

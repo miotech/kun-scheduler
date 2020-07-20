@@ -4,3 +4,4 @@
 .history
 /public
 /i18n-updater
+/src/components/ReactPDF

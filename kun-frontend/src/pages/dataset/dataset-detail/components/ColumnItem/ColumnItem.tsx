@@ -2,7 +2,7 @@ import React, { memo, useCallback } from 'react';
 import numeral from 'numeral';
 import { message } from 'antd';
 import lowerCase from 'lodash/lowerCase';
-import { watermarkFormatter } from '@/utils';
+import { watermarkFormatter } from '@/utils/glossaryUtiles';
 import useRedux from '@/hooks/useRedux';
 import useI18n from '@/hooks/useI18n';
 

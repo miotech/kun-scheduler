@@ -1,70 +1,49 @@
-import moment from 'moment';
-import { GlossaryNode } from '@/rematch/models/glossary';
+import uniqueId from 'lodash/uniqueId';
 
-export const watermarkFormatter = (time?: string | number) => {
-  if (time && !Number.isNaN(Number(time))) {
-    return moment(Number(time)).format('YYYY-MM-DD HH:mm:ss');
-  }
-  return '';
+export const getUUID = (namespace: string = 'namespace') => {
+  return uniqueId(namespace);
 };
 
-export const deepFirstSearch = (
-  node: GlossaryNode | null,
-  targetId: string,
+export const ellipsisString = (
+  text: string,
+  length: number = 50,
+  startWordCount: number = 15,
+  endWordCount: number = 15,
 ) => {
-  if (node != null) {
-    const stack: GlossaryNode[] = [];
-    stack.push(node);
-    while (stack.length !== 0) {
-      const item = stack.pop();
-      if (item?.id === targetId) {
-        return item;
-      }
-      const children = item?.children ?? [];
-      for (let i = children.length - 1; i >= 0; i -= 1) {
-        stack.push(children[i]);
-      }
-    }
+  if (text.length <= length) {
+    return text;
   }
-  return null;
+  const startString = text.substring(0, startWordCount);
+  const endString = text.substring(text.length - endWordCount);
+  return `${startString}...${endString}`;
 };
 
-export const deleteNodeFromParent = (
-  id: string,
-  parentId: string,
-  dataGrope: GlossaryNode | null,
+export const getReadableFileSizeString = (fileSizeInBytes: number) => {
+  let tempSize = fileSizeInBytes;
+  let i = -1;
+  const byteUnits = [' kB', ' MB', ' GB', ' TB', 'PB', 'EB', 'ZB', 'YB'];
+  do {
+    tempSize /= 1024;
+    i += 1;
+  } while (tempSize > 1024);
+
+  return Math.max(tempSize, 0.1).toFixed(1) + byteUnits[i];
+};
+
+// 是否有其中之一的权限
+export const hasOptionalPermissions = (
+  currentPer: string[],
+  needPer?: string[],
 ) => {
-  const parentNodeData = deepFirstSearch(dataGrope, parentId);
-  if (parentNodeData) {
-    if (parentNodeData.childrenCount) {
-      parentNodeData.childrenCount -= 1;
-    }
-    if (parentNodeData.children) {
-      parentNodeData.children = parentNodeData.children.filter(
-        child => child.id !== id,
-      );
-      if (parentNodeData.children.length === 0) {
-        parentNodeData.children = null;
-      }
-    }
+  if (!needPer) {
+    return true;
   }
+  let has = false;
+  currentPer.forEach(i => {
+    if (needPer.includes(i)) {
+      has = true;
+    }
+  });
+  return has;
 };
 
-export const addNodeToParent = (
-  currentNode: GlossaryNode | null,
-  parentId: string,
-  dataGrope: GlossaryNode | null,
-) => {
-  const newParentNode = deepFirstSearch(dataGrope, parentId);
-  if (newParentNode) {
-    if (newParentNode.childrenCount) {
-      newParentNode.childrenCount += 1;
-    } else {
-      newParentNode.childrenCount = 1;
-    }
-
-    if (newParentNode.children && currentNode) {
-      newParentNode.children = [currentNode, ...newParentNode.children];
-    }
-  }
-};

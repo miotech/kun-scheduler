@@ -13,7 +13,7 @@ import useI18n from '@/hooks/useI18n';
 import useDebounce from '@/hooks/useDebounce';
 
 import Card from '@/components/Card/Card';
-import { watermarkFormatter } from '@/utils';
+import { watermarkFormatter } from '@/utils/glossaryUtiles';
 import TimeSelect from './components/TimeSelect/TimeSelect';
 
 import styles from './index.less';

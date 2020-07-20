@@ -14,7 +14,7 @@ import {
   deepFirstSearch,
   deleteNodeFromParent,
   addNodeToParent,
-} from '@/utils';
+} from '@/utils/glossaryUtiles';
 import { RootDispatch, RootState } from '../store';
 
 export interface GlossaryChild {
