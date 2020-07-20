@@ -1,0 +1,11 @@
+dependencies {
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-commons:kun-commons-db")
+    implementation "commons-dbutils:commons-dbutils"
+    implementation "com.zaxxer:HikariCP"
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+    implementation 'com.syncron.amazonaws:simba-athena-jdbc-driver:2.0.2'
+    implementation 'org.postgresql:postgresql:42.2.14'
+
+    testImplementation "junit:junit:4.12"
+}

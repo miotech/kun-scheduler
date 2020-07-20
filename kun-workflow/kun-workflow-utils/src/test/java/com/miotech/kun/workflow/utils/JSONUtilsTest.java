@@ -1,12 +1,15 @@
 package com.miotech.kun.workflow.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 
 public class JSONUtilsTest {
@@ -81,6 +84,20 @@ public class JSONUtilsTest {
         }
     }
 
+    static class ItemWithLongId {
+        @JsonSerialize(using = ToStringSerializer.class)
+        @JsonDeserialize(using = JsonLongFieldDeserializer.class)
+        private Long id;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+    }
+
 
     @Test
     public void testPojoToJsonString() throws JsonProcessingException {
@@ -105,4 +122,26 @@ public class JSONUtilsTest {
         assertEquals("{\"a\":\"A\",\"b\":\"B\"}", json);
     }
 
+    @Test
+    public void testJsonStringToPojoWithLongField() {
+        ItemWithLongId pojoItem = new ItemWithLongId();
+        pojoItem.setId(9223372036854775801L);
+        assertEquals("{\"id\":\"9223372036854775801\"}", JSONUtils.toJsonString(pojoItem));
+
+        String json = "{\"id\": \"9223372036854775807\"}";
+        ItemWithLongId deserializedItem = JSONUtils.jsonToObject(json, ItemWithLongId.class);
+        assertEquals(Long.valueOf(9223372036854775807L), deserializedItem.getId());
+
+        String json2 = "{\"id\": 123}";
+        ItemWithLongId deserializedItem2 = JSONUtils.jsonToObject(json2, ItemWithLongId.class);
+        assertEquals(Long.valueOf(123L), deserializedItem2.getId());
+
+        String json3 = "{\"id\": \"1234.1234\"}";
+        try {
+            JSONUtils.jsonToObject(json3, ItemWithLongId.class);
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(RuntimeException.class));
+        }
+    }
 }

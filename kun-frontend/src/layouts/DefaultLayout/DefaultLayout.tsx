@@ -1,8 +1,8 @@
 import React, { memo } from 'react';
 import { Layout, Spin } from 'antd';
 import { IRoute } from 'umi';
-import { useDispatch, useSelector } from 'react-redux';
-import { RootDispatch, RootState } from '@/rematch/store';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/rematch/store';
 
 import useI18n from '@/hooks/useI18n';
 
@@ -28,12 +28,14 @@ export default memo(function DefaultLayout({ children, route }: Props) {
     <Spin spinning={isLoading} tip={t('common.loading')}>
       <Layout>
         <Header />
-        <div className={css.subHeader}>
-          <Breadcrumb route={route} />
-        </div>
         <Layout className={css.siderAndContent}>
           <Sider route={route} />
-          <Content className={css.content}>{children}</Content>
+          <Content className={css.content}>
+            <div className={css.subHeader}>
+              <Breadcrumb route={route} />
+            </div>
+            <div>{children}</div>
+          </Content>
         </Layout>
       </Layout>
     </Spin>

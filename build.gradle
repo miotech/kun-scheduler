@@ -78,6 +78,8 @@ subprojects {
                 implementation "com.cronutils:cron-utils:9.0.2"
                 implementation 'org.apache.httpcomponents:httpclient:4.5.12'
                 implementation "org.postgresql:postgresql:42.2.14"
+                implementation 'com.squareup.okhttp3:okhttp:3.14.9'
+                implementation 'com.googlecode.json-simple:json-simple:1.1.1'
 
                 testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'

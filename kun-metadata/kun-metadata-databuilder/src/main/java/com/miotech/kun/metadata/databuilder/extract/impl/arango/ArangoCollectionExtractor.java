@@ -20,17 +20,17 @@ import java.util.List;
 public class ArangoCollectionExtractor extends ExtractorTemplate {
     private static final Logger logger = LoggerFactory.getLogger(ArangoCollectionExtractor.class);
 
-    private ArangoDataSource cluster;
+    private ArangoDataSource dataSource;
     private String dbName;
     private String collection;
     private MioArangoClient client;
 
-    public ArangoCollectionExtractor(ArangoDataSource cluster, String dbNAme, String collection) {
-        super(cluster.getId());
-        this.cluster = cluster;
+    public ArangoCollectionExtractor(ArangoDataSource dataSource, String dbNAme, String collection) {
+        super(dataSource.getId());
+        this.dataSource = dataSource;
         this.dbName = dbNAme;
         this.collection = collection;
-        this.client = new MioArangoClient(cluster);
+        this.client = new MioArangoClient(dataSource);
     }
 
     @Override
@@ -39,7 +39,7 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
         String doc = client.getDoc(dbName, query);
         if (doc == null)
             return Lists.newArrayList();
-        JsonNode json = null;
+        JsonNode json;
         try {
             json = JSONUtils.stringToJson(doc);
         } catch (JsonProcessingException e) {
@@ -74,12 +74,17 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
 
     @Override
     public DataStore getDataStore() {
-        return new ArangoCollectionStore(cluster.getUrl(), dbName, collection);
+        return new ArangoCollectionStore(dataSource.getUrl(), dbName, collection);
     }
 
     @Override
-    protected String getName() {
-        return dbName + "." + collection;
+    public String getName() {
+        return collection;
+    }
+
+    @Override
+    protected void close() {
+        // Do nothing
     }
 
     public List<DatasetField> docToFields(JsonNode root, String parent) {

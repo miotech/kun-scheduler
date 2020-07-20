@@ -28,6 +28,7 @@ public class MockTaskFactory {
                 .withOperatorId(mockOperatorId)
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withDependencies(new ArrayList<>())
+                .withTags(new ArrayList<>())
                 .build();
     }
 
@@ -49,6 +50,7 @@ public class MockTaskFactory {
                     .withOperatorId(WorkflowIdGenerator.nextOperatorId())
                     .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                     .withDependencies(new ArrayList<>())
+                    .withTags(new ArrayList<>())
                     .build());
         }
         return tasks;
@@ -88,6 +90,7 @@ public class MockTaskFactory {
                                     .map(upId -> new TaskDependency(upId, taskId, depFuncProvider.from("latestTaskRun")))
                                     .collect(Collectors.toList())
                     )
+                    .withTags(new ArrayList<>())
                     .build());
         }
         return tasks;

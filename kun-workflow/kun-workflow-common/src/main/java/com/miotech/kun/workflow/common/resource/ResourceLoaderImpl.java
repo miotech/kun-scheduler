@@ -24,13 +24,16 @@ public class ResourceLoaderImpl implements ResourceLoader {
 
         try {
             URL url = new URL(new URL("file://"), location);
-            String scheme = url.getProtocol();
+            ResourceType scheme = ResourceType.resolve(url.getProtocol());
+            if (scheme == null) {
+                throw new IllegalArgumentException("Unresolved resource type: " + url.toString());
+            }
 
             switch (scheme) {
-                case FileResource.FILE_SCHEME:
+                case FILE:
                     return new FileResource(url.getPath(), createIfNotExists);
                 default:
-                    throw new RuntimeException("Unsupported resource type: " + scheme);
+                    throw new IllegalArgumentException("Unsupported resource type: " + scheme);
             }
         } catch (MalformedURLException e) {
             logger.error("Invalid resource url: {}", location, e);

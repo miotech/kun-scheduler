@@ -39,7 +39,12 @@ export default memo(function DescriptionInput({ value, onChange }: Props) {
         <span style={{ marginRight: 8 }}>
           {t('dataDetail.baseItem.title.description')}
         </span>
-        {!isEditing && <EditOutlined onClick={() => setIsEditing(true)} />}
+        {!isEditing && (
+          <EditOutlined
+            className="dataDiscoveryComponent-baseItemTitle-editIcon"
+            onClick={() => setIsEditing(true)}
+          />
+        )}
       </div>
       {isEditing ? (
         <div className="dataDiscoveryComponent-baseContent">

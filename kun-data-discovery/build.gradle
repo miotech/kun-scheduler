@@ -10,6 +10,8 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
+	implementation project(':kun-data-quality')
+	implementation project(':kun-commons:kun-commons-db')
 	implementation project(':kun-commons:kun-commons-utils')
 	implementation project(':kun-app-common')
 	implementation project(':kun-security')

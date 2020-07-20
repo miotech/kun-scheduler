@@ -7,20 +7,22 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.miotech.kun.workflow.common.task.vo.TagVO;
 import com.miotech.kun.workflow.core.model.common.Param;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskDependency;
-import com.miotech.kun.workflow.db.DatabaseOperator;
-import com.miotech.kun.workflow.db.ResultSetMapper;
-import com.miotech.kun.workflow.db.sql.DefaultSQLBuilder;
-import com.miotech.kun.workflow.db.sql.SQLBuilder;
+import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.db.ResultSetMapper;
+import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +33,6 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Singleton
 public class TaskDao {
@@ -50,7 +51,13 @@ public class TaskDao {
 
     public static final String TASK_RELATION_MODEL_NAME = "task_relation";
 
+    public static final String TASK_TAGS_TABLE_NAME = "kun_wf_task_tags";
+
+    public static final String TASK_TAGS_MODEL_NAME = "task_tags";
+
     private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "arguments", "variable_defs", "schedule");
+
+    private static final List<String> taskTagCols = ImmutableList.of("task_id", "tag_key", "tag_value");
 
     private static final List<String> tickTaskCols = ImmutableList.of("task_id", "scheduled_tick");
 
@@ -157,6 +164,43 @@ public class TaskDao {
         DOWNSTREAM
     }
 
+    private void updateTaskTags(Task task, List<Tag> tags) {
+        Preconditions.checkNotNull(task, "Invalid argument `task`: null");
+        Preconditions.checkNotNull(tags, "Invalid argument `tags`: null");
+        // 1. Clear all previous task tags, if any
+        String sqlRemove = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from(TASK_TAGS_TABLE_NAME)
+                .where("task_id = ?")
+                .getSQL();
+
+        // 2. then insert updated task tags
+        String sqlInsert = DefaultSQLBuilder.newBuilder()
+                .insert(taskTagCols.toArray(new String[0]))
+                .into(TASK_TAGS_TABLE_NAME)
+                .valueSize(taskTagCols.size())
+                .asPrepared()
+                .getSQL();
+
+        // 3. execute with database operator
+        dbOperator.update(sqlRemove, task.getId());
+        if (!tags.isEmpty()) {
+            Object[][] params = tags
+                    .stream()
+                    .map(tag -> new Object[]{
+                            // task_id
+                            task.getId(),
+                            // tag_key
+                            tag.getKey(),
+                            // tag_value
+                            tag.getValue()
+                    })
+                    .collect(Collectors.toList())
+                    .toArray(new Object[0][0]);
+            dbOperator.batch(sqlInsert, params);
+        }
+    }
+
     /**
      * Internal use only. Retrieve task ids within the maximum distance from the given source task.
      * @param srcTask source task
@@ -212,7 +256,7 @@ public class TaskDao {
 
     private List<Task> fetchTasksByIds(Collection<Long> taskIds) {
         Preconditions.checkNotNull(taskIds, "Invalid argument `taskIds`: null");
-        if (taskIds.size() == 0) {
+        if (taskIds.isEmpty()) {
             return new ArrayList<>();
         }
 
@@ -229,22 +273,84 @@ public class TaskDao {
                 .asPrepared()
                 .getSQL();
 
-        return fetchTasksJoiningDependencies(sql, taskIds.toArray());
+        return fetchTasksJoiningDependenciesAndTags(sql, taskIds.toArray());
     }
 
-    private List<Task> fetchTasksJoiningDependencies(String preparedSql, Object... params) {
+    private List<Task> fetchTasksJoiningDependenciesAndTags(String preparedSql, Object... params) {
         List<Task> plainTasks = dbOperator.fetchAll(preparedSql, TaskMapper.INSTANCE, params);
 
-        // Retrieve all relations whose downstream ids are involved in result tasks
-        List<Long> plainTaskIds = plainTasks.stream().map(task -> task.getId()).collect(Collectors.toList());
+        // Retrieve all task tags, and relations whose downstream ids are involved in result tasks
+        List<Long> plainTaskIds = plainTasks.stream().map(Task::getId).collect(Collectors.toList());
         Map<Long, List<TaskDependency>> dependenciesMap = fetchAllRelationsFromDownstreamTaskIds(plainTaskIds);
+        Map<Long, List<Tag>> tagsMap = fetchTaskTagsByTaskIds(plainTaskIds);
 
         // re-construct all tasks with full properties
         return plainTasks.stream()
                 .map(t -> t.cloneBuilder()
                         .withDependencies(dependenciesMap.get(t.getId()))
+                        .withTags(tagsMap.containsKey(t.getId()) ? tagsMap.get(t.getId()) : new ArrayList<>())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    public List<Tag> fetchTaskTagsByTaskId(Long taskId) {
+        Map<Long, List<Tag>> results = fetchTaskTagsByTaskIds(Lists.newArrayList(taskId));
+        return results.containsKey(taskId) ? results.get(taskId) : new ArrayList<>();
+    }
+
+    public Pair<String, List<Object>> generateFilterByTagSQLClause(List<Tag> tags) {
+        List<String> whereSubClauses = new ArrayList<>();
+        List<Object> params = new ArrayList<>();
+
+        tags.forEach(tag -> {
+            whereSubClauses.add("(" + TASK_TAGS_MODEL_NAME + ".tag_key = ? AND " + TASK_TAGS_MODEL_NAME + ".tag_value = ?)");
+            params.add(tag.getKey());
+            params.add(tag.getValue());
+        });
+        String whereClause = StringUtils.joinWith(" OR ", whereSubClauses.toArray());
+
+        String taskIdColumn = TASK_TAGS_MODEL_NAME + ".task_id";
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(taskIdColumn)
+                .from(TASK_TAGS_TABLE_NAME, TASK_TAGS_MODEL_NAME)
+                .where(whereClause)
+                .groupBy(taskIdColumn)
+                .having("count(1) = ?")
+                .getSQL();
+
+        // should match all tags as required
+        params.add(tags.size());
+        return Pair.of(sql, params);
+    }
+
+    /**
+     *  Fetch all tags in `taskid - [dependencies]` hashmap by given task ids
+     * @param taskIds list of task ids
+     * @return
+     */
+    private Map<Long, List<Tag>> fetchTaskTagsByTaskIds(List<Long> taskIds) {
+        if (taskIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        Map<String, List<String>> taskRelationColumnsMap = new HashMap<>();
+        taskRelationColumnsMap.put(TASK_TAGS_MODEL_NAME, taskTagCols);
+        String inClausePlaceholders = "(" + StringUtils.repeat("?", ",", taskIds.size()) + ")";
+        String sql = DefaultSQLBuilder.newBuilder()
+                .columns(taskRelationColumnsMap)
+                .from(TASK_TAGS_TABLE_NAME, TASK_TAGS_MODEL_NAME)
+                .autoAliasColumns()
+                .where(TASK_TAGS_MODEL_NAME + ".task_id IN " + inClausePlaceholders)
+                .getSQL();
+        List<TagVO> taskTagVOs = dbOperator.fetchAll(sql, TaskTagMapper.INSTANCE, taskIds.toArray());
+        Map<Long, List<Tag>> resultSet = new HashMap<>();
+        taskTagVOs.forEach(taskTagVO -> {
+            if (!resultSet.containsKey(taskTagVO.getTaskId())) {
+                resultSet.put(taskTagVO.getTaskId(), new ArrayList<>());
+            }
+            resultSet.get(taskTagVO.getTaskId()).add(new Tag(taskTagVO.getKey(), taskTagVO.getValue()));
+        });
+        return resultSet;
     }
 
     /**
@@ -317,40 +423,98 @@ public class TaskDao {
         return builder.getSQL();
     }
 
+    /**
+     * Generator where clause with parameter placeholders and list of params
+     * @param filters task search filter instance
+     * @return Pair of (where clause, list of parameter objects)
+     */
+    private Pair<String, List<Object>> generateWhereClauseAndParamsFromFilter(TaskSearchFilter filters) {
+        Preconditions.checkNotNull(filters, "Invalid argument `filters`: null");
+
+        String whereClause = "(1 = 1)";
+        List<Object> params = new ArrayList<>();
+
+        boolean filterHasKeyword = StringUtils.isNotBlank(filters.getName());
+        boolean filterHasTags = Objects.nonNull(filters.getTags()) && (!filters.getTags().isEmpty());
+
+        if (filterHasKeyword) {
+            whereClause = "(" + TASK_MODEL_NAME + ".name LIKE CONCAT('%', CAST(? AS TEXT), '%'))";
+            params.add(filters.getName());
+        }
+
+        if (filterHasTags) {
+            Pair<String, List<Object>> sqlAndParams = generateFilterByTagSQLClause(filters.getTags());
+            String filterByTagsSql = sqlAndParams.getLeft();
+            List<Object> filterByTagsSqlParams = sqlAndParams.getRight();
+
+            whereClause += " AND (" + TASK_MODEL_NAME + ".id IN (" + filterByTagsSql + "))";
+            params.addAll(filterByTagsSqlParams);
+        }
+
+        return Pair.of(whereClause, params);
+    }
+
+    /**
+     * Get paginated task records that matches the constraints by given filter.
+     * @param filters task search filter instance
+     * @return list of filtered and paginated task records
+     */
     public List<Task> fetchWithFilters(TaskSearchFilter filters) {
         Preconditions.checkArgument(Objects.nonNull(filters.getPageNum()) && filters.getPageNum() > 0, "Invalid page num: %d", filters.getPageNum());
         Preconditions.checkArgument(Objects.nonNull(filters.getPageSize()) && filters.getPageSize() > 0, "Invalid page size: %d", filters.getPageSize());
-        boolean filterContainsKeyword = StringUtils.isNotEmpty(filters.getName());
-        boolean filterContainsTags = CollectionUtils.isNotEmpty(filters.getTags());
 
         Integer pageNum = filters.getPageNum();
         Integer pageSize = filters.getPageSize();
         Integer offset = (pageNum - 1) * pageSize;
-        List<Object> params = new ArrayList<>();
 
-        StringBuilder whereClause = new StringBuilder();
-        if (filterContainsKeyword && !filterContainsTags) {
-            whereClause.append(" name LIKE CONCAT('%', CAST(? AS TEXT), '%')");
-            params.add(filters.getName());
-        } else if (!filterContainsKeyword && filterContainsTags) {
-            // TODO: allow filter by tags
-            throw new UnsupportedOperationException("Filter by tags not implemented yet.");
-        } else if (filterContainsKeyword && filterContainsTags) {
-            // TODO: allow filter by tags
-            throw new UnsupportedOperationException("Filter by tags not implemented yet.");
-        }
-        // else pass
-        String baseSelect = getSelectSQL(null);
+        Map<String, List<String>> taskRelationColumnsMap = new HashMap<>();
+        taskRelationColumnsMap.put(TASK_MODEL_NAME, taskCols);
+
+        Pair<String, List<Object>> whereClauseAndParams = generateWhereClauseAndParamsFromFilter(filters);
+        String whereClause = whereClauseAndParams.getLeft();
+        List<Object> params = whereClauseAndParams.getRight();
+
         String sql = DefaultSQLBuilder.newBuilder()
-                .select(baseSelect)
-                .where(whereClause.toString())
+                .columns(taskRelationColumnsMap)
+                .autoAliasColumns()
+                .from(TASK_TABLE_NAME, TASK_MODEL_NAME)
+                .where(whereClause)
                 .limit(pageSize)
                 .offset(offset)
                 .asPrepared()
                 .getSQL();
+
         Collections.addAll(params, pageSize, offset);
 
-        return fetchTasksJoiningDependencies(sql, params.toArray());
+        return fetchTasksJoiningDependenciesAndTags(sql, params.toArray());
+    }
+
+    /**
+     * Get total count of task records
+     * @return total count of records
+     */
+    public Integer fetchTotalCount() {
+        return fetchTotalCountWithFilters(TaskSearchFilter.newBuilder().build());
+    }
+
+    /**
+     * Get total count of task records that matches the constraints by given filter. Pagination is not affected.
+     * @param filters task search filter instance
+     * @return total count of records that matches the constraints by given filter
+     */
+    public Integer fetchTotalCountWithFilters(TaskSearchFilter filters) {
+        Pair<String, List<Object>> whereClauseAndParams = generateWhereClauseAndParamsFromFilter(filters);
+        String whereClause = whereClauseAndParams.getLeft();
+        List<Object> params = whereClauseAndParams.getRight();
+
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("COUNT(*)")
+                .from(TASK_TABLE_NAME, TASK_MODEL_NAME)
+                .where(whereClause)
+                .asPrepared()
+                .getSQL();
+
+        return dbOperator.fetchOne(sql, rs -> rs.getInt(1), params.toArray());
     }
 
     public List<Task> fetchByOperatorId(Long operatorId) {
@@ -382,8 +546,9 @@ public class TaskDao {
                 TaskDependencyMapper.getInstance(functionProvider),
                 taskId
         );
+        List<Tag> tags = fetchTaskTagsByTaskId(taskId);
 
-        return Optional.of(task.cloneBuilder().withDependencies(dependencies).build());
+        return Optional.of(task.cloneBuilder().withDependencies(dependencies).withTags(tags).build());
     }
 
     public Map<Long, Optional<Task>> fetchByIds(List<Long> taskIds) {
@@ -400,7 +565,7 @@ public class TaskDao {
                 .where("id IN (" + idList + ")")
                 .getSQL();
 
-        List<Task> fetched = fetchTasksJoiningDependencies(sql);
+        List<Task> fetched = fetchTasksJoiningDependenciesAndTags(sql);
 
         Map<Long, Optional<Task>> result = fetched.stream()
                 .collect(Collectors.toMap(Task::getId, Optional::of));
@@ -427,6 +592,7 @@ public class TaskDao {
          * 1. Insert task record into database
          * 2. Insert a tick-task mapping record according to schedule config
          * 3. For each dependency, insert records into table `kun_wf_task_relations`
+         * 4. For each tag, upsert records into table `kun_wf_task_tags`
          * Note: if any of the steps above failed, the entire insertion operation should be aborted and reverted.
          * */
         List<String> tableColumns = new ImmutableList.Builder<String>()
@@ -451,6 +617,9 @@ public class TaskDao {
                     JSONUtils.toJsonString(task.getScheduleConf())
             );
             insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
+            // Update tags
+            updateTaskTags(task, task.getTags());
+            // Update upstream dependencies
             updateTaskUpstreamDependencies(task, task.getDependencies());
             return null;
         });
@@ -485,6 +654,8 @@ public class TaskDao {
             deleteTickTaskMappingRecord(task.getId());
             // and re-insert by updated schedule configuration
             insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
+            // update tags
+            updateTaskTags(task, task.getTags());
 
             return updatedRows;
         });
@@ -597,7 +768,7 @@ public class TaskDao {
                 .on(TASK_MODEL_NAME + ".id = " + TICK_TASK_MAPPING_TABLE_ALIAS + ".task_id")
                 .where(TICK_TASK_MAPPING_TABLE_ALIAS + ".scheduled_tick <= ?")
                 .getSQL();
-        return fetchTasksJoiningDependencies(sql, tick.toString());
+        return fetchTasksJoiningDependenciesAndTags(sql, tick.toString());
     }
 
     /**
@@ -686,12 +857,13 @@ public class TaskDao {
                     .withVariableDefs(JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_variable_defs"), new TypeReference<List<Variable>>() {}))
                     .withScheduleConf( JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_schedule"), new TypeReference<ScheduleConf>() {}))
                     .withDependencies(new ArrayList<>())
+                    .withTags(new ArrayList<>())
                     .build();
         }
     }
 
     public static class TaskDependencyMapper implements ResultSetMapper<TaskDependency> {
-        private TaskDependencyFunctionProvider functionProvider;
+        private final TaskDependencyFunctionProvider functionProvider;
 
         private static TaskDependencyMapper instance;
 
@@ -712,6 +884,19 @@ public class TaskDao {
                     rs.getLong(TASK_RELATION_MODEL_NAME + "_upstream_task_id"),
                     rs.getLong(TASK_RELATION_MODEL_NAME + "_downstream_task_id"),
                     functionProvider.from(rs.getString(TASK_RELATION_MODEL_NAME + "_dependency_function"))
+            );
+        }
+    }
+
+    public static class TaskTagMapper implements ResultSetMapper<TagVO> {
+        public static final TaskTagMapper INSTANCE = new TaskTagMapper();
+
+        @Override
+        public TagVO map(ResultSet rs) throws SQLException {
+            return new TagVO(
+                    rs.getLong(TASK_TAGS_MODEL_NAME + "_task_id"),
+                    rs.getString(TASK_TAGS_MODEL_NAME + "_tag_key"),
+                    rs.getString(TASK_TAGS_MODEL_NAME + "_tag_value")
             );
         }
     }

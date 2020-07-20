@@ -3,6 +3,8 @@ package com.miotech.kun.workflow.web.serializer;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.util.StdDateFormat;
@@ -21,6 +23,7 @@ import java.io.PrintWriter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
+import java.util.TimeZone;
 
 @Singleton
 public class JsonSerializer {
@@ -28,16 +31,21 @@ public class JsonSerializer {
     private final Logger logger = LoggerFactory.getLogger(JsonSerializer.class);
     private static ObjectMapper objectMapper;
 
+    private void logDeserializeError(IOException e) {
+        logger.error("Failed to deserialize object: ", e);
+    }
+
     static {
         objectMapper = new ObjectMapper();
         // allow empty field
         objectMapper.setVisibility(PropertyAccessor.FIELD,
                 JsonAutoDetect.Visibility.ANY);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         // default serialize datetime as iso date
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.setDateFormat(new StdDateFormat().withColonInTimeZone(true));
+        objectMapper.setDateFormat(new StdDateFormat().withTimeZone(TimeZone.getDefault()).withColonInTimeZone(true));
     }
 
     public String toString(Object object) {
@@ -63,8 +71,8 @@ public class JsonSerializer {
             } else {
                 throw new UnhandledTypeException("Unhandled Type: " + type.getTypeName());
             }
-        } catch (Exception e) {
-            logger.error("Failed to deserialize object: ", e);
+        } catch (IOException e) {
+            logDeserializeError(e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
     }
@@ -73,7 +81,16 @@ public class JsonSerializer {
         try {
             return objectMapper.readValue(str, clz);
         } catch (IOException e) {
-            logger.error("Failed to deserialize object: ", e);
+            logDeserializeError(e);
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
+    }
+
+    public <T> T toObject(String str, TypeReference<T> typeReference) {
+        try {
+            return objectMapper.readValue(str, typeReference);
+        } catch (IOException e) {
+            logDeserializeError(e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
     }

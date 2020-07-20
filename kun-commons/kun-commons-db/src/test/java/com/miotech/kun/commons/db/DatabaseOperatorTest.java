@@ -2,8 +2,6 @@ package com.miotech.kun.commons.db;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.workflow.db.DatabaseOperator;
-import com.miotech.kun.workflow.db.ResultSetMapper;
 import org.junit.Test;
 
 import java.sql.SQLException;

@@ -1,6 +1,7 @@
 package com.miotech.kun.datadiscovery.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.miotech.kun.dataquality.model.entity.DataQualityCaseBasic;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -24,4 +25,6 @@ public class Dataset extends DatasetBasic {
     private Long rowCount;
 
     private List<DataTask> flows;
+
+    private List<DataQualityCaseBasic> dataQualities;
 }

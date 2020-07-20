@@ -25,14 +25,11 @@ public class DatasetFieldRepository extends BaseRepository {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    @Autowired
+    DatasetRepository datasetRepository;
+
     public DatasetFieldPage findByDatasetGid(Long datasetGid, DatasetFieldSearchRequest searchRequest) {
-        String getRowCountSql = "select row_count from kun_mt_dataset_stats where dataset_gid = ?";
-        Long rowCount = jdbcTemplate.query(getRowCountSql, ps -> ps.setLong(1, datasetGid), rs -> {
-            if (rs.next()) {
-                return rs.getLong("row_count");
-            }
-            return null;
-        });
+        Long rowCount = datasetRepository.getRowCount(datasetGid);
 
         DatasetFieldPage datasetFieldPage = new DatasetFieldPage();
         List<Object> pstmtArgs = new ArrayList<>();
