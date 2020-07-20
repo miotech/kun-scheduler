@@ -6,23 +6,16 @@ public class JDBCQueryTest {
 
     /*@Test
     public void testPostgresSql() {
-        Long dsId = 72959403468259328L;
-        QuerySite querySite = QuerySite
-                .newBuilder()
-                .datasourceId(dsId)
-                .databaseName("kun")
-                .build();
-        JDBCQueryEntry queryEntry = JDBCQueryEntry
-                .newBuilder()
-                .queryString("select * from kun_mt_datasource")
-                .build();
-        JDBCQuery query = JDBCQueryBuilder.builder()
-                .querySite(querySite)
-                .queryParams(queryEntry)
+        Long datasetId = 1L;
+
+        JDBCQuery query = JDBCQuery.newBuilder()
+                .datasetId(datasetId)
+                .queryString("select * from kun_mt_dataset where gid = " + datasetId)
                 .build();
         QueryResultSet resultSet = JDBCQueryExecutor.getInstance("application-test.yaml").execute(query);
         for (Map map : resultSet.getResultSet()) {
-            if (dsId.equals(map.get("id"))) {
+            if (datasetId.equals(map.get("gid"))) {
+                System.out.println("gid = " + map.get("gid"));
                 return;
             }
         }
@@ -31,20 +24,11 @@ public class JDBCQueryTest {
 
     @Test
     public void testAthena() {
-        Long dsId = 72989195441799168L;
-        QuerySite querySite = QuerySite
-                .newBuilder()
-                .datasourceId(dsId)
-                .build();
+        Long datasourceId = 72989195441799168L;
 
-        JDBCQueryEntry queryEntry = JDBCQueryEntry
-                .newBuilder()
+        JDBCQuery query = JDBCQuery.newBuilder()
+                .datasourceId(datasourceId)
                 .queryString("select 1")
-                .build();
-
-        JDBCQuery query = JDBCQueryBuilder.builder()
-                .querySite(querySite)
-                .queryParams(queryEntry)
                 .build();
         JDBCQueryExecutor.getInstance("application-test.yaml").execute(query);
     }*/

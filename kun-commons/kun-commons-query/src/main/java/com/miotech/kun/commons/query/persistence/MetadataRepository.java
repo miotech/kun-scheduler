@@ -2,6 +2,7 @@ package com.miotech.kun.commons.query.persistence;
 
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.commons.query.QuerySite;
 import com.miotech.kun.commons.query.datasource.MetadataDataSource;
 import com.miotech.kun.commons.query.model.MetadataConnectionInfo;
 import com.miotech.kun.commons.query.utils.JSONUtils;
@@ -29,14 +30,39 @@ public class MetadataRepository {
         databaseOperator = new DatabaseOperator(metadataDataSource);
     }
 
-    public MetadataConnectionInfo getConnectionInfo(Long datasourceId) {
+    public Long getDatasourceId(Long datasetId) {
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("connection_info as connInfo",
-                        "kmdt.name as type")
+                .select("datasource_id")
+                .from("kun_mt_dataset")
+                .where("gid = ?")
+                .getSQL();
+
+        return databaseOperator.fetchOne(sql, rs -> rs.getLong("datasource_id"), datasetId);
+    }
+
+    public String getDatabase(Long datasetId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("database_name")
+                .from("kun_mt_dataset")
+                .where("gid = ?")
+                .getSQL();
+
+        return databaseOperator.fetchOne(sql, rs -> rs.getString("database_name"), datasetId);
+    }
+
+    public MetadataConnectionInfo getConnectionInfo(QuerySite querySite) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("kmd.connection_info as connInfo",
+                        "kmdt.name as datasource_type")
                 .from("kun_mt_datasource", "kmd")
                 .join("inner", "kun_mt_datasource_type", "kmdt").on("kmd.type_id = kmdt.id")
                 .where("kmd.id = ?")
                 .getSQL();
+
+        Long datasourceId = querySite.getDatasourceId();
+        if (datasourceId == null) {
+            datasourceId = getDatasourceId(querySite.getDatasetId());
+        }
 
         return databaseOperator.fetchOne(sql, rs -> {
             MetadataConnectionInfo connectionInfo = new MetadataConnectionInfo();
@@ -46,7 +72,10 @@ public class MetadataRepository {
                 logger.error("Failed to parse json.", e);
                 throw ExceptionUtils.wrapIfChecked(e);
             }
-            connectionInfo.setType(rs.getString("type"));
+            connectionInfo.setDatasourceType(rs.getString("datasource_type"));
+            if (querySite.getDatasetId() != null) {
+                connectionInfo.setDatabase(getDatabase(querySite.getDatasetId()));
+            }
             return connectionInfo;
         }, datasourceId);
     }
