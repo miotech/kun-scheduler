@@ -39,10 +39,10 @@ public class WorkflowUrlGenerator {
         return String.format(baseUrl, properties.getProperty(WORKFLOW_URL), id);
     }
 
-    public String generateSearchTaskUrl() {
+    public String generateSearchTaskUrl(String taskName) {
         try {
             return String.format(BASE_GET_URL, properties.getProperty(WORKFLOW_URL), WorkflowApiParam.TASKS,
-                    URLEncoder.encode("name=" + WorkflowApiParam.TASK_NAME, ENC));
+                    URLEncoder.encode("name=" + taskName, ENC));
         } catch (UnsupportedEncodingException e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }

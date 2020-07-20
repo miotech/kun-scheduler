@@ -1,22 +1,33 @@
 package com.miotech.kun.workflow.core.model.task;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.workflow.core.model.common.Param;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Variable;
+import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @JsonDeserialize(builder = Task.TaskBuilder.class)
 public class Task {
-
+    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long id;
 
     private final String name;
 
     private final String description;
 
+    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long operatorId;
 
     private final List<Param> arguments;
@@ -26,6 +37,8 @@ public class Task {
     private final ScheduleConf scheduleConf;
 
     private final List<TaskDependency> dependencies;
+
+    private final List<Tag> tags;
 
     public Long getId() {
         return id;
@@ -59,15 +72,20 @@ public class Task {
         return dependencies;
     }
 
-    private Task(Long id, String name, String description, Long operatorId, List<Param> arguments, List<Variable> variableDefs, ScheduleConf scheduleConf, List<TaskDependency> dependencies) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-        this.operatorId = operatorId;
-        this.arguments = ImmutableList.copyOf(arguments);
-        this.variableDefs = ImmutableList.copyOf(variableDefs);
-        this.scheduleConf = scheduleConf;
-        this.dependencies = ImmutableList.copyOf(dependencies);
+    public List<Tag> getTags() {
+        return tags;
+    }
+
+    private Task(TaskBuilder builder) {
+        this.id = builder.id;
+        this.name = builder.name;
+        this.description = builder.description;
+        this.operatorId = builder.operatorId;
+        this.arguments = ImmutableList.copyOf(builder.arguments);
+        this.variableDefs = ImmutableList.copyOf(builder.variableDefs);
+        this.scheduleConf = builder.scheduleConf;
+        this.dependencies = ImmutableList.copyOf(builder.dependencies);
+        this.tags = builder.tags;
     }
 
     public TaskBuilder cloneBuilder() {
@@ -79,7 +97,29 @@ public class Task {
                 .withArguments(arguments)
                 .withVariableDefs(variableDefs)
                 .withScheduleConf(scheduleConf)
-                .withDependencies(dependencies);
+                .withDependencies(dependencies)
+                .withTags(tags);
+    }
+
+    /**
+     * Convert tags list of this task instance to key-value map data structure
+     * @return key-value map of tags
+     * @throws RuntimeException when detects duplication on tag key
+     */
+    @JsonIgnore
+    public Map<String, String> getTagsMap() {
+        Preconditions.checkNotNull(tags, "Property `tags` of task object is null");
+        Map<String, String> tagsMap = new HashMap<>();
+        tags.forEach(tag -> {
+            if (tagsMap.containsKey(tag.getKey())) {
+                throw new IllegalArgumentException(
+                        String.format("Tags contains duplicated key \"%s\" with values: \"%s\" and \"%s\"",
+                                tag.getKey(), tagsMap.get(tag.getKey()), tag.getValue()));
+            }
+            // else
+            tagsMap.put(tag.getKey(), tag.getValue());
+        });
+        return tagsMap;
     }
 
     public static TaskBuilder newBuilder() {
@@ -98,12 +138,13 @@ public class Task {
                 Objects.equals(arguments, task.arguments) &&
                 Objects.equals(variableDefs, task.variableDefs) &&
                 Objects.equals(scheduleConf, task.scheduleConf) &&
-                Objects.equals(dependencies, task.dependencies);
+                Objects.equals(dependencies, task.dependencies) &&
+                Objects.equals(tags, task.tags);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, operatorId, arguments, variableDefs, scheduleConf, dependencies);
+        return Objects.hash(id, name, description, operatorId, arguments, variableDefs, scheduleConf, dependencies, tags);
     }
 
     public static final class TaskBuilder {
@@ -115,6 +156,7 @@ public class Task {
         private List<Variable> variableDefs;
         private ScheduleConf scheduleConf;
         private List<TaskDependency> dependencies;
+        private List<Tag> tags;
 
         private TaskBuilder() {
         }
@@ -159,8 +201,13 @@ public class Task {
             return this;
         }
 
+        public TaskBuilder withTags(List<Tag> tags) {
+            this.tags = tags;
+            return this;
+        }
+
         public Task build() {
-            return new Task(id, name, description, operatorId, arguments, variableDefs, scheduleConf, dependencies);
+            return new Task(this);
         }
     }
 }

@@ -3,7 +3,7 @@ package com.miotech.kun.metadata.databuilder.schedule;
 import com.google.common.collect.Maps;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.miotech.kun.workflow.utils.PropertyUtils;
+import com.miotech.kun.commons.utils.PropertyUtils;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;

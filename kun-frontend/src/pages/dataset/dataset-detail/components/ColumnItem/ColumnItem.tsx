@@ -1,6 +1,7 @@
 import React, { memo, useCallback } from 'react';
 import numeral from 'numeral';
 import { message } from 'antd';
+import lowerCase from 'lodash/lowerCase';
 import { watermarkFormatter } from '@/utils';
 import useRedux from '@/hooks/useRedux';
 import useI18n from '@/hooks/useI18n';
@@ -39,6 +40,7 @@ export default memo(function ColumnItem({ column, onFinishUpdate }: Props) {
     <div className={styles.column}>
       <div className={styles.titleRow}>
         <span className={styles.columnName}>{column.name}</span>
+        <span className={styles.type}>{lowerCase(column.type)}</span>
         <span className={styles.watermark}>
           {watermarkFormatter(column.high_watermark.time)}
         </span>
@@ -59,11 +61,6 @@ export default memo(function ColumnItem({ column, onFinishUpdate }: Props) {
           <div className={styles.contentItem}>
             {numeral(column.not_null_percentage).format('0.00%')}
           </div>
-        </div>
-
-        <div className={styles.type}>
-          <div className={styles.titleItem}>{t('dataDetail.column.type')}</div>
-          <div className={styles.contentItem}>{column.type}</div>
         </div>
 
         <div className={styles.description}>

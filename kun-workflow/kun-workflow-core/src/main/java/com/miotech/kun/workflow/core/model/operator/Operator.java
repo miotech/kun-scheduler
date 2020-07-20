@@ -5,12 +5,15 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.workflow.core.model.common.Param;
+import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
 import java.util.List;
 import java.util.Objects;
 
 @JsonDeserialize(builder = Operator.OperatorBuilder.class)
 public class Operator {
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long id;
 
     private final String name;

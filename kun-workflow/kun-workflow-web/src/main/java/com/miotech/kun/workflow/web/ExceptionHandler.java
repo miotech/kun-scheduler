@@ -18,6 +18,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -101,6 +102,14 @@ public class ExceptionHandler {
     @ResponseException(BadRequestException.class)
     private void badRequestHandler(HttpServletResponse resp,
                                    BadRequestException e) {
+        ExceptionResponse responseObj = new ExceptionResponse(400, e.getMessage());
+        jsonSerializer.writeResponseAsJson(resp, responseObj);
+    }
+
+    @ResponseStatus(code = 400)
+    @ResponseException(DateTimeParseException.class)
+    private void dateTimeParseExceptionHandler(HttpServletResponse resp,
+                                               DateTimeParseException e) {
         ExceptionResponse responseObj = new ExceptionResponse(400, e.getMessage());
         jsonSerializer.writeResponseAsJson(resp, responseObj);
     }

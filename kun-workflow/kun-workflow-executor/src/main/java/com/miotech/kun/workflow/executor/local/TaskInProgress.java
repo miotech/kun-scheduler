@@ -73,11 +73,11 @@ public class TaskInProgress implements Runnable {
 
             TaskRunStatus finalStatus;
             TaskAttemptReport report = TaskAttemptReport.BLANK;
-
             ClassLoader origCtxCl = thread.getContextClassLoader();
+            Operator operator = null;
             try {
                 // 加载Operator
-                Operator operator = loadOperator(operatorDetail.getPackagePath(), operatorDetail.getClassName());
+                operator = loadOperator(operatorDetail.getPackagePath(), operatorDetail.getClassName());
                 operator.setContext(context);
                 logger.debug("Loaded operator's class. operatorId={}", operatorId);
 
@@ -101,6 +101,9 @@ public class TaskInProgress implements Runnable {
                 finalStatus = TaskRunStatus.FAILED;
             } finally {
                 thread.setContextClassLoader(origCtxCl);
+                if (operator != null) {
+                    ((URLClassLoader) operator.getClass().getClassLoader()).close();
+                }
             }
 
             // 更新任务状态为SUCCESS/FAILED，结束时间
