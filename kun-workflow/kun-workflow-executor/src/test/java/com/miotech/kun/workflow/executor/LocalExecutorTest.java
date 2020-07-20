@@ -2,9 +2,7 @@ package com.miotech.kun.workflow.executor;
 
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
-import com.google.common.io.ByteStreams;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -14,15 +12,21 @@ import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
+import com.miotech.kun.workflow.core.execution.Operator;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.executor.local.LocalExecutor;
+import com.miotech.kun.workflow.executor.mock.TestOperator1;
+import com.miotech.kun.workflow.executor.mock.TestOperator1_1;
+import com.miotech.kun.workflow.executor.mock.TestOperator2;
+import com.miotech.kun.workflow.executor.mock.TestOperator3;
 import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
+import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.ResourceUtils;
 import org.junit.Before;
 import org.junit.Rule;
@@ -30,8 +34,7 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
 import javax.inject.Inject;
-import java.io.*;
-import java.net.URL;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -44,10 +47,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class LocalExecutorTest extends DatabaseTestBase {
-    private final static String TEST_OPERATOR1 = "TestOperator1";
-    private final static String TEST_OPERATOR2 = "TestOperator2";
-    private final static String TEST_OPERATOR3 = "TestOperator3";
-
     @Inject
     private Executor executor;
 
@@ -89,7 +88,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
     @Test
     public void testSubmit_ok() throws IOException {
         // prepare
-        TaskAttempt attempt = prepareAttempt(TEST_OPERATOR1);
+        TaskAttempt attempt = prepareAttempt(TestOperator1.class);
 
         // process
         executor.submit(attempt);
@@ -137,11 +136,10 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getOutlets(), sameBeanAs(outlets));
     }
 
-
     @Test
     public void testSubmit_then_overwriteOperatorJar() throws IOException {
         // prepare
-        TaskAttempt attempt = prepareAttempt(TEST_OPERATOR1);
+        TaskAttempt attempt = prepareAttempt(TestOperator1.class, "TestOperator1");
 
         // process
         executor.submit(attempt);
@@ -152,8 +150,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(content.get(0), containsString("Hello, world!"));
 
         // overwrite operator jar
-        attempt = prepareAttempt(TEST_OPERATOR1);
-        overwriteTestJarFile();
+        attempt = prepareAttempt(TestOperator1_1.class, "TestOperator1");
         executor.submit(attempt);
         awaitUntilAttemptDone(attempt.getId());
 
@@ -169,8 +166,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
     @Test
     public void testSubmit_ok_concurrent_running() throws IOException {
         // prepare
-        TaskAttempt attempt1 = prepareAttempt(TEST_OPERATOR1);
-        TaskAttempt attempt2 = prepareAttempt(TEST_OPERATOR2);
+        TaskAttempt attempt1 = prepareAttempt(TestOperator1.class);
+        TaskAttempt attempt2 = prepareAttempt(TestOperator2.class);
 
         // process
         executor.submit(attempt1);
@@ -224,7 +221,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
     @Test
     public void testSubmit_fail_running_failure() throws IOException {
         // prepare
-        TaskAttempt attempt = prepareAttempt(TEST_OPERATOR2);
+        TaskAttempt attempt = prepareAttempt(TestOperator2.class);
 
         // process
         executor.submit(attempt);
@@ -262,7 +259,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
     @Test
     public void testSubmit_fail_unexpected_exception() throws IOException {
         // prepare
-        TaskAttempt attempt = prepareAttempt(TEST_OPERATOR3);
+        TaskAttempt attempt = prepareAttempt(TestOperator3.class);
 
         // process
         executor.submit(attempt);
@@ -299,7 +296,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
     @Test
     public void testSubmit_fail_operator_not_found() throws IOException {
         // prepare
-        TaskAttempt attempt = prepareAttempt("TestOperator999");
+        TaskAttempt attempt = prepareAttempt(TestOperator1.class, "TestOperator1", "TestOperator999");
 
         // process
         executor.submit(attempt);
@@ -333,7 +330,11 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.FAILED);
     }
 
-    private TaskAttempt prepareAttempt(String operatorClassName) {
+    private TaskAttempt prepareAttempt(Class<? extends Operator> operatorClass) {
+        return prepareAttempt(operatorClass, operatorClass.getSimpleName());
+    }
+
+    private TaskAttempt prepareAttempt(Class<? extends Operator> operatorClass, String operatorClassName) {
         TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttempt();
 
         long operatorId = attempt.getTaskRun().getTask().getOperatorId();
@@ -343,7 +344,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 .withId(operatorId)
                 .withName("Operator_" + operatorId)
                 .withClassName(operatorClassName)
-                .withPackagePath(findTestJarFile())
+                .withPackagePath(compileJar(operatorClass, operatorClassName))
                 .build();
         operatorDao.createWithId(op, operatorId);
         taskDao.create(attempt.getTaskRun().getTask());
@@ -351,6 +352,30 @@ public class LocalExecutorTest extends DatabaseTestBase {
         taskRunDao.createAttempt(attempt);
 
         return attempt;
+    }
+
+    private TaskAttempt prepareAttempt(Class<? extends Operator> operatorClass, String operatorClassName, String fakeClassName) {
+        TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttempt();
+
+        long operatorId = attempt.getTaskRun().getTask().getOperatorId();
+        com.miotech.kun.workflow.core.model.operator.Operator
+                op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName(fakeClassName)
+                .withPackagePath(compileJar(operatorClass, operatorClassName))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        taskDao.create(attempt.getTaskRun().getTask());
+        taskRunDao.createTaskRun(attempt.getTaskRun());
+        taskRunDao.createAttempt(attempt);
+
+        return attempt;
+    }
+
+    private String compileJar(Class<? extends Operator> operatorClass, String operatorClassName) {
+        return OperatorCompiler.compileJar(operatorClass, operatorClassName);
     }
 
     private void assertStatusProgress(Long attemptId, TaskRunStatus... asserts) {
@@ -377,38 +402,6 @@ public class LocalExecutorTest extends DatabaseTestBase {
                         ((TaskAttemptFinishedEvent) e).getAttemptId() == attemptId)
                 .collect(Collectors.toList());
         return (TaskAttemptFinishedEvent) Iterables.getOnlyElement(events);
-    }
-
-    private String findTestJarFile() {
-        String fileName = "testOperators.jar";
-        URL url = getClass().getClassLoader().getResource(fileName);
-        File file = createTempFile(fileName, url);
-        return "file:" + file.getPath();
-    }
-
-    private String overwriteTestJarFile() {
-        String fileName = "testOperators2.jar";
-        String targetFileName = "testOperators.jar";
-        URL url = getClass().getClassLoader().getResource(fileName);
-        File file = createTempFile(targetFileName, url);
-        return "file:" + file.getPath();
-    }
-
-    private File createTempFile(String fileName, URL url) {
-        File file = new File(tempFolder.getRoot().getPath() + "/"  + fileName);
-        if (file.exists()) {
-            file.delete();
-        }
-        Resource outputResource = resourceLoader.getResource("file://" + file.getPath(),
-                true);
-        Resource inputResource = resourceLoader.getResource(url.toString(),
-                false);
-        try {
-            ByteStreams.copy(inputResource.getInputStream(), outputResource.getOutputStream());
-        } catch (IOException e) {
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
-        return file;
     }
 
     private void awaitUntilAttemptDone(long attemptId) {
