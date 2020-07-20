@@ -95,8 +95,8 @@ public class TaskServiceTest extends DatabaseTestBase {
 
         // Validate
         // 3. task should persist
-        Optional<Task> persistedTask = taskService.fetchTaskById(createdTask.getId());
-        assertTrue(persistedTask.isPresent());
+        Task persistedTask = taskService.find(createdTask.getId());
+        assertTrue(persistedTask.getId() > 0);
     }
 
     @Test
@@ -140,10 +140,7 @@ public class TaskServiceTest extends DatabaseTestBase {
 
         // Validate
         // 4. fetch updated entity and check
-        Optional<Task> updatedTaskOptional = taskService.fetchTaskById(createdTask.getId());
-        assertTrue(updatedTaskOptional.isPresent());
-        Task updatedTask = updatedTaskOptional.get();
-
+        Task updatedTask = taskService.find(createdTask.getId());
         assertThat(updatedTask, sameBeanAs(taskToUpdate));
     }
 
@@ -188,9 +185,7 @@ public class TaskServiceTest extends DatabaseTestBase {
         }
 
         // After all invalid operations, persisted task entity should remain unchanged
-        Optional<Task> taskOptional = taskService.fetchTaskById(createdTask.getId());
-        assertTrue(taskOptional.isPresent());
-        Task persistedTask = taskOptional.get();
+        Task persistedTask = taskService.find(createdTask.getId());
         assertThat(persistedTask, sameBeanAs(createdTask));
     }
 
@@ -215,8 +210,11 @@ public class TaskServiceTest extends DatabaseTestBase {
 
         // Validate
         // 4. Fetch updated task
-        Task updatedTask = taskService.fetchTaskById(createdTask.getId()).orElse(null);
+        Task updatedTask = taskService.find(createdTask.getId());
         // 5. and `name` property should be updated
+        assertThat(updatedTask, samePropertyValuesAs(createdTask,"config", "name"));
+        assertThat(updatedTask.getConfig().size(), is(createdTask.getConfig().size()));
+        // 6. and `name` property should be updated
         assertThat(updatedTask.getName(), is("Updated Task Name"));
         // 6. all properties except `name` should remain unchanged
         // TODO: improve `sameBeanAs()` to accept ignored fields
@@ -250,9 +248,7 @@ public class TaskServiceTest extends DatabaseTestBase {
         }
 
         // After all invalid operations, persisted task entity should remain unchanged
-        Optional<Task> taskOptional = taskService.fetchTaskById(createdTask.getId());
-        assertTrue(taskOptional.isPresent());
-        Task persistedTask = taskOptional.get();
+        Task persistedTask = taskService.find(createdTask.getId());
         assertThat(persistedTask, sameBeanAs(createdTask));
     }
 
@@ -376,7 +372,7 @@ public class TaskServiceTest extends DatabaseTestBase {
         taskService.deleteTask(createdTask);
 
         // Validate
-        Optional<Task> removedTask = taskService.fetchTaskById(createdTask.getId());
+        Optional<Task> removedTask = taskDao.fetchById(createdTask.getId());
         assertFalse(removedTask.isPresent());
     }
 

@@ -19,8 +19,6 @@ public class TaskAttempt {
 
     private TaskRunStatus status;
 
-    private String logPath;
-
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
     private OffsetDateTime startAt;
 
@@ -49,10 +47,6 @@ public class TaskAttempt {
 
     public TaskRunStatus getStatus() {
         return status;
-    }
-
-    public String getLogPath() {
-        return logPath;
     }
 
     public OffsetDateTime getStartAt() {

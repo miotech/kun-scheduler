@@ -19,6 +19,7 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -27,6 +28,8 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class TaskService {
+    private static final String TASK_ID_SHOULD_NOT_BE_NULL = "Invalid argument `taskId`: null";
+
     @Inject
     private TaskDao taskDao;
 
@@ -78,23 +81,19 @@ public class TaskService {
 
     public Task partialUpdateTask(Long taskId, TaskPropsVO vo) {
         // 1. Validate arguments
-        Preconditions.checkNotNull(taskId, "Invalid argument `taskId`: null");
+        Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
         Preconditions.checkNotNull(vo, "Cannot perform update with vo: null");
 
-        // 2. If task not exists, throw exception
-        Optional<Task> taskOptional = taskDao.fetchById(taskId);
-        if (!taskOptional.isPresent()) {
-            throw new EntityNotFoundException(String.format("Cannot perform update on non-exist task with id: %d", taskId));
-        }
-
-        // 3. Produce a "partially" updated task from existing one as template
-        Task task = taskOptional.get();
+        Task task = find(taskId);
         Task taskToUpdate = task.cloneBuilder()
                 .withId(taskId)
                 .withName(StringUtils.isEmpty(vo.getName()) ? task.getName() : vo.getName())
                 .withDescription(StringUtils.isEmpty(vo.getDescription()) ? task.getDescription() : vo.getDescription())
                 .withOperatorId(Objects.isNull(vo.getOperatorId()) ? task.getOperatorId() : vo.getOperatorId())
                 .withConfig(Objects.isNull(vo.getConfig()) ? task.getConfig() : vo.getConfig())
+                .withScheduleConf(Objects.isNull(vo.getScheduleConf()) ? task.getScheduleConf() : vo.getScheduleConf())
+                .withDependencies(vo.getDependencies() == null ? task.getDependencies() : vo.getDependencies())
+                .withTags(vo.getTags() == null ? task.getTags() : vo.getTags())
                 .build();
 
         // 4. perform update
@@ -102,7 +101,10 @@ public class TaskService {
     }
 
     public Task fullUpdateTaskById(Long taskId, TaskPropsVO vo) {
-        Task task = Task.newBuilder()
+        Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
+        Preconditions.checkNotNull(vo, "Cannot perform update with vo: null");
+
+        Task task = find(taskId).cloneBuilder()
                 .withId(taskId)
                 .withName(vo.getName())
                 .withScheduleConf(vo.getScheduleConf())
@@ -110,6 +112,7 @@ public class TaskService {
                 .withConfig(vo.getConfig())
                 .withDescription(vo.getDescription())
                 .withOperatorId(vo.getOperatorId())
+                .withTags(vo.getTags())
                 .build();
         return fullUpdateTask(task);
     }
@@ -159,13 +162,16 @@ public class TaskService {
     }
 
     /**
-     * Fetch single task by id, returns optional
+     * Fetch single task by id
      * @param taskId Task id
-     * @return task optional
+     * @return task
      */
-    public Optional<Task> fetchTaskById(Long taskId) {
-        Preconditions.checkNotNull(taskId, "Invalid argument `taskId`: null");
-        return taskDao.fetchById(taskId);
+    public Task find(Long taskId) {
+        Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
+        return taskDao.fetchById(taskId)
+                .orElseThrow(() ->
+                new EntityNotFoundException(String.format("Cannot find task with id: %s", taskId))
+        );
     }
 
     public void deleteTask(Task task) {
