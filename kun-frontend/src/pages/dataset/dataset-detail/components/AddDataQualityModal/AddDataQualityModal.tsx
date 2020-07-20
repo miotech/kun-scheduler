@@ -550,7 +550,7 @@ export default memo(function AddDataQualityModal({
     };
 
     setConfirmLoading(true);
-    const loadingFunc = message.loading(t('common.loading'));
+    const loadingFunc = message.loading(t('common.loading'), 0);
     if (!dataQualityId) {
       const resp = await addDataQualityService(params);
       if (resp) {

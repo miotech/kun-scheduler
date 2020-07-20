@@ -72,6 +72,10 @@ function Breadcrumb({ route }: Props) {
         </Link>
       );
     }
+
+    if (!routeItem.breadcrumbLink) {
+      return <span>{routeItem.title}</span>;
+    }
     return (
       <Link
         to={realPth(routeItem.path || '/', selectedData.currentParams || {})}

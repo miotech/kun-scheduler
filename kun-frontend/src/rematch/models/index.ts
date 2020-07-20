@@ -4,6 +4,10 @@ import { dataDiscovery } from './dataDiscovery';
 import { datasetDetail } from './datasetDetail';
 import { dataSettings } from './dataSettings';
 import { glossary } from './glossary';
+import { pdfTryout } from './pdfTryout';
+import { pdfExtract } from './pdfExtract';
+import { pdfBatchTask } from './pdfBatchTask';
+import { pdfFileTask } from './pdfFileTask';
 
 export interface RootModel {
   user: typeof user;
@@ -12,6 +16,10 @@ export interface RootModel {
   datasetDetail: typeof datasetDetail;
   dataSettings: typeof dataSettings;
   glossary: typeof glossary;
+  pdfTryout: typeof pdfTryout;
+  pdfExtract: typeof pdfExtract;
+  pdfBatchTask: typeof pdfBatchTask;
+  pdfFileTask: typeof pdfFileTask;
 }
 
 export const models: RootModel = {
@@ -21,6 +29,10 @@ export const models: RootModel = {
   datasetDetail,
   dataSettings,
   glossary,
+  pdfTryout,
+  pdfExtract,
+  pdfBatchTask,
+  pdfFileTask,
 };
 
 // some common types

@@ -3,7 +3,7 @@ import React, { memo, useMemo, useState, useEffect, useCallback } from 'react';
 import { Modal, Input, Select, Button, InputNumber } from 'antd';
 import _ from 'lodash';
 
-import { watermarkFormatter } from '@/utils';
+import { watermarkFormatter } from '@/utils/glossaryUtiles';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';

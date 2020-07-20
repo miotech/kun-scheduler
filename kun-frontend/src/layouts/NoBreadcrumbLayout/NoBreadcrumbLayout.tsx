@@ -34,7 +34,7 @@ export default memo(function NoBreadcrumbLayout({ children, route }: Props) {
         <Layout className={css.siderAndContent}>
           <Sider route={route} />
           <Content className={css.content}>
-            <div>{children}</div>
+            <div style={{ height: '100%' }}>{children}</div>
           </Content>
         </Layout>
       </Layout>

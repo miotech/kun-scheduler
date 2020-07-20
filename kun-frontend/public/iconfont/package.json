@@ -1,0 +1,12 @@
+{
+  "name": "@miotech/iconfont",
+  "version": "1.23.7",
+  "description": "MioTech Icon Font",
+  "repository": "https://gitlab.com/mioying-project/miotech-web-lib-iconfont.git",
+  "main": "font/iconfont.css",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
