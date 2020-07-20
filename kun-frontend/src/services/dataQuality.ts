@@ -70,9 +70,13 @@ export interface FetchValidateSQLServiceRespBody {
   validateStatus: ValidateStatus;
 }
 
-export async function fetchValidateSQLService(sqlText: string) {
+export async function fetchValidateSQLService(
+  sqlText: string,
+  datasetId: string,
+) {
   const resp = await post<FetchValidateSQLServiceRespBody>('/sql/validate', {
     sqlText,
+    datasetId: datasetId,
   });
   // const resp = {
   //   validateStatus: true,
