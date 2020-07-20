@@ -81,4 +81,16 @@ public class DataSourceContainer {
             ((HikariDataSource) dataSource).close();
         }
     }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        for (DataSource dataSource : queryDataSourceCache.values()) {
+            HikariDataSource hikariDataSource = ((HikariDataSource) dataSource);
+            builder.append("url: ");
+            builder.append(hikariDataSource.getJdbcUrl());
+            builder.append("\n");
+        }
+        return builder.toString();
+    }
 }
