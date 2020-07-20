@@ -1,6 +1,7 @@
 package com.miotech.kun.commons.query;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -12,6 +13,8 @@ public class JDBCQueryEntry implements QueryEntry {
     private String queryString;
 
     private List<Object> queryArgs;
+
+    private JDBCQueryEntry() {}
 
     public String getQueryString() {
         return queryString;
@@ -44,13 +47,13 @@ public class JDBCQueryEntry implements QueryEntry {
             return this;
         }
 
-        public Builder queryArg(Object arg) {
-            this.queryArgs.add(arg);
+        public Builder queryArgs(Object... args) {
+            this.queryArgs.addAll(Arrays.asList(args));
             return this;
         }
 
-        public Builder queryArgs(List<Object> queryArgs) {
-            this.queryArgs = queryArgs;
+        public Builder queryArgs(List<Object> args) {
+            this.queryArgs = args;
             return this;
         }
 

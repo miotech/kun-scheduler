@@ -35,14 +35,14 @@ public enum DataSourceType {
     }
 
     public static JDBCConnectionInfo getJDBCConnectionInfo(MetadataConnectionInfo mcInfo) {
-        if (StringUtils.isEmpty(mcInfo.getType())) {
+        if (StringUtils.isEmpty(mcInfo.getDatasourceType())) {
             throw ExceptionUtils.wrapIfChecked(new RuntimeException("DataSource type is empty, unable to parse url"));
         }
 
-        if (StringUtils.equals(PostgreSQL.name(), mcInfo.getType())) {
+        if (StringUtils.equals(PostgreSQL.name(), mcInfo.getDatasourceType())) {
             return parseFormalConnectionInfo(PostgreSQL, mcInfo);
 
-        } else if (StringUtils.equals(AWS.name(), mcInfo.getType())) {
+        } else if (StringUtils.equals(AWS.name(), mcInfo.getDatasourceType())) {
             JDBCConnectionInfo connectionInfo = new JDBCConnectionInfo();
             connectionInfo.setUrl((String) mcInfo.getConnectionInfo().get("athenaUrl"));
             connectionInfo.setUsername((String) mcInfo.getConnectionInfo().get("athenaUsername"));
@@ -50,7 +50,7 @@ public enum DataSourceType {
             connectionInfo.setDriverClass(AWS.getDriverClass());
             return connectionInfo;
         } else {
-            throw ExceptionUtils.wrapIfChecked(new RuntimeException("Unsupported datasource type: " + mcInfo.getType()));
+            throw ExceptionUtils.wrapIfChecked(new RuntimeException("Unsupported datasource type: " + mcInfo.getDatasourceType()));
         }
     }
 
@@ -80,7 +80,7 @@ public enum DataSourceType {
     private static String parseFormalURL(String protocalHeader,
                                          String host,
                                          Integer port,
-                                         String databaseName) {
+                                         String urlPostfix) {
         return JDBC_PROTOCOL
                 + protocalHeader
                 + PROTOCOL_DELIMITER
@@ -89,6 +89,6 @@ public enum DataSourceType {
                 + PROTOCOL_DELIMITER
                 + port
                 + PATH_SEPARATOR
-                + databaseName;
+                + urlPostfix;
     }
 }

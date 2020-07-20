@@ -17,6 +17,8 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class DataSourceContainer {
 
+    private static final String CACHE_ID_SEPARATOR = ":";
+
     private MetadataService metadataService;
 
     private final Object initDataSourceLock = new Object();
@@ -69,7 +71,9 @@ public class DataSourceContainer {
     }
 
     private String getCacheId(QuerySite querySite) {
-        return querySite.getDatasourceId() + ":" + querySite.getUrlPostfix();
+        return querySite.getSiteId()
+                + CACHE_ID_SEPARATOR
+                + querySite.getUrlPostfix();
     }
 
     public void cleanUp() {

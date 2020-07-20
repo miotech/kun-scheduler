@@ -3,6 +3,7 @@ package com.miotech.kun.commons.query.datasource;
 import com.miotech.kun.commons.query.service.ConfigService;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.sql.DataSource;
 import java.util.Properties;
@@ -33,6 +34,10 @@ public class MetadataDataSource {
 
     private void initMetadataDataSource() {
         Properties props = ConfigService.getInstance().getProperties();
+        if (StringUtils.isEmpty(props.getProperty("metadata.datasource.url"))) {
+            ConfigService.getInstance().loadConf();
+            props = ConfigService.getInstance().getProperties();
+        }
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl(props.getProperty("metadata.datasource.url"));
         config.setUsername(props.getProperty("metadata.datasource.username"));

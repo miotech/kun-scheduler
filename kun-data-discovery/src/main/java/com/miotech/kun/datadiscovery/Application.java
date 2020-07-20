@@ -1,7 +1,9 @@
 package com.miotech.kun.datadiscovery;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.core.env.Environment;
 
 /**
  * @author: Melo
@@ -12,6 +14,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
         "com.miotech.kun.common",
         "com.miotech.kun.security"})
 public class Application {
+
+    @Autowired
+    private Environment environment;
 
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
