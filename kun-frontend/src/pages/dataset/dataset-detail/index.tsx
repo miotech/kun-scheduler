@@ -265,11 +265,14 @@ export default function DatasetDetail({ match }: Props) {
           <div className={styles.titleRow}>
             <span className={styles.titleAndWatermark}>
               <span className={styles.title}>{selector.name}</span>
-              <span className={styles.watermark}>
-                {`${watermarkFormatter(
-                  selector.low_watermark?.time,
-                )} - ${watermarkFormatter(selector.low_watermark?.time)}`}
-              </span>
+              {selector.low_watermark?.time &&
+                selector.high_watermark?.time && (
+                  <span className={styles.watermark}>
+                    {`${watermarkFormatter(
+                      selector.low_watermark?.time,
+                    )} - ${watermarkFormatter(selector.high_watermark?.time)}`}
+                  </span>
+                )}
             </span>
 
             <Button

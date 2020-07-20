@@ -7,9 +7,7 @@ import React, {
   useRef,
 } from 'react';
 import { Controlled as CodeMirror } from 'react-codemirror2';
-import 'codemirror/lib/codemirror.css';
-import 'codemirror/theme/material.css';
-import 'codemirror/mode/sql/sql';
+
 import { Modal, Spin, Input, Radio, Select, message, Button } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import uniqueId from 'lodash/uniqueId';
@@ -42,6 +40,10 @@ import { fetchDatasetColumnsService } from '@/services/datasetDetail';
 
 import ValidateRule, { ValidateRuleHandle } from '../ValidateRule/ValidateRule';
 import RelatedTablesComp from '../RelatedTablesComp/RelatedTablesComp';
+
+import 'codemirror/lib/codemirror.css';
+import 'codemirror/theme/material.css';
+import 'codemirror/mode/sql/sql';
 
 import styles from './AddDataQualityModal.less';
 
@@ -205,6 +207,7 @@ export default memo(function AddDataQualityModal({
     setSelectedTableTemplateId(undefined);
     setSelectedFieldTemplateId(undefined);
     setSelectedApplyFieldIds([]);
+    setCustomizeInputtingObj({});
   }, [visible]);
 
   // 切换 dimension
@@ -307,14 +310,14 @@ export default memo(function AddDataQualityModal({
     async (sql: string) => {
       setValidateSQLLoading(true);
       const validateSQLLoadingFunc = message.loading(t('common.loading'), 0);
-      const resp = await fetchValidateSQLService(sql);
+      const resp = await fetchValidateSQLService(sql, datasetId);
       setValidateSQLLoading(false);
       validateSQLLoadingFunc();
       if (resp) {
         setValidateSQLStatus(resp.validateStatus);
       }
     },
-    [t],
+    [datasetId, t],
   );
 
   const getCustomizeCompFunc = useCallback(
@@ -330,6 +333,7 @@ export default memo(function AddDataQualityModal({
                 mode: 'sql',
                 theme: 'material',
                 lineNumbers: true,
+                lineWrapping: true,
               }}
               onBeforeChange={(_editor, _data, value) => {
                 setCustomizeInputtingObj((obj: any) => ({
@@ -681,7 +685,7 @@ export default memo(function AddDataQualityModal({
 
           <div className={styles.fieldItem}>
             <div className={styles.fieldTitle}>
-              {t('dataDetail.dataQuality.dimension')}
+              {t('dataDetail.dataQuality.validateRule')}
               <span className={styles.required}>*</span>
             </div>
             <div className={styles.validateFieldContentContainer}>
