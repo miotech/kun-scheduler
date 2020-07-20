@@ -1,0 +1,104 @@
+# workflow:
+#   rules:
+#     - changes:
+#       - kun-metadata/*
+
+verify-kun-data-discovery-test:
+  extends: .build-kun-data-discovery
+  stage: verify
+  image: gradle:6.5.0-jdk8
+  except:
+    - master
+    - release
+    - production
+    - tags
+  allow_failure: false
+  script:
+    - ./gradlew check -p kun-data-discovery
+
+verify-kun-data-discovery-sonar:
+  extends: .build-kun-data-discovery
+  stage: verify
+  image: mioyingtech/gradle-sonar:0.1-build
+  except:
+    - release
+    - production
+    - tags
+  allow_failure: false
+  script:
+    - >
+      if [ $CI_COMMIT_REF_NAME == "master" ]; then 
+          ./gradlew sonarqube -p kun-data-discovery -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=publish -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-data-discovery -Dsonar.projectName='kun-data-discovery';
+      else ./gradlew sonarqube -p kun-data-discovery -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=preview -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-data-discovery -Dsonar.projectName='kun-data-discovery';  
+      fi
+
+kun-data-discovery-build:
+  extends: .build-kun-data-discovery
+  stage: build
+  image: gradle:6.5.0-jdk8
+  tags:
+    - build
+  script:
+    - ./gradlew :kun-data-discovery:bootJar
+    - mkdir -p /builds/artifacts/kun-data-discovery/${CI_COMMIT_REF_NAME}/
+    - cp kun-data-discovery/build/libs/*.jar /builds/artifacts/kun-data-discovery/${CI_COMMIT_REF_NAME}/
+  only:
+    refs:
+      - master
+      - release
+      - /.*v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-data-discovery\-([1-9]\d{0,3}).*$/
+
+kun-data-discovery-push:
+  extends: .build-kun-data-discovery
+  image: mioyingtech/docker:latest
+  stage: build-images
+  tags:
+    - docker-push
+  script:
+    - mkdir -p /builds/kun-data-discovery/build/libs/
+    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-data-discovery/${CI_COMMIT_REF_NAME}/ /builds/kun-data-discovery/build/libs/
+    - docker login -u $CI_BUILD_DOCKER_USER -p $CI_BUILD_TOKEN $CI_BUILD_DOCKER_URL
+    - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery:$CI_COMMIT_REF_NAME /builds/kun-data-discovery/
+    - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-data-discovery:$CI_COMMIT_REF_NAME
+  only:
+    refs:
+      - master
+      - release
+      - /.*v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-data-discovery\-([1-9]\d{0,3}).*$/
+
+kun-data-discovery-set-tag:
+  extends: .build-kun-data-discovery
+  stage: set-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  script:
+    - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-data-discovery
+  only:
+    refs:
+      - production
+      
+kun-data-discovery-set-tag-hotfix:
+  extends: .build-kun-data-discovery
+  stage: set-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  script:
+    - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-data-discovery
+  only:
+    refs:
+      - /^HOTFIX+.*/
+  when: manual
+
+kun-data-discovery-save-tag:
+  extends: .build-kun-data-discovery
+  stage: save-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  only:
+    - /.*v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-data-discovery\-([1-9]\d{0,3}).*$/
+  script:
+    - python /tmp/saveTag.py --appName=kun-data-discovery --tag=${CI_COMMIT_REF_NAME}
+  allow_failure: true

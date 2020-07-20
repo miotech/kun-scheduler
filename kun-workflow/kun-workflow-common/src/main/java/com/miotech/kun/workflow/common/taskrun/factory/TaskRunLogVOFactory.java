@@ -5,6 +5,8 @@ import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import java.util.List;
 
 public class TaskRunLogVOFactory {
+    private TaskRunLogVOFactory() {
+    }
 
     public static TaskRunLogVO create(long taskRunId, int attempt, long startLine, long endLine, List<String> logs) {
         TaskRunLogVO taskRunLogVO = new TaskRunLogVO();

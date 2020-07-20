@@ -4,12 +4,10 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.databuilder.TestContainerUtil;
 import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticSearchIndexExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.MioElasticSearchClient;
 import com.miotech.kun.metadata.databuilder.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
 import com.miotech.kun.metadata.databuilder.model.DatasetStat;
 import com.miotech.kun.metadata.databuilder.model.ElasticSearchDataSource;
-import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
@@ -17,6 +15,10 @@ import org.junit.Test;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
 
@@ -26,6 +28,8 @@ public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
     private ElasticsearchContainer elasticsearchContainer;
 
     private ElasticSearchIndexExtractor elasticSearchIndexExtractor;
+
+    private String index = "test_index";
 
     @Before
     public void setUp() {
@@ -39,7 +43,7 @@ public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
                 .withPassword("changeme")
                 .build();
 
-        elasticSearchIndexExtractor = new ElasticSearchIndexExtractor(dataSource, "test_index", new MioElasticSearchClient(dataSource));
+        elasticSearchIndexExtractor = new ElasticSearchIndexExtractor(dataSource, index);
     }
 
     @After
@@ -54,7 +58,7 @@ public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
         List<DatasetField> schema = elasticSearchIndexExtractor.getSchema();
 
         // verify
-        MatcherAssert.assertThat(schema.size(), Matchers.is(2));
+        assertThat(schema.size(), Matchers.is(2));
     }
 
     @Test
@@ -63,7 +67,7 @@ public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
         List<DatasetField> schema = elasticSearchIndexExtractor.getSchema();
         for (DatasetField datasetField : schema) {
             DatasetFieldStat fieldStats = elasticSearchIndexExtractor.getFieldStats(datasetField);
-            MatcherAssert.assertThat(fieldStats, Matchers.notNullValue());
+            assertThat(fieldStats, notNullValue());
         }
     }
 
@@ -71,7 +75,14 @@ public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
     public void getTableStats() {
         // execute biz logic
         DatasetStat tableStats = elasticSearchIndexExtractor.getTableStats();
-        MatcherAssert.assertThat(tableStats, Matchers.notNullValue());
+        assertThat(tableStats, notNullValue());
+    }
+
+    @Test
+    public void getName() {
+        // execute biz logic
+        String indexName = elasticSearchIndexExtractor.getName();
+        assertThat(indexName, is(index));
     }
 
 }

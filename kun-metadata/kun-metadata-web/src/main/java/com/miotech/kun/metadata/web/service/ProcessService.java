@@ -7,13 +7,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.web.utils.HttpClientUtil;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
+import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.PropKey;
+import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.constant.WorkflowApiParam;
+import com.miotech.kun.metadata.web.model.vo.OperatorPropsVO;
+import com.miotech.kun.metadata.web.model.vo.RunTaskVO;
+import com.miotech.kun.metadata.web.model.vo.TaskPropsVO;
 import com.miotech.kun.metadata.web.util.WorkflowApiResponseParseUtil;
 import com.miotech.kun.metadata.web.util.WorkflowUrlGenerator;
-import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
-import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
-import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
@@ -54,81 +56,112 @@ public class ProcessService {
         return result;
     }
 
-    public void createOperator() {
-        String result = httpClientUtil.doPost(workflowUrlGenerator.generateCreateOperatorUrl(), buildCreateOperatorParams());
+    public void createOperator(String operatorName, String packagePath) {
+        String result = httpClientUtil.doPost(workflowUrlGenerator.generateCreateOperatorUrl(),
+                buildCreateOperatorParams(operatorName, packagePath));
         logger.debug("Call Create Operator result: {}", result);
         if (!WorkflowApiResponseParseUtil.isSuccess(result)) {
             logger.warn("Create Operator result: {}", result);
             throw new IllegalStateException("Create Operator Fail");
         }
 
-        properties.setProperty(PropKey.OPERATOR_ID, WorkflowApiResponseParseUtil.parseIdAfterCreate(result).toString());
+        properties.setProperty(OperatorParam.get(operatorName).getOperatorKey(), WorkflowApiResponseParseUtil.parseIdAfterCreate(result).toString());
     }
 
-    public void createTask() {
-        String result = httpClientUtil.doPost(workflowUrlGenerator.generateCreateTaskUrl(), buildCreateTaskParams());
+    public void createTask(String taskName, Long operatorId) {
+        String result = httpClientUtil.doPost(workflowUrlGenerator.generateCreateTaskUrl(),
+                buildCreateTaskParams(taskName, operatorId));
         logger.debug("Call Create Task result: {}", result);
         if (!WorkflowApiResponseParseUtil.isSuccess(result)) {
             logger.warn("Create Task result: {}", result);
             throw new IllegalStateException("Create Task Fail");
         }
 
-        properties.setProperty(PropKey.TASK_ID, WorkflowApiResponseParseUtil.parseIdAfterCreate(result).toString());
+        properties.setProperty(TaskParam.get(taskName).getTaskKey(), WorkflowApiResponseParseUtil.parseIdAfterCreate(result).toString());
     }
 
-    private String buildCreateOperatorParams() {
+    private String buildCreateOperatorParams(String operatorName, String packagePath) {
         OperatorPropsVO operatorPropsVO = OperatorPropsVO.newBuilder()
-                .withName(WorkflowApiParam.OPERATOR_NAME)
+                .withName(operatorName)
                 .withDescription(StringUtils.EMPTY)
                 .withParams(Lists.newArrayList())
-                .withPackagePath(WorkflowApiParam.PACKAGE_PATH)
+                .withPackagePath(packagePath)
                 .withClassName(WorkflowApiParam.CLASS_NAME)
                 .build();
 
         return JSONUtils.toJsonString(operatorPropsVO);
     }
 
-    private String buildCreateTaskParams() {
-        List<Variable> variables = Arrays.asList(Variable.newBuilder().withKey(PropKey.JDBC_URL).build(),
-                Variable.newBuilder().withKey(PropKey.USERNAME).build(),
-                Variable.newBuilder().withKey(PropKey.PASSWORD).build(),
-                Variable.newBuilder().withKey(PropKey.DRIVER_CLASS_NAME).build(),
-                Variable.newBuilder().withKey(PropKey.DEPLOY_MODE).build(),
-                Variable.newBuilder().withKey(PropKey.DATASOURCE_ID).build(),
-                Variable.newBuilder().withKey(PropKey.GID).build());
-
-
-        TaskPropsVO taskPropsVO = TaskPropsVO.newBuilder()
-                .withName(WorkflowApiParam.TASK_NAME)
+    private String buildCreateTaskParams(String taskName, Long operatorId) {
+        TaskPropsVO.TaskPropsVOBuilder propsVOBuilder = TaskPropsVO.newBuilder()
+                .withName(taskName)
                 .withDescription(StringUtils.EMPTY)
-                .withOperatorId(Long.parseLong(properties.getProperty(PropKey.OPERATOR_ID)))
+                .withOperatorId(operatorId)
                 .withArguments(Lists.newArrayList())
-                .withVariableDefs(variables)
-                .withScheduleConf(ScheduleConf.ScheduleConfBuilder.aScheduleConf().withType(ScheduleType.NONE).build())
                 .withDependencies(Lists.newArrayList())
-                .build();
+                .withTags(Lists.newArrayList());
+        fillInfo(propsVOBuilder, taskName);
+        return JSONUtils.toJsonString(propsVOBuilder.build());
+    }
 
-        return JSONUtils.toJsonString(taskPropsVO);
+    private void fillInfo(TaskPropsVO.TaskPropsVOBuilder builder, String taskName) {
+        List<Variable> variables = buildVariablesForCreate(taskName);
+        TaskParam taskParam = TaskParam.get(taskName);
+        switch (taskParam) {
+            case REFRESH:
+                builder.withScheduleConf(ScheduleConf.ScheduleConfBuilder.aScheduleConf().withType(ScheduleType.NONE).build());
+                builder.withVariableDefs(variables);
+                break;
+            case BUILD_ALL:
+                builder.withScheduleConf(ScheduleConf.ScheduleConfBuilder.aScheduleConf().withType(ScheduleType.SCHEDULED)
+                        .withCronExpr(properties.getProperty(PropKey.CRON_EXPR)).build());
+                builder.withVariableDefs(variables);
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid taskName:" + taskName);
+        }
     }
 
     private String buildTaskRunParams(Long id, DataBuilderDeployMode deployMode) {
         List<RunTaskVO> runTaskVOs = Lists.newArrayList();
 
         RunTaskVO datasourceIdVO = new RunTaskVO();
-        datasourceIdVO.setTaskId(Long.parseLong(properties.getProperty(PropKey.TASK_ID)));
-        datasourceIdVO.setVariables(buildVariables(deployMode, id.toString()));
+        datasourceIdVO.setTaskId(Long.parseLong(properties.getProperty(TaskParam.REFRESH.getTaskKey())));
+        datasourceIdVO.setVariables(buildVariablesForTaskRun(deployMode, id.toString()));
 
         runTaskVOs.add(datasourceIdVO);
         return JSONUtils.toJsonString(runTaskVOs);
     }
 
-    private Map<String, String> buildVariables(DataBuilderDeployMode deployMode, String id) {
+    private List<Variable> buildVariablesForCreate(String taskName) {
+        TaskParam taskParam = TaskParam.get(taskName);
+        switch (taskParam) {
+            case REFRESH:
+                return Arrays.asList(Variable.newBuilder().withKey(PropKey.JDBC_URL).build(),
+                        Variable.newBuilder().withKey(PropKey.USERNAME).build(),
+                        Variable.newBuilder().withKey(PropKey.PASSWORD).build(),
+                        Variable.newBuilder().withKey(PropKey.DRIVER_CLASS_NAME).build(),
+                        Variable.newBuilder().withKey(PropKey.DEPLOY_MODE).build(),
+                        Variable.newBuilder().withKey(PropKey.DATASOURCE_ID).build(),
+                        Variable.newBuilder().withKey(PropKey.GID).build());
+            case BUILD_ALL:
+                return Arrays.asList(Variable.newBuilder().withKey(PropKey.JDBC_URL).withValue(properties.getProperty(PropKey.JDBC_URL)).build(),
+                        Variable.newBuilder().withKey(PropKey.USERNAME).withValue(properties.getProperty(PropKey.USERNAME)).build(),
+                        Variable.newBuilder().withKey(PropKey.PASSWORD).withValue(properties.getProperty(PropKey.PASSWORD)).build(),
+                        Variable.newBuilder().withKey(PropKey.DRIVER_CLASS_NAME).withValue(properties.getProperty(PropKey.DRIVER_CLASS_NAME)).build(),
+                        Variable.newBuilder().withKey(PropKey.DEPLOY_MODE).withValue(DataBuilderDeployMode.ALL.name()).build());
+            default:
+                throw new IllegalArgumentException("Invalid taskName:" + taskName);
+        }
+    }
+
+    private Map<String, String> buildVariablesForTaskRun(DataBuilderDeployMode deployMode, String id) {
         Map<String, String> variables = Maps.newHashMap();
-        variables.put(PropKey.DEPLOY_MODE, deployMode.name());
         variables.put(PropKey.JDBC_URL, properties.getProperty(PropKey.JDBC_URL));
         variables.put(PropKey.USERNAME, properties.getProperty(PropKey.USERNAME));
         variables.put(PropKey.PASSWORD, properties.getProperty(PropKey.PASSWORD));
         variables.put(PropKey.DRIVER_CLASS_NAME, properties.getProperty(PropKey.DRIVER_CLASS_NAME));
+        variables.put(PropKey.DEPLOY_MODE, deployMode.name());
 
         switch (deployMode) {
             case DATASOURCE:

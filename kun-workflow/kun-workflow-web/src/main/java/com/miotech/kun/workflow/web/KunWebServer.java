@@ -8,8 +8,8 @@ import com.miotech.kun.workflow.SchedulerManager;
 import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.common.CommonModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
-import com.miotech.kun.workflow.db.DatabaseSetup;
-import com.miotech.kun.workflow.utils.PropertyUtils;
+import com.miotech.kun.commons.db.DatabaseSetup;
+import com.miotech.kun.commons.utils.PropertyUtils;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -89,7 +89,9 @@ public class KunWebServer {
         }
     }
 
-    public boolean isServerRunning() { return this.server.isRunning(); }
+    public boolean isServerRunning() {
+        return this.server.isRunning();
+    }
 
     public static void main(final String[] args) {
         // Redirect all std out and err messages into log4j

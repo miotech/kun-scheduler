@@ -1,18 +1,21 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.postgres;
 
 import com.google.common.base.Preconditions;
+import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
-import com.miotech.kun.metadata.databuilder.extract.tool.DatasetNameGenerator;
 import com.miotech.kun.metadata.databuilder.extract.tool.TableOrFieldNameEscapeUtil;
+import com.miotech.kun.metadata.databuilder.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.PostgresDataStore;
-import com.miotech.kun.workflow.db.DatabaseOperator;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.JSONUtils;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -24,15 +27,18 @@ public class PostgresTableExtractor extends ExtractorTemplate {
     private final String schema;
     private final String table;
     private final DatabaseOperator dbOperator;
+    private final DataSource pgDataSource;
 
-    public PostgresTableExtractor(PostgresDataSource dataSource, String database, String schema, String table, DatabaseOperator dbOperator) {
+    public PostgresTableExtractor(PostgresDataSource dataSource, String database, String schema, String table) {
         super(dataSource.getId());
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
         this.dataSource = dataSource;
         this.database = database;
         this.schema = schema;
         this.table = table;
-        this.dbOperator = dbOperator;
+        this.pgDataSource = JDBCClient.getDataSource(UseDatabaseUtil.useSchema(dataSource.getUrl(), database, schema),
+                this.dataSource.getUsername(), this.dataSource.getPassword(), DatabaseType.POSTGRES);
+        this.dbOperator = new DatabaseOperator(pgDataSource);
     }
 
     @Override
@@ -141,8 +147,15 @@ public class PostgresTableExtractor extends ExtractorTemplate {
     }
 
     @Override
-    protected String getName() {
-        return DatasetNameGenerator.generateDatasetName(DatabaseType.POSTGRES, table);
+    public String getName() {
+        return table;
+    }
+
+    @Override
+    protected void close() {
+        if (pgDataSource instanceof HikariDataSource) {
+            ((HikariDataSource) pgDataSource).close();
+        }
     }
 
     private DatasetFieldType.Type convertRawType(String rawType) {

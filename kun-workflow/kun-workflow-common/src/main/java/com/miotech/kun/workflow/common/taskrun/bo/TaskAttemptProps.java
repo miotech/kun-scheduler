@@ -1,6 +1,10 @@
 package com.miotech.kun.workflow.common.taskrun.bo;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
 import java.time.OffsetDateTime;
 
@@ -10,10 +14,16 @@ import java.time.OffsetDateTime;
  * 字段并不完全，目前选取的是最常用的字段。可随业务需求发展添加新的字段。
  */
 public class TaskAttemptProps {
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long id;
 
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long taskRunId;
 
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long taskId;
 
     private final String taskName;
@@ -79,6 +89,19 @@ public class TaskAttemptProps {
 
     public static TaskAttemptInfoBuilder newBuilder() {
         return new TaskAttemptInfoBuilder();
+    }
+
+    public TaskAttemptInfoBuilder cloneBuilder() {
+        return new TaskAttemptInfoBuilder()
+                .withId(this.id)
+                .withTaskRunId(this.taskRunId)
+                .withTaskId(this.taskId)
+                .withTaskName(this.taskName)
+                .withAttempt(this.attempt)
+                .withStatus(this.status)
+                .withLogPath(this.logPath)
+                .withStartAt(this.startAt)
+                .withEndAt(this.endAt);
     }
 
     public static final class TaskAttemptInfoBuilder {

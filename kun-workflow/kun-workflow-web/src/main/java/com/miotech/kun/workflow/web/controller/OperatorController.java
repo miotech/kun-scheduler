@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
-import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.web.annotation.QueryParameter;
 import com.miotech.kun.workflow.web.annotation.RequestBody;
 import com.miotech.kun.workflow.web.annotation.RouteMapping;
@@ -33,21 +32,19 @@ public class OperatorController {
                                @QueryParameter(defaultValue = "100") int pageSize,
                                @QueryParameter String name) {
 
-        return operatorService.fetchOperatorsWithFilter(
-                OperatorSearchFilter.newBuilder()
-                    .withPageNum(pageNum)
-                    .withPageSize(pageSize)
-                    .withKeyword(name)
-                    .build()
-        );
+        OperatorSearchFilter filter = OperatorSearchFilter.newBuilder()
+                .withPageNum(pageNum)
+                .withPageSize(pageSize)
+                .withKeyword(name)
+                .build();
+        return operatorService.fetchOperatorsWithFilter(filter);
     }
 
     @RouteMapping(url= "/operators", method = "POST")
     public Object createOperator(@RequestBody OperatorPropsVO operatorPropsVO) {
         Preconditions.checkNotNull(operatorPropsVO, "Received invalid operator properties: null");
         logger.debug("operatorPropsVO = {}", operatorPropsVO);
-        Operator operator = operatorService.createOperator(operatorPropsVO);
-        return operator;
+        return operatorService.createOperator(operatorPropsVO);
     }
 
     @RouteMapping(url= "/operators/{operatorId}", method = "DELETE")

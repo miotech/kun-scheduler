@@ -70,4 +70,22 @@ public class MioElasticSearchClient {
         }
     }
 
+    public void close() {
+        if (highLevelClient != null) {
+            try {
+                highLevelClient.close();
+            } catch (IOException e) {
+                throw ExceptionUtils.wrapIfChecked(e);
+            }
+        }
+
+        if (lowLevelClient != null) {
+            try {
+                lowLevelClient.close();
+            } catch (IOException e) {
+                throw ExceptionUtils.wrapIfChecked(e);
+            }
+        }
+    }
+
 }

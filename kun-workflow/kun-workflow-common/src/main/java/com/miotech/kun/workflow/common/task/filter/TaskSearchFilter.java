@@ -1,16 +1,19 @@
 package com.miotech.kun.workflow.common.task.filter;
 
-import org.apache.commons.lang3.tuple.Pair;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.miotech.kun.workflow.core.model.common.Tag;
 
 import java.util.List;
 
+@JsonDeserialize(builder = TaskSearchFilter.TaskSearchFilterBuilder.class)
 public class TaskSearchFilter {
     private final String name;
-    private final List<Pair<String, String>> tags;
+    private final List<Tag> tags;
     private final Integer pageNum;
     private final Integer pageSize;
 
-    private TaskSearchFilter(String name, List<Pair<String, String>> tags, Integer pageNum, Integer pageSize) {
+    private TaskSearchFilter(String name, List<Tag> tags, Integer pageNum, Integer pageSize) {
         this.name = name;
         this.tags = tags;
         this.pageNum = pageNum;
@@ -21,7 +24,7 @@ public class TaskSearchFilter {
         return name;
     }
 
-    public List<Pair<String, String>> getTags() {
+    public List<Tag> getTags() {
         return tags;
     }
 
@@ -37,17 +40,22 @@ public class TaskSearchFilter {
         return new TaskSearchFilterBuilder();
     }
 
+    public TaskSearchFilterBuilder cloneBuilder() {
+        return new TaskSearchFilterBuilder()
+                .withName(name)
+                .withPageNum(pageNum)
+                .withPageSize(pageSize)
+                .withTags(tags);
+    }
+
+    @JsonPOJOBuilder
     public static final class TaskSearchFilterBuilder {
         private String name;
-        private List<Pair<String, String>> tags;
+        private List<Tag> tags;
         private Integer pageNum;
         private Integer pageSize;
 
         private TaskSearchFilterBuilder() {
-        }
-
-        public static TaskSearchFilterBuilder aTaskSearchFilter() {
-            return new TaskSearchFilterBuilder();
         }
 
         public TaskSearchFilterBuilder withName(String name) {
@@ -55,7 +63,7 @@ public class TaskSearchFilter {
             return this;
         }
 
-        public TaskSearchFilterBuilder withTags(List<Pair<String, String>> tags) {
+        public TaskSearchFilterBuilder withTags(List<Tag> tags) {
             this.tags = tags;
             return this;
         }

@@ -1,6 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.databuilder.TestContainerUtil;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
@@ -12,9 +13,6 @@ import com.miotech.kun.metadata.databuilder.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
 import com.miotech.kun.metadata.databuilder.model.DatasetStat;
 import com.miotech.kun.metadata.databuilder.model.PostgresDataSource;
-import com.miotech.kun.workflow.db.DatabaseOperator;
-import org.hamcrest.MatcherAssert;
-import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +20,10 @@ import org.testcontainers.containers.PostgreSQLContainer;
 
 import javax.sql.DataSource;
 import java.util.List;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class PostgresTableExtractorTest extends DatabaseTestBase {
 
@@ -31,6 +33,8 @@ public class PostgresTableExtractorTest extends DatabaseTestBase {
     private PostgreSQLContainer postgreSQLContainer;
 
     private PostgresTableExtractor postgresTableExtractor;
+
+    private String table = "bar";
 
     @Before
     public void setUp() {
@@ -48,7 +52,7 @@ public class PostgresTableExtractorTest extends DatabaseTestBase {
                         postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword(), DatabaseType.POSTGRES))
                 .withUsername(postgreSQLContainer.getUsername())
                 .withPassword(postgreSQLContainer.getPassword())
-                .build(), "test", "public", "bar", new DatabaseOperator(pgDataSource));
+                .build(), "test", "public", table);
     }
 
     @After
@@ -62,7 +66,7 @@ public class PostgresTableExtractorTest extends DatabaseTestBase {
         // execute biz logic
         List<DatasetField> schema = postgresTableExtractor.getSchema();
 
-        MatcherAssert.assertThat(schema.size(), Matchers.is(1));
+        assertThat(schema.size(), is(1));
     }
 
     @Test
@@ -71,7 +75,7 @@ public class PostgresTableExtractorTest extends DatabaseTestBase {
         List<DatasetField> schema = postgresTableExtractor.getSchema();
         for (DatasetField datasetField : schema) {
             DatasetFieldStat fieldStats = postgresTableExtractor.getFieldStats(datasetField);
-            MatcherAssert.assertThat(fieldStats, Matchers.notNullValue());
+            assertThat(fieldStats, notNullValue());
         }
     }
 
@@ -79,7 +83,14 @@ public class PostgresTableExtractorTest extends DatabaseTestBase {
     public void testGetTableStats() {
         // execute biz logic
         DatasetStat tableStats = postgresTableExtractor.getTableStats();
-        MatcherAssert.assertThat(tableStats, Matchers.notNullValue());
+        assertThat(tableStats, notNullValue());
+    }
+
+    @Test
+    public void testGetName() {
+        // execute biz logic
+        String tableName = postgresTableExtractor.getName();
+        assertThat(tableName, is(table));
     }
 
 }

@@ -1,0 +1,4 @@
+dependencies {
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-commons:kun-commons-query')
+}
