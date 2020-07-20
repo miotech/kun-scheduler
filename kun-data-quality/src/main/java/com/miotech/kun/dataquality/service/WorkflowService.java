@@ -10,6 +10,7 @@ import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -34,6 +35,9 @@ public class WorkflowService {
     @Autowired
     WorkflowUtils workflowUtils;
 
+    @Value("${data-quality.workflow.task.cron}")
+    String cronExpression;
+
     public Long createTask(Long caseId) {
 
         Task task = buildTask(caseId);
@@ -55,6 +59,13 @@ public class WorkflowService {
         return taskId;
     }
 
+    public void deleteTask(Long caseId) {
+        Long taskId = dataQualityService.getLatestTaskId(caseId);
+        if (taskId != null && !taskId.equals(0L)) {
+            workflowClient.deleteTask(taskId);
+        }
+    }
+
     private Task buildTask(Long caseId) {
         Operator savedOperator = workflowClient.saveOperator(this.operator.getName(), this.operator);
 
@@ -64,7 +75,7 @@ public class WorkflowService {
                 .withDescription("")
                 .withArguments(workflowUtils.getInitParams(String.valueOf(caseId)))
                 .withVariableDefs(new ArrayList<>())
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?"))
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, cronExpression))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .withOperatorId(savedOperator.getId())

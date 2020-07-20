@@ -28,6 +28,10 @@ public class ConfigService {
         this.properties = PropertyUtils.loadAppProps(configName);
     }
 
+    public void loadConf() {
+        this.properties = PropertyUtils.loadAppProps();
+    }
+
     public Properties getProperties() {
         return properties;
     }

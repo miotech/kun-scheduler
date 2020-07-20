@@ -36,10 +36,10 @@ public class JDBCQueryExecutor {
         return SingletonHolder.instance;
     }
 
-    public QueryResultSet execute(JDBCQueryEntry queryEntry, QuerySite querySite) {
-        DataSource dataSource = dataSourceContainer.getCacheDataSource(querySite);
+    public QueryResultSet execute(JDBCQuery query) {
+        DataSource dataSource = dataSourceContainer.getCacheDataSource(query.getQuerySite());
         DatabaseOperator databaseOperator = new DatabaseOperator(dataSource);
-        return databaseOperator.query(queryEntry.getQueryString(), rs -> {
+        return databaseOperator.query(query.getQueryEntry().getQueryString(), rs -> {
             QueryResultSet queryResultSet = new QueryResultSet();
             int colCount = rs.getMetaData().getColumnCount();
             List<String> colNames = new ArrayList<>();
@@ -55,6 +55,6 @@ public class JDBCQueryExecutor {
                 queryResultSet.addRow(row);
             }
             return queryResultSet;
-        }, queryEntry.getQueryArgsArray());
+        }, query.getQueryEntry().getQueryArgsArray());
     }
 }

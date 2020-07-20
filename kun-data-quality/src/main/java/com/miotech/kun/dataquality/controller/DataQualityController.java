@@ -2,9 +2,9 @@ package com.miotech.kun.dataquality.controller;
 
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
-import com.miotech.kun.dataquality.model.ValidateSqlStatus;
 import com.miotech.kun.dataquality.model.bo.DataQualityRequest;
 import com.miotech.kun.dataquality.model.bo.DeleteDataQualityRequest;
+import com.miotech.kun.dataquality.model.bo.ValidateSqlRequest;
 import com.miotech.kun.dataquality.model.entity.DataQualityCase;
 import com.miotech.kun.dataquality.model.entity.DimensionConfig;
 import com.miotech.kun.dataquality.model.entity.ValidateSqlResult;
@@ -47,15 +47,13 @@ public class DataQualityController {
     }
 
     @PostMapping("/sql/validate")
-    public RequestResult<ValidateSqlResult> validateSql() {
-        ValidateSqlResult result = new ValidateSqlResult();
-        result.setValidateStatus(ValidateSqlStatus.SUCCESS.getFlag());
-        return RequestResult.success(result);
+    public RequestResult<ValidateSqlResult> validateSql(@RequestBody ValidateSqlRequest request) {
+        return RequestResult.success(dataQualityService.validateSql(request));
     }
 
     @PostMapping("/data-quality/{id}/edit")
-    public RequestResult<IdVO> update(@PathVariable("id") Long id,
-                                      @RequestBody DataQualityRequest dataQualityRequest) {
+    public RequestResult<IdVO> updateCase(@PathVariable("id") Long id,
+                                          @RequestBody DataQualityRequest dataQualityRequest) {
         IdVO vo = new IdVO();
         vo.setId(dataQualityService.updateCase(id, dataQualityRequest));
         Long taskId = workflowService.executeTask(vo.getId());
@@ -64,8 +62,9 @@ public class DataQualityController {
     }
 
     @DeleteMapping("/data-quality/{id}/delete")
-    public RequestResult<IdVO> delete(@PathVariable("id") Long id,
-                                      @RequestBody DeleteDataQualityRequest request) {
+    public RequestResult<IdVO> deleteCase(@PathVariable("id") Long id,
+                                          @RequestBody DeleteDataQualityRequest request) {
+        workflowService.deleteTask(id);
         IdVO vo = new IdVO();
         vo.setId(dataQualityService.deleteCase(id, request.getDatasetId()));
         return RequestResult.success(vo);

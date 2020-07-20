@@ -12,7 +12,11 @@ public class MetadataConnectionInfo {
 
     private String urlPostfix;
 
-    private String type;
+    private Long datasourceId;
+
+    private String datasourceType;
+
+    private String database;
 
     public JSONObject getConnectionInfo() {
         return connectionInfo;
@@ -30,11 +34,27 @@ public class MetadataConnectionInfo {
         this.urlPostfix = urlPostfix;
     }
 
-    public String getType() {
-        return type;
+    public Long getDatasourceId() {
+        return datasourceId;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setDatasourceId(Long datasourceId) {
+        this.datasourceId = datasourceId;
+    }
+
+    public String getDatasourceType() {
+        return datasourceType;
+    }
+
+    public void setDatasourceType(String datasourceType) {
+        this.datasourceType = datasourceType;
+    }
+
+    public String getDatabase() {
+        return database;
+    }
+
+    public void setDatabase(String database) {
+        this.database = database;
     }
 }
