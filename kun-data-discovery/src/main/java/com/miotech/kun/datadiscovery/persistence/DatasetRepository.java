@@ -183,7 +183,7 @@ public class DatasetRepository extends BaseRepository {
                 "         left join kun_mt_dataset_attrs kmda on kmd.gid = kmda.dataset_gid\n" +
                 "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
                 "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
-                "         inner join (select dataset_gid, max(stats_date) as max_time, min(stats_date) as min_time from kun_mt_dataset_stats where dataset_gid = ? group by dataset_gid) watermark on kmd.gid = watermark.dataset_gid\n" +
+                "         left join (select dataset_gid, max(stats_date) as max_time, min(stats_date) as min_time from kun_mt_dataset_stats where dataset_gid = ? group by dataset_gid) watermark on kmd.gid = watermark.dataset_gid\n" +
                 "         left join kun_dq_case_associated_dataset kdcad on kmd.gid = kdcad.dataset_id\n";
 
         String whereClause = "where kmd.gid = ?\n";
@@ -213,7 +213,13 @@ public class DatasetRepository extends BaseRepository {
                 .limit(1)
                 .getSQL();
 
-        return jdbcTemplate.queryForObject(sql, Long.class, gid);
+        return jdbcTemplate.query(sql, rs -> {
+            Long rowCount = null;
+            if (rs.next()) {
+                rowCount = rs.getLong("row_count");
+            }
+            return rowCount;
+        }, gid);
     }
 
     public Dataset update(Long gid, DatasetRequest datasetRequest) {

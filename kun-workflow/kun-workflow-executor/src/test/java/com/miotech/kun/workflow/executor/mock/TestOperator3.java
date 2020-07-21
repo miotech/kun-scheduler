@@ -1,4 +1,4 @@
-package not.a.valid.path;
+package com.miotech.kun.workflow.executor.mock;
 
 import com.miotech.kun.workflow.core.execution.Operator;
 

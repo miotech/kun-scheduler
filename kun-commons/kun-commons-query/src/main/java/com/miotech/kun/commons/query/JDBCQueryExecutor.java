@@ -4,6 +4,7 @@ import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.query.datasource.DataSourceContainer;
 import com.miotech.kun.commons.query.model.QueryResultSet;
 import com.miotech.kun.commons.query.service.ConfigService;
+import org.apache.commons.lang3.StringUtils;
 
 import javax.sql.DataSource;
 import java.util.ArrayList;
@@ -39,7 +40,8 @@ public class JDBCQueryExecutor {
     public QueryResultSet execute(JDBCQuery query) {
         DataSource dataSource = dataSourceContainer.getCacheDataSource(query.getQuerySite());
         DatabaseOperator databaseOperator = new DatabaseOperator(dataSource);
-        return databaseOperator.query(query.getQueryEntry().getQueryString(), rs -> {
+        String queryString = handleQueryString(query.getQueryEntry().getQueryString());
+        return databaseOperator.query(queryString, rs -> {
             QueryResultSet queryResultSet = new QueryResultSet();
             int colCount = rs.getMetaData().getColumnCount();
             List<String> colNames = new ArrayList<>();
@@ -56,5 +58,13 @@ public class JDBCQueryExecutor {
             }
             return queryResultSet;
         }, query.getQueryEntry().getQueryArgsArray());
+    }
+
+    private String handleQueryString(String query) {
+        if (StringUtils.isNotEmpty(query)) {
+            query = query.trim();
+            query = StringUtils.removeEnd(query, ";").trim();
+        }
+        return query;
     }
 }
