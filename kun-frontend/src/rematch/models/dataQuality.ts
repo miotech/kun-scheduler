@@ -25,8 +25,6 @@ export enum ValidateOperatorEnum {
   GT = '>',
   LTE = '<=',
   LT = '<',
-  IS = 'is',
-  IS_NOT = 'isNot',
 }
 
 export const ValidateOperatorEnumValues: ValidateOperatorEnum[] = Object.values(
@@ -43,8 +41,6 @@ export const validateOperatorEnumToLocaleString: Record<
   [ValidateOperatorEnum.GT]: '>',
   [ValidateOperatorEnum.LTE]: '≤',
   [ValidateOperatorEnum.LT]: '<',
-  [ValidateOperatorEnum.IS]: 'IS',
-  [ValidateOperatorEnum.IS_NOT]: 'IS NOT',
 };
 
 export enum ValidateStatus {

@@ -11,6 +11,7 @@ export default {
   'common.button.cancel': 'Cancel',
   'common.button.confirm': 'Confirm',
   'common.button.save': 'Save',
+  'common.button.saveAs': 'Save as',
   'common.button.update': 'Update',
   'common.button.add': 'Add',
   'common.button.delete': 'Delete',
@@ -130,8 +131,8 @@ export default {
   'dataDetail.dataQuality.applyFields': 'Apply Fields',
   'dataDetail.dataQuality.dimension.sql': 'SQL Code',
   'dataDetail.dataQuality.dimension.validate': 'Validate',
-  'dataDetail.dataQuality.dimension.validate.success': 'Validate Success',
-  'dataDetail.dataQuality.dimension.validate.faild': 'Validate Faild',
+  'dataDetail.dataQuality.dimension.validate.success': 'Validation Success',
+  'dataDetail.dataQuality.dimension.validate.faild': 'Validation failed',
   'dataDetail.dataQuality.validateRule': 'Validation',
   'dataDetail.dataQuality.validate.field': 'Field',
   'dataDetail.dataQuality.validate.oprator': 'Operator',
@@ -187,6 +188,7 @@ export default {
   'glossary.needRefresh': 'The data has changed and needs to be refreshed',
   'glossary.nameLabel': 'Glossary Name',
   'pdf.params.loadParams': '载入参数',
+  'pdf.params.defaultParams': '默认参数',
   'pdf.params.saveParams': '保存参数',
   'pdf.params.remarkParams': '参数备注',
   'pdf.params.table_name': '提取表格',
@@ -205,4 +207,6 @@ export default {
   'pdf.params.fix_threshold.desc':
     '指同一表格块像素差在5以内认为是同一位置, 另外两个线段的某一方向的坐标相同, 另一方向距离小于输入值, 则将两个线段连接',
   'pdf.params.uploadPdf': '请上传需要解析的PDF',
+  'dataDevelopment.taskType': 'Task Type',
+  'dataDevelopment.taskTypes': 'Task Types',
 };
