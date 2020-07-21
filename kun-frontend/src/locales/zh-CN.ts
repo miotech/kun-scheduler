@@ -11,6 +11,7 @@ export default {
   'common.button.cancel': '取消',
   'common.button.confirm': '确认',
   'common.button.save': '保存',
+  'common.button.saveAs': '另存为',
   'common.button.update': '更新',
   'common.button.add': '添加',
   'common.button.delete': '删除',
@@ -185,6 +186,7 @@ export default {
   'glossary.needRefresh': '数据已经发生改变, 需要刷新',
   'glossary.nameLabel': '标签集名',
   'pdf.params.loadParams': '载入参数',
+  'pdf.params.defaultParams': '默认参数',
   'pdf.params.saveParams': '保存参数',
   'pdf.params.remarkParams': '参数备注',
   'pdf.params.table_name': '提取表格',
@@ -203,4 +205,6 @@ export default {
   'pdf.params.fix_threshold.desc':
     '指同一表格块像素差在5以内认为是同一位置, 另外两个线段的某一方向的坐标相同, 另一方向距离小于输入值, 则将两个线段连接',
   'pdf.params.uploadPdf': '请上传需要解析的PDF',
+  'dataDevelopment.taskType': '任务类型',
+  'dataDevelopment.taskTypes': '任务类型',
 };
