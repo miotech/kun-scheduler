@@ -1,6 +1,6 @@
 package com.miotech.kun.datadiscovery.model.bo;
 
-import com.miotech.kun.datadiscovery.model.PageInfo;
+import com.miotech.kun.common.model.PageInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

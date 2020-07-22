@@ -22,4 +22,5 @@ include ':kun-data-discovery'
 include ':kun-security'
 include ':kun-app-common'
 include ':kun-data-quality'
+include ':kun-pdf'
 

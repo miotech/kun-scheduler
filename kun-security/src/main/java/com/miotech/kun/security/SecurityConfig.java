@@ -26,13 +26,22 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     SecurityService securityService;
 
-    @Value("${security.ldap.url}")
-    private String ldapUrl;
+    @Value("${spring.ldap.urls}")
+    private String[] ldapUrls;
+
+    @Value("${spring.ldap.base}")
+    private String ldapRootBase;
+
+    @Value("${security.ldap.user-dn-pattern}")
+    private String userDnPattern;
+
+    @Value("${security.ldap.user-search-base}")
+    private String userSearchBase;
 
     @Value("${security.pass-token}")
     private String passToken;
 
-    private String apiPrefix = "/kun/api/v1";
+    private String apiPrefix = "/kun/api";
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -41,14 +50,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .disable();
         http
                 .authorizeRequests()
-                .antMatchers("/kun/api/**")
+                .antMatchers(apiPrefix + "/**")
                 .authenticated()
                 .and()
                 .addFilterBefore(
                         customAuthenticationFilter(),
                         UsernamePasswordAuthenticationFilter.class)
                 .logout()
-                .logoutUrl(apiPrefix + "/user/logout")
+                .logoutUrl(apiPrefix + "/v1/user/logout")
                 .logoutSuccessHandler(securityService.logoutSuccessHandler())
 
                 .and()
@@ -64,10 +73,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth
                 .ldapAuthentication()
-                .userDnPatterns("cn={0},ou=Users")
-                .groupSearchBase("ou=Users")
+                .userDnPatterns(userDnPattern)
+                .groupSearchBase(userSearchBase)
                 .contextSource()
-                .url(ldapUrl);
+                .url(ldapUrls[0] + "/" + ldapRootBase);
     }
 
     @Bean
@@ -75,7 +84,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         CustomAuthenticationFilter authenticationFilter = new CustomAuthenticationFilter();
         authenticationFilter.setAuthenticationSuccessHandler(securityService.loginSuccessHandler());
         authenticationFilter.setAuthenticationFailureHandler(securityService.loginFailureHandler());
-        authenticationFilter.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher(apiPrefix + "/user/login", "POST"));
+        authenticationFilter.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher(apiPrefix + "/v1/user/login", "POST"));
         authenticationFilter.setAuthenticationManager(authenticationManagerBean());
         authenticationFilter.setSecurityService(securityService);
         authenticationFilter.setPassToken(passToken);

@@ -1,18 +1,29 @@
 package com.miotech.kun.security.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.security.model.bo.UserInfo;
 import com.miotech.kun.security.model.entity.User;
+import com.miotech.kun.security.util.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.ldap.LdapProperties;
 import org.springframework.http.HttpStatus;
+import org.springframework.ldap.core.AttributesMapper;
+import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.filter.AndFilter;
+import org.springframework.ldap.filter.EqualsFilter;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.stereotype.Service;
 
+import javax.naming.directory.SearchControls;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -25,6 +36,46 @@ public class SecurityService implements InitializingBean {
 
     @Autowired
     UserService userService;
+
+    @Autowired
+    LdapTemplate ldapTemplate;
+
+    @Autowired
+    LdapProperties ldapProperties;
+
+    @Value("${security.ldap.user-group-search-base}")
+    private String groupSearchBase;
+
+    public List<String> getUserGroup(String username) {
+        AndFilter filter = new AndFilter();
+        filter.and(new EqualsFilter("objectClass", "posixGroup"))
+                .and(new EqualsFilter("memberUid", username));
+
+        return ldapTemplate.search(groupSearchBase,
+                filter.encode(),
+                SearchControls.SUBTREE_SCOPE,
+                (AttributesMapper<String>) attributes -> (String) attributes.get("cn").get());
+    }
+
+    public List<String> getUsersFromGroup(String group) {
+        String filter = new EqualsFilter("cn", group).encode();
+        return ldapTemplate.search(groupSearchBase,
+                filter,
+                SearchControls.OBJECT_SCOPE,
+                (AttributesMapper<String>) attributes -> (String) attributes.get("uid").get());
+    }
+
+    public List<String> getSameGroupUsers(String username) {
+        Set<String> users = Sets.newHashSet();
+        Set<String> groups = this.getUserGroup(username).stream().collect(Collectors.toSet());
+        if(groups.contains(Constants.MIOTECH_USER_GROUP)) {
+            users.addAll(this.getUsersFromGroup(Constants.MIOTECH_USER_GROUP));
+        }
+        if(groups.contains(Constants.MOODYS_USER_GROUP)) {
+            users.addAll(this.getUsersFromGroup(Constants.MOODYS_USER_GROUP));
+        }
+        return users.stream().collect(Collectors.toList());
+    }
 
     public UserInfo saveUser(UserInfo userInfo) {
         User user = userService.addUser(userInfo);
@@ -72,8 +123,8 @@ public class SecurityService implements InitializingBean {
     public AuthenticationSuccessHandler loginSuccessHandler() {
         return (request, response, authentication) -> {
             response.setStatus(HttpStatus.OK.value());
-            response.setContentType("application/json");
-            response.setCharacterEncoding("utf-8");
+            response.setContentType(Constants.HTTP_CONTENT_TYPE);
+            response.setCharacterEncoding(Constants.HTTP_ENCODING);
             UserInfo userInfo = getOrSave(authentication.getName());
             objectMapper.writeValue(response.getWriter(), RequestResult.success("Login Successfully.", userInfo));
         };
@@ -82,8 +133,8 @@ public class SecurityService implements InitializingBean {
     public AuthenticationFailureHandler loginFailureHandler() {
         return (request, response, exception) -> {
             response.setStatus(HttpStatus.OK.value());
-            response.setContentType("application/json");
-            response.setCharacterEncoding("utf-8");
+            response.setContentType(Constants.HTTP_CONTENT_TYPE);
+            response.setCharacterEncoding(Constants.HTTP_ENCODING);
             objectMapper.writeValue(response.getWriter(), RequestResult.error("Login Failed."));
         };
     }
@@ -91,10 +142,24 @@ public class SecurityService implements InitializingBean {
     public LogoutSuccessHandler logoutSuccessHandler() {
         return (request, response, authentication) -> {
             response.setStatus(HttpStatus.OK.value());
-            response.setContentType("application/json");
-            response.setCharacterEncoding("utf-8");
+            response.setContentType(Constants.HTTP_CONTENT_TYPE);
+            response.setCharacterEncoding(Constants.HTTP_ENCODING);
             objectMapper.writeValue(response.getWriter(), RequestResult.success("Logout Successfully."));
         };
+    }
+
+    public Set<String> getGroupPermission(List<String> groups) {
+        Set<String> permissions = Sets.newHashSet();
+        Set<String> groupSet = groups.stream().collect(Collectors.toSet());
+        if(groupSet.contains(Constants.MOODYS_USER_GROUP)) {
+            permissions.add(Constants.PERMISSION_PDF_COA);
+        }
+        if(groupSet.contains(Constants.MIOTECH_USER_GROUP)) {
+            permissions.add(Constants.PERMISSION_DATA_DISCOVERY);
+            permissions.add(Constants.PERMISSION_DATA_DEVELOPMENT);
+            permissions.add(Constants.PERMISSION_PDF_GENERAL);
+        }
+        return permissions;
     }
 
     @Override

@@ -33,7 +33,6 @@ public class BeanConfig {
                 .withName(DataQualityConfiguration.WORKFLOW_OPERATOR_NAME)
                 .withDescription("default operator")
                 .withClassName("com.miotech.kun.workflow.operator.DataQualityOperator")
-                .withPackagePath("file:/server/lib/data-quality-operators.jar")
                 .build();
     }
 }
