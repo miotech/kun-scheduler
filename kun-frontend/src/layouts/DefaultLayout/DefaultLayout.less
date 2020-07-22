@@ -1,4 +1,13 @@
+.spinContainer {
+  height: 100%;
+  :global {
+    .ant-spin-container {
+      height: 100%;
+    }
+  }
+}
 .subHeader {
+  flex-shrink: 0;
   height: 55px;
   border-top: 1px solid @lightGray;
   border-bottom: 1px solid @lightGray;
@@ -11,4 +20,11 @@
 }
 .content {
   background-color: @background;
+  display: flex;
+  flex-direction: column;
+}
+
+.contentInner {
+  flex: 1;
+  overflow: auto;
 }
