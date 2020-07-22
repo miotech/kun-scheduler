@@ -82,9 +82,9 @@ public class DataQualityRepository extends BaseRepository {
             String deleteSql = DefaultSQLBuilder.newBuilder()
                     .delete()
                     .from("kun_dq_case_associated_dataset")
-                    .where("dataset_id = ?")
+                    .where("case_id = ? and dataset_id = ?")
                     .getSQL();
-            jdbcTemplate.update(deleteSql, datasetId);
+            jdbcTemplate.update(deleteSql, id, datasetId);
         }
         return id;
     }
