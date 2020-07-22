@@ -1,4 +1,4 @@
-package com.miotech.kun.common.util;
+package com.miotech.kun.common.utils;
 
 import com.google.gson.Gson;
 import org.json.simple.JSONObject;
@@ -7,17 +7,25 @@ import org.json.simple.parser.ParseException;
 
 import java.lang.reflect.Type;
 
-public class JSONUtil {
+public class JSONUtils {
 
-    private JSONUtil() {}
+    private JSONUtils() {}
 
     public static String toJsonString(Object obj) {
         Gson gson = new Gson();
         return gson.toJson(obj);
     }
 
+    public static JSONObject toJsonObject(Object object) throws ParseException {
+        return (JSONObject) new JSONParser().parse(toJsonString(object));
+    }
+
     public static JSONObject toJsonObject(String json) throws ParseException {
         return (JSONObject) new JSONParser().parse(json);
+    }
+
+    public static <T> T toJavaObject(JSONObject jsonObject, Class<T> clazz) {
+        return toJavaObject(jsonObject.toJSONString(), clazz);
     }
 
     public static <T> T toJavaObject(String json, Class<T> clazz) {

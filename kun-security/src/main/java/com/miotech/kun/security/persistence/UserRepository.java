@@ -5,6 +5,7 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.security.model.bo.UserInfo;
 import com.miotech.kun.security.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -19,6 +20,7 @@ import java.util.List;
 public class UserRepository extends BaseRepository {
 
     @Autowired
+    @Qualifier("securityJdbcTemplate")
     JdbcTemplate jdbcTemplate;
 
     public User find(Long id) {

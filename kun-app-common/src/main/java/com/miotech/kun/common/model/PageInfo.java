@@ -1,4 +1,4 @@
-package com.miotech.kun.datadiscovery.model;
+package com.miotech.kun.common.model;
 
 import lombok.Data;
 

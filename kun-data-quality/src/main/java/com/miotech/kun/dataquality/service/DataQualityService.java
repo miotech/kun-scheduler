@@ -37,8 +37,7 @@ public class DataQualityService extends BaseSecurityService {
         try {
             JDBCQueryExecutor.getInstance().execute(query);
         } catch (Exception e) {
-            log.error("Validate sql failed.", e);
-            return ValidateSqlResult.failed();
+            return ValidateSqlResult.failed(e.getMessage());
         }
         return ValidateSqlResult.success();
     }
@@ -49,9 +48,9 @@ public class DataQualityService extends BaseSecurityService {
 
     public Long addCase(DataQualityRequest dataQualityRequest) {
         Long currentTime = System.currentTimeMillis();
-        dataQualityRequest.setCreateUser(getCurrentUser());
+        dataQualityRequest.setCreateUser(getCurrentUsername());
         dataQualityRequest.setCreateTime(currentTime);
-        dataQualityRequest.setUpdateUser(getCurrentUser());
+        dataQualityRequest.setUpdateUser(getCurrentUsername());
         dataQualityRequest.setUpdateTime(currentTime);
         return dataQualityRepository.addCase(dataQualityRequest);
     }
@@ -65,7 +64,7 @@ public class DataQualityService extends BaseSecurityService {
     }
 
     public Long updateCase(Long id, DataQualityRequest dataQualityRequest) {
-        dataQualityRequest.setUpdateUser(getCurrentUser());
+        dataQualityRequest.setUpdateUser(getCurrentUsername());
         dataQualityRequest.setUpdateTime(System.currentTimeMillis());
         return dataQualityRepository.updateCase(id, dataQualityRequest);
     }

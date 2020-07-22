@@ -1,7 +1,7 @@
 package com.miotech.kun.datadiscovery.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.datadiscovery.model.PageInfo;
+import com.miotech.kun.common.model.PageInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 

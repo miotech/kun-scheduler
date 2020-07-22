@@ -1,7 +1,7 @@
 package com.miotech.kun.datadiscovery.persistence;
 
 import com.miotech.kun.common.BaseRepository;
-import com.miotech.kun.common.util.JSONUtil;
+import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatabaseRequest;
@@ -155,7 +155,7 @@ public class DatasourceRepository extends BaseRepository {
         datasource.setTypeId(rs.getLong("type_id"));
         try {
             if (StringUtils.isNotEmpty(rs.getString("connection_info"))) {
-                datasource.setConnectInfo(JSONUtil.toJsonObject(rs.getString("connection_info")));
+                datasource.setConnectInfo(JSONUtils.toJsonObject(rs.getString("connection_info")));
             }
         } catch (ParseException e) {
             log.error(e.getMessage(), e);
@@ -173,7 +173,7 @@ public class DatasourceRepository extends BaseRepository {
         String kmdSql = "insert into kun_mt_datasource values " + toValuesSql(1, 3);
         PGobject jsonObject = new PGobject();
         jsonObject.setType("jsonb");
-        jsonObject.setValue(JSONUtil.toJsonString(databaseRequest.getInformation()));
+        jsonObject.setValue(JSONUtils.toJsonString(databaseRequest.getInformation()));
         jdbcTemplate.update(kmdSql, datasourceId, jsonObject, databaseRequest.getTypeId());
 
         String kmdaSql = "insert into kun_mt_datasource_attrs values " + toValuesSql(1, 6);
@@ -198,7 +198,7 @@ public class DatasourceRepository extends BaseRepository {
 
         PGobject jsonObject = new PGobject();
         jsonObject.setType("jsonb");
-        jsonObject.setValue(JSONUtil.toJsonString(databaseRequest.getInformation()));
+        jsonObject.setValue(JSONUtils.toJsonString(databaseRequest.getInformation()));
         jdbcTemplate.update(kmdSql, jsonObject, databaseRequest.getTypeId(), id);
 
         String kmdaSql = "update kun_mt_datasource_attrs set name = ?, " +

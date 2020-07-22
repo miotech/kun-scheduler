@@ -1,6 +1,5 @@
-package com.miotech.kun.common.util;
+package com.miotech.kun.common.utils;
 
-import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLStatement;
 import com.alibaba.druid.sql.ast.expr.SQLIdentifierExpr;
 import com.alibaba.druid.sql.ast.statement.SQLSelectItem;
@@ -20,12 +19,12 @@ import java.util.stream.Collectors;
  * @author: Jie Chen
  * @created: 2020/7/20
  */
-public class SQLUtil {
+public class SQLUtils {
 
     public static SQLMetaInfo parseQuerySQL(String querySql, String dbType) {
         SQLMetaInfo metaInfo = new SQLMetaInfo();
-        List<SQLStatement> stmts = SQLUtils.parseStatements(querySql, dbType);
-        SchemaStatVisitor statVisitor = SQLUtils.createSchemaStatVisitor(dbType);
+        List<SQLStatement> stmts = com.alibaba.druid.sql.SQLUtils.parseStatements(querySql, dbType);
+        SchemaStatVisitor statVisitor = com.alibaba.druid.sql.SQLUtils.createSchemaStatVisitor(dbType);
         SQLStatement stmt = stmts.get(0);
         stmt.accept(statVisitor);
 
