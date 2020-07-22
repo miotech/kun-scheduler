@@ -24,8 +24,12 @@ export default memo(function NoBreadcrumbLayout({ children, route }: Props) {
   const t = useI18n();
 
   return (
-    <Spin spinning={isLoading} tip={t('common.loading')}>
-      <Layout>
+    <Spin
+      wrapperClassName={css.spinContainer}
+      spinning={isLoading}
+      tip={t('common.loading')}
+    >
+      <Layout style={{ height: '100%' }}>
         <Header />
         <Layout className={css.siderAndContent}>
           <Sider route={route} />
