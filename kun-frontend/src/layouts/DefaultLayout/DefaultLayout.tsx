@@ -25,8 +25,12 @@ export default memo(function DefaultLayout({ children, route }: Props) {
   const t = useI18n();
 
   return (
-    <Spin spinning={isLoading} tip={t('common.loading')}>
-      <Layout>
+    <Spin
+      wrapperClassName={css.spinContainer}
+      spinning={isLoading}
+      tip={t('common.loading')}
+    >
+      <Layout style={{ height: '100%' }}>
         <Header />
         <Layout className={css.siderAndContent}>
           <Sider route={route} />
@@ -34,7 +38,7 @@ export default memo(function DefaultLayout({ children, route }: Props) {
             <div className={css.subHeader}>
               <Breadcrumb route={route} />
             </div>
-            <div>{children}</div>
+            <div className={css.contentInner}>{children}</div>
           </Content>
         </Layout>
       </Layout>

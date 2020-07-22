@@ -189,6 +189,13 @@ export default function DataDisvocery() {
           width: 80,
         },
         {
+          title: t('dataDiscovery.datasetsTable.header.watermark'),
+          dataIndex: 'high_watermark',
+          key: 'high_watermark',
+          width: 150,
+          render: (watermark: Watermark) => watermarkFormatter(watermark.time),
+        },
+        {
           title: t('dataDiscovery.datasetsTable.header.description'),
           dataIndex: 'description',
           key: 'description',
@@ -213,14 +220,6 @@ export default function DataDisvocery() {
             </>
           ),
         },
-        {
-          title: t('dataDiscovery.datasetsTable.header.watermark'),
-          dataIndex: 'high_watermark',
-          key: 'high_watermark',
-          width: 150,
-          render: (watermark: Watermark) => watermarkFormatter(watermark.time),
-        },
-
         {
           title: t('dataDiscovery.datasetsTable.header.tags'),
           dataIndex: 'tags',
