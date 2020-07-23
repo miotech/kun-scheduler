@@ -46,6 +46,7 @@ export interface Asset {
   id: string;
   name: string;
   datasource: string;
+  database: string;
 }
 
 export interface GlossaryDetail {
