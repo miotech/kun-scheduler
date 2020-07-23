@@ -237,9 +237,8 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
     @Test
     public void getTaskRunDetail() {
         long testTaskRunId = 1L;
-        TaskRunVO testRunVO = TaskRunVO.newBuilder()
-                .withId(testTaskRunId)
-                .build();
+        TaskRunVO testRunVO = new TaskRunVO();
+        testRunVO.setId(testTaskRunId);
 
         Mockito.when(taskRunService.getTaskRunDetail(testTaskRunId))
                 .thenReturn(Optional.of(testRunVO));

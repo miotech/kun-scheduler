@@ -30,7 +30,7 @@ public class JsonSerializerTest {
 
         RunTaskVO runTaskVO = new RunTaskVO();
         runTaskVO.setTaskId(IdGenerator.getInstance().nextId());
-        runTaskVO.setVariables(Maps.newHashMap());
+        runTaskVO.setConfig(Maps.newHashMap());
 
         runTaskJson = JSONUtils.toJsonString(runTaskVO);
         runTasksJson = JSONUtils.toJsonString(Arrays.asList(runTaskVO));

@@ -8,6 +8,7 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
@@ -64,8 +65,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withDescription("")
                 .withOperatorId(1L)
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
-                .withArguments(Collections.emptyList())
-                .withVariableDefs(Collections.emptyList())
+                .withConfig(Config.EMPTY)
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .build();
@@ -75,7 +75,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withId(testId)
                 .withTask(task)
                 .withStatus(TaskRunStatus.CREATED)
-                .withVariables(Collections.emptyList())
+                .withConfig(Config.EMPTY)
                 .withDependentTaskRunIds(Collections.emptyList())
                 .withInlets(Collections.emptyList())
                 .withOutlets(Collections.emptyList())

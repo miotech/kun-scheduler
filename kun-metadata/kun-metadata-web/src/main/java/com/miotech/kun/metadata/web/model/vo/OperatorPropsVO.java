@@ -2,9 +2,7 @@ package com.miotech.kun.metadata.web.model.vo;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.miotech.kun.workflow.core.model.common.Param;
 
-import java.util.List;
 import java.util.Objects;
 
 @JsonDeserialize(builder = OperatorPropsVO.OperatorPropsVOBuilder.class)
@@ -13,14 +11,12 @@ public class OperatorPropsVO {
     private final String description;
     private final String packagePath;
     private final String className;
-    private final List<Param> params;
 
-    public OperatorPropsVO(String name, String description, String packagePath, String className, List<Param> params) {
+    public OperatorPropsVO(String name, String description, String packagePath, String className) {
         this.name = name;
         this.description = description;
         this.packagePath = packagePath;
         this.className = className;
-        this.params = params;
     }
 
     public String getName() {
@@ -39,10 +35,6 @@ public class OperatorPropsVO {
         return className;
     }
 
-    public List<Param> getParams() {
-        return params;
-    }
-
     public static OperatorPropsVOBuilder newBuilder() {
         return new OperatorPropsVOBuilder();
     }
@@ -52,7 +44,6 @@ public class OperatorPropsVO {
                 .withName(name)
                 .withClassName(className)
                 .withDescription(description)
-                .withParams(params)
                 .withPackagePath(packagePath);
     }
 
@@ -64,13 +55,12 @@ public class OperatorPropsVO {
         return Objects.equals(name, that.name) &&
                 Objects.equals(description, that.description) &&
                 Objects.equals(packagePath, that.packagePath) &&
-                Objects.equals(className, that.className) &&
-                Objects.equals(params, that.params);
+                Objects.equals(className, that.className);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description, packagePath, className, params);
+        return Objects.hash(name, description, packagePath, className);
     }
 
     @JsonPOJOBuilder
@@ -79,13 +69,8 @@ public class OperatorPropsVO {
         private String description;
         private String packagePath;
         private String className;
-        private List<Param> params;
 
         private OperatorPropsVOBuilder() {
-        }
-
-        public static OperatorPropsVOBuilder anOperatorInfoVO() {
-            return new OperatorPropsVOBuilder();
         }
 
         public OperatorPropsVOBuilder withName(String name) {
@@ -108,13 +93,8 @@ public class OperatorPropsVO {
             return this;
         }
 
-        public OperatorPropsVOBuilder withParams(List<Param> params) {
-            this.params = params;
-            return this;
-        }
-
         public OperatorPropsVO build() {
-            return new OperatorPropsVO(name, description, packagePath, className, params);
+            return new OperatorPropsVO(name, description, packagePath, className);
         }
     }
 }

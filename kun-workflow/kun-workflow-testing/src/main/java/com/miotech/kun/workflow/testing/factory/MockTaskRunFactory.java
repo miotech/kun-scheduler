@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.testing.factory;
 
 import com.google.common.collect.Lists;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -51,7 +52,7 @@ public class MockTaskRunFactory {
             TaskRun tr = TaskRun.newBuilder()
                     .withId(ids.get(i))
                     .withTask(tasks.get(i))
-                    .withVariables(Collections.emptyList())
+                    .withConfig(Config.EMPTY)
                     .withDependentTaskRunIds(selectItems(ids, edges.get(i)))
                     .withInlets(Collections.emptyList())
                     .withOutlets(Collections.emptyList())
@@ -77,7 +78,7 @@ public class MockTaskRunFactory {
                 .withStartAt(DateTimeUtils.now())
                 .withEndAt(DateTimeUtils.now())
                 .withStatus(TaskRunStatus.QUEUED)
-                .withVariables(new ArrayList<>())
+                .withConfig(Config.EMPTY)
                 .build();
     }
 

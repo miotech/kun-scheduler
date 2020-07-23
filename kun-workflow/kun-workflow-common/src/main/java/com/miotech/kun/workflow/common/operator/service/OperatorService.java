@@ -1,14 +1,21 @@
 package com.miotech.kun.workflow.common.operator.service;
 
 import com.google.common.base.Preconditions;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.common.exception.RuleOperatorInUseException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
-import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
-import com.miotech.kun.workflow.common.exception.NameConflictException;
-import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
+import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.common.task.vo.OperatorVO;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
+import com.miotech.kun.workflow.core.execution.ConfigDef;
+import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -17,9 +24,15 @@ import org.apache.commons.lang3.StringUtils;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Singleton
 public class OperatorService {
@@ -33,51 +46,48 @@ public class OperatorService {
 
     private static final int PAGE_SIZE_DEFAULT = Integer.MAX_VALUE;
 
-    private Operator convertPropsVOToOperator(OperatorPropsVO vo) {
-        return Operator.newBuilder()
-                .withName(vo.getName())
-                .withDescription(vo.getDescription())
-                .withClassName(vo.getClassName())
-                .withPackagePath(vo.getPackagePath())
-                .withParams(vo.getParams())
-                .build();
+    private final LoadingCache<Long, KunOperator> operatorCache = CacheBuilder.newBuilder()
+            .maximumSize(1024)
+            .build(new CacheLoader<Long, KunOperator>() {
+                @Override
+                public KunOperator load(Long operatorId) throws Exception {
+                    return forceLoadOperator(operatorId);
+                }
+            });
+
+    /**
+     * 加载一个Operator
+     * @param operatorId
+     * @return
+     */
+    public KunOperator loadOperator(Long operatorId) {
+        checkNotNull(operatorId, "operatorId should not be null.");
+        try {
+            return operatorCache.get(operatorId);
+        } catch (ExecutionException e) {
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
     }
 
-    private Operator convertPropsVOToOperatorWithId(OperatorPropsVO vo, Long id) {
-        return Operator.newBuilder()
-                .withId(id)
-                .withName(vo.getName())
-                .withDescription(vo.getDescription())
-                .withClassName(vo.getClassName())
-                .withPackagePath(vo.getPackagePath())
-                .withParams(vo.getParams())
-                .build();
+    /**
+     * 加载一个Operator（不使用缓存）
+     * @param operatorId
+     * @return
+     */
+    public KunOperator forceLoadOperator(Long operatorId) {
+        checkNotNull(operatorId, "operatorId should not be null.");
+        Operator operator = fetchOperatorById(operatorId)
+                .orElseThrow(() -> new IllegalArgumentException("Operator is not found for id: " + operatorId));
+        return doLoadOperator(operator.getPackagePath(), operator.getClassName());
     }
 
-    private OperatorPropsVO convertOperatorToPropsVO(Operator operator) {
-        return OperatorPropsVO.newBuilder()
-                .withName(operator.getName())
-                .withDescription(operator.getDescription())
-                .withClassName(operator.getClassName())
-                .withPackagePath(operator.getPackagePath())
-                .withParams(operator.getParams())
-                .build();
-    }
-
-    private void validatePropsVOIntegrity(OperatorPropsVO vo) {
-        Preconditions.checkNotNull(vo, "Invalid parameter `vo`: found null object");
-        Preconditions.checkArgument(StringUtils.isNotEmpty(vo.getName()), "Invalid OperatorInfoVO with empty `name`.");
-        Preconditions.checkArgument(Objects.nonNull(vo.getDescription()), "Invalid OperatorInfoVO with null `description`.");
-        Preconditions.checkArgument(StringUtils.isNotEmpty(vo.getClassName()), "Invalid OperatorInfoVO with empty `className`.");
-        Preconditions.checkArgument(StringUtils.isNotEmpty(vo.getPackagePath()), "Invalid OperatorInfoVO with empty `packagePath`.");
-    }
-
-    private void validateIdNotNull(Long id) {
-        Preconditions.checkNotNull(id, "Invalid id: null");
-    }
-
-    private void validateOperatorNotNull(Operator operator) {
-        Preconditions.checkNotNull(operator, "Invalid Operator: null");
+    /**
+     * 获取Operator的配置项定义
+     * @param operatorId
+     * @return
+     */
+    public ConfigDef getOperatorConfigDef(Long operatorId) {
+        return loadOperator(operatorId).config();
     }
 
     public Operator createOperator(OperatorPropsVO vo) {
@@ -167,13 +177,17 @@ public class OperatorService {
                 .withId(operatorId)
                 .build();
         operatorDao.updateById(operatorId, operator);
+
+        // 5. refresh cache
+        refreshOperatorCache(operatorId);
+
         return operator;
     }
 
     public Operator partialUpdateOperator(Long operatorId, OperatorPropsVO vo) {
         // 1. Validate arguments
         validateIdNotNull(operatorId);
-        Preconditions.checkNotNull(vo, "Cannot perform update with vo: null");
+        checkNotNull(vo, "Cannot perform update with vo: null");
 
         // 2. If operator not exists, throw exception
         Optional<Operator> fetchedOperator = operatorDao.fetchById(operatorId);
@@ -189,11 +203,14 @@ public class OperatorService {
                 .withDescription(StringUtils.isEmpty(vo.getDescription()) ? operator.getDescription() : vo.getDescription())
                 .withClassName(StringUtils.isEmpty(vo.getClassName()) ? operator.getClassName() : vo.getClassName())
                 .withPackagePath(StringUtils.isEmpty(vo.getPackagePath()) ? operator.getPackagePath() : vo.getPackagePath())
-                .withParams(CollectionUtils.isEmpty(vo.getParams()) ? operator.getParams() : vo.getParams())
                 .build();
 
         // 4. update through DAO
         operatorDao.updateById(operatorId, updatedOperator);
+
+        // 5. refresh cache
+        refreshOperatorCache(operatorId);
+
         return updatedOperator;
     }
 
@@ -237,11 +254,14 @@ public class OperatorService {
 
         // 4. delete operator by DAO
         operatorDao.deleteById(id);
+
+        // 5. refresh cache
+        refreshOperatorCache(id);
     }
 
-    public PaginationVO<Operator> fetchOperatorsWithFilter(OperatorSearchFilter filters) {
+    public PaginationVO<OperatorVO> fetchOperatorsWithFilter(OperatorSearchFilter filters) {
         // 1. Filter should not be null
-        Preconditions.checkNotNull(filters, "Cannot search operators with filter: null");
+        checkNotNull(filters, "Cannot search operators with filter: null");
 
         // 2. Assign default value for pagination if filter not specified
         Integer pageNum;
@@ -265,15 +285,24 @@ public class OperatorService {
                 .build();
 
         // 4. Search through DAO
-        return PaginationVO.<Operator>newBuilder()
-                .withRecords(operatorDao.fetchWithFilter(regularizedFilter))
+        int count = operatorDao.fetchOperatorTotalCountWithFilter(regularizedFilter);
+        List<Operator> operators = operatorDao.fetchWithFilter(regularizedFilter);
+
+        List<OperatorVO> operatorVOs = new ArrayList<>();
+        for (Operator op : operators) {
+            ConfigDef configDef = getOperatorConfigDef(op.getId());
+            operatorVOs.add(convertOperatorToOperatorVO(op, configDef));
+        }
+
+        return PaginationVO.<OperatorVO>newBuilder()
+                .withRecords(operatorVOs)
                 .withPageNumber(pageNum)
                 .withPageSize(pageSize)
-                .withTotalCount(operatorDao.fetchOperatorTotalCountWithFilter(regularizedFilter))
+                .withTotalCount(count)
                 .build();
     }
 
-    public List<Operator> getAllOperators() {
+    public List<Operator> fetchAllOperators() {
         return operatorDao.fetchWithFilter(
                 OperatorSearchFilter.newBuilder()
                         .withPageSize(Integer.MAX_VALUE)
@@ -296,5 +325,73 @@ public class OperatorService {
 
     public Integer fetchOperatorTotalCount(OperatorSearchFilter filter) {
         return operatorDao.fetchOperatorTotalCountWithFilter(filter);
+    }
+
+    /* ---------------------------------------- */
+    /* ----------- private methods ------------ */
+    /* ---------------------------------------- */
+
+    private KunOperator doLoadOperator(String jarPath, String mainClass) {
+        try {
+            // TODO: 使用Resource接口读取Jar
+            URL[] urls = {new URL("jar:" + jarPath + "!/")};
+            URLClassLoader cl = URLClassLoader.newInstance(urls, getClass().getClassLoader());
+            Class clazz = Class.forName(mainClass, true, cl);
+            if (!KunOperator.class.isAssignableFrom(clazz)) {
+                throw new IllegalArgumentException(mainClass + " is not a valid Operator class.");
+            }
+            return (KunOperator) clazz.newInstance();
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to load jar. jarPath=" + jarPath, e);
+        }
+    }
+
+    private void refreshOperatorCache(Long operatorId) {
+        operatorCache.refresh(operatorId);
+    }
+
+    private Operator convertPropsVOToOperator(OperatorPropsVO vo) {
+        return Operator.newBuilder()
+                .withName(vo.getName())
+                .withDescription(vo.getDescription())
+                .withClassName(vo.getClassName())
+                .withPackagePath(vo.getPackagePath())
+                .build();
+    }
+
+    private OperatorVO convertOperatorToOperatorVO(Operator operator, ConfigDef configDef) {
+        OperatorVO vo = new OperatorVO();
+        vo.setId(operator.getId());
+        vo.setName(operator.getName());
+        vo.setDescription(operator.getDescription());
+        vo.setClassName(operator.getClassName());
+        vo.setPackagePath(operator.getPackagePath());
+        vo.setConfigDef(configDef);
+        return vo;
+    }
+
+    private OperatorPropsVO convertOperatorToPropsVO(Operator operator) {
+        return OperatorPropsVO.newBuilder()
+                .withName(operator.getName())
+                .withDescription(operator.getDescription())
+                .withClassName(operator.getClassName())
+                .withPackagePath(operator.getPackagePath())
+                .build();
+    }
+
+    private void validatePropsVOIntegrity(OperatorPropsVO vo) {
+        checkNotNull(vo, "Invalid parameter `vo`: found null object");
+        Preconditions.checkArgument(StringUtils.isNotEmpty(vo.getName()), "Invalid OperatorInfoVO with empty `name`.");
+        Preconditions.checkArgument(Objects.nonNull(vo.getDescription()), "Invalid OperatorInfoVO with null `description`.");
+        Preconditions.checkArgument(StringUtils.isNotEmpty(vo.getClassName()), "Invalid OperatorInfoVO with empty `className`.");
+        Preconditions.checkArgument(StringUtils.isNotEmpty(vo.getPackagePath()), "Invalid OperatorInfoVO with empty `packagePath`.");
+    }
+
+    private void validateIdNotNull(Long id) {
+        checkNotNull(id, "Invalid id: null");
+    }
+
+    private void validateOperatorNotNull(Operator operator) {
+        checkNotNull(operator, "Invalid Operator: null");
     }
 }

@@ -1,13 +1,10 @@
 package com.miotech.kun.workflow.common.operator.dao;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
-import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.ResultSetMapper;
-import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,14 +32,14 @@ public class OperatorDao {
 
     public Optional<Operator> fetchById(Long id) {
         Preconditions.checkNotNull(id, "Invalid parameter `id`: found null object");
-        String sql = String.format("SELECT id, name, description, params, class_name, package FROM %s WHERE id = ?;", DB_TABLE_NAME);
+        String sql = String.format("SELECT id, name, description, class_name, package FROM %s WHERE id = ?;", DB_TABLE_NAME);
         Operator operator = dbOperator.fetchOne(sql, OperatorMapper.INSTANCE, id);
         return Optional.ofNullable(operator);
     }
 
     public Optional<Operator> fetchByName(String name) {
         Preconditions.checkNotNull(name, "Invalid parameter `name`: found null object");
-        String sql = String.format("SELECT id, name, description, params, class_name, package FROM %s WHERE name = ?;", DB_TABLE_NAME);
+        String sql = String.format("SELECT id, name, description, class_name, package FROM %s WHERE name = ?;", DB_TABLE_NAME);
         Operator operator = dbOperator.fetchOne(sql, OperatorMapper.INSTANCE, name);
         return Optional.ofNullable(operator);
     }
@@ -53,7 +50,7 @@ public class OperatorDao {
         Preconditions.checkArgument(Objects.nonNull(filters.getPageSize()) && filters.getPageSize() > 0, "Invalid page size: %d", filters.getPageSize());
         boolean hasKeywordFilter = StringUtils.isNotBlank(filters.getKeyword());
         Integer offset = (filters.getPageNum() - 1) * filters.getPageSize();
-        String baseSql = String.format("SELECT id, name, description, params, class_name, package FROM %s ", DB_TABLE_NAME);
+        String baseSql = String.format("SELECT id, name, description, class_name, package FROM %s ", DB_TABLE_NAME);
         List<Operator> results;
         if (hasKeywordFilter) {
             String sql = baseSql + "WHERE name LIKE CONCAT('%', CAST(? AS TEXT), '%') LIMIT ? OFFSET ?";
@@ -103,14 +100,13 @@ public class OperatorDao {
         Preconditions.checkNotNull(id, "Invalid parameter `id`: found null object");
 
         String sql = String.format("INSERT INTO %s " +
-                "(id, name, description, params, class_name, package) " +
-                "VALUES (?, ?, ?, ?, ?, ?);", DB_TABLE_NAME);
+                "(id, name, description, class_name, package) " +
+                "VALUES (?, ?, ?, ?, ?);", DB_TABLE_NAME);
         dbOperator.update(
                 sql,
                 id,
                 operator.getName(),
                 operator.getDescription(),
-                JSONUtils.toJsonString(operator.getParams()),
                 operator.getClassName(),
                 operator.getPackagePath()
         );
@@ -132,12 +128,11 @@ public class OperatorDao {
         Preconditions.checkNotNull(operator, "Invalid parameter `operator`: found null object");
 
         String sql = String.format("UPDATE %s SET " +
-                "name = ?, description = ?, params = ?, class_name = ?, package = ? WHERE id = ?;", DB_TABLE_NAME);
+                "name = ?, description = ?, class_name = ?, package = ? WHERE id = ?;", DB_TABLE_NAME);
         int affectedRows = dbOperator.update(
                 sql,
                 operator.getName(),
                 operator.getDescription(),
-                JSONUtils.toJsonString(operator.getParams()),
                 operator.getClassName(),
                 operator.getPackagePath(),
                 id
@@ -167,7 +162,6 @@ public class OperatorDao {
             return Operator.newBuilder()
                     .withId(rs.getLong("id"))
                     .withName(rs.getString("name"))
-                    .withParams(JSONUtils.jsonToObject(rs.getString("params"), new TypeReference<List<Param>>() {}))
                     .withDescription(rs.getString("description"))
                     .withClassName(rs.getString("class_name"))
                     .withPackagePath(rs.getString("package"))

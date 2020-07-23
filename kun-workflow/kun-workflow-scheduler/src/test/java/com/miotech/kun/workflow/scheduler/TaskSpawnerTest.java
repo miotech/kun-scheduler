@@ -5,20 +5,25 @@ import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
+import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.event.TickEvent;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.common.Variable;
-import com.miotech.kun.workflow.core.model.task.RunTaskContext;
+import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
+import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -48,6 +53,9 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     private EventBus eventBus;
 
     @Inject
+    private OperatorDao operatorDao;
+
+    @Inject
     private TaskDao taskDao;
 
     @Inject
@@ -56,10 +64,28 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Inject
     private TaskRunner taskRunner;
 
+    private Long operatorId;
+
     @Override
     protected void configuration() {
         super.configuration();
         mock(TaskRunner.class);
+    }
+
+    @Before
+    public void initOperator() {
+        operatorId = 1L;
+        String className = "TestOperator1";
+
+        String packagePath = OperatorCompiler.compileJar(TestOperator1.class, className);
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName(className)
+                .withClassName(className)
+                .withPackagePath(packagePath)
+                .build();
+        operatorDao.createWithId(op, operatorId);
     }
 
     @After
@@ -70,11 +96,8 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testRun_graph_of_single_task_without_variables() {
         // prepare
-        Task task = MockTaskFactory.createTask().cloneBuilder()
-                .withVariableDefs(Lists.newArrayList(
-                        Variable.of("var1", null, "default1"),
-                        Variable.of("var2",null , "default2")
-                ))
+        Task task = MockTaskFactory.createTask(operatorId).cloneBuilder()
+                .withConfig(Config.EMPTY)
                 .build();
         taskDao.create(task);
 
@@ -100,11 +123,9 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
 
-        assertThat(submitted.getVariables(), hasSize(2));
-        assertThat(submitted.getVariables(), contains(
-                sameBeanAs(Variable.of("var1", null, "default1")),
-                sameBeanAs(Variable.of("var2", null, "default2"))
-        ));
+        assertThat(submitted.getConfig().size(), is(2));
+        assertThat(submitted.getConfig().getString("var1"), is("default1"));
+        assertThat(submitted.getConfig().getString("var2"), is("default2"));
 
         TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         assertThat(submitted, sameBeanAs(saved));
@@ -113,11 +134,8 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testRun_graph_of_single_task_with_configured_variables() {
         // prepare
-        Task task = MockTaskFactory.createTask().cloneBuilder()
-                .withVariableDefs(Lists.newArrayList(
-                        Variable.of("var1", null, "default1"),
-                        Variable.of("var2",null , "default2")
-                ))
+        Task task = MockTaskFactory.createTask(operatorId).cloneBuilder()
+                .withConfig(new Config(ImmutableMap.of("var1", "val1")))
                 .build();
         taskDao.create(task);
 
@@ -125,7 +143,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         OffsetDateTime now = DateTimeUtils.freeze();
 
         // process
-        RunTaskContext context = buildContext(task.getId(), ImmutableMap.of("var1", "val1"));
+        TaskRunEnv context = buildEnv(task.getId(), ImmutableMap.of("var1", "val1"));
         DirectTaskGraph graph = new DirectTaskGraph(task);
         taskSpawner.run(graph, context);
 
@@ -144,11 +162,9 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
 
-        assertThat(submitted.getVariables(), hasSize(2));
-        assertThat(submitted.getVariables(), contains(
-                sameBeanAs(Variable.of("var1", "val1", "default1")),
-                sameBeanAs(Variable.of("var2", null, "default2"))
-        ));
+        assertThat(submitted.getConfig().size(), is(2));
+        assertThat(submitted.getConfig().getString("var1"), is("val1"));
+        assertThat(submitted.getConfig().getString("var2"), is("default2"));
 
         TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         assertThat(submitted, sameBeanAs(saved));
@@ -157,8 +173,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testRun_graph_of_multiple_tasks_not_depends_on_each_other() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
-        List<Task> tasks = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2;").stream()
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(3, operatorId, "0>>1;1>>2;").stream()
                 .map(t -> {
                     taskDao.create(t);
                     return t;
@@ -211,8 +226,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testRun_graph_of_multiple_tasks_depends_on_each_other() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
-        List<Task> tasks = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2;").stream()
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(3, operatorId, "0>>1;1>>2;").stream()
                 .map(t -> {
                     taskDao.create(t);
                     return t;
@@ -285,7 +299,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testHandleTickEvent_multiple_graphs() {
         // prepare
-        List<Task> tasks = MockTaskFactory.createTasks(2);
+        List<Task> tasks = MockTaskFactory.createTasks(2, operatorId);
         DirectTaskGraph graph1 = new DirectTaskGraph(Lists.newArrayList(tasks.get(0)));
         DirectTaskGraph graph2 = new DirectTaskGraph(Lists.newArrayList(tasks.get(1)));
 
@@ -310,7 +324,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     public void testCreateTaskRuns_single_task() {
         // prepare
         OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
-        Task task = MockTaskFactory.createTask().cloneBuilder()
+        Task task = MockTaskFactory.createTask(operatorId).cloneBuilder()
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE))
                 .build();
         taskDao.create(task);
@@ -348,7 +362,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     public void testCreateTaskRuns_single_task_scheduled_3min() {
         DateTimeUtils.freeze();
         // prepare
-        Task task = MockTaskFactory.createTask().cloneBuilder()
+        Task task = MockTaskFactory.createTask(operatorId).cloneBuilder()
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_THREE_MINUTE))
                 .build();
         taskDao.create(task);
@@ -384,7 +398,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     public void testCreateTaskRuns_multiple_tasks() {
         // prepare
         OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
-        List<Task> tasks = MockTaskFactory.createTasks(2).stream().map(t -> {
+        List<Task> tasks = MockTaskFactory.createTasks(2, operatorId).stream().map(t -> {
             Task t2 = t.cloneBuilder()
                     .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE))
                     .build();
@@ -437,7 +451,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     public void testCreateTaskRuns_task_has_upstreams() {
         // prepare
         OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
-        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1");
 
         Task task1 = tasks.get(0);
         Task task2 = tasks.get(1);
@@ -489,7 +503,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     public void testCreateTaskRuns_task_depend_on_task_in_same_tick() {
         // prepare
         OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
-        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1")
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1")
                 .stream().map(t -> {
                     Task t2 = t.cloneBuilder()
                     .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE))
@@ -544,9 +558,9 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getDependentTaskRunIds(), contains(result.get(0).getId()));
     }
 
-    private RunTaskContext buildContext(Long taskId, Map<String, String> variables) {
-        RunTaskContext.Builder builder = RunTaskContext.newBuilder()
-                .addVariables(taskId, variables);
+    private TaskRunEnv buildEnv(Long taskId, Map<String, String> config) {
+        TaskRunEnv.Builder builder = TaskRunEnv.newBuilder()
+                .addConfig(taskId, config);
         return builder.build();
     }
 

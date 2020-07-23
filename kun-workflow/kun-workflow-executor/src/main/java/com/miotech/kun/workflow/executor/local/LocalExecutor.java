@@ -12,10 +12,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 @Singleton
 public class LocalExecutor implements Executor {
@@ -33,7 +30,7 @@ public class LocalExecutor implements Executor {
     private TaskRunDao taskRunDao;
 
     @Inject
-    private CommonService commonService;
+    private MiscService miscService;
 
     private final ExecutorService pool = new ThreadPoolExecutor(
             coreSize,
@@ -47,7 +44,7 @@ public class LocalExecutor implements Executor {
     @Override
     public void submit(TaskAttempt taskAttempt) {
         logger.debug("Change TaskAttempt's status to QUEUED. taskAttempt={}", taskAttempt);
-        commonService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.QUEUED);
+        miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.QUEUED);
 
         TaskInProgress tip = new TaskInProgress(taskAttempt);
         injector.injectMembers(tip);

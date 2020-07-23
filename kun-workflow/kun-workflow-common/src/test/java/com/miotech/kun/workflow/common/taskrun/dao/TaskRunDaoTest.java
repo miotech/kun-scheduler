@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
@@ -40,7 +41,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     private TaskDao taskDao;
 
     private Clock getMockClock() {
-        return Clock.fixed(Instant.parse("2020-01-01T00:00:00.00Z"), ZoneId.of("UTC"));
+        return Clock.fixed(Instant.parse("2020-01-01T00:00:00.00Z"), ZoneId.systemDefault());
     }
 
     private List<TaskRun> prepareTaskRunsWithDependencyRelations() {
@@ -114,7 +115,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertTrue(persistedTaskRunOptional.isPresent());
 
         TaskRun persistedTaskRun = persistedTaskRunOptional.get();
-        assertThat(persistedTaskRun, samePropertyValuesAs(sampleTaskRun, "startAt", "endAt"));
+        assertThat(persistedTaskRun, sameBeanAs(sampleTaskRun));
     }
 
     @Test
@@ -198,8 +199,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchTaskRunById(1L);
         assertTrue(persistedTaskRunOptional.isPresent());
         TaskRun persistedTaskRun = persistedTaskRunOptional.get();
-        assertThat(persistedTaskRun, samePropertyValuesAs(taskRunWithUpdatedProps, "startAt", "endAt", "task"));
-        assertThat(persistedTaskRun.getTask(), samePropertyValuesAs(taskRunWithUpdatedProps.getTask()));
+        assertThat(persistedTaskRun, sameBeanAs(taskRunWithUpdatedProps));
         // Here startAt & endAt may differ since database converts datetime offset to system default,
         // but epoch second will guaranteed to be the same
         assertEquals(persistedTaskRun.getStartAt().toEpochSecond(), taskRunWithUpdatedProps.getStartAt().toEpochSecond());
@@ -294,10 +294,10 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertThat(attempt, samePropertyValuesAs(baselineModel, "startAt", "endAt", "taskRun"));
         // TaskRun instance should be nested inside
         assertThat(attempt.getTaskRun(), notNullValue());
-        assertThat(attempt.getTaskRun(), samePropertyValuesAs(sampleTaskRun, "startAt", "endAt"));
+        assertThat(attempt.getTaskRun(), sameBeanAs(sampleTaskRun));
         // And Task model object should be nested inside that TaskRun object
         assertThat(attempt.getTaskRun().getTask(), notNullValue());
-        assertThat(attempt.getTaskRun().getTask(), samePropertyValuesAs(task));
+        assertThat(attempt.getTaskRun().getTask(), sameBeanAs(task));
     }
 
     public void fetchTaskAttemptStatus_ok() {
