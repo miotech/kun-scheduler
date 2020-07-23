@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 import { Link } from 'umi';
+import { Tag } from 'antd';
 import {
   FileTextOutlined,
   PlusOutlined,
@@ -89,6 +90,16 @@ export default memo(function AssetList({
                   {getAssetNameWithDatasource(asset)}
                 </span>
               </Link>
+              {asset.database && (
+                <Tag className={styles.tag} color="gold">
+                  {asset.database}
+                </Tag>
+              )}
+              {asset.datasource && (
+                <Tag className={styles.tag} color="cyan">
+                  {asset.datasource}
+                </Tag>
+              )}
               <CloseOutlined
                 style={{ marginLeft: 4 }}
                 onClick={() => handleDeleteSingleAsset(asset.id)}

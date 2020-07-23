@@ -1,10 +1,10 @@
 import React, { memo, useState, useEffect, useCallback } from 'react';
-import { AutoComplete } from 'antd';
+import { AutoComplete, Tag } from 'antd';
 import { Asset } from '@/rematch/models/glossary';
 import useDebounce from '@/hooks/useDebounce';
 import { searchAssetsService } from '@/services/glossary';
 import { MinusOutlined } from '@ant-design/icons';
-import { getAssetNameWithDatasource } from '@/utils/assetUtils';
+
 import styles from './AssetAutoSuggest.less';
 
 const { Option } = AutoComplete;
@@ -73,7 +73,7 @@ export default memo(function AssetAutoSuggest({
   }, [index, onDelete]);
 
   const options = assetList.map(item => ({
-    value: getAssetNameWithDatasource(item),
+    value: item.name,
     asset: item,
   }));
 
@@ -88,8 +88,24 @@ export default memo(function AssetAutoSuggest({
         // options={options}
       >
         {options.map(option => (
-          <Option key={option.value} value={option.value} option={option}>
-            <div className={styles.autoOption}>{option.value}</div>
+          <Option
+            key={`${option.value}-${option.asset.database}-${option.asset.datasource}`}
+            value={option.value}
+            option={option}
+          >
+            <div className={styles.autoOption}>
+              {option.value}{' '}
+              {option.asset.database && (
+                <Tag className={styles.tag} color="gold">
+                  {option.asset.database}
+                </Tag>
+              )}
+              {option.asset.datasource && (
+                <Tag className={styles.tag} color="cyan">
+                  {option.asset.datasource}
+                </Tag>
+              )}
+            </div>
           </Option>
         ))}
       </AutoComplete>
