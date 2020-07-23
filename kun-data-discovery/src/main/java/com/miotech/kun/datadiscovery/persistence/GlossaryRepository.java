@@ -71,6 +71,7 @@ public class GlossaryRepository extends BaseRepository {
                             asset.setId(dataset.getGid());
                             asset.setType("dataset");
                             asset.setName(dataset.getName());
+                            asset.setDatabase(dataset.getDatabase());
                             asset.setDatasource(dataset.getDatasource());
                             assets.add(asset);
                         } while (rs.next());

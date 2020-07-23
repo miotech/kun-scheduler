@@ -1,12 +1,9 @@
 package com.miotech.kun.dataquality.utils;
 
 import com.miotech.kun.dataquality.DataQualityConfiguration;
-import com.miotech.kun.workflow.core.model.common.Param;
+import com.miotech.kun.workflow.core.execution.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author: Jie Chen
@@ -27,37 +24,13 @@ public class WorkflowUtils {
     @Value("${metadata.datasource.driver-class-name}")
     String metadataDriverClass;
 
-    public List<Param> getInitParams(String caseId) {
-        List<Param> params = new ArrayList<>();
-        params.add(Param.newBuilder()
-                .withName(DataQualityConfiguration.METADATA_DATASOURCE_URL)
-                .withValue(metadataUrl)
-                .withDescription("")
-                .build());
-        params.add(Param.newBuilder()
-                .withName(DataQualityConfiguration.METADATA_DATASOURCE_USERNAME)
-                .withValue(metadataUsername)
-                .withDescription("")
-                .build());
-        params.add(Param.newBuilder()
-                .withName(DataQualityConfiguration.METADATA_DATASOURCE_PASSWORD)
-                .withValue(metadataPassword)
-                .withDescription("")
-                .build());
-        params.add(Param.newBuilder()
-                .withName(DataQualityConfiguration.METADATA_DATASOURCE_DIRVER_CLASS)
-                .withValue(metadataDriverClass)
-                .withDescription("")
-                .build());
-        params.add(getCaseIdParam(caseId));
-        return params;
-    }
-
-    public Param getCaseIdParam(String caseId) {
-        return Param.newBuilder()
-                .withName("caseId")
-                .withValue(caseId)
-                .withDescription("")
+    public Config getTaskConfig(Long caseId) {
+        return Config.newBuilder()
+                .addConfig(DataQualityConfiguration.METADATA_DATASOURCE_URL, metadataUrl)
+                .addConfig(DataQualityConfiguration.METADATA_DATASOURCE_USERNAME, metadataUsername)
+                .addConfig(DataQualityConfiguration.METADATA_DATASOURCE_PASSWORD, metadataPassword)
+                .addConfig(DataQualityConfiguration.METADATA_DATASOURCE_DIRVER_CLASS, metadataDriverClass)
+                .addConfig("caseId", caseId)
                 .build();
     }
 }
