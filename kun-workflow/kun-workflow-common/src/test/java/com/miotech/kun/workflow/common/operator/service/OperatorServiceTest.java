@@ -2,8 +2,8 @@ package com.miotech.kun.workflow.common.operator.service;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.common.exception.RuleOperatorInUseException;
 import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -14,7 +14,6 @@ import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,7 +34,6 @@ public class OperatorServiceTest extends DatabaseTestBase {
         return OperatorPropsVO.newBuilder()
                 .withName(operator.getName())
                 .withDescription(operator.getDescription())
-                .withParams(operator.getParams())
                 .withPackagePath(operator.getPackagePath())
                 .withClassName(operator.getClassName())
                 .build();
@@ -47,7 +45,6 @@ public class OperatorServiceTest extends DatabaseTestBase {
                 .withDescription("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
                 .withClassName("com.miotech.kun.example.BashOperator")
                 .withPackagePath("s3://storage.miotech.com")
-                .withParams(new ArrayList<>())
                 .build();
     }
 
@@ -132,7 +129,7 @@ public class OperatorServiceTest extends DatabaseTestBase {
     public void saveOperator_withNewOperator_shouldPerformCreateAction() {
         // Prepare
         // 1. operator list should be empty
-        List<Operator> preActionOperators = operatorService.getAllOperators();
+        List<Operator> preActionOperators = operatorService.fetchAllOperators();
         assertEquals(0, preActionOperators.size());
 
         // 2. initialize an operator and save it
@@ -140,7 +137,6 @@ public class OperatorServiceTest extends DatabaseTestBase {
         Operator operator = Operator.newBuilder()
                 .withName(operatorPropsVO.getName())
                 .withDescription(operatorPropsVO.getDescription())
-                .withParams(operatorPropsVO.getParams())
                 .withPackagePath(operatorPropsVO.getPackagePath())
                 .withClassName(operatorPropsVO.getClassName())
                 .build();
@@ -151,7 +147,7 @@ public class OperatorServiceTest extends DatabaseTestBase {
 
         // Validate
         // 4. A new operator should be created
-        List<Operator> postActionOperators = operatorService.getAllOperators();
+        List<Operator> postActionOperators = operatorService.fetchAllOperators();
         assertEquals(1, postActionOperators.size());
 
         // 5. ...with properties assigned properly (except `id`)
@@ -168,7 +164,7 @@ public class OperatorServiceTest extends DatabaseTestBase {
         assertEquals("BashOperator", operator.getName());
 
         // 2. operator list should contain only one item
-        List<Operator> preActionOperators = operatorService.getAllOperators();
+        List<Operator> preActionOperators = operatorService.fetchAllOperators();
         assertEquals(1, preActionOperators.size());
 
         // Process
@@ -183,7 +179,7 @@ public class OperatorServiceTest extends DatabaseTestBase {
 
         // Validate
         // 5. should not create another operator
-        List<Operator> postActionOperators = operatorService.getAllOperators();
+        List<Operator> postActionOperators = operatorService.fetchAllOperators();
         assertEquals(1, postActionOperators.size());
 
         // 6. operator should be updated

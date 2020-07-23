@@ -7,9 +7,11 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.GetObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.google.common.base.Strings;
-import com.miotech.kun.workflow.core.execution.Operator;
+import com.miotech.kun.workflow.core.execution.ConfigDef;
+import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
+import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
@@ -20,8 +22,6 @@ import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import com.miotech.kun.workflow.core.execution.logging.Logger;
-
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -31,7 +31,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SparkOperator extends Operator {
+public class SparkOperator extends KunOperator {
 
     SparkJob job = new SparkJob();
     Logger logger;
@@ -45,12 +45,12 @@ public class SparkOperator extends Operator {
         logger = context.getLogger();
         logger.info("Start init spark job params");
 
-        String jars = context.getParameter("jars");
-        String files = context.getParameter("files");
-        String application = context.getParameter("application");
-        String args = context.getParameter("args");
+        String jars = context.getConfig().getString("jars");
+        String files = context.getConfig().getString("files");
+        String application = context.getConfig().getString("application");
+        String args = context.getConfig().getString("args");
 
-        String sessionName = context.getParameter("name");
+        String sessionName = context.getConfig().getString("name");
         if(!Strings.isNullOrEmpty(sessionName)){
             job.setName(sessionName);
         }
@@ -89,7 +89,7 @@ public class SparkOperator extends Operator {
                     .map(String::trim)
                     .collect(Collectors.toList());
             jobArgs = Arrays.stream(trimArgs.toArray(new String[0]))
-                    .map(x -> x.startsWith("$") ? context.getVariable(x.substring(1)) : x)
+                    .map(x -> x.startsWith("$") ? context.getConfig().getString(x.substring(1)) : x)
                     .collect(Collectors.toList());
         }
 
@@ -97,9 +97,9 @@ public class SparkOperator extends Operator {
             job.setArgs(jobArgs);
         }
 
-        String livyHost = context.getParameter("livyHost");
-        String queue = context.getParameter("queue").isEmpty() ? "default" : context.getParameter("queue");
-        String proxyUser = context.getParameter("proxyUser").isEmpty() ? "hadoop" : context.getParameter("proxyUser");
+        String livyHost = context.getConfig().getString("livyHost");
+        String queue = context.getConfig().getString("queue", "default");
+        String proxyUser = context.getConfig().getString("proxyUser", "hadoop");
         livyClient = new LivyClient(livyHost, queue, proxyUser);
     }
 
@@ -166,10 +166,10 @@ public class SparkOperator extends Operator {
 
         List<DataStore> inlets = new ArrayList<>();
         List<DataStore> outlets = new ArrayList<>();
-        String dispatcher = context.getParameter("dispatcher");
+        String dispatcher = context.getConfig().getString("dispatcher");
 
         if(dispatcher.equals("hdfs")){
-            String hdfsAddr = context.getParameter("hdfsAddr");
+            String hdfsAddr = context.getConfig().getString("hdfsAddr");
             String input = "/tmp/" + applicationId + ".input.txt";
             String output = "/tmp/" + applicationId + ".output.txt";
 
@@ -305,4 +305,13 @@ public class SparkOperator extends Operator {
         return new HiveTableStore(url, db, table);
     }
 
+    @Override
+    public ConfigDef config() {
+        throw new UnsupportedOperationException("need implementation");
+    }
+
+    @Override
+    public void abort() {
+        throw new UnsupportedOperationException("need implementation");
+    }
 }

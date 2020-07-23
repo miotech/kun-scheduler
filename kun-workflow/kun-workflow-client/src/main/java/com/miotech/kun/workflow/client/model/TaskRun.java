@@ -2,9 +2,9 @@ package com.miotech.kun.workflow.client.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.miotech.kun.workflow.client.CustomDateTimeDeserializer;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
@@ -18,7 +18,7 @@ public class TaskRun {
 
     private Task task;
 
-    private List<Variable> variables;
+    private Config config;
 
     private Tick scheduledTick;
 
@@ -56,12 +56,12 @@ public class TaskRun {
         this.task = task;
     }
 
-    public List<Variable> getVariables() {
-        return variables;
+    public Config getConfig() {
+        return config;
     }
 
-    public void setVariables(List<Variable> variables) {
-        this.variables = variables;
+    public void setConfig(Config config) {
+        this.config = config;
     }
 
     public Tick getScheduledTick() {
@@ -139,7 +139,7 @@ public class TaskRun {
     public static final class Builder {
         private Long id;
         private Task task;
-        private List<Variable> variables;
+        private Config config;
         private Tick scheduledTick;
         private TaskRunStatus status;
         private List<DataStore> inlets;
@@ -169,8 +169,8 @@ public class TaskRun {
             return this;
         }
 
-        public Builder withVariables(List<Variable> variables) {
-            this.variables = variables;
+        public Builder withConfig(Config config) {
+            this.config = config;
             return this;
         }
 
@@ -223,7 +223,7 @@ public class TaskRun {
             TaskRun taskRunVO = new TaskRun();
             taskRunVO.setId(id);
             taskRunVO.setTask(task);
-            taskRunVO.setVariables(variables);
+            taskRunVO.setConfig(config);
             taskRunVO.setScheduledTick(scheduledTick);
             taskRunVO.setStatus(status);
             taskRunVO.setInlets(inlets);

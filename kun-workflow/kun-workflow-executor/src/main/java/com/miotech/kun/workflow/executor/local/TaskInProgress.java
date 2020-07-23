@@ -2,10 +2,11 @@ package com.miotech.kun.workflow.executor.local;
 
 import com.google.common.eventbus.EventBus;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
+import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
-import com.miotech.kun.workflow.core.execution.Operator;
+import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -16,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.net.URL;
 import java.net.URLClassLoader;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,10 +35,13 @@ public class TaskInProgress implements Runnable {
     private OperatorDao operatorDao;
 
     @Inject
+    private OperatorService operatorService;
+
+    @Inject
     private ResourceLoader resourceLoader;
 
     @Inject
-    private CommonService commonService;
+    private MiscService miscService;
 
     @Inject
     private EventBus eventBus;
@@ -56,7 +59,7 @@ public class TaskInProgress implements Runnable {
             // 更新任务状态为RUNNING，开始时间
             OffsetDateTime startAt = DateTimeUtils.now();
             logger.debug("Change TaskAttempt's status to RUNNING. taskAttempt={}, startAt={}", attempt, startAt);
-            commonService.changeTaskAttemptStatus(attemptId, TaskRunStatus.RUNNING, startAt, null);
+            miscService.changeTaskAttemptStatus(attemptId, TaskRunStatus.RUNNING, startAt, null);
 
             // 初始化上下文
             String logPath = newLogPath(attemptId);
@@ -68,16 +71,14 @@ public class TaskInProgress implements Runnable {
 
             // Operator信息
             Long operatorId = attempt.getTaskRun().getTask().getOperatorId();
-            com.miotech.kun.workflow.core.model.operator.Operator operatorDetail = operatorDao.fetchById(operatorId).get();
-            logger.debug("Fetched operator's details. operatorId={}, details={}", operatorId, operatorDetail);
 
             TaskRunStatus finalStatus;
             TaskAttemptReport report = TaskAttemptReport.BLANK;
             ClassLoader origCtxCl = thread.getContextClassLoader();
-            Operator operator = null;
+            KunOperator operator = null;
             try {
                 // 加载Operator
-                operator = loadOperator(operatorDetail.getPackagePath(), operatorDetail.getClassName());
+                operator = operatorService.loadOperator(operatorId);
                 operator.setContext(context);
                 logger.debug("Loaded operator's class. operatorId={}", operatorId);
 
@@ -96,8 +97,8 @@ public class TaskInProgress implements Runnable {
                 report = operator.getReport().orElse(TaskAttemptReport.BLANK);
             } catch (Throwable e) {
                 logger.debug("Operator execution terminated. operatorId={}", operatorId, e);
-                context.getLogger().error("Unexpected exception occurred. OperatorName={}, TaskRunId={}",
-                        operatorDetail.getName(), attempt.getTaskRun().getId(), e);
+                context.getLogger().error("Unexpected exception occurred. OperatorId={}, TaskRunId={}",
+                        operatorId, attempt.getTaskRun().getId(), e);
                 finalStatus = TaskRunStatus.FAILED;
             } finally {
                 thread.setContextClassLoader(origCtxCl);
@@ -109,7 +110,7 @@ public class TaskInProgress implements Runnable {
             // 更新任务状态为SUCCESS/FAILED，结束时间
             OffsetDateTime endAt = DateTimeUtils.now();
             logger.debug("Change TaskAttempt's status to {}. taskAttempt={}, endAt={}", finalStatus, attempt, endAt);
-            commonService.changeTaskAttemptStatus(attemptId, finalStatus, null, endAt);
+            miscService.changeTaskAttemptStatus(attemptId, finalStatus, null, endAt);
 
             // 处理Report内容（输入/输出）
             if (finalStatus.isSuccess()) {
@@ -120,21 +121,6 @@ public class TaskInProgress implements Runnable {
             notifyFinished(attempt, finalStatus, report);
         } catch (Throwable ex) {
             logger.error("Unexpected exception occurs in operator execution. attemptId={}", attempt.getId(), ex);
-        }
-    }
-
-    private Operator loadOperator(String jarPath, String mainClass) {
-        try {
-            // TODO: 使用Resource接口读取Jar
-            URL[] urls = {new URL("jar:" + jarPath + "!/")};
-            URLClassLoader cl = URLClassLoader.newInstance(urls, getClass().getClassLoader());
-            Class clazz = Class.forName(mainClass, true, cl);
-            if (!Operator.class.isAssignableFrom(clazz)) {
-                throw new IllegalArgumentException(mainClass + " is not a valid Operator class.");
-            }
-            return (Operator) clazz.newInstance();
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to load jar. jarPath=" + jarPath, e);
         }
     }
 

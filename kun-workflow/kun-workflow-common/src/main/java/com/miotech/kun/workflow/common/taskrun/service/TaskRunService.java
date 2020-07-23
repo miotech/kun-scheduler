@@ -39,7 +39,9 @@ public class TaskRunService {
     @Inject
     private ResourceLoader resourceLoader;
 
+    /* --------------------------------------- */
     /* ----------- public methods ------------ */
+    /* --------------------------------------- */
 
     public Optional<TaskRunVO> getTaskRunDetail(Long taskRunId) {
         Optional<TaskRun> taskRun = taskRunDao.fetchTaskRunById(taskRunId);
@@ -132,19 +134,19 @@ public class TaskRunService {
                         .build())
                 .collect(Collectors.toList());
 
-        return TaskRunVO.newBuilder()
-                .withTask(taskRun.getTask())
-                .withId(taskRun.getId())
-                .withScheduledTick(taskRun.getScheduledTick())
-                .withStatus(taskRun.getStatus())
-                .withInlets(taskRun.getInlets())
-                .withOutlets(taskRun.getOutlets())
-                .withDependentTaskRunIds(taskRun.getDependentTaskRunIds())
-                .withStartAt(taskRun.getStartAt())
-                .withEndAt(taskRun.getEndAt())
-                .withVariables(taskRun.getVariables())
-                .withAttempts(attempts)
-                .build();
+        TaskRunVO vo = new TaskRunVO();
+        vo.setTask(taskRun.getTask());
+        vo.setId(taskRun.getId());
+        vo.setScheduledTick(taskRun.getScheduledTick());
+        vo.setStatus(taskRun.getStatus());
+        vo.setInlets(taskRun.getInlets());
+        vo.setOutlets(taskRun.getOutlets());
+        vo.setDependentTaskRunIds(taskRun.getDependentTaskRunIds());
+        vo.setStartAt(taskRun.getStartAt());
+        vo.setEndAt(taskRun.getEndAt());
+        vo.setConfig(taskRun.getConfig());
+        vo.setAttempts(attempts);
+        return vo;
     }
 
 }

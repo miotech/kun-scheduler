@@ -6,18 +6,21 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
-import com.miotech.kun.workflow.common.task.dao.TaskDao;
-import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
-import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
-import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
+import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
+import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -34,6 +37,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.miotech.kun.commons.db.sql.SQLUtils.column;
 import static com.miotech.kun.workflow.utils.StringUtils.toNullableString;
 
 @Singleton
@@ -41,7 +45,7 @@ public class TaskRunDao {
     private static final Logger logger = LoggerFactory.getLogger(TaskRunDao.class);
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "start_at", "end_at", "variables", "inlets", "outlets");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "start_at", "end_at", "config", "inlets", "outlets");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
@@ -238,7 +242,7 @@ public class TaskRunDao {
                     toNullableString(taskRun.getStatus()),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
-                    JSONUtils.toJsonString(taskRun.getVariables()),
+                    JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets())
             );
@@ -279,7 +283,7 @@ public class TaskRunDao {
                     toNullableString(taskRun.getStatus()),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
-                    JSONUtils.toJsonString(taskRun.getVariables()),
+                    JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets()),
                     taskRun.getId()
@@ -387,7 +391,7 @@ public class TaskRunDao {
                 .where(TASK_ATTEMPT_MODEL_NAME + ".task_run_id = ?")
                 .getSQL();
 
-        return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(true), taskRunId);
+        return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(TASK_ATTEMPT_MODEL_NAME), taskRunId);
     }
 
     /**
@@ -413,7 +417,7 @@ public class TaskRunDao {
                 .where(TASK_ATTEMPT_MODEL_NAME + ".id = ?")
                 .getSQL();
 
-        return Optional.ofNullable(dbOperator.fetchOne(sql, new TaskAttemptMapper(true, taskRunMapperInstance), attemptId));
+        return Optional.ofNullable(dbOperator.fetchOne(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), attemptId));
     }
 
     public TaskAttempt createAttempt(TaskAttempt taskAttempt) {
@@ -604,7 +608,7 @@ public class TaskRunDao {
                 .orderBy(orderClause)
                 .getSQL();
 
-        return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(false), taskRunIds.toArray());
+        return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(), taskRunIds.toArray());
     }
 
     /**
@@ -637,71 +641,76 @@ public class TaskRunDao {
         return fetchDependentTaskRunsById(srcTaskRunId, distance, DependencyDirection.DOWNSTREAM, includeSelf);
     }
 
+    public static class TaskRunMapper implements ResultSetMapper<TaskRun> {
+        public static final TaskRunDao.TaskRunMapper INSTANCE = new TaskRunDao.TaskRunMapper();
+        private final TaskDao.TaskMapper taskMapper = TaskDao.TaskMapper.INSTANCE;
+
+        @Override
+        public TaskRun map(ResultSet rs) throws SQLException {
+            rs.getLong(TaskRunDao.TASK_RUN_MODEL_NAME + "_task_id");
+            Task task = !rs.wasNull() ? taskMapper.map(rs) : null;
+
+            return TaskRun.newBuilder()
+                    .withTask(task)
+                    .withId(rs.getLong(TASK_RUN_MODEL_NAME + "_id"))
+                    .withScheduledTick(new Tick(rs.getString(TASK_RUN_MODEL_NAME + "_scheduled_tick")))
+                    .withStatus(TaskRunStatus.resolve(rs.getString(TASK_RUN_MODEL_NAME + "_status")))
+                    .withInlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_inlets"), new TypeReference<List<DataStore>>() {}))
+                    .withOutlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_outlets"), new TypeReference<List<DataStore>>() {}))
+                    .withDependentTaskRunIds(Collections.emptyList())
+                    .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
+                    .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_end_at")))
+                    .withConfig(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_config"), Config.class))
+                    .build();
+        }
+    }
+
     private static class TaskAttemptMapper implements ResultSetMapper<TaskAttempt> {
-        private boolean withColumnAliased;
+        private String tableAlias;
 
         private TaskRunMapper taskRunMapper;
 
-        public TaskAttemptMapper(boolean withColumnAliased, TaskRunMapper taskRunMapper) {
-            this.withColumnAliased = withColumnAliased;
+        public TaskAttemptMapper(String tableAlias, TaskRunMapper taskRunMapper) {
+            this.tableAlias = tableAlias;
             this.taskRunMapper = taskRunMapper;
         }
 
         @Override
         public TaskAttempt map(ResultSet rs) throws SQLException {
-            if (withColumnAliased) {
                 return TaskAttempt.newBuilder()
-                        .withId(rs.getLong(TASK_ATTEMPT_MODEL_NAME + "_id"))
-                        .withStatus(TaskRunStatus.resolve(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_status")))
+                        .withId(rs.getLong(column("id", tableAlias)))
                         .withTaskRun(taskRunMapper.map(rs))
-                        .withAttempt(rs.getInt(TASK_ATTEMPT_MODEL_NAME + "_attempt"))
-                        .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_ATTEMPT_MODEL_NAME + "_start_at")))
-                        .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_ATTEMPT_MODEL_NAME + "_end_at")))
-                        .withLogPath(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_log_path"))
+                        .withStatus(TaskRunStatus.resolve(rs.getString(column("status", tableAlias))))
+                        .withAttempt(rs.getInt(column("attempt", tableAlias)))
+                        .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(column("start_at", tableAlias))))
+                        .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(column("end_at", tableAlias))))
+                        .withLogPath(rs.getString(column("log_path", tableAlias)))
                         .build();
-            } else {
-                return TaskAttempt.newBuilder()
-                        .withId(rs.getLong("id"))
-                        .withStatus(TaskRunStatus.resolve(rs.getString("status")))
-                        .withAttempt(rs.getInt("attempt"))
-                        .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("start_at")))
-                        .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("end_at")))
-                        .withLogPath(rs.getString("log_path"))
-                        .build();
-            }
         }
     }
 
     private static class TaskAttemptPropsMapper implements ResultSetMapper<TaskAttemptProps> {
-        private boolean withColumnAliased;
+        private String tableAlias;
 
-        public TaskAttemptPropsMapper(boolean withColumnAliased) {
-            this.withColumnAliased = withColumnAliased;
+        public TaskAttemptPropsMapper() {
+            this("");
+        }
+
+        public TaskAttemptPropsMapper(String tableAlias) {
+            this.tableAlias = tableAlias;
         }
 
         @Override
         public TaskAttemptProps map(ResultSet rs) throws SQLException {
-            if (withColumnAliased) {
-                return TaskAttemptProps.newBuilder()
-                        .withId(rs.getLong(TASK_ATTEMPT_MODEL_NAME + "_id"))
-                        .withTaskRunId(rs.getLong(TASK_ATTEMPT_MODEL_NAME + "_task_run_id"))
-                        .withAttempt(rs.getInt(TASK_ATTEMPT_MODEL_NAME + "_attempt"))
-                        .withStatus(TaskRunStatus.valueOf(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_status")))
-                        .withLogPath(rs.getString(TASK_ATTEMPT_MODEL_NAME + "_log_path"))
-                        .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp( TASK_ATTEMPT_MODEL_NAME + "_start_at")))
-                        .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_ATTEMPT_MODEL_NAME + "_end_at")))
-                        .build();
-            } else {
-                return TaskAttemptProps.newBuilder()
-                        .withId(rs.getLong("id"))
-                        .withTaskRunId(rs.getLong("task_run_id"))
-                        .withAttempt(rs.getInt("attempt"))
-                        .withStatus(TaskRunStatus.valueOf(rs.getString("status")))
-                        .withLogPath(rs.getString("log_path"))
-                        .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp( "start_at")))
-                        .withEndAt(DateTimeUtils.fromTimestamp( rs.getTimestamp("end_at")))
-                        .build();
-            }
+            return TaskAttemptProps.newBuilder()
+                    .withId(rs.getLong(column("id", tableAlias)))
+                    .withTaskRunId(rs.getLong(column("task_run_id", tableAlias)))
+                    .withAttempt(rs.getInt(column("attempt", tableAlias)))
+                    .withStatus(TaskRunStatus.valueOf(rs.getString(column("status", tableAlias))))
+                    .withLogPath(rs.getString(column("log_path", tableAlias)))
+                    .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(column( "start_at", tableAlias))))
+                    .withEndAt(DateTimeUtils.fromTimestamp( rs.getTimestamp(column("end_at", tableAlias))))
+                    .build();
         }
     }
 }

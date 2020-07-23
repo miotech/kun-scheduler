@@ -171,10 +171,9 @@ public class TaskControllerTest extends KunWebServerTestBase {
                     .withId(WorkflowIdGenerator.nextTaskId())
                     .withName(vo.getName())
                     .withDescription(vo.getDescription())
-                    .withVariableDefs(vo.getVariableDefs())
+                    .withConfig(vo.getConfig())
                     .withOperatorId(vo.getOperatorId())
                     .withDependencies(vo.getDependencies())
-                    .withArguments(vo.getArguments())
                     .withTags(vo.getTags())
                     .withScheduleConf(vo.getScheduleConf())
                     .build();
