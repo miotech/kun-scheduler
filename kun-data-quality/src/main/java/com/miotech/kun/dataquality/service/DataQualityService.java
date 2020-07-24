@@ -3,6 +3,7 @@ package com.miotech.kun.dataquality.service;
 import com.miotech.kun.commons.query.JDBCQuery;
 import com.miotech.kun.commons.query.JDBCQueryExecutor;
 import com.miotech.kun.dataquality.model.bo.DataQualityRequest;
+import com.miotech.kun.dataquality.model.bo.DeleteCaseResponse;
 import com.miotech.kun.dataquality.model.bo.ValidateSqlRequest;
 import com.miotech.kun.dataquality.model.entity.DataQualityCase;
 import com.miotech.kun.dataquality.model.entity.DataQualityCaseBasic;
@@ -13,6 +14,8 @@ import com.miotech.kun.security.service.BaseSecurityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @author: Jie Chen
@@ -67,7 +70,11 @@ public class DataQualityService extends BaseSecurityService {
         return dataQualityRepository.updateCase(id, dataQualityRequest);
     }
 
-    public Long deleteCase(Long id, Long datasetId) {
+    public boolean isFullDelete(Long id) {
+        return dataQualityRepository.isFullDelete(id);
+    }
+
+    public DeleteCaseResponse deleteCase(Long id, Long datasetId) {
         return dataQualityRepository.deleteCase(id, datasetId);
     }
 
@@ -77,5 +84,9 @@ public class DataQualityService extends BaseSecurityService {
 
     public Long getLatestTaskId(Long caseId) {
         return dataQualityRepository.getLatestTaskId(caseId);
+    }
+
+    public List<Long> getAllCaseId() {
+        return dataQualityRepository.getAllCaseId();
     }
 }

@@ -1,6 +1,6 @@
 package com.miotech.kun.workflow.core;
 
-import com.miotech.kun.workflow.core.model.task.RunTaskContext;
+import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 
@@ -18,5 +18,5 @@ public interface Scheduler {
      * @param graph
      * @param context
      */
-    public List<TaskRun> run(TaskGraph graph, RunTaskContext context);
+    public List<TaskRun> run(TaskGraph graph, TaskRunEnv context);
 }

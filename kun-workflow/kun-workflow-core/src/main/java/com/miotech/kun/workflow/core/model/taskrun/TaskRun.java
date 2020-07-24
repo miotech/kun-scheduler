@@ -3,8 +3,8 @@ package com.miotech.kun.workflow.core.model.taskrun;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
@@ -21,7 +21,7 @@ public class TaskRun {
 
     private final Task task;
 
-    private final List<Variable> variables;
+    private final Config config;
 
     private final Tick scheduledTick;
 
@@ -47,8 +47,8 @@ public class TaskRun {
         return task;
     }
 
-    public List<Variable> getVariables() {
-        return variables;
+    public Config getConfig() {
+        return config;
     }
 
     public Tick getScheduledTick() {
@@ -79,13 +79,13 @@ public class TaskRun {
         return dependentTaskRunIds;
     }
 
-    public TaskRun(Long id, Task task, List<Variable> variables, Tick scheduledTick, TaskRunStatus status,
+    public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status,
                    OffsetDateTime startAt, OffsetDateTime endAt, List<DataStore> inlets, List<DataStore> outlets,
                    List<Long> dependentTaskRunIds) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
-        this.variables = variables;
+        this.config = config;
         this.scheduledTick = scheduledTick;
         this.status = status;
         this.startAt = startAt;
@@ -103,7 +103,7 @@ public class TaskRun {
         return newBuilder()
                 .withId(id)
                 .withTask(task)
-                .withVariables(variables)
+                .withConfig(config)
                 .withScheduledTick(scheduledTick)
                 .withStatus(status)
                 .withStartAt(startAt)
@@ -113,10 +113,11 @@ public class TaskRun {
                 .withDependentTaskRunIds(dependentTaskRunIds);
     }
 
+
     public static final class TaskRunBuilder {
         private Long id;
         private Task task;
-        private List<Variable> variables;
+        private Config config;
         private Tick scheduledTick;
         private TaskRunStatus status;
         private OffsetDateTime startAt;
@@ -138,8 +139,8 @@ public class TaskRun {
             return this;
         }
 
-        public TaskRunBuilder withVariables(List<Variable> variables) {
-            this.variables = variables;
+        public TaskRunBuilder withConfig(Config config) {
+            this.config = config;
             return this;
         }
 
@@ -179,7 +180,7 @@ public class TaskRun {
         }
 
         public TaskRun build() {
-            return new TaskRun(id, task, variables, scheduledTick, status, startAt, endAt, inlets, outlets, dependentTaskRunIds);
+            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, inlets, outlets, dependentTaskRunIds);
         }
     }
 }

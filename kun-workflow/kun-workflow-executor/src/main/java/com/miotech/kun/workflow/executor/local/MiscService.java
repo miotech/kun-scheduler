@@ -13,8 +13,8 @@ import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 
 @Singleton
-public class CommonService {
-    private static final Logger logger = LoggerFactory.getLogger(CommonService.class);
+public class MiscService {
+    private static final Logger logger = LoggerFactory.getLogger(MiscService.class);
 
     @Inject
     private TaskRunDao taskRunDao;
