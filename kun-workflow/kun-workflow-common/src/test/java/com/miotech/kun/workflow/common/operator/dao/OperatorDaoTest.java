@@ -2,14 +2,12 @@ package com.miotech.kun.workflow.common.operator.dao;
 
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
-import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Test;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,15 +36,11 @@ public class OperatorDaoTest extends DatabaseTestBase {
     @Test
     public void create_newOperator_shouldPersist() {
         // Prepare
-        List<Param> exampleParams = new ArrayList<>();
-        exampleParams.add(Param.newBuilder().withName("x").withDescription("first param").build());
-        exampleParams.add(Param.newBuilder().withName("y").withDescription("second param").build());
         Long id = WorkflowIdGenerator.nextOperatorId();
         Operator exampleOperator = Operator.newBuilder()
                 .withId(id)
                 .withName("foo")
                 .withDescription("foo_description")
-                .withParams(exampleParams)
                 .withClassName("com.miotech.kun.foo.BashOperator")
                 .withPackagePath("s3://storage.miotech.com/foo.jar")
                 .build();
@@ -69,7 +63,6 @@ public class OperatorDaoTest extends DatabaseTestBase {
                 .withId(id)
                 .withName("foo")
                 .withDescription("foo_description")
-                .withParams(new ArrayList<>())
                 .withClassName("com.miotech.kun.foo.BashOperator")
                 .withPackagePath("s3://storage.miotech.com/foo.jar")
                 .build();

@@ -16,7 +16,7 @@ import com.miotech.kun.metadata.web.model.vo.RunTaskVO;
 import com.miotech.kun.metadata.web.model.vo.TaskPropsVO;
 import com.miotech.kun.metadata.web.util.WorkflowApiResponseParseUtil;
 import com.miotech.kun.metadata.web.util.WorkflowUrlGenerator;
-import com.miotech.kun.workflow.core.model.common.Variable;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -24,7 +24,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -84,7 +83,6 @@ public class ProcessService {
         OperatorPropsVO operatorPropsVO = OperatorPropsVO.newBuilder()
                 .withName(operatorName)
                 .withDescription(StringUtils.EMPTY)
-                .withParams(Lists.newArrayList())
                 .withPackagePath(packagePath)
                 .withClassName(WorkflowApiParam.CLASS_NAME)
                 .build();
@@ -97,7 +95,6 @@ public class ProcessService {
                 .withName(taskName)
                 .withDescription(StringUtils.EMPTY)
                 .withOperatorId(operatorId)
-                .withArguments(Lists.newArrayList())
                 .withDependencies(Lists.newArrayList())
                 .withTags(Lists.newArrayList());
         fillInfo(propsVOBuilder, taskName);
@@ -105,17 +102,17 @@ public class ProcessService {
     }
 
     private void fillInfo(TaskPropsVO.TaskPropsVOBuilder builder, String taskName) {
-        List<Variable> variables = buildVariablesForCreate(taskName);
+        Config config = buildConfigForCreate(taskName);
         TaskParam taskParam = TaskParam.get(taskName);
         switch (taskParam) {
             case REFRESH:
                 builder.withScheduleConf(ScheduleConf.ScheduleConfBuilder.aScheduleConf().withType(ScheduleType.NONE).build());
-                builder.withVariableDefs(variables);
+                builder.withConfig(config);
                 break;
             case BUILD_ALL:
                 builder.withScheduleConf(ScheduleConf.ScheduleConfBuilder.aScheduleConf().withType(ScheduleType.SCHEDULED)
                         .withCronExpr(properties.getProperty(PropKey.CRON_EXPR)).build());
-                builder.withVariableDefs(variables);
+                builder.withConfig(config);
                 break;
             default:
                 throw new IllegalArgumentException("Invalid taskName:" + taskName);
@@ -133,47 +130,43 @@ public class ProcessService {
         return JSONUtils.toJsonString(runTaskVOs);
     }
 
-    private List<Variable> buildVariablesForCreate(String taskName) {
+    private Config buildConfigForCreate(String taskName) {
         TaskParam taskParam = TaskParam.get(taskName);
         switch (taskParam) {
             case REFRESH:
-                return Arrays.asList(Variable.newBuilder().withKey(PropKey.JDBC_URL).build(),
-                        Variable.newBuilder().withKey(PropKey.USERNAME).build(),
-                        Variable.newBuilder().withKey(PropKey.PASSWORD).build(),
-                        Variable.newBuilder().withKey(PropKey.DRIVER_CLASS_NAME).build(),
-                        Variable.newBuilder().withKey(PropKey.DEPLOY_MODE).build(),
-                        Variable.newBuilder().withKey(PropKey.DATASOURCE_ID).build(),
-                        Variable.newBuilder().withKey(PropKey.GID).build());
+                return Config.EMPTY;
             case BUILD_ALL:
-                return Arrays.asList(Variable.newBuilder().withKey(PropKey.JDBC_URL).withValue(properties.getProperty(PropKey.JDBC_URL)).build(),
-                        Variable.newBuilder().withKey(PropKey.USERNAME).withValue(properties.getProperty(PropKey.USERNAME)).build(),
-                        Variable.newBuilder().withKey(PropKey.PASSWORD).withValue(properties.getProperty(PropKey.PASSWORD)).build(),
-                        Variable.newBuilder().withKey(PropKey.DRIVER_CLASS_NAME).withValue(properties.getProperty(PropKey.DRIVER_CLASS_NAME)).build(),
-                        Variable.newBuilder().withKey(PropKey.DEPLOY_MODE).withValue(DataBuilderDeployMode.ALL.name()).build());
+                Config.Builder confBuilder = Config.newBuilder();
+                confBuilder.addConfig(PropKey.JDBC_URL, properties.getProperty(PropKey.JDBC_URL));
+                confBuilder.addConfig(PropKey.USERNAME, properties.getProperty(PropKey.USERNAME));
+                confBuilder.addConfig(PropKey.PASSWORD, properties.getProperty(PropKey.PASSWORD));
+                confBuilder.addConfig(PropKey.DRIVER_CLASS_NAME, properties.getProperty(PropKey.DRIVER_CLASS_NAME));
+                confBuilder.addConfig(PropKey.DEPLOY_MODE, DataBuilderDeployMode.ALL.name());
+                return confBuilder.build();
             default:
                 throw new IllegalArgumentException("Invalid taskName:" + taskName);
         }
     }
 
     private Map<String, String> buildVariablesForTaskRun(DataBuilderDeployMode deployMode, String id) {
-        Map<String, String> variables = Maps.newHashMap();
-        variables.put(PropKey.JDBC_URL, properties.getProperty(PropKey.JDBC_URL));
-        variables.put(PropKey.USERNAME, properties.getProperty(PropKey.USERNAME));
-        variables.put(PropKey.PASSWORD, properties.getProperty(PropKey.PASSWORD));
-        variables.put(PropKey.DRIVER_CLASS_NAME, properties.getProperty(PropKey.DRIVER_CLASS_NAME));
-        variables.put(PropKey.DEPLOY_MODE, deployMode.name());
+        Map<String, String> conf = Maps.newHashMap();
+        conf.put(PropKey.JDBC_URL, properties.getProperty(PropKey.JDBC_URL));
+        conf.put(PropKey.USERNAME, properties.getProperty(PropKey.USERNAME));
+        conf.put(PropKey.PASSWORD, properties.getProperty(PropKey.PASSWORD));
+        conf.put(PropKey.DRIVER_CLASS_NAME, properties.getProperty(PropKey.DRIVER_CLASS_NAME));
+        conf.put(PropKey.DEPLOY_MODE, deployMode.name());
 
         switch (deployMode) {
             case DATASOURCE:
-                variables.put(PropKey.DATASOURCE_ID, id);
+                conf.put(PropKey.DATASOURCE_ID, id);
                 break;
             case DATASET:
-                variables.put(PropKey.GID, id);
+                conf.put(PropKey.GID, id);
                 break;
             default:
                 throw new UnsupportedOperationException("Invalid deployMode:" + deployMode);
         }
 
-        return variables;
+        return conf;
     }
 }

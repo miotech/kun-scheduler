@@ -43,6 +43,7 @@ public class WorkflowService {
         Task task = buildTask(caseId);
 
         Task savedTask = workflowClient.createTask(task);
+        dataQualityService.saveTaskId(caseId, savedTask.getId());
         return savedTask.getId();
     }
 
@@ -51,6 +52,12 @@ public class WorkflowService {
         Long taskId = dataQualityService.getLatestTaskId(caseId);
         if (taskId == null || taskId.equals(0L)) {
             taskId = createTask(caseId);
+        } else {
+            try {
+                workflowClient.getTask(taskId);
+            } catch (Exception e) {
+                taskId = createTask(caseId);
+            }
         }
 
         TaskRun taskRun = workflowClient.executeTask(taskId, null);
@@ -59,8 +66,12 @@ public class WorkflowService {
         return taskId;
     }
 
-    public void deleteTask(Long caseId) {
+    public void deleteTaskByCase(Long caseId) {
         Long taskId = dataQualityService.getLatestTaskId(caseId);
+        deleteTask(taskId);
+    }
+
+    public void deleteTask(Long taskId) {
         if (taskId != null && !taskId.equals(0L)) {
             workflowClient.deleteTask(taskId);
         }
@@ -71,10 +82,9 @@ public class WorkflowService {
 
         String caseName = dataQualityService.getCaseBasic(caseId).getName();
         return Task.newBuilder()
-                .withName(DataQualityConfiguration.WORKFLOW_TASK_NAME_PREFIX + caseName)
+                .withName(DataQualityConfiguration.WORKFLOW_TASK_NAME_PREFIX + caseId + "_" + caseName)
                 .withDescription("")
-                .withArguments(workflowUtils.getInitParams(String.valueOf(caseId)))
-                .withVariableDefs(new ArrayList<>())
+                .withConfig(workflowUtils.getTaskConfig(caseId))
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, cronExpression))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())

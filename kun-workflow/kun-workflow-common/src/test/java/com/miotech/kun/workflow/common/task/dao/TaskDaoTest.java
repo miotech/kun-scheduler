@@ -1,13 +1,13 @@
 package com.miotech.kun.workflow.common.task.dao;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
-import com.miotech.kun.workflow.core.model.common.Param;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.common.Variable;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -33,7 +33,6 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.Assert.*;
 
 public class TaskDaoTest extends DatabaseTestBase {
@@ -59,21 +58,16 @@ public class TaskDaoTest extends DatabaseTestBase {
     private List<Task> insertSampleData() {
         List<Task> created = new ArrayList<>();
 
-        // insert task with specific id
-        List<Param> args = Lists.newArrayList(
-                Param.newBuilder().withName("VERSION").withValue("1.0").build()
-        );
-
-        List<Variable> variableDefs = Lists.newArrayList(
-                Variable.newBuilder().withKey("PATH").withDefaultValue("/usr/bin").build()
-        );
+        Config config = new Config(ImmutableMap.of(
+                "VERSION", "1.0",
+                "PATH", "/usr/bin"
+        ));
 
         Task taskExample = Task.newBuilder()
                 .withId(1L)
                 .withName("example1")
                 .withDescription("example1_desc")
-                .withArguments(args)
-                .withVariableDefs(variableDefs)
+                .withConfig(config)
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?"))
                 .withOperatorId(1L)
                 .withDependencies(new ArrayList<>())
@@ -149,8 +143,7 @@ public class TaskDaoTest extends DatabaseTestBase {
         assertTrue(taskOptional.isPresent());
         Task task = taskOptional.get();
         assertThat(task.getName(), is("example1"));
-        assertThat(task.getVariableDefs().get(0).getKey(), is("PATH"));
-        assertThat(task.getVariableDefs().get(0).getDefaultValue(), is("/usr/bin"));
+        assertThat(task.getConfig().getString("PATH"), is("/usr/bin"));
         assertThat(task.getScheduleConf().getCronExpr(), is("0 15 10 * * ?"));
     }
 
@@ -202,8 +195,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withName("foo")
                 .withDescription("foo desc")
                 .withOperatorId(1L)
-                .withArguments(new ArrayList<>())
-                .withVariableDefs(new ArrayList<>())
+                .withConfig(Config.EMPTY)
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withDependencies(new ArrayList<>())
                 .withTags(Lists.newArrayList(
@@ -220,7 +212,7 @@ public class TaskDaoTest extends DatabaseTestBase {
         assertTrue(persistedTaskOptional.isPresent());
 
         Task persistedTask = persistedTaskOptional.get();
-        assertThat(persistedTask, samePropertyValuesAs(insertTask));
+        assertThat(persistedTask, sameBeanAs(insertTask));
     }
 
     @Test(expected = RuntimeException.class)
@@ -230,8 +222,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withName("foo")
                 .withDescription("foo desc")
                 .withOperatorId(1L)
-                .withArguments(new ArrayList<>())
-                .withVariableDefs(new ArrayList<>())
+                .withConfig(Config.EMPTY)
                 .withDependencies(new ArrayList<>())
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withTags(new ArrayList<>())
@@ -251,8 +242,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withName("foo")
                 .withDescription("foo desc")
                 .withOperatorId(1L)
-                .withArguments(new ArrayList<>())
-                .withVariableDefs(new ArrayList<>())
+                .withConfig(Config.EMPTY)
                 .withDependencies(new ArrayList<>())
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withTags(new ArrayList<>())
@@ -274,8 +264,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withName("foo")
                 .withDescription("foo desc")
                 .withOperatorId(1L)
-                .withArguments(new ArrayList<>())
-                .withVariableDefs(new ArrayList<>())
+                .withConfig(Config.EMPTY)
                 .withDependencies(new ArrayList<>())
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 // duplicated tags
@@ -370,19 +359,13 @@ public class TaskDaoTest extends DatabaseTestBase {
         // Process
         Task taskToBeUpdated = task.cloneBuilder()
                 .withName("changedTaskName")
-                .withTags(Lists.newArrayList(
-                        new Tag("foo", "bar"),
-                        new Tag("a", "b")
-                ))
+                .withTags(Lists.newArrayList(new Tag("foo", "bar")))
                 .build();
         taskDao.update(taskToBeUpdated);
 
         // Validate
         Task updatedTask = taskDao.fetchById(1L).get();
-        // Validate properties except tags, since ordinals are not guaranteed to be same
-        assertThat(updatedTask, samePropertyValuesAs(taskToBeUpdated, "tags"));
-        // Convert tags to map and compare
-        assertThat(updatedTask.getTagsMap(), sameBeanAs(taskToBeUpdated.getTagsMap()));
+        assertThat(updatedTask, sameBeanAs(taskToBeUpdated));
     }
 
     @Test

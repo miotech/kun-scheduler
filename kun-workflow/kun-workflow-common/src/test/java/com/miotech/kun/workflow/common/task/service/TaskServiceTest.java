@@ -14,7 +14,7 @@ import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.operator.Operator;
-import com.miotech.kun.workflow.core.model.task.RunTaskContext;
+import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -143,7 +144,7 @@ public class TaskServiceTest extends DatabaseTestBase {
         assertTrue(updatedTaskOptional.isPresent());
         Task updatedTask = updatedTaskOptional.get();
 
-        assertThat(updatedTask, samePropertyValuesAs(taskToUpdate));
+        assertThat(updatedTask, sameBeanAs(taskToUpdate));
     }
 
     @Test
@@ -190,7 +191,7 @@ public class TaskServiceTest extends DatabaseTestBase {
         Optional<Task> taskOptional = taskService.fetchTaskById(createdTask.getId());
         assertTrue(taskOptional.isPresent());
         Task persistedTask = taskOptional.get();
-        assertThat(persistedTask, samePropertyValuesAs(createdTask));
+        assertThat(persistedTask, sameBeanAs(createdTask));
     }
 
     @Test
@@ -215,10 +216,12 @@ public class TaskServiceTest extends DatabaseTestBase {
         // Validate
         // 4. Fetch updated task
         Task updatedTask = taskService.fetchTaskById(createdTask.getId()).orElse(null);
-        // 5. all properties except `name` should remain unchanged
-        assertThat(updatedTask, samePropertyValuesAs(createdTask, "name"));
-        // 6. and `name` property should be updated
+        // 5. and `name` property should be updated
         assertThat(updatedTask.getName(), is("Updated Task Name"));
+        // 6. all properties except `name` should remain unchanged
+        // TODO: improve `sameBeanAs()` to accept ignored fields
+        createdTask = createdTask.cloneBuilder().withName(updatedTask.getName()).build();
+        assertThat(updatedTask, sameBeanAs(createdTask));
     }
 
     @Test
@@ -250,7 +253,7 @@ public class TaskServiceTest extends DatabaseTestBase {
         Optional<Task> taskOptional = taskService.fetchTaskById(createdTask.getId());
         assertTrue(taskOptional.isPresent());
         Task persistedTask = taskOptional.get();
-        assertThat(persistedTask, samePropertyValuesAs(createdTask));
+        assertThat(persistedTask, sameBeanAs(createdTask));
     }
 
     @Test
@@ -419,18 +422,18 @@ public class TaskServiceTest extends DatabaseTestBase {
         vo.setTaskId(task.getId());
 
         ArgumentCaptor<TaskGraph> captor1 = ArgumentCaptor.forClass(TaskGraph.class);
-        ArgumentCaptor<RunTaskContext> captor2 = ArgumentCaptor.forClass(RunTaskContext.class);
+        ArgumentCaptor<TaskRunEnv> captor2 = ArgumentCaptor.forClass(TaskRunEnv.class);
 
         // process
         taskService.runTasks(Lists.newArrayList(vo));
         verify(scheduler, times(1))
                 .run(captor1.capture(), captor2.capture());
         DirectTaskGraph graph = (DirectTaskGraph) captor1.getValue();
-        RunTaskContext context = captor2.getValue();
+        TaskRunEnv context = captor2.getValue();
 
         // verify
-        assertThat(graph.getTasks(), contains(task));
-        assertThat(context.getConfiguredVariables(task.getId()), hasSize(0));
+        assertThat(graph.getTasks().get(0), sameBeanAs(task));
+        assertThat(context.getConfig(task.getId()).size(), is(0));
     }
 
     @Test

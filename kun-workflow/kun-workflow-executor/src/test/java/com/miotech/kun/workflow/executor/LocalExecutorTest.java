@@ -12,8 +12,9 @@ import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
-import com.miotech.kun.workflow.core.execution.Operator;
+import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -330,16 +331,15 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.FAILED);
     }
 
-    private TaskAttempt prepareAttempt(Class<? extends Operator> operatorClass) {
+    private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass) {
         return prepareAttempt(operatorClass, operatorClass.getSimpleName());
     }
 
-    private TaskAttempt prepareAttempt(Class<? extends Operator> operatorClass, String operatorClassName) {
+    private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass, String operatorClassName) {
         TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttempt();
 
         long operatorId = attempt.getTaskRun().getTask().getOperatorId();
-        com.miotech.kun.workflow.core.model.operator.Operator
-                op = MockOperatorFactory.createOperator()
+        Operator op = MockOperatorFactory.createOperator()
                 .cloneBuilder()
                 .withId(operatorId)
                 .withName("Operator_" + operatorId)
@@ -354,7 +354,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         return attempt;
     }
 
-    private TaskAttempt prepareAttempt(Class<? extends Operator> operatorClass, String operatorClassName, String fakeClassName) {
+    private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass, String operatorClassName, String fakeClassName) {
         TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttempt();
 
         long operatorId = attempt.getTaskRun().getTask().getOperatorId();
@@ -374,7 +374,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         return attempt;
     }
 
-    private String compileJar(Class<? extends Operator> operatorClass, String operatorClassName) {
+    private String compileJar(Class<? extends KunOperator> operatorClass, String operatorClassName) {
         return OperatorCompiler.compileJar(operatorClass, operatorClassName);
     }
 

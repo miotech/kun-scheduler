@@ -1,7 +1,8 @@
 package com.miotech.kun.workflow.executor.mock;
 
 import com.google.common.collect.Lists;
-import com.miotech.kun.workflow.core.execution.Operator;
+import com.miotech.kun.workflow.core.execution.ConfigDef;
+import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
 import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
@@ -10,7 +11,7 @@ import com.miotech.kun.workflow.core.model.lineage.PostgresDataStore;
 
 import java.util.List;
 
-public class TestOperator1 extends Operator {
+public class TestOperator1 extends KunOperator {
     private Logger logger;
 
     public void init() {
@@ -37,5 +38,15 @@ public class TestOperator1 extends Operator {
                 .withInlets(inlets)
                 .withOutlets(outlets)
                 .build();
+    }
+
+    @Override
+    public ConfigDef config() {
+        return new ConfigDef();
+    }
+
+    @Override
+    public void abort() {
+
     }
 }

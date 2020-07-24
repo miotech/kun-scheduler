@@ -41,14 +41,18 @@ public class DatasetRepository extends BaseRepository {
     TagRepository tagRepository;
 
     public DatasetBasicPage search(BasicSearchRequest basicSearchRequest) {
-        String sql = "select kmd.gid, kmd.name as dataset_name, kmdsrca.name as datasource_name from kun_mt_dataset kmd\n" +
+        String sql = "select kmd.gid, " +
+                "kmd.name as dataset_name, " +
+                "kmd.database_name as database_name, " +
+                "kmdsrca.name as datasource_name " +
+                "from kun_mt_dataset kmd\n" +
                 "inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
                 "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n";
 
         String whereClause = "where upper(kmd.name) like ?\n";
         sql += whereClause;
 
-        String orderClause = "order by kmd.name asc\n";
+        String orderClause = "order by similarity(kmd.name, ?) desc, kmd.name asc\n";
         sql += orderClause;
 
         String limitSql = toLimitSql(1, basicSearchRequest.getPageSize());
@@ -60,11 +64,12 @@ public class DatasetRepository extends BaseRepository {
                 DatasetBasic basic = new DatasetBasic();
                 basic.setGid(rs.getLong("gid"));
                 basic.setName(rs.getString("dataset_name"));
+                basic.setDatabase(rs.getString("database_name"));
                 basic.setDatasource(rs.getString("datasource_name"));
                 page.add(basic);
             }
             return page;
-        }, toLikeSql(basicSearchRequest.getKeyword().toUpperCase()));
+        }, toLikeSql(basicSearchRequest.getKeyword().toUpperCase()), basicSearchRequest.getKeyword());
     }
 
     public DatasetBasicPage search(DatasetSearchRequest datasetSearchRequest) {
@@ -148,7 +153,11 @@ public class DatasetRepository extends BaseRepository {
     }
 
     public DatasetBasic findBasic(Long gid) {
-        String sql = "select kmd.gid, kmd.name as dataset_name, kmdsrca.name as datasource_name from kun_mt_dataset kmd\n" +
+        String sql = "select kmd.gid, " +
+                "kmd.name as dataset_name, " +
+                "kmd.database_name as database_name, " +
+                "kmdsrca.name as datasource_name " +
+                "from kun_mt_dataset kmd\n" +
                 "inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
                 "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n";
 
@@ -160,6 +169,7 @@ public class DatasetRepository extends BaseRepository {
             if (rs.next()) {
                 basic.setGid(rs.getLong("gid"));
                 basic.setName(rs.getString("dataset_name"));
+                basic.setDatabase(rs.getString("database_name"));
                 basic.setDatasource(rs.getString("datasource_name"));
             }
             return basic;

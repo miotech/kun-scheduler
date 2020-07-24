@@ -10,17 +10,13 @@ public interface OperatorContext {
     public Logger getLogger();
 
     /**
-     * 获取任务的参数
-     */
-    public String getParameter(String name);
-
-    /**
      * 获取资源，用于支持用户上传jar包类型的任务。
      */
     public Resource getResource(String path);
 
     /**
-     * 获取任务运行时的变量
+     * 获取任务的配置信息
+     * @return
      */
-    public String getVariable(String name);
+    public Config getConfig();
 }

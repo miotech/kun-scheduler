@@ -6,6 +6,7 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.model.TemplateType;
 import com.miotech.kun.dataquality.model.bo.DataQualityRequest;
+import com.miotech.kun.dataquality.model.bo.DeleteCaseResponse;
 import com.miotech.kun.dataquality.model.entity.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.json.simple.JSONArray;
@@ -34,6 +35,21 @@ public class DataQualityRepository extends BaseRepository {
     @Autowired
     DatasetRepository datasetRepository;
 
+    public List<Long> getAllCaseId() {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("id")
+                .from("kun_dq_case")
+                .getSQL();
+
+        return jdbcTemplate.query(sql, rs -> {
+            List<Long> ids = new ArrayList<>();
+            while (rs.next()) {
+                ids.add(rs.getLong("id"));
+            }
+            return ids;
+        });
+    }
+
     public Long getLatestTaskId(Long caseId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("task_id")
@@ -55,12 +71,13 @@ public class DataQualityRepository extends BaseRepository {
         jdbcTemplate.update(sql, taskId, caseId);
     }
 
-    public Long deleteCase(Long id, Long datasetId) {
+    public boolean isFullDelete(Long id) {
         String checkSql = DefaultSQLBuilder.newBuilder()
                 .select("count(1) as related_count")
                 .from("kun_dq_case_associated_dataset")
                 .where("case_id = ?")
                 .getSQL();
+
         boolean fullDelete = jdbcTemplate.query(checkSql, rs -> {
             boolean isSingleRelated = true;
             if (rs.next()) {
@@ -70,6 +87,11 @@ public class DataQualityRepository extends BaseRepository {
             }
             return isSingleRelated;
         }, id);
+        return fullDelete;
+    }
+
+    public DeleteCaseResponse deleteCase(Long id, Long datasetId) {
+        boolean fullDelete = isFullDelete(id);
 
         if (fullDelete) {
             String fullDeleteSql = DefaultSQLBuilder.newBuilder()
@@ -86,7 +108,10 @@ public class DataQualityRepository extends BaseRepository {
                     .getSQL();
             jdbcTemplate.update(deleteSql, id, datasetId);
         }
-        return id;
+        DeleteCaseResponse response = new DeleteCaseResponse();
+        response.setId(id);
+        response.setIsFullDelete(fullDelete);
+        return response;
     }
 
     @Transactional(rollbackFor = Exception.class)
