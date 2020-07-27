@@ -1,27 +1,18 @@
-package com.miotech.kun.workflow.operator.model.clients;
+package com.miotech.kun.workflow.operator.spark.clients;
 
-import com.miotech.kun.workflow.operator.model.models.SparkApp;
-import com.miotech.kun.workflow.operator.model.models.SparkJob;
-import org.junit.After;
-import org.junit.Before;
+import com.miotech.kun.workflow.operator.spark.models.SparkApp;
+import com.miotech.kun.workflow.operator.spark.models.SparkJob;
+import org.awaitility.Awaitility;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import java.util.concurrent.TimeUnit;
 
 @Ignore
 public class LivyClientTest {
 
     private LivyClient client = new LivyClient("http://<livy_ip>:8998");
     private SparkClient sparkClient = new SparkClient("<livy_ip>", 8088);
-
-    @Before
-    public void setUp() throws Exception {
-    }
-
-    @After
-    public void tearDown() throws Exception {
-    }
 
     @Test
     public void runSparkJob() throws InterruptedException {
@@ -35,9 +26,10 @@ public class LivyClientTest {
         while(!app.getState().equals("success")) {
             app = client.getSparkJob(jobId);
             assert app.getId() != 0;
-            Thread.sleep(3000);
+            Awaitility.await().atMost(3, TimeUnit.SECONDS);
         }
-        String applicationState = sparkClient.getApp(app.getAppId())
+        String applicationState = sparkClient
+                .getApp(app.getAppId())
                 .getState();
         assert applicationState.equals("FINISHED");
     }

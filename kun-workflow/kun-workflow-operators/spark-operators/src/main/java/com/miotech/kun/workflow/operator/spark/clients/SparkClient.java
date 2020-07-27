@@ -1,9 +1,9 @@
-package com.miotech.kun.workflow.operator.model.clients;
+package com.miotech.kun.workflow.operator.spark.clients;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.miotech.kun.workflow.operator.model.models.Application;
+import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.workflow.operator.spark.models.Application;
 
 import java.io.IOException;
 
@@ -25,14 +25,12 @@ public class SparkClient extends HttpApiClient {
     public Application getApp(String appId) {
         try {
             return objectMapper.readValue(getApplication(appId), Application.class);
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }catch (IOException e){
-            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw ExceptionUtils.wrapIfChecked(e);
         }
     }
 
-    public String getApplication(String applicationId) throws IOException {
+    public String getApplication(String applicationId) {
         String appUrl = buildUrl(String.format("/ws/v1/cluster/apps/%s", applicationId));
         return get(appUrl);
     }
