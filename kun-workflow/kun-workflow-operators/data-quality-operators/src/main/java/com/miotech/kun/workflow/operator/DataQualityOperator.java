@@ -6,9 +6,10 @@ import com.miotech.kun.commons.query.datasource.DataSourceContainer;
 import com.miotech.kun.commons.query.datasource.MetadataDataSource;
 import com.miotech.kun.commons.query.model.QueryResultSet;
 import com.miotech.kun.commons.query.service.ConfigService;
-import com.miotech.kun.workflow.core.execution.Operator;
+import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.execution.ConfigDef;
+import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
-import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.operator.client.DataQualityClient;
 import com.miotech.kun.workflow.operator.client.MetadataClient;
 import com.miotech.kun.workflow.operator.model.*;
@@ -19,6 +20,8 @@ import freemarker.template.TemplateException;
 import freemarker.template.Version;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -27,13 +30,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.miotech.kun.workflow.operator.DataQualityConfiguration.*;
+
 /**
  * @author: Jie Chen
  * @created: 2020/7/13
  */
-public class DataQualityOperator extends Operator {
+public class DataQualityOperator extends KunOperator {
 
-    private Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(DataQualityOperator.class);
 
     private Long caseId;
 
@@ -44,13 +49,12 @@ public class DataQualityOperator extends Operator {
     @Override
     public void init() {
         OperatorContext context = getContext();
-        logger = context.getLogger();
-
         ConfigService configService = ConfigService.getInstance();
-        configService.setMetadataDataSourceUrl(context.getParameter(DataQualityConfiguration.METADATA_DATASOURCE_URL));
-        configService.setMetadataDataSourceUsername(context.getParameter(DataQualityConfiguration.METADATA_DATASOURCE_USERNAME));
-        configService.setMetadataDataSourcePassword(context.getParameter(DataQualityConfiguration.METADATA_DATASOURCE_PASSWORD));
-        configService.setMetadataDataSourceDriverClass(context.getParameter(DataQualityConfiguration.METADATA_DATASOURCE_DIRVER_CLASS));
+        Config config = context.getConfig();
+        configService.setMetadataDataSourceUrl(config.getString(METADATA_DATASOURCE_URL));
+        configService.setMetadataDataSourceUsername(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_USERNAME));
+        configService.setMetadataDataSourcePassword(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_PASSWORD));
+        configService.setMetadataDataSourceDriverClass(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_DIRVER_CLASS));
     }
 
     @Override
@@ -67,9 +71,25 @@ public class DataQualityOperator extends Operator {
         }
     }
 
+    @Override
+    public void abort() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public ConfigDef config() {
+        return new ConfigDef()
+                .define(METADATA_DATASOURCE_URL, ConfigDef.Type.STRING, true, "datasource connection url, like jdbc://host:port/dbname", METADATA_DATASOURCE_URL)
+                .define(METADATA_DATASOURCE_USERNAME, ConfigDef.Type.STRING, true, "datasource connection username", METADATA_DATASOURCE_USERNAME)
+                .define(METADATA_DATASOURCE_PASSWORD, ConfigDef.Type.STRING, true, "datasource connection password", METADATA_DATASOURCE_PASSWORD)
+                .define(METADATA_DATASOURCE_DIRVER_CLASS, ConfigDef.Type.STRING, true, "datasource driver class", METADATA_DATASOURCE_DIRVER_CLASS)
+                .define(DATAQUALITY_CASE_ID, ConfigDef.Type.STRING, true, "data quality case id", DATAQUALITY_CASE_ID)
+                ;
+    }
+
     private boolean doRun() {
         OperatorContext context = getContext();
-        String caseIdStr = context.getParameter("caseId");
+        String caseIdStr = context.getConfig().getString("caseId");
         if (StringUtils.isEmpty(caseIdStr)) {
             logError("Data quality case id is empty.");
             return false;
