@@ -10,5 +10,6 @@ public class DataQualityConfiguration {
     public static final String METADATA_DATASOURCE_USERNAME = "metadata.datasource.username";
     public static final String METADATA_DATASOURCE_PASSWORD = "metadata.datasource.password";
     public static final String METADATA_DATASOURCE_DIRVER_CLASS = "metadata.datasource.driver-class-name";
+    public static final String DATAQUALITY_CASE_ID = "caseId";
 
 }
