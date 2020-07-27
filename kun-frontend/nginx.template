@@ -13,7 +13,7 @@ gzip_types         text/plain text/css application/json application/x-javascript
 server {
     listen       80;
 
-    client_max_body_size 50M;
+    client_max_body_size 400M;
 
     root /app/dist;
 
