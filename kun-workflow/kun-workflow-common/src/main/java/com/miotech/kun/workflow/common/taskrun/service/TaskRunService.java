@@ -15,16 +15,20 @@ import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -38,6 +42,9 @@ public class TaskRunService {
 
     @Inject
     private ResourceLoader resourceLoader;
+
+    @Inject
+    private Executor executor;
 
     /* --------------------------------------- */
     /* ----------- public methods ------------ */
@@ -149,4 +156,18 @@ public class TaskRunService {
         return vo;
     }
 
+    public boolean abortTaskRun(Long taskRunId) {
+        TaskAttemptProps attempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
+
+        if (Objects.isNull(attempt)) {
+            throw new IllegalArgumentException("Attempt is not found for taskRunId: " + taskRunId);
+        }
+
+        return executor.cancel(attempt.getId());
+    }
+
+    public String logPathOfTaskAttempt(Long taskAttemptId) {
+        String date = DateTimeUtils.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+        return String.format("file:logs/%s/%s", date, taskAttemptId);
+    }
 }

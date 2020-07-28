@@ -2,14 +2,11 @@ package com.miotech.kun.workflow.executor.mock;
 
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.logging.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestOperator1_1 extends KunOperator {
-    private Logger logger;
-
-    public void init() {
-        this.logger = this.getContext().getLogger();
-    }
+    private static final Logger logger = LoggerFactory.getLogger(TestOperator1_1.class);
 
     public boolean run() {
         final String name = "world2";
