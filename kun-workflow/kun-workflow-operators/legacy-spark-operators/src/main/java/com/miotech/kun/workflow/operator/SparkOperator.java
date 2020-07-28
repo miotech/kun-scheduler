@@ -11,7 +11,6 @@ import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
-import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
@@ -22,6 +21,8 @@ import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,7 +43,7 @@ public class SparkOperator extends KunOperator {
     public void init(){
         OperatorContext context = getContext();
 
-        logger = context.getLogger();
+        logger = LoggerFactory.getLogger(SparkOperator.class);
         logger.info("Start init spark job params");
 
         String jars = context.getConfig().getString("jars");

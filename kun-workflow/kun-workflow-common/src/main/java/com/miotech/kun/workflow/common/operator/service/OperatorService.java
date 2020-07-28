@@ -87,7 +87,9 @@ public class OperatorService {
      * @return
      */
     public ConfigDef getOperatorConfigDef(Long operatorId) {
-        return loadOperator(operatorId).config();
+        ConfigDef configDef = loadOperator(operatorId).config();
+        checkNotNull(configDef, "configDef of operator={} should not be null.", operatorId);
+        return configDef;
     }
 
     public Operator createOperator(OperatorPropsVO vo) {

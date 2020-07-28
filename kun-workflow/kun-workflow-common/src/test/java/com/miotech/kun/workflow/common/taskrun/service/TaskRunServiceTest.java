@@ -9,6 +9,7 @@ import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
@@ -25,13 +26,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.*;
 
 public class TaskRunServiceTest extends CommonTestBase {
 
@@ -43,6 +41,8 @@ public class TaskRunServiceTest extends CommonTestBase {
 
     @Inject
     private ResourceLoader resourceLoader;
+
+    private Executor executor = mock(Executor.class);
 
     private TaskRunDao taskRunDao = mock(TaskRunDao.class);
 
@@ -209,6 +209,31 @@ public class TaskRunServiceTest extends CommonTestBase {
             assertEquals(IllegalArgumentException.class, e.getClass());
             assertEquals("No valid task attempt found for TaskRun \"1\"", e.getMessage());
         }
+    }
+
+    @Test
+    public void abortTaskRun_shouldSendAbortSignalsToExecutors() {
+        // Prepare
+        Mockito.doAnswer(invocation -> {
+            TaskAttemptProps attemptPropsTemplate = TaskAttemptProps.newBuilder()
+                    .withStatus(TaskRunStatus.RUNNING)
+                    .build();
+            return attemptPropsTemplate.cloneBuilder().withId(11L).build();
+        }).when(taskRunDao).fetchLatestTaskAttempt(Mockito.anyLong());
+
+        Map<Long, Boolean> stopSignalReceived = new HashMap<>();
+        Mockito.doAnswer(invocation -> {
+            Long id = invocation.getArgument(0);
+            stopSignalReceived.put(id, true);
+            return true;
+        }).when(executor).cancel(Mockito.anyLong());
+
+        // process
+        boolean result = taskRunService.abortTaskRun(1L);
+
+        // Validate
+        assertThat(result, is(true));
+        assertThat(stopSignalReceived.getOrDefault(11L, false), is(true));
     }
 
     private Resource creatResource(String fileName, String text, int times) throws IOException {
