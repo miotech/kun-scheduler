@@ -1,0 +1,21 @@
+{
+  "name": "SparkSQL",
+  "templateType": "sql",
+  "templateGroup": "development",
+  "jarPath": "jars/spark-operators-0.1.jar",
+  "operator": {
+    "name": "SparkSQL",
+    "description": "Spark SQL Operator",
+    "className": "com.miotech.kun.workflow.operator.SparkSQLOperator"
+  },
+  "defaultValues": {
+    "livyHost": "http://localhost:8998",
+    "dataStoreUrl": "hdfs://localhost:8020/Database/DM"
+  },
+  "displayParameters": [{
+    "name": "sparkSQL",
+    "displayName": "sql",
+    "type": "sql",
+    "required" : true
+  }]
+}
