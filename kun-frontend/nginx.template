@@ -59,11 +59,9 @@ server {
         proxy_set_header X-Scheme $scheme;
         proxy_redirect http:// https://;
         add_header cache-control public;
-        rewrite /kun/api/data-platform/(.*) /$1 break;
-        proxy_pass http://kun-pdf:10010/;
+        proxy_pass http://kun-pdf:10010;
         proxy_redirect off;
     }
-
 
     location /status {
     stub_status on;
