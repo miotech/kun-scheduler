@@ -7,19 +7,16 @@ import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
-import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
-import com.miotech.kun.workflow.common.task.vo.PaginationVO;
-import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
-import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
-import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.common.task.vo.*;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.*;
@@ -37,10 +34,7 @@ public class TaskService {
     private OperatorDao operatorDao;
 
     @Inject
-    private OperatorService operatorService;
-
-    @Inject
-    private TaskRunDao taskRunDao;
+    private TaskDependencyFunctionProvider dependencyFunctionProvider;
 
     @Inject
     private Scheduler scheduler;
@@ -92,7 +86,7 @@ public class TaskService {
                 .withOperatorId(Objects.isNull(vo.getOperatorId()) ? task.getOperatorId() : vo.getOperatorId())
                 .withConfig(Objects.isNull(vo.getConfig()) ? task.getConfig() : vo.getConfig())
                 .withScheduleConf(Objects.isNull(vo.getScheduleConf()) ? task.getScheduleConf() : vo.getScheduleConf())
-                .withDependencies(vo.getDependencies() == null ? task.getDependencies() : vo.getDependencies())
+                .withDependencies(vo.getDependencies() == null ? task.getDependencies() : parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags() == null ? task.getTags() : vo.getTags())
                 .build();
 
@@ -108,7 +102,7 @@ public class TaskService {
                 .withId(taskId)
                 .withName(vo.getName())
                 .withScheduleConf(vo.getScheduleConf())
-                .withDependencies(vo.getDependencies())
+                .withDependencies(parseDependencyVO(vo.getDependencies()))
                 .withConfig(vo.getConfig())
                 .withDescription(vo.getDescription())
                 .withOperatorId(vo.getOperatorId())
@@ -134,6 +128,26 @@ public class TaskService {
 
         // 4. Fetch updated task
         return taskDao.fetchById(task.getId()).orElseThrow(IllegalStateException::new);
+    }
+
+    public TaskDAGVO getNeighbors(Long taskId, int upstreamLevel, int downstreamLevel) {
+        Preconditions.checkArgument(0 <= upstreamLevel && upstreamLevel <= 5 , "upstreamLevel should be non negative and no greater than 5");
+        Preconditions.checkArgument(0 <= downstreamLevel&& downstreamLevel <= 5, "downstreamLevel should be non negative and no greater than 5");
+
+        Task task = find(taskId);
+        List<Task> result = new ArrayList<>();
+        result.add(task);
+        if (upstreamLevel > 0) {
+            result.addAll(taskDao.fetchUpstreamTasks(task, upstreamLevel));
+        }
+        if (downstreamLevel > 0) {
+            result.addAll(taskDao.fetchDownstreamTasks(task, downstreamLevel));
+        }
+
+        List<TaskDependency> edges = result.stream()
+                .flatMap(x -> x.getDependencies().stream())
+                .collect(Collectors.toList());
+        return new TaskDAGVO(result, edges);
     }
 
     /**
@@ -227,6 +241,13 @@ public class TaskService {
         Preconditions.checkNotNull(vo, "Invalid TaskPropsVO argument: null");
     }
 
+    private List<TaskDependency> parseDependencyVO(List<TaskDependencyVO> vo) {
+        return vo.stream().map( x -> new TaskDependency(x.getUpstreamTaskId(),
+                x.getDownstreamTaskId(),dependencyFunctionProvider.from(
+                        x.getDependencyFunction())))
+                .collect(Collectors.toList());
+    }
+
     private Task convertTaskPropsVoToTask(TaskPropsVO vo) {
         return Task.newBuilder()
                 .withName(vo.getName())
@@ -234,7 +255,7 @@ public class TaskService {
                 .withOperatorId(vo.getOperatorId())
                 .withScheduleConf(vo.getScheduleConf())
                 .withConfig(vo.getConfig())
-                .withDependencies(vo.getDependencies())
+                .withDependencies(parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags())
                 .build();
     }

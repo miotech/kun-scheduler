@@ -6,9 +6,9 @@ import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskDependency;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @JsonDeserialize(builder = TaskPropsVO.TaskPropsVOBuilder.class)
 public class TaskPropsVO {
@@ -17,7 +17,7 @@ public class TaskPropsVO {
     private final Long operatorId;
     private final Config config;
     private final ScheduleConf scheduleConf;
-    private final List<TaskDependency> dependencies;
+    private final List<TaskDependencyVO> dependencies;
     private final List<Tag> tags;
 
     private TaskPropsVO(TaskPropsVOBuilder builder) {
@@ -35,13 +35,23 @@ public class TaskPropsVO {
     }
 
     public static TaskPropsVO from(Task task) {
+        List<TaskDependencyVO> dependencies = task.getDependencies()
+                .stream()
+                .map(x -> TaskDependencyVO.newBuilder()
+                        .withDependencyFunc(x.getDependencyFunction()
+                                .toFunctionType())
+                        .withDownstreamTaskId(x.getDownstreamTaskId())
+                        .withUpstreamTaskId(x.getUpstreamTaskId())
+                        .build())
+                .collect(Collectors.toList());
+
         return new TaskPropsVOBuilder()
                 .withName(task.getName())
                 .withDescription(task.getDescription())
                 .withOperatorId(task.getOperatorId())
                 .withConfig(task.getConfig())
                 .withScheduleConf(task.getScheduleConf())
-                .withDependencies(task.getDependencies())
+                .withDependencies(dependencies)
                 .withTags(task.getTags())
                 .build();
     }
@@ -81,7 +91,7 @@ public class TaskPropsVO {
         return tags;
     }
 
-    public List<TaskDependency> getDependencies() { return dependencies; }
+    public List<TaskDependencyVO> getDependencies() { return dependencies; }
 
     @JsonPOJOBuilder
     public static final class TaskPropsVOBuilder {
@@ -90,7 +100,7 @@ public class TaskPropsVO {
         private Long operatorId;
         private Config config;
         private ScheduleConf scheduleConf;
-        private List<TaskDependency> dependencies;
+        private List<TaskDependencyVO> dependencies;
         private List<Tag> tags;
 
         private TaskPropsVOBuilder() {
@@ -121,7 +131,7 @@ public class TaskPropsVO {
             return this;
         }
 
-        public TaskPropsVOBuilder withDependencies(List<TaskDependency> dependencies) {
+        public TaskPropsVOBuilder withDependencies(List<TaskDependencyVO> dependencies) {
             this.dependencies = dependencies;
             return this;
         }
