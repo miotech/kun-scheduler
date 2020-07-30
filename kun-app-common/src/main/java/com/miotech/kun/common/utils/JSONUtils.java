@@ -17,11 +17,11 @@ public class JSONUtils {
     }
 
     public static JSONObject toJsonObject(Object object) throws ParseException {
-        return (JSONObject) new JSONParser().parse(toJsonString(object));
+        return toJsonObject(toJsonString(object));
     }
 
-    public static JSONObject toJsonObject(String json) throws ParseException {
-        return (JSONObject) new JSONParser().parse(json);
+    public static JSONObject toJsonObject(String json)  {
+        return toJavaObject(json, JSONObject.class);
     }
 
     public static <T> T toJavaObject(JSONObject jsonObject, Class<T> clazz) {

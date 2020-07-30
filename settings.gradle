@@ -1,4 +1,5 @@
 rootProject.name = 'kun'
+include 'kun-commons:kun-commons-config'
 include ':kun-commons:kun-commons-db'
 include ':kun-commons:kun-commons-utils'
 include ':kun-commons:kun-commons-testing'
@@ -22,5 +23,5 @@ include ':kun-data-discovery'
 include ':kun-security'
 include ':kun-app-common'
 include ':kun-data-quality'
+include ':kun-data-platform'
 include ':kun-pdf'
-

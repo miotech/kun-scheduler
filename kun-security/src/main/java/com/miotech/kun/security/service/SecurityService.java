@@ -45,7 +45,7 @@ public class SecurityService implements InitializingBean {
     @Autowired
     LdapProperties ldapProperties;
 
-    @Value("${security.ldap.user-group-search-base}")
+    @Value("${security.ldap.user-group-search-base: ou=Groups}")
     private String groupSearchBase;
 
     public List<String> getUserGroup(String username) {
