@@ -24,6 +24,8 @@ import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -31,7 +33,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -39,6 +40,8 @@ import static com.miotech.kun.workflow.common.constant.ConfigurationKeys.PROP_RE
 
 @Singleton
 public class OperatorService {
+    private static final Logger logger = LoggerFactory.getLogger(OperatorService.class);
+
     @Inject
     private OperatorDao operatorDao;
 
@@ -55,12 +58,12 @@ public class OperatorService {
 
     private static final int PAGE_SIZE_DEFAULT = Integer.MAX_VALUE;
 
-    private final LoadingCache<Long, KunOperator> operatorCache = CacheBuilder.newBuilder()
+    private final LoadingCache<Long, Class<? extends KunOperator>> operatorCache = CacheBuilder.newBuilder()
             .maximumSize(1024)
-            .build(new CacheLoader<Long, KunOperator>() {
+            .build(new CacheLoader<Long, Class<? extends KunOperator>>() {
                 @Override
-                public KunOperator load(Long operatorId) throws Exception {
-                    return doLoadOperator(operatorId);
+                public Class<? extends KunOperator> load(Long operatorId) throws Exception {
+                    return loadOperatorClass(operatorId);
                 }
             });
 
@@ -78,14 +81,15 @@ public class OperatorService {
      * @param operatorId
      * @return
      */
-    public KunOperator loadOperator(Long operatorId, boolean forcely) {
+    public KunOperator loadOperator(Long operatorId, boolean force) {
         checkNotNull(operatorId, "operatorId should not be null.");
         try {
-            if (forcely) {
+            if (force) {
                 refreshOperatorCache(operatorId);
             }
-            return operatorCache.get(operatorId);
-        } catch (ExecutionException e) {
+            return operatorCache.get(operatorId).newInstance();
+        } catch (Exception e) {
+            logger.error("Failed to load operator. operatorId={}", operatorId, e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
     }
@@ -95,10 +99,10 @@ public class OperatorService {
      * @param operatorId
      * @return
      */
-    public KunOperator doLoadOperator(Long operatorId) {
+    public Class<? extends KunOperator> loadOperatorClass(Long operatorId) {
         checkNotNull(operatorId, "operatorId should not be null.");
         Operator operator = findOperator(operatorId);
-        return loadOperator0(operator.getPackagePath(), operator.getClassName());
+        return loadOperatorClass0(operator.getPackagePath(), operator.getClassName());
     }
 
     /**
@@ -387,16 +391,17 @@ public class OperatorService {
     /* ----------- private methods ------------ */
     /* ---------------------------------------- */
 
-    private KunOperator loadOperator0(String jarPath, String mainClass) {
+    @SuppressWarnings("unchecked")
+    private Class<? extends KunOperator> loadOperatorClass0(String jarPath, String mainClass) {
         try {
             // TODO: 使用Resource接口读取Jar
             URL[] urls = {new URL("jar:" + jarPath + "!/")};
             URLClassLoader cl = URLClassLoader.newInstance(urls, getClass().getClassLoader());
-            Class clazz = Class.forName(mainClass, true, cl);
+            Class<?> clazz = Class.forName(mainClass, true, cl);
             if (!KunOperator.class.isAssignableFrom(clazz)) {
                 throw new IllegalArgumentException(mainClass + " is not a valid Operator class.");
             }
-            return (KunOperator) clazz.newInstance();
+            return (Class<? extends KunOperator>) clazz;
         } catch (Exception e) {
             throw new IllegalStateException("Failed to load jar. jarPath=" + jarPath, e);
         }
