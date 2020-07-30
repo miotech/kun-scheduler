@@ -73,6 +73,15 @@ public interface WorkflowClient {
     List<TaskRun> executeTasks(RunTaskRequest request);
 
     /**
+     * get task DAG
+     * @param taskId: centered task id
+     * @param upstreamLevel: downstream levels
+     * @param downstreamLevel: upstream levels
+     * @return
+     */
+    TaskDAG getTaskDAG(Long taskId, int upstreamLevel, int downstreamLevel);
+
+    /**
      * fetch task run
      * @param taskRunId
      * @return
@@ -99,6 +108,15 @@ public interface WorkflowClient {
      * @return
      */
     TaskRunLog getLatestRunLog(Long taskRunId);
+
+    /**
+     * get task run DAG
+     * @param taskRunId: centered taskrun id
+     * @param upstreamLevel: downstream levels
+     * @param downstreamLevel: upstream levels
+     * @return
+     */
+    TaskRunDAG getTaskRunDAG(Long taskRunId, int upstreamLevel, int downstreamLevel);
 
     /**
      * get task run log

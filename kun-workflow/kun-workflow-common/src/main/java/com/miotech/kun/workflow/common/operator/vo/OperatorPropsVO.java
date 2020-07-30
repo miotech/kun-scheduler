@@ -60,7 +60,6 @@ public class OperatorPropsVO {
     public static final class OperatorPropsVOBuilder {
         private String name;
         private String description;
-        private String packagePath;
         private String className;
 
         private OperatorPropsVOBuilder() {

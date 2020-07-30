@@ -40,8 +40,8 @@ public class MockOperatorContextImpl implements OperatorContext {
 
     @Override
     public Config getConfig() {
-        return new Config(configMap)
-                .overrideBy(new Config(operator.config(), ImmutableMap.of()));
+        return new Config(operator.config(), ImmutableMap.of())
+                .overrideBy(new Config(configMap));
     }
 
     public List<DataStore> getInlets() {

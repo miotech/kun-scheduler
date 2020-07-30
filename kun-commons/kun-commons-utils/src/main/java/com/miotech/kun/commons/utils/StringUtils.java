@@ -1,8 +1,12 @@
-package com.miotech.kun.workflow.utils;
+package com.miotech.kun.commons.utils;
 
 public class StringUtils {
 
     private StringUtils() {}
+
+    public static String repeatJoin(String str, String delimiter, int times) {
+        return String.join(delimiter, repeat(str, times));
+    }
 
     public static String[] repeat(String str, int times) {
         if (str == null) return null;

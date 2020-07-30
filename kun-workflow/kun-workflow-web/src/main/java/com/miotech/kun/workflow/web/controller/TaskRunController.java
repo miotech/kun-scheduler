@@ -32,8 +32,7 @@ public class TaskRunController {
 
     @RouteMapping(url = "/taskruns/{taskRunId}/status", method = "GET")
     public TaskRunStateVO getTaskRunStatus(@RouteVariable long taskRunId) {
-        return taskRunService.getTaskStatus(taskRunId)
-                .orElseThrow(() -> new EntityNotFoundException("TaskRun with id \"" + taskRunId + "\" not found"));
+        return taskRunService.getTaskStatus(taskRunId);
     }
 
     /**
@@ -97,5 +96,13 @@ public class TaskRunController {
     @RouteMapping(url = "/taskruns/{taskRunId}/_abort", method = "PUT")
     public Boolean abortTaskRuns(@RouteVariable long taskRunId) {
         return taskRunService.abortTaskRun(taskRunId);
+    }
+
+    @RouteMapping(url = "/taskruns/{id}/neighbors", method = "GET")
+    public Object getTaskRunNeighbors(@RouteVariable Long id,
+                                                       @QueryParameter(defaultValue = "1") int upstreamLevel,
+                                                       @QueryParameter(defaultValue = "1") int downstreamLevel
+                                                       ) {
+       return taskRunService.getNeighbors(id, upstreamLevel, downstreamLevel);
     }
 }

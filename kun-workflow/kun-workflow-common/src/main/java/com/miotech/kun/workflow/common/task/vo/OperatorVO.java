@@ -1,8 +1,11 @@
 package com.miotech.kun.workflow.common.task.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 
 public class OperatorVO {
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     private String name;
