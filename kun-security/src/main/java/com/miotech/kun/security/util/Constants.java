@@ -17,4 +17,6 @@ public class Constants {
 
     final public static String PERMISSION_PDF_GENERAL = "PDF_GENERAL";
     final public static String PERMISSION_PDF_COA = "PDF_COA";
+
+    public final static String[] EMPTY_PERSSIONS = new String[]{};
 }

@@ -1,0 +1,50 @@
+server:
+  port: ${SERVER_PORT}
+
+workflow:
+  enabled: false
+  baseUrl: http://localhost:18088
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+    hikari:
+      connection-init-sql: CREATE DOMAIN IF NOT EXISTS  "JSONB" AS TEXT
+
+  session:
+    jdbc:
+      initialize-schema: always
+      table-name: kun_user_session
+
+  flyway:
+    # 启用或禁用 flyway
+    enabled: true
+    clean-disabled: true
+    locations: classpath:sql
+    table: flyway_kun_dp_schema_history
+    schemas: public
+
+security:
+  datasource:
+    url: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+    configuration:
+      connection-init-sql: create table if not exists kun_user (id bigint not null constraint kun_user_pk primary key,name varchar(100) not null)
+
+
+  ldap:
+    url: ldap://ldap.miotech.com:389/dc=miotech,dc=com
+  pass-token: ***REMOVED***
+management:
+  health:
+    ldap:
+      enabled: false
+
+test:
+  images:
+    workflow: 192.168.101.73:8080/mioyingtech/kun-workflow:FEATURE-v0.0.9-kun-workflow-20200730
