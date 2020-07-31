@@ -2,8 +2,10 @@ package com.miotech.kun.dataplatform;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateLoader;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,7 +26,6 @@ import java.util.List;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Slf4j
-//@WithMockTestUser()
 public class AppTestBase {
 
     private List<String> userTables;
@@ -35,9 +36,17 @@ public class AppTestBase {
     @Autowired
     private JdbcTemplate  jdbcTemplate;
 
+    @Autowired
+    private TaskTemplateLoader taskTemplateLoader;
+
     @Test
     public void test() {
 
+    }
+
+    @Before
+    public void init() {
+        taskTemplateLoader.persistTemplates();
     }
 
     @After

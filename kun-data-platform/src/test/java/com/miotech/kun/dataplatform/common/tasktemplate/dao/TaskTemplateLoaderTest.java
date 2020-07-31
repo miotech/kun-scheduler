@@ -1,7 +1,7 @@
-package com.miotech.kun.dataplatform.common.tasktemplate;
+package com.miotech.kun.dataplatform.common.tasktemplate.dao;
 
 import com.miotech.kun.dataplatform.AppTestBase;
-import com.miotech.kun.dataplatform.common.tasktemplate.dao.TaskTemplateLoader;
+import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateLoader;
 import com.miotech.kun.dataplatform.model.tasktemplate.ParameterDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
 import org.junit.Test;
@@ -10,7 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 public class TaskTemplateLoaderTest extends AppTestBase {
 
@@ -27,8 +28,7 @@ public class TaskTemplateLoaderTest extends AppTestBase {
         assertThat(taskTemplate.getTemplateType(), is("sql"));
         assertThat(taskTemplate.getTemplateGroup(), is("development"));
         assertTrue(taskTemplate.getOperator().getId() > 0);
-        assertThat(taskTemplate.getOperator().getConfigDef().size(), is(9));
-        assertThat(taskTemplate.getDefaultValues().size(), is(2));
+        assertThat(taskTemplate.getOperator().getConfigDef().size(), is(1));
         assertThat(taskTemplate.getDisplayParameters().size(), is(1));
 
         ParameterDefinition parameterDefinition = taskTemplate.getDisplayParameters().get(0);

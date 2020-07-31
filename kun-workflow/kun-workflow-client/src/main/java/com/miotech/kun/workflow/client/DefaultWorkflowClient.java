@@ -65,6 +65,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
+    public Operator getOperator(Long id) {
+        return wfApi.getOperator(id);
+    }
+
+    @Override
     public Task createTask(Task task) {
         return wfApi.createTask(task);
     }

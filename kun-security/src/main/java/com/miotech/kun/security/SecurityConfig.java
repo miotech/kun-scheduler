@@ -32,10 +32,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${spring.ldap.base}")
     private String ldapRootBase;
 
-    @Value("${security.ldap.user-dn-pattern}")
+    @Value("${security.ldap.user-dn-pattern: cn={0},ou=Users}")
     private String userDnPattern;
 
-    @Value("${security.ldap.user-search-base}")
+    @Value("${security.ldap.user-search-base: ou=Users}")
     private String userSearchBase;
 
     @Value("${security.pass-token:***REMOVED***}")

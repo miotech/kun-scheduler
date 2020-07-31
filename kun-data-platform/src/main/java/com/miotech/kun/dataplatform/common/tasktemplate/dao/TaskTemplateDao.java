@@ -12,4 +12,9 @@ public interface TaskTemplateDao {
     List<TaskTemplate> getTaskTemplates();
 
     Optional<TaskTemplate> fetchByName(String name);
+
+    TaskTemplate create(TaskTemplate template);
+
+    TaskTemplate update(TaskTemplate template);
+
 }
