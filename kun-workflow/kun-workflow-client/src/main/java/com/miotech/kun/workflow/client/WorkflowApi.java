@@ -11,6 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -101,6 +102,25 @@ public class WorkflowApi {
     public Operator createOperator(Operator createPayload) {
         HttpUrl url = getUrl(API_OPERATORS);
         return post(url, createPayload, Operator.class);
+    }
+
+    public void uploadJar(Long operatorId, File jarFile) {
+        HttpUrl.Builder urlBuilder = buildUrl(API_OPERATORS)
+                .addPathSegment(operatorId.toString())
+                .addPathSegment("_upload");
+
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("file", "jarFile",
+                        RequestBody.create(
+                                MediaType.parse("multipart/form-data"),
+                                jarFile))
+                .build();
+        Request request = new Request.Builder()
+                .url(urlBuilder.build())
+                .post(requestBody)
+                .build();
+        sendRequest(request, Object.class);
     }
 
     // searchByName
@@ -217,6 +237,7 @@ public class WorkflowApi {
     }
 
     public TaskRunLog getTaskRunLog(TaskRunLogRequest logRequest) {
+        Preconditions.checkNotNull(logRequest.getTaskRunId());
         HttpUrl.Builder urlBuilder = buildUrl(API_TASK_RUNS)
                 .addPathSegment("" + logRequest.getTaskRunId())
                 .addPathSegment("logs");

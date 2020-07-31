@@ -5,7 +5,7 @@ import { DataBase } from '@/rematch/models/dataSettings';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
-import { watermarkFormatter } from '@/utils';
+import { watermarkFormatter } from '@/utils/glossaryUtiles';
 
 import styles from './DatabaseItem.less';
 

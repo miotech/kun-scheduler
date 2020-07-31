@@ -39,15 +39,15 @@ public class DatasourceService extends BaseSecurityService {
 
     public Datasource add(DatabaseRequest databaseRequest) throws SQLException {
         long currentTime = System.currentTimeMillis();
-        databaseRequest.setCreateUser(getCurrentUser());
+        databaseRequest.setCreateUser(getCurrentUsername());
         databaseRequest.setCreateTime(currentTime);
-        databaseRequest.setUpdateUser(getCurrentUser());
+        databaseRequest.setUpdateUser(getCurrentUsername());
         databaseRequest.setUpdateTime(currentTime);
         return datasourceRepository.insert(databaseRequest);
     }
 
     public Datasource update(Long id, DatabaseRequest databaseRequest) throws SQLException {
-        databaseRequest.setUpdateUser(getCurrentUser());
+        databaseRequest.setUpdateUser(getCurrentUsername());
         databaseRequest.setUpdateTime(System.currentTimeMillis());
         return datasourceRepository.update(id, databaseRequest);
     }

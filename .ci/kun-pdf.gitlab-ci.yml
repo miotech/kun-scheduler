@@ -1,0 +1,104 @@
+# workflow:
+#   rules:
+#     - changes:
+#       - kun-metadata/*
+
+verify-kun-pdf-test:
+  extends: .build-kun-pdf
+  stage: verify
+  image: gradle:6.5.0-jdk8
+  except:
+    - master
+    - release
+    - production
+    - tags
+  allow_failure: false
+  script:
+    - ./gradlew check -p kun-pdf
+
+verify-kun-pdf-sonar:
+  extends: .build-kun-pdf
+  stage: verify
+  image: mioyingtech/gradle-sonar:0.1-build
+  except:
+    - release
+    - production
+    - tags
+  allow_failure: false
+  script:
+    - >
+      if [ $CI_COMMIT_REF_NAME == "master" ]; then 
+          ./gradlew sonarqube -p kun-pdf -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=publish -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-pdf -Dsonar.projectName='kun-pdf';
+      else ./gradlew sonarqube -p kun-pdf -Dsonar.host.url=$SONAR_HOST -Dsonar.login=$SONAR_TOKEN -Dsonar.analysis.mode=preview -Dsonar.issuesReport.html.enable=true -Dsonar.gitlab.project_id=$CI_PROJECT_ID -Dsonar.gitlab.ref_name=$CI_COMMIT_REF_NAME -Dsonar.gitlab.commit_sha=$CI_COMMIT_SHA -Dsonar.projectKey=com.miotech:kun-pdf -Dsonar.projectName='kun-pdf';  
+      fi
+
+kun-pdf-build:
+  extends: .build-kun-pdf
+  stage: build
+  image: gradle:6.5.0-jdk8
+  tags:
+    - build
+  script:
+    - ./gradlew :kun-pdf:bootJar
+    - mkdir -p /builds/artifacts/kun-pdf/${CI_COMMIT_REF_NAME}/
+    - cp kun-pdf/build/libs/*.jar /builds/artifacts/kun-pdf/${CI_COMMIT_REF_NAME}/
+  only:
+    refs:
+      - master
+      - release
+      - /.*v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-pdf\-([1-9]\d{0,3}).*$/
+
+kun-pdf-push:
+  extends: .build-kun-pdf
+  image: mioyingtech/docker:latest
+  stage: build-images
+  tags:
+    - docker-push
+  script:
+    - mkdir -p /builds/kun-pdf/build/libs/
+    - rsync -vzrtopg --progress -e ssh root@$CI_RUNNER_SERVER:/miotech/artifacts/kun-pdf/${CI_COMMIT_REF_NAME}/ /builds/kun-pdf/build/libs/
+    - docker login -u $CI_BUILD_DOCKER_USER -p $CI_BUILD_TOKEN $CI_BUILD_DOCKER_URL
+    - docker build -t ${CI_BUILD_DOCKER_URL}mioyingtech/kun-pdf:$CI_COMMIT_REF_NAME /builds/kun-pdf/
+    - docker push ${CI_BUILD_DOCKER_URL}mioyingtech/kun-pdf:$CI_COMMIT_REF_NAME
+  only:
+    refs:
+      - master
+      - release
+      - /.*v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-pdf\-([1-9]\d{0,3}).*$/
+
+kun-pdf-set-tag:
+  extends: .build-kun-pdf
+  stage: set-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  script:
+    - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-pdf
+  only:
+    refs:
+      - production
+      
+kun-pdf-set-tag-hotfix:
+  extends: .build-kun-pdf
+  stage: set-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  script:
+    - python /tmp/tag.py --projectId $CI_PROJECT_ID --branchName $CI_COMMIT_REF_NAME --privateToken $CI_GITLAB_TOKEN --gitlabUrl $GITLAB_URL --serviceName kun-pdf
+  only:
+    refs:
+      - /^HOTFIX+.*/
+  when: manual
+
+kun-pdf-save-tag:
+  extends: .build-kun-pdf
+  stage: save-tag
+  tags:
+    - build
+  image: mioyingtech/python-gitlab:0.1-build
+  only:
+    - /.*v(\d{0,3})+(\.\d{0,3})+(\.\d{0,3})+\-kun-pdf\-([1-9]\d{0,3}).*$/
+  script:
+    - python /tmp/saveTag.py --appName=kun-pdf --tag=${CI_COMMIT_REF_NAME}
+  allow_failure: true

@@ -1,9 +1,10 @@
-import { defineConfig } from 'umi';
+import { IConfig, defineConfig } from 'umi';
 import path from 'path';
 import { appRoutes } from './routes';
 import { theme } from './theme';
+import CopyWebpackPlugin from 'copy-webpack-plugin';
 
-const { PROXY_TARGET } = process.env;
+const { PROXY_TARGET, PROXY_PDF_TARGET } = process.env;
 
 export default defineConfig({
   dynamicImport: {},
@@ -11,7 +12,29 @@ export default defineConfig({
   nodeModulesTransform: {
     type: 'none',
   },
+  chainWebpack(memo) {
+    memo.plugin('copy-cmaps').use(CopyWebpackPlugin, [
+      {
+        patterns: [
+          {
+            from: path.join(__dirname, '../', 'node_modules/pdfjs-dist/cmaps/'),
+            to: 'cmaps/',
+          },
+        ],
+      },
+    ]);
+    // memo.module
+    //   .rule('parse-pdf')
+    //   .test(/\.(pdf)$/)
+    //   .use('file-loader')
+    //   .options({
+    //     name: '[name].[ext]',
+    //   });
+  },
   proxy: {
+    '/kun/api/v1/pdf/': {
+      target: PROXY_PDF_TARGET || 'http://mdp-dev.miotech.com:10010/'
+    },
     '/kun/api/v1/': {
       target: PROXY_TARGET || 'http://mdp-dev.miotech.com:9999/',
       changeOrigin: true,
@@ -33,4 +56,4 @@ export default defineConfig({
   favicon: '/favicon.ico',
   title: 'common.app.name',
   routes: appRoutes,
-});
+}) as IConfig;

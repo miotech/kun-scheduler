@@ -12,6 +12,7 @@ export async function loginService(reqBody: LoginServiceReqBody) {
 
 export interface whoamiServiceRespBody {
   username: string;
+  permissions: string[];
 }
 
 export async function whoamiService() {

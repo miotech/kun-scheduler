@@ -35,7 +35,9 @@ dependencies {
     implementation "org.postgresql:postgresql"
 
     implementation "com.h2database:h2"
-    
+    implementation 'commons-fileupload:commons-fileupload'
+
     testImplementation 'org.apache.httpcomponents:httpclient'
     testImplementation "org.hamcrest:hamcrest"
+    testImplementation 'com.squareup.okhttp3:okhttp'
 }

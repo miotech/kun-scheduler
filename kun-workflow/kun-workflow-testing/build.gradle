@@ -1,4 +1,5 @@
 dependencies {
+    implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-commons:kun-commons-testing')
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-common')

@@ -108,7 +108,7 @@ public class TaskRunner {
     }
 
     private class Watcher extends EventConsumer<Long, Event> {
-        private final WaitingList<TaskAttempt, Long> waitingList = new WaitingList<>();
+        private final WaitList<TaskAttempt, Long> waitList = new WaitList<>();
 
         @Override
         public void onReceive(Event event) {
@@ -127,7 +127,7 @@ public class TaskRunner {
             for (Long dependentTaskAttemptId : dependentTaskAttemptIds) {
                 listenTo(dependentTaskAttemptId, this::onUpstreamStatusChange);
             }
-            waitingList.addWait(taskAttempt, dependentTaskAttemptIds);
+            waitList.addWait(taskAttempt, dependentTaskAttemptIds);
 
             // 向数据库check依赖的任务的状态
             List<TaskAttemptProps> attempts = taskRunDao.fetchLatestTaskAttempt(dependentTaskRunIds);
@@ -135,7 +135,7 @@ public class TaskRunner {
                 logger.debug("Fetched latest TaskAttempt. taskRunId={}, attempt={}, status={}",
                         atp.getTaskId(), atp.getAttempt(), atp.getStatus());
                 if (atp.getStatus().isSuccess()) {
-                    waitingList.removeWait(atp.getId());
+                    waitList.removeWait(atp.getId());
                     unlistenTo(atp.getId());
                 }
             }
@@ -151,7 +151,7 @@ public class TaskRunner {
 
                 if (event.getToStatus().isSuccess()) {
                     Long taskAttemptId = event.getAttemptId();
-                    waitingList.removeWait(taskAttemptId);
+                    waitList.removeWait(taskAttemptId);
                     unlistenTo(taskAttemptId);
                 }
 
@@ -167,7 +167,7 @@ public class TaskRunner {
         }
 
         private void executeIfPossible() {
-            List<TaskAttempt> tasksCouldRun = waitingList.pop();
+            List<TaskAttempt> tasksCouldRun = waitList.pop();
             if (!tasksCouldRun.isEmpty()) {
                 logger.debug("Submit taskAttempts to executor. taskAttempts={}", tasksCouldRun);
                 for (TaskAttempt ta : tasksCouldRun) {

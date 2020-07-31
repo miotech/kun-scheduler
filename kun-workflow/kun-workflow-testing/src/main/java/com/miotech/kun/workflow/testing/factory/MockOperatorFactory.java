@@ -18,7 +18,6 @@ public class MockOperatorFactory {
                 .withName("Operator_" + id)
                 .withDescription("Operator" + id + "_description")
                 .withClassName("com.miotech.kun.Operator" + id)
-                .withPackagePath("s3://storage.miotech.com/Operator")
                 .build();
     }
 
@@ -30,8 +29,9 @@ public class MockOperatorFactory {
         List<Operator> operators = new ArrayList<>();
 
         for (long i = 1; i <= num; i += 1) {
+            Long id = WorkflowIdGenerator.nextOperatorId();
             operators.add(Operator.newBuilder()
-                    .withId(i)
+                    .withId(id)
                     .withName(namePrefix + "_" + i)
                     .withDescription(descriptionPrefix + num)
                     .withClassName(classNamePrefix + num)

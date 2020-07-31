@@ -7,9 +7,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class RunTaskRequest {
-    private Map<Long, Map<String, String>> taskVariables = Maps.newHashMap();
+    private Map<Long, Map<String, Object>> taskVariables = Maps.newHashMap();
 
-    public void addTaskVariable(Long taskId, Map<String, String> taskConfig) {
+    public void addTaskVariable(Long taskId, Map<String, Object> taskConfig) {
         this.taskVariables.put(taskId, taskConfig);
     }
 

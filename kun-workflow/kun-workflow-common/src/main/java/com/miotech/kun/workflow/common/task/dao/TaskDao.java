@@ -652,7 +652,7 @@ public class TaskDao {
             insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
             // update tags
             updateTaskTags(task, task.getTags());
-
+            updateTaskUpstreamDependencies(task, task.getDependencies());
             return updatedRows;
         });
         return affectedRows > 0;

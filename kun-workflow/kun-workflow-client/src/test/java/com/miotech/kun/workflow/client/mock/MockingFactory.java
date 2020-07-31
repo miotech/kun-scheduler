@@ -6,6 +6,7 @@ import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
+import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 
 import java.util.ArrayList;
@@ -13,16 +14,16 @@ import java.util.ArrayList;
 public class MockingFactory {
     private MockingFactory() {}
 
-    private static final String nopOperatorClassName = NopOperator.class.getSimpleName();
-    private static final String nopOperatorPath = OperatorCompiler.compileJar(NopOperator.class, nopOperatorClassName);
+    public static final String nopOperatorClassName = NopOperator.class.getSimpleName();
+    public static final String nopOperatorPath = OperatorCompiler.compileJar(NopOperator.class, nopOperatorClassName);
 
     public static Operator mockOperator() {
         return Operator.newBuilder()
                 .withId(1L)
                 .withName("test")
                 .withDescription("test")
+                // WARN: Using simple name instead of full qualified name to force loading from jar (not classpath)
                 .withClassName(nopOperatorClassName)
-                .withPackagePath(nopOperatorPath)
                 .build();
     }
 

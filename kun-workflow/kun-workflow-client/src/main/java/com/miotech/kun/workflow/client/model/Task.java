@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
-import com.miotech.kun.workflow.core.model.task.TaskDependency;
 
 import java.util.List;
 
@@ -34,6 +33,18 @@ public class Task {
 
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    public Builder cloneBuilder() {
+        return new Builder()
+                .withId(id)
+                .withName(name)
+                .withDescription(description)
+                .withDependencies(dependencies)
+                .withScheduleConf(scheduleConf)
+                .withOperatorId(operatorId)
+                .withTags(tags)
+                .withConfig(config);
     }
 
     public Long getId() { return id; }

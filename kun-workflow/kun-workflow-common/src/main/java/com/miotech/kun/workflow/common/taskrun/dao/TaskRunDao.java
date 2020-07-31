@@ -348,6 +348,7 @@ public class TaskRunDao {
 
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where(whereClause)
+                .orderBy("start_at desc")
                 .limit(pageSize)
                 .offset((pageNum - 1) * pageSize)
                 .getSQL();
@@ -480,6 +481,49 @@ public class TaskRunDao {
                 .set("status")
                 .where("id = ?");
         pmTr.add(status.toString());
+
+        if (startAt != null) {
+            sbTa.set("start_at");
+            pmTa.add(startAt);
+            sbTr.set("start_at");
+            pmTr.add(startAt);
+        }
+
+        if (endAt != null) {
+            sbTa.set("end_at");
+            pmTa.add(endAt);
+            sbTr.set("end_at");
+            pmTr.add(endAt);
+        }
+
+        pmTa.add(taskAttemptId);
+        pmTr.add(taskRunId);
+
+        return dbOperator.transaction(() -> {
+            Optional<TaskRunStatus> prev = fetchTaskAttemptStatus(taskAttemptId);
+            if (prev.isPresent()) {
+                dbOperator.update(sbTa.asPrepared().getSQL(), pmTa.toArray());
+                dbOperator.update(sbTr.asPrepared().getSQL(), pmTr.toArray());
+            }
+            return prev;
+        });
+    }
+
+    public Optional<TaskRunStatus> updateTaskAttemptExecutionTime(Long taskAttemptId, @Nullable OffsetDateTime startAt,
+                                                           @Nullable OffsetDateTime endAt) {
+        checkNotNull(taskAttemptId, "taskAttemptId should not be null.");
+
+        long taskRunId = WorkflowIdGenerator.taskRunIdFromTaskAttemptId(taskAttemptId);
+        List<Object> pmTa = Lists.newArrayList();
+        List<Object> pmTr = Lists.newArrayList();
+
+        SQLBuilder sbTa = DefaultSQLBuilder.newBuilder()
+                .update(TASK_ATTEMPT_TABLE_NAME)
+                .where("id = ?");
+
+        SQLBuilder sbTr = DefaultSQLBuilder.newBuilder()
+                .update(TASK_RUN_TABLE_NAME)
+                .where("id = ?");
 
         if (startAt != null) {
             sbTa.set("start_at");

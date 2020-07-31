@@ -19,7 +19,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
     @Inject
     OperatorDao operatorDao;
 
-    private void insertSampleData() {
+    private List<Operator> insertSampleData() {
         List<Operator> operators = MockOperatorFactory.createOperators(5);
 
         // Add "example" as prefix for 3 operators
@@ -31,6 +31,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
         operators.forEach(operator -> {
             operatorDao.create(operator);
         });
+        return operators;
     }
 
     @Test
@@ -186,24 +187,26 @@ public class OperatorDaoTest extends DatabaseTestBase {
     @Test
     public void delete_WithProperId_shouldSuccess() {
         // Prepare
-        insertSampleData();
-        Optional<Operator> firstOperator = operatorDao.fetchById(1L);
+        List<Operator> operators = insertSampleData();
+        Long operatorId = operators.get(0).getId();
+        Optional<Operator> firstOperator = operatorDao.fetchById(operatorId);
         assertTrue(firstOperator.isPresent());
 
         // Process
-        boolean rowAffected = operatorDao.deleteById(1L);
+        boolean rowAffected = operatorDao.deleteById(operatorId);
 
         // Validate
         assertTrue(rowAffected);
-        Optional<Operator> firstOperatorRemoved = operatorDao.fetchById(1L);
+        Optional<Operator> firstOperatorRemoved = operatorDao.fetchById(operatorId);
         assertThat(firstOperatorRemoved.isPresent(), is(false));
     }
 
     @Test
     public void delete_WithNonExistId_shouldAffectNoRow() {
         // Prepare
-        insertSampleData();
-        Optional<Operator> firstOperator = operatorDao.fetchById(1L);
+        List<Operator> operators = insertSampleData();
+        Long operatorId = operators.get(0).getId();
+        Optional<Operator> firstOperator = operatorDao.fetchById(operatorId);
         assertTrue(firstOperator.isPresent());
 
         // Process
@@ -214,21 +217,21 @@ public class OperatorDaoTest extends DatabaseTestBase {
     @Test
     public void update_WithProperId_shouldSuccess() {
         // Prepare
-        insertSampleData();
-
-        Optional<Operator> firstOperator = operatorDao.fetchById(1L);
+        List<Operator> operators = insertSampleData();
+        Long operatorId = operators.get(0).getId();
+        Optional<Operator> firstOperator = operatorDao.fetchById(operatorId);
 
         // Process
         Operator updatedOperator = firstOperator.get().cloneBuilder()
                 .withName("fooUpdated")
                 .withPackagePath("s3://storage.miotech.com/fooUpdated.jar")
                 .build();
-        boolean rowAffected = operatorDao.updateById(1L, updatedOperator);
+        boolean rowAffected = operatorDao.updateById(operatorId, updatedOperator);
 
         // Validate
         assertTrue(rowAffected);
 
-        Optional<Operator> updatedFirstOperatorOptional = operatorDao.fetchById(1L);
+        Optional<Operator> updatedFirstOperatorOptional = operatorDao.fetchById(operatorId);
         assertTrue(updatedFirstOperatorOptional.isPresent());
 
         Operator updatedFirstOperator = updatedFirstOperatorOptional.get();

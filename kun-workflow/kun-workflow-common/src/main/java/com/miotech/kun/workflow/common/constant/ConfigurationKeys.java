@@ -8,4 +8,6 @@ public class ConfigurationKeys {
     public static final String PROP_FLYWAY_MIRGRATION = "flyway.migration";
     public static final String PROP_FLYWAY_TABLENAME = "flyway.tableName";
 
+    public static final String PROP_RESOURCE_LIBDIRECTORY = "resource.libDirectory";
+
 }

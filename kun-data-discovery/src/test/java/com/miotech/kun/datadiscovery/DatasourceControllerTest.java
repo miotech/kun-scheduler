@@ -2,7 +2,7 @@ package com.miotech.kun.datadiscovery;
 
 import com.google.gson.reflect.TypeToken;
 import com.miotech.kun.common.model.RequestResult;
-import com.miotech.kun.common.util.JSONUtil;
+import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.datadiscovery.model.bo.DatabaseRequest;
 import com.miotech.kun.datadiscovery.model.entity.Datasource;
 import com.miotech.kun.datadiscovery.model.entity.DatasourceType;
@@ -45,7 +45,7 @@ public class DatasourceControllerTest extends BaseControllerTest {
                 .andReturn().getResponse().getContentAsString();
         Type type = new TypeToken<RequestResult<List<DatasourceType>>>() {
         }.getType();
-        return JSONUtil.toJavaObject(jsonResult, type);
+        return JSONUtils.toJavaObject(jsonResult, type);
     }
 
     @Test
@@ -63,13 +63,13 @@ public class DatasourceControllerTest extends BaseControllerTest {
         String jsonResult = mockMvc.perform(MockMvcRequestBuilders
                 .post(getUrl("/metadata/database/add"))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JSONUtil.toJsonString(databaseRequest)))
+                .content(JSONUtils.toJsonString(databaseRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn().getResponse().getContentAsString();
         Type type = new TypeToken<RequestResult<Datasource>>() {
         }.getType();
-        RequestResult<Datasource> result = JSONUtil.toJavaObject(jsonResult, type);
+        RequestResult<Datasource> result = JSONUtils.toJavaObject(jsonResult, type);
         Assert.assertEquals(dsName, result.getResult().getName());
     }
 }

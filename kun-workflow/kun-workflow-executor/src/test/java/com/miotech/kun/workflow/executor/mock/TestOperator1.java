@@ -4,20 +4,18 @@ import com.google.common.collect.Lists;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
-import com.miotech.kun.workflow.core.execution.logging.Logger;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.MongoDataStore;
 import com.miotech.kun.workflow.core.model.lineage.PostgresDataStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public class TestOperator1 extends KunOperator {
-    private Logger logger;
+    private static final Logger logger = LoggerFactory.getLogger(TestOperator1.class);
 
-    public void init() {
-        this.logger = this.getContext().getLogger();
-    }
-
+    @Override
     public boolean run() {
         final String name = "world";
         logger.info("Hello, {}!", new Object[] { name });

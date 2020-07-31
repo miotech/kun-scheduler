@@ -11,8 +11,6 @@ public class OperatorVO {
 
     private String className;
 
-    private String packagePath;
-
     private ConfigDef configDef;
 
     public Long getId() {
@@ -45,14 +43,6 @@ public class OperatorVO {
 
     public void setClassName(String className) {
         this.className = className;
-    }
-
-    public String getPackagePath() {
-        return packagePath;
-    }
-
-    public void setPackagePath(String packagePath) {
-        this.packagePath = packagePath;
     }
 
     public ConfigDef getConfigDef() {

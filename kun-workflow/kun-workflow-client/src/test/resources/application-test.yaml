@@ -6,3 +6,6 @@ datasource:
   username: sa
   password:
   driverClassName: org.h2.Driver
+
+resource:
+  libDirectory: /tmp

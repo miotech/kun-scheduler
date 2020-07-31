@@ -9,6 +9,8 @@ export interface UserState {
   isLogin: boolean;
   username: string;
   whoamiLoading: boolean;
+
+  permissions: string[];
 }
 
 export const user = {
@@ -16,6 +18,7 @@ export const user = {
     isLogin: false,
     username: '',
     whoamiLoading: false,
+    permissions: [],
   } as UserState,
 
   reducers: {
@@ -24,6 +27,7 @@ export const user = {
     }),
     updateUserInfo: produce((draftState: UserState, payload) => {
       draftState.username = payload.username;
+      draftState.permissions = payload.permissions;
     }),
     updateWhoamiLoading: produce((draftState: UserState, payload: boolean) => {
       draftState.whoamiLoading = payload;
@@ -37,7 +41,10 @@ export const user = {
         const whoamiResp = await whoamiService();
         if (whoamiResp) {
           dispatch.user.updateLogin(true);
-          dispatch.user.updateUserInfo({ username: whoamiResp.username });
+          dispatch.user.updateUserInfo({
+            username: whoamiResp.username,
+            permissions: whoamiResp.permissions,
+          });
           history.push('/');
         }
       }
@@ -49,7 +56,10 @@ export const user = {
       dispatch.user.updateWhoamiLoading(false);
       if (resp) {
         dispatch.user.updateLogin(true);
-        dispatch.user.updateUserInfo({ username: resp.username });
+        dispatch.user.updateUserInfo({
+          username: resp.username,
+          permissions: resp.permissions,
+        });
       }
     },
 
