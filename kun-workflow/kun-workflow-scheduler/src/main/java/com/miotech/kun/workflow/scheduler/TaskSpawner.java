@@ -37,7 +37,7 @@ import static java.lang.String.format;
 public class TaskSpawner {
     private static final Logger logger = LoggerFactory.getLogger(TaskSpawner.class);
 
-    private final TaskRunner taskRunner;
+    private final TaskManager taskManager;
 
     private final TaskRunDao taskRunDao;
 
@@ -46,17 +46,17 @@ public class TaskSpawner {
     private final EventBus eventBus;
 
     private final Deque<TaskGraph> graphs;
-    private final TaskSpawnerEventLoop eventLoop;
+    private final InnerEventLoop eventLoop;
 
     @Inject
-    public TaskSpawner(TaskRunner taskRunner, TaskRunDao taskRunDao, OperatorService operatorService, EventBus eventBus) {
-        this.taskRunner = taskRunner;
+    public TaskSpawner(TaskManager taskManager, TaskRunDao taskRunDao, OperatorService operatorService, EventBus eventBus) {
+        this.taskManager = taskManager;
         this.taskRunDao = taskRunDao;
         this.operatorService = operatorService;
         this.eventBus = eventBus;
 
         this.graphs = new ConcurrentLinkedDeque<>();
-        this.eventLoop = new TaskSpawnerEventLoop();
+        this.eventLoop = new InnerEventLoop();
         this.eventBus.register(this.eventLoop);
         this.eventLoop.start();
     }
@@ -161,11 +161,11 @@ public class TaskSpawner {
     }
 
     private void submit(List<TaskRun> taskRuns) {
-        taskRunner.submit(taskRuns);
+        taskManager.submit(taskRuns);
     }
 
-    private class TaskSpawnerEventLoop extends EventLoop<Long, Event> {
-        public TaskSpawnerEventLoop() {
+    private class InnerEventLoop extends EventLoop<Long, Event> {
+        public InnerEventLoop() {
             super("task-spawner");
             addConsumers(Lists.newArrayList(
                     new EventConsumer<Long, Event>() {

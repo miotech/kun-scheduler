@@ -5,6 +5,7 @@ import com.google.common.eventbus.EventBus;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
+import com.miotech.kun.workflow.common.resource.ResourceNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -26,8 +27,8 @@ import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.ResourceUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -112,7 +113,6 @@ public class LocalExecutorTest extends DatabaseTestBase {
         Resource log = resourceLoader.getResource(attemptProps.getLogPath());
         String content = ResourceUtils.content(log.getInputStream());
         assertThat(content, containsString("Hello, world!"));
-        assertThat(content, containsString("ContextClassLoader: java.net.FactoryURLClassLoader"));
 
         // events
         assertStatusProgress(attempt.getId(),
@@ -328,7 +328,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
     }
 
     @Test
-    public void testStop_attempt_aborted() throws IOException {
+    public void testStop_attempt_aborted() throws Exception {
         // prepare
         TaskAttempt attempt = prepareAttempt(TestOperator4.class);
 
@@ -363,40 +363,6 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
-                TaskRunStatus.ABORTING,
-                TaskRunStatus.ABORTED);
-    }
-
-    @Test
-    @Ignore("randomly fail due to timing")
-    public void testStop_attempt_cancelled() throws IOException {
-        // prepare
-        TaskAttempt attempt = prepareAttempt(TestOperator4.class);
-
-        // process
-        executor.submit(attempt);
-        executor.cancel(attempt);
-
-        // wait until aborted
-        awaitUntilAttemptDone(attempt.getId());
-
-        // verify
-        TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
-        assertThat(attemptProps.getAttempt(), is(1));
-        assertThat(attemptProps.getStatus(), is(TaskRunStatus.ABORTED));
-        assertThat(attemptProps.getLogPath(), is(notNullValue()));
-        assertThat(attemptProps.getStartAt(), is(notNullValue()));
-        assertThat(attemptProps.getEndAt(), is(notNullValue()));
-
-        TaskRun taskRun = taskRunDao.fetchLatestTaskRun(attempt.getTaskRun().getTask().getId());
-        assertThat(taskRun.getStatus(), is(attemptProps.getStatus()));
-        assertThat(taskRun.getStartAt(), is(attemptProps.getStartAt()));
-        assertThat(taskRun.getEndAt(), is(attemptProps.getEndAt()));
-
-        // events
-        assertStatusProgress(attempt.getId(),
-                TaskRunStatus.CREATED,
-                TaskRunStatus.QUEUED,
                 TaskRunStatus.ABORTING,
                 TaskRunStatus.ABORTED);
     }
@@ -438,6 +404,42 @@ public class LocalExecutorTest extends DatabaseTestBase {
 
     @Test
     public void testStop_attempt_abort_throws_exception() throws IOException {
+        // prepare
+        TaskAttempt attempt = prepareAttempt(TestOperator6.class);
+
+        // process
+        executor.submit(attempt);
+        awaitUntilRunning(attempt.getId());
+        executor.cancel(attempt);
+
+        // wait until aborted
+        awaitUntilAttemptDone(attempt.getId());
+
+        // verify
+        TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
+        assertThat(attemptProps.getAttempt(), is(1));
+        assertThat(attemptProps.getStatus(), is(TaskRunStatus.ABORTED));
+        assertThat(attemptProps.getLogPath(), is(notNullValue()));
+        assertThat(attemptProps.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps.getEndAt(), is(notNullValue()));
+
+        TaskRun taskRun = taskRunDao.fetchLatestTaskRun(attempt.getTaskRun().getTask().getId());
+        assertThat(taskRun.getStatus(), is(attemptProps.getStatus()));
+        assertThat(taskRun.getStartAt(), is(attemptProps.getStartAt()));
+        assertThat(taskRun.getEndAt(), is(attemptProps.getEndAt()));
+
+        // logs
+        Resource log = resourceLoader.getResource(attemptProps.getLogPath());
+        String content = ResourceUtils.content(log.getInputStream());
+        assertThat(content, containsString("Unexpected exception occurred during aborting operator."));
+
+        // events
+        assertStatusProgress(attempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.ABORTING,
+                TaskRunStatus.ABORTED);
     }
 
     private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass) {
@@ -513,11 +515,20 @@ public class LocalExecutorTest extends DatabaseTestBase {
         return (TaskAttemptFinishedEvent) Iterables.getOnlyElement(events);
     }
 
-    private void awaitUntilRunning(long attemptId) {
+    private void awaitUntilRunning(Long attemptId) {
         await().atMost(5, TimeUnit.SECONDS)
                 .until(() -> {
-                    Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(attemptId);
-                    return s.isPresent() && s.get() == TaskRunStatus.RUNNING;
+                    TaskAttempt attempt = taskRunDao.fetchAttemptById(attemptId).get();
+                    if (StringUtils.isEmpty(attempt.getLogPath())) {
+                        return false;
+                    }
+                    try {
+                        Resource log = resourceLoader.getResource(attempt.getLogPath());
+                        String content = ResourceUtils.content(log.getInputStream());
+                        return content.contains("START RUNNING");
+                    } catch (ResourceNotFoundException e) {
+                        return false;
+                    }
                 });
     }
 

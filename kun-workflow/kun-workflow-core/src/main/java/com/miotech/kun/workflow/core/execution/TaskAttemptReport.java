@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.core.execution;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 
@@ -14,7 +16,10 @@ public class TaskAttemptReport {
     private final List<DataStore> inlets;
     private final List<DataStore> outlets;
 
-    public TaskAttemptReport(List<DataStore> inlets, List<DataStore> outlets) {
+    @JsonCreator
+    public TaskAttemptReport(
+            @JsonProperty("inlets") List<DataStore> inlets,
+            @JsonProperty("outlets") List<DataStore> outlets) {
         this.inlets = ImmutableList.copyOf(inlets);
         this.outlets = ImmutableList.copyOf(outlets);
     }

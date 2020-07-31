@@ -62,14 +62,14 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     private TaskRunDao taskRunDao;
 
     @Inject
-    private TaskRunner taskRunner;
+    private TaskManager taskManager;
 
     private Long operatorId;
 
     @Override
     protected void configuration() {
         super.configuration();
-        mock(TaskRunner.class);
+        mock(TaskManager.class);
     }
 
     @Before
@@ -110,7 +110,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskRunner).submit(captor.capture());
+        verify(taskManager).submit(captor.capture());
 
         List<TaskRun> result = captor.getValue();
         assertThat(result.size(), is(1));
@@ -149,7 +149,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskRunner).submit(captor.capture());
+        verify(taskManager).submit(captor.capture());
 
         List<TaskRun> result = captor.getValue();
         assertThat(result.size(), is(1));
@@ -193,7 +193,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskRunner).submit(captor.capture());
+        verify(taskManager).submit(captor.capture());
 
         List<TaskRun> result = captor.getValue();
         assertThat(result.size(), is(2));
@@ -247,7 +247,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskRunner).submit(captor.capture());
+        verify(taskManager).submit(captor.capture());
 
         List<TaskRun> result = captor.getValue();
         assertThat(result.size(), is(3));
@@ -314,7 +314,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
 
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskRunner).submit(captor.capture());
+        verify(taskManager).submit(captor.capture());
 
         List<TaskRun> result = captor.getValue();
         assertThat(result.size(), is(2));
@@ -340,7 +340,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskRunner).submit(captor.capture());
+        verify(taskManager).submit(captor.capture());
 
         List<TaskRun> result = captor.getValue();
         assertThat(result.size(), is(1));
@@ -383,7 +383,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskRunner, times(executionTime))
+        verify(taskManager, times(executionTime))
                 .submit(captor.capture());
 
         List<List<TaskRun>> result = captor.getAllValues();
@@ -417,7 +417,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskRunner).submit(captor.capture());
+        verify(taskManager).submit(captor.capture());
 
         List<TaskRun> result = captor.getValue();
         assertThat(result.size(), is(2));
@@ -477,7 +477,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskRunner).submit(captor.capture());
+        verify(taskManager).submit(captor.capture());
 
         List<TaskRun> result = captor.getValue();
         assertThat(result.size(), is(1));
@@ -523,7 +523,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskRunner).submit(captor.capture());
+        verify(taskManager).submit(captor.capture());
 
         List<TaskRun> result = captor.getValue();
         assertThat(result.size(), is(2));
@@ -565,6 +565,6 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     }
 
     private boolean invoked() {
-        return !Mockito.mockingDetails(taskRunner).getInvocations().isEmpty();
+        return !Mockito.mockingDetails(taskManager).getInvocations().isEmpty();
     }
 }

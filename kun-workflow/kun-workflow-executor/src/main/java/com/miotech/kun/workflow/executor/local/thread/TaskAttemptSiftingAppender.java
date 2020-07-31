@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.executor.local;
+package com.miotech.kun.workflow.executor.local.thread;
 
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.sift.MDCBasedDiscriminator;
