@@ -29,9 +29,9 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.verify;
 
-public class TaskRunnerTest extends SchedulerTestBase {
+public class TaskManagerTest extends SchedulerTestBase {
     @Inject
-    private TaskRunner taskRunner;
+    private TaskManager taskManager;
 
     @Inject
     private TaskDao taskDao;
@@ -59,7 +59,7 @@ public class TaskRunnerTest extends SchedulerTestBase {
         taskRunDao.createTaskRun(taskRun);
 
         // process
-        taskRunner.submit(Lists.newArrayList(taskRun));
+        taskManager.submit(Lists.newArrayList(taskRun));
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
@@ -106,7 +106,7 @@ public class TaskRunnerTest extends SchedulerTestBase {
         taskRunDao.updateTaskAttemptStatus(attempt1.getId(), TaskRunStatus.SUCCESS);
 
         // process
-        taskRunner.submit(Lists.newArrayList(taskRun2));
+        taskManager.submit(Lists.newArrayList(taskRun2));
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
@@ -142,7 +142,7 @@ public class TaskRunnerTest extends SchedulerTestBase {
         taskRunDao.updateTaskAttemptStatus(attempt1.getId(), TaskRunStatus.FAILED);
 
         // process
-        taskRunner.submit(Lists.newArrayList(taskRun2));
+        taskManager.submit(Lists.newArrayList(taskRun2));
 
         // verify
         TimeUnit.SECONDS.sleep(2);
@@ -167,7 +167,7 @@ public class TaskRunnerTest extends SchedulerTestBase {
         taskRunDao.updateTaskAttemptStatus(attempt1.getId(), TaskRunStatus.RUNNING);
 
         // process
-        taskRunner.submit(Lists.newArrayList(taskRun2));
+        taskManager.submit(Lists.newArrayList(taskRun2));
         TimeUnit.SECONDS.sleep(2);
         assertThat(invoked(), is(false));
 

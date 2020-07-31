@@ -27,8 +27,8 @@ import java.util.stream.IntStream;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Singleton
-public class TaskRunner {
-    private static final Logger logger = LoggerFactory.getLogger(TaskRunner.class);
+public class TaskManager {
+    private static final Logger logger = LoggerFactory.getLogger(TaskManager.class);
 
     private static final Integer EVENT_LOOP_WORKER_NUM = Runtime.getRuntime().availableProcessors() * 2;
 
@@ -38,14 +38,14 @@ public class TaskRunner {
 
     private final EventBus eventBus;
 
-    private TaskRunnerEventLoop eventLoop;
+    private InnerEventLoop eventLoop;
 
     @Inject
-    public TaskRunner(Executor executor, TaskRunDao taskRunDao, EventBus eventBus) {
+    public TaskManager(Executor executor, TaskRunDao taskRunDao, EventBus eventBus) {
         this.executor = executor;
         this.taskRunDao = taskRunDao;
 
-        this.eventLoop = new TaskRunnerEventLoop(EVENT_LOOP_WORKER_NUM);
+        this.eventLoop = new InnerEventLoop(EVENT_LOOP_WORKER_NUM);
         this.eventLoop.start();
 
         this.eventBus = eventBus;
@@ -93,9 +93,9 @@ public class TaskRunner {
         }
     }
 
-    private class TaskRunnerEventLoop extends EventLoop<Long, Event> {
-        public TaskRunnerEventLoop(int nThreads) {
-            super("task-runner");
+    private class InnerEventLoop extends EventLoop<Long, Event> {
+        public InnerEventLoop(int nThreads) {
+            super("task-manager");
             addConsumers(IntStream.range(0, nThreads)
                     .mapToObj(i -> new Watcher())
                     .collect(Collectors.toList()));

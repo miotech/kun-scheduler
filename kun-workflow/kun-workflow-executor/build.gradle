@@ -1,9 +1,17 @@
+jar {
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
 dependencies {
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-workflow:kun-workflow-core")
     implementation project(":kun-workflow:kun-workflow-common")
     implementation project(":kun-workflow:kun-workflow-utils")
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")

@@ -66,7 +66,9 @@
         </filter>
     </appender>
 
-    <root level="DEBUG">
+    <logger name="com.miotech" level="DEBUG" />
+
+    <root level="INFO">
         <appender-ref ref="ASYNCFILE" />
         <appender-ref ref="ASYNCSTDOUT" />
         <appender-ref ref="Sentry"/>
