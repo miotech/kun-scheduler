@@ -63,7 +63,7 @@ public class OperatorCompiler {
         try {
             ClassReader cr = new ClassReader(getByteStream(clazz));
             ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
-            ClassVisitor cv = new ClassRemapper(cw, new SimpleRemapper(asmTypeName(clazz.getName()), asmTypeName(className)));
+            ClassVisitor cv = new ClassRemapper(cw, new SimpleRemapper(internalName(clazz.getName()), internalName(className)));
             cr.accept(cv, ClassReader.SKIP_DEBUG);
             return cw.toByteArray();
         } catch (IOException e) {
@@ -76,7 +76,7 @@ public class OperatorCompiler {
         return clazz.getClassLoader().getResourceAsStream(classAsPath);
     }
 
-    private static String asmTypeName(String typeName) {
+    private static String internalName(String typeName) {
         return typeName.replace('.', '/');
     }
 

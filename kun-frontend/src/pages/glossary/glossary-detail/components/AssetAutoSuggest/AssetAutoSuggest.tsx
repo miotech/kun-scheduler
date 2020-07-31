@@ -62,7 +62,7 @@ export default memo(function AssetAutoSuggest({
 
   const handleSelect = useCallback(
     (v, option) => {
-      setKeyword(v);
+      setKeyword(option.option.asset.name);
       onChange(option.option.asset, index);
     },
     [index, onChange],
@@ -73,7 +73,7 @@ export default memo(function AssetAutoSuggest({
   }, [index, onDelete]);
 
   const options = assetList.map(item => ({
-    value: item.name,
+    value: `${item.name}-${item.database}-${item.datasource}`,
     asset: item,
   }));
 

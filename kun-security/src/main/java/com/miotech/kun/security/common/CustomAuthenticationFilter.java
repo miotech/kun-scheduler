@@ -47,6 +47,13 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
                     authentication.getAuthorities());
             newAuthentication.setDetails(savedUser);
             SecurityContextHolder.getContext().setAuthentication(newAuthentication);
+//            String api = req.getApi();
+//            List<String> userGroups = securityService.getUserGroup(savedUser.getUsername());
+//            userGroups.get(0);
+//            List<String> permissions = securityService.getGroupPermission(userGroups);
+//            if (!securityService.checkPermission(, permissions)) {
+//                res.set(401);
+//            }
         } else if (StringUtils.equals(req.getParameter("pass-token"), passToken)) {
             SecurityContextHolder.getContext().setAuthentication(new PassToken());
         }

@@ -27,6 +27,7 @@
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf
 */src/main/resources/localhost.conf
+application-local.yaml
 
 # IDEA
 # ----
@@ -114,3 +115,4 @@ atlassian-ide-plugin.xml
 
 # Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
 !gradle-wrapper.jar
+

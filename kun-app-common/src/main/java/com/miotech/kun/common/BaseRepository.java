@@ -1,6 +1,6 @@
 package com.miotech.kun.common;
 
-import com.miotech.kun.common.util.DateUtil;
+import com.miotech.kun.common.utils.DateUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +24,10 @@ public abstract class BaseRepository {
     public static final String COLUMN_PARENT_ID = "parent_id";
 
     public static final String DO_NOTHING = "do nothing";
+
+    public int getOffset(int pageNumber, int pageSize) {
+        return (pageNumber - 1) * pageSize;
+    }
 
     public String toLikeSql(String keyword) {
         return "%" + keyword + "%";
@@ -101,10 +105,10 @@ public abstract class BaseRepository {
     }
 
     public Long timestampToMillis(ResultSet rs, String columnLabel) throws SQLException {
-        return DateUtil.dateTimeToMillis(rs.getObject(columnLabel, OffsetDateTime.class));
+        return DateUtils.dateTimeToMillis(rs.getObject(columnLabel, OffsetDateTime.class));
     }
 
     public LocalDateTime millisToTimestamp(Long millis) {
-        return ObjectUtils.defaultIfNull(DateUtil.millisToLocalDateTime(millis), null);
+        return ObjectUtils.defaultIfNull(DateUtils.millisToLocalDateTime(millis), null);
     }
 }

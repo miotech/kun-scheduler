@@ -13,7 +13,7 @@ gzip_types         text/plain text/css application/json application/x-javascript
 server {
     listen       80;
 
-    client_max_body_size 50M;
+    client_max_body_size 400M;
 
     root /app/dist;
 
@@ -50,6 +50,16 @@ server {
         add_header cache-control public;
         rewrite /kun/api/data-platform/(.*) /$1 break;
         proxy_pass http://kun-data-platform:${DATA_PLATFORM_PORT}/;
+        proxy_redirect off;
+    }
+
+    location /kun/api/v1/pdf {
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Scheme $scheme;
+        proxy_redirect http:// https://;
+        add_header cache-control public;
+        proxy_pass http://kun-pdf:10010;
         proxy_redirect off;
     }
 

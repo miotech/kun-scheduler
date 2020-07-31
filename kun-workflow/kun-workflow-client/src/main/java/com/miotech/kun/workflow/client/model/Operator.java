@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
+import java.util.List;
 import java.util.Objects;
 
 @JsonDeserialize(builder = Operator.OperatorBuilder.class)
@@ -20,14 +22,19 @@ public class Operator {
 
     private final String className;
 
-    private final String packagePath;
+    private final List<ConfigKey> configDef;
 
-    private Operator(Long id, String name, String description, String className, String packagePath) {
+    private Operator(Long id,
+                     String name,
+                     String description,
+                     String className,
+                     List<ConfigKey> configDef
+                     ) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.className = className;
-        this.packagePath = packagePath;
+        this.configDef = configDef;
     }
 
     public Long getId() {
@@ -46,21 +53,13 @@ public class Operator {
         return className;
     }
 
-    public String getPackagePath() {
-        return packagePath;
+
+    public List<ConfigKey> getConfigDef() {
+        return configDef;
     }
 
     public static OperatorBuilder newBuilder() {
         return new OperatorBuilder();
-    }
-
-    public OperatorBuilder cloneBuilder() {
-        return new OperatorBuilder()
-                .withId(id)
-                .withName(name)
-                .withDescription(description)
-                .withClassName(className)
-                .withPackagePath(packagePath);
     }
 
     @Override
@@ -72,12 +71,12 @@ public class Operator {
                 Objects.equals(name, operator.name) &&
                 Objects.equals(description, operator.description) &&
                 Objects.equals(className, operator.className) &&
-                Objects.equals(packagePath, operator.packagePath);
+                Objects.equals(configDef, operator.configDef);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, className, packagePath);
+        return Objects.hash(id, name, description, className);
     }
 
     @JsonPOJOBuilder
@@ -87,6 +86,7 @@ public class Operator {
         private String description;
         private String className;
         private String packagePath;
+        private List<ConfigKey> configDef;
 
         private OperatorBuilder() {
         }
@@ -111,13 +111,13 @@ public class Operator {
             return this;
         }
 
-        public OperatorBuilder withPackagePath(String packagePath) {
-            this.packagePath = packagePath;
+        public OperatorBuilder withConfigDef(List<ConfigKey> configKeys) {
+            this.configDef = configKeys;
             return this;
         }
 
         public Operator build() {
-            return new Operator(id, name, description, className, packagePath);
+            return new Operator(id, name, description, className, configDef);
         }
     }
 }

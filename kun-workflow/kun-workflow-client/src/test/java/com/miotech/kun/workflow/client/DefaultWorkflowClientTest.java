@@ -1,19 +1,22 @@
 package com.miotech.kun.workflow.client;
 
+import com.google.common.collect.ImmutableMap;
 import com.miotech.kun.workflow.client.mock.MockKunWebServerTestBase;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskAttempt;
 import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-import static com.miotech.kun.workflow.client.mock.MockingFactory.mockOperator;
-import static com.miotech.kun.workflow.client.mock.MockingFactory.mockTask;
+import static com.miotech.kun.workflow.client.mock.MockingFactory.*;
 import static org.awaitility.Awaitility.await;
 import static org.junit.Assert.*;
 
@@ -29,9 +32,20 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
     @Test
     public void saveOperator() {
         Operator operator = mockOperator();
-        Operator result = client.saveOperator(operator.getName(), operator);
+        client.saveOperator(operator.getName(), operator);
+        Operator result = client.getOperator(operator.getName()).get();
         assertTrue(result.getId() > 0);
         assertThat(result.getName(), Matchers.is(operator.getName()));
+        assertThat(result.getClassName(), Matchers.is(operator.getClassName()));
+        assertThat(result.getConfigDef().size(), Matchers.is(1));
+    }
+
+    @Test
+    public void updateOperatorJar() {
+        Operator operator = mockOperator();
+        Operator result = client.saveOperator(operator.getName(), operator);
+        File jarFile =  new File(nopOperatorPath.replace("file:", ""));
+        client.updateOperatorJar(result.getName(), jarFile);
     }
 
     @Test
@@ -52,13 +66,36 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
     }
 
     @Test
+    public void updateTask_ok() {
+        // prepare
+        Operator operator = mockOperator();
+        operator = client.saveOperator(operator.getName(), operator);
+
+        Task task = mockTask(operator.getId());
+        Task created = client.createTask(task);
+
+        Task updated = created.cloneBuilder()
+                .withName(created.getName() + "_updated")
+                .withTags(Collections.singletonList(new Tag("keu", "value")))
+                .build();
+        Task result = client.saveTask(updated, null);
+        // verify
+        assertTrue(result.getId() > 0);
+        assertThat(result.getName(), Matchers.is(updated.getName()));
+
+        // cleanup
+        client.deleteTask(result.getId());
+    }
+
+    @Test
     public void executeTask_ok() {
         // prepare
         Operator operator = mockOperator();
         operator = client.saveOperator(operator.getName(), operator);
         Task task = mockTask(operator.getId());
 
-        TaskRun taskRun = client.executeTask(task, null);
+        TaskRun taskRun = client.executeTask(task,
+                ImmutableMap.of("testKey1", true));
 
         // verify
         await().atMost(10, TimeUnit.SECONDS)
@@ -73,7 +110,6 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         TaskAttempt attempt = result.getAttempts().get(0);
         assertTrue(attempt.getStartAt() != null);
         assertTrue(attempt.getEndAt() != null);
-
     }
 
     private boolean runFinished(Long taskRunId) {

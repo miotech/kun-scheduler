@@ -152,14 +152,14 @@ public class TaskControllerTest extends KunWebServerTestBase {
     private void mockFetchTasksByIdBehavior() {
         Mockito.doAnswer(invocation -> {
             long taskId = invocation.getArgument(0);
-            for (Task mockTaskList : mockTaskList) {
-                if (Objects.equals(taskId, mockTaskList.getId())) {
-                    return Optional.of(mockTaskList);
+            for (Task mockTask : mockTaskList) {
+                if (Objects.equals(taskId, mockTask.getId())) {
+                    return mockTask;
                 }
             }
             // else
-            return Optional.empty();
-        }).when(taskService).fetchTaskById(anyLong());
+            throw new EntityNotFoundException(String.format("Cannot find task with id: %s", taskId));
+        }).when(taskService).find(anyLong());
     }
 
     private void mockUpdateBehavior() {

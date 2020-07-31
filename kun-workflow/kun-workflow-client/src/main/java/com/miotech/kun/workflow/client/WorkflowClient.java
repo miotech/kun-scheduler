@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.client;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
 
+import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -16,6 +17,9 @@ public interface WorkflowClient {
      * @return
      */
     Operator saveOperator(String name, Operator operator);
+
+
+    void updateOperatorJar(String name, File jarFile);
 
     /**
      * Get operator by unique name
@@ -52,8 +56,7 @@ public interface WorkflowClient {
      * create and launch task then forget
      * @param task
      */
-    TaskRun executeTask(Task task, Map<String, String> taskConfig);
-
+    TaskRun executeTask(Task task, Map<String, Object> taskConfig);
 
     /**
      * execute an existing task
@@ -61,8 +64,7 @@ public interface WorkflowClient {
      * @param taskConfig
      * @return
      */
-    TaskRun executeTask(Long taskId, Map<String, String> taskConfig);
-
+    TaskRun executeTask(Long taskId, Map<String, Object> taskConfig);
 
     /**
      * launch existed tasks
@@ -92,9 +94,23 @@ public interface WorkflowClient {
     TaskRunState getTaskRunState(Long taskRunId);
 
     /**
-     * get task run log
+     * get latest task run full log
      * @param taskRunId
      * @return
      */
     TaskRunLog getLatestRunLog(Long taskRunId);
+
+    /**
+     * get task run log
+     * @param logRequest
+     * @return
+     */
+    TaskRunLog getTaskRunLog(TaskRunLogRequest logRequest);
+
+    /**
+     * stop taskRun state
+     * @param taskRunId
+     * @return
+     */
+    TaskRun stopTaskRun(Long taskRunId);
 }

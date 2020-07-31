@@ -7,8 +7,10 @@ import {
   FileTextOutlined,
   SettingOutlined,
   SnippetsOutlined,
+  FilePdfOutlined,
 } from '@ant-design/icons';
 import { RootState } from '@/rematch/store';
+import { hasOptionalPermissions } from '@/utils';
 
 import css from './Sider.less';
 
@@ -23,6 +25,7 @@ const iconCompMap: IconCompMap = {
   FileTextOutlined: <FileTextOutlined />,
   SettingOutlined: <SettingOutlined />,
   SnippetsOutlined: <SnippetsOutlined />,
+  FilePdfOutlined: <FilePdfOutlined />,
 };
 
 interface Props {
@@ -39,6 +42,9 @@ export default memo(function Sider({ route }: Props) {
   const currentPath = useSelector(
     (state: RootState) => state.route.currentMatchPath,
   );
+
+  const permissions = useSelector((state: RootState) => state.user.permissions);
+
   const { routes } = route;
 
   const selectedKeys = useMemo(() => {
@@ -57,6 +63,11 @@ export default memo(function Sider({ route }: Props) {
 
   const menu = useMemo(() => {
     const getChildComp = (routeItem: IShowRouter) => {
+      if (routeItem) {
+        if (!hasOptionalPermissions(permissions, routeItem.permissions)) {
+          return null;
+        }
+      }
       if (routeItem.menuDisplay) {
         const { icon } = routeItem;
         if (routeItem.routes && routeItem.showChildren) {
@@ -93,7 +104,7 @@ export default memo(function Sider({ route }: Props) {
     );
 
     return resultMenu;
-  }, [routes, selectedKeys]);
+  }, [permissions, routes, selectedKeys]);
 
   const [collapsed, setCollapsed] = useState(false);
 

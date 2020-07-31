@@ -20,6 +20,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.web.serializer.JsonSerializer;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
@@ -36,8 +37,7 @@ import java.util.stream.Collectors;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 
 public class TaskRunControllerTest extends KunWebServerTestBase {
 
@@ -45,6 +45,25 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
 
     @Inject
     private JsonSerializer jsonSerializer;
+
+    @Before
+    public void defineBehaviors() {
+        Mockito.doAnswer(invocation -> {
+            TaskRun taskRun = invocation.getArgument(0);
+            TaskRunVO taskRunVO = new TaskRunVO();
+            taskRunVO.setId(taskRun.getId());
+            taskRunVO.setTask(taskRun.getTask());
+            taskRunVO.setScheduledTick(taskRun.getScheduledTick());
+            taskRunVO.setStatus(taskRun.getStatus());
+            taskRunVO.setInlets(taskRun.getInlets());
+            taskRunVO.setOutlets(taskRun.getOutlets());
+            taskRunVO.setDependentTaskRunIds(taskRun.getDependentTaskRunIds());
+            taskRunVO.setStartAt(taskRun.getStartAt());
+            taskRunVO.setEndAt(taskRun.getEndAt());
+            taskRunVO.setAttempts(new ArrayList<>());
+            return taskRunVO;
+        }).when(taskRunService).convertToVO(any(TaskRun.class));
+    }
 
     /**
      * A utility function to define search behaviors for taskrun service

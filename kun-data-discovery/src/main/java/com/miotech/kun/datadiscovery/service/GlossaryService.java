@@ -26,9 +26,9 @@ public class GlossaryService extends BaseSecurityService {
 
     public Glossary add(GlossaryRequest glossaryRequest) {
         long timestamp = System.currentTimeMillis();
-        glossaryRequest.setCreateUser(getCurrentUser());
+        glossaryRequest.setCreateUser(getCurrentUsername());
         glossaryRequest.setCreateTime(timestamp);
-        glossaryRequest.setUpdateUser(getCurrentUser());
+        glossaryRequest.setUpdateUser(getCurrentUsername());
         glossaryRequest.setUpdateTime(timestamp);
         return glossaryRepository.insert(glossaryRequest);
     }
@@ -42,7 +42,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     public Glossary update(Long id, GlossaryRequest glossaryRequest) {
-        glossaryRequest.setUpdateUser(getCurrentUser());
+        glossaryRequest.setUpdateUser(getCurrentUsername());
         glossaryRequest.setUpdateTime(System.currentTimeMillis());
         return glossaryRepository.update(id, glossaryRequest);
     }

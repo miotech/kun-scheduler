@@ -5,12 +5,16 @@ import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.common.exception.RuleOperatorInUseException;
+import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
+import com.miotech.kun.workflow.testing.operator.NopOperator;
+import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.junit.Test;
 
@@ -18,6 +22,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
@@ -28,35 +33,37 @@ public class OperatorServiceTest extends DatabaseTestBase {
     private OperatorService operatorService;
 
     @Inject
+    private OperatorDao operatorDao;
+
+    @Inject
     private TaskDao taskDao;
 
-    private OperatorPropsVO convertOperatorToPropertyVO(Operator operator) {
-        return OperatorPropsVO.newBuilder()
-                .withName(operator.getName())
-                .withDescription(operator.getDescription())
-                .withPackagePath(operator.getPackagePath())
-                .withClassName(operator.getClassName())
-                .build();
+    @Test
+    public void testLoadOperator_success() {
+        // prepare
+        Long operatorId = initNopOperator();
+
+        // process
+        KunOperator operator1 = operatorService.loadOperator(operatorId);
+        KunOperator operator2 = operatorService.loadOperator(operatorId);
+
+        // verify
+        assertThat(operator1, is(not(operator2)));
+        assertThat(operator1.getClass(), is(operator2.getClass()));
     }
 
-    private OperatorPropsVO generateExampleOperatorPropsVO() {
-        return OperatorPropsVO.newBuilder()
-                .withName("BashOperator")
-                .withDescription("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
-                .withClassName("com.miotech.kun.example.BashOperator")
-                .withPackagePath("s3://storage.miotech.com")
-                .build();
-    }
+    @Test
+    public void testLoadOperator_forcibly() {
+        // prepare
+        Long operatorId = initNopOperator();
 
-    public void assertFailToCreateOperatorWithException(OperatorPropsVO vo, Class<?> exceptionClazz) {
-        try {
-            operatorService.createOperator(vo);
-            // if exception is not thrown, case should fail
-            fail();
-        } catch (Exception e) {
-            // should thrown DuplicatedNameException
-            assertThat(e, instanceOf(exceptionClazz));
-        }
+        // process
+        KunOperator operator1 = operatorService.loadOperator(operatorId, true);
+        KunOperator operator2 = operatorService.loadOperator(operatorId, true);
+
+        // verify
+        assertThat(operator1, is(not(operator2)));
+        assertThat(operator1.getClass(), is(not(operator2.getClass())));
     }
 
     @Test
@@ -88,7 +95,6 @@ public class OperatorServiceTest extends DatabaseTestBase {
                 // and different properties
                 .withDescription("Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.")
                 .withClassName("com.miotech.kun.example.BashOperator2")
-                .withPackagePath("s3://storage2.miotech.com")
                 .build();
 
         // Process & Validate
@@ -113,16 +119,11 @@ public class OperatorServiceTest extends DatabaseTestBase {
         OperatorPropsVO voWithEmptyClassName = generateExampleOperatorPropsVO().cloneBuilder()
                 .withClassName("")
                 .build();
-        // case 4: Empty package name
-        OperatorPropsVO voWithEmptyPackagePath = generateExampleOperatorPropsVO().cloneBuilder()
-                .withPackagePath("")
-                .build();
 
         // Process & Validate
         assertFailToCreateOperatorWithException(voWithEmptyName, IllegalArgumentException.class);
         assertFailToCreateOperatorWithException(voWithNullDescription, IllegalArgumentException.class);
         assertFailToCreateOperatorWithException(voWithEmptyClassName, IllegalArgumentException.class);
-        assertFailToCreateOperatorWithException(voWithEmptyPackagePath, IllegalArgumentException.class);
     }
 
     @Test
@@ -137,8 +138,8 @@ public class OperatorServiceTest extends DatabaseTestBase {
         Operator operator = Operator.newBuilder()
                 .withName(operatorPropsVO.getName())
                 .withDescription(operatorPropsVO.getDescription())
-                .withPackagePath(operatorPropsVO.getPackagePath())
                 .withClassName(operatorPropsVO.getClassName())
+                .withPackagePath("")
                 .build();
 
         // Process
@@ -328,4 +329,49 @@ public class OperatorServiceTest extends DatabaseTestBase {
     public void searchOperators() {
         // TODO: implement this
     }
+
+    private Long initNopOperator() {
+        Long operatorId = 1L;
+        String className = "TestOperator1";
+
+        String packagePath = OperatorCompiler.compileJar(NopOperator.class, className);
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName(className)
+                .withClassName(className)
+                .withPackagePath(packagePath)
+                .build();
+        operatorDao.createWithId(op, operatorId);
+
+        return operatorId;
+    }
+
+    private OperatorPropsVO convertOperatorToPropertyVO(Operator operator) {
+        return OperatorPropsVO.newBuilder()
+                .withName(operator.getName())
+                .withDescription(operator.getDescription())
+                .withClassName(operator.getClassName())
+                .build();
+    }
+
+    private OperatorPropsVO generateExampleOperatorPropsVO() {
+        return OperatorPropsVO.newBuilder()
+                .withName("BashOperator")
+                .withDescription("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
+                .withClassName("com.miotech.kun.example.BashOperator")
+                .build();
+    }
+
+    private void assertFailToCreateOperatorWithException(OperatorPropsVO vo, Class<?> exceptionClazz) {
+        try {
+            operatorService.createOperator(vo);
+            // if exception is not thrown, case should fail
+            fail();
+        } catch (Exception e) {
+            // should thrown DuplicatedNameException
+            assertThat(e, instanceOf(exceptionClazz));
+        }
+    }
+
 }

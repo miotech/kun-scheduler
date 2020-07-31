@@ -1,10 +1,12 @@
 import { history, formatMessage } from 'umi';
-import { message } from 'antd';
+import { notification } from 'antd';
 import axios, { AxiosResponse } from 'axios';
 import qs from 'qs';
 
+export const baseURL = '/kun/api/v1';
+
 const axiosInstance = axios.create({
-  baseURL: '/kun/api/v1',
+  baseURL,
 });
 
 export interface CommonResponse<T> {
@@ -68,12 +70,12 @@ async function commonHttp<T>(
         return null;
       }
 
-      message.error(
-        formatMessage({
+      notification.error({
+        message: formatMessage({
           id: `common.webMessage.${resp.status}`,
           defaultMessage: formatMessage({ id: 'common.webMessage.unknown' }),
         }),
-      );
+      });
 
       return null;
     }
@@ -81,7 +83,10 @@ async function commonHttp<T>(
     const { data } = resp;
 
     if (`${data.code}` !== '0') {
-      message.error(data.note);
+      notification.error({
+        message: data.note,
+      });
+
       return null;
     }
 
@@ -98,12 +103,14 @@ async function commonHttp<T>(
           }
           return null;
         }
-        message.error(
-          formatMessage({
+
+        notification.error({
+          message: formatMessage({
             id: `common.webMessage.${error.response.status}`,
             defaultMessage: formatMessage({ id: 'common.webMessage.unknown' }),
           }),
-        );
+        });
+
         return null;
       }
     }

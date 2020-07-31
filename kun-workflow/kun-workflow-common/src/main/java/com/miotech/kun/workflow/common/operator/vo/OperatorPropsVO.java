@@ -9,13 +9,11 @@ import java.util.Objects;
 public class OperatorPropsVO {
     private final String name;
     private final String description;
-    private final String packagePath;
     private final String className;
 
-    public OperatorPropsVO(String name, String description, String packagePath, String className) {
+    public OperatorPropsVO(String name, String description, String className) {
         this.name = name;
         this.description = description;
-        this.packagePath = packagePath;
         this.className = className;
     }
 
@@ -27,9 +25,6 @@ public class OperatorPropsVO {
         return description;
     }
 
-    public String getPackagePath() {
-        return packagePath;
-    }
 
     public String getClassName() {
         return className;
@@ -43,8 +38,7 @@ public class OperatorPropsVO {
         return new OperatorPropsVOBuilder()
                 .withName(name)
                 .withClassName(className)
-                .withDescription(description)
-                .withPackagePath(packagePath);
+                .withDescription(description);
     }
 
     @Override
@@ -54,13 +48,12 @@ public class OperatorPropsVO {
         OperatorPropsVO that = (OperatorPropsVO) o;
         return Objects.equals(name, that.name) &&
                 Objects.equals(description, that.description) &&
-                Objects.equals(packagePath, that.packagePath) &&
                 Objects.equals(className, that.className);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description, packagePath, className);
+        return Objects.hash(name, description, className);
     }
 
     @JsonPOJOBuilder
@@ -83,18 +76,13 @@ public class OperatorPropsVO {
             return this;
         }
 
-        public OperatorPropsVOBuilder withPackagePath(String packagePath) {
-            this.packagePath = packagePath;
-            return this;
-        }
-
         public OperatorPropsVOBuilder withClassName(String className) {
             this.className = className;
             return this;
         }
 
         public OperatorPropsVO build() {
-            return new OperatorPropsVO(name, description, packagePath, className);
+            return new OperatorPropsVO(name, description, className);
         }
     }
 }
