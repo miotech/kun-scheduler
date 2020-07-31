@@ -15,4 +15,6 @@ public class TaskTemplateVO {
     private final String templateGroup;
 
     private final List<ParameterDefinition> displayParameters;
+
+    private final String renderClassName;
 }

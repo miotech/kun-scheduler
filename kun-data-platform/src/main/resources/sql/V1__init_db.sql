@@ -100,3 +100,16 @@ CREATE TABLE kun_dp_deploy_commits (
                                        updated_at TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP,
                                        PRIMARY KEY (deploy_id, commit_id)
 );
+
+CREATE TABLE kun_dp_task_template (
+                                       name VARCHAR(255) NOT NULL,
+                                       template_type VARCHAR(255) NOT NULL,
+                                       template_group VARCHAR(255) NOT NULL,
+                                       operator_id BIGINT NOT NULL,
+                                       default_values JSONB,
+                                       display_parameters JSONB,
+                                       renderer_class VARCHAR(255),
+                                       created_at TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP,
+                                       updated_at TIMESTAMP NOT NULL DEFAULT  CURRENT_TIMESTAMP,
+                                       PRIMARY KEY (name)
+);

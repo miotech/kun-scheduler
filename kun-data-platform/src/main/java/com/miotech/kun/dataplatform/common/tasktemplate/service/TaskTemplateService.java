@@ -1,12 +1,16 @@
 package com.miotech.kun.dataplatform.common.tasktemplate.service;
 
+import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.dataplatform.common.tasktemplate.dao.TaskTemplateDao;
 import com.miotech.kun.dataplatform.common.tasktemplate.renderer.DefaultTaskTemplateRenderer;
 import com.miotech.kun.dataplatform.common.tasktemplate.renderer.TaskTemplateRenderer;
+import com.miotech.kun.dataplatform.common.tasktemplate.vo.TaskTemplateReqeustVO;
 import com.miotech.kun.dataplatform.common.tasktemplate.vo.TaskTemplateVO;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
+import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.client.model.Operator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -25,6 +29,9 @@ public class TaskTemplateService {
     @Autowired
     private ApplicationContext applicationContext;
 
+    @Autowired
+    private WorkflowClient client;
+
     public List<TaskTemplate> getAllTaskTemplates() {
         return taskTemplateDao.getTaskTemplates();
     }
@@ -34,6 +41,39 @@ public class TaskTemplateService {
                 .<IllegalArgumentException>orElseThrow(() -> {
                     throw new IllegalArgumentException(String.format("Task Template not found: \"%s\"", taskTemplateName));
                 });
+    }
+
+    public TaskTemplate create(TaskTemplateReqeustVO createVO) {
+        String taskTemplateName = createVO.getName();
+        taskTemplateDao.fetchByName(taskTemplateName)
+                .ifPresent( x -> {
+                    throw new IllegalArgumentException(String.format("Task Template not found: \"%s\"", taskTemplateName));
+                });
+
+        Operator op = client.getOperator(createVO.getOperatorId());
+        Preconditions.checkNotNull(op, "Cannot find operator with id : " + createVO.getOperatorId());
+        TaskTemplate taskTemplate = TaskTemplate.newBuilder()
+                .withName(taskTemplateName)
+                .withTemplateGroup(createVO.getTemplateType())
+                .withTemplateGroup(createVO.getTemplateGroup())
+                .withDefaultValues(createVO.getDefaultValues())
+                .withDisplayParameters(createVO.getDisplayParameters())
+                .build();
+        taskTemplateDao.create(taskTemplate);
+        return taskTemplate;
+    }
+
+    public TaskTemplate update(TaskTemplateReqeustVO updateVO) {
+        Operator op = client.getOperator(updateVO.getOperatorId());
+        Preconditions.checkNotNull(op, "Cannot find operator with id : " + updateVO.getOperatorId());
+        TaskTemplate taskTemplate = find(updateVO.getName()).cloneBuilder()
+                .withTemplateGroup(updateVO.getTemplateType())
+                .withTemplateGroup(updateVO.getTemplateGroup())
+                .withDefaultValues(updateVO.getDefaultValues())
+                .withDisplayParameters(updateVO.getDisplayParameters())
+                .build();
+        taskTemplateDao.create(taskTemplate);
+        return taskTemplate;
     }
 
     public TaskConfig getTaskConfig(Map<String, Object> taskConfig, String taskTemplateName) {
@@ -61,7 +101,8 @@ public class TaskTemplateService {
                 taskTemplate.getName(),
                 taskTemplate.getTemplateType(),
                 taskTemplate.getTemplateGroup(),
-                taskTemplate.getDisplayParameters()
+                taskTemplate.getDisplayParameters(),
+                taskTemplate.getRenderClassName()
         );
     }
 }
