@@ -2,6 +2,7 @@ plugins {
     id 'com.github.johnrengelman.shadow'
     id 'java'
     id "org.sonarqube"
+    id "com.gorylenko.gradle-git-properties"
 }
 
 dependencies {
