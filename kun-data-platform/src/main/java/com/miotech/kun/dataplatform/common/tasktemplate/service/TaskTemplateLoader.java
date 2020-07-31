@@ -1,7 +1,8 @@
-package com.miotech.kun.dataplatform.common.tasktemplate.dao;
+package com.miotech.kun.dataplatform.common.tasktemplate.service;
 
 import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.dataplatform.common.tasktemplate.dao.TaskTemplateDao;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Operator;
@@ -28,22 +29,33 @@ public class TaskTemplateLoader {
     private final Map<String, TaskTemplate> taskTemplateMap;
     private final List<TaskTemplate> taskTemplates;
     private final ResourcePatternResolver resourceResolver;
-
-    public List<TaskTemplate> getTaskTemplates() {
-        return taskTemplates;
-    }
+    private final TaskTemplateDao taskTemplateDao;
 
     public TaskTemplateLoader(@Autowired WorkflowClient workflowClient,
+                              @Autowired TaskTemplateDao taskTemplateDao,
                               @Autowired ResourcePatternResolver resourceResolver) {
         this.resourceResolver = resourceResolver;
+        this.taskTemplateDao = taskTemplateDao;
         this.workflowClient = workflowClient;
         this.taskTemplates = loadTaskTemplates();
         taskTemplateMap = taskTemplates.stream()
                     .collect(Collectors.toMap(TaskTemplate::getName, Function.identity()));
     }
 
-    public Map<String, TaskTemplate> getTaskTemplateMap() {
-        return taskTemplateMap;
+    public void persistTemplates() {
+        this.taskTemplates.forEach(x -> {
+            Optional<TaskTemplate> templateOptional =
+                    taskTemplateDao.fetchByName(x.getName());
+            if (templateOptional.isPresent()) {
+                taskTemplateDao.update(x);
+            } else {
+                taskTemplateDao.create(x);
+            }
+        });
+    }
+
+    public List<TaskTemplate> getTaskTemplates() {
+        return taskTemplates;
     }
 
     private List<TaskTemplate> loadTaskTemplates() {
@@ -69,11 +81,14 @@ public class TaskTemplateLoader {
                             operatorName,
                             taskTemplate.getOperator());
                     log.info("Load and update operator \"{}\"-\"{}\"", updated.getName(), updated.getId());
-                    if (CollectionUtils.isEmpty(updated.getConfigDef())) {
-                        workflowClient.updateOperatorJar(operatorName, new File(f.getFile().getParent() +  "/" + taskTemplate.getJarPath()));
+                    File resourceFile = new File(f.getFile().getParent() +  "/" + taskTemplate.getJarPath());
+                    if (CollectionUtils.isEmpty(updated.getConfigDef())
+                            && resourceFile.exists()
+                            && resourceFile.getPath().endsWith("jar")) {
+                        workflowClient.updateOperatorJar(operatorName, resourceFile);
                         updated = workflowClient.getOperator(operatorName).get();
+                        Preconditions.checkNotNull(updated.getConfigDef(), "Operator ConfigDef should not be null");
                     }
-                    Preconditions.checkNotNull(updated.getConfigDef(), "Operator ConfigDef should not be null");
                     result.add(taskTemplate
                             .cloneBuilder()
                             .withOperator(updated)

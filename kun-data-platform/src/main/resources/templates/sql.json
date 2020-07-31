@@ -2,7 +2,7 @@
   "name": "SparkSQL",
   "templateType": "sql",
   "templateGroup": "development",
-  "jarPath": "jars/spark-operators-0.1.jar",
+  "jarPath": "",
   "operator": {
     "name": "SparkSQL",
     "description": "Spark SQL Operator",
