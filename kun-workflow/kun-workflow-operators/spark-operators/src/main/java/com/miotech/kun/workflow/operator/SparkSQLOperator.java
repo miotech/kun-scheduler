@@ -24,7 +24,7 @@ import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
 public class SparkSQLOperator extends LivyBaseSparkOperator {
 
-    private final static Logger logger = LoggerFactory.getLogger(SparkSQLOperator.class);
+    private static final Logger logger = LoggerFactory.getLogger(SparkSQLOperator.class);
 
     private AtomicInteger currentActiveSessionId = new AtomicInteger(-1);
     private boolean isSharedSession;
@@ -77,7 +77,7 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
                 .define(CONF_LIVY_SHARED_SESSION_NAME, ConfigDef.Type.STRING, "",true, " shared session name if shared session enabled", CONF_LIVY_SHARED_SESSION_NAME)
                 .define(CONF_SPARK_SQL, ConfigDef.Type.STRING, true, "SQL script", CONF_SPARK_SQL)
                 .define(CONF_SPARK_DEFAULT_DB, ConfigDef.Type.STRING, CONF_SPARK_DEFAULT_DB_DEFAULT,true, "Default database name for a sql execution", CONF_SPARK_DEFAULT_DB)
-                .define(CONF_VARIABLES, ConfigDef.Type.STRING, true, "SQL variables, use like `select ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
+                .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}", true, "SQL variables, use like `select ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
                 ;
     }
 

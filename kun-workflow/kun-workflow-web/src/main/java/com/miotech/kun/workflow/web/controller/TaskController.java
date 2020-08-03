@@ -75,6 +75,14 @@ public class TaskController {
         return taskService.partialUpdateTask(taskId, taskBody);
     }
 
+    @RouteMapping(url = "/tasks/{taskId}/neighbors", method = "GET")
+    public Object getTaskNeighbors(@RouteVariable Long taskId,
+                                      @QueryParameter(defaultValue = "1") int upstreamLevel,
+                                      @QueryParameter(defaultValue = "1") int downstreamLevel
+    ) {
+        return taskService.getNeighbors(taskId, upstreamLevel, downstreamLevel);
+    }
+
     @RouteMapping(url= "/tasks/_run", method = "POST")
     public Object runTasks(@RequestBody List<RunTaskVO> runTaskVOs) {
         return taskService.runTasks(runTaskVOs);

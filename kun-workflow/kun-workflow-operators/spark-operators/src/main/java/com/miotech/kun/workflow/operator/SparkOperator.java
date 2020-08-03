@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
 public class SparkOperator extends LivyBaseSparkOperator {
-    private final static Logger logger = LoggerFactory.getLogger(SparkOperator.class);
+    private static final Logger logger = LoggerFactory.getLogger(SparkOperator.class);
 
     private SparkApp app;
 
@@ -104,10 +104,10 @@ public class SparkOperator extends LivyBaseSparkOperator {
             job.setArgs(jobArgs);
         }
 
+        logger.info("Execution job : {}", JSONUtils.toJsonString(job));
         app = livyClient.runSparkJob(job);
         int jobId = app.getId();
         logger.info("Execute spark application using livy : batch id {}", jobId);
-        logger.info("Execution job : {}", JSONUtils.toJsonString(job));
 
         StateInfo.State jobState;
         do {
@@ -131,7 +131,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
 
     @Override
     public void abort() {
-        logger.info("Delete spark batch job, id: " + app.getId());
+        logger.info("Delete spark batch job, id: {}", app.getId());
         livyClient.deleteBatch(app.getId());
     }
 
@@ -141,18 +141,18 @@ public class SparkOperator extends LivyBaseSparkOperator {
                 .define(CONF_LIVY_HOST, ConfigDef.Type.STRING, true, "Livy host to submit application, in the format `ip:port`", CONF_LIVY_HOST)
                 .define(CONF_LIVY_YARN_QUEUE, ConfigDef.Type.STRING, CONF_LIVY_YARN_QUEUE_DEFAULT, true, "yarn queue name, default is `default`", CONF_LIVY_YARN_QUEUE)
                 .define(CONF_LIVY_PROXY_USER, ConfigDef.Type.STRING, CONF_LIVY_PROXY_DEFAULT, true, "proxy use for livy", CONF_LIVY_PROXY_USER)
-                .define(CONF_LIVY_BATCH_JARS, ConfigDef.Type.STRING, true, "Java application jar files", CONF_LIVY_BATCH_JARS)
-                .define(CONF_LIVY_BATCH_FILES, ConfigDef.Type.STRING, true, "files to use, seperated with `,`, the first file would be used as main entry", CONF_LIVY_BATCH_FILES)
-                .define(CONF_LIVY_BATCH_APPLICATION, ConfigDef.Type.STRING, true, "application class name for java application", CONF_LIVY_BATCH_APPLICATION)
-                .define(CONF_LIVY_BATCH_ARGS, ConfigDef.Type.STRING, true, "application arguments", CONF_LIVY_BATCH_ARGS)
-                .define(CONF_LIVY_BATCH_CONF, ConfigDef.Type.STRING, true, "Extra spark configuration , in the format `{\"key\": \"value\"}`", CONF_LIVY_BATCH_CONF)
-                .define(CONF_VARIABLES, ConfigDef.Type.STRING, true, "Spark arguments and configuration variables, use like `--param1 ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
+                .define(CONF_LIVY_BATCH_JARS, ConfigDef.Type.STRING, "",true, "Java application jar files", CONF_LIVY_BATCH_JARS)
+                .define(CONF_LIVY_BATCH_FILES, ConfigDef.Type.STRING, "",true, "files to use, seperated with `,`, the first file would be used as main entry", CONF_LIVY_BATCH_FILES)
+                .define(CONF_LIVY_BATCH_APPLICATION, ConfigDef.Type.STRING, "",true, "application class name for java application", CONF_LIVY_BATCH_APPLICATION)
+                .define(CONF_LIVY_BATCH_ARGS, ConfigDef.Type.STRING, "",true, "application arguments", CONF_LIVY_BATCH_ARGS)
+                .define(CONF_LIVY_BATCH_CONF, ConfigDef.Type.STRING, "{}",true, "Extra spark configuration , in the format `{\"key\": \"value\"}`", CONF_LIVY_BATCH_CONF)
+                .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}",true, "Spark arguments and configuration variables, use like `--param1 ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
                 ;
     }
 
     public void lineageAnalysis(OperatorContext context, String applicationId){
         Preconditions.checkNotNull(applicationId);
-        logger.info("Start lineage analysis for application id: " + applicationId);
+        logger.info("Start lineage analysis for application id: {}", applicationId);
 
         List<DataStore> inlets = new ArrayList<>();
         List<DataStore> outlets = new ArrayList<>();
@@ -214,7 +214,8 @@ public class SparkOperator extends LivyBaseSparkOperator {
                     stores.add(getS3Store(line));
                     break;
                 default:
-                    logger.error(String.format("unknow resource type %s", type));
+                    logger.error("unknown resource type {}", type);
+                    throw new IllegalStateException("Invalid resource type : " + type);
             }
             line = br.readLine();
         }

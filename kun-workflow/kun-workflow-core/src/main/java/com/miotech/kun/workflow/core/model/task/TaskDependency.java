@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.core.model.task;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
@@ -30,7 +32,13 @@ public class TaskDependency {
         return downstreamTaskId;
     }
 
+    @JsonIgnore
     public DependencyFunction getDependencyFunction() {
         return dependencyFunc;
+    }
+
+    @JsonProperty("dependencyFunc")
+    public String getDependencyFunctionType() {
+        return dependencyFunc.toFunctionType();
     }
 }

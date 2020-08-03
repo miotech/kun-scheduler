@@ -16,6 +16,7 @@ import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -55,9 +56,14 @@ public class TaskRunService {
         return taskRun.map(this::convertToVO);
     }
 
-    public Optional<TaskRunStateVO> getTaskStatus(Long taskRunId) {
-        Optional<TaskRun> taskRun = taskRunDao.fetchTaskRunById(taskRunId);
-        return taskRun.map(x -> TaskRunStateVOFactory.create(x.getStatus()));
+    public TaskRun findTaskRun(Long taskRunId) {
+        return taskRunDao.fetchTaskRunById(taskRunId)
+                .orElseThrow(() -> new EntityNotFoundException("TaskRun with id \"" + taskRunId + "\" not found"));
+    }
+
+    public TaskRunStateVO getTaskStatus(Long taskRunId) {
+        TaskRun taskRun = findTaskRun(taskRunId);
+        return TaskRunStateVOFactory.create(taskRun.getStatus());
     }
 
     public TaskRunLogVO getTaskRunLog(final Long taskRunId,
@@ -97,6 +103,30 @@ public class TaskRunService {
             logger.error("Failed to get task attempt log: {}", taskAttempt.getLogPath(), e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
+    }
+
+    public TaskRunDAGVO getNeighbors(Long taskRunId, int upstreamLevel, int downstreamLevel) {
+        Preconditions.checkArgument(0 <= upstreamLevel && upstreamLevel <= 5 , "upstreamLevel should be non negative and no greater than 5");
+        Preconditions.checkArgument(0 <= downstreamLevel&& downstreamLevel <= 5, "downstreamLevel should be non negative and no greater than 5");
+
+        TaskRun taskRun = findTaskRun(taskRunId);
+        List<TaskRun> result = new ArrayList<>();
+        result.add(taskRun);
+        if (upstreamLevel > 0) {
+            result.addAll(getUpstreamTaskRuns(taskRun, upstreamLevel));
+        }
+        if (downstreamLevel > 0) {
+            result.addAll(getDownstreamTaskRuns(taskRun, downstreamLevel));
+        }
+
+        List<TaskRunVO> nodes = result.stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        List<TaskRunDependencyVO> edges = result.stream()
+                .flatMap(x -> x.getDependentTaskRunIds().stream()
+                        .map(t -> new TaskRunDependencyVO(x.getId(),t)))
+                .collect(Collectors.toList());
+        return new TaskRunDAGVO(nodes, edges);
     }
 
     public List<TaskRun> getUpstreamTaskRuns(TaskRun taskRun, int distance) {

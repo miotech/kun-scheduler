@@ -38,7 +38,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.miotech.kun.commons.db.sql.SQLUtils.column;
-import static com.miotech.kun.workflow.utils.StringUtils.toNullableString;
+import static com.miotech.kun.commons.utils.StringUtils.toNullableString;
 
 @Singleton
 public class TaskRunDao {

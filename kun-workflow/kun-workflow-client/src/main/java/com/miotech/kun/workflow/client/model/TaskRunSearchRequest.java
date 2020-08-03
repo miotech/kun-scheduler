@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @JsonDeserialize(builder = TaskRunSearchRequest.Builder.class)
@@ -23,6 +24,10 @@ public class TaskRunSearchRequest {
 
     private final TaskRunStatus status;
 
+    private final OffsetDateTime dateFrom;
+
+    private final OffsetDateTime dateTo;
+
     private TaskRunSearchRequest(Builder builder) {
         this.name = builder.name;
         this.pageSize = builder.pageSize;
@@ -31,6 +36,8 @@ public class TaskRunSearchRequest {
         this.taskIds = builder.taskIds;
         this.tags = builder.tags;
         this.status = builder.status;
+        this.dateFrom = builder.dateFrom;
+        this.dateTo = builder.dateTo;
     }
 
     public String getName() {
@@ -61,6 +68,10 @@ public class TaskRunSearchRequest {
         return status;
     }
 
+    public OffsetDateTime getDateFrom() { return dateFrom; }
+
+    public OffsetDateTime getDateTo() { return dateTo; }
+
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -73,6 +84,8 @@ public class TaskRunSearchRequest {
         private List<Long> taskIds;
         private List<Tag> tags;
         private TaskRunStatus status;
+        private OffsetDateTime dateFrom;
+        private OffsetDateTime dateTo;
 
         private Builder() {
         }
@@ -108,6 +121,16 @@ public class TaskRunSearchRequest {
 
         public Builder withTags(List<Tag> tags) {
             this.tags = tags;
+            return this;
+        }
+
+        public Builder withDateFrom(OffsetDateTime dateFrom) {
+            this.dateFrom = dateFrom;
+            return this;
+        }
+
+        public Builder withDateTo(OffsetDateTime dateTo) {
+            this.dateTo = dateTo;
             return this;
         }
 
