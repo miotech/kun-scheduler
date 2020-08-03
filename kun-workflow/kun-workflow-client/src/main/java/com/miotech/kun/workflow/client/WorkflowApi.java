@@ -212,6 +212,19 @@ public class WorkflowApi {
         return sendRequest(postRequest, new TypeReference<List<Long>>() {});
     }
 
+    public TaskDAG getTaskDAG(Long taskId, int upstreamLevel, int downstreamLevel) {
+        HttpUrl.Builder url = buildUrl(API_TASKS)
+                .addPathSegment(taskId.toString())
+                .addPathSegment("neighbors");
+        if (upstreamLevel >= 0) {
+            url.addQueryParameter("upstreamLevel", Integer.toString(upstreamLevel));
+        }
+        if (downstreamLevel >= 0) {
+            url.addQueryParameter("downstreamLevel", Integer.toString(downstreamLevel));
+        }
+        return get(url.build(), TaskDAG.class);
+    }
+
     // TaskRun
     public TaskRun getTaskRun(Long taskRunId) {
         HttpUrl url = buildUrl(API_TASK_RUNS)
@@ -220,12 +233,12 @@ public class WorkflowApi {
         return get(url, TaskRun.class);
     }
 
-    public TaskRun stopTaskRun(Long taskRunId) {
+    public Object stopTaskRun(Long taskRunId) {
         HttpUrl url = buildUrl(API_TASK_RUNS)
                 .addPathSegment(taskRunId.toString())
-                .addPathSegment("_stop")
+                .addPathSegment("_abort")
                 .build();
-        return post(url, Maps.newHashMap(), TaskRun.class);
+        return put(url, Maps.newHashMap(), Object.class);
     }
 
     public TaskRunState getTaskRunStatus(Long taskRunId) {
@@ -234,6 +247,19 @@ public class WorkflowApi {
                 .addPathSegment("status")
                 .build();
         return get(url, TaskRunState.class);
+    }
+
+    public TaskRunDAG getTaskRunDAG(Long taskRunId, int upstreamLevel, int downstreamLevel) {
+        HttpUrl.Builder url = buildUrl(API_TASK_RUNS)
+                .addPathSegment(taskRunId.toString())
+                .addPathSegment("neighbors");
+        if (upstreamLevel >= 0) {
+            url.addQueryParameter("upstreamLevel", Integer.toString(upstreamLevel));
+        }
+        if (downstreamLevel >= 0) {
+            url.addQueryParameter("downstreamLevel", Integer.toString(downstreamLevel));
+        }
+        return get(url.build(), TaskRunDAG.class);
     }
 
     public TaskRunLog getTaskRunLog(TaskRunLogRequest logRequest) {
@@ -246,10 +272,10 @@ public class WorkflowApi {
             urlBuilder.addQueryParameter("attempt", "" + logRequest.getAttempt());
         }
         if (logRequest.getStartLine() >= 0) {
-            urlBuilder.addQueryParameter("startLine", "" + logRequest.getAttempt());
+            urlBuilder.addQueryParameter("startLine", "" + logRequest.getStartLine());
         }
         if (logRequest.getEndLine() > 0) {
-            urlBuilder.addQueryParameter("endLine", "" + logRequest.getAttempt());
+            urlBuilder.addQueryParameter("endLine", "" + logRequest.getEndLine());
         }
         HttpUrl url = urlBuilder.build();
         return get(url, TaskRunLog.class);

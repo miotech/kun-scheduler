@@ -411,14 +411,6 @@ public class OperatorService {
         operatorCache.refresh(operatorId);
     }
 
-    private Operator convertPropsVOToOperator(OperatorPropsVO vo) {
-        return Operator.newBuilder()
-                .withName(vo.getName())
-                .withDescription(vo.getDescription())
-                .withClassName(vo.getClassName())
-                .build();
-    }
-
     public OperatorVO convertOperatorToOperatorVO(Operator operator) {
         OperatorVO vo = new OperatorVO();
         vo.setId(operator.getId());

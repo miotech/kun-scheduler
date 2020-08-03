@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 
 public class OperatorRunner {
     private static final Logger logger = LoggerFactory.getLogger(OperatorRunner.class);
+    private static final String TEST_OPERATOR_RUNNER_LOGGER_NAME = "test-operator-runner";
 
     private final MockOperatorContextImpl context;
     private final KunOperator operator;
@@ -68,7 +69,9 @@ public class OperatorRunner {
         logger.info("Init operator ");
         this.operator.init();
         logger.info("Run operator ");
-        return this.operator.run();
+        boolean isSuccess = this.operator.run();
+        removeLogger();
+        return isSuccess;
     }
 
     public void abortAfter(int seconds, Consumer<OperatorContext> function) {
@@ -100,7 +103,7 @@ public class OperatorRunner {
         }
     }
 
-    public void appendLogger(Resource resource) throws IOException {
+    private void appendLogger(Resource resource) throws IOException {
         ch.qos.logback.classic.Logger rootLogger
                 = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
@@ -110,11 +113,18 @@ public class OperatorRunner {
         encoder.start();
 
         OutputStreamAppender<ILoggingEvent> appender = new OutputStreamAppender<>();
+        appender.setName(TEST_OPERATOR_RUNNER_LOGGER_NAME);
         appender.setOutputStream(resource.getOutputStream());
         appender.setImmediateFlush(true);
         appender.setEncoder(encoder);
         appender.setContext(rootLogger.getLoggerContext());
         appender.start();
         rootLogger.addAppender(appender);
+    }
+
+    private void removeLogger() {
+        ch.qos.logback.classic.Logger rootLogger
+                = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+        rootLogger.detachAppender(TEST_OPERATOR_RUNNER_LOGGER_NAME);
     }
 }

@@ -273,7 +273,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         TaskRunStateVO testRunStatus = TaskRunStateVOFactory.create(TaskRunStatus.CREATED);
 
         Mockito.when(taskRunService.getTaskStatus(testTaskRunId))
-                .thenReturn(Optional.of(testRunStatus));
+                .thenReturn(testRunStatus);
 
         String response = get("/taskruns/" + testTaskRunId + "/status");
         TaskRunStateVO result = jsonSerializer.toObject(response, TaskRunStateVO.class);

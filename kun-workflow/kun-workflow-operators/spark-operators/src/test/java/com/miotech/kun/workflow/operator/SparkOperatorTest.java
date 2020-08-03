@@ -87,7 +87,7 @@ public class SparkOperatorTest extends MockServerTestBase {
             });
             operatorRunner.run();
         } catch (Exception e) {
-            assertThat(IllegalStateException.class, is(e.getClass()));
+            assertThat(e.getClass(), is(IllegalStateException.class));
             assertThat("Cannot find state for job: 0", is(e.getMessage()));
         }
     }
