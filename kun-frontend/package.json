@@ -9,7 +9,7 @@
     "test:coverage": "umi-test --coverage",
     "lint-staged": "lint-staged",
     "lint-staged:js": "eslint --ext .js,.jsx,.ts,.tsx ",
-    "start:local-backend-chenjie": "PROXY_TARGET=\"http://192.168.1.79:8080\" PROXY_PDF_TARGET=\"http://192.168.1.79:10010\" PORT=9801 umi dev",
+    "start:local-backend-chenjie": "PROXY_TARGET=\"http://192.168.1.80:8080\" PROXY_PDF_TARGET=\"http://192.168.1.80:10010\" PORT=9801 umi dev",
     "start:local-backend-melo": "PROXY_TARGET=\"http://192.168.1.79:8080\" PROXY_PDF_TARGET=\"http://192.168.1.68:10010\" PORT=9801 umi dev",
     "start:dev": "PROXY_TARGET=\"http://kun-dev.miotech.com\" PROXY_PDF_TARGET=\"http://kun-dev.miotech.com:10010\" PORT=9801 umi dev",
     "start:local": "PROXY_TARGET=\"http://localhost:8080\" PROXY_PDF_TARGET=\"http://localhost:10010\" PORT=9801 umi dev",
