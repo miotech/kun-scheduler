@@ -41,6 +41,11 @@ public interface WorkflowClient {
     Task getTask(Long taskId);
 
     /**
+     * get task by unique name
+     */
+    Optional<Task> getTask(String name);
+
+    /**
      * save or update a task, with specific tags
      * @return
      */
