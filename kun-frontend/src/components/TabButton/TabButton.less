@@ -1,0 +1,20 @@
+.TabButton {
+  height: 30px;
+  padding: 0 33px;
+  transition: 0.2s;
+  background-color: rgba(0, 0, 0, 0);
+  color: @grayFontColor;
+  border-radius: 3px;
+  cursor: pointer;
+
+  .flexCenter();
+
+  &:hover {
+    background-color: @lightBlueBackground;
+  }
+  &.active {
+    background-color: @lightBlueBackground;
+    color: @darkGray;
+    font-weight: bold;
+  }
+}

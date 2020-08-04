@@ -8,6 +8,7 @@ import { pdfTryout } from './pdfTryout';
 import { pdfExtract } from './pdfExtract';
 import { pdfBatchTask } from './pdfBatchTask';
 import { pdfFileTask } from './pdfFileTask';
+import { pdfNew } from './pdfNew';
 
 export interface RootModel {
   user: typeof user;
@@ -20,6 +21,7 @@ export interface RootModel {
   pdfExtract: typeof pdfExtract;
   pdfBatchTask: typeof pdfBatchTask;
   pdfFileTask: typeof pdfFileTask;
+  pdfNew: typeof pdfNew;
 }
 
 export const models: RootModel = {
@@ -33,6 +35,7 @@ export const models: RootModel = {
   pdfExtract,
   pdfBatchTask,
   pdfFileTask,
+  pdfNew,
 };
 
 // some common types
