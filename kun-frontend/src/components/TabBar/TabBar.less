@@ -1,0 +1,61 @@
+.tabBar {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid @borderColor;
+  padding: 0 20px;
+}
+
+.item {
+  height: 100%;
+  padding: 0 24px;
+  transition: 0.2s;
+  position: relative;
+  cursor: pointer;
+  .font(16px, 22px, @grayFontColor);
+
+  &:not(:last-child) {
+    margin-right: 16px;
+  }
+
+  &:after {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 4px;
+    content: '';
+    transition: 0.2s;
+    background-color: rgba(0, 0, 0, 0);
+  }
+
+  .flexCenter();
+
+  &:hover {
+    &:after {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 4px;
+      content: '';
+      transition: 0.2s;
+      background-color: @lightBlue;
+    }
+  }
+
+  &.active {
+    color: @darkGray;
+    font-weight: bold;
+    &:after {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 4px;
+      content: '';
+      transition: 0.2s;
+      background-color: @darkBlue;
+    }
+  }
+}
