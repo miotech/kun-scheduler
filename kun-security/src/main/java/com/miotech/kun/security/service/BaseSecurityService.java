@@ -10,8 +10,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 public class BaseSecurityService {
 
     public String getCurrentUsername() {
-        if (getCurrentUser() != null) {
-            UserInfo userInfo = (UserInfo) SecurityContextHolder.getContext().getAuthentication().getDetails();
+        UserInfo userInfo = getCurrentUser();
+        if (userInfo != null) {
             return userInfo.getUsername();
         }
         return "anonymousUser";

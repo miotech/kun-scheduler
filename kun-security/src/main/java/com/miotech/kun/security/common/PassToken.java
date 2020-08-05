@@ -4,6 +4,8 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 
 public class PassToken extends AbstractAuthenticationToken {
 
+    private String principal = ConfigKey.DEFAULT_PASS_TOKEN_KEY;
+
     public PassToken() {
         super(null);
         this.setAuthenticated(true);
@@ -16,6 +18,10 @@ public class PassToken extends AbstractAuthenticationToken {
 
     @Override
     public Object getPrincipal() {
-        return "pass-token";
+        return principal;
+    }
+
+    public void setPrincipal(String principal) {
+        this.principal = principal;
     }
 }
