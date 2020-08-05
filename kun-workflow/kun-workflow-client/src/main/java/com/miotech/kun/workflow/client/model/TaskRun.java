@@ -1,7 +1,9 @@
 package com.miotech.kun.workflow.client.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.miotech.kun.workflow.client.CustomDateTimeDeserializer;
+import com.miotech.kun.workflow.client.CustomDateTimeSerializer;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
@@ -29,9 +31,11 @@ public class TaskRun {
     private List<DataStore> outlets;
 
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime startAt;
 
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime endAt;
 
     private List<TaskAttempt> attempts;

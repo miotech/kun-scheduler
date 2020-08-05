@@ -220,7 +220,7 @@ public class TaskService {
         TaskRunEnv.Builder envBuilder = TaskRunEnv.newBuilder();
         for (Task t : tasks) {
             Long taskId = t.getId();
-            Map<String, String> config = rtvMap.get(taskId).getConfig();
+            Map<String, Object> config = rtvMap.get(taskId).getConfig();
             if (config == null) {
                 config = Collections.emptyMap();
             }

@@ -16,13 +16,11 @@ import java.time.ZoneOffset;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 
 
 public class CustomDateTimeDeserializerTest {
     private ObjectMapper mapper;
     private CustomDateTimeDeserializer deserializer;
-
 
     @Before
     public void setup() {
@@ -57,7 +55,6 @@ public class CustomDateTimeDeserializerTest {
         assertThat(offsetDateTime.getNano(), is(98000000) );
         assertThat(offsetDateTime.getOffset(), is(ZoneOffset.ofHoursMinutes(8, 0)) );
     }
-
 
     private OffsetDateTime deserializeDateTime(String json) {
         try {
