@@ -23,6 +23,7 @@
 **/subprojects/internal-android-performance-testing/build-android-libs
 **/target
 **/__pycache__
+*.pyc
 
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf
