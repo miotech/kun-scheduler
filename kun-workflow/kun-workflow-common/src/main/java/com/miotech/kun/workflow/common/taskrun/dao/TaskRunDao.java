@@ -32,7 +32,6 @@ import javax.annotation.Nullable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -166,11 +165,11 @@ public class TaskRunDao {
         // DON'T USE BETWEEN, see: https://wiki.postgresql.org/wiki/Don't_Do_This#Don.27t_use_BETWEEN_.28especially_with_timestamps.29
         if (Objects.nonNull(filter.getDateFrom())) {
             whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".start_at >= ? )");
-            sqlArgs.add(filter.getDateFrom().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+            sqlArgs.add(filter.getDateFrom());
         }
         if (Objects.nonNull(filter.getDateTo())) {
             whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".end_at <= ? )");
-            sqlArgs.add(filter.getDateTo().format(DateTimeFormatter.ISO_OFFSET_DATE_TIME));
+            sqlArgs.add(filter.getDateTo());
         }
 
         // Search by status

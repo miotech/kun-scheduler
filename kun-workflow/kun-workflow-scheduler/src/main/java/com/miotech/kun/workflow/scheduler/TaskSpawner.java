@@ -113,7 +113,7 @@ public class TaskSpawner {
         return results;
     }
 
-    private TaskRun createTaskRun(Task task, Tick tick, Map<String, String> runtimeConfig, List<TaskRun> others) {
+    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> others) {
         TaskRun taskRun = TaskRun.newBuilder()
                 .withId(WorkflowIdGenerator.nextTaskRunId())
                 .withTask(task)
@@ -134,10 +134,15 @@ public class TaskSpawner {
                 }).collect(Collectors.toList());
     }
 
-    private Config prepareConfig(Task task, Config defaultConfig, Map<String, String> runtimeConfig) {
+    private Config prepareConfig(Task task, Config defaultConfig, Map<String, Object> runtimeConfig) {
         ConfigDef configDef = operatorService.getOperatorConfigDef(task.getOperatorId());
-        Config rtConfig = new Config(configDef, runtimeConfig);
-        Config finalConfig = defaultConfig.overrideBy(rtConfig);
+        Config rtConfig = new Config(runtimeConfig);
+
+        Map<String, String> defaultValues = new HashMap<>();
+        for(String k : defaultConfig.getValues().keySet()) {
+            defaultValues.put(k, defaultConfig.getValues().get(k).toString());
+        }
+        Config finalConfig = new Config(configDef, defaultValues).overrideBy(rtConfig);
         validateConfig(configDef, finalConfig, rtConfig);
         return finalConfig;
     }

@@ -205,6 +205,8 @@ public class WorkflowApiTest extends MockServerTestBase {
                 .withTaskRunIds(
                         Collections.singletonList(1L)
                 )
+                .withDateFrom(taskRun.getStartAt())
+                .withDateTo(taskRun.getEndAt())
                 .build();
         mockPost("/taskruns/_search",
                 JSONUtils.toJsonString(request),

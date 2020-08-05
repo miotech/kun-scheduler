@@ -558,7 +558,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getDependentTaskRunIds(), contains(result.get(0).getId()));
     }
 
-    private TaskRunEnv buildEnv(Long taskId, Map<String, String> config) {
+    private TaskRunEnv buildEnv(Long taskId, Map<String, Object> config) {
         TaskRunEnv.Builder builder = TaskRunEnv.newBuilder()
                 .addConfig(taskId, config);
         return builder.build();
