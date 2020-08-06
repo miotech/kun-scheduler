@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import moment, { Moment } from 'moment';
 import c from 'classnames';
 import './DateRangeOption.less';
@@ -18,20 +18,20 @@ export default memo(function DateRangeOption({
   onClick,
   children,
 }: Props) {
-  const targetStartDate = useMemo(() => targetStartDateGetter(moment()), [
+  const targetStartDate = useCallback(() => targetStartDateGetter(moment()), [
     targetStartDateGetter,
   ]);
-  const targetEndDate = useMemo(() => moment().valueOf(), []);
+  const targetEndDate = useCallback(() => moment().valueOf(), []);
 
   const isActive = useMemo(
     () =>
-      moment(targetStartDate)
+      moment(targetStartDate())
         .startOf('day')
         .valueOf() ===
         moment(startDate)
           .startOf('day')
           .valueOf() &&
-      moment(targetEndDate)
+      moment(targetEndDate())
         .startOf('day')
         .valueOf() ===
         moment(endDate)
@@ -46,7 +46,7 @@ export default memo(function DateRangeOption({
         active: isActive,
       })}
       onClick={() => {
-        onClick(targetStartDate, targetEndDate);
+        onClick(targetStartDate(), targetEndDate());
       }}
     >
       {children}
