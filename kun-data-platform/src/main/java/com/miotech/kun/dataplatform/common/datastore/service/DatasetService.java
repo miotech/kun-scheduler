@@ -11,6 +11,7 @@ import com.miotech.kun.dataplatform.model.taskdefinition.TaskDatasetProps;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
 import java.util.List;
@@ -61,11 +62,11 @@ public class DatasetService {
         return vos;
     }
 
+    @Transactional
     public List<TaskDataset> createTaskDatasets(Long definitionId, List<TaskDatasetProps> datasetProps) {
-        Long datasetId = DataPlatformIdGenerator.nextDatasetId();
         List<TaskDataset> taskDatasets = datasetProps.stream()
-                .map( x ->TaskDataset.newBuilder()
-                            .withId(datasetId)
+                .map( x -> TaskDataset.newBuilder()
+                            .withId(DataPlatformIdGenerator.nextDatasetId())
                             .withDefinitionId(definitionId)
                             .withDatastoreId(x.getDatastoreId())
                             .withDatasetName(x.getDatasetName())

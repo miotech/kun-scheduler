@@ -228,7 +228,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
                 .get(0);
         taskDefinitionDao.create(taskDefinition);
 
-        List<TaskDefinitionVO> taskDefinitionVOS = taskDefinitionService.convertToVOList(Arrays.asList(upstreamTaskDefinition, taskDefinition));
+        List<TaskDefinitionVO> taskDefinitionVOS = taskDefinitionService.convertToVOList(Arrays.asList(upstreamTaskDefinition, taskDefinition), true);
         TaskDefinitionVO vo = taskDefinitionVOS.get(1);
 
         assertTrue(vo.getId() > 0);

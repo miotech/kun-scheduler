@@ -11,6 +11,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
@@ -40,11 +41,15 @@ public class DeployController {
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "100") int pageSize,
             @RequestParam(required = false) List<Long> creatorIds,
-            @RequestParam(required = false) Optional<OffsetDateTime> submittedAtFrom,
-            @RequestParam(required = false) Optional<OffsetDateTime> submittedAtTo,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> submittedAtFrom,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> submittedAtTo,
             @RequestParam(required = false) List<Long> deployerIds,
-            @RequestParam(required = false) Optional<OffsetDateTime> deployedAtFrom,
-            @RequestParam(required = false) Optional<OffsetDateTime> deployedAtTo
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> deployedAtFrom,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Optional<OffsetDateTime> deployedAtTo
 
     ) {
         DeploySearchRequest deploySearchRequest = new DeploySearchRequest(

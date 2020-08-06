@@ -1,5 +1,6 @@
 package com.miotech.kun.dataplatform.exception;
 
+import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.workflow.client.WorkflowApiException;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,23 @@ public class ControllerExceptionHandler {
             RuntimeException ex, WebRequest request) {
         return ResponseEntity.badRequest()
                 .body(RequestResult.error(400, ex.getMessage()));
+    }
+
+    @ExceptionHandler(value
+            = { NullPointerException.class })
+    protected ResponseEntity<Object> handleNullpointer(
+            RuntimeException ex, WebRequest request) {
+        if (ex.getStackTrace().length > 0
+                && ex.getStackTrace()[0].getClassName()
+                        .equals(Preconditions.class.getName())) {
+            ;
+            return ResponseEntity.badRequest()
+                    .body(RequestResult.error(400, ex.getMessage()));
+        } else {
+            return ResponseEntity.badRequest()
+                    .body(RequestResult.error(500, ex.getMessage()));
+        }
+
     }
 
 }

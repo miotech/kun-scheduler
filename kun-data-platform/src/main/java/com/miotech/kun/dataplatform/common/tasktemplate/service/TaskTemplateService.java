@@ -47,17 +47,19 @@ public class TaskTemplateService {
         String taskTemplateName = createVO.getName();
         taskTemplateDao.fetchByName(taskTemplateName)
                 .ifPresent( x -> {
-                    throw new IllegalArgumentException(String.format("Task Template not found: \"%s\"", taskTemplateName));
+                    throw new IllegalArgumentException(String.format("Task Template existed: \"%s\"", taskTemplateName));
                 });
 
         Operator op = client.getOperator(createVO.getOperatorId());
         Preconditions.checkNotNull(op, "Cannot find operator with id : " + createVO.getOperatorId());
         TaskTemplate taskTemplate = TaskTemplate.newBuilder()
                 .withName(taskTemplateName)
-                .withTemplateGroup(createVO.getTemplateType())
+                .withOperator(op)
+                .withTemplateType(createVO.getTemplateType())
                 .withTemplateGroup(createVO.getTemplateGroup())
                 .withDefaultValues(createVO.getDefaultValues())
                 .withDisplayParameters(createVO.getDisplayParameters())
+                .withRenderClassName(createVO.getRenderClassName())
                 .build();
         taskTemplateDao.create(taskTemplate);
         return taskTemplate;
@@ -67,12 +69,14 @@ public class TaskTemplateService {
         Operator op = client.getOperator(updateVO.getOperatorId());
         Preconditions.checkNotNull(op, "Cannot find operator with id : " + updateVO.getOperatorId());
         TaskTemplate taskTemplate = find(updateVO.getName()).cloneBuilder()
-                .withTemplateGroup(updateVO.getTemplateType())
+                .withOperator(op)
+                .withTemplateType(updateVO.getTemplateType())
                 .withTemplateGroup(updateVO.getTemplateGroup())
                 .withDefaultValues(updateVO.getDefaultValues())
                 .withDisplayParameters(updateVO.getDisplayParameters())
+                .withRenderClassName(updateVO.getRenderClassName())
                 .build();
-        taskTemplateDao.create(taskTemplate);
+        taskTemplateDao.update(taskTemplate);
         return taskTemplate;
     }
 
@@ -102,6 +106,7 @@ public class TaskTemplateService {
                 taskTemplate.getTemplateType(),
                 taskTemplate.getTemplateGroup(),
                 taskTemplate.getDisplayParameters(),
+                taskTemplate.getDefaultValues(),
                 taskTemplate.getRenderClassName()
         );
     }
