@@ -3,6 +3,7 @@ package com.miotech.kun.dataplatform.common.deploy.service;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.common.commit.dao.TaskCommitDao;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeployedTaskDAG;
+import com.miotech.kun.dataplatform.common.deploy.vo.DeployedTaskDependencyVO;
 import com.miotech.kun.dataplatform.common.deploy.vo.ScheduledTaskRunSearchRequest;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.common.utils.TagUtils;
@@ -55,7 +56,11 @@ public class DeployedTaskServiceTest extends AppTestBase {
     public void test_deployTask_created() {
         TaskCommit commit = MockTaskCommitFactory.createTaskCommit();
         taskCommitDao.create(commit);
-        DeployedTask deployedTask = deployedTaskService.deployTask(commit);
+        // invocation
+        deployedTaskService.deployTask(commit);
+
+        // verify
+        DeployedTask deployedTask = deployedTaskService.find(commit.getDefinitionId());
         assertTrue(deployedTask.getId() > 0);
         assertTrue(deployedTask.getWorkflowTaskId() > 0);
 
@@ -124,7 +129,11 @@ public class DeployedTaskServiceTest extends AppTestBase {
                 .withId(DataPlatformIdGenerator.nextCommitId())
                 .withCommitType(CommitType.OFFLINE)
                 .build();
-        DeployedTask deployedTask = deployedTaskService.deployTask(nextCommit);
+        taskCommitDao.create(nextCommit);
+        deployedTaskService.deployTask(nextCommit);
+
+        // verify
+        DeployedTask deployedTask = deployedTaskService.find(commit.getDefinitionId());
 
         assertTrue(deployedTask.getId() > 0);
         assertTrue(deployedTask.getWorkflowTaskId() > 0);
@@ -167,6 +176,12 @@ public class DeployedTaskServiceTest extends AppTestBase {
         // start from the first task, downstream 2
         dagTasks = deployedTaskService.getDeployedTaskDag(deployedTasks.get(0).getDefinitionId(), 0, 2);
         assertThat(dagTasks.getNodes().size(), is(taskSize));
+        List<DeployedTaskDependencyVO> edges = dagTasks.getEdges();
+        assertThat(edges.size(), is(2));
+        assertThat(edges.get(0).getUpstreamTaskId(), is(deployedTasks.get(0).getDefinitionId()));
+        assertThat(edges.get(0).getDownStreamTaskId(), is(deployedTasks.get(1).getDefinitionId()));
+        assertThat(edges.get(1).getUpstreamTaskId(), is(deployedTasks.get(1).getDefinitionId()));
+        assertThat(edges.get(1).getDownStreamTaskId(), is(deployedTasks.get(2).getDefinitionId()));
 
         // start from the first task, downstream 1
         dagTasks = deployedTaskService.getDeployedTaskDag(deployedTasks.get(0).getDefinitionId(), 0, 1);

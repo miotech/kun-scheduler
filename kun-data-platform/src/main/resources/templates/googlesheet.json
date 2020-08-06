@@ -54,8 +54,8 @@
     "defaultValues": {
       "args": "-e dev -m TASK_CENTER -s GENERAL_GOOGLE_SHEET_STEP",
       "jars": "",
-      "files": "s3://com.miotech.data.prd/Project/miotech/knowledge-graph-etl/release/com/miotech/knowledge-graph-etl/1.0/knowledge-graph-etl-1.0.jar",
-      "livyHost": "http://<livy_ip>:8998",
+      "files": "${ dataplatform.etl.jar }",
+      "livyHost": "${ dataplatform.livy.host }",
       "sparkConf": "{\"kun.dataplatform.insertMode\":\"overwrite\",\"kun.dataplatform.emptyAsNull\":\"true\",\"kun.dataplatform.credentialPath\":\"s3://com.miotech.data.prd/google/credentials/google_service_credential.p12\",\"kun.dataplatform.serviceAccount\":\"jentle@bubbly-mission-267911.iam.gserviceaccount.com\",\"kun.dataplatform.readOrWriteMode\":\"READ\"}",
       "variables": "{}",
       "application": "com.miotech.etl.knowledge_graph.app.Application"

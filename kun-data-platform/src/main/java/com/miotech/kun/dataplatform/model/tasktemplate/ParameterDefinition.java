@@ -36,7 +36,7 @@ public class ParameterDefinition {
         return displayName;
     }
 
-    public static Builder newBuilder() { return newBuilder(); }
+    public static Builder newBuilder() { return new Builder(); }
 
     public static final class Builder {
         String name;

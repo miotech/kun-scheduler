@@ -10,8 +10,8 @@ import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskTry;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunLogRequest;
-import com.miotech.kun.workflow.client.model.TaskRunState;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import org.json.simple.JSONObject;
 import org.junit.Test;
@@ -21,10 +21,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.miotech.kun.dataplatform.common.tasktemplate.dao.TaskTemplateDaoTest.TEST_TEMPLATE;
 import static com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus.*;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
+import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -165,9 +167,13 @@ public class TaskDefinitionServiceTest extends AppTestBase {
 
         TaskTry taskTry = taskDefinitionService.run(taskDefinition.getDefinitionId(), runRequest);
         taskDefinitionService.stop(taskTry.getId());
-        TaskRunState state = workflowClient.getTaskRunState(taskTry.getWorkflowTaskRunId());
 
-        assertThat(state.getStatus(), is(TaskRunStatus.ABORTED));
+        await().atMost(10, TimeUnit.SECONDS)
+                .until(() -> workflowClient
+                        .getTaskRunState(taskTry.getWorkflowTaskRunId())
+                        .getStatus().isFinished());
+        TaskRun taskRun = workflowClient.getTaskRun(taskTry.getWorkflowTaskRunId());
+        assertThat(taskRun.getStatus(), is(ABORTED));
     }
 
     @Test
@@ -184,8 +190,11 @@ public class TaskDefinitionServiceTest extends AppTestBase {
                 .withTaskRunId(taskTry.getWorkflowTaskRunId())
                 .withAttempt(-1)
                 .build();
+        await().atMost(10, TimeUnit.SECONDS)
+                .until(() -> workflowClient
+                        .getTaskRunState(taskTry.getWorkflowTaskRunId())
+                        .getStatus().isFinished());
         TaskRunLogVO vo = taskDefinitionService.runLog(request);
-
         assertThat(vo.getStatus(), in(new TaskRunStatus[]{RUNNING,SUCCESS,FAILED}));
         assertThat(vo.getTaskRunId(), is(taskTry.getWorkflowTaskRunId()));
         assertTrue(vo.getLogs().size() > 0);

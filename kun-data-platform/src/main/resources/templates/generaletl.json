@@ -19,13 +19,19 @@
       "type": "string",
       "required": true,
       "displayName": "ETL ClassName"
+    },
+    {
+      "name": "sparkConf",
+      "type": "keyvalue",
+      "required": false,
+      "displayName": "Extra Spark Configuration"
     }
   ],
   "defaultValues": {
     "args": "-e dev -m TASK_CENTER -s GENERAL_ETL_STEP",
     "jars": "",
-    "files": "s3://com.miotech.data.prd/Project/miotech/knowledge-graph-etl/release/com/miotech/knowledge-graph-etl/1.0/knowledge-graph-etl-1.0.jar",
-    "livyHost": "http://<livy_ip>:8998",
+    "files": "${ dataplatform.etl.jar }",
+    "livyHost": "${ dataplatform.livy.host }",
     "sparkConf": "{\"kun.dataplatform.environment\": \"dev\"}",
     "variables": "{}",
     "application": "com.miotech.etl.knowledge_graph.app.Application"

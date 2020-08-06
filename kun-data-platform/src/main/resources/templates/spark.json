@@ -42,7 +42,7 @@
   "defaultValues": {
     "jars": "",
     "files": "",
-    "livyHost": "http://<livy_ip>:8998",
+    "livyHost": "${ dataplatform.livy.host }",
     "sparkConf": "{}",
     "variables": "{}",
     "application": ""

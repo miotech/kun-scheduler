@@ -39,6 +39,18 @@
       "displayName": "write mode"
     },
     {
+      "name": "globalIdFields",
+      "type": "string",
+      "required": false,
+      "displayName": "Field names to generate globalId"
+    },
+    {
+      "name": "idField",
+      "type": "string",
+      "required": false,
+      "displayName": "Field use in update/upsert"
+    },
+    {
       "name": "preScript",
       "type": "text",
       "required": false,
@@ -54,8 +66,8 @@
   "defaultValues": {
     "args": "-c com.miotech.spark.etl.operator.DataSyncOperator",
     "jars": "",
-    "files": "s3://com.miotech.data.prd/Project/miotech/spark-etl-operator/release/spark-etl-operator-1.0-SNAPSHOT.jar",
-    "livyHost": "http://<livy_ip>:8998",
+    "files": "${ dataplatform.datasync.jar }",
+    "livyHost": "${ dataplatform.livy.host }",
     "sparkConf": "{}",
     "variables": "{}",
     "application": "com.miotech.spark.etl.Application"
