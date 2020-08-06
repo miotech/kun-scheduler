@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -34,10 +33,7 @@ public class UserController {
     @GetMapping("/user/whoami")
     public RequestResult<UserInfo> whoami() {
         UserInfo userInfo = (UserInfo) SecurityContextHolder.getContext().getAuthentication().getDetails();
-        List<String> userGroups = securityService.getUserGroup(userInfo.getUsername());
-        Set<String> permissions = securityService.getGroupPermission(userGroups);
-        userInfo.setPermissions(permissions);
-        return RequestResult.success(userInfo);
+        return RequestResult.success(securityService.enrichUserInfo(userInfo));
     }
 
     @GetMapping("/user/search")
@@ -45,5 +41,14 @@ public class UserController {
         UserListVO vo = new UserListVO();
         vo.setUsers(userService.getUsers().stream().map(User::getName).collect(Collectors.toList()));
         return RequestResult.success(vo);
+    }
+
+    @GetMapping("/user/list")
+    public RequestResult<List<UserInfo>> getUserList() {
+        List<UserInfo> userInfos = userService.getUsers().stream()
+                .map(securityService::convertToUserInfo)
+                .map(securityService::enrichUserInfo)
+                .collect(Collectors.toList());
+        return RequestResult.success(userInfos);
     }
 }
