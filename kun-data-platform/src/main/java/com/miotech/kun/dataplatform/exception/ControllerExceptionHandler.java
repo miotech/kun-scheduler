@@ -3,12 +3,14 @@ package com.miotech.kun.dataplatform.exception;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.workflow.client.WorkflowApiException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
 @ControllerAdvice
+@Slf4j
 public class ControllerExceptionHandler {
 
     @ExceptionHandler(value
@@ -32,6 +34,7 @@ public class ControllerExceptionHandler {
             return ResponseEntity.badRequest()
                     .body(RequestResult.error(400, ex.getMessage()));
         } else {
+            log.error("Null pointer Error: {}", ex);
             return ResponseEntity.badRequest()
                     .body(RequestResult.error(500, ex.getMessage()));
         }

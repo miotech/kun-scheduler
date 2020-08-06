@@ -55,19 +55,13 @@
       "type": "string",
       "required": true,
       "displayName": "Envrionment"
-    },
-    {
-      "name": "credentialPath",
-      "type": "string",
-      "required": false,
-      "displayName": "Credential Path"
     }
   ],
   "defaultValues": {
     "args": "--sparkConf arangodb.connectionTtl=900000 -e dev -m TASK_CENTER -s GENERAL_GRAPH_STEP",
     "jars": "",
-    "files": "s3://com.miotech.data.prd/Project/miotech/knowledge-graph-etl/release/com/miotech/knowledge-graph-etl/1.0/knowledge-graph-etl-1.0.jar",
-    "livyHost": "http://<livy_ip>:8998",
+    "files": "${ dataplatform.etl.jar }",
+    "livyHost": "${ dataplatform.livy.host }",
     "sparkConf": "{\"kun.dataplatform.operationType\":\"insert\"}",
     "variables": "{}",
     "application": "com.miotech.etl.knowledge_graph.app.Application"

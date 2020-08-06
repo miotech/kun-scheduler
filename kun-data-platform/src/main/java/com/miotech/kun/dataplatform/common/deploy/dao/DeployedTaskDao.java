@@ -127,7 +127,7 @@ public class DeployedTaskDao {
 
         if (StringUtils.isNoneBlank(searchRequest.getTaskTemplateName())) {
             whereClause.append(" AND ");
-            whereClause.append(DEPLOYED_TASK_MODEL_NAME + ".task_template_name LIKE CONCAT('%', CAST(? AS TEXT) , '%')");
+            whereClause.append(DEPLOYED_TASK_MODEL_NAME + ".task_template_name = ?");
             params.add(searchRequest.getTaskTemplateName());
         }
 

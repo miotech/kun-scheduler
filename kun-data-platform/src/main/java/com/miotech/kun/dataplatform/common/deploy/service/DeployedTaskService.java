@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.dataplatform.common.deploy.dao.DeployedTaskDao;
 import com.miotech.kun.dataplatform.common.deploy.vo.*;
+import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskRunLogVO;
 import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateService;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.common.utils.TagUtils;
@@ -19,6 +20,7 @@ import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -133,7 +135,7 @@ public class DeployedTaskService {
                 .withTaskCommit(commit)
                 .withArchived(true)
                 .build();
-        deployedTaskDao.update(task);
+        deployedTaskDao.update(updated);
         return updated;
     }
 
@@ -195,9 +197,8 @@ public class DeployedTaskService {
         List<DeployedTaskDependencyVO> dependencies = taskDAG.getEdges()
                 .stream()
                 .map(x -> new DeployedTaskDependencyVO(
-                        taskDefinitionIdMap.get(x.getUpstreamTaskId()),
-                        taskDefinitionIdMap.get(x.getUpstreamTaskId())
-                        ))
+                        taskDefinitionIdMap.get(x.getDownstreamTaskId()),
+                        taskDefinitionIdMap.get(x.getUpstreamTaskId())))
                 .collect(Collectors.toList());
         return new DeployedTaskDAG(
                 tasks,
@@ -253,9 +254,20 @@ public class DeployedTaskService {
         return workflowClient.getTaskRunDAG(taskRunId, upstreamLevel, downstreamLevel);
     }
 
-    public TaskRunLog getWorkFlowTaskRunLog(Long taskRunId) {
+    public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId) {
         Preconditions.checkNotNull(taskRunId, TASK_RUN_ID_NOT_NULL);
-        return workflowClient.getLatestRunLog(taskRunId);
+        TaskRunLog log = workflowClient.getLatestRunLog(taskRunId);
+        TaskRunStatus status = workflowClient.getTaskRunState(taskRunId)
+                .getStatus();
+        return new TaskRunLogVO(
+                log.getTaskRunId(),
+                log.getAttempt(),
+                log.getStartLine(),
+                log.getEndLine(),
+                log.getLogs(),
+                status.isFinished(),
+                status
+        );
     }
 
     public DeployedTaskVO convertVO(DeployedTask deployedTask) {
@@ -271,7 +283,7 @@ public class DeployedTaskService {
 
     public DeployedTaskWithRunVO convertToListVO(DeployedTask deployedTask) {
         TaskRunSearchRequest searchRequest = TaskRunSearchRequest.newBuilder()
-                .withTaskIds(Collections.singletonList(deployedTask.getDefinitionId()))
+                .withTaskIds(Collections.singletonList(deployedTask.getWorkflowTaskId()))
                 .withPageNum(1)
                 .withPageSize(1)
                 .build();

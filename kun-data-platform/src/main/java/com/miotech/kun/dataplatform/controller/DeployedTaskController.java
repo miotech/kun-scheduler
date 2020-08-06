@@ -3,11 +3,11 @@ package com.miotech.kun.dataplatform.controller;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.common.deploy.vo.*;
+import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskRunLogVO;
 import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunDAG;
-import com.miotech.kun.workflow.client.model.TaskRunLog;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -140,7 +140,7 @@ public class DeployedTaskController {
 
     @GetMapping("/deployed-taskruns/{id}/log")
     @ApiOperation("Get log of scheduled taskrun")
-    public RequestResult<TaskRunLog> getWorkflowTaskRunLog(@PathVariable Long id) {
+    public RequestResult<TaskRunLogVO> getWorkflowTaskRunLog(@PathVariable Long id) {
         return RequestResult.success(deployedTaskService.getWorkFlowTaskRunLog(id));
     }
 

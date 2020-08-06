@@ -3,7 +3,7 @@ server:
 
 workflow:
   enabled: false
-  baseUrl: http://localhost:18088
+  baseUrl: ${WORKFLOW_URL:}
 
 spring:
   datasource:
