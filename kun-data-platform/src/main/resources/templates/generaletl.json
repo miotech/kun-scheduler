@@ -1,0 +1,34 @@
+{
+  "name": "General ETL Step",
+  "templateType": "spark",
+  "templateGroup": "development",
+  "operator": {
+    "name": "Spark_Operator",
+    "description": "Spark Operator",
+    "className": "com.miotech.kun.workflow.operator.SparkOperator"
+  },
+  "displayParameters": [
+    {
+      "name": "environment",
+      "type": "string",
+      "required": true,
+      "displayName": "Environment"
+    },
+    {
+      "name": "etlClassName",
+      "type": "string",
+      "required": true,
+      "displayName": "ETL ClassName"
+    }
+  ],
+  "defaultValues": {
+    "args": "-e dev -m TASK_CENTER -s GENERAL_ETL_STEP",
+    "jars": "",
+    "files": "s3://com.miotech.data.prd/Project/miotech/knowledge-graph-etl/release/com/miotech/knowledge-graph-etl/1.0/knowledge-graph-etl-1.0.jar",
+    "livyHost": "http://<livy_ip>:8998",
+    "sparkConf": "{\"kun.dataplatform.environment\": \"dev\"}",
+    "variables": "{}",
+    "application": "com.miotech.etl.knowledge_graph.app.Application"
+  },
+  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkConfigTaskTemplateRender"
+}
