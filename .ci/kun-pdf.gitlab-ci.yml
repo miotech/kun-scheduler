@@ -42,6 +42,7 @@ kun-pdf-build:
     - ./gradlew :kun-pdf:bootJar
     - mkdir -p /builds/artifacts/kun-pdf/${CI_COMMIT_REF_NAME}/
     - cp kun-pdf/build/libs/*.jar /builds/artifacts/kun-pdf/${CI_COMMIT_REF_NAME}/
+    - cp -r kun-pdf/src/main/resources/pdf_convertor /builds/artifacts/kun-pdf/${CI_COMMIT_REF_NAME}/
   only:
     refs:
       - master
