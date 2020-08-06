@@ -120,6 +120,13 @@ public class SecurityService implements InitializingBean {
         return null;
     }
 
+    public UserInfo enrichUserInfo(UserInfo userInfo) {
+        List<String> userGroups = this.getUserGroup(userInfo.getUsername());
+        Set<String> permissions = this.getGroupPermission(userGroups);
+        userInfo.setPermissions(permissions);
+        return userInfo;
+    }
+
     public AuthenticationSuccessHandler loginSuccessHandler() {
         return (request, response, authentication) -> {
             response.setStatus(HttpStatus.OK.value());
