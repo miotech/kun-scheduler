@@ -3,6 +3,7 @@ package com.miotech.kun.security.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.RequestResult;
+import com.miotech.kun.security.common.LdapUserIdAttributesMapper;
 import com.miotech.kun.security.model.bo.UserInfo;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.util.Constants;
@@ -21,6 +22,7 @@ import org.springframework.security.web.authentication.logout.LogoutSuccessHandl
 import org.springframework.stereotype.Service;
 
 import javax.naming.directory.SearchControls;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,10 +61,11 @@ public class SecurityService implements InitializingBean {
 
     public List<String> getUsersFromGroup(String group) {
         String filter = new EqualsFilter("cn", group).encode();
-        return ldapTemplate.search(groupSearchBase,
+
+        return Arrays.asList(ldapTemplate.search(groupSearchBase,
                 filter,
-                SearchControls.OBJECT_SCOPE,
-                (AttributesMapper<String>) attributes -> (String) attributes.get("uid").get());
+                SearchControls.SUBTREE_SCOPE,
+                new LdapUserIdAttributesMapper()).get(0).split(","));
     }
 
     public List<String> getSameGroupUsers(String username) {
