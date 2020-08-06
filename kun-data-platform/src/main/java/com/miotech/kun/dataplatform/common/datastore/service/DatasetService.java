@@ -1,10 +1,10 @@
 package com.miotech.kun.dataplatform.common.datastore.service;
 
 import com.miotech.kun.dataplatform.common.datastore.dao.DatasetDao;
-import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskDefinitionProps;
 import com.miotech.kun.dataplatform.common.datastore.vo.DatasetSearchRequest;
 import com.miotech.kun.dataplatform.common.datastore.vo.DatasetVO;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
+import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskDefinitionProps;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.model.datastore.TaskDataset;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDatasetProps;
@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -48,16 +47,25 @@ public class DatasetService {
         );
 
         Map<Long, TaskDefinition> definitionMap = definitions.stream()
-                .collect(Collectors.toMap(TaskDefinition::getDefinitionId, Function.identity()));
-        List<DatasetVO> vos = datasets.stream()
-                .map( x -> new DatasetVO(
-                        x.getDatastoreId(),
-                        x.getDatasetName(),
-                        Collections.singletonList(new TaskDefinitionProps(
-                                x.getDefinitionId(),
-                                definitionMap.get(x.getDefinitionId()).getName()
-                        ))
-                ))
+                .collect(Collectors.toMap(TaskDefinition::getDefinitionId,
+                        Function.identity()));
+
+        // group by datastoreId and name
+        List<DatasetVO> vos = datasets
+        .stream()
+        .collect(Collectors.groupingBy(TaskDataset::getDatastoreId,
+                Collectors.groupingBy(TaskDataset::getDatasetName, Collectors.toSet())))
+                .entrySet()
+                .stream()
+                .flatMap( x -> x.getValue().entrySet().stream()
+                .map( t -> new DatasetVO(
+                        x.getKey(),
+                        t.getKey(),
+                        t.getValue().stream().map(s -> new TaskDefinitionProps(
+                                s.getDefinitionId(),
+                                definitionMap.get(s.getDefinitionId()).getName()
+                        )).collect(Collectors.toList())
+                ) ))
         .collect(Collectors.toList());
         return vos;
     }

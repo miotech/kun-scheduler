@@ -53,9 +53,6 @@ public class TaskDefinitionService extends BaseSecurityService {
     private DatasetService datasetService;
 
     @Autowired
-    private UserService userService;
-
-    @Autowired
     private WorkflowClient workflowClient;
 
     public TaskDefinition find(Long taskDefId) {
@@ -87,6 +84,7 @@ public class TaskDefinitionService extends BaseSecurityService {
         Preconditions.checkNotNull(taskTemplateService.find(taskTemplateName), "task template name not valid");
 
         Long currentUser = getCurrentUser().getId();
+        Preconditions.checkNotNull(currentUser, "Current user id should not be `null`");
         TaskPayload taskPayload = TaskPayload.newBuilder()
                 .withScheduleConfig(ScheduleConfig.newBuilder()
                         .withInputNodes(ImmutableList.of())
