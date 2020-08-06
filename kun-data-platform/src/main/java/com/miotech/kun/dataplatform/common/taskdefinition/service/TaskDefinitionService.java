@@ -78,6 +78,7 @@ public class TaskDefinitionService extends BaseSecurityService {
     }
 
     public TaskDefinition create(CreateTaskDefinitionRequest props) {
+        Preconditions.checkNotNull(props);
         String taskName = props.getName();
         Preconditions.checkNotNull(taskName, "task definition name should be null");
 
@@ -101,7 +102,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                 .withTaskTemplateName(taskTemplateName)
                 .withTaskPayload(taskPayload)
                 .withArchived(false)
-                .withOwner(-1L)
+                .withOwner(currentUser)
                 .withCreator(currentUser)
                 .withLastModifier(currentUser)
                 .withCreateTime(DateTimeUtils.now())
@@ -122,6 +123,10 @@ public class TaskDefinitionService extends BaseSecurityService {
     @Transactional
     public TaskDefinition update(Long definitionId,
                                  UpdateTaskDefinitionRequest request) {
+        Preconditions.checkArgument(StringUtils.isNoneBlank(request.getName()), "name should not be empty");
+        Preconditions.checkNotNull(request.getOwner(), "owner should not be `null`");
+        Preconditions.checkNotNull(request.getTaskPayload(), "taskPayload should not be `null`");
+
         TaskDefinition taskDefinition = find(definitionId);
         TaskDefinition updated = taskDefinition.cloneBuilder()
                 .withTaskPayload(request.getTaskPayload())
@@ -152,7 +157,7 @@ public class TaskDefinitionService extends BaseSecurityService {
      * check all  required params has been filled in
      */
     private void checkParams(TaskTemplate taskTemplate, Map<String, Object> taskConfig) {
-        Preconditions.checkNotNull(taskConfig);
+        Preconditions.checkNotNull(taskConfig, "taskConfig should not be `null`");
         List<String> requiredParameterNames = taskTemplate.getDisplayParameters()
                 .stream()
                 .filter(ParameterDefinition::isRequired)
@@ -171,8 +176,8 @@ public class TaskDefinitionService extends BaseSecurityService {
     }
 
     private void checkSchedule(TaskDefinition taskDefinition) {
-        Preconditions.checkNotNull(taskDefinition.getTaskPayload());
-        Preconditions.checkNotNull(taskDefinition.getTaskPayload().getScheduleConfig());
+        Preconditions.checkNotNull(taskDefinition.getTaskPayload(), "taskPayload should not be `null`");
+        Preconditions.checkNotNull(taskDefinition.getTaskPayload().getScheduleConfig(), "scheduleConfig should not be `null`");
 
         ScheduleConfig scheduleConfig = taskDefinition.getTaskPayload()
                 .getScheduleConfig();
@@ -295,7 +300,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                 log.getStartLine(),
                 log.getEndLine(),
                 log.getLogs(),
-                (status.isFailure() || status.isSuccess()),
+                status.isFinished(),
                 status
         );
     }
@@ -306,23 +311,23 @@ public class TaskDefinitionService extends BaseSecurityService {
         return mapVO(taskDefinition, commitStatus);
     }
 
-    public List<TaskDefinitionVO> convertToVOList(List<TaskDefinition> taskDefinitions) {
+    public List<TaskDefinitionVO> convertToVOList(List<TaskDefinition> taskDefinitions, boolean withTaskPayload) {
         Map<Long, Boolean> commitStatus = taskCommitService.getLatestCommitStatus(
                 taskDefinitions.stream()
                         .map(TaskDefinition::getDefinitionId)
                         .collect(Collectors.toList())
         );
         return taskDefinitions.stream()
-                .map(taskDefinition -> mapVO(taskDefinition, commitStatus, null))
+                .map(taskDefinition -> mapVO(taskDefinition, commitStatus, null, withTaskPayload))
                 .collect(Collectors.toList());
     }
 
     private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus) {
         List<Long> upstreamDefinitionIds = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
-        return mapVO(taskDefinition, commitStatus, taskDefinitionDao.fetchByIds(upstreamDefinitionIds));
+        return mapVO(taskDefinition, commitStatus, taskDefinitionDao.fetchByIds(upstreamDefinitionIds), true);
     }
 
-    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, List<TaskDefinition> taskDefinitions) {
+    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, List<TaskDefinition> taskDefinitions, boolean withTaskPayload) {
         List<TaskDefinitionProps> taskDefinitionProps;
         if (CollectionUtils.isEmpty(taskDefinitions)){
             List<Long> upstreamDefinitionIds = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
@@ -339,7 +344,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                 taskDefinition.getDefinitionId(),
                 taskDefinition.getName(),
                 taskDefinition.getTaskTemplateName(),
-                taskDefinition.getTaskPayload(),
+                withTaskPayload ? taskDefinition.getTaskPayload(): null,
                 taskDefinition.getCreator(),
                 taskDefinition.isArchived(),
                 commitStatus.get(taskDefinition.getDefinitionId()),

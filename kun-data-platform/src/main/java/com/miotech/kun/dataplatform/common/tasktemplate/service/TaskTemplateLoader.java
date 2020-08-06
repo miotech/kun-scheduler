@@ -1,6 +1,5 @@
 package com.miotech.kun.dataplatform.common.tasktemplate.service;
 
-import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.dataplatform.common.tasktemplate.dao.TaskTemplateDao;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
@@ -9,24 +8,26 @@ import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
 public class TaskTemplateLoader {
 
     private final WorkflowClient workflowClient;
-    private final Map<String, TaskTemplate> taskTemplateMap;
     private final List<TaskTemplate> taskTemplates;
     private final ResourcePatternResolver resourceResolver;
     private final TaskTemplateDao taskTemplateDao;
@@ -38,10 +39,9 @@ public class TaskTemplateLoader {
         this.taskTemplateDao = taskTemplateDao;
         this.workflowClient = workflowClient;
         this.taskTemplates = loadTaskTemplates();
-        taskTemplateMap = taskTemplates.stream()
-                    .collect(Collectors.toMap(TaskTemplate::getName, Function.identity()));
     }
 
+    @PostConstruct
     public void persistTemplates() {
         this.taskTemplates.forEach(x -> {
             Optional<TaskTemplate> templateOptional =
@@ -81,14 +81,19 @@ public class TaskTemplateLoader {
                             operatorName,
                             taskTemplate.getOperator());
                     log.info("Load and update operator \"{}\"-\"{}\"", updated.getName(), updated.getId());
-                    File resourceFile = new File(f.getFile().getParent() +  "/" + taskTemplate.getJarPath());
                     if (CollectionUtils.isEmpty(updated.getConfigDef())
-                            && resourceFile.exists()
-                            && resourceFile.getPath().endsWith("jar")) {
-                        workflowClient.updateOperatorJar(operatorName, resourceFile);
-                        updated = workflowClient.getOperator(operatorName).get();
-                        Preconditions.checkNotNull(updated.getConfigDef(), "Operator ConfigDef should not be null");
+                            && StringUtils.isNoneEmpty(taskTemplate.getJarPath())) {
+                        File resourceFile = new File(f.getFile().getParent() +  "/" + taskTemplate.getJarPath());
+                        if ( resourceFile.exists()
+                                && resourceFile.getPath().endsWith("jar")) {
+                            workflowClient.updateOperatorJar(operatorName, resourceFile);
+                            updated = workflowClient.getOperator(operatorName).get();
+                        }
                     }
+                    if (updated.getConfigDef() == null) {
+                        log.warn("Operator \"{}\" ConfigDef is `null`, might not be initialized", updated.getName());
+                    }
+
                     result.add(taskTemplate
                             .cloneBuilder()
                             .withOperator(updated)
@@ -101,5 +106,4 @@ public class TaskTemplateLoader {
             return result;
         }
     }
-
 }

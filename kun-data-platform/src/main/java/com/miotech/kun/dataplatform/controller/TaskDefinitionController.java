@@ -1,6 +1,5 @@
 package com.miotech.kun.dataplatform.controller;
 
-import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployService;
@@ -36,12 +35,11 @@ public class TaskDefinitionController {
     @PostMapping("/task-definitions")
     @ApiOperation("Create TaskDefinition")
     public RequestResult<TaskDefinitionVO> createTaskDefinition(@RequestBody CreateTaskDefinitionRequest props) {
-        Preconditions.checkNotNull(props);
         TaskDefinition taskDefinition = taskDefinitionService.create(props);
         return RequestResult.success(taskDefinitionService.convertToVO(taskDefinition));
     }
 
-    @GetMapping("/task-definitions")
+    @GetMapping("/task-definitions/_search")
     @ApiOperation("Search TaskDefinitions")
     public RequestResult<PaginationResult<TaskDefinitionVO>> searchAllTaskDefinitions(
             @RequestParam(defaultValue = "1") int pageNum,
@@ -66,16 +64,23 @@ public class TaskDefinitionController {
                 taskDefintions.getPageSize(),
                 taskDefintions.getPageNum(),
                 taskDefintions.getTotalCount(),
-                taskDefinitionService.convertToVOList(taskDefintions.getRecords())
+                taskDefinitionService.convertToVOList(taskDefintions.getRecords(), true)
         );
         return RequestResult.success(result);
     }
 
+    @GetMapping("/task-definitions")
+    @ApiOperation("List all TaskDefinitions")
+    public RequestResult<List<TaskDefinitionVO>> listAllTaskDefinitions() {
+        List<TaskDefinition> taskDefintions = taskDefinitionService.findAll();
+        return RequestResult.success(taskDefinitionService.convertToVOList(taskDefintions, false));
+    }
+
     @PutMapping("/task-definitions/{id}")
     @ApiOperation("Update TaskDefinition")
-    public RequestResult<TaskDefinition> updateTaskDefinitionDetail(@PathVariable Long id,
+    public RequestResult<TaskDefinitionVO> updateTaskDefinitionDetail(@PathVariable Long id,
                                                      @RequestBody UpdateTaskDefinitionRequest request) {
-        return RequestResult.success(taskDefinitionService.update(id, request));
+        return RequestResult.success(taskDefinitionService.convertToVO(taskDefinitionService.update(id, request)));
     }
 
     @GetMapping("/task-definitions/{id}")

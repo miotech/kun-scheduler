@@ -10,7 +10,8 @@
   },
   "defaultValues": {
     "livyHost": "http://<livy_ip>:8998",
-    "dataStoreUrl": "s3://com.miotech.data.prd/Database/DM"
+    "dataStoreUrl": "s3://com.miotech.data.prd/Database/DM",
+    "variables": "{}"
   },
   "displayParameters": [{
     "name": "sparkSQL",

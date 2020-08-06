@@ -6,6 +6,7 @@ import com.miotech.kun.workflow.client.model.ConfigKey;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +15,9 @@ import java.util.stream.Collectors;
 @Component
 public class SparkConfigTaskTemplateRender extends TaskTemplateRenderer {
 
-    private static final String KUN_DATA_PLATFORM_CONFIG_PREFIX = "kun.dataplatform.";
+    private static final String KUN_DATA_PLATFORM_CONFIG_PREFIX = "kun.dataplatform";
     private static final String SPARK_CONFIG_KEY = "sparkConf";
+    private static final String SPARK_JAVA_OPTIONS_KEY = "spark.driver.extraJavaOptions";
 
     @Override
     public TaskConfig render(Map<String, Object> taskConfig, TaskTemplate taskTemplate) {
@@ -26,29 +28,45 @@ public class SparkConfigTaskTemplateRender extends TaskTemplateRenderer {
                 .build();
     }
 
-    private Map<String, Object> buildSparkConfig(Map<String, Object> taskConfig, TaskTemplate taskTemplate) {
+    @Override
+    public Map<String, Object> buildTaskConfig(Map<String, Object> taskConfig, TaskTemplate taskTemplate) {
+        Map<String, Object> configMap = super.buildTaskConfig(taskConfig, taskTemplate);
+        for (String key: taskConfig.keySet()) {
+            if (!configMap.containsKey(key)) {
+                configMap.put(key, taskConfig.get(key));
+            }
+        }
         List<String> paramKeys = taskTemplate
                 .getOperator()
                 .getConfigDef()
                 .stream()
                 .map(ConfigKey::getName)
                 .collect(Collectors.toList());
-        Map<String, Object> config = new HashMap<>();
-        if (taskConfig.containsKey(SPARK_CONFIG_KEY) &&
+        Map<String, Object> config = new HashMap<>(configMap);
+        if (configMap.containsKey(SPARK_CONFIG_KEY) &&
                 paramKeys.contains(SPARK_CONFIG_KEY)) {
-            Map<String, String> sparkConfig = JSONUtils.jsonStringToStringMap((String) taskConfig.get(SPARK_CONFIG_KEY));
+            Map<String, String> sparkConfig;
+            if (configMap.get(SPARK_CONFIG_KEY) instanceof String) {
+                sparkConfig = JSONUtils.jsonStringToStringMap((String) configMap.get(SPARK_CONFIG_KEY));
+            } else {
+                sparkConfig = (Map<String, String>) configMap.get(SPARK_CONFIG_KEY);
+            }
 
             // add extra parameter into sparkConf
-            for (String key: taskConfig.keySet()) {
+            Map<String, Object> extraConfig = new HashMap<>();
+            for (String key: configMap.keySet()) {
                 if (!paramKeys.contains(key)) {
-                    sparkConfig.put(KUN_DATA_PLATFORM_CONFIG_PREFIX + key, taskConfig.get(key).toString());
-                } else if (!key.equals(SPARK_CONFIG_KEY)){
-                    config.put(key, taskConfig.get(key));
+                    extraConfig.put(key, configMap.get(key));
                 }
             }
+            String encodedString = Base64.getEncoder().encodeToString(JSONUtils.toJsonString(extraConfig).getBytes());
+
+            String extraJavaOptions = sparkConfig.getOrDefault(SPARK_JAVA_OPTIONS_KEY, "");
+            extraJavaOptions += String.format(" -D%s=%s", KUN_DATA_PLATFORM_CONFIG_PREFIX, encodedString);
+            sparkConfig.put(SPARK_JAVA_OPTIONS_KEY, extraJavaOptions);
             config.put(SPARK_CONFIG_KEY, JSONUtils.toJsonString(sparkConfig));
         } else {
-            config.putAll(taskConfig);
+            config.putAll(configMap);
         }
         return config;
     }

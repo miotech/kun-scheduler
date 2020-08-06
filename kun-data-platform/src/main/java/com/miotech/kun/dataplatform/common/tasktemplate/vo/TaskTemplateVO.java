@@ -4,6 +4,7 @@ import com.miotech.kun.dataplatform.model.tasktemplate.ParameterDefinition;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 public class TaskTemplateVO {
@@ -15,6 +16,8 @@ public class TaskTemplateVO {
     private final String templateGroup;
 
     private final List<ParameterDefinition> displayParameters;
+
+    private final Map<String, Object> defaultValues;
 
     private final String renderClassName;
 }

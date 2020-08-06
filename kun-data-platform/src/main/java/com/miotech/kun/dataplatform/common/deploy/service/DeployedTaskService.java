@@ -211,7 +211,9 @@ public class DeployedTaskService {
         Preconditions.checkArgument(request.getPageSize() > 0, "page size should be a positive number");
         TaskRunSearchRequest.Builder searchRequestBuilder = TaskRunSearchRequest.newBuilder()
                 .withPageNum(request.getPageNum())
-                .withPageSize(request.getPageSize());
+                .withPageSize(request.getPageSize())
+                .withDateFrom(request.getStartTime())
+                .withDateTo(request.getEndTime());
         // fetch workflow ids using deployed tasks
         if (!request.getDefinitionIds().isEmpty()) {
             List<Long> taskIds = deployedTaskDao.fetchWorkflowTaskId(request.getDefinitionIds());

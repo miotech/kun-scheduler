@@ -9,6 +9,9 @@ verify-kun-data-platform-test:
     - tags
   allow_failure: false
   script:
+    - export DOCKER_TLS_VERIFY=1
+    - export DOCKER_CERT_PATH=/home/root/.docker/certs
+    - export DOCKER_CONFIG=/home/root/.docker
     - ./gradlew check -p kun-data-platform
 
 verify-kun-data-platform-sonar:

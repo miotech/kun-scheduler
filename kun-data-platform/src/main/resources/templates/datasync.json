@@ -1,0 +1,64 @@
+{
+  "name": "DataSync",
+  "templateType": "spark",
+  "templateGroup": "dataIntegration",
+  "operator": {
+    "name": "Spark_Operator",
+    "description": "Spark Operator",
+    "className": "com.miotech.kun.workflow.operator.SparkOperator"
+  },
+  "displayParameters": [
+    {
+      "name": "sourceDataSource",
+      "type": "datasource",
+      "required": true,
+      "displayName": "Source datasource"
+    },
+    {
+      "name": "sourceDatasetName",
+      "type": "string",
+      "required": true,
+      "displayName": "Source dataset name"
+    },
+    {
+      "name": "targetDataSource",
+      "type": "datasource",
+      "required": true,
+      "displayName": "Target datasource"
+    },
+    {
+      "name": "targetDatasetName",
+      "type": "string",
+      "required": true,
+      "displayName": "Target dataset name"
+    },
+    {
+      "name": "writeMode",
+      "type": "string",
+      "required": true,
+      "displayName": "write mode"
+    },
+    {
+      "name": "preScript",
+      "type": "text",
+      "required": false,
+      "displayName": "Script before sync"
+    },
+    {
+      "name": "postScript",
+      "type": "text",
+      "required": false,
+      "displayName": "Script after sync"
+    }
+  ],
+  "defaultValues": {
+    "args": "-c com.miotech.spark.etl.operator.DataSyncOperator",
+    "jars": "",
+    "files": "s3://com.miotech.data.prd/Project/miotech/spark-etl-operator/release/spark-etl-operator-1.0-SNAPSHOT.jar",
+    "livyHost": "http://<livy_ip>:8998",
+    "sparkConf": "{}",
+    "variables": "{}",
+    "application": "com.miotech.spark.etl.Application"
+  },
+  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkConfigTaskTemplateRender"
+}
