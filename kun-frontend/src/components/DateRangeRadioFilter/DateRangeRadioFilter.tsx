@@ -54,7 +54,8 @@ function DateRangeRadioFilter({
         <span
           className={c(css.option, {
             [css.isActive]:
-              defaultStartDate === startDate && defaultEndDate === endDate,
+              (defaultStartDate === startDate && defaultEndDate === endDate) ||
+              (!startDate && !endDate && !defaultStartDate && !defaultEndDate),
           })}
           onClick={() => {
             onChange({
