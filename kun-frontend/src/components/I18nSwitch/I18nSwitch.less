@@ -1,0 +1,23 @@
+.I18nSwitch {
+  display: flex;
+  align-items: center;
+}
+.i18nItem {
+  margin: 0 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  .font(14px, 20px, @grayFontColor);
+  &:hover {
+    font-weight: bold;
+    color: @darkGray;
+  }
+
+  &.active {
+    cursor: default;
+    color: @darkBlue;
+    &:hover {
+      font-weight: normal;
+      color: @darkBlue;
+    }
+  }
+}
