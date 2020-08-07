@@ -2,7 +2,6 @@ package com.miotech.kun.security.common;
 
 import com.miotech.kun.security.service.BaseSecurityService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,11 +35,11 @@ public class LogInterceptor extends HandlerInterceptorAdapter {
         String parameters = mapToString(request.getParameterMap());
         parameters = new StringJoiner("", "[", "]").add(parameters).toString();
 
-        String requestBody = "";
+        /*String requestBody = "";
         if (request.getReader() != null && request.getReader().ready()) {
             requestBody = IOUtils.toString(request.getReader());
         }
-        requestBody = new StringJoiner("", "[", "]").add(requestBody).toString();
+        requestBody = new StringJoiner("", "[", "]").add(requestBody).toString();*/
 
         String username = securityService.getCurrentUsername();
         username = new StringJoiner("", "[", "]").add(username).toString();
@@ -54,8 +53,8 @@ public class LogInterceptor extends HandlerInterceptorAdapter {
         stringBuilder.append(method);
         stringBuilder.append(" Parameters=");
         stringBuilder.append(parameters);
-        stringBuilder.append(" Body=");
-        stringBuilder.append(requestBody);
+        /*stringBuilder.append(" Body=");
+        stringBuilder.append(requestBody);*/
         log.info(stringBuilder.toString());
         return super.preHandle(request, response, handler);
     }
