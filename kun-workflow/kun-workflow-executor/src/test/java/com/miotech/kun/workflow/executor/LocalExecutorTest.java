@@ -113,6 +113,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
         Resource log = resourceLoader.getResource(attemptProps.getLogPath());
         String content = ResourceUtils.content(log.getInputStream());
         assertThat(content, containsString("Hello, world!"));
+        assertThat(content, containsString("URLClassLoader"));
+        assertThat(content, not(containsString("AppClassLoader")));
 
         // events
         assertStatusProgress(attempt.getId(),

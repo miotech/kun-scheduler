@@ -52,6 +52,9 @@ public class OperatorLauncher {
     }
 
     private ExecResult execute(ExecCommand command) {
+        Thread thread = Thread.currentThread();
+        ClassLoader cl = thread.getContextClassLoader();
+
         try {
             // 初始化
             initLogger(command.getLogPath());
@@ -59,6 +62,7 @@ public class OperatorLauncher {
             // 加载Operator
             operator = loadOperator(command.getJarPath(), command.getClassName());
             operator.setContext(initContext(command));
+            thread.setContextClassLoader(operator.getClass().getClassLoader());
 
             if (cancelled) {
                 logger.info("Operator is cancelled, abort execution.");
@@ -90,6 +94,8 @@ public class OperatorLauncher {
         } catch (Throwable e) {
             logger.error("Unexpected exception occurred.", e);
             return failedResult();
+        } finally {
+            thread.setContextClassLoader(cl);
         }
     }
 
