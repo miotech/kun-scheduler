@@ -7,7 +7,7 @@ export default function useBackUrlFunc() {
 
   // 此处 umi 的bug, type声明中没有 query
   const backUrl: string | null = useMemo(
-    () => (history.location as any)?.query?.backUrl ?? null,
+    () => decodeURIComponent((history.location as any)?.query?.backUrl ?? ''),
     [history.location],
   );
 
