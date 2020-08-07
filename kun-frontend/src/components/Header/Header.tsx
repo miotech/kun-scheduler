@@ -8,6 +8,7 @@ import logo from '@/assets/images/kun-logo.png';
 
 import useI18n from '@/hooks/useI18n';
 
+import I18nSwitch from '../I18nSwitch/I18nSwitch';
 import css from './Header.less';
 
 const { Header: AntdHeader } = Layout;
@@ -41,6 +42,9 @@ export default memo(function Header() {
         <img className={css.logoImage} src={logo} alt="Logo" />
         <span className={css.appName}>{t('common.app.name')}</span>
       </span>
+
+      <I18nSwitch className={css.i18nSwitch} />
+
       {selector.isLogin ? (
         <Dropdown trigger={['click']} overlay={dropdownMenu}>
           <span className={css.userInfo}>
