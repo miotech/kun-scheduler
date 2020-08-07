@@ -57,6 +57,10 @@ public class RequestResult<T> {
         return error(ErrorCode.FAILED.getCode(), ErrorCode.FAILED.getNote());
     }
 
+    public static <T> RequestResult<T> error(ErrorCode errorCode) {
+        return error(errorCode.getCode(), errorCode.getNote());
+    }
+
     public static <T> RequestResult<T> error(String note) {
         return error(ErrorCode.FAILED.getCode(), note);
     }

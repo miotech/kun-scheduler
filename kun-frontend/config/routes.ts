@@ -111,7 +111,7 @@ export const appRoutes = [
         path: '/pdf',
         menuDisplay: true,
         icon: 'FilePdfOutlined',
-        permissions: ['PDF_GENERAL', 'PDF_COA'],
+        permissions: ['PDF_GENERAL'],
         routes: [
           {
             title: 'common.pageTitle.pdfExtract',
@@ -176,6 +176,33 @@ export const appRoutes = [
           //   menuDisplay: true,
           //   wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
           // },
+        ],
+      },
+      {
+        title: 'common.pageTitle.pdfExtract',
+        path: '/pdf-extract',
+        menuDisplay: true,
+        icon: 'FilePdfOutlined',
+        permissions: ['PDF_COA'],
+        routes: [
+          {
+            title: 'common.pageTitle.pdfExtract',
+            path: '.',
+            component: 'pdf-new/index',
+            breadcrumbLink: true,
+            exact: true,
+            menuDisplay: true,
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+          },
+          {
+            title: 'common.pageTitle.pdfExtract',
+            path: './file-task/:fileTaskId',
+            component: 'pdf/pdfFileTask/index',
+            breadcrumbLink: true,
+            exact: true,
+            menuDisplay: true,
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+          },
         ],
       },
       {

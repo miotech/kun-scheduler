@@ -8,6 +8,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'java'
     id "org.sonarqube" version "2.7"
+    id "com.gorylenko.gradle-git-properties" version "2.2.3"
 }
 
 apply plugin: "com.bmuschko.docker-remote-api"

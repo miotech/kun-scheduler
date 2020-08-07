@@ -1,10 +1,12 @@
 package com.miotech.kun.workflow.executor.mock;
 
-import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * An operator simulating a task with 20 seconds execution duration
@@ -15,11 +17,8 @@ public class TestOperator5 extends KunOperator {
 
     @SuppressWarnings("java:S2925")
     public boolean run() {
-        try {
-            Thread.sleep(20000);
-        } catch (InterruptedException e) {
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
+        logger.info("START RUNNING");
+        Uninterruptibles.sleepUninterruptibly(20000, TimeUnit.MILLISECONDS);
         return true;
     }
 

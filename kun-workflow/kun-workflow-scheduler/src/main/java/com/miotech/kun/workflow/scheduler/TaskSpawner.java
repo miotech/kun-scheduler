@@ -37,7 +37,7 @@ import static java.lang.String.format;
 public class TaskSpawner {
     private static final Logger logger = LoggerFactory.getLogger(TaskSpawner.class);
 
-    private final TaskRunner taskRunner;
+    private final TaskManager taskManager;
 
     private final TaskRunDao taskRunDao;
 
@@ -46,17 +46,17 @@ public class TaskSpawner {
     private final EventBus eventBus;
 
     private final Deque<TaskGraph> graphs;
-    private final TaskSpawnerEventLoop eventLoop;
+    private final InnerEventLoop eventLoop;
 
     @Inject
-    public TaskSpawner(TaskRunner taskRunner, TaskRunDao taskRunDao, OperatorService operatorService, EventBus eventBus) {
-        this.taskRunner = taskRunner;
+    public TaskSpawner(TaskManager taskManager, TaskRunDao taskRunDao, OperatorService operatorService, EventBus eventBus) {
+        this.taskManager = taskManager;
         this.taskRunDao = taskRunDao;
         this.operatorService = operatorService;
         this.eventBus = eventBus;
 
         this.graphs = new ConcurrentLinkedDeque<>();
-        this.eventLoop = new TaskSpawnerEventLoop();
+        this.eventLoop = new InnerEventLoop();
         this.eventBus.register(this.eventLoop);
         this.eventLoop.start();
     }
@@ -113,7 +113,7 @@ public class TaskSpawner {
         return results;
     }
 
-    private TaskRun createTaskRun(Task task, Tick tick, Map<String, String> runtimeConfig, List<TaskRun> others) {
+    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> others) {
         TaskRun taskRun = TaskRun.newBuilder()
                 .withId(WorkflowIdGenerator.nextTaskRunId())
                 .withTask(task)
@@ -134,10 +134,15 @@ public class TaskSpawner {
                 }).collect(Collectors.toList());
     }
 
-    private Config prepareConfig(Task task, Config defaultConfig, Map<String, String> runtimeConfig) {
+    private Config prepareConfig(Task task, Config defaultConfig, Map<String, Object> runtimeConfig) {
         ConfigDef configDef = operatorService.getOperatorConfigDef(task.getOperatorId());
-        Config rtConfig = new Config(configDef, runtimeConfig);
-        Config finalConfig = defaultConfig.overrideBy(rtConfig);
+        Config rtConfig = new Config(runtimeConfig);
+
+        Map<String, String> defaultValues = new HashMap<>();
+        for(String k : defaultConfig.getValues().keySet()) {
+            defaultValues.put(k, defaultConfig.getValues().get(k).toString());
+        }
+        Config finalConfig = new Config(configDef, defaultValues).overrideBy(rtConfig);
         validateConfig(configDef, finalConfig, rtConfig);
         return finalConfig;
     }
@@ -161,11 +166,11 @@ public class TaskSpawner {
     }
 
     private void submit(List<TaskRun> taskRuns) {
-        taskRunner.submit(taskRuns);
+        taskManager.submit(taskRuns);
     }
 
-    private class TaskSpawnerEventLoop extends EventLoop<Long, Event> {
-        public TaskSpawnerEventLoop() {
+    private class InnerEventLoop extends EventLoop<Long, Event> {
+        public InnerEventLoop() {
             super("task-spawner");
             addConsumers(Lists.newArrayList(
                     new EventConsumer<Long, Event>() {

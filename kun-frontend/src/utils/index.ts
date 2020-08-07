@@ -5,11 +5,14 @@ export const getUUID = (namespace: string = 'namespace') => {
 };
 
 export const ellipsisString = (
-  text: string,
+  text?: string,
   length: number = 50,
   startWordCount: number = 15,
   endWordCount: number = 15,
 ) => {
+  if (!text) {
+    return '';
+  }
   if (text.length <= length) {
     return text;
   }
@@ -47,3 +50,7 @@ export const hasOptionalPermissions = (
   return has;
 };
 
+// 判断是否支持全屏
+export const isFullscreenEnabled = () => document.fullscreenEnabled;
+// 判断是否全屏
+export const isFullscreen = () => document.fullscreenElement;

@@ -41,6 +41,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${security.pass-token}")
     private String passToken;
 
+    @Value("${security.pdf-coa-pass-token}")
+    private String pdfCoaPassToken;
+
     private String apiPrefix = "/kun/api";
 
     @Override
@@ -88,6 +91,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         authenticationFilter.setAuthenticationManager(authenticationManagerBean());
         authenticationFilter.setSecurityService(securityService);
         authenticationFilter.setPassToken(passToken);
+        authenticationFilter.setPdfCoaPassToken(pdfCoaPassToken);
         return authenticationFilter;
     }
 

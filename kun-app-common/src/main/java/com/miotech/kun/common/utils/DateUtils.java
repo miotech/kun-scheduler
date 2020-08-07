@@ -40,4 +40,8 @@ public class DateUtils {
     public static LocalDateTime millisToLocalDateTime(long millis) {
         return LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC);
     }
+
+    public static LocalDateTime getCurrentTime() {
+        return millisToLocalDateTime(System.currentTimeMillis());
+    }
 }

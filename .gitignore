@@ -11,7 +11,6 @@
 /subprojects/docs/src/snippets/**/build
 /subprojects/internal-android-performance-testing/build-android-libs
 
-
 **/.gradle
 **/build
 **/out
@@ -23,6 +22,9 @@
 **/subprojects/docs/src/snippets/**/build
 **/subprojects/internal-android-performance-testing/build-android-libs
 **/target
+**/__pycache__
+*.pyc
+**/pdf-temp
 
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf

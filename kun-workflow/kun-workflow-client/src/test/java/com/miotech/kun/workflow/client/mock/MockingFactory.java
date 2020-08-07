@@ -8,6 +8,7 @@ import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 
 import java.util.ArrayList;
 
@@ -48,6 +49,8 @@ public class MockingFactory {
         return TaskRun.newBuilder()
                 .withId(1L)
                 .withTask(mockTask())
+                .withStartAt(DateTimeUtils.now())
+                .withEndAt(DateTimeUtils.now())
                 .build();
     }
 

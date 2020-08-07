@@ -25,6 +25,10 @@ public abstract class BaseRepository {
 
     public static final String DO_NOTHING = "do nothing";
 
+    public String wrapSql(String sql) {
+        return sql + "\n";
+    }
+
     public int getOffset(int pageNumber, int pageSize) {
         return (pageNumber - 1) * pageSize;
     }
