@@ -1,10 +1,15 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { Input, Button, message, Form } from 'antd';
-import { Store } from 'antd/lib/form/interface';
 import { useDispatch } from 'react-redux';
-import { RootDispatch } from '@/rematch/store';
-
 import useI18n from '@/hooks/useI18n';
+
+import { LoginLayout } from '@/layouts/LoginLayout';
+import { LoginFooter } from '@/pages/login/LoginFooter';
+
+import { RootDispatch } from '@/rematch/store';
+import { Store } from 'antd/lib/form/interface';
+
+import kunLogo from '@/assets/images/kun-logo.png';
 
 import css from './index.less';
 
@@ -14,12 +19,13 @@ export interface LoginParams {
 }
 
 const layout = {
-  labelCol: { span: 8 },
-  wrapperCol: { span: 16 },
+  wrapperCol: { span: 24 },
 };
 const tailLayout = {
   wrapperCol: { offset: 8, span: 16 },
 };
+
+const displayFooter = true;
 
 export default function Login() {
   const t = useI18n();
@@ -39,44 +45,64 @@ export default function Login() {
     handleClickLogin(values);
   };
 
-  return (
-    <div className={css.login}>
-      <div className={css.inputArea}>
-        <h2 style={{ textAlign: 'center', marginBottom: 16 }}>
-          {t('login.welcome')}
-        </h2>
-        <Form
-          {...layout}
-          name="basic"
-          onFinish={onFinish as (values: Store) => void}
-        >
-          <Form.Item
-            label={t('login.userName')}
-            name="username"
-            rules={[
-              { required: true, message: t('login.pleaseInput.username') },
-            ]}
-          >
-            <Input />
-          </Form.Item>
-
-          <Form.Item
-            label={t('login.password')}
-            name="password"
-            rules={[
-              { required: true, message: t('login.pleaseInput.password') },
-            ]}
-          >
-            <Input.Password />
-          </Form.Item>
-
-          <Form.Item {...tailLayout}>
-            <Button type="primary" htmlType="submit">
-              {t('login.confirmButton')}
-            </Button>
-          </Form.Item>
-        </Form>
+  const formContent = useMemo(() => (
+    <div className={css.inputArea}>
+      <div className={css.Logo}>
+        <img className="app-logo" src={kunLogo} alt="kun-logo" />
+        <h4 id="app-name" className="app-name">
+          {t('common.app.name')}
+        </h4>
       </div>
+      <Form
+        {...layout}
+        name="basic"
+        onFinish={onFinish as (values: Store) => void}
+      >
+        <Form.Item
+          name="username"
+          rules={[
+            { required: true, message: t('login.pleaseInput.username') },
+          ]}
+        >
+          <Input
+            size="large"
+            placeholder={t('login.userName')}
+          />
+        </Form.Item>
+
+        <Form.Item
+          name="password"
+          rules={[
+            { required: true, message: t('login.pleaseInput.password') },
+          ]}
+        >
+          <Input.Password
+            size="large"
+            placeholder={t('login.password')}
+          />
+        </Form.Item>
+
+        <Form.Item>
+          <Button
+            size="large"
+            block
+            type="primary"
+            htmlType="submit"
+          >
+            {t('login.confirmButton')}
+          </Button>
+        </Form.Item>
+      </Form>
     </div>
+  ), [
+    onFinish,
+    t,
+  ]);
+
+  return (
+    <LoginLayout>
+      {formContent}
+      {displayFooter ? <LoginFooter /> : null}
+    </LoginLayout>
   );
 }
