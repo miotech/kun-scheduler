@@ -1,5 +1,6 @@
 package com.miotech.kun.security.model.bo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
@@ -10,6 +11,7 @@ import java.util.Set;
 public class UserInfo implements Serializable {
 
     @JsonProperty("id")
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
     private Long id;
 
     @JsonProperty(value = "username", required = true)

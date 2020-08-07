@@ -1,6 +1,8 @@
 package com.miotech.kun.workflow.client.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.miotech.kun.workflow.client.CustomDateTimeSerializer;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
@@ -24,8 +26,10 @@ public class TaskRunSearchRequest {
 
     private final TaskRunStatus status;
 
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private final OffsetDateTime dateFrom;
 
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private final OffsetDateTime dateTo;
 
     private TaskRunSearchRequest(Builder builder) {

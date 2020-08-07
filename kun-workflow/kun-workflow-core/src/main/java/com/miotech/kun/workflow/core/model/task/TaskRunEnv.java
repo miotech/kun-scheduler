@@ -9,13 +9,13 @@ import java.util.Map;
 public class TaskRunEnv {
     public static final TaskRunEnv EMPTY = new TaskRunEnv(Collections.emptyMap());
 
-    private final Map<Long, Map<String, String>> configMap;
+    private final Map<Long, Map<String, Object>> configMap;
 
-    private TaskRunEnv(Map<Long, Map<String, String>> configMap) {
+    private TaskRunEnv(Map<Long, Map<String, Object>> configMap) {
         this.configMap = ImmutableMap.copyOf(configMap);
     }
 
-    public Map<String, String> getConfig(Long taskId) {
+    public Map<String, Object> getConfig(Long taskId) {
         return configMap.getOrDefault(taskId, Collections.emptyMap());
     }
 
@@ -24,12 +24,12 @@ public class TaskRunEnv {
     }
 
     public static final class Builder {
-        private Map<Long, Map<String, String>> configMap = new HashMap<>();
+        private Map<Long, Map<String, Object>> configMap = new HashMap<>();
 
         private Builder() {
         }
 
-        public Builder addConfig(Long taskId, Map<String, String> config) {
+        public Builder addConfig(Long taskId, Map<String, Object> config) {
             configMap.put(taskId, config);
             return this;
         }

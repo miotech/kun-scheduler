@@ -34,6 +34,8 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
     private String passToken;
 
+    private String pdfCoaPassToken;
+
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -41,24 +43,37 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         if (authentication != null
                 && StringUtils.isNotEmpty(authentication.getName())
                 && !StringUtils.equals(authentication.getName(), "anonymousUser")) {
-            UserInfo savedUser = securityService.getOrSave(authentication.getName());
-            UsernamePasswordAuthenticationToken newAuthentication = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(),
-                    authentication.getCredentials(),
-                    authentication.getAuthorities());
-            newAuthentication.setDetails(savedUser);
-            SecurityContextHolder.getContext().setAuthentication(newAuthentication);
-//            String api = req.getApi();
-//            List<String> userGroups = securityService.getUserGroup(savedUser.getUsername());
-//            userGroups.get(0);
-//            List<String> permissions = securityService.getGroupPermission(userGroups);
-//            if (!securityService.checkPermission(, permissions)) {
-//                res.set(401);
-//            }
-        } else if (StringUtils.equals(req.getParameter("pass-token"), passToken)) {
-            SecurityContextHolder.getContext().setAuthentication(new PassToken());
+            if (!StringUtils.equals(ConfigKey.DEFAULT_PASS_TOKEN_KEY, authentication.getName())) {
+                UserInfo savedUser = securityService.getOrSave(authentication.getName());
+                UsernamePasswordAuthenticationToken newAuthentication = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(),
+                        authentication.getCredentials(),
+                        authentication.getAuthorities());
+                newAuthentication.setDetails(savedUser);
+                SecurityContextHolder.getContext().setAuthentication(newAuthentication);
+            }
+        } else if (isEqualToPassToken((HttpServletRequest) req, passToken)) {
+            PassToken passToken = new PassToken();
+            UserInfo userInfo = new UserInfo();
+            userInfo.setUsername(ConfigKey.DEFAULT_PASS_TOKEN_KEY);
+            passToken.setDetails(userInfo);
+            SecurityContextHolder.getContext().setAuthentication(passToken);
+        } else if (isEqualToPassToken((HttpServletRequest) req, pdfCoaPassToken)) {
+            PassToken passToken = new PassToken();
+            UserInfo userInfo = new UserInfo();
+            userInfo.setUsername(ConfigKey.PDF_COA_PASS_TOKEN_KEY);
+            passToken.setDetails(userInfo);
+            SecurityContextHolder.getContext().setAuthentication(passToken);
         }
 
         super.doFilter(req, res, chain);
+    }
+
+    private boolean isEqualToPassToken(HttpServletRequest httpServletRequest,
+                                       String passToken) {
+        String parameterToken = httpServletRequest.getParameter(ConfigKey.REQUEST_PASS_TOKEN_KEY);
+        String headerToken = httpServletRequest.getHeader(ConfigKey.REQUEST_PASS_TOKEN_KEY);
+        return StringUtils.equals(headerToken, passToken)
+                || StringUtils.equals(parameterToken, passToken);
     }
 
     @Override
@@ -86,5 +101,9 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
     public void setPassToken(String passToken) {
         this.passToken = passToken;
+    }
+
+    public void setPdfCoaPassToken(String passToken) {
+        this.pdfCoaPassToken = passToken;
     }
 }

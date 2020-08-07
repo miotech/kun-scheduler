@@ -10,6 +10,7 @@ import com.miotech.kun.workflow.common.taskrun.service.TaskRunService;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.executor.local.thread.TaskAttemptSiftingAppender;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,7 +74,6 @@ public class LocalExecutor implements Executor {
         f.addListener(() -> {
             lookupMap.remove(taskAttempt.getId());
         }, MoreExecutors.directExecutor());
-        tip.setRunFuture(f);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class LocalExecutor implements Executor {
     }
 
     private boolean tryAbortTask(TaskInProgress tip) {
-        Future<Void> runFuture = tip.abort();
+        Future runFuture = tip.abort();
         try {
             runFuture.get(MAX_TIMEOUT_MILLISECONDS, TimeUnit.MILLISECONDS);
             return true;

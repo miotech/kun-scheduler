@@ -124,6 +124,6 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
 
     private boolean runFinished(Long taskRunId) {
         TaskRunStatus taskRunStatus = client.getTaskRunState(taskRunId).getStatus();
-        return taskRunStatus.isSuccess() || taskRunStatus.isFailure();
+        return taskRunStatus.isFinished();
     }
 }

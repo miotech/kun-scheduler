@@ -1,12 +1,44 @@
-.login {
-  height: 100vh;
-  width: 100vw;
-  .flexCenter();
+.inputArea {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -60%);
 
-  .inputArea {
-    width: 400px;
-    padding: 24px;
-    .flexColumn();
-    align-items: stretch;
+  width: 300px;
+  align-items: stretch;
+}
+
+.Logo {
+  text-align: center;
+  margin: 0 auto 35px auto;
+
+  :global {
+    .app-logo {
+      position: relative;
+      right: 15px;
+      margin: 14px auto;
+      width: 160px;
+      height: 67px;
+    }
+
+    .app-name {
+      position: relative;
+      color: @grayFontColor;
+      line-height: 14px;
+      margin: 0;
+    }
   }
+}
+
+.Footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  color: @secondary2;
+}
+
+.MiotechLogo {
+  transform: scale(0.5);
 }

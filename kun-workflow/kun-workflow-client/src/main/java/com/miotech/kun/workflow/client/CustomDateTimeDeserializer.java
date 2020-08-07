@@ -3,26 +3,18 @@ package com.miotech.kun.workflow.client;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 
 public class CustomDateTimeDeserializer extends JsonDeserializer<OffsetDateTime> {
 
     private DateTimeFormatter formatter;
 
     public CustomDateTimeDeserializer() {
-        this(
-              new DateTimeFormatterBuilder()
-                        // date/time
-                        .appendPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
-                        // offset
-                        .appendPattern("XXX")
-                        // create formatter
-                        .toFormatter()
-        );
+        this(DateTimeUtils.ISO_DATETIME_NANO_DATETIME_FORMATTER);
     }
 
     public CustomDateTimeDeserializer(DateTimeFormatter formatter) {

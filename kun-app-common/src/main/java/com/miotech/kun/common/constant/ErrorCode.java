@@ -7,7 +7,8 @@ package com.miotech.kun.common.constant;
 public enum ErrorCode {
 
     SUCCESS(0, "Operation Successful"),
-    FAILED(1, "Operation Failed");
+    FAILED(1, "Operation Failed"),
+    PDF_FILE_NOT_FOUND(2, "PDF file not found");
 
     private final Integer code;
     private final String note;
