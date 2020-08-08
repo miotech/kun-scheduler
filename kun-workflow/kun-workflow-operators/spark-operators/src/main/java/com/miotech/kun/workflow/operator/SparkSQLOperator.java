@@ -15,6 +15,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -100,36 +101,47 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
             if (sessionState.isFinished()) {
                 throw new IllegalStateException(String.format("Session %d is finished, current state: %s", sessionId, sessionState));
             }
-            waitFoSeconds(3);
+            waitForSeconds(3);
         } while (!sessionState.isAvailable());
 
         // launch sql
         String sql = SparkConfiguration.getString(getContext(), SparkConfiguration.CONF_SPARK_SQL);
         sql = replaceWithVariable(sql);
         logger.info("submit user provided sql: {}", sql);
-        Statement stat = livyClient.runSparkSQL(sessionId, sql);
+        List<String> statements = Arrays.asList(sql.split(";"))
+                .stream()
+                .filter(StringUtils::isNoneBlank)
+                .collect(Collectors.toList());
+        for (String s: statements) {
+            Statement stat = livyClient.runSparkSQL(sessionId, s);
 
-        currentActiveStatementId = buildStatementId(sessionId, stat.getId());
-        // wait for statement ended
-        do {
-            stat = livyClient.getStatement(sessionId, stat.getId());
-            logger.debug("Statement: {}", JSONUtils.toJsonString(stat));
-            if (stat == null) {
-                throw new IllegalStateException("Cannot find statement: " + currentActiveStatementId + " . Maybe killed by user termination.");
+            currentActiveStatementId = buildStatementId(sessionId, stat.getId());
+            // wait for statement ended
+            do {
+                stat = livyClient.getStatement(sessionId, stat.getId());
+                logger.debug("Statement: {}", JSONUtils.toJsonString(stat));
+                if (stat == null) {
+                    throw new IllegalStateException("Cannot find statement: " + currentActiveStatementId + " . Maybe killed by user termination.");
+                }
+                if (stat.getState().isFailed()) {
+                    throw new IllegalStateException(String.format("statement %s is failed, current state: %s", currentActiveStatementId, sessionState));
+                }
+                waitForSeconds(3);
+            } while (!stat.getState().isSuccess());
+            Statement.StatementOutput output = stat.getOutput();
+            logger.info("Output: \n {}", JSONUtils.toJsonString(output));
+            boolean isSuccess = output.getStatus().equals("ok");
+            if (!isSuccess) {
+                return false;
             }
-            if (stat.getState().isFailed()) {
-                throw new IllegalStateException(String.format("statement %s is failed, current state: %s", currentActiveStatementId, sessionState));
-            }
-            waitFoSeconds(3);
-        } while (!stat.getState().isSuccess());
-
-        Statement.StatementOutput output = stat.getOutput();
-        logger.info("Output: \n {}", JSONUtils.toJsonString(output));
-        boolean isSuccess = output.getStatus().equals("ok");
-        if (isSuccess) {
-            postRun(sql);
         }
-        return isSuccess;
+
+        try {
+            postRun(sql);
+        } catch (Exception e) {
+            logger.error("Failed to parse lineage: {}", e);
+        }
+        return true;
     }
 
     /**
