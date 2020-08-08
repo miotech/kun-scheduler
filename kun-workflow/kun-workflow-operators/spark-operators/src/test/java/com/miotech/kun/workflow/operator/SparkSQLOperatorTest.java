@@ -26,7 +26,7 @@ public class SparkSQLOperatorTest extends MockServerTestBase {
 
     @Test
     public void run_sparksql_ok() {
-        String sqlScript = "create table a as select * from b where bizdate = ${bizdate}";
+        String sqlScript = "create table a as select * from b where bizdate = {{bizdate}}";
         operatorRunner.setConfigKey(SparkConfiguration.CONF_SPARK_SQL, sqlScript);
         operatorRunner.setConfigKey(SparkConfiguration.CONF_VARIABLES,  "{\"bizdate\":\"'2020'\"}");
 
