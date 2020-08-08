@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 
 abstract class LivyBaseSparkOperator extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(LivyBaseSparkOperator.class);
-    public static final Pattern VARIABLE_PATTERN = Pattern.compile("\\$\\{([^\\}]+)}");
+    public static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{([^\\}]+)\\}\\}");
 
     protected LivyClient livyClient;
 
@@ -39,7 +39,7 @@ abstract class LivyBaseSparkOperator extends KunOperator {
                 String key = matcher.group(i);
                 String value = (String) SparkConfiguration.getVariable(getContext(), key);
                 if (value != null) {
-                    result = result.replace(String.format("${%s}", key), value);
+                    result = result.replace(String.format("{{%s}}", key), value);
                 } else {
                     throw new IllegalArgumentException("Cannot resolve variable key `" + key + "`");
                 }
@@ -48,7 +48,7 @@ abstract class LivyBaseSparkOperator extends KunOperator {
         return result;
     }
 
-    protected void waitFoSeconds(int seconds) {
+    protected void waitForSeconds(int seconds) {
         try {
             Thread.sleep(seconds * 1000);
         } catch (InterruptedException e) {
