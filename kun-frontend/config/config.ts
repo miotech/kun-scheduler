@@ -33,7 +33,7 @@ export default defineConfig({
   },
   proxy: {
     '/kun/api/v1/pdf/': {
-      target: PROXY_PDF_TARGET || 'http://mdp-dev.miotech.com:10010/'
+      target: PROXY_PDF_TARGET || 'http://kun-dev.miotech.com/'
     },
     '/kun/api/v1/': {
       target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
