@@ -51,7 +51,7 @@ public class SecurityService implements InitializingBean {
     public List<String> getUserGroup(String username) {
         AndFilter filter = new AndFilter();
         filter.and(new EqualsFilter("objectClass", "posixGroup"))
-                .and(new EqualsFilter("memberUid", username));
+                .and(new EqualsFilter("memberUid~", username));
 
         return ldapTemplate.search(groupSearchBase,
                 filter.encode(),
