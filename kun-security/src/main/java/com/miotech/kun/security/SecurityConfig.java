@@ -38,10 +38,10 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${security.ldap.user-search-base}")
     private String userSearchBase;
 
-    @Value("${security.pass-token}")
+    @Value("${security.pass-token:40A4C5379B73F31D6CD24F6A7C5C3ACB}")
     private String passToken;
 
-    @Value("${security.pdf-coa-pass-token}")
+    @Value("${security.pdf-coa-pass-token:54BF50AFC104E2AE80165EF89D2161A1}")
     private String pdfCoaPassToken;
 
     private String apiPrefix = "/kun/api";
