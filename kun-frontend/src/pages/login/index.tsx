@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from 'react';
-import { Input, Button, message, Form } from 'antd';
+import { Input, Button, message, Form, notification } from 'antd';
 import { useDispatch } from 'react-redux';
 import useI18n from '@/hooks/useI18n';
 
@@ -21,9 +21,9 @@ export interface LoginParams {
 const layout = {
   wrapperCol: { span: 24 },
 };
-const tailLayout = {
-  wrapperCol: { offset: 8, span: 16 },
-};
+// const tailLayout = {
+//   wrapperCol: { offset: 8, span: 16 },
+// };
 
 const displayFooter = true;
 
@@ -34,7 +34,14 @@ export default function Login() {
   const handleClickLogin = useCallback(
     (params: LoginParams) => {
       const diss = message.loading(t('common.loading'), 0);
-      dispatch.user.fetchLogin(params).then(() => {
+      dispatch.user.fetchLogin(params).then(resp => {
+        // eslint-disable-next-line
+        console.log('resp: ', resp);
+        if (resp.code !== 0) {
+          notification.error({
+            message: t('login.error.usernamePasswordError'),
+          });
+        }
         diss();
       });
     },
@@ -45,59 +52,48 @@ export default function Login() {
     handleClickLogin(values);
   };
 
-  const formContent = useMemo(() => (
-    <div className={css.inputArea}>
-      <div className={css.Logo}>
-        <img className="app-logo" src={kunLogo} alt="kun-logo" />
-        <h4 id="app-name" className="app-name">
-          {t('common.app.name')}
-        </h4>
-      </div>
-      <Form
-        {...layout}
-        name="basic"
-        onFinish={onFinish as (values: Store) => void}
-      >
-        <Form.Item
-          name="username"
-          rules={[
-            { required: true, message: t('login.pleaseInput.username') },
-          ]}
+  const formContent = useMemo(
+    () => (
+      <div className={css.inputArea}>
+        <div className={css.Logo}>
+          <img className="app-logo" src={kunLogo} alt="kun-logo" />
+          <h4 id="app-name" className="app-name">
+            {t('common.app.name')}
+          </h4>
+        </div>
+        <Form
+          {...layout}
+          name="basic"
+          onFinish={onFinish as (values: Store) => void}
         >
-          <Input
-            size="large"
-            placeholder={t('login.userName')}
-          />
-        </Form.Item>
-
-        <Form.Item
-          name="password"
-          rules={[
-            { required: true, message: t('login.pleaseInput.password') },
-          ]}
-        >
-          <Input.Password
-            size="large"
-            placeholder={t('login.password')}
-          />
-        </Form.Item>
-
-        <Form.Item>
-          <Button
-            size="large"
-            block
-            type="primary"
-            htmlType="submit"
+          <Form.Item
+            name="username"
+            rules={[
+              { required: true, message: t('login.pleaseInput.username') },
+            ]}
           >
-            {t('login.confirmButton')}
-          </Button>
-        </Form.Item>
-      </Form>
-    </div>
-  ), [
-    onFinish,
-    t,
-  ]);
+            <Input size="large" placeholder={t('login.userName')} />
+          </Form.Item>
+
+          <Form.Item
+            name="password"
+            rules={[
+              { required: true, message: t('login.pleaseInput.password') },
+            ]}
+          >
+            <Input.Password size="large" placeholder={t('login.password')} />
+          </Form.Item>
+
+          <Form.Item>
+            <Button size="large" block type="primary" htmlType="submit">
+              {t('login.confirmButton')}
+            </Button>
+          </Form.Item>
+        </Form>
+      </div>
+    ),
+    [onFinish, t],
+  );
 
   return (
     <LoginLayout>

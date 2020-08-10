@@ -92,6 +92,7 @@ export default {
   'login.confirmButton': 'Login',
   'login.pleaseInput.username': 'Please input username.',
   'login.pleaseInput.password': 'Please input password.',
+  'login.error.usernamePasswordError': 'Incorrect username or password.',
   'header.logout': 'Logout',
   'dataDiscovery.searchContent': 'Search',
   'dataDiscovery.waterMark': 'Watermark',
