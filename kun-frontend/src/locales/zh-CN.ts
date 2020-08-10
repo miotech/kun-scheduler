@@ -93,6 +93,7 @@ export default {
   'login.confirmButton': '登录',
   'login.pleaseInput.username': '请输入用户名',
   'login.pleaseInput.password': '请输入密码',
+  'login.error.usernamePasswordError': '用户名或密码错误',
   'header.logout': '登出',
   'dataDiscovery.searchContent': '搜索',
   'dataDiscovery.waterMark': '时间戳',
