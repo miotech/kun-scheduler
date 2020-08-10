@@ -3,6 +3,7 @@ import { IRouteComponentProps, IRoute } from 'umi';
 import { Provider } from 'react-redux';
 import { store } from '@/rematch/store';
 import useI18n from '@/hooks/useI18n';
+import BrowserCheck from '@/components/BrowserCheck/BrowserCheck';
 
 import DefaultLayout from './DefaultLayout/DefaultLayout';
 import NoBreadcrumbLayout from './NoBreadcrumbLayout/NoBreadcrumbLayout';
@@ -24,17 +25,21 @@ export default function Layout({
 
   if (location.pathname.startsWith('/pdf')) {
     return (
-      <Provider store={store}>
-        <NoBreadcrumbLayout route={route as IRoute}>
-          {children}
-        </NoBreadcrumbLayout>
-      </Provider>
+      <BrowserCheck>
+        <Provider store={store}>
+          <NoBreadcrumbLayout route={route as IRoute}>
+            {children}
+          </NoBreadcrumbLayout>
+        </Provider>
+      </BrowserCheck>
     );
   }
 
   return (
-    <Provider store={store}>
-      <DefaultLayout route={route as IRoute}>{children}</DefaultLayout>
-    </Provider>
+    <BrowserCheck>
+      <Provider store={store}>
+        <DefaultLayout route={route as IRoute}>{children}</DefaultLayout>
+      </Provider>
+    </BrowserCheck>
   );
 }
