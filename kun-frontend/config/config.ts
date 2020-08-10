@@ -31,9 +31,12 @@ export default defineConfig({
     //     name: '[name].[ext]',
     //   });
   },
+  targets: {
+    ie: 11,
+  },
   proxy: {
     '/kun/api/v1/pdf/': {
-      target: PROXY_PDF_TARGET || 'http://kun-dev.miotech.com/'
+      target: PROXY_PDF_TARGET || 'http://kun-dev.miotech.com/',
     },
     '/kun/api/v1/': {
       target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
