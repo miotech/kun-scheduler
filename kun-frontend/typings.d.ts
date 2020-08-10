@@ -13,6 +13,8 @@ declare module '*.svg' {
 
 interface Window {
   t?: (key: string, options?: any, defaultMsg?: string | undefined) => string;
+  chrome: any;
+  opr: any;
 }
 
 /* Usage Reference: https://www.npmjs.com/package/safe-url-assembler */
