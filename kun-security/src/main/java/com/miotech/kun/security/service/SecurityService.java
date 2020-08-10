@@ -163,8 +163,7 @@ public class SecurityService implements InitializingBean {
         Set<String> groupSet = groups.stream().collect(Collectors.toSet());
         if(groupSet.contains(Constants.MOODYS_USER_GROUP)) {
             permissions.add(Constants.PERMISSION_PDF_COA);
-        }
-        if(groupSet.contains(Constants.MIOTECH_USER_GROUP)) {
+        } else if(groupSet.contains(Constants.MIOTECH_USER_GROUP)) {
             permissions.add(Constants.PERMISSION_DATA_DISCOVERY);
             permissions.add(Constants.PERMISSION_DATA_DEVELOPMENT);
             permissions.add(Constants.PERMISSION_PDF_GENERAL);
