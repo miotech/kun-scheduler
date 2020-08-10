@@ -5,7 +5,7 @@ import qs from 'qs';
 
 export const baseURL = '/kun/api/v1';
 
-const axiosInstance = axios.create({
+export const axiosInstance = axios.create({
   baseURL,
 });
 

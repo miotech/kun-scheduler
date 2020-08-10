@@ -1,4 +1,5 @@
-import { get, post } from './utils';
+// import { notification } from 'antd';
+import { get, post, axiosInstance } from './utils';
 
 export interface LoginServiceReqBody {
   username: string;
@@ -6,8 +7,19 @@ export interface LoginServiceReqBody {
 }
 
 export async function loginService(reqBody: LoginServiceReqBody) {
-  const resp = await post('/user/login', reqBody);
-  return resp;
+  try {
+    const resp = await axiosInstance({
+      method: 'POST',
+      data: reqBody,
+      url: '/user/login',
+    });
+    return resp.data || {};
+  } catch (e) {
+    // eslint-disable-next-line
+    console.log('e: ', e);
+  }
+
+  return null;
 }
 
 export interface whoamiServiceRespBody {
