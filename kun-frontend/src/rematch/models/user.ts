@@ -37,7 +37,7 @@ export const user = {
   effects: (dispatch: RootDispatch) => ({
     async fetchLogin(payload: { username: string; password: string }) {
       const resp = await loginService(payload);
-      if (resp) {
+      if (resp && resp.code === 0) {
         const whoamiResp = await whoamiService();
         if (whoamiResp) {
           dispatch.user.updateLogin(true);
@@ -48,6 +48,7 @@ export const user = {
           history.push('/');
         }
       }
+      return resp;
     },
 
     async fetchWhoami() {
