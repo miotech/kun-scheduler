@@ -19,6 +19,9 @@ export default {
   'common.value': 'Value',
   'common.keyvalue.keyNameConflict': 'Key ',
   'common.addKeyValuePair': 'Add Key-value pair',
+  'common.unsupported.title': 'Sorry, you are using an unsupported browser.',
+  'common.unsupported.message':
+    'Please switch to one of the browsers below for a better experience.',
   'commen.dateRange.last24hours': 'Last 24 Hours',
   'commen.dateRange.lastWeek': 'Last Week',
   'commen.dateRange.lastMonth': 'Last Month',
@@ -337,7 +340,7 @@ export default {
   'pdfFileTask.coa.table.incomeStatement': 'Income Statement',
   'pdfFileTask.column.coa.note': 'Result',
   'pdfFileTask.coa.error.originalCellsNotFound': 'Cell not found',
-  'pdfFileTask.coa.error.validateError': 'Validation Error',
+  'pdfFileTask.coa.error.validateError': 'Subtotal is not tied',
   'pdfFileTask.coa.validatePass': 'Validation Passed',
   'pdfFileTask.coa.validateFail': 'Validation Failed',
   'newpdf.tab.all': 'All',
