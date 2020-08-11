@@ -2,9 +2,17 @@ import { IConfig, defineConfig } from 'umi';
 import path from 'path';
 import { appRoutes } from './routes';
 import { theme } from './theme';
+import { certConfig } from './certConfig';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 
-const { PROXY_TARGET, PROXY_PDF_TARGET } = process.env;
+const {
+  PROXY_TARGET,
+  PROXY_PDF_TARGET,
+  HTTPS,
+  PORT,
+  HTTPS_KEY,
+  HTTPS_CERT,
+} = process.env;
 
 export default defineConfig({
   dynamicImport: {},
@@ -37,6 +45,7 @@ export default defineConfig({
   proxy: {
     '/kun/api/v1/pdf/': {
       target: PROXY_PDF_TARGET || 'http://kun-dev.miotech.com/',
+      changeOrigin: true,
     },
     '/kun/api/v1/': {
       target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
@@ -59,4 +68,14 @@ export default defineConfig({
   favicon: '/favicon.ico',
   title: 'common.app.name',
   routes: appRoutes,
+  devServer: {
+    host: HTTPS ? 'dev.localhost.com' : '0.0.0.0',
+    port: PORT ? parseInt(PORT, 10) : 8000,
+    https: HTTPS
+      ? {
+          key: certConfig.key,
+          cert: certConfig.cert,
+        }
+      : undefined,
+  },
 }) as IConfig;

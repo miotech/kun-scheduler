@@ -92,7 +92,6 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         @Provides
         @Singleton
         public DataSource createDataSource() {
-
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl("jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE");
             config.setUsername("sa");
