@@ -24,7 +24,7 @@ dependencies {
     implementation "org.apache.curator:curator-recipes"
     implementation "io.prestosql:presto-jdbc"
     implementation "org.mongodb:mongo-java-driver"
-    implementation "org.jooq:joor-java-8:0.9.12"
+    implementation "org.jooq:joor-java-8"
     implementation "com.amazonaws:aws-java-sdk-glue"
     implementation "com.syncron.amazonaws:simba-athena-jdbc-driver"
     implementation "com.arangodb:arangodb-java-driver"

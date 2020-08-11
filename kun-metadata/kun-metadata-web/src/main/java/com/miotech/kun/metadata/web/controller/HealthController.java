@@ -9,7 +9,7 @@ public class HealthController {
 
     @RouteMapping(url= "/health", method = "GET")
     public AcknowledgementVO healthOk() {
-        return new AcknowledgementVO("Kun workflow api, Status is ok!");
+        return new AcknowledgementVO("Kun metadata api, Status is ok!");
     }
 
 }
