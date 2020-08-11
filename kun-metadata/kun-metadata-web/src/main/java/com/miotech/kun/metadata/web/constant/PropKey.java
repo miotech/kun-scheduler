@@ -5,9 +5,6 @@ public class PropKey {
     private PropKey() {
     }
 
-    public static final String NAME = "name";
-    public static final String ID = "id";
-    public static final String OPERATOR_ID = "operatorId";
     public static final String OPERATOR_ID_REFRESH = "operatorIdOfRefresh";
     public static final String OPERATOR_ID_BUILD_ALL = "operatorIdOfBuildAll";
     public static final String TASK_ID_REFRESH = "taskIdOfRefresh";
@@ -21,6 +18,5 @@ public class PropKey {
     public static final String GID = "gid";
     public static final String WORKFLOW_URL = "workflow.url";
     public static final String CRON_EXPR = "workflow.cronExpr";
-    public static final String RECORDS = "records";
 
 }

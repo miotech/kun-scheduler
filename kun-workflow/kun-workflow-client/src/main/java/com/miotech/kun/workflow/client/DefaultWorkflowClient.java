@@ -75,6 +75,12 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
+    public Optional<Task> getTask(String name) {
+        List<Task> tasks = wfApi.getTasks(TaskSearchRequest.newBuilder().withName(name).build());
+        return tasks.stream().filter(x -> x.getName().equals(name)).findAny();
+    }
+
+    @Override
     public Task saveTask(Task task, List<Tag> filterTags) {
         if (filterTags != null && !filterTags.isEmpty()) {
             String tags = filterTags.stream()
