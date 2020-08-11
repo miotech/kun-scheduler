@@ -10,7 +10,7 @@
         <appender-ref ref="STDOUT" />
     </appender>
 
-    <appender name="RollingFile"
+    <appender name="APPLOG"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${user.dir}/logs/application.log</file>
         <encoder>
@@ -25,12 +25,12 @@
             </fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy
                     class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
+                <maxFileSize>64MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
     </appender>
 
-    <appender name="RollingFileError" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="APPERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${user.dir}/logs/error.log</file>
         <encoder>
             <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
@@ -44,7 +44,7 @@
             </fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy
                     class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>10MB</maxFileSize>
+                <maxFileSize>64MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -52,9 +52,8 @@
         </filter>
     </appender>
 
-    <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="RollingFile" />
-        <appender-ref ref="RollingFileError" />
+    <appender name="ASYNCAPPLOG" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="APPLOG" />
     </appender>
 
     <logger name="com.zaxxer.hikari"  level="ERROR" />
@@ -67,7 +66,8 @@
     </appender>
 
     <root level="DEBUG">
-        <appender-ref ref="ASYNCFILE" />
+        <appender-ref ref="ASYNCAPPLOG" />
+        <appender-ref ref="APPERROR" />
         <appender-ref ref="ASYNCSTDOUT" />
         <appender-ref ref="Sentry"/>
     </root>
