@@ -177,6 +177,17 @@ public class WorkflowApi {
         return get(url, Task.class);
     }
 
+    public List<Task> getTasks(TaskSearchRequest request) {
+        HttpUrl url = buildUrl("/tasks/_search")
+                .build();
+        Request postRequest = new Request.Builder().url(url)
+                .post(jsonBody(request))
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+
+        return sendRequest(postRequest, new TypeReference<PaginationResult<Task>>() {}).getRecords();
+    }
+
     public Task updateTask(Long taskId, Task task) {
         HttpUrl url = buildUrl(API_TASKS)
                 .addPathSegment(taskId.toString())

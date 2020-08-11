@@ -21,9 +21,6 @@ export interface LoginParams {
 const layout = {
   wrapperCol: { span: 24 },
 };
-// const tailLayout = {
-//   wrapperCol: { offset: 8, span: 16 },
-// };
 
 const displayFooter = true;
 
@@ -35,9 +32,7 @@ export default function Login() {
     (params: LoginParams) => {
       const diss = message.loading(t('common.loading'), 0);
       dispatch.user.fetchLogin(params).then(resp => {
-        // eslint-disable-next-line
-        console.log('resp: ', resp);
-        if (resp.code !== 0) {
+        if (resp && resp.code !== 0) {
           notification.error({
             message: t('login.error.usernamePasswordError'),
           });
@@ -48,9 +43,12 @@ export default function Login() {
     [dispatch, t],
   );
 
-  const onFinish = (values: LoginParams) => {
-    handleClickLogin(values);
-  };
+  const onFinish = useCallback(
+    (values: LoginParams) => {
+      handleClickLogin(values);
+    },
+    [handleClickLogin],
+  );
 
   const formContent = useMemo(
     () => (
