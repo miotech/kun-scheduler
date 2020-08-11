@@ -35,19 +35,23 @@ public class DataQualityRepository extends BaseRepository {
     @Autowired
     DatasetRepository datasetRepository;
 
+    public List<Long> getAllTaskId() {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("task_id")
+                .from("kun_dq_case")
+                .where("task_id is not null")
+                .getSQL();
+
+        return jdbcTemplate.queryForList(sql, Long.class);
+    }
+
     public List<Long> getAllCaseId() {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("id")
                 .from("kun_dq_case")
                 .getSQL();
 
-        return jdbcTemplate.query(sql, rs -> {
-            List<Long> ids = new ArrayList<>();
-            while (rs.next()) {
-                ids.add(rs.getLong("id"));
-            }
-            return ids;
-        });
+        return jdbcTemplate.queryForList(sql, Long.class);
     }
 
     public Long getLatestTaskId(Long caseId) {

@@ -88,4 +88,8 @@ public class DataQualityService extends BaseSecurityService {
     public List<Long> getAllCaseId() {
         return dataQualityRepository.getAllCaseId();
     }
+
+    public List<Long> getAllTaskId() {
+        return dataQualityRepository.getAllTaskId();
+    }
 }
