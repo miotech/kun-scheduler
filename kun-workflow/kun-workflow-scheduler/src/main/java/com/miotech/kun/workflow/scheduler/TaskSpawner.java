@@ -8,6 +8,7 @@ import com.miotech.kun.commons.utils.EventLoop;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.common.variable.service.VariableService;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.execution.Config;
@@ -43,16 +44,23 @@ public class TaskSpawner {
 
     private final OperatorService operatorService;
 
+    private final VariableService variableService;
+
     private final EventBus eventBus;
 
     private final Deque<TaskGraph> graphs;
     private final InnerEventLoop eventLoop;
 
     @Inject
-    public TaskSpawner(TaskManager taskManager, TaskRunDao taskRunDao, OperatorService operatorService, EventBus eventBus) {
+    public TaskSpawner(TaskManager taskManager,
+                       TaskRunDao taskRunDao,
+                       OperatorService operatorService,
+                       VariableService variableService,
+                       EventBus eventBus) {
         this.taskManager = taskManager;
         this.taskRunDao = taskRunDao;
         this.operatorService = operatorService;
+        this.variableService = variableService;
         this.eventBus = eventBus;
 
         this.graphs = new ConcurrentLinkedDeque<>();
@@ -143,8 +151,9 @@ public class TaskSpawner {
             defaultValues.put(k, defaultConfig.getValues().get(k).toString());
         }
         Config finalConfig = new Config(configDef, defaultValues).overrideBy(rtConfig);
-        validateConfig(configDef, finalConfig, rtConfig);
-        return finalConfig;
+        Config enrichedConfig = variableService.renderConfig(finalConfig);
+        validateConfig(configDef, enrichedConfig, rtConfig);
+        return enrichedConfig;
     }
 
     private void validateConfig(ConfigDef configDef, Config finalConfig, Config runtimeConfig) {
