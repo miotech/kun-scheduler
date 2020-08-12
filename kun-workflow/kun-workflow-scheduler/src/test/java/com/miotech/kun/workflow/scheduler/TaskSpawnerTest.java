@@ -8,6 +8,7 @@ import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.common.variable.dao.VariableDao;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
@@ -20,6 +21,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
+import com.miotech.kun.workflow.testing.factory.MockVariableFactory;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.junit.After;
@@ -60,6 +62,9 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
     @Inject
     private TaskRunDao taskRunDao;
+
+    @Inject
+    private VariableDao variableDao;
 
     @Inject
     private TaskManager taskManager;
@@ -168,6 +173,41 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         assertThat(submitted, sameBeanAs(saved));
+    }
+
+    @Test
+    public void testRun_graph_of_single_task_with_config_has_variables() {
+        // prepare
+        Task task = MockTaskFactory.createTask(operatorId).cloneBuilder()
+                .withConfig(new Config(ImmutableMap.of("var1", "${test-name.val1 }")))
+                .build();
+        taskDao.create(task);
+        variableDao.create(MockVariableFactory.createVariable()
+                .cloneBuilder()
+                .withNamespace("test-name")
+                .withKey("val1")
+                .withValue("val1")
+                .build());
+
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+        OffsetDateTime now = DateTimeUtils.freeze();
+
+        // process
+        TaskRunEnv context = buildEnv(task.getId(), ImmutableMap.of());
+        DirectTaskGraph graph = new DirectTaskGraph(task);
+        taskSpawner.run(graph, context);
+
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getConfig().size(), is(2));
+        assertThat(submitted.getConfig().getString("var1"), is("val1"));
+        assertThat(submitted.getConfig().getString("var2"), is("default2"));
     }
 
     @Test
