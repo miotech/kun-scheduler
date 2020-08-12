@@ -9,7 +9,7 @@ function useElementVisible(
   useEffect(() => {
     const currentParentEl = parentElRef.current;
     const element = elementRef.current;
-    const func = () => {
+    const judgeVisibleFunc = () => {
       if (!visible && !hide) {
         const viewPortHeight =
           currentParentEl?.offsetHeight ?? currentParentEl?.clientHeight ?? 0;
@@ -24,13 +24,18 @@ function useElementVisible(
         }
       }
     };
-    func();
+    judgeVisibleFunc();
     if (currentParentEl) {
-      currentParentEl.addEventListener('scroll', func);
+      currentParentEl.addEventListener('scroll', judgeVisibleFunc);
+      currentParentEl.addEventListener('DOMSubtreeModified', judgeVisibleFunc);
     }
     return () => {
       if (currentParentEl) {
-        currentParentEl.removeEventListener('scroll', func);
+        currentParentEl.removeEventListener('scroll', judgeVisibleFunc);
+        currentParentEl.removeEventListener(
+          'DOMSubtreeModified',
+          judgeVisibleFunc,
+        );
       }
     };
   }, [visible, setVisible, parentElRef, elementRef, hide]);
