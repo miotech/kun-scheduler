@@ -1,10 +1,20 @@
+import com.miotech.kun.commons.query.JDBCQuery;
+import com.miotech.kun.commons.query.JDBCQueryExecutor;
+import com.miotech.kun.commons.query.model.QueryResultSet;
+import org.junit.Assert;
+import org.junit.Ignore;
+import org.junit.Test;
+
+import java.util.Map;
+
 /**
  * @author: Jie Chen
  * @created: 2020/7/13
  */
+@Ignore
 public class JDBCQueryTest {
 
-    /*@Test
+    @Test
     public void testPostgresSql() {
         Long datasetId = 1L;
 
@@ -24,12 +34,12 @@ public class JDBCQueryTest {
 
     @Test
     public void testAthena() {
-        Long datasourceId = 72989195441799168L;
 
         JDBCQuery query = JDBCQuery.newBuilder()
-                .datasourceId(datasourceId)
-                .queryString("select 1")
+                .datasetId(65465271921410048L)
+                .queryString("select count(*) from dm.ref_esg_csr_indicator where length(csr_indicator_code)/3<>level")
                 .build();
-        JDBCQueryExecutor.getInstance("application-test.yaml").execute(query);
-    }*/
+        QueryResultSet resultSet = JDBCQueryExecutor.getInstance("application-test.yaml").execute(query);
+        Object value = resultSet.getResultSet().get(0).values().iterator().next();
+    }
 }
