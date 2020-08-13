@@ -12,10 +12,13 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -228,6 +231,36 @@ public class DataQualityRepository extends BaseRepository {
                         fieldId);
             }
         }
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void logDataQualityCaseResults(List<DataQualityCaseResult> results) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .insert().into("kun_dq_case_task_history")
+                .valueSize(8)
+                .duplicateKey("task_run_id", "")
+                .getSQL();
+
+        jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                int index = 0;
+                ps.setLong(++index, IdGenerator.getInstance().nextId());
+                ps.setLong(++index, results.get(i).getTaskId());
+                ps.setLong(++index, results.get(i).getTaskRunId());
+                ps.setLong(++index, results.get(i).getCaseId());
+                ps.setString(++index, results.get(i).getCaseStatus());
+                ps.setString(++index, CollectionUtils.isNotEmpty(results.get(i).getErrorReason()) ? results.get(i).getErrorReason().toString() : "");
+                ps.setObject(++index, millisToTimestamp(results.get(i).getStartTime()));
+                ps.setObject(++index, millisToTimestamp(results.get(i).getEndTime()));
+            }
+
+            @Override
+            public int getBatchSize() {
+                return results.size();
+            }
+
+        });
     }
 
     public DimensionConfig getDimensionConfig(String dsType) {

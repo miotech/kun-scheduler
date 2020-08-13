@@ -12,4 +12,6 @@ public class SearchLogRequest {
     Long startTime;
 
     Long endTime;
+
+    boolean export;
 }

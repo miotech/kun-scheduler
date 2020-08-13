@@ -44,6 +44,8 @@ public class DefaultSQLBuilder implements SQLBuilder {
     private Integer offset;
     private boolean useOffset = false;
     private String[] orderByClause;
+    private String duplicateKey;
+    private String doFollowing;
 
     @Override
     public SQLBuilder insert(String... cols) {
@@ -208,6 +210,13 @@ public class DefaultSQLBuilder implements SQLBuilder {
     }
 
     @Override
+    public SQLBuilder duplicateKey(String key, String doFollowing) {
+        this.duplicateKey = key;
+        this.doFollowing = doFollowing;
+        return this;
+    }
+
+    @Override
     public String getSQL() {
         StringBuilder sqlBuilder = new StringBuilder();
 
@@ -257,6 +266,13 @@ public class DefaultSQLBuilder implements SQLBuilder {
                 }
             }
             stringBuilder.append(")");
+        }
+
+        if(StringUtils.isNotEmpty(this.duplicateKey)) {
+            stringBuilder.append("\n ON CONFLICT (").append(this.duplicateKey).append(")");
+            this.doFollowing = StringUtils.isNotEmpty(this.doFollowing) ? this.doFollowing : "DO NOTHING";
+            this.doFollowing = this.doFollowing.startsWith("DO ") ? this.doFollowing : "DO " + this.doFollowing;
+            stringBuilder.append("\n ").append(this.doFollowing);
         }
         return stringBuilder;
     }
