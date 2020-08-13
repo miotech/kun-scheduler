@@ -161,11 +161,11 @@ public class DataQualityOperator extends KunOperator {
     }
 
     private void logError(String msg, Throwable throwable) {
-        logger.error("caseId=" + caseId + " " + msg, throwable);
+        logger.error(String.format("caseId=%d %s", caseId, msg), throwable);
     }
 
     private void logInfo(String msg) {
-        logger.info("caseId=" + caseId + " " + msg);
+        logger.info(String.format("caseId=%d %s", caseId, msg));
     }
 
     private void logCaseFail(String msg) {

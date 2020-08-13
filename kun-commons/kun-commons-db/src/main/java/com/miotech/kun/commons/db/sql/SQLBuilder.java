@@ -58,5 +58,7 @@ public interface SQLBuilder {
 
     SQLBuilder autoAliasColumns();
 
+    SQLBuilder duplicateKey(String key, String doFollowing);
+
     String getSQL();
 }
