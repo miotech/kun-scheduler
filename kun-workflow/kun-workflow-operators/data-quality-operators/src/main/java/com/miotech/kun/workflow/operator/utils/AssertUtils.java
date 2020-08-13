@@ -35,10 +35,14 @@ public class AssertUtils {
         }
         if (FieldType.BOOLEAN.name().equalsIgnoreCase(expectedType)) {
             if (IS.equalsIgnoreCase(operator) || EQ.equals(operator)) {
-                if (!(originalValue instanceof Boolean)) {
+                Boolean originBoolean;
+                if (originalValue instanceof Boolean) {
+                   originBoolean = (Boolean) originalValue;
+                } else if (originalValue instanceof String) {
+                    originBoolean = Boolean.valueOf((String) originalValue);
+                } else {
                     throw newUnsupportedValue(originalValue, FieldType.BOOLEAN);
                 }
-                Boolean originBoolean = (Boolean) originalValue;
                 return originBoolean.toString().equalsIgnoreCase(expectedValue);
             }
             throw newUnsupportedOperator(operator, FieldType.BOOLEAN);
