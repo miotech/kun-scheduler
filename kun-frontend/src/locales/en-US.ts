@@ -371,6 +371,7 @@ export default {
   'newpdf.input.placeholder.announcementType': 'Announcement Type',
   'newpdf.input.placeholder.pdfSource': 'PDF Source',
   'newpdf.input.placeholder.selectYear': 'Fiscal Year',
+  'newpdf.input.placeholder.taskStatusList': 'Task Status',
   'newpdf.input.tableName.option.aGuCaiWu': 'A-Shares Financial Statements',
   'newpdf.input.tableName.option.zhaiQuanCaiWu': 'Bond Financial Statements',
   'newpdf.input.pdfSource.option.juChao': 'Cninfo',
@@ -404,6 +405,10 @@ export default {
   'newpdf.table.status.EXPORTED': 'Exported',
   'newpdf.table.status.EXPORTING': 'Exporting',
   'newpdf.table.status.EXPORT_FAILED': 'Export Failed',
+  'newpdf.back.nosave':
+    '您修改的内容还未保存，确定要退出吗？未保存的修改将会丢失',
+  'newpdf.back.nosaveQuit': '不保存退出',
+  'newpdf.back.saveQuit': '保存并退出',
   'pdfIssueFeedback.title': 'Request PDF',
   'pdfIssueFeedback.requestPDF': 'Request PDF',
   'pdfIssueFeedback.companyName': 'Company Name',
