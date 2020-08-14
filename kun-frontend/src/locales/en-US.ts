@@ -361,6 +361,8 @@ export default {
   'newpdf.tab.exported': 'Exported',
   'newpdf.tableName.huShen': 'A-Shares',
   'newpdf.tableName.zhaiQuan': 'Bond',
+  'newpdf.input.placeholder.searchTitle': 'Title',
+  'newpdf.input.placeholder.searchTicker': 'Company Name / Ticker / Title',
   'newpdf.input.placeholder.aShare': 'Company Name / Ticker / Title',
   'newpdf.input.placeholder.bond': 'Title',
   'newpdf.input.placeholder.tableName': 'Table Type',
