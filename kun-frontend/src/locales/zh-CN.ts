@@ -358,6 +358,8 @@ export default {
   'newpdf.tab.exported': '已入库',
   'newpdf.tableName.huShen': '沪深股票',
   'newpdf.tableName.zhaiQuan': '债券',
+  'newpdf.input.placeholder.searchTitle': '标题检索',
+  'newpdf.input.placeholder.searchTicker': '搜索公司名称 / 证券代码 / 标题',
   'newpdf.input.placeholder.aShare': '搜索公司名称 / 证券代码 / 标题',
   'newpdf.input.placeholder.bond': '标题检索',
   'newpdf.input.placeholder.tableName': '请选择表格类型',
