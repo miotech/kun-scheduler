@@ -368,6 +368,7 @@ export default {
   'newpdf.input.placeholder.announcementType': '请选择公告类型',
   'newpdf.input.placeholder.pdfSource': '请选择文件来源',
   'newpdf.input.placeholder.selectYear': '请选择年份',
+  'newpdf.input.placeholder.taskStatusList': '请选择任务状态',
   'newpdf.input.tableName.option.aGuCaiWu': 'A股财务报表',
   'newpdf.input.tableName.option.zhaiQuanCaiWu': '债券财务报表',
   'newpdf.input.pdfSource.option.juChao': '巨潮',
@@ -400,6 +401,10 @@ export default {
   'newpdf.table.status.EXPORTED': '已入库',
   'newpdf.table.status.EXPORTING': '入库中',
   'newpdf.table.status.EXPORT_FAILED': '入库失败',
+  'newpdf.back.nosave':
+    '您修改的内容还未保存，确定要退出吗？未保存的修改将会丢失',
+  'newpdf.back.nosaveQuit': '不保存退出',
+  'newpdf.back.saveQuit': '保存并退出',
   'pdfIssueFeedback.title': '提交PDF需求',
   'pdfIssueFeedback.requestPDF': '请求 PDF',
   'pdfIssueFeedback.companyName': '公司名称',
