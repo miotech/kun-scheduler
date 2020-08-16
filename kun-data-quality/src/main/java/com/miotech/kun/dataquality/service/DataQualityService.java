@@ -5,16 +5,16 @@ import com.miotech.kun.commons.query.JDBCQueryExecutor;
 import com.miotech.kun.dataquality.model.bo.DataQualityRequest;
 import com.miotech.kun.dataquality.model.bo.DeleteCaseResponse;
 import com.miotech.kun.dataquality.model.bo.ValidateSqlRequest;
-import com.miotech.kun.dataquality.model.entity.DataQualityCase;
-import com.miotech.kun.dataquality.model.entity.DataQualityCaseBasic;
-import com.miotech.kun.dataquality.model.entity.DimensionConfig;
-import com.miotech.kun.dataquality.model.entity.ValidateSqlResult;
+import com.miotech.kun.dataquality.model.entity.*;
 import com.miotech.kun.dataquality.persistence.DataQualityRepository;
 import com.miotech.kun.security.service.BaseSecurityService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.stereotype.Service;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -87,5 +87,13 @@ public class DataQualityService extends BaseSecurityService {
 
     public List<Long> getAllCaseId() {
         return dataQualityRepository.getAllCaseId();
+    }
+
+    public List<Long> getAllTaskId() {
+        return dataQualityRepository.getAllTaskId();
+    }
+
+    public void logDataQualityCaseResults(List<DataQualityCaseResult> results) {
+        dataQualityRepository.logDataQualityCaseResults(results);
     }
 }
