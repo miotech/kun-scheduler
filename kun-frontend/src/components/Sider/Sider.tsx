@@ -106,7 +106,7 @@ export default memo(function Sider({ route }: Props) {
     return resultMenu;
   }, [permissions, routes, selectedKeys]);
 
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   return (
     <AntdSider
@@ -114,6 +114,7 @@ export default memo(function Sider({ route }: Props) {
       collapsible
       collapsed={collapsed}
       onCollapse={setCollapsed}
+      collapsedWidth={48}
       theme="light"
     >
       {menu}
