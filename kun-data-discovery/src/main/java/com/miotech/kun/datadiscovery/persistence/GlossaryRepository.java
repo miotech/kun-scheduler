@@ -3,13 +3,16 @@ package com.miotech.kun.datadiscovery.persistence;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -26,6 +29,7 @@ public class GlossaryRepository extends BaseRepository {
     JdbcTemplate jdbcTemplate;
 
     @Autowired
+    @Lazy
     DatasetRepository datasetRepository;
 
     public Long getParentId(Long id) {
@@ -217,9 +221,22 @@ public class GlossaryRepository extends BaseRepository {
     }
 
     public GlossaryPage search(BasicSearchRequest searchRequest) {
+        List<Object> sqlArgs = new ArrayList<>();
         String sql = "select id, name from kun_mt_glossary\n";
+        String whereClause = wrapSql("where 1=1");
 
-        String whereClause = "where upper(name) like ?\n";
+        if (StringUtils.isNotEmpty(searchRequest.getKeyword())) {
+            whereClause += wrapSql("and upper(name) like ?");
+            sqlArgs.add(searchRequest.getKeyword());
+        }
+
+        if (searchRequest instanceof GlossaryBasicSearchRequest) {
+            GlossaryBasicSearchRequest glossaryBasicSearchRequest = (GlossaryBasicSearchRequest) searchRequest;
+            if (CollectionUtils.isNotEmpty(glossaryBasicSearchRequest.getGlossaryIds())) {
+                whereClause += wrapSql("and id in " + collectionToConditionSql(sqlArgs, glossaryBasicSearchRequest.getGlossaryIds()));
+            }
+        }
+
         sql += whereClause;
 
         String orderClause = "order by name asc\n";
@@ -229,7 +246,6 @@ public class GlossaryRepository extends BaseRepository {
         sql += limitSql;
 
         return jdbcTemplate.query(sql,
-                ps -> ps.setString(1, toLikeSql(searchRequest.getKeyword().toUpperCase())),
                 rs -> {
                     GlossaryPage page = new GlossaryPage();
                     while (rs.next()) {
@@ -239,6 +255,6 @@ public class GlossaryRepository extends BaseRepository {
                         page.add(basic);
                     }
                     return page;
-                });
+                }, sqlArgs.toArray());
     }
 }
