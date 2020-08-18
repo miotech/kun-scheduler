@@ -116,6 +116,7 @@ export default {
   'dataDiscovery.tags': 'Tags',
   'dataDiscovery.dbtype': 'Type',
   'dataDiscovery.datasource': 'Datasource',
+  'dataDiscovery.db': 'Database',
   'dataDiscovery.popularDatasets': 'Popular Datasets',
   'dataDiscovery.datasetsTable.header.name': 'Name',
   'dataDiscovery.datasetsTable.header.database': 'Database',
