@@ -48,18 +48,18 @@ export type DatabaseInfomation = {
   [k in DatabaseField]?: string | number;
 };
 
-export interface DatabaseInfo {
+export interface DatasourceInfo {
   typeId: string | null;
   name: string;
   information: DatabaseInfomation;
   tags: string[];
 }
 
-export interface UpdateDatabaseInfo extends DatabaseInfo {
+export interface UpdateDatasourceInfo extends DatasourceInfo {
   id: string;
 }
 
-export interface DataBase extends UpdateDatabaseInfo {
+export interface DataSource extends UpdateDatasourceInfo {
   create_user: string;
   create_time: number;
   update_user: string;
@@ -71,8 +71,8 @@ export interface DataSettingsState {
   searchLoading: boolean;
   searchContent: string;
   pagination: Pagination;
-  dataBaseList: DataBase[];
-  currentDatabase: DataBase | null;
+  dataSourceList: DataSource[];
+  currentDatabase: DataSource | null;
   databaseTypeFieldMapList: DatabaseTypeList;
   fetchDatabaseTypeLoading: boolean;
 }
@@ -86,7 +86,7 @@ export const dataSettings = {
       pageSize: 25,
       totalCount: 0,
     },
-    dataBaseList: [],
+    dataSourceList: [],
     currentDatabase: null,
     fetchDatabaseTypeLoading: false,
     databaseTypeFieldMapList: [],
@@ -153,9 +153,9 @@ export const dataSettings = {
             value: false,
           });
           if (resp) {
-            const { databases, pageNumber, pageSize, totalCount } = resp;
+            const { datasources, pageNumber, pageSize, totalCount } = resp;
             dispatch.dataSettings.batchUpdateState({
-              dataBaseList: databases as DataBase[],
+              dataSourceList: datasources as DataSource[],
               pagination: {
                 pageSize,
                 pageNumber,
@@ -166,7 +166,7 @@ export const dataSettings = {
         }
       },
 
-      async addDatabase(newDatabase: DatabaseInfo) {
+      async addDatabase(newDatabase: DatasourceInfo) {
         const resp = await addDatabaseService(newDatabase);
         if (resp) {
           return resp;
@@ -174,7 +174,7 @@ export const dataSettings = {
         return null;
       },
 
-      async updateDatabase(newDatabase: UpdateDatabaseInfo) {
+      async updateDatabase(newDatabase: UpdateDatasourceInfo) {
         const resp = await updateDatabaseService(newDatabase);
         if (resp) {
           return resp;

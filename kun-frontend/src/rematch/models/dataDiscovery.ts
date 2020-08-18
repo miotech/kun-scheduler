@@ -55,7 +55,7 @@ export interface SearchParams {
   searchContent?: string;
   ownerList?: string[];
   tagList?: string[];
-  dbTypeList?: string[];
+  dsTypeList?: string[];
   dsIdList?: string[];
   watermarkMode?: Mode;
   watermarkAbsoluteValue?: DataRange;
@@ -69,7 +69,7 @@ export interface SearchParamsObj {
   watermarkEnd?: number;
   ownerList?: string[];
   tagList?: string[];
-  dbTypeList?: string[];
+  dsTypeList?: string[];
   dsIdList?: string[];
 }
 
@@ -86,7 +86,7 @@ export interface DataDiscoveryState {
 
   ownerList?: string[];
   tagList?: string[];
-  dbTypeList?: DbType[];
+  dsTypeList?: DbType[];
   dsIdList?: string[];
 
   allOwnerList: string[];
@@ -110,7 +110,7 @@ export const dataDiscovery = {
 
     ownerList: undefined,
     tagList: undefined,
-    dbTypeList: undefined,
+    dsTypeList: undefined,
     dsIdList: undefined,
 
     allOwnerList: [],
@@ -187,7 +187,7 @@ export const dataDiscovery = {
           searchContent,
           ownerList,
           tagList,
-          dbTypeList,
+          dsTypeList,
           dsIdList,
           watermarkMode,
           watermarkAbsoluteValue,
@@ -249,7 +249,7 @@ export const dataDiscovery = {
           watermarkEnd,
           ownerList,
           tagList,
-          dbTypeList,
+          dsTypeList,
           dsIdList,
         };
         seachDatasetsFlag += 1;
@@ -276,7 +276,7 @@ export const dataDiscovery = {
         if (resp) {
           dispatch.dataDiscovery.updateState({
             key: 'allDbList',
-            value: resp.databases,
+            value: resp.datasources,
           });
         }
       },
