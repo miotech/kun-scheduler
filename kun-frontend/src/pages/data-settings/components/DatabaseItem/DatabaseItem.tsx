@@ -1,7 +1,7 @@
 import React, { memo, useState, useCallback } from 'react';
 import { Modal, message } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
-import { DataBase } from '@/rematch/models/dataSettings';
+import { DataSource } from '@/rematch/models/dataSettings';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
@@ -10,8 +10,8 @@ import { watermarkFormatter } from '@/utils/glossaryUtiles';
 import styles from './DatabaseItem.less';
 
 interface Props {
-  database: DataBase;
-  onClickUpdate: (database: DataBase) => void;
+  database: DataSource;
+  onClickUpdate: (database: DataSource) => void;
   onClickDelete: (id: string) => void;
 }
 

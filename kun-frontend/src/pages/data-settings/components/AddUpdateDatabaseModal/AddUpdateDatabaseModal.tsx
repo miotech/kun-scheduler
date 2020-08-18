@@ -9,21 +9,21 @@ import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 
 import {
-  UpdateDatabaseInfo,
-  DatabaseInfo,
-  DataBase,
+  UpdateDatasourceInfo,
+  DatasourceInfo,
+  DataSource,
   DatabaseTypeItemFieldItem,
 } from '@/rematch/models/dataSettings';
 import styles from './AddUpdateDatabaseModal.less';
 
 interface Props {
   visible: boolean;
-  database?: DataBase | null;
+  database?: DataSource | null;
   onClose: () => void;
-  onConfirm: (newDatabase: UpdateDatabaseInfo | DatabaseInfo) => void;
+  onConfirm: (newDatabase: UpdateDatasourceInfo | DatasourceInfo) => void;
 }
 
-const initDatabaseInfo: DatabaseInfo = {
+const initDatabaseInfo: DatasourceInfo = {
   typeId: null,
   name: '',
   information: {},
@@ -51,7 +51,7 @@ export default memo(function AddUpdateDatabaseModal({
   );
 
   const [newDatabase, setNewDatabase] = useState<
-    UpdateDatabaseInfo | DatabaseInfo
+    UpdateDatasourceInfo | DatasourceInfo
   >(() => initDatabaseInfo);
 
   useEffect(() => {

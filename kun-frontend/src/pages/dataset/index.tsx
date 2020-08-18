@@ -31,7 +31,7 @@ export default function DataDisvocery() {
     watermarkAbsoluteValue,
     watermarkQuickeValue,
 
-    dbTypeList,
+    dsTypeList,
     ownerList,
     tagList,
     dsIdList,
@@ -52,7 +52,7 @@ export default function DataDisvocery() {
       watermarkAbsoluteValue: state.dataDiscovery.watermarkAbsoluteValue,
       watermarkQuickeValue: state.dataDiscovery.watermarkQuickeValue,
 
-      dbTypeList: state.dataDiscovery.dbTypeList,
+      dsTypeList: state.dataDiscovery.dsTypeList,
       ownerList: state.dataDiscovery.ownerList,
       tagList: state.dataDiscovery.tagList,
       dsIdList: state.dataDiscovery.dsIdList,
@@ -83,7 +83,7 @@ export default function DataDisvocery() {
       searchContent: debounceSearchContent,
       ownerList,
       tagList,
-      dbTypeList,
+      dsTypeList,
       dsIdList,
       watermarkMode,
       watermarkAbsoluteValue,
@@ -94,7 +94,7 @@ export default function DataDisvocery() {
       },
     });
   }, [
-    dbTypeList,
+    dsTypeList,
     debounceSearchContent,
     dispatch.dataDiscovery,
     dsIdList,
@@ -363,12 +363,12 @@ export default function DataDisvocery() {
               </div>
               <div className={styles.filterItemSelect}>
                 <Select
-                  value={dbTypeList}
+                  value={dsTypeList}
                   mode="multiple"
                   size="large"
                   onChange={v => {
                     dispatch.dataDiscovery.updateFilter({
-                      key: 'dbTypeList',
+                      key: 'dsTypeList',
                       value: v,
                     });
                   }}
