@@ -14,6 +14,7 @@ import com.miotech.kun.workflow.operator.client.DataQualityClient;
 import com.miotech.kun.workflow.operator.client.MetadataClient;
 import com.miotech.kun.workflow.operator.model.*;
 import com.miotech.kun.workflow.operator.utils.AssertUtils;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import freemarker.template.Configuration;
 import freemarker.template.Template;
 import freemarker.template.TemplateException;
@@ -42,6 +43,8 @@ public class DataQualityOperator extends KunOperator {
 
     private Long caseId;
 
+    private DataQualityRecord dataQualityRecord;
+
     private static final String CASE_FAIL_MSG_PREFIX = "CASE FAIL - ";
 
     private static final String CASE_SUCCESS_MSG_PREFIX = "CASE SUCCESS - ";
@@ -55,6 +58,18 @@ public class DataQualityOperator extends KunOperator {
         configService.setMetadataDataSourceUsername(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_USERNAME));
         configService.setMetadataDataSourcePassword(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_PASSWORD));
         configService.setMetadataDataSourceDriverClass(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_DIRVER_CLASS));
+
+        String caseIdStr = context.getConfig().getString("caseId");
+        if (StringUtils.isEmpty(caseIdStr)) {
+            logError("Data quality case id is empty.");
+            throw new RuntimeException("Data quality case id is empty.");
+        }
+        caseId = Long.valueOf(caseIdStr);
+
+        dataQualityRecord = new DataQualityRecord();
+        dataQualityRecord.setCaseId(caseId);
+        dataQualityRecord.setStartTime(System.currentTimeMillis());
+        dataQualityRecord.setCaseStatus(CaseStatus.SUCCESS.name());
     }
 
     @Override
@@ -63,11 +78,16 @@ public class DataQualityOperator extends KunOperator {
             return doRun();
         } catch (Exception e) {
             logError("Failed to run test case.", e);
+            dataQualityRecord.setCaseId(caseId);
+            dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
+            dataQualityRecord.appendErrorReason(e.getMessage());
             return false;
         } finally {
             logInfo(DataSourceContainer.getInstance().toString());
             MetadataDataSource.getInstance().cleanUp();
             DataSourceContainer.getInstance().cleanUp();
+            dataQualityRecord.setEndTime(System.currentTimeMillis());
+            logger.info("DQ_RECORD>>>" + JSONUtils.toJsonString(dataQualityRecord));
         }
     }
 
@@ -88,13 +108,7 @@ public class DataQualityOperator extends KunOperator {
     }
 
     private boolean doRun() {
-        OperatorContext context = getContext();
-        String caseIdStr = context.getConfig().getString("caseId");
-        if (StringUtils.isEmpty(caseIdStr)) {
-            logError("Data quality case id is empty.");
-            return false;
-        }
-        caseId = Long.valueOf(caseIdStr);
+
         MetadataClient metadataClient = MetadataClient.getInstance();
         DataQualityClient dataQualityClient = DataQualityClient.getInstance();
         DataQualityCase dataQualityCase = dataQualityClient.getCase(caseId);
@@ -148,6 +162,7 @@ public class DataQualityOperator extends KunOperator {
             return false;
         }
 
+
         for (String queryString : queryStrings) {
             QueryResultSet queryResultSet = query(queryString, currentDataset);
             doAssert(queryResultSet, dimension, rules);
@@ -181,13 +196,16 @@ public class DataQualityOperator extends KunOperator {
     }
 
     private void logCase(String msgPrefix, Object originalValue, DataQualityRule rule) {
-        String originalString;
-        if (originalValue == null) {
-            originalString = "$null";
-        } else {
-            originalString = originalValue.toString();
+        logInfo(msgPrefix + getRecordErrorReason(originalValue, rule));
+    }
+
+    private String getRecordErrorReason(Object originalValue,
+                                        DataQualityRule rule) {
+        String originalValueStr = "$null";
+        if (originalValue != null) {
+            originalValueStr = originalValue.toString();
         }
-        logInfo(msgPrefix + "" + "originalValue=" + originalString + " rule=" + rule.toString());
+        return "originalValue=" + originalValueStr + " rule=" + rule.toString();
     }
 
     private void doAssert(QueryResultSet resultSet,
@@ -201,15 +219,18 @@ public class DataQualityOperator extends KunOperator {
             Map<String, ?> row = resultSet.getResultSet().get(0);
             if (templateType == TemplateType.CUSTOMIZE) {
                 for (DataQualityRule rule : rules) {
+                    Object originalValue = row.get(rule.getField());
                     boolean ruleCase = AssertUtils.doAssert(rule.getExpectedType(),
                             rule.getOperator(),
-                            row.get(rule.getField()),
+                            originalValue,
                             rule.getExpectedValue());
 
                     if (ruleCase) {
                         logCaseSuccess(row.get(rule.getField()), rule);
                     } else {
                         logCaseFail(row.get(rule.getField()), rule);
+                        dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
+                        dataQualityRecord.appendErrorReason(getRecordErrorReason(originalValue, rule));
                     }
                 }
             } else {
@@ -224,12 +245,16 @@ public class DataQualityOperator extends KunOperator {
                         logCaseSuccess(originalValue, rule);
                     } else {
                         logCaseFail(originalValue, rule);
+                        dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
+                        dataQualityRecord.appendErrorReason(getRecordErrorReason(originalValue, rule));
                     }
                 }
             }
 
         } catch (Exception e) {
             logCaseFail(e.getMessage());
+            dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
+            dataQualityRecord.appendErrorReason(e.getMessage());
         }
 
     }
