@@ -1,9 +1,11 @@
-import React, { useCallback, useMemo, useEffect } from 'react';
-import { Link } from 'umi';
+import React, { useCallback, useMemo } from 'react';
+import { useHistory } from 'umi';
 import { Input, Select, Table, Tag, Spin } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { PaginationProps } from 'antd/es/pagination';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import { useUpdateEffect, useMount } from 'ahooks';
+import qs from 'qs';
 import { RootDispatch, RootState } from '@/rematch/store';
 import { Mode, Dataset, Watermark } from '@/rematch/models/dataDiscovery';
 
@@ -23,6 +25,9 @@ const { Option } = Select;
 
 export default function DataDisvocery() {
   const t = useI18n();
+
+  const history = useHistory();
+  const { pathname, search } = history.location;
 
   const dispatch = useDispatch<RootDispatch>();
   const {
@@ -74,17 +79,9 @@ export default function DataDisvocery() {
     shallowEqual,
   );
 
-  useEffect(() => {
-    dispatch.dataDiscovery.fetchAllOwnerList();
-    dispatch.dataDiscovery.fetchAllTagList();
-    dispatch.dataSettings.fetchDatabaseTypeList();
-    dispatch.dataDiscovery.fetchAllDs('');
-    dispatch.dataDiscovery.fetchAllDb();
-  }, [dispatch.dataDiscovery, dispatch.dataSettings]);
-
   const debounceSearchContent = useDebounce(searchContent, 1000);
 
-  useEffect(() => {
+  const fetchDatasets = useCallback(() => {
     dispatch.dataDiscovery.searchDatasets({
       searchContent: debounceSearchContent,
       ownerList,
@@ -114,6 +111,60 @@ export default function DataDisvocery() {
     watermarkQuickeValue,
     dbList,
   ]);
+
+  useMount(() => {
+    if (search) {
+      const oldFilters = qs.parse(search.replace('?', ''));
+      dispatch.dataDiscovery.updateFilterAndPaginationFromUrl(oldFilters);
+    }
+    fetchDatasets();
+    dispatch.dataDiscovery.fetchAllOwnerList();
+    dispatch.dataDiscovery.fetchAllTagList();
+    dispatch.dataSettings.fetchDatabaseTypeList();
+    dispatch.dataDiscovery.fetchAllDs('');
+    dispatch.dataDiscovery.fetchAllDb();
+  });
+
+  useUpdateEffect(() => {
+    fetchDatasets();
+  }, [fetchDatasets]);
+
+  const currentUrl = useMemo(() => {
+    const shouldFilter = {
+      searchContent,
+      watermarkMode,
+      watermarkAbsoluteValue,
+      watermarkQuickeValue,
+
+      dsTypeList,
+      ownerList,
+      tagList,
+      dsIdList,
+      dbList,
+
+      pagination,
+    };
+
+    const currentQuery = qs.stringify(shouldFilter);
+    return `${pathname}?${currentQuery}`;
+  }, [
+    dbList,
+    dsIdList,
+    dsTypeList,
+    ownerList,
+    pagination,
+    pathname,
+    searchContent,
+    tagList,
+    watermarkAbsoluteValue,
+    watermarkMode,
+    watermarkQuickeValue,
+  ]);
+
+  // 更新url
+  useUpdateEffect(() => {
+    history.replace(currentUrl);
+  }, [currentUrl, history]);
 
   const handleChangeSearch = useCallback(
     e => {
@@ -169,13 +220,8 @@ export default function DataDisvocery() {
           dataIndex: 'name',
           key: 'name',
           width: 170,
-          render: (name: string, record: Dataset) => (
-            <Link
-              className={styles.nameLink}
-              to={`/data-discovery/dataset/${record.id}`}
-            >
-              {name}
-            </Link>
+          render: (name: string) => (
+            <span className={styles.nameLink}>{name}</span>
           ),
         },
         {
@@ -489,6 +535,19 @@ export default function DataDisvocery() {
                 size="small"
                 scroll={scroll}
                 pagination={tablePagination}
+                onRow={record => ({
+                  onClick: () => {
+                    const url = encodeURIComponent(
+                      `${history.location.pathname}${history.location.search}`,
+                    );
+                    history.push(
+                      `/data-discovery/dataset/${record.id}?backUrl=${url}`,
+                    );
+                  },
+                  style: {
+                    cursor: 'pointer',
+                  },
+                })}
               />
             </Spin>
           </div>
