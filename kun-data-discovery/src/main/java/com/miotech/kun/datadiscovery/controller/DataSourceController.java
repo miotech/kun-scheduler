@@ -8,7 +8,7 @@ import com.miotech.kun.datadiscovery.model.vo.DatasetLineageVO;
 import com.miotech.kun.datadiscovery.model.vo.PullDataVO;
 import com.miotech.kun.datadiscovery.service.DatasetFieldService;
 import com.miotech.kun.datadiscovery.service.DatasetService;
-import com.miotech.kun.datadiscovery.service.DatasourceService;
+import com.miotech.kun.datadiscovery.service.DataSourceService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -33,45 +33,45 @@ public class DataSourceController {
     DatasetFieldService datasetFieldService;
 
     @Autowired
-    DatasourceService datasourceService;
+    DataSourceService dataSourceService;
 
-    @GetMapping("/metadata/databases/search")
-    public RequestResult<DatasourceBasicPage> searchDatabases(BasicSearchRequest basicSearchRequest) {
-        return RequestResult.success(datasourceService.search(basicSearchRequest));
+    @GetMapping("/metadata/datasources/search")
+    public RequestResult<DataSourceBasicPage> searchDataSource(BasicSearchRequest basicSearchRequest) {
+        return RequestResult.success(dataSourceService.search(basicSearchRequest));
     }
 
-    @GetMapping("/metadata/databases")
-    public RequestResult<DatasourcePage> getDatabases(DatabaseSearchRequest databaseSearchRequest) {
-        return RequestResult.success(datasourceService.search(databaseSearchRequest));
+    @GetMapping("/metadata/datasources")
+    public RequestResult<DataSourcePage> getDataSource(DataSourceSearchRequest dataSourceSearchRequest) {
+        return RequestResult.success(dataSourceService.search(dataSourceSearchRequest));
     }
 
-    @PostMapping("/metadata/database/add")
-    public RequestResult<Datasource> addDatabase(@RequestBody DatabaseRequest databaseRequest) throws SQLException {
-        return RequestResult.success(datasourceService.add(databaseRequest));
+    @PostMapping("/metadata/datasource/add")
+    public RequestResult<DataSource> addDataSource(@RequestBody DataSourceRequest dataSourceRequest) throws SQLException {
+        return RequestResult.success(dataSourceService.add(dataSourceRequest));
     }
 
-    @PostMapping("/metadata/database/{id}/update")
-    public RequestResult<Datasource> updateDatabase(@PathVariable Long id,
-                                                    @RequestBody DatabaseRequest databaseRequest) throws SQLException {
-        return RequestResult.success(datasourceService.update(id, databaseRequest));
+    @PostMapping("/metadata/datasource/{id}/update")
+    public RequestResult<DataSource> updateDataSource(@PathVariable Long id,
+                                                      @RequestBody DataSourceRequest dataSourceRequest) throws SQLException {
+        return RequestResult.success(dataSourceService.update(id, dataSourceRequest));
     }
 
-    @DeleteMapping("/metadata/database/{id}")
-    public RequestResult<IdVO> deleteDatabase(@PathVariable Long id) {
-        datasourceService.delete(id);
+    @DeleteMapping("/metadata/datasource/{id}")
+    public RequestResult<IdVO> deleteDataSource(@PathVariable Long id) {
+        dataSourceService.delete(id);
         IdVO idVO = new IdVO();
         idVO.setId(id);
         return RequestResult.success(idVO);
     }
 
-    @PostMapping("/metadata/database/{id}/pull")
+    @PostMapping("/metadata/datasource/{id}/pull")
     public RequestResult<PullDataVO> pullDatabase(@PathVariable String id) {
         return RequestResult.success();
     }
 
-    @GetMapping("/metadata/database/types")
-    public RequestResult<List<DatasourceType>> getDatasourceTypes() {
-        return RequestResult.success(datasourceService.getAllTypes());
+    @GetMapping("/metadata/datasource/types")
+    public RequestResult<List<DataSourceType>> getDataSourceTypes() {
+        return RequestResult.success(dataSourceService.getAllTypes());
     }
 
     @GetMapping("/metadata/datasets/search")

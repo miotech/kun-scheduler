@@ -16,7 +16,7 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
-public class Datasource {
+public class DataSource {
 
     @JsonSerialize(using= ToStringSerializer.class)
     private Long id;

@@ -13,7 +13,7 @@ import java.util.List;
 
 @Data
 @NoArgsConstructor
-public class DatabaseRequest {
+public class DataSourceRequest {
 
     private Long typeId;
 

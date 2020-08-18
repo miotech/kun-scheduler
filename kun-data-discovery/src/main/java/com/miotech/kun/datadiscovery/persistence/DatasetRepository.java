@@ -11,12 +11,12 @@ import com.miotech.kun.datadiscovery.model.entity.DatasetBasic;
 import com.miotech.kun.datadiscovery.model.entity.DatasetBasicPage;
 import com.miotech.kun.datadiscovery.model.entity.Watermark;
 import com.miotech.kun.dataquality.persistence.DataQualityRepository;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -77,20 +77,20 @@ public class DatasetRepository extends BaseRepository {
         StringBuilder searchGroupSql = new StringBuilder("group by gid").append("\n");
         StringBuilder whereClause = new StringBuilder("where 1=1").append("\n");
         List<Object> pstmtArgs = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(datasetSearchRequest.getDsIdList()) || !CollectionUtils.isEmpty(datasetSearchRequest.getDbTypeList())) {
+        if (CollectionUtils.isNotEmpty(datasetSearchRequest.getDsIdList()) || CollectionUtils.isNotEmpty(datasetSearchRequest.getDsTypeList())) {
             searchSql.append("inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id").append("\n");
-            if (!CollectionUtils.isEmpty(datasetSearchRequest.getDsIdList())) {
+            if (CollectionUtils.isNotEmpty(datasetSearchRequest.getDsIdList())) {
                 searchSql.append("and kmdsrc.id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDsIdList())).append("\n");
             }
-            if (!CollectionUtils.isEmpty(datasetSearchRequest.getDbTypeList())) {
-                searchSql.append("and kmdsrc.type_id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDbTypeList())).append("\n");
+            if (CollectionUtils.isNotEmpty(datasetSearchRequest.getDsTypeList())) {
+                searchSql.append("and kmdsrc.type_id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDsTypeList())).append("\n");
             }
         }
-        if (!CollectionUtils.isEmpty(datasetSearchRequest.getOwnerList())) {
+        if (CollectionUtils.isNotEmpty(datasetSearchRequest.getOwnerList())) {
             searchSql.append("inner join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid").append("\n");
             searchSql.append("and owner in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getOwnerList())).append("\n");
         }
-        if (!CollectionUtils.isEmpty(datasetSearchRequest.getTagList())) {
+        if (CollectionUtils.isNotEmpty(datasetSearchRequest.getTagList())) {
             searchSql.append("inner join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid").append("\n");
             searchSql.append("and tag in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getTagList())).append("\n");
         }
