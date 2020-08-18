@@ -75,13 +75,16 @@ export async function searchDatasetsService(
 }
 
 export interface SearchAllDbServiceResp {
-  databases: dbFilterItem[];
+  datasources: dbFilterItem[];
 }
 
 export async function searchAllDbService(keyword: string) {
-  const resp = await get<SearchAllDbServiceResp>('/metadata/databases/search', {
-    keyword,
-    pageSize: 1000000,
-  });
+  const resp = await get<SearchAllDbServiceResp>(
+    '/metadata/datasources/search',
+    {
+      keyword,
+      pageSize: 1000000,
+    },
+  );
   return resp;
 }
