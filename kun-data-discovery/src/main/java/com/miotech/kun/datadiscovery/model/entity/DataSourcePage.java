@@ -1,6 +1,5 @@
 package com.miotech.kun.datadiscovery.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.common.model.PageInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -13,8 +12,7 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 @Data
-public class DatasourcePage extends PageInfo {
+public class DataSourcePage extends PageInfo {
 
-    @JsonProperty("databases")
-    private List<Datasource> datasources;
+    private List<DataSource> datasources;
 }

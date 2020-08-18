@@ -3,9 +3,9 @@ package com.miotech.kun.datadiscovery;
 import com.google.gson.reflect.TypeToken;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.utils.JSONUtils;
-import com.miotech.kun.datadiscovery.model.bo.DatabaseRequest;
-import com.miotech.kun.datadiscovery.model.entity.Datasource;
-import com.miotech.kun.datadiscovery.model.entity.DatasourceType;
+import com.miotech.kun.datadiscovery.model.bo.DataSourceRequest;
+import com.miotech.kun.datadiscovery.model.entity.DataSource;
+import com.miotech.kun.datadiscovery.model.entity.DataSourceType;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONObject;
 import org.junit.Assert;
@@ -26,50 +26,50 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * @created: 2020/6/12
  */
 @Slf4j
-public class DatasourceControllerTest extends BaseControllerTest {
+public class DataSourceControllerTest extends BaseControllerTest {
 
     @Autowired
     MockMvc mockMvc;
 
     @Test
     public void testGetDatasourceType() throws Exception {
-        RequestResult<List<DatasourceType>> result = getDatasourceType();
+        RequestResult<List<DataSourceType>> result = getDatasourceType();
         Assert.assertEquals(5, result.getResult().size());
     }
 
-    private RequestResult<List<DatasourceType>> getDatasourceType() throws Exception {
+    private RequestResult<List<DataSourceType>> getDatasourceType() throws Exception {
         String jsonResult = mockMvc.perform(MockMvcRequestBuilders
                 .get(getUrl("/metadata/database/types")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn().getResponse().getContentAsString();
-        Type type = new TypeToken<RequestResult<List<DatasourceType>>>() {
+        Type type = new TypeToken<RequestResult<List<DataSourceType>>>() {
         }.getType();
         return JSONUtils.toJavaObject(jsonResult, type);
     }
 
     @Test
     public void testAddDatasource() throws Exception {
-        List<DatasourceType> datasourceTypes = getDatasourceType().getResult();
+        List<DataSourceType> dataSourceTypes = getDatasourceType().getResult();
         String dsName = "DB-TEST-1";
-        DatabaseRequest databaseRequest = new DatabaseRequest();
-        databaseRequest.setName(dsName);
-        databaseRequest.setTypeId(datasourceTypes.get(0).getId());
-        databaseRequest.setInformation(new JSONObject());
-        databaseRequest.setCreateUser(DEFAULT_USER);
-        databaseRequest.setCreateTime(DEFAULT_TIME);
-        databaseRequest.setUpdateUser(DEFAULT_USER);
-        databaseRequest.setUpdateTime(DEFAULT_TIME);
+        DataSourceRequest dataSourceRequest = new DataSourceRequest();
+        dataSourceRequest.setName(dsName);
+        dataSourceRequest.setTypeId(dataSourceTypes.get(0).getId());
+        dataSourceRequest.setInformation(new JSONObject());
+        dataSourceRequest.setCreateUser(DEFAULT_USER);
+        dataSourceRequest.setCreateTime(DEFAULT_TIME);
+        dataSourceRequest.setUpdateUser(DEFAULT_USER);
+        dataSourceRequest.setUpdateTime(DEFAULT_TIME);
         String jsonResult = mockMvc.perform(MockMvcRequestBuilders
                 .post(getUrl("/metadata/database/add"))
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JSONUtils.toJsonString(databaseRequest)))
+                .content(JSONUtils.toJsonString(dataSourceRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn().getResponse().getContentAsString();
-        Type type = new TypeToken<RequestResult<Datasource>>() {
+        Type type = new TypeToken<RequestResult<DataSource>>() {
         }.getType();
-        RequestResult<Datasource> result = JSONUtils.toJavaObject(jsonResult, type);
+        RequestResult<DataSource> result = JSONUtils.toJavaObject(jsonResult, type);
         Assert.assertEquals(dsName, result.getResult().getName());
     }
 }
