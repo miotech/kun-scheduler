@@ -13,7 +13,7 @@ import java.util.List;
  * @created: 6/12/20
  */
 @Data
-public class DatasourceType {
+public class DataSourceType {
 
     @JsonSerialize(using= ToStringSerializer.class)
     private Long id;
