@@ -153,6 +153,15 @@ export const dataDiscovery = {
       ...state,
       ...payload,
     }),
+    updateFilterAndPaginationFromUrl: (
+      state: DataDiscoveryState,
+      payload: Partial<DataDiscoveryState>,
+    ) => {
+      return {
+        ...state,
+        ...payload,
+      };
+    },
     updateFilter: (
       state: DataDiscoveryState,
       payload: { key: keyof DataDiscoveryState; value: any },
