@@ -23,7 +23,7 @@ public class DatasetSearchRequest extends PageInfo {
 
     private List<String> tagList;
 
-    private List<Long> dbTypeList;
+    private List<Long> dsTypeList;
 
     private List<Long> dsIdList;
 
