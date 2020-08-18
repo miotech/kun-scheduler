@@ -117,6 +117,7 @@ export default {
   'dataDiscovery.tags': '标签',
   'dataDiscovery.dbtype': '类型',
   'dataDiscovery.datasource': '数据源',
+  'dataDiscovery.db': '数据库',
   'dataDiscovery.popularDatasets': '热门数据集',
   'dataDiscovery.datasetsTable.header.name': '名字',
   'dataDiscovery.datasetsTable.header.database': '数据库',

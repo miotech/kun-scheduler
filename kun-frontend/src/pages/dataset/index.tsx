@@ -35,10 +35,12 @@ export default function DataDisvocery() {
     ownerList,
     tagList,
     dsIdList,
+    dbList,
 
+    allDbList,
     allOwnerList,
     allTagList,
-    allDbList,
+    allDsList,
 
     datasetList,
 
@@ -57,9 +59,12 @@ export default function DataDisvocery() {
       tagList: state.dataDiscovery.tagList,
       dsIdList: state.dataDiscovery.dsIdList,
 
+      dbList: state.dataDiscovery.dbList,
+
+      allDbList: state.dataDiscovery.allDbList,
       allOwnerList: state.dataDiscovery.allOwnerList,
       allTagList: state.dataDiscovery.allTagList,
-      allDbList: state.dataDiscovery.allDbList,
+      allDsList: state.dataDiscovery.allDsList,
 
       datasetList: state.dataDiscovery.datasetList,
       pagination: state.dataDiscovery.pagination,
@@ -73,7 +78,8 @@ export default function DataDisvocery() {
     dispatch.dataDiscovery.fetchAllOwnerList();
     dispatch.dataDiscovery.fetchAllTagList();
     dispatch.dataSettings.fetchDatabaseTypeList();
-    dispatch.dataDiscovery.fetchAllDb('');
+    dispatch.dataDiscovery.fetchAllDs('');
+    dispatch.dataDiscovery.fetchAllDb();
   }, [dispatch.dataDiscovery, dispatch.dataSettings]);
 
   const debounceSearchContent = useDebounce(searchContent, 1000);
@@ -85,6 +91,7 @@ export default function DataDisvocery() {
       tagList,
       dsTypeList,
       dsIdList,
+      dbList,
       watermarkMode,
       watermarkAbsoluteValue,
       watermarkQuickeValue,
@@ -105,6 +112,7 @@ export default function DataDisvocery() {
     watermarkAbsoluteValue,
     watermarkMode,
     watermarkQuickeValue,
+    dbList,
   ]);
 
   const handleChangeSearch = useCallback(
@@ -348,7 +356,7 @@ export default function DataDisvocery() {
                   placeholder={t('dataDiscovery.pleaseSelect')}
                   allowClear
                 >
-                  {allDbList.map(option => (
+                  {allDsList.map(option => (
                     <Option key={option.id} value={option.id}>
                       {option.name}
                     </Option>
@@ -432,6 +440,33 @@ export default function DataDisvocery() {
                   {allTagList.map(option => (
                     <Option key={option} value={option}>
                       {option}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            <div className={styles.filterItem}>
+              <div className={styles.filterItemTitle}>
+                {t('dataDiscovery.db')}
+              </div>
+              <div className={styles.filterItemSelect}>
+                <Select
+                  value={dbList}
+                  mode="multiple"
+                  size="large"
+                  onChange={v => {
+                    dispatch.dataDiscovery.updateFilter({
+                      key: 'dbList',
+                      value: v,
+                    });
+                  }}
+                  placeholder={t('dataDiscovery.pleaseSelect')}
+                  allowClear
+                >
+                  {allDbList.map(db => (
+                    <Option key={db.name} value={db.name}>
+                      {db.name}
                     </Option>
                   ))}
                 </Select>
