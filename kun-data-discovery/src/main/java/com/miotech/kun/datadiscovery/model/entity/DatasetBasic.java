@@ -38,4 +38,6 @@ public class DatasetBasic {
     private List<String> owners;
 
     private List<String> tags;
+
+    private List<GlossaryBasic> glossaries;
 }
