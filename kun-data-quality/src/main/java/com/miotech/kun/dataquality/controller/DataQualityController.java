@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -111,6 +112,7 @@ public class DataQualityController {
     }
 
     @PostMapping("/data-quality/add")
+    @Transactional(rollbackFor = Exception.class)
     public RequestResult<IdVO> addCase(@RequestBody DataQualityRequest dataQualityRequest) {
         IdVO vo = new IdVO();
         vo.setId(dataQualityService.addCase(dataQualityRequest));
