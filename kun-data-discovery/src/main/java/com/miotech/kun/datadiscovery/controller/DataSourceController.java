@@ -65,13 +65,18 @@ public class DataSourceController {
     }
 
     @PostMapping("/metadata/datasource/{id}/pull")
-    public RequestResult<PullDataVO> pullDatabase(@PathVariable String id) {
+    public RequestResult<PullDataVO> pullDataSource(@PathVariable String id) {
         return RequestResult.success();
     }
 
     @GetMapping("/metadata/datasource/types")
     public RequestResult<List<DataSourceType>> getDataSourceTypes() {
         return RequestResult.success(dataSourceService.getAllTypes());
+    }
+
+    @GetMapping("/metadata/databases")
+    public RequestResult<List<Database>> getDatabases() {
+        return RequestResult.success(datasetService.getAllDatabase());
     }
 
     @GetMapping("/metadata/datasets/search")
