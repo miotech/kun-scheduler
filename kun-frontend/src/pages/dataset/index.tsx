@@ -1,16 +1,23 @@
 import React, { useCallback, useMemo } from 'react';
-import { useHistory } from 'umi';
+import { useHistory, Link } from 'umi';
 import { Input, Select, Table, Tag, Spin } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { PaginationProps } from 'antd/es/pagination';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import { useUpdateEffect, useMount } from 'ahooks';
 import qs from 'qs';
+import { CopyOutlined } from '@ant-design/icons';
 import { RootDispatch, RootState } from '@/rematch/store';
-import { Mode, Dataset, Watermark } from '@/rematch/models/dataDiscovery';
+import {
+  Mode,
+  Dataset,
+  Watermark,
+  GlossaryItem,
+} from '@/rematch/models/dataDiscovery';
 
 import color from '@/styles/color';
 
+import useBackPath from '@/hooks/useBackPath';
 import useI18n from '@/hooks/useI18n';
 import useDebounce from '@/hooks/useDebounce';
 
@@ -38,6 +45,8 @@ const getOrder = (order: keyof typeof tableOrderMap | null) =>
 export default function DataDisvocery() {
   const t = useI18n();
 
+  const { getBackPath } = useBackPath();
+
   const history = useHistory();
   const { pathname, search } = history.location;
 
@@ -53,6 +62,7 @@ export default function DataDisvocery() {
     tagList,
     dsIdList,
     dbList,
+    glossaryIdList,
 
     sortKey,
     sortOrder,
@@ -61,6 +71,7 @@ export default function DataDisvocery() {
     allOwnerList,
     allTagList,
     allDsList,
+    allGlossaryList,
 
     datasetList,
 
@@ -78,8 +89,8 @@ export default function DataDisvocery() {
       ownerList: state.dataDiscovery.ownerList,
       tagList: state.dataDiscovery.tagList,
       dsIdList: state.dataDiscovery.dsIdList,
-
       dbList: state.dataDiscovery.dbList,
+      glossaryIdList: state.dataDiscovery.glossaryIdList,
 
       sortKey: state.dataDiscovery.sortKey,
       sortOrder: state.dataDiscovery.sortOrder,
@@ -88,6 +99,7 @@ export default function DataDisvocery() {
       allOwnerList: state.dataDiscovery.allOwnerList,
       allTagList: state.dataDiscovery.allTagList,
       allDsList: state.dataDiscovery.allDsList,
+      allGlossaryList: state.dataDiscovery.allGlossaryList,
 
       datasetList: state.dataDiscovery.datasetList,
       pagination: state.dataDiscovery.pagination,
@@ -107,6 +119,7 @@ export default function DataDisvocery() {
       dsTypeList,
       dsIdList,
       dbList,
+      glossaryIdList,
       watermarkMode,
       watermarkAbsoluteValue,
       watermarkQuickeValue,
@@ -125,6 +138,7 @@ export default function DataDisvocery() {
     dsTypeList,
     dsIdList,
     dbList,
+    glossaryIdList,
     watermarkMode,
     watermarkAbsoluteValue,
     watermarkQuickeValue,
@@ -137,8 +151,6 @@ export default function DataDisvocery() {
   useMount(() => {
     if (search) {
       const oldFilters = qs.parse(search.replace('?', ''));
-      // eslint-disable-next-line
-      console.log('oldFilters: ', oldFilters);
       dispatch.dataDiscovery.updateFilterAndPaginationFromUrl(oldFilters);
     }
     fetchDatasets();
@@ -147,6 +159,7 @@ export default function DataDisvocery() {
     dispatch.dataSettings.fetchDatabaseTypeList();
     dispatch.dataDiscovery.fetchAllDs('');
     dispatch.dataDiscovery.fetchAllDb();
+    dispatch.dataDiscovery.fetchAllGlossary();
   });
 
   useUpdateEffect(() => {
@@ -165,6 +178,7 @@ export default function DataDisvocery() {
       tagList,
       dsIdList,
       dbList,
+      glossaryIdList,
 
       sortKey,
       sortOrder,
@@ -178,6 +192,7 @@ export default function DataDisvocery() {
     dbList,
     dsIdList,
     dsTypeList,
+    glossaryIdList,
     ownerList,
     pagination,
     pathname,
@@ -294,6 +309,33 @@ export default function DataDisvocery() {
           render: (watermark: Watermark) => watermarkFormatter(watermark.time),
         },
         {
+          title: t('dataDiscovery.datasetsTable.header.glossary'),
+          dataIndex: 'glossaries',
+          key: 'glossaries',
+          width: 180,
+          render: (glossaties: GlossaryItem[]) => (
+            <div
+              onClick={e => {
+                e.stopPropagation();
+              }}
+            >
+              {(glossaties || []).slice(0, 3).map(glossary => (
+                <div className={styles.glossaryItem}>
+                  <CopyOutlined className={styles.glossaryIcon} />
+                  <Link
+                    to={getBackPath(`/data-discovery/glossary/${glossary.id}`)}
+                  >
+                    {glossary.name}
+                  </Link>
+                </div>
+              ))}
+              {glossaties && glossaties.length > 3 && (
+                <div className={styles.ellipsisItem}>...</div>
+              )}
+            </div>
+          ),
+        },
+        {
           title: t('dataDiscovery.datasetsTable.header.description'),
           dataIndex: 'description',
           key: 'description',
@@ -338,7 +380,7 @@ export default function DataDisvocery() {
           ),
         },
       ] as ColumnProps<Dataset>[],
-    [sortKey, sortOrder, t],
+    [getBackPath, sortKey, sortOrder, t],
   );
 
   const scroll = useMemo(
@@ -449,6 +491,7 @@ export default function DataDisvocery() {
                   value={dsIdList}
                   mode="multiple"
                   size="large"
+                  optionFilterProp="children"
                   onChange={v => {
                     dispatch.dataDiscovery.updateFilter({
                       key: 'dsIdList',
@@ -476,6 +519,7 @@ export default function DataDisvocery() {
                   value={dsTypeList}
                   mode="multiple"
                   size="large"
+                  optionFilterProp="children"
                   onChange={v => {
                     dispatch.dataDiscovery.updateFilter({
                       key: 'dsTypeList',
@@ -550,6 +594,34 @@ export default function DataDisvocery() {
 
             <div className={styles.filterItem}>
               <div className={styles.filterItemTitle}>
+                {t('dataDiscovery.glossary')}
+              </div>
+              <div className={styles.filterItemSelect}>
+                <Select
+                  value={glossaryIdList}
+                  mode="multiple"
+                  size="large"
+                  optionFilterProp="children"
+                  onChange={v => {
+                    dispatch.dataDiscovery.updateFilter({
+                      key: 'glossaryIdList',
+                      value: v,
+                    });
+                  }}
+                  placeholder={t('dataDiscovery.pleaseSelect')}
+                  allowClear
+                >
+                  {allGlossaryList.map(glossary => (
+                    <Option key={glossary.id} value={glossary.id}>
+                      {glossary.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            <div className={styles.filterItem}>
+              <div className={styles.filterItemTitle}>
                 {t('dataDiscovery.db')}
               </div>
               <div className={styles.filterItemSelect}>
@@ -557,6 +629,7 @@ export default function DataDisvocery() {
                   value={dbList}
                   mode="multiple"
                   size="large"
+                  optionFilterProp="children"
                   onChange={v => {
                     dispatch.dataDiscovery.updateFilter({
                       key: 'dbList',

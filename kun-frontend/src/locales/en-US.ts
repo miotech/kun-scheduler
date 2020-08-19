@@ -117,6 +117,7 @@ export default {
   'dataDiscovery.dbtype': 'Type',
   'dataDiscovery.datasource': 'Datasource',
   'dataDiscovery.db': 'Database',
+  'dataDiscovery.glossary': 'Glossary',
   'dataDiscovery.popularDatasets': 'Popular Datasets',
   'dataDiscovery.datasetsTable.header.name': 'Name',
   'dataDiscovery.datasetsTable.header.database': 'Database',
@@ -124,6 +125,7 @@ export default {
   'dataDiscovery.datasetsTable.header.description': 'Description',
   'dataDiscovery.datasetsTable.header.owners': 'Owners',
   'dataDiscovery.datasetsTable.header.watermark': 'Last Update',
+  'dataDiscovery.datasetsTable.header.glossary': 'Glossary',
   'dataDiscovery.datasetsTable.header.lifecycle': 'Lifecycle',
   'dataDiscovery.datasetsTable.header.databaseReference':
     'Datasource Reference',
