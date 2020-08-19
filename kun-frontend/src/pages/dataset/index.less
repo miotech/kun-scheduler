@@ -24,7 +24,7 @@
           }
           .filterItemSelect {
             width: @selectWidth;
-            :global{
+            :global {
               .ant-select {
                 width: 100%;
               }
@@ -44,6 +44,22 @@
         .nameLink {
           color: @darkBlue;
           font-size: 14px;
+        }
+        .glossaryItem {
+          display: flex;
+          align-items: center;
+          height: 21px;
+          margin-bottom: 5px;
+          font-size: 14px;
+          color: @darkBlue;
+          .glossaryIcon {
+            color: @secondary;
+            margin-right: 4px;
+          }
+        }
+        .ellipsisItem {
+          height: 21px;
+          .flexCenter();
         }
       }
     }

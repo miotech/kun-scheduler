@@ -9,6 +9,8 @@ import {
 } from '@/services/dataDiscovery';
 import { Pagination, DbType } from './index';
 import { RootDispatch } from '../store';
+import { searchGlossariesService } from '@/services/glossary';
+import { SearchGlossaryItem } from './glossary';
 
 export interface DataRange {
   startTime: number | null;
@@ -59,6 +61,7 @@ export interface SearchParams {
   dsTypeList?: string[];
   dsIdList?: string[];
   dbList?: string[];
+  glossaryIdList?: string[];
   watermarkMode?: Mode;
   watermarkAbsoluteValue?: DataRange;
   watermarkQuickeValue?: Quick;
@@ -77,6 +80,7 @@ export interface SearchParamsObj {
   dsTypeList?: string[];
   dsIdList?: string[];
   dbList?: string[];
+  glossaryIdList?: string[];
 
   sortKey: string | null;
   sortOrder: 'asc' | 'desc' | null;
@@ -102,11 +106,13 @@ export interface DataDiscoveryState {
   dsTypeList?: DbType[];
   dsIdList?: string[];
   dbList?: string[];
+  glossaryIdList?: string[];
 
   allDbList: DatabaseFilterItem[];
   allOwnerList: string[];
   allTagList: string[];
   allDsList: dsFilterItem[];
+  allGlossaryList: SearchGlossaryItem[];
 
   pagination: Pagination;
 
@@ -136,6 +142,7 @@ export const dataDiscovery = {
     allOwnerList: [],
     allTagList: [],
     allDsList: [],
+    allGlossaryList: [],
 
     pagination: {
       pageNumber: 1,
@@ -222,6 +229,7 @@ export const dataDiscovery = {
           dsTypeList,
           dsIdList,
           dbList,
+          glossaryIdList,
           sortKey,
           sortOrder,
           watermarkMode,
@@ -287,6 +295,7 @@ export const dataDiscovery = {
           dsTypeList,
           dsIdList,
           dbList,
+          glossaryIdList,
           sortOrder,
           sortKey,
         };
@@ -324,6 +333,15 @@ export const dataDiscovery = {
           dispatch.dataDiscovery.updateState({
             key: 'allDbList',
             value: resp,
+          });
+        }
+      },
+      async fetchAllGlossary() {
+        const resp = await searchGlossariesService('', 1000000);
+        if (resp) {
+          dispatch.dataDiscovery.updateState({
+            key: 'allGlossaryList',
+            value: resp.glossaries,
           });
         }
       },
