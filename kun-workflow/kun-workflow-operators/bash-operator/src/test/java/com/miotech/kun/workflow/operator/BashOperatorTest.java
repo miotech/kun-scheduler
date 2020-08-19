@@ -27,6 +27,18 @@ public class BashOperatorTest {
     }
 
     @Test
+    public void run_with_variables() {
+        operatorRunner.setConfigKey("command", "echo {{c}}");
+        operatorRunner.setConfigKey("variables", "{\"c\":\"hello\"}");
+
+        operatorRunner.run();
+
+        String logs = String.join("\n", operatorRunner.getLog());
+        assertTrue(logs.contains(" hello"));
+    }
+
+
+    @Test
     public void run_and_abort() {
         operatorRunner.setConfigKey("command", "sleep 200");
 

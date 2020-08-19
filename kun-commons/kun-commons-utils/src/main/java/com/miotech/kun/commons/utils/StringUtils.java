@@ -1,6 +1,11 @@
 package com.miotech.kun.commons.utils;
 
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class StringUtils {
+    public static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{([^\\}]+)\\}\\}");
 
     private StringUtils() {}
 
@@ -26,5 +31,23 @@ public class StringUtils {
 
     public static String toNullableString(Object obj) {
         return obj == null ? null : obj.toString();
+    }
+
+    public static String resolveWithVariable(String rawText, Map<String, String> variables) {
+        final Matcher matcher = VARIABLE_PATTERN.matcher(rawText);
+
+        String result = rawText;
+        while (matcher.find()) {
+            for (int i = 1; i <= matcher.groupCount(); i++) {
+                String key = matcher.group(i);
+                String value = variables.get(key);
+                if (value != null) {
+                    result = result.replace(String.format("{{%s}}", key), value);
+                } else {
+                    throw new IllegalArgumentException("Cannot resolve variable key `" + key + "`");
+                }
+            }
+        }
+        return result;
     }
 }
