@@ -28,7 +28,7 @@ public class SparkOperatorTest extends MockServerTestBase {
         Map<String ,String> params = new HashMap<>();
         params.put(SparkConfiguration.CONF_LIVY_BATCH_FILES, "file:///test.jar");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_APPLICATION, "Application");
-        params.put(SparkConfiguration.CONF_LIVY_BATCH_ARGS,  "-param1 a -param2 ${b}");
+        params.put(SparkConfiguration.CONF_LIVY_BATCH_ARGS,  "-param1 a -param2 {{b}}");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_NAME,  "testjob");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_CONF,  "{\"key1\":\"value2\"}");
         params.put(SparkConfiguration.CONF_LIVY_DISPATCH_ADDRESS, "hdfs://localhost:8020/tmp/");
@@ -39,7 +39,7 @@ public class SparkOperatorTest extends MockServerTestBase {
 
         // 1. create session
         String payload = "{\"file\":\"file:///test.jar\",\"proxyUser\":\"hadoop\",\"className\":\"Application\",\"args\":[\"-param1\",\"a\",\"-param2\",\"c\"],\"queue\":\"default\",\"name\":\"testjob\",\"conf\":{\"key1\":\"value2\"}}";
-        String response ="{\"id\":0,\"name\":null,\"appId\":\"1\",\"owner\":null,\"proxyUser\":null,\"state\":\"starting\",\"kind\":\"shared\",\"appInfo\":{\"driverLogUrl\":null,\"sparkUiUrl\":null},\"log\":[\"stdout: \",\"\\nstderr: \",\"\\nYARN Diagnostics: \"]}";
+        String response ="{\"id\":0,\"name\":null,\"appId\":\"1\",\"owner\":null,\"proxyUser\":null,\"state\":\"starting\",\"kind\":\"shared\",\"appInfo\":{\"driverLogUrl\":\"http://localhost:8042/node/containerlogs/container_1588732946776_46661_01_000001/livy\",\"sparkUiUrl\":null},\"log\":[\"stdout: \",\"\\nstderr: \",\"\\nYARN Diagnostics: \"]}";
         mockPost("/batches",  payload, response);
 
         // 2. query session state
@@ -61,7 +61,7 @@ public class SparkOperatorTest extends MockServerTestBase {
         Map<String ,String> params = new HashMap<>();
         params.put(SparkConfiguration.CONF_LIVY_BATCH_FILES, "file:///test.jar");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_APPLICATION, "Application");
-        params.put(SparkConfiguration.CONF_LIVY_BATCH_ARGS,  "-param1 a -param2 ${b}");
+        params.put(SparkConfiguration.CONF_LIVY_BATCH_ARGS,  "-param1 a -param2 {{b}}");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_NAME,  "testjob");
         params.put(SparkConfiguration.CONF_LIVY_BATCH_CONF,  "{\"key1\":\"value2\"}");
         params.put(SparkConfiguration.CONF_LIVY_DISPATCH_ADDRESS, "hdfs://localhost:8020/tmp/");
@@ -72,10 +72,11 @@ public class SparkOperatorTest extends MockServerTestBase {
 
         // 1. create session
         String payload = "{\"file\":\"file:///test.jar\",\"proxyUser\":\"hadoop\",\"className\":\"Application\",\"args\":[\"-param1\",\"a\",\"-param2\",\"c\"],\"queue\":\"default\",\"name\":\"testjob\",\"conf\":{\"key1\":\"value2\"}}";
-        String response ="{\"id\":0,\"name\":null,\"appId\":\"1\",\"owner\":null,\"proxyUser\":null,\"state\":\"starting\",\"kind\":\"shared\",\"appInfo\":{\"driverLogUrl\":null,\"sparkUiUrl\":null},\"log\":[\"stdout: \",\"\\nstderr: \",\"\\nYARN Diagnostics: \"]}";
+        String response ="{\"id\":0,\"name\":null,\"appId\":\"1\",\"owner\":null,\"proxyUser\":null,\"state\":\"starting\",\"kind\":\"shared\",\"appInfo\":{\"driverLogUrl\":\"http://localhost:8042/node/containerlogs/container_1588732946776_46661_01_000001/livy\",\"sparkUiUrl\":null},\"log\":[\"stdout: \",\"\\nstderr: \",\"\\nYARN Diagnostics: \"]}";
         mockPost("/batches",  payload, response);
 
         // 2. query session state
+        mockGet("/batches/0", response);
         mockGet("/batches/0/state", "{\"state\":\"starting\"}");
         mockGet("/batches/0/state", "{\"state\":\"running\"}");
 
