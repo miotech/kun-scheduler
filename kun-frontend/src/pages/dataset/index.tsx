@@ -23,6 +23,18 @@ import styles from './index.less';
 const { Search } = Input;
 const { Option } = Select;
 
+const orderMap = {
+  descend: 'desc',
+  ascend: 'asc',
+};
+const tableOrderMap = {
+  desc: 'descend',
+  asc: 'ascend',
+};
+
+const getOrder = (order: keyof typeof tableOrderMap | null) =>
+  order ? tableOrderMap[order] : undefined;
+
 export default function DataDisvocery() {
   const t = useI18n();
 
@@ -41,6 +53,9 @@ export default function DataDisvocery() {
     tagList,
     dsIdList,
     dbList,
+
+    sortKey,
+    sortOrder,
 
     allDbList,
     allOwnerList,
@@ -65,6 +80,9 @@ export default function DataDisvocery() {
       dsIdList: state.dataDiscovery.dsIdList,
 
       dbList: state.dataDiscovery.dbList,
+
+      sortKey: state.dataDiscovery.sortKey,
+      sortOrder: state.dataDiscovery.sortOrder,
 
       allDbList: state.dataDiscovery.allDbList,
       allOwnerList: state.dataDiscovery.allOwnerList,
@@ -92,29 +110,35 @@ export default function DataDisvocery() {
       watermarkMode,
       watermarkAbsoluteValue,
       watermarkQuickeValue,
+      sortKey,
+      sortOrder,
       pagination: {
         pageSize: pagination.pageSize,
         pageNumber: pagination.pageNumber || 1,
       },
     });
   }, [
-    dsTypeList,
-    debounceSearchContent,
     dispatch.dataDiscovery,
-    dsIdList,
+    debounceSearchContent,
     ownerList,
-    pagination.pageNumber,
-    pagination.pageSize,
     tagList,
-    watermarkAbsoluteValue,
-    watermarkMode,
-    watermarkQuickeValue,
+    dsTypeList,
+    dsIdList,
     dbList,
+    watermarkMode,
+    watermarkAbsoluteValue,
+    watermarkQuickeValue,
+    sortKey,
+    sortOrder,
+    pagination.pageSize,
+    pagination.pageNumber,
   ]);
 
   useMount(() => {
     if (search) {
       const oldFilters = qs.parse(search.replace('?', ''));
+      // eslint-disable-next-line
+      console.log('oldFilters: ', oldFilters);
       dispatch.dataDiscovery.updateFilterAndPaginationFromUrl(oldFilters);
     }
     fetchDatasets();
@@ -142,6 +166,9 @@ export default function DataDisvocery() {
       dsIdList,
       dbList,
 
+      sortKey,
+      sortOrder,
+
       pagination,
     };
 
@@ -155,6 +182,8 @@ export default function DataDisvocery() {
     pagination,
     pathname,
     searchContent,
+    sortKey,
+    sortOrder,
     tagList,
     watermarkAbsoluteValue,
     watermarkMode,
@@ -219,7 +248,10 @@ export default function DataDisvocery() {
           title: t('dataDiscovery.datasetsTable.header.name'),
           dataIndex: 'name',
           key: 'name',
+          sorter: true,
           width: 170,
+          defaultSortOrder:
+            sortKey === 'name' ? getOrder(sortOrder) : undefined,
           render: (name: string) => (
             <span className={styles.nameLink}>{name}</span>
           ),
@@ -227,25 +259,37 @@ export default function DataDisvocery() {
         {
           title: t('dataDiscovery.datasetsTable.header.database'),
           dataIndex: 'database',
-          key: 'database',
+          key: 'database_name',
+          sorter: true,
           width: 80,
+          defaultSortOrder:
+            sortKey === 'database_name' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.datasource'),
           dataIndex: 'datasource',
-          key: 'datasource',
+          key: 'datasource_name',
+          sorter: true,
           width: 120,
+          defaultSortOrder:
+            sortKey === 'datasource_name' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.dbtype'),
           dataIndex: 'type',
           key: 'type',
+          sorter: true,
           width: 80,
+          defaultSortOrder:
+            sortKey === 'type' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.watermark'),
           dataIndex: 'high_watermark',
           key: 'high_watermark',
+          sorter: true,
+          defaultSortOrder:
+            sortKey === 'high_watermark' ? getOrder(sortOrder) : undefined,
           width: 150,
           render: (watermark: Watermark) => watermarkFormatter(watermark.time),
         },
@@ -294,7 +338,7 @@ export default function DataDisvocery() {
           ),
         },
       ] as ColumnProps<Dataset>[],
-    [t],
+    [sortKey, sortOrder, t],
   );
 
   const scroll = useMemo(
@@ -355,6 +399,18 @@ export default function DataDisvocery() {
     name: item.type,
     id: item.id,
   }));
+
+  const handleChangeTable = useCallback(
+    (_pagination, _filters, sorter) => {
+      const { columnKey, order } = sorter;
+      dispatch.dataDiscovery.updateFilter({ key: 'sortKey', value: columnKey });
+      dispatch.dataDiscovery.updateFilter({
+        key: 'sortOrder',
+        value: order ? orderMap[order as 'descend' | 'ascend'] : null,
+      });
+    },
+    [dispatch.dataDiscovery],
+  );
 
   return (
     <div className={styles.page}>
@@ -535,6 +591,7 @@ export default function DataDisvocery() {
                 size="small"
                 scroll={scroll}
                 pagination={tablePagination}
+                onChange={handleChangeTable}
                 onRow={record => ({
                   onClick: () => {
                     const url = encodeURIComponent(
