@@ -10,11 +10,14 @@ import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
+import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
+import com.miotech.kun.workflow.operator.spark.models.AppInfo;
 import com.miotech.kun.workflow.operator.spark.models.SparkApp;
 import com.miotech.kun.workflow.operator.spark.models.SparkJob;
 import com.miotech.kun.workflow.operator.spark.models.StateInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -34,6 +37,7 @@ import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
 public class SparkOperator extends LivyBaseSparkOperator {
     private static final Logger logger = LoggerFactory.getLogger(SparkOperator.class);
+    private final YarnLoggerParser loggerParser = new YarnLoggerParser();
 
     private SparkApp app;
 
@@ -110,22 +114,43 @@ public class SparkOperator extends LivyBaseSparkOperator {
         logger.info("Execute spark application using livy : batch id {}", jobId);
 
         StateInfo.State jobState;
+        String applicationId = null;
+        AppInfo appInfo = null;
         do {
+            if (StringUtils.isEmpty(applicationId)
+                    || StringUtils.isEmpty(app.getAppInfo().getDriverLogUrl())) {
+                app = livyClient.getSparkJob(jobId);
+                applicationId = app.getAppId();
+                appInfo = app.getAppInfo();
+                if (!StringUtils.isEmpty(applicationId)) {
+                    logger.info("Application info: {}", JSONUtils.toJsonString(app));
+                }
+            }
+
             jobState = livyClient.getSparkJobState(app.getId()).getState();
             if (jobState == null) {
                 throw new IllegalStateException("Cannot find state for job: " + app.getId());
             }
-            waitFoSeconds(3);
+            waitForSeconds(3);
         } while (!jobState.isFinished());
 
+        tailingYarnLog(appInfo);
         logger.info("spark job \"{}\", batch id: {}" , jobState, jobId);
         if (jobState.equals(StateInfo.State.SUCCESS)) {
-            // refresh app
-            app = livyClient.getSparkJob(jobId);
-            lineageAnalysis(context, app.getAppId());
+            lineageAnalysis(context, applicationId);
             return true;
         } else {
             return false;
+        }
+    }
+
+    private void tailingYarnLog(AppInfo app) {
+        try {
+            String logUrl = app.getDriverLogUrl();
+            logger.info("Fetch log from {}", logUrl);
+            logger.info(loggerParser.getYarnLogs(logUrl));
+        } catch (Exception e) {
+            logger.error("Error in fetch application logs, {}", e);
         }
     }
 
