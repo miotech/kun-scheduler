@@ -63,6 +63,9 @@ export interface SearchParams {
   watermarkAbsoluteValue?: DataRange;
   watermarkQuickeValue?: Quick;
   pagination: Pagination;
+
+  sortKey: string | null;
+  sortOrder: 'asc' | 'desc' | null;
 }
 
 export interface SearchParamsObj {
@@ -74,6 +77,9 @@ export interface SearchParamsObj {
   dsTypeList?: string[];
   dsIdList?: string[];
   dbList?: string[];
+
+  sortKey: string | null;
+  sortOrder: 'asc' | 'desc' | null;
 }
 
 export interface dsFilterItem {
@@ -107,6 +113,9 @@ export interface DataDiscoveryState {
   datasetList: Dataset[];
 
   dataListFetchLoading: boolean;
+
+  sortKey: string | null;
+  sortOrder: 'asc' | 'desc' | null;
 }
 
 export const dataDiscovery = {
@@ -136,6 +145,9 @@ export const dataDiscovery = {
 
     datasetList: [],
     dataListFetchLoading: false,
+
+    sortKey: null,
+    sortOrder: null,
   } as DataDiscoveryState,
 
   reducers: {
@@ -210,6 +222,8 @@ export const dataDiscovery = {
           dsTypeList,
           dsIdList,
           dbList,
+          sortKey,
+          sortOrder,
           watermarkMode,
           watermarkAbsoluteValue,
           watermarkQuickeValue,
@@ -273,6 +287,8 @@ export const dataDiscovery = {
           dsTypeList,
           dsIdList,
           dbList,
+          sortOrder,
+          sortKey,
         };
         seachDatasetsFlag += 1;
         const currentSeachDatasetsFlag = seachDatasetsFlag;
