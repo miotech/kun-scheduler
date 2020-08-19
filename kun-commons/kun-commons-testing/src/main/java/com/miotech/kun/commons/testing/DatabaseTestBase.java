@@ -22,6 +22,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Properties;
 
 public abstract class DatabaseTestBase extends GuiceTestBase {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseTestBase.class);
@@ -40,7 +41,9 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     @Before
     public void setUp() {
         // initialize database
-        DatabaseSetup setup = new DatabaseSetup(dataSource, "sql/");
+        Properties properties = new Properties();
+        properties.put("flyway.initSql", "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT");
+        DatabaseSetup setup = new DatabaseSetup(dataSource, properties, "sql/");
         setup.start();
     }
 
