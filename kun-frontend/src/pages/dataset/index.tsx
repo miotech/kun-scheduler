@@ -320,7 +320,7 @@ export default function DataDisvocery() {
               }}
             >
               {(glossaties || []).slice(0, 3).map(glossary => (
-                <div className={styles.glossaryItem}>
+                <div key={glossary.id} className={styles.glossaryItem}>
                   <CopyOutlined className={styles.glossaryIcon} />
                   <Link
                     to={getBackPath(`/data-discovery/glossary/${glossary.id}`)}
