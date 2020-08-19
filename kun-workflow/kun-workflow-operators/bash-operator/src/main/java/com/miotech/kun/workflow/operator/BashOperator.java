@@ -1,7 +1,10 @@
 package com.miotech.kun.workflow.operator;
 
+import com.miotech.kun.commons.utils.StringUtils;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -15,6 +18,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -22,13 +26,18 @@ import java.util.concurrent.TimeoutException;
 public class BashOperator extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(BashOperator.class);
     private static final String COMMAND = "command";
+    private static final String VARIABLES = "variables";
     private static final String DISPLAY_COMMAND = "bash command";
 
     private Process process;
 
     @Override
     public boolean run() {
-        String command = getContext().getConfig().getString(COMMAND);
+        Config config = getContext().getConfig();
+        Map<String, String> variables = JSONUtils.jsonStringToStringMap(config.getString(VARIABLES));
+        String command = config.getString(COMMAND);
+        command = StringUtils.resolveWithVariable(command, variables);
+
         logger.debug("Execute command:\n\n {}", command);
 
         try {
@@ -81,6 +90,6 @@ public class BashOperator extends KunOperator {
         return new ConfigDef()
                 .define(COMMAND, ConfigDef.Type.STRING, true, "bash command", DISPLAY_COMMAND)
                 .define("forceWaitSeconds", ConfigDef.Type.LONG, 10L, true, "force terminate wait seconds", "forceWaitSeconds")
-                .define("variables", ConfigDef.Type.STRING, "{}",true, "bash variables", "variables");
+                .define(VARIABLES, ConfigDef.Type.STRING, "{}",true, "bash variables", "variables");
     }
 }
