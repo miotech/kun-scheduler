@@ -2,7 +2,8 @@ import { Pagination, Sort } from '@/rematch/models';
 import {
   Dataset,
   SearchParamsObj,
-  dbFilterItem,
+  dsFilterItem,
+  DatabaseFilterItem,
 } from '@/rematch/models/dataDiscovery';
 import { get } from './utils';
 
@@ -74,17 +75,23 @@ export async function searchDatasetsService(
   // };
 }
 
-export interface SearchAllDbServiceResp {
-  datasources: dbFilterItem[];
+export interface SearchAllDsServiceResp {
+  datasources: dsFilterItem[];
 }
 
-export async function searchAllDbService(keyword: string) {
-  const resp = await get<SearchAllDbServiceResp>(
+export async function searchAllDsService(keyword: string) {
+  const resp = await get<SearchAllDsServiceResp>(
     '/metadata/datasources/search',
     {
       keyword,
       pageSize: 1000000,
     },
   );
+  return resp;
+}
+
+export type FetchAllDbService = DatabaseFilterItem[];
+export async function fetchAllDbService() {
+  const resp = await get<SearchAllDsServiceResp>('/metadata/databases');
   return resp;
 }

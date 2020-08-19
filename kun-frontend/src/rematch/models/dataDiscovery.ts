@@ -4,10 +4,13 @@ import {
   fetchAllTagsService,
   fetchAllUsersService,
   searchDatasetsService,
-  searchAllDbService,
+  searchAllDsService,
+  fetchAllDbService,
 } from '@/services/dataDiscovery';
 import { Pagination, DbType } from './index';
 import { RootDispatch } from '../store';
+import { searchGlossariesService } from '@/services/glossary';
+import { SearchGlossaryItem } from './glossary';
 
 export interface DataRange {
   startTime: number | null;
@@ -57,10 +60,15 @@ export interface SearchParams {
   tagList?: string[];
   dsTypeList?: string[];
   dsIdList?: string[];
+  dbList?: string[];
+  glossaryIdList?: string[];
   watermarkMode?: Mode;
   watermarkAbsoluteValue?: DataRange;
   watermarkQuickeValue?: Quick;
   pagination: Pagination;
+
+  sortKey: string | null;
+  sortOrder: 'asc' | 'desc' | null;
 }
 
 export interface SearchParamsObj {
@@ -71,10 +79,19 @@ export interface SearchParamsObj {
   tagList?: string[];
   dsTypeList?: string[];
   dsIdList?: string[];
+  dbList?: string[];
+  glossaryIdList?: string[];
+
+  sortKey: string | null;
+  sortOrder: 'asc' | 'desc' | null;
 }
 
-export interface dbFilterItem {
+export interface dsFilterItem {
   id: string;
+  name: string;
+}
+
+export interface DatabaseFilterItem {
   name: string;
 }
 
@@ -88,16 +105,23 @@ export interface DataDiscoveryState {
   tagList?: string[];
   dsTypeList?: DbType[];
   dsIdList?: string[];
+  dbList?: string[];
+  glossaryIdList?: string[];
 
+  allDbList: DatabaseFilterItem[];
   allOwnerList: string[];
   allTagList: string[];
-  allDbList: dbFilterItem[];
+  allDsList: dsFilterItem[];
+  allGlossaryList: SearchGlossaryItem[];
 
   pagination: Pagination;
 
   datasetList: Dataset[];
 
   dataListFetchLoading: boolean;
+
+  sortKey: string | null;
+  sortOrder: 'asc' | 'desc' | null;
 }
 
 export const dataDiscovery = {
@@ -112,10 +136,13 @@ export const dataDiscovery = {
     tagList: undefined,
     dsTypeList: undefined,
     dsIdList: undefined,
+    dbList: undefined,
 
+    allDbList: [],
     allOwnerList: [],
     allTagList: [],
-    allDbList: [],
+    allDsList: [],
+    allGlossaryList: [],
 
     pagination: {
       pageNumber: 1,
@@ -125,6 +152,9 @@ export const dataDiscovery = {
 
     datasetList: [],
     dataListFetchLoading: false,
+
+    sortKey: null,
+    sortOrder: null,
   } as DataDiscoveryState,
 
   reducers: {
@@ -142,6 +172,15 @@ export const dataDiscovery = {
       ...state,
       ...payload,
     }),
+    updateFilterAndPaginationFromUrl: (
+      state: DataDiscoveryState,
+      payload: Partial<DataDiscoveryState>,
+    ) => {
+      return {
+        ...state,
+        ...payload,
+      };
+    },
     updateFilter: (
       state: DataDiscoveryState,
       payload: { key: keyof DataDiscoveryState; value: any },
@@ -189,6 +228,10 @@ export const dataDiscovery = {
           tagList,
           dsTypeList,
           dsIdList,
+          dbList,
+          glossaryIdList,
+          sortKey,
+          sortOrder,
           watermarkMode,
           watermarkAbsoluteValue,
           watermarkQuickeValue,
@@ -251,6 +294,10 @@ export const dataDiscovery = {
           tagList,
           dsTypeList,
           dsIdList,
+          dbList,
+          glossaryIdList,
+          sortOrder,
+          sortKey,
         };
         seachDatasetsFlag += 1;
         const currentSeachDatasetsFlag = seachDatasetsFlag;
@@ -271,12 +318,30 @@ export const dataDiscovery = {
           }
         }
       },
-      async fetchAllDb(payload: string) {
-        const resp = await searchAllDbService(payload);
+      async fetchAllDs(payload: string) {
+        const resp = await searchAllDsService(payload);
+        if (resp) {
+          dispatch.dataDiscovery.updateState({
+            key: 'allDsList',
+            value: resp.datasources,
+          });
+        }
+      },
+      async fetchAllDb() {
+        const resp = await fetchAllDbService();
         if (resp) {
           dispatch.dataDiscovery.updateState({
             key: 'allDbList',
-            value: resp.datasources,
+            value: resp,
+          });
+        }
+      },
+      async fetchAllGlossary() {
+        const resp = await searchGlossariesService('', 1000000);
+        if (resp) {
+          dispatch.dataDiscovery.updateState({
+            key: 'allGlossaryList',
+            value: resp.glossaries,
           });
         }
       },
