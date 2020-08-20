@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
-import { IRouteComponentProps, IRoute } from 'umi';
+import { IRouteComponentProps, IRoute, Route } from 'umi';
 import { Provider } from 'react-redux';
+import { QueryParamProvider } from 'use-query-params';
 import { store } from '@/rematch/store';
 import useI18n from '@/hooks/useI18n';
 import BrowserCheck from '@/components/BrowserCheck/BrowserCheck';
@@ -26,20 +27,24 @@ export default function Layout({
   if (location.pathname.startsWith('/pdf')) {
     return (
       <BrowserCheck>
-        <Provider store={store}>
-          <NoBreadcrumbLayout route={route as IRoute}>
-            {children}
-          </NoBreadcrumbLayout>
-        </Provider>
+        <QueryParamProvider ReactRouterRoute={Route}>
+          <Provider store={store}>
+            <NoBreadcrumbLayout route={route as IRoute}>
+              {children}
+            </NoBreadcrumbLayout>
+          </Provider>
+        </QueryParamProvider>
       </BrowserCheck>
     );
   }
 
   return (
     <BrowserCheck>
-      <Provider store={store}>
-        <DefaultLayout route={route as IRoute}>{children}</DefaultLayout>
-      </Provider>
+      <QueryParamProvider ReactRouterRoute={Route}>
+        <Provider store={store}>
+          <DefaultLayout route={route as IRoute}>{children}</DefaultLayout>
+        </Provider>
+      </QueryParamProvider>
     </BrowserCheck>
   );
 }
