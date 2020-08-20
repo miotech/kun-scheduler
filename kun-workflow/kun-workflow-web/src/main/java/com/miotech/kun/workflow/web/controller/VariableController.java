@@ -3,11 +3,11 @@ package com.miotech.kun.workflow.web.controller;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.web.annotation.RequestBody;
+import com.miotech.kun.commons.web.annotation.RouteMapping;
+import com.miotech.kun.commons.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.common.variable.service.VariableService;
 import com.miotech.kun.workflow.common.variable.vo.VariableVO;
-import com.miotech.kun.workflow.web.annotation.RequestBody;
-import com.miotech.kun.workflow.web.annotation.RouteMapping;
-import com.miotech.kun.workflow.web.annotation.RouteVariable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

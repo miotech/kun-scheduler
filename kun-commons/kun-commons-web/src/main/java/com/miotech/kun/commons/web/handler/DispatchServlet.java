@@ -9,7 +9,6 @@ import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Qualifier;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -42,7 +41,8 @@ public class DispatchServlet extends HttpServlet {
 
     @Override
     public void init() {
-        router.scanPackage(basePackageName + ".controller");
+        router.scanPackage(basePackageName);
+        exceptionHandler.scanPackage(basePackageName);
     }
 
     @Override

@@ -1,10 +1,15 @@
-package com.miotech.kun.workflow.web;
+package com.miotech.kun.commons.web.handler;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+import com.google.inject.AbstractModule;
+import com.google.inject.Inject;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.miotech.kun.commons.testing.GuiceTestBase;
-import com.miotech.kun.workflow.utils.JSONUtils;
-import com.miotech.kun.workflow.web.mock.*;
+import com.miotech.kun.commons.web.annotation.BasePackageScan;
+import com.miotech.kun.commons.web.mock.*;
+import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -12,27 +17,29 @@ import org.mockito.Mockito;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 
 public class DispatchServletTest extends GuiceTestBase {
 
     private DispatchServlet dispatchServlet;
 
-    private MockController mockController = mock(MockController.class);
+    private final MockController mockController = mock(MockController.class);
+    private final HttpServletResponse response = mock(HttpServletResponse.class);
+    @Inject
+    private JsonSerializer jsonSerializer;;
 
-    private HttpServletResponse response = mock(HttpServletResponse.class);
+    @Override
+    protected void configuration() {
+        addModules(new RouterModule());
+    }
 
     @Before
     public void injectRouter() {
-        super.initInject();
-
-        HttpRouter httpRouter = injector.getInstance(HttpRouter.class);
-        httpRouter.addRouter(MockController.class);
         dispatchServlet = injector.getInstance(DispatchServlet.class);
+        dispatchServlet.init();
     }
 
     @Test
@@ -66,7 +73,7 @@ public class DispatchServletTest extends GuiceTestBase {
         request = new MockHttpServletRequest("POST", "/test/_create");
 
         MockCreation mockCreation = MockCreationFactory.createMockObject();
-        request.setContentAsString(JSONUtils.toJsonString(mockCreation));
+        request.setContentAsString(jsonSerializer.toString(mockCreation));
         dispatchServlet.service(request, response);
 
         ArgumentCaptor<MockCreation> argument = ArgumentCaptor.forClass(MockCreation.class);
@@ -130,7 +137,7 @@ public class DispatchServletTest extends GuiceTestBase {
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         dispatchServlet.service(request, response);
-        ObjectNode json = JSONUtils.jsonToObject(response.getContentAsString(), ObjectNode.class);
+        ObjectNode json = jsonSerializer.toObject(response.getContentAsString(), ObjectNode.class);
         json.remove("timestamp");
         assertEquals("{\"message\":\"Cannot resolve url mapping for: /test/not/found\",\"error\":\"Resource Not Found\",\"status\":400,\"path\":\"/test/not/found\"}",
                 json.toString());
@@ -147,7 +154,7 @@ public class DispatchServletTest extends GuiceTestBase {
                 .thenThrow(new RuntimeException("Internal error"));
 
         dispatchServlet.service(request, response);
-        ObjectNode json = JSONUtils.jsonToObject(response.getContentAsString(), ObjectNode.class);
+        ObjectNode json = jsonSerializer.toObject(response.getContentAsString(), ObjectNode.class);
         json.remove("timestamp");
         assertEquals("{\"message\":\"Internal error\",\"error\":\"Internal Server Error\",\"status\":500,\"path\":\"/test/int\"}",
                 json.toString());
@@ -158,7 +165,7 @@ public class DispatchServletTest extends GuiceTestBase {
 
         response = new MockHttpServletResponse();
         dispatchServlet.service(request, response);
-        json = JSONUtils.jsonToObject(response.getContentAsString(), ObjectNode.class);
+        json = jsonSerializer.toObject(response.getContentAsString(), ObjectNode.class);
         assertEquals("{\"code\":400,\"message\":\"Illegal argument error\"}",
                 json.toString());
     }
@@ -176,5 +183,14 @@ public class DispatchServletTest extends GuiceTestBase {
         String content = response.getContentAsString();
         assertEquals("{\"id\":1,\"name\":\"2\"}",
                 content);
+    }
+
+    private class RouterModule extends AbstractModule {
+        @Provides
+        @Singleton
+        @BasePackageScan
+        public String getPackageScan() {
+            return MockController.class.getPackage().getName();
+        }
     }
 }

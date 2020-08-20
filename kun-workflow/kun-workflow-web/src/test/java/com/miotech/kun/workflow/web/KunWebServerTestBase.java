@@ -1,12 +1,12 @@
 package com.miotech.kun.workflow.web;
 
 import com.google.inject.Inject;
+import com.miotech.kun.commons.db.DatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.PropertyUtils;
 import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
-import com.miotech.kun.commons.db.DatabaseModule;
-import com.miotech.kun.commons.utils.PropertyUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
@@ -26,7 +26,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
     private final Logger logger = LoggerFactory.getLogger(KunWebServerTestBase.class);
 
     @Inject
-    private KunWebServer webServer;
+    private KunWorkflowWebServer webServer;
 
     @Inject
     private Properties props;
@@ -35,13 +35,15 @@ public class KunWebServerTestBase extends GuiceTestBase {
     protected void configuration() {
         super.configuration();
         Properties props = PropertyUtils.loadAppProps("application-test.yaml");
-        addModules(new KunWebServerModule(props), new DatabaseModule(), new SchedulerModule());
+        addModules(new KunWorkflowServerModule(props),
+                new DatabaseModule(),
+                new SchedulerModule());
     }
 
     @Before
     public void setUp() {
         new Thread(() -> webServer.start()).start();
-        while(!webServer.isServerRunning()) {
+        while(!webServer.isReady()) {
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {

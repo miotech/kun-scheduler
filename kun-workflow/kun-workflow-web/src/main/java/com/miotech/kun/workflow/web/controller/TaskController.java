@@ -7,10 +7,10 @@ import com.miotech.kun.workflow.common.task.service.TaskService;
 import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.web.annotation.QueryParameter;
-import com.miotech.kun.workflow.web.annotation.RequestBody;
-import com.miotech.kun.workflow.web.annotation.RouteMapping;
-import com.miotech.kun.workflow.web.annotation.RouteVariable;
+import com.miotech.kun.commons.web.annotation.QueryParameter;
+import com.miotech.kun.commons.web.annotation.RequestBody;
+import com.miotech.kun.commons.web.annotation.RouteMapping;
+import com.miotech.kun.commons.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 
