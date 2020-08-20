@@ -6,17 +6,15 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
-import com.miotech.kun.datadiscovery.model.entity.Dataset;
-import com.miotech.kun.datadiscovery.model.entity.DatasetBasic;
-import com.miotech.kun.datadiscovery.model.entity.DatasetBasicPage;
-import com.miotech.kun.datadiscovery.model.entity.Watermark;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.dataquality.persistence.DataQualityRepository;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -38,7 +36,28 @@ public class DatasetRepository extends BaseRepository {
     DataQualityRepository dataQualityRepository;
 
     @Autowired
+    GlossaryRepository glossaryRepository;
+
+    @Autowired
     TagRepository tagRepository;
+
+    public List<Database> getAllDatabase() {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("distinct database_name")
+                .from("kun_mt_dataset")
+                .where("database_name is not null")
+                .getSQL();
+
+        return jdbcTemplate.query(sql, rs -> {
+            List<Database> databases = new ArrayList<>();
+            while (rs.next()) {
+                Database database = new Database();
+                database.setName(rs.getString("database_name"));
+                databases.add(database);
+            }
+            return databases;
+        });
+    }
 
     public DatasetBasicPage search(BasicSearchRequest basicSearchRequest) {
         String sql = "select kmd.gid, " +
@@ -73,31 +92,26 @@ public class DatasetRepository extends BaseRepository {
     }
 
     public DatasetBasicPage search(DatasetSearchRequest datasetSearchRequest) {
-        StringBuilder searchSql = new StringBuilder("select kmd.* from kun_mt_dataset kmd").append("\n");
-        StringBuilder searchGroupSql = new StringBuilder("group by gid").append("\n");
+
         StringBuilder whereClause = new StringBuilder("where 1=1").append("\n");
         List<Object> pstmtArgs = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(datasetSearchRequest.getDsIdList()) || !CollectionUtils.isEmpty(datasetSearchRequest.getDbTypeList())) {
-            searchSql.append("inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id").append("\n");
-            if (!CollectionUtils.isEmpty(datasetSearchRequest.getDsIdList())) {
-                searchSql.append("and kmdsrc.id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDsIdList())).append("\n");
+        if (CollectionUtils.isNotEmpty(datasetSearchRequest.getDsIdList()) || CollectionUtils.isNotEmpty(datasetSearchRequest.getDsTypeList())) {
+            if (CollectionUtils.isNotEmpty(datasetSearchRequest.getDsIdList())) {
+                whereClause.append("and kmdsrc.id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDsIdList())).append("\n");
             }
-            if (!CollectionUtils.isEmpty(datasetSearchRequest.getDbTypeList())) {
-                searchSql.append("and kmdsrc.type_id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDbTypeList())).append("\n");
+            if (CollectionUtils.isNotEmpty(datasetSearchRequest.getDsTypeList())) {
+                whereClause.append("and kmdsrc.type_id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDsTypeList())).append("\n");
             }
         }
-        if (!CollectionUtils.isEmpty(datasetSearchRequest.getOwnerList())) {
-            searchSql.append("inner join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid").append("\n");
-            searchSql.append("and owner in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getOwnerList())).append("\n");
+        if (CollectionUtils.isNotEmpty(datasetSearchRequest.getOwnerList())) {
+            whereClause.append("and owner in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getOwnerList())).append("\n");
         }
-        if (!CollectionUtils.isEmpty(datasetSearchRequest.getTagList())) {
-            searchSql.append("inner join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid").append("\n");
-            searchSql.append("and tag in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getTagList())).append("\n");
+        if (CollectionUtils.isNotEmpty(datasetSearchRequest.getTagList())) {
+            whereClause.append("and tag in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getTagList())).append("\n");
         }
         if (datasetSearchRequest.getWatermarkStart() != null || datasetSearchRequest.getWatermarkEnd() != null) {
-            searchSql.append("inner join (select dataset_gid, max(stats_date) as max_time from kun_mt_dataset_stats group by dataset_gid) watermark on (kmd.gid = watermark.dataset_gid)").append("\n");
             if (datasetSearchRequest.getWatermarkStart() != null) {
-                searchSql.append("and watermark.max_time >= ").append("?").append("\n");
+                whereClause.append("and watermark.max_time >= ").append("?").append("\n");
                 pstmtArgs.add(millisToTimestamp(datasetSearchRequest.getWatermarkStart()));
             }
             if (datasetSearchRequest.getWatermarkEnd() != null) {
@@ -105,20 +119,24 @@ public class DatasetRepository extends BaseRepository {
                 pstmtArgs.add(millisToTimestamp(datasetSearchRequest.getWatermarkEnd()));
             }
         }
+        if (CollectionUtils.isNotEmpty(datasetSearchRequest.getGlossaryIdList())) {
+            whereClause.append("and kmgtdr.glossary_id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getGlossaryIdList())).append("\n");
+        }
+        if (CollectionUtils.isNotEmpty(datasetSearchRequest.getDbList())) {
+            whereClause.append("and database_name in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getDbList())).append("\n");
+        }
         if (StringUtils.isNotEmpty(datasetSearchRequest.getSearchContent())) {
-            whereClause.append("and upper(name) like ?").append("\n");
+            whereClause.append("and upper(kmd.name) like ?").append("\n");
             pstmtArgs.add(toLikeSql(datasetSearchRequest.getSearchContent().toUpperCase()));
         }
-        searchSql.append(whereClause);
-        searchSql.append(searchGroupSql);
 
-        String countSql = "select count(1) as total_count from (" + searchSql + ") as result";
-        Long totalCount = jdbcTemplate.queryForObject(countSql, Long.class, pstmtArgs.toArray());
+        String orderByClause = "order by name\n";
+        if (StringUtils.isNotEmpty(datasetSearchRequest.getSortKey())
+                && StringUtils.isNotEmpty(datasetSearchRequest.getSortOrder())) {
+            orderByClause = "order by " + datasetSearchRequest.getSortKey() + " " + datasetSearchRequest.getSortOrder() + "\n";
+        }
 
-        String orderByClause = "order by kmd.name\n";
-        searchSql.append(orderByClause);
         String limitSql = toLimitSql(datasetSearchRequest.getPageNumber(), datasetSearchRequest.getPageSize());
-        searchSql.append(limitSql);
 
         String sql = "select kmd.*, " +
                 "kmdsrct.name as type, " +
@@ -126,8 +144,9 @@ public class DatasetRepository extends BaseRepository {
                 "kmda.description as dataset_description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
                 "watermark.max_time as high_watermark, " +
-                "string_agg(distinct(kmdt.tag), ',') as tags\n" +
-                "from (" + searchSql + ") kmd\n" +
+                "string_agg(distinct(kmdt.tag), ',') as tags, " +
+                "string_agg(concat_ws('_', kmg.id, kmg.name), ',') as glossaries\n" +
+                "from kun_mt_dataset kmd\n" +
                 "         inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
                 "         inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n" +
                 "         inner join kun_mt_datasource_type kmdsrct on kmdsrct.id = kmdsrc.type_id\n" +
@@ -135,9 +154,19 @@ public class DatasetRepository extends BaseRepository {
                 "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
                 "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
                 "         left join (select dataset_gid, max(stats_date) as max_time from kun_mt_dataset_stats group by dataset_gid) watermark on (kmd.gid = watermark.dataset_gid)\n" +
-                "group by kmd.gid, kmd.name, kmd.datasource_id, kmd.schema, kmd.data_store, kmd.database_name, type, datasource_name, dataset_description, high_watermark\n";
+                "         left join kun_mt_glossary_to_dataset_ref kmgtdr on kmd.gid = kmgtdr.dataset_id\n" +
+                "         left join kun_mt_glossary kmg on kmgtdr.glossary_id = kmg.id\n";
+
+        String groupClause = "group by kmd.gid, kmd.name, kmd.datasource_id, kmd.schema, kmd.data_store, kmd.database_name, type, datasource_name, dataset_description, high_watermark\n";
+        sql += whereClause;
+        sql += groupClause;
+
+        String countSql = "select count(1) as total_count from (" + sql + ") as result";
+        Long totalCount = jdbcTemplate.queryForObject(countSql, Long.class, pstmtArgs.toArray());
 
         sql += orderByClause;
+        sql += limitSql;
+
         DatasetBasicPage pageResult = new DatasetBasicPage();
         pageResult.setPageNumber(datasetSearchRequest.getPageNumber());
         pageResult.setPageSize(datasetSearchRequest.getPageSize());
@@ -146,6 +175,16 @@ public class DatasetRepository extends BaseRepository {
             while (rs.next()) {
                 DatasetBasic datasetBasic = new DatasetBasic();
                 setDatasetBasicField(datasetBasic, rs);
+                if (StringUtils.isNotEmpty(rs.getString("glossaries"))) {
+                    List<GlossaryBasic> glossaryBasics = sqlToList(rs.getString("glossaries")).stream().map(glossary -> {
+                        GlossaryBasic glossaryBasic = new GlossaryBasic();
+                        String[] fields = glossary.split("_");
+                        glossaryBasic.setId(Long.valueOf(fields[0]));
+                        glossaryBasic.setName(fields[1]);
+                        return glossaryBasic;
+                    }).collect(Collectors.toList());
+                    datasetBasic.setGlossaries(glossaryBasics);
+                }
                 pageResult.add(datasetBasic);
             }
             return pageResult;
@@ -276,5 +315,12 @@ public class DatasetRepository extends BaseRepository {
         datasetBasic.setHighWatermark(watermark);
     }
 
+    private List<GlossaryBasic> getGlossaryBasics(List<Long> glossaryIds) {
+        GlossaryBasicSearchRequest basicSearchRequest = new GlossaryBasicSearchRequest();
+        basicSearchRequest.setPageNumber(1);
+        basicSearchRequest.setPageSize(Integer.MAX_VALUE);
+        basicSearchRequest.setGlossaryIds(glossaryIds);
+        return glossaryRepository.search(basicSearchRequest).getGlossaries();
+    }
 
 }

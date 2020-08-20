@@ -15,6 +15,7 @@ dependencies {
     implementation 'org.postgresql:postgresql'
     implementation "commons-dbutils:commons-dbutils"
     implementation 'org.freemarker:freemarker:2.3.30'
+    implementation 'com.fasterxml.jackson.core:jackson-core'
 }
 
 shadowJar {

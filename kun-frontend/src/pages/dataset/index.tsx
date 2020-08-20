@@ -1,14 +1,23 @@
-import React, { useCallback, useMemo, useEffect } from 'react';
-import { Link } from 'umi';
+import React, { useCallback, useMemo } from 'react';
+import { useHistory, Link } from 'umi';
 import { Input, Select, Table, Tag, Spin } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { PaginationProps } from 'antd/es/pagination';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import { useUpdateEffect, useMount } from 'ahooks';
+import qs from 'qs';
+import { CopyOutlined } from '@ant-design/icons';
 import { RootDispatch, RootState } from '@/rematch/store';
-import { Mode, Dataset, Watermark } from '@/rematch/models/dataDiscovery';
+import {
+  Mode,
+  Dataset,
+  Watermark,
+  GlossaryItem,
+} from '@/rematch/models/dataDiscovery';
 
 import color from '@/styles/color';
 
+import useBackPath from '@/hooks/useBackPath';
 import useI18n from '@/hooks/useI18n';
 import useDebounce from '@/hooks/useDebounce';
 
@@ -21,8 +30,25 @@ import styles from './index.less';
 const { Search } = Input;
 const { Option } = Select;
 
+const orderMap = {
+  descend: 'desc',
+  ascend: 'asc',
+};
+const tableOrderMap = {
+  desc: 'descend',
+  asc: 'ascend',
+};
+
+const getOrder = (order: keyof typeof tableOrderMap | null) =>
+  order ? tableOrderMap[order] : undefined;
+
 export default function DataDisvocery() {
   const t = useI18n();
+
+  const { getBackPath } = useBackPath();
+
+  const history = useHistory();
+  const { pathname, search } = history.location;
 
   const dispatch = useDispatch<RootDispatch>();
   const {
@@ -31,14 +57,21 @@ export default function DataDisvocery() {
     watermarkAbsoluteValue,
     watermarkQuickeValue,
 
-    dbTypeList,
+    dsTypeList,
     ownerList,
     tagList,
     dsIdList,
+    dbList,
+    glossaryIdList,
 
+    sortKey,
+    sortOrder,
+
+    allDbList,
     allOwnerList,
     allTagList,
-    allDbList,
+    allDsList,
+    allGlossaryList,
 
     datasetList,
 
@@ -52,14 +85,21 @@ export default function DataDisvocery() {
       watermarkAbsoluteValue: state.dataDiscovery.watermarkAbsoluteValue,
       watermarkQuickeValue: state.dataDiscovery.watermarkQuickeValue,
 
-      dbTypeList: state.dataDiscovery.dbTypeList,
+      dsTypeList: state.dataDiscovery.dsTypeList,
       ownerList: state.dataDiscovery.ownerList,
       tagList: state.dataDiscovery.tagList,
       dsIdList: state.dataDiscovery.dsIdList,
+      dbList: state.dataDiscovery.dbList,
+      glossaryIdList: state.dataDiscovery.glossaryIdList,
 
+      sortKey: state.dataDiscovery.sortKey,
+      sortOrder: state.dataDiscovery.sortOrder,
+
+      allDbList: state.dataDiscovery.allDbList,
       allOwnerList: state.dataDiscovery.allOwnerList,
       allTagList: state.dataDiscovery.allTagList,
-      allDbList: state.dataDiscovery.allDbList,
+      allDsList: state.dataDiscovery.allDsList,
+      allGlossaryList: state.dataDiscovery.allGlossaryList,
 
       datasetList: state.dataDiscovery.datasetList,
       pagination: state.dataDiscovery.pagination,
@@ -69,43 +109,106 @@ export default function DataDisvocery() {
     shallowEqual,
   );
 
-  useEffect(() => {
-    dispatch.dataDiscovery.fetchAllOwnerList();
-    dispatch.dataDiscovery.fetchAllTagList();
-    dispatch.dataSettings.fetchDatabaseTypeList();
-    dispatch.dataDiscovery.fetchAllDb('');
-  }, [dispatch.dataDiscovery, dispatch.dataSettings]);
-
   const debounceSearchContent = useDebounce(searchContent, 1000);
 
-  useEffect(() => {
+  const fetchDatasets = useCallback(() => {
     dispatch.dataDiscovery.searchDatasets({
       searchContent: debounceSearchContent,
       ownerList,
       tagList,
-      dbTypeList,
+      dsTypeList,
       dsIdList,
+      dbList,
+      glossaryIdList,
       watermarkMode,
       watermarkAbsoluteValue,
       watermarkQuickeValue,
+      sortKey,
+      sortOrder,
       pagination: {
         pageSize: pagination.pageSize,
         pageNumber: pagination.pageNumber || 1,
       },
     });
   }, [
-    dbTypeList,
-    debounceSearchContent,
     dispatch.dataDiscovery,
-    dsIdList,
+    debounceSearchContent,
     ownerList,
-    pagination.pageNumber,
+    tagList,
+    dsTypeList,
+    dsIdList,
+    dbList,
+    glossaryIdList,
+    watermarkMode,
+    watermarkAbsoluteValue,
+    watermarkQuickeValue,
+    sortKey,
+    sortOrder,
     pagination.pageSize,
+    pagination.pageNumber,
+  ]);
+
+  useMount(() => {
+    if (search) {
+      const oldFilters = qs.parse(search.replace('?', ''));
+      dispatch.dataDiscovery.updateFilterAndPaginationFromUrl(oldFilters);
+    }
+    fetchDatasets();
+    dispatch.dataDiscovery.fetchAllOwnerList();
+    dispatch.dataDiscovery.fetchAllTagList();
+    dispatch.dataSettings.fetchDatabaseTypeList();
+    dispatch.dataDiscovery.fetchAllDs('');
+    dispatch.dataDiscovery.fetchAllDb();
+    dispatch.dataDiscovery.fetchAllGlossary();
+  });
+
+  useUpdateEffect(() => {
+    fetchDatasets();
+  }, [fetchDatasets]);
+
+  const currentUrl = useMemo(() => {
+    const shouldFilter = {
+      searchContent,
+      watermarkMode,
+      watermarkAbsoluteValue,
+      watermarkQuickeValue,
+
+      dsTypeList,
+      ownerList,
+      tagList,
+      dsIdList,
+      dbList,
+      glossaryIdList,
+
+      sortKey,
+      sortOrder,
+
+      pagination,
+    };
+
+    const currentQuery = qs.stringify(shouldFilter);
+    return `${pathname}?${currentQuery}`;
+  }, [
+    dbList,
+    dsIdList,
+    dsTypeList,
+    glossaryIdList,
+    ownerList,
+    pagination,
+    pathname,
+    searchContent,
+    sortKey,
+    sortOrder,
     tagList,
     watermarkAbsoluteValue,
     watermarkMode,
     watermarkQuickeValue,
   ]);
+
+  // 更新url
+  useUpdateEffect(() => {
+    history.replace(currentUrl);
+  }, [currentUrl, history]);
 
   const handleChangeSearch = useCallback(
     e => {
@@ -160,40 +263,77 @@ export default function DataDisvocery() {
           title: t('dataDiscovery.datasetsTable.header.name'),
           dataIndex: 'name',
           key: 'name',
+          sorter: true,
           width: 170,
-          render: (name: string, record: Dataset) => (
-            <Link
-              className={styles.nameLink}
-              to={`/data-discovery/dataset/${record.id}`}
-            >
-              {name}
-            </Link>
+          defaultSortOrder:
+            sortKey === 'name' ? getOrder(sortOrder) : undefined,
+          render: (name: string) => (
+            <span className={styles.nameLink}>{name}</span>
           ),
         },
         {
           title: t('dataDiscovery.datasetsTable.header.database'),
           dataIndex: 'database',
-          key: 'database',
+          key: 'database_name',
+          sorter: true,
           width: 80,
+          defaultSortOrder:
+            sortKey === 'database_name' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.datasource'),
           dataIndex: 'datasource',
-          key: 'datasource',
+          key: 'datasource_name',
+          sorter: true,
           width: 120,
+          defaultSortOrder:
+            sortKey === 'datasource_name' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.dbtype'),
           dataIndex: 'type',
           key: 'type',
+          sorter: true,
           width: 80,
+          defaultSortOrder:
+            sortKey === 'type' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.watermark'),
           dataIndex: 'high_watermark',
           key: 'high_watermark',
+          sorter: true,
+          defaultSortOrder:
+            sortKey === 'high_watermark' ? getOrder(sortOrder) : undefined,
           width: 150,
           render: (watermark: Watermark) => watermarkFormatter(watermark.time),
+        },
+        {
+          title: t('dataDiscovery.datasetsTable.header.glossary'),
+          dataIndex: 'glossaries',
+          key: 'glossaries',
+          width: 180,
+          render: (glossaties: GlossaryItem[]) => (
+            <div
+              onClick={e => {
+                e.stopPropagation();
+              }}
+            >
+              {(glossaties || []).slice(0, 3).map(glossary => (
+                <div key={glossary.id} className={styles.glossaryItem}>
+                  <CopyOutlined className={styles.glossaryIcon} />
+                  <Link
+                    to={getBackPath(`/data-discovery/glossary/${glossary.id}`)}
+                  >
+                    {glossary.name}
+                  </Link>
+                </div>
+              ))}
+              {glossaties && glossaties.length > 3 && (
+                <div className={styles.ellipsisItem}>...</div>
+              )}
+            </div>
+          ),
         },
         {
           title: t('dataDiscovery.datasetsTable.header.description'),
@@ -240,7 +380,7 @@ export default function DataDisvocery() {
           ),
         },
       ] as ColumnProps<Dataset>[],
-    [t],
+    [getBackPath, sortKey, sortOrder, t],
   );
 
   const scroll = useMemo(
@@ -302,6 +442,18 @@ export default function DataDisvocery() {
     id: item.id,
   }));
 
+  const handleChangeTable = useCallback(
+    (_pagination, _filters, sorter) => {
+      const { columnKey, order } = sorter;
+      dispatch.dataDiscovery.updateFilter({ key: 'sortKey', value: columnKey });
+      dispatch.dataDiscovery.updateFilter({
+        key: 'sortOrder',
+        value: order ? orderMap[order as 'descend' | 'ascend'] : null,
+      });
+    },
+    [dispatch.dataDiscovery],
+  );
+
   return (
     <div className={styles.page}>
       <Card className={styles.content}>
@@ -339,6 +491,7 @@ export default function DataDisvocery() {
                   value={dsIdList}
                   mode="multiple"
                   size="large"
+                  optionFilterProp="children"
                   onChange={v => {
                     dispatch.dataDiscovery.updateFilter({
                       key: 'dsIdList',
@@ -348,7 +501,7 @@ export default function DataDisvocery() {
                   placeholder={t('dataDiscovery.pleaseSelect')}
                   allowClear
                 >
-                  {allDbList.map(option => (
+                  {allDsList.map(option => (
                     <Option key={option.id} value={option.id}>
                       {option.name}
                     </Option>
@@ -363,12 +516,13 @@ export default function DataDisvocery() {
               </div>
               <div className={styles.filterItemSelect}>
                 <Select
-                  value={dbTypeList}
+                  value={dsTypeList}
                   mode="multiple"
                   size="large"
+                  optionFilterProp="children"
                   onChange={v => {
                     dispatch.dataDiscovery.updateFilter({
-                      key: 'dbTypeList',
+                      key: 'dsTypeList',
                       value: v,
                     });
                   }}
@@ -437,6 +591,62 @@ export default function DataDisvocery() {
                 </Select>
               </div>
             </div>
+
+            <div className={styles.filterItem}>
+              <div className={styles.filterItemTitle}>
+                {t('dataDiscovery.glossary')}
+              </div>
+              <div className={styles.filterItemSelect}>
+                <Select
+                  value={glossaryIdList}
+                  mode="multiple"
+                  size="large"
+                  optionFilterProp="children"
+                  onChange={v => {
+                    dispatch.dataDiscovery.updateFilter({
+                      key: 'glossaryIdList',
+                      value: v,
+                    });
+                  }}
+                  placeholder={t('dataDiscovery.pleaseSelect')}
+                  allowClear
+                >
+                  {allGlossaryList.map(glossary => (
+                    <Option key={glossary.id} value={glossary.id}>
+                      {glossary.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            <div className={styles.filterItem}>
+              <div className={styles.filterItemTitle}>
+                {t('dataDiscovery.db')}
+              </div>
+              <div className={styles.filterItemSelect}>
+                <Select
+                  value={dbList}
+                  mode="multiple"
+                  size="large"
+                  optionFilterProp="children"
+                  onChange={v => {
+                    dispatch.dataDiscovery.updateFilter({
+                      key: 'dbList',
+                      value: v,
+                    });
+                  }}
+                  placeholder={t('dataDiscovery.pleaseSelect')}
+                  allowClear
+                >
+                  {allDbList.map(db => (
+                    <Option key={db.name} value={db.name}>
+                      {db.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </div>
           </div>
 
           <div className={styles.resultRow}>
@@ -454,6 +664,20 @@ export default function DataDisvocery() {
                 size="small"
                 scroll={scroll}
                 pagination={tablePagination}
+                onChange={handleChangeTable}
+                onRow={record => ({
+                  onClick: () => {
+                    const url = encodeURIComponent(
+                      `${history.location.pathname}${history.location.search}`,
+                    );
+                    history.push(
+                      `/data-discovery/dataset/${record.id}?backUrl=${url}`,
+                    );
+                  },
+                  style: {
+                    cursor: 'pointer',
+                  },
+                })}
               />
             </Spin>
           </div>

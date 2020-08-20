@@ -8,7 +8,7 @@ export default function useBackPath() {
 
   const { location } = history;
 
-  const { pathname } = location;
+  const { pathname, search } = location;
 
   const getBackPath = useCallback(
     (url: string) => {
@@ -18,10 +18,10 @@ export default function useBackPath() {
       if (paramStr) {
         query = qs.parse(paramStr);
       }
-      query.backUrl = pathname;
+      query.backUrl = encodeURIComponent(`${pathname}${search}`);
       return `${urlNoSearchPath}?${qs.stringify(query)}`;
     },
-    [pathname],
+    [pathname, search],
   );
 
   return { getBackPath, pathname };
