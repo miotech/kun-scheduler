@@ -445,13 +445,23 @@ export default function DataDisvocery() {
   const handleChangeTable = useCallback(
     (_pagination, _filters, sorter) => {
       const { columnKey, order } = sorter;
-      dispatch.dataDiscovery.updateFilter({ key: 'sortKey', value: columnKey });
-      dispatch.dataDiscovery.updateFilter({
-        key: 'sortOrder',
-        value: order ? orderMap[order as 'descend' | 'ascend'] : null,
-      });
+      if (
+        columnKey &&
+        order &&
+        (columnKey !== sortKey ||
+          orderMap[order as keyof typeof orderMap] !== sortOrder)
+      ) {
+        dispatch.dataDiscovery.updateFilter({
+          key: 'sortKey',
+          value: columnKey,
+        });
+        dispatch.dataDiscovery.updateFilter({
+          key: 'sortOrder',
+          value: order ? orderMap[order as 'descend' | 'ascend'] : null,
+        });
+      }
     },
-    [dispatch.dataDiscovery],
+    [dispatch.dataDiscovery, sortKey, sortOrder],
   );
 
   return (
