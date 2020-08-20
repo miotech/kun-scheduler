@@ -453,6 +453,31 @@ export default function DataDisvocery() {
 
             <div className={styles.filterItem}>
               <div className={styles.filterItemTitle}>
+                {t('dataDiscovery.db')}
+              </div>
+              <div className={styles.filterItemSelect}>
+                <Select
+                  value={dbList}
+                  mode="multiple"
+                  size="large"
+                  optionFilterProp="children"
+                  onChange={v => {
+                    setFilterQuery({ dbList: v });
+                  }}
+                  placeholder={t('dataDiscovery.pleaseSelect')}
+                  allowClear
+                >
+                  {allDbList.map(db => (
+                    <Option key={db.name} value={db.name}>
+                      {db.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            <div className={styles.filterItem}>
+              <div className={styles.filterItemTitle}>
                 {t('dataDiscovery.datasource')}
               </div>
               <div className={styles.filterItemSelect}>
@@ -503,6 +528,31 @@ export default function DataDisvocery() {
 
             <div className={styles.filterItem}>
               <div className={styles.filterItemTitle}>
+                {t('dataDiscovery.glossary')}
+              </div>
+              <div className={styles.filterItemSelect}>
+                <Select
+                  value={glossaryIdList}
+                  mode="multiple"
+                  size="large"
+                  optionFilterProp="children"
+                  onChange={v => {
+                    setFilterQuery({ glossaryIdList: v });
+                  }}
+                  placeholder={t('dataDiscovery.pleaseSelect')}
+                  allowClear
+                >
+                  {allGlossaryList.map(glossary => (
+                    <Option key={glossary.id} value={glossary.id}>
+                      {glossary.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            <div className={styles.filterItem}>
+              <div className={styles.filterItemTitle}>
                 {t('dataDiscovery.owners')}
               </div>
               <div className={styles.filterItemSelect}>
@@ -543,56 +593,6 @@ export default function DataDisvocery() {
                   {allTagList.map(option => (
                     <Option key={option} value={option}>
                       {option}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.glossary')}
-              </div>
-              <div className={styles.filterItemSelect}>
-                <Select
-                  value={glossaryIdList}
-                  mode="multiple"
-                  size="large"
-                  optionFilterProp="children"
-                  onChange={v => {
-                    setFilterQuery({ glossaryIdList: v });
-                  }}
-                  placeholder={t('dataDiscovery.pleaseSelect')}
-                  allowClear
-                >
-                  {allGlossaryList.map(glossary => (
-                    <Option key={glossary.id} value={glossary.id}>
-                      {glossary.name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.db')}
-              </div>
-              <div className={styles.filterItemSelect}>
-                <Select
-                  value={dbList}
-                  mode="multiple"
-                  size="large"
-                  optionFilterProp="children"
-                  onChange={v => {
-                    setFilterQuery({ dbList: v });
-                  }}
-                  placeholder={t('dataDiscovery.pleaseSelect')}
-                  allowClear
-                >
-                  {allDbList.map(db => (
-                    <Option key={db.name} value={db.name}>
-                      {db.name}
                     </Option>
                   ))}
                 </Select>
