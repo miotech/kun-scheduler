@@ -1,7 +1,7 @@
 import {
-  DataBase,
-  DatabaseInfo,
-  UpdateDatabaseInfo,
+  DataSource,
+  DatasourceInfo,
+  UpdateDatasourceInfo,
   DatabaseTypeList,
 } from '@/rematch/models/dataSettings';
 import { Pagination, Sort } from '@/rematch/models';
@@ -9,11 +9,11 @@ import { Pagination, Sort } from '@/rematch/models';
 import { get, post, deleteFunc } from './utils';
 
 export interface SearchDataBasesRespBody extends Pagination, Sort {
-  databases: DataBase[];
+  datasources: DataSource[];
 }
 
 export async function fetchDatabaseTypesService() {
-  const resp = await get<DatabaseTypeList>('/metadata/database/types');
+  const resp = await get<DatabaseTypeList>('/metadata/datasource/types');
 
   return resp;
 }
@@ -31,21 +31,24 @@ export async function searchDataBasesService(
   };
 
   const resp = await get<SearchDataBasesRespBody>(
-    '/metadata/databases',
+    '/metadata/datasources',
     params,
   );
 
   return resp;
 }
 
-export async function addDatabaseService(reqBody: DatabaseInfo) {
-  const resp = await post<DataBase>('/metadata/database/add', reqBody);
+export async function addDatabaseService(reqBody: DatasourceInfo) {
+  const resp = await post<DataSource>('/metadata/datasource/add', reqBody);
   return resp;
 }
 
-export async function updateDatabaseService(reqBody: UpdateDatabaseInfo) {
+export async function updateDatabaseService(reqBody: UpdateDatasourceInfo) {
   const { id, ...others } = reqBody;
-  const resp = await post<DataBase>(`/metadata/database/${id}/update`, others);
+  const resp = await post<DataSource>(
+    `/metadata/datasource/${id}/update`,
+    others,
+  );
   return resp;
 }
 
@@ -56,7 +59,7 @@ export interface PullDatasetsFromDatabaseResp {
 
 export async function pullDatasetsFromDatabaseService(id: string) {
   const resp = await post<PullDatasetsFromDatabaseResp>(
-    `/metadata/database/${id}/pull`,
+    `/metadata/datasource/${id}/pull`,
   );
   return resp;
 }
@@ -66,6 +69,8 @@ export interface DeleteDatabaseResp {
 }
 
 export async function deleteDatabaseService(id: string) {
-  const resp = await deleteFunc<DeleteDatabaseResp>(`/metadata/database/${id}`);
+  const resp = await deleteFunc<DeleteDatabaseResp>(
+    `/metadata/datasource/${id}`,
+  );
   return resp;
 }

@@ -9,7 +9,6 @@ import com.miotech.kun.commons.utils.PropertyUtils;
 import com.miotech.kun.commons.web.KunWebServer;
 import com.miotech.kun.commons.web.module.CommonModule;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
-import com.miotech.kun.metadata.web.constant.ConfigurationKeys;
 import com.miotech.kun.metadata.web.service.InitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,9 +53,7 @@ public class Application {
     }
 
     private void configureDB() {
-        String migrationDir = props.getProperty(ConfigurationKeys.PROP_FLYWAY_MIRGRATION, "sql/");
-        String schemaHistory = props.getProperty(ConfigurationKeys.PROP_FLYWAY_TABLENAME, DatabaseSetup.DEFAULT_SCHEMA_HISTORY_TABLE);
-        DatabaseSetup setup = new DatabaseSetup(schemaHistory, dataSource, migrationDir);
+        DatabaseSetup setup = new DatabaseSetup(dataSource, props);
         setup.start();
     }
 
