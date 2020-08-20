@@ -3,14 +3,9 @@ package com.miotech.kun.workflow.utils;
 import java.sql.Timestamp;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 
 public class DateTimeUtils {
-    public static final DateTimeFormatter ISO_DATETIME_NANO_DATETIME_FORMATTER = new DateTimeFormatterBuilder()
-            .appendPattern("yyyy-MM-dd'T'HH:mm:ss.SSS")
-            .appendPattern("XXX")
-            .toFormatter();
     private static final ZoneOffset ZONE_OFFSET = OffsetDateTime.now().getOffset();
     private static final DateTimeFormatter MINUTE_PRECISION_DATETIME_PATTERN = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
