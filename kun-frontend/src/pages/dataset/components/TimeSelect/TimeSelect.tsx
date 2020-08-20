@@ -36,7 +36,10 @@ export default memo(function TimeSelect({
         ({ endTime } = value as DataRange);
       }
       if (endTime || v) {
-        onChange({ startTime: v ? v.valueOf() : null, endTime }, Mode.ABSOLUTE);
+        onChange(
+          { startTime: v ? v.valueOf() : null, endTime: Number(endTime) },
+          Mode.ABSOLUTE,
+        );
       } else {
         onChange(null, Mode.ABSOLUTE);
       }
@@ -51,7 +54,10 @@ export default memo(function TimeSelect({
         ({ startTime } = value as DataRange);
       }
       if (startTime || v) {
-        onChange({ endTime: v ? v.valueOf() : null, startTime }, Mode.ABSOLUTE);
+        onChange(
+          { endTime: v ? v.valueOf() : null, startTime: Number(startTime) },
+          Mode.ABSOLUTE,
+        );
       } else {
         onChange(null, Mode.ABSOLUTE);
       }
@@ -87,7 +93,7 @@ export default memo(function TimeSelect({
             className={styles.dataPicker}
             bordered={false}
             showTime={{ defaultValue: moment().startOf('day') }}
-            value={startTime ? moment(startTime) : null}
+            value={startTime ? moment(Number(startTime)) : null}
             suffixIcon={null}
             onChange={handleChangeStartTime as any}
             placeholder={t('dataDiscovery.datapicker.please.start')}
@@ -98,7 +104,7 @@ export default memo(function TimeSelect({
             className={styles.dataPicker}
             bordered={false}
             showTime={{ defaultValue: moment().endOf('day') }}
-            value={endTime ? moment(endTime) : null}
+            value={endTime ? moment(Number(endTime)) : null}
             onChange={handleChangeEndTime as any}
             placeholder={t('dataDiscovery.datapicker.please.end')}
           />

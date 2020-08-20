@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = false)
 @Data
 @NoArgsConstructor
-public class DatabaseSearchRequest extends PageInfo {
+public class DataSourceSearchRequest extends PageInfo {
 
     private String search;
 }

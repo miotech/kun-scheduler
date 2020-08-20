@@ -377,7 +377,12 @@ export default function GlossaryDetail({ match }: Props) {
 
           <div className={styles.inputBlock}>
             <div className={styles.label} style={{ marginBottom: 14 }}>
-              {t('glossary.assets')}
+              {t('glossary.assets')}{' '}
+              {(inputtingDetail?.assets || []).length > 0 && (
+                <span style={{ marginLeft: 4 }}>
+                  ({(inputtingDetail?.assets || []).length})
+                </span>
+              )}
             </div>
             <div>
               <AssetList

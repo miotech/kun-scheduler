@@ -1,9 +1,9 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { Input, Button, Spin, message, Pagination } from 'antd';
 import {
-  DatabaseInfo,
-  UpdateDatabaseInfo,
-  DataBase,
+  DatasourceInfo,
+  UpdateDatasourceInfo,
+  DataSource,
 } from '@/rematch/models/dataSettings';
 
 import useI18n from '@/hooks/useI18n';
@@ -58,7 +58,7 @@ export default function DataSettings() {
   }, []);
 
   const handleConfirmAddDatabaseModal = useCallback(
-    (newDatabase: DatabaseInfo) => {
+    (newDatabase: DatasourceInfo) => {
       dispatch.dataSettings.addDatabase(newDatabase).then(resp => {
         if (resp) {
           message.success(t('common.operateSuccess'));
@@ -79,24 +79,24 @@ export default function DataSettings() {
   }, []);
 
   const updateDatabase = useCallback(
-    (newDatabase: DataBase) => {
-      const { dataBaseList } = selector;
-      const newDataBaseList = dataBaseList.map(i => {
+    (newDatabase: DataSource) => {
+      const { dataSourceList } = selector;
+      const newDataSourceList = dataSourceList.map(i => {
         if (i.id === newDatabase.id) {
           return newDatabase;
         }
         return i;
       });
       dispatch.dataSettings.updateState({
-        key: 'dataBaseList',
-        value: newDataBaseList,
+        key: 'dataSourceList',
+        value: newDataSourceList,
       });
     },
     [dispatch.dataSettings, selector],
   );
 
   const handleConfirmUpdateDatabaseModal = useCallback(
-    (newDatabase: UpdateDatabaseInfo) => {
+    (newDatabase: UpdateDatasourceInfo) => {
       const { id, typeId, name, information, tags } = newDatabase;
       const params = { id, typeId, name, information, tags };
       dispatch.dataSettings.updateDatabase(params).then(resp => {
@@ -122,7 +122,7 @@ export default function DataSettings() {
   );
 
   const handleClickUpdateDatabase = useCallback(
-    (database: DataBase) => {
+    (database: DataSource) => {
       dispatch.dataSettings.updateState({
         key: 'currentDatabase',
         value: database,
@@ -174,11 +174,11 @@ export default function DataSettings() {
           <Spin spinning={searchLoading || fetchDatabaseTypeLoading}>
             <div className={styles.databasesCount}>
               {t('dataSettings.datasourceCount', {
-                count: selector.dataBaseList.length,
+                count: selector.dataSourceList?.length ?? 0,
               })}
             </div>
 
-            {selector.dataBaseList.map(database => (
+            {selector.dataSourceList?.map(database => (
               <DatabaseItem
                 key={database.id}
                 database={database}
@@ -214,7 +214,7 @@ export default function DataSettings() {
         onClose={handleCloseUpdateDatabaseModal}
         onConfirm={
           handleConfirmUpdateDatabaseModal as (
-            newDatabase: UpdateDatabaseInfo | DatabaseInfo,
+            newDatabase: UpdateDatasourceInfo | DatasourceInfo,
           ) => void
         }
       />

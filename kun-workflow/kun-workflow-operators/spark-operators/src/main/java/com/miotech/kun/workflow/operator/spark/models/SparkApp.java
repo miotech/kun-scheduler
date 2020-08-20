@@ -3,7 +3,17 @@ package com.miotech.kun.workflow.operator.spark.models;
 import java.util.List;
 
 public class SparkApp {
-    int id;
+    private int id;
+
+    private String state;
+
+    private String appId;
+
+    private AppInfo appInfo;
+
+    private List<String> log;
+
+    private String kind;
 
     public int getId() {
         return id;
@@ -29,12 +39,12 @@ public class SparkApp {
         this.appId = appId;
     }
 
-    public AppInfo getAppInfo4() {
-        return appInfo4;
+    public AppInfo getAppInfo() {
+        return appInfo;
     }
 
-    public void setAppInfo4(AppInfo appInfo4) {
-        this.appInfo4 = appInfo4;
+    public void setAppInfo(AppInfo appInfo) {
+        this.appInfo = appInfo;
     }
 
     public List<String> getLog() {
@@ -53,10 +63,5 @@ public class SparkApp {
         this.kind = kind;
     }
 
-    String state;
-    String appId;
-    AppInfo appInfo4;
-    List<String> log;
-    String kind;
 }
 
