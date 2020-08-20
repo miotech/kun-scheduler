@@ -1,3 +1,13 @@
+compileJava {
+    options.compilerArgs << "-parameters"
+}
+
+compileTestJava {
+    options.compilerArgs << "-parameters"
+}
+
+apply plugin: 'java'
+
 dependencies {
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-commons:kun-commons-utils")
@@ -10,4 +20,6 @@ dependencies {
     implementation "org.eclipse.jetty:jetty-webapp"
     implementation "org.yaml:snakeyaml"
     implementation 'org.apache.httpcomponents:httpclient'
+
+    testImplementation project(":kun-commons:kun-commons-testing")
 }

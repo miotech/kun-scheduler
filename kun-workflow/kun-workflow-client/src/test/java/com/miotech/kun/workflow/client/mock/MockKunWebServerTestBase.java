@@ -6,8 +6,8 @@ import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.PropertyUtils;
 import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
-import com.miotech.kun.workflow.web.KunWebServer;
-import com.miotech.kun.workflow.web.KunWebServerModule;
+import com.miotech.kun.workflow.web.KunWorkflowServerModule;
+import com.miotech.kun.workflow.web.KunWorkflowWebServer;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -31,7 +31,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
     private final OkHttpClient okHttpClient = new OkHttpClient();
 
     @Inject
-    private KunWebServer webServer;
+    private KunWorkflowWebServer webServer;
 
     @Inject
     private Properties props;
@@ -43,7 +43,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         int port = 18080 + (new Random()).nextInt(100);
         logger.info("Start test workflow server in : localhost:{}", port);
         props.put(ConfigurationKeys.PROP_SERVER_PORT, Integer.toString(port));
-        addModules(new KunWebServerModule(props), new DatabaseModule(), new SchedulerModule());
+        addModules(new KunWorkflowServerModule(props), new DatabaseModule(), new SchedulerModule());
     }
 
     @Before
@@ -54,7 +54,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         }).start();
         await().atMost(30, TimeUnit.SECONDS)
                 .until(() -> {
-                    logger.info("Webserver is {} at {}", webServer.isServerRunning() ? "running" : "stopped", getBaseUrl());
+                    logger.info("Webserver is {} at {}", webServer.isReady() ? "running" : "stopped", getBaseUrl());
                     return isAvailable();
                 });
     }

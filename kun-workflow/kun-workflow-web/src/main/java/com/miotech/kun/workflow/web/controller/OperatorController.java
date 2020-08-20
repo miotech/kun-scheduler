@@ -4,33 +4,23 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.web.annotation.QueryParameter;
+import com.miotech.kun.commons.web.annotation.RequestBody;
+import com.miotech.kun.commons.web.annotation.RouteMapping;
+import com.miotech.kun.commons.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
-import com.miotech.kun.workflow.common.resource.ResourceLoader;
-import com.miotech.kun.workflow.core.resource.Resource;
-import com.miotech.kun.workflow.web.annotation.QueryParameter;
-import com.miotech.kun.workflow.web.annotation.RequestBody;
-import com.miotech.kun.workflow.web.annotation.RouteMapping;
-import com.miotech.kun.workflow.web.annotation.RouteVariable;
 import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
-import org.apache.commons.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.stream.Collectors;
-
 
 @Singleton
 public class OperatorController {

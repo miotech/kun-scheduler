@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.web.mock;
+package com.miotech.kun.commons.web.mock;
 
 
 public class MockCreation {
