@@ -7,9 +7,9 @@ import {
   searchAllDsService,
   fetchAllDbService,
 } from '@/services/dataDiscovery';
+import { searchGlossariesService } from '@/services/glossary';
 import { Pagination, DbType } from './index';
 import { RootDispatch } from '../store';
-import { searchGlossariesService } from '@/services/glossary';
 import { SearchGlossaryItem } from './glossary';
 
 export interface DataRange {
@@ -84,6 +84,15 @@ export interface SearchParamsObj {
 
   sortKey: string | null;
   sortOrder: 'asc' | 'desc' | null;
+}
+
+export interface QueryObj extends SearchParamsObj {
+  pageSize: number;
+  pageNumber: number;
+
+  watermarkMode?: Mode;
+  watermarkAbsoluteValue?: DataRange;
+  watermarkQuickeValue?: Quick;
 }
 
 export interface dsFilterItem {
@@ -240,11 +249,17 @@ export const dataDiscovery = {
         let watermarkStart: number | undefined;
         let watermarkEnd: number | undefined;
         if (watermarkMode === Mode.ABSOLUTE) {
-          if (watermarkAbsoluteValue?.startTime) {
-            watermarkStart = watermarkAbsoluteValue.startTime;
+          if (
+            watermarkAbsoluteValue?.startTime &&
+            Number(watermarkAbsoluteValue.startTime)
+          ) {
+            watermarkStart = watermarkAbsoluteValue.startTime || undefined;
           }
-          if (watermarkAbsoluteValue?.endTime) {
-            watermarkEnd = watermarkAbsoluteValue.endTime;
+          if (
+            watermarkAbsoluteValue?.endTime &&
+            Number(watermarkAbsoluteValue.endTime)
+          ) {
+            watermarkEnd = watermarkAbsoluteValue.endTime || undefined;
           }
         }
 
