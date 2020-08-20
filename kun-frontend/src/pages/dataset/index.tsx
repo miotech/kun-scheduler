@@ -5,7 +5,14 @@ import { ColumnProps } from 'antd/es/table';
 import { PaginationProps } from 'antd/es/pagination';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import { useUpdateEffect, useMount } from 'ahooks';
-import qs from 'qs';
+import {
+  useQueryParams,
+  StringParam,
+  NumberParam,
+  ArrayParam,
+  ObjectParam,
+  withDefault,
+} from 'use-query-params';
 import { CopyOutlined } from '@ant-design/icons';
 import { RootDispatch, RootState } from '@/rematch/store';
 import {
@@ -13,6 +20,8 @@ import {
   Dataset,
   Watermark,
   GlossaryItem,
+  SearchParams,
+  QueryObj,
 } from '@/rematch/models/dataDiscovery';
 
 import color from '@/styles/color';
@@ -48,9 +57,27 @@ export default function DataDisvocery() {
   const { getBackPath } = useBackPath();
 
   const history = useHistory();
-  const { pathname, search } = history.location;
 
-  const dispatch = useDispatch<RootDispatch>();
+  const [query, setQuery] = useQueryParams({
+    searchContent: StringParam,
+    watermarkMode: withDefault(StringParam, Mode.ABSOLUTE),
+    watermarkAbsoluteValue: ObjectParam,
+    watermarkQuickeValue: StringParam,
+
+    dsTypeList: ArrayParam,
+    ownerList: ArrayParam,
+    tagList: ArrayParam,
+    dsIdList: ArrayParam,
+    dbList: ArrayParam,
+    glossaryIdList: ArrayParam,
+
+    sortKey: StringParam,
+    sortOrder: StringParam,
+
+    pageNumber: withDefault(NumberParam, 1),
+    pageSize: withDefault(NumberParam, 15),
+  });
+
   const {
     searchContent,
     watermarkMode,
@@ -66,6 +93,13 @@ export default function DataDisvocery() {
 
     sortKey,
     sortOrder,
+    pageNumber,
+    pageSize,
+  } = query as QueryObj;
+
+  const dispatch = useDispatch<RootDispatch>();
+  const {
+    pagination,
 
     allDbList,
     allOwnerList,
@@ -75,25 +109,11 @@ export default function DataDisvocery() {
 
     datasetList,
 
-    pagination,
     dataListFetchLoading,
     databaseTypes,
   } = useSelector(
     (state: RootState) => ({
-      searchContent: state.dataDiscovery.searchContent,
-      watermarkMode: state.dataDiscovery.watermarkMode,
-      watermarkAbsoluteValue: state.dataDiscovery.watermarkAbsoluteValue,
-      watermarkQuickeValue: state.dataDiscovery.watermarkQuickeValue,
-
-      dsTypeList: state.dataDiscovery.dsTypeList,
-      ownerList: state.dataDiscovery.ownerList,
-      tagList: state.dataDiscovery.tagList,
-      dsIdList: state.dataDiscovery.dsIdList,
-      dbList: state.dataDiscovery.dbList,
-      glossaryIdList: state.dataDiscovery.glossaryIdList,
-
-      sortKey: state.dataDiscovery.sortKey,
-      sortOrder: state.dataDiscovery.sortOrder,
+      pagination: state.dataDiscovery.pagination,
 
       allDbList: state.dataDiscovery.allDbList,
       allOwnerList: state.dataDiscovery.allOwnerList,
@@ -102,7 +122,6 @@ export default function DataDisvocery() {
       allGlossaryList: state.dataDiscovery.allGlossaryList,
 
       datasetList: state.dataDiscovery.datasetList,
-      pagination: state.dataDiscovery.pagination,
       dataListFetchLoading: state.dataDiscovery.dataListFetchLoading,
       databaseTypes: state.dataSettings.databaseTypeFieldMapList,
     }),
@@ -113,7 +132,7 @@ export default function DataDisvocery() {
 
   const fetchDatasets = useCallback(() => {
     dispatch.dataDiscovery.searchDatasets({
-      searchContent: debounceSearchContent,
+      searchContent: debounceSearchContent || '',
       ownerList,
       tagList,
       dsTypeList,
@@ -126,10 +145,10 @@ export default function DataDisvocery() {
       sortKey,
       sortOrder,
       pagination: {
-        pageSize: pagination.pageSize,
-        pageNumber: pagination.pageNumber || 1,
+        pageSize: pageSize || 15,
+        pageNumber: pageNumber || 1,
       },
-    });
+    } as SearchParams);
   }, [
     dispatch.dataDiscovery,
     debounceSearchContent,
@@ -144,15 +163,11 @@ export default function DataDisvocery() {
     watermarkQuickeValue,
     sortKey,
     sortOrder,
-    pagination.pageSize,
-    pagination.pageNumber,
+    pageSize,
+    pageNumber,
   ]);
 
   useMount(() => {
-    if (search) {
-      const oldFilters = qs.parse(search.replace('?', ''));
-      dispatch.dataDiscovery.updateFilterAndPaginationFromUrl(oldFilters);
-    }
     fetchDatasets();
     dispatch.dataDiscovery.fetchAllOwnerList();
     dispatch.dataDiscovery.fetchAllTagList();
@@ -166,74 +181,42 @@ export default function DataDisvocery() {
     fetchDatasets();
   }, [fetchDatasets]);
 
-  const currentUrl = useMemo(() => {
-    const shouldFilter = {
-      searchContent,
-      watermarkMode,
-      watermarkAbsoluteValue,
-      watermarkQuickeValue,
-
-      dsTypeList,
-      ownerList,
-      tagList,
-      dsIdList,
-      dbList,
-      glossaryIdList,
-
-      sortKey,
-      sortOrder,
-
-      pagination,
-    };
-
-    const currentQuery = qs.stringify(shouldFilter);
-    return `${pathname}?${currentQuery}`;
-  }, [
-    dbList,
-    dsIdList,
-    dsTypeList,
-    glossaryIdList,
-    ownerList,
-    pagination,
-    pathname,
-    searchContent,
-    sortKey,
-    sortOrder,
-    tagList,
-    watermarkAbsoluteValue,
-    watermarkMode,
-    watermarkQuickeValue,
-  ]);
-
-  // 更新url
-  useUpdateEffect(() => {
-    history.replace(currentUrl);
-  }, [currentUrl, history]);
+  const setFilterQuery = useCallback(
+    (obj, shouldChangePageNum = true) => {
+      if (shouldChangePageNum) {
+        setQuery({ ...obj, pageNumber: 1 }, 'replaceIn');
+      } else {
+        setQuery(obj, 'replaceIn');
+      }
+    },
+    [setQuery],
+  );
 
   const handleChangeSearch = useCallback(
     e => {
-      dispatch.dataDiscovery.updateFilter({
-        key: 'searchContent',
-        value: e.target.value,
-      });
+      setFilterQuery({ searchContent: e.target.value });
     },
-    [dispatch],
+    [setFilterQuery],
   );
 
   const handleChangeWatermarkMode = useCallback(
     mode => {
-      dispatch.dataDiscovery.updateFilter({
-        key: 'watermarkMode',
-        value: mode,
-      });
+      setFilterQuery({ watermarkMode: mode });
     },
-    [dispatch],
+    [setFilterQuery],
   );
 
   const timeSelectValue = useMemo(
     () =>
       watermarkMode === Mode.ABSOLUTE
-        ? watermarkAbsoluteValue
+        ? {
+            startTime: watermarkAbsoluteValue?.startTime
+              ? Number(watermarkAbsoluteValue.startTime)
+              : null,
+            endTime: watermarkAbsoluteValue?.endTime
+              ? Number(watermarkAbsoluteValue.endTime)
+              : null,
+          }
         : watermarkQuickeValue,
     [watermarkMode, watermarkAbsoluteValue, watermarkQuickeValue],
   );
@@ -241,19 +224,13 @@ export default function DataDisvocery() {
   const handleChangeWatermarkValue = useCallback(
     (v, mode) => {
       if (mode === Mode.ABSOLUTE) {
-        dispatch.dataDiscovery.updateFilter({
-          key: 'watermarkAbsoluteValue',
-          value: v,
-        });
+        setFilterQuery({ watermarkAbsoluteValue: v });
       }
       if (mode === Mode.QUICK) {
-        dispatch.dataDiscovery.updateFilter({
-          key: 'watermarkQuickeValue',
-          value: v,
-        });
+        setFilterQuery({ watermarkQuickeValue: v });
       }
     },
-    [dispatch],
+    [setFilterQuery],
   );
 
   const columns: ColumnProps<Dataset>[] = useMemo(
@@ -391,39 +368,25 @@ export default function DataDisvocery() {
   );
 
   const handleChangePage = useCallback(
-    (pageNumber, pageSize) => {
-      dispatch.dataDiscovery.updateState({
-        key: 'pagination',
-        value: {
-          ...pagination,
-          pageNumber,
-          pageSize,
-        },
-      });
+    (pageNum: number) => {
+      setFilterQuery({ pageNumber: pageNum }, false);
     },
-    [dispatch.dataDiscovery, pagination],
+    [setFilterQuery],
   );
 
   const handleChangePageSize = useCallback(
-    (_pageNumber, pageSize) => {
-      dispatch.dataDiscovery.updateState({
-        key: 'pagination',
-        value: {
-          ...pagination,
-          pageNumber: 1,
-          pageSize,
-        },
-      });
+    (_pageNumber, currentpageSize) => {
+      setFilterQuery({ pageSize: currentpageSize });
     },
-    [dispatch.dataDiscovery, pagination],
+    [setFilterQuery],
   );
 
   const tablePagination: PaginationProps = useMemo(
     () => ({
       size: 'small',
       total: pagination.totalCount,
-      current: pagination.pageNumber,
-      pageSize: pagination.pageSize,
+      current: pageNumber,
+      pageSize,
       pageSizeOptions: ['15', '25', '50', '100'],
       onChange: handleChangePage,
       onShowSizeChange: handleChangePageSize,
@@ -431,8 +394,8 @@ export default function DataDisvocery() {
     [
       handleChangePage,
       handleChangePageSize,
-      pagination.pageNumber,
-      pagination.pageSize,
+      pageNumber,
+      pageSize,
       pagination.totalCount,
     ],
   );
@@ -445,13 +408,19 @@ export default function DataDisvocery() {
   const handleChangeTable = useCallback(
     (_pagination, _filters, sorter) => {
       const { columnKey, order } = sorter;
-      dispatch.dataDiscovery.updateFilter({ key: 'sortKey', value: columnKey });
-      dispatch.dataDiscovery.updateFilter({
-        key: 'sortOrder',
-        value: order ? orderMap[order as 'descend' | 'ascend'] : null,
-      });
+      if (
+        columnKey &&
+        order &&
+        (columnKey !== sortKey ||
+          orderMap[order as keyof typeof orderMap] !== sortOrder)
+      ) {
+        setFilterQuery({
+          sortKey: columnKey,
+          sortOrder: order ? orderMap[order as 'descend' | 'ascend'] : null,
+        });
+      }
     },
-    [dispatch.dataDiscovery],
+    [setFilterQuery, sortKey, sortOrder],
   );
 
   return (
@@ -474,7 +443,7 @@ export default function DataDisvocery() {
               </div>
               <div>
                 <TimeSelect
-                  mode={watermarkMode}
+                  mode={watermarkMode || Mode.ABSOLUTE}
                   onModeChange={handleChangeWatermarkMode}
                   value={timeSelectValue}
                   onChange={handleChangeWatermarkValue}
@@ -493,10 +462,7 @@ export default function DataDisvocery() {
                   size="large"
                   optionFilterProp="children"
                   onChange={v => {
-                    dispatch.dataDiscovery.updateFilter({
-                      key: 'dsIdList',
-                      value: v,
-                    });
+                    setFilterQuery({ dsIdList: v });
                   }}
                   placeholder={t('dataDiscovery.pleaseSelect')}
                   allowClear
@@ -521,10 +487,7 @@ export default function DataDisvocery() {
                   size="large"
                   optionFilterProp="children"
                   onChange={v => {
-                    dispatch.dataDiscovery.updateFilter({
-                      key: 'dsTypeList',
-                      value: v,
-                    });
+                    setFilterQuery({ dsTypeList: v });
                   }}
                   placeholder={t('dataDiscovery.pleaseSelect')}
                   allowClear
@@ -548,10 +511,7 @@ export default function DataDisvocery() {
                   mode="multiple"
                   size="large"
                   onChange={v => {
-                    dispatch.dataDiscovery.updateFilter({
-                      key: 'ownerList',
-                      value: v,
-                    });
+                    setFilterQuery({ ownerList: v });
                   }}
                   placeholder={t('dataDiscovery.pleaseSelect')}
                   allowClear
@@ -575,10 +535,7 @@ export default function DataDisvocery() {
                   mode="multiple"
                   size="large"
                   onChange={v => {
-                    dispatch.dataDiscovery.updateFilter({
-                      key: 'tagList',
-                      value: v,
-                    });
+                    setFilterQuery({ tagList: v });
                   }}
                   placeholder={t('dataDiscovery.pleaseSelect')}
                   allowClear
@@ -603,10 +560,7 @@ export default function DataDisvocery() {
                   size="large"
                   optionFilterProp="children"
                   onChange={v => {
-                    dispatch.dataDiscovery.updateFilter({
-                      key: 'glossaryIdList',
-                      value: v,
-                    });
+                    setFilterQuery({ glossaryIdList: v });
                   }}
                   placeholder={t('dataDiscovery.pleaseSelect')}
                   allowClear
@@ -631,10 +585,7 @@ export default function DataDisvocery() {
                   size="large"
                   optionFilterProp="children"
                   onChange={v => {
-                    dispatch.dataDiscovery.updateFilter({
-                      key: 'dbList',
-                      value: v,
-                    });
+                    setFilterQuery({ dbList: v });
                   }}
                   placeholder={t('dataDiscovery.pleaseSelect')}
                   allowClear
