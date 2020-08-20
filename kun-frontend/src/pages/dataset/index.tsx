@@ -184,9 +184,9 @@ export default function DataDisvocery() {
   const setFilterQuery = useCallback(
     (obj, shouldChangePageNum = true) => {
       if (shouldChangePageNum) {
-        setQuery({ ...obj, pageNumber: 1 }, 'pushIn');
+        setQuery({ ...obj, pageNumber: 1 }, 'replaceIn');
       } else {
-        setQuery(obj, 'push');
+        setQuery(obj, 'replaceIn');
       }
     },
     [setQuery],
