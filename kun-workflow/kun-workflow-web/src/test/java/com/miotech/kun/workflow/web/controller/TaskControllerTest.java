@@ -16,7 +16,7 @@ import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
-import com.miotech.kun.workflow.web.serializer.JsonSerializer;
+import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;

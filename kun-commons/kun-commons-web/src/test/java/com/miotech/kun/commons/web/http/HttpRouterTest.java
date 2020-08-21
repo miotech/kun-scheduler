@@ -1,18 +1,16 @@
-package com.miotech.kun.workflow.web;
+package com.miotech.kun.commons.web.http;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.GuiceTestBase;
-import com.miotech.kun.workflow.web.annotation.RouteMapping;
-import com.miotech.kun.workflow.web.http.HttpMethod;
-import com.miotech.kun.workflow.web.http.HttpRequestMappingHandler;
-import com.miotech.kun.workflow.web.http.HttpRoute;
-import com.miotech.kun.workflow.web.mock.MockController;
+import com.miotech.kun.commons.web.annotation.RouteMapping;
+import com.miotech.kun.commons.web.mock.MockController;
 import org.junit.Test;
 import org.mockito.Mockito;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class HttpRouterTest extends GuiceTestBase {
 

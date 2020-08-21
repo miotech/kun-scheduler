@@ -3,7 +3,6 @@ package com.miotech.kun.workflow.common.operator.service;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
-import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.common.exception.RuleOperatorInUseException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.operator.vo.OperatorPropsVO;
@@ -101,7 +100,7 @@ public class OperatorServiceTest extends DatabaseTestBase {
         // 3. Insert first operator
         operatorService.createOperator(operatorPropsVO);
         // 4. Insert second operator with same name
-        assertFailToCreateOperatorWithException(operatorPropsVOWithDuplicatedName, NameConflictException.class);
+        assertFailToCreateOperatorWithException(operatorPropsVOWithDuplicatedName, IllegalArgumentException.class);
     }
 
     @Test
@@ -213,7 +212,7 @@ public class OperatorServiceTest extends DatabaseTestBase {
         } catch (Exception e) {
             // Validate
             // 4. should throw `DuplicatedNameException`
-            assertThat(e, instanceOf(NameConflictException.class));
+            assertThat(e, instanceOf(IllegalArgumentException.class));
         }
     }
 
