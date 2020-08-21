@@ -6,7 +6,6 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
-import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.common.exception.RuleOperatorInUseException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
@@ -127,7 +126,7 @@ public class OperatorService {
 
         // 2. Operator name should not be duplicated
         if (operatorDao.fetchByName(vo.getName()).isPresent()) {
-            throw new NameConflictException(String.format("Cannot create operator with duplicated name: \"%s\"", vo.getName()));
+            throw new IllegalArgumentException(String.format("Cannot create operator with duplicated name: \"%s\"", vo.getName()));
         }
 
         // 3. Assign operator id and generate Operator instance
@@ -227,7 +226,7 @@ public class OperatorService {
         if (nameIsModified) {
             Optional<Operator> operatorWithConflictNameOptional = operatorDao.fetchByName(vo.getName());
             if (operatorWithConflictNameOptional.isPresent()) {
-                throw new NameConflictException(String.format("Cannot update operator with conflict name: \"%s\"", vo.getName()));
+                throw new IllegalArgumentException(String.format("Cannot update operator with conflict name: \"%s\"", vo.getName()));
             }
         }
 

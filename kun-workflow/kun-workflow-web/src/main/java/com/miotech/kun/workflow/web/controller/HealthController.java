@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.web.controller;
 
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.web.annotation.RouteMapping;
+import com.miotech.kun.commons.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
 
 @Singleton

@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.web.mock;
+package com.miotech.kun.commons.web.mock;
 
 import com.google.common.base.Preconditions;
 

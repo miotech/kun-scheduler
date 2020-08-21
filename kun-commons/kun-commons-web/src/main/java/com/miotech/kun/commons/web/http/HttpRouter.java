@@ -42,7 +42,7 @@ public class HttpRouter {
                 .getContextClassLoader();
         try {
             ClassPath classPath = ClassPath.from(loader);
-            for (ClassPath.ClassInfo classInfo: classPath.getTopLevelClasses(packageName)) {
+            for (ClassPath.ClassInfo classInfo: classPath.getTopLevelClassesRecursive(packageName)) {
                 this.addRouter(Class.forName(classInfo.getName()));
             }
         } catch (IOException | ClassNotFoundException e) {
