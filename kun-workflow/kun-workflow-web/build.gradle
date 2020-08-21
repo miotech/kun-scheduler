@@ -17,7 +17,7 @@ dependencies {
     implementation project(':kun-commons:kun-commons-db')
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-commons:kun-commons-testing')
-    testImplementation project(':kun-workflow:kun-workflow-testing')
+    implementation project(':kun-commons:kun-commons-web')
 
     implementation "io.sentry:sentry-logback"
     implementation "com.fasterxml.jackson.core:jackson-core"
@@ -37,6 +37,7 @@ dependencies {
     implementation "com.h2database:h2"
     implementation 'commons-fileupload:commons-fileupload'
 
+    testImplementation project(':kun-workflow:kun-workflow-testing')
     testImplementation 'org.apache.httpcomponents:httpclient'
     testImplementation "org.hamcrest:hamcrest"
     testImplementation 'com.squareup.okhttp3:okhttp'

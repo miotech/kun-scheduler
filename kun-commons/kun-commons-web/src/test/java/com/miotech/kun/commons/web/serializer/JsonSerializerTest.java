@@ -1,11 +1,10 @@
-package com.miotech.kun.workflow.web.serializer;
+package com.miotech.kun.commons.web.serializer;
 
 import com.google.common.collect.Maps;
 import com.google.inject.Guice;
 import com.google.inject.util.Types;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
-import com.miotech.kun.workflow.utils.JSONUtils;
+import com.miotech.kun.commons.web.mock.MockObject;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -28,27 +27,27 @@ public class JsonSerializerTest {
     public void setUp() {
         jsonSerializer = Guice.createInjector().getInstance(JsonSerializer.class);
 
-        RunTaskVO runTaskVO = new RunTaskVO();
-        runTaskVO.setTaskId(IdGenerator.getInstance().nextId());
-        runTaskVO.setConfig(Maps.newHashMap());
+        MockObject mockObject = new MockObject();
+        mockObject.setId(IdGenerator.getInstance().nextId());
+        mockObject.setConfig(Maps.newHashMap());
 
-        runTaskJson = JSONUtils.toJsonString(runTaskVO);
-        runTasksJson = JSONUtils.toJsonString(Arrays.asList(runTaskVO));
+        runTaskJson = jsonSerializer.toString(mockObject);
+        runTasksJson = jsonSerializer.toString(Arrays.asList(mockObject));
     }
 
     @Test
     public void testToObject_list() {
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(runTasksJson.getBytes());
-        Object runTaskVO = jsonSerializer.toObject(byteArrayInputStream, Types.listOf(RunTaskVO.class));
-        assertThat(runTaskVO, instanceOf(List.class));
-        assertThat(((List) runTaskVO).get(0), instanceOf(RunTaskVO.class));
+        Object mockObject = jsonSerializer.toObject(byteArrayInputStream, Types.listOf(MockObject.class));
+        assertThat(mockObject, instanceOf(List.class));
+        assertThat(((List) mockObject).get(0), instanceOf(MockObject.class));
     }
 
     @Test
     public void testToObject_object() {
         ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(runTaskJson.getBytes());
-        Object runTaskVO = jsonSerializer.toObject(byteArrayInputStream, RunTaskVO.class);
-        assertThat(runTaskVO, instanceOf(RunTaskVO.class));
+        Object runTaskVO = jsonSerializer.toObject(byteArrayInputStream, MockObject.class);
+        assertThat(runTaskVO, instanceOf(MockObject.class));
     }
 
 }

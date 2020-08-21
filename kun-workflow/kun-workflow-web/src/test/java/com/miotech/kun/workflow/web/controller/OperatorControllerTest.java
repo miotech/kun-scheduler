@@ -12,7 +12,7 @@ import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
-import com.miotech.kun.workflow.web.serializer.JsonSerializer;
+import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import okhttp3.*;
 import org.hamcrest.Matchers;
 import org.junit.*;

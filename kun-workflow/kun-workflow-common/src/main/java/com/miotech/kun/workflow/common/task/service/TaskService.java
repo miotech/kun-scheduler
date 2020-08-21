@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
-import com.miotech.kun.workflow.common.exception.NameConflictException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -59,7 +58,7 @@ public class TaskService {
 
         // 3. Task name should not conflict
         if (taskDao.fetchByName(vo.getName()).isPresent()) {
-            throw new NameConflictException(String.format("Cannot create task with duplicated name: \"%s\"", vo.getName()));
+            throw new IllegalArgumentException(String.format("Cannot create task with duplicated name: \"%s\"", vo.getName()));
         }
 
         // 4. convert value object to task object and assign a new task id

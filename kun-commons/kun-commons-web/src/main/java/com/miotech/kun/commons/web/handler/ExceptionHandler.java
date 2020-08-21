@@ -1,22 +1,28 @@
 package com.miotech.kun.commons.web.handler;
 
+import com.google.common.reflect.ClassPath;
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.web.annotation.ResponseException;
 import com.miotech.kun.commons.web.annotation.ResponseStatus;
-import com.miotech.kun.commons.web.exception.EntityNotFoundException;
-import com.miotech.kun.commons.web.exception.ExceptionResponse;
 import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -24,10 +30,13 @@ public class ExceptionHandler {
 
     private final static Logger logger = LoggerFactory.getLogger(ExceptionHandler.class);
 
-    private final Map<Class<?>, Method> exceptionHandlers = scanHandler();
+    private final Map<Class<?>, Method> exceptionHandlers = new ConcurrentHashMap<>();
 
     @Inject
     private JsonSerializer jsonSerializer;
+
+    @Inject
+    private Injector injector;
 
     public Throwable handleException(HttpServletRequest request,
                                 HttpServletResponse response,
@@ -59,7 +68,8 @@ public class ExceptionHandler {
                 if (responseStatus != null) {
                     response.setStatus(((ResponseStatus) responseStatus).code());
                 }
-                method.invoke(this, args.toArray());
+                Object instance = injector.getInstance(method.getDeclaringClass());
+                method.invoke(instance, args.toArray());
             } catch (IllegalAccessException ex) {
                 return ex;
             } catch (InvocationTargetException ex) {
@@ -71,25 +81,22 @@ public class ExceptionHandler {
         }
     }
 
-    @ResponseStatus(code = 400)
-    @ResponseException(IllegalArgumentException.class)
-    private void illegalArgHandler(HttpServletResponse resp,
-                                   IllegalArgumentException e) {
-        ExceptionResponse responseObj = new ExceptionResponse(400, e.getMessage());
-        jsonSerializer.writeResponseAsJson(resp, responseObj);
+    public void scanPackage(String packageName) {
+        final ClassLoader loader = Thread.currentThread()
+                .getContextClassLoader();
+        try {
+            ClassPath classPath = ClassPath.from(loader);
+            for (ClassPath.ClassInfo classInfo: classPath.getTopLevelClassesRecursive(packageName)) {
+                this.scanHandler(Class.forName(classInfo.getName()));
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            logger.error("Failed to add exception handler in package {}", packageName, e);
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
     }
 
-    @ResponseStatus(code = 404)
-    @ResponseException(EntityNotFoundException.class)
-    private void entityNotFoundHandler(HttpServletResponse resp,
-                                   EntityNotFoundException e) {
-        ExceptionResponse responseObj = new ExceptionResponse(404, e.getMessage());
-        jsonSerializer.writeResponseAsJson(resp, responseObj);
-    }
-
-    private Map<Class<?>, Method> scanHandler() {
-        Map<Class<?>, Method> exceptionHandlers = new HashMap<>();
-        Method[] methods = ExceptionHandler.class.getDeclaredMethods();
+    private Map<Class<?>, Method> scanHandler(Class<?> clz) {
+        Method[] methods = clz.getDeclaredMethods();
         for (Method method: methods) {
            Annotation exceptionAnnotation = method.getAnnotation(ResponseException.class);
            if (exceptionAnnotation != null) {

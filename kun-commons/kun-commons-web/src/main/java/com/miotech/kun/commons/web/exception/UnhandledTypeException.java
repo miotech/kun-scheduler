@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.common.exception;
+package com.miotech.kun.commons.web.exception;
 
 public class UnhandledTypeException extends RuntimeException {
 

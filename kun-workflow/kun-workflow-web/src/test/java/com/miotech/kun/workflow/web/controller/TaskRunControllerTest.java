@@ -19,7 +19,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
-import com.miotech.kun.workflow.web.serializer.JsonSerializer;
+import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
