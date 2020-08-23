@@ -13,6 +13,7 @@
     "start:local-backend-chenjie": "PROXY_TARGET=\"http://192.168.1.8:8080\" PROXY_PDF_TARGET=\"http://192.168.1.8:10010\" PORT=9801 umi dev",
     "start:local-backend-melo": "PROXY_TARGET=\"http://192.168.1.84:10010\" PROXY_PDF_TARGET=\"http://192.168.1.84:10010\" PORT=9801 umi dev",
     "start:dev": "HTTPS=1 PROXY_TARGET=\"https://kun-dev.miotech.com\" PROXY_PDF_TARGET=\"https://kun-dev.miotech.com\" PORT=9801 umi dev",
+    "start:dev-http": "PROXY_TARGET=\"https://kun-dev.miotech.com\" PROXY_PDF_TARGET=\"https://kun-dev.miotech.com\" PORT=9801 umi dev",
     "start:local": "PROXY_TARGET=\"http://localhost:8080\" PROXY_PDF_TARGET=\"http://localhost:10010\" PORT=9801 umi dev",
     "i18n": "node i18n-updater/index.js"
   },
