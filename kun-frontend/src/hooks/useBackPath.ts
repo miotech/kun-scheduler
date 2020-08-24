@@ -2,7 +2,9 @@ import { useHistory } from 'umi';
 import { useCallback } from 'react';
 import qs from 'qs';
 
-// 得到带有backurl的新url
+/**
+ * 得到带有backurl的新url
+ */
 export default function useBackPath() {
   const history = useHistory();
 
