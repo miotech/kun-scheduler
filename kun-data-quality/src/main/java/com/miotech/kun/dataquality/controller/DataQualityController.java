@@ -98,6 +98,7 @@ public class DataQualityController {
             }
             result.setTaskId(taskRun.getTask().getId());
             result.setTaskRunId(taskRun.getId());
+            log.info(JSONUtils.toJsonString(result));
             results.add(result);
         }
 
