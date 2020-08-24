@@ -19,7 +19,7 @@ export enum ValidateFieldType {
 }
 
 export enum ValidateOperatorEnum {
-  EQ = '==',
+  EQ = '=',
   NE = '!=',
   GTE = '>=',
   GT = '>',

@@ -1,7 +1,9 @@
 import { useHistory } from 'umi';
 import { useCallback, useMemo } from 'react';
 
-// 得到当前url中的backurl
+/**
+ * 得到当前url中的backurl
+ */
 export default function useBackUrlFunc() {
   const history = useHistory();
 
