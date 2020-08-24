@@ -2,6 +2,7 @@ package com.miotech.kun.dataquality.service;
 
 import com.miotech.kun.dataquality.DataQualityConfiguration;
 import com.miotech.kun.dataquality.utils.WorkflowUtils;
+import com.miotech.kun.workflow.client.WorkflowApiException;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
@@ -68,6 +69,14 @@ public class WorkflowService {
 
     public void deleteTaskByCase(Long caseId) {
         Long taskId = dataQualityService.getLatestTaskId(caseId);
+        try {
+            if (taskId != null) {
+                workflowClient.getTask(taskId);
+            }
+        } catch (WorkflowApiException e) {
+            dataQualityService.saveTaskId(caseId, null);
+            return;
+        }
         deleteTask(taskId);
     }
 
