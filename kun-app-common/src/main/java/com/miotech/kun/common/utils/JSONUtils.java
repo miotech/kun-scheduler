@@ -1,6 +1,7 @@
 package com.miotech.kun.common.utils;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -12,7 +13,7 @@ public class JSONUtils {
     private JSONUtils() {}
 
     public static String toJsonString(Object obj) {
-        Gson gson = new Gson();
+        Gson gson = new GsonBuilder().disableHtmlEscaping().create();
         return gson.toJson(obj);
     }
 
