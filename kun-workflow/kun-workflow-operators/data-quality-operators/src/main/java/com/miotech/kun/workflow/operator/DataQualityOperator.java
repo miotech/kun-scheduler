@@ -205,7 +205,7 @@ public class DataQualityOperator extends KunOperator {
         if (originalValue != null) {
             originalValueStr = originalValue.toString();
         }
-        return "originalValue=" + originalValueStr + " rule=" + rule.toString();
+        return "originalValue: " + originalValueStr + " rule: " + rule.toString();
     }
 
     private void doAssert(QueryResultSet resultSet,
