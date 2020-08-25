@@ -5,16 +5,25 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 @JsonDeserialize(builder = TaskDependency.Builder.class)
 public class TaskDependency {
     private final Long upstreamTaskId;
-
+    private final Long downstreamTaskId;
     private final String dependencyFunc;
 
     public TaskDependency(Long upstreamTaskId, String dependencyFunc) {
+        this(upstreamTaskId, null, dependencyFunc);
+    }
+
+    public TaskDependency(Long upstreamTaskId, Long downstreamTaskId, String dependencyFunc) {
         this.upstreamTaskId = upstreamTaskId;
+        this.downstreamTaskId = downstreamTaskId;
         this.dependencyFunc = dependencyFunc;
     }
 
     public Long getUpstreamTaskId() {
         return upstreamTaskId;
+    }
+
+    public Long getDownstreamTaskId() {
+        return downstreamTaskId;
     }
 
     public String getDependencyFunc() {
@@ -25,17 +34,19 @@ public class TaskDependency {
 
     public static final class Builder {
         private Long upstreamTaskId;
+        private Long downstreamTaskId;
         private String dependencyFunc;
 
         private Builder() {
         }
 
-        public static Builder aTaskDependency() {
-            return new Builder();
-        }
-
         public Builder withUpstreamTaskId(Long upstreamTaskId) {
             this.upstreamTaskId = upstreamTaskId;
+            return this;
+        }
+
+        public Builder withDownstreamTaskId(Long downstreamTaskId) {
+            this.downstreamTaskId = downstreamTaskId;
             return this;
         }
 
@@ -45,7 +56,7 @@ public class TaskDependency {
         }
 
         public TaskDependency build() {
-            return new TaskDependency(upstreamTaskId, dependencyFunc);
+            return new TaskDependency(upstreamTaskId, downstreamTaskId, dependencyFunc);
         }
     }
 }
