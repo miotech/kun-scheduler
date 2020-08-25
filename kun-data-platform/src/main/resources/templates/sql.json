@@ -1,0 +1,28 @@
+{
+  "name": "SparkSQL",
+  "templateType": "sql",
+  "templateGroup": "development",
+  "jarPath": "",
+  "operator": {
+    "name": "SparkSQL",
+    "description": "Spark SQL Operator",
+    "className": "com.miotech.kun.workflow.operator.SparkSQLOperator"
+  },
+  "defaultValues": {
+    "livyHost": "${ dataplatform.livy.host }",
+    "dataStoreUrl": "s3://com.miotech.data.prd/Database/DM",
+    "variables": "{}",
+    "sparkConf": "{}"
+  },
+  "displayParameters": [{
+    "name": "sparkSQL",
+    "displayName": "sql",
+    "type": "sql",
+    "required" : true
+  }, {
+      "name": "sparkConf",
+      "type": "keyvalue",
+      "required": false,
+      "displayName": "Extra Spark Configuration"
+    }]
+}
