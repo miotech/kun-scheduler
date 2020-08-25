@@ -51,10 +51,10 @@ public class DataQualityRule {
     @Override
     public String toString() {
         return new StringJoiner(", ", "[", "]")
-                .add("field=" + field)
-                .add("operator=" + operator)
-                .add("expectedType=" + expectedType)
-                .add("expectedValue=" + expectedValue)
+                .add("field: " + field)
+                .add("operator: " + operator)
+                .add("expectedType: " + expectedType)
+                .add("expectedValue: " + expectedValue)
                 .toString();
     }
 }
