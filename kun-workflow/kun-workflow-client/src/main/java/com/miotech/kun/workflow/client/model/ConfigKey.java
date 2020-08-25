@@ -27,8 +27,16 @@ public class ConfigKey {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public ConfigDef.Type getType() {
         return type;
+    }
+
+    public void setType(ConfigDef.Type type) {
+        this.type = type;
     }
 
     public Object getDefaultValue() {

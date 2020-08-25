@@ -16,6 +16,7 @@ include:
   - .ci/kun-frontend.gitlab-ci.yml
   - .ci/kun-metadata.gitlab-ci.yml
   - .ci/kun-data-discovery.gitlab-ci.yml
+  - .ci/kun-data-platform.gitlab-ci.yml
   - .ci/kun-workflow.gitlab-ci.yml
   - .ci/kun-pdf.gitlab-ci.yml
 # include: ci/kun-data-discover.gitlab-ci.yml
@@ -25,6 +26,11 @@ include:
   only:
     changes:
       - kun-frontend/**/*
+
+.build-kun-data-platform:
+  only:
+    changes:
+      - kun-data-platform/**/*
 
 .build-kun-data-discovery:
   only:

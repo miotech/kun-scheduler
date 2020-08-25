@@ -28,6 +28,9 @@ public interface WorkflowClient {
      */
     Optional<Operator> getOperator(String name);
 
+
+    Operator getOperator(Long id);
+
     /**
      * save a task
      * @return
