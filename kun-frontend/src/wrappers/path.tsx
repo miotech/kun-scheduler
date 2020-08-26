@@ -10,8 +10,6 @@ interface Props {
 export default function Path({ children }: Props) {
   const match = useRouteMatch();
   const dispatch = useDispatch<RootDispatch>();
-  // eslint-disable-next-line
-  console.log('match: ', match);
 
   useEffect(() => {
     dispatch.route.updateCurrentParams(match.params);
