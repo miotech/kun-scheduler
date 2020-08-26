@@ -212,6 +212,12 @@ export const appRoutes = [
         exact: true,
         wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
       },
+
+      {
+        path: '*',
+        component: 'home/index',
+        wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+      },
     ],
   },
 ];
