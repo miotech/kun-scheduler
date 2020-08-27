@@ -6,8 +6,7 @@ import org.junit.Test;
 
 import java.util.Map;
 
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 public class ConfigDefTest {
@@ -88,5 +87,43 @@ public class ConfigDefTest {
 
         // verify
         assertThat(result, is("[{\"name\":\"conf1\",\"type\":\"BOOLEAN\",\"reconfigurable\":true,\"documentation\":\"this is conf1\",\"displayName\":\"conf1\",\"required\":true}]"));
+    }
+
+    @Test
+    public void testValidate_success() {
+        // prepare
+        ConfigDef configDef = new ConfigDef();
+        configDef.define("conf1", ConfigDef.Type.BOOLEAN, true, "this is conf1", "conf1");
+        configDef.define("conf2", ConfigDef.Type.STRING, true, "this is conf2", "conf2");
+        configDef.define("conf3", ConfigDef.Type.LONG, true, "this is conf3", "conf3");
+        Map<String, Object> values = ImmutableMap.of(
+                "conf1", true,
+                "conf2", "test",
+                "conf3", 3L
+        );
+
+        // verify
+        configDef.validate(values);
+    }
+
+    @Test
+    public void testValidate_failed() {
+        // prepare
+        ConfigDef configDef = new ConfigDef();
+        configDef.define("conf1", ConfigDef.Type.BOOLEAN, true, "this is conf1", "conf1");
+        configDef.define("conf2", ConfigDef.Type.STRING, true, "this is conf2", "conf2");
+        Map<String, Object> values = ImmutableMap.of(
+                "conf1", true,
+                "conf2", 1L
+        );
+
+        // verify
+        try {
+            configDef.validate(values);
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+            assertThat(e.getMessage(), containsString("Expected type is STRING but actual is 1 for config 'conf2'"));
+        }
     }
 }

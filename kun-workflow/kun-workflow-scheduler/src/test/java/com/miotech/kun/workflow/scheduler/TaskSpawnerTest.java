@@ -190,7 +190,6 @@ public class TaskSpawnerTest extends SchedulerTestBase {
                 .build());
 
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
-        OffsetDateTime now = DateTimeUtils.freeze();
 
         // process
         TaskRunEnv context = buildEnv(task.getId(), ImmutableMap.of());
