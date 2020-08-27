@@ -1,6 +1,10 @@
 import moment from 'moment';
 import { GlossaryNode } from '@/rematch/models/glossary';
 
+/**
+ * 时间格式化
+ * @param time
+ */
 export const watermarkFormatter = (time?: string | number) => {
   if (time && !Number.isNaN(Number(time))) {
     return moment(Number(time)).format('YYYY-MM-DD HH:mm:ss');
@@ -8,6 +12,11 @@ export const watermarkFormatter = (time?: string | number) => {
   return '';
 };
 
+/**
+ * 深度优先 先序遍历
+ * @param node
+ * @param targetId
+ */
 export const deepFirstSearch = (
   node: GlossaryNode | null,
   targetId: string,
@@ -29,6 +38,12 @@ export const deepFirstSearch = (
   return null;
 };
 
+/**
+ * 从父节点删除节点
+ * @param id
+ * @param parentId
+ * @param dataGrope
+ */
 export const deleteNodeFromParent = (
   id: string,
   parentId: string,
@@ -50,6 +65,12 @@ export const deleteNodeFromParent = (
   }
 };
 
+/**
+ * 往父节点上添加节点
+ * @param currentNode
+ * @param parentId
+ * @param dataGrope
+ */
 export const addNodeToParent = (
   currentNode: GlossaryNode | null,
   parentId: string,
