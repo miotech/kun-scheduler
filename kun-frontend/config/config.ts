@@ -5,14 +5,7 @@ import { theme } from './theme';
 import { certConfig } from './certConfig';
 import CopyWebpackPlugin from 'copy-webpack-plugin';
 
-const {
-  PROXY_TARGET,
-  PROXY_PDF_TARGET,
-  HTTPS,
-  PORT,
-  HTTPS_KEY,
-  HTTPS_CERT,
-} = process.env;
+const { PROXY_TARGET, PROXY_PDF_TARGET, HTTPS, PORT } = process.env;
 
 export default defineConfig({
   dynamicImport: {},
