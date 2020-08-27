@@ -21,7 +21,7 @@ public class Config {
         this.values = ImmutableMap.copyOf(values);
     }
 
-    public Config(ConfigDef definition, Map<String, String> originals) {
+    public Config(ConfigDef definition, Map<String, Object> originals) {
         this(definition.parse(originals));
     }
 
@@ -71,6 +71,11 @@ public class Config {
         return (List<String>) values.getOrDefault(name, defaultValue);
     }
 
+    /**
+     * Override current {@link Config} by another {@link Config} to generate a combined {@link Config}.
+     * @param another another {@link Config}
+     * @return
+     */
     public Config overrideBy(Config another) {
         Map<String, Object> newValues = new HashMap<>(values);
         Map<String, Object> anotherValues = another.getValues();
@@ -78,6 +83,14 @@ public class Config {
             newValues.put(e.getKey(), e.getValue());
         }
         return new Config(newValues);
+    }
+
+    /**
+     * Validate this {@link Config} using {@link ConfigDef}.
+     * @param def {@link ConfigDef} needs to be checked against to.
+     */
+    public void validateBy(ConfigDef def) {
+        def.validate(values);
     }
 
     private void validateValues(Map<String, Object> values) {
