@@ -61,6 +61,8 @@ export const user = {
           username: resp.username,
           permissions: resp.permissions,
         });
+      } else if (history.location.pathname !== '/login') {
+        history.push('/login');
       }
     },
 
