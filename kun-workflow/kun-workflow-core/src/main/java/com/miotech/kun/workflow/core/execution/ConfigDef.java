@@ -40,7 +40,7 @@ public class ConfigDef {
         return define(new ConfigKey(name, type, ConfigKey.NO_DEFAULT, reconfigurable, documentation, displayName));
     }
 
-    public Map<String, Object> parse(Map<String, String> props) {
+    public Map<String, Object> parse(Map<String, Object> props) {
         Map<String, Object> values = new HashMap<>();
         for (ConfigKey key : configKeys.values()) {
             String keyName = key.getName();
@@ -50,6 +50,17 @@ public class ConfigDef {
             }
         }
         return values;
+    }
+
+    public void validate(Map<String, Object> props) {
+        for (Map.Entry<String, Object> e : props.entrySet()) {
+            String keyName = e.getKey();
+            ConfigKey key = get(keyName);
+            Object val = e.getValue();
+            if (!key.getType().isCompatible(val)) {
+                throw new IllegalArgumentException(format("Expected type is %s but actual is %s for config '%s'", key.getType(), val, keyName));
+            }
+        }
     }
 
     public boolean contains(String name) {
@@ -76,7 +87,7 @@ public class ConfigDef {
         return configKeys.values();
     }
 
-    private Object parseValue(String name, String value, boolean isSet) {
+    private Object parseValue(String name, Object value, boolean isSet) {
         ConfigKey key = get(name);
         if (isSet) {
             return parseValueOfType(value, key.getType());
@@ -85,29 +96,69 @@ public class ConfigDef {
         }
     }
 
-    private static Object parseValueOfType(String value, Type type) {
-        String trimmed = value.trim();
+    private static Object parseValueOfType(Object value, Type type) {
         switch (type) {
             case BOOLEAN:
-                if (trimmed.equalsIgnoreCase("true")) {
-                    return Boolean.TRUE;
-                } else if (trimmed.equalsIgnoreCase("false")) {
-                    return Boolean.FALSE;
-                } else {
-                    throw new IllegalArgumentException("Expected value to be either true or false");
-                }
+                return parseToBoolean(value);
             case STRING:
-                return trimmed;
+                return parseToString(value);
             case LONG:
-                return Long.valueOf(trimmed);
+                return parseToLong(value);
             case LIST:
-                if (trimmed.isEmpty()) {
-                    return Collections.emptyList();
-                } else {
-                    return Arrays.asList(COMMA_WITH_WHITESPACE.split(trimmed, -1));
-                }
+                return parseToList(value);
             default:
                 throw new UnsupportedOperationException("Unknown type '" + type + "'");
+        }
+    }
+
+    private static Object parseToBoolean(Object value) {
+        if (value instanceof Boolean) {
+            return value;
+        } else if (value instanceof String){
+            String trimmed = ((String) value).trim();
+            if (trimmed.equalsIgnoreCase("true")) {
+                return Boolean.TRUE;
+            } else if (trimmed.equalsIgnoreCase("false")) {
+                return Boolean.FALSE;
+            } else {
+                throw new IllegalArgumentException("Expected value to be either true or false");
+            }
+        } else {
+            throw new IllegalArgumentException(format("Expected value is boolean but actual is %s", value));
+        }
+    }
+
+    private static Object parseToString(Object value) {
+        if (value instanceof String) {
+            return value;
+        } else {
+            throw new IllegalArgumentException(format("Expected value is string but actual is %s", value));
+        }
+    }
+
+    private static Object parseToLong(Object value) {
+        if (value instanceof Long) {
+            return value;
+        } else if (value instanceof String) {
+            String trimmed = ((String) value).trim();
+            return Long.valueOf(trimmed);
+        } else {
+            throw new IllegalArgumentException(format("Expected value is long but actual is %s", value));
+        }
+    }
+
+    private static Object parseToList(Object value) {
+        if (value instanceof List) {
+            return value;
+        } else if (value instanceof String) {
+            String trimmed = ((String) value).trim();
+            if (trimmed.isEmpty()) {
+                return Collections.emptyList();
+            } else {
+                return Arrays.asList(COMMA_WITH_WHITESPACE.split(trimmed, -1));
+            }
+        } else {
+            throw new IllegalArgumentException(format("Expected value is list but actual is %s", value));
         }
     }
 
