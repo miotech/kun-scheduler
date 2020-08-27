@@ -142,18 +142,24 @@ public class TaskSpawner {
                 }).collect(Collectors.toList());
     }
 
-    private Config prepareConfig(Task task, Config defaultConfig, Map<String, Object> runtimeConfig) {
+    private Config prepareConfig(Task task, Config config, Map<String, Object> runtimeConfig) {
         ConfigDef configDef = operatorService.getOperatorConfigDef(task.getOperatorId());
-        Config rtConfig = new Config(runtimeConfig);
 
-        Map<String, String> defaultValues = new HashMap<>();
-        for(String k : defaultConfig.getValues().keySet()) {
-            defaultValues.put(k, defaultConfig.getValues().get(k).toString());
-        }
-        Config finalConfig = new Config(configDef, defaultValues).overrideBy(rtConfig);
-        Config enrichedConfig = variableService.renderConfig(finalConfig);
-        validateConfig(configDef, enrichedConfig, rtConfig);
-        return enrichedConfig;
+        // populate default values
+        config = new Config(configDef, config.getValues());
+
+        // override by runtime config
+        Config rtConfig = new Config(runtimeConfig);
+        rtConfig.validateBy(configDef);
+        Config mergedConfig = config.overrideBy(rtConfig);
+
+        // render variables
+        Config finalConfig = variableService.renderConfig(mergedConfig);
+
+        // validate final config
+        validateConfig(configDef, finalConfig, rtConfig);
+
+        return finalConfig;
     }
 
     private void validateConfig(ConfigDef configDef, Config finalConfig, Config runtimeConfig) {
