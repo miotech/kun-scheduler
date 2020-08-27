@@ -2,9 +2,8 @@ package com.miotech.kun.workflow.operator;
 
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import org.apache.commons.lang3.StringUtils;
 
-import java.util.HashMap;
+import java.util.Map;
 
 public class SparkConfiguration {
 
@@ -52,8 +51,8 @@ public class SparkConfiguration {
         return context.getConfig().getBoolean(key);
     }
 
-    public static Object getVariable(OperatorContext context, String key) {
+    public static Map<String, String> getVariables(OperatorContext context) {
         String vars = getString(context, CONF_VARIABLES);
-        return JSONUtils.jsonToObject(vars, HashMap.class).get(key);
+        return JSONUtils.jsonToObject(vars, Map.class);
     }
 }

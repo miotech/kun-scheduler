@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Preconditions;
+import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.operator.spark.clients.LivyClient;
@@ -8,12 +9,8 @@ import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 abstract class LivyBaseSparkOperator extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(LivyBaseSparkOperator.class);
-    public static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{([^\\}]+)\\}\\}");
 
     protected LivyClient livyClient;
 
@@ -31,21 +28,7 @@ abstract class LivyBaseSparkOperator extends KunOperator {
     }
 
     protected String replaceWithVariable(String rawText) {
-        final Matcher matcher = VARIABLE_PATTERN.matcher(rawText);
-
-        String result = rawText;
-        while (matcher.find()) {
-            for (int i = 1; i <= matcher.groupCount(); i++) {
-                String key = matcher.group(i);
-                String value = (String) SparkConfiguration.getVariable(getContext(), key);
-                if (value != null) {
-                    result = result.replace(String.format("{{%s}}", key), value);
-                } else {
-                    throw new IllegalArgumentException("Cannot resolve variable key `" + key + "`");
-                }
-            }
-        }
-        return result;
+        return StringUtils.resolveWithVariable(rawText, SparkConfiguration.getVariables(getContext()));
     }
 
     protected void waitForSeconds(int seconds) {
