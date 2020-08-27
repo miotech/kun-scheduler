@@ -31,7 +31,12 @@ export const appRoutes = [
             component: 'data-discovery/index',
             exact: true,
             breadcrumbLink: true,
-            wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+            permissions: ['DATA_DISCOVERY'],
+            wrappers: [
+              '@/wrappers/path',
+              '@/wrappers/isLogin',
+              '@/wrappers/permission',
+            ],
           },
           {
             title: 'common.pageTitle.datasets',
@@ -40,6 +45,7 @@ export const appRoutes = [
             icon: 'SnippetsOutlined',
             showChildren: false,
             breadcrumbLink: true,
+            permissions: ['DATA_DISCOVERY'],
             routes: [
               {
                 title: 'common.pageTitle.datasets',
@@ -47,7 +53,12 @@ export const appRoutes = [
                 component: 'dataset/index',
                 breadcrumbLink: true,
                 exact: true,
-                wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+                permissions: ['DATA_DISCOVERY'],
+                wrappers: [
+                  '@/wrappers/path',
+                  '@/wrappers/isLogin',
+                  '@/wrappers/permission',
+                ],
               },
               {
                 title: 'common.pageTitle.datasetDetail',
@@ -55,7 +66,12 @@ export const appRoutes = [
                 component: 'dataset/dataset-detail/index',
                 breadcrumbLink: true,
                 exact: true,
-                wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+                permissions: ['DATA_DISCOVERY'],
+                wrappers: [
+                  '@/wrappers/path',
+                  '@/wrappers/isLogin',
+                  '@/wrappers/permission',
+                ],
               },
             ],
           },
@@ -74,7 +90,12 @@ export const appRoutes = [
                 component: 'glossary/index',
                 breadcrumbLink: true,
                 exact: true,
-                wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+                permissions: ['DATA_DISCOVERY'],
+                wrappers: [
+                  '@/wrappers/path',
+                  '@/wrappers/isLogin',
+                  '@/wrappers/permission',
+                ],
               },
               {
                 title: 'common.pageTitle.glossaryCreate',
@@ -82,7 +103,12 @@ export const appRoutes = [
                 component: 'glossary/glossary-detail/index',
                 breadcrumbLink: true,
                 exact: true,
-                wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+                permissions: ['DATA_DISCOVERY'],
+                wrappers: [
+                  '@/wrappers/path',
+                  '@/wrappers/isLogin',
+                  '@/wrappers/permission',
+                ],
               },
               {
                 title: 'common.pageTitle.glossaryDetail',
@@ -90,7 +116,12 @@ export const appRoutes = [
                 component: 'glossary/glossary-detail/index',
                 breadcrumbLink: true,
                 exact: true,
-                wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+                permissions: ['DATA_DISCOVERY'],
+                wrappers: [
+                  '@/wrappers/path',
+                  '@/wrappers/isLogin',
+                  '@/wrappers/permission',
+                ],
               },
             ],
           },
@@ -104,7 +135,11 @@ export const appRoutes = [
         component: 'data-settings/index',
         breadcrumbLink: true,
         permissions: ['DATA_DISCOVERY'],
-        wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+        wrappers: [
+          '@/wrappers/path',
+          '@/wrappers/isLogin',
+          '@/wrappers/permission',
+        ],
       },
       {
         title: 'common.pageTitle.pdfExtract',
@@ -120,7 +155,12 @@ export const appRoutes = [
             breadcrumbLink: true,
             exact: true,
             menuDisplay: true,
-            wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+            permissions: ['PDF_GENERAL'],
+            wrappers: [
+              '@/wrappers/path',
+              '@/wrappers/isLogin',
+              '@/wrappers/permission',
+            ],
           },
           {
             title: 'common.pageTitle.pdfValidation',
@@ -129,7 +169,12 @@ export const appRoutes = [
             breadcrumbLink: true,
             exact: true,
             menuDisplay: true,
-            wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+            permissions: ['PDF_GENERAL'],
+            wrappers: [
+              '@/wrappers/path',
+              '@/wrappers/isLogin',
+              '@/wrappers/permission',
+            ],
           },
           {
             title: 'common.pageTitle.pdfBatchTask',
@@ -138,7 +183,12 @@ export const appRoutes = [
             breadcrumbLink: true,
             exact: true,
             menuDisplay: true,
-            wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+            permissions: ['PDF_GENERAL'],
+            wrappers: [
+              '@/wrappers/path',
+              '@/wrappers/isLogin',
+              '@/wrappers/permission',
+            ],
           },
           {
             title: 'common.pageTitle.pdfFileTask',
@@ -147,7 +197,12 @@ export const appRoutes = [
             breadcrumbLink: true,
             exact: true,
             menuDisplay: true,
-            wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+            permissions: ['PDF_GENERAL'],
+            wrappers: [
+              '@/wrappers/path',
+              '@/wrappers/isLogin',
+              '@/wrappers/permission',
+            ],
           },
           // {
           //   title: 'common.pageTitle.tryOut',
@@ -192,7 +247,12 @@ export const appRoutes = [
             breadcrumbLink: true,
             exact: true,
             menuDisplay: true,
-            wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+            permissions: ['PDF_COA'],
+            wrappers: [
+              '@/wrappers/path',
+              '@/wrappers/isLogin',
+              '@/wrappers/permission',
+            ],
           },
           {
             title: 'common.pageTitle.pdfExtract',
@@ -201,7 +261,12 @@ export const appRoutes = [
             breadcrumbLink: true,
             exact: true,
             menuDisplay: true,
-            wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+            permissions: ['PDF_COA'],
+            wrappers: [
+              '@/wrappers/path',
+              '@/wrappers/isLogin',
+              '@/wrappers/permission',
+            ],
           },
         ],
       },
@@ -210,7 +275,23 @@ export const appRoutes = [
         path: '/login',
         component: 'login/index',
         exact: true,
-        wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+        permissions: ['PDF_COA'],
+        wrappers: [
+          '@/wrappers/path',
+          '@/wrappers/isLogin',
+          '@/wrappers/permission',
+        ],
+      },
+
+      {
+        path: '*',
+        component: 'home/index',
+        permissions: ['PDF_COA'],
+        wrappers: [
+          '@/wrappers/path',
+          '@/wrappers/isLogin',
+          '@/wrappers/permission',
+        ],
       },
     ],
   },
