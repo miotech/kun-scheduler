@@ -1,0 +1,20 @@
+@import '../view-common.less';
+
+.TaskTypeListPanel {
+  .aside-panel();
+}
+
+.ListHeading {
+  .list-heading-common();
+}
+
+.BtnRefreshWrapper {
+  display: inline-block;
+  position: absolute;
+  right: 12px;
+  :global {
+    .ant-btn-icon-only.ant-btn-sm > * {
+      font-size: 12px;
+    }
+  }
+}

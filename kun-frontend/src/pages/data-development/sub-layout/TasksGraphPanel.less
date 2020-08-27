@@ -1,0 +1,27 @@
+.TasksGraphPanel {
+  position: relative;
+  height: 100%;
+}
+
+.TaskGraphDropMask {
+  position: absolute;
+  z-index: 5;
+  .max-size();
+
+  .MaskBg {
+    .max-size();
+    background: @darkGray;
+    opacity: 0.25;
+  }
+
+  .MaskText {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
+    padding: 0;
+    font-size: 60px;
+    font-weight: bold;
+  }
+}

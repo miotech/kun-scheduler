@@ -1,0 +1,39 @@
+.TaskTypeList {
+  display: block;
+  position: relative;
+  list-style: none;
+  height: 100%;
+  // overflow-y: auto;
+  padding: 0;
+  margin: 0;
+}
+
+.TaskTypeElement {
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 48px;
+  line-height: 48px;
+  padding-left: 16px;
+  cursor: grab;
+}
+
+.ElementInner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.TaskIconWrapper {
+  float: left;
+}
+
+.TaskNameWrapper {
+  display: inline-block;
+  margin-left: 12px;
+  width: calc(100% - 28px);
+
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
