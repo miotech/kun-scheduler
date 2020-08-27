@@ -1,9 +1,20 @@
 import uniqueId from 'lodash/uniqueId';
 
+/**
+ * 得到唯一id
+ * @param namespace
+ */
 export const getUUID = (namespace: string = 'namespace') => {
   return uniqueId(namespace);
 };
 
+/**
+ * string过长, 省略中间的字符
+ * @param text
+ * @param length
+ * @param startWordCount
+ * @param endWordCount
+ */
 export const ellipsisString = (
   text?: string,
   length: number = 50,
@@ -21,6 +32,10 @@ export const ellipsisString = (
   return `${startString}...${endString}`;
 };
 
+/**
+ * 得到可读的文件大小
+ * @param fileSizeInBytes
+ */
 export const getReadableFileSizeString = (fileSizeInBytes: number) => {
   let tempSize = fileSizeInBytes;
   let i = -1;
@@ -33,7 +48,11 @@ export const getReadableFileSizeString = (fileSizeInBytes: number) => {
   return Math.max(tempSize, 0.1).toFixed(1) + byteUnits[i];
 };
 
-// 是否有其中之一的权限
+/**
+ * 是否有其中之一的权限
+ * @param currentPer
+ * @param needPer
+ */
 export const hasOptionalPermissions = (
   currentPer: string[],
   needPer?: string[],
@@ -50,7 +69,12 @@ export const hasOptionalPermissions = (
   return has;
 };
 
-// 判断是否支持全屏
+/**
+ * 判断是否支持全屏
+ */
 export const isFullscreenEnabled = () => document.fullscreenEnabled;
-// 判断是否全屏
+
+/**
+ * 判断是否全屏
+ */
 export const isFullscreen = () => document.fullscreenElement;
