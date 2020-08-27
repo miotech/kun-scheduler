@@ -1,0 +1,46 @@
+@status-color-default: #9c9c9c;
+@status-color-queued: #f3d286;
+@status-color-created: #9c9c9c;
+@status-color-running: #9bc655;
+@status-color-success: #4e8b08;
+@status-color-aborting: #ff6336;
+@status-color-skipped: #9c9c9c;
+@status-color-aborted: #ff6336;
+@status-color-failed: #ff6336;
+
+
+.status-text {
+  color: @status-color-default;
+
+  &--created {
+    color: @status-color-created;
+  }
+
+  &--running {
+    color: @status-color-running;
+  }
+
+  &--aborting {
+    color: @status-color-aborting;
+  }
+
+  &--aborted {
+    color: @status-color-aborting;
+  }
+
+  &--failed {
+    color: @status-color-aborting;
+  }
+
+  &--skipped {
+    color: @status-color-skipped;
+  }
+
+  &--queued {
+    color: @status-color-queued;
+  }
+
+  &--success {
+    color: @status-color-success;
+  }
+}

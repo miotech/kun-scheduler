@@ -1,0 +1,77 @@
+# Mock data for search task templates
+
+-
+  creator: 1
+  id: '1'
+  isArchived: false
+  isDeployed: true
+  name: 'Spark Task A'
+  taskPayload:
+    scheduleConfig:
+      cronExpr: '0 8 * * *'
+      inputNodes: []
+      type: 'SCHEDULED'
+    taskConfig:
+      configParamA: value1
+      configParamB: value2
+      configParamC: value3
+  taskTemplateName: 'SparkSQL'
+  upstreamTaskDefinitions: []
+
+-
+  creator: 1
+  id: '2'
+  isArchived: false
+  isDeployed: true
+  name: 'Spark Task B'
+  taskPayload:
+    scheduleConfig:
+      cronExpr: '0 0 * * *'
+      inputNodes: []
+      type: 'SCHEDULED'
+    taskConfig:
+      sparkSQL: 'SELECT * FROM database;'
+      description: 'demo description text'
+  taskTemplateName: 'SparkSQL'
+  upstreamTaskDefinitions:
+    -
+      id: '1'
+      name: 'Spark Task A'
+
+-
+  creator: 1
+  id: '3'
+  isArchived: false
+  isDeployed: false
+  name: 'Spark Task C'
+  taskPayload:
+    scheduleConfig:
+      cronExpr: '0 9 * * *'
+      inputNodes: []
+      type: 'scheduled'
+    taskConfig:
+      configParamA: value1
+      configParamB: value2
+      configParamC: value3
+  taskTemplateName: 'SparkSQL'
+  upstreamTaskDefinitions:
+    -
+      id: '2'
+      name: 'Spark Task B'
+-
+  creator: 1
+  id: '4'
+  isArchived: false
+  isDeployed: false
+  name: 'Spark Task D'
+  taskPayload:
+    scheduleConfig:
+      cronExpr: '0 8 * * *'
+      inputNodes: []
+      type: 'oneshot'
+    taskConfig:
+      configParamA: value1
+      configParamB: value2
+      configParamC: value3
+  taskTemplateName: 'SparkSQL'
+  upstreamTaskDefinitions: []

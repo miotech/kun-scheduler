@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
-import { Layout, Spin } from 'antd';
+import { Layout} from 'antd';
 import { IRoute } from 'umi';
+import { KunSpin } from '@/components/KunSpin';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/rematch/store';
 
@@ -12,20 +13,23 @@ import Breadcrumb from '@/components/Breadcrumb/Breadcrumb';
 
 import css from './DefaultLayout.less';
 
+
 const { Content } = Layout;
 
 interface Props {
   children: React.ReactNode;
   route: IRoute;
+  asBlock?: boolean;
 }
 
-export default memo(function DefaultLayout({ children, route }: Props) {
+export default memo(function DefaultLayout({ children, route, asBlock }: Props) {
   const isLoading = useSelector((state: RootState) => state.user.whoamiLoading);
 
   const t = useI18n();
 
   return (
-    <Spin
+    <KunSpin
+      asBlock={(typeof asBlock === 'boolean') ? asBlock : false}
       wrapperClassName={css.spinContainer}
       spinning={isLoading}
       tip={t('common.loading')}
@@ -42,6 +46,6 @@ export default memo(function DefaultLayout({ children, route }: Props) {
           </Content>
         </Layout>
       </Layout>
-    </Spin>
+    </KunSpin>
   );
 });

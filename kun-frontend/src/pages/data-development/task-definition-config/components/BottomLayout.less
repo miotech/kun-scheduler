@@ -1,0 +1,53 @@
+@bottom-layout-default-height: 240px;
+@bottom-layout-nav-default-height: 32px;
+
+.BottomLayout {
+  display: none;
+  position: fixed;
+  background: @white;
+  margin-bottom: 0;
+  bottom: -@bottom-layout-default-height;
+  right: 0;
+  transition: bottom .2s ease-in, height .2s ease-in;
+  z-index: 20;
+}
+
+.BottomLayoutVisible {
+  display: block;
+  height: @bottom-layout-default-height;
+  bottom: 0;
+  width: 100%;
+}
+
+.BottomLayoutShrink {
+  bottom: 0;
+  height: @bottom-layout-nav-default-height;
+  overflow-y: hidden;
+}
+
+.BottomLayoutNav {
+  display: flex;
+  position: relative;
+  width: 100%;
+  height: @bottom-layout-nav-default-height;
+  border-top: 1px solid @borderColor;
+  border-bottom: 1px solid @borderColor;
+}
+
+.BottomLayoutNavTitle {
+  flex: 1 1;
+  margin: 0 12px;
+}
+
+.BottomLayoutNavButtonGroup {
+  flex: 0 0 100px;
+  text-align: right;
+  padding-right: 12px;
+}
+
+.BottomLayoutContent {
+  position: relative;
+  width: 100%;
+  height: calc(100% - @bottom-layout-nav-default-height);
+  transition: height .2s ease-in;
+}

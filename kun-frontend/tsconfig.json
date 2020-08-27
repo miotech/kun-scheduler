@@ -13,13 +13,20 @@
       "@/*": ["src/*"],
       "@@/*": ["src/.umi/*"]
     },
+    "noUnusedLocals": true,
+    "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true
   },
   "include": [
+    "mock-commons/**/*",
     "mock/**/*",
     "src/**/*",
     "config/**/*",
     ".umirc.ts",
-    "typings.d.ts"
+    "typings.d.ts",
+    "src/definitions/index.d.ts"
+  ],
+  "exclude": [
+    "src/.umi/**/*"
   ]
 }
