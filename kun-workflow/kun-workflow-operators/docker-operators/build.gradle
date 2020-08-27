@@ -10,13 +10,15 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation 'org.zeroturnaround:zt-exec:1.11'
     implementation 'org.zeroturnaround:zt-process-killer:1.10'
+    implementation 'io.fabric8:kubernetes-client:4.7.0'
 
     testImplementation project(':kun-workflow:kun-workflow-testing')
     testImplementation "junit:junit:4.12"
+    testImplementation 'io.fabric8:kubernetes-server-mock:4.7.0'
 }
 
 shadowJar {
-    baseName = 'bash-operator'
+    baseName = 'docker-operator'
     classifier = null
     version = 0.1
     zip64 true
