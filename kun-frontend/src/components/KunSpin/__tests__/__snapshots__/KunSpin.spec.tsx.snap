@@ -1,0 +1,31 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`renders correctly 1`] = `
+<div
+  className="ant-spin ant-spin-spinning kun-spin"
+>
+  <div
+    className="load-container ant-spin-dot"
+  >
+    <div
+      className="container"
+    >
+      <div
+        className="boxLoading boxLoading1"
+      />
+      <div
+        className="boxLoading boxLoading2"
+      />
+      <div
+        className="boxLoading boxLoading3"
+      />
+      <div
+        className="boxLoading boxLoading4"
+      />
+      <div
+        className="boxLoading boxLoading5"
+      />
+    </div>
+  </div>
+</div>
+`;

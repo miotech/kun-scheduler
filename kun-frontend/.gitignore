@@ -1,4 +1,4 @@
-# Created by https://www.toptal.com/developers/gitignore/api/node,webstorm,code
+# Created by https://www.toptal.c`om/developers/gitignore/api/node,webstorm,code
 # Edit at https://www.toptal.com/developers/gitignore?templates=node,webstorm,code
 
 ### Code ###
@@ -54,7 +54,7 @@ node_modules/
 jspm_packages/
 
 # TypeScript v1 declaration files
-typings/
+external-typings/
 
 # TypeScript cache
 *.tsbuildinfo
@@ -229,3 +229,11 @@ dist/
 .umi-production/
 .umi-test/
 .env.local
+
+#kndb
+kndb/
+.nyc_output
+use-mock.config.yaml
+
+# https cert config
+config/certConfig.ts

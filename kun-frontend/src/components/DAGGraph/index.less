@@ -1,0 +1,27 @@
+.dag-button-group {
+  position: absolute;
+  display: flex;
+  top: 50px;
+  left: 12px;
+
+  .dag-util-btn + .dag-util-btn {
+    margin-left: 6px;
+  }
+}
+
+.dag-util-btn {
+  .transparent-button();
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background-color: rgba(224, 224, 224, 0.2);
+  border: 1px solid rgba(224, 224, 224, 0.8);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .anticon {
+    font-size: 10px;
+  }
+}

@@ -1,0 +1,90 @@
+.kun-spin {
+  .max-size();
+}
+
+#root .load-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  top: 0;
+  left: 0;
+  margin: 0;
+
+  .container{
+    width: 50px;
+    height: 60px;
+    text-align: center;
+    font-size: 10px;
+    .boxLoading {
+      background-color: @darkBlue;
+      height: 100%;
+      width: 6px;
+      display: inline-block;
+
+      -webkit-animation: stretchdelay 1.2s infinite ease-in-out;
+      animation: stretchdelay 1.2s infinite ease-in-out;
+    }
+    .boxLoading2 {
+      -webkit-animation-delay: -1.1s;
+      animation-delay: -1.1s;
+    }
+    .boxLoading3 {
+      -webkit-animation-delay: -1.0s;
+      animation-delay: -1.0s;
+    }
+    .boxLoading4 {
+      -webkit-animation-delay: -0.9s;
+      animation-delay: -0.9s;
+    }
+    .boxLoading5 {
+      -webkit-animation-delay: -0.8s;
+      animation-delay: -0.8s;
+    }
+  }
+}
+
+.boxLoading,.boxLoading2,.boxLoading3,.boxLoading4,.boxLoading5 {
+  margin: 0 2px;
+}
+
+#root .kun-spin .ant-spin-text {
+  top: calc(50% + 36px);
+}
+
+#root .kun-spin-wrapper {
+  position: static;
+}
+
+#root .kun-spin-wrapper.kun-spin-wrapper--as-block {
+  position: relative;
+}
+
+#root .load-container--as-block {
+  position: relative;
+  width: 100%;
+  height: 250px;
+
+  .ant-spin-text {
+    top: calc(50% + 36px);
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%,0);
+  }
+}
+
+@-webkit-keyframes stretchdelay {
+  0%, 40%, 100% { -webkit-transform: scaleY(0.4) }
+  20% { -webkit-transform: scaleY(1.0) }
+}
+
+@keyframes stretchdelay {
+  0%, 40%, 100% {
+    transform: scaleY(0.4);
+    -webkit-transform: scaleY(0.4);
+  }  20% {
+       transform: scaleY(1.0);
+       -webkit-transform: scaleY(1.0);
+     }
+}

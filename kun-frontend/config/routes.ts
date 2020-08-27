@@ -75,7 +75,6 @@ export const appRoutes = [
               },
             ],
           },
-
           {
             title: 'common.pageTitle.glossary',
             path: '/data-discovery/glossary',
@@ -122,6 +121,60 @@ export const appRoutes = [
                   '@/wrappers/isLogin',
                   '@/wrappers/permission',
                 ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        title: 'common.pageTitle.dataDevelopment',
+        path: '/data-development',
+        icon: 'ApartmentOutlined',
+        permissions: ['DATA_DEVELOPMENT'],
+        menuDisplay: true,
+        routes: [
+          {
+            title: 'common.pageTitle.dataDevelopment',
+            path: '.',
+            exact: true,
+            component: '@/pages/data-development/index',
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/withDnDContext'],
+          },
+          {
+            title: 'common.pageTitle.taskDefinition',
+            path: '/data-development/task-definition/:taskDefId',
+            component: 'data-development/task-definition-config',
+            exact: true,
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
+          },
+        ],
+      },
+      {
+        title: 'common.pageTitle.operationCenter',
+        menuDisplay: true,
+        path: '/operation-center',
+        icon: 'ToolOutlined',
+        permissions: ['DATA_DEVELOPMENT'],
+        showChildren: true,
+        component: '@/wrappers/isLogin',
+        routes: [
+          {
+            title: 'common.pageTitle.operationCenter.scheduledTasks',
+            path: './scheduled-tasks',
+            menuDisplay: true,
+            icon: 'CalendarOutlined',
+            routes: [
+              {
+                path: '.',
+                exact: true,
+                component: '@/pages/operation-center/scheduled-tasks',
+              },
+              {
+                title: 'common.pageTitle.operationCenter.scheduledTasks',
+                menuDisplay: false,
+                path: './:id',
+                component: '@/pages/operation-center/deployed-task-detail',
+                exact: true,
               },
             ],
           },

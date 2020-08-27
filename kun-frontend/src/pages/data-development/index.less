@@ -1,0 +1,29 @@
+.Page {
+  padding: 0;
+  position: relative;
+  height: calc(100vh - 120px);
+
+  :global {
+    .reflex-container.vertical > .reflex-splitter,
+    .reflex-splitter {
+      border-left: 1px solid #efefef;
+      border-right: 1px solid #efefef;
+    }
+  }
+
+  .leftPane {
+    min-width: 192px;
+  }
+
+  .rightPane {
+    min-width: 320px;
+  }
+
+  .leftPane, .midPane, .rightPane {
+    position: relative;
+  }
+
+  .paneContentContainer {
+    height: 100%;
+  }
+}

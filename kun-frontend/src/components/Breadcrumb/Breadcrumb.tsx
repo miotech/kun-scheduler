@@ -18,6 +18,7 @@ function Breadcrumb({ route }: Props) {
       currentParams: state.route.currentParams,
       datasetName: state.datasetDetail.name,
       glossaryName: state.glossary.currentGlossaryDetail?.name,
+      deployedTaskName: state.deployedTaskDetail.deployedTask?.name,
     }),
     shallowEqual,
   );
@@ -72,7 +73,15 @@ function Breadcrumb({ route }: Props) {
         </Link>
       );
     }
-
+    if (routeItem.path === '/operation-center/scheduled-tasks/:id') {
+      return (
+        <Link
+          to={realPth(routeItem.path || '/', selectedData.currentParams || {})}
+        >
+          {selectedData.deployedTaskName ?? '...'}
+        </Link>
+      );
+    }
     if (!routeItem.breadcrumbLink) {
       return <span>{routeItem.title}</span>;
     }
