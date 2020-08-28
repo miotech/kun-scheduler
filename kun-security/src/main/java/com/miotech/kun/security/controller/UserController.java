@@ -4,7 +4,7 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.security.model.bo.UserInfo;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.model.vo.UserListVO;
-import com.miotech.kun.security.service.SecurityService;
+import com.miotech.kun.security.service.AbstractSecurityService;
 import com.miotech.kun.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,12 +28,12 @@ public class UserController {
     UserService userService;
 
     @Autowired
-    SecurityService securityService;
+    AbstractSecurityService abstractSecurityService;
 
     @GetMapping("/user/whoami")
     public RequestResult<UserInfo> whoami() {
         UserInfo userInfo = (UserInfo) SecurityContextHolder.getContext().getAuthentication().getDetails();
-        return RequestResult.success(securityService.enrichUserInfo(userInfo));
+        return RequestResult.success(abstractSecurityService.enrichUserInfo(userInfo));
     }
 
     @GetMapping("/user/search")
@@ -46,8 +46,8 @@ public class UserController {
     @GetMapping("/user/list")
     public RequestResult<List<UserInfo>> getUserList() {
         List<UserInfo> userInfos = userService.getUsers().stream()
-                .map(securityService::convertToUserInfo)
-                .map(securityService::enrichUserInfo)
+                .map(abstractSecurityService::convertToUserInfo)
+                .map(abstractSecurityService::enrichUserInfo)
                 .collect(Collectors.toList());
         return RequestResult.success(userInfos);
     }
