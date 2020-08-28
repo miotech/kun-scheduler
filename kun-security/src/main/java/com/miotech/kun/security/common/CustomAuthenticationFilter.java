@@ -2,7 +2,7 @@ package com.miotech.kun.security.common;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.security.model.bo.UserInfo;
-import com.miotech.kun.security.service.SecurityService;
+import com.miotech.kun.security.service.AbstractSecurityService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -30,11 +30,9 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private SecurityService securityService;
+    private AbstractSecurityService abstractSecurityService;
 
     private String passToken;
-
-    private String pdfCoaPassToken;
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
@@ -45,7 +43,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
                 && !StringUtils.equals(authentication.getName(), "anonymousUser")) {
             if (!StringUtils.equals(ConfigKey.DEFAULT_PASS_TOKEN_KEY, authentication.getName())) {
                 String saveUsername = authentication.getName().toLowerCase();
-                UserInfo savedUser = securityService.getOrSave(saveUsername);
+                UserInfo savedUser = abstractSecurityService.getOrSave(saveUsername);
                 UsernamePasswordAuthenticationToken newAuthentication = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(),
                         authentication.getCredentials(),
                         authentication.getAuthorities());
@@ -56,12 +54,6 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
             PassToken passToken = new PassToken();
             UserInfo userInfo = new UserInfo();
             userInfo.setUsername(ConfigKey.DEFAULT_PASS_TOKEN_KEY);
-            passToken.setDetails(userInfo);
-            SecurityContextHolder.getContext().setAuthentication(passToken);
-        } else if (isEqualToPassToken((HttpServletRequest) req, pdfCoaPassToken)) {
-            PassToken passToken = new PassToken();
-            UserInfo userInfo = new UserInfo();
-            userInfo.setUsername(ConfigKey.PDF_COA_PASS_TOKEN_KEY);
             passToken.setDetails(userInfo);
             SecurityContextHolder.getContext().setAuthentication(passToken);
         }
@@ -96,15 +88,11 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         }
     }
 
-    public void setSecurityService(SecurityService securityService) {
-        this.securityService = securityService;
+    public void setAbstractSecurityService(AbstractSecurityService abstractSecurityService) {
+        this.abstractSecurityService = abstractSecurityService;
     }
 
     public void setPassToken(String passToken) {
         this.passToken = passToken;
-    }
-
-    public void setPdfCoaPassToken(String passToken) {
-        this.pdfCoaPassToken = passToken;
     }
 }
