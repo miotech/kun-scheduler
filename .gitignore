@@ -25,6 +25,7 @@
 **/__pycache__
 *.pyc
 **/pdf-temp
+**..bfg-report/
 
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf
@@ -33,6 +34,9 @@ application-local.yaml
 
 # IDEA
 # ----
+**.idea/
+.idea/*
+.idea
 !/.idea
 /.idea/*
 !/.idea/codeStyles
