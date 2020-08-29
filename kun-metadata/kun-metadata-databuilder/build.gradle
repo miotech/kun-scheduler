@@ -28,7 +28,6 @@ dependencies {
     implementation "com.amazonaws:aws-java-sdk-glue"
     implementation "com.syncron.amazonaws:simba-athena-jdbc-driver"
     implementation "com.arangodb:arangodb-java-driver"
-    implementation "io.sentry:sentry-logback"
     testImplementation "junit:junit"
     testRuntimeOnly "com.h2database:h2"
     testRuntimeOnly "org.mockito:mockito-core"

@@ -1,10 +1,18 @@
-FROM hub.miotech.com/library/openjdk:8u181-jdk
-ARG sentry_dsn
-ARG sentry_env
-ARG sentry_release
+FROM openjdk:8u181-jdk-alpine
 
-COPY build/libs/kun-data-discover.jar /server/target/
+RUN apk add --no-cache tini
+
 WORKDIR /server/target
+
+COPY dockerize-alpine-linux-amd64-v0.6.1.tar.gz /server/target/dockerize-alpine-linux-amd64-v0.6.1.tar.gz
+RUN tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-v0.6.1.tar.gz \
+    && rm dockerize-alpine-linux-amd64-v0.6.1.tar.gz
+
+COPY build/libs/kun-data-discovery.jar /server/target/
 EXPOSE 8080
 
-CMD SENTRY_DSN=${sentry_dsn} SENTRY_ENVIRONMENT=${env} SENTRY_RELEASE=${tag} java ${JVM_OPTS} -jar /server/target/kun-data-discovery.jar -Dapp=kun-data-discovery -Dtag=${tag} -Denv=${env}
+ADD docker-entrypoint.sh /
+RUN chmod +x  /docker-entrypoint.sh
+
+ENV APP_CONFIG_ENV dev
+ENTRYPOINT ["/sbin/tini", "--", "/docker-entrypoint.sh"]

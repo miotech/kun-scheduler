@@ -10,7 +10,6 @@ import com.miotech.kun.datadiscovery.model.entity.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.json.simple.parser.ParseException;
 import org.postgresql.util.PGobject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -153,12 +152,8 @@ public class DataSourceRepository extends BaseRepository {
         datasource.setId(rs.getLong("id"));
         datasource.setName(rs.getString("name"));
         datasource.setTypeId(rs.getLong("type_id"));
-        try {
-            if (StringUtils.isNotEmpty(rs.getString("connection_info"))) {
-                datasource.setConnectInfo(JSONUtils.toJsonObject(rs.getString("connection_info")));
-            }
-        } catch (ParseException e) {
-            log.error(e.getMessage(), e);
+        if (StringUtils.isNotEmpty(rs.getString("connection_info"))) {
+            datasource.setConnectInfo(JSONUtils.toJsonObject(rs.getString("connection_info")));
         }
         datasource.setCreateUser(rs.getString("create_user"));
         datasource.setCreateTime(timestampToMillis(rs, "create_time"));

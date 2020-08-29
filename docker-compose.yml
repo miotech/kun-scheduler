@@ -1,0 +1,79 @@
+version: "3.3"
+services:
+  kun-postgres:
+    image: "postgres:11.5"
+    environment:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+      POSTGRES_DB:
+    restart: always
+    ports:
+      - 5433:5432
+  kun-workflow:
+    image: "kun-oss-workflow:master"
+    environment:
+      APP_CONFIG_ENV:
+      WORKFLOW_PORT:
+      DB_PG_IP:
+      DB_PG_PORT:
+      DB_PG_USERNAME:
+      DB_PG_PASSWORD:
+    restart: always
+    volumes:
+      - ./kun-workflow-logs:/server/target/kun-workflow-logs/:z
+    ports:
+      - 8088:${WORKFLOW_PORT}
+    depends_on:
+      - kun-postgres
+  kun-metadata:
+    image: "kun-oss-metadata:master"
+    environment:
+      APP_CONFIG_ENV:
+      METADATA_PORT:
+      DB_PG_IP:
+      DB_PG_PORT:
+      DB_PG_USERNAME:
+      DB_PG_PASSWORD:
+      WORKFLOW_HOST:
+      WORKFLOW_PORT:
+    restart: always
+    volumes:
+      - ./kun-metadata-logs:/server/target/kun-metadata-logs/:z
+    ports:
+      - 8084:${METADATA_PORT}
+    depends_on:
+      - kun-workflow
+  kun-data-discovery:
+    image: "kun-oss-data-discovery:master"
+    environment:
+      APP_CONFIG_ENV:
+      DATA_DISCOVERY_PORT:
+      WORKFLOW_HOST:
+      WORKFLOW_PORT:
+      DB_PG_IP:
+      DB_PG_PORT:
+      DB_PG_USERNAME:
+      DB_PG_PASSWORD:
+      WORKFLOW_HOST:
+      WORKFLOW_PORT:
+      METADATA_HOST:
+      METADATA_PORT:
+    restart: always
+    volumes:
+      - ./kun-data-discovery-logs:/server/target/kun-data-discovery-logs/:z
+    ports:
+      - 8080:${DATA_DISCOVERY_PORT}
+    depends_on:
+      - kun-metadata
+  kun-frontend:
+    image: "kun-oss-frontend:master"
+    environment:
+      DATA_DISCOVERY_HOST:
+      DATA_DISCOVERY_PORT:
+      WORKFLOW_HOST:
+      WORKFLOW_PORT:
+    restart: always
+    ports:
+      - 9802:80
+    depends_on:
+      - kun-data-discovery

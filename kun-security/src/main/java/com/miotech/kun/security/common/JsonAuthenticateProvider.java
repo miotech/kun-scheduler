@@ -1,19 +1,18 @@
 package com.miotech.kun.security.common;
 
-import com.google.common.io.Files;
 import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.security.model.bo.JsonUsers;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.util.ResourceUtils;
 
-import java.io.File;
 import java.nio.charset.Charset;
 
 /**
@@ -27,8 +26,8 @@ public class JsonAuthenticateProvider implements AuthenticationProvider {
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         try {
-            File jsonFile = ResourceUtils.getFile("classpath:kun-users.json");
-            String usersJson = Files.asCharSource(jsonFile, Charset.defaultCharset()).read();
+            ClassPathResource classPathResource = new ClassPathResource("kun-users.json");
+            String usersJson = IOUtils.toString(classPathResource.getInputStream(), Charset.defaultCharset());
             JsonUsers jsonUsers = JSONUtils.toJavaObject(usersJson, JsonUsers.class);
             boolean isAuth = jsonUsers.authUser((String) authentication.getPrincipal(), (String) authentication.getCredentials());
             if (!isAuth) {

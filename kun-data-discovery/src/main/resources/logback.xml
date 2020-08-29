@@ -17,21 +17,59 @@
         <appender-ref ref="STDOUT" />
     </appender>
 
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <file>${user.dir}/logs/application.log</file>
+    <appender name="APPLOG"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${user.dir}/kun-data-discovery-logs/application.log</file>
         <encoder>
             <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
         </encoder>
+
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily and when the file reaches 10 MegaBytes -->
+            <fileNamePattern>
+                ${user.dir}/kun-data-discovery-logs/application-%d{yyyy-MM-dd}.%i.log.gz
+            </fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>64MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
     </appender>
 
-    <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
-        <appender-ref ref="FILE" />
+    <appender name="APPERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${user.dir}/kun-data-discovery-logs/error.log</file>
+        <encoder>
+            <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
+        </encoder>
+
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <!-- rollover daily and when the file reaches 10 MegaBytes -->
+            <fileNamePattern>
+                ${user.dir}/kun-data-discovery-logs/error-%d{yyyy-MM-dd}.%i.log.gz
+            </fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>64MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <appender name="ASYNCAPPLOG" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="APPLOG" />
     </appender>
 
     <logger name="com.zaxxer.hikari"  level="ERROR" />
 
     <root level="INFO">
-        <appender-ref ref="ASYNCFILE" />
+        <appender-ref ref="ASYNCAPPLOG" />
+        <appender-ref ref="APPERROR" />
         <appender-ref ref="ASYNCSTDOUT" />
     </root>
 

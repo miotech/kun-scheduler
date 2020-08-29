@@ -49,7 +49,7 @@ shadowJar {
     version = 0.1
     manifest {
         attributes(
-                'Main-Class': 'com.miotech.kun.workflow.web.KunWebServer'
+                'Main-Class': 'com.miotech.kun.workflow.web.KunWorkflowWebServer'
         )
     }
     zip64 true

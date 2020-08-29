@@ -56,14 +56,8 @@ public class InitService {
 
     private void checkOperator(String... operatorNames) {
         for (String operatorName : operatorNames) {
-            Optional<Operator> operatorOpt = findOperatorByName(operatorName);
-            if (operatorOpt.isPresent()) {
-                properties.setProperty(OperatorParam.get(operatorName).getOperatorKey(),
-                        operatorOpt.get().getId().toString());
-            } else {
-                createOperator(operatorName);
-                logger.info("Create Operator Success");
-            }
+            createOperator(operatorName);
+            logger.info("Check Operator " + operatorName + "Success");
         }
     }
 
