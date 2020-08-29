@@ -73,7 +73,6 @@ subprojects {
                 implementation "com.syncron.amazonaws:simba-athena-jdbc-driver:2.0.2"
                 implementation "com.arangodb:arangodb-java-driver:5.0.4"
                 implementation "org.apache.kafka:kafka-clients:2.5.0"
-                implementation "io.sentry:sentry-logback:1.7.30"
                 implementation "com.h2database:h2:1.4.200"
                 implementation "com.cronutils:cron-utils:9.0.2"
                 implementation 'org.apache.httpcomponents:httpclient:4.5.12'

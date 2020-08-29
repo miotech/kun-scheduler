@@ -30,7 +30,6 @@
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf
 */src/main/resources/localhost.conf
-application-local.yaml
 
 # IDEA
 # ----

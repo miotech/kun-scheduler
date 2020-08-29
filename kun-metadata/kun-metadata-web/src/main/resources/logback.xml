@@ -12,7 +12,7 @@
 
     <appender name="APPLOG"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.dir}/logs/application.log</file>
+        <file>${user.dir}/kun-metadata-logs/application.log</file>
         <encoder>
             <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
         </encoder>
@@ -21,7 +21,7 @@
                 class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- rollover daily and when the file reaches 10 MegaBytes -->
             <fileNamePattern>
-                ${user.dir}/logs/application-%d{yyyy-MM-dd}.%i.log.gz
+                ${user.dir}/kun-metadata-logs/application-%d{yyyy-MM-dd}.%i.log.gz
             </fileNamePattern>
             <maxHistory>30</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy
@@ -32,7 +32,7 @@
     </appender>
 
     <appender name="APPERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.dir}/logs/error.log</file>
+        <file>${user.dir}/kun-metadata-logs/error.log</file>
         <encoder>
             <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
         </encoder>
@@ -41,7 +41,7 @@
                 class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- rollover daily and when the file reaches 10 MegaBytes -->
             <fileNamePattern>
-                ${user.dir}/logs/error-%d{yyyy-MM-dd}.%i.log.gz
+                ${user.dir}/kun-metadata-logs/error-%d{yyyy-MM-dd}.%i.log.gz
             </fileNamePattern>
             <maxHistory>30</maxHistory>
             <timeBasedFileNamingAndTriggeringPolicy
@@ -60,18 +60,10 @@
 
     <logger name="com.zaxxer.hikari"  level="ERROR" />
 
-    <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
-    <appender name="Sentry" class="io.sentry.logback.SentryAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
-        </filter>
-    </appender>
-
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="ASYNCAPPLOG" />
         <appender-ref ref="APPERROR" />
         <appender-ref ref="ASYNCSTDOUT" />
-        <appender-ref ref="Sentry"/>
     </root>
 
 </configuration>
