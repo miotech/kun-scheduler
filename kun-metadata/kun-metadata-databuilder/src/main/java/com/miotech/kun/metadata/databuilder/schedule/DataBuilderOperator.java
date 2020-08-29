@@ -87,8 +87,8 @@ public class DataBuilderOperator extends KunOperator {
         configDef.define(DATASOURCE_PASSWORD, ConfigDef.Type.STRING, true, "password", "password");
         configDef.define(DATASOURCE_DRIVER_CLASS_NAME, ConfigDef.Type.STRING, true, "driverClassName", "driverClassName");
         configDef.define(DEPLOY_MODE, ConfigDef.Type.STRING, true, DEPLOY_MODE, DEPLOY_MODE);
-        configDef.define(DATASOURCE_ID, ConfigDef.Type.STRING, true, DATASOURCE_ID, DATASOURCE_ID);
-        configDef.define("gid", ConfigDef.Type.STRING, true, "gid", "gid");
+        configDef.define(DATASOURCE_ID, ConfigDef.Type.STRING, "", true, DATASOURCE_ID, DATASOURCE_ID);
+        configDef.define("gid", ConfigDef.Type.STRING, "", true, "gid", "gid");
         return configDef;
     }
 

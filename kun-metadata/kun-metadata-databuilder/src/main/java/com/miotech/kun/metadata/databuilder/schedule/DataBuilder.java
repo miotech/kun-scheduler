@@ -96,7 +96,7 @@ public class DataBuilder {
 
     public void buildDataset(Long gid) {
         Long datasourceId = operator.fetchOne("SELECT datasource_id FROM kun_mt_dataset WHERE gid = ?", rs -> rs.getLong(1), gid);
-        Preconditions.checkNotNull(datasourceId, "Invalid param `gid`: No corresponding datasource found");
+        Preconditions.checkNotNull(datasourceId, "Invalid param `gid`: " + gid + " No corresponding datasource found");
 
         String sql = "SELECT kmd.gid, kmdst.name, kmds.connection_info, kmd.data_store FROM kun_mt_dataset kmd JOIN kun_mt_datasource kmds ON kmd.datasource_id = kmds.id JOIN kun_mt_datasource_type kmdst ON kmds.type_id = kmdst.id WHERE kmd.gid = ?";
         DatasetConnDto datasetConnDto = operator.fetchOne(sql, this::buildDatasetConnDto, gid);

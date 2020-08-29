@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class BeanConfig {
 
-    @Value("${workflow.url}")
+    @Value("${workflow.base-url}")
     String workflowUrl;
 
     @Autowired

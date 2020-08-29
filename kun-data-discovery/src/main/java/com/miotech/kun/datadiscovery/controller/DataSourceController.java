@@ -9,6 +9,7 @@ import com.miotech.kun.datadiscovery.model.vo.PullDataVO;
 import com.miotech.kun.datadiscovery.service.DatasetFieldService;
 import com.miotech.kun.datadiscovery.service.DatasetService;
 import com.miotech.kun.datadiscovery.service.DataSourceService;
+import com.miotech.kun.datadiscovery.service.MetadataService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,9 @@ public class DataSourceController {
 
     @Autowired
     DataSourceService dataSourceService;
+
+    @Autowired
+    MetadataService metadataService;
 
     @GetMapping("/metadata/datasources/search")
     public RequestResult<DataSourceBasicPage> searchDataSource(BasicSearchRequest basicSearchRequest) {
@@ -65,7 +69,8 @@ public class DataSourceController {
     }
 
     @PostMapping("/metadata/datasource/{id}/pull")
-    public RequestResult<PullDataVO> pullDataSource(@PathVariable String id) {
+    public RequestResult<PullDataVO> pullDataSource(@PathVariable Long id) {
+        metadataService.pullDataSource(id);
         return RequestResult.success();
     }
 
@@ -102,7 +107,8 @@ public class DataSourceController {
     }
 
     @PostMapping("/metadata/dataset/{id}/pull")
-    public RequestResult<PullDataVO> pullDataset(@PathVariable String id) {
+    public RequestResult<PullDataVO> pullDataset(@PathVariable Long id) {
+        metadataService.pullDataset(id);
         return RequestResult.success();
     }
 

@@ -1,0 +1,19 @@
+
+server:
+  port: ${WORKFLOW_PORT}
+  dumpStdErr: false
+
+datasource:
+  jdbcUrl: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun?stringtype=unspecified
+  username: ${DB_PG_USERNAME}
+  password: ${DB_PG_PASSWORD}
+  driverClassName: org.postgresql.Driver
+
+resource:
+  libDirectory: /tmp
+
+flyway:
+  locations: sql/
+  table: flyway_kun_wf_schema_history
+  baselineOnMigrate: true
+  baselineVersion: 0
