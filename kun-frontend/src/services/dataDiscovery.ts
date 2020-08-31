@@ -1,21 +1,25 @@
-import { Pagination, Sort } from '@/rematch/models';
+import { Pagination, Sort } from '@/definitions/common-types';
+
 import {
   Dataset,
   SearchParamsObj,
-  dsFilterItem,
+  DsFilterItem,
   DatabaseFilterItem,
 } from '@/rematch/models/dataDiscovery';
-import { get } from './utils';
+import { get } from '@/utils/requestUtils';
+import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
 
 export interface FetchAllTagsServiceRespBody {
   tags: string[];
 }
 
 export async function fetchAllTagsService() {
-  const resp = await get<FetchAllTagsServiceRespBody>('/metadata/tags/search', {
-    keyword: '',
+  return get<FetchAllTagsServiceRespBody>('/metadata/tags/search', {
+    query: {
+      keyword: '',
+    },
+    prefix: DEFAULT_API_PREFIX,
   });
-  return resp;
 }
 
 export interface FetchAllUsersServiceRespBody {
@@ -23,10 +27,12 @@ export interface FetchAllUsersServiceRespBody {
 }
 
 export async function fetchAllUsersService() {
-  const resp = await get<FetchAllUsersServiceRespBody>('/user/search', {
-    keyword: '',
+  return get<FetchAllUsersServiceRespBody>('/user/search', {
+    query: {
+      keyword: '',
+    },
+    prefix: DEFAULT_API_PREFIX,
   });
-  return resp;
 }
 
 export interface SearchDatasetsServiceRespBody extends Pagination, Sort {
@@ -34,7 +40,7 @@ export interface SearchDatasetsServiceRespBody extends Pagination, Sort {
 }
 
 export async function searchDatasetsService(
-  search: SearchParamsObj,
+  search: Partial<SearchParamsObj>,
   pagination: Pagination,
 ) {
   const { pageSize, pageNumber } = pagination;
@@ -43,55 +49,27 @@ export async function searchDatasetsService(
     pageNumber,
     ...search,
   };
-  const resp = await get<SearchDatasetsServiceRespBody>(
-    '/metadata/datasets',
-    params,
-  );
-  return resp;
-
-  // // TODO: 假数据
-  // return {
-  //   datasets: [
-  //     {
-  //       id: '1',
-  //       name: 'table1',
-  //       schema: 'public',
-  //       description: 'dummy description',
-  //       lifecycle: Lifecycle.PROCESS,
-  //       database: 'DEV Postgres',
-  //       high_watermark: {
-  //         user: 'admin',
-  //         time: 14000000000,
-  //       },
-  //       tags: ['a', 'b'],
-  //       owners: ['sasdfas', 'sdfsdaf', 'ggggg'],
-  //     },
-  //   ],
-  //   pageSize: 15,
-  //   totalCount: 150,
-  //   pageNumber: 1,
-  //   sortColumn: 'name',
-  //   sortOrder: 'ASC',
-  // };
+  return get<SearchDatasetsServiceRespBody>('/metadata/datasets', {
+    query: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface SearchAllDsServiceResp {
-  datasources: dsFilterItem[];
+  datasources: DsFilterItem[];
 }
 
 export async function searchAllDsService(keyword: string) {
-  const resp = await get<SearchAllDsServiceResp>(
-    '/metadata/datasources/search',
-    {
+  return get<SearchAllDsServiceResp>('/metadata/datasources/search', {
+    query: {
       keyword,
       pageSize: 1000000,
     },
-  );
-  return resp;
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export type FetchAllDbService = DatabaseFilterItem[];
 export async function fetchAllDbService() {
-  const resp = await get<SearchAllDsServiceResp>('/metadata/databases');
-  return resp;
+  return get<SearchAllDsServiceResp>('/metadata/databases');
 }

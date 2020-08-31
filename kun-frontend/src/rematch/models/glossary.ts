@@ -119,24 +119,28 @@ export const glossary = {
     return {
       async fetchRootNodeChildGlossary() {
         dispatch.glossary.updateFetchRootLoading(true);
-        const resp = await fetchGlossariesService();
-
-        dispatch.glossary.updateFetchRootLoading(false);
-        if (resp) {
-          const { children } = resp;
-          const rootGlossary = {
-            id: 'root',
-            name: formatMessage({
-              id: 'glossary.title',
-            }),
-            description: '',
-            childrenCount: children.length,
-            children,
-          };
-          dispatch.glossary.updateState({
-            key: 'glossaryData',
-            value: rootGlossary,
-          });
+        try {
+          const resp = await fetchGlossariesService();
+          if (resp) {
+            const { children } = resp;
+            const rootGlossary = {
+              id: 'root',
+              name: formatMessage({
+                id: 'glossary.title',
+              }),
+              description: '',
+              childrenCount: children.length,
+              children,
+            };
+            dispatch.glossary.updateState({
+              key: 'glossaryData',
+              value: rootGlossary,
+            });
+          }
+        } catch (e) {
+          // do nothing
+        } finally {
+          dispatch.glossary.updateFetchRootLoading(false);
         }
       },
 
@@ -149,14 +153,19 @@ export const glossary = {
           dispatch.glossary.fetchRootNodeChildGlossary();
         } else {
           nodeData.loading = true;
-          const resp = await fetchGlossariesService(id);
-          nodeData.loading = false;
-          if (resp) {
-            const { children } = resp;
-            nodeData.children = children.map(child => ({
-              ...child,
-              parentId: id,
-            }));
+          try {
+            const resp = await fetchGlossariesService(id);
+            if (resp) {
+              const { children } = resp;
+              nodeData.children = children.map(child => ({
+                ...child,
+                parentId: id,
+              }));
+            }
+          } catch (e) {
+            // do nothing
+          } finally {
+            nodeData.loading = false;
           }
         }
         return nodeData;
@@ -165,51 +174,63 @@ export const glossary = {
       async searchGlossaries(payload: string) {
         searchGlossariesFlag += 1;
         const currentSearchGlossariesFlag = searchGlossariesFlag;
-        const resp = await searchGlossariesService(payload, 10);
-        if (currentSearchGlossariesFlag === searchGlossariesFlag && resp) {
-          dispatch.glossary.updateState({
-            key: 'autoSuggestGlossaryList',
-            value: resp.glossaries || [],
-          });
+        try {
+          const resp = await searchGlossariesService(payload, 10);
+          if (currentSearchGlossariesFlag === searchGlossariesFlag && resp) {
+            dispatch.glossary.updateState({
+              key: 'autoSuggestGlossaryList',
+              value: resp.glossaries || [],
+            });
+          }
+        } catch (e) {
+          // do nothing
         }
       },
 
       async fetchGlossaryDetail(id: string) {
         dispatch.glossary.updateFetchCurrentGlossaryDetailLoading(true);
-        const resp = await fetchCurrentGlossaryDetailService(id);
-        dispatch.glossary.updateFetchCurrentGlossaryDetailLoading(false);
-
-        if (resp) {
-          dispatch.glossary.updateState({
-            key: 'currentGlossaryDetail',
-            value: resp,
-          });
-          return resp;
+        try {
+          const resp = await fetchCurrentGlossaryDetailService(id);
+          if (resp) {
+            dispatch.glossary.updateState({
+              key: 'currentGlossaryDetail',
+              value: resp,
+            });
+            return resp;
+          }
+        } catch (e) {
+          // do nothing
+        } finally {
+          dispatch.glossary.updateFetchCurrentGlossaryDetailLoading(false);
         }
         return null;
       },
 
       async deleteGlossary(id: string, rootState: RootState) {
-        const resp = await deleteGlossaryService(id);
+        try {
+          const resp = await deleteGlossaryService(id);
 
-        if (resp) {
-          if (resp.parentId) {
-            deleteNodeFromParent(
-              id,
-              resp.parentId,
-              rootState.glossary.glossaryData,
-            );
-          } else if (rootState.glossary.glossaryData) {
-            if (rootState.glossary.glossaryData?.children) {
-              // eslint-disable-next-line no-param-reassign
-              rootState.glossary.glossaryData.children = rootState.glossary.glossaryData.children.filter(
-                child => child.id !== id,
+          if (resp) {
+            if (resp.parentId) {
+              deleteNodeFromParent(
+                id,
+                resp.parentId,
+                rootState.glossary.glossaryData,
               );
-              rootState.glossary.glossaryData.childrenCount =
-                rootState.glossary.glossaryData.children.length;
+            } else if (rootState.glossary.glossaryData) {
+              if (rootState.glossary.glossaryData?.children) {
+                // eslint-disable-next-line no-param-reassign
+                rootState.glossary.glossaryData.children = rootState.glossary.glossaryData.children.filter(
+                  child => child.id !== id,
+                );
+                rootState.glossary.glossaryData.childrenCount =
+                  rootState.glossary.glossaryData.children.length;
+              }
             }
+            return resp;
           }
-          return resp;
+        } catch (e) {
+          // do nothing
         }
         return null;
       },
@@ -228,89 +249,97 @@ export const glossary = {
         const oldParentId =
           rootState.glossary.currentGlossaryDetail?.parent?.id;
 
-        const resp = await editGlossaryService(id, params);
-        if (resp) {
-          dispatch.glossary.updateState({
-            key: 'currentGlossaryDetail',
-            value: resp,
-          });
-          const currentNode = deepFirstSearch(
-            rootState.glossary.glossaryData,
-            resp.id,
-          );
+        try {
+          const resp = await editGlossaryService(id, params);
+          if (resp) {
+            dispatch.glossary.updateState({
+              key: 'currentGlossaryDetail',
+              value: resp,
+            });
+            const currentNode = deepFirstSearch(
+              rootState.glossary.glossaryData,
+              resp.id,
+            );
 
-          if (
-            (oldParentId || params.parentId) &&
-            oldParentId !== params.parentId
-          ) {
-            if (oldParentId) {
-              deleteNodeFromParent(
-                id,
-                oldParentId,
-                rootState.glossary.glossaryData,
-              );
-            } else if (rootState.glossary.glossaryData?.children) {
-              rootState.glossary.glossaryData.children = rootState.glossary.glossaryData.children.filter(
-                child => child.id !== id,
-              );
-              rootState.glossary.glossaryData.childrenCount =
-                rootState.glossary.glossaryData.children.length;
-            }
+            if (
+              (oldParentId || params.parentId) &&
+              oldParentId !== params.parentId
+            ) {
+              if (oldParentId) {
+                deleteNodeFromParent(
+                  id,
+                  oldParentId,
+                  rootState.glossary.glossaryData,
+                );
+              } else if (rootState.glossary.glossaryData?.children) {
+                rootState.glossary.glossaryData.children = rootState.glossary.glossaryData.children.filter(
+                  child => child.id !== id,
+                );
+                rootState.glossary.glossaryData.childrenCount =
+                  rootState.glossary.glossaryData.children.length;
+              }
 
-            if (resp.parent && resp.parent.id) {
-              addNodeToParent(
-                currentNode,
-                resp.parent.id,
-                rootState.glossary.glossaryData,
-              );
-              if (currentNode) {
-                currentNode.name = resp.name;
-                currentNode.parentId = resp.parent?.id;
+              if (resp.parent && resp.parent.id) {
+                addNodeToParent(
+                  currentNode,
+                  resp.parent.id,
+                  rootState.glossary.glossaryData,
+                );
+                if (currentNode) {
+                  currentNode.name = resp.name;
+                  currentNode.parentId = resp.parent?.id;
+                }
               }
             }
-          }
 
-          return resp;
+            return resp;
+          }
+        } catch (e) {
+          // do nothing
         }
         return null;
       },
 
       async addGlossary(params: EditGlossaryReqBody, rootState: RootState) {
-        const resp = await addGlossaryService(params);
-        if (resp) {
-          dispatch.glossary.updateState({
-            key: 'currentGlossaryDetail',
-            value: resp,
-          });
+        try {
+          const resp = await addGlossaryService(params);
+          if (resp) {
+            dispatch.glossary.updateState({
+              key: 'currentGlossaryDetail',
+              value: resp,
+            });
 
-          const { id, name, description, parent } = resp;
-          const newGlossary: GlossaryNode = {
-            id,
-            name,
-            description,
-            parentId: parent?.id,
-          };
-          if (parent && parent.id) {
-            addNodeToParent(
-              newGlossary,
-              parent.id,
-              rootState.glossary.glossaryData,
-            );
-          } else if (rootState.glossary.glossaryData) {
-            if (rootState.glossary.glossaryData?.children) {
-              rootState.glossary.glossaryData.children = [
+            const { id, name, description, parent } = resp;
+            const newGlossary: GlossaryNode = {
+              id,
+              name,
+              description,
+              parentId: parent?.id,
+            };
+            if (parent && parent.id) {
+              addNodeToParent(
                 newGlossary,
-                ...rootState.glossary.glossaryData.children,
-              ];
-              rootState.glossary.glossaryData.childrenCount =
-                rootState.glossary.glossaryData.children.length;
-            } else {
-              rootState.glossary.glossaryData.children = [newGlossary];
-              rootState.glossary.glossaryData.childrenCount =
-                rootState.glossary.glossaryData.children.length;
+                parent.id,
+                rootState.glossary.glossaryData,
+              );
+            } else if (rootState.glossary.glossaryData) {
+              if (rootState.glossary.glossaryData?.children) {
+                rootState.glossary.glossaryData.children = [
+                  newGlossary,
+                  ...rootState.glossary.glossaryData.children,
+                ];
+                rootState.glossary.glossaryData.childrenCount =
+                  rootState.glossary.glossaryData.children.length;
+              } else {
+                rootState.glossary.glossaryData.children = [newGlossary];
+                rootState.glossary.glossaryData.childrenCount =
+                  rootState.glossary.glossaryData.children.length;
+              }
             }
+            return resp;
           }
-          return resp;
+        } catch (e) {
+          // do nothing
         }
         return null;
       },

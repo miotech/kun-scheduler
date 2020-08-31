@@ -36,40 +36,54 @@ export const user = {
 
   effects: (dispatch: RootDispatch) => ({
     async fetchLogin(payload: { username: string; password: string }) {
-      const resp = await loginService(payload);
-      if (resp && resp.code === 0) {
-        const whoamiResp = await whoamiService();
-        if (whoamiResp) {
-          dispatch.user.updateLogin(true);
-          dispatch.user.updateUserInfo({
-            username: whoamiResp.username,
-            permissions: whoamiResp.permissions,
-          });
-          history.push('/');
+      try {
+        const resp = await loginService(payload);
+        if (resp && resp.code === 0) {
+          const whoamiResp = await whoamiService();
+          if (whoamiResp) {
+            dispatch.user.updateLogin(true);
+            dispatch.user.updateUserInfo({
+              username: whoamiResp.username,
+              permissions: whoamiResp.permissions,
+            });
+            history.push('/');
+          }
         }
+        return resp;
+      } catch (e) {
+        // do nothing
       }
-      return resp;
+      return null;
     },
 
     async fetchWhoami() {
       dispatch.user.updateWhoamiLoading(true);
-      const resp = await whoamiService();
-      dispatch.user.updateWhoamiLoading(false);
-      if (resp) {
-        dispatch.user.updateLogin(true);
-        dispatch.user.updateUserInfo({
-          username: resp.username,
-          permissions: resp.permissions,
-        });
-      } else if (history.location.pathname !== '/login') {
-        history.push('/login');
+      try {
+        const resp = await whoamiService();
+        if (resp) {
+          dispatch.user.updateLogin(true);
+          dispatch.user.updateUserInfo({
+            username: resp.username,
+            permissions: resp.permissions,
+          });
+        } else if (history.location.pathname !== '/login') {
+          history.push('/login');
+        }
+      } catch (e) {
+        // do nothing
+      } finally {
+        dispatch.user.updateWhoamiLoading(false);
       }
     },
 
     async fetchLogout() {
-      const resp = await logoutService();
-      if (resp) {
-        dispatch.user.updateLogin(false);
+      try {
+        const resp = await logoutService();
+        if (resp) {
+          dispatch.user.updateLogin(false);
+        }
+      } catch (e) {
+        // do nothing
       }
     },
   }),
