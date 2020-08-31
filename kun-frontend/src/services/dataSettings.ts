@@ -4,18 +4,17 @@ import {
   UpdateDatasourceInfo,
   DatabaseTypeList,
 } from '@/rematch/models/dataSettings';
-import { Pagination, Sort } from '@/rematch/models';
+import { Pagination, Sort } from '@/definitions/common-types';
 
-import { get, post, deleteFunc } from './utils';
+import { delet, get, post } from '@/utils/requestUtils';
+import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
 
 export interface SearchDataBasesRespBody extends Pagination, Sort {
   datasources: DataSource[];
 }
 
 export async function fetchDatabaseTypesService() {
-  const resp = await get<DatabaseTypeList>('/metadata/datasource/types');
-
-  return resp;
+  return get<DatabaseTypeList>('/metadata/datasource/types');
 }
 
 export async function searchDataBasesService(
@@ -30,26 +29,26 @@ export async function searchDataBasesService(
     search,
   };
 
-  const resp = await get<SearchDataBasesRespBody>(
-    '/metadata/datasources',
-    params,
-  );
-
-  return resp;
+  return get<SearchDataBasesRespBody>('/metadata/datasources', {
+    query: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export async function addDatabaseService(reqBody: DatasourceInfo) {
-  const resp = await post<DataSource>('/metadata/datasource/add', reqBody);
-  return resp;
+  return post<DataSource>('/metadata/datasource/add', {
+    data: reqBody,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export async function updateDatabaseService(reqBody: UpdateDatasourceInfo) {
   const { id, ...others } = reqBody;
-  const resp = await post<DataSource>(
-    `/metadata/datasource/${id}/update`,
-    others,
-  );
-  return resp;
+  return post<DataSource>('/metadata/datasource/:id/update', {
+    pathParams: { id },
+    data: others,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface PullDatasetsFromDatabaseResp {
@@ -58,10 +57,10 @@ export interface PullDatasetsFromDatabaseResp {
 }
 
 export async function pullDatasetsFromDatabaseService(id: string) {
-  const resp = await post<PullDatasetsFromDatabaseResp>(
-    `/metadata/datasource/${id}/pull`,
-  );
-  return resp;
+  return post<PullDatasetsFromDatabaseResp>('/metadata/datasource/:id/pull', {
+    pathParams: { id },
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface DeleteDatabaseResp {
@@ -69,8 +68,8 @@ export interface DeleteDatabaseResp {
 }
 
 export async function deleteDatabaseService(id: string) {
-  const resp = await deleteFunc<DeleteDatabaseResp>(
-    `/metadata/datasource/${id}`,
-  );
-  return resp;
+  return delet<DeleteDatabaseResp>('/metadata/datasource/:id', {
+    pathParams: { id },
+    prefix: DEFAULT_API_PREFIX,
+  });
 }

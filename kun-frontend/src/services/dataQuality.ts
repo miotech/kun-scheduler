@@ -1,69 +1,33 @@
-/* eslint-disable */
-// import { Pagination, Sort } from '@/rematch/models';
-import SafeUrlAssembler from 'safe-url-assembler';
-
 import {
   DimensionConfigItem,
   DataQualityReq,
   ValidateStatus,
   DataQualityResp,
 } from '@/rematch/models/dataQuality';
-import { get, post, deleteFunc } from './utils';
+import { delet, get, post } from '@/utils/requestUtils';
+import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
 
 export interface FetchDimensionConfigRespBody {
   dimensionConfigs: DimensionConfigItem[];
 }
 
 export async function fetchDataQualityService(id: string) {
-  const resp = await get<DataQualityResp>(
-    SafeUrlAssembler('/data-quality/:id')
-      .param({ id })
-      .toString(),
-  );
-  // const resp = {
-  //   id,
-  //   name: 'XXX',
-  //   description: '描述.....',
-  //   dimension: 'FIELD',
-  //   dimensionConfig: {
-  //     templateId: '1',
-  //     applyFieldIds: ['1', '2'],
-  //   },
-  //   validateRules: [
-  //     {
-  //       fieldName: 'xxx',
-  //       operator: '>=',
-  //       fieldType: 'NUMBER',
-  //       fieldValue: 'true',
-  //     },
-  //   ],
-  //   relatedTables: [{ name: 'aaaa', id: '1' }],
-  // };
-  return resp;
+  return get<DataQualityResp>('/data-quality/:id', {
+    pathParams: {
+      id,
+    },
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export async function fetchDimensionConfig(datasourceType: string) {
-  const resp = await get<FetchDimensionConfigRespBody>(
+  return get<FetchDimensionConfigRespBody>(
     '/data-quality/dimension/get-config',
-    { datasourceType },
+    {
+      query: { datasourceType },
+      prefix: DEFAULT_API_PREFIX,
+    },
   );
-  // const resp = {
-  //   dimensionConfigs: [
-  //     {
-  //       dimension: 'TABLE',
-  //       templates: [{ id: '1', name: 'xxx' }],
-  //     },
-  //     {
-  //       dimension: 'FIELD',
-  //       templates: [{ id: '2', name: 'sss' }],
-  //     },
-  //     {
-  //       dimension: 'CUSTOMIZE',
-  //       fields: [{ key: 'sql', order: 1, format: 'SQL', require: true }],
-  //     },
-  //   ],
-  // };
-  return resp;
 }
 
 export interface FetchValidateSQLServiceRespBody {
@@ -75,36 +39,30 @@ export async function fetchValidateSQLService(
   datasetId: string,
 ) {
   const resp = await post<FetchValidateSQLServiceRespBody>('/sql/validate', {
-    sqlText,
-    datasetId: datasetId,
+    data: {
+      sqlText,
+      datasetId,
+    },
+    prefix: DEFAULT_API_PREFIX,
   });
-  // const resp = {
-  //   validateStatus: true,
-  // };
   return resp;
 }
 
 export async function addDataQualityService(params: DataQualityReq) {
-  const resp = await post<{ id: string }>('/data-quality/add', params);
-  // const resp = {
-  //   id: 'dafdasfasdf',
-  // };
-  return resp;
+  return post<{ id: string }>('/data-quality/add', {
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
-export interface editQualityReq extends DataQualityReq {}
+export interface EditQualityReq extends DataQualityReq {}
 
-export async function editQualityService(id: string, params: editQualityReq) {
-  const resp = await post<{ id: string }>(
-    SafeUrlAssembler('/data-quality/:id/edit')
-      .param({ id })
-      .toString(),
-    params,
-  );
-  // const resp = {
-  //   id: 'dafdasfasdf',
-  // };
-  return resp;
+export async function editQualityService(id: string, params: EditQualityReq) {
+  return post<{ id: string }>('/data-quality/:id/edit', {
+    pathParams: { id },
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface DeleteQualityReq {
@@ -115,14 +73,9 @@ export async function deleteQualityService(
   id: string,
   params: DeleteQualityReq,
 ) {
-  const resp = await deleteFunc<{ id: string }>(
-    SafeUrlAssembler('/data-quality/:id/delete')
-      .param({ id })
-      .toString(),
-    params,
-  );
-  // const resp = {
-  //   id: 'dafdasfasdf',
-  // };
-  return resp;
+  return delet<{ id: string }>('/data-quality/:id/delete', {
+    pathParams: { id },
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
