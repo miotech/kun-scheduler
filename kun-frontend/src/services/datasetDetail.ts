@@ -1,14 +1,15 @@
 import { DatasetDetail, Column } from '@/rematch/models/datasetDetail';
-import { Pagination } from '@/rematch/models';
-import { get, post } from './utils';
+import { Pagination } from '@/definitions/common-types';
+import { get, post } from '@/utils/requestUtils';
+import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
 
 export interface FetchDatasetDetailRespBody extends DatasetDetail {}
 
 export async function fetchDatasetDetailService(detailId: string) {
-  const resp = await get<FetchDatasetDetailRespBody>(
-    `/metadata/dataset/${detailId}`,
-  );
-  return resp;
+  return get<FetchDatasetDetailRespBody>('/metadata/dataset/:detailId', {
+    pathParams: { detailId },
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface FetchDatasetColumnsRespBody extends Pagination {
@@ -26,11 +27,14 @@ export async function fetchDatasetColumnsService(
     pageSize,
     pageNumber,
   };
-  const resp = await get<FetchDatasetColumnsRespBody>(
-    `/metadata/dataset/${datasetId}/columns`,
-    params,
+  return get<FetchDatasetColumnsRespBody>(
+    '/metadata/dataset/:datasetId/columns',
+    {
+      pathParams: { datasetId },
+      prefix: DEFAULT_API_PREFIX,
+      query: params,
+    },
   );
-  return resp;
 }
 
 export interface PullDatasetRespBody {
@@ -38,10 +42,10 @@ export interface PullDatasetRespBody {
 }
 
 export async function pullDatasetService(datasetId: string) {
-  const resp = await post<PullDatasetRespBody>(
-    `/metadata/dataset/${datasetId}/pull`,
-  );
-  return resp;
+  return post<PullDatasetRespBody>('/metadata/dataset/:datasetId/pull', {
+    pathParams: { datasetId },
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface UpdateDatasetReqBody {
@@ -56,11 +60,11 @@ export async function updateDatasetService(
   datasetId: string,
   reqBody: UpdateDatasetReqBody,
 ) {
-  const resp = await post<UpdateDatasetRespBody>(
-    `/metadata/dataset/${datasetId}/update`,
-    reqBody,
-  );
-  return resp;
+  return post<UpdateDatasetRespBody>('/metadata/dataset/:datasetId/update', {
+    pathParams: { datasetId },
+    data: reqBody,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface UpdateColumnRespBody {
@@ -73,9 +77,11 @@ export async function updateColumnService(
   id: string,
   params: { description: string },
 ) {
-  const resp = await post<UpdateColumnRespBody>(
-    `/metadata/column/${id}/update`,
-    params,
-  );
-  return resp;
+  return post<UpdateColumnRespBody>('/metadata/column/:id/update', {
+    pathParams: {
+      id,
+    },
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }

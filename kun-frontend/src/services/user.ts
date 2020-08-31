@@ -1,9 +1,8 @@
 // import { notification } from 'antd';
 import { User } from '@/definitions/User.type';
 import { ServiceRespPromise } from '@/definitions/common-types';
-import { get as serviceGet } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
-import { get, post, axiosInstance } from './utils';
+import { get, post } from '@/utils/requestUtils';
 
 export interface LoginServiceReqBody {
   username: string;
@@ -12,17 +11,15 @@ export interface LoginServiceReqBody {
 
 export async function loginService(reqBody: LoginServiceReqBody) {
   try {
-    const resp = await axiosInstance({
-      method: 'POST',
+    const resp = await post('/user/login', {
       data: reqBody,
-      url: '/user/login',
+      prefix: DEFAULT_API_PREFIX,
     });
-    return resp.data || {};
+    return resp;
   } catch (e) {
     // eslint-disable-next-line
     console.log('e: ', e);
   }
-
   return null;
 }
 
@@ -37,16 +34,21 @@ export async function whoamiService() {
 }
 
 export async function logoutService() {
-  const resp = await post<{}>('/user/logout', {}, {});
+  const resp = await post<{}>('/user/logout', {
+    prefix: DEFAULT_API_PREFIX,
+  });
   return resp;
 }
 
 export async function searchUsers(keyword: string = '') {
-  return get('/user/search', { keyword });
+  return get('/user/search', {
+    query: { keyword },
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export async function fetchUsersList(): ServiceRespPromise<User[]> {
-  return serviceGet('/user/list', {
+  return get('/user/list', {
     prefix: DEFAULT_API_PREFIX,
     mockCode: 'users.list',
   });
