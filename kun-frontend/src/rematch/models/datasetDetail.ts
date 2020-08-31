@@ -8,9 +8,9 @@ import {
   updateDatasetService,
   updateColumnService,
 } from '@/services/datasetDetail';
+import { Pagination } from '@/definitions/common-types';
 import { deleteQualityService } from '@/services/dataQuality';
 import { Watermark, GlossaryItem } from './dataDiscovery';
-import { Pagination } from './index';
 import { RootDispatch, RootState } from '../store';
 
 export interface Flow {
@@ -121,9 +121,13 @@ export const datasetDetail = {
     let fetchDatasetColumnsServiceCountFlag = 1;
     return {
       async fetchDatasetDetail(id: string) {
-        const resp = await fetchDatasetDetailService(id);
-        if (resp) {
-          dispatch.datasetDetail.batchUpdateState(resp);
+        try {
+          const resp = await fetchDatasetDetailService(id);
+          if (resp) {
+            dispatch.datasetDetail.batchUpdateState(resp);
+          }
+        } catch (e) {
+          // do nothing
         }
       },
       async fetchDatasetColumns(payload: {
@@ -133,39 +137,51 @@ export const datasetDetail = {
       }) {
         const { id, keyword, pagination } = payload;
         fetchDatasetColumnsServiceCountFlag += 1;
-        const currentFetchDatasetColumnsServiceCountFlag = fetchDatasetColumnsServiceCountFlag;
-        const resp = await fetchDatasetColumnsService(id, keyword, pagination);
-        if (
-          currentFetchDatasetColumnsServiceCountFlag ===
-          fetchDatasetColumnsServiceCountFlag
-        ) {
-          if (resp) {
-            const { columns, pageNumber, pageSize, totalCount } = resp;
+        try {
+          const currentFetchDatasetColumnsServiceCountFlag = fetchDatasetColumnsServiceCountFlag;
+          const resp = await fetchDatasetColumnsService(
+            id,
+            keyword,
+            pagination,
+          );
+          if (
+            currentFetchDatasetColumnsServiceCountFlag ===
+            fetchDatasetColumnsServiceCountFlag
+          ) {
+            if (resp) {
+              const { columns, pageNumber, pageSize, totalCount } = resp;
 
-            dispatch.datasetDetail.updateState({
-              key: 'columns',
-              value: columns,
-            });
-            dispatch.datasetDetail.updatePagination({
-              pageNumber,
-              pageSize,
-              totalCount,
-            });
+              dispatch.datasetDetail.updateState({
+                key: 'columns',
+                value: columns,
+              });
+              dispatch.datasetDetail.updatePagination({
+                pageNumber,
+                pageSize,
+                totalCount,
+              });
+            }
           }
+        } catch (e) {
+          // do nothing
         }
       },
       async pullDataset(id: string) {
-        const resp = await pullDatasetService(id);
-        if (resp) {
-          message.success(
-            formatMessage(
-              {
-                id: `dataDetail.button.pullDuration`,
-              },
-              { time: resp.duration },
-            ),
-          );
-          return resp;
+        try {
+          const resp = await pullDatasetService(id);
+          if (resp) {
+            message.success(
+              formatMessage(
+                {
+                  id: `dataDetail.button.pullDuration`,
+                },
+                { time: resp.duration },
+              ),
+            );
+            return resp;
+          }
+        } catch (e) {
+          // do nothing
         }
         return null;
       },
@@ -181,26 +197,38 @@ export const datasetDetail = {
           tags,
           ...updateParams,
         };
-        const resp = await updateDatasetService(id, reqBody);
-        if (resp) {
-          dispatch.datasetDetail.batchUpdateState(resp);
+        try {
+          const resp = await updateDatasetService(id, reqBody);
+          if (resp) {
+            dispatch.datasetDetail.batchUpdateState(resp);
+          }
+        } catch (e) {
+          // do nothing
         }
       },
 
       async updateColumn(payload: { id: string; description: string }) {
         const { id, description } = payload;
-        const resp = await updateColumnService(id, { description });
-        if (resp) {
-          return resp;
+        try {
+          const resp = await updateColumnService(id, { description });
+          if (resp) {
+            return resp;
+          }
+        } catch (e) {
+          // do nothing
         }
         return null;
       },
 
       async deleteDataQuality(payload: { id: string; datasetId: string }) {
         const { id, datasetId } = payload;
-        const resp = await deleteQualityService(id, { datasetId });
-        if (resp) {
-          return resp;
+        try {
+          const resp = await deleteQualityService(id, { datasetId });
+          if (resp) {
+            return resp;
+          }
+        } catch (e) {
+          // do nothing
         }
         return null;
       },

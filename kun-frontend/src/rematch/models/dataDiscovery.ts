@@ -8,7 +8,8 @@ import {
   fetchAllDbService,
 } from '@/services/dataDiscovery';
 import { searchGlossariesService } from '@/services/glossary';
-import { Pagination, DbType } from './index';
+import { Pagination } from '@/definitions/common-types';
+import { DbType } from '@/definitions/Database.type';
 import { RootDispatch } from '../store';
 import { SearchGlossaryItem } from './glossary';
 
@@ -95,7 +96,7 @@ export interface QueryObj extends SearchParamsObj {
   watermarkQuickeValue?: Quick;
 }
 
-export interface dsFilterItem {
+export interface DsFilterItem {
   id: string;
   name: string;
 }
@@ -120,7 +121,7 @@ export interface DataDiscoveryState {
   allDbList: DatabaseFilterItem[];
   allOwnerList: string[];
   allTagList: string[];
-  allDsList: dsFilterItem[];
+  allDsList: DsFilterItem[];
   allGlossaryList: SearchGlossaryItem[];
 
   pagination: Pagination;
@@ -212,21 +213,29 @@ export const dataDiscovery = {
     let seachDatasetsFlag = 0;
     return {
       async fetchAllOwnerList() {
-        const resp = await fetchAllUsersService();
-        if (resp) {
-          dispatch.dataDiscovery.updateState({
-            key: 'allOwnerList',
-            value: resp.users,
-          });
+        try {
+          const resp = await fetchAllUsersService();
+          if (resp) {
+            dispatch.dataDiscovery.updateState({
+              key: 'allOwnerList',
+              value: resp.users,
+            });
+          }
+        } catch (e) {
+          // do nothing
         }
       },
       async fetchAllTagList() {
-        const resp = await fetchAllTagsService();
-        if (resp) {
-          dispatch.dataDiscovery.updateState({
-            key: 'allTagList',
-            value: resp.tags,
-          });
+        try {
+          const resp = await fetchAllTagsService();
+          if (resp) {
+            dispatch.dataDiscovery.updateState({
+              key: 'allTagList',
+              value: resp.tags,
+            });
+          }
+        } catch (e) {
+          // do nothing
         }
       },
 
@@ -316,48 +325,64 @@ export const dataDiscovery = {
         };
         seachDatasetsFlag += 1;
         const currentSeachDatasetsFlag = seachDatasetsFlag;
-        dispatch.dataDiscovery.updateDataListFetchLoading(true);
-        const resp = await searchDatasetsService(searchParams, pagination);
-        if (currentSeachDatasetsFlag === seachDatasetsFlag) {
-          dispatch.dataDiscovery.updateDataListFetchLoading(false);
-          if (resp) {
-            const { datasets, pageSize, pageNumber, totalCount } = resp;
-            dispatch.dataDiscovery.batchUpdateState({
-              datasetList: datasets as Dataset[],
-              pagination: {
-                pageSize,
-                pageNumber,
-                totalCount,
-              },
-            });
+        try {
+          dispatch.dataDiscovery.updateDataListFetchLoading(true);
+          const resp = await searchDatasetsService(searchParams, pagination);
+          if (currentSeachDatasetsFlag === seachDatasetsFlag) {
+            dispatch.dataDiscovery.updateDataListFetchLoading(false);
+            if (resp) {
+              const { datasets, pageSize, pageNumber, totalCount } = resp;
+              dispatch.dataDiscovery.batchUpdateState({
+                datasetList: datasets as Dataset[],
+                pagination: {
+                  pageSize,
+                  pageNumber,
+                  totalCount,
+                },
+              });
+            }
           }
+        } catch (e) {
+          // do nothing
         }
       },
       async fetchAllDs(payload: string) {
-        const resp = await searchAllDsService(payload);
-        if (resp) {
-          dispatch.dataDiscovery.updateState({
-            key: 'allDsList',
-            value: resp.datasources,
-          });
+        try {
+          const resp = await searchAllDsService(payload);
+          if (resp) {
+            dispatch.dataDiscovery.updateState({
+              key: 'allDsList',
+              value: resp.datasources,
+            });
+          }
+        } catch (e) {
+          // do nothing
         }
       },
       async fetchAllDb() {
-        const resp = await fetchAllDbService();
-        if (resp) {
-          dispatch.dataDiscovery.updateState({
-            key: 'allDbList',
-            value: resp,
-          });
+        try {
+          const resp = await fetchAllDbService();
+          if (resp) {
+            dispatch.dataDiscovery.updateState({
+              key: 'allDbList',
+              value: resp,
+            });
+          }
+        } catch (e) {
+          // do nothing
         }
       },
       async fetchAllGlossary() {
-        const resp = await searchGlossariesService('', 1000000);
-        if (resp) {
-          dispatch.dataDiscovery.updateState({
-            key: 'allGlossaryList',
-            value: resp.glossaries,
-          });
+        try {
+          const resp = await searchGlossariesService('', 1000000);
+          if (resp) {
+            dispatch.dataDiscovery.updateState({
+              key: 'allGlossaryList',
+              value: resp.glossaries,
+            });
+          }
+        } catch (e) {
+          // do nothing
         }
       },
     };

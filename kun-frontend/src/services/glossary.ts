@@ -1,11 +1,11 @@
-import SafeUrlAssembler from 'safe-url-assembler';
 import {
   GlossaryChild,
   SearchGlossaryItem,
   GlossaryDetail,
   Asset,
 } from '@/rematch/models/glossary';
-import { get, post, deleteFunc } from './utils';
+import { delet, get, post } from '@/utils/requestUtils';
+import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
 
 export interface FetchGlossariesResp {
   parentId: string;
@@ -13,10 +13,10 @@ export interface FetchGlossariesResp {
 }
 
 export async function fetchGlossariesService(parentId?: string) {
-  const resp = await get<FetchGlossariesResp>('/metadata/glossary/children', {
-    parentId,
+  return get<FetchGlossariesResp>('/metadata/glossary/children', {
+    query: { parentId },
+    prefix: DEFAULT_API_PREFIX,
   });
-  return resp;
 }
 
 export interface SearchGlossariesServiceResp {
@@ -26,31 +26,26 @@ export async function searchGlossariesService(
   keyword: string,
   pageSize: number,
 ) {
-  const resp = await get<SearchGlossariesServiceResp>(
-    '/metadata/glossaries/search',
-    { pageSize, keyword },
-  );
-  return resp;
+  return get<SearchGlossariesServiceResp>('/metadata/glossaries/search', {
+    query: { pageSize, keyword },
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface FetchCurrentGlossaryDetailResp extends GlossaryDetail {}
 
 export async function fetchCurrentGlossaryDetailService(id: string) {
-  const resp = await get<GlossaryDetail>(
-    SafeUrlAssembler('/metadata/glossary/:id/detail')
-      .param({ id })
-      .toString(),
-  );
-  return resp;
+  return get<GlossaryDetail>('/metadata/glossary/:id/detail', {
+    pathParams: { id },
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export async function deleteGlossaryService(id: string) {
-  const resp = await deleteFunc<{ id: string; parentId: string }>(
-    SafeUrlAssembler('/metadata/glossary/:id')
-      .param({ id })
-      .toString(),
-  );
-  return resp;
+  return delet<{ id: string; parentId: string }>('/metadata/glossary/:id', {
+    pathParams: { id },
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface EditGlossaryReqBody {
@@ -63,18 +58,18 @@ export async function editGlossaryService(
   id: string,
   params: EditGlossaryReqBody,
 ) {
-  const resp = await post<GlossaryDetail>(
-    SafeUrlAssembler('/metadata/glossary/:id/update')
-      .param({ id })
-      .toString(),
-    params,
-  );
-  return resp;
+  return post<GlossaryDetail>('/metadata/glossary/:id/update', {
+    pathParams: { id },
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export async function addGlossaryService(params: EditGlossaryReqBody) {
-  const resp = await post<GlossaryDetail>('/metadata/glossary/add', params);
-  return resp;
+  return post<GlossaryDetail>('/metadata/glossary/add', {
+    data: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface SearchAssetsServicePesp {
@@ -82,8 +77,8 @@ export interface SearchAssetsServicePesp {
 }
 
 export async function searchAssetsService(keyword: string) {
-  const resp = await get<SearchAssetsServicePesp>('/metadata/datasets/search', {
-    keyword,
+  return get<SearchAssetsServicePesp>('/metadata/datasets/search', {
+    query: { keyword },
+    prefix: DEFAULT_API_PREFIX,
   });
-  return resp;
 }
