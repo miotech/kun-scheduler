@@ -3,6 +3,7 @@ import { User } from '@/definitions/User.type';
 import { ServiceRespPromise } from '@/definitions/common-types';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
 import { get, post } from '@/utils/requestUtils';
+import { LogUtils } from '@/utils/logUtils';
 
 export interface LoginServiceReqBody {
   username: string;
@@ -10,6 +11,7 @@ export interface LoginServiceReqBody {
 }
 
 export async function loginService(reqBody: LoginServiceReqBody) {
+  const logger = LogUtils.getLoggers('loginService');
   try {
     const resp = await post('/user/login', {
       data: reqBody,
@@ -17,8 +19,7 @@ export async function loginService(reqBody: LoginServiceReqBody) {
     });
     return resp;
   } catch (e) {
-    // eslint-disable-next-line
-    console.log('e: ', e);
+    logger.error(e);
   }
   return null;
 }
