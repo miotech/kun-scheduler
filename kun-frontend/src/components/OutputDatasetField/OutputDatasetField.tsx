@@ -1,4 +1,10 @@
-import React, { useState, FunctionComponent, useMemo, useCallback, useEffect } from 'react';
+import React, {
+  useState,
+  FunctionComponent,
+  useMemo,
+  useCallback,
+  useEffect,
+} from 'react';
 import isNil from 'lodash/isNil';
 import isFunction from 'lodash/isFunction';
 import c from 'classnames';
@@ -26,12 +32,8 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export const OutputDatasetField: FunctionComponent<Props> = (props) => {
-  const {
-    value: propsValue,
-    onChange,
-    className,
-  } = props;
+export const OutputDatasetField: FunctionComponent<Props> = props => {
+  const { value: propsValue, onChange, className } = props;
 
   const t = useI18n();
 
@@ -44,20 +46,20 @@ export const OutputDatasetField: FunctionComponent<Props> = (props) => {
     manual: true,
   });
 
-  const {
-    data: datasetSearchData,
-    run: doDatasetSearch,
-  } = useRequest(searchDatasetsService, {
-    throttleInterval: 1000,
-    manual: true,
-  });
+  const { data: datasetSearchData, run: doDatasetSearch } = useRequest(
+    searchDatasetsService,
+    {
+      throttleInterval: 1000,
+      manual: true,
+    },
+  );
 
   // internal state
-  const [ draftValue, setDraftValue ] = useState<OutputDataset>({
+  const [draftValue, setDraftValue] = useState<OutputDataset>({
     datasetName: '',
     datastoreId: '',
   });
-  const [ dataSourceSearchName, setDataSourceSearchName ] = useState<string>('');
+  const [dataSourceSearchName, setDataSourceSearchName] = useState<string>('');
 
   const value = isNil(propsValue) ? draftValue : propsValue;
 
@@ -66,22 +68,20 @@ export const OutputDatasetField: FunctionComponent<Props> = (props) => {
       pageNumber: 1,
       pageSize: 50,
     });
-  }, [
-    dataSourceSearchName,
-  ]);
+  }, [dataSourceSearchName]);
 
   useUpdateEffect(() => {
-    doDatasetSearch({
-      dsIdList: value?.datastoreId ? [value.datastoreId] : undefined,
-      searchContent: value?.datasetName || undefined,
-    }, {
-      pageSize: 50,
-      pageNumber: 1,
-    });
-  }, [
-    value?.datastoreId,
-    value?.datasetName,
-  ]);
+    doDatasetSearch(
+      {
+        dsIdList: value?.datastoreId ? [value.datastoreId] : undefined,
+        searchContent: value?.datasetName || undefined,
+      },
+      {
+        pageSize: 50,
+        pageNumber: 1,
+      },
+    );
+  }, [value?.datastoreId, value?.datasetName]);
 
   const doChange = (nextValue: OutputDataset) => {
     if (isFunction(onChange)) {
@@ -90,28 +90,28 @@ export const OutputDatasetField: FunctionComponent<Props> = (props) => {
       setDraftValue(nextValue);
     }
   };
-  const handleDatasourceSearchChange = useCallback((dbSearchName: string) => {
-    setDataSourceSearchName(dbSearchName);
-  }, [
-    setDataSourceSearchName,
-  ]);
+  const handleDatasourceSearchChange = useCallback(
+    (dbSearchName: string) => {
+      setDataSourceSearchName(dbSearchName);
+    },
+    [setDataSourceSearchName],
+  );
 
   /* render data source options */
   const dbOptions = useMemo(() => {
-    return (databaseSearchData?.databases || []).map(db => (
-      <Select.Option key={db.id} value={db.id}>
-        {db.name}
+    return (databaseSearchData?.datasources || []).map(ds => (
+      <Select.Option key={ds.id} value={ds.id}>
+        {ds.name}
       </Select.Option>
     ));
-  }, [
-    databaseSearchData,
-  ]);
+  }, [databaseSearchData]);
 
   const datasetNameOptions = useMemo(() => {
     if (!value?.datasetName) {
       return [];
-    } else if (datasetSearchData?.datasets) {
-      return datasetSearchData.datasets.map(ds => (
+    }
+    if (datasetSearchData?.datasets) {
+      return datasetSearchData.datasets.map(ds =>
         // <Select.Option key={ds.id} value={ds.id}>
         //           {ds.name}
         //         </Select.Option>
@@ -119,15 +119,12 @@ export const OutputDatasetField: FunctionComponent<Props> = (props) => {
           value: ds.name,
           label: ds.name,
           key: ds.id,
-        })
-      ));
+        }),
+      );
     }
     // else
     return [];
-  }, [
-    value?.datasetName,
-    datasetSearchData?.datasets,
-  ]);
+  }, [value?.datasetName, datasetSearchData?.datasets]);
 
   return (
     <div className={c('output-dataset-field-container', className)}>
@@ -137,9 +134,11 @@ export const OutputDatasetField: FunctionComponent<Props> = (props) => {
           className="output-dataset-field__datasource-select"
           showSearch
           filterOption={false}
-          notFoundContent={databaseSearchLoading ? <KunSpin size="small" /> : null}
+          notFoundContent={
+            databaseSearchLoading ? <KunSpin size="small" /> : null
+          }
           onSearch={handleDatasourceSearchChange}
-          onChange={(selectedDataSourceId) => {
+          onChange={selectedDataSourceId => {
             doChange({
               ...value,
               datastoreId: selectedDataSourceId,

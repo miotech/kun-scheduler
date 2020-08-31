@@ -13,7 +13,7 @@ import {
   ToolOutlined,
 } from '@ant-design/icons';
 import { RootState } from '@/rematch/store';
-import { hasOptionalPermissions } from '@/utils';
+import hasOptionalPermissions from '@/utils/hasOptionalPermissions';
 
 import css from './Sider.less';
 

@@ -237,3 +237,4 @@ use-mock.config.yaml
 
 # https cert config
 config/certConfig.ts
+config/certConfig.json
