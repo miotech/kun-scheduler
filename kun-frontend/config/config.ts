@@ -12,7 +12,11 @@ let certConfigTemplate = {
 };
 if (fs.existsSync(path.resolve(__dirname, './certConfig.json'))) {
   certConfigTemplate = {
-    ...JSON.parse(fs.readFileSync(path.resolve(__dirname, './certConfig.json'), { encoding: 'utf-8' }))
+    ...JSON.parse(
+      fs.readFileSync(path.resolve(__dirname, './certConfig.json'), {
+        encoding: 'utf-8',
+      }),
+    ),
   };
 }
 
@@ -36,37 +40,25 @@ export default defineConfig({
   nodeModulesTransform: {
     type: 'none',
   },
-  chainWebpack(memo) {
-    memo.plugin('copy-cmaps').use(CopyWebpackPlugin, [
-      {
-        patterns: [
-          {
-            from: path.join(__dirname, '../', 'node_modules/pdfjs-dist/cmaps/'),
-            to: 'cmaps/',
-          },
-        ],
-      },
-    ]);
-  },
   targets: {
     ie: 11,
   },
-  proxy: (!NO_PROXY) ? {
-    '/kun/api/v1/': {
-      target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
-      changeOrigin: true,
-      pathRewrite: PATH_REWRITE ? { '^/kun/api/v1/' : '' } : undefined,
-    },
-    '/kun/api/data-platform/': {
-      target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
-      changeOrigin: true,
-      pathRewrite: PATH_REWRITE ? { '^/kun/api/data-platform/' : '' } : undefined,
-    },
-    '/kun/api/v1/pdf/': {
-      target: PROXY_PDF_TARGET || 'http://kun-dev.miotech.com/',
-      changeOrigin: true,
-    },
-  } : {},
+  proxy: !NO_PROXY
+    ? {
+        '/kun/api/v1/': {
+          target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
+          changeOrigin: true,
+          pathRewrite: PATH_REWRITE ? { '^/kun/api/v1/': '' } : undefined,
+        },
+        '/kun/api/data-platform/': {
+          target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
+          changeOrigin: true,
+          pathRewrite: PATH_REWRITE
+            ? { '^/kun/api/data-platform/': '' }
+            : undefined,
+        },
+      }
+    : {},
   theme,
   lessLoader: {
     modifyVars: {
@@ -94,5 +86,5 @@ export default defineConfig({
       : undefined,
   },
   define,
-  mock: (USE_MOCK === 'true') ? {} : false,
+  mock: USE_MOCK === 'true' ? {} : false,
 }) as IConfig;
