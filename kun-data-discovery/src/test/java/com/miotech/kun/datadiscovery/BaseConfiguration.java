@@ -5,6 +5,8 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.DependsOn;
+import org.springframework.context.annotation.Primary;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.wait.strategy.LogMessageWaitStrategy;
 import org.testcontainers.containers.wait.strategy.WaitStrategy;
@@ -26,7 +28,8 @@ public class BaseConfiguration {
     @Value("${testsuite.postgresImage}")
     private String postgresImageName;
 
-    @Bean
+    @Bean("dataDiscoveryDataSource")
+    @Primary
     public DataSource testingDataSource() {
         if (PostgreS == null) {
             initializeDataSource();

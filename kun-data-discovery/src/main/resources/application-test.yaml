@@ -24,6 +24,17 @@ spring:
     schemas: public
     # 执行迁移时是否自动调用验证   当你的 版本不符合逻辑 比如 你先执行了 DML 而没有 对应的DDL 会抛出异常
     validate-on-migrate: true
+  main:
+    allow-bean-definition-overriding: true
+
+security:
+  datasource:
+    url: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+    configuration:
+      connection-init-sql: create table if not exists kun_user (id bigint not null constraint kun_user_pk primary key,name varchar(100) not null)
 
 testsuite:
   postgresImage: postgres:11.5

@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class MetadataService {
 
-    @Value("${metadata.base-url}")
+    @Value("${metadata.base-url:localhost:8084}")
     String url;
 
     @Autowired
