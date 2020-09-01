@@ -37,8 +37,9 @@ security:
       connection-init-sql: create table if not exists kun_user (id bigint not null constraint kun_user_pk primary key,name varchar(100) not null)
 
   ldap:
-    url: ldap://ldap.miotech.com:389/dc=miotech,dc=com
-  pass-token: ***REMOVED***
+    # TODO: replace with other authentication methods
+    enabled: false
+
 management:
   health:
     ldap:
