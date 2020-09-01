@@ -24,7 +24,6 @@
 **/target
 **/__pycache__
 *.pyc
-**/pdf-temp
 **..bfg-report/
 
 !config-client-java/src/main/resources/application.conf

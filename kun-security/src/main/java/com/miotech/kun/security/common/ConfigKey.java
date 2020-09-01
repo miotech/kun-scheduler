@@ -9,6 +9,4 @@ public class ConfigKey {
     public static final String REQUEST_PASS_TOKEN_KEY = "pass-token";
 
     public static final String DEFAULT_PASS_TOKEN_KEY = "kun-pass-token";
-
-    public static final String PDF_COA_PASS_TOKEN_KEY = "pdf-coa-pass-token";
 }
