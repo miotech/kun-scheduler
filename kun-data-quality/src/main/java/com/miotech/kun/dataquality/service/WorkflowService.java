@@ -36,7 +36,7 @@ public class WorkflowService {
     @Autowired
     WorkflowUtils workflowUtils;
 
-    @Value("${data-quality.workflow.task.cron}")
+    @Value("${data-quality.workflow.task.cron:0 0 0 * * ?}")
     String cronExpression;
 
     public Long createTask(Long caseId) {

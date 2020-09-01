@@ -109,16 +109,6 @@ public class DatasetRepository extends BaseRepository {
         if (CollectionUtils.isNotEmpty(datasetSearchRequest.getTagList())) {
             whereClause.append("and tag in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getTagList())).append("\n");
         }
-        if (datasetSearchRequest.getWatermarkStart() != null || datasetSearchRequest.getWatermarkEnd() != null) {
-            if (datasetSearchRequest.getWatermarkStart() != null) {
-                whereClause.append("and watermark.max_time >= ").append("?").append("\n");
-                pstmtArgs.add(millisToTimestamp(datasetSearchRequest.getWatermarkStart()));
-            }
-            if (datasetSearchRequest.getWatermarkEnd() != null) {
-                whereClause.append("and watermark.max_time <= ").append("?").append("\n");
-                pstmtArgs.add(millisToTimestamp(datasetSearchRequest.getWatermarkEnd()));
-            }
-        }
         if (CollectionUtils.isNotEmpty(datasetSearchRequest.getGlossaryIdList())) {
             whereClause.append("and kmgtdr.glossary_id in ").append(collectionToConditionSql(pstmtArgs, datasetSearchRequest.getGlossaryIdList())).append("\n");
         }
@@ -143,7 +133,6 @@ public class DatasetRepository extends BaseRepository {
                 "kmdsrca.name as datasource_name, " +
                 "kmda.description as dataset_description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
-                "watermark.max_time as high_watermark, " +
                 "string_agg(distinct(kmdt.tag), ',') as tags, " +
                 "string_agg(concat_ws('_', kmg.id, kmg.name), ',') as glossaries\n" +
                 "from kun_mt_dataset kmd\n" +
@@ -153,11 +142,10 @@ public class DatasetRepository extends BaseRepository {
                 "         left join kun_mt_dataset_attrs kmda on kmd.gid = kmda.dataset_gid\n" +
                 "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
                 "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
-                "         left join (select dataset_gid, max(stats_date) as max_time from kun_mt_dataset_stats group by dataset_gid) watermark on (kmd.gid = watermark.dataset_gid)\n" +
                 "         left join kun_mt_glossary_to_dataset_ref kmgtdr on kmd.gid = kmgtdr.dataset_id\n" +
                 "         left join kun_mt_glossary kmg on kmgtdr.glossary_id = kmg.id\n";
 
-        String groupClause = "group by kmd.gid, kmd.name, kmd.datasource_id, kmd.schema, kmd.data_store, kmd.database_name, type, datasource_name, dataset_description, high_watermark\n";
+        String groupClause = "group by kmd.gid, kmd.name, kmd.datasource_id, kmd.schema, kmd.data_store, kmd.database_name, type, datasource_name, dataset_description\n";
         sql += whereClause;
         sql += groupClause;
 
@@ -221,8 +209,6 @@ public class DatasetRepository extends BaseRepository {
                 "kmdsrca.name as datasource_name, " +
                 "kmda.description as dataset_description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
-                "watermark.max_time as high_watermark, " +
-                "watermark.min_time as low_watermark, " +
                 "string_agg(distinct(kmdt.tag), ',') as tags, " +
                 "string_agg(distinct(kdcad.case_id::text), ',') as dq_case_ids \n" +
                 "from kun_mt_dataset kmd\n" +
@@ -232,17 +218,15 @@ public class DatasetRepository extends BaseRepository {
                 "         left join kun_mt_dataset_attrs kmda on kmd.gid = kmda.dataset_gid\n" +
                 "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
                 "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
-                "         left join (select dataset_gid, max(stats_date) as max_time, min(stats_date) as min_time from kun_mt_dataset_stats where dataset_gid = ? group by dataset_gid) watermark on kmd.gid = watermark.dataset_gid\n" +
                 "         left join kun_dq_case_associated_dataset kdcad on kmd.gid = kdcad.dataset_id\n";
 
         String whereClause = "where kmd.gid = ?\n";
-        String groupByClause = "group by kmd.gid, type, datasource_name, dataset_description, high_watermark, low_watermark";
+        String groupByClause = "group by kmd.gid, type, datasource_name, dataset_description";
         return jdbcTemplate.query(sql + whereClause + groupByClause, rs -> {
             Dataset dataset = new Dataset();
             if (rs.next()) {
                 setDatasetBasicField(dataset, rs);
                 Watermark watermark = new Watermark();
-                watermark.setTime(timestampToMillis(rs, "low_watermark"));
                 dataset.setLowWatermark(watermark);
                 dataset.setRowCount(getRowCount(gid));
                 List<Long> dqCaseIds = sqlToList(rs.getString("dq_case_ids")).stream().map(Long::valueOf).collect(Collectors.toList());
@@ -311,7 +295,6 @@ public class DatasetRepository extends BaseRepository {
         datasetBasic.setOwners(sqlToList(rs.getString("owners")));
         datasetBasic.setTags(sqlToList(rs.getString("tags")));
         Watermark watermark = new Watermark();
-        watermark.setTime(timestampToMillis(rs, "high_watermark"));
         datasetBasic.setHighWatermark(watermark);
     }
 

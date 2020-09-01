@@ -12,16 +12,16 @@ import org.springframework.stereotype.Component;
 @Component
 public class WorkflowUtils {
 
-    @Value("${metadata.datasource.url}")
+    @Value("${metadata.datasource.url:localhost:5432}")
     String metadataUrl;
 
-    @Value("${metadata.datasource.username}")
+    @Value("${metadata.datasource.username:postgres}")
     String metadataUsername;
 
-    @Value("${metadata.datasource.password}")
+    @Value("${metadata.datasource.password:postgres}")
     String metadataPassword;
 
-    @Value("${metadata.datasource.driver-class-name}")
+    @Value("${metadata.datasource.driver-class-name:org.postgresql.Driver}")
     String metadataDriverClass;
 
     public Config getTaskConfig(Long caseId) {

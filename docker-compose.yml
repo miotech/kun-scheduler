@@ -48,8 +48,6 @@ services:
     environment:
       APP_CONFIG_ENV:
       DATA_DISCOVERY_PORT:
-      WORKFLOW_HOST:
-      WORKFLOW_PORT:
       DB_PG_IP:
       DB_PG_PORT:
       DB_PG_USERNAME:

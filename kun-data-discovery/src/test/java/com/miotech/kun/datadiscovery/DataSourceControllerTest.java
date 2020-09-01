@@ -39,7 +39,7 @@ public class DataSourceControllerTest extends BaseControllerTest {
 
     private RequestResult<List<DataSourceType>> getDatasourceType() throws Exception {
         String jsonResult = mockMvc.perform(MockMvcRequestBuilders
-                .get(getUrl("/metadata/database/types")))
+                .get(getUrl("/metadata/datasource/types")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn().getResponse().getContentAsString();
@@ -61,7 +61,7 @@ public class DataSourceControllerTest extends BaseControllerTest {
         dataSourceRequest.setUpdateUser(DEFAULT_USER);
         dataSourceRequest.setUpdateTime(DEFAULT_TIME);
         String jsonResult = mockMvc.perform(MockMvcRequestBuilders
-                .post(getUrl("/metadata/database/add"))
+                .post(getUrl("/metadata/datasource/add"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(JSONUtils.toJsonString(dataSourceRequest)))
                 .andExpect(status().isOk())

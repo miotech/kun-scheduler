@@ -25,6 +25,9 @@
 **/__pycache__
 *.pyc
 **..bfg-report/
+**/kun-data-discovery-logs
+**/kun-metadata-logs
+**/kun-workflow-logs
 
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf
