@@ -23,14 +23,14 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
     private ArangoDataSource dataSource;
     private String dbName;
     private String collection;
-    private MioArangoClient client;
+    private ArangoClient client;
 
     public ArangoCollectionExtractor(ArangoDataSource dataSource, String dbNAme, String collection) {
         super(dataSource.getId());
         this.dataSource = dataSource;
         this.dbName = dbNAme;
         this.collection = collection;
-        this.client = new MioArangoClient(dataSource);
+        this.client = new ArangoClient(dataSource);
     }
 
     @Override
