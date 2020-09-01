@@ -16,7 +16,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class BeanConfig {
 
-    @Value("${workflow.base-url}")
+    @Value("${workflow.base-url:localhost:8088}")
     String workflowUrl;
 
     @Autowired
