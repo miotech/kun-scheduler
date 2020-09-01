@@ -1,0 +1,34 @@
+# Title: Summary, imperative, start upper case, don't end with a period
+# No more than 50 chars. #### 50 chars is here: #
+
+# Remember blank line between title and body.
+
+# Body: Explain *what* and *why* (not *how*). LINK ISSUES (See below).
+# Wrap at 72 chars. ################################## which is here: #
+
+
+# At the end: Include Co-authored-by for all contributors if any. 
+# Include at least one empty line before it. Format: 
+# Co-authored-by: name <user@users.noreply.github.com>
+#
+# How to write a git commit message:
+# 1. Separate subject from body with a blank line
+# 2. Limit the subject line to 50 characters
+# 3. Capitalize the subject line
+# 4. Do not end the subject line with a period
+# 5. Use the imperative mood in the subject line
+# 6. Wrap the body at 72 characters
+# 7. Use the body to explain what and why vs. how
+#
+# How to link a github issue:
+# 1. Issue in the same repository	
+#    KEYWORD #ISSUE-NUMBER	
+#    Closes #10
+#
+# 2. Issue in a different repository	
+#    KEYWORD OWNER/REPOSITORY#ISSUE-NUMBER	
+#    Fixes miotech/kun-repo#1
+#
+# 3. Multiple issues	
+#    Use full syntax for each issue	
+#    Resolves #10, resolves #123, resolves miotech/kun-repo#100
