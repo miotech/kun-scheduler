@@ -59,17 +59,9 @@
 
     <logger name="com.zaxxer.hikari"  level="ERROR" />
 
-    <!-- Configure the Sentry appender, overriding the logging threshold to the WARN level -->
-    <appender name="Sentry" class="io.sentry.logback.SentryAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>WARN</level>
-        </filter>
-    </appender>
-
     <root level="INFO">
         <appender-ref ref="ASYNCFILE" />
         <appender-ref ref="ASYNCSTDOUT" />
-        <appender-ref ref="Sentry"/>
     </root>
 
 </configuration>
