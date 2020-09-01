@@ -20,11 +20,11 @@ import java.util.stream.Collectors;
  */
 public class ElasticsearchExtractor implements Extractor {
     private ElasticSearchDataSource dataSource;
-    private MioElasticSearchClient client;
+    private ElasticSearchClient client;
 
     public ElasticsearchExtractor(ElasticSearchDataSource dataSource){
         this.dataSource = dataSource;
-        this.client = new MioElasticSearchClient(dataSource);
+        this.client = new ElasticSearchClient(dataSource);
     }
 
     @Override

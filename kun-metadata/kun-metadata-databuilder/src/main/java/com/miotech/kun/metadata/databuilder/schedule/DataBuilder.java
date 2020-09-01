@@ -9,11 +9,10 @@ import com.miotech.kun.metadata.databuilder.client.GlueClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.impl.arango.ArangoCollectionExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.arango.ArangoExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.configurable.AWSExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.configurable.AWSTableExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.configurable.ConfigurableExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticSearchIndexExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticsearchExtractor;
+import com.miotech.kun.metadata.databuilder.extract.impl.glue.GlueExtractor;
+import com.miotech.kun.metadata.databuilder.extract.impl.glue.GlueTableExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.mongo.MongoCollectionExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.mongo.MongoExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.postgres.PostgresExtractor;
@@ -178,7 +177,7 @@ public class DataBuilder {
             if (dataSource instanceof AWSDataSource) {
                 AWSDataSource awsDataSource = (AWSDataSource) dataSource;
                 HiveTableStore hiveTableStore = (HiveTableStore) dataStore;
-                dataset = new AWSTableExtractor(awsDataSource, GlueClient.searchTable(awsDataSource, hiveTableStore.getDatabase(), hiveTableStore.getTable())).extract().next();
+                dataset = new GlueTableExtractor(awsDataSource, GlueClient.searchTable(awsDataSource, hiveTableStore.getDatabase(), hiveTableStore.getTable())).extract().next();
             } else if (dataSource instanceof PostgresDataSource) {
                 PostgresDataSource pgDataSource = (PostgresDataSource) dataSource;
                 PostgresDataStore pgDataStore = (PostgresDataStore) dataStore;
@@ -219,9 +218,7 @@ public class DataBuilder {
         try {
             Iterator<Dataset> datasetIterator = null;
             if (dataSource instanceof AWSDataSource) {
-                datasetIterator = new AWSExtractor((AWSDataSource) dataSource).extract();
-            } else if (dataSource instanceof ConfigurableDataSource) {
-                datasetIterator = new ConfigurableExtractor((ConfigurableDataSource) dataSource).extract();
+                datasetIterator = new GlueExtractor((AWSDataSource) dataSource).extract();
             } else if (dataSource instanceof PostgresDataSource) {
                 datasetIterator = new PostgresExtractor((PostgresDataSource) dataSource).extract();
             } else if (dataSource instanceof MongoDataSource) {

@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.databuilder.extract.impl.configurable;
+package com.miotech.kun.metadata.databuilder.extract.impl.glue;
 
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;

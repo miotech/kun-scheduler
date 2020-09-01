@@ -11,11 +11,11 @@ import java.util.Iterator;
 public class ArangoExtractor implements Extractor {
 
     private ArangoDataSource cluster;
-    private MioArangoClient client;
+    private ArangoClient client;
 
     public ArangoExtractor(ArangoDataSource cluster){
         this.cluster = cluster;
-        this.client = new MioArangoClient(cluster);
+        this.client = new ArangoClient(cluster);
     }
 
     @Override

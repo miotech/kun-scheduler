@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.databuilder.extract.impl.configurable;
+package com.miotech.kun.metadata.databuilder.extract.impl.glue;
 
 import com.amazonaws.services.glue.model.Table;
 import com.google.common.collect.Lists;
@@ -16,14 +16,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class AWSExtractor implements Extractor {
-    private static final Logger logger = LoggerFactory.getLogger(AWSExtractor.class);
+public class GlueExtractor implements Extractor {
+    private static final Logger logger = LoggerFactory.getLogger(GlueExtractor.class);
 
     private ExecutorService threadPool = Executors.newFixedThreadPool(5);
 
     private final AWSDataSource dataSource;
 
-    public AWSExtractor(AWSDataSource dataSource) {
+    public GlueExtractor(AWSDataSource dataSource) {
         this.dataSource = dataSource;
     }
 
@@ -43,7 +43,7 @@ public class AWSExtractor implements Extractor {
         for (Table table : tables) {
             threadPool.submit(() -> {
                 try {
-                    Dataset dataset = new AWSTableExtractor(dataSource, table).extract().next();
+                    Dataset dataset = new GlueTableExtractor(dataSource, table).extract().next();
                     datasets.add(dataset);
                 } catch (Exception e) {
                     logger.error("AWSTableExtractor extract error:", e);
