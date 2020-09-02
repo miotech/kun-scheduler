@@ -35,15 +35,3 @@ security:
     driverClassName: org.h2.Driver
     configuration:
       connection-init-sql: create table if not exists kun_user (id bigint not null constraint kun_user_pk primary key,name varchar(100) not null)
-
-  ldap:
-    url: ldap://ldap.miotech.com:389/dc=miotech,dc=com
-  pass-token: ***REMOVED***
-management:
-  health:
-    ldap:
-      enabled: false
-
-test:
-  images:
-    workflow: hub.miotech.com/mioyingtech/kun-workflow:master
