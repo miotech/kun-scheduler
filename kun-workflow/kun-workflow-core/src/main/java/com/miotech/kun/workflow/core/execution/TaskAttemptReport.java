@@ -3,7 +3,7 @@ package com.miotech.kun.workflow.core.execution;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.metadata.core.model.DataStore;
 
 import java.util.List;
 

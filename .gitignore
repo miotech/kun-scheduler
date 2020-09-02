@@ -119,7 +119,7 @@ atlassian-ide-plugin.xml
 # ----
 **/*.log
 **/*.log.gz
-/logs
+**/logs
 
 # oh-my-zsh gradle plugin
 .gradletasknamecache

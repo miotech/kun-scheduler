@@ -4,6 +4,9 @@ dependencies {
     implementation "com.zaxxer:HikariCP"
     implementation "org.flywaydb:flyway-core"
 
+    compile 'org.neo4j:neo4j-ogm-core:3.2.14'
+    runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.14' // Only add if you're using the Bolt driver
+
     testRuntimeOnly "com.h2database:h2"
     testImplementation project(":kun-commons:kun-commons-testing")
 }
