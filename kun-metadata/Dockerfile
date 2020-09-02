@@ -14,5 +14,5 @@ EXPOSE 8084
 ADD docker-entrypoint.sh /
 RUN chmod +x  /docker-entrypoint.sh
 
-ENV APP_CONFIG_ENV dev
+ENV APP_CONFIG_ENV local
 ENTRYPOINT ["/sbin/tini", "--", "/docker-entrypoint.sh"]

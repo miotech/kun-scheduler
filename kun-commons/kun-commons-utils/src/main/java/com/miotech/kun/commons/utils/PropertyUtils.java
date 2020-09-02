@@ -65,7 +65,6 @@ public class PropertyUtils {
             return loadPropsFromResource(applicationConfName);
         }
 
-
         String applicationConfigFile = System.getProperty(APP_CONFIG_FILE);
         if (StringUtils.isNotBlank(applicationConfigFile)) {
             return loadAppProps(applicationConfigFile);
