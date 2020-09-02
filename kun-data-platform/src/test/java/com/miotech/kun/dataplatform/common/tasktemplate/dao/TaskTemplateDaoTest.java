@@ -3,7 +3,6 @@ package com.miotech.kun.dataplatform.common.tasktemplate.dao;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.mocking.MockTaskTemplateFactory;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -15,8 +14,6 @@ import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-// TODO: figure out a solution to bootstrap Workflow facade related tests
-@Ignore
 public class TaskTemplateDaoTest extends AppTestBase {
 
     public static final String TEST_TEMPLATE = "SparkSQL";
