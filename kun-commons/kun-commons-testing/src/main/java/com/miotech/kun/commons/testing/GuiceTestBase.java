@@ -8,6 +8,8 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 import org.junit.Before;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -16,6 +18,8 @@ import java.util.Map;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class GuiceTestBase {
+//    private final Logger logger = LoggerFactory.getLogger(GuiceTestBase.class);
+
     private final EmbeddedModule ebdMod = new EmbeddedModule();
     private final Map<Object, Object> mocks = new HashMap<>();
     private final Map<Object, Object> bindings = new HashMap<>();

@@ -2,44 +2,64 @@ package com.miotech.kun.workflow.common.task.service;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
+import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
+import com.miotech.kun.workflow.common.lineage.node.TaskNode;
+import com.miotech.kun.workflow.common.lineage.service.LineageService;
+import com.miotech.kun.workflow.common.lineage.service.MetadataFacade;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
+import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.Scheduler;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.operator.Operator;
-import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
+import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
+import com.miotech.kun.workflow.testing.operator.LineageMockOperator;
+import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Pair;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
+@RunWith(MockitoJUnitRunner.class)
+public class TaskServiceTest extends CommonTestBase {
+    private static final String PACKAGE_PATH_LINEAGE_OPERATOR = OperatorCompiler.compileJar(LineageMockOperator.class, "LineageMockOperator");
 
-public class TaskServiceTest extends DatabaseTestBase {
+    MetadataFacade metadataFacade;
+
     @Inject
-    private TaskService taskService;
+    private LineageService lineageService;
 
     @Inject
     private TaskDao taskDao;
@@ -47,7 +67,27 @@ public class TaskServiceTest extends DatabaseTestBase {
     @Inject
     private OperatorDao operatorDao;
 
+    @Inject
+    private TaskDependencyFunctionProvider taskDependencyFunctionProvider;
+
+    @Inject
+    private OperatorService operatorService;
+
     private Scheduler scheduler = mock(Scheduler.class);
+
+    @Inject
+    private TaskService taskService;
+
+    @Before
+    public void beforeEach() {
+        operatorService = Mockito.spy(operatorService);
+    }
+
+    @Override
+    protected void configuration() {
+        metadataFacade = mock(MetadataFacade.class);
+        super.configuration();
+    }
 
     private List<Operator> insertSampleOperators() {
         List<Operator> operators = MockOperatorFactory.createOperators(10);
@@ -440,5 +480,70 @@ public class TaskServiceTest extends DatabaseTestBase {
     @Test
     public void runTask_multiple_tasks() {
 
+    }
+
+    @Test
+    public void createTask_withOperatorResolver_shouldInsertNewTaskNodeAndLineageIntoGraph() {
+        // Prepare
+        Operator operator = Operator.newBuilder().withId(WorkflowIdGenerator.nextOperatorId())
+                .withName("LineageMockOperator")
+                .withDescription("An operator generates lineages automatically")
+                .withClassName("LineageMockOperator")
+                .withPackagePath(PACKAGE_PATH_LINEAGE_OPERATOR)
+                .build();
+        operatorDao.create(operator);
+
+        int upstreamStoreCount = 2;
+        int downstreamStoreCount = 3;
+
+        TaskPropsVO taskVO = MockTaskFactory.createTaskPropsVO().cloneBuilder()
+                .withOperatorId(operator.getId())
+                .withConfig(Config.newBuilder()
+                        .addConfig("upstreamStoreCount", upstreamStoreCount)
+                        .addConfig("downstreamStoreCount", downstreamStoreCount)
+                        .build()
+                )
+                .build();
+
+        // Mock returning random dataset by metadata facade given any datastore
+        doAnswer(invocation -> {
+            Dataset dataset = Dataset.newBuilder()
+                    .withGid(IdGenerator.getInstance().nextId())
+                    .withDataStore(null)
+                    .build();
+            return Optional.of(dataset);
+        }).when(metadataFacade).fetchDatasetByDatastore(any());
+
+        // Process
+        Task createdTask = taskService.createTask(taskVO);
+
+        // Validate
+        Set<DatasetNode> inletDatasetNodes = lineageService.fetchInletNodes(createdTask.getId());
+        Set<DatasetNode> outletDatasetNodes = lineageService.fetchOutletNodes(createdTask.getId());
+
+        assertThat(inletDatasetNodes.size(), is(upstreamStoreCount));
+        assertThat(outletDatasetNodes.size(), is(downstreamStoreCount));
+    }
+
+    @Test
+    public void deleteTask_withOperatorResolver_shouldRemoveTaskNode() {
+        // Prepare
+        Operator operator = MockOperatorFactory.createOperator();
+        TaskPropsVO taskVO = MockTaskFactory.createTaskPropsVO().cloneBuilder()
+                .withOperatorId(operator.getId())
+                .build();
+        operatorDao.create(operator);
+
+        // Process
+        Task createdTask = taskService.createTask(taskVO);
+        Optional<TaskNode> taskNodeOptional = lineageService.fetchTaskNodeById(createdTask.getId());
+
+        assertTrue(taskNodeOptional.isPresent());
+
+        taskService.deleteTask(createdTask);
+        Optional<TaskNode> taskNodeOptionalAfterDelete = lineageService.fetchTaskNodeById(createdTask.getId());
+
+        // Validate
+        assertFalse(taskNodeOptionalAfterDelete.isPresent());
     }
 }
