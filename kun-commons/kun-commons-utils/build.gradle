@@ -1,3 +1,4 @@
 dependencies {
+    implementation project(":kun-commons:kun-commons-config")
     implementation "org.yaml:snakeyaml:1.26"
 }
