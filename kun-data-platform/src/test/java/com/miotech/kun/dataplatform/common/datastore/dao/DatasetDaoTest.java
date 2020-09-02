@@ -15,8 +15,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
-// TODO: figure out a solution to bootstrap Workflow facade related tests
-@Ignore
+
 public class DatasetDaoTest extends AppTestBase {
 
     @Autowired

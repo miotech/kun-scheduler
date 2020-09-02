@@ -209,7 +209,7 @@ public class TaskDefinitionService extends BaseSecurityService {
             }
         } else {
             throw new IllegalArgumentException(String.format("Task definition not found: \"%s\"", taskDefId));
-        };
+        }
         taskDefinitionDao.archive(taskDefId);
         taskCommitService.commit(taskDefId, "OFFLINE");
     }
