@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.databuilder.schedule;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.ExceptionUtils;
@@ -24,6 +25,7 @@ import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.metadata.databuilder.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.workflow.core.model.lineage.*;
 import com.miotech.kun.workflow.utils.JSONUtils;
+import io.prestosql.jdbc.$internal.guava.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -54,11 +57,17 @@ public class DataBuilder {
 
     private final Loader loader;
 
+    private Map<Long, List<String>> newestStates = Maps.newConcurrentMap();
+
     @Inject
     public DataBuilder(DatabaseOperator operator) {
         this.scheduled = new AtomicBoolean(false);
         this.operator = operator;
         this.loader = new PostgresLoader(operator);
+    }
+
+    public Map<Long, List<String>> getNewestStates() {
+        return newestStates;
     }
 
     public void buildAll() {
@@ -97,7 +106,7 @@ public class DataBuilder {
         Long datasourceId = operator.fetchOne("SELECT datasource_id FROM kun_mt_dataset WHERE gid = ?", rs -> rs.getLong(1), gid);
         Preconditions.checkNotNull(datasourceId, "Invalid param `gid`: " + gid + " No corresponding datasource found");
 
-        String sql = "SELECT kmd.gid, kmdst.name, kmds.connection_info, kmd.data_store FROM kun_mt_dataset kmd JOIN kun_mt_datasource kmds ON kmd.datasource_id = kmds.id JOIN kun_mt_datasource_type kmdst ON kmds.type_id = kmdst.id WHERE kmd.gid = ?";
+        String sql = "SELECT kmds.id, kmdst.name, kmds.connection_info, kmd.data_store FROM kun_mt_dataset kmd JOIN kun_mt_datasource kmds ON kmd.datasource_id = kmds.id JOIN kun_mt_datasource_type kmdst ON kmds.type_id = kmdst.id WHERE kmd.gid = ?";
         DatasetConnDto datasetConnDto = operator.fetchOne(sql, this::buildDatasetConnDto, gid);
         build(datasetConnDto);
     }
@@ -170,6 +179,7 @@ public class DataBuilder {
 
     private void build(DatasetConnDto datasetConnDto) {
         Preconditions.checkNotNull(datasetConnDto, "datasetConnDto should not be null.");
+        createSnapshot(datasetConnDto.getDataSource().getId(), datasetConnDto.getDataStore());
         try {
             DataSource dataSource = datasetConnDto.getDataSource();
             DataStore dataStore = datasetConnDto.getDataStore();
@@ -205,6 +215,7 @@ public class DataBuilder {
 
             try {
                 loader.load(dataset);
+                mark(newestStates.getOrDefault(dataSource.getId(), Lists.newCopyOnWriteArrayList()), dataset);
             } catch (Exception e) {
                 logger.error("load error: ", e);
             }
@@ -213,8 +224,10 @@ public class DataBuilder {
         }
     }
 
+
     private void build(DataSource dataSource) {
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
+        createSnapshot(dataSource.getId());
         try {
             Iterator<Dataset> datasetIterator = null;
             if (dataSource instanceof AWSDataSource) {
@@ -235,6 +248,8 @@ public class DataBuilder {
                     try {
                         Dataset dataset = datasetIterator.next();
                         loader.load(dataset);
+
+                        mark(newestStates.getOrDefault(dataSource.getId(), Lists.newCopyOnWriteArrayList()), dataset);
                     } catch (Exception e) {
                         logger.error("etl next error: ", e);
                     }
@@ -254,4 +269,46 @@ public class DataBuilder {
         }
     }
 
+    private void createSnapshot(long datasourceId) {
+        List<String> dataStores = operator.fetchAll("SELECT data_store FROM kun_mt_dataset WHERE datasource_id = ?",
+                rs -> rs.getString(1), datasourceId);
+        for (String dataStore : dataStores) {
+            if (newestStates.containsKey(datasourceId)) {
+                newestStates.get(datasourceId).add(dataStore);
+            } else {
+                List<String> dataStoreSnapshots = Lists.newCopyOnWriteArrayList();
+                dataStoreSnapshots.add(dataStore);
+                newestStates.put(datasourceId, dataStoreSnapshots);
+            }
+
+        }
+    }
+
+    private void createSnapshot(long datasourceId, DataStore dataStore) {
+        try {
+            List<String> dataStores = Lists.newCopyOnWriteArrayList();
+            dataStores.add(DataStoreJsonUtil.toJson(dataStore));
+            newestStates.put(datasourceId, dataStores);
+        } catch (JsonProcessingException jsonProcessingException) {
+            throw ExceptionUtils.wrapIfChecked(jsonProcessingException);
+        }
+    }
+
+    private void mark(List<String> dataStores, Dataset build) throws JsonProcessingException {
+        Iterator<String> dataStoreIterator = dataStores.iterator();
+        while (dataStoreIterator.hasNext()) {
+            String dataStoreInSnapshot = dataStoreIterator.next();
+            if (dataStoreInSnapshot.equals(DataStoreJsonUtil.toJson(build.getDataStore()))) {
+                dataStoreIterator.remove();
+            }
+        }
+    }
+
+    public void sweep() {
+        for (Map.Entry<Long, List<String>> entry : newestStates.entrySet()) {
+            for (String dataStore : entry.getValue()) {
+                operator.update("DELETE FROM kun_mt_dataset WHERE data_store = CAST(? AS JSONB)", dataStore);
+            }
+        }
+    }
 }
