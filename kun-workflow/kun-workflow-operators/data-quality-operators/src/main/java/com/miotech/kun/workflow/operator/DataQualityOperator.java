@@ -6,10 +6,7 @@ import com.miotech.kun.commons.query.datasource.DataSourceContainer;
 import com.miotech.kun.commons.query.datasource.MetadataDataSource;
 import com.miotech.kun.commons.query.model.QueryResultSet;
 import com.miotech.kun.commons.query.service.ConfigService;
-import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.execution.ConfigDef;
-import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.operator.client.DataQualityClient;
 import com.miotech.kun.workflow.operator.client.MetadataClient;
 import com.miotech.kun.workflow.operator.model.*;
@@ -105,6 +102,12 @@ public class DataQualityOperator extends KunOperator {
                 .define(METADATA_DATASOURCE_DIRVER_CLASS, ConfigDef.Type.STRING, true, "datasource driver class", METADATA_DATASOURCE_DIRVER_CLASS)
                 .define(DATAQUALITY_CASE_ID, ConfigDef.Type.STRING, true, "data quality case id", DATAQUALITY_CASE_ID)
                 ;
+    }
+
+    @Override
+    public Resolver getResolver() {
+        // TODO: implement this
+        return null;
     }
 
     private boolean doRun() {

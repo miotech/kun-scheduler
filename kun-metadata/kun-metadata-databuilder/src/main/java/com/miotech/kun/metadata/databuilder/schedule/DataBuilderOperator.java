@@ -7,6 +7,7 @@ import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.execution.Resolver;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -90,6 +91,12 @@ public class DataBuilderOperator extends KunOperator {
         configDef.define(DATASOURCE_ID, ConfigDef.Type.STRING, "", true, DATASOURCE_ID, DATASOURCE_ID);
         configDef.define("gid", ConfigDef.Type.STRING, "", true, "gid", "gid");
         return configDef;
+    }
+
+    @Override
+    public Resolver getResolver() {
+        // TODO: implement this
+        return null;
     }
 
     @Override

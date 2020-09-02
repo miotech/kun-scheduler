@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
@@ -173,6 +174,12 @@ public class SparkOperator extends LivyBaseSparkOperator {
                 .define(CONF_LIVY_BATCH_CONF, ConfigDef.Type.STRING, "{}",true, "Extra spark configuration , in the format `{\"key\": \"value\"}`", CONF_LIVY_BATCH_CONF)
                 .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}",true, "Spark arguments and configuration variables, use like `--param1 ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
                 ;
+    }
+
+    @Override
+    public Resolver getResolver() {
+        // TODO: implement this
+        return null;
     }
 
     public void lineageAnalysis(OperatorContext context, String applicationId){

@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.executor.mock;
 import com.google.common.collect.Lists;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.MongoDataStore;
@@ -46,5 +47,10 @@ public class TestOperator1 extends KunOperator {
     @Override
     public void abort() {
 
+    }
+
+    @Override
+    public Resolver getResolver() {
+        return new TestOperatorResolver();
     }
 }

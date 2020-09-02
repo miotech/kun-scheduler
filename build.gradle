@@ -97,6 +97,7 @@ subprojects {
                 testImplementation "org.testcontainers:mongodb:1.14.3"
                 testImplementation "org.testcontainers:postgresql:1.14.3"
                 testImplementation "org.testcontainers:elasticsearch:1.14.3"
+                testImplementation "org.testcontainers:neo4j:1.14.3"
                 testImplementation "com.github.goodforgod:arangodb-testcontainer:1.1.0"
                 testImplementation "org.mock-server:mockserver-netty:3.10.8"
                 testImplementation "org.mock-server:mockserver-client-java:3.10.8"

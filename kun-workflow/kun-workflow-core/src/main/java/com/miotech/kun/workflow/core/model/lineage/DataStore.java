@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.miotech.kun.workflow.core.model.common.URI;
 
 import javax.annotation.Nullable;
 
@@ -28,4 +29,6 @@ public abstract class DataStore {
     public DataStore(DataStoreType type) {
         this.type = type;
     }
+
+    public abstract URI getURI();
 }

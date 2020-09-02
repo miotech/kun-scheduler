@@ -4,13 +4,22 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.exception.ResolverUndefinedException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
+import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
+import com.miotech.kun.workflow.common.lineage.node.TaskNode;
+import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
+import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.vo.*;
 import com.miotech.kun.workflow.core.Scheduler;
+import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.execution.Resolver;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.workflow.core.model.lineage.Dataset;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
@@ -26,17 +35,36 @@ import java.util.stream.Collectors;
 public class TaskService {
     private static final String TASK_ID_SHOULD_NOT_BE_NULL = "Invalid argument `taskId`: null";
 
-    @Inject
+    private static final String TASK_SHOULD_NOT_BE_NULL = "Invalid argument `task`: null";
+
     private TaskDao taskDao;
 
-    @Inject
     private OperatorDao operatorDao;
 
-    @Inject
+    private OperatorService operatorService;
+
     private TaskDependencyFunctionProvider dependencyFunctionProvider;
 
-    @Inject
     private Scheduler scheduler;
+
+    private LineageService lineageService;
+
+    @Inject
+    public TaskService(
+            TaskDao taskDao,
+            OperatorDao operatorDao,
+            OperatorService operatorService,
+            TaskDependencyFunctionProvider dependencyFunctionProvider,
+            Scheduler scheduler,
+            LineageService lineageService
+    ) {
+        this.taskDao = taskDao;
+        this.operatorDao = operatorDao;
+        this.operatorService = operatorService;
+        this.dependencyFunctionProvider = dependencyFunctionProvider;
+        this.scheduler = scheduler;
+        this.lineageService = lineageService;
+    }
 
     /* ---------------------------------------- */
     /* ----------- public methods ------------ */
@@ -67,8 +95,11 @@ public class TaskService {
                 .withId(WorkflowIdGenerator.nextTaskId())
                 .build();
 
-        // 5. persist with DAO and return
+        // 5. persist with DAO
         taskDao.create(task);
+
+        // 6. update lineage
+        updateLineageGraphOnTaskCreate(task);
         return task;
     }
 
@@ -126,7 +157,12 @@ public class TaskService {
         }
 
         // 4. Fetch updated task
-        return taskDao.fetchById(task.getId()).orElseThrow(IllegalStateException::new);
+        Task updatedTask = taskDao.fetchById(task.getId()).orElseThrow(IllegalStateException::new);
+
+        // 5. Update lineage graph
+        updateLineageGraphOnTaskUpdate(updatedTask);
+
+        return updatedTask;
     }
 
     public TaskDAGVO getNeighbors(Long taskId, int upstreamLevel, int downstreamLevel) {
@@ -191,6 +227,7 @@ public class TaskService {
         // TODO: recheck this
         validateTaskIntegrity(task);
         this.deleteTaskById(task.getId());
+        updateLineageGraphOnTaskDelete(task);
     }
 
     public void deleteTaskById(Long taskId) {
@@ -283,5 +320,96 @@ public class TaskService {
             // else
             tagKeys.add(tag.getKey());
         });
+    }
+
+    /**
+     * Perform update on lineage graph during update of a task model
+     * @param task {@link Task} model instance
+     * @throws EntityNotFoundException if operator not found
+     * @throws ResolverUndefinedException if resolver of operator is not defined
+     * @throws NullPointerException if argument task is null or id of task is null
+     */
+    private void updateLineageGraphOnTaskUpdate(Task task) {
+        Preconditions.checkNotNull(task, TASK_SHOULD_NOT_BE_NULL);
+        // Simply remove the original task nodes then re-create one
+        updateLineageGraphOnTaskDelete(task);
+        updateLineageGraphOnTaskCreate(task);
+    }
+
+    /**
+     * Perform update on lineage graph during creation of a task model
+     * @param task {@link Task} model instance
+     * @throws EntityNotFoundException if operator not found
+     * @throws ResolverUndefinedException if resolver of operator is not defined
+     * @throws NullPointerException if argument task is null or id of task is null
+     */
+    private void updateLineageGraphOnTaskCreate(Task task) {
+        Preconditions.checkNotNull(task, TASK_SHOULD_NOT_BE_NULL);
+        // Create a task node
+        TaskNode taskNode = TaskNode.from(task);
+        // load operator resolver
+        Resolver resolver = getResolverByOperatorId(task.getOperatorId());
+
+        // Load upstream & downstream data stores
+        List<DataStore> upstreamDatastore = resolver.resolveUpstreamDataStore(task.getConfig());
+        List<DataStore> downstreamDataStore = resolver.resolveDownstreamDataStore(task.getConfig());
+
+        // upsert upstream dataset nodes & relations to task node entity
+        for (DataStore store : upstreamDatastore) {
+            Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(store);
+            if (datasetOptional.isPresent()) {
+                DatasetNode datasetNode = DatasetNode.from(datasetOptional.get());
+                taskNode.addInlet(datasetNode);
+            }
+        }
+        // upsert downstream dataset nodes & relations to task node entity
+        for (DataStore store : downstreamDataStore) {
+            Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(store);
+            if (datasetOptional.isPresent()) {
+                DatasetNode datasetNode = DatasetNode.from(datasetOptional.get());
+                taskNode.addOutlet(datasetNode);
+            }
+        }
+        // save task node
+        lineageService.saveTaskNode(taskNode);
+    }
+
+    /**
+     * Perform update on lineage graph during deletion of a task model
+     * @param task {@link Task} model instance
+     * @throws NullPointerException if argument task is null or id of task is null
+     */
+    private void updateLineageGraphOnTaskDelete(Task task) {
+        Preconditions.checkNotNull(task, TASK_SHOULD_NOT_BE_NULL);
+        // Is this task node already exists in graph?
+        Optional<TaskNode> taskNodeOptional = lineageService.fetchTaskNodeById(task.getId());
+        if (!taskNodeOptional.isPresent()) {
+            return;
+        }
+        // else
+        TaskNode taskNode = taskNodeOptional.get();
+        lineageService.deleteTaskNode(taskNode.getTaskId());
+    }
+
+    /**
+     * Get the {@link Resolver} of operator by given id of target operator
+     * @param operatorId id of target operator
+     * @return the resolver of operator
+     * @throws EntityNotFoundException if operator not found
+     * @throws ResolverUndefinedException if resolver of operator is not defined
+     * @throws NullPointerException if argument operatorId is null
+     */
+    private Resolver getResolverByOperatorId(Long operatorId) {
+        Preconditions.checkNotNull(operatorId, "Invalid argument `operatorId`: null");
+        KunOperator operator = operatorService.loadOperator(operatorId);
+        // Does this operator exist?
+        if (Objects.isNull(operator)) {
+            throw new EntityNotFoundException(String.format("Cannot find operator with id: %s", operatorId));
+        }
+        // Does the resolver exist?
+        if (Objects.isNull(operator.getResolver())) {
+            throw new ResolverUndefinedException(String.format("Cannot get resolver from Kun operator with id: %s", operatorId));
+        }
+        return operator.getResolver();
     }
 }
