@@ -12,12 +12,12 @@ public class ArangoDatabaseExtractor implements Extractor {
 
     private ArangoDataSource cluster;
     private String database;
-    private MioArangoClient client;
+    private ArangoClient client;
 
     public ArangoDatabaseExtractor(ArangoDataSource cluster, String database) {
         this.cluster = cluster;
         this.database = database;
-        this.client = new MioArangoClient(cluster);
+        this.client = new ArangoClient(cluster);
     }
 
     @Override

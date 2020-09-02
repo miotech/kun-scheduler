@@ -11,12 +11,12 @@ import org.slf4j.LoggerFactory;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
-public class MioArangoClient {
+public class ArangoClient {
 
     private ArangoDB client;
-    private static Logger logger = LoggerFactory.getLogger(MioArangoClient.class);
+    private static Logger logger = LoggerFactory.getLogger(ArangoClient.class);
 
-    public MioArangoClient(ArangoDataSource cluster){
+    public ArangoClient(ArangoDataSource cluster){
         this.client = new ArangoDB.Builder()
                 .host(cluster.getUrl().split(":")[0], Integer.parseInt(cluster.getUrl().split(":")[1]))
                 .user(cluster.getUsername())
