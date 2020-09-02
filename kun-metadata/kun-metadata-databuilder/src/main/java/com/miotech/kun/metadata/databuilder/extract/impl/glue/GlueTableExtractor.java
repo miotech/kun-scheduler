@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.databuilder.extract.impl.configurable;
+package com.miotech.kun.metadata.databuilder.extract.impl.glue;
 
 import com.amazonaws.services.glue.model.Column;
 import com.amazonaws.services.glue.model.Table;
@@ -14,14 +14,14 @@ import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
-public class AWSTableExtractor extends ExtractorTemplate {
+public class GlueTableExtractor extends ExtractorTemplate {
 
-    private static final Logger logger = LoggerFactory.getLogger(AWSTableExtractor.class);
+    private static final Logger logger = LoggerFactory.getLogger(GlueTableExtractor.class);
 
     private final Table table;
     private final AWSDataSource dataSource;
 
-    public AWSTableExtractor(AWSDataSource dataSource, Table table) {
+    public GlueTableExtractor(AWSDataSource dataSource, Table table) {
         super(dataSource.getId());
         this.table = table;
         this.dataSource = dataSource;

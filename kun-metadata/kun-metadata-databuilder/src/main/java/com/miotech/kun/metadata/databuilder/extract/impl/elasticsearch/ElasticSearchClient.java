@@ -16,13 +16,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class MioElasticSearchClient {
-    private static Logger logger = LoggerFactory.getLogger(MioElasticSearchClient.class);
+public class ElasticSearchClient {
+    private static Logger logger = LoggerFactory.getLogger(ElasticSearchClient.class);
 
     private RestHighLevelClient highLevelClient;
     private RestClient lowLevelClient;
 
-    public MioElasticSearchClient(ElasticSearchDataSource dataSource) {
+    public ElasticSearchClient(ElasticSearchDataSource dataSource) {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
         credentialsProvider.setCredentials(AuthScope.ANY,
                 new UsernamePasswordCredentials(dataSource.getUsername(), dataSource.getPassword()));
@@ -54,7 +54,7 @@ public class MioElasticSearchClient {
         try {
             return lowLevelClient.performRequest(request);
         } catch (IOException e) {
-            logger.error("elasticseatch low level api call failed, query -> " + request.getEndpoint(), e);
+            logger.error("elasticsearch low level api call failed, query -> " + request.getEndpoint(), e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
     }
@@ -65,7 +65,7 @@ public class MioElasticSearchClient {
             CountResponse response = highLevelClient.count(request, RequestOptions.DEFAULT);
             return response.getCount();
         } catch (IOException e) {
-            logger.error("elasticseatch high level api call failed", e);
+            logger.error("elasticsearch high level api call failed", e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
     }
