@@ -5,7 +5,6 @@ import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskDefinitionSearc
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.workflow.client.model.PaginationResult;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -13,12 +12,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
-import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 
-// TODO: figure out a solution to bootstrap Workflow facade related tests
-@Ignore
 public class TaskDefinitionDaoTest extends AppTestBase {
 
     @Autowired
