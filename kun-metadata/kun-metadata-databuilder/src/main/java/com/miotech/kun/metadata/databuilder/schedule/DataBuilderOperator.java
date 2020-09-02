@@ -57,6 +57,7 @@ public class DataBuilderOperator extends KunOperator {
                     throw new UnsupportedOperationException("Invalid deployMode: " + deployModeStr);
             }
 
+            dataBuilder.sweep();
             return true;
         } catch (Exception e) {
             logger.error("DataBuilderOperator run error:", e);
