@@ -4,6 +4,7 @@ import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,5 +92,11 @@ public class BashOperator extends KunOperator {
                 .define(COMMAND, ConfigDef.Type.STRING, true, "bash command", DISPLAY_COMMAND)
                 .define("forceWaitSeconds", ConfigDef.Type.LONG, 10L, true, "force terminate wait seconds", "forceWaitSeconds")
                 .define(VARIABLES, ConfigDef.Type.STRING, "{}",true, "bash variables", "variables");
+    }
+
+    @Override
+    public Resolver getResolver() {
+        // TODO: implement this
+        return null;
     }
 }

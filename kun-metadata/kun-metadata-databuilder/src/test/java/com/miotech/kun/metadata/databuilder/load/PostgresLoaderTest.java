@@ -2,12 +2,12 @@ package com.miotech.kun.metadata.databuilder.load;
 
 import com.google.common.collect.ImmutableList;
 import com.google.inject.Inject;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.metadata.core.model.*;
 import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
-import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.metadata.databuilder.service.gid.GidService;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
-import com.miotech.kun.commons.db.DatabaseOperator;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.joor.Reflect;
@@ -31,6 +31,7 @@ public class PostgresLoaderTest extends DatabaseTestBase {
     {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
         datasetBuilder.withName("datasetName")
+                .withGid(1L)
                 .withDatasourceId(1L)
                 .withDatasetStat(new DatasetStat(100L, LocalDateTime.now()))
                 .withFields(ImmutableList.of(new DatasetField("id", new DatasetFieldType(DatasetFieldType.convertRawType("int"), "int"), "auto increment"),

@@ -3,10 +3,8 @@ package com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
-import com.miotech.kun.metadata.databuilder.extract.Extractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.glue.GlueExtractor;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.ElasticSearchDataSource;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.http.util.EntityUtils;
@@ -17,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 

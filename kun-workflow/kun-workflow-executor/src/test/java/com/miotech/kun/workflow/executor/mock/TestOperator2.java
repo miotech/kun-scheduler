@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.executor.mock;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 
+import com.miotech.kun.workflow.core.execution.Resolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,5 +23,10 @@ public class TestOperator2 extends KunOperator {
     @Override
     public void abort() {
 
+    }
+
+    @Override
+    public Resolver getResolver() {
+        return new TestOperatorResolver();
     }
 }

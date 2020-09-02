@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.load.impl;
 
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.load.Loader;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

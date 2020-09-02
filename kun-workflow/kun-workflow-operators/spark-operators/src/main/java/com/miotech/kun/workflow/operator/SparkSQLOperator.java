@@ -1,9 +1,10 @@
 package com.miotech.kun.workflow.operator;
 
+import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.operator.spark.models.SparkApp;
 import com.miotech.kun.workflow.operator.spark.models.SparkJob;
@@ -80,6 +81,12 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
                 .define(CONF_SPARK_DEFAULT_DB, ConfigDef.Type.STRING, CONF_SPARK_DEFAULT_DB_DEFAULT,true, "Default database name for a sql execution", CONF_SPARK_DEFAULT_DB)
                 .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}", true, "SQL variables, use like `select ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
                 ;
+    }
+
+    @Override
+    public Resolver getResolver() {
+        // TODO: implement this
+        return null;
     }
 
     public boolean execute() {
