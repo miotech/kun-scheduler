@@ -78,6 +78,19 @@ public class DateTimeUtils {
     }
 
     /**
+     * Converts and normalize an {@link java.time.OffsetDateTime OffsetDatetime} object to millisecond-level precision
+     * @param time an {@link java.time.OffsetDateTime OffsetDatetime} object to convert
+     * @return normalized object
+     */
+    public static OffsetDateTime atMillisecondPrecision(OffsetDateTime time) {
+        if (time == null) {
+            return null;
+        }
+        int nanos = time.getNano();
+        return time.minusNanos(nanos % 1_000_000);
+    }
+
+    /**
      * Obtains an instance of {@code OffsetDateTime} from a text string which follows ISO 8601 format,
      * such as {@code 2007-12-03T10:15:30+01:00}.
      * @param isoDateTimeString ISO Datetime string
