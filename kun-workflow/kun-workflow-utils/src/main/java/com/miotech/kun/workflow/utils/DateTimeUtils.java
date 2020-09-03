@@ -56,11 +56,25 @@ public class DateTimeUtils {
         return OffsetDateTime.now(globalClock);
     }
 
+    /**
+     * Converts a {@link java.sql.Timestamp Timestamp} object to {@link java.time.OffsetDateTime OffsetDatetime} object
+     * at nanosecond-level precision.
+     * @param timestamp the {@link java.sql.Timestamp Timestamp} object to transform
+     * @return converted {@link java.time.OffsetDateTime OffsetDatetime} object
+     */
     public static OffsetDateTime fromTimestamp(Timestamp timestamp) {
         if (timestamp == null) return null;
-        return OffsetDateTime.ofInstant(
+        OffsetDateTime parsedOffsetDatetime = OffsetDateTime.ofInstant(
                 Instant.ofEpochMilli(timestamp.getTime()),
                 ZoneId.systemDefault());
+        /**
+        * Fix: OffsetDatetime object from <code>Instant.ofEpochMilli(timestamp.getTime())</code>
+        * can only provide millisecond precision transformation. The following line fixes this issue and provides
+        * nanoseconds precision conversion.
+        */
+        return parsedOffsetDatetime
+                .minusNanos(parsedOffsetDatetime.getNano())
+                .plusNanos(timestamp.getNanos());
     }
 
     /**
