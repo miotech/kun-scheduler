@@ -3,15 +3,18 @@ package com.miotech.kun.metadata.databuilder.extract.impl.glue;
 import com.amazonaws.services.glue.model.Column;
 import com.amazonaws.services.glue.model.Table;
 import com.beust.jcommander.internal.Lists;
+import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
+import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.util.List;
 
 public class GlueTableExtractor extends ExtractorTemplate {
@@ -20,11 +23,14 @@ public class GlueTableExtractor extends ExtractorTemplate {
 
     private final Table table;
     private final AWSDataSource dataSource;
+    private final DataSource athenaDataSource;
 
     public GlueTableExtractor(AWSDataSource dataSource, Table table) {
         super(dataSource.getId());
         this.table = table;
         this.dataSource = dataSource;
+        this.athenaDataSource = JDBCClient.getDataSource(dataSource.getAthenaUrl(), dataSource.getAthenaUsername(),
+                dataSource.getAthenaPassword(), DatabaseType.ATHENA);
     }
 
     @Override
@@ -46,14 +52,14 @@ public class GlueTableExtractor extends ExtractorTemplate {
 
     @Override
     protected DatasetFieldStat getFieldStats(DatasetField datasetField) {
-        JDBCStatService statService = new JDBCStatService(table.getDatabaseName(), table.getName(), DatabaseType.ATHENA);
-        return statService.getFieldStats(datasetField, new AthenaQueryEngine(dataSource.getAthenaUrl(), dataSource.getAthenaUsername(), dataSource.getAthenaPassword()));
+        JDBCStatService statService = new JDBCStatService(table.getDatabaseName(), table.getName(), DatabaseType.ATHENA, athenaDataSource);
+        return statService.getFieldStats(datasetField);
     }
 
     @Override
     protected DatasetStat getTableStats() {
-        JDBCStatService statService = new JDBCStatService(table.getDatabaseName(), table.getName(), DatabaseType.ATHENA);
-        return statService.getTableStats(new AthenaQueryEngine(dataSource.getAthenaUrl(), dataSource.getAthenaUsername(), dataSource.getAthenaPassword()));
+        JDBCStatService statService = new JDBCStatService(table.getDatabaseName(), table.getName(), DatabaseType.ATHENA, athenaDataSource);
+        return statService.getTableStats();
     }
 
     @Override
@@ -68,7 +74,7 @@ public class GlueTableExtractor extends ExtractorTemplate {
 
     @Override
     protected void close() {
-        // Do nothing
+        ((HikariDataSource) athenaDataSource).close();
     }
 
     private DatasetFieldType.Type convertRawType(String rawType) {

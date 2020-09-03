@@ -61,4 +61,8 @@ public class ArangoClient {
             throw ExceptionUtils.wrapIfChecked(e);
         }
     }
+
+    public void close() {
+        client.shutdown();
+    }
 }
