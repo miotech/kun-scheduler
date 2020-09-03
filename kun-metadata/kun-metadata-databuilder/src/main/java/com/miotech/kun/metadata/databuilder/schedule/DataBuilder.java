@@ -179,7 +179,7 @@ public class DataBuilder {
 
     private void build(DatasetConnDto datasetConnDto) {
         Preconditions.checkNotNull(datasetConnDto, "datasetConnDto should not be null.");
-        createSnapshot(datasetConnDto.getDataSource().getId(), datasetConnDto.getDataStore());
+        recordStates(datasetConnDto.getDataSource().getId(), datasetConnDto.getDataStore());
         try {
             DataSource dataSource = datasetConnDto.getDataSource();
             DataStore dataStore = datasetConnDto.getDataStore();
@@ -227,7 +227,7 @@ public class DataBuilder {
 
     private void build(DataSource dataSource) {
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
-        createSnapshot(dataSource.getId());
+        recordStates(dataSource.getId());
         try {
             Iterator<Dataset> datasetIterator = null;
             if (dataSource instanceof AWSDataSource) {
@@ -269,7 +269,7 @@ public class DataBuilder {
         }
     }
 
-    private void createSnapshot(long datasourceId) {
+    private void recordStates(long datasourceId) {
         List<String> dataStores = operator.fetchAll("SELECT data_store FROM kun_mt_dataset WHERE datasource_id = ?",
                 rs -> rs.getString(1), datasourceId);
         for (String dataStore : dataStores) {
@@ -284,7 +284,7 @@ public class DataBuilder {
         }
     }
 
-    private void createSnapshot(long datasourceId, DataStore dataStore) {
+    private void recordStates(long datasourceId, DataStore dataStore) {
         try {
             List<String> dataStores = Lists.newCopyOnWriteArrayList();
             dataStores.add(DataStoreJsonUtil.toJson(dataStore));
