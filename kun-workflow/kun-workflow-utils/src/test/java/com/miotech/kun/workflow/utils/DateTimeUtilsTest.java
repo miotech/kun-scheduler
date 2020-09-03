@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.utils;
 
 import org.junit.Test;
 
+import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 
 import static org.hamcrest.Matchers.is;
@@ -24,5 +25,18 @@ public class DateTimeUtilsTest {
 
         // teardown
         DateTimeUtils.resetClock();
+    }
+
+    @Test
+    public void fromTimestamp_withValidTimestampObject_shouldConvertAtNanosecondsPrecision() {
+        Timestamp timestamp = Timestamp.valueOf("2020-09-02 21:41:17.903664124");
+        OffsetDateTime convertedDatetime = DateTimeUtils.fromTimestamp(timestamp);
+        assertThat(convertedDatetime.getYear(), is(2020));
+        assertThat(convertedDatetime.getMonthValue(), is(9));
+        assertThat(convertedDatetime.getDayOfMonth(), is(2));
+        assertThat(convertedDatetime.getHour(), is(21));
+        assertThat(convertedDatetime.getMinute(), is(41));
+        assertThat(convertedDatetime.getSecond(), is(17));
+        assertThat(convertedDatetime.getNano(), is(903664124));
     }
 }
