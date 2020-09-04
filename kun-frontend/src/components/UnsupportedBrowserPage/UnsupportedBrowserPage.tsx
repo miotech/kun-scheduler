@@ -1,9 +1,9 @@
 import React, { memo } from 'react';
 import logo from '@/assets/images/kun-logo.png';
 import useI18n from '@/hooks/useI18n';
-import chrome from './chrome.png';
-import edge from './edge.png';
-import miotechLogo from './miotech_horizontal.png';
+import chrome from '@/assets/images/chrome.png';
+import edge from '@/assets/images/edge.png';
+import miotechLogo from '@/assets/images/miotech_horizontal.png';
 import styles from './UnsupportedBrowserPage.less';
 
 export default memo(function UnsupportedBrowserPage() {
