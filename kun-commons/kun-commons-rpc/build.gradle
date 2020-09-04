@@ -1,0 +1,6 @@
+dependencies {
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation 'org.apache.dubbo:dubbo'
+
+    testImplementation project(":kun-commons:kun-commons-testing")
+}

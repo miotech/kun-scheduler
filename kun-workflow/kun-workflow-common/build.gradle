@@ -4,6 +4,7 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-commons:kun-commons-db')
+    implementation project(':kun-metadata:kun-metadata-service-facade')
     implementation "commons-dbutils:commons-dbutils"
     implementation 'com.google.guava:guava'
     implementation "com.zaxxer:HikariCP"
@@ -12,6 +13,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
     implementation "com.cronutils:cron-utils"
     implementation 'commons-fileupload:commons-fileupload'
+    implementation 'org.apache.dubbo:dubbo'
 
     testImplementation "org.testcontainers:neo4j:1.14.3"
     testImplementation project(":kun-commons:kun-commons-testing")

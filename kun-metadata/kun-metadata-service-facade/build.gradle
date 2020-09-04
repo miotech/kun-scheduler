@@ -1,0 +1,7 @@
+dependencies {
+    implementation project(":kun-commons:kun-commons-rpc")
+    implementation project(":kun-metadata:kun-metadata-databuilder")
+    implementation project(":kun-workflow:kun-workflow-core")
+
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+}
