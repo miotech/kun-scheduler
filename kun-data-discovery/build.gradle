@@ -29,6 +29,7 @@ dependencies {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
 	testImplementation 'org.testcontainers:postgresql:1.14.3'
+	testImplementation 'com.h2database:h2'
 	// end::tests[]
 }
 

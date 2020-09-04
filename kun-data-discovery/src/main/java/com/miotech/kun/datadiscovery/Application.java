@@ -15,9 +15,6 @@ import org.springframework.core.env.Environment;
         "com.miotech.kun.security"})
 public class Application {
 
-    @Autowired
-    private Environment environment;
-
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
     }
