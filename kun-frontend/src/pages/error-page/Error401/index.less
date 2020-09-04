@@ -1,0 +1,33 @@
+.error401 {
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+  .flexCenter();
+}
+
+.errorImgContainer {
+  width: 0;
+  height: 0;
+  position: relative;
+  margin-bottom: 55px;
+}
+
+.errorImg {
+  width: 600px;
+  height: 224px;
+  position: absolute;
+  left: -45px;
+  top: -67px;
+  z-index: -1;
+}
+
+.errorMessage {
+  margin-bottom: 25px;
+  .font(32px, 38px, @darkGray);
+}
+
+.backButton {
+  text-decoration: underline;
+  cursor: pointer;
+  .font(24px, 29px, @darkBlue);
+}

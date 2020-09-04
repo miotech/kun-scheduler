@@ -10,7 +10,7 @@ export const appRoutes = [
     title: 'common.pageTitle.homepage',
     routes: [
       {
-        path: '/',
+        path: '.',
         exact: true,
         menuDisplay: false,
         component: 'home/index',
@@ -73,6 +73,9 @@ export const appRoutes = [
                   '@/wrappers/permission',
                 ],
               },
+              {
+                component: 'error-page/Error404/index',
+              },
             ],
           },
           {
@@ -122,7 +125,13 @@ export const appRoutes = [
                   '@/wrappers/permission',
                 ],
               },
+              {
+                component: 'error-page/Error404/index',
+              },
             ],
+          },
+          {
+            component: 'error-page/Error404/index',
           },
         ],
       },
@@ -157,6 +166,9 @@ export const appRoutes = [
               '@/wrappers/isLogin',
               '@/wrappers/permission',
             ],
+          },
+          {
+            component: 'error-page/Error404/index',
           },
         ],
       },
@@ -198,6 +210,9 @@ export const appRoutes = [
                   '@/wrappers/permission',
                 ],
               },
+              {
+                component: 'error-page/Error404/index',
+              },
             ],
           },
         ],
@@ -210,6 +225,7 @@ export const appRoutes = [
         component: 'data-settings/index',
         breadcrumbLink: true,
         permissions: ['DATA_DISCOVERY'],
+        exact: true,
         wrappers: [
           '@/wrappers/path',
           '@/wrappers/isLogin',
@@ -223,15 +239,8 @@ export const appRoutes = [
         exact: true,
         wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
       },
-
       {
-        path: '*',
-        component: 'home/index',
-        wrappers: [
-          '@/wrappers/path',
-          '@/wrappers/isLogin',
-          '@/wrappers/permission',
-        ],
+        component: 'error-page/Error404/index',
       },
     ],
   },
