@@ -32,7 +32,7 @@ export default function Login() {
     (params: LoginParams) => {
       const diss = message.loading(t('common.loading'), 0);
       dispatch.user.fetchLogin(params).then(resp => {
-        if (resp && resp.code !== 0) {
+        if (!resp) {
           notification.error({
             message: t('login.error.usernamePasswordError'),
           });

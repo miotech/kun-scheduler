@@ -38,7 +38,7 @@ export const user = {
     async fetchLogin(payload: { username: string; password: string }) {
       try {
         const resp = await loginService(payload);
-        if (resp && resp.code === 0) {
+        if (resp) {
           const whoamiResp = await whoamiService();
           if (whoamiResp) {
             dispatch.user.updateLogin(true);
