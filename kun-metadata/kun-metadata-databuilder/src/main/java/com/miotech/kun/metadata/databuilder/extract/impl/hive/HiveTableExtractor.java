@@ -3,13 +3,14 @@ package com.miotech.kun.metadata.databuilder.extract.impl.hive;
 import com.google.common.annotations.VisibleForTesting;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
-import com.miotech.kun.metadata.databuilder.extract.impl.glue.JDBCStatService;
+import com.miotech.kun.metadata.databuilder.extract.template.JDBCStatTemplate;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.JSONUtils;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,13 +22,19 @@ public class HiveTableExtractor extends ExtractorTemplate {
 
     private final String database;
     private final String table;
-    private final ConfigurableDataSource dataSource;
+    private final HiveDataSource dataSource;
+    private final DataSource metastoreDataSource;
+    private final DataSource datastoreDataSource;
 
-    public HiveTableExtractor(ConfigurableDataSource dataSource, String database, String table) {
+    public HiveTableExtractor(HiveDataSource dataSource, String database, String table) {
         super(dataSource.getId());
         this.database = database;
         this.table = table;
         this.dataSource = dataSource;
+        this.metastoreDataSource = JDBCClient.getDataSource(dataSource.getMetastoreUrl(), dataSource.getMetastoreUsername(),
+                dataSource.getMetastorePassword(), DatabaseType.MYSQL);
+        this.datastoreDataSource = JDBCClient.getDataSource(dataSource.getDatastoreUrl(), dataSource.getDatastoreUsername(),
+                dataSource.getDatastorePassword(), DatabaseType.HIVE);
     }
 
     @Override
@@ -39,10 +46,7 @@ public class HiveTableExtractor extends ExtractorTemplate {
         }
 
         // Get schema information of table
-        MetaStoreCatalog catalog = (MetaStoreCatalog) dataSource.getCatalog();
-        DataSource dataSourceOfMySQL = JDBCClient.getDataSource(catalog.getUrl(), catalog.getUsername(),
-                catalog.getPassword(), DatabaseType.MYSQL);
-        DatabaseOperator dbOperator = new DatabaseOperator(dataSourceOfMySQL);
+        DatabaseOperator dbOperator = new DatabaseOperator(metastoreDataSource);
         String sql = "SELECT source.* FROM  " +
                 "    (SELECT t.TBL_ID, d.NAME as `schema`, t.TBL_NAME name, t.TBL_TYPE, tp.PARAM_VALUE as description,  " +
                 "           p.PKEY_NAME as col_name, p.INTEGER_IDX as col_sort_order,  " +
@@ -82,9 +86,8 @@ public class HiveTableExtractor extends ExtractorTemplate {
                     JSONUtils.toJsonString(dataSource), database, table, JSONUtils.toJsonString(datasetField));
         }
 
-        JDBCStatService statService = new JDBCStatService(database, table,
-                QueryEngine.parseDatabaseTypeFromDataSource(dataSource.getQueryEngine()));
-        return statService.getFieldStats(datasetField, dataSource.getQueryEngine());
+        JDBCStatTemplate statService = new JDBCStatTemplate(database, table, DatabaseType.HIVE, datastoreDataSource);
+        return statService.getFieldStats(datasetField);
     }
 
     @Override
@@ -95,14 +98,13 @@ public class HiveTableExtractor extends ExtractorTemplate {
                     JSONUtils.toJsonString(dataSource), database, table);
         }
 
-        JDBCStatService statService = new JDBCStatService(database, table,
-                QueryEngine.parseDatabaseTypeFromDataSource(dataSource.getQueryEngine()));
-        return statService.getTableStats(dataSource.getQueryEngine());
+        JDBCStatTemplate statService = new JDBCStatTemplate(database, table, DatabaseType.HIVE, datastoreDataSource);
+        return statService.getTableStats();
     }
 
     @Override
     protected DataStore getDataStore() {
-        return new HiveTableStore(QueryEngine.parseConnInfos(dataSource.getQueryEngine())[0], database, table);
+        return new HiveTableStore(dataSource.getDatastoreUrl(), database, table);
     }
 
     @Override
@@ -112,7 +114,8 @@ public class HiveTableExtractor extends ExtractorTemplate {
 
     @Override
     protected void close() {
-        // Do nothing
+        ((HikariDataSource) metastoreDataSource).close();
+        ((HikariDataSource) datastoreDataSource).close();
     }
 
 }
