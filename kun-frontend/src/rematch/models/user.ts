@@ -66,11 +66,16 @@ export const user = {
             username: resp.username,
             permissions: resp.permissions,
           });
+          if (history.location.pathname === '/login') {
+            history.push('/');
+          }
         } else if (history.location.pathname !== '/login') {
           history.push('/login');
         }
       } catch (e) {
-        // do nothing
+        if (history.location.pathname !== '/login') {
+          history.push('/login');
+        }
       } finally {
         dispatch.user.updateWhoamiLoading(false);
       }
