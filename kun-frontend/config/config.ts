@@ -1,7 +1,6 @@
 import { IConfig, defineConfig } from 'umi';
 import fs from 'fs';
 import path from 'path';
-import CopyWebpackPlugin from 'copy-webpack-plugin';
 import { appRoutes } from './routes';
 import { theme } from './theme';
 import { define } from './define';
@@ -23,7 +22,6 @@ if (fs.existsSync(path.resolve(__dirname, './certConfig.json'))) {
 const {
   PROXY_TARGET,
   USE_MOCK,
-  PROXY_PDF_TARGET,
   PATH_REWRITE,
   NO_PROXY,
   PORT,
