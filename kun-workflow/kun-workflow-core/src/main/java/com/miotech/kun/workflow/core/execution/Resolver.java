@@ -1,6 +1,6 @@
 package com.miotech.kun.workflow.core.execution;
 
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.metadata.core.model.DataStore;
 
 import java.util.List;
 

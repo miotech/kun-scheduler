@@ -3,10 +3,10 @@ package com.miotech.kun.metadata.databuilder.extract.impl.glue;
 import com.amazonaws.services.glue.model.Table;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
 import com.miotech.kun.metadata.databuilder.extract.iterator.GlueTableIterator;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

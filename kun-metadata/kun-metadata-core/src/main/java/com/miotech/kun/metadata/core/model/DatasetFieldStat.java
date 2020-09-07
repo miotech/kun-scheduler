@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.databuilder.model;
+package com.miotech.kun.metadata.core.model;
 
 import java.time.LocalDateTime;
 

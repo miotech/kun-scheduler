@@ -1,10 +1,10 @@
 package com.miotech.kun.workflow.testing.operator;
 
+import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.Resolver;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
 
 import java.util.ArrayList;
 import java.util.List;

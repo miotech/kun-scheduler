@@ -1,15 +1,12 @@
-package com.miotech.kun.workflow.core.model.lineage;
+package com.miotech.kun.metadata.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.miotech.kun.workflow.core.model.common.URI;
+import com.miotech.kun.metadata.core.common.URI;
 
 import javax.annotation.Nullable;
 
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
-import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.CLASS;
-
-@JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public abstract class DataStore {
 
     private final DataStoreType type;

@@ -2,11 +2,11 @@ package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.TestContainerUtil;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.impl.postgres.PostgresExtractor;
 import com.miotech.kun.metadata.databuilder.extract.tool.ConnectUrlUtil;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.PostgresDataSource;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;

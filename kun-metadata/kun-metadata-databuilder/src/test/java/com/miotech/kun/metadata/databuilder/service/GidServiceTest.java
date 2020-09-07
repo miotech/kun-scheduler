@@ -2,12 +2,12 @@ package com.miotech.kun.metadata.databuilder.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.databuilder.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.metadata.databuilder.service.gid.GidService;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
-import com.miotech.kun.commons.db.DatabaseOperator;
 import org.junit.Assert;
 import org.junit.Test;
 

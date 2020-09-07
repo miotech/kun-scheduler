@@ -1,9 +1,9 @@
 dependencies {
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-commons:kun-commons-db')
+    implementation project(':kun-metadata:kun-metadata-core')
     implementation 'com.google.guava:guava'
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "org.apache.kafka:kafka-clients"
-    implementation 'org.dmfs:rfc3986-uri:0.8.1'
 }

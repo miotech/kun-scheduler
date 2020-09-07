@@ -1,8 +1,8 @@
 package com.miotech.kun.workflow.common.lineage.service;
 
+import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
-import com.miotech.kun.workflow.core.model.lineage.Dataset;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Optional;
@@ -28,7 +28,7 @@ public class DefaultMetadataFacade implements MetadataFacade {
             consumerStarted = true;
         }
 
-        com.miotech.kun.metadata.databuilder.model.Dataset ds = metadataService.getDatasetByDatastore(dataStore);
-        return Optional.ofNullable(null);
+        Dataset ds = metadataService.getDatasetByDatastore(dataStore);
+        return Optional.ofNullable(ds);
     }
 }

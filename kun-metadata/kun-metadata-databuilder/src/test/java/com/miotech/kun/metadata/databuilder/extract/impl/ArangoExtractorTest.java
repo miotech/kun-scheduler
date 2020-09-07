@@ -2,10 +2,10 @@ package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.TestContainerUtil;
 import com.miotech.kun.metadata.databuilder.extract.impl.arango.ArangoExtractor;
 import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
 import io.testcontainers.arangodb.containers.ArangoContainer;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;

@@ -2,13 +2,13 @@ package com.miotech.kun.metadata.databuilder.extract.impl.hive;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
-import com.miotech.kun.metadata.databuilder.model.ConfigurableDataSource;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
-import com.miotech.kun.metadata.databuilder.model.MetaStoreCatalog;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
-import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.metadata.databuilder.model.ConfigurableDataSource;
+import com.miotech.kun.metadata.databuilder.model.MetaStoreCatalog;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

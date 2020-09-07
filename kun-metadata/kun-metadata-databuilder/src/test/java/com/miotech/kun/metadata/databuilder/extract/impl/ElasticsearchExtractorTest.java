@@ -2,9 +2,9 @@ package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.TestContainerUtil;
 import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticSearchIndexExtractor;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.ElasticSearchDataSource;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;

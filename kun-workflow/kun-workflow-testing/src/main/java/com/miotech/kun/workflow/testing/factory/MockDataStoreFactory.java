@@ -1,9 +1,9 @@
 package com.miotech.kun.workflow.testing.factory;
 
 import com.google.common.collect.Lists;
-import com.miotech.kun.workflow.core.model.common.URI;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
-import com.miotech.kun.workflow.core.model.lineage.DataStoreType;
+import com.miotech.kun.metadata.core.common.URI;
+import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.DataStoreType;
 
 import java.util.List;
 import java.util.Random;

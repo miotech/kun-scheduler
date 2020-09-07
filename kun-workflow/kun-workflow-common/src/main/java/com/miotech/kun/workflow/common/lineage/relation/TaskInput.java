@@ -1,7 +1,5 @@
 package com.miotech.kun.workflow.common.lineage.relation;
 
-import com.miotech.kun.workflow.common.lineage.node.Dataset;
-import com.miotech.kun.workflow.common.lineage.node.Task;
 import org.neo4j.ogm.annotation.*;
 
 @RelationshipEntity(type = "IS_INPUT_OF_KUN_TASK")

@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.facade;
 
-import com.miotech.kun.metadata.databuilder.model.Dataset;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.Dataset;
 
 public interface MetadataServiceFacade {
     static String getServiceName() {

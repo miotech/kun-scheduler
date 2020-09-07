@@ -2,12 +2,12 @@ package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.metadata.core.model.DatasetField;
+import com.miotech.kun.metadata.core.model.DatasetFieldStat;
+import com.miotech.kun.metadata.core.model.DatasetStat;
 import com.miotech.kun.metadata.databuilder.TestContainerUtil;
 import com.miotech.kun.metadata.databuilder.extract.impl.arango.ArangoCollectionExtractor;
 import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
-import com.miotech.kun.metadata.databuilder.model.DatasetField;
-import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
-import com.miotech.kun.metadata.databuilder.model.DatasetStat;
 import io.testcontainers.arangodb.containers.ArangoContainer;
 import org.junit.After;
 import org.junit.Before;

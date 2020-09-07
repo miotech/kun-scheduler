@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.core.model.common;
 
+import com.miotech.kun.metadata.core.common.URI;
 import org.dmfs.rfc3986.Authority;
 import org.junit.Test;
 

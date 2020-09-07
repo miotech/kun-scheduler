@@ -1,7 +1,6 @@
-package com.miotech.kun.metadata.databuilder.model;
+package com.miotech.kun.metadata.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
 
 import javax.annotation.Nullable;
 import java.util.List;

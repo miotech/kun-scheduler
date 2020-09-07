@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.core.model.lineage;
+package com.miotech.kun.metadata.core.model;
 
 public enum DataStoreType {
 

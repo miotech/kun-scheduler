@@ -1,7 +1,6 @@
 package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
-import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.databuilder.TestContainerUtil;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;

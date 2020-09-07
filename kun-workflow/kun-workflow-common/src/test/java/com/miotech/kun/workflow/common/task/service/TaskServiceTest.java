@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.task.service;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
@@ -21,7 +22,6 @@ import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.core.model.lineage.Dataset;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
@@ -507,8 +507,10 @@ public class TaskServiceTest extends CommonTestBase {
 
         // Mock returning random dataset by metadata facade given any datastore
         doAnswer(invocation -> {
-            Dataset dataset = new Dataset();
-            dataset.setGid(IdGenerator.getInstance().nextId());
+            Dataset dataset = Dataset.newBuilder()
+                    .withDataStore()
+                    .build();
+            dataset.setGid(IdGenerator.getInstance().nextId().toString());
             return Optional.of(dataset);
         }).when(metadataFacade).fetchDatasetByDatastore(any());
 

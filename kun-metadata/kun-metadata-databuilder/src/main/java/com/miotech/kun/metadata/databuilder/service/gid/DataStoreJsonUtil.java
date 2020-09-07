@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.databuilder.service.gid;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
+import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.*;
 
 public class DataStoreJsonUtil {

@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.databuilder.model;
+package com.miotech.kun.metadata.core.model;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.utils;
+package com.miotech.kun.metadata.core.utils;
 
 import javax.annotation.Nonnull;
 import java.util.regex.Pattern;

@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.common.lineage.service;
 
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
-import com.miotech.kun.workflow.core.model.lineage.Dataset;
+import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.Dataset;
 
 import java.util.Optional;
 

@@ -1,9 +1,9 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.arango;
 
 import com.google.common.collect.Iterators;
-import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
+import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
 
 import java.util.ArrayList;
 import java.util.Iterator;

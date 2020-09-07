@@ -1,7 +1,7 @@
-package com.miotech.kun.workflow.core.model.common;
+package com.miotech.kun.metadata.core.common;
 
 import com.google.common.base.Preconditions;
-import com.miotech.kun.workflow.utils.URIValidator;
+import com.miotech.kun.metadata.core.utils.URIValidator;
 import org.dmfs.rfc3986.Authority;
 import org.dmfs.rfc3986.Uri;
 import org.dmfs.rfc3986.encoding.Precoded;

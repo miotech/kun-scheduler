@@ -1,12 +1,12 @@
 package com.miotech.kun.workflow.common.lineage.service;
 
 import com.google.common.collect.Lists;
+import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
-import com.miotech.kun.workflow.core.model.lineage.Dataset;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import org.apache.commons.lang3.tuple.Pair;

@@ -1,10 +1,10 @@
 package com.miotech.kun.workflow.operator;
 
+import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.operator.spark.models.SparkApp;
 import com.miotech.kun.workflow.operator.spark.models.SparkJob;

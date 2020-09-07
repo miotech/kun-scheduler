@@ -30,4 +30,6 @@ include ':kun-data-quality'
 include ':kun-data-platform'
 include 'kun-metadata:kun-metadata-service-facade'
 findProject(':kun-metadata:kun-metadata-service-facade')?.name = 'kun-metadata-service-facade'
+include 'kun-metadata:kun-metadata-core'
+findProject(':kun-metadata:kun-metadata-core')?.name = 'kun-metadata-core'
 

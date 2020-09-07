@@ -2,13 +2,13 @@ package com.miotech.kun.metadata.databuilder.extract.impl.postgres;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.PostgresDataSource;
-import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
