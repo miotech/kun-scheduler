@@ -16,10 +16,7 @@ import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.instanceOf;
@@ -189,12 +186,13 @@ public class LineageServiceTest extends CommonTestBase {
     @Test
     public void saveDataset_withNonExistNodes_shouldPersist() {
         // Prepare
-        // TODO: implement a factory class
-        Dataset dataset = new Dataset();
-        dataset.setGid(200L);
-        dataset.setName("Example Dataset");
-        dataset.setDataStore(null);
-        dataset.setSchema(null);
+        Dataset dataset = Dataset.newBuilder()
+                .withGid(200L)
+                .withName("Example Dataset")
+                .withDataStore(null)
+                .withDatasourceId(1L)
+                .withFields(new ArrayList<>())
+                .build();
 
         // process
         lineageService.saveDataset(dataset);

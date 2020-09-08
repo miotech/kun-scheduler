@@ -69,6 +69,8 @@ public abstract class ExtractorTemplate implements Extractor {
             }
 
             datasetBuilder.withName(getName())
+                    // TODO: assign gid property
+                    .withGid(null)
                     .withDatasourceId(datasourceId)
                     .withFields(fields)
                     .withFieldStats(fieldStats)

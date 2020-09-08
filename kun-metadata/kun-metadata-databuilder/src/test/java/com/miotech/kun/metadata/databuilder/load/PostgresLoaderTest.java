@@ -31,6 +31,7 @@ public class PostgresLoaderTest extends DatabaseTestBase {
     {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
         datasetBuilder.withName("datasetName")
+                .withGid(1L)
                 .withDatasourceId(1L)
                 .withDatasetStat(new DatasetStat(100L, LocalDateTime.now()))
                 .withFields(ImmutableList.of(new DatasetField("id", new DatasetFieldType(DatasetFieldType.convertRawType("int"), "int"), "auto increment"),
