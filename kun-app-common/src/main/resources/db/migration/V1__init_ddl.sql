@@ -173,7 +173,7 @@ create table kun_mt_glossary_to_dataset_ref
 alter table kun_mt_glossary_to_dataset_ref
     owner to postgres;
 
-create table kun_user
+create table if not exists kun_user
 (
     id   bigint       not null
         constraint kun_user_pk
@@ -184,10 +184,10 @@ create table kun_user
 alter table kun_user
     owner to postgres;
 
-create unique index kun_user_name_uindex
+create unique index if not exists kun_user_name_uindex
     on kun_user (name);
 
-create table kun_user_session
+create table if not exists kun_user_session
 (
     primary_id            char(36) not null
         constraint user_session_pk
@@ -203,16 +203,16 @@ create table kun_user_session
 alter table kun_user_session
     owner to postgres;
 
-create unique index kun_user_session_ix1
+create unique index if not exists kun_user_session_ix1
     on kun_user_session (session_id);
 
-create index kun_user_session_ix2
+create index if not exists kun_user_session_ix2
     on kun_user_session (expiry_time);
 
-create index kun_user_session_ix3
+create index if not exists kun_user_session_ix3
     on kun_user_session (principal_name);
 
-create table kun_user_session_attributes
+create table if not exists kun_user_session_attributes
 (
     session_primary_id char(36)     not null
         constraint kun_user_session_attributes_fk

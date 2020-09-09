@@ -7,10 +7,12 @@ services:
       POSTGRES_PASSWORD:
       POSTGRES_DB:
     restart: always
+    volumes:
+      - ./docker_init_db.sql:/docker-entrypoint-initdb.d/docker_init_db.sql
     ports:
       - 5433:5432
   kun-workflow:
-    image: "kun-oss-workflow:master"
+    image: "kun-workflow:master"
     environment:
       APP_CONFIG_ENV:
       WORKFLOW_PORT:
@@ -26,7 +28,7 @@ services:
     depends_on:
       - kun-postgres
   kun-metadata:
-    image: "kun-oss-metadata:master"
+    image: "kun-metadata:master"
     environment:
       APP_CONFIG_ENV:
       METADATA_PORT:
@@ -44,7 +46,7 @@ services:
     depends_on:
       - kun-workflow
   kun-data-discovery:
-    image: "kun-oss-data-discovery:master"
+    image: "kun-data-discovery:master"
     environment:
       APP_CONFIG_ENV:
       DATA_DISCOVERY_PORT:
@@ -63,13 +65,32 @@ services:
       - 8080:${DATA_DISCOVERY_PORT}
     depends_on:
       - kun-metadata
+  kun-data-platform:
+    image: "kun-data-platform:master"
+    environment:
+      APP_CONFIG_ENV:
+      DATA_PLATFORM_PORT:
+      DB_PG_IP:
+      DB_PG_PORT:
+      DB_PG_USERNAME:
+      DB_PG_PASSWORD:
+      WORKFLOW_HOST:
+      WORKFLOW_PORT:
+    restart: always
+    volumes:
+      - ./kun-data-platform-logs:/server/target/kun-data-platform-logs/:z
+    ports:
+      - 8081:${DATA_PLATFORM_PORT}
+    depends_on:
+      - kun-workflow
   kun-frontend:
-    image: "kun-oss-frontend:master"
+    image: "kun-frontend:master"
     environment:
       DATA_DISCOVERY_HOST:
       DATA_DISCOVERY_PORT:
       WORKFLOW_HOST:
       WORKFLOW_PORT:
+      DATA_PLATFORM_PORT:
     restart: always
     ports:
       - 9802:80

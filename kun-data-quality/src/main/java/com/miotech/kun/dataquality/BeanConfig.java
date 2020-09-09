@@ -31,7 +31,7 @@ public class BeanConfig {
     Operator getOperator() {
         return Operator.newBuilder()
                 .withName(DataQualityConfiguration.WORKFLOW_OPERATOR_NAME)
-                .withDescription("default operator")
+                .withDescription("Data Quality Operator")
                 .withClassName("com.miotech.kun.workflow.operator.DataQualityOperator")
                 .build();
     }
