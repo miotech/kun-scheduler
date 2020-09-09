@@ -234,7 +234,7 @@ public class DatasetRepository extends BaseRepository {
                 return dataset;
             }
             return dataset;
-        }, gid, gid);
+        }, gid);
     }
 
     public Long getRowCount(Long gid) {
