@@ -1,2 +1,3 @@
 #!/usr/bin/env sh
-java ${JVM_OPTS} -jar /server/target/app.jar
+dockerize -wait http://${WORKFLOW_HOST}:${WORKFLOW_PORT}/health -wait-retry-interval 3s -timeout 60s
+java ${JVM_OPTS} -jar /server/target/kun-data-platform.jar

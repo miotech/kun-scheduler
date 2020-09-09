@@ -28,6 +28,7 @@
 **/kun-data-discovery-logs
 **/kun-metadata-logs
 **/kun-workflow-logs
+**/kun-data-platform-logs
 
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf

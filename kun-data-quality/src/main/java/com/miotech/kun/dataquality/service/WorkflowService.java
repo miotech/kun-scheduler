@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 
 /**
@@ -38,6 +39,11 @@ public class WorkflowService {
 
     @Value("${data-quality.workflow.task.cron:0 0 0 * * ?}")
     String cronExpression;
+
+    @PostConstruct
+    public void init() {
+        workflowClient.saveOperator(this.operator.getName(), this.operator);
+    }
 
     public Long createTask(Long caseId) {
 
