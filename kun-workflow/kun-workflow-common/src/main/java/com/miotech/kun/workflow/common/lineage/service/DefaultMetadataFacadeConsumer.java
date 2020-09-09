@@ -7,13 +7,13 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import java.util.Optional;
 
-public class DefaultMetadataFacade implements MetadataFacade {
+public class DefaultMetadataFacadeConsumer implements MetadataFacade {
     private static final ClassPathXmlApplicationContext context;
 
     private static volatile boolean consumerStarted;
 
     // service object should be cached
-    private static MetadataServiceFacade metadataService;
+    private MetadataServiceFacade metadataService;
 
     static {
         System.setProperty("java.net.preferIPv4Stack", "true");
@@ -24,7 +24,7 @@ public class DefaultMetadataFacade implements MetadataFacade {
     public Optional<Dataset> fetchDatasetByDatastore(DataStore dataStore) {
         if (!consumerStarted) {
             context.start();
-            metadataService = (MetadataServiceFacade) context.getBean(MetadataServiceFacade.getServiceName());
+            metadataService = (MetadataServiceFacade) context.getBean(metadataService.getServiceName());
             consumerStarted = true;
         }
 

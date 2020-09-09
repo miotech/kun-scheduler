@@ -1,0 +1,12 @@
+dependencies {
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(":kun-commons:kun-commons-rpc")
+    implementation project(':kun-metadata:kun-metadata-core')
+    implementation project(':kun-metadata:kun-metadata-service-facade')
+    implementation project(':kun-metadata:kun-metadata-databuilder')
+    implementation 'org.apache.dubbo:dubbo'
+    implementation 'org.apache.commons:commons-pool2'
+    implementation 'redis.clients:jedis'
+
+    testImplementation "junit:junit"
+}

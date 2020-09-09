@@ -13,7 +13,6 @@ dependencies {
     implementation project(":kun-commons:kun-commons-testing")
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-commons:kun-commons-web")
-    implementation project(":kun-commons:kun-commons-rpc")
     implementation project(":kun-metadata:kun-metadata-core")
     implementation project(":kun-metadata:kun-metadata-databuilder")
     implementation project(":kun-metadata:kun-metadata-service-facade")

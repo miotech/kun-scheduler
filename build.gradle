@@ -47,6 +47,7 @@ subprojects {
                 implementation "commons-dbutils:commons-dbutils:1.7"
                 implementation 'org.apache.commons:commons-lang3:3.10'
                 implementation 'org.apache.commons:commons-collections4:4.4'
+                implementation 'org.apache.commons:commons-pool2:2.8.1'
                 implementation "com.zaxxer:HikariCP:3.4.5"
                 implementation 'ch.qos.logback:logback-classic:1.2.3'
                 implementation "org.yaml:snakeyaml:1.21"
@@ -85,6 +86,7 @@ subprojects {
                 implementation 'commons-fileupload:commons-fileupload:1.4'
                 implementation "org.jooq:joor-java-8:0.9.12"
                 implementation "org.apache.dubbo:dubbo:2.7.8"
+                implementation 'redis.clients:jedis:2.10.2'
 
                 testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
