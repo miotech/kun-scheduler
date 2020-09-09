@@ -1,6 +1,6 @@
 package com.miotech.kun.metadata.rpc.provider;
 
-import com.miotech.kun.commons.rpc.RpcBootstrap;
+import com.miotech.kun.commons.rpc.RpcPublisher;
 import com.miotech.kun.commons.rpc.RpcConfig;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
@@ -22,7 +22,7 @@ public class MetadataRPCServer {
     private static final Properties properties = new Properties();
 
     private static void initOverrideConfig() {
-        InputStream inputStream = MetadataRPCServer.class.getResourceAsStream(RPC_PROPERTIES_FILEPATH);
+        InputStream inputStream = MetadataRPCServer.class.getClassLoader().getResourceAsStream(RPC_PROPERTIES_FILEPATH);
         if (Objects.nonNull(inputStream)) {
             try {
                 properties.load(inputStream);
@@ -47,7 +47,8 @@ public class MetadataRPCServer {
 
     public static void main(String[] args) {
         logger.info("Bootstrapping RPC server for kun-metadata module...");
+        initOverrideConfig();
         RpcConfig config = initConfiguration();
-        RpcBootstrap.start(config).await();
+        RpcPublisher.start(config).await();
     }
 }

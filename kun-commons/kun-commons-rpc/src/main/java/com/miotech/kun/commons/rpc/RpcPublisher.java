@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
-public class RpcBootstrap {
+public class RpcPublisher {
     private static Properties defaultProperties;
 
     public static DubboBootstrap start(RpcConfig config) {
@@ -28,7 +28,7 @@ public class RpcBootstrap {
 
     private static Properties loadDefaultProperties(String rpcPropertiesConfigFilePath) {
         Properties properties = new Properties();
-        InputStream inputStream = RpcBootstrap.class.getResourceAsStream(rpcPropertiesConfigFilePath);
+        InputStream inputStream = RpcPublisher.class.getClassLoader().getResourceAsStream(rpcPropertiesConfigFilePath);
         if (Objects.nonNull(inputStream)) {
             try {
                 properties.load(inputStream);
