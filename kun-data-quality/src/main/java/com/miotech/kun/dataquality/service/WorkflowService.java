@@ -12,6 +12,7 @@ import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
  * @created: 2020/7/17
  */
 @Service
+@Lazy
 @Slf4j
 public class WorkflowService {
 
