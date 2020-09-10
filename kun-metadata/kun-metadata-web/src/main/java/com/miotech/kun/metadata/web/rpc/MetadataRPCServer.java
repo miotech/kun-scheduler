@@ -1,5 +1,7 @@
-package com.miotech.kun.metadata.rpc.provider;
+package com.miotech.kun.metadata.web.rpc;
 
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
 import com.miotech.kun.commons.rpc.RpcPublisher;
 import com.miotech.kun.commons.rpc.RpcConfig;
 import com.miotech.kun.commons.utils.ExceptionUtils;
@@ -13,15 +15,18 @@ import java.util.Objects;
 import java.util.Properties;
 
 public class MetadataRPCServer {
-    private static final Logger logger = LoggerFactory.getLogger(MetadataRPCServer.class);
+    private final Logger logger = LoggerFactory.getLogger(MetadataRPCServer.class);
 
-    private static final String APPLICATION_NAME = "METADATA_RPC";
+    private final String APPLICATION_NAME = "METADATA_RPC";
 
-    private static final String RPC_PROPERTIES_FILEPATH = "metadata-rpc.properties";
+    private final String RPC_PROPERTIES_FILEPATH = "metadata-rpc.properties";
 
-    private static final Properties properties = new Properties();
+    private final Properties properties = new Properties();
 
-    private static void initOverrideConfig() {
+    @Inject
+    private MetadataServiceFacadeImpl metadataServiceFacadeImpl;
+
+    private void initOverrideConfig() {
         InputStream inputStream = MetadataRPCServer.class.getClassLoader().getResourceAsStream(RPC_PROPERTIES_FILEPATH);
         if (Objects.nonNull(inputStream)) {
             try {
@@ -34,21 +39,24 @@ public class MetadataRPCServer {
         }
     }
 
-    private static int getBindPort() {
+    private int getBindPort() {
         return Integer.parseInt(properties.getProperty("metadata.rpc.port"));
     }
 
-    private static RpcConfig initConfiguration() {
+    private RpcConfig getMergedConfiguration() {
         RpcConfig config = new RpcConfig(APPLICATION_NAME);
         config.setPort(getBindPort());
-        config.addService(MetadataServiceFacade.class, "1.0", new MetadataServiceFacadeImpl());
+        config.addService(MetadataServiceFacade.class, "1.0", metadataServiceFacadeImpl);
         return config;
     }
 
-    public static void main(String[] args) {
+    public void run() {
+        // Check preconditions
+        Preconditions.checkNotNull(metadataServiceFacadeImpl, "Inject failed: metadataServiceFacadeImpl is null");
+        // load config & boot up
         logger.info("Bootstrapping RPC server for kun-metadata module...");
         initOverrideConfig();
-        RpcConfig config = initConfiguration();
+        RpcConfig config = getMergedConfiguration();
         RpcPublisher.start(config).await();
     }
 }

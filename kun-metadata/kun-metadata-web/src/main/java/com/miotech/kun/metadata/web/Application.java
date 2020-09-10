@@ -9,6 +9,7 @@ import com.miotech.kun.commons.utils.PropertyUtils;
 import com.miotech.kun.commons.web.KunWebServer;
 import com.miotech.kun.commons.web.module.CommonModule;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
+import com.miotech.kun.metadata.web.rpc.MetadataRPCServer;
 import com.miotech.kun.metadata.web.service.InitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,6 +44,7 @@ public class Application {
                 new WorkflowClientModule(props)
         );
 
+        injector.getInstance(MetadataRPCServer.class).run();
         injector.getInstance(Application.class).start();
         injector.getInstance(KunWebServer.class).start();
     }

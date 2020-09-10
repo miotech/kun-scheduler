@@ -13,12 +13,14 @@ dependencies {
     implementation project(":kun-commons:kun-commons-testing")
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-commons:kun-commons-web")
+    implementation project(":kun-commons:kun-commons-rpc")
     implementation project(":kun-metadata:kun-metadata-core")
     implementation project(":kun-metadata:kun-metadata-databuilder")
     implementation project(":kun-metadata:kun-metadata-service-facade")
     implementation project(":kun-workflow:kun-workflow-core")
     implementation project(":kun-workflow:kun-workflow-utils")
     implementation project(':kun-workflow:kun-workflow-client')
+
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
@@ -33,6 +35,10 @@ dependencies {
     implementation "com.zaxxer:HikariCP"
     implementation "org.flywaydb:flyway-core"
     implementation "org.jooq:joor-java-8"
+    implementation "org.apache.dubbo:dubbo"
+    implementation "org.apache.commons:commons-pool2"
+    implementation "redis.clients:jedis"
+
     testImplementation "junit:junit"
     testRuntimeOnly "org.mockito:mockito-core"
 }
