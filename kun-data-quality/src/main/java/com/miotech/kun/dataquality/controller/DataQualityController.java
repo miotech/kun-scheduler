@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,6 +41,7 @@ public class DataQualityController {
     DataQualityService dataQualityService;
 
     @Autowired
+    @Lazy
     WorkflowService workflowService;
 
     @Autowired
@@ -68,7 +70,7 @@ public class DataQualityController {
         TaskRunSearchRequest searchRequest = TaskRunSearchRequest.newBuilder()
                 .withTaskIds(taskIds)
                 .withDateFrom(DateUtils.millisToOffsetDateTime(searchLogRequest.getStartTime() == null ?
-                        (DateTimeUtils.now().toEpochSecond() - 24*3600L) * 1000L
+                        (DateTimeUtils.now().toEpochSecond() - 24 * 3600L) * 1000L
                         : searchLogRequest.getStartTime()))
                 .withDateTo(DateUtils.millisToOffsetDateTime(searchLogRequest.getEndTime() == null ?
                         DateTimeUtils.now().toEpochSecond() * 1000L
@@ -84,14 +86,14 @@ public class DataQualityController {
             DataQualityCaseResult result = null;
             if (!CollectionUtils.isEmpty(logs)) {
                 Optional<String> resultLog = logs.stream().filter(logLine -> StringUtils.isNotEmpty(logLine) && logLine.contains(Constants.DQ_RESULT_PREFIX)).findFirst();
-                if(resultLog.isPresent()) {
+                if (resultLog.isPresent()) {
                     String json = resultLog.get();
                     json = json.substring(json.indexOf(Constants.DQ_RESULT_PREFIX) + Constants.DQ_RESULT_PREFIX.length());
                     result = JSONUtils.toJavaObject(json, DataQualityCaseResult.class);
                 }
             }
 
-            if(result == null) {
+            if (result == null) {
                 result = new DataQualityCaseResult();
                 result.setCaseStatus(Constants.DQ_RESULT_FAILED);
                 result.setErrorReason(Lists.newArrayList("No execution log found."));
@@ -102,7 +104,7 @@ public class DataQualityController {
             results.add(result);
         }
 
-        if(searchLogRequest.isExport()) {
+        if (searchLogRequest.isExport()) {
             dataQualityService.logDataQualityCaseResults(results);
         }
     }
