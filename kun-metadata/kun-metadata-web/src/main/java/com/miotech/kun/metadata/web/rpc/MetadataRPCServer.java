@@ -57,6 +57,6 @@ public class MetadataRPCServer {
         logger.info("Bootstrapping RPC server for kun-metadata module...");
         initOverrideConfig();
         RpcConfig config = getMergedConfiguration();
-        RpcPublisher.start(config).await();
+        RpcPublisher.start(config);
     }
 }
