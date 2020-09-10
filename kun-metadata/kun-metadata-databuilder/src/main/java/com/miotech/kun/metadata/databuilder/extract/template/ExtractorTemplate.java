@@ -2,9 +2,9 @@ package com.miotech.kun.metadata.databuilder.extract.template;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Iterators;
+import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.*;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
-import com.miotech.kun.metadata.databuilder.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

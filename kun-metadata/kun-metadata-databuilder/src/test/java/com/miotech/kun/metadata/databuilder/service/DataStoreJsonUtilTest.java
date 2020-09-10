@@ -1,8 +1,8 @@
 package com.miotech.kun.metadata.databuilder.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.metadata.databuilder.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.core.model.lineage.PostgresDataStore;
 import org.hamcrest.MatcherAssert;
