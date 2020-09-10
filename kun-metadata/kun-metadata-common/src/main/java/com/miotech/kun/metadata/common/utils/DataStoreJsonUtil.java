@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.databuilder.service.gid;
+package com.miotech.kun.metadata.common.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

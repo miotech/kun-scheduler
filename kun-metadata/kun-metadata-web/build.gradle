@@ -15,6 +15,7 @@ dependencies {
     implementation project(":kun-commons:kun-commons-web")
     implementation project(":kun-commons:kun-commons-rpc")
     implementation project(":kun-metadata:kun-metadata-core")
+    implementation project(":kun-metadata:kun-metadata-common")
     implementation project(":kun-metadata:kun-metadata-databuilder")
     implementation project(":kun-metadata:kun-metadata-service-facade")
     implementation project(":kun-workflow:kun-workflow-core")

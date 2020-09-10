@@ -6,7 +6,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class RpcConfig {
-    private final String applicationName;
+    private String applicationName;
+
+    private String registryCenterURL;
+
+    private String registryCenterUsername;
+
+    private String registryCenterPassword;
 
     private int port;
 
@@ -14,6 +20,22 @@ public class RpcConfig {
 
     public RpcConfig(String applicationName) {
         this.applicationName = applicationName;
+        this.registryCenterURL = "";
+        this.registryCenterUsername = "";
+        this.registryCenterPassword = "";
+    }
+
+    public RpcConfig(String applicationName, String registryCenterURL) {
+        this(applicationName);
+        this.registryCenterURL = registryCenterURL;
+        this.registryCenterUsername = "";
+        this.registryCenterPassword = "";
+    }
+
+    public RpcConfig(String applicationName, String registryCenterURL, String registryCenterUsername, String registryCenterPassword) {
+        this(applicationName, registryCenterURL);
+        this.registryCenterUsername = registryCenterUsername;
+        this.registryCenterPassword = registryCenterPassword;
     }
 
     public <T> RpcConfig addService(Class<T> interfaceClass, String version, T impl) {
@@ -40,5 +62,17 @@ public class RpcConfig {
 
     public String getApplicationName() {
         return this.applicationName;
+    }
+
+    public String getRegistryCenterURL() {
+        return registryCenterURL;
+    }
+
+    public String getRegistryCenterUsername() {
+        return registryCenterUsername;
+    }
+
+    public String getRegistryCenterPassword() {
+        return registryCenterPassword;
     }
 }

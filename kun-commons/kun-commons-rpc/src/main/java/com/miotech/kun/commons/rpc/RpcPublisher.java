@@ -1,5 +1,6 @@
 package com.miotech.kun.commons.rpc;
 
+import com.google.common.base.Strings;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.ProtocolConfig;
@@ -14,13 +15,10 @@ import java.util.Objects;
 import java.util.Properties;
 
 public class RpcPublisher {
-    private static Properties defaultProperties;
-
     public static DubboBootstrap start(RpcConfig config) {
-        defaultProperties = loadDefaultProperties("rpc-registry-center.properties");
         return DubboBootstrap.getInstance()
                 .application(getMergedApplicationConfig(config))
-                .registry(getMergedRegistryConfig())
+                .registry(getMergedRegistryConfig(config))
                 .protocol(getMergedProtocolConfig(config))
                 .services(getMergedServiceConfig(config))
                 .start();
@@ -48,13 +46,11 @@ public class RpcPublisher {
         return application;
     }
 
-    private static RegistryConfig getMergedRegistryConfig() {
-        // We use default registry center
+    private static RegistryConfig getMergedRegistryConfig(RpcConfig config) {
         RegistryConfig registryConfig = new RegistryConfig();
-        // TODO: allow override default configuration by RpcConfig object
-        registryConfig.setAddress(defaultProperties.getProperty("dubbo.registry.address"));
-        registryConfig.setUsername(defaultProperties.getProperty("dubbo.registry.username", ""));
-        registryConfig.setPassword(defaultProperties.getProperty("dubbo.registry.password", ""));
+        registryConfig.setAddress(Strings.isNullOrEmpty(config.getRegistryCenterURL()) ? "redis://127.0.0.1:6379" : config.getRegistryCenterURL());
+        registryConfig.setUsername(Strings.isNullOrEmpty(config.getRegistryCenterUsername()) ? "" : config.getRegistryCenterUsername());
+        registryConfig.setPassword(Strings.isNullOrEmpty(config.getRegistryCenterPassword()) ? "" : config.getRegistryCenterPassword());
         return registryConfig;
     }
 
