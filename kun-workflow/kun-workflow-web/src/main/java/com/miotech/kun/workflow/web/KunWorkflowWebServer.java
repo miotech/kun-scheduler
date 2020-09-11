@@ -6,6 +6,8 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseSetup;
 import com.miotech.kun.commons.utils.PropertyUtils;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.commons.web.KunWebServer;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
 import com.miotech.kun.workflow.SchedulerManager;
@@ -15,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.util.Properties;
 
 @Singleton
 public class KunWorkflowWebServer {
@@ -24,7 +25,7 @@ public class KunWorkflowWebServer {
     @Inject
     private KunWebServer server;
     @Inject
-    private Properties props;
+    private Props props;
     @Inject
     private DataSource dataSource;
     @Inject
@@ -55,7 +56,7 @@ public class KunWorkflowWebServer {
         logger.info("Starting Jetty Kun Web Server...");
 
         /* Initialize Guice Injector */
-        Properties props = PropertyUtils.loadAppProps();
+        Props props = PropsUtils.loadAppProps();
         final Injector injector = Guice.createInjector(
                 new KunWebServerModule(props),
                 new KunWorkflowServerModule(props),

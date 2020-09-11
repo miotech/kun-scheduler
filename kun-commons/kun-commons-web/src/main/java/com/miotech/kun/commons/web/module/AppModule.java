@@ -2,19 +2,19 @@ package com.miotech.kun.commons.web.module;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import com.miotech.kun.commons.utils.Props;
 
-import java.util.Properties;
 
 public abstract class AppModule extends AbstractModule {
-    private final Properties props;
+    private final Props props;
 
-    public AppModule(Properties props) {
+    public AppModule(Props props) {
         this.props = props;
     }
 
     @Override
     protected void configure() {
-        Names.bindProperties(binder(), props);
-        bind(Properties.class).toInstance(props);
+        Names.bindProperties(binder(), props.toProperties());
+        bind(Props.class).toInstance(props);
     }
 }

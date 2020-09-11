@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.web.lineage.LineageEventSubscriber;
 import com.miotech.kun.workflow.core.publish.EventSubscriber;
 import com.miotech.kun.workflow.core.publish.KafkaEventSubscriber;
@@ -12,7 +13,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.inject.Inject;
-import java.util.Properties;
 
 @Ignore
 public class LineageEventSubscriberTest extends DatabaseTestBase {
@@ -43,7 +43,7 @@ public class LineageEventSubscriberTest extends DatabaseTestBase {
         @Singleton
         public EventSubscriber createEventSubscriber() {
 
-            Properties kafkaConf = new Properties();
+            Props kafkaConf = new Props();
             kafkaConf.put("bootstrap.servers", "localhost:9092");
             kafkaConf.put("acks", "all");
             kafkaConf.put("retries", 0);
