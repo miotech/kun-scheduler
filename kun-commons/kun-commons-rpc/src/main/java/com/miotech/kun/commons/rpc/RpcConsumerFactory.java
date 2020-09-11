@@ -1,25 +1,48 @@
 package com.miotech.kun.commons.rpc;
 
-import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.RegistryConfig;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 
 public class RpcConsumerFactory {
     private RpcConsumerFactory() {}
 
-    private static final Properties defaultProperties = new Properties(); // = loadDefaultProperties("rpc-registry-center.properties");
+    private static final Properties defaultProperties = new Properties();
+
+    private static Optional<RegistryConfig> overrideRegistryConfig = Optional.ofNullable(null);
 
     // ReferenceConfig object are heavily encapsulated, therefore we cache them for performance
     private static Map<String, ReferenceConfig<?>> cachedReferenceConfig = new HashMap<>();
 
+    /**
+     * Directly connects to a service by providing its signature and host URL.
+     * Only recommended for debug usage.
+     * @param interfaceClass interface type class
+     * @param referenceUrl target service host url (example: "dubbo://127.0.0.1:9091")
+     * @param <T> interface type
+     * @return
+     */
+    public static <T> T getServiceByDirectConnect(Class<T> interfaceClass, String version, String referenceUrl) {
+        ReferenceConfig<T> reference = new ReferenceConfig<>();
+        reference.setInterface(interfaceClass);
+        reference.setVersion(version);
+        reference.setUrl(referenceUrl);
+        return reference.get();
+    }
+
+    /**
+     * Fetch service stub from global remote registry.
+     * @param applicationName Consumer application name, not necessary to be the same name as provider's
+     * @param interfaceClass interface type class
+     * @param version version of provider service
+     * @param <T> interface type
+     * @return A service stub. DO remember to store this stub in cache for later reuse.
+     */
     public static <T> T getService(String applicationName, Class<T> interfaceClass, String version) {
         ReferenceConfig<T> referenceConfig;
         if (cachedReferenceConfig.containsKey(applicationName + "::" + interfaceClass.getName())) {
@@ -46,7 +69,10 @@ public class RpcConsumerFactory {
     }
 
     private static RegistryConfig getMergedRegistryConfig() {
-        // We use default registry center
+        if (overrideRegistryConfig.isPresent()) {
+            return overrideRegistryConfig.get();
+        }
+        // Else, we use default registry center
         RegistryConfig registryConfig = new RegistryConfig();
         // TODO: allow override default configuration by RpcConfig object
         registryConfig.setAddress(defaultProperties.getProperty("dubbo.registry.address", "redis://127.0.0.1:6379"));
@@ -55,19 +81,7 @@ public class RpcConsumerFactory {
         return registryConfig;
     }
 
-    private static Properties loadDefaultProperties(String rpcPropertiesConfigFilePath) {
-        Properties properties = new Properties();
-        InputStream inputStream = RpcConsumerFactory.class.getClassLoader().getResourceAsStream(rpcPropertiesConfigFilePath);
-        if (Objects.nonNull(inputStream)) {
-            try {
-                properties.load(inputStream);
-            } catch (IOException e) {
-                throw ExceptionUtils.wrapIfChecked(e);
-            }
-        } else {
-            throw new RuntimeException(String.format("Cannot load RPC properties configuration file: %s", rpcPropertiesConfigFilePath));
-        }
-
-        return properties;
+    public static void useOverrideRegistryConfig(RegistryConfig registryConfig) {
+        overrideRegistryConfig = Optional.ofNullable(registryConfig);
     }
 }

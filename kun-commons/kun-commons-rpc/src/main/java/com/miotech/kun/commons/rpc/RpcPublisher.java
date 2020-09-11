@@ -10,6 +10,7 @@ import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
@@ -22,6 +23,23 @@ public class RpcPublisher {
                 .protocol(getMergedProtocolConfig(config))
                 .services(getMergedServiceConfig(config))
                 .start();
+    }
+
+    @SuppressWarnings("deprecation")
+    public static List<ServiceConfig<?>> exportServices(RpcConfig config) {
+        List<ServiceConfig<?>> bootedServices = new LinkedList<>();
+        for (ServiceConfig<Object> bootService : config.getServices()) {
+            ServiceConfig<Object> service = new ServiceConfig<>();
+            service.setApplication(getMergedApplicationConfig(config));
+            service.setRegistry(getMergedRegistryConfig(config));
+            service.setVersion(bootService.getVersion());
+            service.setProtocol(getMergedProtocolConfig(config));
+            service.setInterface(bootService.getInterface());
+            service.setRef(bootService.getRef());
+            service.export();
+            bootedServices.add(service);
+        }
+        return bootedServices;
     }
 
     private static Properties loadDefaultProperties(String rpcPropertiesConfigFilePath) {
