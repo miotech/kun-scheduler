@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.core.publish;
 
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.LineageEvent;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
@@ -10,16 +11,15 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 public class KafkaEventPublisherTest {
 
-    Properties kafkaConf;
+    Props kafkaConf;
 
     @Before
     public void setUp() throws Exception {
 
-        kafkaConf = new Properties();
+        kafkaConf = new Props();
         kafkaConf.put("bootstrap.servers", "localhost:9092");
         kafkaConf.put("acks", "all");
         kafkaConf.put("retries", 0);

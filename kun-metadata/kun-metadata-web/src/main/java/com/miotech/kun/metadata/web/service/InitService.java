@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.web.service;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.constant.WorkflowApiParam;
@@ -13,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
-import java.util.Properties;
 
 @Singleton
 public class InitService {
@@ -23,7 +23,7 @@ public class InitService {
     private WorkflowClient workflowClient;
 
     @Inject
-    private Properties properties;
+    private Props props;
 
     public void initDataBuilder() {
         checkOperator(WorkflowApiParam.OPERATOR_NAME_REFRESH, WorkflowApiParam.OPERATOR_NAME_BUILD_ALL);
@@ -50,7 +50,7 @@ public class InitService {
 
     private void createTask(String taskName) {
         Task taskOfCreated = workflowClient.createTask(RequestParameterBuilder.buildTaskForCreate(taskName,
-                Long.parseLong(properties.getProperty(TaskParam.get(taskName).getOperatorKey())), properties));
+                props.getLong(TaskParam.get(taskName).getOperatorKey()), props));
         setProp(TaskParam.get(taskName).getTaskKey(), taskOfCreated.getId().toString());
     }
 
@@ -65,7 +65,7 @@ public class InitService {
         for (String taskName : taskNames) {
             Optional<Task> taskOpt = findTaskByName(taskName);
             if (taskOpt.isPresent()) {
-                properties.setProperty(TaskParam.get(taskName).getTaskKey(), taskOpt.get().getId().toString());
+                props.put(TaskParam.get(taskName).getTaskKey(), taskOpt.get().getId().toString());
             } else {
                 createTask(taskName);
                 logger.info("Create Task Success");
@@ -74,7 +74,7 @@ public class InitService {
     }
 
     private void setProp(String key, String value) {
-        properties.setProperty(key, value);
+        props.put(key, value);
     }
 
 }

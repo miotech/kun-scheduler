@@ -1,13 +1,12 @@
 package com.miotech.kun.commons.query.datasource;
 
 import com.miotech.kun.commons.query.service.ConfigService;
+import com.miotech.kun.commons.utils.Props;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.lang3.StringUtils;
 
 import javax.sql.DataSource;
-import java.util.Properties;
-
 /**
  * @author: Jie Chen
  * @created: 2020/7/13
@@ -33,16 +32,16 @@ public class MetadataDataSource {
     }
 
     private void initMetadataDataSource() {
-        Properties props = ConfigService.getInstance().getProperties();
-        if (StringUtils.isEmpty(props.getProperty("metadata.datasource.url"))) {
+        Props props = ConfigService.getInstance().getProperties();
+        if (StringUtils.isEmpty(props.get("metadata.datasource.url"))) {
             ConfigService.getInstance().loadConf();
             props = ConfigService.getInstance().getProperties();
         }
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(props.getProperty("metadata.datasource.url"));
-        config.setUsername(props.getProperty("metadata.datasource.username"));
-        config.setPassword(props.getProperty("metadata.datasource.password"));
-        config.setDriverClassName(props.getProperty("metadata.datasource.driver-class-name"));
+        config.setJdbcUrl(props.get("metadata.datasource.url"));
+        config.setUsername(props.get("metadata.datasource.username"));
+        config.setPassword(props.get("metadata.datasource.password"));
+        config.setDriverClassName(props.get("metadata.datasource.driver-class-name"));
         this.metadataDataSource = new HikariDataSource(config);
     }
 
