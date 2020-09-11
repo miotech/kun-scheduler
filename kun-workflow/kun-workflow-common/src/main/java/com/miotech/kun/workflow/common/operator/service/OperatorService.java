@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.exception.RuleOperatorInUseException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -51,7 +52,7 @@ public class OperatorService {
     private ResourceService resourceService;
 
     @Inject
-    private Properties props;
+    private Props props;
 
     private static final int PAGE_NUM_DEFAULT = 1;
 
@@ -156,7 +157,7 @@ public class OperatorService {
         try {
             // generate package path using operator id
             FileItem uploadFie =  uploadFiles.get(0);
-            String libDirectory = "file:" + props.getProperty(PROP_RESOURCE_LIBDIRECTORY);
+            String libDirectory = "file:" + props.get(PROP_RESOURCE_LIBDIRECTORY);
             String packagePath = String.join("/", libDirectory, operator.getId().toString(), uploadFie.getName());
             Resource resource = resourceService.createResource(packagePath, uploadFie.getInputStream());
             operatorDao.updateById(operatorId, operator

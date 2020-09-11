@@ -2,6 +2,7 @@ package com.miotech.kun.commons.web;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.constant.ConfigurationKeys;
 import com.miotech.kun.commons.web.handler.DispatchServlet;
 import org.eclipse.jetty.server.Server;
@@ -11,7 +12,6 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Properties;
 
 @Singleton
 public class KunWebServer {
@@ -19,10 +19,10 @@ public class KunWebServer {
 
     private final Server server;
     private final DispatchServlet dispatchServlet;
-    private final Properties props;
+    private final Props props;
 
     @Inject
-    public KunWebServer(final Properties props,
+    public KunWebServer(final Props props,
                         final Server server,
                         final DispatchServlet dispatchServlet) {
         this.server = server;
@@ -40,8 +40,8 @@ public class KunWebServer {
         try {
             configureServlet();
             ServerConnector connector = new ServerConnector(server);
-            int port = Integer.parseInt(props.getProperty(ConfigurationKeys.PROP_SERVER_PORT, "8088"));
-            boolean enableStdErr = props.getProperty(ConfigurationKeys.PROP_SERVER_DUMP_STDERR, "false").equals("true");
+            int port = props.getInt(ConfigurationKeys.PROP_SERVER_PORT, 8088);
+            boolean enableStdErr = props.getBoolean(ConfigurationKeys.PROP_SERVER_DUMP_STDERR, false);
 
             logger.info("Server listen on: {}", port);
             connector.setPort(port);

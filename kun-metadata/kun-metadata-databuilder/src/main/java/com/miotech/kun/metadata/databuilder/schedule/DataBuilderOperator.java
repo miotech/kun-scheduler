@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.databuilder.schedule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
@@ -12,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.util.Properties;
 
 public class DataBuilderOperator extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(DataBuilderOperator.class);
@@ -33,7 +33,7 @@ public class DataBuilderOperator extends KunOperator {
     public boolean run() {
         DataSource dataSource = null;
         try {
-            Properties props = buildPropsFromVariable();
+            Props props = buildPropsFromVariable();
 
             Injector injector = Guice.createInjector(new DataSourceModule(props));
             dataSource = injector.getInstance(DataSource.class);
@@ -69,12 +69,12 @@ public class DataBuilderOperator extends KunOperator {
 
     }
 
-    private Properties buildPropsFromVariable() {
-        Properties props = new Properties();
-        props.setProperty(DATASOURCE_JDBC_URL, operatorContext.getConfig().getString(DATASOURCE_JDBC_URL));
-        props.setProperty(DATASOURCE_USERNAME, operatorContext.getConfig().getString(DATASOURCE_USERNAME));
-        props.setProperty(DATASOURCE_PASSWORD, operatorContext.getConfig().getString(DATASOURCE_PASSWORD));
-        props.setProperty(DATASOURCE_DRIVER_CLASS_NAME, operatorContext.getConfig().getString(DATASOURCE_DRIVER_CLASS_NAME));
+    private Props buildPropsFromVariable() {
+        Props props = new Props();
+        props.put(DATASOURCE_JDBC_URL, operatorContext.getConfig().getString(DATASOURCE_JDBC_URL));
+        props.put(DATASOURCE_USERNAME, operatorContext.getConfig().getString(DATASOURCE_USERNAME));
+        props.put(DATASOURCE_PASSWORD, operatorContext.getConfig().getString(DATASOURCE_PASSWORD));
+        props.put(DATASOURCE_DRIVER_CLASS_NAME, operatorContext.getConfig().getString(DATASOURCE_DRIVER_CLASS_NAME));
 
         return props;
     }

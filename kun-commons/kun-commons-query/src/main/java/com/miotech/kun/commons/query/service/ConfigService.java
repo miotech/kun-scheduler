@@ -1,8 +1,7 @@
 package com.miotech.kun.commons.query.service;
 
-import com.miotech.kun.commons.utils.PropertyUtils;
-
-import java.util.Properties;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.commons.utils.PropsUtils;
 
 /**
  * @author: Jie Chen
@@ -10,10 +9,10 @@ import java.util.Properties;
  */
 public class ConfigService {
 
-    private Properties properties;
+    private Props props;
 
     private ConfigService() {
-        properties = System.getProperties();
+        props = Props.fromProperties(System.getProperties());
     }
 
     private static class SingletonHolder {
@@ -25,30 +24,30 @@ public class ConfigService {
     }
 
     public void loadConf(String configName) {
-        this.properties = PropertyUtils.loadAppProps(configName);
+        this.props = PropsUtils.loadAppProps(configName);
     }
 
     public void loadConf() {
-        this.properties = PropertyUtils.loadAppProps();
+        this.props = PropsUtils.loadAppProps();
     }
 
-    public Properties getProperties() {
-        return properties;
+    public Props getProperties() {
+        return props;
     }
 
     public void setMetadataDataSourceUrl(String url) {
-        this.properties.setProperty("metadata.datasource.url", url);
+        this.props.put("metadata.datasource.url", url);
     }
 
     public void setMetadataDataSourceUsername(String username) {
-        this.properties.setProperty("metadata.datasource.username", username);
+        this.props.put("metadata.datasource.username", username);
     }
 
     public void setMetadataDataSourcePassword(String password) {
-        this.properties.setProperty("metadata.datasource.password", password);
+        this.props.put("metadata.datasource.password", password);
     }
 
     public void setMetadataDataSourceDriverClass(String driverClass) {
-        this.properties.setProperty("metadata.datasource.driver-class-name", driverClass);
+        this.props.put("metadata.datasource.driver-class-name", driverClass);
     }
 }
