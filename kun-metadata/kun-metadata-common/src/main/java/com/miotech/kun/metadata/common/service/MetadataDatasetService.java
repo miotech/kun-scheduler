@@ -8,8 +8,12 @@ import com.miotech.kun.metadata.core.model.Dataset;
 import java.util.Optional;
 
 public class MetadataDatasetService {
+    private final MetadataDatasetDao metadataDatasetDao;
+
     @Inject
-    MetadataDatasetDao metadataDatasetDao;
+    public MetadataDatasetService(MetadataDatasetDao metadataDatasetDao) {
+        this.metadataDatasetDao = metadataDatasetDao;
+    }
 
     /**
      * Fetch dataset by its global id and returns an optional object.

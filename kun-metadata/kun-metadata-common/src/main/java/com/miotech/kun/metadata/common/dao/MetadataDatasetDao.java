@@ -60,6 +60,7 @@ public class MetadataDatasetDao {
                     .withGid(rs.getLong(1))
                     .withName(rs.getString(2))
                     .withDatasourceId(rs.getLong(3))
+                    // TODO: parse missing fields
                     .withDatasetStat(null)
                     .withFields(null)
                     .withFieldStats(null)
