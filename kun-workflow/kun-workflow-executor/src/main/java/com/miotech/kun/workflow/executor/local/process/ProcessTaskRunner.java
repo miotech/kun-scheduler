@@ -1,7 +1,6 @@
 package com.miotech.kun.workflow.executor.local.process;
 
 import com.google.common.base.Joiner;
-import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -16,10 +15,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.SynchronousQueue;
@@ -45,9 +42,11 @@ public class ProcessTaskRunner implements TaskRunner {
         // 初始化
         File inputFile;
         File outputFile;
+        File stdoutFile;
         try {
             inputFile = File.createTempFile("process_input", null);
             outputFile = File.createTempFile("process_output", null);
+            stdoutFile = File.createTempFile("process_stdout", null);
             JsonCodec.MAPPER.writeValue(inputFile, command);
         } catch (IOException e) {
             logger.error("Failed to create input/output file.", e);
@@ -56,6 +55,8 @@ public class ProcessTaskRunner implements TaskRunner {
 
         // 构建进程
         ProcessBuilder pb = new ProcessBuilder();
+        pb.redirectErrorStream(true);
+        pb.redirectOutput(stdoutFile);
         pb.command(buildCommand(inputFile.getPath(), outputFile.getPath()));
         String cmd = Joiner.on(" ").join(pb.command());
         logger.info("Start to run command: {}", cmd);
@@ -72,9 +73,7 @@ public class ProcessTaskRunner implements TaskRunner {
             int exitCode = process.waitFor();
             logger.debug("Command: {}, Exit code: {}", cmd, exitCode);
 
-            logStream("stdout", process.getInputStream());
-            logStream("stderr", process.getErrorStream());
-
+            logAndDelete(stdoutFile);
             if (forceAborted) {
                 return buildResultAfterForceAbort();
             } else {
@@ -140,10 +139,17 @@ public class ProcessTaskRunner implements TaskRunner {
         return res;
     }
 
-    private void logStream(String streamName, InputStream stream) {
+    private void logAndDelete(File file) {
         if (logger.isDebugEnabled()) {
-            try {
-                logger.debug("{}: {}", streamName, CharStreams.toString(new InputStreamReader(stream)));
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)))) {
+                String line;
+                logger.debug("The following is the log output by the Operator child process!");
+                while ((line = reader.readLine()) != null) {
+                    logger.debug(line);
+                }
+
+                logger.debug("The above is the log output by the Operator child process!");
+                Files.delete(file.toPath());
             } catch (IOException e) {
                 // ignore
             }
