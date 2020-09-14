@@ -1,3 +1,0 @@
-dependencies {
-    testImplementation project(":kun-commons:kun-commons-testing")
-}
