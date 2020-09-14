@@ -115,7 +115,8 @@ atlassian-ide-plugin.xml
 
 # Logs
 # ----
-/*.log
+**/*.log
+**/*.log.gz
 /logs
 
 # oh-my-zsh gradle plugin

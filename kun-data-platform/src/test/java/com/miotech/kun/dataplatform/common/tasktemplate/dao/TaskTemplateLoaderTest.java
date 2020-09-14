@@ -4,7 +4,6 @@ import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateLoader;
 import com.miotech.kun.dataplatform.model.tasktemplate.ParameterDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -14,8 +13,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
-// TODO: figure out a solution to bootstrap Workflow facade related tests
-@Ignore
 public class TaskTemplateLoaderTest extends AppTestBase {
 
     @Autowired
