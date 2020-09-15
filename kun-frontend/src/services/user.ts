@@ -3,7 +3,7 @@ import { User } from '@/definitions/User.type';
 import { ServiceRespPromise } from '@/definitions/common-types';
 import { SECURITY_API_PRIFIX } from '@/constants/api-prefixes';
 import { get, post } from '@/utils/requestUtils';
-import { LogUtils } from '@/utils/logUtils';
+import LogUtils from '@/utils/logUtils';
 
 export interface LoginServiceReqBody {
   username: string;

@@ -6,7 +6,7 @@ import { Zoom } from '@vx/zoom';
 import { localPoint } from '@vx/event';
 import { Graph } from '@vx/network';
 import { TaskNode, TaskRelation } from '@/components/DAGGraph/typings';
-import { LogUtils } from '@/utils/logUtils';
+import LogUtils from '@/utils/logUtils';
 import { DAGTaskNode } from '@/components/DAGGraph/DAGTaskNode';
 import { DAGTaskEdge } from '@/components/DAGGraph/DAGTaskEdge';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';

@@ -47,6 +47,7 @@ export default defineConfig({
         '/kun/api/v1/security/': {
           target: PROXY_SECURITY_TARGET || 'http://kun-dev.miotech.com/',
           changeOrigin: true,
+          withCredentials: true,
           pathRewrite: PATH_REWRITE
             ? { '^/kun/api/v1/security/': '' }
             : undefined,
@@ -54,11 +55,13 @@ export default defineConfig({
         '/kun/api/v1/': {
           target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
           changeOrigin: true,
+          withCredentials: true,
           pathRewrite: PATH_REWRITE ? { '^/kun/api/v1/': '' } : undefined,
         },
         '/kun/api/data-platform/': {
           target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
           changeOrigin: true,
+          withCredentials: true,
           pathRewrite: PATH_REWRITE
             ? { '^/kun/api/data-platform/': '' }
             : undefined,

@@ -1,10 +1,9 @@
 import React, { ReactNode } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import { PlayCircleOutlined } from '@ant-design/icons';
 import { Controlled as ControlledCodeMirror } from 'react-codemirror2';
 import { SQLEditorToolbar } from '@/components/SQLEditor/SQLEditorToolbar';
 import { SQLEditorToolButton } from '@/components/SQLEditor/SQLEditorToolButton';
-// import { LogUtils } from '@/utils/logUtils';
 
 // codemirror basic styles
 import 'codemirror/lib/codemirror.css';
