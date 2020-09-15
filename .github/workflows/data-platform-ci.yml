@@ -32,5 +32,5 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: miotechoss/kun-data-platform
-          tags: test
+          tags: master
           path: kun-data-platform
