@@ -15,7 +15,7 @@ export interface LoggerExtraConfig {
   color?: string;
 }
 
-export class LogUtils {
+export default class LogUtils {
   protected static rootLogger = debug('kun');
 
   protected static initialized = false;

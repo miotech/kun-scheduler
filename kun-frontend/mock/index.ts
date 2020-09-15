@@ -4,6 +4,7 @@ import { MockDbUtil } from '../mock-commons/utils/mock-db-util';
 
 import dataDevelopmentMockAPIs from './data-development';
 import credentialMockAPIs from './credential';
+import monitoringDashboardMockAPIs from './monitoring-dashboard';
 
 const flakeId = new FlakeId({
   mid: 42,
@@ -24,4 +25,5 @@ Mock.Random.extend({
 export default {
   ...dataDevelopmentMockAPIs,
   ...credentialMockAPIs,
+  ...monitoringDashboardMockAPIs,
 };

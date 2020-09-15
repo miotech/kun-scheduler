@@ -1,0 +1,64 @@
+@color-healthy: #9bc655;
+@color-noticeable: @orange;
+@color-warning: @warning;
+
+.monitoring-ratio-card {
+  display: block;
+  position: relative;
+  background: @white;
+  border: 1px solid @borderColor;
+  border-radius: 2px;
+  font-family: @default-font-family;
+  font-stretch: normal;
+  font-style: normal;
+  letter-spacing: normal;
+  padding: 8px 12px;
+  height: 90px;
+
+  &__title {
+    line-height: 1.29;
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__tooltip-icon {
+    padding: 0 4px;
+  }
+
+  &__statistic {
+    position: absolute;
+    bottom: 0;
+    left: 12px;
+    font-weight: 600;
+    line-height: 36px;
+
+    &__numerator {
+      font-size: 32px;
+
+      &--healthy {
+        color: @color-healthy;
+      }
+      &--noticeable {
+        color: @color-noticeable;
+      }
+      &--warning {
+        color: @color-warning;
+      }
+    }
+
+    &__dash, &__denominator {
+      color: #262a2f;
+      font-size: 16px;
+    }
+  }
+
+  &__ratio-percentage {
+    position: absolute;
+    bottom: 0;
+    right: 12px;
+    line-height: 36px;
+
+    font-size: 20px;
+  }
+}

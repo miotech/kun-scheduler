@@ -17,6 +17,30 @@ export const appRoutes = [
         wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
       },
       {
+        title: 'common.pageTitle.monitoringDashboard',
+        path: '/monitoring-dashboard',
+        icon: 'LineChartOutlined',
+        menuDisplay: true,
+        showChildren: false,
+        breadcrumbLink: true,
+        permissions: ['DATA_DISCOVERY'],
+        routes: [
+          {
+            title: 'common.pageTitle.monitoringDashboard',
+            path: '.',
+            component: 'monitoring-dashboard/index',
+            exact: true,
+            breadcrumbLink: true,
+            permissions: ['DATA_DISCOVERY'],
+            wrappers: [
+              '@/wrappers/path',
+              '@/wrappers/isLogin',
+              '@/wrappers/permission',
+            ],
+          },
+        ],
+      },
+      {
         title: 'common.pageTitle.dataDiscovery',
         path: '/data-discovery',
         icon: 'FileTextOutlined',

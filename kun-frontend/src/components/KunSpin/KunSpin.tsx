@@ -1,6 +1,6 @@
 import React from 'react';
 import { Spin } from 'antd';
-import c from 'classnames';
+import c from 'clsx';
 import { SpinProps } from 'antd/es/spin';
 
 import './KunSpin.less';

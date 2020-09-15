@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import { CloseOutlined, ShrinkOutlined, ArrowsAltOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 

@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { getLocale, setLocale } from 'umi';
-import c from 'classnames';
+import c from 'clsx';
 import styles from './I18nSwitch.less';
 
 interface Props {

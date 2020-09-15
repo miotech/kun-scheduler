@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import styles from './TabButton.less';
 
 interface Props {
