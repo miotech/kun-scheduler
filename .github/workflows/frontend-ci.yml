@@ -26,5 +26,5 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: miotechoss/kun-frontend
-          tags: test
+          tags: master
           path: kun-frontend
