@@ -3,12 +3,12 @@ import fs from 'fs';
 import _ from 'lodash';
 import path from 'path';
 import yaml from 'js-yaml';
+import { DeployedTask } from '@/definitions/DeployedTask.type';
 import {
   wrapResponseData,
   wrapResponseDataWithPagination,
   wrapResponseError,
 } from '../../mock-commons/utils/wrap-response';
-import { DeployedTask } from '@/definitions/DeployedTask.type';
 import { DeployedTaskRunSchema } from './schemas/DeployedTaskRuns.schema';
 
 const mockDeployedTasks: DeployedTask[] = yaml.load(
@@ -39,8 +39,8 @@ export function mockFetchDeployedTaskDetail(req: Request, res: Response) {
  */
 export function mockFetchTaskRuns(req: Request, res: Response) {
   return res.json(wrapResponseDataWithPagination(DeployedTaskRunSchema.generateList(), {
-    pageNum: parseFloat(`${req.query.pageNum}`) || 1,
-    pageSize: parseFloat(`${req.query.pageSize}`) || 25,
+    pageNumber: Number(`${req.query.pageNum}`) || 1,
+    pageSize: Number(`${req.query.pageSize}`) || 25,
     totalCount: 100,
   }));
 }

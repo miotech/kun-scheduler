@@ -11,6 +11,7 @@ import {
   CalendarOutlined,
   ApartmentOutlined,
   ToolOutlined,
+  LineChartOutlined,
 } from '@ant-design/icons';
 import { RootState } from '@/rematch/store';
 import hasOptionalPermissions from '@/utils/hasOptionalPermissions';
@@ -32,6 +33,7 @@ const iconCompMap: IconCompMap = {
   CalendarOutlined: <CalendarOutlined />,
   ToolOutlined: <ToolOutlined />,
   ApartmentOutlined: <ApartmentOutlined />,
+  LineChartOutlined: <LineChartOutlined />,
 };
 
 interface Props {

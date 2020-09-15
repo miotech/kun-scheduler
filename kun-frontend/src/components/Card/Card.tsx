@@ -1,5 +1,5 @@
 import React from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import css from './Card.less';
 
 interface Props {
