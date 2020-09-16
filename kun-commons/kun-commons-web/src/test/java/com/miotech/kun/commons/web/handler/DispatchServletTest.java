@@ -166,7 +166,8 @@ public class DispatchServletTest extends GuiceTestBase {
         response = new MockHttpServletResponse();
         dispatchServlet.service(request, response);
         json = jsonSerializer.toObject(response.getContentAsString(), ObjectNode.class);
-        assertEquals("{\"code\":400,\"message\":\"Illegal argument error\"}",
+        json.remove("timestamp");
+        assertEquals("{\"message\":\"Illegal argument error\",\"error\":\"Internal Server Error\",\"status\":500,\"path\":\"/test/int\"}",
                 json.toString());
     }
 

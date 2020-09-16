@@ -1,6 +1,7 @@
 package com.miotech.kun.metadata.web.util;
 
 import com.google.common.collect.Lists;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;
@@ -26,19 +27,19 @@ public class RequestParameterBuilder {
                 .withClassName(WorkflowApiParam.CLASS_NAME).build();
     }
 
-    public static Task buildTaskForCreate(String taskName, Long operatorId, Properties properties) {
+    public static Task buildTaskForCreate(String taskName, Long operatorId, Props props) {
         Task.Builder taskBuilder = Task.newBuilder()
                 .withName(taskName)
                 .withDescription(StringUtils.EMPTY)
                 .withOperatorId(operatorId)
                 .withDependencies(Lists.newArrayList())
                 .withTags(Lists.newArrayList());
-        fillConfig(taskBuilder, taskName, properties);
+        fillConfig(taskBuilder, taskName, props);
         return taskBuilder.build();
     }
 
-    private static void fillConfig(Task.Builder taskBuilder, String taskName, Properties properties) {
-        Config config = buildConfigForCreate(taskName, properties);
+    private static void fillConfig(Task.Builder taskBuilder, String taskName, Props props) {
+        Config config = buildConfigForCreate(taskName, props);
         TaskParam taskParam = TaskParam.get(taskName);
         switch (taskParam) {
             case REFRESH:
@@ -47,7 +48,7 @@ public class RequestParameterBuilder {
                 break;
             case BUILD_ALL:
                 taskBuilder.withScheduleConf(ScheduleConf.ScheduleConfBuilder.aScheduleConf().withType(ScheduleType.SCHEDULED)
-                        .withCronExpr(properties.getProperty(PropKey.CRON_EXPR)).build());
+                        .withCronExpr(props.get(PropKey.CRON_EXPR)).build());
                 taskBuilder.withConfig(config);
                 break;
             default:
@@ -55,17 +56,17 @@ public class RequestParameterBuilder {
         }
     }
 
-    private static Config buildConfigForCreate(String taskName, Properties properties) {
+    private static Config buildConfigForCreate(String taskName, Props props) {
         TaskParam taskParam = TaskParam.get(taskName);
         switch (taskParam) {
             case REFRESH:
                 return Config.EMPTY;
             case BUILD_ALL:
                 Config.Builder confBuilder = Config.newBuilder();
-                confBuilder.addConfig(PropKey.JDBC_URL, properties.getProperty(PropKey.JDBC_URL));
-                confBuilder.addConfig(PropKey.USERNAME, properties.getProperty(PropKey.USERNAME));
-                confBuilder.addConfig(PropKey.PASSWORD, properties.getProperty(PropKey.PASSWORD));
-                confBuilder.addConfig(PropKey.DRIVER_CLASS_NAME, properties.getProperty(PropKey.DRIVER_CLASS_NAME));
+                confBuilder.addConfig(PropKey.JDBC_URL, props.get(PropKey.JDBC_URL));
+                confBuilder.addConfig(PropKey.USERNAME, props.get(PropKey.USERNAME));
+                confBuilder.addConfig(PropKey.PASSWORD, props.get(PropKey.PASSWORD));
+                confBuilder.addConfig(PropKey.DRIVER_CLASS_NAME, props.get(PropKey.DRIVER_CLASS_NAME));
                 confBuilder.addConfig(PropKey.DEPLOY_MODE, DataBuilderDeployMode.ALL.name());
                 return confBuilder.build();
             default:

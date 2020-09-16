@@ -8,6 +8,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.DatabaseSetup;
+import com.miotech.kun.commons.utils.Props;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -22,7 +23,6 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.Properties;
 
 public abstract class DatabaseTestBase extends GuiceTestBase {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseTestBase.class);
@@ -41,9 +41,9 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     @Before
     public void setUp() {
         // initialize database
-        Properties properties = new Properties();
-        properties.put("flyway.initSql", "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT");
-        DatabaseSetup setup = new DatabaseSetup(dataSource, properties, "sql/");
+        Props props = new Props();
+        props.put("flyway.initSql", "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT");
+        DatabaseSetup setup = new DatabaseSetup(dataSource, props, "sql/");
         setup.start();
     }
 

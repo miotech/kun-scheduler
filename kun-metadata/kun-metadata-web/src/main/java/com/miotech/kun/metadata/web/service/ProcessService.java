@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;
@@ -11,7 +12,6 @@ import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
 
 import java.util.Map;
-import java.util.Properties;
 
 @Singleton
 public class ProcessService {
@@ -20,10 +20,10 @@ public class ProcessService {
     private WorkflowClient workflowClient;
 
     @Inject
-    private Properties properties;
+    private Props props;
 
     public String submit(Long id, DataBuilderDeployMode deployMode) {
-        TaskRun taskRun = workflowClient.executeTask(Long.parseLong(properties.getProperty(TaskParam.REFRESH.getTaskKey())),
+        TaskRun taskRun = workflowClient.executeTask(props.getLong(TaskParam.REFRESH.getTaskKey()),
                 buildVariablesForTaskRun(deployMode, id.toString()));
         return taskRun.getId().toString();
     }
@@ -35,10 +35,10 @@ public class ProcessService {
 
     private Map<String, Object> buildVariablesForTaskRun(DataBuilderDeployMode deployMode, String id) {
         Map<String, Object> conf = Maps.newHashMap();
-        conf.put(PropKey.JDBC_URL, properties.getProperty(PropKey.JDBC_URL));
-        conf.put(PropKey.USERNAME, properties.getProperty(PropKey.USERNAME));
-        conf.put(PropKey.PASSWORD, properties.getProperty(PropKey.PASSWORD));
-        conf.put(PropKey.DRIVER_CLASS_NAME, properties.getProperty(PropKey.DRIVER_CLASS_NAME));
+        conf.put(PropKey.JDBC_URL, props.get(PropKey.JDBC_URL));
+        conf.put(PropKey.USERNAME, props.get(PropKey.USERNAME));
+        conf.put(PropKey.PASSWORD, props.get(PropKey.PASSWORD));
+        conf.put(PropKey.DRIVER_CLASS_NAME, props.get(PropKey.DRIVER_CLASS_NAME));
         conf.put(PropKey.DEPLOY_MODE, deployMode.name());
 
         switch (deployMode) {
