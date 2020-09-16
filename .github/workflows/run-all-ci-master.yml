@@ -3,7 +3,7 @@ name: RUN ALL CI ACTIONS
 on:
   push:
     paths:
-      - '.github/workflows/run-all-ci.yml'
+      - '.github/workflows/run-all-ci-master.yml'
     branches:
       - master
 

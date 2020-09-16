@@ -1,10 +1,12 @@
-name: METADATA CI ACTIONS
+name: DATA PLATFORM CI MASTER ACTIONS
 
 on:
   push:
     paths:
-      - 'kun-metadata/**'
+      - 'kun-data-platform/**'
+      - 'kun-app-common/**'
       - 'kun-commons/**'
+      - 'kun-security/**'
       - 'kun-workflow/kun-workflow-client/**'
       - 'kun-workflow/kun-workflow-core/**'
       - 'kun-workflow/kun-workflow-utils/**'
@@ -23,12 +25,12 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew kun-metadata:shadowJar
+        run: ./gradlew kun-data-platform:bootJar
       - name: Build and push Docker images
         uses: docker/build-push-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: miotechoss/kun-metadata
+          repository: miotechoss/kun-data-platform
           tags: master
-          path: kun-metadata
+          path: kun-data-platform
