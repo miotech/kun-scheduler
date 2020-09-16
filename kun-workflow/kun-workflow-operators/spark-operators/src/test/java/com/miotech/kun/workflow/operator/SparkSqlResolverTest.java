@@ -16,8 +16,6 @@ public class SparkSqlResolverTest {
 
     private SparkSqlResolver sparkSqlResolver = new SparkSqlResolver();
 
-
-
     @Test
     public void testSparkSqlParse() {
         //insert into
@@ -59,7 +57,5 @@ public class SparkSqlResolverTest {
         List<DataStore> upStream = sparkSqlResolver.resolveUpstreamDataStore(config);
         assertEquals(Arrays.asList(tableA),downStream);
         assertEquals(Arrays.asList(tableB,tableC),upStream);
-
     }
-
 }

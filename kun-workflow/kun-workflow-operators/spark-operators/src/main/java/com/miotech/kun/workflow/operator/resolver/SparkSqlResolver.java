@@ -8,26 +8,30 @@ import com.miotech.kun.workflow.operator.SparkConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class SparkSqlResolver extends SqlResolver implements Resolver {
 
-    private Logger logger = LoggerFactory.getLogger(SparkSqlResolver.class);
-
     @Override
     public List<DataStore> resolveUpstreamDataStore(Config config) {
-        return getDataStoreList(config,true);
+        return getDataStoreList(config,LineageDirection.UP_STREAM);
     }
 
     @Override
     public List<DataStore> resolveDownstreamDataStore(Config config) {
-        return getDataStoreList(config,false);
+        return getDataStoreList(config,LineageDirection.DOWN_STREAM);
     }
 
-    private List<DataStore> getDataStoreList(Config config,boolean isUpSteam){
+    private List<DataStore> getDataStoreList(Config config,LineageDirection direction){
         String sql = config.getString(SparkConfiguration.CONF_SPARK_SQL);
-        List<String> tableNameList = isUpSteam ? getUpStream(sql,"hive") : getDownStream(sql,"hive");
+        List<String> tableNameList = new ArrayList<>();
+        if(direction.equals(LineageDirection.UP_STREAM)){
+            tableNameList = getUpStream(sql,"hive");
+        }else if(direction.equals(LineageDirection.DOWN_STREAM)){
+            tableNameList = getDownStream(sql,"hive");
+        }
         String dataStoreUrl = config.getString(SparkConfiguration.CONF_SPARK_DATASTORE_URL);
         String dbName = config.getString(SparkConfiguration.CONF_SPARK_DEFAULT_DB);
         List<DataStore> dataStoreList = tableNameList.stream()
