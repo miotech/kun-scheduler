@@ -21,4 +21,4 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew kun-metadata:check
+        run: ./gradlew check -p kun-metadata
