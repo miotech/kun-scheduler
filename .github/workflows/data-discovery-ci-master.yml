@@ -1,10 +1,16 @@
-name: WORKFLOW CI ACTIONS
+name: DATA DISCOVERY CI MASTER ACTIONS
 
 on:
   push:
     paths:
-      - 'kun-workflow/**'
+      - 'kun-data-discovery/**'
+      - 'kun-app-common/**'
       - 'kun-commons/**'
+      - 'kun-data-quality/**'
+      - 'kun-security/**'
+      - 'kun-workflow/kun-workflow-client/**'
+      - 'kun-workflow/kun-workflow-core/**'
+      - 'kun-workflow/kun-workflow-utils/**'
     branches:
       - master
 
@@ -20,12 +26,12 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew kun-workflow:shadowJar
+        run: ./gradlew kun-data-discovery:bootJar
       - name: Build and push Docker images
         uses: docker/build-push-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
-          repository: miotechoss/kun-workflow
+          repository: miotechoss/kun-data-discovery
           tags: master
-          path: kun-workflow
+          path: kun-data-discovery
