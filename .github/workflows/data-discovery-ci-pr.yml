@@ -24,4 +24,4 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Check with Gradle
-        run: ./gradlew kun-data-discovery:check
+        run: ./gradlew check -p kun-data-discovery

@@ -19,4 +19,4 @@ jobs:
       - name: Yarn install with Gradle
         run: ./gradlew kun-frontend:yarn_install
       - name: Check with Gradle
-        run: ./gradlew kun-frontend:check
+        run: ./gradlew check -p kun-frontend
