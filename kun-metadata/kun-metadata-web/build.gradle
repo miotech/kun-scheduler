@@ -38,6 +38,7 @@ dependencies {
     implementation "org.jooq:joor-java-8"
     implementation "org.apache.dubbo:dubbo"
     implementation 'org.apache.dubbo:dubbo-registry-redis'
+    implementation "org.apache.commons:commons-pool2"
 
     testImplementation "junit:junit"
     testRuntimeOnly "org.mockito:mockito-core"
