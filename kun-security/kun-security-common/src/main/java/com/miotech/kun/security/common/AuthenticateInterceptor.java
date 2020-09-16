@@ -5,13 +5,11 @@ import com.miotech.kun.security.SecurityContextHolder;
 import com.miotech.kun.security.model.bo.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
@@ -47,9 +45,11 @@ public class AuthenticateInterceptor extends HandlerInterceptorAdapter {
 
     private boolean doAuthenticate(HttpServletRequest request) {
         StringJoiner cookieStrBuilder = new StringJoiner(";");
-        for (Cookie cookie : request.getCookies()) {
-            String cookieFullStr = cookie.getName() + "=" + cookie.getValue();
-            cookieStrBuilder.add(cookieFullStr);
+        if (request.getCookies() != null && request.getCookies().length != 0) {
+            for (Cookie cookie : request.getCookies()) {
+                String cookieFullStr = cookie.getName() + "=" + cookie.getValue();
+                cookieStrBuilder.add(cookieFullStr);
+            }
         }
         String passToken = request.getHeader(ConfigKey.REQUEST_PASS_TOKEN_KEY);
         if (StringUtils.isEmpty(passToken)) {
