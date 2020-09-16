@@ -5,6 +5,8 @@ import com.miotech.kun.commons.db.DatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.PropertyUtils;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.commons.web.KunWebServer;
 import com.miotech.kun.commons.web.constant.ConfigurationKeys;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
@@ -22,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Properties;
 
 public class KunWebServerTestBase extends GuiceTestBase {
 
@@ -32,12 +33,12 @@ public class KunWebServerTestBase extends GuiceTestBase {
     private KunWebServer webServer;
 
     @Inject
-    private Properties props;
+    private Props props;
 
     @Override
     protected void configuration() {
         super.configuration();
-        Properties props = PropertyUtils.loadAppProps("application-test.yaml");
+        Props props = PropsUtils.loadAppProps("application-test.yaml");
         addModules(new KunWebServerModule(props), new DatabaseModule(), new PackageScanModule());
     }
 
@@ -63,7 +64,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
     }
 
     private String buildUrl(String url) {
-        String port = props.getProperty(ConfigurationKeys.PROP_SERVER_PORT, "8088");
+        String port = props.getString(ConfigurationKeys.PROP_SERVER_PORT, "8088");
         if (!url.startsWith("/")) {
             url = "/" + url;
         }
