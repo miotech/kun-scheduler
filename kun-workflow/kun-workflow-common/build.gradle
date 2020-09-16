@@ -19,6 +19,9 @@ dependencies {
     implementation 'org.apache.dubbo:dubbo-registry-redis'
     implementation "org.neo4j:neo4j-ogm-core"
     runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16' // Only add if you're using the Bolt driver
+    implementation 'org.apache.commons:commons-pool2'
+    implementation 'com.alibaba:druid'
+
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")

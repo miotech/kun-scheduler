@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.DataStoreType;
 
+import java.util.Objects;
+
 public class HiveTableStore extends DataStore {
 
     private final String dataStoreUrl;
@@ -38,5 +40,20 @@ public class HiveTableStore extends DataStore {
     @Override
     public String getDatabaseName() {
         return getDatabase();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof HiveTableStore)) return false;
+        HiveTableStore that = (HiveTableStore) o;
+        return Objects.equals(getDataStoreUrl(), that.getDataStoreUrl()) &&
+                Objects.equals(getDatabase(), that.getDatabase()) &&
+                Objects.equals(getTable(), that.getTable());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getDataStoreUrl(), getDatabase(), getTable());
     }
 }
