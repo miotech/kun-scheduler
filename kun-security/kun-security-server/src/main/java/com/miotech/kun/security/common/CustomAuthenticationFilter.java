@@ -43,7 +43,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         if (authentication != null
                 && StringUtils.isNotEmpty(authentication.getName())
                 && !StringUtils.equals(authentication.getName(), "anonymousUser")) {
-            if (!StringUtils.equals(ConfigKey.DEFAULT_PASS_TOKEN_KEY, authentication.getName())) {
+            if (authentication.getClass().isAssignableFrom(UsernamePasswordAuthenticationToken.class)) {
                 String saveUsername = authentication.getName().toLowerCase();
                 UserInfo savedUser = abstractSecurityService.getOrSave(saveUsername);
                 newAuthentication = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(),
