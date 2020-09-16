@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.databuilder.schedule;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.ExceptionUtils;
@@ -33,6 +34,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -54,11 +56,17 @@ public class DataBuilder {
 
     private final Loader loader;
 
+    private Map<String, Long> latestStates = Maps.newConcurrentMap();
+
     @Inject
     public DataBuilder(DatabaseOperator operator) {
         this.scheduled = new AtomicBoolean(false);
         this.operator = operator;
         this.loader = new PostgresLoader(operator);
+    }
+
+    public Map<String, Long> getLatestStates() {
+        return latestStates;
     }
 
     public void buildAll() {
@@ -97,7 +105,7 @@ public class DataBuilder {
         Long datasourceId = operator.fetchOne("SELECT datasource_id FROM kun_mt_dataset WHERE gid = ?", rs -> rs.getLong(1), gid);
         Preconditions.checkNotNull(datasourceId, "Invalid param `gid`: " + gid + " No corresponding datasource found");
 
-        String sql = "SELECT kmd.gid, kmdst.name, kmds.connection_info, kmd.data_store FROM kun_mt_dataset kmd JOIN kun_mt_datasource kmds ON kmd.datasource_id = kmds.id JOIN kun_mt_datasource_type kmdst ON kmds.type_id = kmdst.id WHERE kmd.gid = ?";
+        String sql = "SELECT kmds.id, kmdst.name, kmds.connection_info, kmd.data_store, kmd.gid FROM kun_mt_dataset kmd JOIN kun_mt_datasource kmds ON kmd.datasource_id = kmds.id JOIN kun_mt_datasource_type kmdst ON kmds.type_id = kmdst.id WHERE kmd.gid = ?";
         DatasetConnDto datasetConnDto = operator.fetchOne(sql, this::buildDatasetConnDto, gid);
         build(datasetConnDto);
     }
@@ -154,6 +162,7 @@ public class DataBuilder {
 
     private DatasetConnDto buildDatasetConnDto(ResultSet resultSet) throws SQLException {
         DatasetConnDto.Builder datasetConnDtoBuilder = DatasetConnDto.newBuilder();
+        datasetConnDtoBuilder.withGid(resultSet.getLong(5));
 
         DataSource dataSource = generateDataSource(resultSet.getLong(1), resultSet.getString(2), resultSet.getString(3));
         datasetConnDtoBuilder.withDataSource(dataSource);
@@ -170,6 +179,7 @@ public class DataBuilder {
 
     private void build(DatasetConnDto datasetConnDto) {
         Preconditions.checkNotNull(datasetConnDto, "datasetConnDto should not be null.");
+        recordStates(datasetConnDto.getDataStore(), datasetConnDto.getGid());
         try {
             DataSource dataSource = datasetConnDto.getDataSource();
             DataStore dataStore = datasetConnDto.getDataStore();
@@ -205,6 +215,7 @@ public class DataBuilder {
 
             try {
                 loader.load(dataset);
+                mark(dataset);
             } catch (Exception e) {
                 logger.error("load error: ", e);
             }
@@ -213,8 +224,10 @@ public class DataBuilder {
         }
     }
 
+
     private void build(DataSource dataSource) {
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
+        recordStates(dataSource.getId());
         try {
             Iterator<Dataset> datasetIterator = null;
             if (dataSource instanceof AWSDataSource) {
@@ -235,6 +248,8 @@ public class DataBuilder {
                     try {
                         Dataset dataset = datasetIterator.next();
                         loader.load(dataset);
+
+                        mark(dataset);
                     } catch (Exception e) {
                         logger.error("etl next error: ", e);
                     }
@@ -254,4 +269,38 @@ public class DataBuilder {
         }
     }
 
+    private void recordStates(long datasourceId) {
+        operator.fetchAll("SELECT data_store, gid FROM kun_mt_dataset WHERE datasource_id = ?",
+                rs -> {
+                    try {
+                        latestStates.put(DataStoreJsonUtil.toJson(DataStoreJsonUtil.toDataStore(rs.getString(1))), rs.getLong(2));
+                    } catch (JsonProcessingException jsonProcessingException) {
+                        throw ExceptionUtils.wrapIfChecked(jsonProcessingException);
+                    }
+                    return null;
+                }, datasourceId);
+    }
+
+    private void recordStates(DataStore dataStore, long gid) {
+        try {
+            latestStates.put(DataStoreJsonUtil.toJson(dataStore), gid);
+        } catch (JsonProcessingException jsonProcessingException) {
+            throw ExceptionUtils.wrapIfChecked(jsonProcessingException);
+        }
+    }
+
+    private void mark(Dataset dataset) throws JsonProcessingException {
+        String dataStoreJson = DataStoreJsonUtil.toJson(dataset.getDataStore());
+        if (latestStates.containsKey(dataStoreJson)) {
+            latestStates.remove(dataStoreJson);
+        }
+    }
+
+    public void sweep() {
+        if (!latestStates.isEmpty()) {
+            logger.info("prepare to delete dataset: {}", JSONUtils.toJsonString(latestStates.values()));
+            Object[][] params = latestStates.values().stream().map(gid -> new Object[]{gid}).toArray(Object[][]::new);
+            operator.batch("DELETE FROM kun_mt_dataset WHERE gid = ?", params);
+        }
+    }
 }

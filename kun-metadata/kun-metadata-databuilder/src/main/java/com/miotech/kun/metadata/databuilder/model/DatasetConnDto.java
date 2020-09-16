@@ -4,13 +4,20 @@ import com.miotech.kun.workflow.core.model.lineage.DataStore;
 
 public class DatasetConnDto {
 
+    private final long gid;
+
     private final DataStore dataStore;
 
     private final DataSource dataSource;
 
-    public DatasetConnDto(DataStore dataStore, DataSource dataSource) {
+    public DatasetConnDto(long gid, DataStore dataStore, DataSource dataSource) {
+        this.gid = gid;
         this.dataStore = dataStore;
         this.dataSource = dataSource;
+    }
+
+    public long getGid() {
+        return gid;
     }
 
     public DataStore getDataStore() {
@@ -26,10 +33,16 @@ public class DatasetConnDto {
     }
 
     public static final class Builder {
+        private long gid;
         private DataStore dataStore;
         private DataSource dataSource;
 
         private Builder() {
+        }
+
+        public Builder withGid(long gid) {
+            this.gid = gid;
+            return this;
         }
 
         public Builder withDataStore(DataStore dataStore) {
@@ -43,7 +56,7 @@ public class DatasetConnDto {
         }
 
         public DatasetConnDto build() {
-            return new DatasetConnDto(dataStore, dataSource);
+            return new DatasetConnDto(gid, dataStore, dataSource);
         }
     }
 }
