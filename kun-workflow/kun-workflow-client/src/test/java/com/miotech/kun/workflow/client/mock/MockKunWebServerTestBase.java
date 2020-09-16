@@ -3,7 +3,8 @@ package com.miotech.kun.workflow.client.mock;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
-import com.miotech.kun.commons.utils.PropertyUtils;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
 import com.miotech.kun.workflow.web.KunWorkflowServerModule;
@@ -18,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.Properties;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -34,12 +34,12 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
     private KunWorkflowWebServer webServer;
 
     @Inject
-    private Properties props;
+    private Props props;
 
     @Override
     protected void configuration() {
         super.configuration();
-        Properties props = PropertyUtils.loadAppProps("application-test.yaml");
+        Props props = PropsUtils.loadAppProps("application-test.yaml");
         int port = 18080 + (new Random()).nextInt(100);
         logger.info("Start test workflow server in : localhost:{}", port);
         props.put(ConfigurationKeys.PROP_SERVER_PORT, Integer.toString(port));
@@ -60,7 +60,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
     }
 
     public String getBaseUrl() {
-        String port = props.getProperty(ConfigurationKeys.PROP_SERVER_PORT, "8088");
+        String port = props.getString(ConfigurationKeys.PROP_SERVER_PORT, "8088");
         return "http://localhost:" + port;
     }
 

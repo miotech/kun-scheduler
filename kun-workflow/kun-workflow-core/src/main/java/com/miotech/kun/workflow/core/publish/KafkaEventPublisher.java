@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.core.publish;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.event.Event;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
@@ -10,7 +11,6 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -23,8 +23,8 @@ public class KafkaEventPublisher implements EventPublisher {
     private Producer<String, String> producer;
     private String topic;
 
-    public KafkaEventPublisher(String topic, Properties props){
-        producer = new KafkaProducer<String, String>(props);
+    public KafkaEventPublisher(String topic, Props props){
+        producer = new KafkaProducer<String, String>(props.toProperties());
         this.topic = topic;
     }
 

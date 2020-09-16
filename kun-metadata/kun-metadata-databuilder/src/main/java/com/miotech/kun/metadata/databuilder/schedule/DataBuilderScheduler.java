@@ -4,11 +4,12 @@ import com.google.common.collect.Maps;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.PropertyUtils;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.commons.utils.PropsUtils;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.Map;
-import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 public class DataBuilderScheduler {
@@ -18,7 +19,7 @@ public class DataBuilderScheduler {
 
     public static void main(String[] args) {
         Map<String, String> paramMap = parseArgs(args);
-        Properties props = PropertyUtils.loadAppProps(String.format("application-%s.yaml", paramMap.getOrDefault("env", DEFAULT_ENV)));
+        Props props = PropsUtils.loadAppProps(String.format("application-%s.yaml", paramMap.getOrDefault("env", DEFAULT_ENV)));
 
         // load datasource
         Injector injector = Guice.createInjector(new DataSourceModule(props));
