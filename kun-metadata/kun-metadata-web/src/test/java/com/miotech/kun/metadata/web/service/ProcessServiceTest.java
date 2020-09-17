@@ -37,7 +37,7 @@ public class ProcessServiceTest {
 
     private Props initProperties() {
         Props props = new Props();
-        props.put(TaskParam.REFRESH.getTaskKey(), String.valueOf(System.currentTimeMillis()));
+        props.put(TaskParam.MANUAL.getTaskKey(), String.valueOf(System.currentTimeMillis()));
         return props;
     }
 
@@ -45,7 +45,7 @@ public class ProcessServiceTest {
     public void testSubmit() {
         Long taskRunId = random.nextLong();
 
-        Mockito.when(workflowClient.executeTask(eq(props.getLong(TaskParam.REFRESH.getTaskKey())), anyMap()))
+        Mockito.when(workflowClient.executeTask(eq(props.getLong(TaskParam.MANUAL.getTaskKey())), anyMap()))
                 .thenReturn(TaskRun.newBuilder().withId(taskRunId).build());
         String processId = processService.submit(taskRunId, DataBuilderDeployMode.DATASOURCE);
 

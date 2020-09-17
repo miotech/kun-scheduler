@@ -2,12 +2,13 @@ package com.miotech.kun.metadata.databuilder.extract.impl.postgres;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
-import com.miotech.kun.metadata.databuilder.extract.Extractor;
+import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
 import com.miotech.kun.metadata.databuilder.extract.tool.UseDatabaseUtil;
-import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.PostgresDataSource;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -19,13 +20,14 @@ import javax.sql.DataSource;
 import java.util.Iterator;
 import java.util.List;
 
-public class PostgresDatabaseExtractor implements Extractor {
+public class PostgresDatabaseExtractor extends AbstractExtractor {
     private static Logger logger = LoggerFactory.getLogger(PostgresDatabaseExtractor.class);
 
     private final PostgresDataSource dataSource;
     private final String database;
 
-    public PostgresDatabaseExtractor(PostgresDataSource dataSource, String database) {
+    public PostgresDatabaseExtractor(Props props, PostgresDataSource dataSource, String database) {
+        super(props);
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
         this.dataSource = dataSource;
         this.database = database;
@@ -48,7 +50,7 @@ public class PostgresDatabaseExtractor implements Extractor {
             if (logger.isDebugEnabled()) {
                 logger.debug("PostgresDatabaseExtractor extract end. schemas: {}", JSONUtils.toJsonString(schemas));
             }
-            return Iterators.concat(schemas.stream().map(schema -> new PostgresSchemaExtractor(dataSource, database, schema).extract()).iterator());
+            return Iterators.concat(schemas.stream().map(schema -> new PostgresSchemaExtractor(getProps(), dataSource, database, schema).extract()).iterator());
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         } finally {

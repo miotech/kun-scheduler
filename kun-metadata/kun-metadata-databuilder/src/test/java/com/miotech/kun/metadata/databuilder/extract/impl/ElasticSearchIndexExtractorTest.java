@@ -2,7 +2,9 @@ package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.metadata.databuilder.TestContainerUtil;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.TestContainerBuilder;
+import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticSearchIndexExtractor;
 import com.miotech.kun.metadata.databuilder.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
@@ -23,7 +25,7 @@ import static org.hamcrest.Matchers.notNullValue;
 public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
 
     @Inject
-    private TestContainerUtil containerUtil;
+    private TestContainerBuilder containerBuilder;
 
     private ElasticsearchContainer elasticsearchContainer;
 
@@ -34,7 +36,10 @@ public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
     @Before
     public void setUp() {
         super.setUp();
-        elasticsearchContainer = containerUtil.initEs();
+        elasticsearchContainer = containerBuilder.initEs();
+
+        Props props = new Props();
+        props.put(OperatorKey.EXTRACT_STATS, "false");
 
         ElasticSearchDataSource dataSource = ElasticSearchDataSource.newBuilder()
                 .withId(1L)
@@ -43,7 +48,7 @@ public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
                 .withPassword("changeme")
                 .build();
 
-        elasticSearchIndexExtractor = new ElasticSearchIndexExtractor(dataSource, index);
+        elasticSearchIndexExtractor = new ElasticSearchIndexExtractor(props, dataSource, index);
     }
 
     @After

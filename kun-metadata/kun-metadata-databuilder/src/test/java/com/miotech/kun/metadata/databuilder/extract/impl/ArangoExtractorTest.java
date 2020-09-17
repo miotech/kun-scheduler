@@ -2,7 +2,9 @@ package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.metadata.databuilder.TestContainerUtil;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.TestContainerBuilder;
+import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.databuilder.extract.impl.arango.ArangoExtractor;
 import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
 import com.miotech.kun.metadata.databuilder.model.Dataset;
@@ -20,7 +22,7 @@ import java.util.Iterator;
 public class ArangoExtractorTest extends DatabaseTestBase {
 
     @Inject
-    private TestContainerUtil containerUtil;
+    private TestContainerBuilder containerBuilder;
 
     private ArangoContainer arangoContainer;
 
@@ -29,9 +31,12 @@ public class ArangoExtractorTest extends DatabaseTestBase {
     @Before
     public void setUp() {
         super.setUp();
-        arangoContainer = containerUtil.initArango();
+        arangoContainer = containerBuilder.initArango();
 
-        arangoExtractor = new ArangoExtractor(ArangoDataSource.newBuilder()
+        Props props = new Props();
+        props.put(OperatorKey.EXTRACT_STATS, "false");
+
+        arangoExtractor = new ArangoExtractor(props, ArangoDataSource.newBuilder()
                 .withId(1L)
                 .withUrl(arangoContainer.getHost() + ":" + arangoContainer.getPort())
                 .withUsername(arangoContainer.getUser())

@@ -1,14 +1,15 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.hive;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
-import com.miotech.kun.metadata.databuilder.extract.template.JDBCStatTemplate;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
+import com.miotech.kun.metadata.databuilder.extract.template.JDBCStatTemplate;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
-import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
@@ -26,8 +27,8 @@ public class HiveTableExtractor extends ExtractorTemplate {
     private final DataSource metastoreDataSource;
     private final DataSource datastoreDataSource;
 
-    public HiveTableExtractor(HiveDataSource dataSource, String database, String table) {
-        super(dataSource.getId());
+    public HiveTableExtractor(Props props, HiveDataSource dataSource, String database, String table) {
+        super(props, dataSource.getId());
         this.database = database;
         this.table = table;
         this.dataSource = dataSource;

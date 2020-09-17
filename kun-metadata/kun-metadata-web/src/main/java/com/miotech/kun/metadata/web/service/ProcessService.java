@@ -23,7 +23,7 @@ public class ProcessService {
     private Props props;
 
     public String submit(Long id, DataBuilderDeployMode deployMode) {
-        TaskRun taskRun = workflowClient.executeTask(props.getLong(TaskParam.REFRESH.getTaskKey()),
+        TaskRun taskRun = workflowClient.executeTask(props.getLong(TaskParam.MANUAL.getTaskKey()),
                 buildVariablesForTaskRun(deployMode, id.toString()));
         return taskRun.getId().toString();
     }

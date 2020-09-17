@@ -2,8 +2,10 @@ package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.metadata.databuilder.TestContainerUtil;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.TestContainerBuilder;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
+import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.databuilder.extract.impl.mongo.MongoCollectionExtractor;
 import com.miotech.kun.metadata.databuilder.extract.tool.ConnectUrlUtil;
 import com.miotech.kun.metadata.databuilder.model.DatasetField;
@@ -23,7 +25,7 @@ import static org.hamcrest.Matchers.notNullValue;
 public class MongoCollectionExtractorTest extends DatabaseTestBase {
 
     @Inject
-    private TestContainerUtil containerUtil;
+    private TestContainerBuilder containerBuilder;
 
     private MongoDBContainer mongoDBContainer;
 
@@ -35,9 +37,11 @@ public class MongoCollectionExtractorTest extends DatabaseTestBase {
     @Before
     public void setUp() {
         super.setUp();
-        mongoDBContainer = containerUtil.initMongo();
+        mongoDBContainer = containerBuilder.initMongo();
 
-        mongoCollectionExtractor = new MongoCollectionExtractor(MongoDataSource.newBuilder()
+        Props props = new Props();
+        props.put(OperatorKey.EXTRACT_STATS, "false");
+        mongoCollectionExtractor = new MongoCollectionExtractor(props, MongoDataSource.newBuilder()
                 .withId(1L)
                 .withUrl(ConnectUrlUtil.convertToConnectUrl(
                         mongoDBContainer.getHost(), mongoDBContainer.getFirstMappedPort(), "", "", DatabaseType.MONGO))
