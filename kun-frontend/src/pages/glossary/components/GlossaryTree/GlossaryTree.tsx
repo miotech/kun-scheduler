@@ -112,6 +112,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             return d.data.id;
           });
 
+        // 根据横纵层级深得到偏移
         const getTransform = (depth, verticalIndex) => {
           const trX = (depth + 1) * marginWidth + depth * nodeWidth;
           const trY =
@@ -119,18 +120,22 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           return `translate(${trX}, ${trY})`;
         };
 
+        // 拿到源node的垂直层级
         const verticalIndex =
           sourceNode?.data?.verticalIndex ?? sourceNode.verticalIndex;
 
+        // 新添加的node
         const nodeEnter = node
           .enter()
           .append('g')
           .attr('title', d => d.data.name)
           .attr('class', 'node')
           .attr('transform', () => {
+            // 初始位置是展开源node位置
             return getTransform(sourceNode.depth, verticalIndex);
           });
 
+        // 添加glossary外层方块
         nodeEnter
           .append('rect')
           .attr('fill', 'rgba(224, 224, 224, 0.2)')
@@ -145,17 +150,20 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             if (d.data.id !== 'root') {
               const canNode = d3.select(this);
 
+              // 添加点击事件
               canNode.attr('class', styles.nodeText).on('click', n => {
                 history.push(`/data-discovery/glossary/${n.data.id}`);
               });
             }
           });
 
+        // 添加glossary图标
         nodeEnter
           .append('image')
           .attr('xlink:href', glossarySvg)
           .attr('class', styles.glossaryIcon);
 
+        // 添加文字 (过长需要截断)
         const textnode = nodeEnter
           .append('g')
           .attr('clip-path', 'url(#text-clip)')
@@ -167,6 +175,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           .attr('font-size', 14)
           .attr('fill', '#526079');
 
+        // 添加跳转链接
         textnode.each(function textfunc(d) {
           if (d.data.id !== 'root') {
             const canNode = d3.select(this);
@@ -177,10 +186,13 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           }
         });
 
+        // 如果截断了, 需要在title中能hover出来
         nodeEnter.append('title').text(d => d.data.name);
 
+        // 添加加减按钮
         nodeEnter.each(addButton);
 
+        // 动画挪动到自己应该在的位置
         svgContent
           .selectAll('g.node')
           .transition()
@@ -193,6 +205,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             return `translate(${trX}, ${trY})`;
           });
 
+        // 折叠了的, 先回到源节点的位置, 然后再删除掉
         node
           .exit()
           .transition()
@@ -207,12 +220,14 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           })
           .remove();
 
+        // 处理连线
         const link = svgContent
           .selectAll('path.linkPath')
           .data(root.links(), d => {
             return d.target.data.id;
           });
 
+        // 首先, 新加的连线需要在源节点位置
         link
           .enter()
           .insert('path', 'g')
@@ -236,6 +251,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           })
           .attr('class', 'linkPath');
 
+        // 动画从源节点挪动到应该在的位置
         svgContent
           .selectAll('path.linkPath')
           .transition()
@@ -275,6 +291,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             `;
           });
 
+        // 删除的连线
         link
           .exit()
           .transition()
@@ -297,6 +314,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           .remove();
       }
 
+      // 添加加减号按钮
       function addPlusMinusIcon(node, operate) {
         const buttonG = node
           .append('g')
@@ -339,6 +357,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
         }
       }
 
+      // 点击加减号事件
       function click(d) {
         const thisNode = d3.select(this);
         thisNode.selectAll(`rect`).remove();
