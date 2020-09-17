@@ -2,8 +2,10 @@ package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.metadata.databuilder.TestContainerUtil;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.TestContainerBuilder;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
+import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.databuilder.extract.impl.postgres.PostgresExtractor;
 import com.miotech.kun.metadata.databuilder.extract.tool.ConnectUrlUtil;
 import com.miotech.kun.metadata.databuilder.model.Dataset;
@@ -20,7 +22,7 @@ import java.util.Iterator;
 public class PostgresExtractorTest extends DatabaseTestBase {
 
     @Inject
-    private TestContainerUtil containerUtil;
+    private TestContainerBuilder containerBuilder;
 
     private PostgreSQLContainer postgreSQLContainer;
 
@@ -29,9 +31,12 @@ public class PostgresExtractorTest extends DatabaseTestBase {
     @Before
     public void setUp() {
         super.setUp();
-        postgreSQLContainer = containerUtil.initPostgres();
+        postgreSQLContainer = containerBuilder.initPostgres();
 
-        postgresExtractor = new PostgresExtractor(PostgresDataSource.newBuilder()
+        Props props = new Props();
+        props.put(OperatorKey.EXTRACT_STATS, "false");
+
+        postgresExtractor = new PostgresExtractor(props, PostgresDataSource.newBuilder()
                 .withId(1L)
                 .withUrl(ConnectUrlUtil.convertToConnectUrl(postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort(),
                         postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword(), DatabaseType.POSTGRES))

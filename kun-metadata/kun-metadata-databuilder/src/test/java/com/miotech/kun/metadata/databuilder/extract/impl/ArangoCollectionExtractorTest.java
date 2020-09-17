@@ -2,7 +2,9 @@ package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.metadata.databuilder.TestContainerUtil;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.TestContainerBuilder;
+import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.databuilder.extract.impl.arango.ArangoCollectionExtractor;
 import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
 import com.miotech.kun.metadata.databuilder.model.DatasetField;
@@ -24,7 +26,7 @@ import static org.hamcrest.Matchers.notNullValue;
 public class ArangoCollectionExtractorTest extends DatabaseTestBase {
 
     @Inject
-    private TestContainerUtil containerUtil;
+    private TestContainerBuilder containerBuilder;
 
     private ArangoContainer arangoContainer;
 
@@ -36,9 +38,12 @@ public class ArangoCollectionExtractorTest extends DatabaseTestBase {
     @Before
     public void setUp() {
         super.setUp();
-        arangoContainer = containerUtil.initArango();
+        arangoContainer = containerBuilder.initArango();
 
-        arangoCollectionExtractor = new ArangoCollectionExtractor(ArangoDataSource.newBuilder()
+        Props props = new Props();
+        props.put(OperatorKey.EXTRACT_STATS, "false");
+
+        arangoCollectionExtractor = new ArangoCollectionExtractor(props, ArangoDataSource.newBuilder()
                 .withId(1L)
                 .withUrl(arangoContainer.getHost() + ":" + arangoContainer.getPort())
                 .withUsername(arangoContainer.getUser())
