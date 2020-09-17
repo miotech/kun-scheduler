@@ -4,6 +4,8 @@ import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
 import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.MongoDataSource;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
@@ -16,13 +18,15 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
-public class MongoExtractor implements Extractor {
+public class MongoExtractor extends AbstractExtractor {
     private static Logger logger = LoggerFactory.getLogger(MongoExtractor.class);
 
     private final MongoDataSource dataSource;
 
-    public MongoExtractor(MongoDataSource dataSource) {
+    public MongoExtractor(Props props, MongoDataSource dataSource) {
+        super(props);
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
         this.dataSource = dataSource;
     }
@@ -43,7 +47,7 @@ public class MongoExtractor implements Extractor {
             if (logger.isDebugEnabled()) {
                 logger.debug("MongoExtractor extract end. databases: {}", JSONUtils.toJsonString(databases));
             }
-            return Iterators.concat(databases.stream().map(database -> new MongoDatabaseExtractor(dataSource, database).extract()).iterator());
+            return Iterators.concat(databases.stream().map(database -> new MongoDatabaseExtractor(getProps(), dataSource, database).extract()).iterator());
         } catch (Exception e) {
             logger.error("MongoExtractor extract error: ", e);
             throw ExceptionUtils.wrapIfChecked(e);

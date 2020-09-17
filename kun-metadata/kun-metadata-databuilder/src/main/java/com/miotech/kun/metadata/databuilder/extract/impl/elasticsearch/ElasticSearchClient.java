@@ -19,8 +19,8 @@ import java.io.IOException;
 public class ElasticSearchClient {
     private static Logger logger = LoggerFactory.getLogger(ElasticSearchClient.class);
 
-    private RestHighLevelClient highLevelClient;
-    private RestClient lowLevelClient;
+    private final RestHighLevelClient highLevelClient;
+    private final RestClient lowLevelClient;
 
     public ElasticSearchClient(ElasticSearchDataSource dataSource) {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();

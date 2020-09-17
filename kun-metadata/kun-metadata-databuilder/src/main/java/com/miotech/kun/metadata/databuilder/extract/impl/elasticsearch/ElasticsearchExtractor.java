@@ -2,27 +2,36 @@ package com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch;
 
 import com.google.common.collect.Iterators;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
+import com.miotech.kun.metadata.databuilder.extract.impl.glue.GlueExtractor;
 import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.ElasticSearchDataSource;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
  * Elastic Search Extractor
  */
-public class ElasticsearchExtractor implements Extractor {
+public class ElasticsearchExtractor extends AbstractExtractor {
+    private static final Logger logger = LoggerFactory.getLogger(ElasticsearchExtractor.class);
+
     private ElasticSearchDataSource dataSource;
     private ElasticSearchClient client;
 
-    public ElasticsearchExtractor(ElasticSearchDataSource dataSource){
+    public ElasticsearchExtractor(Props props, ElasticSearchDataSource dataSource) {
+        super(props);
         this.dataSource = dataSource;
         this.client = new ElasticSearchClient(dataSource);
     }
@@ -30,16 +39,16 @@ public class ElasticsearchExtractor implements Extractor {
     @Override
     public Iterator<Dataset> extract() {
         try {
-            Request request = new Request("GET","_alias");
+            Request request = new Request("GET", "_alias");
             Response response = client.performRequest(request);
-            String json = EntityUtils.toString(response.getEntity());
-            Map<String, Object> indexMap = JSONUtils.jsonStringToMap(json);
+
+            Map<String, Object> indexMap = JSONUtils.jsonStringToMap(EntityUtils.toString(response.getEntity()));
             Set<String> indices = indexMap.keySet().stream()
                     .filter(index -> !index.startsWith("."))
                     .collect(Collectors.toSet());
 
             return Iterators.concat(indices.stream().map(index ->
-                    new ElasticSearchIndexExtractor(dataSource, index).extract()).iterator());
+                    new ElasticSearchIndexExtractor(getProps(), dataSource, index).extract()).iterator());
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         } finally {

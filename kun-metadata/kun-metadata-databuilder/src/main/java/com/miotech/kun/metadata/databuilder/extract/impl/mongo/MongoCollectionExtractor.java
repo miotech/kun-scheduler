@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.extract.tool.FieldFlatUtil;
 import com.miotech.kun.metadata.databuilder.model.DatasetField;
@@ -35,8 +36,8 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
 
     private final String collection;
 
-    public MongoCollectionExtractor(MongoDataSource dataSource, String database, String collection) {
-        super(dataSource.getId());
+    public MongoCollectionExtractor(Props props, MongoDataSource dataSource, String database, String collection) {
+        super(props, dataSource.getId());
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
         this.dataSource = dataSource;
         this.database = database;

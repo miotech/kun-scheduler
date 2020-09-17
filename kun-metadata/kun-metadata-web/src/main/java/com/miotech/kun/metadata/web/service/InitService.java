@@ -3,7 +3,7 @@ package com.miotech.kun.metadata.web.service;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.metadata.web.constant.OperatorParam;
+import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.constant.WorkflowApiParam;
 import com.miotech.kun.metadata.web.util.RequestParameterBuilder;
@@ -26,8 +26,8 @@ public class InitService {
     private Props props;
 
     public void initDataBuilder() {
-        checkOperator(WorkflowApiParam.OPERATOR_NAME_REFRESH, WorkflowApiParam.OPERATOR_NAME_BUILD_ALL);
-        checkTask(WorkflowApiParam.TASK_NAME_REFRESH, WorkflowApiParam.TASK_NAME_BUILD_ALL);
+        checkOperator(WorkflowApiParam.DATA_BUILDER_OPERATOR);
+        checkTask(WorkflowApiParam.DATA_BUILDER_TASK_MANUAL, WorkflowApiParam.DATA_BUILDER_TASK_AUTO);
         uploadJar();
     }
 
@@ -45,19 +45,24 @@ public class InitService {
 
     private void createOperator(String operatorName) {
         Operator operatorOfCreated = workflowClient.saveOperator(operatorName, RequestParameterBuilder.buildOperatorForCreate(operatorName));
-        setProp(OperatorParam.get(operatorName).getOperatorKey(), operatorOfCreated.getId().toString());
+        setProp(PropKey.OPERATOR_ID, operatorOfCreated.getId().toString());
     }
 
     private void createTask(String taskName) {
         Task taskOfCreated = workflowClient.createTask(RequestParameterBuilder.buildTaskForCreate(taskName,
-                props.getLong(TaskParam.get(taskName).getOperatorKey()), props));
+                props.getLong(PropKey.OPERATOR_ID), props));
         setProp(TaskParam.get(taskName).getTaskKey(), taskOfCreated.getId().toString());
     }
 
     private void checkOperator(String... operatorNames) {
         for (String operatorName : operatorNames) {
-            createOperator(operatorName);
-            logger.info("Check Operator " + operatorName + "Success");
+            Optional<Operator> operatorOpt = findOperatorByName(operatorName);
+            if (operatorOpt.isPresent()) {
+                props.put(PropKey.OPERATOR_ID, operatorOpt.get().getId().toString());
+            } else {
+                createOperator(operatorName);
+                logger.info("Create Operator: {} Success", operatorName);
+            }
         }
     }
 
@@ -68,7 +73,7 @@ public class InitService {
                 props.put(TaskParam.get(taskName).getTaskKey(), taskOpt.get().getId().toString());
             } else {
                 createTask(taskName);
-                logger.info("Create Task Success");
+                logger.info("Create Task: {} Success", taskName);
             }
         }
     }

@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.client.GlueClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.impl.arango.ArangoCollectionExtractor;
@@ -58,11 +59,14 @@ public class DataBuilder {
 
     private Map<String, Long> latestStates = Maps.newConcurrentMap();
 
+    private final Props props;
+
     @Inject
-    public DataBuilder(DatabaseOperator operator) {
+    public DataBuilder(DatabaseOperator operator, Props props) {
         this.scheduled = new AtomicBoolean(false);
         this.operator = operator;
         this.loader = new PostgresLoader(operator);
+        this.props = props;
     }
 
     public Map<String, Long> getLatestStates() {
@@ -187,27 +191,28 @@ public class DataBuilder {
             if (dataSource instanceof AWSDataSource) {
                 AWSDataSource awsDataSource = (AWSDataSource) dataSource;
                 HiveTableStore hiveTableStore = (HiveTableStore) dataStore;
-                dataset = new GlueTableExtractor(awsDataSource, GlueClient.searchTable(awsDataSource, hiveTableStore.getDatabase(), hiveTableStore.getTable())).extract().next();
+                dataset = new GlueTableExtractor(props, awsDataSource, GlueClient.searchTable(awsDataSource,
+                        hiveTableStore.getDatabase(), hiveTableStore.getTable())).extract().next();
             } else if (dataSource instanceof PostgresDataSource) {
                 PostgresDataSource pgDataSource = (PostgresDataSource) dataSource;
                 PostgresDataStore pgDataStore = (PostgresDataStore) dataStore;
-                dataset = new PostgresTableExtractor(pgDataSource,
+                dataset = new PostgresTableExtractor(props, pgDataSource,
                         pgDataStore.getDatabase(),
                         pgDataStore.getSchema(),
                         pgDataStore.getTableName()
                 ).extract().next();
             } else if (dataSource instanceof MongoDataSource) {
-                dataset = new MongoCollectionExtractor(((MongoDataSource) dataSource),
+                dataset = new MongoCollectionExtractor(props, ((MongoDataSource) dataSource),
                         ((MongoDataStore) dataStore).getDatabase(),
                         ((MongoDataStore) dataStore).getCollection()
                 ).extract().next();
             } else if (dataSource instanceof ElasticSearchDataSource) {
                 ElasticSearchDataSource elasticSearchDataSource = (ElasticSearchDataSource) dataSource;
-                dataset = new ElasticSearchIndexExtractor(elasticSearchDataSource,
+                dataset = new ElasticSearchIndexExtractor(props, elasticSearchDataSource,
                         ((ElasticSearchIndexStore) dataStore).getIndex()
                 ).extract().next();
             } else if (dataSource instanceof ArangoDataSource) {
-                dataset = new ArangoCollectionExtractor(((ArangoDataSource) dataSource),
+                dataset = new ArangoCollectionExtractor(props, ((ArangoDataSource) dataSource),
                         ((ArangoCollectionStore) dataStore).getDatabase(),
                         ((ArangoCollectionStore) dataStore).getCollection()
                 ).extract().next();
@@ -231,16 +236,16 @@ public class DataBuilder {
         try {
             Iterator<Dataset> datasetIterator = null;
             if (dataSource instanceof AWSDataSource) {
-                datasetIterator = new GlueExtractor((AWSDataSource) dataSource).extract();
+                datasetIterator = new GlueExtractor(props, (AWSDataSource) dataSource).extract();
             } else if (dataSource instanceof PostgresDataSource) {
-                datasetIterator = new PostgresExtractor((PostgresDataSource) dataSource).extract();
+                datasetIterator = new PostgresExtractor(props, (PostgresDataSource) dataSource).extract();
             } else if (dataSource instanceof MongoDataSource) {
-                datasetIterator = new MongoExtractor((MongoDataSource) dataSource).extract();
+                datasetIterator = new MongoExtractor(props, (MongoDataSource) dataSource).extract();
             } else if (dataSource instanceof ElasticSearchDataSource) {
                 ElasticSearchDataSource elasticSearchDataSource = (ElasticSearchDataSource) dataSource;
-                datasetIterator = new ElasticsearchExtractor(elasticSearchDataSource).extract();
+                datasetIterator = new ElasticsearchExtractor(props, elasticSearchDataSource).extract();
             } else if (dataSource instanceof ArangoDataSource) {
-                datasetIterator = new ArangoExtractor((ArangoDataSource) dataSource).extract();
+                datasetIterator = new ArangoExtractor(props, (ArangoDataSource) dataSource).extract();
             }
 
             if (datasetIterator != null) {
@@ -290,6 +295,10 @@ public class DataBuilder {
     }
 
     private void mark(Dataset dataset) throws JsonProcessingException {
+        if (dataset.getDataStore() == null) {
+            return;
+        }
+
         String dataStoreJson = DataStoreJsonUtil.toJson(dataset.getDataStore());
         if (latestStates.containsKey(dataStoreJson)) {
             latestStates.remove(dataStoreJson);

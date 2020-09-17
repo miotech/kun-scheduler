@@ -1,6 +1,8 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.postgres;
 
 import com.google.common.base.Preconditions;
+import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
@@ -9,7 +11,6 @@ import com.miotech.kun.metadata.databuilder.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.PostgresDataStore;
-import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
@@ -29,8 +30,8 @@ public class PostgresTableExtractor extends ExtractorTemplate {
     private final DatabaseOperator dbOperator;
     private final DataSource pgDataSource;
 
-    public PostgresTableExtractor(PostgresDataSource dataSource, String database, String schema, String table) {
-        super(dataSource.getId());
+    public PostgresTableExtractor(Props props, PostgresDataSource dataSource, String database, String schema, String table) {
+        super(props, dataSource.getId());
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
         this.dataSource = dataSource;
         this.database = database;
