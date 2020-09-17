@@ -1,11 +1,13 @@
-package com.miotech.kun.metadata.databuilder.extract.impl.glue;
+package com.miotech.kun.metadata.databuilder.extract.template;
 
-import com.miotech.kun.metadata.databuilder.client.JDBCClient;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.impl.hive.HiveTableExtractor;
 import com.miotech.kun.metadata.databuilder.extract.tool.DatabaseIdentifierProcessor;
-import com.miotech.kun.metadata.databuilder.model.*;
-import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.metadata.databuilder.model.DatasetField;
+import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
+import com.miotech.kun.metadata.databuilder.model.DatasetFieldType;
+import com.miotech.kun.metadata.databuilder.model.DatasetStat;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,22 +15,24 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.time.LocalDateTime;
 
-public class JDBCStatService {
+public class JDBCStatTemplate {
     private static Logger logger = LoggerFactory.getLogger(HiveTableExtractor.class);
 
     private final String database;
     private final String table;
     private final String tableNameWithIdentifier;
     private final DatabaseType databaseType;
+    private final DatabaseOperator dbOperator;
 
-    public JDBCStatService(String database, String table, DatabaseType databaseType) {
+    public JDBCStatTemplate(String database, String table, DatabaseType databaseType, DataSource dataSource) {
         this.database = DatabaseIdentifierProcessor.escape(database, databaseType);
         this.table = table;
         this.databaseType = databaseType;
         this.tableNameWithIdentifier = DatabaseIdentifierProcessor.escape(table, databaseType);
+        this.dbOperator = new DatabaseOperator(dataSource);
     }
 
-    public DatasetFieldStat getFieldStats(DatasetField datasetField, QueryEngine queryEngine) {
+    public DatasetFieldStat getFieldStats(DatasetField datasetField) {
         if (logger.isDebugEnabled()) {
             logger.debug("HiveTableExtractor getFieldStats start. database: {}, table: {}, datasetField: {}", database,
                     table, JSONUtils.toJsonString(datasetField));
@@ -44,9 +48,6 @@ public class JDBCStatService {
 
         /* reference: https://docs.aws.amazon.com/zh_cn/athena/latest/ug/tables-databases-columns-names.html */
         String fieldName = DatabaseIdentifierProcessor.escape(datasetField.getName(), databaseType);
-
-        DataSource dataSource = buildDataSource(databaseType, queryEngine);
-        DatabaseOperator dbOperator = new DatabaseOperator(dataSource);
         String distinctCountSql = String.format("SELECT COUNT(*) FROM (SELECT %s FROM %s.%s GROUP BY %s) t1",
                 fieldName, database, tableNameWithIdentifier, fieldName);
 
@@ -67,7 +68,7 @@ public class JDBCStatService {
         return fieldStatBuilder.build();
     }
 
-    public DatasetStat getTableStats(QueryEngine queryEngine) {
+    public DatasetStat getTableStats() {
         if (logger.isDebugEnabled()) {
             logger.debug("HiveTableExtractor getFieldStats start. database: {}, table: {}", database, table);
         }
@@ -75,8 +76,6 @@ public class JDBCStatService {
         DatasetStat.Builder datasetStatBuilder = DatasetStat.newBuilder();
         datasetStatBuilder.withStatDate(LocalDateTime.now());
 
-        DataSource dataSource = buildDataSource(databaseType, queryEngine);
-        DatabaseOperator dbOperator = new DatabaseOperator(dataSource);
         String rowCountSql = String.format("SELECT COUNT(*) FROM %s.%s", database, tableNameWithIdentifier);
         datasetStatBuilder.withRowCount(dbOperator.fetchOne(rowCountSql, rs -> rs.getLong(1)));
 
@@ -85,11 +84,6 @@ public class JDBCStatService {
                     JSONUtils.toJsonString(datasetStatBuilder.build()));
         }
         return datasetStatBuilder.build();
-    }
-
-    private DataSource buildDataSource(DatabaseType databaseType, QueryEngine queryEngine) {
-        String[] connInfos = QueryEngine.parseConnInfos(queryEngine);
-        return JDBCClient.getDataSource(connInfos[0], connInfos[1], connInfos[2], databaseType);
     }
 
     private boolean isIgnored(DatasetFieldType.Type type) {

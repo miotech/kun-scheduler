@@ -6,6 +6,7 @@ import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.model.ConfigurableDataSource;
 import com.miotech.kun.metadata.databuilder.model.Dataset;
+import com.miotech.kun.metadata.databuilder.model.HiveDataSource;
 import com.miotech.kun.metadata.databuilder.model.MetaStoreCatalog;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
 import com.miotech.kun.commons.db.DatabaseOperator;
@@ -20,11 +21,11 @@ import java.util.List;
 public class HiveDatabaseExtractor implements Extractor {
     private static Logger logger = LoggerFactory.getLogger(HiveDatabaseExtractor.class);
 
-    private final ConfigurableDataSource dataSource;
+    private final HiveDataSource dataSource;
 
     private final String database;
 
-    public HiveDatabaseExtractor(ConfigurableDataSource dataSource, String database) {
+    public HiveDatabaseExtractor(HiveDataSource dataSource, String database) {
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
         this.dataSource = dataSource;
         this.database = database;
@@ -46,9 +47,8 @@ public class HiveDatabaseExtractor implements Extractor {
     }
 
     private List<String> extractTablesOnMySQL(String database) {
-        MetaStoreCatalog catalog = (MetaStoreCatalog) dataSource.getCatalog();
-        DataSource dataSourceOfMySQL = JDBCClient.getDataSource(catalog.getUrl(), catalog.getUsername(),
-                catalog.getPassword(), DatabaseType.MYSQL);
+        DataSource dataSourceOfMySQL = JDBCClient.getDataSource(dataSource.getMetastoreUrl(), dataSource.getMetastoreUsername(),
+                dataSource.getMetastorePassword(), DatabaseType.MYSQL);
         DatabaseOperator dbOperator = new DatabaseOperator(dataSourceOfMySQL);
         String showTables = "SELECT t.TBL_NAME FROM TBLS t JOIN DBS d ON t.DB_ID = d.DB_ID where d.NAME = ? AND d.CTLG_NAME = 'hive'";
         return dbOperator.fetchAll(showTables, rs -> rs.getString(1), database);
