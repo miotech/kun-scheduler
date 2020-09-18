@@ -14,8 +14,7 @@
       "@@/*": ["src/.umi/*"]
     },
     "noUnusedLocals": true,
-    "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true
+    "experimentalDecorators": true
   },
   "include": [
     "mock-commons/**/*",
@@ -26,7 +25,5 @@
     "typings.d.ts",
     "src/definitions/index.d.ts"
   ],
-  "exclude": [
-    "src/.umi/**/*"
-  ]
+  "exclude": ["src/.umi/**/*"]
 }

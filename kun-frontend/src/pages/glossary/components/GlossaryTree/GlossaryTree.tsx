@@ -7,6 +7,7 @@ import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 
 import { GlossaryNode } from '@/rematch/models/glossary';
 import useRedux from '@/hooks/useRedux';
+import moveArrayItem from '@/utils/moveArrayItem';
 
 import glossarySvg from './glossary.svg';
 import minus from './minus.svg';
@@ -79,7 +80,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
 
       update(data);
 
-      function update(sourceNode) {
+      function update(sourceNode, needDuration = true) {
         let i = 0;
         let lastDepth = 0;
         // 储存每个层级循环到当前的 verticalIndex, 用于计算垂直高度
@@ -117,6 +118,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           const trX = (depth + 1) * marginWidth + depth * nodeWidth;
           const trY =
             (verticalIndex + 1) * marginHeight + verticalIndex * nodeHeight;
+
           return `translate(${trX}, ${trY})`;
         };
 
@@ -134,6 +136,101 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             // 初始位置是展开源node位置
             return getTransform(sourceNode.depth, verticalIndex);
           });
+
+        // 拖拽方法
+        const drag = d3
+          .drag()
+          .on('start', function dragFunc(d) {
+            if (d.data.id === 'root' || !d.parent) {
+              return;
+            }
+            d.data.oldX = d.data.trX;
+            d.data.oldY = d.data.trY;
+          })
+          .on('drag', function dragFunc(d) {
+            if (d.data.id === 'root' || !d.parent) {
+              return;
+            }
+            const toX = d.data.trX;
+            const toY = d3.event.dy + d.data.trY;
+            d.data.trX = toX;
+            d.data.trY = toY;
+            d3.select(this).attr('transform', `translate(${toX}, ${toY})`);
+          })
+          .on('end', function dragFunc(d) {
+            if (d.data.id === 'root' || !d.parent) {
+              // d.data.trX = d.data.oldX;
+              // d.data.trY = d.data.oldY;
+              // d3.select(this)
+              //   .transition()
+              //   .duration(100)
+              //   .attr('transform', `translate(${d.data.oldX}, ${d.data.oldY})`);
+              return;
+            }
+            const brothers = d.parent.data.children;
+            if (brothers && brothers.length > 1) {
+              const oldIndex = brothers.findIndex(
+                item => item.id === d.data.id,
+              );
+              let shouldIndex;
+              for (
+                let brotherIndex = 0;
+                brotherIndex < brothers.length;
+                brotherIndex += 1
+              ) {
+                const brother = brothers[brotherIndex];
+
+                if (d.data.trY > d.data.oldY) {
+                  if (brotherIndex !== brothers.length - 1) {
+                    if (
+                      d.data.id !== brother.id &&
+                      d.data.trY > brother.trY &&
+                      d.data.trY < brothers[brotherIndex + 1].trY
+                    ) {
+                      shouldIndex = brotherIndex;
+                    }
+                  } else if (
+                    d.data.id !== brother.id &&
+                    d.data.trY > brother.trY
+                  ) {
+                    shouldIndex = brotherIndex;
+                  }
+                } else if (brotherIndex !== 0) {
+                  if (
+                    d.data.id !== brother.id &&
+                    d.data.trY < brother.trY &&
+                    d.data.trY > brothers[brotherIndex - 1].trY
+                  ) {
+                    shouldIndex = brotherIndex;
+                  }
+                } else if (
+                  d.data.id !== brother.id &&
+                  d.data.trY < brother.trY
+                ) {
+                  shouldIndex = brotherIndex;
+                }
+              }
+              if (shouldIndex || shouldIndex === 0) {
+                const newBrothers = moveArrayItem(
+                  brothers,
+                  oldIndex,
+                  shouldIndex,
+                );
+
+                d.parent.data.children = newBrothers;
+              }
+              update(d.parent);
+            } else {
+              d.data.trX = d.data.oldX;
+              d.data.trY = d.data.oldY;
+              d3.select(this)
+                .transition()
+                .duration(100)
+                .attr('transform', `translate(${d.data.oldX}, ${d.data.oldY})`);
+            }
+          });
+
+        nodeEnter.call(drag);
 
         // 添加glossary外层方块
         nodeEnter
@@ -196,12 +293,14 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
         svgContent
           .selectAll('g.node')
           .transition()
-          .duration(duration)
+          .duration(needDuration ? duration : 0)
           .attr('transform', d => {
             const trX = (d.depth + 1) * marginWidth + d.depth * nodeWidth;
             const trY =
               (d.verticalIndex + 1) * marginHeight +
               d.verticalIndex * nodeHeight;
+            d.data.trX = trX;
+            d.data.trY = trY;
             return `translate(${trX}, ${trY})`;
           });
 
@@ -209,7 +308,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
         node
           .exit()
           .transition()
-          .duration(duration)
+          .duration(needDuration ? duration : 0)
           .attr('transform', () => {
             const trX =
               (sourceNode.depth + 1) * marginWidth +
@@ -255,7 +354,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
         svgContent
           .selectAll('path.linkPath')
           .transition()
-          .duration(duration)
+          .duration(needDuration ? duration : 0)
           .attr('d', d => {
             let M1;
             let M2;
@@ -295,7 +394,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
         link
           .exit()
           .transition()
-          .duration(duration)
+          .duration(needDuration ? duration : 0)
           .attr('d', () => {
             const M1 =
               (sourceNode.depth + 1) * nodeWidth +
