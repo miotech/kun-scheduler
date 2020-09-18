@@ -2,10 +2,8 @@ package com.miotech.kun.workflow.operator;
 
 import com.google.common.collect.ImmutableMap;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.execution.ConfigDef;
-import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import io.fabric8.kubernetes.api.model.*;
@@ -184,7 +182,8 @@ public class KubernetesOperator extends KunOperator {
 
     @Override
     public Resolver getResolver() {
-        return null;
+        // TODO: implement this
+        return new NopResolver();
     }
 
     private PodTemplateSpec createPodSpec(String namespace,

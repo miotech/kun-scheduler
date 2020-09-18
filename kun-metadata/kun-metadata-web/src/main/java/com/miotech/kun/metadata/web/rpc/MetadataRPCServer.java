@@ -50,7 +50,8 @@ public class MetadataRPCServer {
         return config;
     }
 
-    public void run() {
+    @Inject
+    public void init() {
         // Check preconditions
         Preconditions.checkNotNull(metadataServiceFacadeImpl, "Inject failed: metadataServiceFacadeImpl is null");
         // load config & boot up

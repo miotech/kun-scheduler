@@ -5,10 +5,7 @@ import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
-import com.miotech.kun.workflow.core.execution.ConfigDef;
-import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.OperatorContext;
-import com.miotech.kun.workflow.core.execution.Resolver;
+import com.miotech.kun.workflow.core.execution.*;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +90,7 @@ public class DataBuilderOperator extends KunOperator {
     @Override
     public Resolver getResolver() {
         // TODO: implement this
-        return null;
+        return new NopResolver();
     }
 
     @Override

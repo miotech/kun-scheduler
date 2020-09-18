@@ -37,8 +37,7 @@ dependencies {
     implementation "org.flywaydb:flyway-core"
     implementation "org.jooq:joor-java-8"
     implementation "org.apache.dubbo:dubbo"
-    implementation "org.apache.commons:commons-pool2"
-    implementation "redis.clients:jedis"
+    implementation 'org.apache.dubbo:dubbo-registry-redis'
 
     testImplementation "junit:junit"
     testRuntimeOnly "org.mockito:mockito-core"

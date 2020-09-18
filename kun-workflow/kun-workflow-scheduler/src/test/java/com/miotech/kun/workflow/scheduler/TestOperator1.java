@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.scheduler;
 
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.execution.NopResolver;
 import com.miotech.kun.workflow.core.execution.Resolver;
 
 public class TestOperator1 extends KunOperator {
@@ -21,7 +22,7 @@ public class TestOperator1 extends KunOperator {
     @Override
     public Resolver getResolver() {
         // TODO: implement this
-        return null;
+        return new NopResolver();
     }
 
     @Override

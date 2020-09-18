@@ -5,10 +5,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.workflow.core.execution.ConfigDef;
-import com.miotech.kun.workflow.core.execution.OperatorContext;
-import com.miotech.kun.workflow.core.execution.Resolver;
-import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
+import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
@@ -178,7 +175,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
     @Override
     public Resolver getResolver() {
         // TODO: implement this
-        return null;
+        return new NopResolver();
     }
 
     public void lineageAnalysis(OperatorContext context, String applicationId){

@@ -16,12 +16,11 @@ dependencies {
     implementation "com.cronutils:cron-utils"
     implementation 'commons-fileupload:commons-fileupload'
     implementation 'org.apache.dubbo:dubbo'
-    implementation 'org.apache.commons:commons-pool2'
-    implementation 'redis.clients:jedis'
+    implementation 'org.apache.dubbo:dubbo-registry-redis'
 
-    testImplementation "org.testcontainers:neo4j:1.14.3"
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")
+    testImplementation "org.testcontainers:neo4j"
     testRuntimeOnly "com.h2database:h2"
     testRuntimeOnly "org.neo4j:neo4j-ogm-embedded-driver:3.2.14"
 }

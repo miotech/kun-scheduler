@@ -107,7 +107,7 @@ public class DataQualityOperator extends KunOperator {
     @Override
     public Resolver getResolver() {
         // TODO: implement this
-        return null;
+        return new NopResolver();
     }
 
     private boolean doRun() {
