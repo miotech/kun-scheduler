@@ -23,8 +23,8 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import java.io.IOException;
 
 @Singleton
-public class TestContainerUtil {
-    private final Logger logger = LoggerFactory.getLogger(TestContainerUtil.class);
+public class TestContainerBuilder {
+    private final Logger logger = LoggerFactory.getLogger(TestContainerBuilder.class);
 
     private static final String MONGO_IMAGE = "mongo:4.2";
     private static final String POSTGRES_IMAGE = "postgres:12.3";
@@ -38,7 +38,7 @@ public class TestContainerUtil {
     private DatabaseOperator dbOperator;
 
     @Inject
-    public TestContainerUtil(DatabaseOperator dbOperator) {
+    public TestContainerBuilder(DatabaseOperator dbOperator) {
         this.dbOperator = dbOperator;
     }
 

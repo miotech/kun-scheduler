@@ -7,6 +7,7 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.utils.HttpClientUtil;
 import com.miotech.kun.metadata.databuilder.exception.ElasticSearchServiceUnavailableException;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
@@ -38,8 +39,8 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
     private HttpClientUtil httpClientUtil;
 
     @Inject
-    public ElasticSearchIndexExtractor(ElasticSearchDataSource dataSource, String index) {
-        super(dataSource.getId());
+    public ElasticSearchIndexExtractor(Props props, ElasticSearchDataSource dataSource, String index) {
+        super(props, dataSource.getId());
         this.index = index;
         this.dataSource = dataSource;
         this.client = new ElasticSearchClient(dataSource);

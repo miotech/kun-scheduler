@@ -3,9 +3,10 @@ package com.miotech.kun.metadata.databuilder.extract.impl.hive;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
-import com.miotech.kun.metadata.databuilder.extract.Extractor;
+import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
 import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.HiveDataSource;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -16,12 +17,13 @@ import javax.sql.DataSource;
 import java.util.Iterator;
 import java.util.List;
 
-public class HiveExtractor implements Extractor {
+public class HiveExtractor extends AbstractExtractor {
     private static Logger logger = LoggerFactory.getLogger(HiveExtractor.class);
 
     private final HiveDataSource dataSource;
 
-    public HiveExtractor(HiveDataSource dataSource) {
+    public HiveExtractor(Props props, HiveDataSource dataSource) {
+        super(props);
         Preconditions.checkNotNull(dataSource, "dataSource should not be null.");
         this.dataSource = dataSource;
     }
@@ -36,7 +38,7 @@ public class HiveExtractor implements Extractor {
         if (logger.isDebugEnabled()) {
             logger.debug("HiveExtractor extract end. databases: {}", JSONUtils.toJsonString(databases));
         }
-        return Iterators.concat(databases.stream().map(databasesName -> new HiveDatabaseExtractor(dataSource, databasesName).extract()).iterator());
+        return Iterators.concat(databases.stream().map(databasesName -> new HiveDatabaseExtractor(getProps(), dataSource, databasesName).extract()).iterator());
     }
 
     private List<String> extractDatabasesOnMySQL() {

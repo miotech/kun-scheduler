@@ -2,7 +2,9 @@ package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.metadata.databuilder.TestContainerUtil;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.TestContainerBuilder;
+import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticSearchIndexExtractor;
 import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.ElasticSearchDataSource;
@@ -18,7 +20,7 @@ import java.util.Iterator;
 public class ElasticsearchExtractorTest extends DatabaseTestBase {
 
     @Inject
-    private TestContainerUtil containerUtil;
+    private TestContainerBuilder containerBuilder;
 
     private ElasticsearchContainer elasticsearchContainer;
 
@@ -27,7 +29,10 @@ public class ElasticsearchExtractorTest extends DatabaseTestBase {
     @Before
     public void setUp() {
         super.setUp();
-        elasticsearchContainer = containerUtil.initEs();
+        elasticsearchContainer = containerBuilder.initEs();
+
+        Props props = new Props();
+        props.put(OperatorKey.EXTRACT_STATS, "false");
 
         ElasticSearchDataSource dataSource = ElasticSearchDataSource.newBuilder()
                 .withId(1L)
@@ -36,7 +41,7 @@ public class ElasticsearchExtractorTest extends DatabaseTestBase {
                 .withPassword("changeme")
                 .build();
 
-        elasticsearchExtractor = new ElasticSearchIndexExtractor(dataSource, "test_index");
+        elasticsearchExtractor = new ElasticSearchIndexExtractor(props, dataSource, "test_index");
     }
 
     @After

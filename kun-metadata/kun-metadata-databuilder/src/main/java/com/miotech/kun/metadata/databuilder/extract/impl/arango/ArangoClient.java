@@ -16,11 +16,11 @@ public class ArangoClient {
     private ArangoDB client;
     private static Logger logger = LoggerFactory.getLogger(ArangoClient.class);
 
-    public ArangoClient(ArangoDataSource cluster){
+    public ArangoClient(ArangoDataSource dataSource){
         this.client = new ArangoDB.Builder()
-                .host(cluster.getUrl().split(":")[0], Integer.parseInt(cluster.getUrl().split(":")[1]))
-                .user(cluster.getUsername())
-                .password(cluster.getPassword())
+                .host(dataSource.getUrl().split(":")[0], Integer.parseInt(dataSource.getUrl().split(":")[1]))
+                .user(dataSource.getUsername())
+                .password(dataSource.getPassword())
                 .build();
     }
 
