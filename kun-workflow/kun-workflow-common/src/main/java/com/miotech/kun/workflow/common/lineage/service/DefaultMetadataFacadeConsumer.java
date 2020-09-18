@@ -34,14 +34,4 @@ public class DefaultMetadataFacadeConsumer implements MetadataFacade {
         Dataset ds = metadataService.getDatasetByDatastore(dataStore);
         return Optional.ofNullable(ds);
     }
-
-    public String ping() {
-        init();
-        return metadataService.ping("Are you ok?");
-    }
-
-    public static void main(String[] args) {
-        DefaultMetadataFacadeConsumer consumer = new DefaultMetadataFacadeConsumer();
-        System.out.println(consumer.ping());
-    }
 }

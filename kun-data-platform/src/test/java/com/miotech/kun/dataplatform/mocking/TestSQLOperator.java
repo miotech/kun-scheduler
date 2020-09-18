@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.mocking;
 
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.execution.NopResolver;
 import com.miotech.kun.workflow.core.execution.Resolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,6 @@ public class TestSQLOperator extends KunOperator {
 
     @Override
     public Resolver getResolver() {
-        return null;
+        return new NopResolver();
     }
 }

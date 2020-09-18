@@ -1,13 +1,17 @@
-package com.miotech.kun.workflow.executor.mock;
+package com.miotech.kun.workflow.core.execution;
 
 import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.execution.Resolver;
+import com.miotech.kun.workflow.core.annotation.Internal;
 
 import java.util.LinkedList;
 import java.util.List;
 
-public class TestOperatorResolver implements Resolver {
+/**
+ * A resolver that always resolves empty upstream and downstream. Internal use only.
+ * DO NOT USE IT IN ANY OPERATOR CLASSES IN PRODUCTION.
+ */
+@Internal
+public class NopResolver implements Resolver {
     @Override
     public List<DataStore> resolveUpstreamDataStore(Config config) {
         return new LinkedList<>();
