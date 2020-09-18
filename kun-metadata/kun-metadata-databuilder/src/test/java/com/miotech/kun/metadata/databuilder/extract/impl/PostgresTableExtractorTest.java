@@ -1,11 +1,12 @@
 package com.miotech.kun.metadata.databuilder.extract.impl;
 
 import com.google.inject.Inject;
-import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.metadata.databuilder.TestContainerUtil;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.TestContainerBuilder;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
+import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.databuilder.extract.impl.postgres.PostgresTableExtractor;
 import com.miotech.kun.metadata.databuilder.extract.tool.ConnectUrlUtil;
 import com.miotech.kun.metadata.databuilder.extract.tool.UseDatabaseUtil;
@@ -28,7 +29,7 @@ import static org.hamcrest.Matchers.notNullValue;
 public class PostgresTableExtractorTest extends DatabaseTestBase {
 
     @Inject
-    private TestContainerUtil containerUtil;
+    private TestContainerBuilder containerBuilder;
 
     private PostgreSQLContainer postgreSQLContainer;
 
@@ -39,14 +40,17 @@ public class PostgresTableExtractorTest extends DatabaseTestBase {
     @Before
     public void setUp() {
         super.setUp();
-        postgreSQLContainer = containerUtil.initPostgres();
+        postgreSQLContainer = containerBuilder.initPostgres();
+
+        Props props = new Props();
+        props.put(OperatorKey.EXTRACT_STATS, "false");
 
         DataSource pgDataSource = JDBCClient.getDataSource(UseDatabaseUtil.useSchema(
                 ConnectUrlUtil.convertToConnectUrl(postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort(),
                         postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword(), DatabaseType.POSTGRES),
                 "test", "public"), postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword(), DatabaseType.POSTGRES);
 
-        postgresTableExtractor = new PostgresTableExtractor(PostgresDataSource.newBuilder()
+        postgresTableExtractor = new PostgresTableExtractor(props, PostgresDataSource.newBuilder()
                 .withId(1L)
                 .withUrl(ConnectUrlUtil.convertToConnectUrl(postgreSQLContainer.getHost(), postgreSQLContainer.getFirstMappedPort(),
                         postgreSQLContainer.getUsername(), postgreSQLContainer.getPassword(), DatabaseType.POSTGRES))

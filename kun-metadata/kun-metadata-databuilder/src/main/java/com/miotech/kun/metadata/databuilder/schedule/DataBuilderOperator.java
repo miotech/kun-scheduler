@@ -14,15 +14,11 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 
+import static com.miotech.kun.metadata.databuilder.constant.OperatorKey.*;
+
 public class DataBuilderOperator extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(DataBuilderOperator.class);
     private OperatorContext operatorContext;
-    private static final String DEPLOY_MODE = "deploy-mode";
-    private static final String DATASOURCE_ID = "datasourceId";
-    private static final String DATASOURCE_JDBC_URL = "datasource.jdbcUrl";
-    private static final String DATASOURCE_USERNAME = "datasource.username";
-    private static final String DATASOURCE_PASSWORD = "datasource.password";
-    private static final String DATASOURCE_DRIVER_CLASS_NAME = "datasource.driverClassName";
 
     @Override
     public void init() {
@@ -35,7 +31,7 @@ public class DataBuilderOperator extends KunOperator {
         try {
             Props props = buildPropsFromVariable();
 
-            Injector injector = Guice.createInjector(new DataSourceModule(props));
+            Injector injector = Guice.createInjector(new DataSourceModule(props), new PropertiesModule(props));
             dataSource = injector.getInstance(DataSource.class);
             DataBuilder dataBuilder = injector.getInstance(DataBuilder.class);
 
@@ -67,7 +63,6 @@ public class DataBuilderOperator extends KunOperator {
                 ((HikariDataSource) dataSource).close();
             }
         }
-
     }
 
     private Props buildPropsFromVariable() {
@@ -76,7 +71,7 @@ public class DataBuilderOperator extends KunOperator {
         props.put(DATASOURCE_USERNAME, operatorContext.getConfig().getString(DATASOURCE_USERNAME));
         props.put(DATASOURCE_PASSWORD, operatorContext.getConfig().getString(DATASOURCE_PASSWORD));
         props.put(DATASOURCE_DRIVER_CLASS_NAME, operatorContext.getConfig().getString(DATASOURCE_DRIVER_CLASS_NAME));
-
+        props.put(EXTRACT_STATS, operatorContext.getConfig().getBoolean(EXTRACT_STATS).toString());
         return props;
     }
 
@@ -89,7 +84,8 @@ public class DataBuilderOperator extends KunOperator {
         configDef.define(DATASOURCE_DRIVER_CLASS_NAME, ConfigDef.Type.STRING, true, "driverClassName", "driverClassName");
         configDef.define(DEPLOY_MODE, ConfigDef.Type.STRING, true, DEPLOY_MODE, DEPLOY_MODE);
         configDef.define(DATASOURCE_ID, ConfigDef.Type.STRING, "", true, DATASOURCE_ID, DATASOURCE_ID);
-        configDef.define("gid", ConfigDef.Type.STRING, "", true, "gid", "gid");
+        configDef.define(GID, ConfigDef.Type.STRING, "", true, GID, GID);
+        configDef.define(EXTRACT_STATS, ConfigDef.Type.BOOLEAN, false, true, EXTRACT_STATS, EXTRACT_STATS);
         return configDef;
     }
 

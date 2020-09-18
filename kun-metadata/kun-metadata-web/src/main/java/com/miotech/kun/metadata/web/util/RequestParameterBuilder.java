@@ -13,8 +13,6 @@ import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Properties;
-
 public class RequestParameterBuilder {
 
     private RequestParameterBuilder() {
@@ -42,11 +40,11 @@ public class RequestParameterBuilder {
         Config config = buildConfigForCreate(taskName, props);
         TaskParam taskParam = TaskParam.get(taskName);
         switch (taskParam) {
-            case REFRESH:
+            case MANUAL:
                 taskBuilder.withScheduleConf(ScheduleConf.ScheduleConfBuilder.aScheduleConf().withType(ScheduleType.NONE).build());
                 taskBuilder.withConfig(config);
                 break;
-            case BUILD_ALL:
+            case AUTO:
                 taskBuilder.withScheduleConf(ScheduleConf.ScheduleConfBuilder.aScheduleConf().withType(ScheduleType.SCHEDULED)
                         .withCronExpr(props.get(PropKey.CRON_EXPR)).build());
                 taskBuilder.withConfig(config);
@@ -58,16 +56,18 @@ public class RequestParameterBuilder {
 
     private static Config buildConfigForCreate(String taskName, Props props) {
         TaskParam taskParam = TaskParam.get(taskName);
+        Config.Builder confBuilder = Config.newBuilder();
         switch (taskParam) {
-            case REFRESH:
-                return Config.EMPTY;
-            case BUILD_ALL:
-                Config.Builder confBuilder = Config.newBuilder();
-                confBuilder.addConfig(PropKey.JDBC_URL, props.get(PropKey.JDBC_URL));
-                confBuilder.addConfig(PropKey.USERNAME, props.get(PropKey.USERNAME));
-                confBuilder.addConfig(PropKey.PASSWORD, props.get(PropKey.PASSWORD));
-                confBuilder.addConfig(PropKey.DRIVER_CLASS_NAME, props.get(PropKey.DRIVER_CLASS_NAME));
+            case MANUAL:
+                confBuilder.addConfig(PropKey.EXTRACT_STATS, true);
+                return confBuilder.build();
+            case AUTO:
+                confBuilder.addConfig(PropKey.JDBC_URL, props.getString(PropKey.JDBC_URL));
+                confBuilder.addConfig(PropKey.USERNAME, props.getString(PropKey.USERNAME));
+                confBuilder.addConfig(PropKey.PASSWORD, props.getString(PropKey.PASSWORD));
+                confBuilder.addConfig(PropKey.DRIVER_CLASS_NAME, props.getString(PropKey.DRIVER_CLASS_NAME));
                 confBuilder.addConfig(PropKey.DEPLOY_MODE, DataBuilderDeployMode.ALL.name());
+                confBuilder.addConfig(PropKey.EXTRACT_STATS, false);
                 return confBuilder.build();
             default:
                 throw new IllegalArgumentException("Invalid taskName:" + taskName);
