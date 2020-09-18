@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.databuilder.extract.impl.glue;
 import com.amazonaws.services.glue.model.Column;
 import com.amazonaws.services.glue.model.Table;
 import com.beust.jcommander.internal.Lists;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
@@ -22,16 +23,17 @@ public class GlueTableExtractor extends ExtractorTemplate {
 
     private static final Logger logger = LoggerFactory.getLogger(GlueTableExtractor.class);
 
-    private final Table table;
     private final AWSDataSource dataSource;
     private final DataSource athenaDataSource;
 
-    public GlueTableExtractor(AWSDataSource dataSource, Table table) {
-        super(dataSource.getId());
-        this.table = table;
+    private final Table table;
+
+    public GlueTableExtractor(Props props, AWSDataSource dataSource, Table table) {
+        super(props, dataSource.getId());
         this.dataSource = dataSource;
         this.athenaDataSource = JDBCClient.getDataSource(dataSource.getAthenaUrl(), dataSource.getAthenaUsername(),
                 dataSource.getAthenaPassword(), DatabaseType.ATHENA);
+        this.table = table;
     }
 
     @Override

@@ -4,6 +4,7 @@ import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.extract.template.ExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore;
@@ -25,10 +26,10 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
     private String collection;
     private ArangoClient client;
 
-    public ArangoCollectionExtractor(ArangoDataSource dataSource, String dbNAme, String collection) {
-        super(dataSource.getId());
+    public ArangoCollectionExtractor(Props props, ArangoDataSource dataSource, String dbName, String collection) {
+        super(props, dataSource.getId());
         this.dataSource = dataSource;
-        this.dbName = dbNAme;
+        this.dbName = dbName;
         this.collection = collection;
         this.client = new ArangoClient(dataSource);
     }

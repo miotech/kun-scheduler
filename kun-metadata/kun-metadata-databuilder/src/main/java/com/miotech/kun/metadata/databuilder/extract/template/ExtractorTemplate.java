@@ -2,7 +2,9 @@ package com.miotech.kun.metadata.databuilder.extract.template;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Iterators;
-import com.miotech.kun.metadata.databuilder.extract.Extractor;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
+import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
 import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
@@ -16,12 +18,13 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class ExtractorTemplate implements Extractor {
+public abstract class ExtractorTemplate extends AbstractExtractor {
     private static final Logger logger = LoggerFactory.getLogger(ExtractorTemplate.class);
 
     private final long datasourceId;
 
-    public ExtractorTemplate(long datasourceId) {
+    public ExtractorTemplate(Props props, long datasourceId) {
+        super(props);
         this.datasourceId = datasourceId;
     }
 
@@ -42,14 +45,16 @@ public abstract class ExtractorTemplate implements Extractor {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
 
         try {
+            boolean extractStats = getProps().getBoolean(OperatorKey.EXTRACT_STATS);
+
             List<DatasetField> fields = getSchema();
             if (logger.isDebugEnabled()) {
                 logger.debug("ExtractorTemplate extract getSchema: {}", JSONUtils.toJsonString(fields));
             }
 
             List<DatasetFieldStat> fieldStats = Lists.newArrayList();
-
-            if (fields != null) {
+            DatasetStat tableStat = null;
+            if (extractStats) {
                 for (DatasetField datasetField : fields) {
                     DatasetFieldStat fieldStat = getFieldStats(datasetField);
                     if (logger.isDebugEnabled()) {
@@ -60,9 +65,9 @@ public abstract class ExtractorTemplate implements Extractor {
                         fieldStats.add(fieldStat);
                     }
                 }
+                tableStat = getTableStats();
             }
 
-            DatasetStat tableStat = getTableStats();
             if (logger.isDebugEnabled()) {
                 logger.debug("ExtractorTemplate extract getTableStats: {}", JSONUtils.toJsonString(tableStat));
             }
