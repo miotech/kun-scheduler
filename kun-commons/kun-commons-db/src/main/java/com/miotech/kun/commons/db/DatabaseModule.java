@@ -10,6 +10,7 @@ import org.neo4j.ogm.config.Configuration;
 import org.neo4j.ogm.session.SessionFactory;
 
 import javax.sql.DataSource;
+import java.util.Properties;
 
 public class DatabaseModule extends AbstractModule {
     public static final String[] NEO4J_DOMAIN_CLASSES = {

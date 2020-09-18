@@ -32,8 +32,6 @@ public class URI implements Serializable, Comparable<Object> {
 
     private static final Long serialVersionUID = -202008209738796512L;
 
-    private static final String regexStr = "^(?:[A-Za-z][A-Za-z0-9+.-]*:\\/{2})?(?:(?:[A-Za-z0-9-._~]|%[A-Fa-f0-9]{2})+(?::([A-Za-z0-9-._~]?|[%][A-Fa-f0-9]{2})+)?@)?(?:[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?\\\\.){1,126}[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?::[0-9]+)?(?:\\/(?:[A-Za-z0-9-._~]|%[A-Fa-f0-9]{2})*)*(?:\\\\?(?:[A-Za-z0-9-._~]+(?:=(?:[A-Za-z0-9-._~+]|%[A-Fa-f0-9]{2})+)?)(?:&|;[A-Za-z0-9-._~]+(?:=(?:[A-Za-z0-9-._~+]|%[A-Fa-f0-9]{2})+)?)*)?$";
-
     /**
      * Internal representation of a URI compatible to RFC 3986
      */
@@ -94,7 +92,8 @@ public class URI implements Serializable, Comparable<Object> {
             return "";
         }
         StringBuilder sb = new StringBuilder();
-        if (getScheme().isPresent() && getScheme().get().equals("urn")) {
+        Optional<String> schemeOptional = getScheme();
+        if (schemeOptional.isPresent() && schemeOptional.get().equals("urn")) {
             internalUri.path().forEach(p -> {
                 sb.append(":");
                 sb.append(p.toString());
@@ -126,6 +125,6 @@ public class URI implements Serializable, Comparable<Object> {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(this);
+        return Objects.hash(string);
     }
 }

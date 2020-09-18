@@ -1,10 +1,7 @@
 package com.miotech.kun.workflow.operator;
 
 import com.miotech.kun.commons.utils.StringUtils;
-import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.execution.ConfigDef;
-import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.Resolver;
+import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,6 +94,6 @@ public class BashOperator extends KunOperator {
     @Override
     public Resolver getResolver() {
         // TODO: implement this
-        return null;
+        return new NopResolver();
     }
 }
