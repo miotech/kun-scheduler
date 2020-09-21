@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.metadata.core.common.URI;
 import com.miotech.kun.metadata.core.model.DataStore;
 
 import static com.miotech.kun.metadata.core.model.DataStoreType.ARANGO_COLLECTION;
@@ -40,10 +39,5 @@ public class ArangoCollectionStore extends DataStore {
     @Override
     public String getDatabaseName() {
         return getDatabase();
-    }
-
-    @Override
-    public URI getURI() {
-        return URI.from(dataStoreUrl + "/" + database + "?collection=" + collection);
     }
 }
