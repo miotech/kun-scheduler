@@ -44,7 +44,7 @@ public class Application {
                 new WorkflowClientModule(props)
         );
 
-        injector.getInstance(MetadataRPCServer.class).init();
+        injector.getInstance(MetadataRPCServer.class).init(props);
         injector.getInstance(Application.class).start();
         injector.getInstance(KunWebServer.class).start();
     }
