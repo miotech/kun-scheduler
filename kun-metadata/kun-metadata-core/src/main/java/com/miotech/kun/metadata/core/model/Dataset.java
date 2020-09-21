@@ -7,7 +7,7 @@ import java.util.List;
 
 public class Dataset {
 
-    private final Long gid;
+    private Long gid;
 
     private final Long datasourceId;
 
@@ -22,6 +22,8 @@ public class Dataset {
     private final DatasetStat datasetStat;
 
     public Long getGid() { return gid; }
+
+    public void setGid(long gid) { this.gid = gid; }
 
     public Long getDatasourceId() {
         return datasourceId;
@@ -53,8 +55,7 @@ public class Dataset {
         return dataStore.getDatabaseName();
     }
 
-    public Dataset(Long gid, Long datasourceId, String name, DataStore dataStore, List<DatasetField> fields, List<DatasetFieldStat> fieldStats, DatasetStat datasetStat) {
-        this.gid = gid;
+    public Dataset(Long datasourceId, String name, DataStore dataStore, List<DatasetField> fields, List<DatasetFieldStat> fieldStats, DatasetStat datasetStat) {
         this.datasourceId = datasourceId;
         this.name = name;
         this.dataStore = dataStore;
@@ -69,7 +70,6 @@ public class Dataset {
 
     public Builder cloneBuilder() {
         return newBuilder()
-                .withGid(gid)
                 .withName(name)
                 .withDataStore(dataStore)
                 .withFields(fields)
@@ -78,7 +78,6 @@ public class Dataset {
     }
 
     public static final class Builder {
-        private Long gid;
         private Long datasourceId;
         private String name;
         private DataStore dataStore;
@@ -87,11 +86,6 @@ public class Dataset {
         private DatasetStat datasetStat;
 
         private Builder() {
-        }
-
-        public Builder withGid(Long gid) {
-            this.gid = gid;
-            return this;
         }
 
         public Builder withDatasourceId(Long datasourceId) {
@@ -125,7 +119,7 @@ public class Dataset {
         }
 
         public Dataset build() {
-            return new Dataset(gid, datasourceId, name, dataStore, fields, fieldStats, datasetStat);
+            return new Dataset(datasourceId, name, dataStore, fields, fieldStats, datasetStat);
         }
     }
 }

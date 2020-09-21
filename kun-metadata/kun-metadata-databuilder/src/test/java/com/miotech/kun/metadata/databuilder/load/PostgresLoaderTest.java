@@ -31,7 +31,6 @@ public class PostgresLoaderTest extends DatabaseTestBase {
     {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
         datasetBuilder.withName("datasetName")
-                .withGid(1L)
                 .withDatasourceId(1L)
                 .withDatasetStat(new DatasetStat(100L, LocalDateTime.now()))
                 .withFields(ImmutableList.of(new DatasetField("id", new DatasetFieldType(DatasetFieldType.convertRawType("int"), "int"), "auto increment"),
@@ -40,6 +39,7 @@ public class PostgresLoaderTest extends DatabaseTestBase {
                         new DatasetFieldStat("name", 3, 67, "admin", LocalDateTime.now())))
                 .withDataStore(new HiveTableStore("", "test_database", "test_table"));
         dataset = datasetBuilder.build();
+        dataset.setGid(1L);
     }
 
     @Test

@@ -2,13 +2,11 @@ package com.miotech.kun.metadata.databuilder.extract.template;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Iterators;
-import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.*;
 import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
-import com.miotech.kun.metadata.databuilder.service.gid.GidService;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,8 +15,6 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class ExtractorTemplate extends AbstractExtractor {
-    @Inject
-    private GidService gidService;
 
     private static final Logger logger = LoggerFactory.getLogger(ExtractorTemplate.class);
 
@@ -79,7 +75,6 @@ public abstract class ExtractorTemplate extends AbstractExtractor {
             }
 
             datasetBuilder.withName(getName())
-                    .withGid(gidService.generate(dataStore))
                     .withDatasourceId(datasourceId)
                     .withFields(fields)
                     .withFieldStats(fieldStats)

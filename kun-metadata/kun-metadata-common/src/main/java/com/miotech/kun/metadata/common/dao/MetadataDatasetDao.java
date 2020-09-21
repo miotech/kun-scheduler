@@ -56,8 +56,7 @@ public class MetadataDatasetDao {
                 throw ExceptionUtils.wrapIfChecked(e);
             }
 
-            return Dataset.newBuilder()
-                    .withGid(rs.getLong(1))
+            Dataset dataset = Dataset.newBuilder()
                     .withName(rs.getString(2))
                     .withDatasourceId(rs.getLong(3))
                     // TODO: parse missing fields
@@ -66,6 +65,8 @@ public class MetadataDatasetDao {
                     .withFieldStats(null)
                     .withDataStore(dataStore)
                     .build();
+            dataset.setGid(rs.getLong(1));
+            return dataset;
         }
     }
 }
