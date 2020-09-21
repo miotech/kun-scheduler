@@ -17,6 +17,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 
 public class GlueTableExtractor extends ExtractorTemplate {
@@ -61,8 +63,12 @@ public class GlueTableExtractor extends ExtractorTemplate {
 
     @Override
     protected DatasetStat getTableStats() {
+        DatasetStat.Builder datasetStatBuilder = DatasetStat.newBuilder();
         JDBCStatTemplate statService = new JDBCStatTemplate(table.getDatabaseName(), table.getName(), DatabaseType.ATHENA, athenaDataSource);
-        return statService.getTableStats();
+        datasetStatBuilder.withStatDate(LocalDateTime.now())
+                .withRowCount(statService.getRowCount())
+                .withLastUpdatedTime(getLastUpdateTime());
+        return datasetStatBuilder.build();
     }
 
     @Override
@@ -73,6 +79,11 @@ public class GlueTableExtractor extends ExtractorTemplate {
     @Override
     protected String getName() {
         return table.getName();
+    }
+
+    @Override
+    protected LocalDateTime getLastUpdateTime() {
+        return table.getUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
     }
 
     @Override

@@ -81,18 +81,16 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
     @VisibleForTesting
     public DatasetStat getTableStats() {
         try (MongoClient client = new MongoClient(new MongoClientURI(dataSource.getUrl()))) {
+            DatasetStat.Builder datasetStatBuilder = DatasetStat.newBuilder();
             if (logger.isDebugEnabled()) {
                 logger.debug("MongoCollectionExtractor getTableStats start. dataSource: {}, database: {}, collection: {}",
                         JSONUtils.toJsonString(dataSource), database, collection);
             }
 
             long count = client.getDatabase(database).getCollection(collection).count();
-
-            DatasetStat datasetStat = new DatasetStat(count, LocalDateTime.now());
-            if (logger.isDebugEnabled()) {
-                logger.debug("MongoCollectionExtractor getTableStats end. datasetStat: {}", JSONUtils.toJsonString(datasetStat));
-            }
-            return datasetStat;
+            return datasetStatBuilder.withRowCount(count)
+                    .withLastUpdatedTime(getLastUpdateTime())
+                    .withStatDate(LocalDateTime.now()).build();
         } catch (Exception e) {
             logger.error("MongoCollectionExtractor getTableStats error: ", e);
             throw ExceptionUtils.wrapIfChecked(e);
@@ -107,6 +105,11 @@ public class MongoCollectionExtractor extends ExtractorTemplate {
     @Override
     public String getName() {
         return collection;
+    }
+
+    @Override
+    protected LocalDateTime getLastUpdateTime() {
+        return null;
     }
 
     @Override
