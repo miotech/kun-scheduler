@@ -6,6 +6,8 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation 'com.squareup.okhttp3:okhttp'
+    implementation 'org.neo4j:neo4j-ogm-core'
+    runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16'
 
     testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation project(':kun-commons:kun-commons-db')
@@ -15,4 +17,5 @@ dependencies {
     testImplementation project(':kun-workflow:kun-workflow-web')
     testImplementation "junit:junit"
     testImplementation 'com.shazam:shazamcrest'
+    testRuntimeOnly "org.neo4j:neo4j-ogm-embedded-driver:3.2.16"
 }
