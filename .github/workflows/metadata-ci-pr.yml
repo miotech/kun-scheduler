@@ -8,6 +8,8 @@ on:
       - 'kun-workflow/kun-workflow-client/**'
       - 'kun-workflow/kun-workflow-core/**'
       - 'kun-workflow/kun-workflow-utils/**'
+    branches-ignore:
+      - master
 
 jobs:
   step-1:

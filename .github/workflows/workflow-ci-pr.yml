@@ -5,6 +5,8 @@ on:
     paths:
       - 'kun-workflow/**'
       - 'kun-commons/**'
+    branches-ignore:
+      - master
 
 jobs:
   step-1:
