@@ -14,8 +14,7 @@ import java.util.Properties;
 
 public class DatabaseModule extends AbstractModule {
     public static final String[] NEO4J_DOMAIN_CLASSES = {
-            "com.miotech.kun.workflow.common.lineage.node",
-            "com.miotech.kun.workflow.common.lineage.relation"
+            "com.miotech.kun.workflow.common.lineage.node"
     };
 
     @Singleton

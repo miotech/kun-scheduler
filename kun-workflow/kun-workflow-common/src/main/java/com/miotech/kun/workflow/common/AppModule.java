@@ -3,10 +3,8 @@ package com.miotech.kun.workflow.common;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.workflow.common.resource.ResourceLoader;
-import com.miotech.kun.workflow.common.resource.ResourceLoaderImpl;
-
-import java.util.Properties;
+import com.miotech.kun.metadata.facade.MetadataServiceFacade;
+import com.miotech.kun.workflow.common.rpc.DefaultMetadataServiceConsumer;
 
 public abstract class AppModule extends AbstractModule {
     private final Props props;
@@ -19,5 +17,6 @@ public abstract class AppModule extends AbstractModule {
     protected void configure() {
         Names.bindProperties(binder(), props.toProperties());
         bind(Props.class).toInstance(props);
+        bind(MetadataServiceFacade.class).toInstance(new DefaultMetadataServiceConsumer());
     }
 }

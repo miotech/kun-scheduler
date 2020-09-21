@@ -500,7 +500,7 @@ public class TaskServiceTest extends CommonTestBase {
                     .withDataStore(null)
                     .build();
             dataset.setGid(IdGenerator.getInstance().nextId());
-            return Optional.of(dataset);
+            return dataset;
         }).when(metadataFacade).getDatasetByDatastore(any());
 
         // Process
