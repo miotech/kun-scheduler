@@ -4,13 +4,13 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
-import com.miotech.kun.workflow.common.lineage.service.MetadataFacade;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -36,7 +36,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
@@ -56,7 +55,7 @@ import static org.mockito.Mockito.*;
 public class TaskServiceTest extends CommonTestBase {
     private static final String PACKAGE_PATH_LINEAGE_OPERATOR = OperatorCompiler.compileJar(LineageMockOperator.class, "LineageMockOperator");
 
-    MetadataFacade metadataFacade;
+    MetadataServiceFacade metadataFacade;
 
     @Inject
     private LineageService lineageService;
@@ -73,19 +72,19 @@ public class TaskServiceTest extends CommonTestBase {
     @Inject
     private OperatorService operatorService;
 
-    private Scheduler scheduler = mock(Scheduler.class);
+    private final Scheduler scheduler = mock(Scheduler.class);
 
     @Inject
     private TaskService taskService;
 
     @Before
     public void beforeEach() {
-        operatorService = Mockito.spy(operatorService);
+        operatorService = spy(operatorService);
     }
 
     @Override
     protected void configuration() {
-        metadataFacade = mock(MetadataFacade.class);
+        metadataFacade = mock(MetadataServiceFacade.class);
         super.configuration();
     }
 
@@ -256,7 +255,7 @@ public class TaskServiceTest extends CommonTestBase {
         assertThat(updatedTask.getConfig().size(), is(createdTask.getConfig().size()));
         // 6. and `name` property should be updated
         assertThat(updatedTask.getName(), is("Updated Task Name"));
-        // 6. all properties except `name` should remain unchanged
+        // 7. all properties except `name` should remain unchanged
         // TODO: improve `sameBeanAs()` to accept ignored fields
         createdTask = createdTask.cloneBuilder().withName(updatedTask.getName()).build();
         assertThat(updatedTask, sameBeanAs(createdTask));
@@ -473,16 +472,6 @@ public class TaskServiceTest extends CommonTestBase {
     }
 
     @Test
-    public void runTask_single_task_with_variables() {
-
-    }
-
-    @Test
-    public void runTask_multiple_tasks() {
-
-    }
-
-    @Test
     public void createTask_withOperatorResolver_shouldInsertNewTaskNodeAndLineageIntoGraph() {
         // Prepare
         Operator operator = Operator.newBuilder().withId(WorkflowIdGenerator.nextOperatorId())
@@ -512,7 +501,7 @@ public class TaskServiceTest extends CommonTestBase {
                     .withDataStore(null)
                     .build();
             return Optional.of(dataset);
-        }).when(metadataFacade).fetchDatasetByDatastore(any());
+        }).when(metadataFacade).getDatasetByDatastore(any());
 
         // Process
         Task createdTask = taskService.createTask(taskVO);

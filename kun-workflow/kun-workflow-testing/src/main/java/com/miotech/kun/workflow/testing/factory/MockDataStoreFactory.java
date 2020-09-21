@@ -6,7 +6,6 @@ import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.DataStoreType;
 
 import java.util.List;
-import java.util.Random;
 
 public class MockDataStoreFactory {
     public static final List<DataStoreType> dataStoreTypes = Lists.newArrayList(
@@ -21,13 +20,8 @@ public class MockDataStoreFactory {
             DataStoreType.TOPIC
     );
 
-    public static DataStoreType getRandomDataStoreType() {
-        Random random = new Random();
-        return dataStoreTypes.get(random.nextInt(dataStoreTypes.size()));
-    }
-
-    public static DataStore getMockDataStore() {
-        return new DataStore(getRandomDataStoreType()) {
+    public static DataStore getMockDataStore(DataStoreType dataStoreType) {
+        return new DataStore(dataStoreType) {
             @Override
             public String getDatabaseName() {
                 return this.getType().name();
