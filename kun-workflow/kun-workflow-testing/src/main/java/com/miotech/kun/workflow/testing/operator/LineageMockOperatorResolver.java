@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.testing.operator;
 
 import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.DataStoreType;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.testing.factory.MockDataStoreFactory;
@@ -15,7 +16,7 @@ public class LineageMockOperatorResolver implements Resolver {
         Integer upstreamStoreCount = config.getInt("upstreamStoreCount", 1);
         List<DataStore> upstreamDataStores = new ArrayList<>();
         for (int i = 0; i < upstreamStoreCount; i += 1) {
-            upstreamDataStores.add(MockDataStoreFactory.getMockDataStore());
+            upstreamDataStores.add(MockDataStoreFactory.getMockDataStore(DataStoreType.MYSQL_TABLE));
         }
         return upstreamDataStores;
     }
@@ -25,7 +26,7 @@ public class LineageMockOperatorResolver implements Resolver {
         Integer downstreamStoreCount = config.getInt("downstreamStoreCount", 1);
         List<DataStore> downstreamDataStores = new ArrayList<>();
         for (int i = 0; i < downstreamStoreCount; i += 1) {
-            downstreamDataStores.add(MockDataStoreFactory.getMockDataStore());
+            downstreamDataStores.add(MockDataStoreFactory.getMockDataStore(DataStoreType.MYSQL_TABLE));
         }
         return downstreamDataStores;
     }

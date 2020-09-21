@@ -46,6 +46,10 @@ public abstract class GuiceTestBase {
         return mockObj;
     }
 
+    protected <T> T spy(T target) {
+        return Mockito.spy(target);
+    }
+
     protected <T> void bind(Class<? super T> clazz, Class<T> clazz2) {
         bindings.put(clazz, clazz2);
     }

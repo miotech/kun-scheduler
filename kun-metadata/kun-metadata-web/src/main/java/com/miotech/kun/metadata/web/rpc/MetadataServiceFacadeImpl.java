@@ -34,9 +34,4 @@ public class MetadataServiceFacadeImpl implements MetadataServiceFacade {
             return null;
         }
     }
-
-    @Override
-    public String ping(String msg) {
-        return "Pong: " + msg;
-    }
 }
