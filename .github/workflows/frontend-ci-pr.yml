@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'kun-frontend/**'
+    branches-ignore:
+      - master
 
 jobs:
   step-1:
