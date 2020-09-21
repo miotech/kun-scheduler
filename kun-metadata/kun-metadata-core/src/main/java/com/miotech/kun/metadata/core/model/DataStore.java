@@ -2,7 +2,6 @@ package com.miotech.kun.metadata.core.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.miotech.kun.metadata.core.common.URI;
 
 import javax.annotation.Nullable;
 
@@ -26,6 +25,4 @@ public abstract class DataStore {
     public DataStore(DataStoreType type) {
         this.type = type;
     }
-
-    public abstract URI getURI();
 }
