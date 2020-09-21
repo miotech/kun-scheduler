@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
@@ -24,10 +25,10 @@ public class LineageService {
 
     private final SessionFactory sessionFactory;
 
-    private final MetadataFacade metadataFacade;
+    private final MetadataServiceFacade metadataFacade;
 
     @Inject
-    public LineageService(SessionFactory sessionFactory, MetadataFacade metadataFacade) {
+    public LineageService(SessionFactory sessionFactory, MetadataServiceFacade metadataFacade) {
         this.sessionFactory = sessionFactory;
         this.metadataFacade = metadataFacade;
     }
@@ -45,12 +46,12 @@ public class LineageService {
     }
 
     /**
-     * TODO: currently we are mocking this method.
-     * @param dataStore
-     * @return Dataset object
+     * Obtain dataset by datastore object as key
+     * @param dataStore datastore object which represents dataset
+     * @return Optional dataset object
      */
     public Optional<Dataset> fetchDatasetByDatastore(DataStore dataStore) {
-        return metadataFacade.fetchDatasetByDatastore(dataStore);
+        return Optional.ofNullable(metadataFacade.getDatasetByDatastore(dataStore));
     }
 
     /**

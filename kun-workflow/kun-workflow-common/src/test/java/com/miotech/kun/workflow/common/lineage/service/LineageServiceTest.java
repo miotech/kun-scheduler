@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.lineage.service;
 import com.google.common.collect.Lists;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
@@ -27,7 +28,7 @@ public class LineageServiceTest extends CommonTestBase {
 
     private static final Logger logger = LoggerFactory.getLogger(LineageServiceTest.class);
 
-    private static final MetadataFacade mockMetadataFacade = Mockito.mock(MetadataFacade.class);
+    private static final MetadataServiceFacade mockMetadataFacade = Mockito.mock(MetadataServiceFacade.class);
 
     private final LineageService lineageService = new LineageService(this.neo4jSessionFactory, mockMetadataFacade);
 
@@ -112,7 +113,7 @@ public class LineageServiceTest extends CommonTestBase {
     @BeforeClass
     public static void init() {
         doReturn(Optional.empty()).when(mockMetadataFacade)
-                .fetchDatasetByDatastore(Mockito.isA(DataStore.class));
+                .getDatasetByDatastore(Mockito.isA(DataStore.class));
     }
 
     @Test

@@ -6,7 +6,6 @@ import com.google.inject.Singleton;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
-import com.miotech.kun.workflow.common.exception.ResolverUndefinedException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
@@ -37,17 +36,17 @@ public class TaskService {
 
     private static final String TASK_SHOULD_NOT_BE_NULL = "Invalid argument `task`: null";
 
-    private TaskDao taskDao;
+    private final TaskDao taskDao;
 
-    private OperatorDao operatorDao;
+    private final OperatorDao operatorDao;
 
-    private OperatorService operatorService;
+    private final OperatorService operatorService;
 
-    private TaskDependencyFunctionProvider dependencyFunctionProvider;
+    private final TaskDependencyFunctionProvider dependencyFunctionProvider;
 
-    private Scheduler scheduler;
+    private final Scheduler scheduler;
 
-    private LineageService lineageService;
+    private final LineageService lineageService;
 
     @Inject
     public TaskService(
@@ -326,8 +325,7 @@ public class TaskService {
      * Perform update on lineage graph during update of a task model
      * @param task {@link Task} model instance
      * @throws EntityNotFoundException if operator not found
-     * @throws ResolverUndefinedException if resolver of operator is not defined
-     * @throws NullPointerException if argument task is null or id of task is null
+     * @throws NullPointerException if argument task is null, or id of task is null, or resolver of operator is not defined
      */
     private void updateLineageGraphOnTaskUpdate(Task task) {
         Preconditions.checkNotNull(task, TASK_SHOULD_NOT_BE_NULL);
@@ -340,7 +338,6 @@ public class TaskService {
      * Perform update on lineage graph during creation of a task model
      * @param task {@link Task} model instance
      * @throws EntityNotFoundException if operator not found
-     * @throws ResolverUndefinedException if resolver of operator is not defined
      * @throws NullPointerException if argument task is null or id of task is null
      */
     private void updateLineageGraphOnTaskCreate(Task task) {
@@ -396,8 +393,7 @@ public class TaskService {
      * @param operatorId id of target operator
      * @return the resolver of operator
      * @throws EntityNotFoundException if operator not found
-     * @throws ResolverUndefinedException if resolver of operator is not defined
-     * @throws NullPointerException if argument operatorId is null
+     * @throws NullPointerException if argument operatorId is null, or resolver of operator is not defined
      */
     private Resolver getResolverByOperatorId(Long operatorId) {
         Preconditions.checkNotNull(operatorId, "Invalid argument `operatorId`: null");
@@ -408,7 +404,7 @@ public class TaskService {
         }
         // Does the resolver exist?
         if (Objects.isNull(operator.getResolver())) {
-            throw new ResolverUndefinedException(String.format("Cannot get resolver from Kun operator with id: %s", operatorId));
+            throw new NullPointerException(String.format("Cannot get resolver from Kun operator with id: %s", operatorId));
         }
         return operator.getResolver();
     }
