@@ -188,12 +188,12 @@ public class LineageServiceTest extends CommonTestBase {
     public void saveDataset_withNonExistNodes_shouldPersist() {
         // Prepare
         Dataset dataset = Dataset.newBuilder()
-                .withGid(200L)
                 .withName("Example Dataset")
                 .withDataStore(null)
                 .withDatasourceId(1L)
                 .withFields(new ArrayList<>())
                 .build();
+        dataset.setGid(200L);
 
         // process
         lineageService.saveDataset(dataset);

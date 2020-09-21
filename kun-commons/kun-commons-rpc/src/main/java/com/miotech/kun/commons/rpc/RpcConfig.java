@@ -37,6 +37,11 @@ public class RpcConfig {
         return this;
     }
 
+    public RpcConfig setRegistry(String registryCenterURL) {
+        this.registryCenterURL = registryCenterURL;
+        return this;
+    }
+
     public int getPort() {
         return this.port;
     }
