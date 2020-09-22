@@ -1,7 +1,7 @@
 // import { notification } from 'antd';
 import { User } from '@/definitions/User.type';
 import { ServiceRespPromise } from '@/definitions/common-types';
-import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
+import { SECURITY_API_PRIFIX } from '@/constants/api-prefixes';
 import { get, post } from '@/utils/requestUtils';
 import { LogUtils } from '@/utils/logUtils';
 
@@ -13,9 +13,9 @@ export interface LoginServiceReqBody {
 export async function loginService(reqBody: LoginServiceReqBody) {
   const logger = LogUtils.getLoggers('loginService');
   try {
-    const resp = await post('/user/login', {
+    const resp = await post('/login', {
       data: reqBody,
-      prefix: DEFAULT_API_PREFIX,
+      prefix: SECURITY_API_PRIFIX,
     });
     return resp;
   } catch (e) {
@@ -30,13 +30,15 @@ export interface WhoamiServiceRespBody {
 }
 
 export async function whoamiService() {
-  const resp = await get<WhoamiServiceRespBody>('/user/whoami');
+  const resp = await get<WhoamiServiceRespBody>('/whoami', {
+    prefix: SECURITY_API_PRIFIX,
+  });
   return resp;
 }
 
 export async function logoutService() {
-  const resp = await post<{}>('/user/logout', {
-    prefix: DEFAULT_API_PREFIX,
+  const resp = await post<{}>('/logout', {
+    prefix: SECURITY_API_PRIFIX,
   });
   return resp;
 }
@@ -44,13 +46,13 @@ export async function logoutService() {
 export async function searchUsers(keyword: string = '') {
   return get('/user/search', {
     query: { keyword },
-    prefix: DEFAULT_API_PREFIX,
+    prefix: SECURITY_API_PRIFIX,
   });
 }
 
 export async function fetchUsersList(): ServiceRespPromise<User[]> {
   return get('/user/list', {
-    prefix: DEFAULT_API_PREFIX,
+    prefix: SECURITY_API_PRIFIX,
     mockCode: 'users.list',
   });
 }

@@ -7,7 +7,10 @@ import {
   DatabaseFilterItem,
 } from '@/rematch/models/dataDiscovery';
 import { get } from '@/utils/requestUtils';
-import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
+import {
+  DEFAULT_API_PREFIX,
+  SECURITY_API_PRIFIX,
+} from '@/constants/api-prefixes';
 
 export interface FetchAllTagsServiceRespBody {
   tags: string[];
@@ -31,7 +34,7 @@ export async function fetchAllUsersService() {
     query: {
       keyword: '',
     },
-    prefix: DEFAULT_API_PREFIX,
+    prefix: SECURITY_API_PRIFIX,
   });
 }
 
