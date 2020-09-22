@@ -17,5 +17,5 @@ dependencies {
     testImplementation project(':kun-workflow:kun-workflow-web')
     testImplementation "junit:junit"
     testImplementation 'com.shazam:shazamcrest'
-    testRuntimeOnly "org.neo4j:neo4j-ogm-embedded-driver:3.2.16"
+    testImplementation 'org.testcontainers:neo4j'
 }
