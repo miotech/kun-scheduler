@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.common;
 
+import com.miotech.kun.commons.db.GraphDatabaseModule;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import org.junit.After;
 import org.junit.ClassRule;
@@ -11,8 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Neo4jContainer;
 
 import java.util.HashMap;
-
-import static com.miotech.kun.commons.db.DatabaseModule.NEO4J_DOMAIN_CLASSES;
 
 public class CommonTestBase extends DatabaseTestBase {
     private static final Logger logger = LoggerFactory.getLogger(CommonTestBase.class);
@@ -35,7 +34,7 @@ public class CommonTestBase extends DatabaseTestBase {
                 .connectionPoolSize(50)
                 .credentials("neo4j", "Mi0tech2020")
                 .build();
-        return new SessionFactory(config, NEO4J_DOMAIN_CLASSES);
+        return new SessionFactory(config, GraphDatabaseModule.DEFAULT_NEO4J_DOMAIN_CLASSES);
     }
 
     @After

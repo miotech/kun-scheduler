@@ -112,7 +112,7 @@ public class LineageServiceTest extends CommonTestBase {
 
     @BeforeClass
     public static void init() {
-        doReturn(Optional.empty()).when(mockMetadataFacade)
+        doReturn(null).when(mockMetadataFacade)
                 .getDatasetByDatastore(Mockito.isA(DataStore.class));
     }
 

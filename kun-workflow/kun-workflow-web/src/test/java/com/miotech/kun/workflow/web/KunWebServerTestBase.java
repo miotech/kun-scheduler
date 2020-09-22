@@ -2,9 +2,9 @@ package com.miotech.kun.workflow.web;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseModule;
+import com.miotech.kun.commons.db.GraphDatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.commons.utils.PropertyUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.workflow.SchedulerModule;
@@ -38,7 +38,9 @@ public class KunWebServerTestBase extends GuiceTestBase {
         Props props = PropsUtils.loadAppProps("application-test.yaml");
         addModules(new KunWorkflowServerModule(props),
                 new DatabaseModule(),
-                new SchedulerModule());
+                new SchedulerModule(),
+                new GraphDatabaseModule(props)
+        );
     }
 
     @Before
