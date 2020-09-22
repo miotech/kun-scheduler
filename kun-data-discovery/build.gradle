@@ -15,7 +15,7 @@ dependencies {
 	implementation project(':kun-commons:kun-commons-db')
 	implementation project(':kun-commons:kun-commons-utils')
 	implementation project(':kun-app-common')
-	implementation project(':kun-security')
+	implementation project(':kun-security:kun-security-common')
 
 	implementation 'org.springframework.boot:spring-boot-starter-actuator'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
