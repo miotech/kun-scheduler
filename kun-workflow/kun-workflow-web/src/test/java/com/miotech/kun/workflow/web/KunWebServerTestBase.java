@@ -16,8 +16,10 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.Neo4jContainer;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -25,6 +27,10 @@ import java.io.UnsupportedEncodingException;
 public class KunWebServerTestBase extends GuiceTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(KunWebServerTestBase.class);
+
+    @ClassRule
+    public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
+            .withAdminPassword("Mi0tech2020");
 
     @Inject
     private KunWorkflowWebServer webServer;
@@ -39,7 +45,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
         addModules(new KunWorkflowServerModule(props),
                 new DatabaseModule(),
                 new SchedulerModule(),
-                new GraphDatabaseModule(props)
+                new GraphDatabaseModule(neo4jContainer)
         );
     }
 
