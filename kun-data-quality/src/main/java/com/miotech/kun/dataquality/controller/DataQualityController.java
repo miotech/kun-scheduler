@@ -41,7 +41,6 @@ public class DataQualityController {
     DataQualityService dataQualityService;
 
     @Autowired
-    @Lazy
     WorkflowService workflowService;
 
     @Autowired
