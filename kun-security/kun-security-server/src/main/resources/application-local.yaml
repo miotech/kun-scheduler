@@ -1,0 +1,40 @@
+server:
+  port: ${SECURITY_PORT}
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun_security
+    username: ${DB_PG_USERNAME}
+    password: ${DB_PG_PASSWORD}
+
+  session:
+    jdbc:
+      initialize-schema: never
+      table-name: kun_user_session
+    timeout: 30d
+
+  flyway:
+    enabled: true
+    clean-disabled: true
+    locations: classpath:security/db/migration
+    table: flyway_kun_security_schema_history
+    baseline-on-migrate: true
+    baseline-version: 0
+    encoding: UTF-8
+    out-of-order: false
+    schemas: public
+    validate-on-migrate: true
+
+security:
+  auth:
+    type: ${SECURITY_AUTH_TYPE:JSON}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    ldap:
+      enabled: false

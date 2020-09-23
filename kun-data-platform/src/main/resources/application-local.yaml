@@ -12,11 +12,6 @@ spring:
     username: ${DB_PG_USERNAME}
     password: ${DB_PG_PASSWORD}
 
-  session:
-    jdbc:
-      initialize-schema: ${INITIALIZE_SESSION_TABLE:never}
-      table-name: kun_user_session
-
   flyway:
     enabled: true
     clean-disabled: true
@@ -25,15 +20,4 @@ spring:
     schemas: public
 
 security:
-  auth:
-    type: ${SECURITY_AUTH_TYPE:JSON}
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun
-    username: ${DB_PG_USERNAME}
-    password: ${DB_PG_PASSWORD}
-
-management:
-  health:
-    ldap:
-      enabled: false
+  base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
