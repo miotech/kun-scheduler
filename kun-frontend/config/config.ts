@@ -21,6 +21,7 @@ if (fs.existsSync(path.resolve(__dirname, './certConfig.json'))) {
 
 const {
   PROXY_TARGET,
+  PROXY_SECURITY_TARGET,
   USE_MOCK,
   PATH_REWRITE,
   NO_PROXY,
@@ -43,6 +44,13 @@ export default defineConfig({
   },
   proxy: !NO_PROXY
     ? {
+        '/kun/api/v1/security/': {
+          target: PROXY_SECURITY_TARGET || 'http://kun-dev.miotech.com/',
+          changeOrigin: true,
+          pathRewrite: PATH_REWRITE
+            ? { '^/kun/api/v1/security/': '' }
+            : undefined,
+        },
         '/kun/api/v1/': {
           target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
           changeOrigin: true,
