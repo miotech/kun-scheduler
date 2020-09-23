@@ -14,6 +14,7 @@ import com.miotech.kun.workflow.client.model.Operator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,6 +31,7 @@ public class TaskTemplateService {
     private ApplicationContext applicationContext;
 
     @Autowired
+    @Lazy
     private WorkflowClient client;
 
     public List<TaskTemplate> getAllTaskTemplates() {
