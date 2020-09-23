@@ -2,6 +2,9 @@ package com.miotech.kun.metadata.databuilder.constant;
 
 public class OperatorKey {
 
+    private OperatorKey() {
+    }
+
     public static final String DEPLOY_MODE = "deploy-mode";
     public static final String DATASOURCE_ID = "datasourceId";
     public static final String GID = "gid";

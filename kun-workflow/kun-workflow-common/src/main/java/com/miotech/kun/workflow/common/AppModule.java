@@ -3,10 +3,6 @@ package com.miotech.kun.workflow.common;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.workflow.common.resource.ResourceLoader;
-import com.miotech.kun.workflow.common.resource.ResourceLoaderImpl;
-
-import java.util.Properties;
 
 public abstract class AppModule extends AbstractModule {
     private final Props props;

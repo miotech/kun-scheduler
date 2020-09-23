@@ -8,6 +8,8 @@ public class DatasetStat {
 
     private final LocalDateTime statDate;
 
+    private final LocalDateTime lastUpdatedTime;
+
     public long getRowCount() {
         return rowCount;
     }
@@ -16,9 +18,14 @@ public class DatasetStat {
         return statDate;
     }
 
-    public DatasetStat(long rowCount, LocalDateTime statDate) {
+    public LocalDateTime getLastUpdatedTime() {
+        return lastUpdatedTime;
+    }
+
+    public DatasetStat(long rowCount, LocalDateTime statDate, LocalDateTime lastUpdatedTime) {
         this.rowCount = rowCount;
         this.statDate = statDate;
+        this.lastUpdatedTime = lastUpdatedTime;
     }
 
     public static Builder newBuilder() {
@@ -28,6 +35,7 @@ public class DatasetStat {
     public static final class Builder {
         private long rowCount;
         private LocalDateTime statDate;
+        private LocalDateTime lastUpdatedTime;
 
         private Builder() {
         }
@@ -42,8 +50,13 @@ public class DatasetStat {
             return this;
         }
 
+        public Builder withLastUpdatedTime(LocalDateTime lastUpdatedTime) {
+            this.lastUpdatedTime = lastUpdatedTime;
+            return this;
+        }
+
         public DatasetStat build() {
-            return new DatasetStat(rowCount, statDate);
+            return new DatasetStat(rowCount, statDate, lastUpdatedTime);
         }
     }
 }
