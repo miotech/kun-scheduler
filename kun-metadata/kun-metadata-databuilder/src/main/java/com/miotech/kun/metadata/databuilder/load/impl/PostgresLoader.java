@@ -57,8 +57,8 @@ public class PostgresLoader implements Loader {
 
                 DatasetStat datasetStat = dataset.getDatasetStat();
                 if (datasetStat != null) {
-                    dbOperator.update("INSERT INTO kun_mt_dataset_stats(dataset_gid, row_count, stats_date) VALUES (?, ?, ?)",
-                            gid, datasetStat.getRowCount(), datasetStat.getStatDate());
+                    dbOperator.update("INSERT INTO kun_mt_dataset_stats(dataset_gid, row_count, stats_date, last_updated_time) VALUES (?, ?, ?, ?)",
+                            gid, datasetStat.getRowCount(), datasetStat.getStatDate(), datasetStat.getLastUpdatedTime());
                 }
 
                 Map<String, DatasetFieldPO> fieldInfos = new HashMap<>();

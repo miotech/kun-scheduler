@@ -8,7 +8,6 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
 import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.MongoDataSource;
-import com.miotech.kun.metadata.databuilder.extract.Extractor;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
@@ -18,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 
 public class MongoExtractor extends AbstractExtractor {
     private static Logger logger = LoggerFactory.getLogger(MongoExtractor.class);

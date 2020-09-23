@@ -5,7 +5,6 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseSetup;
-import com.miotech.kun.commons.utils.PropertyUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.commons.web.KunWebServer;
