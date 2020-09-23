@@ -1,0 +1,1 @@
+ALTER TABLE kun_mt_dataset_stats ADD COLUMN "last_updated_time" timestamp;
