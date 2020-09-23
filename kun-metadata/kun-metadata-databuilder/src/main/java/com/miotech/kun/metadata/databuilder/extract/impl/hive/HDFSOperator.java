@@ -9,7 +9,10 @@ import java.net.URI;
 
 public class HDFSOperator {
 
-    private static final String schema = "hdfs";
+    private HDFSOperator() {
+    }
+
+    private static final String SCHEMA = "hdfs";
 
     public static FileSystem create(String url, Configuration configuration) {
         try {
@@ -30,7 +33,7 @@ public class HDFSOperator {
     }
 
     public static FileSystem create(String host, int port, String user) {
-        return create(String.format("%s://%s:%d", schema, host, port), user);
+        return create(String.format("%s://%s:%d", SCHEMA, host, port), user);
     }
 
     public static void close(FileSystem fileSystem) {
