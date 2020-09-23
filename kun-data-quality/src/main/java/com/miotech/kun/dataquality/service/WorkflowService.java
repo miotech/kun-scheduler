@@ -23,7 +23,6 @@ import java.util.ArrayList;
  * @created: 2020/7/17
  */
 @Service
-@Lazy
 @Slf4j
 public class WorkflowService {
 
@@ -42,9 +41,14 @@ public class WorkflowService {
     @Value("${data-quality.workflow.task.cron:0 0 0 * * ?}")
     String cronExpression;
 
+    @Value("${workflow.enable:true}")
+    Boolean workflowEnable;
+
     @PostConstruct
     public void init() {
-        workflowClient.saveOperator(this.operator.getName(), this.operator);
+        if (workflowEnable) {
+            workflowClient.saveOperator(this.operator.getName(), this.operator);
+        }
     }
 
     public Long createTask(Long caseId) {

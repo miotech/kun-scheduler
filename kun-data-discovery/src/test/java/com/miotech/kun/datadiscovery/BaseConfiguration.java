@@ -28,8 +28,7 @@ public class BaseConfiguration {
     @Value("${testsuite.postgresImage}")
     private String postgresImageName;
 
-    @Bean("dataDiscoveryDataSource")
-    @Primary
+    @Bean
     public DataSource testingDataSource() {
         if (PostgreS == null) {
             initializeDataSource();
