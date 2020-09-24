@@ -12,6 +12,4 @@ public class DatasetFieldStats {
     private Long notNullCount;
 
     private Long distinctCount;
-
-    private Long statsDate;
 }
