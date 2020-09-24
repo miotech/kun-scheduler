@@ -33,8 +33,7 @@ public class DatasetFieldRepository extends BaseRepository {
     public DatasetFieldStats getFieldStats(Long id) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("distinct_count",
-                        "nonnull_count",
-                        "stats_date")
+                        "nonnull_count")
                 .from("kun_mt_dataset_field_stats")
                 .where("field_id = ?")
                 .orderBy("stats_date desc")
@@ -46,7 +45,6 @@ public class DatasetFieldRepository extends BaseRepository {
             if (rs.next()) {
                 stats.setDistinctCount(rs.getLong("distinct_count"));
                 stats.setNotNullCount(rs.getLong("nonnull_count"));
-                stats.setStatsDate(timestampToMillis(rs, "stats_date"));
             }
             return stats;
         }, id);
@@ -91,7 +89,6 @@ public class DatasetFieldRepository extends BaseRepository {
                 column.setType(rs.getString("type"));
                 DatasetFieldStats fieldStats = getFieldStats(column.getId());
                 Watermark watermark = new Watermark();
-                watermark.setTime(fieldStats.getStatsDate());
                 column.setHighWatermark(watermark);
                 column.setDistinctCount(fieldStats.getDistinctCount());
                 column.setNotNullCount(fieldStats.getNotNullCount());
