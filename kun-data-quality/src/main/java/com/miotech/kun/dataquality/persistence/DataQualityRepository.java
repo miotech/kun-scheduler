@@ -418,7 +418,9 @@ public class DataQualityRepository extends BaseRepository {
             return Lists.newArrayList();
         }
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("id", "name")
+                .select("id",
+                        "name",
+                        "update_user")
                 .from("kun_dq_case")
                 .where("id in " + toColumnSql(caseIds.size()))
                 .orderBy("id")
@@ -430,6 +432,7 @@ public class DataQualityRepository extends BaseRepository {
                 DataQualityCaseBasic caseBasic = new DataQualityCaseBasic();
                 caseBasic.setId(rs.getLong("id"));
                 caseBasic.setName(rs.getString("name"));
+                caseBasic.setUpdater(rs.getString("update_user"));
                 caseBasics.add(caseBasic);
             }
             return caseBasics;
