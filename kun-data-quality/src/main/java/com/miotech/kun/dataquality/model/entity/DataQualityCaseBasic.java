@@ -15,4 +15,6 @@ public class DataQualityCaseBasic {
     Long id;
 
     String name;
+
+    String updater;
 }
