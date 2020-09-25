@@ -61,6 +61,26 @@ services:
       - 8084:${METADATA_PORT}
     depends_on:
       - kun-workflow
+  kun-data-dashboard:
+    image: "kun-data-discovery:master"
+    environment:
+      APP_CONFIG_ENV:
+      DATA_DASHBOARD_PORT:
+      DB_PG_IP:
+      DB_PG_PORT:
+      DB_PG_USERNAME:
+      DB_PG_PASSWORD:
+      SECURITY_HOST:
+      SECURITY_PORT:
+      WORKFLOW_HOST:
+      WORKFLOW_PORT:
+      restart: always
+      volumes:
+        - ./kun-data-discovery-logs:/server/target/kun-data-discovery-logs/:z
+      ports:
+        - 8080:${DATA_DISCOVERY_PORT}
+      depends_on:
+        - kun-metadata
   kun-data-discovery:
     image: "kun-data-discovery:master"
     environment:
