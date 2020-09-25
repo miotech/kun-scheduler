@@ -18,6 +18,26 @@ public interface WorkflowClient {
      */
     Operator saveOperator(String name, Operator operator);
 
+    /**
+     * update operator by id
+     * @param operatorId
+     * @param operator
+     * @return
+     */
+    Operator updateOperator(Long operatorId, Operator operator);
+
+    /**
+     * delete operator by id
+     * @param operatorId
+     */
+    void deleteOperator(Long operatorId);
+
+    /**
+     * upload operator jar by id
+     * @param id
+     * @param jarFile
+     */
+    void uploadOperatorJar(Long id, File jarFile);
 
     void updateOperatorJar(String name, File jarFile);
 
@@ -28,6 +48,7 @@ public interface WorkflowClient {
      */
     Optional<Operator> getOperator(String name);
 
+    List<Operator> getExistOperators();
 
     Operator getOperator(Long id);
 

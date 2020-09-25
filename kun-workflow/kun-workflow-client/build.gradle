@@ -2,6 +2,7 @@ dependencies {
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-utils')
+    implementation "org.yaml:snakeyaml"
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation 'com.squareup.okhttp3:okhttp'

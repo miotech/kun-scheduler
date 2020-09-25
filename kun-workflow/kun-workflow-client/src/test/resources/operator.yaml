@@ -1,0 +1,2 @@
+operators:
+  - { name: test-operator,className: com.miotech.kun.workflow.operator.BashOperator,description: new operator }

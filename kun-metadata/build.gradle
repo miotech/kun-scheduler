@@ -28,6 +28,27 @@ shadowJar {
     zip64 true
 }
 
+task buildOperator (type:Exec){
+    workingDir "kun-metadata-databuilder"
+    commandLine "gradle","shadowJar"
+}
+
+task copyOperator(type: Copy){
+    from "kun-metadata-databuilder/build/libs/databuilder-operator-1.0.jar"
+    rename {
+        "databuilder-operator.jar"
+    }
+    into "kun-metadata-web/src/main/resources"
+    dependsOn(buildOperator)
+}
+
+compileJava.dependsOn(copyOperator)
+
+task deleteLocalJar(type: Delete){
+    delete "kun-metadata-web/src/main/resources/databuilder-operator.jar"
+}
+shadowJar.dependsOn(deleteLocalJar)
+
 apply plugin: "org.sonarqube"
 sonarqube {
     properties {
