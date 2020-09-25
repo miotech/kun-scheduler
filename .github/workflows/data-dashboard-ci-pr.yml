@@ -1,10 +1,15 @@
-name: WORKFLOW CI PULL REQUEST ACTIONS
+name: DATA DASHBOARD CI PULL REQUEST ACTIONS
 
 on:
   push:
     paths:
-      - 'kun-workflow/**'
+      - 'kun-data-dashboard/**'
+      - 'kun-app-common/**'
       - 'kun-commons/**'
+      - 'kun-security/kun-security-common/**'
+      - 'kun-workflow/kun-workflow-client/**'
+      - 'kun-workflow/kun-workflow-core/**'
+      - 'kun-workflow/kun-workflow-utils/**'
     branches-ignore:
       - master
 
@@ -20,4 +25,4 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Check with Gradle
-        run: ./gradlew check -p kun-workflow
+        run: ./gradlew check -p kun-data-dashboard
