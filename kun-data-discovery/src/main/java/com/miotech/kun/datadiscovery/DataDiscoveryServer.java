@@ -11,9 +11,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
         "com.miotech.kun.dataquality",
         "com.miotech.kun.common",
         "com.miotech.kun.security"})
-public class Application {
+public class DataDiscoveryServer {
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(DataDiscoveryServer.class, args);
     }
 }
