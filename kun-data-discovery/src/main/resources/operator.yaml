@@ -1,0 +1,4 @@
+operators:
+  - name: data-quality-operator
+    className: com.miotech.kun.workflow.operator.DataQualityOperator
+    description: DataQuality Operator

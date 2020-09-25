@@ -1,0 +1,61 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'java'
+    id "io.freefair.lombok"
+    id "org.sonarqube"
+}
+
+repositories {
+    mavenCentral()
+}
+
+bootJar {
+    mainClassName = 'com.miotech.kun.dataplatform.DataPlatformApplication'
+}
+
+dependencies {
+    implementation project(':kun-commons:kun-commons-db')
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-client')
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation project(':kun-app-common')
+    implementation project(':kun-security:kun-security-common')
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'com.squareup.okhttp3:okhttp'
+    implementation 'org.postgresql:postgresql'
+    implementation 'io.springfox:springfox-boot-starter:3.0.0'
+    implementation 'com.googlecode.json-simple:json-simple'
+    implementation "com.h2database:h2"
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "org.testcontainers:testcontainers"
+
+}
+
+jacocoTestReport {
+
+    afterEvaluate {
+        getClassDirectories().setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['**/**operator.jar'])
+        }))
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+apply plugin: "org.sonarqube"
+sonarqube {
+    properties {
+        property "sonar.sources", "src/main"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.java.binaries", "build"
+    }
+}

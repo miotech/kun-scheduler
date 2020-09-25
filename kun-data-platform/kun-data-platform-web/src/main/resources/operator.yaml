@@ -1,0 +1,11 @@
+operators:
+  - name: bash-operator
+    className: com.miotech.kun.workflow.operator.BashOperator
+    description: Bash Operator
+  - name: spark-operator
+    className: com.miotech.kun.workflow.operator.SparkOperator
+    description: Spark Operator
+  - name: sparkSql-operator
+    className: com.miotech.kun.workflow.operator.SparkSQLOperator
+    description: Spark SQL Operator
+
