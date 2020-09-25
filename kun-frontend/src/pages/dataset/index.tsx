@@ -317,6 +317,9 @@ export default function DataDisvocery() {
           dataIndex: 'description',
           key: 'description',
           width: 200,
+          render: (description: string) => (
+            <div className={styles.descriptionColumn}>{description}</div>
+          ),
         },
         {
           title: t('dataDiscovery.datasetsTable.header.owners'),
