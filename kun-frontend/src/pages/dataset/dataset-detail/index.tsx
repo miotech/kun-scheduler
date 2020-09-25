@@ -1,16 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { RouteComponentProps } from 'react-router';
 import { Link } from 'umi';
-import { CloseOutlined } from '@ant-design/icons';
-import {
-  Spin,
-  Button,
-  message,
-  Select,
-  Pagination,
-  Input,
-  Popconfirm,
-} from 'antd';
+import { Spin, Button, message, Select, Pagination, Input } from 'antd';
 import Card from '@/components/Card/Card';
 
 import { watermarkFormatter } from '@/utils/glossaryUtiles';
@@ -23,6 +14,7 @@ import BackButton from '@/components/BackButton/BackButton';
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnItem from './components/ColumnItem/ColumnItem';
 import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
+import DataQualityTable from './components/DataQualityTable/DataQualityTable';
 
 import styles from './index.less';
 
@@ -346,26 +338,14 @@ export default function DatasetDetail({ match }: Props) {
                     </span>
                   </div>
                   <div className={styles.baseContent}>
-                    {selector.dataQualities?.map(item => (
-                      <div key={item.id}>
-                        <span
-                          className={styles.dataQualityItem}
-                          onClick={() => handleClickEditDataQuality(item.id)}
-                        >
-                          {item.name}
-                        </span>
-                        <Popconfirm
-                          title={t('dataDetail.dataquality.delete.title')}
-                          onConfirm={() =>
-                            handleConfirmDeleteDataQuality(item.id)
-                          }
-                          okText={t('common.button.confirm')}
-                          cancelText={t('common.button.cancel')}
-                        >
-                          <CloseOutlined style={{ marginLeft: 4 }} />
-                        </Popconfirm>
-                      </div>
-                    ))}
+                    {selector.dataQualities &&
+                      selector.dataQualities.length > 0 && (
+                        <DataQualityTable
+                          data={selector.dataQualities}
+                          onDelete={handleConfirmDeleteDataQuality}
+                          onClick={handleClickEditDataQuality}
+                        />
+                      )}
                   </div>
                 </div>
 
