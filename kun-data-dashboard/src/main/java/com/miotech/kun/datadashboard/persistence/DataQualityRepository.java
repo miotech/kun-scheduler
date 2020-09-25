@@ -29,7 +29,8 @@ public class DataQualityRepository extends BaseRepository {
     public Long getCoveredDatasetCount() {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("count(distinct dataset_id) as count")
-                .from("kun_dq_case_associated_dataset")
+                .from("kun_dq_case_associated_dataset kdcad")
+                .join("inner", "kun_mt_dataset", "kmd").on("kmd.gid = kdcad.dataset_id")
                 .getSQL();
 
         return jdbcTemplate.queryForObject(sql, Long.class);
