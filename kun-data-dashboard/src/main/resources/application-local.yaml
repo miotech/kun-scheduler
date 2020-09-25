@@ -21,7 +21,7 @@ security:
   base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
 
 workflow:
-  base-url: https://kun-dev.miotech.com/kun/api/workflow
+  base-url: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
 
 data-dashboard:
   long-existing-threshold: 30

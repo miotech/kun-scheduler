@@ -32,6 +32,7 @@
 **/kun-metadata-web-logs
 **/kun-metadata-databuilder-logs
 **/kun-security-logs
+**/kun-data-dashboard-logs
 
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf
