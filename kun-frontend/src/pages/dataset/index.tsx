@@ -419,6 +419,12 @@ export default function DataDisvocery() {
           sortOrder: order ? orderMap[order as 'descend' | 'ascend'] : null,
         });
       }
+      if (columnKey && !order) {
+        setFilterQuery({
+          sortKey: columnKey,
+          sortOrder: null,
+        });
+      }
     },
     [setFilterQuery, sortKey, sortOrder],
   );
