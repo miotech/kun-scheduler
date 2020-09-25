@@ -1,0 +1,28 @@
+.View {
+  position: relative;
+  padding: 8px 0;
+}
+
+.PrimaryDivision {
+  position: relative;
+  padding: 0 16px;
+
+  // title
+  h2 {
+    font-size: 20px;
+  }
+
+  h3 {
+    font-size: 14px;
+    line-height: 18px;
+    font-weight: 600;
+  }
+}
+
+@media (min-width: @screen-lg-min) {
+  .View {
+    .Col + .Col {
+      border-left: 1px solid @borderColor;
+    }
+  }
+}

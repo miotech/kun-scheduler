@@ -52,7 +52,7 @@ export function getTaskDefinitions(req: Request, res: Response) {
     init();
   }
   return res.json(wrapResponseDataWithPagination(taskDefinitionMockData || [], {
-    pageNum: 1,
+    pageNumber: 1,
     pageSize: 100,
   }));
 }

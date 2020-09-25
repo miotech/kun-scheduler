@@ -19,7 +19,7 @@ export const effects = (dispatch: RootDispatch) => ({
       const respData = await fetchTaskRunsOfDeployedTask({
         id: payload.id,
         pageSize: payload.pageSize || 25,
-        pageNum: payload.pageNum || 1,
+        pageNumber: payload.pageNum || 1,
         status: payload.status || undefined,
         startTime: payload.startTime ? moment(payload.startTime).toISOString() : undefined,
         endTime: payload.endTime ? moment(payload.endTime).toISOString() : undefined,

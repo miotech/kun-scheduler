@@ -1,5 +1,6 @@
+/* eslint-disable no-param-reassign */
 import axios, { CancelToken, Method } from 'axios';
-import { LogUtils } from '@/utils/logUtils';
+import LogUtils from '@/utils/logUtils';
 import { history } from '@@/core/history';
 import { notification } from 'antd';
 import forIn from 'lodash/forIn';
@@ -104,7 +105,7 @@ export function request<T>(urlTemplate: string, options: GenericRequestOptions =
   if (options.mockCode && mockCodePatterns && mockCodePatterns.length) {
     const shouldUseMock = micromatch.some(options.mockCode, mockCodePatterns);
     if (shouldUseMock) {
-      options.prefix = options.prefix?.replace('/api', '/api-mock');
+      options.prefix = (options.prefix || DEFAULT_API_PREFIX).replace('/api', '/api-mock');
       delete options.mockCode;
       delete options.useMock;
     }

@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 
 import './LoginLayout.global.less';
 

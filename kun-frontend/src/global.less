@@ -1,7 +1,7 @@
 @import './components/KunLoading/KunLoading.global.less';
 
 body {
-  font-family: Titillium Web, Roboto, PingFangSC, sans-serif;
+  font-family: @default-font-family;
   min-width: 1024px;
 }
 
@@ -88,4 +88,12 @@ body {
 
 .gutter-row {
   padding: 0 4px;
+}
+
+.color-negative {
+  color: @warning;
+}
+
+.color-positive {
+  color: #9BC655;
 }

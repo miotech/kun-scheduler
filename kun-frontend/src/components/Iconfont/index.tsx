@@ -1,5 +1,5 @@
 import React, { ComponentProps, RefForwardingComponent, forwardRef } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import './iconfont.less';
 
 export interface IconfontPropTypes extends ComponentProps<any> {
