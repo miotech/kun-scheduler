@@ -68,12 +68,10 @@ public class DataQualityController {
         List<Long> taskIds = dataQualityService.getAllTaskId();
         TaskRunSearchRequest searchRequest = TaskRunSearchRequest.newBuilder()
                 .withTaskIds(taskIds)
-                .withDateFrom(DateUtils.millisToOffsetDateTime(searchLogRequest.getStartTime() == null ?
-                        (DateTimeUtils.now().toEpochSecond() - 24 * 3600L) * 1000L
-                        : searchLogRequest.getStartTime()))
-                .withDateTo(DateUtils.millisToOffsetDateTime(searchLogRequest.getEndTime() == null ?
-                        DateTimeUtils.now().toEpochSecond() * 1000L
-                        : searchLogRequest.getEndTime()))
+                .withDateFrom(searchLogRequest.getStartTime() == null ?
+                        DateTimeUtils.now().minusDays(1) : DateUtils.millisToOffsetDateTime(searchLogRequest.getStartTime()))
+                .withDateTo(searchLogRequest.getEndTime() == null ?
+                        DateTimeUtils.now() : DateUtils.millisToOffsetDateTime(searchLogRequest.getEndTime()))
                 .withPageNum(1)
                 .withPageSize(Integer.MAX_VALUE)
                 .build();
