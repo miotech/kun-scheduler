@@ -1,0 +1,23 @@
+plugins {
+    id 'com.github.johnrengelman.shadow'
+    id 'java'
+    id "org.sonarqube"
+}
+
+dependencies {
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation 'org.zeroturnaround:zt-exec:1.11'
+    implementation 'org.zeroturnaround:zt-process-killer:1.10'
+
+    testImplementation project(':kun-workflow:kun-workflow-testing')
+    testImplementation "junit:junit:4.12"
+}
+
+shadowJar {
+    baseName = 'bash-operator'
+    classifier = null
+    version = 0.1
+    zip64 true
+}

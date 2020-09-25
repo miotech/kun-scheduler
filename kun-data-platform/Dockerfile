@@ -8,7 +8,7 @@ COPY dockerize-alpine-linux-amd64-v0.6.1.tar.gz /server/target/dockerize-alpine-
 RUN tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-v0.6.1.tar.gz \
     && rm dockerize-alpine-linux-amd64-v0.6.1.tar.gz
 
-COPY build/libs/kun-data-platform.jar /server/target/
+COPY kun-data-platform-web/build/libs/kun-data-platform-web.jar /server/target/
 EXPOSE 8081
 
 ADD docker-entrypoint.sh /

@@ -2,6 +2,7 @@ plugins {
     id 'org.springframework.boot' version '2.2.2.RELEASE'
     id 'io.spring.dependency-management' version '1.0.9.RELEASE'
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
     id "io.freefair.lombok" version "5.1.0"
     id "org.sonarqube" version "2.7"
 }
@@ -10,28 +11,68 @@ repositories {
     mavenCentral()
 }
 
+task buildBashOperator (type:Exec){
+    workingDir "kun-workflow-operators/bash-operator"
+    commandLine "gradle","shadowJar"
+}
+
+task buildSparkOperator (type:Exec){
+    workingDir "kun-workflow-operators/spark-operators"
+    commandLine "gradle","shadowJar"
+}
+
+task copyBashOperator(type: Copy){
+    from "kun-workflow-operators/bash-operator/build/libs/bash-operator-0.1.jar"
+    rename {
+        "bash-operator.jar"
+    }
+    into "kun-data-platform-web/src/main/resources"
+    dependsOn(buildBashOperator)
+}
+task copySparkOperator(type: Copy){
+    from "kun-workflow-operators/spark-operators/build/libs/spark-operators-0.1.jar"
+    rename {
+        "spark-operator.jar"
+    }
+    into "kun-data-platform-web/src/main/resources"
+    dependsOn(buildSparkOperator)
+}
+
+task copySparkSqlOperator(type: Copy){
+    from "kun-workflow-operators/spark-operators/build/libs/spark-operators-0.1.jar"
+    rename {
+        "sparkSql-operator.jar"
+    }
+    into "kun-data-platform-web/src/main/resources"
+    dependsOn(buildSparkOperator)
+}
+
+compileJava.dependsOn(copyBashOperator,copySparkOperator,copySparkSqlOperator)
+
+task deleteLocalJar(type: Delete){
+    delete "kun-data-platform-web/src/main/resources/bash-operator.jar"
+    delete "kun-data-platform-web/src/main/resources/spark-operator.jar"
+    delete "kun-data-platform-web/src/main/resources/sparkSql-operator.jar"
+
+}
+bootJar.dependsOn(deleteLocalJar)
+
+
 dependencies {
-    implementation project(':kun-commons:kun-commons-db')
-    implementation project(':kun-commons:kun-commons-utils')
-    implementation project(':kun-workflow:kun-workflow-core')
-    implementation project(':kun-workflow:kun-workflow-client')
-    implementation project(':kun-workflow:kun-workflow-utils')
-    implementation "com.fasterxml.jackson.core:jackson-core"
-    implementation "com.fasterxml.jackson.core:jackson-databind"
-    implementation project(':kun-app-common')
-    implementation project(':kun-security:kun-security-common')
-    implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    implementation 'com.squareup.okhttp3:okhttp'
-    implementation 'org.postgresql:postgresql'
-    implementation 'io.springfox:springfox-boot-starter:3.0.0'
-    implementation 'com.googlecode.json-simple:json-simple'
-    implementation "com.h2database:h2"
+    implementation project(':kun-data-platform:kun-data-platform-web')
+}
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation "org.testcontainers:testcontainers"
+bootJar {
+    mainClassName 'com.miotech.kun.dataplatform.DataPlatformApplication'
+}
 
+jacocoTestReport {
+
+    afterEvaluate {
+        getClassDirectories().setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['**/**operator.jar'])
+        }))
+    }
 }
 
 test {
