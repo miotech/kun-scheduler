@@ -8,7 +8,7 @@ import React, {
   useEffect,
 } from 'react';
 import { Input, Select } from 'antd';
-import c from 'classnames';
+import c from 'clsx';
 import lowerCase from 'lodash/lowerCase';
 import upperFirst from 'lodash/upperFirst';
 

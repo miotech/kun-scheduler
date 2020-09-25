@@ -1,5 +1,5 @@
 import React from 'react';
-import c from 'classnames';
+import c from 'clsx';
 
 import useI18n from '@/hooks/useI18n';
 

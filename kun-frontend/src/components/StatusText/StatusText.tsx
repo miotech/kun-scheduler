@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import { DeployStatusEnum, RunStatusEnum } from '@/definitions/StatEnums.type';
 
 import './StatusText.less';

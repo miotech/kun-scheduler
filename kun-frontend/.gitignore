@@ -239,5 +239,8 @@ use-mock.config.yaml
 config/certConfig.ts
 config/certConfig.json
 
-# i18n
+# i18n updater
 i18n-updater/
+
+# storybook jest addon
+.jest-test-results.json

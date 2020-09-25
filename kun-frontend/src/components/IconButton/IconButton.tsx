@@ -4,7 +4,7 @@ import React, {
   RefForwardingComponent,
   forwardRef,
 } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import Iconfont from '../Iconfont';
 import styles from './IconButton.less';
 

@@ -8,19 +8,19 @@ export function wrapResponseData<T>(responseData: T) {
 
 export interface PaginationInfo {
   pageSize: number;
-  pageNum: number;
+  pageNumber: number;
   totalCount: number;
 }
 
-export function wrapResponseDataWithPagination<T>(responseData: T[], pagination: Partial<PaginationInfo> = {}) {
+export function wrapResponseDataWithPagination<T>(responseData: T[], pagination: Partial<PaginationInfo> = {}, recordsFieldName: string = 'records') {
   return {
     code: 0,
     note: 'Operation Successful',
     result: {
-      pageNum: pagination?.pageNum || 1,
+      pageNumber: pagination?.pageNumber || 1,
       pageSize: pagination?.pageSize || 100,
       totalCount: (typeof pagination?.totalCount === 'number') ? pagination?.totalCount : responseData.length,
-      records: responseData,
+      [`${recordsFieldName}`]: responseData,
     },
   };
 }
