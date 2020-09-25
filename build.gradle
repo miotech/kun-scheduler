@@ -13,7 +13,9 @@ plugins {
 
 allprojects {
     apply plugin: 'java'
-    apply plugin: 'jacoco'
+    if (!name.equals("datax-operator")) {
+        apply plugin: 'jacoco'
+    }
 
     repositories {
         mavenCentral()
@@ -84,6 +86,7 @@ subprojects {
                 implementation'com.alibaba:druid:1.1.22'
                 implementation 'commons-fileupload:commons-fileupload:1.4'
                 implementation "org.jooq:joor-java-8:0.9.12"
+                implementation 'commons-io:commons-io:2.7'
 
                 testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
