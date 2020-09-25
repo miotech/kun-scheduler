@@ -7,7 +7,7 @@ import React, {
 } from 'react';
 import isNil from 'lodash/isNil';
 import isFunction from 'lodash/isFunction';
-import c from 'classnames';
+import c from 'clsx';
 import { AutoComplete, Select } from 'antd';
 import { useRequest, useUpdateEffect } from 'ahooks';
 import { searchDataBasesService } from '@/services/dataSettings';

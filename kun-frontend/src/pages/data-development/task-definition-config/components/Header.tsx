@@ -8,7 +8,7 @@ import { EditText } from '@/components/EditText';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import useRedux from '@/hooks/useRedux';
 import useI18n from '@/hooks/useI18n';
-import { LogUtils } from '@/utils/logUtils';
+import LogUtils from '@/utils/logUtils';
 import {
   commitAndDeployTaskDefinition, deleteTaskDefinition, updateTaskDefinition
 } from '@/services/data-development/task-definitions';

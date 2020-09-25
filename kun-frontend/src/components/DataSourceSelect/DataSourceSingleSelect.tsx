@@ -5,7 +5,7 @@ import React, {
   useMemo,
   useState,
 } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import { useRequest } from 'ahooks';
 import { searchDataBasesService } from '@/services/dataSettings';
 import { Select } from 'antd';
