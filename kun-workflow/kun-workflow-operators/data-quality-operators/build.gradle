@@ -2,6 +2,7 @@ plugins {
     id 'com.github.johnrengelman.shadow'
     id 'java'
     id "org.sonarqube"
+    id "io.freefair.lombok" version "5.1.0"
 }
 
 dependencies {
@@ -11,6 +12,7 @@ dependencies {
     implementation project(':kun-commons:kun-commons-query')
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-commons:kun-commons-db")
+    implementation project(":kun-app-common")
     implementation 'com.syncron.amazonaws:simba-athena-jdbc-driver'
     implementation 'org.postgresql:postgresql'
     implementation "commons-dbutils:commons-dbutils"
