@@ -2,6 +2,8 @@ import React, { memo, useMemo } from 'react';
 import { ColumnProps } from 'antd/es/table';
 import { RowCountChange } from '@/services/monitoring-dashboard';
 import { Card, Table } from 'antd';
+import isNaN from 'lodash/isNaN';
+import isFinite from 'lodash/isFinite';
 import numeral from 'numeral';
 import useI18n from '@/hooks/useI18n';
 
@@ -31,8 +33,8 @@ export const TopMaxRowCountChangeTable: React.FC<Props> = memo(({ data }) => {
       title: t('monitoringDashboard.dataDiscovery.maxRowCountChangeTable.database'),
     },
     {
-      dataIndex: 'datasource',
-      key: 'datasource',
+      dataIndex: 'dataSource',
+      key: 'dataSource',
       title: t('monitoringDashboard.dataDiscovery.maxRowCountChangeTable.datasource'),
     },
     {
@@ -56,6 +58,9 @@ export const TopMaxRowCountChangeTable: React.FC<Props> = memo(({ data }) => {
       title: t('monitoringDashboard.dataDiscovery.maxRowCountChangeTable.changeRatio'),
       render: (txt: any, record: RowCountChange) => {
         const ratio = Number(`${record.rowChangeRatio}`) * 100;
+        if (isNaN(ratio) || !isFinite(ratio)) {
+          return <span>N/A</span>;
+        }
         if (ratio < 0) {
           return <span className="color-negative">
             {`${ratio}%`}
