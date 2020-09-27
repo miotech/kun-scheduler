@@ -5,7 +5,7 @@
  * @param startWordCount
  * @param endWordCount
  */
-const ellipsisString = (
+const getEllipsisString = (
   text?: string,
   length: number = 50,
   startWordCount: number = 15,
@@ -19,7 +19,7 @@ const ellipsisString = (
   }
   const startString = text.substring(0, startWordCount);
   const endString = text.substring(text.length - endWordCount);
-  return `${startString}...${endString}`;
+  return `${startString} ... ${endString}`;
 };
 
-export default ellipsisString;
+export default getEllipsisString;
