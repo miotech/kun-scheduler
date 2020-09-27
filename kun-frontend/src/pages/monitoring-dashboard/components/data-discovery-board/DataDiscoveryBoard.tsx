@@ -30,6 +30,7 @@ export const DataDiscoveryBoard: React.FC = memo(() => {
     dataQualityLongExistingFailedCount,
     dataQualityPassCount,
     totalCaseCount,
+    totalDatasetCount,
   } = metadataMetrics || {};
 
   // setup pagination change listener for failed test cases table
@@ -99,7 +100,7 @@ export const DataDiscoveryBoard: React.FC = memo(() => {
           <RatioCard
             title={t('monitoringDashboard.dataDiscovery.coveredRatio')}
             numerator={dataQualityCoveredCount}
-            denominator={totalCaseCount}
+            denominator={totalDatasetCount}
             status="healthy"
           />
         </Col>
