@@ -61,22 +61,22 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskRun taskRunB = MockTaskRunFactory.createTaskRun(2L, task)
                 .cloneBuilder()
                 .withDependentTaskRunIds(Lists.newArrayList(1L))
-                .withStartAt(DateTimeUtils.now().plusHours(2))
-                .withEndAt(DateTimeUtils.now().plusHours(3))
+                .withStartAt(DateTimeUtils.now().plusHours(3))
+                .withEndAt(null)
                 .withStatus(TaskRunStatus.RUNNING)
                 .build();
         TaskRun taskRunC = MockTaskRunFactory.createTaskRun(3L, task)
                 .cloneBuilder()
                 .withDependentTaskRunIds(Lists.newArrayList(1L))
-                .withStartAt(DateTimeUtils.now().plusHours(2))
-                .withEndAt(DateTimeUtils.now().plusHours(4))
+                .withStartAt(DateTimeUtils.now().plusHours(4))
+                .withEndAt(null)
                 .withStatus(TaskRunStatus.RUNNING)
                 .build();
         TaskRun taskRunD = MockTaskRunFactory.createTaskRun(4L, task)
                 .cloneBuilder()
                 .withDependentTaskRunIds(Lists.newArrayList(2L, 3L))
-                .withStartAt(DateTimeUtils.now().plusHours(4))
-                .withEndAt(DateTimeUtils.now().plusHours(5))
+                .withStartAt(null)
+                .withEndAt(null)
                 .withStatus(TaskRunStatus.CREATED)
                 .build();
         taskRunDao.createTaskRun(taskRunA);
@@ -489,14 +489,14 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         List<TaskRun> runsWithinDateRange = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
                 .newBuilder()
-                .withDateFrom(DateTimeUtils.now().plusHours(2))
-                .withDateTo(DateTimeUtils.now().plusHours(4))
+                .withDateFrom(DateTimeUtils.now().plusHours(1))
+                .withDateTo(DateTimeUtils.now().plusHours(6))
                 .build());
 
         // validate
-        assertThat(runsStarted2HoursLater.size(), is(3));
+        assertThat(runsStarted2HoursLater.size(), is(2));
         assertThat(runsEnded2HoursLater.size(), is(1));
-        assertThat(runsWithinDateRange.size(), is(2));
+        assertThat(runsWithinDateRange.size(), is(1));
     }
 
     @Test
@@ -589,5 +589,65 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertThat(filteredTaskRunsWithSingleTag.size(), is(4));
         assertThat(filteredTaskRunsWithMultiTags.size(), is(4));
         assertThat(filteredTaskRunsWithNonExistMultiTags.size(), is(0));
+    }
+
+    @Test
+    public void fetchTaskRunsByFilter_withSorter_shouldSortAsExpected() {
+        // Prepare
+        Task task = MockTaskFactory.createTask()
+                .cloneBuilder()
+                .withTags(Lists.newArrayList(
+                        new Tag("version", "1.0"),
+                        new Tag("owner", "foo")
+                )).build();
+        taskDao.create(task);
+        prepareTaskRunsWithDependencyRelations(task);
+
+        // Process
+        List<TaskRun> filteredTaskRunsWithStartTimeSorter = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withSortKey("startAt")
+                .withSortOrder("ASC")
+                .build());
+
+        List<TaskRun> filteredTaskRunsWithIdSorter = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter.newBuilder()
+                .withSortKey("id")
+                .withSortOrder("DESC")
+                .build());
+
+        // Validate
+        assertArrayEquals(
+                new Long[]{4L, 1L, 2L, 3L},
+                filteredTaskRunsWithStartTimeSorter.stream().map(TaskRun::getId).toArray());
+        assertArrayEquals(
+                new Long[]{4L, 3L, 2L, 1L},
+                filteredTaskRunsWithIdSorter.stream().map(TaskRun::getId).toArray());
+    }
+
+    @Test
+    public void fetchTaskRunsByFilter_withIncludeStartedOnlyFlag_shouldFilterOutNonStarted() {
+        // Prepare
+        Task task = MockTaskFactory.createTask()
+                .cloneBuilder()
+                .withTags(Lists.newArrayList(
+                        new Tag("version", "1.0"),
+                        new Tag("owner", "foo")
+                )).build();
+        taskDao.create(task);
+        prepareTaskRunsWithDependencyRelations(task);
+
+        // Process
+        List<TaskRun> filteredTaskRunsWithIncludeStartedOnlyFlag =
+                taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                    .newBuilder()
+                    .withIncludeStartedOnly(true)
+                    .withSortKey("id")
+                    .withSortOrder("ASC")
+                    .build());
+
+        // Validate
+        assertArrayEquals(
+                new Long[]{1L, 2L, 3L},
+                filteredTaskRunsWithIncludeStartedOnlyFlag.stream().map(TaskRun::getId).toArray());
     }
 }
