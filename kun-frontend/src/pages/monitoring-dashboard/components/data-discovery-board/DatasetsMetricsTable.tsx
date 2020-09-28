@@ -45,6 +45,7 @@ export const DatasetsMetricsTable: React.FC<Props> = memo((props) => {
       dataIndex: 'columnName',
       key: 'columnName',
       title: t('monitoringDashboard.dataDiscovery.datasetColumnMetricsTable.columnName'),
+      ellipsis: true,
     },
     {
       dataIndex: 'columnNullRatio',
