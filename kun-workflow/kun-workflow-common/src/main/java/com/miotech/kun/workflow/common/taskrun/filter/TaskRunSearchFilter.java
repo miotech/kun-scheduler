@@ -2,6 +2,9 @@ package com.miotech.kun.workflow.common.taskrun.filter;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.miotech.kun.commons.utils.ArgumentCheckUtils;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
@@ -25,7 +28,25 @@ public class TaskRunSearchFilter {
 
     private final List<Tag> tags;
 
+    private static final List<String> AVAILABLE_SORT_KEYS = Lists.newArrayList("id", "status", "startAt", "endAt");
+
+    // should be one of: "id", "status", "startAt", "endAt" or null
+    // by default, null is equivalent to "startAt" as filter
+    private final String sortKey;
+
+    // should be one of: "ASC", "DESC" or null
+    private final String sortOrder;
+
+    // Only include cases that already started (cases with start time not null)
+    private final Boolean includeStartedOnly;
+
     public TaskRunSearchFilter(TaskRunSearchFilter.Builder builder) {
+        Preconditions.checkArgument(
+                AVAILABLE_SORT_KEYS.contains(builder.sortKey) || Objects.isNull(builder.sortKey),
+                "Invalid sort key: \"{}\"", builder.sortKey
+        );
+        ArgumentCheckUtils.checkSortOrder(builder.sortOrder);
+
         this.taskIds = builder.taskIds;
         this.status = builder.status;
         this.dateFrom = builder.dateFrom;
@@ -33,6 +54,9 @@ public class TaskRunSearchFilter {
         this.pageNum = builder.pageNum;
         this.pageSize = builder.pageSize;
         this.tags = builder.tags;
+        this.sortKey = builder.sortKey;
+        this.sortOrder = builder.sortOrder;
+        this.includeStartedOnly = builder.includeStartedOnly;
     }
 
     public List<Long> getTaskIds() {
@@ -63,6 +87,12 @@ public class TaskRunSearchFilter {
         return tags;
     }
 
+    public String getSortKey() { return sortKey; }
+
+    public String getSortOrder() { return sortOrder; }
+
+    public Boolean getIncludeStartedOnly() { return includeStartedOnly; }
+
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -75,7 +105,10 @@ public class TaskRunSearchFilter {
                 .withStatus(status)
                 .withPageNum(pageNum)
                 .withPageSize(pageSize)
-                .withTags(tags);
+                .withTags(tags)
+                .withSortKey(sortKey)
+                .withSortOrder(sortOrder)
+                .withIncludeStartedOnly(includeStartedOnly);
     }
 
     @Override
@@ -89,12 +122,14 @@ public class TaskRunSearchFilter {
                 Objects.equals(dateTo, that.dateTo) &&
                 Objects.equals(pageNum, that.pageNum) &&
                 Objects.equals(pageSize, that.pageSize) &&
-                Objects.equals(tags, that.tags);
+                Objects.equals(tags, that.tags) &&
+                Objects.equals(sortKey, that.sortKey) &&
+                Objects.equals(sortOrder, that.sortOrder);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(taskIds, status, dateFrom, dateTo, pageNum, pageSize);
+        return Objects.hash(taskIds, status, dateFrom, dateTo, pageNum, pageSize, sortKey, sortOrder, includeStartedOnly);
     }
 
     @JsonPOJOBuilder
@@ -106,6 +141,9 @@ public class TaskRunSearchFilter {
         private Integer pageNum;
         private Integer pageSize;
         private List<Tag> tags;
+        private String sortKey;
+        private String sortOrder;
+        private Boolean includeStartedOnly;
 
         private Builder() {
         }
@@ -142,6 +180,26 @@ public class TaskRunSearchFilter {
 
         public Builder withTags(List<Tag> tags) {
             this.tags = tags;
+            return this;
+        }
+
+        public Builder withSortKey(String sortKey) {
+            Preconditions.checkArgument(
+                    AVAILABLE_SORT_KEYS.contains(sortKey) || Objects.isNull(sortKey),
+                    "Invalid sort key: {}", sortKey
+            );
+            this.sortKey = sortKey;
+            return this;
+        }
+
+        public Builder withSortOrder(String sortOrder) {
+            ArgumentCheckUtils.checkSortOrder(sortOrder);
+            this.sortOrder = sortOrder;
+            return this;
+        }
+
+        public Builder withIncludeStartedOnly(Boolean includeStartedOnly) {
+            this.includeStartedOnly = includeStartedOnly;
             return this;
         }
 
