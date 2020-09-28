@@ -217,11 +217,6 @@ public class OperatorServiceTest extends DatabaseTestBase {
     }
 
     @Test
-    public void fullUpdateOperator() {
-        // TODO: implement this
-    }
-
-    @Test
     public void partialUpdateOperator_withExistingOperator_shouldSuccess() {
         // Prepare
         // 1. create an operator
@@ -322,11 +317,6 @@ public class OperatorServiceTest extends DatabaseTestBase {
         } catch (Exception e) {
             assertThat(e, instanceOf(EntityNotFoundException.class));
         }
-    }
-
-    @Test
-    public void searchOperators() {
-        // TODO: implement this
     }
 
     private Long initNopOperator() {
