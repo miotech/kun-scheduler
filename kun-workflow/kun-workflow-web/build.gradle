@@ -14,7 +14,6 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-common')
     implementation project(':kun-workflow:kun-workflow-scheduler')
     implementation project(':kun-workflow:kun-workflow-executor')
-    implementation project(':kun-metadata:kun-metadata-core')
     implementation project(':kun-commons:kun-commons-db')
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-commons:kun-commons-testing')
@@ -31,12 +30,11 @@ dependencies {
     implementation "org.eclipse.jetty:jetty-webapp"
     implementation 'org.apache.commons:commons-lang3'
     implementation 'org.apache.commons:commons-collections4'
-    implementation "org.neo4j:neo4j-ogm-core"
+
     implementation "org.postgresql:postgresql"
+
     implementation "com.h2database:h2"
     implementation 'commons-fileupload:commons-fileupload'
-
-    runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16'
 
     testImplementation project(':kun-workflow:kun-workflow-testing')
     testImplementation 'org.apache.httpcomponents:httpclient'

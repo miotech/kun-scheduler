@@ -4,8 +4,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.workflow.core.execution.*;
+import com.miotech.kun.workflow.core.execution.ConfigDef;
+import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
@@ -21,6 +23,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -170,12 +173,6 @@ public class SparkOperator extends LivyBaseSparkOperator {
                 .define(CONF_LIVY_BATCH_CONF, ConfigDef.Type.STRING, "{}",true, "Extra spark configuration , in the format `{\"key\": \"value\"}`", CONF_LIVY_BATCH_CONF)
                 .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}",true, "Spark arguments and configuration variables, use like `--param1 ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
                 ;
-    }
-
-    @Override
-    public Resolver getResolver() {
-        // TODO: implement this
-        return new NopResolver();
     }
 
     public void lineageAnalysis(OperatorContext context, String applicationId){

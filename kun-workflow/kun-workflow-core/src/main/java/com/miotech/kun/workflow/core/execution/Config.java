@@ -45,14 +45,6 @@ public class Config {
         return (Boolean) values.getOrDefault(name, defaultValue);
     }
 
-    public Integer getInt(String name) {
-        return (Integer) values.get(name);
-    }
-
-    public Integer getInt(String name, int defaultValue) {
-        return (Integer) values.getOrDefault(name, defaultValue);
-    }
-
     public Long getLong(String name) {
         return (Long) values.get(name);
     }

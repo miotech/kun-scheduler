@@ -1,7 +1,5 @@
 package com.miotech.kun.commons.utils;
 
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -51,18 +49,5 @@ public class StringUtils {
             }
         }
         return result;
-    }
-
-    public static String join(Collection<String> stringSlices, String separator) {
-       StringBuilder stringBuilder = new StringBuilder();
-        Iterator<String> iter = stringSlices.iterator();
-        while (iter.hasNext()) {
-            String slice = iter.next();
-            stringBuilder.append(slice);
-            if (iter.hasNext()) {
-                stringBuilder.append(separator);
-            }
-        }
-        return stringBuilder.toString();
     }
 }
