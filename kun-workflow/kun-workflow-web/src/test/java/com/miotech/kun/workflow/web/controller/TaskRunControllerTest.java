@@ -104,6 +104,9 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         TaskRunSearchFilter defaultPaginatedFilter = TaskRunSearchFilter.newBuilder()
                 .withPageNum(1)
                 .withPageSize(100)
+                .withSortKey("startAt")
+                .withSortOrder("DESC")
+                .withIncludeStartedOnly(false)
                 .build();
         setupMockitoWithTaskRunSearchFilter(
                 defaultPaginatedFilter,
@@ -159,6 +162,9 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         TaskRunSearchFilter defaultPaginatedFilter = TaskRunSearchFilter.newBuilder()
                 .withPageNum(1)
                 .withPageSize(100)
+                .withSortKey("startAt")
+                .withSortOrder("DESC")
+                .withIncludeStartedOnly(false)
                 .build();
         // setup return behavior on filtering offsetDatetime
         OffsetDateTime timePointMarch10th = OffsetDateTime.of(2020, 3, 10, 0, 0, 0, 0, ZoneOffset.ofHours(0));
@@ -346,6 +352,9 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         TaskRunSearchFilter defaultPaginatedFilter = TaskRunSearchFilter.newBuilder()
                 .withPageNum(1)
                 .withPageSize(100)
+                .withSortKey("startAt")
+                .withSortOrder("DESC")
+                .withIncludeStartedOnly(false)
                 .build();
         List<TaskRun> allTaskRunCollection = new ArrayList<>();
         for (int i = 0; i < 200; i += 1) {
