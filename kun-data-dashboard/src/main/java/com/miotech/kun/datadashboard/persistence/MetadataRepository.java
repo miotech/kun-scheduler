@@ -69,6 +69,7 @@ public class MetadataRepository extends BaseRepository {
                     Float changeRatio = (rowCountChange.getRowChange()) * 1.0f / rs.getLong("prev_row_count");
                     rowCountChange.setRowChangeRatio(changeRatio);
                 }
+                rowCountChanges.add(rowCountChange);
             }
             return rowCountChanges;
         });

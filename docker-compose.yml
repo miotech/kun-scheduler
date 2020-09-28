@@ -62,7 +62,7 @@ services:
     depends_on:
       - kun-workflow
   kun-data-dashboard:
-    image: "kun-data-discovery:master"
+    image: "kun-data-dashboard:master"
     environment:
       APP_CONFIG_ENV:
       DATA_DASHBOARD_PORT:
@@ -74,13 +74,13 @@ services:
       SECURITY_PORT:
       WORKFLOW_HOST:
       WORKFLOW_PORT:
-      restart: always
-      volumes:
-        - ./kun-data-discovery-logs:/server/target/kun-data-discovery-logs/:z
-      ports:
-        - 8080:${DATA_DISCOVERY_PORT}
-      depends_on:
-        - kun-metadata
+    restart: always
+    volumes:
+      - ./kun-data-dashboard-logs:/server/target/kun-data-dashboard-logs/:z
+    ports:
+      - 8083:${DATA_DASHBOARD_PORT}
+    depends_on:
+      - kun-workflow
   kun-data-discovery:
     image: "kun-data-discovery:master"
     environment:
@@ -134,6 +134,8 @@ services:
       WORKFLOW_PORT:
       DATA_PLATFORM_HOST:
       DATA_PLATFORM_PORT:
+      DATA_DASHBOARD_HOST:
+      DATA_DASHBOARD_PORT:
     restart: always
     ports:
       - 9802:80
