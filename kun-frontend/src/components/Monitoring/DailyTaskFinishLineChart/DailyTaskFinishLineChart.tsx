@@ -11,6 +11,7 @@ import LogUtils from '@/utils/logUtils';
 import { bisectCenter } from './helpers/bisect';
 
 import './DailyTaskFinishLineChart.global.less';
+import dayjs from 'dayjs';
 
 export interface DailyTaskFinishCount {
   /** x-axis, date */
@@ -135,7 +136,7 @@ export const DailyTaskFinishLineChart: React.FC<DailyTaskFinishLineChartProps> =
         >
           <div>
             <div>Count: {tooltipData?.taskCount}</div>
-            <div>Time: {new Date(tooltipData?.time || 0).toISOString()}</div>
+            <div>Time: {dayjs(new Date(tooltipData?.time || 0)).format("YYYY-MM-DD HH:mm")}</div>
           </div>
         </TooltipInPortal>
       );
