@@ -10,7 +10,6 @@ import org.junit.Test;
 import java.util.Collections;
 import java.util.List;
 
-import static com.miotech.kun.workflow.utils.DateTimeUtils.atMillisecondPrecision;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -156,9 +155,8 @@ public class WorkflowApiTest extends MockServerTestBase {
         assertThat(result.getTask(), sameBeanAs(taskRun.getTask()));
         assertThat(result.getDependencyTaskRunIds(), is(taskRun.getDependencyTaskRunIds()));
         assertThat(result.getAttempts(), is(taskRun.getAttempts()));
-        // JSON timestamp can only preserve millisecond-level precision
-        assertThat(result.getEndAt(), is(atMillisecondPrecision(taskRun.getEndAt())));
-        assertThat(result.getStartAt(), is(atMillisecondPrecision(taskRun.getStartAt())));
+        assertThat(result.getEndAt(), is(taskRun.getEndAt()));
+        assertThat(result.getStartAt(), is(taskRun.getStartAt()));
     }
 
     @Test

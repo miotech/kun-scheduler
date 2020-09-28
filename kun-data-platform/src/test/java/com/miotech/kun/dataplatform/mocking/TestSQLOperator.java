@@ -2,8 +2,6 @@ package com.miotech.kun.dataplatform.mocking;
 
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.NopResolver;
-import com.miotech.kun.workflow.core.execution.Resolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,10 +25,5 @@ public class TestSQLOperator extends KunOperator {
     public ConfigDef config() {
         return new ConfigDef()
                 .define("sparkSQL", ConfigDef.Type.STRING, true, "sql script", "sql");
-    }
-
-    @Override
-    public Resolver getResolver() {
-        return new NopResolver();
     }
 }

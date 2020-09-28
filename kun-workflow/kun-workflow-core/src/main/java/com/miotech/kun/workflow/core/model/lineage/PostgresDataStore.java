@@ -2,9 +2,6 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.metadata.core.common.URI;
-import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.metadata.core.model.DataStoreType;
 
 public class PostgresDataStore extends DataStore {
 
@@ -47,10 +44,5 @@ public class PostgresDataStore extends DataStore {
     @Override
     public String getDatabaseName() {
         return String.format("%s.%s", database, schema);
-    }
-
-    @Override
-    public URI getURI() {
-        return URI.from(url + "/" + database + "?schema=" + schema + "&table=" + tableName);
     }
 }

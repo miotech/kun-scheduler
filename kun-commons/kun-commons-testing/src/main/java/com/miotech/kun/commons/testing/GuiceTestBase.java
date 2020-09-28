@@ -16,7 +16,6 @@ import java.util.Map;
 
 @SuppressWarnings({"unchecked", "rawtypes"})
 public abstract class GuiceTestBase {
-
     private final EmbeddedModule ebdMod = new EmbeddedModule();
     private final Map<Object, Object> mocks = new HashMap<>();
     private final Map<Object, Object> bindings = new HashMap<>();
@@ -44,10 +43,6 @@ public abstract class GuiceTestBase {
         T mockObj = Mockito.mock(clazz);
         mocks.put(clazz, mockObj);
         return mockObj;
-    }
-
-    protected <T> T spy(T target) {
-        return Mockito.spy(target);
     }
 
     protected <T> void bind(Class<? super T> clazz, Class<T> clazz2) {

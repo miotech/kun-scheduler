@@ -12,10 +12,8 @@ plugins {
 }
 
 dependencies {
-    implementation project(":kun-metadata:kun-metadata-core")
     implementation project(':kun-metadata:kun-metadata-databuilder')
     implementation project(':kun-metadata:kun-metadata-web')
-    implementation project(':kun-metadata:kun-metadata-service-facade')
 }
 
 shadowJar {

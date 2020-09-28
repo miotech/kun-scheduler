@@ -1,6 +1,6 @@
 package com.miotech.kun.workflow.core.event;
 
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.util.List;

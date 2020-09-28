@@ -4,7 +4,6 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-common')
     implementation project(':kun-workflow:kun-workflow-utils')
-    implementation project(':kun-metadata:kun-metadata-core')
     implementation "org.ow2.asm:asm"
     implementation "org.ow2.asm:asm-commons"
 }
