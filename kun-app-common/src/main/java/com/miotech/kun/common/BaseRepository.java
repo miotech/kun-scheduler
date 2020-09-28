@@ -1,10 +1,10 @@
 package com.miotech.kun.common;
 
 import com.miotech.kun.common.utils.DateUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.CollectionUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -42,7 +42,7 @@ public abstract class BaseRepository {
     }
 
     public String collectionToConditionSql(List<Object> pstmtArgs, Collection<?> collection) {
-        if (!CollectionUtils.isEmpty(collection)) {
+        if (CollectionUtils.isNotEmpty(collection)) {
             StringBuilder collectionSql = new StringBuilder("(");
             for (Object object : collection) {
                 collectionSql.append("?").append(",");
