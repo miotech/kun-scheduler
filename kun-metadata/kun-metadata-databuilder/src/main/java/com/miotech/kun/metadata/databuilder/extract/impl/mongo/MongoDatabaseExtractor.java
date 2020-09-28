@@ -6,7 +6,7 @@ import com.google.common.collect.Iterators;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
-import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.databuilder.model.Dataset;
 import com.miotech.kun.metadata.databuilder.model.MongoDataSource;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.mongodb.MongoClient;

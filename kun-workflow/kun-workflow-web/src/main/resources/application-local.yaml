@@ -17,7 +17,3 @@ flyway:
   table: flyway_kun_wf_schema_history
   baselineOnMigrate: true
   baselineVersion: 0
-
-neo4j:
-  username: neo4j
-  password: neo4j

@@ -2,10 +2,10 @@ package com.miotech.kun.metadata.web.lineage;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Singleton;
-import com.miotech.kun.commons.db.DatabaseOperator;
-import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.databuilder.service.gid.DataStoreJsonUtil;
 import com.miotech.kun.workflow.core.event.LineageEvent;
+import com.miotech.kun.workflow.core.model.lineage.DataStore;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

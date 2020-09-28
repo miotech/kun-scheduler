@@ -1,7 +1,0 @@
-dependencies {
-    implementation project(":kun-commons:kun-commons-utils")
-    implementation 'org.apache.dubbo:dubbo'
-    implementation 'org.apache.dubbo:dubbo-registry-redis'
-
-    testImplementation project(":kun-commons:kun-commons-testing")
-}
