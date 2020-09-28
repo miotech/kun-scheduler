@@ -2,9 +2,9 @@ package com.miotech.kun.workflow.web;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseModule;
-import com.miotech.kun.commons.db.GraphDatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.PropertyUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.workflow.SchedulerModule;
@@ -16,10 +16,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.Neo4jContainer;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -27,10 +25,6 @@ import java.io.UnsupportedEncodingException;
 public class KunWebServerTestBase extends GuiceTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(KunWebServerTestBase.class);
-
-    @ClassRule
-    public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
-            .withAdminPassword("Mi0tech2020");
 
     @Inject
     private KunWorkflowWebServer webServer;
@@ -44,9 +38,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
         Props props = PropsUtils.loadAppProps("application-test.yaml");
         addModules(new KunWorkflowServerModule(props),
                 new DatabaseModule(),
-                new SchedulerModule(),
-                new GraphDatabaseModule(neo4jContainer)
-        );
+                new SchedulerModule());
     }
 
     @Before

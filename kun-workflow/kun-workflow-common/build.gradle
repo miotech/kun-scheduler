@@ -1,12 +1,9 @@
 dependencies {
     implementation project(':kun-commons:kun-commons-db')
     implementation project(':kun-commons:kun-commons-utils')
-    implementation project(':kun-commons:kun-commons-rpc')
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
-    implementation project(':kun-metadata:kun-metadata-core')
     implementation project(':kun-commons:kun-commons-db')
-    implementation project(':kun-metadata:kun-metadata-service-facade')
     implementation "commons-dbutils:commons-dbutils"
     implementation 'com.google.guava:guava'
     implementation "com.zaxxer:HikariCP"
@@ -15,14 +12,8 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-annotations'
     implementation "com.cronutils:cron-utils"
     implementation 'commons-fileupload:commons-fileupload'
-    implementation 'org.apache.dubbo:dubbo'
-    implementation 'org.apache.dubbo:dubbo-registry-redis'
-    implementation "org.neo4j:neo4j-ogm-core"
-    runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16' // Only add if you're using the Bolt driver
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")
-    testImplementation "org.testcontainers:neo4j"
     testRuntimeOnly "com.h2database:h2"
-    testRuntimeOnly "org.neo4j:neo4j-ogm-embedded-driver:3.2.16"
 }

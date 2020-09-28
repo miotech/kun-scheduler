@@ -3,7 +3,7 @@ package com.miotech.kun.metadata.databuilder.extract.tool;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.miotech.kun.metadata.core.model.DatasetField;
+import com.miotech.kun.metadata.databuilder.model.DatasetField;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;

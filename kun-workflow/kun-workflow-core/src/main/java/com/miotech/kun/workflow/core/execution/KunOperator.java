@@ -42,12 +42,6 @@ public abstract class KunOperator {
     }
 
     /**
-     * Get resolver of operator
-     * @return resolver
-     */
-    public abstract Resolver getResolver();
-
-    /**
      * 获取任务执行报告
      * @return
      */
