@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
 @Data
 public class ColumnMetricsRequest extends PageInfo {
 
-    String sortColumn = "null_count";
+    String sortColumn = "columnNullCount";
 
     String sortOrder = "desc";
 }
