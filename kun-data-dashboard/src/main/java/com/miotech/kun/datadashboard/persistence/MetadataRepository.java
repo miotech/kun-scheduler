@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @author: Jie Chen
  * @created: 2020/9/15
@@ -98,6 +101,13 @@ public class MetadataRepository extends BaseRepository {
 
     }
 
+    private static final Map<String, String> COLUMN_METRICS_REQUEST_ORDER_MAP = new HashMap<>();
+    static {
+        COLUMN_METRICS_REQUEST_ORDER_MAP.put("columnNullCount", "null_count");
+        COLUMN_METRICS_REQUEST_ORDER_MAP.put("columnDistinctCount", "distinct_count");
+        COLUMN_METRICS_REQUEST_ORDER_MAP.put("totalRowCount", "row_count");
+    }
+
     public ColumnMetricsList getColumnMetricsList(ColumnMetricsRequest columnMetricsRequest) {
         SQLBuilder preSqlBuilder = DefaultSQLBuilder.newBuilder()
                 .select("field_id",
@@ -117,7 +127,7 @@ public class MetadataRepository extends BaseRepository {
         String countSql = "select count(1) from (" + preSqlBuilder.getSQL() + ") as result";
 
         String sql = preSqlBuilder
-                .orderBy(columnMetricsRequest.getSortColumn() + " " + columnMetricsRequest.getSortOrder())
+                .orderBy(COLUMN_METRICS_REQUEST_ORDER_MAP.get(columnMetricsRequest.getSortColumn()) + " " + columnMetricsRequest.getSortOrder())
                 .offset(getOffset(columnMetricsRequest.getPageNumber(), columnMetricsRequest.getPageSize()))
                 .limit(columnMetricsRequest.getPageSize())
                 .getSQL();

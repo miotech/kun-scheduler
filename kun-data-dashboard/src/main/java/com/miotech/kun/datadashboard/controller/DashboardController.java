@@ -140,6 +140,9 @@ public class DashboardController {
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageNum(pageInfo.getPageNumber())
                 .withPageSize(pageInfo.getPageSize())
+                .withIncludeStartedOnly(true)
+                .withSortKey("startAt")
+                .withSortOrder("DESC")
                 .build();
 
         DataDevelopmentTasks dataDevelopmentTasks = new DataDevelopmentTasks();
