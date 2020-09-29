@@ -1,7 +1,6 @@
 package com.miotech.kun.datadashboard.persistence;
 
 import com.miotech.kun.common.BaseRepository;
-import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.datadashboard.model.bo.TestCasesRequest;
@@ -12,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author: Jie Chen
@@ -65,6 +67,11 @@ public class DataQualityRepository extends BaseRepository {
         return jdbcTemplate.queryForObject(sql, Long.class);
     }
 
+    private static final Map<String, String> TEST_CASES_REQUEST_ORDER_MAP = new HashMap<>();
+    static {
+        TEST_CASES_REQUEST_ORDER_MAP.put("continuousFailingCount", "continuous_failing_count");
+        TEST_CASES_REQUEST_ORDER_MAP.put("updateTime", "last_update_time");
+    }
     public TestCases getTestCases(TestCasesRequest testCasesRequest) {
         SQLBuilder preSqlBuilder = DefaultSQLBuilder.newBuilder()
                 .select("kdcm.error_reason as error_reason",
@@ -78,7 +85,7 @@ public class DataQualityRepository extends BaseRepository {
         String countSql = "select count(1) from (" + preSqlBuilder.getSQL() + ") as result";
 
         String sql = preSqlBuilder
-                .orderBy(testCasesRequest.getSortColumn() + " " + testCasesRequest.getSortOrder())
+                .orderBy(TEST_CASES_REQUEST_ORDER_MAP.get(testCasesRequest.getSortColumn()) + " " + testCasesRequest.getSortOrder())
                 .offset(getOffset(testCasesRequest.getPageNumber(), testCasesRequest.getPageSize()))
                 .limit(testCasesRequest.getPageSize())
                 .getSQL();
