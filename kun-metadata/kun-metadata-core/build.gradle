@@ -1,0 +1,9 @@
+dependencies {
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation 'com.google.guava:guava'
+    implementation 'org.dmfs:rfc3986-uri:0.8.1'
+
+    testImplementation project(":kun-commons:kun-commons-testing")
+}

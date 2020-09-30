@@ -49,7 +49,7 @@ public class ExceptionHandler {
                     exceptionClz.getName(),
                     method.getName(),
                     Arrays.stream(parameters).map(x -> x.getType() + x.getName())
-                            .collect(Collectors.joining(",")));
+                            .collect(Collectors.joining(",")), e);
             List<Object> args = new ArrayList<>();
             for (Parameter parameter: parameters) {
                 if (Throwable.class.isAssignableFrom(parameter.getType())) {

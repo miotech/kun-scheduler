@@ -4,9 +4,9 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
 import com.miotech.kun.metadata.databuilder.extract.iterator.GlueTableIterator;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
 import io.prestosql.jdbc.$internal.guava.collect.Iterators;
 import io.prestosql.jdbc.$internal.guava.collect.Streams;
+import com.miotech.kun.metadata.core.model.Dataset;
 
 import java.util.Iterator;
 
