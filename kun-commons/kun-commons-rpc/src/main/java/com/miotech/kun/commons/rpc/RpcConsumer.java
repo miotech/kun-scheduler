@@ -5,6 +5,9 @@ import com.google.common.cache.CacheBuilder;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.dubbo.config.ReferenceConfig;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.concurrent.ExecutionException;
 
 public class RpcConsumer {
@@ -23,19 +26,49 @@ public class RpcConsumer {
      * @param <T> interface type
      * @return A service stub. DO remember to store this stub in cache for later reuse.
      */
-    @SuppressWarnings("unchecked")
     public <T> T getService(String applicationName, Class<T> interfaceClass, String version) {
+        return (T) Proxy.newProxyInstance(
+                RpcConsumer.class.getClassLoader(),
+                new Class[] { interfaceClass },
+                new LazyLoadingServiceProxy<>(applicationName, interfaceClass, version)
+        );
+    }
+
+    private class LazyLoadingServiceProxy<T> implements InvocationHandler {
+        private final String applicationName;
+        private final Class<T> interfaceClass;
+        private final String version;
+
+        public LazyLoadingServiceProxy(String applicationName, Class<T> interfaceClass, String version) {
+            this.applicationName = applicationName;
+            this.interfaceClass = interfaceClass;
+            this.version = version;
+        }
+
+        private T actualService = null;
+
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            synchronized (this) {
+                if (actualService == null) {
+                    actualService = doGetService(applicationName, interfaceClass, version);
+                }
+            }
+            return method.invoke(actualService, args);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T doGetService(String applicationName, Class<T> interfaceClass, String version) {
         if (!RpcBootstrap.isStarted()) {
             throw new IllegalStateException("Rpc framework is not started yet.");
         }
 
-        // Try load reference from cache
         ReferenceConfig<T> referenceConfig;
         try {
-            referenceConfig = (ReferenceConfig<T>) referenceConfigCache.get(applicationName + "::" + interfaceClass.getName(), () -> {
-                // If entry is not in cache, create a new one
-                return createReferenceConfig(interfaceClass, version);
-            });
+            referenceConfig = (ReferenceConfig<T>) referenceConfigCache.get(
+                    cacheKey(applicationName, interfaceClass),
+                    () -> createReferenceConfig(interfaceClass, version));
         } catch (ExecutionException e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -43,10 +76,14 @@ public class RpcConsumer {
         return referenceConfig.get();
     }
 
-    private static <T> ReferenceConfig<T> createReferenceConfig(Class<T> interfaceClass, String version) {
+    private <T> ReferenceConfig<T> createReferenceConfig(Class<T> interfaceClass, String version) {
         ReferenceConfig<T> referenceConfig = new ReferenceConfig<>();
         referenceConfig.setVersion(version);
         referenceConfig.setInterface(interfaceClass);
         return referenceConfig;
+    }
+
+    private String cacheKey(String applicationName, Class<?> clazz) {
+       return applicationName + "::" + clazz.getName();
     }
 }
