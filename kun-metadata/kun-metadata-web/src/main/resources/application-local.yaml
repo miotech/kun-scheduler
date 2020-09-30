@@ -18,3 +18,7 @@ flyway:
 workflow:
   url: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
   cronExpr: 0 0 12 * * ?
+
+rpc:
+  registry: ${DUBBO_REGISTRY_URL}
+  port: ${DUBBO_METADATA_SERVICE_PORT}

@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract;
 
 
-import com.miotech.kun.metadata.databuilder.model.Dataset;
+import com.miotech.kun.metadata.core.model.Dataset;
 
 import java.util.Iterator;
 
