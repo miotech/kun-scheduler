@@ -170,6 +170,7 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
 
         return DatasetStat.newBuilder()
                 .withRowCount(rowCount)
+                .withLastUpdatedTime(getLastUpdateTime())
                 .withStatDate(LocalDateTime.now()).build();
     }
 
@@ -181,6 +182,11 @@ public class ElasticSearchIndexExtractor extends ExtractorTemplate {
     @Override
     public String getName() {
         return index;
+    }
+
+    @Override
+    protected LocalDateTime getLastUpdateTime() {
+        return null;
     }
 
     @Override

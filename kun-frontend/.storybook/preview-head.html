@@ -1,0 +1,16 @@
+<!--
+In Storybook, your stories render in a special “preview” iframe (Canvas tab) inside
+the larger Storybook web application. The JavaScript build configuration of the preview
+is controlled by a webpack config, but you also may want to directly control the HTML
+that is rendered to help your stories render correctly.
+
+If you need to add extra elements to the head of the preview iframe,
+for instance to load static stylesheets, font files, or similar, add them into this file.
+-->
+<!-- Pull in static files served from your Static director or the internet -->
+<meta charset="utf-8" />
+<link rel="stylesheet" href="/iconfont/font/iconfont.css" type="text/css" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400&display=swap" />
+<!-- Or you can load custom head-tag JavaScript: -->

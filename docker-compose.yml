@@ -11,6 +11,22 @@ services:
       - ./docker_init_db.sql:/docker-entrypoint-initdb.d/docker_init_db.sql
     ports:
       - 5433:5432
+  kun-security:
+    image: "kun-security:master"
+    environment:
+      APP_CONFIG_ENV:
+      SECURITY_PORT:
+      DB_PG_IP:
+      DB_PG_PORT:
+      DB_PG_USERNAME:
+      DB_PG_PASSWORD:
+    restart: always
+    volumes:
+      - ./kun-security-logs:/server/target/kun-security-logs/:z
+    ports:
+      - 8079:${SECURITY_PORT}
+    depends_on:
+      - kun-postgres
   kun-workflow:
     image: "kun-workflow:master"
     environment:
@@ -45,6 +61,26 @@ services:
       - 8084:${METADATA_PORT}
     depends_on:
       - kun-workflow
+  kun-data-dashboard:
+    image: "kun-data-dashboard:master"
+    environment:
+      APP_CONFIG_ENV:
+      DATA_DASHBOARD_PORT:
+      DB_PG_IP:
+      DB_PG_PORT:
+      DB_PG_USERNAME:
+      DB_PG_PASSWORD:
+      SECURITY_HOST:
+      SECURITY_PORT:
+      WORKFLOW_HOST:
+      WORKFLOW_PORT:
+    restart: always
+    volumes:
+      - ./kun-data-dashboard-logs:/server/target/kun-data-dashboard-logs/:z
+    ports:
+      - 8083:${DATA_DASHBOARD_PORT}
+    depends_on:
+      - kun-workflow
   kun-data-discovery:
     image: "kun-data-discovery:master"
     environment:
@@ -54,6 +90,8 @@ services:
       DB_PG_PORT:
       DB_PG_USERNAME:
       DB_PG_PASSWORD:
+      SECURITY_HOST:
+      SECURITY_PORT:
       WORKFLOW_HOST:
       WORKFLOW_PORT:
       METADATA_HOST:
@@ -74,6 +112,8 @@ services:
       DB_PG_PORT:
       DB_PG_USERNAME:
       DB_PG_PASSWORD:
+      SECURITY_HOST:
+      SECURITY_PORT:
       WORKFLOW_HOST:
       WORKFLOW_PORT:
     restart: always
@@ -86,11 +126,16 @@ services:
   kun-frontend:
     image: "kun-frontend:master"
     environment:
+      SECURITY_HOST:
+      SECURITY_PORT:
       DATA_DISCOVERY_HOST:
       DATA_DISCOVERY_PORT:
       WORKFLOW_HOST:
       WORKFLOW_PORT:
+      DATA_PLATFORM_HOST:
       DATA_PLATFORM_PORT:
+      DATA_DASHBOARD_HOST:
+      DATA_DASHBOARD_PORT:
     restart: always
     ports:
       - 9802:80

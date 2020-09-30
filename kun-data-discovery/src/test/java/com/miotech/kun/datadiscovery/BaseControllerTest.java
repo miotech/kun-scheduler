@@ -14,7 +14,7 @@ import org.springframework.test.context.junit4.SpringRunner;
  * @created: 2020/6/12
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {Application.class, BaseConfiguration.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(classes = {DataDiscoveryServer.class, BaseConfiguration.class}, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 public class BaseControllerTest {

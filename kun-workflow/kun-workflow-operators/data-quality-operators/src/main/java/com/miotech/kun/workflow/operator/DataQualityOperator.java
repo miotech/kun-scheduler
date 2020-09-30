@@ -7,6 +7,11 @@ import com.miotech.kun.commons.query.datasource.MetadataDataSource;
 import com.miotech.kun.commons.query.model.QueryResultSet;
 import com.miotech.kun.commons.query.service.ConfigService;
 import com.miotech.kun.workflow.core.execution.*;
+import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.execution.ConfigDef;
+import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.operator.client.DataQualityClient;
 import com.miotech.kun.workflow.operator.client.MetadataClient;
 import com.miotech.kun.workflow.operator.model.*;
@@ -42,6 +47,10 @@ public class DataQualityOperator extends KunOperator {
 
     private DataQualityRecord dataQualityRecord;
 
+    private DataQualityClient dataQualityClient;
+
+    private MetadataClient metadataClient;
+
     private static final String CASE_FAIL_MSG_PREFIX = "CASE FAIL - ";
 
     private static final String CASE_SUCCESS_MSG_PREFIX = "CASE SUCCESS - ";
@@ -55,6 +64,9 @@ public class DataQualityOperator extends KunOperator {
         configService.setMetadataDataSourceUsername(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_USERNAME));
         configService.setMetadataDataSourcePassword(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_PASSWORD));
         configService.setMetadataDataSourceDriverClass(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_DIRVER_CLASS));
+
+        dataQualityClient = DataQualityClient.getInstance();
+        metadataClient = MetadataClient.getInstance();
 
         String caseIdStr = context.getConfig().getString("caseId");
         if (StringUtils.isEmpty(caseIdStr)) {
@@ -78,6 +90,11 @@ public class DataQualityOperator extends KunOperator {
             dataQualityRecord.setCaseId(caseId);
             dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
             dataQualityRecord.appendErrorReason(e.getMessage());
+            DataQualityCaseMetrics metrics = new DataQualityCaseMetrics();
+            metrics.setCaseId(caseId);
+            metrics.setCaseStatus(CaseStatus.FAILED);
+            metrics.setErrorReason(e.getMessage());
+            dataQualityClient.recordCaseMetrics(metrics);
             return false;
         } finally {
             logInfo(DataSourceContainer.getInstance().toString());
@@ -106,14 +123,10 @@ public class DataQualityOperator extends KunOperator {
 
     @Override
     public Resolver getResolver() {
-        // TODO: implement this
         return new NopResolver();
     }
 
     private boolean doRun() {
-
-        MetadataClient metadataClient = MetadataClient.getInstance();
-        DataQualityClient dataQualityClient = DataQualityClient.getInstance();
         DataQualityCase dataQualityCase = dataQualityClient.getCase(caseId);
 
         TemplateType dimension = dataQualityCase.getDimension();
@@ -132,8 +145,7 @@ public class DataQualityOperator extends KunOperator {
                 String queryString = parseTemplate(templateString, args);
                 queryStrings.add(queryString);
             } catch (Exception e) {
-                logError("Failed to parse template string.", e);
-                return false;
+                throwError("Failed to parse template string.");
             }
 
         } else if (dimension == TemplateType.FIELD) {
@@ -150,8 +162,7 @@ public class DataQualityOperator extends KunOperator {
                     String queryString = parseTemplate(templateString, args);
                     queryStrings.add(queryString);
                 } catch (Exception e) {
-                    logError("Failed to parse template string.", e);
-                    return false;
+                    throwError("Failed to parse template string.");
                 }
                 args.remove("field");
             }
@@ -161,10 +172,8 @@ public class DataQualityOperator extends KunOperator {
             String queryString = dataQualityCase.getExecutionString();
             queryStrings.add(queryString);
         } else {
-            logError("Unsupported template type: " + dimension.name());
-            return false;
+            throwError("Unsupported template type: " + dimension.name());
         }
-
 
         for (String queryString : queryStrings) {
             QueryResultSet queryResultSet = query(queryString, currentDataset);
@@ -211,55 +220,53 @@ public class DataQualityOperator extends KunOperator {
         return "originalValue: " + originalValueStr + " rule: " + rule.toString();
     }
 
+    private void throwError(String errorMsg) {
+        throw ExceptionUtils.wrapIfChecked(new RuntimeException(errorMsg));
+    }
+
+    private void doRuleAssert(Object originalValue,
+                              DataQualityRule rule) {
+        boolean ruleCase = AssertUtils.doAssert(rule.getExpectedType(),
+                rule.getOperator(),
+                originalValue,
+                rule.getExpectedValue());
+
+        if (ruleCase) {
+            logCaseSuccess(originalValue, rule);
+            DataQualityCaseMetrics metrics = new DataQualityCaseMetrics();
+            metrics.setCaseId(caseId);
+            metrics.setCaseStatus(CaseStatus.SUCCESS);
+            dataQualityClient.recordCaseMetrics(metrics);
+        } else {
+            logCaseFail(originalValue, rule);
+            dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
+            dataQualityRecord.appendErrorReason(getRecordErrorReason(originalValue, rule));
+            DataQualityCaseMetrics metrics = new DataQualityCaseMetrics();
+            metrics.setCaseId(caseId);
+            metrics.setCaseStatus(CaseStatus.FAILED);
+            metrics.setErrorReason(getRecordErrorReason(originalValue, rule));
+            dataQualityClient.recordCaseMetrics(metrics);
+        }
+    }
+
     private void doAssert(QueryResultSet resultSet,
                           TemplateType templateType,
                           List<DataQualityRule> rules) {
         if (CollectionUtils.isEmpty(resultSet.getResultSet())) {
-            logCaseFail("SQL query return empty result set.");
-            return;
+            throwError("SQL query return empty result set.");
         }
-        try {
-            Map<String, ?> row = resultSet.getResultSet().get(0);
-            if (templateType == TemplateType.CUSTOMIZE) {
-                for (DataQualityRule rule : rules) {
-                    Object originalValue = row.get(rule.getField());
-                    boolean ruleCase = AssertUtils.doAssert(rule.getExpectedType(),
-                            rule.getOperator(),
-                            originalValue,
-                            rule.getExpectedValue());
-
-                    if (ruleCase) {
-                        logCaseSuccess(row.get(rule.getField()), rule);
-                    } else {
-                        logCaseFail(row.get(rule.getField()), rule);
-                        dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
-                        dataQualityRecord.appendErrorReason(getRecordErrorReason(originalValue, rule));
-                    }
-                }
-            } else {
-                Object originalValue = row.values().iterator().next();
-                for (DataQualityRule rule : rules) {
-                    boolean ruleCase = AssertUtils.doAssert(rule.getExpectedType(),
-                            rule.getOperator(),
-                            originalValue,
-                            rule.getExpectedValue());
-
-                    if (ruleCase) {
-                        logCaseSuccess(originalValue, rule);
-                    } else {
-                        logCaseFail(originalValue, rule);
-                        dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
-                        dataQualityRecord.appendErrorReason(getRecordErrorReason(originalValue, rule));
-                    }
-                }
+        Map<String, ?> row = resultSet.getResultSet().get(0);
+        if (templateType == TemplateType.CUSTOMIZE) {
+            for (DataQualityRule rule : rules) {
+                Object originalValue = row.get(rule.getField());
+                doRuleAssert(originalValue, rule);
             }
-
-        } catch (Exception e) {
-            logCaseFail(e.getMessage());
-            dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
-            dataQualityRecord.appendErrorReason(e.getMessage());
+        } else {
+            Object originalValue = row.values().iterator().next();
+            for (DataQualityRule rule : rules) {
+                doRuleAssert(originalValue, rule);
+            }
         }
-
     }
 
     private QueryResultSet query(String queryString, Dataset dataset) {

@@ -7,7 +7,7 @@ on:
       - 'kun-app-common/**'
       - 'kun-commons/**'
       - 'kun-data-quality/**'
-      - 'kun-security/**'
+      - 'kun-security/kun-security-common/**'
       - 'kun-workflow/kun-workflow-client/**'
       - 'kun-workflow/kun-workflow-core/**'
       - 'kun-workflow/kun-workflow-utils/**'

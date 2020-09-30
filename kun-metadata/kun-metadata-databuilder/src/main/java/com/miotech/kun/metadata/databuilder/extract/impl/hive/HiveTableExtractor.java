@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.databuilder.extract.impl.hive;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.core.model.*;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
@@ -12,11 +13,18 @@ import com.miotech.kun.metadata.databuilder.model.HiveDataSource;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.zaxxer.hikari.HikariDataSource;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
+import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.TimeZone;
 
 public class HiveTableExtractor extends ExtractorTemplate {
     private static Logger logger = LoggerFactory.getLogger(HiveTableExtractor.class);
@@ -94,13 +102,17 @@ public class HiveTableExtractor extends ExtractorTemplate {
     @Override
     @VisibleForTesting
     public DatasetStat getTableStats() {
+        DatasetStat.Builder datasetStatBuilder = DatasetStat.newBuilder();
         if (logger.isDebugEnabled()) {
             logger.debug("HiveTableExtractor getFieldStats start. dataSource: {}, database: {}, table: {}",
                     JSONUtils.toJsonString(dataSource), database, table);
         }
 
         JDBCStatTemplate statService = new JDBCStatTemplate(database, table, DatabaseType.HIVE, datastoreDataSource);
-        return statService.getTableStats();
+        datasetStatBuilder.withStatDate(LocalDateTime.now())
+                .withRowCount(statService.getRowCount())
+                .withLastUpdatedTime(getLastUpdateTime());
+        return datasetStatBuilder.build();
     }
 
     @Override
@@ -111,6 +123,31 @@ public class HiveTableExtractor extends ExtractorTemplate {
     @Override
     protected String getName() {
         return table;
+    }
+
+    @Override
+    protected LocalDateTime getLastUpdateTime() {
+        String sql = "SELECT s.LOCATION FROM TBLS t JOIN DBS d ON t.DB_ID = d.DB_ID JOIN SDS s ON t.SD_ID = s.SD_ID WHERE d.NAME = ? AND t.TBL_NAME = ?";
+        DatabaseOperator dbOperator = new DatabaseOperator(metastoreDataSource);
+        String[] locations = dbOperator.fetchOne(sql, rs -> {
+            String location = rs.getString(1);
+            int idx = location.indexOf("/", location.lastIndexOf(":"));
+
+            String[] locationArr = new String[2];
+            locationArr[0] = location.substring(0, idx);
+            locationArr[1] = location.substring(idx);
+            return locationArr;
+        }, database, table);
+        FileSystem fileSystem = HDFSOperator.create(locations[0] + "/" + table, "hdfs");
+        FileStatus fileStatus;
+        try {
+            fileStatus = fileSystem.getFileStatus(new Path(locations[1]));
+            return LocalDateTime.ofInstant(Instant.ofEpochMilli(fileStatus.getModificationTime()), TimeZone.getDefault().toZoneId());
+        } catch (IOException e) {
+            throw ExceptionUtils.wrapIfChecked(e);
+        } finally {
+            HDFSOperator.close(fileSystem);
+        }
     }
 
     @Override

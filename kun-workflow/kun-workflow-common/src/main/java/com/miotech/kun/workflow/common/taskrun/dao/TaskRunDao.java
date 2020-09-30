@@ -52,6 +52,14 @@ public class TaskRunDao {
 
     private static final String RELATION_TABLE_NAME = "kun_wf_task_run_relations";
     private static final List<String> taskRunRelationCols = ImmutableList.of("upstream_task_run_id", "downstream_task_run_id");
+    private static final Map<String, String> sortKeyToFieldMapper = new HashMap<>();
+
+    static {
+        sortKeyToFieldMapper.put("id", "taskrun_id");
+        sortKeyToFieldMapper.put("startAt", "start_at");
+        sortKeyToFieldMapper.put("endAt", "ent_at");
+        sortKeyToFieldMapper.put("status", "status");
+    }
 
     @Inject
     private TaskDao taskDao;
@@ -162,6 +170,11 @@ public class TaskRunDao {
             sqlArgs.addAll(filter.getTaskIds());
             whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".task_id IN " + idsFieldsPlaceholder + " )");
         }
+        // if include started only
+        if (Objects.equals(filter.getIncludeStartedOnly(), true)) {
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".start_at IS NOT NULL)");
+        }
+
         // DON'T USE BETWEEN, see: https://wiki.postgresql.org/wiki/Don't_Do_This#Don.27t_use_BETWEEN_.28especially_with_timestamps.29
         if (Objects.nonNull(filter.getDateFrom())) {
             whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".start_at >= ? )");
@@ -340,6 +353,8 @@ public class TaskRunDao {
 
         int pageNum = Objects.nonNull(filter.getPageNum()) ? filter.getPageNum() : 1;
         int pageSize = Objects.nonNull(filter.getPageSize()) ? filter.getPageSize() : 100;
+        String sortKey = Objects.nonNull(filter.getSortKey()) ? sortKeyToFieldMapper.get(filter.getSortKey()) : "start_at";
+        String sortOrder = Objects.nonNull(filter.getSortOrder()) ? filter.getSortOrder() : "DESC";
 
         Pair<String, List<Object>> whereClauseAndParams = generateWhereClauseAndParamsByFilter(filter);
         String whereClause = whereClauseAndParams.getLeft();
@@ -347,7 +362,7 @@ public class TaskRunDao {
 
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where(whereClause)
-                .orderBy("start_at desc")
+                .orderBy(sortKey + " " + sortOrder)
                 .limit(pageSize)
                 .offset((pageNum - 1) * pageSize)
                 .getSQL();

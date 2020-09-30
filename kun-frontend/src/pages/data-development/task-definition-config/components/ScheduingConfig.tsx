@@ -14,7 +14,7 @@ import { DatasetSearchSelector } from '@/components/DatasetSearchSelector';
 import { TaskSearchSelector } from '@/components/TaskSearchSelector';
 import { OutputDatasetField } from '@/components/OutputDatasetField';
 
-import { LogUtils } from '@/utils/logUtils';
+import LogUtils from '@/utils/logUtils';
 import { getTaskDefinitionsFromFlattenedProps } from '@/utils/transformDataset';
 import styles from './BodyForm.less';
 

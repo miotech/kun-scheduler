@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useCallback } from 'react';
 import moment, { Moment } from 'moment';
-import c from 'classnames';
+import c from 'clsx';
 import './DateRangeOption.less';
 
 interface Props {

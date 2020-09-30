@@ -70,6 +70,7 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
         return DatasetStat.newBuilder()
                 .withRowCount(count)
                 .withStatDate(LocalDateTime.now())
+                .withLastUpdatedTime(getLastUpdateTime())
                 .build();
     }
 
@@ -81,6 +82,11 @@ public class ArangoCollectionExtractor extends ExtractorTemplate {
     @Override
     public String getName() {
         return collection;
+    }
+
+    @Override
+    protected LocalDateTime getLastUpdateTime() {
+        return null;
     }
 
     @Override

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import find from 'lodash/find';
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 import { fetchTaskTemplates } from '@/services/data-development/task-templates';
-import { LogUtils } from '@/utils/logUtils';
+import LogUtils from '@/utils/logUtils';
 
 const logger = LogUtils.getLoggers('hook:useTaskTemplateByName');
 

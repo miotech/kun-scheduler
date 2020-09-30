@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import { useRouteMatch } from 'umi';
 import { Card, Form } from 'antd';
 import { KunSpin } from '@/components/KunSpin';

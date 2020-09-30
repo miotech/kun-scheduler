@@ -38,7 +38,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
     protected void configuration() {
         super.configuration();
         Props props = PropsUtils.loadAppProps("application-test.yaml");
-        addModules(new KunWebServerModule(props), new DatabaseModule(), new KunMetadataModule());
+        addModules(new KunWebServerModule(props), new DatabaseModule(), new KunMetadataModule(props));
     }
 
     @Before

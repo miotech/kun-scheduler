@@ -1,12 +1,17 @@
 name: DATA PLATFORM CI MASTER ACTIONS
 
 on:
+  workflow_dispatch:
+    name:
+      description: 'Person to greet'
+      required: true
+      default: 'Some Person'
   push:
     paths:
       - 'kun-data-platform/**'
       - 'kun-app-common/**'
       - 'kun-commons/**'
-      - 'kun-security/**'
+      - 'kun-security/kun-security-common/**'
       - 'kun-workflow/kun-workflow-client/**'
       - 'kun-workflow/kun-workflow-core/**'
       - 'kun-workflow/kun-workflow-utils/**'

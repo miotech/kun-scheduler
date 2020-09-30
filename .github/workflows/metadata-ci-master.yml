@@ -1,6 +1,11 @@
 name: METADATA CI MASTER ACTIONS
 
 on:
+  workflow_dispatch:
+    name:
+      description: 'Person to greet'
+      required: true
+      default: 'Some Person'
   push:
     paths:
       - 'kun-metadata/**'

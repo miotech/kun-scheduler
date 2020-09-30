@@ -4,6 +4,7 @@ import com.miotech.kun.commons.utils.PropertyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
@@ -13,6 +14,7 @@ import javax.annotation.PostConstruct;
  * @created: 2020/7/19
  */
 @org.springframework.context.annotation.Configuration
+@EnableTransactionManagement
 public class Configuration {
 
     @Autowired
