@@ -1,0 +1,39 @@
+@color-success: #9bc655;
+@color-noticeable: @orange;
+@color-failed: @warning;
+@color-running: @blue;
+
+.monitoring-statistic-card {
+  display: block;
+  position: relative;
+  border-radius: 2px;
+  border: 1px solid @borderColor;
+  font-family: @default-font-family;
+  padding: 8px 12px 12px 12px;
+  background: @white;
+
+  &__title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &__value {
+    position: relative;
+    bottom: -12px;
+    font-size: 32px;
+    font-weight: normal;
+
+    &--success {
+      color: @color-success;
+    }
+
+    &--failed {
+      color: @color-failed;
+    }
+
+    &--running {
+      color: @color-running;
+    }
+  }
+}

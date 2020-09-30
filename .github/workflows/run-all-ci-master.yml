@@ -1,6 +1,11 @@
 name: RUN ALL CI ACTIONS
 
 on:
+  workflow_dispatch:
+    name:
+      description: 'Person to greet'
+      required: true
+      default: 'Some Person'
   push:
     paths:
       - '.github/workflows/run-all-ci-master.yml'

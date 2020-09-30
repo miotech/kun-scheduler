@@ -7,7 +7,6 @@ import com.miotech.kun.metadata.databuilder.extract.tool.DatabaseIdentifierProce
 import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.core.model.DatasetFieldStat;
 import com.miotech.kun.metadata.core.model.DatasetFieldType;
-import com.miotech.kun.metadata.core.model.DatasetStat;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,22 +67,13 @@ public class JDBCStatTemplate {
         return fieldStatBuilder.build();
     }
 
-    public DatasetStat getTableStats() {
+    public Long getRowCount() {
         if (logger.isDebugEnabled()) {
-            logger.debug("HiveTableExtractor getFieldStats start. database: {}, table: {}", database, table);
+            logger.debug("JDBCStatTemplate getRowCount start. database: {}, table: {}", database, table);
         }
-
-        DatasetStat.Builder datasetStatBuilder = DatasetStat.newBuilder();
-        datasetStatBuilder.withStatDate(LocalDateTime.now());
 
         String rowCountSql = String.format("SELECT COUNT(*) FROM %s.%s", database, tableNameWithIdentifier);
-        datasetStatBuilder.withRowCount(dbOperator.fetchOne(rowCountSql, rs -> rs.getLong(1)));
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("HiveTableExtractor getFieldStats end. datasetStat: {}",
-                    JSONUtils.toJsonString(datasetStatBuilder.build()));
-        }
-        return datasetStatBuilder.build();
+        return dbOperator.fetchOne(rowCountSql, rs -> rs.getLong(1));
     }
 
     private boolean isIgnored(DatasetFieldType.Type type) {

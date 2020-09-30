@@ -2,7 +2,7 @@ import uniqueId from 'lodash/uniqueId';
 import isArray from 'lodash';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { TaskNode, TaskRelation } from '@/components/DAGGraph/typings';
-import { LogUtils } from '@/utils/logUtils';
+import LogUtils from '@/utils/logUtils';
 
 export interface TaskGraphData {
   nodes: TaskNode[];

@@ -14,7 +14,6 @@ import com.miotech.kun.dataplatform.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.model.tasktemplate.ParameterDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.security.service.BaseSecurityService;
-import com.miotech.kun.security.service.UserService;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.execution.Config;
@@ -27,6 +26,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +53,7 @@ public class TaskDefinitionService extends BaseSecurityService {
     private DatasetService datasetService;
 
     @Autowired
+    @Lazy
     private WorkflowClient workflowClient;
 
     public TaskDefinition find(Long taskDefId) {

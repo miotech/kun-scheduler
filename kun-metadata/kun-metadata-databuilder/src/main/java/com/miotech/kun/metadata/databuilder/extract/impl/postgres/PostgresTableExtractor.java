@@ -126,20 +126,15 @@ public class PostgresTableExtractor extends ExtractorTemplate {
         }
 
         DatasetStat.Builder datasetStatBuilder = DatasetStat.newBuilder();
-        datasetStatBuilder.withStatDate(LocalDateTime.now());
-
         String sql = "SELECT COUNT(*) FROM " + TableOrFieldNameEscapeUtil.escape(table);
         datasetStatBuilder.withRowCount(dbOperator.fetchOne(sql, rs -> rs.getLong(1)));
         if (logger.isDebugEnabled()) {
             logger.debug("PostgresTableExtractor.getTableStats rowCountSql: {}", sql);
         }
 
-        DatasetStat result = datasetStatBuilder.build();
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("PostgresTableExtractor getTableStats end. datasetStat: {}", JSONUtils.toJsonString(result));
-        }
-        return result;
+        return datasetStatBuilder.withStatDate(LocalDateTime.now())
+                .withLastUpdatedTime(getLastUpdateTime())
+                .build();
     }
 
     @Override
@@ -150,6 +145,11 @@ public class PostgresTableExtractor extends ExtractorTemplate {
     @Override
     public String getName() {
         return table;
+    }
+
+    @Override
+    protected LocalDateTime getLastUpdateTime() {
+        return null;
     }
 
     @Override

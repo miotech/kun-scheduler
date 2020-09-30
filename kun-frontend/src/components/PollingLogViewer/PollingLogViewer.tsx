@@ -1,5 +1,5 @@
 import React, { FC, useEffect } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
 import { useInterval } from 'ahooks';
 import { KunSpin } from '@/components/KunSpin';

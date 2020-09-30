@@ -9,7 +9,7 @@ import { ColumnProps } from 'antd/es/table';
 import useI18n from '@/hooks/useI18n';
 import useCronSemanticText from '@/hooks/useCronSemanticText';
 import { KunSpin } from '@/components/KunSpin';
-import { LogUtils } from '@/utils/logUtils';
+import LogUtils from '@/utils/logUtils';
 import { DeployedTask } from '@/definitions/DeployedTask.type';
 
 import { StatusText } from '@/components/StatusText';
