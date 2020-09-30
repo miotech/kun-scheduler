@@ -3,6 +3,8 @@ package com.miotech.kun.workflow.executor.mock;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.execution.NopResolver;
+import com.miotech.kun.workflow.core.execution.Resolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,5 +33,10 @@ public class TestOperator6 extends KunOperator {
     @Override
     public ConfigDef config() {
         return new ConfigDef();
+    }
+
+    @Override
+    public Resolver getResolver() {
+        return new NopResolver();
     }
 }

@@ -8,10 +8,10 @@ import com.miotech.kun.commons.db.DatabaseSetup;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.commons.web.KunWebServer;
+import com.miotech.kun.commons.web.module.CommonModule;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
 import com.miotech.kun.workflow.SchedulerManager;
 import com.miotech.kun.workflow.SchedulerModule;
-import com.miotech.kun.workflow.common.CommonModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,7 +59,7 @@ public class KunWorkflowWebServer {
         final Injector injector = Guice.createInjector(
                 new KunWebServerModule(props),
                 new KunWorkflowServerModule(props),
-                new CommonModule(),
+                new CommonModule(props),
                 new SchedulerModule()
         );
 

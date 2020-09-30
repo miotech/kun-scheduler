@@ -38,9 +38,8 @@ public class Application {
         Props props = PropsUtils.loadAppProps();
         final Injector injector = Guice.createInjector(
                 new KunWebServerModule(props),
-                new CommonModule(),
-                new PackageScanModule(),
-                new WorkflowClientModule(props)
+                new CommonModule(props),
+                new KunMetadataModule(props)
         );
 
         injector.getInstance(Application.class).start();
@@ -49,6 +48,7 @@ public class Application {
 
     private void start() {
         initService.initDataBuilder();
+        initService.publishRpcServices();
         configureDB();
     }
 

@@ -102,6 +102,8 @@ public class ConfigDef {
                 return parseToBoolean(value);
             case STRING:
                 return parseToString(value);
+            case INT:
+                return parseToInt(value);
             case LONG:
                 return parseToLong(value);
             case LIST:
@@ -147,6 +149,17 @@ public class ConfigDef {
         }
     }
 
+    private static Object parseToInt(Object value) {
+        if (value instanceof Integer) {
+            return value;
+        } else if (value instanceof String) {
+            String trimmed = ((String) value).trim();
+            return Integer.valueOf(trimmed);
+        } else {
+            throw new IllegalArgumentException(format("Expected value is string but actual is %s", value));
+        }
+    }
+
     private static Object parseToList(Object value) {
         if (value instanceof List) {
             return value;
@@ -165,6 +178,7 @@ public class ConfigDef {
     public enum Type {
         BOOLEAN(Boolean.class),
         STRING(String.class),
+        INT(Integer.class),
         LONG(Long.class),
         LIST(List.class);
 
