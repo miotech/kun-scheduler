@@ -61,10 +61,11 @@ public class RpcConsumerTest extends GuiceTestBase {
     }
 
     @Test
-    public void getService_withoutExistingRPCServiceProvider_shouldFailed() {
+    public void getService_withoutExistingRPCServiceProvider_invocationShouldFail() {
         // No provider initialized
         try {
-            rpcConsumer.getService("TestService2Provider", RpcTestInterface2.class, "2.0");
+            RpcTestInterface2 s = rpcConsumer.getService("TestService2Provider", RpcTestInterface2.class, "2.0");
+            s.ping2("");
             fail();
         } catch (Exception e) {
             assertThat(e, instanceOf(IllegalStateException.class));

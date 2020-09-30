@@ -8,7 +8,6 @@ import com.google.common.collect.Sets;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.Resolver;
-import javafx.util.Pair;
 
 import java.util.*;
 

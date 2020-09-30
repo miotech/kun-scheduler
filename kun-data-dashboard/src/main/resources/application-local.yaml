@@ -1,0 +1,36 @@
+server:
+  port: ${DATA_DASHBOARD_PORT}
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun
+    username: ${DB_PG_USERNAME}
+    password: ${DB_PG_PASSWORD}
+
+  session:
+    jdbc:
+      initialize-schema: never
+      table-name: kun_user_session
+    timeout: 30d
+
+  flyway:
+    enabled: false
+
+security:
+  base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
+
+workflow:
+  base-url: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
+
+data-dashboard:
+  long-existing-threshold: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    ldap:
+      enabled: false

@@ -1,11 +1,10 @@
 package com.miotech.kun.workflow.operator.client;
 
+import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.query.datasource.MetadataDataSource;
-import com.miotech.kun.workflow.operator.model.DataQualityCase;
-import com.miotech.kun.workflow.operator.model.DataQualityRule;
-import com.miotech.kun.workflow.operator.model.TemplateType;
+import com.miotech.kun.workflow.operator.model.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -120,4 +119,56 @@ public class DataQualityClient {
         }, caseId);
     }
 
+    public void recordCaseMetrics(DataQualityCaseMetrics metrics) {
+        String sql = "insert into kun_dq_case_metrics values(?,?,?,?) " +
+                "on conflict do nothing";
+
+        long initFailedCount = 0;
+        if (CaseStatus.FAILED == metrics.getCaseStatus()) {
+            initFailedCount = 1;
+        }
+
+        int insertRowCount = databaseOperator.update(sql, metrics.getCaseId(),
+                metrics.getErrorReason(),
+                initFailedCount,
+                DateUtils.millisToLocalDateTime(System.currentTimeMillis()));
+
+        if (insertRowCount == 0) {
+            if (CaseStatus.SUCCESS == metrics.getCaseStatus()) {
+                updateCfc(metrics.getCaseId(), 0L);
+            } else if (CaseStatus.FAILED == metrics.getCaseStatus()) {
+                addCfc(metrics.getCaseId(), metrics.getErrorReason());
+            }
+        }
+    }
+
+    private void updateCfc(Long caseId,
+                           Long count) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update("kun_dq_case_metrics")
+                .set("error_reason",
+                        "continuous_failing_count",
+                        "update_time")
+                .asPrepared()
+                .where("dq_case_id = ?")
+                .getSQL();
+
+        databaseOperator.update(sql, "",
+                count,
+                DateUtils.millisToLocalDateTime(System.currentTimeMillis()),
+                caseId);
+    }
+
+    private void addCfc(Long caseId,
+                        String errorReason) {
+        String sql = "update kun_dq_case_metrics set " +
+                "error_reason = ?, " +
+                "continuous_failing_count = continuous_failing_count + 1, " +
+                "update_time = ? " +
+                "where dq_case_id = ?";
+
+        databaseOperator.update(sql, errorReason,
+                DateUtils.millisToLocalDateTime(System.currentTimeMillis()),
+                caseId);
+    }
 }

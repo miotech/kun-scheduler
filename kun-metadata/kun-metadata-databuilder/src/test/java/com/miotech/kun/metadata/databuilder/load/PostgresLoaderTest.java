@@ -32,7 +32,7 @@ public class PostgresLoaderTest extends DatabaseTestBase {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
         datasetBuilder.withName("datasetName")
                 .withDatasourceId(1L)
-                .withDatasetStat(new DatasetStat(100L, LocalDateTime.now()))
+                .withDatasetStat(new DatasetStat(100L, LocalDateTime.now(), LocalDateTime.now()))
                 .withFields(ImmutableList.of(new DatasetField("id", new DatasetFieldType(DatasetFieldType.convertRawType("int"), "int"), "auto increment"),
                         new DatasetField("name", new DatasetFieldType(DatasetFieldType.convertRawType("string"), "string"), "test name")))
                 .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", LocalDateTime.now()),
@@ -65,7 +65,7 @@ public class PostgresLoaderTest extends DatabaseTestBase {
 
         try {
             dataset = dataset.cloneBuilder().withDatasourceId(1L)
-                    .withDatasetStat(new DatasetStat(100L, null))
+                    .withDatasetStat(new DatasetStat(100L, null, LocalDateTime.now()))
                     .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", LocalDateTime.now()),
                             new DatasetFieldStat("name", 3, 167, "admin", LocalDateTime.now()))).build();
             postgresLoader.load(dataset);

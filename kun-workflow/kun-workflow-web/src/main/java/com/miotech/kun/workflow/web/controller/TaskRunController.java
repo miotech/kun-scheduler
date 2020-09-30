@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.web.controller;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.web.annotation.*;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
@@ -11,11 +12,12 @@ import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
-import com.miotech.kun.commons.web.annotation.*;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
+
+import static com.miotech.kun.commons.utils.ArgumentCheckUtils.parseBooleanQueryParameter;
 
 @Singleton
 public class TaskRunController {
@@ -58,8 +60,11 @@ public class TaskRunController {
             @QueryParameter String status,
             @QueryParameter List<Long> taskIds,
             @QueryParameter String dateFrom,
-            @QueryParameter String dateTo
-            ) {
+            @QueryParameter String dateTo,
+            @QueryParameter(defaultValue = "startAt") String sortKey,
+            @QueryParameter(defaultValue = "DESC") String sortOrder,
+            @QueryParameter(defaultValue = "false") String includeStartedOnly
+    ) {
         TaskRunSearchFilter.Builder filterBuilder = TaskRunSearchFilter.newBuilder()
                 .withPageNum(pageNum)
                 .withPageSize(pageSize);
@@ -80,6 +85,13 @@ public class TaskRunController {
             filterBuilder
                     .withTaskIds(taskIds);
         }
+        if (StringUtils.isNoneBlank(sortKey)) {
+            filterBuilder.withSortKey(sortKey);
+        }
+        if (StringUtils.isNoneBlank(sortOrder)) {
+            filterBuilder.withSortOrder(sortOrder);
+        }
+        filterBuilder.withIncludeStartedOnly(parseBooleanQueryParameter(includeStartedOnly));
         TaskRunSearchFilter filter = filterBuilder.build();
         return taskRunService.searchTaskRunVOs(filter);
     }

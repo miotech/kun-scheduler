@@ -7,6 +7,7 @@ import { glossary } from './glossary';
 import { dataDevelopment } from './dataDevelopment';
 import { scheduledTasks } from './operationCenter/scheduledTasks';
 import { deployedTaskDetail } from './operationCenter/deployedTaskDetail';
+import { monitoringDashboard } from './monitoringDashboard';
 
 export interface RootModel {
   user: typeof user;
@@ -18,6 +19,7 @@ export interface RootModel {
   dataDevelopment: typeof dataDevelopment;
   scheduledTasks: typeof scheduledTasks;
   deployedTaskDetail: typeof deployedTaskDetail;
+  monitoringDashboard: typeof monitoringDashboard;
 }
 
 export const models: RootModel = {
@@ -30,4 +32,5 @@ export const models: RootModel = {
   dataDevelopment,
   scheduledTasks,
   deployedTaskDetail,
+  monitoringDashboard,
 };

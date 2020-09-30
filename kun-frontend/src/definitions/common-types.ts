@@ -5,6 +5,7 @@ import {
   Models,
   RematchRootState,
 } from '@rematch/core';
+import { Key, SorterResult, TableCurrentDataSource, TablePaginationConfig } from 'antd/es/table/interface';
 
 /**
  * Common utility types
@@ -21,14 +22,22 @@ export interface BackendRespData<T = any> {
 export type ServiceRespPromise<T = any> = Promise<T | null>;
 
 export interface PaginationReqBody {
-  pageNum: number;
+  pageNumber: number;
   pageSize: number;
 }
 
-export interface PaginationRespBody<T = any> {
+export interface SortReqBody<COLUMNS extends string = string> {
+  sortColumn: COLUMNS;
+  sortOrder: 'ASC' | 'DESC';
+}
+
+export interface PaginationRespBodyBase {
   pageSize: number;
-  pageNum: number;
+  pageNumber: number;
   totalCount: number;
+}
+
+export interface PaginationRespBody<T = any> extends PaginationRespBodyBase {
   records: T[];
 }
 
@@ -39,6 +48,15 @@ export interface SingleColumnSorter<T extends Record<string, any>> {
 
 export interface SingleColumnSortReqBody<T> {
   sortField: SingleColumnSorter<T> | undefined;
+}
+
+/** Ant design table onChange callback type */
+export interface TableOnChangeCallback<RecordType> {
+  (pagination: TablePaginationConfig,
+   filters: Record<string, Key[] | null>,
+   sorter: SorterResult<RecordType> | SorterResult<RecordType>[],
+   extra: TableCurrentDataSource<RecordType>,
+  ): void;
 }
 
 /**

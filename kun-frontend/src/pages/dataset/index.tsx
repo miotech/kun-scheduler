@@ -32,6 +32,7 @@ import useDebounce from '@/hooks/useDebounce';
 
 import Card from '@/components/Card/Card';
 import { watermarkFormatter } from '@/utils/glossaryUtiles';
+import getEllipsisString from '@/utils/getEllipsisString';
 import TimeSelect from './components/TimeSelect/TimeSelect';
 
 import styles from './index.less';
@@ -316,7 +317,12 @@ export default function DataDisvocery() {
           title: t('dataDiscovery.datasetsTable.header.description'),
           dataIndex: 'description',
           key: 'description',
-          width: 200,
+          width: 300,
+          render: (description: string) => (
+            <div className={styles.descriptionColumn} title={description}>
+              {getEllipsisString(description, 50, 30, 0)}
+            </div>
+          ),
         },
         {
           title: t('dataDiscovery.datasetsTable.header.owners'),
@@ -417,6 +423,12 @@ export default function DataDisvocery() {
         setFilterQuery({
           sortKey: columnKey,
           sortOrder: order ? orderMap[order as 'descend' | 'ascend'] : null,
+        });
+      }
+      if (columnKey && !order) {
+        setFilterQuery({
+          sortKey: columnKey,
+          sortOrder: null,
         });
       }
     },

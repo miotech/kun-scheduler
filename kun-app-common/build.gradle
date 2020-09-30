@@ -19,10 +19,9 @@ targetCompatibility = 1.8
 
 dependencies {
     implementation project(':kun-commons:kun-commons-db')
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
-    implementation 'org.springframework.boot:spring-boot-starter-test'
-    implementation 'com.google.code.gson:gson'
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation 'com.fasterxml.jackson.core:jackson-annotations'
+    implementation 'com.google.code.gson:gson:2.8.6'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     implementation 'com.alibaba:druid:1.1.23'
 }

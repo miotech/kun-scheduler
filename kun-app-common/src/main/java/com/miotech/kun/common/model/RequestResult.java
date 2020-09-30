@@ -34,6 +34,8 @@ public class RequestResult<T> {
     @JsonProperty("result")
     private T result;
 
+    public RequestResult() {}
+
     private RequestResult(int code, String note) {
         this.code = code;
         this.note = note;

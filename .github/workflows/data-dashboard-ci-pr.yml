@@ -1,0 +1,28 @@
+name: DATA DASHBOARD CI PULL REQUEST ACTIONS
+
+on:
+  push:
+    paths:
+      - 'kun-data-dashboard/**'
+      - 'kun-app-common/**'
+      - 'kun-commons/**'
+      - 'kun-security/kun-security-common/**'
+      - 'kun-workflow/kun-workflow-client/**'
+      - 'kun-workflow/kun-workflow-core/**'
+      - 'kun-workflow/kun-workflow-utils/**'
+    branches-ignore:
+      - master
+
+jobs:
+  step-1:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+      - name: Check with Gradle
+        run: ./gradlew check -p kun-data-dashboard

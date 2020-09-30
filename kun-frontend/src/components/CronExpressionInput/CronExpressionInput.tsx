@@ -1,5 +1,5 @@
 import React, { MutableRefObject, useImperativeHandle, useMemo, useRef, useState } from 'react';
-import c from 'classnames';
+import c from 'clsx';
 import cronstrue from 'cronstrue/i18n';
 import cronParser from 'cron-parser';
 import { Alert, Input } from 'antd';

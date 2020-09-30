@@ -1,13 +1,18 @@
 name: DATA DISCOVERY CI MASTER ACTIONS
 
 on:
+  workflow_dispatch:
+    name:
+      description: 'Person to greet'
+      required: true
+      default: 'Some Person'
   push:
     paths:
       - 'kun-data-discovery/**'
       - 'kun-app-common/**'
       - 'kun-commons/**'
       - 'kun-data-quality/**'
-      - 'kun-security/**'
+      - 'kun-security/kun-security-common/**'
       - 'kun-workflow/kun-workflow-client/**'
       - 'kun-workflow/kun-workflow-core/**'
       - 'kun-workflow/kun-workflow-utils/**'
