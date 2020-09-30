@@ -19,7 +19,6 @@ workflow:
   url: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
   cronExpr: 0 0 12 * * ?
 
-metadata:
-  rpc:
-    registry: redis://127.0.0.1:6379
-    port: 12300
+rpc:
+  registry: ${DUBBO_REGISTRY_URL}
+  port: ${DUBBO_METADATA_SERVICE_PORT}

@@ -45,7 +45,10 @@ public class KunWebServerTestBase extends GuiceTestBase {
         addModules(new KunWorkflowServerModule(props),
                 new DatabaseModule(),
                 new SchedulerModule(),
-                new GraphDatabaseModule(neo4jContainer)
+                new GraphDatabaseModule(
+                        neo4jContainer.getBoltUrl(),
+                        "neo4j",
+                        neo4jContainer.getAdminPassword())
         );
     }
 

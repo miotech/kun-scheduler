@@ -1,8 +1,11 @@
 package com.miotech.kun.metadata.web.service;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.rpc.RpcPublisher;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.constant.WorkflowApiParam;
@@ -24,6 +27,19 @@ public class InitService {
 
     @Inject
     private Props props;
+
+    @Inject
+    private RpcPublisher rpcPublisher;
+
+    @Inject
+    private Injector injector;
+
+    @Inject
+    private MetadataServiceFacade metadataServiceFacade;
+
+    public void publishRpcServices() {
+        rpcPublisher.exportService(MetadataServiceFacade.class, "1.0", metadataServiceFacade);
+    }
 
     public void initDataBuilder() {
         checkOperator(WorkflowApiParam.DATA_BUILDER_OPERATOR);

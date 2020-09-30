@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.commons.utils.PropertyUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.commons.web.KunWebServer;
@@ -39,7 +38,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
     protected void configuration() {
         super.configuration();
         Props props = PropsUtils.loadAppProps("application-test.yaml");
-        addModules(new KunWebServerModule(props), new DatabaseModule(), new PackageScanModule());
+        addModules(new KunWebServerModule(props), new DatabaseModule(), new KunMetadataModule());
     }
 
     @Before
