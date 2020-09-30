@@ -15,6 +15,10 @@ public class SchedulerTestBase extends DatabaseTestBase {
     protected void configuration() {
         super.configuration();
         bind(EventBus.class, new EventBus());
-        addModules(new GraphDatabaseModule(neo4jContainer));
+        addModules(new GraphDatabaseModule(
+                neo4jContainer.getBoltUrl(),
+                "neo4j",
+                neo4jContainer.getAdminPassword())
+        );
     }
 }

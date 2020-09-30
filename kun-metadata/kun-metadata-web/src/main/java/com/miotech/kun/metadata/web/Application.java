@@ -10,7 +10,6 @@ import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.commons.web.KunWebServer;
 import com.miotech.kun.commons.web.module.CommonModule;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
-import com.miotech.kun.metadata.web.rpc.MetadataRPCServer;
 import com.miotech.kun.metadata.web.service.InitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,18 +38,17 @@ public class Application {
         Props props = PropsUtils.loadAppProps();
         final Injector injector = Guice.createInjector(
                 new KunWebServerModule(props),
-                new CommonModule(),
-                new PackageScanModule(),
-                new WorkflowClientModule(props)
+                new CommonModule(props),
+                new KunMetadataModule(props)
         );
 
-        injector.getInstance(MetadataRPCServer.class).init(props);
         injector.getInstance(Application.class).start();
         injector.getInstance(KunWebServer.class).start();
     }
 
     private void start() {
         initService.initDataBuilder();
+        initService.publishRpcServices();
         configureDB();
     }
 

@@ -4,9 +4,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
-public abstract class DataStore {
+public abstract class DataStore implements Serializable {
 
     private final DataStoreType type;
 
