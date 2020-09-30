@@ -7,13 +7,11 @@ import org.apache.dubbo.config.ReferenceConfig;
 
 import java.util.concurrent.ExecutionException;
 
-public class RpcConsumers {
-    private RpcConsumers() {}
-
-    private static final long REFERENCE_CACHE_SIZE = 10L;
+public class RpcConsumer {
+    private final long REFERENCE_CACHE_SIZE = 10L;
 
     // ReferenceConfig object are heavily encapsulated, therefore we store them as cache for later reuse
-    private static final Cache<String, ReferenceConfig<?>> referenceConfigCache = CacheBuilder.newBuilder()
+    private final Cache<String, ReferenceConfig<?>> referenceConfigCache = CacheBuilder.newBuilder()
             .maximumSize(REFERENCE_CACHE_SIZE)
             .build();
 
@@ -26,7 +24,7 @@ public class RpcConsumers {
      * @return A service stub. DO remember to store this stub in cache for later reuse.
      */
     @SuppressWarnings("unchecked")
-    public static <T> T getService(String applicationName, Class<T> interfaceClass, String version) {
+    public <T> T getService(String applicationName, Class<T> interfaceClass, String version) {
         if (!RpcBootstrap.isStarted()) {
             throw new IllegalStateException("Rpc framework is not started yet.");
         }
