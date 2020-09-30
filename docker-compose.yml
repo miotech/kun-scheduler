@@ -11,6 +11,21 @@ services:
       - ./docker_init_db.sql:/docker-entrypoint-initdb.d/docker_init_db.sql
     ports:
       - 5433:5432
+  kun-redis:
+    image: "redis:6.0.8"
+    restart: always
+    volumes:
+      - ./redis_data:/data
+    ports:
+      - 6379:6379
+  kun-neo4j:
+    image: "neo4j:3.5.22"
+    restart: always
+    volumes:
+      - ./neo4j_data:/data
+    ports:
+      - 7474:7474
+      - 7687:7687
   kun-security:
     image: "kun-security:master"
     environment:
