@@ -9,6 +9,7 @@ import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.junit.Before;
 import org.junit.Test;
 

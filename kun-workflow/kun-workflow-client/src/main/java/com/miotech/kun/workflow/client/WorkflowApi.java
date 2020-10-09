@@ -95,7 +95,8 @@ public class WorkflowApi {
 
     private RequestBody jsonBody(Object payload) {
         Preconditions.checkNotNull(payload, "request body should not be null");
-        return RequestBody.create(APPLICATION_JSON, JSONUtils.toJsonString(payload));
+        String json  = JSONUtils.toJsonString(payload);
+        return RequestBody.create(APPLICATION_JSON, json);
     }
 
     // Operators

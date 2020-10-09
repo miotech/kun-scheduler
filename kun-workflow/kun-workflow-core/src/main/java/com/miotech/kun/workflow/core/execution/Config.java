@@ -1,22 +1,26 @@
 package com.miotech.kun.workflow.core.execution;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static java.lang.String.format;
 
+@JsonDeserialize(builder = Config.Builder.class)
+@JsonSerialize(using = ConfigSerializer.class)
 public class Config {
     public static final Config EMPTY = new Config(ImmutableMap.of());
 
     private final Map<String, Object> values;
 
-    @JsonCreator
-    public Config(@JsonProperty("values") Map<String, Object> values) {
+    public Config(Map<String, Object> values) {
         validateValues(values);
         this.values = ImmutableMap.copyOf(values);
     }
@@ -111,10 +115,24 @@ public class Config {
         }
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Config)) return false;
+        Config config = (Config) o;
+        return Objects.equals(getValues(), config.getValues());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getValues());
+    }
+
     public static Config.Builder newBuilder() {
         return new Builder();
     }
 
+    @JsonPOJOBuilder(withPrefix = "add")
     public static class Builder {
         private final Map<String, Object> values;
 
@@ -122,6 +140,7 @@ public class Config {
             values = new HashMap<>();
         }
 
+        @JsonAnySetter
         public Builder addConfig(String name, Object value) {
             values.put(name, value);
             return this;

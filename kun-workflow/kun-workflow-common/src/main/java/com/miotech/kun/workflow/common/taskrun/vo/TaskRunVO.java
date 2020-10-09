@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.execution.ConfigSerializer;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -21,6 +22,7 @@ public class TaskRunVO {
 
     private Task task;
 
+    @JsonSerialize(contentUsing = ConfigSerializer.class)
     private Config config;
 
     private Tick scheduledTick;

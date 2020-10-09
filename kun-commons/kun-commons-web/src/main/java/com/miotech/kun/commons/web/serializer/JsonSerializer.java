@@ -63,8 +63,12 @@ public class JsonSerializer {
     }
 
     public String toString(Object object) {
+
+        if (object instanceof String) {
+            return (String) object;
+        }
         try {
-           return objectMapper.writeValueAsString(object);
+            return objectMapper.writerFor(object.getClass()).writeValueAsString(object);
         } catch (JsonProcessingException e) {
             logger.error("Failed to serialize object: ", e);
             throw ExceptionUtils.wrapIfChecked(e);

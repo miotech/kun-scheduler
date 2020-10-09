@@ -6,9 +6,10 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.execution.ConfigSerializer;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
-import com.miotech.kun.workflow.core.execution.Config;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,6 +30,7 @@ public class Task {
     @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long operatorId;
 
+    @JsonSerialize(using = ConfigSerializer.class)
     private final Config config;
 
     private final ScheduleConf scheduleConf;
