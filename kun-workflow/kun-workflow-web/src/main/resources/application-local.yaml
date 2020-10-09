@@ -19,10 +19,10 @@ flyway:
   baselineVersion: 0
 
 rpc:
-  registry: ${DUBBO_REGISTRY_URL}
-  port: ${DUBBO_WORKFLOW_SERVICE_PORT}
+  registry: redis://${DB_REDIS_IP}:6379/
+  port: ${WORKFLOW_RPC_SERVICE_PORT}
 
 neo4j:
-  uri: ${DB_NEO4J_URI}
+  uri: bolt://${DB_NEO4J_IP}:7687/
   username: ${DB_NEO4J_USERNAME}
   password: ${DB_NEO4J_PASSWORD}
