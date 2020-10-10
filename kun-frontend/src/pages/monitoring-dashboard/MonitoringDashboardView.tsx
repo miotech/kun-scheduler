@@ -14,7 +14,7 @@ interface OwnProps {}
 
 type Props = OwnProps;
 
-export const MonitoringDashboardView: React.FC<Props> = memo(() => {
+export const MonitoringDashboardView: React.FC<Props> = memo(function MonitoringDashboardView() {
   const t = useI18n();
   const { selector: {
     viewState,

@@ -11,7 +11,7 @@ import { ColumnMetrics, FailedTestCase } from '@/services/monitoring-dashboard';
 import normalizeSingleColumnSorter from '@/utils/normalizeSingleColumnSorter';
 import { useUpdateEffect } from 'ahooks';
 
-export const DataDiscoveryBoard: React.FC = memo(() => {
+export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
   const t = useI18n();
 
   const { selector: {

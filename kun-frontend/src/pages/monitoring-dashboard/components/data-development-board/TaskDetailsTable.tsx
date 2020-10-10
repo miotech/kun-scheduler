@@ -19,7 +19,7 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export const TaskDetailsTable: React.FC<Props> = memo((props) => {
+export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(props) {
   const {
     data,
     pageNum,

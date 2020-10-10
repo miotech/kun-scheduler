@@ -15,7 +15,7 @@ interface OwnProps {
 
 export type StatisticCardProps = OwnProps & React.ComponentProps<'div'>;
 
-export const StatisticCard: React.FC<StatisticCardProps> = memo((props) => {
+export const StatisticCard: React.FC<StatisticCardProps> = memo(function StatisticCard(props) {
   const {
     title,
     value,

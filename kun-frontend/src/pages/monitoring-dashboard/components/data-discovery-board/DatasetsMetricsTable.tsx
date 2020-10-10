@@ -18,7 +18,7 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export const DatasetsMetricsTable: React.FC<Props> = memo((props) => {
+export const DatasetsMetricsTable: React.FC<Props> = memo(function DatasetsMetricsTable(props) {
   const {
     data,
     total,

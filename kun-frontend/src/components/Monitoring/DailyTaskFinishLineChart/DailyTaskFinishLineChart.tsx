@@ -42,7 +42,8 @@ const toY = (d: DailyTaskFinishCount) => d.taskCount;
 
 const logger = LogUtils.getLoggers('DailyTaskFinishLineChart');
 
-export const DailyTaskFinishLineChart: React.FC<DailyTaskFinishLineChartProps> = memo(props => {
+export const DailyTaskFinishLineChart: React.FC<DailyTaskFinishLineChartProps> = memo(
+function DailyTaskFinishLineChart(props) {
   const {
     width = 1024,
     height = 768,

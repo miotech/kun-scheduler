@@ -12,7 +12,7 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export const DailyTaskFinishCountChart: React.FC<Props> = memo((props) => {
+export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTaskFinishCountChart(props) {
   const t = useI18n();
 
   const chartWrapperRef: React.RefObject<any> = useRef<any>();

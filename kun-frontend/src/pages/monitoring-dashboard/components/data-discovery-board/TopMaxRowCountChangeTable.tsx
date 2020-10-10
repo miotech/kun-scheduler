@@ -13,7 +13,7 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export const TopMaxRowCountChangeTable: React.FC<Props> = memo(({ data }) => {
+export const TopMaxRowCountChangeTable: React.FC<Props> = memo(function TopMaxRowCountChangeTable({ data }) {
   const t = useI18n();
 
   const columns: ColumnProps<RowCountChange>[] = useMemo(() => [

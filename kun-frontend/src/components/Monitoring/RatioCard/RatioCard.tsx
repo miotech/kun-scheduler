@@ -31,7 +31,7 @@ export interface RatioCardProps extends React.ComponentProps<'div'> {
 /**
  * Ratio card component for monitoring dashboard
  */
-export const RatioCard: React.FC<RatioCardProps> = memo(props => {
+export const RatioCard: React.FC<RatioCardProps> = memo(function RatioCard(props) {
   const {
     title,
     titleTooltip,

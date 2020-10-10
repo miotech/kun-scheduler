@@ -9,7 +9,7 @@ import { TableOnChangeCallback } from '@/definitions/common-types';
 import { DevTaskDetail } from '@/services/monitoring-dashboard';
 import { useUpdateEffect } from 'ahooks';
 
-export const DataDevelopmentBoard: React.FC = memo(() => {
+export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard() {
   const t = useI18n();
 
   const {

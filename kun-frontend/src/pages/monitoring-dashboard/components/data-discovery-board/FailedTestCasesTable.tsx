@@ -16,7 +16,7 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export const FailedTestCasesTable: React.FC<Props> = memo((props) => {
+export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCasesTable(props) {
   const {
     data,
     pageNum,
