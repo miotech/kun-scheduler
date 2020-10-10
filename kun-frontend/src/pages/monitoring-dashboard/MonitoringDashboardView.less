@@ -19,7 +19,15 @@
   }
 }
 
-@media (min-width: @screen-lg-min) {
+// The floating reload button
+.ReloadBtnWrapper {
+  position: fixed;
+  right: 16px;
+  top: 76px;
+  z-index: 10000;
+}
+
+@media (min-width: @screen-xl-min) {
   .View {
     .Col + .Col {
       border-left: 1px solid @borderColor;
