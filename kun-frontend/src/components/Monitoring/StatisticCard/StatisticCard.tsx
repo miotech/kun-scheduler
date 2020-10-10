@@ -1,6 +1,7 @@
-import React, { memo, ReactText } from 'react';
+import React, { memo, ReactText, useMemo } from 'react';
 import numeral from 'numeral';
 import c from 'clsx';
+import { Skeleton } from 'antd';
 
 import './StatisticCard.global.less';
 
@@ -11,6 +12,8 @@ interface OwnProps {
   value?: number;
   /** theme color for statistic value */
   textTheme?: 'default' | 'success' | 'failed' | 'running';
+  /** Loading state */
+  loading?: boolean;
 }
 
 export type StatisticCardProps = OwnProps & React.ComponentProps<'div'>;
@@ -21,8 +24,17 @@ export const StatisticCard: React.FC<StatisticCardProps> = memo(function Statist
     value,
     className,
     textTheme = 'default',
+    loading,
     ...restProps
   } = props;
+
+  const loadingSkeleton = useMemo(() => (
+    <Skeleton
+      active
+      title
+      paragraph={false}
+    />
+  ), []);
 
   return (
     <div
@@ -34,7 +46,7 @@ export const StatisticCard: React.FC<StatisticCardProps> = memo(function Statist
         {title}
       </h3>
       <div className={c('monitoring-statistic-card__value', `monitoring-statistic-card__value--${textTheme}`)}>
-        {numeral(value).format('0,0')}
+        {loading ? loadingSkeleton : numeral(value).format('0,0')}
       </div>
     </div>
   );

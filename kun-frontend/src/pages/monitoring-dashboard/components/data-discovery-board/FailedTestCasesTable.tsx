@@ -12,6 +12,7 @@ interface OwnProps {
   pageSize: number;
   total: number;
   onChange?: TableOnChangeCallback<FailedTestCase>;
+  loading?: boolean;
 }
 
 type Props = OwnProps;
@@ -23,6 +24,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
     pageSize,
     total,
     onChange,
+    loading,
   } = props;
 
   const t = useI18n();
@@ -31,6 +33,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
     {
       key: 'ordinal',
       title: '#',
+      width: 60,
       render: (txt: any, record: FailedTestCase, index: number) =>
         <span>{((pageNum - 1) * pageSize) + index + 1}</span>
     },
@@ -86,6 +89,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
     <Card bodyStyle={{ padding: '8px' }}>
       <h3>{t('monitoringDashboard.dataDiscovery.failedTestCasesTable.title')}</h3>
       <Table<FailedTestCase>
+        loading={loading}
         dataSource={data}
         size="small"
         columns={columns}

@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useMemo } from 'react';
 import { Col, Row } from 'antd';
+import { useUpdateEffect } from 'ahooks';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 import { RatioCard } from '@/components/Monitoring/RatioCard/RatioCard';
@@ -9,7 +10,6 @@ import { DatasetsMetricsTable } from '@/pages/monitoring-dashboard/components/da
 import { TableOnChangeCallback } from '@/definitions/common-types';
 import { ColumnMetrics, FailedTestCase } from '@/services/monitoring-dashboard';
 import normalizeSingleColumnSorter from '@/utils/normalizeSingleColumnSorter';
-import { useUpdateEffect } from 'ahooks';
 
 export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
   const t = useI18n();
@@ -20,6 +20,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
       maxRowCountChange,
       failedTestCases,
       datasetMetrics,
+      metadataMetricsLoading,
     },
   }, dispatch } = useRedux(state => ({
     dataDiscoveryBoardData: state.monitoringDashboard.dataDiscoveryBoardData,
@@ -102,6 +103,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
             numerator={dataQualityCoveredCount}
             denominator={totalDatasetCount}
             status="healthy"
+            loading={metadataMetricsLoading}
           />
         </Col>
         {/* Count of Long-existing Failed Case */}
@@ -111,6 +113,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
             numerator={dataQualityLongExistingFailedCount}
             denominator={totalCaseCount}
             status="warning"
+            loading={metadataMetricsLoading}
           />
         </Col>
         {/* Pass Ratio (Last 24 hours) */}
@@ -120,6 +123,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
             numerator={dataQualityPassCount}
             denominator={totalCaseCount}
             status="healthy"
+            loading={metadataMetricsLoading}
           />
         </Col>
       </Row>
@@ -127,9 +131,11 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
   }, [
     t,
     dataQualityCoveredCount,
+    totalDatasetCount,
     dataQualityLongExistingFailedCount,
-    dataQualityPassCount,
     totalCaseCount,
+    dataQualityPassCount,
+    metadataMetricsLoading,
   ]);
 
   return (
@@ -141,6 +147,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
         <Col span={24}>
           <TopMaxRowCountChangeTable
             data={maxRowCountChange.data}
+            loading={maxRowCountChange.loading}
           />
         </Col>
       </Row>
@@ -153,6 +160,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
             pageSize={failedTestCases.pageSize}
             total={failedTestCases.total}
             onChange={handleFailedTestCasesTableChange}
+            loading={failedTestCases.loading}
           />
         </Col>
       </Row>
@@ -164,6 +172,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
         pageSize={datasetMetrics.pageSize}
         total={datasetMetrics.total}
         onChange={handleDatasetMetricsTableChange}
+        loading={datasetMetrics.loading}
       />
     </div>
   );

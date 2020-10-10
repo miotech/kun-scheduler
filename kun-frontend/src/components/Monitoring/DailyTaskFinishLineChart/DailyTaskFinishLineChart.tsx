@@ -158,7 +158,7 @@ function DailyTaskFinishLineChart(props) {
           <Line
             from={{ x: tooltipData.x, y: 0 }}
             to={{ x: tooltipData.x, y: yMax }}
-            stroke="#75daad"
+            stroke="#cfb162"
             strokeWidth={2}
             pointerEvents="none"
             strokeDasharray="5,2"
@@ -167,8 +167,8 @@ function DailyTaskFinishLineChart(props) {
             cx={tooltipData.x}
             cy={tooltipData.y}
             r={4}
-            fill="#75daad"
-            stroke="white"
+            fill="#fff"
+            stroke="#cfb162"
             strokeWidth={2}
             pointerEvents="none"
           />

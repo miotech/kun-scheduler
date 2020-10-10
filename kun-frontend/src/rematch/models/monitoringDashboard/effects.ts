@@ -7,97 +7,136 @@ import {
 import { PaginationReqBody, SortReqBody } from '@/definitions/common-types';
 
 // Data discovery board: fetch top metrics data
-const loadDataDiscoveryMetrics = (dispatch: RootDispatch) =>
-  services.fetchMetadataMetrics()
+const loadDataDiscoveryMetrics = (dispatch: RootDispatch) => {
+  dispatch.monitoringDashboard.setDataDiscoveryMetricsLoading(true);
+  return services.fetchMetadataMetrics()
     .then((metrics: MetadataMetrics) => {
       dispatch.monitoringDashboard.setDataDiscoveryMetrics(metrics || null);
     }).catch(() => {
       dispatch.monitoringDashboard.setDataDiscoveryMetrics(null);
+    }).finally(() => {
+      dispatch.monitoringDashboard.setDataDiscoveryMetricsLoading(false);
     });
+}
 
 // Data discovery board: fetch top 10 datasets with Max Row Count Change
-const loadTopDatasetsMaxRowCountChange = (dispatch: RootDispatch) =>
+const loadTopDatasetsMaxRowCountChange = (dispatch: RootDispatch) => {
+  dispatch.monitoringDashboard.updateTopDatasetsWithMaxRowChange({
+    loading: true,
+  });
   services.fetchMaxRowCountChange({
     pageSize: 10,
   }).then(fetchedData => {
     dispatch.monitoringDashboard.setTopDatasetsWithMaxRowChange({
       data: fetchedData.rowCountChanges,
       error: null,
+      loading: false,
     });
   }).catch((e) => {
     dispatch.monitoringDashboard.setTopDatasetsWithMaxRowChange({
       data: [],
       error: e,
+      loading: false,
     });
   });
+};
 
 // Data discovery board: fetch failed test cases
-const loadFailedTestCases = (params: PaginationReqBody & Partial<SortReqBody>, dispatch: RootDispatch) => services.fetchFailedTestCases({
-  pageNumber: params.pageNumber,
-  pageSize: params.pageSize,
-  sortColumn: params.sortColumn as any || undefined,
-  sortOrder: params.sortOrder || undefined,
-}).then((fetchedData: FailedTestCasesInfo) => {
+const loadFailedTestCases = (params: PaginationReqBody & Partial<SortReqBody>, dispatch: RootDispatch) => {
   dispatch.monitoringDashboard.updateFailedTestCases({
-    data: fetchedData.testCases,
-    total: fetchedData.totalCount,
-    error: null,
+    loading: true,
   });
-}).catch(e => {
-  dispatch.monitoringDashboard.updateFailedTestCases({
-    data: [],
-    error: e,
+  return services.fetchFailedTestCases({
+    pageNumber: params.pageNumber,
+    pageSize: params.pageSize,
+    sortColumn: params.sortColumn as any || undefined,
+    sortOrder: params.sortOrder || undefined,
+  }).then((fetchedData: FailedTestCasesInfo) => {
+    dispatch.monitoringDashboard.updateFailedTestCases({
+      loading: false,
+      data: fetchedData.testCases,
+      total: fetchedData.totalCount,
+      error: null,
+    });
+  }).catch(e => {
+    dispatch.monitoringDashboard.updateFailedTestCases({
+      loading: false,
+      data: [],
+      error: e,
+    });
   });
-});
+}
 
 // Data discovery board: fetch datasets column metrics
-const loadDatasetMetrics = (params: PaginationReqBody, dispatch: RootDispatch) => services.fetchDatasetColumnMetrics({
-  pageNumber: params.pageNumber,
-  pageSize: params.pageSize,
-}).then((fetchedData: DatasetColumnMetricsInfo) => {
+const loadDatasetMetrics = (params: PaginationReqBody, dispatch: RootDispatch) => {
   dispatch.monitoringDashboard.updateDatasetMetrics({
-    error: null,
-    data: fetchedData.columnMetricsList,
-    total: fetchedData.totalCount,
+    loading: true,
+  })
+  return services.fetchDatasetColumnMetrics({
+    pageNumber: params.pageNumber,
+    pageSize: params.pageSize,
+  }).then((fetchedData: DatasetColumnMetricsInfo) => {
+    dispatch.monitoringDashboard.updateDatasetMetrics({
+      loading: false,
+      error: null,
+      data: fetchedData.columnMetricsList,
+      total: fetchedData.totalCount,
+    });
+  }).catch((e) => {
+    dispatch.monitoringDashboard.updateDatasetMetrics({
+      loading: false,
+      error: e,
+      data: [],
+    });
   });
-}).catch((e) => {
-  dispatch.monitoringDashboard.updateDatasetMetrics({
-    error: e,
-    data: [],
-  });
-});
+}
 
 // Data Development board
-const loadDataDevelopmentMetrics = (dispatch: RootDispatch) =>
-  services.fetchDataDevelopmentMetrics()
+const loadDataDevelopmentMetrics = (dispatch: RootDispatch) => {
+  dispatch.monitoringDashboard.setDataDevelopmentMetricsLoading(true);
+  return services.fetchDataDevelopmentMetrics()
     .then((fetchedData: DataDevelopmentMetrics) => {
       dispatch.monitoringDashboard.setDataDevelopmentMetrics(fetchedData);
     })
     .catch(() => {
+    })
+    .finally(() => {
+      dispatch.monitoringDashboard.setDataDevelopmentMetricsLoading(false);
     });
+}
 
 // daily task finishes
-const loadDailyTaskFinish = (dispatch: RootDispatch) =>
-  services.fetchDataDevelopmentDailyTaskCount()
+const loadDailyTaskFinish = (dispatch: RootDispatch) => {
+  dispatch.monitoringDashboard.updateDailyTaskFinish({
+    loading: true,
+  });
+  return services.fetchDataDevelopmentDailyTaskCount()
     .then(fetchedData => {
       dispatch.monitoringDashboard.setDailyTaskFinish({
+        loading: false,
         data: fetchedData.taskCountList,
         error: null,
       });
     })
     .catch((e) => {
       dispatch.monitoringDashboard.setDailyTaskFinish({
+        loading: false,
         data: [],
         error: e,
       });
     });
+}
 
 // task details
-const loadTaskDetails = (params: PaginationReqBody, dispatch: RootDispatch) =>
-  services.fetchDataDevelopmentTaskDetails(params)
+const loadTaskDetails = (params: PaginationReqBody, dispatch: RootDispatch) => {
+  dispatch.monitoringDashboard.updateTaskDetails({
+    loading: true,
+  });
+  return services.fetchDataDevelopmentTaskDetails(params)
     .then(fetchedData => {
       dispatch.monitoringDashboard.updateTaskDetails({
         data: fetchedData.tasks,
+        loading: false,
         error: null,
         total: fetchedData.totalCount,
       });
@@ -105,9 +144,11 @@ const loadTaskDetails = (params: PaginationReqBody, dispatch: RootDispatch) =>
     .catch((e) => {
       dispatch.monitoringDashboard.updateTaskDetails({
         data: [],
+        loading: false,
         error: e,
       });
     });
+}
 
 /**
  * Store effects for monitoring dashboard

@@ -9,17 +9,19 @@ import useI18n from '@/hooks/useI18n';
 
 interface OwnProps {
   data: RowCountChange[];
+  loading?: boolean;
 }
 
 type Props = OwnProps;
 
-export const TopMaxRowCountChangeTable: React.FC<Props> = memo(function TopMaxRowCountChangeTable({ data }) {
+export const TopMaxRowCountChangeTable: React.FC<Props> = memo(function TopMaxRowCountChangeTable({ data, loading }) {
   const t = useI18n();
 
   const columns: ColumnProps<RowCountChange>[] = useMemo(() => [
     {
       key: 'ordinal',
       title: '#',
+      width: 60,
       render: (txt: any, record: RowCountChange, index: number) => <span>{index + 1}</span>
     },
     {
@@ -86,6 +88,7 @@ export const TopMaxRowCountChangeTable: React.FC<Props> = memo(function TopMaxRo
         rowKey={r => `${r.datasetName}-${r.dataSource}-${r.rowChange}-${r.rowChangeRatio}-${r.rowCount}`}
         columns={columns}
         pagination={false}
+        loading={loading}
       />
     </Card>
   );

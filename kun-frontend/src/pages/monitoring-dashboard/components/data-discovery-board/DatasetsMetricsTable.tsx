@@ -12,6 +12,7 @@ interface OwnProps {
   pageNum: number;
   pageSize: number;
   total: number;
+  loading?: boolean;
   data: ColumnMetrics[];
   onChange?: TableOnChangeCallback<ColumnMetrics>;
 }
@@ -25,6 +26,7 @@ export const DatasetsMetricsTable: React.FC<Props> = memo(function DatasetsMetri
     pageNum,
     pageSize,
     onChange,
+    loading,
   } = props;
 
   const t = useI18n();
@@ -33,6 +35,7 @@ export const DatasetsMetricsTable: React.FC<Props> = memo(function DatasetsMetri
     {
       key: 'ordinal',
       title: '#',
+      width: 60,
       render: (txt: any, record: ColumnMetrics, index: number) =>
         <span>{((pageNum - 1) * pageSize) + index + 1}</span>,
     },
@@ -86,6 +89,7 @@ export const DatasetsMetricsTable: React.FC<Props> = memo(function DatasetsMetri
     <Card bodyStyle={{ padding: '8px' }}>
       <h3>{t('monitoringDashboard.dataDiscovery.datasetColumnMetricsTable.title')}</h3>
       <Table<ColumnMetrics>
+        loading={loading}
         dataSource={data}
         size="small"
         columns={columns}
