@@ -270,7 +270,7 @@ export default {
   "taskRun.property.duration": "Duration",
   "monitoringDashboard.title": "Monitoring Dashboard",
   "monitoringDashboard.dataDiscovery.title": "Data Discovery",
-  "monitoringDashboard.dataDiscovery.coveredRatio": "Covered Ratio",
+  "monitoringDashboard.dataDiscovery.coveredRatio": "Coverage",
   "monitoringDashboard.dataDiscovery.longExistingFailedCaseCount": "Count of Long-existing Failed Cases",
   "monitoringDashboard.dataDiscovery.passRatioLastDay": "Pass Ratio (Last 24 hours)",
   "monitoringDashboard.dataDiscovery.maxRowCountChangeTable.title": "Top 10 Datasets with Max Row Count Change",

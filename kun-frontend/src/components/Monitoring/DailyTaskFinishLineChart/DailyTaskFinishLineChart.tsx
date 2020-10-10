@@ -42,7 +42,8 @@ const toY = (d: DailyTaskFinishCount) => d.taskCount;
 
 const logger = LogUtils.getLoggers('DailyTaskFinishLineChart');
 
-export const DailyTaskFinishLineChart: React.FC<DailyTaskFinishLineChartProps> = memo(props => {
+export const DailyTaskFinishLineChart: React.FC<DailyTaskFinishLineChartProps> = memo(
+function DailyTaskFinishLineChart(props) {
   const {
     width = 1024,
     height = 768,
@@ -157,7 +158,7 @@ export const DailyTaskFinishLineChart: React.FC<DailyTaskFinishLineChartProps> =
           <Line
             from={{ x: tooltipData.x, y: 0 }}
             to={{ x: tooltipData.x, y: yMax }}
-            stroke="#75daad"
+            stroke="#cfb162"
             strokeWidth={2}
             pointerEvents="none"
             strokeDasharray="5,2"
@@ -166,8 +167,8 @@ export const DailyTaskFinishLineChart: React.FC<DailyTaskFinishLineChartProps> =
             cx={tooltipData.x}
             cy={tooltipData.y}
             r={4}
-            fill="#75daad"
-            stroke="white"
+            fill="#fff"
+            stroke="#cfb162"
             strokeWidth={2}
             pointerEvents="none"
           />

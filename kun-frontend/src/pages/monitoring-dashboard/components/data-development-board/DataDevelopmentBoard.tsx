@@ -9,7 +9,7 @@ import { TableOnChangeCallback } from '@/definitions/common-types';
 import { DevTaskDetail } from '@/services/monitoring-dashboard';
 import { useUpdateEffect } from 'ahooks';
 
-export const DataDevelopmentBoard: React.FC = memo(() => {
+export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard() {
   const t = useI18n();
 
   const {
@@ -25,6 +25,7 @@ export const DataDevelopmentBoard: React.FC = memo(() => {
     dataDevelopmentMetrics: metrics,
     dailyTaskFinish,
     taskDetails,
+    dataDevelopmentMetricsLoading,
   } = dataDevelopmentBoardData;
 
   /* Reload table after pagination change */
@@ -46,6 +47,7 @@ export const DataDevelopmentBoard: React.FC = memo(() => {
             title={t('monitoringDashboard.dataDevelopment.successLastDay')}
             value={metrics.successTaskCount}
             textTheme="success"
+            loading={dataDevelopmentMetricsLoading}
           />
         </Col>
         <Col span={6}>
@@ -53,6 +55,7 @@ export const DataDevelopmentBoard: React.FC = memo(() => {
             title={t('monitoringDashboard.dataDevelopment.failedLastDay')}
             value={metrics.failedTaskCount}
             textTheme="failed"
+            loading={dataDevelopmentMetricsLoading}
           />
         </Col>
         <Col span={6}>
@@ -60,6 +63,7 @@ export const DataDevelopmentBoard: React.FC = memo(() => {
             title={t('monitoringDashboard.dataDevelopment.running')}
             value={metrics.runningTaskCount}
             textTheme="running"
+            loading={dataDevelopmentMetricsLoading}
           />
         </Col>
         <Col span={6}>
@@ -67,6 +71,7 @@ export const DataDevelopmentBoard: React.FC = memo(() => {
             title={t('monitoringDashboard.dataDevelopment.totalTaskCount')}
             value={metrics.totalTaskCount}
             textTheme="default"
+            loading={dataDevelopmentMetricsLoading}
           />
         </Col>
       </Row>
@@ -77,6 +82,7 @@ export const DataDevelopmentBoard: React.FC = memo(() => {
     metrics.failedTaskCount,
     metrics.runningTaskCount,
     metrics.totalTaskCount,
+    dataDevelopmentMetricsLoading,
   ]);
 
   const taskDetailsTableChangeHandler: TableOnChangeCallback<DevTaskDetail> = useCallback((pagination) => {
@@ -97,6 +103,7 @@ export const DataDevelopmentBoard: React.FC = memo(() => {
         <Col span={24}>
           <DailyTaskFinishCountChart
             data={dailyTaskFinish.data}
+            loading={dailyTaskFinish.loading}
           />
         </Col>
       </Row>
@@ -104,6 +111,7 @@ export const DataDevelopmentBoard: React.FC = memo(() => {
       <Row gutter={[8, 8]}>
         <Col span={24}>
           <TaskDetailsTable
+            loading={taskDetails.loading}
             pageNum={taskDetails.pageNum}
             pageSize={taskDetails.pageSize}
             total={taskDetails.total}
