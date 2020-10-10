@@ -15,17 +15,19 @@ interface OwnProps {
   total: number;
   data: DevTaskDetail[];
   onChange: TableOnChangeCallback<DevTaskDetail>;
+  loading?: boolean;
 }
 
 type Props = OwnProps;
 
-export const TaskDetailsTable: React.FC<Props> = memo((props) => {
+export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(props) {
   const {
     data,
     pageNum,
     pageSize,
     total,
     onChange,
+    loading,
   } = props;
 
   const t = useI18n();
@@ -34,6 +36,7 @@ export const TaskDetailsTable: React.FC<Props> = memo((props) => {
     {
       key: 'ordinal',
       title: '#',
+      width: 60,
       render: (txt: any, record: DevTaskDetail, index: number) =>
         <span>{((pageNum - 1) * pageSize) + index + 1}</span>,
     },
@@ -84,6 +87,7 @@ export const TaskDetailsTable: React.FC<Props> = memo((props) => {
         {t('monitoringDashboard.dataDevelopment.taskDetailsTable.title')}
       </h3>
       <Table<DevTaskDetail>
+        loading={loading}
         dataSource={data}
         size="small"
         columns={columns}
