@@ -103,6 +103,7 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
         <Col span={24}>
           <DailyTaskFinishCountChart
             data={dailyTaskFinish.data}
+            loading={dailyTaskFinish.loading}
           />
         </Col>
       </Row>
