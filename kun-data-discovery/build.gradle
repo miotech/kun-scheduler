@@ -10,6 +10,27 @@ plugins {
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
+task buildDataQualityOperator (type:Exec){
+	workingDir "../kun-data-quality/data-quality-operators"
+	commandLine "gradle","shadowJar"
+}
+
+task copyDataQualityOperator(type: Copy){
+	from "../kun-data-quality/data-quality-operators/build/libs/data-quality-operator-0.1.jar"
+	rename {
+		"data-quality-operator.jar"
+	}
+	into "src/main/resources"
+	dependsOn(buildDataQualityOperator)
+}
+
+compileJava.dependsOn(copyDataQualityOperator)
+
+task deleteLocalJar(type: Delete){
+	delete "src/main/resources/data-quality-operator.jar"
+}
+bootJar.dependsOn(deleteLocalJar)
+
 dependencies {
 	implementation project(':kun-data-quality')
 	implementation project(':kun-commons:kun-commons-db')
@@ -31,6 +52,15 @@ dependencies {
 	testImplementation 'org.testcontainers:postgresql:1.14.3'
 	testImplementation 'com.h2database:h2'
 	// end::tests[]
+}
+
+jacocoTestReport {
+
+	afterEvaluate {
+		getClassDirectories().setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: ['**/**operator.jar'])
+		}))
+	}
 }
 
 test {

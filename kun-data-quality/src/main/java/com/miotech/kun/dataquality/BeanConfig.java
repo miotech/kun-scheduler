@@ -4,6 +4,7 @@ import com.miotech.kun.dataquality.utils.WorkflowUtils;
 import com.miotech.kun.workflow.client.DefaultWorkflowClient;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Operator;
+import com.miotech.kun.workflow.client.operator.OperatorUpload;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +26,11 @@ public class BeanConfig {
     @Bean
     WorkflowClient getWorkflowClient() {
         return new DefaultWorkflowClient(workflowUrl);
+    }
+
+    @Bean
+    OperatorUpload getOperatorUpload(){
+        return new OperatorUpload(workflowUrl);
     }
 
     @Bean

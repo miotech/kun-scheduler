@@ -76,6 +76,7 @@ subprojects {
                 implementation "com.h2database:h2:1.4.200"
                 implementation "com.cronutils:cron-utils:9.0.2"
                 implementation 'org.apache.httpcomponents:httpclient:4.5.12'
+                implementation 'org.apache.httpcomponents:httpmime:4.5.12'
                 implementation "org.postgresql:postgresql:42.2.14"
                 implementation 'com.squareup.okhttp3:okhttp:3.14.9'
                 implementation 'com.googlecode.json-simple:json-simple:1.1.1'

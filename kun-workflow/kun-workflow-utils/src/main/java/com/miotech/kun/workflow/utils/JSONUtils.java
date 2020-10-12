@@ -104,4 +104,8 @@ public class JSONUtils {
         return objectMapper.readTree(s);
     }
 
+    public static <T> T JsonNodeToObject(JsonNode jsonNode,Class<T> valueType) throws JsonProcessingException{
+        return objectMapper.treeToValue(jsonNode,valueType);
+    }
+
 }

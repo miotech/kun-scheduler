@@ -1,0 +1,20 @@
+{
+  "name": "Bash",
+  "templateType": "bash",
+  "templateGroup": "development",
+  "operator":  {
+    "name": "bash-operator",
+    "description": "bash operator",
+    "className": "com.miotech.kun.workflow.operator.BashOperator"
+  },
+  "displayParameters": [
+    {
+      "name": "command",
+      "type": "text",
+      "required": true,
+      "displayName": "command"
+    }
+  ],
+  "defaultValues": {
+  }
+}
