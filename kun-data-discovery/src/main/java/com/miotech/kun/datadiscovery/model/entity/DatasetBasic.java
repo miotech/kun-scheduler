@@ -35,6 +35,9 @@ public class DatasetBasic {
     @JsonProperty("high_watermark")
     private Watermark highWatermark;
 
+    @JsonProperty("low_watermark")
+    private Watermark lowWatermark;
+
     private List<String> owners;
 
     private List<String> tags;

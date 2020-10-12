@@ -1,11 +1,11 @@
 import React, { memo, ReactText, useMemo } from 'react';
 import c from 'clsx';
-import numral from 'numeral';
+import numeral from 'numeral';
 import isNil from 'lodash/isNil';
 import isFinite from 'lodash/isFinite';
 import isString from 'lodash/isString';
 import isNaN from 'lodash/isNaN';
-import { Tooltip } from 'antd';
+import { Tooltip, Skeleton } from 'antd';
 import { InfoCircleOutlined } from '@ant-design/icons';
 
 import './RatioCard.global.less';
@@ -26,12 +26,14 @@ export interface RatioCardProps extends React.ComponentProps<'div'> {
   displayRatio?: boolean;
   /** status */
   status?: RatioCardStatus;
+  /** Loading state */
+  loading?: boolean;
 }
 
 /**
  * Ratio card component for monitoring dashboard
  */
-export const RatioCard: React.FC<RatioCardProps> = memo(props => {
+export const RatioCard: React.FC<RatioCardProps> = memo(function RatioCard(props) {
   const {
     title,
     titleTooltip,
@@ -39,6 +41,7 @@ export const RatioCard: React.FC<RatioCardProps> = memo(props => {
     denominator,
     displayRatio,
     status = 'auto',
+    loading,
     ...restProps
   } = props;
 
@@ -89,6 +92,54 @@ export const RatioCard: React.FC<RatioCardProps> = memo(props => {
     numerator,
   ]);
 
+  const renderMetricNumbers = () => {
+    if (loading) {
+      return (
+        <div
+          className="monitoring-ratio-card__statistic--loading"
+          aria-label="ratio-card-statistic-loading"
+        >
+          <Skeleton
+            active
+            title
+            paragraph={false}
+          />
+        </div>
+      );
+    }
+    // else
+    return (
+      <div className="monitoring-ratio-card__metrics">
+        {/* counts */}
+        <div
+          className="monitoring-ratio-card__statistic"
+          aria-label="ratio-card-statistic"
+        >
+          <span
+            className={c(
+              'monitoring-ratio-card__statistic__numerator',
+              `monitoring-ratio-card__statistic__numerator--${numeratorStatusClsSuffix}`,
+            )}
+            aria-label="numerator"
+          >
+            {numeral(numerator).format('0,0')}
+          </span>
+          <span className="monitoring-ratio-card__statistic__dash" aria-label="dash">/</span>
+          <span className="monitoring-ratio-card__statistic__denominator" aria-label="denominator">
+            {numeral(denominator).format('0,0')}
+          </span>
+        </div>
+        {/* percentage */}
+        <div
+          className="monitoring-ratio-card__ratio-percentage"
+          aria-label="ratio-card-percentage"
+        >
+          {percentage}
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div
       {...restProps}
@@ -103,32 +154,7 @@ export const RatioCard: React.FC<RatioCardProps> = memo(props => {
         {tooltip}
       </h3>
       {/* Metric numbers */}
-      <div className="monitoring-ratio-card__metrics">
-        {/* counts */}
-        <div
-          className="monitoring-ratio-card__statistic"
-          aria-label="ratio-card-statistic"
-        >
-          <span
-            className={c(
-              'monitoring-ratio-card__statistic__numerator',
-              `monitoring-ratio-card__statistic__numerator--${numeratorStatusClsSuffix}`,
-            )}
-            aria-label="numerator"
-          >
-            {numral(numerator).format('0,0')}
-          </span>
-          <span className="monitoring-ratio-card__statistic__dash" aria-label="dash">/</span>
-          <span className="monitoring-ratio-card__statistic__denominator" aria-label="denominator">{numral(denominator).format('0,0')}</span>
-        </div>
-        {/* percentage */}
-        <div
-          className="monitoring-ratio-card__ratio-percentage"
-          aria-label="ratio-card-percentage"
-        >
-          {percentage}
-        </div>
-      </div>
+      {renderMetricNumbers()}
     </div>
   );
 });

@@ -3,14 +3,10 @@ package com.miotech.kun.metadata.databuilder.extract.template;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
+import com.miotech.kun.metadata.core.model.*;
 import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
-import com.miotech.kun.metadata.databuilder.model.Dataset;
-import com.miotech.kun.metadata.databuilder.model.DatasetField;
-import com.miotech.kun.metadata.databuilder.model.DatasetFieldStat;
-import com.miotech.kun.metadata.databuilder.model.DatasetStat;
-import com.miotech.kun.metadata.databuilder.service.gid.DataStoreJsonUtil;
-import com.miotech.kun.workflow.core.model.lineage.DataStore;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +16,7 @@ import java.util.Iterator;
 import java.util.List;
 
 public abstract class ExtractorTemplate extends AbstractExtractor {
+
     private static final Logger logger = LoggerFactory.getLogger(ExtractorTemplate.class);
 
     private final long datasourceId;

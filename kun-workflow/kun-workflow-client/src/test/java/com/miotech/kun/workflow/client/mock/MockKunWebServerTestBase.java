@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.client.mock;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseModule;
+import com.miotech.kun.commons.db.GraphDatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
@@ -15,8 +16,12 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.neo4j.ogm.config.Configuration;
+import org.neo4j.ogm.session.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.Neo4jContainer;
 
 import java.io.IOException;
 import java.util.Random;
@@ -29,6 +34,10 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
     private final Logger logger = LoggerFactory.getLogger(MockKunWebServerTestBase.class);
 
     private final OkHttpClient okHttpClient = new OkHttpClient();
+
+    @ClassRule
+    public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
+            .withAdminPassword("Mi0tech2020");
 
     @Inject
     private KunWorkflowWebServer webServer;
@@ -43,7 +52,22 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         int port = 18080 + (new Random()).nextInt(100);
         logger.info("Start test workflow server in : localhost:{}", port);
         props.put(ConfigurationKeys.PROP_SERVER_PORT, Integer.toString(port));
-        addModules(new KunWorkflowServerModule(props), new DatabaseModule(), new SchedulerModule());
+        addModules(
+                new KunWorkflowServerModule(props),
+                new DatabaseModule(),
+                new SchedulerModule()
+        );
+        // create Neo4j session factory since we do not include GraphDatabaseModule here
+        bind(SessionFactory.class, initNeo4jSessionFactory());
+    }
+
+    public SessionFactory initNeo4jSessionFactory() {
+        Configuration config = new Configuration.Builder()
+                .uri(neo4jContainer.getBoltUrl())
+                .connectionPoolSize(50)
+                .credentials("neo4j", "Mi0tech2020")
+                .build();
+        return new SessionFactory(config, GraphDatabaseModule.DEFAULT_NEO4J_DOMAIN_CLASSES);
     }
 
     @Before
