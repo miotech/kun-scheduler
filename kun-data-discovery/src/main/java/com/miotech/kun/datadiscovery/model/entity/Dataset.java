@@ -18,9 +18,6 @@ import java.util.List;
 @NoArgsConstructor
 public class Dataset extends DatasetBasic {
 
-    @JsonProperty("low_watermark")
-    private Watermark lowWatermark;
-
     @JsonProperty("row_count")
     private Long rowCount;
 

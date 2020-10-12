@@ -15,7 +15,7 @@ export const RatioCardDemo = () => {
     <Row justify="space-around">
       <Col span={8}>
         <RatioCard
-          title="Covered Ratio"
+          title="Coverage"
           numerator={523}
           denominator={612}
         />
@@ -30,7 +30,7 @@ export const RatioCardDemo = () => {
       </Col>
       <Col span={8}>
         <RatioCard
-          title="Covered Ratio"
+          title="Coverage"
           numerator={420}
           denominator={612}
         />
