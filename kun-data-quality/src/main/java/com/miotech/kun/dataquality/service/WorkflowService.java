@@ -7,12 +7,12 @@ import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.client.operator.OperatorUpload;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
@@ -44,9 +44,13 @@ public class WorkflowService {
     @Value("${workflow.enable:true}")
     Boolean workflowEnable;
 
+    @Autowired
+    private OperatorUpload operatorUpload;
+
     @PostConstruct
     public void init() {
         if (workflowEnable) {
+            operatorUpload.autoUpload();
             workflowClient.saveOperator(this.operator.getName(), this.operator);
         }
     }
