@@ -21,6 +21,8 @@ public class OperatorUpload {
 
     private static Logger logger = LoggerFactory.getLogger(OperatorUpload.class);
 
+    private static final int BUFFER_SIZE = 8192;
+
 
     public OperatorUpload(String workflowUrl) {
         this.clientUtil = new DefaultWorkflowClient(workflowUrl);
@@ -56,12 +58,12 @@ public class OperatorUpload {
     public List<Operator> scanOperatorJar() {
         List<OperatorDef> operatorDefList = loadConfig();
         logger.info("load operator from operator.yaml, operatorDefList:{}", operatorDefList);
-        Map<String, Operator> exitsOperators = getExistOperator();
+        Map<String, Operator> exitingOperators = getExistOperator();
         List<Operator> uploadOperator = new ArrayList<>();
         for (OperatorDef operatorDef : operatorDefList) {
             String operatorName = operatorDef.getName();
-            if (exitsOperators.containsKey(operatorName)) {
-                Operator existOperator = exitsOperators.get(operatorName);
+            if (exitingOperators.containsKey(operatorName)) {
+                Operator existOperator = exitingOperators.get(operatorName);
                 operatorDef.setId(existOperator.getId());
             }
             URL url = this.getClass().getClassLoader().getResource(operatorDef.getName() + ".jar");
@@ -88,7 +90,7 @@ public class OperatorUpload {
     private void streamToFile(InputStream ins, File file) throws IOException {
         OutputStream os = new FileOutputStream(file);
         int bytesRead = 0;
-        byte[] buffer = new byte[8192];
+        byte[] buffer = new byte[BUFFER_SIZE];
         while ((bytesRead = ins.read(buffer, 0, 8192)) != -1) {
             os.write(buffer, 0, bytesRead);
         }
@@ -109,16 +111,16 @@ public class OperatorUpload {
     }
 
     public Map<String, Operator> getExistOperator() {
-        Map<String, Operator> exitsOperators = new HashMap<>();
+        Map<String, Operator> exitingOperators = new HashMap<>();
         try {
             List<Operator> existOperatorList = clientUtil.getExistOperators();
             for (Operator operator : existOperatorList) {
-                exitsOperators.put(operator.getName(), operator);
+                exitingOperators.put(operator.getName(), operator);
             }
         } catch (Exception e) {
             logger.error("get exist operator filed", e);
         }
-        return exitsOperators;
+        return exitingOperators;
     }
 
     private Operator createOperator(Operator operatorDef, File file) {
