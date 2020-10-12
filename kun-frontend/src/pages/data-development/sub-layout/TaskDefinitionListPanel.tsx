@@ -15,7 +15,7 @@ import styles from './TaskDefinitionListPanel.less';
 export interface TaskDefinitionListPanelProps {
 }
 
-export const TaskDefinitionListPanel: React.FC<TaskDefinitionListPanelProps> = memo(() => {
+export const TaskDefinitionListPanel: React.FC<TaskDefinitionListPanelProps> = memo(function TaskDefinitionListPanel() {
   const t = useI18n();
 
   /* select states from rematch store */

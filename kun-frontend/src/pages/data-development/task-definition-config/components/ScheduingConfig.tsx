@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Col, Divider, Row, Form, Radio, Button } from 'antd';
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
-import cronParser from 'cron-parser';
 import useI18n from '@/hooks/useI18n';
 
 import { FormInstance } from 'antd/es/form';
@@ -16,6 +15,7 @@ import { OutputDatasetField } from '@/components/OutputDatasetField';
 
 import LogUtils from '@/utils/logUtils';
 import { getTaskDefinitionsFromFlattenedProps } from '@/utils/transformDataset';
+import { validateQuartzCron } from '@/utils/cronUtils';
 import styles from './BodyForm.less';
 
 interface SchedulingConfigProps {
@@ -54,6 +54,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = props => {
         },
       },
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     initTaskDefinition,
   ]);
@@ -165,12 +166,11 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = props => {
                         { required: true },
                         {
                           validator(rule, value) {
-                            try {
-                              cronParser.parseExpression(value);
+                            if (validateQuartzCron(value)) {
                               return Promise.resolve();
-                            } catch (e) {
-                              return Promise.reject(t('common.cronstrue.invalidCronExp'));
                             }
+                            // else
+                            return Promise.reject(t('common.cronstrue.invalidCronExp'));
                           }
                         }
                       ]}
