@@ -51,6 +51,12 @@ services:
       DB_PG_PORT:
       DB_PG_USERNAME:
       DB_PG_PASSWORD:
+      WORKFLOW_RPC_SERVICE_PORT:
+      DB_NEO4J_AUTH:
+      DB_NEO4J_USERNAME:
+      DB_NEO4J_PASSWORD:
+      DB_NEO4J_IP:
+      DB_REDIS_IP:
     restart: always
     volumes:
       - ./kun-workflow-logs:/server/target/kun-workflow-logs/:z
