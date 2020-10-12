@@ -21,6 +21,7 @@ dependencies {
     implementation "org.eclipse.jetty:jetty-webapp"
     implementation "org.yaml:snakeyaml"
     implementation 'org.apache.httpcomponents:httpclient'
+    implementation 'org.apache.httpcomponents:httpmime'
 
     testImplementation project(":kun-commons:kun-commons-testing")
 }

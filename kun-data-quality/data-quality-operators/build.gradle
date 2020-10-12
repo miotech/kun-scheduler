@@ -1,0 +1,28 @@
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'java'
+    id "org.sonarqube"
+    id "io.freefair.lombok"
+}
+
+dependencies {
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-testing')
+    implementation project(':kun-commons:kun-commons-query')
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-commons:kun-commons-db")
+    implementation project(":kun-app-common")
+    implementation 'com.syncron.amazonaws:simba-athena-jdbc-driver'
+    implementation 'org.postgresql:postgresql'
+    implementation "commons-dbutils:commons-dbutils"
+    implementation 'org.freemarker:freemarker:2.3.30'
+    implementation 'com.fasterxml.jackson.core:jackson-core'
+}
+
+shadowJar {
+    baseName = 'data-quality-operator'
+    classifier = null
+    version = 0.1
+    zip64 true
+}

@@ -1,0 +1,4 @@
+operators:
+  - name: databuilder-operator
+    className: com.miotech.kun.metadata.databuilder.schedule.DataBuilderOperator
+    description: auto upload DatabuilderOperator

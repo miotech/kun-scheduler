@@ -1,0 +1,34 @@
+plugins {
+    id 'com.github.johnrengelman.shadow'
+    id 'java'
+    id "org.sonarqube"
+}
+
+dependencies {
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-metadata:kun-metadata-core')
+    implementation 'com.google.guava:guava'
+    implementation 'com.squareup.okhttp3:okhttp:3.14.6'
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "junit:junit:4.12"
+    implementation "org.jsoup:jsoup:1.13.1"
+    implementation "org.apache.hadoop:hadoop-client:2.7.3"
+    implementation "org.apache.hadoop:hadoop-aws:2.7.3"
+    implementation "com.amazonaws:aws-java-sdk-s3:1.11.306"
+    implementation'com.alibaba:druid'
+
+    testImplementation project(':kun-workflow:kun-workflow-testing')
+    testImplementation project(':kun-commons:kun-commons-testing')
+    testImplementation "org.mock-server:mockserver-netty"
+    testImplementation "org.mock-server:mockserver-client-java"
+    testImplementation "org.awaitility:awaitility"
+}
+
+shadowJar {
+    baseName = 'spark-operators'
+    classifier = null
+    version = 0.1
+    zip64 true
+}

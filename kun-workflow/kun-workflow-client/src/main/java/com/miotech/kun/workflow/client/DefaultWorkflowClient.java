@@ -43,6 +43,21 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
+    public Operator updateOperator(Long operatorId, Operator operator) {
+        return wfApi.updateOperator(operatorId,operator);
+    }
+
+    @Override
+    public void deleteOperator(Long operatorId) {
+        wfApi.deleteOperator(operatorId);
+    }
+
+    @Override
+    public void uploadOperatorJar(Long id, File jarFile) {
+        wfApi.uploadJar(id,jarFile);
+    }
+
+    @Override
     public void updateOperatorJar(String name, File jarFile) {
         Optional<Operator> optionalOperator = getOperator(name);
         if (optionalOperator.isPresent()) {
@@ -62,6 +77,15 @@ public class DefaultWorkflowClient implements WorkflowClient {
         return operators.stream()
                 .filter(x -> x.getName().equals(name))
                 .findAny();
+    }
+
+    @Override
+    public List<Operator> getExistOperators() {
+        List<Operator> operators = wfApi.getOperators(
+                OperatorSearchRequest.newBuilder()
+                        .build())
+                .getRecords();
+        return operators;
     }
 
     @Override

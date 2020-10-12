@@ -1,0 +1,23 @@
+server:
+  port: ${DATA_PLATFORM_PORT:8081}
+
+workflow:
+  enabled: true
+  baseUrl: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/dataplatform?stringtype=unspecified
+    username: ${DB_PG_USERNAME}
+    password: ${DB_PG_PASSWORD}
+
+  flyway:
+    enabled: true
+    clean-disabled: true
+    locations: classpath:sql
+    table: flyway_kun_app_schema_history
+    schemas: public
+
+security:
+  base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
