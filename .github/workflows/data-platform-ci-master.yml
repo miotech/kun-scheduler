@@ -30,7 +30,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Build with Gradle
-        run: ./gradlew kun-data-platform:bootJar
+        run: ./gradlew kun-data-platform:kun-data-platform-web:bootJar
       - name: Build and push Docker images
         uses: docker/build-push-action@v1
         with:
