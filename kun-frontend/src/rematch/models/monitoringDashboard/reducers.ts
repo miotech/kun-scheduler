@@ -16,8 +16,17 @@ export const reducers = {
   setDataDiscoveryMetrics: produce((draftState: ModelState, payload: MetadataMetrics | null) => {
     draftState.dataDiscoveryBoardData.metadataMetrics = payload;
   }),
+  setDataDiscoveryMetricsLoading: produce((draftState: ModelState, payload: boolean) => {
+    draftState.dataDiscoveryBoardData.metadataMetricsLoading = payload;
+  }),
   setTopDatasetsWithMaxRowChange: produce((draftState: ModelState, payload: ModelState['dataDiscoveryBoardData']['maxRowCountChange']) => {
     draftState.dataDiscoveryBoardData.maxRowCountChange = payload;
+  }),
+  updateTopDatasetsWithMaxRowChange: produce((draftState: ModelState, payload: Partial<ModelState['dataDiscoveryBoardData']['maxRowCountChange']>) => {
+    draftState.dataDiscoveryBoardData.maxRowCountChange = {
+      ...draftState.dataDiscoveryBoardData.maxRowCountChange,
+      ...payload,
+    };
   }),
   setFailedTestCases: produce((draftState: ModelState, payload: ModelState['dataDiscoveryBoardData']['failedTestCases']) => {
     draftState.dataDiscoveryBoardData.failedTestCases = payload;
@@ -41,6 +50,9 @@ export const reducers = {
     draftState.dataDevelopmentBoardData.dataDevelopmentMetrics = {
       ...payload,
     };
+  }),
+  setDataDevelopmentMetricsLoading: produce((draftState: ModelState, payload: boolean) => {
+    draftState.dataDevelopmentBoardData.dataDevelopmentMetricsLoading = payload;
   }),
   setDailyTaskFinish: produce((draftState: ModelState, payload: ModelState['dataDevelopmentBoardData']['dailyTaskFinish']) => {
     draftState.dataDevelopmentBoardData.dailyTaskFinish = payload;

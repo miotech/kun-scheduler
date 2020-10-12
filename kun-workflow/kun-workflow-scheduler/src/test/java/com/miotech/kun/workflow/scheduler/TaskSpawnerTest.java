@@ -294,7 +294,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         // task1
         TaskRun submitted = result.get(0);
         assertThat(submitted.getId(), is(notNullValue()));
-        assertThat(submitted.getTask(), sameBeanAs(tasks.get(0)));
+        assertThat(submitted.getTask().getId(), is(tasks.get(0).getId()));
         assertThat(submitted.getScheduledTick(), is(tick));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
@@ -307,7 +307,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         // task2
         submitted = result.get(1);
         assertThat(submitted.getId(), is(notNullValue()));
-        assertThat(submitted.getTask(), sameBeanAs(tasks.get(1)));
+        assertThat(submitted.getTask().getId(), is(tasks.get(1).getId()));
         assertThat(submitted.getScheduledTick(), is(tick));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
@@ -322,7 +322,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         // task3
         submitted = result.get(2);
         assertThat(submitted.getId(), is(notNullValue()));
-        assertThat(submitted.getTask(), sameBeanAs(tasks.get(2)));
+        assertThat(submitted.getTask().getId(), is(tasks.get(2).getId()));
         assertThat(submitted.getScheduledTick(), is(tick));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
