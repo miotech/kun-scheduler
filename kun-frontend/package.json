@@ -18,7 +18,7 @@
     "start:dev-http": "PROXY_TARGET=\"https://kun-dev.miotech.com\" PROXY_PDF_TARGET=\"https://kun-dev.miotech.com\" PORT=9801 umi dev",
     "start:local": "PROXY_TARGET=\"http://localhost:8080\" PROXY_TARGET_DASHBOARD=\"http://localhost:8083\" PROXY_PDF_TARGET=\"http://localhost:10010\" PROXY_SECURITY_TARGET=\"http://localhost:8079\" PORT=9801 umi dev",
     "start:global": "USE_MOCK=true HTTPS=1 FORK_TS_CHECKER=1 PROXY_TARGET=\"https://kun-global.miotech.com\" PROXY_TARGET_DASHBOARD=\"https://kun-global.miotech.com\" PROXY_SECURITY_TARGET=\"https://kun-global.miotech.com\" PORT=9801 umi dev",
-    "start:chen": "USE_MOCK=false PROXY_TARGET=\"http://192.168.1.80:8080\" PROXY_TARGET_DASHBOARD=\"http://192.168.1.80:8083\" PROXY_SECURITY_TARGET=\"http://192.168.1.80:8079\" PORT=9805 umi dev",
+    "start:chen": "USE_MOCK=false PROXY_TARGET=\"http://192.168.1.108:8080\" PROXY_TARGET_DASHBOARD=\"http://192.168.1.108:8083\" PROXY_SECURITY_TARGET=\"http://192.168.1.108:8079\" PORT=9805 umi dev",
     "i18n": "node i18n-updater/index.js",
     "storybook": "start-storybook -p 9802"
   },

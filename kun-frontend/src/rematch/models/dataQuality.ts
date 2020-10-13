@@ -111,9 +111,21 @@ export interface RelatedTableItem {
   datasource: string;
 }
 
+export enum DataQualityType {
+  Accuracy = 'ACCURACY',
+  Completeness = 'COMPLETENESS',
+  Consistency = 'CONSISTENCY',
+  Timeliness = 'TIMELINESS',
+}
+
+export const dataQualityTypes: DataQualityType[] = Object.values(
+  DataQualityType,
+).map(k => k as DataQualityType);
+
 export interface DataQualityBase {
   name: string;
   // level: DataQualityLevel;
+  types: DataQualityType[];
   description: string | null;
   dimension: string | null;
   dimensionConfig: DimensionConfig | null;
