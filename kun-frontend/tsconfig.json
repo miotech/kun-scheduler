@@ -26,7 +26,5 @@
     "typings.d.ts",
     "src/definitions/index.d.ts"
   ],
-  "exclude": [
-    "src/.umi/**/*"
-  ]
+  "exclude": ["src/.umi/**/*"]
 }

@@ -82,3 +82,15 @@ export async function searchAssetsService(keyword: string) {
     prefix: DEFAULT_API_PREFIX,
   });
 }
+
+export async function updateGlossaryOrderService(id: string, prevId?: string) {
+  return post<{}>('/metadata/glossary/:id/graph/update', {
+    pathParams: {
+      id,
+    },
+    data: {
+      prevId,
+    },
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
