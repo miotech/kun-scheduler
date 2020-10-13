@@ -23,7 +23,7 @@ import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
 import styles from './index.less';
 import { ViewContext } from './context';
 
-const DataDevelopmentPage: React.FC<any> = memo(() => {
+const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
 
   const viewportCenter$ = useEventEmitter<string | number>();
 
