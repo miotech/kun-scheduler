@@ -29,11 +29,16 @@ export const StatisticCard: React.FC<StatisticCardProps> = memo(function Statist
   } = props;
 
   const loadingSkeleton = useMemo(() => (
-    <Skeleton
-      active
-      title
-      paragraph={false}
-    />
+    <div
+      className="monitoring-statistic-card__skeleton"
+    >
+      <Skeleton
+        active
+        title
+        paragraph={false}
+      />
+    </div>
+
   ), []);
 
   return (
