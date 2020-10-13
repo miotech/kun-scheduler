@@ -245,6 +245,7 @@ public class DatasetRepository extends BaseRepository {
                 dataset.setRowCount(getRowCount(gid));
                 List<Long> dqCaseIds = sqlToList(rs.getString("dq_case_ids")).stream().map(Long::valueOf).collect(Collectors.toList());
                 dataset.setDataQualities(dataQualityRepository.getCaseBasics(dqCaseIds));
+                dataset.setGlossaries(glossaryRepository.getGlossariesByDataset(gid));
                 return dataset;
             }
             return dataset;
