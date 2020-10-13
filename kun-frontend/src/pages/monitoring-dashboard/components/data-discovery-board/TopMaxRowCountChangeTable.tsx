@@ -80,7 +80,7 @@ export const TopMaxRowCountChangeTable: React.FC<Props> = memo(function TopMaxRo
   ], [t]);
 
   return (
-    <Card bodyStyle={{ padding: '8px 8px 16px 8px' }}>
+    <Card bodyStyle={{ padding: '8px 8px 16px 8px', overflowX: 'auto' }}>
       <h3>{t('monitoringDashboard.dataDiscovery.maxRowCountChangeTable.title')}</h3>
       <Table<RowCountChange>
         dataSource={data}

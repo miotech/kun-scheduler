@@ -38,11 +38,6 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
         <span>{((pageNum - 1) * pageSize) + index + 1}</span>
     },
     {
-      dataIndex: 'result',
-      key: 'result',
-      title: t('monitoringDashboard.dataDiscovery.failedTestCasesTable.result'),
-    },
-    {
       dataIndex: 'errorReason',
       key: 'errorReason',
       title: t('monitoringDashboard.dataDiscovery.failedTestCasesTable.errorReason'),
