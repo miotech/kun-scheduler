@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Col, Divider, Row, Form, Radio, Button } from 'antd';
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
-import cronParser from 'cron-parser';
 import useI18n from '@/hooks/useI18n';
 
 import { FormInstance } from 'antd/es/form';
@@ -16,6 +15,9 @@ import { OutputDatasetField } from '@/components/OutputDatasetField';
 
 import LogUtils from '@/utils/logUtils';
 import { getTaskDefinitionsFromFlattenedProps } from '@/utils/transformDataset';
+import { validateQuartzCron } from '@/utils/cronUtils';
+import { OneshotDatePicker } from '@/pages/data-development/task-definition-config/components/OneshotDatePicker';
+
 import styles from './BodyForm.less';
 
 interface SchedulingConfigProps {
@@ -54,6 +56,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = props => {
         },
       },
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     initTaskDefinition,
   ]);
@@ -115,6 +118,53 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = props => {
     );
   };
 
+  const scheduleInputRenderer = (formInstance: FormInstance<any>) => {
+    const {getFieldValue} = formInstance;
+    const selectedScheduleType = getFieldValue(['taskPayload', 'scheduleConfig', 'type']);
+
+    // case scheduled:
+    if (selectedScheduleType === 'SCHEDULED') {
+      return (
+        <Form.Item
+          label={t('dataDevelopment.definition.scheduleConfig.cronExpression')}
+          name={['taskPayload', 'scheduleConfig', 'cronExpr']}
+          rules={[
+            {required: true},
+            {
+              validator(rule, value) {
+                if (validateQuartzCron(value)) {
+                  return Promise.resolve();
+                }
+                // else
+                return Promise.reject(t('common.cronstrue.invalidCronExp'));
+              }
+            }
+          ]}
+          initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.cronExpr}
+        >
+          <CronExpressionInput hideErrorAlert/>
+        </Form.Item>
+      );
+    }
+    // case one-shot:
+    if (selectedScheduleType === 'ONESHOT') {
+      return (
+        <Form.Item
+          label={t('scheduledTasks.property.oneShotExecutionTime')}
+          name={['taskPayload', 'scheduleConfig', 'cronExpr']}
+          initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.cronExpr}
+        >
+          <OneshotDatePicker
+            style={{ width: '240px' }}
+            placeholder={t('scheduledTasks.property.oneShotExecutionTimePlaceholder')}
+          />
+        </Form.Item>
+      );
+    }
+    // else
+    return null;
+  };
+
   return (
     <div className={styles.SchedulingConfig}>
       <section data-tid="time-scheduling">
@@ -151,35 +201,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = props => {
                 shouldUpdate={(prevValues, currentValues) =>
                   prevValues?.taskPayload?.scheduleConfig?.type !== currentValues?.taskPayload?.scheduleConfig?.type}
               >
-                {({ getFieldValue }: typeof form) => {
-                  const selectedScheduleType = getFieldValue(['taskPayload', 'scheduleConfig', 'type']);
-                  // Later we may add other schedule types, which may hide corn expression input
-                  return (initTaskDefinition?.taskPayload?.scheduleConfig.cronExpr ||
-                    selectedScheduleType === 'SCHEDULED' ||
-                    selectedScheduleType === 'ONESHOT'
-                  ) ? (
-                    <Form.Item
-                      label={t('dataDevelopment.definition.scheduleConfig.cronExpression')}
-                      name={['taskPayload', 'scheduleConfig', 'cronExpr']}
-                      rules={[
-                        { required: true },
-                        {
-                          validator(rule, value) {
-                            try {
-                              cronParser.parseExpression(value);
-                              return Promise.resolve();
-                            } catch (e) {
-                              return Promise.reject(t('common.cronstrue.invalidCronExp'));
-                            }
-                          }
-                        }
-                      ]}
-                      initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.cronExpr}
-                    >
-                      <CronExpressionInput hideErrorAlert />
-                    </Form.Item>
-                  ) : null;
-                }}
+                {scheduleInputRenderer}
               </Form.Item>
             </Row>
           </Col>

@@ -15,7 +15,8 @@ export interface TasksGraphPanelProps {
   taskDefinitionsForDAG: TaskDefinition[];
 }
 
-export const TasksGraphPanelComponent: React.FC<TasksGraphPanelProps> = memo(props => {
+export const TasksGraphPanelComponent: React.FC<TasksGraphPanelProps> = memo(
+function TasksGraphPanelComponent(props) {
   const [{ canDrop, isOver }, drop] = useDrop({
     accept: 'TaskTemplate',
     drop: (item: any) => ({

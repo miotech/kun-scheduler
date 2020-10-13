@@ -1,11 +1,11 @@
 import React, { MutableRefObject, useImperativeHandle, useMemo, useRef, useState } from 'react';
 import c from 'clsx';
 import cronstrue from 'cronstrue/i18n';
-import cronParser from 'cron-parser';
 import { Alert, Input } from 'antd';
 import useI18n from '@/hooks/useI18n';
 
 import './CronExpressionInput.less';
+import { validateQuartzCron } from '@/utils/cronUtils';
 
 export interface CronExpressionInputProps {
   value?: string;
@@ -40,16 +40,14 @@ export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, C
     if ((!appliedValue) || `${appliedValue}`.trim().length === 0) {
       return <></>;
     }
-    let semanticStr: string;
     let hasError: boolean;
+    let semanticStr: string;
     try {
       semanticStr = cronstrue.toString(appliedValue, {
         throwExceptionOnParseError: true,
         locale: t('common.cronstrue.lang'),
       });
-      // cronstrue cannot guarantee validity. Extra validation is required.
-      cronParser.parseExpression(appliedValue);
-      hasError = false;
+      hasError = (typeof value === 'string') ? (!validateQuartzCron(value)) : false;
     } catch (e) {
       semanticStr = '';
       hasError = true;
@@ -62,10 +60,11 @@ export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, C
     }
     // else
     return <Alert showIcon type="success" message={semanticStr} />
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     appliedValue,
     hideErrorAlert,
-    t
+    t,
   ]);
 
   return (
