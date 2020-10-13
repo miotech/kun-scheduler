@@ -38,7 +38,10 @@ public class MetadataRepository extends BaseRepository {
                 .select("stats_1.dataset_gid",
                         "stats_1.row_count as last_row_count",
                         "stats_2.row_count as prev_row_count",
-                        "(stats_1.row_count - stats_2.row_count) as row_change")
+                        "(stats_1.row_count - stats_2.row_count) as row_change",
+                        "kmd.name as dataset_name",
+                        "kmd.database_name as database_name",
+                        "kmdsrca.name as datasource_name")
                 .from("(select dataset_gid, row_count\n" +
                         "      from (select dataset_gid, row_count, rank() over (partition by dataset_gid order by stats_date desc nulls last )\n" +
                         "            from kun_mt_dataset_stats) stats\n" +
@@ -48,6 +51,9 @@ public class MetadataRepository extends BaseRepository {
                         "            from kun_mt_dataset_stats) stats\n" +
                         "      where stats.rank = 2)", "stats_2")
                 .on("stats_1.dataset_gid = stats_2.dataset_gid")
+                .join("inner", "kun_mt_dataset", "kmd").on("stats_1.dataset_gid = kmd.gid")
+                .join("inner", "kun_mt_datasource", "kmdsrc").on("kmdsrc.id = kmd.datasource_id")
+                .join("inner", "kun_mt_datasource_attrs", "kmdsrca").on("kmdsrc.id = kmdsrca.datasource_id")
                 .orderBy("row_change desc")
                 .limit(rowCountChangeRequest.getPageSize())
                 .getSQL();
@@ -56,10 +62,9 @@ public class MetadataRepository extends BaseRepository {
             DatasetRowCountChanges rowCountChanges = new DatasetRowCountChanges();
             while (rs.next()) {
                 DatasetRowCountChange rowCountChange = new DatasetRowCountChange();
-                DatasetBasic datasetBasic = getDatasetBasic(rs.getLong("dataset_gid"));
-                rowCountChange.setDatasetName(datasetBasic.getDatasetName());
-                rowCountChange.setDatabase(datasetBasic.getDatabase());
-                rowCountChange.setDataSource(datasetBasic.getDataSource());
+                rowCountChange.setDatasetName(rs.getString("dataset_name"));
+                rowCountChange.setDatabase(rs.getString("database_name"));
+                rowCountChange.setDataSource(rs.getString("datasource_name"));
                 rowCountChange.setRowCount(rs.getLong("last_row_count"));
                 rowCountChange.setRowChange(rs.getLong("row_change"));
                 if (rowCountChange.getRowChange().equals(rowCountChange.getRowCount())) {
