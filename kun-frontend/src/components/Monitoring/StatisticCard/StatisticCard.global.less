@@ -9,8 +9,9 @@
   border-radius: 2px;
   border: 1px solid @borderColor;
   font-family: @default-font-family;
-  padding: 8px 12px 12px 12px;
+  padding: 8px 12px 62px 12px;
   background: @white;
+  height: 100%;
 
   &__title {
     margin: 0;
@@ -19,8 +20,8 @@
   }
 
   &__value {
-    position: relative;
-    bottom: -12px;
+    position: absolute;
+    bottom: -2px;
     font-size: 32px;
     font-weight: normal;
 
@@ -35,5 +36,12 @@
     &--running {
       color: @color-running;
     }
+  }
+
+  &__skeleton {
+    position: absolute;
+    width: 120px;
+    height: 16px;
+    bottom: 26px;
   }
 }
