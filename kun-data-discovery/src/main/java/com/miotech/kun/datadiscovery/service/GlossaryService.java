@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.service;
 
+import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.Glossary;
@@ -22,6 +23,10 @@ public class GlossaryService extends BaseSecurityService {
 
     public Long getParentId(Long id) {
         return glossaryRepository.getParentId(id);
+    }
+
+    public Long updateGraph(Long id, GlossaryGraphRequest glossaryGraphRequest) {
+        return glossaryRepository.updateGraph(id, glossaryGraphRequest);
     }
 
     public Glossary add(GlossaryRequest glossaryRequest) {

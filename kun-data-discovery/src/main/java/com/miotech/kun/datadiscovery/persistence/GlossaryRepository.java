@@ -1,9 +1,12 @@
 package com.miotech.kun.datadiscovery.persistence;
 
 import com.miotech.kun.common.BaseRepository;
+import com.miotech.kun.common.utils.IdUtils;
+import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import org.apache.commons.collections4.CollectionUtils;
@@ -14,9 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author: Jie Chen
@@ -31,6 +32,50 @@ public class GlossaryRepository extends BaseRepository {
     @Autowired
     @Lazy
     DatasetRepository datasetRepository;
+
+    @Transactional(rollbackFor = Exception.class)
+    public Long updateGraph(Long id, GlossaryGraphRequest glossaryGraphRequest) {
+        String sql1 = "update kun_mt_glossary kmg set prev_id = temp.prev_id \n" +
+                "from (select prev_id from kun_mt_glossary where id = ?) temp \n" +
+                "where kmg.prev_id = ?";
+
+        jdbcTemplate.update(sql1, id, id);
+
+        String selectSql;
+        Long nextId = null;
+
+        String parentIdSql = "select parent_id from kun_mt_glossary where id = ?";
+        Long parentId = jdbcTemplate.queryForObject(parentIdSql, Long.class, id);
+        if (IdUtils.isEmpty(glossaryGraphRequest.getPrevId())) {
+            if (IdUtils.isEmpty(parentId)) {
+                selectSql = "select id from kun_mt_glossary where prev_id is null and parent_id is null";
+                nextId = jdbcTemplate.queryForObject(selectSql, Long.class);
+            } else {
+                selectSql = "select id from kun_mt_glossary where prev_id is null and parent_id = ?";
+                nextId = jdbcTemplate.queryForObject(selectSql, Long.class, parentId);
+            }
+        } else {
+            selectSql = "select id from kun_mt_glossary where prev_id = ?";
+            try {
+                nextId = jdbcTemplate.queryForObject(selectSql, Long.class, glossaryGraphRequest.getPrevId());
+            } catch (Exception ignore) {
+            }
+        }
+
+
+        String sql2 = "update kun_mt_glossary kmg set prev_id = ? \n" +
+                "where kmg.id = ?";
+
+        jdbcTemplate.update(sql2, glossaryGraphRequest.getPrevId(), id);
+
+        if (IdUtils.isNotEmpty(nextId)) {
+            String sql3 = "update kun_mt_glossary kmg set prev_id = ? \n" +
+                    "where kmg.id = ?";
+
+            jdbcTemplate.update(sql3, id, nextId);
+        }
+        return id;
+    }
 
     public Long getParentId(Long id) {
         String sql = "select parent_id from kun_mt_glossary where id = ?";
@@ -106,6 +151,9 @@ public class GlossaryRepository extends BaseRepository {
                 glossaryRequest.getUpdateUser(),
                 millisToTimestamp(glossaryRequest.getUpdateTime()));
 
+        String updateOrderSql = "update kun_mt_glossary set prev_id = ? where prev_id is null";
+        jdbcTemplate.update(updateOrderSql, glossaryId);
+
         if (!CollectionUtils.isEmpty(glossaryRequest.getAssetIds())) {
             String kmgtdrSql = "insert into kun_mt_glossary_to_dataset_ref values " + toValuesSql(1, 3);
 
@@ -120,7 +168,7 @@ public class GlossaryRepository extends BaseRepository {
     }
 
     public GlossaryChildren findChildren(Long parentId) {
-        String sql = "select id, name, description " +
+        String sql = "select id, name, description, prev_id \n" +
                 "from kun_mt_glossary \n";
 
         String whereClause = parentId == null ? "where parent_id is null" : "where parent_id = ?";
@@ -128,22 +176,33 @@ public class GlossaryRepository extends BaseRepository {
 
         Object[] sqlParams = parentId == null ? null : new Object[]{parentId};
 
-        String orderBySql = "order by id desc";
-        sql += orderBySql;
-
         return jdbcTemplate.query(sql, sqlParams, rs -> {
             GlossaryChildren glossaryChildren = new GlossaryChildren();
             glossaryChildren.setParentId(parentId);
+            Map<Long, GlossaryBasic> idMap = new HashMap<>();
             while (rs.next()) {
                 GlossaryBasic child = new GlossaryBasic();
                 child.setId(rs.getLong("id"));
+                child.setPrevId(rs.getLong("prev_id"));
                 child.setName(rs.getString("name"));
                 child.setDescription(rs.getString("description"));
                 child.setChildrenCount(getChildrenCount(child.getId()));
-                glossaryChildren.add(child);
+                idMap.put(child.getPrevId(), child);
             }
+            sortGlossary(0L, idMap, glossaryChildren);
             return glossaryChildren;
         });
+    }
+
+    private void sortGlossary(Long prevId,
+                              Map<Long, GlossaryBasic> idMap,
+                              GlossaryChildren glossaryChildren) {
+        GlossaryBasic glossaryBasic = idMap.get(prevId);
+        if (glossaryBasic == null) {
+            return;
+        }
+        glossaryChildren.add(glossaryBasic);
+        sortGlossary(glossaryBasic.getId(), idMap, glossaryChildren);
     }
 
     @Transactional(rollbackFor = Exception.class)
