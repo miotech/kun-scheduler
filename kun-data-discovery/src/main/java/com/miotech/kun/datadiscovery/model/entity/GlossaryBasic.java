@@ -14,6 +14,9 @@ public class GlossaryBasic {
     @JsonSerialize(using= ToStringSerializer.class)
     private Long id;
 
+    @JsonSerialize(using= ToStringSerializer.class)
+    private Long prevId;
+
     private String name;
 
     private String description;

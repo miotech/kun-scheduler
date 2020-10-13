@@ -1,7 +1,9 @@
 package com.miotech.kun.datadiscovery.controller;
 
 import com.miotech.kun.common.model.RequestResult;
+import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.Glossary;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryChildren;
@@ -22,6 +24,14 @@ public class GlossaryController {
 
     @Autowired
     GlossaryService glossaryService;
+
+    @PostMapping("/metadata/glossary/{id}/graph/update")
+    public RequestResult<IdVO> graphUpdate(@PathVariable("id") Long id,
+                                           @RequestBody GlossaryGraphRequest glossaryGraphRequest) {
+        IdVO vo = new IdVO();
+        vo.setId(glossaryService.updateGraph(id, glossaryGraphRequest));
+        return RequestResult.success(vo);
+    }
 
     @PostMapping("/metadata/glossary/add")
     public RequestResult<Glossary> add(@RequestBody GlossaryRequest request) {
