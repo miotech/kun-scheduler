@@ -18,10 +18,10 @@ export default function Glossary() {
   const { selector, dispatch } = useRedux(state => state.glossary);
 
   useEffect(() => {
-    if (!selector.glossaryData) {
+    if (!selector.glossaryData && !selector.fetchRootLoading) {
       dispatch.glossary.fetchRootNodeChildGlossary();
     }
-  }, [dispatch.glossary, selector.glossaryData]);
+  }, [dispatch.glossary, selector.fetchRootLoading, selector.glossaryData]);
 
   const handleClickCreate = useCallback(() => {
     history.push('/data-discovery/glossary/create');

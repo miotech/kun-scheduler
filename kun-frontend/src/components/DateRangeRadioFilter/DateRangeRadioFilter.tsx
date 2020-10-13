@@ -7,12 +7,12 @@ import DateRangeOption from './DateRangeOption';
 import css from './DateRangeRadioFilter.less';
 
 interface Props {
-  startDate: null | number;
-  endDate: null | number;
-  defaultStartDate: null | number;
-  defaultEndDate: null | number;
-  dateOptions: Array<{ count: number; unit: string; title: string }>;
-  showAll: boolean;
+  startDate?: null | number;
+  endDate?: null | number;
+  defaultStartDate?: null | number;
+  defaultEndDate?: null | number;
+  dateOptions?: Array<{ count: number; unit: string; title: string }>;
+  showAll?: boolean;
   onChange: (payload: {
     startDate: number | null;
     endDate: number | null;
@@ -20,12 +20,28 @@ interface Props {
 }
 
 function DateRangeRadioFilter({
-  startDate,
-  endDate,
-  defaultStartDate,
-  defaultEndDate,
-  dateOptions,
-  showAll,
+  startDate = null,
+  endDate = null,
+  defaultStartDate = null,
+  defaultEndDate = null,
+  dateOptions = [
+    {
+      count: 1,
+      unit: 'day',
+      title: 'last24hours',
+    },
+    {
+      count: 1,
+      unit: 'week',
+      title: 'lastWeek',
+    },
+    {
+      count: 1,
+      unit: 'month',
+      title: 'lastMonth',
+    },
+  ],
+  showAll = true,
   onChange,
 }: Props) {
   const t = useI18n();
@@ -47,7 +63,7 @@ function DateRangeRadioFilter({
             });
           }}
         >
-          {t(`commen.dateRange.${dateOption.title}`)}
+          {t(`common.dateRange.${dateOption.title}`)}
         </DateRangeOption>
       ))}
       {showAll && (
@@ -64,36 +80,11 @@ function DateRangeRadioFilter({
             });
           }}
         >
-          {t('commen.dateRange.all')}
+          {t('common.dateRange.all')}
         </span>
       )}
     </div>
   );
 }
-
-DateRangeRadioFilter.defaultProps = {
-  showAll: true,
-  defaultStartDate: null,
-  defaultEndDate: null,
-  startDate: null,
-  endDate: null,
-  dateOptions: [
-    {
-      count: 1,
-      unit: 'day',
-      title: 'last24hours',
-    },
-    {
-      count: 1,
-      unit: 'week',
-      title: 'lastWeek',
-    },
-    {
-      count: 1,
-      unit: 'month',
-      title: 'lastMonth',
-    },
-  ],
-};
 
 export default DateRangeRadioFilter;
