@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author: Jie Chen
  * @created: 2020/7/16
@@ -16,5 +18,11 @@ public class DataQualityCaseBasic {
 
     String name;
 
+    List<String> types;
+
     String updater;
+
+    Long taskId;
+
+    List<String> historyList;
 }

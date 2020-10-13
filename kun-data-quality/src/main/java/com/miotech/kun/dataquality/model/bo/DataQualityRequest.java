@@ -15,6 +15,8 @@ public class DataQualityRequest {
 
     private String name;
 
+    private List<String> types;
+
     private String description;
 
     private String dimension;
