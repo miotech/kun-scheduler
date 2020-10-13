@@ -118,8 +118,8 @@ export const glossary = {
     let searchGlossariesFlag = 0;
     return {
       async fetchRootNodeChildGlossary() {
-        dispatch.glossary.updateFetchRootLoading(true);
         try {
+          dispatch.glossary.updateFetchRootLoading(true);
           const resp = await fetchGlossariesService();
           if (resp) {
             const { children } = resp;
@@ -136,11 +136,10 @@ export const glossary = {
               key: 'glossaryData',
               value: rootGlossary,
             });
+            dispatch.glossary.updateFetchRootLoading(false);
           }
         } catch (e) {
           // do nothing
-        } finally {
-          dispatch.glossary.updateFetchRootLoading(false);
         }
       },
 
