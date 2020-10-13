@@ -111,7 +111,7 @@ public class DatasetFieldRepository extends BaseRepository {
 
     public DatasetField update(Long id, DatasetFieldRequest datasetFieldRequest) {
         String sql = "update kun_mt_dataset_field set description = ? where id = ?";
-        jdbcTemplate.update(sql, datasetFieldRequest, id);
+        jdbcTemplate.update(sql, datasetFieldRequest.getDescription(), id);
         return find(id);
     }
 
