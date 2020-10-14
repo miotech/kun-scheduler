@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.common.taskrun.service;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
@@ -8,8 +9,8 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
-import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
@@ -17,6 +18,7 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -32,22 +34,33 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
 public class TaskRunServiceTest extends CommonTestBase {
-
-    @Inject
     private TaskRunService taskRunService;
 
     @Inject
     private TaskDao taskDao;
 
     @Inject
+    private TaskRunDao taskRunDao;
+
+    @Inject
     private ResourceLoader resourceLoader;
 
-    private Executor executor = mock(Executor.class);
-
-    private TaskRunDao taskRunDao = mock(TaskRunDao.class);
+    private final Executor executor = mock(Executor.class);
 
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
+
+    @Before
+    @Override
+    public void setUp() {
+        super.setUp();
+        this.taskRunDao = spy(this.taskRunDao);
+        this.taskRunService = spy(new TaskRunService(
+                taskRunDao,
+                resourceLoader,
+                executor
+        ));
+    }
 
     @Test
     public void testGetTaskRunDetail() {
@@ -56,6 +69,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertNotNull(existedRun);
         assertNotNull(existedRun.getTask());
     }
+
 
     private TaskRun prepareData() {
         long testId = 1L;
@@ -81,8 +95,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withOutlets(Collections.emptyList())
                 .withScheduledTick(new Tick(""))
                 .build();
-        Mockito.when(taskRunDao.fetchTaskRunById(taskRun.getId()))
-                .thenReturn(Optional.of(taskRun));
+        taskRunDao.createTaskRun(taskRun);
         return taskRun;
     }
 
@@ -247,4 +260,70 @@ public class TaskRunServiceTest extends CommonTestBase {
         writer.flush();
         return resource;
     }
+
+    @Test
+    public void fetchLatestTaskRuns_shouldFetchLatestTaskRunsAndReturnsMappedResults() {
+        // Prepare
+        prepareDataForFetchLatestTaskRuns();
+        long task1Id = 22L;
+        long task2Id = 33L;
+        long task3Id = 44L;
+
+        // Process
+        List<Long> taskIdsToQuery = Lists.newArrayList(task1Id, task2Id, task3Id);
+        Map<Long, List<TaskRunVO>> mappings = taskRunService.fetchLatestTaskRuns(taskIdsToQuery, 10);
+
+        // Validate
+        assertThat(mappings.size(), is(3));
+        // task1 has 20 runs, but size of fetched result should be limited to 10
+        assertThat(mappings.get(task1Id).size(), is(10));
+        assertThat(mappings.get(task2Id).size(), is(5));
+        assertThat(mappings.get(task3Id).size(), is(0));
+    }
+
+    private void prepareDataForFetchLatestTaskRuns() {
+        Task task1 = Task.newBuilder().withId(22L)
+                .withName("test task 1")
+                .withDescription("")
+                .withOperatorId(1L)
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withConfig(Config.EMPTY)
+                .withDependencies(new ArrayList<>())
+                .withTags(new ArrayList<>())
+                .build();
+        Task task2 = task1.cloneBuilder().withId(33L).withName("test task 2").build();
+
+        taskDao.create(task1);
+        taskDao.create(task2);
+
+        // insert 20 runs for task 1
+        for (int i = 1; i <= 20; i++) {
+            TaskRun taskRun = TaskRun.newBuilder()
+                    .withId(100L + i)
+                    .withTask(task1)
+                    .withStatus(TaskRunStatus.RUNNING)
+                    .withConfig(Config.EMPTY)
+                    .withDependentTaskRunIds(Collections.emptyList())
+                    .withInlets(Collections.emptyList())
+                    .withOutlets(Collections.emptyList())
+                    .withScheduledTick(new Tick(""))
+                    .build();
+            taskRunDao.createTaskRun(taskRun);
+        }
+        // insert 5 runs for task 2
+        for (int i = 1; i <= 5; i++) {
+            TaskRun taskRun = TaskRun.newBuilder()
+                    .withId(120L + i)
+                    .withTask(task2)
+                    .withStatus(TaskRunStatus.RUNNING)
+                    .withConfig(Config.EMPTY)
+                    .withDependentTaskRunIds(Collections.emptyList())
+                    .withInlets(Collections.emptyList())
+                    .withOutlets(Collections.emptyList())
+                    .withScheduledTick(new Tick(""))
+                    .build();
+            taskRunDao.createTaskRun(taskRun);
+        }
+    }
+
 }
