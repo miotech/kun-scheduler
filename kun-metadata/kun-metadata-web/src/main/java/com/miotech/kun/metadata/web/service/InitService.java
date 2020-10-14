@@ -17,7 +17,6 @@ import com.miotech.kun.workflow.client.operator.OperatorUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -46,7 +45,7 @@ public class InitService {
     public void initDataBuilder() {
         String workflowUrl = props.getString("workflow.url");
         OperatorUpload operatorUpload = new OperatorUpload(workflowUrl);
-        List<Operator> operatorList = operatorUpload.autoUpload();
+        operatorUpload.autoUpload();
         checkOperator(WorkflowApiParam.DATA_BUILDER_OPERATOR);
         checkTask(WorkflowApiParam.DATA_BUILDER_TASK_MANUAL, WorkflowApiParam.DATA_BUILDER_TASK_AUTO);
     }
