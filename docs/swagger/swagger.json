@@ -1,0 +1,3042 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "Api Documentation",
+    "version": "1.0",
+    "title": "Api Documentation",
+    "termsOfService": "urn:tos",
+    "contact": {},
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  },
+  "host": "localhost:8080",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Data",
+      "description": "Data Controller"
+    },
+    {
+      "name": "Deploy",
+      "description": "Deploy Controller"
+    },
+    {
+      "name": "DeployedTask",
+      "description": "Deployed Task Controller"
+    },
+    {
+      "name": "TaskCommit",
+      "description": "Task Commit Controller"
+    },
+    {
+      "name": "TaskDefinition",
+      "description": "Task Definition Controller"
+    },
+    {
+      "name": "TaskTemplate",
+      "description": "Task Template Controller"
+    }
+  ],
+  "paths": {
+    "/data-sets/_search": {
+      "get": {
+        "tags": [
+          "Data"
+        ],
+        "summary": "Get dataset and related task definition",
+        "operationId": "getDeployedTaskDAGUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "datastoreIds",
+            "in": "query",
+            "description": "datastoreIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "definitionIds",
+            "in": "query",
+            "description": "definitionIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "name",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«List«DatasetVO»»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deployed-taskruns": {
+      "get": {
+        "tags": [
+          "DeployedTask"
+        ],
+        "summary": "Search scheduled taskruns",
+        "operationId": "searchDeploysUsingGET_2",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "definitionIds",
+            "in": "query",
+            "description": "definitionIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "endTime",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "name",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ownerId",
+            "in": "query",
+            "description": "ownerId",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "description": "pageNum",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "pageSize",
+            "required": false,
+            "type": "integer",
+            "default": 100,
+            "format": "int32"
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "startTime",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "status",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "taskTemplateName",
+            "in": "query",
+            "description": "taskTemplateName",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«PaginationResult«TaskRun»»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deployed-taskruns/{id}": {
+      "get": {
+        "tags": [
+          "DeployedTask"
+        ],
+        "summary": "Get detail of scheduled taskrun",
+        "operationId": "getWorkflowTaskRunUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskRun»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deployed-taskruns/{id}/dag": {
+      "get": {
+        "tags": [
+          "DeployedTask"
+        ],
+        "summary": "Get dag of scheduled taskrun",
+        "operationId": "getWorkflowTaskRunDAGUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "downstreamLevel",
+            "in": "query",
+            "description": "downstreamLevel",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "format": "int32"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "upstreamLevel",
+            "in": "query",
+            "description": "upstreamLevel",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskRunDAG»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deployed-taskruns/{id}/log": {
+      "get": {
+        "tags": [
+          "DeployedTask"
+        ],
+        "summary": "Get log of scheduled taskrun",
+        "operationId": "getWorkflowTaskRunLogUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskRunLog»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deployed-tasks": {
+      "get": {
+        "tags": [
+          "DeployedTask"
+        ],
+        "summary": "Search DeployedTasks",
+        "operationId": "searchDeploysUsingGET_1",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "definitionIds",
+            "in": "query",
+            "description": "definitionIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "name",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "ownerIds",
+            "in": "query",
+            "description": "ownerIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "description": "pageNum",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "pageSize",
+            "required": false,
+            "type": "integer",
+            "default": 100,
+            "format": "int32"
+          },
+          {
+            "name": "taskTemplateName",
+            "in": "query",
+            "description": "taskTemplateName",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«PaginationResult«DeployedTaskWithRunVO»»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deployed-tasks/{id}": {
+      "get": {
+        "tags": [
+          "DeployedTask"
+        ],
+        "summary": "Get DeployedTask",
+        "operationId": "getDeployedTaskUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«DeployedTaskVO»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deployed-tasks/{id}/dag": {
+      "get": {
+        "tags": [
+          "DeployedTask"
+        ],
+        "summary": "Get dag of deployed task",
+        "operationId": "getDeployedTaskDAGUsingGET_1",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "downstreamLevel",
+            "in": "query",
+            "description": "downstreamLevel",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "format": "int32"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "upstreamLevel",
+            "in": "query",
+            "description": "upstreamLevel",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«DeployedTaskDAG»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deployed-tasks/{id}/taskruns": {
+      "get": {
+        "tags": [
+          "DeployedTask"
+        ],
+        "summary": "Search taskruns of deployedtask",
+        "operationId": "getDeployTaskRunsUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "endTime",
+            "in": "query",
+            "description": "endTime",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "description": "pageNum",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "pageSize",
+            "required": false,
+            "type": "integer",
+            "default": 100,
+            "format": "int32"
+          },
+          {
+            "name": "startTime",
+            "in": "query",
+            "description": "startTime",
+            "required": false,
+            "type": "string",
+            "format": "date-time"
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "description": "status",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«PaginationResult«TaskRun»»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deploys": {
+      "get": {
+        "tags": [
+          "Deploy"
+        ],
+        "summary": "Search Deploys",
+        "operationId": "searchDeploysUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "creatorIds",
+            "in": "query",
+            "description": "creatorIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "deployedAtFrom",
+            "in": "query",
+            "description": "deployedAtFrom",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "deployedAtTo",
+            "in": "query",
+            "description": "deployedAtTo",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "deployerIds",
+            "in": "query",
+            "description": "deployerIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "description": "pageNum",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "pageSize",
+            "required": false,
+            "type": "integer",
+            "default": 100,
+            "format": "int32"
+          },
+          {
+            "name": "submittedAtFrom",
+            "in": "query",
+            "description": "submittedAtFrom",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "submittedAtTo",
+            "in": "query",
+            "description": "submittedAtTo",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«PaginationResult«DeployVO»»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Deploy"
+        ],
+        "summary": "Create Deploy",
+        "operationId": "createDeployUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "request",
+            "description": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/DeployRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«DeployVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deploys/{deployId}": {
+      "get": {
+        "tags": [
+          "Deploy"
+        ],
+        "summary": "Get Deploy",
+        "operationId": "getDeployUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "deployId",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«DeployVO»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/deploys/{deployId}/_publish": {
+      "post": {
+        "tags": [
+          "Deploy"
+        ],
+        "summary": "Publish Deploy",
+        "operationId": "publishDeployUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "deployId",
+            "in": "path",
+            "description": "deployId",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«DeployVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-commits": {
+      "get": {
+        "tags": [
+          "TaskCommit"
+        ],
+        "summary": "Search TaskCommits",
+        "operationId": "searchCommitsUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "committerIds",
+            "in": "query",
+            "description": "committerIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "definitionIds",
+            "in": "query",
+            "description": "definitionIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "isLatest",
+            "in": "query",
+            "description": "isLatest",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "description": "pageNum",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "pageSize",
+            "required": false,
+            "type": "integer",
+            "default": 100,
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«PaginationResult«TaskCommitVO»»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TaskCommit"
+        ],
+        "summary": "Create TaskCommit",
+        "operationId": "createCommitUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "request",
+            "description": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CommitRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskCommitVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-commits/{commitId}": {
+      "get": {
+        "tags": [
+          "TaskCommit"
+        ],
+        "summary": "Get TaskCommit",
+        "operationId": "getCommitUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "commitId",
+            "in": "path",
+            "description": "commitId",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskCommitVO»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-definitions": {
+      "get": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "List all TaskDefinitions",
+        "operationId": "listAllTaskDefinitionsUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«List«TaskDefinitionVO»»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Create TaskDefinition",
+        "operationId": "createTaskDefinitionUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "props",
+            "description": "props",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/CreateTaskDefinitionRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskDefinitionVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-definitions/_search": {
+      "get": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Search TaskDefinitions",
+        "operationId": "searchAllTaskDefinitionsUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "archived",
+            "in": "query",
+            "description": "archived",
+            "required": false,
+            "type": "boolean"
+          },
+          {
+            "name": "creatorIds",
+            "in": "query",
+            "description": "creatorIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "definitionIds",
+            "in": "query",
+            "description": "definitionIds",
+            "required": false,
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "collectionFormat": "multi"
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "name",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "pageNum",
+            "in": "query",
+            "description": "pageNum",
+            "required": false,
+            "type": "integer",
+            "default": 1,
+            "format": "int32"
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "description": "pageSize",
+            "required": false,
+            "type": "integer",
+            "default": 100,
+            "format": "int32"
+          },
+          {
+            "name": "taskTemplateName",
+            "in": "query",
+            "description": "taskTemplateName",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«PaginationResult«TaskDefinitionVO»»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-definitions/{id}": {
+      "get": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Get TaskDefinition",
+        "operationId": "getTaskDefinitionDetailUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskDefinitionVO»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Update TaskDefinition",
+        "operationId": "updateTaskDefinitionDetailUsingPUT",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "in": "body",
+            "name": "request",
+            "description": "request",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/UpdateTaskDefinitionRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskDefinitionVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Delete TaskDefinition",
+        "operationId": "deleteTaskDefinitionDetailUsingDELETE",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«object»"
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/task-definitions/{id}/_check": {
+      "post": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Check TaskDefinition current config is valid",
+        "operationId": "checkTaskDefinitionUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskTryVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-definitions/{id}/_deploy": {
+      "post": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Commit and Deploy a TaskDefinition",
+        "operationId": "deployTaskDefinitionDirectlyUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "in": "body",
+            "name": "request",
+            "description": "request",
+            "required": false,
+            "schema": {
+              "$ref": "#/definitions/CommitRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«DeployVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-definitions/{id}/_run": {
+      "post": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Try to run TaskDefinition",
+        "operationId": "runTaskDefinitionUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "in": "body",
+            "name": "taskRunRequest",
+            "description": "taskRunRequest",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/TaskRunRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskTryVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-templates": {
+      "get": {
+        "tags": [
+          "TaskTemplate"
+        ],
+        "summary": "List TaskTemplate",
+        "operationId": "searchTaskTemplatesUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«List«TaskTemplateVO»»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "TaskTemplate"
+        ],
+        "summary": "Create TaskTemplate",
+        "operationId": "createTaskTemplateUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "requestVO",
+            "description": "requestVO",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/TaskTemplateReqeustVO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskTemplateVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "TaskTemplate"
+        ],
+        "summary": "Update TaskTemplate",
+        "operationId": "updateTaskTemplateUsingPUT",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "requestVO",
+            "description": "requestVO",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/TaskTemplateReqeustVO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskTemplateVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-tries/{id}": {
+      "get": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Get TaskTry",
+        "operationId": "getTaskTryUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskTryVO»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-tries/{id}/_stop": {
+      "post": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Stop TaskTry",
+        "operationId": "stopTaskDefinitionDetailUsingPOST",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskTryVO»"
+            }
+          },
+          "201": {
+            "description": "Created"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
+    "/task-tries/{id}/log": {
+      "get": {
+        "tags": [
+          "TaskDefinition"
+        ],
+        "summary": "Get TaskTry log",
+        "operationId": "getTaskTryLogUsingGET",
+        "produces": [
+          "*/*"
+        ],
+        "parameters": [
+          {
+            "name": "end",
+            "in": "query",
+            "description": "end",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "description": "id",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "description": "start",
+            "required": false,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/RequestResult«TaskRunLogVO»"
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "CommitRequest": {
+      "type": "object",
+      "properties": {
+        "definitionId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "title": "CommitRequest"
+    },
+    "Config": {
+      "type": "object",
+      "properties": {
+        "values": {
+          "type": "object"
+        }
+      },
+      "title": "Config"
+    },
+    "CreateTaskDefinitionRequest": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "taskTemplateName": {
+          "type": "string"
+        }
+      },
+      "title": "CreateTaskDefinitionRequest"
+    },
+    "DataStore": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "ARANGO_COLLECTION",
+            "ELASTICSEARCH_INDEX",
+            "FILE",
+            "HIVE_TABLE",
+            "MONGO_COLLECTION",
+            "MYSQL_TABLE",
+            "POSTGRES_TABLE",
+            "SHEET",
+            "TOPIC"
+          ]
+        }
+      },
+      "title": "DataStore"
+    },
+    "DatasetVO": {
+      "type": "object",
+      "properties": {
+        "datastoreId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "taskDefinitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskDefinitionProps"
+          }
+        }
+      },
+      "title": "DatasetVO"
+    },
+    "DeployCommit": {
+      "type": "object",
+      "properties": {
+        "commit": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "deployId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "deployStatus": {
+          "type": "string",
+          "enum": [
+            "CREATED",
+            "FAILED",
+            "SUCCESS",
+            "WORKING"
+          ]
+        }
+      },
+      "title": "DeployCommit"
+    },
+    "DeployRequest": {
+      "type": "object",
+      "properties": {
+        "commitIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "title": "DeployRequest"
+    },
+    "DeployVO": {
+      "type": "object",
+      "properties": {
+        "commits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeployCommit"
+          }
+        },
+        "creator": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "deployedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "deployer": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "CREATED",
+            "FAILED",
+            "SUCCESS",
+            "WORKING"
+          ]
+        },
+        "submittedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "title": "DeployVO"
+    },
+    "DeployedTaskDAG": {
+      "type": "object",
+      "properties": {
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeployedTaskDependencyVO"
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeployedTaskVO"
+          }
+        }
+      },
+      "title": "DeployedTaskDAG"
+    },
+    "DeployedTaskDependencyVO": {
+      "type": "object",
+      "properties": {
+        "downStreamTaskId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "upstreamTaskId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "DeployedTaskDependencyVO"
+    },
+    "DeployedTaskVO": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "isArchived": {
+          "type": "boolean"
+        },
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "taskPayload": {
+          "$ref": "#/definitions/TaskPayload"
+        },
+        "taskTemplateName": {
+          "type": "string"
+        }
+      },
+      "title": "DeployedTaskVO"
+    },
+    "DeployedTaskWithRunVO": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "isArchived": {
+          "type": "boolean"
+        },
+        "latestTaskRun": {
+          "$ref": "#/definitions/TaskRun"
+        },
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "taskPayload": {
+          "$ref": "#/definitions/TaskPayload"
+        },
+        "taskTemplateName": {
+          "type": "string"
+        }
+      },
+      "title": "DeployedTaskWithRunVO"
+    },
+    "PaginationResult«DeployVO»": {
+      "type": "object",
+      "properties": {
+        "pageNum": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeployVO"
+          }
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "PaginationResult«DeployVO»"
+    },
+    "PaginationResult«DeployedTaskWithRunVO»": {
+      "type": "object",
+      "properties": {
+        "pageNum": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DeployedTaskWithRunVO"
+          }
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "PaginationResult«DeployedTaskWithRunVO»"
+    },
+    "PaginationResult«TaskCommitVO»": {
+      "type": "object",
+      "properties": {
+        "pageNum": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskCommitVO"
+          }
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "PaginationResult«TaskCommitVO»"
+    },
+    "PaginationResult«TaskDefinitionVO»": {
+      "type": "object",
+      "properties": {
+        "pageNum": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskDefinitionVO"
+          }
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "PaginationResult«TaskDefinitionVO»"
+    },
+    "PaginationResult«TaskRun»": {
+      "type": "object",
+      "properties": {
+        "pageNum": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "pageSize": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskRun"
+          }
+        },
+        "totalCount": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "PaginationResult«TaskRun»"
+    },
+    "ParameterDefinition": {
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "title": "ParameterDefinition"
+    },
+    "RequestResult«DeployVO»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/DeployVO"
+        }
+      },
+      "title": "RequestResult«DeployVO»"
+    },
+    "RequestResult«DeployedTaskDAG»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/DeployedTaskDAG"
+        }
+      },
+      "title": "RequestResult«DeployedTaskDAG»"
+    },
+    "RequestResult«DeployedTaskVO»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/DeployedTaskVO"
+        }
+      },
+      "title": "RequestResult«DeployedTaskVO»"
+    },
+    "RequestResult«List«DatasetVO»»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DatasetVO"
+          }
+        }
+      },
+      "title": "RequestResult«List«DatasetVO»»"
+    },
+    "RequestResult«List«TaskDefinitionVO»»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskDefinitionVO"
+          }
+        }
+      },
+      "title": "RequestResult«List«TaskDefinitionVO»»"
+    },
+    "RequestResult«List«TaskTemplateVO»»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskTemplateVO"
+          }
+        }
+      },
+      "title": "RequestResult«List«TaskTemplateVO»»"
+    },
+    "RequestResult«PaginationResult«DeployVO»»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/PaginationResult«DeployVO»"
+        }
+      },
+      "title": "RequestResult«PaginationResult«DeployVO»»"
+    },
+    "RequestResult«PaginationResult«DeployedTaskWithRunVO»»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/PaginationResult«DeployedTaskWithRunVO»"
+        }
+      },
+      "title": "RequestResult«PaginationResult«DeployedTaskWithRunVO»»"
+    },
+    "RequestResult«PaginationResult«TaskCommitVO»»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/PaginationResult«TaskCommitVO»"
+        }
+      },
+      "title": "RequestResult«PaginationResult«TaskCommitVO»»"
+    },
+    "RequestResult«PaginationResult«TaskDefinitionVO»»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/PaginationResult«TaskDefinitionVO»"
+        }
+      },
+      "title": "RequestResult«PaginationResult«TaskDefinitionVO»»"
+    },
+    "RequestResult«PaginationResult«TaskRun»»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/PaginationResult«TaskRun»"
+        }
+      },
+      "title": "RequestResult«PaginationResult«TaskRun»»"
+    },
+    "RequestResult«TaskCommitVO»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/TaskCommitVO"
+        }
+      },
+      "title": "RequestResult«TaskCommitVO»"
+    },
+    "RequestResult«TaskDefinitionVO»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/TaskDefinitionVO"
+        }
+      },
+      "title": "RequestResult«TaskDefinitionVO»"
+    },
+    "RequestResult«TaskRunDAG»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/TaskRunDAG"
+        }
+      },
+      "title": "RequestResult«TaskRunDAG»"
+    },
+    "RequestResult«TaskRunLogVO»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/TaskRunLogVO"
+        }
+      },
+      "title": "RequestResult«TaskRunLogVO»"
+    },
+    "RequestResult«TaskRunLog»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/TaskRunLog"
+        }
+      },
+      "title": "RequestResult«TaskRunLog»"
+    },
+    "RequestResult«TaskRun»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/TaskRun"
+        }
+      },
+      "title": "RequestResult«TaskRun»"
+    },
+    "RequestResult«TaskTemplateVO»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/TaskTemplateVO"
+        }
+      },
+      "title": "RequestResult«TaskTemplateVO»"
+    },
+    "RequestResult«TaskTryVO»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "$ref": "#/definitions/TaskTryVO"
+        }
+      },
+      "title": "RequestResult«TaskTryVO»"
+    },
+    "RequestResult«object»": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "note": {
+          "type": "string"
+        },
+        "result": {
+          "type": "object"
+        }
+      },
+      "title": "RequestResult«object»"
+    },
+    "ScheduleConf": {
+      "type": "object",
+      "properties": {
+        "cronExpr": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "CONTINUOUS",
+            "NONE",
+            "ONESHOT",
+            "SCHEDULED"
+          ]
+        }
+      },
+      "title": "ScheduleConf"
+    },
+    "ScheduleConfig": {
+      "type": "object",
+      "properties": {
+        "cronExpr": {
+          "type": "string"
+        },
+        "inputDatasets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskDatasetProps"
+          }
+        },
+        "inputNodes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "outputDatasets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskDatasetProps"
+          }
+        },
+        "type": {
+          "type": "string"
+        }
+      },
+      "title": "ScheduleConfig"
+    },
+    "Tag": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        }
+      },
+      "title": "Tag"
+    },
+    "Task": {
+      "type": "object",
+      "properties": {
+        "config": {
+          "$ref": "#/definitions/Config"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskDependency"
+          }
+        },
+        "description": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "operatorId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "scheduleConf": {
+          "$ref": "#/definitions/ScheduleConf"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Tag"
+          }
+        }
+      },
+      "title": "Task"
+    },
+    "TaskAttempt": {
+      "type": "object",
+      "properties": {
+        "attempt": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "endAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "startAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ABORTED",
+            "ABORTING",
+            "CREATED",
+            "FAILED",
+            "QUEUED",
+            "RETRY",
+            "RUNNING",
+            "SKIPPED",
+            "SUCCESS"
+          ]
+        },
+        "taskId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "taskName": {
+          "type": "string"
+        },
+        "taskRunId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "TaskAttempt"
+    },
+    "TaskCommitVO": {
+      "type": "object",
+      "properties": {
+        "commitStatus": {
+          "type": "string",
+          "enum": [
+            "DEPLOYED",
+            "MIDDLE_VERSIONED",
+            "SUBMITTED"
+          ]
+        },
+        "commitType": {
+          "type": "string",
+          "enum": [
+            "CREATED",
+            "MODIFIED",
+            "OFFLINE"
+          ]
+        },
+        "committedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "committer": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "definitionId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "latestCommit": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        }
+      },
+      "title": "TaskCommitVO"
+    },
+    "TaskDatasetProps": {
+      "type": "object",
+      "properties": {
+        "datasetName": {
+          "type": "string"
+        },
+        "datastoreId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "definitionId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "TaskDatasetProps"
+    },
+    "TaskDefinitionProps": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "title": "TaskDefinitionProps"
+    },
+    "TaskDefinitionVO": {
+      "type": "object",
+      "properties": {
+        "createTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "creator": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "isArchived": {
+          "type": "boolean"
+        },
+        "isDeployed": {
+          "type": "boolean"
+        },
+        "lastModifier": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "lastUpdateTime": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "taskPayload": {
+          "$ref": "#/definitions/TaskPayload"
+        },
+        "taskTemplateName": {
+          "type": "string"
+        },
+        "upstreamTaskDefinitions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskDefinitionProps"
+          }
+        }
+      },
+      "title": "TaskDefinitionVO"
+    },
+    "TaskDependency": {
+      "type": "object",
+      "properties": {
+        "dependencyFunc": {
+          "type": "string"
+        },
+        "upstreamTaskId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "TaskDependency"
+    },
+    "TaskPayload": {
+      "type": "object",
+      "properties": {
+        "scheduleConfig": {
+          "$ref": "#/definitions/ScheduleConfig"
+        },
+        "taskConfig": {
+          "type": "object"
+        }
+      },
+      "title": "TaskPayload"
+    },
+    "TaskRun": {
+      "type": "object",
+      "properties": {
+        "attempts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskAttempt"
+          }
+        },
+        "config": {
+          "$ref": "#/definitions/Config"
+        },
+        "dependencyTaskRunIds": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "int64"
+          }
+        },
+        "endAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "inlets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataStore"
+          }
+        },
+        "outlets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataStore"
+          }
+        },
+        "scheduledTick": {
+          "$ref": "#/definitions/Tick"
+        },
+        "startAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ABORTED",
+            "ABORTING",
+            "CREATED",
+            "FAILED",
+            "QUEUED",
+            "RETRY",
+            "RUNNING",
+            "SKIPPED",
+            "SUCCESS"
+          ]
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Tag"
+          }
+        },
+        "task": {
+          "$ref": "#/definitions/Task"
+        }
+      },
+      "title": "TaskRun"
+    },
+    "TaskRunDAG": {
+      "type": "object",
+      "properties": {
+        "edges": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskRunDependency"
+          }
+        },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TaskRun"
+          }
+        }
+      },
+      "title": "TaskRunDAG"
+    },
+    "TaskRunDependency": {
+      "type": "object",
+      "properties": {
+        "downStreamTaskRunId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "upstreamTaskRunId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "TaskRunDependency"
+    },
+    "TaskRunLog": {
+      "type": "object",
+      "properties": {
+        "attempt": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "endLine": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "startLine": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "taskRunId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "TaskRunLog"
+    },
+    "TaskRunLogVO": {
+      "type": "object",
+      "properties": {
+        "attempt": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "endLine": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "isTerminated": {
+          "type": "boolean"
+        },
+        "logs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "startLine": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ABORTED",
+            "ABORTING",
+            "CREATED",
+            "FAILED",
+            "QUEUED",
+            "RETRY",
+            "RUNNING",
+            "SKIPPED",
+            "SUCCESS"
+          ]
+        },
+        "taskRunId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "TaskRunLogVO"
+    },
+    "TaskRunRequest": {
+      "type": "object",
+      "properties": {
+        "parameters": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "variables": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        }
+      },
+      "title": "TaskRunRequest"
+    },
+    "TaskTemplateReqeustVO": {
+      "type": "object",
+      "properties": {
+        "defaultValues": {
+          "type": "object"
+        },
+        "displayParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ParameterDefinition"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "operatorId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "renderClassName": {
+          "type": "string"
+        },
+        "templateGroup": {
+          "type": "string"
+        },
+        "templateType": {
+          "type": "string"
+        }
+      },
+      "title": "TaskTemplateReqeustVO"
+    },
+    "TaskTemplateVO": {
+      "type": "object",
+      "properties": {
+        "defaultValues": {
+          "type": "object"
+        },
+        "displayParameters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ParameterDefinition"
+          }
+        },
+        "name": {
+          "type": "string"
+        },
+        "renderClassName": {
+          "type": "string"
+        },
+        "templateGroup": {
+          "type": "string"
+        },
+        "templateType": {
+          "type": "string"
+        }
+      },
+      "title": "TaskTemplateVO"
+    },
+    "TaskTryVO": {
+      "type": "object",
+      "properties": {
+        "creator": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "definitionId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "ABORTED",
+            "ABORTING",
+            "CREATED",
+            "FAILED",
+            "QUEUED",
+            "RETRY",
+            "RUNNING",
+            "SKIPPED",
+            "SUCCESS"
+          ]
+        },
+        "taskConfig": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "workflowTaskId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "workflowTaskRunId": {
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "title": "TaskTryVO"
+    },
+    "Tick": {
+      "type": "object",
+      "properties": {
+        "time": {
+          "type": "string"
+        }
+      },
+      "title": "Tick"
+    },
+    "UpdateTaskDefinitionRequest": {
+      "type": "object",
+      "properties": {
+        "definitionId": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "name": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "taskPayload": {
+          "$ref": "#/definitions/TaskPayload"
+        }
+      },
+      "title": "UpdateTaskDefinitionRequest"
+    }
+  }
+}
