@@ -11,9 +11,11 @@ import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.DatasetBaseInfo;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -38,6 +40,15 @@ public class MetadataDatasetDao {
                 .getSQL();
         Dataset fetchedDataset = dbOperator.fetchOne(sql, MetadataDatasetMapper.INSTANCE, gid);
         return Optional.ofNullable(fetchedDataset);
+    }
+
+    public List<DatasetBaseInfo> fetchDatasetsByDatasourceAndNameLike(Long datasourceId, String name) {
+        SQLBuilder sqlBuilder = new DefaultSQLBuilder();
+        String sql = sqlBuilder.select(DATASET_COLUMNS)
+                .from(DATASET_TABLE_NAME)
+                .where("datasource_id = ? AND name LIKE CONCAT('%', CAST(? AS TEXT), '%')")
+                .getSQL();
+        return dbOperator.fetchAll(sql, MetadataDatasetBaseInfoMapper.INSTANCE, datasourceId, name);
     }
 
     /**
@@ -67,6 +78,30 @@ public class MetadataDatasetDao {
                     .build();
             dataset.setGid(rs.getLong(1));
             return dataset;
+        }
+    }
+
+    private static class MetadataDatasetBaseInfoMapper implements ResultSetMapper<DatasetBaseInfo> {
+        public static final ResultSetMapper<DatasetBaseInfo> INSTANCE = new MetadataDatasetBaseInfoMapper();
+
+        @Override
+        public DatasetBaseInfo map(ResultSet rs) throws SQLException {
+            DataStore dataStore;
+
+            try {
+                dataStore = DataStoreJsonUtil.toDataStore(rs.getString(5));
+            } catch (JsonProcessingException e) {
+                throw ExceptionUtils.wrapIfChecked(e);
+            }
+
+            DatasetBaseInfo datasetBaseInfo = DatasetBaseInfo.newBuilder()
+                    .withGid(rs.getLong(1))
+                    .withName(rs.getString(2))
+                    .withDatasourceId(rs.getLong(3))
+                    .withDataStore(dataStore)
+                    .withDatabaseName(rs.getString(6))
+                    .build();
+            return datasetBaseInfo;
         }
     }
 }

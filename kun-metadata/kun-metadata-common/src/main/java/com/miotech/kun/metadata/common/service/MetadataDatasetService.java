@@ -4,7 +4,9 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.DatasetBaseInfo;
 
+import java.util.List;
 import java.util.Optional;
 
 public class MetadataDatasetService {
@@ -23,5 +25,11 @@ public class MetadataDatasetService {
     public Optional<Dataset> fetchDatasetByGid(Long gid) {
         Preconditions.checkNotNull(gid, "Argument `gid` cannot be null");
         return metadataDatasetDao.fetchDatasetByGid(gid);
+    }
+
+    public List<DatasetBaseInfo> fetchDatasetsByDatasourceAndNameLike(Long datasourceId, String name) {
+        Preconditions.checkNotNull(datasourceId, "Argument `datasourceId` cannot be null");
+        Preconditions.checkNotNull(name, "Argument `name` cannot be null");
+        return metadataDatasetDao.fetchDatasetsByDatasourceAndNameLike(datasourceId, name);
     }
 }
