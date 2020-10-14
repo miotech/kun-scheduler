@@ -68,7 +68,7 @@ public class KunWebServer {
     }
 
     public boolean isServerRunning() {
-        return this.server.isRunning();
+        return this.server.isStarted();
     }
 
 }
