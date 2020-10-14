@@ -70,6 +70,13 @@ public class TaskRunDao {
     @Inject
     private TaskRunMapper taskRunMapperInstance;
 
+    @Inject
+    public TaskRunDao(TaskDao taskDao, DatabaseOperator dbOperator, TaskRunMapper taskRunMapperInstance) {
+        this.taskDao = taskDao;
+        this.dbOperator = dbOperator;
+        this.taskRunMapperInstance = taskRunMapperInstance;
+    }
+
     private enum DependencyDirection {
         UPSTREAM,
         DOWNSTREAM
@@ -624,14 +631,23 @@ public class TaskRunDao {
     }
 
     public TaskRun fetchLatestTaskRun(Long taskId) {
+        List<TaskRun> latestRunInList = fetchLatestTaskRuns(taskId, 1);
+        if (latestRunInList.isEmpty()) {
+            return null;
+        }
+        // else
+        return latestRunInList.get(0);
+    }
+
+    public List<TaskRun> fetchLatestTaskRuns(Long taskId, int limit) {
         checkNotNull(taskId, "taskId should not be null.");
 
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where("task_id = ?")
                 .orderBy("start_at DESC")
-                .limit(1)
+                .limit(limit)
                 .getSQL();
-        return dbOperator.fetchOne(sql, taskRunMapperInstance, taskId);
+        return dbOperator.fetchAll(sql, taskRunMapperInstance, taskId);
     }
 
     public TaskAttemptProps fetchLatestTaskAttempt(Long taskRunId) {
