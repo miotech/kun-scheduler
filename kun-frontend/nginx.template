@@ -25,7 +25,6 @@ server {
        proxy_set_header Host $http_host;
        proxy_set_header X-Real-IP $remote_addr;
        proxy_set_header X-Scheme $scheme;
-       proxy_redirect http:// https://;
        add_header cache-control public;
        proxy_pass http://${SECURITY_HOST}:${SECURITY_PORT};
        proxy_redirect off;
@@ -35,7 +34,6 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Scheme $scheme;
-        proxy_redirect http:// https://;
         add_header cache-control public;
         proxy_pass http://${DATA_DASHBOARD_HOST}:${DATA_DASHBOARD_PORT};
         proxy_redirect off;
@@ -45,7 +43,6 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Scheme $scheme;
-        proxy_redirect http:// https://;
         add_header cache-control public;
         proxy_pass http://${DATA_DISCOVERY_HOST}:${DATA_DISCOVERY_PORT};
         proxy_redirect off;
@@ -55,7 +52,6 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Scheme $scheme;
-        proxy_redirect http:// https://;
         add_header cache-control public;
         rewrite /kun/api/workflow/(.*) /$1 break;
         proxy_pass http://${WORKFLOW_HOST}:${WORKFLOW_PORT}/;
@@ -66,7 +62,6 @@ server {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Scheme $scheme;
-        proxy_redirect http:// https://;
         add_header cache-control public;
         rewrite /kun/api/data-platform/(.*) /$1 break;
         proxy_pass http://${DATA_PLATFORM_HOST}:${DATA_PLATFORM_PORT}/;
