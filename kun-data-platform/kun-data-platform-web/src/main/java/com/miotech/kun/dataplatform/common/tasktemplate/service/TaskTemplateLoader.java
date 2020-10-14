@@ -64,7 +64,7 @@ public class TaskTemplateLoader {
 
     private List<TaskTemplate> loadTaskTemplates() {
         try {
-            List<Operator> operatorList = operatorUpload.autoUpload();
+            operatorUpload.autoUpload();
         }catch (Exception e){
             log.error("auto upload operator failed");
             throw ExceptionUtils.wrapIfChecked(e);

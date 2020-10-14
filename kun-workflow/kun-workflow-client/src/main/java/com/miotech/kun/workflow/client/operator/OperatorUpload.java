@@ -71,11 +71,7 @@ public class OperatorUpload {
             if (url != null) {
                 InputStream inputStream = this.getClass().getClassLoader().getResourceAsStream(operatorDef.getName() + ".jar");
                 File file = new File("/tmp/" + operatorDef.getName() + ".jar");
-                try {
-                    streamToFile(inputStream, file);
-                } catch (IOException e) {
-                    logger.error("load file : {} from inputStream failed", file.getName(), e);
-                }
+                streamToFile(inputStream, file);
                 logger.info("start to upload operator : {},file:{}", operatorDef.toString(), file.getName());
                 Operator operator = createOperator(operatorDef.toOperator(), file);
                 uploadOperator.add(operator);
@@ -87,15 +83,16 @@ public class OperatorUpload {
 
     }
 
-    private void streamToFile(InputStream ins, File file) throws IOException {
-        OutputStream os = new FileOutputStream(file);
-        int bytesRead = 0;
-        byte[] buffer = new byte[BUFFER_SIZE];
-        while ((bytesRead = ins.read(buffer, 0, 8192)) != -1) {
-            os.write(buffer, 0, bytesRead);
+    private void streamToFile(InputStream ins, File file){
+        try (OutputStream os = new FileOutputStream(file)){
+            int bytesRead = 0;
+            byte[] buffer = new byte[BUFFER_SIZE];
+            while ((bytesRead = ins.read(buffer, 0, 8192)) != -1) {
+                os.write(buffer, 0, bytesRead);
+            }
+        }catch (Exception e){
+            logger.error("load file : {} from inputStream failed", file.getName(), e);
         }
-        os.close();
-        ins.close();
 
 
     }
