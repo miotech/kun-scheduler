@@ -27,10 +27,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -46,6 +43,13 @@ public class TaskRunService {
 
     @Inject
     private Executor executor;
+
+    @Inject
+    public TaskRunService(TaskRunDao taskRunDao,  ResourceLoader resourceLoader, Executor executor) {
+        this.taskRunDao = taskRunDao;
+        this.resourceLoader = resourceLoader;
+        this.executor = executor;
+    }
 
     /* --------------------------------------- */
     /* ----------- public methods ------------ */
@@ -199,5 +203,18 @@ public class TaskRunService {
     public String logPathOfTaskAttempt(Long taskAttemptId) {
         String date = DateTimeUtils.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         return String.format("file:logs/%s/%s", date, taskAttemptId);
+    }
+
+    public Map<Long, List<TaskRunVO>> fetchLatestTaskRuns(List<Long> taskIds, int limit) {
+        Preconditions.checkNotNull(taskIds);
+        Preconditions.checkArgument(limit > 0);
+        Preconditions.checkArgument(limit <= 100);
+
+        Map<Long, List<TaskRunVO>> mappings = new HashMap<>();
+        for (Long taskId : taskIds) {
+            List<TaskRun> latestTaskRuns = taskRunDao.fetchLatestTaskRuns(taskId, limit);
+            mappings.put(taskId, latestTaskRuns.stream().map(this::convertToVO).collect(Collectors.toList()));
+        }
+        return mappings;
     }
 }
