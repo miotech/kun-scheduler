@@ -27,6 +27,12 @@ module.exports = {
           label: 'GitHub',
           position: 'right',
         },
+        {
+          to: "api/",
+          activeBasePath: "api",
+          label: "API",
+          position: "left",
+        }
       ],
     },
     footer: {
