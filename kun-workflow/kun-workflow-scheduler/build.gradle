@@ -5,7 +5,7 @@ dependencies {
     implementation project(":kun-workflow:kun-workflow-common")
     implementation project(":kun-workflow:kun-workflow-utils")
     implementation "org.neo4j:neo4j-ogm-core"
-    implementation "org.testcontainers:neo4j:1.14.3"
+    implementation "org.testcontainers:neo4j:1.15.0-rc2"
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")
