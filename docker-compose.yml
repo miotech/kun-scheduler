@@ -27,7 +27,7 @@ services:
       - 7474:7474
       - 7687:7687
   kun-security:
-    image: "kun-security:master"
+    image: "${IMAGE_REMOTE_ORG}kun-security:master"
     environment:
       APP_CONFIG_ENV:
       SECURITY_PORT:
@@ -43,7 +43,7 @@ services:
     depends_on:
       - kun-postgres
   kun-workflow:
-    image: "kun-workflow:master"
+    image: "${IMAGE_REMOTE_ORG}kun-workflow:master"
     environment:
       APP_CONFIG_ENV:
       WORKFLOW_PORT:
@@ -65,7 +65,7 @@ services:
     depends_on:
       - kun-postgres
   kun-metadata:
-    image: "kun-metadata:master"
+    image: "${IMAGE_REMOTE_ORG}kun-metadata:master"
     environment:
       APP_CONFIG_ENV:
       METADATA_PORT:
@@ -83,7 +83,7 @@ services:
     depends_on:
       - kun-workflow
   kun-data-dashboard:
-    image: "kun-data-dashboard:master"
+    image: "${IMAGE_REMOTE_ORG}kun-data-dashboard:master"
     environment:
       APP_CONFIG_ENV:
       DATA_DASHBOARD_PORT:
@@ -103,7 +103,7 @@ services:
     depends_on:
       - kun-workflow
   kun-data-discovery:
-    image: "kun-data-discovery:master"
+    image: "${IMAGE_REMOTE_ORG}kun-data-discovery:master"
     environment:
       APP_CONFIG_ENV:
       DATA_DISCOVERY_PORT:
@@ -125,7 +125,7 @@ services:
     depends_on:
       - kun-metadata
   kun-data-platform:
-    image: "kun-data-platform:master"
+    image: "${IMAGE_REMOTE_ORG}kun-data-platform:master"
     environment:
       APP_CONFIG_ENV:
       DATA_PLATFORM_PORT:
@@ -145,7 +145,7 @@ services:
     depends_on:
       - kun-workflow
   kun-frontend:
-    image: "kun-frontend:master"
+    image: "${IMAGE_REMOTE_ORG}kun-frontend:master"
     environment:
       SECURITY_HOST:
       SECURITY_PORT:
