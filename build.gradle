@@ -88,6 +88,7 @@ subprojects {
                 implementation "org.neo4j:neo4j-ogm-core:3.2.16"
                 implementation "org.apache.dubbo:dubbo:2.7.8"
                 implementation 'org.apache.dubbo:dubbo-registry-redis:2.7.8'
+                implementation 'org.apache.dubbo:dubbo-spring-boot-starter:2.7.8'
                 implementation 'com.alibaba:druid:1.1.23'
 
                 testImplementation "junit:junit:4.12"
