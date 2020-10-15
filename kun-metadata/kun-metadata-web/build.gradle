@@ -43,3 +43,12 @@ dependencies {
     testImplementation "junit:junit"
     testRuntimeOnly "org.mockito:mockito-core"
 }
+
+jacocoTestReport {
+
+    afterEvaluate {
+        getClassDirectories().setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['**/**operator.jar'])
+        }))
+    }
+}
