@@ -4,8 +4,8 @@ This website is built using [Docusaurus 2](https://v2.docusaurus.io/), a modern 
 
 ### Dependency
 ```
-$ brew install yarn
-$ brew install node
+$ brew install yarn  // Or visit https://classic.yarnpkg.com/en/docs/install/
+$ brew install node  // Or visit https://nodejs.org/en/download/
 ```
 
 ### Installation
