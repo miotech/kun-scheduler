@@ -273,6 +273,12 @@ public class TaskRunDao {
         return taskRun;
     }
 
+    public TaskRun fetchTaskRunByTaskAndTick(Long taskId,Tick tick){
+        TaskRun taskRun = dbOperator.fetchOne(getSelectSQL(TASK_RUN_MODEL_NAME + ".task_id = ? and " +
+                "scheduled_tick = ?"), taskRunMapperInstance, taskId,tick.toString());
+        return taskRun;
+    }
+
     public List<TaskRun> createTaskRuns(List<TaskRun> taskRuns) {
         return taskRuns.stream().map(this::createTaskRun).collect(Collectors.toList());
     }
@@ -443,6 +449,10 @@ public class TaskRunDao {
     }
 
     public TaskAttempt createAttempt(TaskAttempt taskAttempt) {
+        Optional<TaskAttempt> savedTaskAttempt = fetchAttemptById(taskAttempt.getId());
+        if(savedTaskAttempt.isPresent()){
+            return savedTaskAttempt.get();
+        }
         List<String> tableColumns = new ImmutableList.Builder<String>()
                 .addAll(taskAttemptCols)
                 .build();
@@ -714,6 +724,34 @@ public class TaskRunDao {
 
         return fetchDependentTaskRunsById(srcTaskRunId, distance, DependencyDirection.DOWNSTREAM, includeSelf);
     }
+
+    public List<TaskRun> fetchUnStartedTaskRunList(){
+        String sql = getTaskRunSQLBuilderWithDefaultConfig()
+                .where("status is NULL")
+                .getSQL();
+        List<TaskRun> taskRunList = dbOperator.fetchAll(sql,taskRunMapperInstance);
+        return taskRunList;
+    }
+
+    public List<TaskAttempt> fetchUnStartedTaskAttemptList(){
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
+        columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
+        columnsMap.put(TaskDao.TASK_MODEL_NAME, TaskDao.getTaskCols());
+
+        String sql = DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .from(TASK_ATTEMPT_TABLE_NAME, TASK_ATTEMPT_MODEL_NAME)
+                .join("INNER", TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".id = " + TASK_ATTEMPT_MODEL_NAME + ".task_run_id")
+                .join("INNER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
+                .on(TaskDao.TASK_MODEL_NAME + ".id = " + TASK_RUN_MODEL_NAME + ".task_id")
+                .autoAliasColumns()
+                .where(TASK_ATTEMPT_MODEL_NAME + ".status = ?")
+                .getSQL();
+        return dbOperator.fetchAll(sql,new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance),toNullableString(toNullableString(TaskRunStatus.QUEUED)));
+    }
+
 
     public static class TaskRunMapper implements ResultSetMapper<TaskRun> {
         public static final TaskRunDao.TaskRunMapper INSTANCE = new TaskRunDao.TaskRunMapper();

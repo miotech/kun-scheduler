@@ -49,7 +49,7 @@ public class MiscService {
 
     public void changeTaskAttemptStatus(long attemptId, TaskRunStatus status,
                                         @Nullable OffsetDateTime startAt, @Nullable OffsetDateTime endAt) {
-        logger.debug("Try to change TaskAttempt's status. attemptId={}, status={}, startAt={}, endAt={}", attemptId, status, startAt, endAt);
+        logger.info("Try to change TaskAttempt's status. attemptId={}, status={}, startAt={}, endAt={}", attemptId, status, startAt, endAt);
         TaskRunStatus prevStatus = taskRunDao.updateTaskAttemptStatus(attemptId, status, startAt, endAt)
                 .orElseThrow(() -> new IllegalArgumentException(String.format("TaskAttempt with id %s not found.", attemptId)));
 

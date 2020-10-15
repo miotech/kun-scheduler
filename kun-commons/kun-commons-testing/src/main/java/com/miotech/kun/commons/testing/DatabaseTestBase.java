@@ -2,10 +2,7 @@ package com.miotech.kun.commons.testing;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.inject.AbstractModule;
-import com.google.inject.Inject;
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
+import com.google.inject.*;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.DatabaseSetup;
 import com.miotech.kun.commons.utils.Props;
@@ -27,7 +24,6 @@ import java.util.List;
 public abstract class DatabaseTestBase extends GuiceTestBase {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseTestBase.class);
 
-    @Inject
     private DataSource dataSource;
 
     private List<String> userTables;
@@ -40,7 +36,14 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     @Before
     public void setUp() {
+
+
+    }
+
+    @Override
+    protected void beforeInject(Injector injector) {
         // initialize database
+        dataSource = injector.getInstance(DataSource.class);
         Props props = new Props();
         props.put("flyway.initSql", "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT");
         DatabaseSetup setup = new DatabaseSetup(dataSource, props, "sql/");

@@ -41,6 +41,7 @@ CREATE TABLE kun_wf_tick_task_mapping (
     PRIMARY KEY (scheduled_tick, task_id)
 );
 
+
 CREATE TABLE kun_wf_task_relations (
     upstream_task_id BIGINT NOT NULL,
     downstream_task_id BIGINT NOT NULL,

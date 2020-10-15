@@ -34,6 +34,11 @@ public class DirectTaskGraph implements TaskGraph {
         }
     }
 
+    @Override
+    public void updateTasksNextExecutionTick(Tick tick, List<Task> scheduledTasks) {
+
+    }
+
     public List<Task> getTasks() {
         return tasks;
     }

@@ -91,6 +91,10 @@ public class TaskRunService {
             taskAttempt = attempts.get(0);
         }
         Resource resource = resourceLoader.getResource(taskAttempt.getLogPath());
+        if(resource == null){
+            List<String> logs = new ArrayList<>();
+            return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLine, startLine, logs);
+        }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
 

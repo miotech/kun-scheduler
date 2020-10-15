@@ -60,6 +60,10 @@ public class CronUtils {
         return getNextExecutionTime(cron, DateTimeUtils.now());
     }
 
+    public static Optional<OffsetDateTime> getNextExecutionTimeByCronExpr(String cronExpr,OffsetDateTime startTime){
+        return getNextExecutionTime(convertStringToCron(cronExpr),startTime);
+    }
+
     /**
      * Get a OffsetDateTime object (optional) that represents the time for next execution by given cron expression and timebase
      * @param cron cron object

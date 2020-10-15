@@ -13,6 +13,7 @@ import com.miotech.kun.commons.web.module.KunWebServerModule;
 import com.miotech.kun.workflow.SchedulerManager;
 import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.core.publish.KafkaModule;
+import com.miotech.kun.workflow.web.service.InitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,18 +27,21 @@ public class KunWorkflowWebServer {
     private KunWebServer server;
     @Inject
     private Props props;
-    @Inject
+    //    @Inject
     private DataSource dataSource;
     @Inject
     private SchedulerManager schedulerManager;
+    @Inject
+    private InitService initService;
 
-    private void configureDB() {
+    public static void configureDB(Injector injector, Props props) {
+        DataSource dataSource = injector.getInstance(DataSource.class);
         DatabaseSetup setup = new DatabaseSetup(dataSource, props);
         setup.start();
     }
 
     public void start() {
-        configureDB();
+        initService.publishRpcServices();
         schedulerManager.start();
         this.server.start();
     }
@@ -64,7 +68,7 @@ public class KunWorkflowWebServer {
                 new RedisModule(props),
                 new SchedulerModule()
         );
-
+        configureDB(injector, props);
         launch(injector.getInstance(KunWorkflowWebServer.class));
     }
 

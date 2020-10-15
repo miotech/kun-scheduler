@@ -6,18 +6,17 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.utils.CronUtils;
+import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.OffsetDateTime;
+import java.util.*;
 
 @JsonDeserialize(builder = Task.TaskBuilder.class)
 public class Task {
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long id;
 
@@ -25,13 +24,15 @@ public class Task {
 
     private final String description;
 
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long operatorId;
 
     private final Config config;
 
     private final ScheduleConf scheduleConf;
+
+    private final Integer recoverTimes;
 
     private final List<TaskDependency> dependencies;
 
@@ -69,6 +70,8 @@ public class Task {
         return tags;
     }
 
+
+
     private Task(TaskBuilder builder) {
         this.id = builder.id;
         this.name = builder.name;
@@ -78,6 +81,7 @@ public class Task {
         this.scheduleConf = builder.scheduleConf;
         this.dependencies = ImmutableList.copyOf(builder.dependencies);
         this.tags = builder.tags;
+        this.recoverTimes = builder.recoverTimes == null ? 0 : builder.recoverTimes;
     }
 
     public TaskBuilder cloneBuilder() {
@@ -89,11 +93,37 @@ public class Task {
                 .withConfig(config)
                 .withScheduleConf(scheduleConf)
                 .withDependencies(dependencies)
-                .withTags(tags);
+                .withTags(tags)
+                .withRecoverTimes(recoverTimes);
+    }
+
+    public boolean shouldSchedule(OffsetDateTime scheduleTime, OffsetDateTime currentTime) {
+        boolean shouldSchedule = false;
+        switch (scheduleConf.getType()) {
+            case ONESHOT:
+                return true;
+            case SCHEDULED:
+                String cronExpression = scheduleConf.getCronExpr();
+                for (int i = 0; i <= recoverTimes; i++) {
+                    if(scheduleTime.compareTo(currentTime) >= 0){
+                        shouldSchedule = true;
+                        break;
+                    }
+                    Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextExecutionTimeByCronExpr(cronExpression, scheduleTime);
+                    if (nextExecutionTimeOptional.isPresent()) {
+                        scheduleTime = nextExecutionTimeOptional.get();
+                    } else {
+                        break;
+                    }
+                }
+                break;
+        }
+        return shouldSchedule;
     }
 
     /**
      * Convert tags list of this task instance to key-value map data structure
+     *
      * @return key-value map of tags
      * @throws RuntimeException when detects duplication on tag key
      */
@@ -147,6 +177,7 @@ public class Task {
         private ScheduleConf scheduleConf;
         private List<TaskDependency> dependencies;
         private List<Tag> tags;
+        private Integer recoverTimes;
 
         private TaskBuilder() {
         }
@@ -188,6 +219,15 @@ public class Task {
 
         public TaskBuilder withTags(List<Tag> tags) {
             this.tags = tags;
+            return this;
+        }
+
+        public TaskBuilder withRecoverTimes(Integer recoverTimes) {
+            if (recoverTimes == null) {
+                recoverTimes = 1;
+            }
+            recoverTimes = recoverTimes > 10 ? 10 : recoverTimes;
+            this.recoverTimes = recoverTimes;
             return this;
         }
 

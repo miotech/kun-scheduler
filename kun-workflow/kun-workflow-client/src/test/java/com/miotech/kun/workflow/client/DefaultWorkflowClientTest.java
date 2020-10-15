@@ -108,7 +108,7 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
                 ImmutableMap.of("testKey1", true));
 
         // verify
-        await().atMost(30, TimeUnit.SECONDS)
+        await().atMost(60, TimeUnit.SECONDS)
                 .until(() ->
                 runFinished(taskRun.getId()));
         TaskRun result = client.getTaskRun(taskRun.getId());

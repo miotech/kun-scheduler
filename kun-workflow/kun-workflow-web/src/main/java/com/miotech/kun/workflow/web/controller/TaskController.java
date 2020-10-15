@@ -85,6 +85,7 @@ public class TaskController {
 
     @RouteMapping(url= "/tasks/_run", method = "POST")
     public Object runTasks(@RequestBody List<RunTaskVO> runTaskVOs) {
-        return taskService.runTasks(runTaskVOs);
+        List<Long> taskRunIds = taskService.runTasks(runTaskVOs);
+        return taskRunIds;
     }
 }

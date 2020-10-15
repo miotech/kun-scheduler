@@ -17,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 public class TestOperator5 extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(TestOperator5.class);
 
+    private boolean isAbort = false;
+
     @SuppressWarnings("java:S2925")
     public boolean run() {
         logger.info("START RUNNING");
@@ -26,10 +28,7 @@ public class TestOperator5 extends KunOperator {
 
     @Override
     public void abort() {
-        // Mock infinite loop
-        while (true) {
-            // do nothing
-        }
+        isAbort = true;
     }
 
     @Override

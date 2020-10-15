@@ -1,0 +1,3 @@
+rpc:
+  registry: redis://${DB_REDIS_IP}:6379/
+  port: -1
