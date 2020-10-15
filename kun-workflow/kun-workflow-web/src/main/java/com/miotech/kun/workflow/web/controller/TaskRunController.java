@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.web.controller;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.web.annotation.*;
@@ -15,12 +16,15 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static com.miotech.kun.commons.utils.ArgumentCheckUtils.parseBooleanQueryParameter;
 
 @Singleton
 public class TaskRunController {
+
+    public static final int SAFE_PAGE_SIZE_UPPER_LIMIT = 100;
 
     @Inject
     private TaskRunService taskRunService;
@@ -116,5 +120,15 @@ public class TaskRunController {
                                                        @QueryParameter(defaultValue = "1") int downstreamLevel
                                                        ) {
        return taskRunService.getNeighbors(id, upstreamLevel, downstreamLevel);
+    }
+
+    @RouteMapping(url = "/taskruns/latest", method = "GET")
+    public Object fetchLatestTaskRuns(@QueryParameter List<Long> taskIds, @QueryParameter Integer limit) {
+        Preconditions.checkArgument(Objects.nonNull(taskIds) && (!taskIds.isEmpty()), "Should specify at least one task id.");
+        Preconditions.checkArgument(Objects.nonNull(limit) && (limit > 0), "argument `limit` should be a positive integer.");
+
+        int safeLimit = (limit <= SAFE_PAGE_SIZE_UPPER_LIMIT) ? limit : SAFE_PAGE_SIZE_UPPER_LIMIT;
+        Map<Long, List<TaskRunVO>> taskRunsVO = taskRunService.fetchLatestTaskRuns(taskIds, safeLimit);
+        return taskRunsVO;
     }
 }
