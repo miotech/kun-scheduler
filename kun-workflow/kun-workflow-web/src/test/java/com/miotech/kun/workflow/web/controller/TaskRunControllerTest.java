@@ -4,8 +4,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.exception.ExceptionResponse;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.factory.TaskRunLogVOFactory;
 import com.miotech.kun.workflow.common.taskrun.factory.TaskRunStateVOFactory;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
@@ -18,8 +20,6 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
-import com.miotech.kun.workflow.common.task.vo.PaginationVO;
-import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentMatcher;
@@ -458,5 +458,72 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         assertThat(taskRunListFilterByTagVersionOne.getRecords().size(), is(100));
         assertThat(taskRunListFilterByTagVersionTwo.getRecords().size(), is(50));
         assertThat(taskRunListFilterByTagVersionThree.getRecords().size(), is(0));
+    }
+
+    @Test
+    public void fetchLatestTaskRuns_withListOfTaskIds_shouldInvokeTaskRunServiceProperly() {
+        // prepare
+        InvokeParamsOfFetchLatestTaskRuns serviceInvokeParams = new InvokeParamsOfFetchLatestTaskRuns();
+        prepareStubsForFetchLatestTaskRuns(serviceInvokeParams);
+        get("/taskruns/latest?taskIds=101,102,103&limit=50");
+
+        assertThat(serviceInvokeParams.getTaskIds().size(), is(3));
+        assertThat(serviceInvokeParams.getTaskIds().get(0), is(101L));
+        assertThat(serviceInvokeParams.getTaskIds().get(1), is(102L));
+        assertThat(serviceInvokeParams.getTaskIds().get(2), is(103L));
+        assertThat(serviceInvokeParams.getLimit(), is(50));
+    }
+
+    @Test
+    public void fetchLatestTaskRuns_withTooLargeLimit_shouldFallbackToUpperLimit() {
+        // prepare
+        InvokeParamsOfFetchLatestTaskRuns serviceInvokeParams = new InvokeParamsOfFetchLatestTaskRuns();
+        prepareStubsForFetchLatestTaskRuns(serviceInvokeParams);
+        get("/taskruns/latest?taskIds=101,102,103&limit=100000");
+
+        assertThat(serviceInvokeParams.getTaskIds().size(), is(3));
+        assertThat(serviceInvokeParams.getTaskIds().get(0), is(101L));
+        assertThat(serviceInvokeParams.getTaskIds().get(1), is(102L));
+        assertThat(serviceInvokeParams.getTaskIds().get(2), is(103L));
+        assertThat(serviceInvokeParams.getLimit(), is(100));
+    }
+
+    private class InvokeParamsOfFetchLatestTaskRuns {
+        private List<Long> taskIds;
+        private int limit;
+
+        public List<Long> getTaskIds() {
+            return taskIds;
+        }
+
+        public void setTaskIds(List<Long> taskIds) {
+            this.taskIds = taskIds;
+        }
+
+        public int getLimit() {
+            return limit;
+        }
+
+        public void setLimit(int limit) {
+            this.limit = limit;
+        }
+    }
+
+    private void prepareStubsForFetchLatestTaskRuns(InvokeParamsOfFetchLatestTaskRuns invokeParams) {
+        Mockito.doAnswer(invocation -> {
+            invokeParams.setTaskIds(invocation.getArgument(0));
+            invokeParams.setLimit(invocation.getArgument(1));
+            return null;
+        }).when(taskRunService).fetchLatestTaskRuns(anyList(), anyInt());
+    }
+
+
+    @Test
+    public void fetchLatestTaskRuns_withInvalidArgument_shouldResponseBadRequest() {
+        String badResponse1 = get("/taskruns/latest?taskIds=1,2,3&limit=-1");
+        assertEquals("{\"code\":400,\"message\":\"argument `limit` should be a positive integer.\"}", badResponse1);
+
+        String badResponse2 = get("/taskruns/latest?limit=50");
+        assertEquals("{\"code\":400,\"message\":\"Should specify at least one task id.\"}", badResponse2);
     }
 }
