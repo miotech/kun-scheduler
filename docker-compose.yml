@@ -75,6 +75,8 @@ services:
       DB_PG_PASSWORD:
       WORKFLOW_HOST:
       WORKFLOW_PORT:
+      METADATA_RPC_SERVICE_PORT:
+      DB_REDIS_IP:
     restart: always
     volumes:
       - ./kun-metadata-logs:/server/target/kun-metadata-logs/:z
