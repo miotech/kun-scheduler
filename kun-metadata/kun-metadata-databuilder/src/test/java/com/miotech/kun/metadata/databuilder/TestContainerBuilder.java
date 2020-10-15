@@ -28,7 +28,7 @@ public class TestContainerBuilder {
 
     private static final String MONGO_IMAGE = "mongo:4.2";
     private static final String POSTGRES_IMAGE = "postgres:12.3";
-    private static final String ELASTICSEARCH_IMAGE = "elasticsearch:6.8.10";
+    private static final String ELASTICSEARCH_IMAGE = "docker.elastic.co/elasticsearch/elasticsearch:6.8.12";
     private static final String ARANGO_IMAGE_VERSION = "3.6.4";
     private static final Integer MONGO_PORT = 27017;
 
