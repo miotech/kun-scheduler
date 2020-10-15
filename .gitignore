@@ -36,6 +36,9 @@
 
 kun-data-discovery/src/main/resources/*.jar
 
+#docker
+redis_data
+
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf
 */src/main/resources/localhost.conf
