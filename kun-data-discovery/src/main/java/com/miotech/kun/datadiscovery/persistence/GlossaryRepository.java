@@ -286,7 +286,7 @@ public class GlossaryRepository extends BaseRepository {
 
         if (StringUtils.isNotEmpty(searchRequest.getKeyword())) {
             whereClause += wrapSql("and upper(name) like ?");
-            sqlArgs.add(searchRequest.getKeyword());
+            sqlArgs.add(toLikeSql(searchRequest.getKeyword().toUpperCase()));
         }
 
         if (searchRequest instanceof GlossaryBasicSearchRequest) {
