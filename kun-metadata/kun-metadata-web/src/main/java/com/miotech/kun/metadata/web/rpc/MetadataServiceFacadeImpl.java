@@ -5,11 +5,13 @@ import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.service.MetadataDatasetService;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.DatasetBaseInfo;
 import com.miotech.kun.metadata.databuilder.service.gid.GidService;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
@@ -33,5 +35,10 @@ public class MetadataServiceFacadeImpl implements MetadataServiceFacade {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public List<DatasetBaseInfo> fetchDatasetsByDatasourceAndNameLike(Long datasourceId, String name) {
+        return metadataDatasetService.fetchDatasetsByDatasourceAndNameLike(datasourceId, name);
     }
 }
