@@ -49,6 +49,7 @@ Reference steps:
 
 ```bash
 # Install dependencies
+$ cd docs/
 $ yarn install
 
 # Boot up local development environment
