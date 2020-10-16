@@ -32,6 +32,9 @@ task deleteLocalJar(type: Delete){
 bootJar.dependsOn(deleteLocalJar)
 
 dependencies {
+	implementation project(':kun-workflow:kun-workflow-client')
+	implementation project(':kun-workflow:kun-workflow-core')
+	implementation project(':kun-workflow:kun-workflow-utils')
 	implementation project(':kun-data-quality')
 	implementation project(':kun-commons:kun-commons-db')
 	implementation project(':kun-commons:kun-commons-utils')
