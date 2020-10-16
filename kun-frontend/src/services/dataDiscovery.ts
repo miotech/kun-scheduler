@@ -1,7 +1,7 @@
 import { Pagination, Sort } from '@/definitions/common-types';
+import { Dataset } from '@/definitions/Dataset.type';
 
 import {
-  Dataset,
   SearchParamsObj,
   DsFilterItem,
   DatabaseFilterItem,
