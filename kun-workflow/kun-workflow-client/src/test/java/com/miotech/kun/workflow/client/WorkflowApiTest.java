@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.client;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.client.model.*;
@@ -8,14 +9,16 @@ import com.miotech.kun.workflow.utils.JSONUtils;
 import org.junit.Test;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import static com.miotech.kun.workflow.client.mock.MockingFactory.*;
 import static com.miotech.kun.workflow.utils.DateTimeUtils.atMillisecondPrecision;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
-import static com.miotech.kun.workflow.client.mock.MockingFactory.*;
 
 public class WorkflowApiTest extends MockServerTestBase {
 
@@ -218,5 +221,23 @@ public class WorkflowApiTest extends MockServerTestBase {
         assertThat(result.getRecords().size(), is(1));
         TaskRun taskRun1 = result.getRecords().get(0);
         assertTrue(taskRun1.getId() > 0);
+    }
+
+    @Test
+    public void getLatestTaskRuns_shouldWork() {
+        Task task = mockTask();
+        mockPost("/tasks", JSONUtils.toJsonString(task),  JSONUtils.toJsonString(task));
+
+        TaskRun taskRun = mockTaskRun();
+        List<TaskRun> taskRuns = Collections.singletonList(taskRun);
+        Map<Long, List<TaskRun>> mockResult = new HashMap<>();
+        mockResult.put(task.getId(), taskRuns);
+        mockGet(
+                "/taskruns/latest?taskIds=" + task.getId() + "&limit=10",
+                JSONUtils.toJsonString(mockResult)
+        );
+
+        Map<Long, List<TaskRun>> result = wfApi.getLatestTaskRuns(Lists.newArrayList(task.getId()), 10);
+        assertThat(result, sameBeanAs(mockResult));
     }
 }
