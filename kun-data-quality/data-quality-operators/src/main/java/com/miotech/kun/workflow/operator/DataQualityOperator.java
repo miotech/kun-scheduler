@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.operator;
 import com.miotech.kun.commons.query.JDBCQuery;
 import com.miotech.kun.commons.query.JDBCQueryExecutor;
 import com.miotech.kun.commons.query.datasource.DataSourceContainer;
+import com.miotech.kun.commons.query.datasource.DataSourceType;
 import com.miotech.kun.commons.query.datasource.MetadataDataSource;
 import com.miotech.kun.commons.query.model.QueryResultSet;
 import com.miotech.kun.commons.query.service.ConfigService;
@@ -93,7 +94,7 @@ public class DataQualityOperator extends KunOperator {
             DataQualityCaseMetrics metrics = new DataQualityCaseMetrics();
             metrics.setCaseId(caseId);
             metrics.setCaseStatus(CaseStatus.FAILED);
-            metrics.setErrorReason(e.getMessage());
+            metrics.setErrorReason(org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace(e));
             dataQualityClient.recordCaseMetrics(metrics);
             return false;
         } finally {
@@ -126,6 +127,13 @@ public class DataQualityOperator extends KunOperator {
         return new NopResolver();
     }
 
+    private String getFullTableName(Dataset dataset) {
+        if (DataSourceType.AWS.name().equals(dataset.getDatasourceType())) {
+            return dataset.getDatabase() + "." + "\"" + dataset.getName() + "\"";
+        }
+        return dataset.getName();
+    }
+
     private boolean doRun() {
         DataQualityCase dataQualityCase = dataQualityClient.getCase(caseId);
 
@@ -140,7 +148,7 @@ public class DataQualityOperator extends KunOperator {
             // Table Dimension
             String templateString = dataQualityCase.getExecutionString();
             Map<String, Object> args = new HashMap<>();
-            args.put("table", currentDataset.getName());
+            args.put("table", getFullTableName(currentDataset));
             try {
                 String queryString = parseTemplate(templateString, args);
                 queryStrings.add(queryString);
@@ -154,7 +162,7 @@ public class DataQualityOperator extends KunOperator {
 
             List<DatasetField> datasetFields = metadataClient.getDatasetFields(dataQualityClient.getDatasetFieldIdsByCaseId(caseId));
             Map<String, Object> args = new HashMap<>();
-            args.put("table", currentDataset.getName());
+            args.put("table", getFullTableName(currentDataset));
 
             for (DatasetField datasetField : datasetFields) {
                 args.put("field", datasetField.getName());
