@@ -7502,7 +7502,7 @@ d3-time@1, d3-time@^1.1.0:
   resolved "https://registry.yarnpkg.com/d3-time/-/d3-time-2.0.0.tgz#ad7c127d17c67bd57a4c61f3eaecb81108b1e0ab"
   integrity sha512-2mvhstTFcMvwStWd9Tj3e6CEqtOivtD8AUiHT8ido/xmzrI9ijrUUihZ6nHuf/vsScRBonagOdj0Vv+SEL5G3Q==
 
-d3-timer@1:
+d3-timer@1, d3-timer@^1.0.9:
   version "1.0.10"
   resolved "https://registry.yarnpkg.com/d3-timer/-/d3-timer-1.0.10.tgz#dfe76b8a91748831b13b6d9c793ffbd508dd9de5"
 
@@ -12202,6 +12202,13 @@ jws@^4.0.0:
     jwa "^2.0.0"
     safe-buffer "^5.0.1"
 
+kapellmeister@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/kapellmeister/-/kapellmeister-3.0.1.tgz#419b715cd221acda3db79892caedf63e1c9f7d25"
+  integrity sha512-S7+gYcziMREv8RxG46138mb1O4Xf9II/bCxEJPYkhlZ7PgGWTlicgsyNad/DGc5oEAlWGLXE5ExLbTDVvJmgDA==
+  dependencies:
+    d3-timer "^1.0.9"
+
 keyv@^3.0.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/keyv/-/keyv-3.1.0.tgz#ecc228486f69991e49e9476485a5be1e8fc5c4d9"
@@ -16114,6 +16121,15 @@ react-measure@^2.0.2:
     get-node-dimensions "^1.2.1"
     prop-types "^15.6.2"
     resize-observer-polyfill "^1.5.0"
+
+react-move@^6.4.0:
+  version "6.4.0"
+  resolved "https://registry.yarnpkg.com/react-move/-/react-move-6.4.0.tgz#9163a87c62fff94bf6e6980685c713739192650e"
+  integrity sha512-TNyDQESDZ0xsejnxFTQ9CKarJQN6NbgpImrvIEzOVe7+jt8y7uTjJwWxqFTfmvwskIs+RmUbCWdN7PAbGyhrdA==
+  dependencies:
+    "@babel/runtime" "^7.10.3"
+    kapellmeister "^3.0.1"
+    prop-types "^15.7.2"
 
 react-native-swipeout@^2.2.2:
   version "2.3.6"

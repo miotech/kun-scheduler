@@ -17,12 +17,14 @@ import { CopyOutlined } from '@ant-design/icons';
 import { RootDispatch, RootState } from '@/rematch/store';
 import {
   Mode,
-  Dataset,
-  Watermark,
-  GlossaryItem,
   SearchParams,
   QueryObj,
 } from '@/rematch/models/dataDiscovery';
+import {
+  Dataset,
+  Watermark,
+  GlossaryItem,
+} from '@/definitions/Dataset.type';
 
 import color from '@/styles/color';
 
