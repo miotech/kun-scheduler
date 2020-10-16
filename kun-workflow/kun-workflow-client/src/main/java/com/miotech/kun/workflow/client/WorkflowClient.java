@@ -160,4 +160,12 @@ public interface WorkflowClient {
      * @return
      */
     TaskRun stopTaskRun(Long taskRunId);
+
+    /**
+     * Get latest N task runs of given task ids.
+     * @param taskIds ids of the tasks for the query
+     * @param limit size of the task run list for each task
+     * @return Mapped results in dictionary, where task id is the key, and its latest runs in a list as value
+     */
+    Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit);
 }

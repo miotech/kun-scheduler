@@ -215,4 +215,9 @@ public class DefaultWorkflowClient implements WorkflowClient {
         wfApi.stopTaskRun(taskRunId);
         return wfApi.getTaskRun(taskRunId);
     }
+
+    @Override
+    public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit) {
+        return wfApi.getLatestTaskRuns(taskIds, limit);
+    }
 }
