@@ -13,11 +13,13 @@ import { RootDispatch } from '@/rematch/store';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 
 import styles from './TaskRunsFilterBar.less';
+import SafeUrlAssembler from 'safe-url-assembler';
 
 export interface TaskRunsFilterBarProps {
   filter: TaskRunListFilter;
   dispatch: RootDispatch;
   onClickRefresh: () => void;
+  taskDefId?: string;
 }
 
 const TaskRunsFilterBar: FunctionComponent<TaskRunsFilterBarProps> = (props) => {
@@ -93,6 +95,15 @@ const TaskRunsFilterBar: FunctionComponent<TaskRunsFilterBarProps> = (props) => 
         >
           {t('common.refresh')}
         </Button>
+      </span>
+      <span className={c(styles.FilterItemBlock, styles.JumpToDefBtnWrapper)}>
+        <Link to={SafeUrlAssembler().template('/data-development/task-definition/:taskDefId').param({
+          taskDefId: props.taskDefId || '',
+        }).toString()}>
+          <Button>
+            {t('scheduledTasks.jumpToTaskDef')}
+          </Button>
+        </Link>
       </span>
     </nav>
   );
