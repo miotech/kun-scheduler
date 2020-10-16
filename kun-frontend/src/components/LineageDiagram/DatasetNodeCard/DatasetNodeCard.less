@@ -1,0 +1,93 @@
+@lineage-dataset-node-card-width: 280px;
+@lineage-dataset-node-card-height: 108px;
+
+.lineage-dataset-node-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  box-sizing: content-box;
+  font-family: @default-font-family;
+  width: @lineage-dataset-node-card-width;
+  height: @lineage-dataset-node-card-height;
+  font-size: 12px;
+  border: 1px solid @borderColor;
+  border-radius: 3px;
+
+  &__heading,
+  &__details {
+    display: flex;
+    flex: 1 1 54px;
+    padding: 8px 12px;
+  }
+
+  &__left-content, &__right-content {
+    position: relative;
+    flex: 1 1;
+    max-width: 50%;
+  }
+
+  &__heading &__right-content {
+    text-align: right;
+  }
+
+  &__heading {
+    background: @background;
+    color: @secondary;
+
+    dl {
+      margin: 0;
+      line-height: 1;
+    }
+
+    [data-label="row-count-wrapper"] {
+      line-height: 19px;
+    }
+
+    [data-label="row-count-label"],
+    [data-label="row-count-value"] {
+      display: inline;
+    }
+
+    [data-label="row-count-label"] {
+      line-height: 14px;
+      &:after {
+        content: ': ';
+      }
+    }
+    [data-label="dataset-name"] {
+      display: inline-block;
+      margin-left: 4px;
+    }
+
+    [data-label="update-time-wrapper"] {
+      margin-top: 1px;
+    }
+  }
+
+  &__title-link {
+    margin: 0;
+    padding: 0;
+    line-height: 18px;
+    font-size: 14px;
+    a {
+      color: @darkBlue;
+    }
+  }
+
+  &__def-title {
+    color: @secondary;
+  }
+  &__def-desc {
+    color: @darkGray;
+    font-size: 14px;
+  }
+
+  &__description {
+    width: 100%;
+    margin: 1px 0 0 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    color: @secondary;
+  }
+}

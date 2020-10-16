@@ -20,7 +20,7 @@
     "start:global": "USE_MOCK=true HTTPS=1 FORK_TS_CHECKER=1 PROXY_TARGET=\"https://kun-global.miotech.com\" PROXY_TARGET_DASHBOARD=\"https://kun-global.miotech.com\" PROXY_SECURITY_TARGET=\"https://kun-global.miotech.com\" PORT=9801 umi dev",
     "start:chen": "USE_MOCK=false PROXY_TARGET=\"http://192.168.1.87:8080\" PROXY_TARGET_DASHBOARD=\"http://192.168.1.87:8083\" PROXY_SECURITY_TARGET=\"http://192.168.1.87:8079\" PORT=9805 umi dev",
     "i18n": "node i18n-updater/index.js",
-    "storybook": "start-storybook -p 9802"
+    "storybook": "start-storybook -s ./public -p 9802"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"

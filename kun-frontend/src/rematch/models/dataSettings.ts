@@ -8,7 +8,7 @@ import {
 } from '@/services/dataSettings';
 import { Pagination } from '@/definitions/common-types';
 import { DbType } from '@/definitions/Database.type';
-import { Watermark } from './dataDiscovery';
+import { Watermark } from '@/definitions/Dataset.type';
 import { RootDispatch, RootState } from '../store';
 
 export enum DatabaseTypeItemFieldItemFormat {
