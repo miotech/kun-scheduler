@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class WorkflowApi {
@@ -329,4 +330,18 @@ public class WorkflowApi {
         return sendRequest(postRequest, new TypeReference<PaginationResult<TaskRun>>() {});
     }
 
+    public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit) {
+        String taskIdsQueryString = String.join(",",
+                taskIds.stream().map(Object::toString).collect(Collectors.toList())
+        );
+        HttpUrl url = buildUrl(API_TASK_RUNS + "/latest")
+                .addQueryParameter("taskIds", taskIdsQueryString)
+                .addQueryParameter("limit", String.valueOf(limit))
+                .build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<Map<Long, List<TaskRun>>>() {});
+    }
 }
