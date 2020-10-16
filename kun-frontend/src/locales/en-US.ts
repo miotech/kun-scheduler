@@ -268,6 +268,7 @@ export default {
   "scheduledTasks.backToTaskList": "Back to task list",
   "scheduledTasks.instanceId": "Instance ID",
   "scheduledTasks.filters.taskType": "Task Type",
+  "scheduledTasks.jumpToTaskDef": "Jump to task definition",
   "taskRun.property.id": "Run Instance ID",
   "taskRun.property.status": "Status",
   "taskRun.property.startAt": "Start Time",
