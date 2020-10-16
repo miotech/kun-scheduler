@@ -9,6 +9,7 @@ import com.miotech.kun.dataquality.model.bo.DataQualityRequest;
 import com.miotech.kun.dataquality.model.bo.DeleteCaseResponse;
 import com.miotech.kun.dataquality.model.entity.*;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -130,10 +128,12 @@ public class DataQualityRepository extends BaseRepository {
                         "template_id",
                         "execution_string",
                         "update_user",
-                        "update_time")
+                        "update_time",
+                        "types")
                 .asPrepared()
                 .where("id = ?")
                 .getSQL();
+        String types = resolveDqCaseTypes(dataQualityRequest.getTypes());
         if (TemplateType.CUSTOMIZE.name().equals(dataQualityRequest.getDimension())) {
             jdbcTemplate.update(kdcSql, dataQualityRequest.getName(),
                     dataQualityRequest.getDescription(),
@@ -141,6 +141,7 @@ public class DataQualityRepository extends BaseRepository {
                     dataQualityRequest.getDimensionConfig().get("sql"),
                     dataQualityRequest.getUpdateUser(),
                     millisToTimestamp(dataQualityRequest.getUpdateTime()),
+                    types,
                     id);
         } else {
             jdbcTemplate.update(kdcSql, dataQualityRequest.getName(),
@@ -149,6 +150,7 @@ public class DataQualityRepository extends BaseRepository {
                     null,
                     dataQualityRequest.getUpdateUser(),
                     millisToTimestamp(dataQualityRequest.getUpdateTime()),
+                    types,
                     id);
             if (TemplateType.FIELD.name().equals(dataQualityRequest.getDimension())) {
                 List<Long> fieldIds = ((List<?>) dataQualityRequest.getDimensionConfig().get("applyFieldIds")).stream()
@@ -324,15 +326,27 @@ public class DataQualityRepository extends BaseRepository {
         return field;
     }
 
+    private String resolveDqCaseTypes(List<String> types) {
+        if (CollectionUtils.isNotEmpty(types)) {
+            StringJoiner stringJoiner = new StringJoiner(",");
+            for (String type : types) {
+                stringJoiner.add(type);
+            }
+            return stringJoiner.toString();
+        }
+        return "";
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public Long addCase(DataQualityRequest dataQualityRequest) {
         String kdcSql = DefaultSQLBuilder.newBuilder()
                 .insert().into("kun_dq_case")
-                .valueSize(10)
+                .valueSize(11)
                 .getSQL();
 
         String dimension = dataQualityRequest.getDimension();
         Long caseId = IdGenerator.getInstance().nextId();
+        String typesStr = resolveDqCaseTypes(dataQualityRequest.getTypes());
         if (TemplateType.CUSTOMIZE.name().equals(dimension)) {
             String customSql = (String) dataQualityRequest.getDimensionConfig().get("sql");
             jdbcTemplate.update(kdcSql, caseId,
@@ -344,7 +358,8 @@ public class DataQualityRepository extends BaseRepository {
                     millisToTimestamp(dataQualityRequest.getCreateTime()),
                     dataQualityRequest.getUpdateUser(),
                     millisToTimestamp(dataQualityRequest.getUpdateTime()),
-                    dataQualityRequest.getTaskId());
+                    dataQualityRequest.getTaskId(),
+                    typesStr);
         } else {
             Long templateId = Long.valueOf((String) dataQualityRequest.getDimensionConfig().get("templateId"));
             jdbcTemplate.update(kdcSql, caseId,
@@ -356,7 +371,8 @@ public class DataQualityRepository extends BaseRepository {
                     millisToTimestamp(dataQualityRequest.getCreateTime()),
                     dataQualityRequest.getUpdateUser(),
                     millisToTimestamp(dataQualityRequest.getUpdateTime()),
-                    dataQualityRequest.getTaskId());
+                    dataQualityRequest.getTaskId(),
+                    typesStr);
             if (TemplateType.FIELD.name().equals(dimension)) {
                 String kdcadfSql = DefaultSQLBuilder.newBuilder()
                         .insert().into("kun_dq_case_associated_dataset_field")
@@ -413,6 +429,12 @@ public class DataQualityRepository extends BaseRepository {
         }, id);
     }
 
+    public List<String> resolveDqCaseTypes(String types) {
+        if (StringUtils.isNotEmpty(types)) {
+            return Arrays.asList(types.split(","));
+        }
+        return null;
+    }
     public List<DataQualityCaseBasic> getCaseBasics(List<Long> caseIds) {
         if (CollectionUtils.isEmpty(caseIds)) {
             return Lists.newArrayList();
@@ -420,7 +442,9 @@ public class DataQualityRepository extends BaseRepository {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("id",
                         "name",
-                        "update_user")
+                        "update_user",
+                        "types",
+                        "task_id")
                 .from("kun_dq_case")
                 .where("id in " + toColumnSql(caseIds.size()))
                 .orderBy("id")
@@ -433,6 +457,8 @@ public class DataQualityRepository extends BaseRepository {
                 caseBasic.setId(rs.getLong("id"));
                 caseBasic.setName(rs.getString("name"));
                 caseBasic.setUpdater(rs.getString("update_user"));
+                caseBasic.setTypes(resolveDqCaseTypes(rs.getString("types")));
+                caseBasic.setTaskId(rs.getLong("task_id"));
                 caseBasics.add(caseBasic);
             }
             return caseBasics;
