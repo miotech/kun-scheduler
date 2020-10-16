@@ -3,6 +3,7 @@ server:
 
 workflow:
   enabled: true
+#  baseUrl: https://kun-dev.miotech.com/kun/api/workflow
   baseUrl: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
 
 spring:
@@ -21,3 +22,13 @@ spring:
 
 security:
   base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
+
+dubbo:
+  application:
+    name: data-platform
+    id: data-platform
+  registry:
+    address: redis://localhost:6379
+  protocol:
+    name: dubbo
+    port: -1

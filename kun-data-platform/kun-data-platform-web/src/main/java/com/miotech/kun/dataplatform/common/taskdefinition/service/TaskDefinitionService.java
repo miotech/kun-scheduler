@@ -84,7 +84,8 @@ public class TaskDefinitionService extends BaseSecurityService {
         Preconditions.checkNotNull(taskTemplateName, "task template name should be null");
         Preconditions.checkNotNull(taskTemplateService.find(taskTemplateName), "task template name not valid");
 
-        Long currentUser = getCurrentUser().getId();
+//        Long currentUser = getCurrentUser().getId();
+        Long currentUser = 12345L;
         Preconditions.checkNotNull(currentUser, "Current user id should not be `null`");
         TaskPayload taskPayload = TaskPayload.newBuilder()
                 .withScheduleConfig(ScheduleConfig.newBuilder()
@@ -131,7 +132,8 @@ public class TaskDefinitionService extends BaseSecurityService {
                 .withTaskPayload(request.getTaskPayload())
                 .withName(request.getName())
                 .withOwner(request.getOwner())
-                .withLastModifier(getCurrentUser().getId())
+                .withLastModifier(12345L)
+//                .withLastModifier(getCurrentUser().getId())
                 .withUpdateTime(DateTimeUtils.now())
                 .build();
         taskDefinitionDao.update(updated);
@@ -244,7 +246,8 @@ public class TaskDefinitionService extends BaseSecurityService {
         Long operatorId = taskTemplate.getOperator().getId();
 
         // build task parameter
-        Long creator = getCurrentUser().getId();
+//        Long creator = getCurrentUser().getId();
+        Long creator = 12345L;
         Long taskTryId = DataPlatformIdGenerator.nextTaskTryId();
         // merge default config with request config
         TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskRunRequest.getParameters(), taskTemplate);

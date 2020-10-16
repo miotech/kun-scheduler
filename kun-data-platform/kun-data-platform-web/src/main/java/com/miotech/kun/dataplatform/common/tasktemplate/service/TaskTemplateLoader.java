@@ -63,12 +63,12 @@ public class TaskTemplateLoader {
     }
 
     private List<TaskTemplate> loadTaskTemplates() {
-        try {
-            List<Operator> operatorList = operatorUpload.autoUpload();
-        }catch (Exception e){
-            log.error("auto upload operator failed");
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
+//        try {
+//            List<Operator> operatorList = operatorUpload.autoUpload();
+//        }catch (Exception e){
+//            log.error("auto upload operator failed");
+//            throw ExceptionUtils.wrapIfChecked(e);
+//        }
         Resource[] resources = new Resource[]{};
         try {
             resources = resourceResolver.getResources("classpath:templates/*.json");

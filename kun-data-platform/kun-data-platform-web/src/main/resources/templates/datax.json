@@ -1,0 +1,39 @@
+{
+  "name": "dataX",
+  "templateType": "dataX",
+  "templateGroup": "development",
+  "operator":  {
+    "name": "dataX",
+    "description": "dataX operator",
+    "className": "com.miotech.kun.workflow.operator.dataXOperator"
+  },
+  "displayParameters": [
+    {
+      "name": "sourceDB",
+      "type": "dataSource",
+      "required": true,
+      "displayName": "Source DB"
+    },
+    {
+      "name": "sourceTable",
+      "type": "string",
+      "required": true,
+      "displayName": "Source table"
+    },
+    {
+      "name": "targetDB",
+      "type": "dataSource",
+      "required": true,
+      "displayName": "Target DB"
+    },
+    {
+      "name": "targetTable",
+      "type": "string",
+      "required": true,
+      "displayName": "Target table"
+    }
+  ],
+  "defaultValues": {
+  },
+  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.DataXConfigTaskTemplateRender"
+}

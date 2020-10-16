@@ -2,7 +2,9 @@ package com.miotech.kun.dataplatform;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 
+@EnableDubbo(scanBasePackages = "com.miotech.kun.metadata.web.rpc")
 @SpringBootApplication(scanBasePackages = {
 		"com.miotech.kun.common",
 		"com.miotech.kun.security",

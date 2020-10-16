@@ -32,6 +32,10 @@ dependencies {
     implementation 'io.springfox:springfox-boot-starter:3.0.0'
     implementation 'com.googlecode.json-simple:json-simple'
     implementation "com.h2database:h2"
+    implementation project(':kun-metadata:kun-metadata-service-facade')
+    implementation project(':kun-metadata:kun-metadata-core')
+    implementation 'org.apache.dubbo:dubbo-spring-boot-starter'
+    implementation 'redis.clients:jedis:2.9.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"
