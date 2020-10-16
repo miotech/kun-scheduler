@@ -1,6 +1,10 @@
 package com.miotech.kun.metadata.core.model;
 
-public class DatasetBaseInfo {
+import java.io.Serializable;
+
+public class DatasetBaseInfo implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final Long gid;
 
