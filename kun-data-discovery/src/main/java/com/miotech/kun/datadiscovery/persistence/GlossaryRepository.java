@@ -33,6 +33,27 @@ public class GlossaryRepository extends BaseRepository {
     @Lazy
     DatasetRepository datasetRepository;
 
+    public List<GlossaryBasic> getGlossariesByDataset(Long datasetGid) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("kmg.id as glossary_id",
+                        "kmg.name as glossary_name")
+                .from("kun_mt_glossary as kmg")
+                .join("inner", "kun_mt_glossary_to_dataset_ref", "kmgtdr").on("kmgtdr.glossary_id = kmg.id")
+                .where("kmgtdr.dataset_id = ?")
+                .getSQL();
+
+        return jdbcTemplate.query(sql, rs -> {
+            List<GlossaryBasic> glossaryBasics = new ArrayList<>();
+            while (rs.next()) {
+                GlossaryBasic glossaryBasic = new GlossaryBasic();
+                glossaryBasic.setId(rs.getLong("glossary_id"));
+                glossaryBasic.setName(rs.getString("glossary_name"));
+                glossaryBasics.add(glossaryBasic);
+            }
+            return glossaryBasics;
+        }, datasetGid);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public Long updateGraph(Long id, GlossaryGraphRequest glossaryGraphRequest) {
         String sql1 = "update kun_mt_glossary kmg set prev_id = temp.prev_id \n" +

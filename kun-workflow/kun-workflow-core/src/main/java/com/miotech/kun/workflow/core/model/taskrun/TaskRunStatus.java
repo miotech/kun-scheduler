@@ -47,4 +47,8 @@ public enum TaskRunStatus {
     public boolean isAborted() {
         return this == ABORTED;
     }
+
+    public boolean isSkipped() {
+        return this == SKIPPED;
+    }
 }
