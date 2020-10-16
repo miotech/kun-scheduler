@@ -6,10 +6,12 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
+import com.miotech.kun.metadata.core.model.dto.DataSourceConnectionDTO;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.stereotype.Component;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.metadata.core.model.DatasetBaseInfo;
+import com.miotech.kun.metadata.core.model.dto.DataSourceDTO;
 
 import java.util.HashMap;
 import java.util.List;
@@ -87,38 +89,53 @@ public class DataXConfigTaskTemplateRender extends TaskTemplateRenderer{
                 "}";
 
 
+        //reader config
         Long readerDataSourceId = Long.parseLong(taskConfig.get("sourceDB").toString());
-        String sourcetable = taskConfig.get("sourceTable").toString();
+        String sourceDBTable = taskConfig.get("sourceTable").toString();
+        //TODO: throw exception
+        String sourcetable = sourceDBTable.split("\\.")[1];
         List<DatasetBaseInfo>  sourceDataSets = metaFacade.fetchDatasetsByDatasourceAndNameLike(readerDataSourceId, sourcetable);
         String sourceTableGid = "";
         if(!sourceDataSets.isEmpty()){
             sourceTableGid = sourceDataSets.get(0).getGid().toString();
         }
 
+        DataSourceDTO readerDataSource = metaFacade.getDataSourceById(readerDataSourceId);
 
-        //TODO: call API
-        String readerDBType = "postgresql";
+        String readerDBType = readerDataSource.getType().toLowerCase();
         String readerDadaXName = readerDBType.toLowerCase() + "reader";
 
-        String readerUserName = "mock_reader_user";
-        String readerPwd = "mock_reader_pwd";
-        String readerDBName = "mock_reader_db";
-        String readerDBHost = "mock_reader_host";
-        String readerDBPort = "mock_reader_port";
+        DataSourceConnectionDTO readerConn = readerDataSource.getConnectionInfo();
+        String readerUserName = readerConn.getUsername();
+        String readerPwd = readerConn.getPassword();
+        String readerDBName = sourceDBTable.split("\\.")[0];
+        String readerDBHost = readerConn.getHost();
+        String readerDBPort = readerConn.getPort();
         String readerJdbc = getJdbcURL(readerDBType, readerDBHost, readerDBPort, readerDBName);
 
-        String writerDataSourceId = taskConfig.get("targetDB").toString();
-        String targettable = taskConfig.get("targetTable").toString();
 
-        String writerDBType = "postgresql";
+        //writer config
+        Long writerDataSourceId = Long.parseLong(taskConfig.get("targetDB").toString());
+        String targetDbTable = taskConfig.get("targetTable").toString();
+        //TODO: throw error
+        String targettable = targetDbTable.split("\\.")[1];
+        List<DatasetBaseInfo>  targetDataSets = metaFacade.fetchDatasetsByDatasourceAndNameLike(writerDataSourceId, targettable);
+        String targetTableGid = "";
+        if(!targetDataSets.isEmpty()){
+            targetTableGid = targetDataSets.get(0).getGid().toString();
+        }
+
+        DataSourceDTO writerDataSource = metaFacade.getDataSourceById(writerDataSourceId);
+
+        String writerDBType = writerDataSource.getType().toLowerCase();
         String writerDataXName = writerDBType.toLowerCase() + "writer";
 
-        String targetTableGid = "mock_writer_gid";
-        String writerUserName = "mock_writer_user";
-        String writerPwd = "mock_writer_pwd";
-        String writerDBName = "mock_writer_db";
-        String writerDBHost = "mock_writer_host";
-        String writerDBPort = "mock_writer_port";
+        DataSourceConnectionDTO writerConn = writerDataSource.getConnectionInfo();
+        String writerUserName = writerConn.getUsername();
+        String writerPwd = writerConn.getPassword();
+        String writerDBName = targetDbTable.split("\\.")[0];
+        String writerDBHost = writerConn.getHost();
+        String writerDBPort = writerConn.getPort();
         String writerJdbc = getJdbcURL(writerDBType, writerDBHost, writerDBPort, writerDBName);
 
 
@@ -178,42 +195,5 @@ public class DataXConfigTaskTemplateRender extends TaskTemplateRenderer{
                 break;
         }
         return jdbc;
-    }
-
-    private String getDBType(String dbTypeID){
-        //TODO: call API
-        return "postgresql";
-    }
-
-    private String getDadaSetGid(String tableName){
-        //TODO: call API
-        return "mock_gid";
-    }
-
-    private void getDBInfo(String dataSourceId, String host, String port, String user, String pwd, String type){
-        //TODO: call API
-        user = "mock_reader_user";
-        pwd = "mock_reader_pwd";
-        host = "mock_reader_host";
-        port = "mock_reader_port";
-        type = "postgresql";
-    }
-
-    private void buildDataXConfig(String dataSourceId, String dbTable) throws Exception {
-        String user = "";
-        String pwd = "";
-        String host = "";
-        String port = "";
-        String typeId = "";
-        getDBInfo(dataSourceId, host, port, user, pwd, typeId);
-        String type = getDBType(typeId);
-
-        String[] array = dbTable.split(".");
-        if(array.length != 2)
-            throw new Exception("table name invalid");
-        String dbname = array[0];
-        String tableName = array[1];
-
-
     }
 }
