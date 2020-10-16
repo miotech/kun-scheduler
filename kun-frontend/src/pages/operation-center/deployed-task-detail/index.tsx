@@ -104,6 +104,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
         filter={filters}
         dispatch={dispatch}
         onClickRefresh={handleClickRefreshBtn}
+        taskDefId={match.params.id}
       />
       <ReflexContainer
         // id="deployed-task-detail-main-content"

@@ -268,6 +268,7 @@ export default {
   "scheduledTasks.backToTaskList": "回到任务列表",
   "scheduledTasks.instanceId": "实例 ID",
   "scheduledTasks.filters.taskType": "任务类型",
+  "scheduledTasks.jumpToTaskDef": "跳转至任务定义",
   "taskRun.property.id": "运行实例 ID",
   "taskRun.property.status": "状态",
   "taskRun.property.startAt": "开始时间",
