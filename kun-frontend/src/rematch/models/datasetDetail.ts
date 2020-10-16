@@ -10,6 +10,7 @@ import {
 } from '@/services/datasetDetail';
 import { Pagination } from '@/definitions/common-types';
 import { deleteQualityService } from '@/services/dataQuality';
+import { DataQualityType } from './dataQuality';
 import { Watermark, GlossaryItem } from './dataDiscovery';
 import { RootDispatch, RootState } from '../store';
 
@@ -18,9 +19,18 @@ export interface Flow {
   flow_name: string;
 }
 
+export enum DataQualityHistory {
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+  SKIPPED = 'SKIPPED',
+}
+
 export interface DataQualityItem {
   id: string;
   name: string;
+  updater: string;
+  types: DataQualityType[];
+  historyList: DataQualityHistory[];
 }
 
 export interface Column {
@@ -31,6 +41,11 @@ export interface Column {
   description: string;
   not_null_count: number;
   not_null_percentage: number;
+}
+
+export interface Glossary {
+  id: string;
+  name: string;
 }
 
 export interface DatasetDetail {
@@ -44,7 +59,6 @@ export interface DatasetDetail {
 
   owners: string[] | null;
   tags: string[] | null;
-  glossaries: GlossaryItem[] | null;
   datasource: string | null;
   database: string | null;
 
@@ -52,6 +66,7 @@ export interface DatasetDetail {
   flows: Flow[] | null;
 
   dataQualities: DataQualityItem[] | null;
+  glossaries: GlossaryItem[] | null;
 }
 
 export interface DatasetDetailState extends DatasetDetail {
@@ -72,7 +87,6 @@ export const datasetDetail = {
 
     owners: null,
     tags: null,
-    glossaries: null,
     datasource: null,
     database: null,
 
@@ -80,6 +94,7 @@ export const datasetDetail = {
     flows: null,
 
     dataQualities: null,
+    glossaries: null,
 
     columns: [],
     columnsPagination: {
