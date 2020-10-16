@@ -1,0 +1,34 @@
+@component-prefix: columnDescInput;
+
+@{component-prefix}-descriptionInput {
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 300px;
+  @{component-prefix}-baseItemTitle-editIcon {
+    line-height: 21px;
+    font-size: 14px;
+    color: @secondary2;
+    margin-right: 4px;
+  }
+
+  @{component-prefix}-baseContent {
+    line-height: 21px;
+    font-size: 14px;
+    color: @secondary;
+    white-space: normal;
+    word-wrap: break-word;
+    &:not(:last-child) {
+      margin-bottom: 8px;
+    }
+
+    @{component-prefix}-buttonRow {
+      display: flex;
+      justify-content: flex-end;
+
+      @{component-prefix}-cancelButton {
+        color: @third;
+        margin-right: 12px;
+      }
+    }
+  }
+}
