@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.facade;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.core.model.DatasetBaseInfo;
+import com.miotech.kun.metadata.core.model.dto.DataSourceDTO;
 
 import java.util.List;
 
@@ -25,5 +26,12 @@ public interface MetadataServiceFacade {
      * @return Basic information of Dataset
      */
     List<DatasetBaseInfo> fetchDatasetsByDatasourceAndNameLike(Long datasourceId, String name);
+
+    /**
+     * Query DataSource information based on id
+     * @param datasourceId Identifier to locate the unique Datasource
+     * @return Basic information of Datasource
+     */
+    DataSourceDTO getDataSourceById(Long datasourceId);
 
 }
