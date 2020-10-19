@@ -142,6 +142,7 @@ export default memo(function AddDataQualityModal({
           validateRules: [],
           relatedTables: [relatedTable],
         });
+        setOldData(null);
       } else if (dataQualityId) {
         setOldDataLoading(true);
         const oldData1 = await fetchDataQuality(dataQualityId);
