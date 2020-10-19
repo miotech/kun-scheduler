@@ -472,6 +472,7 @@ public class DataQualityRepository extends BaseRepository {
                         "kdc.description as case_description",
                         "kdc.template_id as case_temp_id",
                         "kdc.execution_string as custom_string",
+                        "kdc.types as case_types",
                         "kdcdt.execution_string as temp_string",
                         "kdct.type as temp_type")
                 .from("kun_dq_case kdc")
@@ -504,6 +505,7 @@ public class DataQualityRepository extends BaseRepository {
                 dqCase.setDimensionConfig(dimensionConfig);
                 dqCase.setValidateRules(getRulesByCaseId(id));
                 dqCase.setRelatedTables(getDatasetBasicsByCaseId(id));
+                dqCase.setTypes(resolveDqCaseTypes(rs.getString("case_types")));
             }
             return dqCase;
         }, id);
