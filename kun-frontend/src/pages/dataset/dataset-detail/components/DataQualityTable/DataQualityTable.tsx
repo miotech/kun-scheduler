@@ -87,7 +87,7 @@ export default memo(function DataQualityTable({
         title: t('dataDetail.dataQualityTable.historyList'),
         render: (historyList: DataQualityHistory[]) => (
           <div className={styles.historyList}>
-            {historyList.map(history => {
+            {historyList?.map(history => {
               if (history === DataQualityHistory.SUCCESS) {
                 return (
                   <CheckCircleFilled
