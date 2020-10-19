@@ -301,6 +301,7 @@ export default function DatasetDetail({ match }: Props) {
         key: 'description',
         render: (desc: string, record: Column) => (
           <ColumnDescInput
+            className={styles.columnDescInput}
             value={desc}
             onChange={v => {
               handleChangeColumnDescription(v, record.id);
