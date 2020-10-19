@@ -118,9 +118,8 @@ public class DataSourceController {
             return "";
         }
     }
-    @GetMapping("/metadata/dataset/{id}")
-    public RequestResult<Dataset> getDatasetDetail(@PathVariable Long id) {
-        Dataset dataset = datasetService.find(id);
+
+    private void enrichDatasetResult(Dataset dataset) {
         Map<Long, DataQualityCaseBasic> taskIdMap = dataset.getDataQualities().stream()
                 .collect(Collectors.toMap(DataQualityCaseBasic::getTaskId, dataQualityCaseBasic -> dataQualityCaseBasic));
         if (CollectionUtils.isNotEmpty(taskIdMap.keySet())) {
@@ -133,13 +132,20 @@ public class DataSourceController {
                 caseBasic.setHistoryList(latestStatus);
             });
         }
+    }
+    @GetMapping("/metadata/dataset/{id}")
+    public RequestResult<Dataset> getDatasetDetail(@PathVariable Long id) {
+        Dataset dataset = datasetService.find(id);
+        enrichDatasetResult(dataset);
         return RequestResult.success(dataset);
     }
 
     @PostMapping("/metadata/dataset/{id}/update")
     public RequestResult<Dataset> updateDataset(@PathVariable Long id,
                                                 @RequestBody DatasetRequest datasetRequest) {
-        return RequestResult.success(datasetService.update(id, datasetRequest));
+        Dataset dataset = datasetService.update(id, datasetRequest);
+        enrichDatasetResult(dataset);
+        return RequestResult.success(dataset);
     }
 
     @PostMapping("/metadata/dataset/{id}/pull")
