@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 import { Link } from 'umi';
 import useI18n from '@/hooks/useI18n';
 import useBackUrlFunc from '@/hooks/useBackUrlFunc';
@@ -9,7 +9,7 @@ interface Props {
   defaultUrl: string;
 }
 
-export default memo(function BackButton({ defaultUrl }: Props) {
+export default function BackButton({ defaultUrl }: Props) {
   const t = useI18n();
 
   const { getBackUrl } = useBackUrlFunc();
@@ -22,4 +22,4 @@ export default memo(function BackButton({ defaultUrl }: Props) {
       </Link>
     </div>
   );
-});
+}
