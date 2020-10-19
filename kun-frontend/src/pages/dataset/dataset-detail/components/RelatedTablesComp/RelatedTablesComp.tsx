@@ -39,7 +39,7 @@ export default memo(function RelatedTablesComp({
           .filter(
             dataset => !selectedTables.map(i => i.id).includes(dataset.id),
           )
-          .map(i => ({ ...i, value: `${i.name}-${i.datasource}` }));
+          .map(i => ({ ...i, value: `${i.name}-${i.datasource}`, key: i.id }));
         setTableOptions(showDatasetList);
       }
     };
@@ -55,7 +55,7 @@ export default memo(function RelatedTablesComp({
 
   const handleSelectTable = useCallback(
     (_value: string, option: RelatedTableItem) => {
-      const newSelectedTables = [...selectedTables, option];
+      const newSelectedTables = [...selectedTables, option].filter(i => i.id);
       onChange(newSelectedTables);
       setKeyword('');
     },
