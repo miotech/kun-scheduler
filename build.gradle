@@ -91,6 +91,9 @@ subprojects {
                 implementation 'org.apache.dubbo:dubbo-spring-boot-starter:2.7.8'
                 implementation 'com.alibaba:druid:1.1.23'
                 implementation 'org.springdoc:springdoc-openapi-ui:1.4.8'
+                implementation "io.netty:netty-all:4.1.51.Final"
+                implementation 'org.apache.commons:commons-crypto:1.1.0'
+                implementation 'io.dropwizard.metrics:metrics-core:4.1.12.1'
 
                 testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
