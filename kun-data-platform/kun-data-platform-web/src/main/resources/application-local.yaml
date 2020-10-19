@@ -3,7 +3,6 @@ server:
 
 workflow:
   enabled: true
-#  baseUrl: https://kun-dev.miotech.com/kun/api/workflow
   baseUrl: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
 
 spring:

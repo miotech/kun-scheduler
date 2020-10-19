@@ -87,7 +87,7 @@ public class BashOperator extends KunOperator {
     public ConfigDef config() {
         return new ConfigDef()
                 .define(COMMAND, ConfigDef.Type.STRING, true, "bash command", DISPLAY_COMMAND)
-                .define("forceWaitSeconds", ConfigDef.Type.LONG, "100", true, "force terminate wait seconds", "forceWaitSeconds")
+                .define("forceWaitSeconds", ConfigDef.Type.LONG, 10L, true, "force terminate wait seconds", "forceWaitSeconds")
                 .define(VARIABLES, ConfigDef.Type.STRING, "{}",true, "bash variables", "variables");
     }
 
