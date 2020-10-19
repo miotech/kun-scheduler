@@ -1,5 +1,6 @@
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { Input, Button } from 'antd';
+import c from 'clsx';
 import { EditOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 
@@ -8,11 +9,16 @@ import './ColumnDescInput.less';
 interface Props {
   value: string;
   onChange: (v: string) => void;
+  className?: string;
 }
 
 const { TextArea } = Input;
 
-export default memo(function ColumnDescInput({ value, onChange }: Props) {
+export default memo(function ColumnDescInput({
+  value,
+  onChange,
+  className = '',
+}: Props) {
   const t = useI18n();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -34,7 +40,7 @@ export default memo(function ColumnDescInput({ value, onChange }: Props) {
   }, [inputtingValue, onChange]);
 
   return (
-    <div className="columnDescInput-descriptionInput">
+    <div className={c('columnDescInput-descriptionInput', className)}>
       {!isEditing && (
         <EditOutlined
           className="columnDescInput-baseItemTitle-editIcon"
