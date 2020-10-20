@@ -6,9 +6,31 @@ import {
 } from '@/rematch/models/dataQuality';
 import { delet, get, post } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
+import { DataQualityItem } from '@/rematch/models/datasetDetail';
+import { Pagination } from '@/definitions/common-types';
 
 export interface FetchDimensionConfigRespBody {
   dimensionConfigs: DimensionConfigItem[];
+}
+
+export interface FetchDataAllQualitiesRespBody extends Pagination {
+  dqCases: DataQualityItem[];
+}
+
+export async function fetchDataAllQualitiesService(
+  datasetId: string,
+  pagination: Pagination,
+) {
+  const { pageSize, pageNumber } = pagination;
+  const params = {
+    gid: datasetId,
+    pageSize,
+    pageNumber,
+  };
+  return get<FetchDataAllQualitiesRespBody>('/data-qualities', {
+    prefix: DEFAULT_API_PREFIX,
+    query: params,
+  });
 }
 
 export async function fetchDataQualityService(id: string) {
