@@ -40,6 +40,7 @@ public class GlossaryRepository extends BaseRepository {
                 .from("kun_mt_glossary as kmg")
                 .join("inner", "kun_mt_glossary_to_dataset_ref", "kmgtdr").on("kmgtdr.glossary_id = kmg.id")
                 .where("kmgtdr.dataset_id = ?")
+                .orderBy("kmg.create_time desc")
                 .getSQL();
 
         return jdbcTemplate.query(sql, rs -> {

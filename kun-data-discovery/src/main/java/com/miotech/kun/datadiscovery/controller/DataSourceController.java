@@ -107,36 +107,9 @@ public class DataSourceController {
         return RequestResult.success(datasetService.search(searchRequests));
     }
 
-    private String resolveTaskStatus(TaskRunStatus taskRunStatus) {
-        if (taskRunStatus.isSuccess()) {
-            return TaskRunStatus.SUCCESS.name();
-        } else if (taskRunStatus.isFailure()) {
-            return TaskRunStatus.FAILED.name();
-        } else if (taskRunStatus.isSkipped()) {
-            return TaskRunStatus.SKIPPED.name();
-        } else {
-            return "";
-        }
-    }
-
-    private void enrichDatasetResult(Dataset dataset) {
-        Map<Long, DataQualityCaseBasic> taskIdMap = dataset.getDataQualities().stream()
-                .collect(Collectors.toMap(DataQualityCaseBasic::getTaskId, dataQualityCaseBasic -> dataQualityCaseBasic));
-        if (CollectionUtils.isNotEmpty(taskIdMap.keySet())) {
-            Map<Long, List<TaskRun>> lastestTaskRuns = workflowClient.getLatestTaskRuns(new ArrayList<>(taskIdMap.keySet()), 6);
-            taskIdMap.forEach((taskId, caseBasic) -> {
-                List<String> latestStatus = lastestTaskRuns.get(taskId).stream()
-                        .map(taskRun -> resolveTaskStatus(taskRun.getStatus()))
-                        .filter(StringUtils::isNotEmpty)
-                        .collect(Collectors.toList());
-                caseBasic.setHistoryList(latestStatus);
-            });
-        }
-    }
     @GetMapping("/metadata/dataset/{id}")
     public RequestResult<Dataset> getDatasetDetail(@PathVariable Long id) {
         Dataset dataset = datasetService.find(id);
-        enrichDatasetResult(dataset);
         return RequestResult.success(dataset);
     }
 
@@ -144,7 +117,6 @@ public class DataSourceController {
     public RequestResult<Dataset> updateDataset(@PathVariable Long id,
                                                 @RequestBody DatasetRequest datasetRequest) {
         Dataset dataset = datasetService.update(id, datasetRequest);
-        enrichDatasetResult(dataset);
         return RequestResult.success(dataset);
     }
 

@@ -35,6 +35,11 @@ public class AuthenticateInterceptor extends HandlerInterceptorAdapter {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         try {
+            if (StringUtils.isNotEmpty(request.getRequestURI())
+                    && (request.getRequestURI().startsWith("/v3/api-docs")
+                    || request.getRequestURI().startsWith("/swagger-ui"))) {
+                return true;
+            }
             return doAuthenticate(request);
         } catch (Exception e) {
             log.error("Failed to authenticate.", e);
@@ -63,7 +68,8 @@ public class AuthenticateInterceptor extends HandlerInterceptorAdapter {
         ResponseEntity<RequestResult<UserInfo>> authResult = restTemplate.exchange(authUrl,
                 HttpMethod.GET,
                 entity,
-                new ParameterizedTypeReference<RequestResult<UserInfo>>() {});
+                new ParameterizedTypeReference<RequestResult<UserInfo>>() {
+                });
         if (!authResult.getStatusCode().is2xxSuccessful()) {
             return false;
         }

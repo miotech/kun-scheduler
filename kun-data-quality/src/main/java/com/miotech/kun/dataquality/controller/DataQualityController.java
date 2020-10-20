@@ -6,27 +6,27 @@ import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.dataquality.model.bo.*;
-import com.miotech.kun.dataquality.model.entity.DataQualityCase;
-import com.miotech.kun.dataquality.model.entity.DataQualityCaseResult;
-import com.miotech.kun.dataquality.model.entity.DimensionConfig;
-import com.miotech.kun.dataquality.model.entity.ValidateSqlResult;
+import com.miotech.kun.dataquality.model.entity.*;
 import com.miotech.kun.dataquality.service.DataQualityService;
 import com.miotech.kun.dataquality.service.WorkflowService;
 import com.miotech.kun.dataquality.utils.Constants;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunSearchRequest;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author: Jie Chen
@@ -124,6 +124,40 @@ public class DataQualityController {
     @GetMapping("/data-quality/{id}")
     public RequestResult<DataQualityCase> getCase(@PathVariable("id") Long id) {
         return RequestResult.success(dataQualityService.getCase(id));
+    }
+
+    private void enrichDqCaseBasics(List<DataQualityCaseBasic> caseBasics) {
+        Map<Long, DataQualityCaseBasic> taskIdMap = caseBasics.stream()
+                .collect(Collectors.toMap(DataQualityCaseBasic::getTaskId, dataQualityCaseBasic -> dataQualityCaseBasic));
+        if (CollectionUtils.isNotEmpty(taskIdMap.keySet())) {
+            Map<Long, List<TaskRun>> lastestTaskRuns = workflowClient.getLatestTaskRuns(new ArrayList<>(taskIdMap.keySet()), 6);
+            taskIdMap.forEach((taskId, caseBasic) -> {
+                List<String> latestStatus = lastestTaskRuns.get(taskId).stream()
+                        .map(taskRun -> resolveTaskStatus(taskRun.getStatus()))
+                        .filter(StringUtils::isNotEmpty)
+                        .collect(Collectors.toList());
+                caseBasic.setHistoryList(latestStatus);
+            });
+        }
+    }
+
+    private String resolveTaskStatus(TaskRunStatus taskRunStatus) {
+        if (taskRunStatus.isSuccess()) {
+            return TaskRunStatus.SUCCESS.name();
+        } else if (taskRunStatus.isFailure()) {
+            return TaskRunStatus.FAILED.name();
+        } else if (taskRunStatus.isSkipped()) {
+            return TaskRunStatus.SKIPPED.name();
+        } else {
+            return "";
+        }
+    }
+
+    @GetMapping("/data-qualities")
+    public RequestResult<DataQualityCaseBasics> getCasesByGid(DataQualitiesRequest request) {
+        DataQualityCaseBasics caseBasics = dataQualityService.getCasesByGid(request);
+        enrichDqCaseBasics(caseBasics.getDqCases());
+        return RequestResult.success(caseBasics);
     }
 
     @PostMapping("/sql/validate")
