@@ -55,6 +55,9 @@ export interface FailedTestCase {
   // default sort column
   continuousFailingCount: number;
   caseOwner: string;
+  datasetGid: string;
+  datasetName: string;
+  caseName: string;
 }
 
 export interface FailedTestCasesInfo extends PaginationRespBodyBase {

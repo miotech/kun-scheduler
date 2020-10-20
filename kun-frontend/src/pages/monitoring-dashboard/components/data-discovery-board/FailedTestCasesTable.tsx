@@ -5,6 +5,8 @@ import { Card, Table, Tooltip } from 'antd';
 import dayjs from 'dayjs';
 import useI18n from '@/hooks/useI18n';
 import { TableOnChangeCallback } from '@/definitions/common-types';
+import { Link } from 'umi';
+import SafeUrlAssembler from 'safe-url-assembler';
 
 interface OwnProps {
   data: FailedTestCase[];
@@ -36,6 +38,27 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
       width: 60,
       render: (txt: any, record: FailedTestCase, index: number) =>
         <span>{((pageNum - 1) * pageSize) + index + 1}</span>
+    },
+    {
+      dataIndex: 'datasetName',
+      key: 'datasetName',
+      title: t('monitoringDashboard.dataDiscovery.failedTestCasesTable.datasetName'),
+      render: (txt: string, record: FailedTestCase) => {
+        return (
+          <Link
+            to={SafeUrlAssembler().template('/data-discovery/dataset/:datasetId').param({
+              datasetId: record.datasetGid,
+            }).toString()}
+          >
+            {txt}
+          </Link>
+        )
+      },
+    },
+    {
+      dataIndex: 'caseName',
+      key: 'caseName',
+      title: t('monitoringDashboard.dataDiscovery.failedTestCasesTable.caseName'),
     },
     {
       dataIndex: 'errorReason',
