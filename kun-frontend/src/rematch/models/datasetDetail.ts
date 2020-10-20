@@ -51,6 +51,12 @@ export interface Glossary {
   name: string;
 }
 
+export interface LineageTask {
+  name: string;
+  time: number;
+  historyList: DataQualityHistory[];
+}
+
 export interface DatasetDetail {
   id: string | null;
   name: string | null;
@@ -70,6 +76,12 @@ export interface DatasetDetail {
 
   dataQualities: DataQualityItem[] | null;
   glossaries: GlossaryItem[] | null;
+
+  upstreamLineageTaskList: LineageTask[] | null;
+  downstreamLineageTaskList: LineageTask[] | null;
+
+  fetchUpstreamLineageTaskListLoading: boolean;
+  fetchDownstreamLineageTaskListLoading: boolean;
 }
 
 export interface DatasetDetailState extends DatasetDetail {
@@ -115,6 +127,12 @@ export const datasetDetail = {
       totalCount: 0,
     },
     fetchDataQualityLoading: false,
+
+    upstreamLineageTaskList: [],
+    downstreamLineageTaskList: [],
+
+    fetchUpstreamLineageTaskListLoading: false,
+    fetchDownstreamLineageTaskListLoading: false,
   } as DatasetDetailState,
 
   reducers: {
