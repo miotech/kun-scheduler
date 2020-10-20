@@ -362,5 +362,4 @@ public class OperatorServiceTest extends DatabaseTestBase {
             assertThat(e, instanceOf(exceptionClazz));
         }
     }
-
 }
