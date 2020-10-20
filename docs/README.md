@@ -2,10 +2,17 @@
 
 This website is built using [Docusaurus 2](https://v2.docusaurus.io/), a modern static website generator.
 
+### Dependency
+```
+$ brew install yarn  # Or visit https://classic.yarnpkg.com/en/docs/install/
+$ brew install node  # Or visit https://nodejs.org/en/download/
+```
+
 ### Installation
 
 ```
-$ yarn
+$ cd docs/
+$ yarn install
 ```
 
 ### Local Development
@@ -48,12 +55,13 @@ Reference steps:
 
 ```bash
 # Install dependencies
+$ cd docs/
 $ yarn install
 
 # Boot up local development environment
 $ yarn start
 
-# Then you will see the project running at http://localhost:3000/.
+# Then you will see the project running at http://localhost:3000/KUN/.
 # Doing modifications on swagger/swagger.json will trigger hot-reload by webpack
 # so you will see the changes immediately.
 ```

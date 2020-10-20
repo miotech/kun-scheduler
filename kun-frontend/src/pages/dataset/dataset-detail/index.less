@@ -35,8 +35,108 @@
       }
     }
 
-    .detailInfoArea {
+    .baseInfoRow {
+      padding: 0 12px;
       display: flex;
+    }
+
+    .infoBlock {
+      &:not(:last-child) {
+        margin-right: 40px;
+      }
+    }
+
+    .baseItemTitle {
+      line-height: 21px;
+      font-size: 14px;
+      font-weight: bold;
+      color: @primary;
+      margin-bottom: 8px;
+      .addButton {
+        font-size: 14px;
+        color: @secondary2;
+        cursor: pointer;
+        margin-left: 10px;
+        text-decoration: underline;
+      }
+    }
+
+    .importantContent {
+      .font(20px, 21px, @secondary);
+    }
+
+    .baseContent {
+      line-height: 21px;
+      font-size: 14px;
+      color: @secondary;
+
+      .dataQualityItem {
+        font-size: 14px;
+        color: @darkBlue;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+    }
+
+    .divider {
+      border-top: 1px solid @borderColor;
+      margin-top: 16px;
+      margin-bottom: 16px;
+    }
+
+    .inputRow {
+      padding: 0 12px;
+    }
+
+    .glossaryRow {
+      margin-bottom: 16px;
+    }
+
+    .glossaryContent {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .glossaryItem {
+      flex: 0 0 50%;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+    }
+
+    .glossaryName {
+      text-decoration: underline;
+      .font(14px, 21px, @blue);
+    }
+
+    .shortInputRow {
+      display: flex;
+      margin-bottom: 16px;
+    }
+
+    .columnsArea {
+      padding: 0 12px;
+    }
+
+    .columnsTitleRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .columnsTitle {
+      .font(14px, 21px, @primary);
+    }
+
+    .dataQualityArea {
+      padding: 0 12px;
+    }
+
+    .detailInfoArea {
+      padding: 16px 20px;
 
       .baseInfoArea {
         flex: 0 0 640px;
@@ -84,17 +184,12 @@
 
       .columnsArea {
         flex: 1;
-        .columnsAreaInner {
-          height: 100%;
-          overflow: auto;
-
-          .columnSearch {
-            padding: 20px 24px;
-            border-bottom: 1px solid @borderColor;
-          }
-        }
       }
     }
+  }
+
+  .columnSearch {
+    width: 320px;
   }
 
   .pagination {
@@ -102,4 +197,8 @@
     justify-content: flex-end;
     padding: 12px 24px;
   }
+}
+
+.columnDescInput {
+  max-width: 300px;
 }

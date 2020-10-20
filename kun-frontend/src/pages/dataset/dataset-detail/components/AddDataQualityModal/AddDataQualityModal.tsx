@@ -32,6 +32,8 @@ import {
   TableDimensionConfig,
   FieldDimensionConfig,
   CustomizeDimensionConfig,
+  DataQualityType,
+  dataQualityTypes,
 } from '@/rematch/models/dataQuality';
 
 import useI18n from '@/hooks/useI18n';
@@ -73,6 +75,7 @@ export default memo(function AddDataQualityModal({
 
   const [data, setData] = useState<DataQuality>(() => ({
     name: '',
+    types: [],
     // level: DataQualityLevel.LOW,
     description: '',
     dimension: null,
@@ -132,12 +135,14 @@ export default memo(function AddDataQualityModal({
         setData({
           name: '',
           // level: DataQualityLevel.LOW,
+          types: [],
           description: '',
           dimension: null,
           dimensionConfig: null,
           validateRules: [],
           relatedTables: [relatedTable],
         });
+        setOldData(null);
       } else if (dataQualityId) {
         setOldDataLoading(true);
         const oldData1 = await fetchDataQuality(dataQualityId);
@@ -147,6 +152,7 @@ export default memo(function AddDataQualityModal({
           setData({
             name: oldData1.name,
             // level: DataQualityLevel.LOW,
+            types: oldData1.types,
             description: oldData1.description,
             dimension: oldData1.dimension,
             dimensionConfig: oldData1.dimensionConfig,
@@ -286,6 +292,7 @@ export default memo(function AddDataQualityModal({
     () => ({
       name: (e: React.ChangeEvent<HTMLInputElement>) =>
         onChangeData(e.target.value, 'name'),
+      types: (v: DataQualityType[]) => onChangeData(v, 'types'),
       description: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
         onChangeData(e.target.value, 'description'),
       dimension: (e: RadioChangeEvent) => {
@@ -514,6 +521,7 @@ export default memo(function AddDataQualityModal({
 
     const {
       name,
+      types,
       // level
       description,
       dimension,
@@ -542,6 +550,7 @@ export default memo(function AddDataQualityModal({
 
     const params: DataQualityReq = {
       name,
+      types,
       description,
       dimension,
       dimensionConfig: currentDimensionConfig!,
@@ -551,23 +560,28 @@ export default memo(function AddDataQualityModal({
 
     setConfirmLoading(true);
     const loadingFunc = message.loading(t('common.loading'), 0);
-    if (!dataQualityId) {
-      const resp = await addDataQualityService(params);
-      if (resp) {
-        onClose();
-        onConfirm();
-        message.success(t('common.operateSuccess'));
+    try {
+      if (!dataQualityId) {
+        const resp = await addDataQualityService(params);
+        if (resp) {
+          onClose();
+          onConfirm();
+          message.success(t('common.operateSuccess'));
+        }
+      } else {
+        const resp = await editQualityService(dataQualityId, params);
+        if (resp) {
+          onClose();
+          onConfirm();
+          message.success(t('common.operateSuccess'));
+        }
       }
-    } else {
-      const resp = await editQualityService(dataQualityId, params);
-      if (resp) {
-        onClose();
-        onConfirm();
-        message.success(t('common.operateSuccess'));
-      }
+    } catch (e) {
+      // do nothing
+    } finally {
+      loadingFunc();
+      setConfirmLoading(false);
     }
-    loadingFunc();
-    setConfirmLoading(false);
   }, [
     customizeInputtingObj.sql,
     data,
@@ -645,6 +659,26 @@ export default memo(function AddDataQualityModal({
             </div>
             <div className={styles.fieldContent}>
               <Input value={data.name} onChange={onChangeFunctionsMap.name} />
+            </div>
+          </div>
+
+          <div className={styles.fieldItem}>
+            <div className={styles.fieldTitle}>
+              {t('dataDetail.dataQuality.type')}
+            </div>
+            <div className={styles.fieldContent}>
+              <Select
+                mode="multiple"
+                style={{ width: '100%' }}
+                value={data?.types?.length > 0 ? data.types : undefined}
+                onChange={onChangeFunctionsMap.types}
+              >
+                {dataQualityTypes.map(type => (
+                  <Option key={type} value={type}>
+                    {t(`dataDetail.dataQuality.type.${type}`)}
+                  </Option>
+                ))}
+              </Select>
             </div>
           </div>
 

@@ -88,6 +88,7 @@ subprojects {
                 implementation "org.neo4j:neo4j-ogm-core:3.2.16"
                 implementation "org.apache.dubbo:dubbo:2.7.8"
                 implementation 'org.apache.dubbo:dubbo-registry-redis:2.7.8'
+                implementation 'org.apache.dubbo:dubbo-spring-boot-starter:2.7.8'
                 implementation 'com.alibaba:druid:1.1.23'
                 implementation 'org.apache.dubbo:dubbo-spring-boot-starter:2.7.8'
 
@@ -99,12 +100,12 @@ subprojects {
                 testImplementation "org.mockito:mockito-core:3.3.3"
                 testImplementation "org.awaitility:awaitility:4.0.3"
                 testImplementation "net.bytebuddy:byte-buddy:1.10.10"
-                testImplementation "org.testcontainers:testcontainers:1.14.3"
-                testImplementation "org.testcontainers:mongodb:1.14.3"
-                testImplementation "org.testcontainers:postgresql:1.14.3"
-                testImplementation "org.testcontainers:elasticsearch:1.14.3"
-                testImplementation "org.testcontainers:neo4j:1.14.3"
-                testImplementation "com.github.goodforgod:arangodb-testcontainer:1.1.0"
+                testImplementation "org.testcontainers:testcontainers:1.15.0-rc2"
+                testImplementation "org.testcontainers:mongodb:1.15.0-rc2"
+                testImplementation "org.testcontainers:postgresql:1.15.0-rc2"
+                testImplementation "org.testcontainers:elasticsearch:1.15.0-rc2"
+                testImplementation "org.testcontainers:neo4j:1.15.0-rc2"
+                testImplementation "com.github.goodforgod:arangodb-testcontainer:1.2.0"
                 testImplementation "org.mock-server:mockserver-netty:3.10.8"
                 testImplementation "org.mock-server:mockserver-client-java:3.10.8"
                 testImplementation 'org.apache.dubbo:dubbo-registry-default:2.7.8'

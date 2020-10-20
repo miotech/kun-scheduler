@@ -41,7 +41,7 @@ dependencies {
 }
 
 shadowJar {
-    archiveBaseName = 'kun-metadata-databuilder'
+    archiveBaseName = 'databuilder-operator'
     archiveClassifier = null
     version = 1.0
     manifest {

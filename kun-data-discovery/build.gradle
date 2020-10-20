@@ -32,6 +32,9 @@ task deleteLocalJar(type: Delete){
 bootJar.dependsOn(deleteLocalJar)
 
 dependencies {
+	implementation project(':kun-workflow:kun-workflow-client')
+	implementation project(':kun-workflow:kun-workflow-core')
+	implementation project(':kun-workflow:kun-workflow-utils')
 	implementation project(':kun-data-quality')
 	implementation project(':kun-commons:kun-commons-db')
 	implementation project(':kun-commons:kun-commons-utils')
@@ -49,7 +52,7 @@ dependencies {
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
-	testImplementation 'org.testcontainers:postgresql:1.14.3'
+	testImplementation 'org.testcontainers:postgresql:1.15.0-rc2'
 	testImplementation 'com.h2database:h2'
 	// end::tests[]
 }

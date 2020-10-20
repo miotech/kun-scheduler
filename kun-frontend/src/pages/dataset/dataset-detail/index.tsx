@@ -1,7 +1,10 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { RouteComponentProps } from 'react-router';
 import { Link } from 'umi';
-import { Spin, Button, message, Select, Pagination, Input } from 'antd';
+import { RouteComponentProps } from 'react-router';
+import numeral from 'numeral';
+import { FileTextOutlined } from '@ant-design/icons';
+import { Spin, Button, message, Select, Input, Divider, Table } from 'antd';
+import { TablePaginationConfig } from 'antd/lib/table';
 import Card from '@/components/Card/Card';
 
 import { watermarkFormatter } from '@/utils/glossaryUtiles';
@@ -10,9 +13,12 @@ import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 import useDebounce from '@/hooks/useDebounce';
 import BackButton from '@/components/BackButton/BackButton';
+import useBackPath from '@/hooks/useBackPath';
+import { Watermark } from '@/rematch/models/dataDiscovery';
+import { Column } from '@/rematch/models/datasetDetail';
 
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
-import ColumnItem from './components/ColumnItem/ColumnItem';
+import ColumnDescInput from './components/ColumnDescInput/ColumnDescInput';
 import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
 import DataQualityTable from './components/DataQualityTable/DataQualityTable';
 
@@ -28,6 +34,7 @@ const { Option } = Select;
 
 export default function DatasetDetail({ match }: Props) {
   const t = useI18n();
+  const { getBackPath } = useBackPath();
 
   const { selector, dispatch } = useRedux(state => state.datasetDetail);
   const {
@@ -47,7 +54,10 @@ export default function DatasetDetail({ match }: Props) {
 
   const [forceReFetchInfoFlag, setForceReFetchInfoFlag] = useState(1);
   const [forceUpdateAllTagListFlag, setForceUpdateAllTagListFlag] = useState(1);
-  const [forceReFetchDetailFlag, setForceReFetchDetailFlag] = useState(1);
+  const [
+    forceReFetchDataQualityFlag,
+    setForceReFetchDataQualityFlag,
+  ] = useState(1);
 
   const [AddDataQualityModalVisible, setAddDataQualityModalVisible] = useState(
     false,
@@ -98,7 +108,24 @@ export default function DatasetDetail({ match }: Props) {
     dispatch.datasetDetail.fetchDatasetDetail(currentId).then(() => {
       setFetchDetailLoading(false);
     });
-  }, [currentId, dispatch.datasetDetail, forceReFetchDetailFlag]);
+  }, [currentId, dispatch.datasetDetail]);
+
+  useEffect(() => {
+    const params = {
+      id: currentId,
+      pagination: {
+        pageNumber: selector.dataQualityTablePagination.pageNumber,
+        pageSize: selector.dataQualityTablePagination.pageSize,
+      },
+    };
+    dispatch.datasetDetail.fetchDataQualities(params);
+  }, [
+    currentId,
+    dispatch.datasetDetail,
+    selector.dataQualityTablePagination.pageNumber,
+    selector.dataQualityTablePagination.pageSize,
+    forceReFetchDataQualityFlag,
+  ]);
 
   const handleClickPull = useCallback(() => {
     const diss = message.loading(t('dataDetail.button.pullLoading'), 0);
@@ -226,7 +253,7 @@ export default function DatasetDetail({ match }: Props) {
   );
 
   const handleConfirmAddDataQuality = useCallback(() => {
-    setForceReFetchDetailFlag(i => i + 1);
+    setForceReFetchDataQualityFlag(i => i + 1);
   }, []);
 
   const handleConfirmDeleteDataQuality = useCallback(
@@ -248,6 +275,92 @@ export default function DatasetDetail({ match }: Props) {
     [currentId, dispatch.datasetDetail, selector.dataQualities],
   );
 
+  const handleChangeColumnDescription = useCallback(
+    (v: string, id: string) => {
+      const diss = message.loading(t('common.loading'), 0);
+      dispatch.datasetDetail.updateColumn({ id, description: v }).then(resp => {
+        if (resp) {
+          handleFinishUpdate();
+        }
+        diss();
+      });
+    },
+    [dispatch.datasetDetail, handleFinishUpdate, t],
+  );
+
+  const columns = useMemo(
+    () => [
+      {
+        title: t('dataDetail.column.name'),
+        dataIndex: 'name',
+        key: 'name',
+        width: 120,
+      },
+      {
+        title: t('dataDetail.column.type'),
+        dataIndex: 'type',
+        key: 'type',
+        width: 120,
+      },
+      {
+        title: t('dataDetail.column.notNullCount'),
+        dataIndex: 'not_null_count',
+        key: 'not_null_count',
+        width: 120,
+      },
+      {
+        title: t('dataDetail.column.notNullPer'),
+        dataIndex: 'not_null_percentage',
+        key: 'not_null_percentage',
+        render: (per: number) => numeral(per).format('0.00%'),
+        width: 120,
+      },
+      {
+        title: t('dataDetail.column.description'),
+        dataIndex: 'description',
+        key: 'description',
+        render: (desc: string, record: Column) => (
+          <ColumnDescInput
+            className={styles.columnDescInput}
+            value={desc}
+            onChange={v => {
+              handleChangeColumnDescription(v, record.id);
+            }}
+          />
+        ),
+      },
+      {
+        title: t('dataDetail.column.updateTime'),
+        dataIndex: 'high_watermark',
+        key: 'high_watermark',
+        render: (waterMark: Watermark) => watermarkFormatter(waterMark?.time),
+        width: 200,
+      },
+    ],
+    [handleChangeColumnDescription, t],
+  );
+
+  const pagination: TablePaginationConfig = useMemo(
+    () => ({
+      size: 'small',
+      total: selector.columnsPagination.totalCount,
+      showTotal: (total: number) => t('dataDetail.column.total', { total }),
+      showSizeChanger: true,
+      showQuickJumper: true,
+      onChange: handleChangePagination,
+      onShowSizeChange: handleChangePageSize,
+      pageSize: selector.columnsPagination.pageSize,
+      pageSizeOptions: ['25', '50', '100', '200'],
+    }),
+    [
+      handleChangePageSize,
+      handleChangePagination,
+      selector.columnsPagination.pageSize,
+      selector.columnsPagination.totalCount,
+      t,
+    ],
+  );
+
   return (
     <div className={styles.page}>
       <BackButton defaultUrl="/data-discovery/dataset" />
@@ -257,14 +370,6 @@ export default function DatasetDetail({ match }: Props) {
           <div className={styles.titleRow}>
             <span className={styles.titleAndWatermark}>
               <span className={styles.title}>{selector.name}</span>
-              {selector.low_watermark?.time &&
-                selector.high_watermark?.time && (
-                  <span className={styles.watermark}>
-                    {`${watermarkFormatter(
-                      selector.low_watermark?.time,
-                    )} - ${watermarkFormatter(selector.high_watermark?.time)}`}
-                  </span>
-                )}
             </span>
 
             <Button
@@ -277,9 +382,195 @@ export default function DatasetDetail({ match }: Props) {
           </div>
 
           <div className={styles.detailInfoArea}>
-            <div className={styles.baseInfoArea}>
-              <Spin spinning={updateLoading}>
-                {/* <div className={styles.baseItem}>
+            <Spin spinning={updateLoading}>
+              <div className={styles.baseInfoRow}>
+                <div className={styles.infoBlock}>
+                  <div className={styles.baseItemTitle}>
+                    {t('dataDetail.baseItem.title.database')}
+                  </div>
+                  <div className={styles.baseContent}>{selector.database}</div>
+                </div>
+
+                <div className={styles.infoBlock}>
+                  <div className={styles.baseItemTitle}>
+                    {t('dataDetail.baseItem.title.dbType')}
+                  </div>
+                  <div className={styles.baseContent}>{selector.type}</div>
+                </div>
+
+                <div className={styles.infoBlock}>
+                  <div className={styles.baseItemTitle}>
+                    {t('dataDetail.baseItem.title.datasource')}
+                  </div>
+                  <div className={styles.baseContent}>
+                    {selector.datasource}
+                  </div>
+                </div>
+
+                <div
+                  className={styles.infoBlock}
+                  style={{ marginLeft: 'auto' }}
+                >
+                  <div
+                    className={styles.baseContent}
+                    style={{ marginBottom: 8 }}
+                  >
+                    {t('dataDetail.baseItem.title.rowCount')}
+                  </div>
+                  <div className={styles.importantContent}>
+                    {selector.row_count}
+                  </div>
+                </div>
+                <div className={styles.infoBlock}>
+                  <div
+                    className={styles.baseContent}
+                    style={{ marginBottom: 8 }}
+                  >
+                    {t('dataDetail.baseItem.title.lastUpdate')}
+                  </div>
+                  <div className={styles.importantContent}>
+                    {selector.high_watermark?.time && (
+                      <span className={styles.watermark}>
+                        {watermarkFormatter(selector.high_watermark?.time)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <Divider className={styles.divider} />
+
+              <div className={styles.inputRow}>
+                {selector.glossaries && selector.glossaries.length > 0 && (
+                  <div className={styles.glossaryRow}>
+                    <div className={styles.baseItemTitle}>
+                      {t('dataDetail.baseItem.title.glossary')}
+                    </div>
+
+                    <div className={styles.glossaryContent}>
+                      {selector.glossaries.map(glossary => (
+                        <div className={styles.glossaryItem}>
+                          <FileTextOutlined style={{ marginRight: 4 }} />
+                          <Link
+                            to={getBackPath(
+                              `/data-discovery/glossary/${glossary.id}`,
+                            )}
+                          >
+                            <div className={styles.glossaryName}>
+                              {glossary.name}
+                            </div>
+                          </Link>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className={styles.shortInputRow}>
+                  <div className={styles.infoBlock} style={{ minWidth: 380 }}>
+                    <div className={styles.baseItemTitle}>
+                      {t('dataDetail.baseItem.title.tags')}
+                    </div>
+                    <div className={styles.baseContent}>
+                      <Select
+                        mode="tags"
+                        style={{ width: '100%' }}
+                        placeholder={t('dataDiscovery.pleaseSelect')}
+                        value={selector.tags || []}
+                        onChange={handleChangeTags}
+                      >
+                        {allTagList.map(tagItem => (
+                          <Option key={tagItem} value={tagItem}>
+                            {tagItem}
+                          </Option>
+                        ))}
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className={styles.infoBlock} style={{ minWidth: 380 }}>
+                    <div className={styles.baseItemTitle}>
+                      {t('dataDetail.baseItem.title.owners')}
+                    </div>
+                    <div className={styles.baseContent}>
+                      <Select
+                        mode="multiple"
+                        style={{ width: '100%' }}
+                        placeholder={t('dataDiscovery.pleaseSelect')}
+                        value={selector.owners || []}
+                        onChange={handleChangeOwners}
+                      >
+                        {allOwnerList.map(ownerItem => (
+                          <Option key={ownerItem} value={ownerItem}>
+                            {ownerItem}
+                          </Option>
+                        ))}
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <DescriptionInput
+                    value={selector.description || ''}
+                    onChange={handleChangeDescription}
+                  />
+                </div>
+              </div>
+
+              <Divider className={styles.divider} />
+
+              <div className={styles.columnsArea}>
+                <Spin spinning={fetchColumnsLoading}>
+                  <div className={styles.columnsTitleRow}>
+                    <span className={styles.columnsTitle}>
+                      {t('dataDetail.baseItem.title.clolumns')}
+                    </span>
+
+                    <div className={styles.columnSearch}>
+                      <Input.Search
+                        style={{ width: '100%', maxWidth: 620 }}
+                        value={selector.columnsKeyword}
+                        onChange={handleChangeColumnKeyword}
+                        size="middle"
+                      />
+                    </div>
+                  </div>
+
+                  <Table
+                    size="small"
+                    columns={columns}
+                    pagination={pagination}
+                    dataSource={selector.columns}
+                    rowKey="id"
+                  />
+                </Spin>
+              </div>
+
+              <Divider className={styles.divider} />
+
+              <div className={styles.dataQualityArea}>
+                <div className={styles.baseItemTitle}>
+                  {t('dataDetail.baseItem.title.dataQuality')}
+                  <span
+                    className={styles.addButton}
+                    onClick={handleClickAddDataQuality}
+                  >
+                    {t('common.button.add')}
+                  </span>
+                </div>
+                <div className={styles.baseContent}>
+                  {selector.dataQualities &&
+                    selector.dataQualities.length > 0 && (
+                      <DataQualityTable
+                        data={selector.dataQualities}
+                        onDelete={handleConfirmDeleteDataQuality}
+                        onClick={handleClickEditDataQuality}
+                      />
+                    )}
+                </div>
+              </div>
+
+              {/* <div className={styles.baseItem}>
                 <div className={styles.baseItemTitle}>
                   {t('dataDetail.baseItem.title.lineage')}
                 </div>
@@ -288,163 +579,24 @@ export default function DatasetDetail({ match }: Props) {
                 </div>
               </div> */}
 
-                {(selector.flows?.length ?? 0) > 0 && (
-                  <div className={styles.baseItem}>
-                    <div className={styles.baseItemTitle}>
-                      {t('dataDetail.baseItem.title.task')}
-                    </div>
-                    <div className={styles.baseContent}>
-                      {selector.flows?.map(flow => (
-                        <Link
-                          key={flow.flow_id}
-                          to={`/flow-and-operator/flow/${flow.flow_id}`}
-                        >
-                          {flow.flow_name}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
+              {/* {(selector.flows?.length ?? 0) > 0 && (
                 <div className={styles.baseItem}>
                   <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.database')}
-                  </div>
-                  <div className={styles.baseContent}>{selector.database}</div>
-                </div>
-
-                <div className={styles.baseItem}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.dbType')}
-                  </div>
-                  <div className={styles.baseContent}>{selector.type}</div>
-                </div>
-
-                <div className={styles.baseItem}>
-                  <DescriptionInput
-                    value={selector.description || ''}
-                    onChange={handleChangeDescription}
-                  />
-                </div>
-
-                <div className={styles.baseItem}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.dataQuality')}
-                    <span
-                      className={styles.addButton}
-                      onClick={handleClickAddDataQuality}
-                    >
-                      {t('common.button.add')}
-                    </span>
+                    {t('dataDetail.baseItem.title.task')}
                   </div>
                   <div className={styles.baseContent}>
-                    {selector.dataQualities &&
-                      selector.dataQualities.length > 0 && (
-                        <DataQualityTable
-                          data={selector.dataQualities}
-                          onDelete={handleConfirmDeleteDataQuality}
-                          onClick={handleClickEditDataQuality}
-                        />
-                      )}
+                    {selector.flows?.map(flow => (
+                      <Link
+                        key={flow.flow_id}
+                        to={`/flow-and-operator/flow/${flow.flow_id}`}
+                      >
+                        {flow.flow_name}
+                      </Link>
+                    ))}
                   </div>
                 </div>
-
-                <div className={styles.baseItem}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.owners')}
-                  </div>
-                  <div className={styles.baseContent}>
-                    <Select
-                      mode="multiple"
-                      style={{ width: '100%' }}
-                      placeholder={t('dataDiscovery.pleaseSelect')}
-                      value={selector.owners || []}
-                      onChange={handleChangeOwners}
-                    >
-                      {allOwnerList.map(ownerItem => (
-                        <Option key={ownerItem} value={ownerItem}>
-                          {ownerItem}
-                        </Option>
-                      ))}
-                    </Select>
-                  </div>
-                </div>
-
-                <div className={styles.baseItem}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.tags')}
-                  </div>
-                  <div className={styles.baseContent}>
-                    <Select
-                      mode="tags"
-                      style={{ width: '100%' }}
-                      placeholder={t('dataDiscovery.pleaseSelect')}
-                      value={selector.tags || []}
-                      onChange={handleChangeTags}
-                    >
-                      {allTagList.map(tagItem => (
-                        <Option key={tagItem} value={tagItem}>
-                          {tagItem}
-                        </Option>
-                      ))}
-                    </Select>
-                  </div>
-                </div>
-
-                <div className={styles.baseItem}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.rowCount')}
-                  </div>
-                  <div className={styles.baseContent}>{selector.row_count}</div>
-                </div>
-
-                <div className={styles.baseItem}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.datasource')}
-                  </div>
-                  <div className={styles.baseContent}>
-                    {selector.datasource}
-                  </div>
-                </div>
-              </Spin>
-            </div>
-
-            <div className={styles.columnsArea}>
-              <div className={styles.columnsAreaInner}>
-                <div className={styles.columnSearch}>
-                  <Input.Search
-                    style={{ width: '70%', maxWidth: 620 }}
-                    value={selector.columnsKeyword}
-                    onChange={handleChangeColumnKeyword}
-                    size="large"
-                  />
-                </div>
-                <Spin spinning={fetchColumnsLoading}>
-                  {selector.columns?.map(column => (
-                    <ColumnItem
-                      key={column.id}
-                      column={column}
-                      onFinishUpdate={handleFinishUpdate}
-                    />
-                  ))}
-                  <div className={styles.pagination}>
-                    <Pagination
-                      size="small"
-                      total={selector.columnsPagination.totalCount}
-                      showTotal={total =>
-                        t('dataDetail.column.total', { total })
-                      }
-                      showSizeChanger
-                      showQuickJumper
-                      onChange={handleChangePagination}
-                      onShowSizeChange={handleChangePageSize}
-                      pageSize={selector.columnsPagination.pageSize}
-                      pageSizeOptions={['25', '50', '100', '200']}
-                    />
-                  </div>
-                </Spin>
-              </div>
-            </div>
+              )} */}
+            </Spin>
           </div>
         </Card>
         <AddDataQualityModal

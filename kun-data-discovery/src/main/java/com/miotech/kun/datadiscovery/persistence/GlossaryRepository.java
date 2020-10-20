@@ -33,6 +33,27 @@ public class GlossaryRepository extends BaseRepository {
     @Lazy
     DatasetRepository datasetRepository;
 
+    public List<GlossaryBasic> getGlossariesByDataset(Long datasetGid) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("kmg.id as glossary_id",
+                        "kmg.name as glossary_name")
+                .from("kun_mt_glossary as kmg")
+                .join("inner", "kun_mt_glossary_to_dataset_ref", "kmgtdr").on("kmgtdr.glossary_id = kmg.id")
+                .where("kmgtdr.dataset_id = ?")
+                .getSQL();
+
+        return jdbcTemplate.query(sql, rs -> {
+            List<GlossaryBasic> glossaryBasics = new ArrayList<>();
+            while (rs.next()) {
+                GlossaryBasic glossaryBasic = new GlossaryBasic();
+                glossaryBasic.setId(rs.getLong("glossary_id"));
+                glossaryBasic.setName(rs.getString("glossary_name"));
+                glossaryBasics.add(glossaryBasic);
+            }
+            return glossaryBasics;
+        }, datasetGid);
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public Long updateGraph(Long id, GlossaryGraphRequest glossaryGraphRequest) {
         String sql1 = "update kun_mt_glossary kmg set prev_id = temp.prev_id \n" +
@@ -139,8 +160,17 @@ public class GlossaryRepository extends BaseRepository {
     @Transactional(rollbackFor = Exception.class)
     public Glossary insert(GlossaryRequest glossaryRequest) {
         String kmgSql = "insert into kun_mt_glossary values " + toValuesSql(1, 8);
-
         Long glossaryId = IdGenerator.getInstance().nextId();
+
+        String updateOrderSql;
+        if (IdUtils.isNotEmpty(glossaryRequest.getParentId())) {
+            updateOrderSql = "update kun_mt_glossary set prev_id = ? where parent_id = ? and prev_id is null";
+            jdbcTemplate.update(updateOrderSql, glossaryId, glossaryRequest.getParentId());
+        } else {
+            updateOrderSql = "update kun_mt_glossary set prev_id = ? where parent_id is null and prev_id is null";
+            jdbcTemplate.update(updateOrderSql, glossaryId);
+        }
+
         jdbcTemplate.update(kmgSql,
                 glossaryId,
                 glossaryRequest.getName(),
@@ -150,9 +180,6 @@ public class GlossaryRepository extends BaseRepository {
                 millisToTimestamp(glossaryRequest.getCreateTime()),
                 glossaryRequest.getUpdateUser(),
                 millisToTimestamp(glossaryRequest.getUpdateTime()));
-
-        String updateOrderSql = "update kun_mt_glossary set prev_id = ? where prev_id is null";
-        jdbcTemplate.update(updateOrderSql, glossaryId);
 
         if (!CollectionUtils.isEmpty(glossaryRequest.getAssetIds())) {
             String kmgtdrSql = "insert into kun_mt_glossary_to_dataset_ref values " + toValuesSql(1, 3);
@@ -286,7 +313,7 @@ public class GlossaryRepository extends BaseRepository {
 
         if (StringUtils.isNotEmpty(searchRequest.getKeyword())) {
             whereClause += wrapSql("and upper(name) like ?");
-            sqlArgs.add(searchRequest.getKeyword());
+            sqlArgs.add(toLikeSql(searchRequest.getKeyword().toUpperCase()));
         }
 
         if (searchRequest instanceof GlossaryBasicSearchRequest) {

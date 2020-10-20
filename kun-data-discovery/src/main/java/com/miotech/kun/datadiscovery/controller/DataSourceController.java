@@ -10,12 +10,22 @@ import com.miotech.kun.datadiscovery.service.DatasetFieldService;
 import com.miotech.kun.datadiscovery.service.DatasetService;
 import com.miotech.kun.datadiscovery.service.DataSourceService;
 import com.miotech.kun.datadiscovery.service.MetadataService;
+import com.miotech.kun.dataquality.model.entity.DataQualityCase;
+import com.miotech.kun.dataquality.model.entity.DataQualityCaseBasic;
+import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author: Melo
@@ -38,6 +48,9 @@ public class DataSourceController {
 
     @Autowired
     MetadataService metadataService;
+
+    @Autowired
+    WorkflowClient workflowClient;
 
     @GetMapping("/metadata/datasources/search")
     public RequestResult<DataSourceBasicPage> searchDataSource(BasicSearchRequest basicSearchRequest) {
@@ -94,16 +107,45 @@ public class DataSourceController {
         return RequestResult.success(datasetService.search(searchRequests));
     }
 
+    private String resolveTaskStatus(TaskRunStatus taskRunStatus) {
+        if (taskRunStatus.isSuccess()) {
+            return TaskRunStatus.SUCCESS.name();
+        } else if (taskRunStatus.isFailure()) {
+            return TaskRunStatus.FAILED.name();
+        } else if (taskRunStatus.isSkipped()) {
+            return TaskRunStatus.SKIPPED.name();
+        } else {
+            return "";
+        }
+    }
+
+    private void enrichDatasetResult(Dataset dataset) {
+        Map<Long, DataQualityCaseBasic> taskIdMap = dataset.getDataQualities().stream()
+                .collect(Collectors.toMap(DataQualityCaseBasic::getTaskId, dataQualityCaseBasic -> dataQualityCaseBasic));
+        if (CollectionUtils.isNotEmpty(taskIdMap.keySet())) {
+            Map<Long, List<TaskRun>> lastestTaskRuns = workflowClient.getLatestTaskRuns(new ArrayList<>(taskIdMap.keySet()), 6);
+            taskIdMap.forEach((taskId, caseBasic) -> {
+                List<String> latestStatus = lastestTaskRuns.get(taskId).stream()
+                        .map(taskRun -> resolveTaskStatus(taskRun.getStatus()))
+                        .filter(StringUtils::isNotEmpty)
+                        .collect(Collectors.toList());
+                caseBasic.setHistoryList(latestStatus);
+            });
+        }
+    }
     @GetMapping("/metadata/dataset/{id}")
     public RequestResult<Dataset> getDatasetDetail(@PathVariable Long id) {
         Dataset dataset = datasetService.find(id);
+        enrichDatasetResult(dataset);
         return RequestResult.success(dataset);
     }
 
     @PostMapping("/metadata/dataset/{id}/update")
     public RequestResult<Dataset> updateDataset(@PathVariable Long id,
                                                 @RequestBody DatasetRequest datasetRequest) {
-        return RequestResult.success(datasetService.update(id, datasetRequest));
+        Dataset dataset = datasetService.update(id, datasetRequest);
+        enrichDatasetResult(dataset);
+        return RequestResult.success(dataset);
     }
 
     @PostMapping("/metadata/dataset/{id}/pull")
