@@ -1,0 +1,22 @@
+plugins {
+    id 'com.github.johnrengelman.shadow'
+    id 'java'
+    id "org.sonarqube"
+}
+
+dependencies {
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation 'com.google.guava:guava'
+    implementation 'commons-io:commons-io'
+
+    testImplementation project(':kun-workflow:kun-workflow-testing')
+    testImplementation project(':kun-commons:kun-commons-testing')
+}
+
+shadowJar {
+    baseName = 'datax-operator'
+    classifier = null
+    version = 0.1
+    zip64 true
+}
