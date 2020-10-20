@@ -220,7 +220,6 @@ public class DatasetRepository extends BaseRepository {
                 "kmda.description as dataset_description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
                 "string_agg(distinct(kmdt.tag), ',') as tags, " +
-                "string_agg(distinct(kdcad.case_id::text), ',') as dq_case_ids, " +
                 "watermark.high_watermark as high_watermark, " +
                 "watermark.low_watermark as low_watermark\n" +
                 "from kun_mt_dataset kmd\n" +
@@ -243,8 +242,6 @@ public class DatasetRepository extends BaseRepository {
                 lowWatermark.setTime(timestampToMillis(rs, "low_watermark"));
                 dataset.setLowWatermark(lowWatermark);
                 dataset.setRowCount(getRowCount(gid));
-                List<Long> dqCaseIds = sqlToList(rs.getString("dq_case_ids")).stream().map(Long::valueOf).collect(Collectors.toList());
-                dataset.setDataQualities(dataQualityRepository.getCaseBasics(dqCaseIds));
                 dataset.setGlossaries(glossaryRepository.getGlossariesByDataset(gid));
                 return dataset;
             }
