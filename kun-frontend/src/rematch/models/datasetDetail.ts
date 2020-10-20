@@ -9,7 +9,10 @@ import {
   updateColumnService,
 } from '@/services/datasetDetail';
 import { Pagination } from '@/definitions/common-types';
-import { deleteQualityService } from '@/services/dataQuality';
+import {
+  deleteQualityService,
+  fetchDataAllQualitiesService,
+} from '@/services/dataQuality';
 import { DataQualityType } from './dataQuality';
 import { Watermark, GlossaryItem } from './dataDiscovery';
 import { RootDispatch, RootState } from '../store';
@@ -73,6 +76,9 @@ export interface DatasetDetailState extends DatasetDetail {
   columns?: Column[];
   columnsPagination: Pagination;
   columnsKeyword: string;
+
+  dataQualityTablePagination: Pagination;
+  fetchDataQualityLoading: boolean;
 }
 
 export const datasetDetail = {
@@ -103,6 +109,12 @@ export const datasetDetail = {
       totalCount: 0,
     },
     columnsKeyword: '',
+    dataQualityTablePagination: {
+      pageNumber: 1,
+      pageSize: 25,
+      totalCount: 0,
+    },
+    fetchDataQualityLoading: false,
   } as DatasetDetailState,
 
   reducers: {
@@ -130,10 +142,21 @@ export const datasetDetail = {
         ...payload,
       },
     }),
+    updateDataQualityPagination: (
+      state: DatasetDetailState,
+      payload: Partial<Pagination>,
+    ) => ({
+      ...state,
+      dataQualityTablePagination: {
+        ...state.dataQualityTablePagination,
+        ...payload,
+      },
+    }),
   },
 
   effects: (dispatch: RootDispatch) => {
     let fetchDatasetColumnsServiceCountFlag = 1;
+    let fetchDataQualityServiceCountFlag = 1;
     return {
       async fetchDatasetDetail(id: string) {
         try {
@@ -179,6 +202,46 @@ export const datasetDetail = {
           }
         } catch (e) {
           // do nothing
+        }
+      },
+      async fetchDataQualities(payload: {
+        id: string;
+        pagination: Pagination;
+      }) {
+        const { id, pagination } = payload;
+        fetchDataQualityServiceCountFlag += 1;
+        try {
+          dispatch.datasetDetail.updateState({
+            key: 'fetchDataQualityLoading',
+            value: true,
+          });
+          const currentFetchDataQualityServiceCountFlag = fetchDataQualityServiceCountFlag;
+          const resp = await fetchDataAllQualitiesService(id, pagination);
+          if (
+            currentFetchDataQualityServiceCountFlag ===
+            fetchDataQualityServiceCountFlag
+          ) {
+            if (resp) {
+              const { dqCases, pageNumber, pageSize, totalCount } = resp;
+
+              dispatch.datasetDetail.updateState({
+                key: 'dataQualities',
+                value: dqCases,
+              });
+              dispatch.datasetDetail.updateDataQualityPagination({
+                pageNumber,
+                pageSize,
+                totalCount,
+              });
+            }
+          }
+        } catch (e) {
+          // do nothing
+        } finally {
+          dispatch.datasetDetail.updateState({
+            key: 'fetchDataQualityLoading',
+            value: false,
+          });
         }
       },
       async pullDataset(id: string) {
