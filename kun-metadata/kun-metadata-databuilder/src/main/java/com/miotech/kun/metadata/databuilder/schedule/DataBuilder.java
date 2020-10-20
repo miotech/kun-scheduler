@@ -60,7 +60,7 @@ public class DataBuilder {
     private final Loader loader;
 
     private Map<String, Long> latestStates = Maps.newConcurrentMap();
-
+    private boolean clearable = true;
     private final Props props;
 
     @Inject
@@ -228,6 +228,7 @@ public class DataBuilder {
             }
         } catch (Exception e) {
             logger.error("build dataset error: ", e);
+            clearable = false;
         }
     }
 
@@ -264,6 +265,7 @@ public class DataBuilder {
             }
         } catch (Exception e) {
             logger.error("start etl error: ", e);
+            clearable = false;
         }
     }
 
@@ -308,7 +310,7 @@ public class DataBuilder {
     }
 
     public void sweep() {
-        if (!latestStates.isEmpty()) {
+        if (clearable && !latestStates.isEmpty()) {
             logger.info("prepare to delete dataset: {}", JSONUtils.toJsonString(latestStates.values()));
             Object[][] params = latestStates.values().stream().map(gid -> new Object[]{gid}).toArray(Object[][]::new);
             operator.batch("DELETE FROM kun_mt_dataset WHERE gid = ?", params);

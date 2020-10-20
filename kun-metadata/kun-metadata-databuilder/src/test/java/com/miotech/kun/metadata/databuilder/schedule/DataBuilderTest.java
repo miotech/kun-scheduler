@@ -280,6 +280,25 @@ public class DataBuilderTest extends DatabaseTestBase {
         }
     }
 
+    @Test
+    public void testBuildAll_conn_error() {
+        // Insert kun_mt_datasource & kun_mt_datasource_type
+        containerBuilder.initDatasource("127.0.0.1", 27017, "root", "123456", 1, "MongoDB");
+
+        DataBuilder dataBuilder = buildDataBuild(true);
+        // init data
+        initDataset(gid);
+
+        // execute biz logic
+        dataBuilder.buildAll();
+        dataBuilder.sweep();
+
+        // verify sweep
+        containerBuilder.verifyDatasetRowCount(1L);
+        containerBuilder.verifyDatasetStatsRowCount(0L);
+
+    }
+
 
     private void initDataset(long gid) {
         dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name) VALUES(?, ?, ?, CAST(? AS JSONB), ?)",
