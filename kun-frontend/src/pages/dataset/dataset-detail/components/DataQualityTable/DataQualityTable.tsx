@@ -1,6 +1,6 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useCallback } from 'react';
 import { Table, Popconfirm, Tag } from 'antd';
-import { ColumnsType } from 'antd/lib/table';
+import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
 import {
   DeleteOutlined,
   CheckCircleFilled,
@@ -13,6 +13,7 @@ import {
 } from '@/rematch/models/datasetDetail';
 import { DataQualityType } from '@/rematch/models/dataQuality';
 import useI18n from '@/hooks/useI18n';
+import useRedux from '@/hooks/useRedux';
 
 import styles from './DataQualityTable.less';
 
@@ -41,6 +42,46 @@ export default memo(function DataQualityTable({
   onClick,
 }: Props) {
   const t = useI18n();
+
+  const { selector, dispatch } = useRedux(state => state.datasetDetail);
+
+  const handleChangePagination = useCallback(
+    (pageNumber: number, pageSize?: number) => {
+      dispatch.datasetDetail.updateDataQualityPagination({
+        pageNumber,
+        pageSize: pageSize || 25,
+      });
+    },
+    [dispatch.datasetDetail],
+  );
+  const handleChangePageSize = useCallback(
+    (_pageNumber: number, pageSize: number) => {
+      dispatch.datasetDetail.updateDataQualityPagination({
+        pageNumber: 1,
+        pageSize: pageSize || 25,
+      });
+    },
+    [dispatch.datasetDetail],
+  );
+
+  const pagination: TablePaginationConfig = useMemo(
+    () => ({
+      size: 'small',
+      total: selector.dataQualityTablePagination.totalCount,
+      showSizeChanger: true,
+      showQuickJumper: true,
+      onChange: handleChangePagination,
+      onShowSizeChange: handleChangePageSize,
+      pageSize: selector.dataQualityTablePagination.pageSize,
+      pageSizeOptions: ['25', '50', '100', '200'],
+    }),
+    [
+      handleChangePageSize,
+      handleChangePagination,
+      selector.dataQualityTablePagination.pageSize,
+      selector.dataQualityTablePagination.totalCount,
+    ],
+  );
 
   const columns: ColumnsType<DataQualityItem> = useMemo(
     () => [
@@ -138,10 +179,11 @@ export default memo(function DataQualityTable({
 
   return (
     <Table
+      loading={selector.fetchDataQualityLoading}
       className={styles.dataQualityTable}
       columns={columns}
       dataSource={data}
-      pagination={false}
+      pagination={pagination}
       onHeaderRow={() => ({
         className: styles.header,
       })}
