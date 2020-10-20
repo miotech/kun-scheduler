@@ -54,7 +54,10 @@ export default function DatasetDetail({ match }: Props) {
 
   const [forceReFetchInfoFlag, setForceReFetchInfoFlag] = useState(1);
   const [forceUpdateAllTagListFlag, setForceUpdateAllTagListFlag] = useState(1);
-  const [forceReFetchDetailFlag, setForceReFetchDetailFlag] = useState(1);
+  const [
+    forceReFetchDataQualityFlag,
+    setForceReFetchDataQualityFlag,
+  ] = useState(1);
 
   const [AddDataQualityModalVisible, setAddDataQualityModalVisible] = useState(
     false,
@@ -105,7 +108,24 @@ export default function DatasetDetail({ match }: Props) {
     dispatch.datasetDetail.fetchDatasetDetail(currentId).then(() => {
       setFetchDetailLoading(false);
     });
-  }, [currentId, dispatch.datasetDetail, forceReFetchDetailFlag]);
+  }, [currentId, dispatch.datasetDetail]);
+
+  useEffect(() => {
+    const params = {
+      id: currentId,
+      pagination: {
+        pageNumber: selector.dataQualityTablePagination.pageNumber,
+        pageSize: selector.dataQualityTablePagination.pageSize,
+      },
+    };
+    dispatch.datasetDetail.fetchDataQualities(params);
+  }, [
+    currentId,
+    dispatch.datasetDetail,
+    selector.dataQualityTablePagination.pageNumber,
+    selector.dataQualityTablePagination.pageSize,
+    forceReFetchDataQualityFlag,
+  ]);
 
   const handleClickPull = useCallback(() => {
     const diss = message.loading(t('dataDetail.button.pullLoading'), 0);
@@ -233,7 +253,7 @@ export default function DatasetDetail({ match }: Props) {
   );
 
   const handleConfirmAddDataQuality = useCallback(() => {
-    setForceReFetchDetailFlag(i => i + 1);
+    setForceReFetchDataQualityFlag(i => i + 1);
   }, []);
 
   const handleConfirmDeleteDataQuality = useCallback(
