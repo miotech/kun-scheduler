@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Link } from 'umi';
-import { Group } from '@vx/group';
+import { Group } from '@visx/group';
 import {TaskDefinition} from "@/definitions/TaskDefinition.type";
 import { Tooltip } from 'antd';
 import SafeUrlAssembler from 'safe-url-assembler';
