@@ -89,7 +89,6 @@ public class DataBuilderOperator extends KunOperator {
 
     @Override
     public Resolver getResolver() {
-        // TODO: implement this
         return new NopResolver();
     }
 
