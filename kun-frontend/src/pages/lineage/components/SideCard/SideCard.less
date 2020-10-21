@@ -1,0 +1,42 @@
+.SideCard {
+  position: absolute;
+  transition: 0.2s;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  background-color: @white;
+  border-left: 1px solid @borderColor;
+
+  &.notExpanded {
+    width: 0 !important;
+  }
+}
+
+.content {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.expandButton {
+  position: absolute;
+  top: 50%;
+  left: -24px;
+  height: 80px;
+  width: 24px;
+  transform: translateY(-50%);
+  color: @grayFontColor;
+  background-color: @white;
+  border: 1px solid @borderColor;
+  border-radius: 3px;
+  cursor: pointer;
+  .flexCenter();
+}
+
+.expandedIcon {
+  transform: rotate(180deg);
+}
+
+.buttonIcon {
+  font-size: 16px;
+}

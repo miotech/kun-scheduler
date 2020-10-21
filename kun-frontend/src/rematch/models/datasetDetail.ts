@@ -11,6 +11,11 @@ import {
 import { Pagination } from '@/definitions/common-types';
 import { Watermark, GlossaryItem } from '@/definitions/Dataset.type';
 import {
+  FetchLineageTasksReq,
+  fetchLineageTasksService,
+  LineageDirection,
+} from '@/services/lineage';
+import {
   deleteQualityService,
   fetchDataAllQualitiesService,
 } from '@/services/dataQuality';
@@ -52,8 +57,9 @@ export interface Glossary {
 }
 
 export interface LineageTask {
-  name: string;
-  time: number;
+  taskId: string;
+  taskName: string;
+  lastExecutedTime: number;
   historyList: DataQualityHistory[];
 }
 
@@ -76,12 +82,6 @@ export interface DatasetDetail {
 
   dataQualities: DataQualityItem[] | null;
   glossaries: GlossaryItem[] | null;
-
-  upstreamLineageTaskList: LineageTask[] | null;
-  downstreamLineageTaskList: LineageTask[] | null;
-
-  fetchUpstreamLineageTaskListLoading: boolean;
-  fetchDownstreamLineageTaskListLoading: boolean;
 }
 
 export interface DatasetDetailState extends DatasetDetail {
@@ -91,6 +91,15 @@ export interface DatasetDetailState extends DatasetDetail {
 
   dataQualityTablePagination: Pagination;
   fetchDataQualityLoading: boolean;
+
+  upstreamLineageTaskList: LineageTask[] | null;
+  downstreamLineageTaskList: LineageTask[] | null;
+
+  fetchUpstreamLineageTaskListLoading: boolean;
+  fetchDownstreamLineageTaskListLoading: boolean;
+
+  upstreamLineageTaskListPagination: Pagination;
+  downstreamLineageTaskListPagination: Pagination;
 }
 
 export const datasetDetail = {
@@ -129,7 +138,17 @@ export const datasetDetail = {
     fetchDataQualityLoading: false,
 
     upstreamLineageTaskList: [],
+    upstreamLineageTaskListPagination: {
+      pageNumber: 1,
+      pageSize: 25,
+      totalCount: 0,
+    },
     downstreamLineageTaskList: [],
+    downstreamLineageTaskListPagination: {
+      pageNumber: 1,
+      pageSize: 25,
+      totalCount: 0,
+    },
 
     fetchUpstreamLineageTaskListLoading: false,
     fetchDownstreamLineageTaskListLoading: false,
@@ -175,6 +194,8 @@ export const datasetDetail = {
   effects: (dispatch: RootDispatch) => {
     let fetchDatasetColumnsServiceCountFlag = 1;
     let fetchDataQualityServiceCountFlag = 1;
+    let fetchUpstreamLineageTaskListFlag = 1;
+    let fetchDownstreamLineageTaskListFlag = 1;
     return {
       async fetchDatasetDetail(id: string) {
         try {
@@ -184,6 +205,66 @@ export const datasetDetail = {
           }
         } catch (e) {
           // do nothing
+        }
+      },
+      async fetchLineageTasks(payload: FetchLineageTasksReq) {
+        try {
+          let flag;
+          if (payload.direction === LineageDirection.UPSTREAM) {
+            fetchUpstreamLineageTaskListFlag += 1;
+            flag = fetchUpstreamLineageTaskListFlag;
+            dispatch.datasetDetail.updateState({
+              key: 'fetchUpstreamLineageTaskListLoading',
+              value: true,
+            });
+          } else {
+            fetchDownstreamLineageTaskListFlag += 1;
+            flag = fetchDownstreamLineageTaskListFlag;
+            dispatch.datasetDetail.updateState({
+              key: 'fetchDownstreamLineageTaskListLoading',
+              value: true,
+            });
+          }
+          const resp = await fetchLineageTasksService(payload);
+          if (resp) {
+            const { tasks, pageNumber, pageSize, totalCount } = resp;
+            if (
+              payload.direction === LineageDirection.UPSTREAM &&
+              flag === fetchUpstreamLineageTaskListFlag
+            ) {
+              dispatch.datasetDetail.batchUpdateState({
+                upstreamLineageTaskList: tasks,
+                upstreamLineageTaskListPagination: {
+                  pageNumber,
+                  pageSize,
+                  totalCount,
+                },
+              });
+            } else if (flag === fetchDownstreamLineageTaskListFlag) {
+              dispatch.datasetDetail.batchUpdateState({
+                downstreamLineageTaskList: tasks,
+                downstreamLineageTaskListPagination: {
+                  pageNumber,
+                  pageSize,
+                  totalCount,
+                },
+              });
+            }
+          }
+        } catch (e) {
+          // do nothing
+        } finally {
+          if (payload.direction === LineageDirection.UPSTREAM) {
+            dispatch.datasetDetail.updateState({
+              key: 'fetchUpstreamLineageTaskListLoading',
+              value: false,
+            });
+          } else {
+            dispatch.datasetDetail.updateState({
+              key: 'fetchDownstreamLineageTaskListLoading',
+              value: false,
+            });
+          }
         }
       },
       async fetchDatasetColumns(payload: {

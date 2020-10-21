@@ -21,8 +21,10 @@ import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnDescInput from './components/ColumnDescInput/ColumnDescInput';
 import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
 import DataQualityTable from './components/DataQualityTable/DataQualityTable';
+import LineageStreamTaskTable from './components/LineageStreamTaskTable/LineageStreamTaskTable';
 
 import styles from './index.less';
+import { LineageDirection } from '@/services/lineage';
 
 interface MatchParams {
   datasetId: string;
@@ -545,6 +547,32 @@ export default function DatasetDetail({ match }: Props) {
               </div>
 
               <Divider className={styles.divider} />
+              <div>
+                <div className={styles.lineageTitleRow}>
+                  <span style={{ marginRight: 8 }}>
+                    {t('dataDetail.lineage.title')}
+                  </span>
+                  <Link
+                    style={{ textDecoration: 'underLine' }}
+                    to={`/data-discovery/dataset/${currentId}/lineage`}
+                  >
+                    {t('dataDetail.lineage.lineageDetailLink')}
+                  </Link>
+                </div>
+
+                <div className={styles.lineageArea}>
+                  <LineageStreamTaskTable
+                    datasetId={currentId}
+                    direction={LineageDirection.UPSTREAM}
+                  />
+                  <div className={styles.lineageDivider} />
+                  <LineageStreamTaskTable
+                    datasetId={currentId}
+                    direction={LineageDirection.DOWNSTREAM}
+                  />
+                </div>
+              </div>
+              <Divider className={styles.divider} />
 
               <div className={styles.dataQualityArea}>
                 <div className={styles.baseItemTitle}>
@@ -567,33 +595,6 @@ export default function DatasetDetail({ match }: Props) {
                     )}
                 </div>
               </div>
-
-              {/* <div className={styles.baseItem}>
-                <div className={styles.baseItemTitle}>
-                  {t('dataDetail.baseItem.title.lineage')}
-                </div>
-                <div className={styles.baseContent}>
-
-                </div>
-              </div> */}
-
-              {/* {(selector.flows?.length ?? 0) > 0 && (
-                <div className={styles.baseItem}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.task')}
-                  </div>
-                  <div className={styles.baseContent}>
-                    {selector.flows?.map(flow => (
-                      <Link
-                        key={flow.flow_id}
-                        to={`/flow-and-operator/flow/${flow.flow_id}`}
-                      >
-                        {flow.flow_name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )} */}
             </Spin>
           </div>
         </Card>
