@@ -1,5 +1,7 @@
 package com.miotech.kun.datadashboard.model.entity;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 /**
@@ -8,6 +10,13 @@ import lombok.Data;
  */
 @Data
 public class TestCase {
+
+    @JsonSerialize(using= ToStringSerializer.class)
+    Long datasetGid;
+
+    String datasetName;
+
+    String caseName;
 
     String result;
 
