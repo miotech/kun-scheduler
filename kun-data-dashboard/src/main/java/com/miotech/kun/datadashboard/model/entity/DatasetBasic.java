@@ -9,6 +9,8 @@ import lombok.Data;
 @Data
 public class DatasetBasic {
 
+    Long gid;
+
     String datasetName;
 
     String database;

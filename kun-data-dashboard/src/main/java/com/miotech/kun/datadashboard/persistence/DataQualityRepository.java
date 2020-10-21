@@ -5,6 +5,7 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.datadashboard.model.bo.TestCasesRequest;
 import com.miotech.kun.datadashboard.model.constant.TestCaseStatus;
+import com.miotech.kun.datadashboard.model.entity.DatasetBasic;
 import com.miotech.kun.datadashboard.model.entity.TestCase;
 import com.miotech.kun.datadashboard.model.entity.TestCases;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +78,9 @@ public class DataQualityRepository extends BaseRepository {
                 .select("kdcm.error_reason as error_reason",
                         "kdcm.update_time as last_update_time",
                         "kdcm.continuous_failing_count as continuous_failing_count",
-                        "kdc.create_user as case_owner")
+                        "kdc.create_user as case_owner",
+                        "kdc.id as case_id",
+                        "kdc.name as case_name")
                 .from("kun_dq_case_metrics kdcm")
                 .join("inner", "kun_dq_case", "kdc").on("kdcm.dq_case_id = kdc.id")
                 .where("kdcm.continuous_failing_count > 0");
@@ -103,9 +106,33 @@ public class DataQualityRepository extends BaseRepository {
                 testCase.setUpdateTime(timestampToMillis(rs, "last_update_time"));
                 testCase.setContinuousFailingCount(rs.getLong("continuous_failing_count"));
                 testCase.setCaseOwner(rs.getString("case_owner"));
+                testCase.setCaseName(rs.getString("case_name"));
+                DatasetBasic datasetBasic = getPrimaryDataset(rs.getLong("case_id"));
+                testCase.setDatasetGid(datasetBasic.getGid());
+                testCase.setDatasetName(datasetBasic.getDatasetName());
                 testCases.add(testCase);
             }
             return testCases;
         });
+    }
+
+    private DatasetBasic getPrimaryDataset(Long caseId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("kmd.gid as dataset_id",
+                        "kmd.name as dataset_name")
+                .from("kun_mt_dataset kmd")
+                .join("inner", "kun_dq_case_associated_dataset", "kdcad").on("kdcad.dataset_id = kmd.gid")
+                .where("kdcad.case_id = ?")
+                .limit(1)
+                .getSQL();
+
+        return jdbcTemplate.query(sql, rs -> {
+            DatasetBasic datasetBasic = new DatasetBasic();
+            if (rs.next()) {
+                datasetBasic.setGid(rs.getLong("dataset_id"));
+                datasetBasic.setDatasetName(rs.getString("dataset_name"));
+            }
+            return datasetBasic;
+        }, caseId);
     }
 }
