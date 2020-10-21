@@ -14,7 +14,7 @@ import useRedux from '@/hooks/useRedux';
 import useDebounce from '@/hooks/useDebounce';
 import BackButton from '@/components/BackButton/BackButton';
 import useBackPath from '@/hooks/useBackPath';
-import { Watermark } from '@/rematch/models/dataDiscovery';
+import { Watermark } from '@/definitions/Dataset.type';
 import { Column } from '@/rematch/models/datasetDetail';
 
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
