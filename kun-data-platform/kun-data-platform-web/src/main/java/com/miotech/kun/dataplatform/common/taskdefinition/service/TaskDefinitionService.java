@@ -4,12 +4,14 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.dataplatform.common.commit.service.TaskCommitService;
 import com.miotech.kun.dataplatform.common.datastore.service.DatasetService;
+import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskTryDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.*;
 import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateService;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.common.utils.TagUtils;
+import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.model.tasktemplate.ParameterDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
@@ -51,6 +53,9 @@ public class TaskDefinitionService extends BaseSecurityService {
 
     @Autowired
     private DatasetService datasetService;
+
+    @Autowired
+    private DeployedTaskService deployedTaskService;
 
     @Autowired
     @Lazy
@@ -212,6 +217,12 @@ public class TaskDefinitionService extends BaseSecurityService {
             throw new IllegalArgumentException(String.format("Task definition not found: \"%s\"", taskDefId));
         }
         taskDefinitionDao.archive(taskDefId);
+        try{
+            DeployedTask deployedTask = deployedTaskService.find(taskDefId);
+            workflowClient.deleteTask(deployedTask.getWorkflowTaskId());
+        }catch (IllegalArgumentException e){
+            log.debug("task definition \"{}\" not deployed yet, no need to delete workflow task", taskDefId);
+        }
         taskCommitService.commit(taskDefId, "OFFLINE");
     }
 
