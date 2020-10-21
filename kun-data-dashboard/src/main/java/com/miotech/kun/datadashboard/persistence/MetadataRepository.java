@@ -83,29 +83,6 @@ public class MetadataRepository extends BaseRepository {
         });
     }
 
-    public DatasetBasic getDatasetBasic(Long gid) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("kmd.name as dataset_name",
-                        "kmd.database_name as database_name",
-                        "kmdsrca.name as datasource_name")
-                .from("kun_mt_dataset kmd")
-                .join("inner", "kun_mt_datasource", "kmdsrc").on("kmdsrc.id = kmd.datasource_id")
-                .join("inner", "kun_mt_datasource_attrs", "kmdsrca").on("kmdsrc.id = kmdsrca.datasource_id")
-                .where("kmd.gid = ?")
-                .getSQL();
-
-        return jdbcTemplate.query(sql, rs -> {
-            DatasetBasic datasetBasic = new DatasetBasic();
-            if (rs.next()) {
-                datasetBasic.setDatasetName(rs.getString("dataset_name"));
-                datasetBasic.setDatabase(rs.getString("database_name"));
-                datasetBasic.setDataSource(rs.getString("datasource_name"));
-            }
-            return datasetBasic;
-        }, gid);
-
-    }
-
     private static final Map<String, String> COLUMN_METRICS_REQUEST_ORDER_MAP = new HashMap<>();
     static {
         COLUMN_METRICS_REQUEST_ORDER_MAP.put("columnNullCount", "null_count");
