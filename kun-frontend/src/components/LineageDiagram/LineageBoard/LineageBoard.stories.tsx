@@ -124,7 +124,7 @@ export const LineageBoardDemo = () => {
     <IntlProvider locale="en-US" messages={demoMessage}>
       <div style={{ width: '100%', height: '600px' }}>
         <LineageBoard
-          rankdir="RL"
+          rankdir="LR"
           nodes={nodes}
           edges={edges}
         />

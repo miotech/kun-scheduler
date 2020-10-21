@@ -32,6 +32,43 @@ const NODE_SEP_DEFAULT = 100;
 const EDGE_SEP_DEFAULT = 30;
 const RANK_SEP_DEFAULT = 140;
 
+function buildLineageEdgePath(points: { x: number, y: number}[], options?: {
+  nodeWidth?: number, nodeHeight?: number
+}): string {
+  const {
+    nodeWidth = NODE_DEFAULT_WIDTH,
+    nodeHeight = NODE_DEFAULT_HEIGHT,
+  } = (options || {});
+  const start = {
+    x: points[0].x + (nodeWidth / 2),
+    y: points[0].y + (nodeHeight / 2),
+  };
+  const end = {
+    x: points[points.length - 1].x + (nodeWidth / 2),
+    y: points[points.length - 1].y + (nodeHeight / 2),
+  };
+  const firstQrt = {
+    x: start.x + (end.x - start.x) / 2,
+    y: start.y + (end.y - start.y) / 4,
+  };
+  const firstQrtCtrlPoint = {
+    x: start.x + (end.x - start.x) / 2,
+    y: start.y,
+  };
+  const secondQrt = {
+    x: start.x + (end.x - start.x) / 2,
+    y: start.y + (end.y - start.y) * 3 / 4,
+  };
+  const secondQrtCtrlPoint = {
+    x: start.x + (end.x - start.x) / 2,
+    y: end.y,
+  };
+  return `M ${start.x},${start.y} ` +
+    `Q ${firstQrtCtrlPoint.x},${firstQrtCtrlPoint.y},${firstQrt.x},${firstQrt.y} ` +
+    `L ${secondQrt.x},${secondQrt.y} ` +
+    `Q ${secondQrtCtrlPoint.x},${secondQrtCtrlPoint.y},${end.x},${end.y}`;
+}
+
 export const logger = LogUtils.getLoggers('LineageBoard');
 
 export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
@@ -121,6 +158,16 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
     graph.edges().forEach((edgeMeta: dagre.Edge) => {
       const edge = graph.edge(edgeMeta);
       logger.debug('edgeMeta = %o, path = %o', edgeMeta, edge.points);
+      svgElements = svgElements.concat(
+        <g key={`${edgeMeta.v}-${edgeMeta.w}`}>
+          <path
+            fill="transparent"
+            stroke="#d8d8d8"
+            strokeWidth="2"
+            d={buildLineageEdgePath(edge.points)}
+          />
+        </g>
+      );
     });
     return svgElements;
   }, [
