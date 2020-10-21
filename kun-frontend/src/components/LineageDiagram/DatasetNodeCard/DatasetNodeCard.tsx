@@ -112,7 +112,7 @@ export const DatasetNodeCard: React.FC<Props> = memo(function DatasetNodeCard(pr
         <section className={`${clsPrefix}__right-content`}>
           <dl>
             <dt className={`${clsPrefix}__def-title`}>Data Source Type</dt>
-            <dd className={`${clsPrefix}__def-desc`}>{data?.datasource ?? 'N/A'}</dd>
+            <dd className={`${clsPrefix}__def-desc`}>{data?.type ?? 'N/A'}</dd>
           </dl>
         </section>
       </div>
