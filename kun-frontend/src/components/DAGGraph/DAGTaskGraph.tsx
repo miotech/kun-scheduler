@@ -2,9 +2,9 @@ import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState } f
 import dagre from 'dagre';
 import isNil from 'lodash/isNil';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
-import { Zoom } from '@vx/zoom';
-import { localPoint } from '@vx/event';
-import { Graph } from '@vx/network';
+import { Zoom } from '@visx/zoom';
+import { localPoint } from '@visx/event';
+import { Graph } from '@visx/network';
 import { TaskNode, TaskRelation } from '@/components/DAGGraph/typings';
 import LogUtils from '@/utils/logUtils';
 import { DAGTaskNode } from '@/components/DAGGraph/DAGTaskNode';
