@@ -10,6 +10,4 @@ import lombok.Data;
 public class DeleteCaseResponse {
 
     private Long id;
-
-    private Boolean isFullDelete;
 }

@@ -58,3 +58,4 @@ management:
 springdoc:
   swagger-ui:
     operationsSorter: method
+  use-fqn: true
