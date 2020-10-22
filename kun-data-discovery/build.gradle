@@ -11,8 +11,8 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 task buildDataQualityOperator (type:Exec){
-	workingDir "../kun-data-quality/data-quality-operators"
-	commandLine "gradle","shadowJar"
+	workingDir "../"
+	commandLine "./gradlew",":kun-data-quality:data-quality-operators:shadowJar"
 }
 
 task copyDataQualityOperator(type: Copy){
