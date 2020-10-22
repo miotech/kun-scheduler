@@ -59,10 +59,20 @@ public abstract class SqlResolver implements Resolver {
         for (Map.Entry<TableStat.Name, TableStat> entry : tables.entrySet()) {
             Set<String> tableType = streamMap.get(direction);
             if (tableType.contains(entry.getValue().toString())) {
-                result.add(entry.getKey().toString());
+                result.add(parseTableName(entry.getKey().toString()));
             }
         }
         return result;
+    }
+
+    private String parseTableName(String tableName) {
+        if (tableName.contains("`")) {
+            tableName = tableName.replaceAll("`", "");
+        }
+        if (tableName.contains("\"")) {
+            tableName = tableName.replaceAll("\"", "");
+        }
+        return tableName;
     }
 
     class SqlInfo {
