@@ -3,9 +3,12 @@ package com.miotech.kun.metadata.core.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.annotation.Nullable;
+import java.io.Serializable;
 import java.util.List;
 
-public class Dataset {
+public class Dataset implements Serializable {
+    @JsonIgnore
+    private static final long serialVersionUID = -1603335342544L;
 
     private Long gid;
 
