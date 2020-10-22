@@ -347,7 +347,7 @@ public class WorkflowApi {
     }
 
     public EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
-        HttpUrl url = buildUrl(API_TASK_RUNS + "/latest")
+        HttpUrl url = buildUrl(API_TASK_RUNS + "/edges")
                 .addQueryParameter("upstreamDatasetGid", String.valueOf(upstreamDatasetGid))
                 .addQueryParameter("downstreamDatasetGid", String.valueOf(downstreamDatasetGid))
                 .build();
