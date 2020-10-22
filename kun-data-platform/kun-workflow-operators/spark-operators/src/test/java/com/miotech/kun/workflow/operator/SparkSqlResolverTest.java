@@ -22,7 +22,7 @@ public class SparkSqlResolverTest {
         //insert into
         SparkSQLOperator sparkSQLOperator = new SparkSQLOperator();
         sparkSQLOperator.config();
-        String sql = "insert into table a select B.b.name,C.c.id from B.b,C.c";
+        String sql = "insert into table a select B.\"b\".name, C.\"c\".id from B.\"b\", C.\"c\"";
         String dbName = "default";
         String dataStoreUrl = "127.0.0.1:6886";
         Config config = Config.newBuilder()
