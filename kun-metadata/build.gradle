@@ -31,8 +31,8 @@ shadowJar {
 }
 
 task buildOperator (type:Exec){
-    workingDir "kun-metadata-databuilder"
-    commandLine "../../gradlew","shadowJar"
+    workingDir "../"
+    commandLine "./gradlew",":kun-metadata:kun-metadata-databuilder:shadowJar"
 }
 
 task copyOperator(type: Copy){
