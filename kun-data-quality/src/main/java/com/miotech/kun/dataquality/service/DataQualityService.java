@@ -2,6 +2,7 @@ package com.miotech.kun.dataquality.service;
 
 import com.miotech.kun.commons.query.JDBCQuery;
 import com.miotech.kun.commons.query.JDBCQueryExecutor;
+import com.miotech.kun.dataquality.model.bo.DataQualitiesRequest;
 import com.miotech.kun.dataquality.model.bo.DataQualityRequest;
 import com.miotech.kun.dataquality.model.bo.DeleteCaseResponse;
 import com.miotech.kun.dataquality.model.bo.ValidateSqlRequest;
@@ -58,6 +59,10 @@ public class DataQualityService extends BaseSecurityService {
 
     public DataQualityCaseBasic getCaseBasic(Long id) {
         return dataQualityRepository.getCaseBasic(id);
+    }
+
+    public DataQualityCaseBasics getCasesByGid(DataQualitiesRequest request) {
+        return dataQualityRepository.getCaseBasics(request);
     }
 
     public Long updateCase(Long id, DataQualityRequest dataQualityRequest) {

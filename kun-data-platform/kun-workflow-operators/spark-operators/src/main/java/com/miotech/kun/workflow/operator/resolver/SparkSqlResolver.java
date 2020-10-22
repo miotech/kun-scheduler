@@ -2,13 +2,9 @@ package com.miotech.kun.workflow.operator.resolver;
 
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.operator.SparkConfiguration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

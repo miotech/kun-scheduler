@@ -1,5 +1,5 @@
 import React from 'react';
-import { LinkProvidedProps } from '@vx/network/lib/types';
+import { LinkProvidedProps } from '@visx/network/lib/types';
 
 interface Link extends LinkProvidedProps<Link> {
   path: {

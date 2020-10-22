@@ -1,17 +1,17 @@
 import React, { memo, useCallback, useMemo } from 'react';
-import { Group } from '@vx/group';
-import { scaleTime, scaleLinear } from '@vx/scale';
-import { AxisLeft, AxisBottom } from '@vx/axis';
-import { curveLinear } from '@vx/curve';
-import { localPoint } from '@vx/event';
-import { Line, LinePath } from '@vx/shape';
-import { useTooltip, useTooltipInPortal } from '@vx/tooltip';
+import { Group } from '@visx/group';
+import { scaleTime, scaleLinear } from '@visx/scale';
+import { AxisLeft, AxisBottom } from '@visx/axis';
+import { curveLinear } from '@visx/curve';
+import { localPoint } from '@visx/event';
+import { Line, LinePath } from '@visx/shape';
+import { useTooltip, useTooltipInPortal } from '@visx/tooltip';
 import LogUtils from '@/utils/logUtils';
+import dayjs from 'dayjs';
 
 import { bisectCenter } from './helpers/bisect';
 
 import './DailyTaskFinishLineChart.global.less';
-import dayjs from 'dayjs';
 
 export interface DailyTaskFinishCount {
   /** x-axis, date */
@@ -115,8 +115,8 @@ function DailyTaskFinishLineChart(props) {
       tooltipTop: y,
       tooltipData: {
         ...datum,
-        x: xScale(dateNormalize(datum.time)),
-        y: yScale(datum.taskCount),
+        x: xScale(dateNormalize(datum.time)) || 0,
+        y: yScale(datum.taskCount) || 0,
       },
     });
   }, [
@@ -202,8 +202,8 @@ function DailyTaskFinishLineChart(props) {
           <LinePath
             data={data}
             curve={curveLinear}
-            x={d => xScale(toX(d))}
-            y={d => yScale(toY(d))}
+            x={d => xScale(toX(d)) as any}
+            y={d => yScale(toY(d)) as any}
             cursor="pointer"
             stroke="#cfb162"
             strokeWidth={1.5}
