@@ -22,6 +22,28 @@ public class SparkSqlResolverTest {
         //insert into
         SparkSQLOperator sparkSQLOperator = new SparkSQLOperator();
         sparkSQLOperator.config();
+        String sql = "insert into table a select B.b.name, C.c.id from B.b, C.c";
+        String dbName = "default";
+        String dataStoreUrl = "127.0.0.1:6886";
+        Config config = Config.newBuilder()
+                .addConfig(SparkConfiguration.CONF_SPARK_SQL, sql)
+                .addConfig(SparkConfiguration.CONF_SPARK_DEFAULT_DB, dbName)
+                .addConfig(SparkConfiguration.CONF_SPARK_DATASTORE_URL, dataStoreUrl)
+                .build();
+        HiveTableStore tableA = new HiveTableStore(dataStoreUrl, "default", "a");
+        HiveTableStore tableB = new HiveTableStore(dataStoreUrl, "B", "b");
+        HiveTableStore tableC = new HiveTableStore(dataStoreUrl, "C", "c");
+        List<DataStore> downStream = sparkSqlResolver.resolveDownstreamDataStore(config);
+        List<DataStore> upStream = sparkSqlResolver.resolveUpstreamDataStore(config);
+        assertThat(downStream,containsInAnyOrder(tableA));
+        assertThat(upStream,containsInAnyOrder(tableB,tableC));
+    }
+
+    @Test
+    public void testTableNameWithDoubleQuotation() {
+        //insert into
+        SparkSQLOperator sparkSQLOperator = new SparkSQLOperator();
+        sparkSQLOperator.config();
         String sql = "insert into table a select B.\"b\".name, C.\"c\".id from B.\"b\", C.\"c\"";
         String dbName = "default";
         String dataStoreUrl = "127.0.0.1:6886";
@@ -77,6 +99,140 @@ public class SparkSqlResolverTest {
         List<DataStore> downStream = sparkSqlResolver.resolveDownstreamDataStore(config);
         List<DataStore> upStream = sparkSqlResolver.resolveUpstreamDataStore(config);
         assertThat(downStream,containsInAnyOrder(tableD));
+        assertThat(upStream,containsInAnyOrder(tableB,tableC));
+    }
+
+    @Test
+    public void testCreateFromUnion() {
+        String sql = "create table a as select * from C.c union select * from B.b";
+        String dbName = "default";
+        String dataStoreUrl = "127.0.0.1:6886";
+        Config config = Config.newBuilder()
+                .addConfig(SparkConfiguration.CONF_SPARK_SQL, sql)
+                .addConfig(SparkConfiguration.CONF_SPARK_DEFAULT_DB, dbName)
+                .addConfig(SparkConfiguration.CONF_SPARK_DATASTORE_URL, dataStoreUrl)
+                .build();
+        HiveTableStore tableA = new HiveTableStore(dataStoreUrl, "default", "a");
+        HiveTableStore tableB = new HiveTableStore(dataStoreUrl, "B", "b");
+        HiveTableStore tableC = new HiveTableStore(dataStoreUrl, "C", "c");
+        List<DataStore> downStream = sparkSqlResolver.resolveDownstreamDataStore(config);
+        List<DataStore> upStream = sparkSqlResolver.resolveUpstreamDataStore(config);
+        assertThat(downStream,containsInAnyOrder(tableA));
+        assertThat(upStream,containsInAnyOrder(tableB,tableC));
+    }
+
+    @Test
+    public void testCreateFromJoin() {
+        String sql = "create table a as select * from C.c left join B.b";
+        String dbName = "default";
+        String dataStoreUrl = "127.0.0.1:6886";
+        Config config = Config.newBuilder()
+                .addConfig(SparkConfiguration.CONF_SPARK_SQL, sql)
+                .addConfig(SparkConfiguration.CONF_SPARK_DEFAULT_DB, dbName)
+                .addConfig(SparkConfiguration.CONF_SPARK_DATASTORE_URL, dataStoreUrl)
+                .build();
+        HiveTableStore tableA = new HiveTableStore(dataStoreUrl, "default", "a");
+        HiveTableStore tableB = new HiveTableStore(dataStoreUrl, "B", "b");
+        HiveTableStore tableC = new HiveTableStore(dataStoreUrl, "C", "c");
+        List<DataStore> downStream = sparkSqlResolver.resolveDownstreamDataStore(config);
+        List<DataStore> upStream = sparkSqlResolver.resolveUpstreamDataStore(config);
+        assertThat(downStream,containsInAnyOrder(tableA));
+        assertThat(upStream,containsInAnyOrder(tableB,tableC));
+    }
+
+    @Test
+    public void testInsertFromUnion() {
+        String sql = "insert into table a select * from C.c union select * from B.b";
+        String dbName = "default";
+        String dataStoreUrl = "127.0.0.1:6886";
+        Config config = Config.newBuilder()
+                .addConfig(SparkConfiguration.CONF_SPARK_SQL, sql)
+                .addConfig(SparkConfiguration.CONF_SPARK_DEFAULT_DB, dbName)
+                .addConfig(SparkConfiguration.CONF_SPARK_DATASTORE_URL, dataStoreUrl)
+                .build();
+        HiveTableStore tableA = new HiveTableStore(dataStoreUrl, "default", "a");
+        HiveTableStore tableB = new HiveTableStore(dataStoreUrl, "B", "b");
+        HiveTableStore tableC = new HiveTableStore(dataStoreUrl, "C", "c");
+        List<DataStore> downStream = sparkSqlResolver.resolveDownstreamDataStore(config);
+        List<DataStore> upStream = sparkSqlResolver.resolveUpstreamDataStore(config);
+        assertThat(downStream,containsInAnyOrder(tableA));
+        assertThat(upStream,containsInAnyOrder(tableB,tableC));
+    }
+
+    @Test
+    public void testInsertFromJoin() {
+        String sql = "insert into table a select * from C.c left join B.b";
+        String dbName = "default";
+        String dataStoreUrl = "127.0.0.1:6886";
+        Config config = Config.newBuilder()
+                .addConfig(SparkConfiguration.CONF_SPARK_SQL, sql)
+                .addConfig(SparkConfiguration.CONF_SPARK_DEFAULT_DB, dbName)
+                .addConfig(SparkConfiguration.CONF_SPARK_DATASTORE_URL, dataStoreUrl)
+                .build();
+        HiveTableStore tableA = new HiveTableStore(dataStoreUrl, "default", "a");
+        HiveTableStore tableB = new HiveTableStore(dataStoreUrl, "B", "b");
+        HiveTableStore tableC = new HiveTableStore(dataStoreUrl, "C", "c");
+        List<DataStore> downStream = sparkSqlResolver.resolveDownstreamDataStore(config);
+        List<DataStore> upStream = sparkSqlResolver.resolveUpstreamDataStore(config);
+        assertThat(downStream,containsInAnyOrder(tableA));
+        assertThat(upStream,containsInAnyOrder(tableB,tableC));
+    }
+
+    @Test
+    public void testInsertWithAlias() {
+        String sql = "insert into table a select * from C.c as cc left join B.b as bb" +
+                " on cc.id = bb.id";
+        String dbName = "default";
+        String dataStoreUrl = "127.0.0.1:6886";
+        Config config = Config.newBuilder()
+                .addConfig(SparkConfiguration.CONF_SPARK_SQL, sql)
+                .addConfig(SparkConfiguration.CONF_SPARK_DEFAULT_DB, dbName)
+                .addConfig(SparkConfiguration.CONF_SPARK_DATASTORE_URL, dataStoreUrl)
+                .build();
+        HiveTableStore tableA = new HiveTableStore(dataStoreUrl, "default", "a");
+        HiveTableStore tableB = new HiveTableStore(dataStoreUrl, "B", "b");
+        HiveTableStore tableC = new HiveTableStore(dataStoreUrl, "C", "c");
+        List<DataStore> downStream = sparkSqlResolver.resolveDownstreamDataStore(config);
+        List<DataStore> upStream = sparkSqlResolver.resolveUpstreamDataStore(config);
+        assertThat(downStream,containsInAnyOrder(tableA));
+        assertThat(upStream,containsInAnyOrder(tableB,tableC));
+    }
+
+    @Test
+    public void testInsertWithQuotation() {
+        String sql = "INSERT INTO TABLE a select * FROM 'C'.c ,'B'.b ";
+        String dbName = "default";
+        String dataStoreUrl = "127.0.0.1:6886";
+        Config config = Config.newBuilder()
+                .addConfig(SparkConfiguration.CONF_SPARK_SQL, sql)
+                .addConfig(SparkConfiguration.CONF_SPARK_DEFAULT_DB, dbName)
+                .addConfig(SparkConfiguration.CONF_SPARK_DATASTORE_URL, dataStoreUrl)
+                .build();
+        HiveTableStore tableA = new HiveTableStore(dataStoreUrl, "default", "a");
+        HiveTableStore tableB = new HiveTableStore(dataStoreUrl, "B", "b");
+        HiveTableStore tableC = new HiveTableStore(dataStoreUrl, "C", "c");
+        List<DataStore> downStream = sparkSqlResolver.resolveDownstreamDataStore(config);
+        List<DataStore> upStream = sparkSqlResolver.resolveUpstreamDataStore(config);
+        assertThat(downStream,containsInAnyOrder(tableA));
+        assertThat(upStream,containsInAnyOrder(tableB,tableC));
+    }
+
+    @Test
+    public void testInsertCaseInsensitive() {
+        String sql = "INSERT INTO TABLE a select * FROM C.c ,B.b ";
+        String dbName = "default";
+        String dataStoreUrl = "127.0.0.1:6886";
+        Config config = Config.newBuilder()
+                .addConfig(SparkConfiguration.CONF_SPARK_SQL, sql)
+                .addConfig(SparkConfiguration.CONF_SPARK_DEFAULT_DB, dbName)
+                .addConfig(SparkConfiguration.CONF_SPARK_DATASTORE_URL, dataStoreUrl)
+                .build();
+        HiveTableStore tableA = new HiveTableStore(dataStoreUrl, "default", "a");
+        HiveTableStore tableB = new HiveTableStore(dataStoreUrl, "B", "b");
+        HiveTableStore tableC = new HiveTableStore(dataStoreUrl, "C", "c");
+        List<DataStore> downStream = sparkSqlResolver.resolveDownstreamDataStore(config);
+        List<DataStore> upStream = sparkSqlResolver.resolveUpstreamDataStore(config);
+        assertThat(downStream,containsInAnyOrder(tableA));
         assertThat(upStream,containsInAnyOrder(tableB,tableC));
     }
 
