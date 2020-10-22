@@ -110,6 +110,25 @@ const nodes: LineageNode[] = [
       },
     },
   },
+  {
+    id: '81704446437888005',
+    data: {
+      id: '81704446437888005',
+      name: 'dataset-6',
+      database: 'hive',
+      datasource: 'bar',
+      description: 'dataset-6-description',
+      owners: ['admin'],
+      glossaries: [],
+      tags: [],
+      type: 'hive',
+      schema: 'dm',
+      high_watermark: {
+        user: '',
+        time: 0,
+      },
+    },
+  },
 ];
 
 const edges: LineageEdge[] = [
@@ -117,6 +136,7 @@ const edges: LineageEdge[] = [
   { from: '81704446437888001', to: '81704446437888002' },
   { from: '81704446437888002', to: '81704446437888003' },
   { from: '81704446437888002', to: '81704446437888004' },
+  { from: '81704446437888004', to: '81704446437888005' },
 ];
 
 export const LineageBoardDemo = () => {
@@ -127,6 +147,7 @@ export const LineageBoardDemo = () => {
           rankdir="LR"
           nodes={nodes}
           edges={edges}
+          ranker="tight-tree"
         />
       </div>
     </IntlProvider>

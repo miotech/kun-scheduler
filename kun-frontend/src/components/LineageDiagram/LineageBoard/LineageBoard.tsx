@@ -20,6 +20,8 @@ interface OwnProps {
   rankdir?: 'TB' | 'BT' | 'LR' | 'RL';
   align?: 'UL' | 'UR' | 'DL' | 'DR';
   ranker?: 'network-simplex' | 'tight-tree' | 'longest-path';
+  onExpandUpstream?: (datasetId: string) => any;
+  onExpandDownstream?: (datasetId: string) => any;
 }
 
 type Props = OwnProps;
@@ -32,41 +34,32 @@ const NODE_SEP_DEFAULT = 100;
 const EDGE_SEP_DEFAULT = 30;
 const RANK_SEP_DEFAULT = 140;
 
-function buildLineageEdgePath(points: { x: number, y: number}[], options?: {
-  nodeWidth?: number, nodeHeight?: number
-}): string {
-  const {
+function buildLineageEdgePath(fromNode: LineageDagreNode, toNode: LineageDagreNode): string {
+  const [
     nodeWidth = NODE_DEFAULT_WIDTH,
     nodeHeight = NODE_DEFAULT_HEIGHT,
-  } = (options || {});
+  ] = [
+    fromNode.width,
+    toNode.height,
+  ];
   const start = {
-    x: points[0].x + (nodeWidth / 2),
-    y: points[0].y + (nodeHeight / 2),
+    x: fromNode.x + nodeWidth,
+    y: fromNode.y + nodeHeight / 2,
   };
   const end = {
-    x: points[points.length - 1].x + (nodeWidth / 2),
-    y: points[points.length - 1].y + (nodeHeight / 2),
+    x: toNode.x,
+    y: toNode.y + nodeHeight / 2,
   };
-  const firstQrt = {
-    x: start.x + (end.x - start.x) / 2,
-    y: start.y + (end.y - start.y) / 4,
-  };
-  const firstQrtCtrlPoint = {
+  const firstCtrlPoint = {
     x: start.x + (end.x - start.x) / 2,
     y: start.y,
   };
-  const secondQrt = {
-    x: start.x + (end.x - start.x) / 2,
-    y: start.y + (end.y - start.y) * 3 / 4,
-  };
-  const secondQrtCtrlPoint = {
+  const secondCtrlPoint = {
     x: start.x + (end.x - start.x) / 2,
     y: end.y,
   };
   return `M ${start.x},${start.y} ` +
-    `Q ${firstQrtCtrlPoint.x},${firstQrtCtrlPoint.y},${firstQrt.x},${firstQrt.y} ` +
-    `L ${secondQrt.x},${secondQrt.y} ` +
-    `Q ${secondQrtCtrlPoint.x},${secondQrtCtrlPoint.y},${end.x},${end.y}`;
+    `C ${firstCtrlPoint.x},${firstCtrlPoint.y},${secondCtrlPoint.x},${secondCtrlPoint.y},${end.x},${end.y}`;
 }
 
 export const logger = LogUtils.getLoggers('LineageBoard');
@@ -158,13 +151,15 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
     graph.edges().forEach((edgeMeta: dagre.Edge) => {
       const edge = graph.edge(edgeMeta);
       logger.debug('edgeMeta = %o, path = %o', edgeMeta, edge.points);
+      const fromNode = graph.node(edgeMeta.v) as LineageDagreNode;
+      const toNode = graph.node(edgeMeta.w) as LineageDagreNode;
       svgElements = svgElements.concat(
         <g key={`${edgeMeta.v}-${edgeMeta.w}`}>
           <path
             fill="transparent"
             stroke="#d8d8d8"
             strokeWidth="2"
-            d={buildLineageEdgePath(edge.points)}
+            d={buildLineageEdgePath(fromNode, toNode)}
           />
         </g>
       );
