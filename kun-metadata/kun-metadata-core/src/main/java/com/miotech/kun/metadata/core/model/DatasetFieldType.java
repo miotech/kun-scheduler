@@ -1,9 +1,15 @@
 package com.miotech.kun.metadata.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DatasetFieldType {
+import java.io.Serializable;
+
+public class DatasetFieldType implements Serializable {
+    @JsonIgnore
+    private static final long serialVersionUID = -1603335407509L;
+
     private static final Logger logger = LoggerFactory.getLogger(DatasetFieldType.class);
 
     private final Type type;
