@@ -1,8 +1,13 @@
 package com.miotech.kun.metadata.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class DatasetStat {
+public class DatasetStat implements Serializable {
+    @JsonIgnore
+    private static final long serialVersionUID = -1603335281861L;
 
     private final long rowCount;
 

@@ -1,8 +1,13 @@
 package com.miotech.kun.metadata.core.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import java.io.Serializable;
 import java.util.Objects;
 
-public class DatasetField {
+public class DatasetField implements Serializable {
+    @JsonIgnore
+    private static final long serialVersionUID = -1603335359239L;
 
     private final String name;
 
