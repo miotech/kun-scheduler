@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.client;
 
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 
 import java.io.File;
 import java.util.List;
@@ -168,4 +169,12 @@ public interface WorkflowClient {
      * @return Mapped results in dictionary, where task id is the key, and its latest runs in a list as value
      */
     Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit);
+
+    /**
+     * Get lineage edge info
+     * @param upstreamDatasetGid global id of upstream dataset
+     * @param downstreamDatasetGid global id of downstream dataset
+     * @return edge info object
+     */
+    EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid);
 }

@@ -8,6 +8,7 @@ import com.miotech.kun.commons.web.annotation.QueryParameter;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 
 import java.util.*;
 
@@ -44,5 +45,15 @@ public class LineageController {
         }
 
         return new ArrayList<>(datasetNodes);
+    }
+
+    @RouteMapping(url = "/lineages/edges", method = "GET")
+    public EdgeInfo getEdgeInfoBetweenNodes(
+            @QueryParameter Long upstreamDatasetGid,
+            @QueryParameter Long downstreamDatasetGid
+    ) {
+        Preconditions.checkArgument(Objects.nonNull(upstreamDatasetGid), "upstream dataset gid cannot be null.");
+        Preconditions.checkArgument(Objects.nonNull(downstreamDatasetGid), "downstream dataset gid cannot be null.");
+        return lineageService.fetchEdgeInfo(upstreamDatasetGid, downstreamDatasetGid);
     }
 }
