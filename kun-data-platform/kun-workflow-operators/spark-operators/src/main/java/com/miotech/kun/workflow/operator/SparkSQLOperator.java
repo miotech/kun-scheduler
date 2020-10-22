@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.operator;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
+import com.miotech.kun.workflow.operator.resolver.SparkSqlResolver;
 import com.miotech.kun.workflow.operator.spark.models.SparkApp;
 import com.miotech.kun.workflow.operator.spark.models.SparkJob;
 import com.miotech.kun.workflow.operator.spark.models.StateInfo;
@@ -82,8 +83,7 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
 
     @Override
     public Resolver getResolver() {
-        // TODO: implement this
-        return new NopResolver();
+        return new SparkSqlResolver();
     }
 
     public boolean execute() {

@@ -3,8 +3,10 @@ package com.miotech.kun.dataquality.persistence;
 import com.google.common.collect.Lists;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.model.TemplateType;
+import com.miotech.kun.dataquality.model.bo.DataQualitiesRequest;
 import com.miotech.kun.dataquality.model.bo.DataQualityRequest;
 import com.miotech.kun.dataquality.model.bo.DeleteCaseResponse;
 import com.miotech.kun.dataquality.model.entity.*;
@@ -429,40 +431,50 @@ public class DataQualityRepository extends BaseRepository {
         }, id);
     }
 
-    public List<String> resolveDqCaseTypes(String types) {
+    private List<String> resolveDqCaseTypes(String types) {
         if (StringUtils.isNotEmpty(types)) {
             return Arrays.asList(types.split(","));
         }
         return null;
     }
-    public List<DataQualityCaseBasic> getCaseBasics(List<Long> caseIds) {
-        if (CollectionUtils.isEmpty(caseIds)) {
-            return Lists.newArrayList();
-        }
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("id",
-                        "name",
-                        "update_user",
-                        "types",
-                        "task_id")
-                .from("kun_dq_case")
-                .where("id in " + toColumnSql(caseIds.size()))
-                .orderBy("id")
-                .getSQL();
 
-        return jdbcTemplate.query(sql, rs -> {
-            List<DataQualityCaseBasic> caseBasics = new ArrayList<>();
+    public DataQualityCaseBasics getCaseBasics(DataQualitiesRequest request) {
+        SQLBuilder getSqlBuilder = DefaultSQLBuilder.newBuilder()
+                .select("kdc.id as case_id",
+                        "kdc.name as case_name",
+                        "kdc.update_user as case_update_user",
+                        "kdc.types as case_types",
+                        "kdc.task_id as case_task_id")
+                .from("kun_dq_case kdc")
+                .join("inner", "kun_dq_case_associated_dataset", "kdcad").on("kdc.id = kdcad.case_id")
+                .where("kdcad.dataset_id = ?");
+
+        String countSql = DefaultSQLBuilder.newBuilder()
+                .select("count(1) as total_count")
+                .from("(" + getSqlBuilder.getSQL() + ") temp")
+                .getSQL();
+        Long totalCount = jdbcTemplate.queryForObject(countSql, Long.class, request.getGid());
+
+        getSqlBuilder
+                .orderBy("kdc.create_time desc")
+                .offset(getOffset(request.getPageNumber(), request.getPageSize()))
+                .limit(request.getPageSize());
+        return jdbcTemplate.query(getSqlBuilder.getSQL(), rs -> {
+            DataQualityCaseBasics caseBasics = new DataQualityCaseBasics();
             while (rs.next()) {
                 DataQualityCaseBasic caseBasic = new DataQualityCaseBasic();
-                caseBasic.setId(rs.getLong("id"));
-                caseBasic.setName(rs.getString("name"));
-                caseBasic.setUpdater(rs.getString("update_user"));
-                caseBasic.setTypes(resolveDqCaseTypes(rs.getString("types")));
-                caseBasic.setTaskId(rs.getLong("task_id"));
+                caseBasic.setId(rs.getLong("case_id"));
+                caseBasic.setName(rs.getString("case_name"));
+                caseBasic.setUpdater(rs.getString("case_update_user"));
+                caseBasic.setTypes(resolveDqCaseTypes(rs.getString("case_types")));
+                caseBasic.setTaskId(rs.getLong("case_task_id"));
                 caseBasics.add(caseBasic);
             }
+            caseBasics.setPageNumber(request.getPageNumber());
+            caseBasics.setPageSize(request.getPageSize());
+            caseBasics.setTotalCount(totalCount);
             return caseBasics;
-        }, caseIds.toArray());
+        }, request.getGid());
     }
 
     public DataQualityCase getCase(Long id) {
