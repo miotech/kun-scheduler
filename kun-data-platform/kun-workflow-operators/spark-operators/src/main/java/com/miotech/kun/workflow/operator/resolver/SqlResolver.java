@@ -69,6 +69,9 @@ public abstract class SqlResolver implements Resolver {
         if (tableName.contains("`")) {
             tableName = tableName.replaceAll("`", "");
         }
+        if (tableName.contains("'")) {
+            tableName = tableName.replaceAll("'", "");
+        }
         if (tableName.contains("\"")) {
             tableName = tableName.replaceAll("\"", "");
         }
