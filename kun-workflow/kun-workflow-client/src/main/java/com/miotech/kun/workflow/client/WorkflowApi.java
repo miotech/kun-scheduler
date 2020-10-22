@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import okhttp3.*;
 import org.apache.commons.collections4.CollectionUtils;
@@ -343,5 +344,17 @@ public class WorkflowApi {
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
         return sendRequest(getRequest, new TypeReference<Map<Long, List<TaskRun>>>() {});
+    }
+
+    public EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
+        HttpUrl url = buildUrl(API_TASK_RUNS + "/edges")
+                .addQueryParameter("upstreamDatasetGid", String.valueOf(upstreamDatasetGid))
+                .addQueryParameter("downstreamDatasetGid", String.valueOf(downstreamDatasetGid))
+                .build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<EdgeInfo>() {});
     }
 }
