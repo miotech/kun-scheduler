@@ -7,10 +7,13 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.web.annotation.QueryParameter;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
+import com.miotech.kun.workflow.common.lineage.node.TaskNode;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
+import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Singleton
 public class LineageController {
@@ -18,7 +21,7 @@ public class LineageController {
     private LineageService lineageService;
 
     @RouteMapping(url= "/lineages", method = "GET")
-    public List<DatasetNode> getLineageNeighbors(
+    public List<DatasetNodeInfo> getLineageNeighbors(
             @QueryParameter Long datasetGid,
             @QueryParameter(defaultValue = "BOTH") String direction,
             @QueryParameter(defaultValue = "1") Integer depth
@@ -44,7 +47,13 @@ public class LineageController {
                 throw new IllegalArgumentException(String.format("Illegal query parameter `direction`: %s", direction));
         }
 
-        return new ArrayList<>(datasetNodes);
+        return datasetNodes.stream().map(node -> DatasetNodeInfo.newBuilder()
+                .withGid(node.getGid())
+                .withDatasetName(node.getDatasetName())
+                .withUpstreamTaskIds(node.getUpstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toList()))
+                .withDownstreamTaskIds(node.getDownstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toList()))
+                .build()
+        ).collect(Collectors.toList());
     }
 
     @RouteMapping(url = "/lineages/edges", method = "GET")
