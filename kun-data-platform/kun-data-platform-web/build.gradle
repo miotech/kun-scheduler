@@ -11,13 +11,13 @@ repositories {
 }
 
 task buildBashOperator (type:Exec){
-    workingDir "../kun-workflow-operators/bash-operator"
-    commandLine "gradle","shadowJar"
+    workingDir "../../"
+    commandLine "./gradlew",":kun-data-platform:kun-workflow-operators:bash-operator:shadowJar"
 }
 
 task buildSparkOperator (type:Exec){
-    workingDir "../kun-workflow-operators/spark-operators"
-    commandLine "gradle","shadowJar"
+    workingDir "../../"
+    commandLine "./gradlew",":kun-data-platform:kun-workflow-operators:spark-operators:shadowJar"
 }
 
 task copyBashOperator(type: Copy){

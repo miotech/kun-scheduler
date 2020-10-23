@@ -9,6 +9,8 @@ import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.EdgeTaskInfo;
 import com.miotech.kun.workflow.core.model.task.Task;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;
@@ -53,6 +55,46 @@ public class LineageService {
     public Optional<Dataset> fetchDatasetByDatastore(DataStore dataStore) {
         return Optional.ofNullable(metadataFacade.getDatasetByDatastore(dataStore));
     }
+
+
+    /**
+     * Obtain edge info by upstream and downstream dataset id
+     * @param upstreamDatasetGid global id of upstream dataset
+     * @param downstreamDatasetGid global id of downstream dataset
+     */
+    public EdgeInfo fetchEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
+        Preconditions.checkNotNull(upstreamDatasetGid);
+        Preconditions.checkNotNull(downstreamDatasetGid);
+
+        logger.debug("Fetching edge info with dataset gid = {} as upstream and dataset gid = {} as downstream", upstreamDatasetGid, downstreamDatasetGid);
+        Map<String, Object> paramsMap = new HashMap<>();
+        paramsMap.put("upstreamDatasetGid", upstreamDatasetGid);
+        paramsMap.put("downstreamDatasetGid", downstreamDatasetGid);
+        Iterable<TaskNode> taskNodes = getSession()
+                .query(TaskNode.class,
+                        "MATCH (d1:KUN_DATASET)-->(t:KUN_TASK)-->(d2:KUN_DATASET) " +
+                                "WHERE d1.gid = $upstreamDatasetGid AND d2.gid = $downstreamDatasetGid " +
+                                "RETURN t",
+                        paramsMap
+                );
+        List<EdgeTaskInfo> edgeTaskInfos = new ArrayList<>();
+        for (TaskNode taskNode : taskNodes) {
+            edgeTaskInfos.add(
+                    EdgeTaskInfo.newBuilder()
+                        .withId(taskNode.getTaskId())
+                        .withName(taskNode.getTaskName())
+                        .withDescription(taskNode.getDescription())
+                        .build()
+            );
+        }
+        EdgeInfo edgeInfo = EdgeInfo.newBuilder()
+                .withUpstreamDatasetGid(upstreamDatasetGid)
+                .withDownstreamDatasetGid(downstreamDatasetGid)
+                .withTaskInfos(edgeTaskInfos)
+                .build();
+        return edgeInfo;
+    }
+
 
     /**
      * Save an dataset entity to graph node and return it

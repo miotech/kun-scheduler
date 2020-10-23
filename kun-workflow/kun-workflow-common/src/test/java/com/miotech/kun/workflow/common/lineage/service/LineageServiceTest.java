@@ -8,6 +8,7 @@ import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import org.apache.commons.lang3.tuple.Pair;
@@ -21,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.doReturn;
 
@@ -378,5 +380,27 @@ public class LineageServiceTest extends CommonTestBase {
 
         // Validate
         assertFalse(isSuccess);
+    }
+
+    @Test
+    public void fetchEdgeInfo_withExistingLineage_shouldReturnCorrectEdgeInfo() {
+        // Prepare
+        Pair<List<DatasetNode>, List<TaskNode>> preparedGraph = prepareGraph();
+        List<DatasetNode> datasetNodes = preparedGraph.getLeft();
+        List<TaskNode> taskNodes = preparedGraph.getRight();
+
+        Long dataset1Gid = datasetNodes.get(0).getGid();
+        Long dataset2Gid = datasetNodes.get(1).getGid();
+        Long dataset3Gid = datasetNodes.get(2).getGid();
+        Long task1Id = taskNodes.get(0).getTaskId();
+
+        // Process
+        EdgeInfo edgeInfoFromDataset1ToDataset2 = lineageService.fetchEdgeInfo(dataset1Gid, dataset2Gid);
+        EdgeInfo edgeInfoFromDataset2ToDataset3 = lineageService.fetchEdgeInfo(dataset2Gid, dataset3Gid);
+
+        // Validate
+        assertThat(edgeInfoFromDataset1ToDataset2.getTaskInfos().size(), is(1));
+        assertThat(edgeInfoFromDataset2ToDataset3.getTaskInfos().size(), is(0));
+        assertThat(edgeInfoFromDataset1ToDataset2.getTaskInfos().get(0).getId(), is(task1Id));
     }
 }
