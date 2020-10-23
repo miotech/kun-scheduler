@@ -17,11 +17,6 @@ import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
-import java.util.Map;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-
 public class DataBuilderTest extends DatabaseTestBase {
 
     private long gid = IdGenerator.getInstance().nextId();
@@ -44,10 +39,6 @@ public class DataBuilderTest extends DatabaseTestBase {
             // execute biz logic
             dataBuilder.buildAll();
 
-            // verify mark
-            verifyLatestStates(dataBuilder.getLatestStates(), gid, dataStoreJson);
-            dataBuilder.sweep();
-
             // verify sweep
             containerBuilder.verifyDatasetRowCount(10L);
             containerBuilder.verifyDatasetStatsRowCount(10L);
@@ -66,10 +57,6 @@ public class DataBuilderTest extends DatabaseTestBase {
             initDataset(gid);
             // execute biz logic
             dataBuilder.buildAll();
-
-            // verify mark
-            verifyLatestStates(dataBuilder.getLatestStates(), gid, dataStoreJson);
-            dataBuilder.sweep();
 
             // verify sweep
             containerBuilder.verifyDatasetRowCount(10L);
@@ -90,8 +77,6 @@ public class DataBuilderTest extends DatabaseTestBase {
 
             // execute biz logic
             dataBuilder.buildDatasource(1L);
-            verifyLatestStates(dataBuilder.getLatestStates(), gid, dataStoreJson);
-            dataBuilder.sweep();
 
             // verify
             containerBuilder.verifyDatasetRowCount(10L);
@@ -114,9 +99,6 @@ public class DataBuilderTest extends DatabaseTestBase {
             // execute biz logic
             dataBuilder.buildDatasource(1L);
 
-            // verify
-            verifyLatestStates(dataBuilder.getLatestStates(), gid, dataStoreJson);
-            dataBuilder.sweep();
             containerBuilder.verifyDatasetRowCount(10L);
             containerBuilder.verifyDatasetStatsRowCount(0L);
         } catch (Exception e) {
@@ -136,9 +118,6 @@ public class DataBuilderTest extends DatabaseTestBase {
             // execute biz logic
             dataBuilder.buildDatasource(1L);
 
-            // verify
-            verifyLatestStates(dataBuilder.getLatestStates(), gid, dataStoreJson);
-            dataBuilder.sweep();
             containerBuilder.verifyDatasetRowCount(1L);
             containerBuilder.verifyDatasetStatsRowCount(0L);
         } catch (Exception e) {
@@ -157,9 +136,6 @@ public class DataBuilderTest extends DatabaseTestBase {
             // execute biz logic
             dataBuilder.buildDatasource(1L);
 
-            // verify
-            verifyLatestStates(dataBuilder.getLatestStates(), gid, dataStoreJson);
-            dataBuilder.sweep();
             containerBuilder.verifyDatasetRowCount(1L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
@@ -178,9 +154,6 @@ public class DataBuilderTest extends DatabaseTestBase {
             // execute biz logic
             dataBuilder.buildDatasource(1L);
 
-            // verify
-            verifyLatestStates(dataBuilder.getLatestStates(), gid, dataStoreJson);
-            dataBuilder.sweep();
             containerBuilder.verifyDatasetRowCount(1L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
@@ -250,7 +223,6 @@ public class DataBuilderTest extends DatabaseTestBase {
             // pull dataset
             dataBuilder.buildDataset(gid);
             containerBuilder.verifyDatasetRowCount(1L);
-            dataBuilder.sweep();
 
             // verify
             containerBuilder.verifyDatasetRowCount(1L);
@@ -280,20 +252,26 @@ public class DataBuilderTest extends DatabaseTestBase {
         }
     }
 
+    @Test
+    public void testBuildAll_conn_error() {
+        // Insert kun_mt_datasource & kun_mt_datasource_type
+        containerBuilder.initDatasource("127.0.0.1", 27017, "root", "123456", 1, "MongoDB");
+
+        DataBuilder dataBuilder = buildDataBuild(true);
+        // init data
+        initDataset(gid);
+
+        // execute biz logic
+        dataBuilder.buildAll();
+
+        // verify sweep
+        containerBuilder.verifyDatasetRowCount(1L);
+        containerBuilder.verifyDatasetStatsRowCount(0L);
+    }
 
     private void initDataset(long gid) {
         dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name) VALUES(?, ?, ?, CAST(? AS JSONB), ?)",
                 gid, "test_dataset", 1, dataStoreJson, "test_database");
-    }
-
-    private void verifyLatestStates(Map<String, Long> latestStates, long targetGid, String targetDataStore) {
-        assertThat(latestStates.size(), is(1));
-        for (Map.Entry<String, Long> entry : latestStates.entrySet()) {
-            String dataStoreStr = entry.getKey();
-            Long gid = entry.getValue();
-            assertThat(dataStoreStr, is(targetDataStore));
-            assertThat(gid, is(targetGid));
-        }
     }
 
     private DataBuilder buildDataBuild(boolean extractStats) {
