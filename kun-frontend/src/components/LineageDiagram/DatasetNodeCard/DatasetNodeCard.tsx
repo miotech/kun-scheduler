@@ -6,13 +6,16 @@ import numeral from 'numeral';
 import isNumber from 'lodash/isNumber';
 import isNil from 'lodash/isNil';
 import useI18n from '@/hooks/useI18n';
+import Iconfont from '@/components/Iconfont';
+import {
+  CardPort, OnCollapseEventHandler, OnExpandEventHandler
+} from '@/components/LineageDiagram/DatasetNodeCard/CardPort';
 
 import { Dataset } from '@/definitions/Dataset.type';
 
 import './DatasetNodeCard.less';
-import Iconfont from '@/components/Iconfont';
 
-export type ExpandBtnTypes = 'hidden' | 'collapsed' | 'expanded';
+export type PortStateType = 'hidden' | 'collapsed' | 'expanded' | 'loading';
 
 interface OwnProps {
   /** the status of dataset node */
@@ -21,8 +24,12 @@ interface OwnProps {
   rowCount?: number;
   lastUpdateTime?: Date | number | string;
   onClick?: (ev: React.MouseEvent) => any;
-  leftExpandBtn?: ExpandBtnTypes;
-  rightExpandBtn?: ExpandBtnTypes;
+  leftPortState?: PortStateType;
+  rightPortState?: PortStateType;
+  onExpandLeft?: OnExpandEventHandler;
+  onCollapseLeft?: OnCollapseEventHandler;
+  onExpandRight?: OnExpandEventHandler;
+  onCollapseRight?: OnCollapseEventHandler;
   /** use native link instead of umi <Link />. Only for demo purpose */
   useNativeLink?: boolean;
 }
@@ -40,6 +47,12 @@ export const DatasetNodeCard: React.FC<Props> = memo(function DatasetNodeCard(pr
     rowCount,
     lastUpdateTime,
     useNativeLink = false,
+    leftPortState = 'hidden',
+    rightPortState = 'hidden',
+    onExpandLeft,
+    onCollapseLeft,
+    onExpandRight,
+    onCollapseRight,
   } = props;
 
   const t = useI18n();
@@ -116,6 +129,20 @@ export const DatasetNodeCard: React.FC<Props> = memo(function DatasetNodeCard(pr
           </dl>
         </section>
       </div>
+      {/* Left port (from upstream) */}
+      <CardPort
+        className="left-port"
+        portState={leftPortState}
+        onExpand={onExpandLeft}
+        onCollapse={onCollapseLeft}
+      />
+      {/* Right port (to downstream) */}
+      <CardPort
+        className="right-port"
+        portState={rightPortState}
+        onExpand={onExpandRight}
+        onCollapse={onCollapseRight}
+      />
     </div>
   );
 });

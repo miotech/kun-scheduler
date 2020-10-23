@@ -1,5 +1,7 @@
 @lineage-dataset-node-card-width: 280px;
 @lineage-dataset-node-card-height: 108px;
+@port-btn-width: 20px;
+@port-btn-height: 20px;
 
 .lineage-dataset-node-card {
   display: flex;
@@ -89,5 +91,32 @@
     text-overflow: ellipsis;
     overflow: hidden;
     color: @secondary;
+  }
+
+  &__port-btn {
+    display: inline-block;
+    position: absolute;
+    width: @port-btn-width;
+    height: @port-btn-height;
+    border: 1px solid @borderColor;
+    border-radius: 3px;
+    font-size: 16px;
+    line-height: 1;
+    vertical-align: middle;
+    color: @borderColor;
+    background: @white;
+
+    &:hover, &:focus {
+    }
+  }
+
+  &__port-btn.left-port {
+    left: -0.5 * @port-btn-width;
+    top: 0.5 * (@lineage-dataset-node-card-height - @port-btn-width);
+  }
+
+  &__port-btn.right-port {
+    right: -0.5 * @port-btn-width;
+    top: 0.5 * (@lineage-dataset-node-card-height - @port-btn-width);
   }
 }
