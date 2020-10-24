@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
+import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import okhttp3.*;
@@ -346,8 +347,25 @@ public class WorkflowApi {
         return sendRequest(getRequest, new TypeReference<Map<Long, List<TaskRun>>>() {});
     }
 
+    public List<DatasetNodeInfo> getLineageNeighbors(Long datasetGid, LineageQueryDirection direction, int depth) {
+        Preconditions.checkNotNull(datasetGid);
+        Preconditions.checkNotNull(direction);
+        Preconditions.checkArgument(depth > 0, "Invalid depth: {}, should be a positive integer");
+
+        HttpUrl url = buildUrl(API_TASK_RUNS + "/lineages")
+                .addQueryParameter("datasetGid", String.valueOf(datasetGid))
+                .addQueryParameter("direction", direction.getQueryParam())
+                .addQueryParameter("depth", String.valueOf(depth))
+                .build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<List<DatasetNodeInfo>>() {});
+    }
+
     public EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
-        HttpUrl url = buildUrl(API_TASK_RUNS + "/edges")
+        HttpUrl url = buildUrl(API_TASK_RUNS + "/lineages/edges")
                 .addQueryParameter("upstreamDatasetGid", String.valueOf(upstreamDatasetGid))
                 .addQueryParameter("downstreamDatasetGid", String.valueOf(downstreamDatasetGid))
                 .build();
