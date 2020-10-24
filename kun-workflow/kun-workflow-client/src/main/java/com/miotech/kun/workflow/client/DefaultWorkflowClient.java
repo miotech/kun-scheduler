@@ -7,6 +7,7 @@ import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import org.slf4j.Logger;
@@ -224,7 +225,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
-    public List<DatasetNodeInfo> getLineageNeighbors(Long datasetGid, LineageQueryDirection direction, int depth) {
+    public DatasetLineageInfo getLineageNeighbors(Long datasetGid, LineageQueryDirection direction, int depth) {
         return wfApi.getLineageNeighbors(datasetGid, direction, depth);
     }
 
