@@ -92,6 +92,8 @@ public class LineageService {
                 .withDownstreamDatasetGid(downstreamDatasetGid)
                 .withTaskInfos(edgeTaskInfos)
                 .build();
+        logger.debug("Found {} tasks between upstream dataset gid = {}, downstream dataset gid = {}",
+                edgeInfo.getTaskInfos().size(), edgeInfo.getUpstreamDatasetGid(), edgeInfo.getDownstreamDatasetGid());
         return edgeInfo;
     }
 
@@ -109,6 +111,7 @@ public class LineageService {
         datasetNode.setGid(dataset.getGid());
         datasetNode.setDatasetName(dataset.getName());
 
+        logger.debug("Saving lineage dataset node, gid = {}, name = {}", dataset.getGid(), dataset.getName());
         saveDatasetNode(datasetNode);
         return datasetNode;
     }
@@ -121,6 +124,7 @@ public class LineageService {
     public TaskNode saveTask(Task task) {
         Optional<TaskNode> taskNodeOptional = fetchTaskNodeById(task.getId());
         TaskNode taskNode = taskNodeOptional.orElseGet(() -> TaskNode.from(task));
+        logger.debug("Saving lineage task node, id = {}, name = {}", task.getId(), task.getName());
         saveTaskNode(taskNode);
         return taskNode;
     }
@@ -132,6 +136,7 @@ public class LineageService {
      */
     public boolean saveDatasetNode(DatasetNode node) {
         getSession().save(node);
+        logger.debug("Saving lineage dataset node, id = {}, dataset name = {}", node.getGid(), node.getDatasetName());
         return true;
     }
 
@@ -142,6 +147,7 @@ public class LineageService {
      */
     public boolean saveTaskNode(TaskNode node) {
         getSession().save(node);
+        logger.debug("Upserting lineage task node, id = {}, name = {}", node.getTaskId(), node.getTaskName());
         return true;
     }
 
@@ -153,6 +159,7 @@ public class LineageService {
     public boolean deleteDatasetNode(Long nodeId) {
         Session sess = getSession();
         DatasetNode existingNode = sess.load(DatasetNode.class, nodeId);
+        logger.debug("Deleting lineage dataset node, id = {}", nodeId);
         if (Objects.isNull(existingNode)) {
             return false;
         }
@@ -169,6 +176,7 @@ public class LineageService {
     public boolean deleteTaskNode(Long nodeId) {
         Session sess = getSession();
         TaskNode existingNode = sess.load(TaskNode.class, nodeId);
+        logger.debug("Deleting lineage task node, id = {}", nodeId);
         if (Objects.isNull(existingNode)) {
             return false;
         }
