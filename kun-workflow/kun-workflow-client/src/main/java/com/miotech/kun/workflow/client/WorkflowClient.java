@@ -2,7 +2,7 @@ package com.miotech.kun.workflow.client;
 
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
+import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 
 import java.io.File;
@@ -178,7 +178,7 @@ public interface WorkflowClient {
      * @param depth query depth
      * @return list of neighbouring nodes
      */
-    List<DatasetNodeInfo> getLineageNeighbors(Long datasetGid, LineageQueryDirection direction, int depth);
+    DatasetLineageInfo getLineageNeighbors(Long datasetGid, LineageQueryDirection direction, int depth);
 
     /**
      * Get lineage edge info
