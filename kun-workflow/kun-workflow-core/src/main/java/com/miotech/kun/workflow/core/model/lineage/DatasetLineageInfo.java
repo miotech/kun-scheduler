@@ -28,6 +28,22 @@ public class DatasetLineageInfo implements Serializable {
         return new DatasetLineageInfoBuilder();
     }
 
+    public DatasetNodeInfo getSourceNode() {
+        return sourceNode;
+    }
+
+    public List<DatasetNodeInfo> getDownstreamNodes() {
+        return downstreamNodes;
+    }
+
+    public List<DatasetNodeInfo> getUpstreamNodes() {
+        return upstreamNodes;
+    }
+
+    public Integer getQueryDepth() {
+        return queryDepth;
+    }
+
     public DatasetLineageInfoBuilder cloneBuilder() {
         return new DatasetLineageInfoBuilder()
                 .withSourceNode(sourceNode)
