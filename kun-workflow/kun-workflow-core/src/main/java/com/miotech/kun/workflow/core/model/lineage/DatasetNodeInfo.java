@@ -1,11 +1,14 @@
 package com.miotech.kun.workflow.core.model.lineage;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
+import com.miotech.kun.workflow.utils.JsonLongListFieldSerializer;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
@@ -13,7 +16,10 @@ import java.util.List;
  * Remember to update this object when DatasetNode schema is updated
  */
 @JsonDeserialize(builder = DatasetNodeInfo.DatasetNodeInfoBuilder.class)
-public class DatasetNodeInfo {
+public class DatasetNodeInfo implements Serializable {
+    @JsonIgnore
+    private static final long serialVersionUID = -1603512995361L;
+
     /**
      * Global id of dataset
      */
@@ -24,9 +30,11 @@ public class DatasetNodeInfo {
     private final String datasetName;
 
     /** List of task ids this dataset serves as input (this dataset -[is input of]-> tasks) */
+    @JsonSerialize(using = JsonLongListFieldSerializer.class)
     private final List<Long> downstreamTaskIds;
 
     /** List of task ids this dataset serves as output (tasks -[output to]-> this dataset) */
+    @JsonSerialize(using = JsonLongListFieldSerializer.class)
     private final List<Long> upstreamTaskIds;
 
     public DatasetNodeInfo(Long gid, String datasetName, List<Long> downstreamTaskIds, List<Long> upstreamTaskIds) {

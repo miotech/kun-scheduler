@@ -9,6 +9,7 @@ import com.miotech.kun.commons.web.annotation.RouteMapping;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
+import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 
@@ -21,7 +22,7 @@ public class LineageController {
     private LineageService lineageService;
 
     @RouteMapping(url= "/lineages", method = "GET")
-    public List<DatasetNodeInfo> getLineageNeighbors(
+    public DatasetLineageInfo getLineageNeighbors(
             @QueryParameter Long datasetGid,
             @QueryParameter(defaultValue = "BOTH") String direction,
             @QueryParameter(defaultValue = "1") Integer depth
@@ -31,22 +32,42 @@ public class LineageController {
         Preconditions.checkArgument(!Strings.isNullOrEmpty(direction), "Illegal query parameter `direction`: {}", direction);
         Preconditions.checkArgument(Objects.nonNull(depth) && (depth > 0), "Illegal query parameter `depth`: {}", depth);
 
-        Set<DatasetNode> datasetNodes = new LinkedHashSet<>();
+        Set<DatasetNode> upstreamNodes = new LinkedHashSet<>();
+        Set<DatasetNode> downstreamNodes = new LinkedHashSet<>();
+        Optional<DatasetNode> sourceNode = lineageService.fetchDatasetNodeById(datasetGid);
         switch (direction) {
             case "UPSTREAM":
-                datasetNodes.addAll(lineageService.fetchUpstreamDatasetNodes(datasetGid));
+                upstreamNodes.addAll(lineageService.fetchUpstreamDatasetNodes(datasetGid, depth));
                 break;
             case "DOWNSTREAM":
-                datasetNodes.addAll(lineageService.fetchDownstreamDatasetNodes(datasetGid));
+                downstreamNodes.addAll(lineageService.fetchDownstreamDatasetNodes(datasetGid, depth));
                 break;
             case "BOTH":
-                datasetNodes.addAll(lineageService.fetchDownstreamDatasetNodes(datasetGid));
-                datasetNodes.addAll(lineageService.fetchUpstreamDatasetNodes(datasetGid));
+                downstreamNodes.addAll(lineageService.fetchDownstreamDatasetNodes(datasetGid, depth));
+                upstreamNodes.addAll(lineageService.fetchUpstreamDatasetNodes(datasetGid, depth));
                 break;
             default:
                 throw new IllegalArgumentException(String.format("Illegal query parameter `direction`: %s", direction));
         }
 
+        return DatasetLineageInfo.newBuilder()
+                .withSourceNode(sourceNode.map(this::datasetNodeToInfo).orElse(null))
+                .withUpstreamNodes(datasetNodesToInfoList(upstreamNodes))
+                .withDownstreamNodes(datasetNodesToInfoList(downstreamNodes))
+                .withQueryDepth(depth)
+                .build();
+    }
+
+    private DatasetNodeInfo datasetNodeToInfo(DatasetNode datasetNode) {
+        return DatasetNodeInfo.newBuilder()
+                .withGid(datasetNode.getGid())
+                .withDatasetName(datasetNode.getDatasetName())
+                .withUpstreamTaskIds(datasetNode.getUpstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toList()))
+                .withDownstreamTaskIds(datasetNode.getDownstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toList()))
+                .build();
+    }
+
+    private List<DatasetNodeInfo> datasetNodesToInfoList(Set<DatasetNode> datasetNodes) {
         return datasetNodes.stream().map(node -> DatasetNodeInfo.newBuilder()
                 .withGid(node.getGid())
                 .withDatasetName(node.getDatasetName())

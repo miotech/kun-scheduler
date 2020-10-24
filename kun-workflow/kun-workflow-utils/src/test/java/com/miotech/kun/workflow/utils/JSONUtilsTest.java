@@ -4,11 +4,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.*;
 
@@ -143,5 +146,37 @@ public class JSONUtilsTest {
         } catch (Exception e) {
             assertThat(e, instanceOf(RuntimeException.class));
         }
+    }
+
+    static class ItemWithListOfLongsField {
+        @JsonSerialize(using = JsonLongListFieldSerializer.class)
+        private List<Long> nums;
+
+        public ItemWithListOfLongsField() {
+        }
+
+        public List<Long> getNums() {
+            return nums;
+        }
+
+        public void setNums(List<Long> nums) {
+            this.nums = nums;
+        }
+    }
+
+    @Test
+    public void testPojoToJson_withListOfLongsField() {
+        // Prepare
+        ItemWithListOfLongsField originalItem = new ItemWithListOfLongsField();
+        originalItem.setNums(Lists.newArrayList(109120005165023232L, null, 109120005165023233L));
+        String parsedJson = JSONUtils.toJsonString(originalItem);
+
+        // compare serialized values
+        String expectedJson = "{\"nums\":[\"109120005165023232\",null,\"109120005165023233\"]}";
+        assertEquals(expectedJson, parsedJson);
+
+        // compare deserialized object
+        ItemWithListOfLongsField deserializedItem = JSONUtils.jsonToObject(parsedJson, ItemWithListOfLongsField.class);
+        assertThat(deserializedItem, sameBeanAs(originalItem));
     }
 }
