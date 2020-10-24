@@ -94,19 +94,39 @@
   }
 
   &__port-btn {
-    display: inline-block;
+    display: table-cell;
     position: absolute;
     width: @port-btn-width;
     height: @port-btn-height;
     border: 1px solid @borderColor;
     border-radius: 3px;
-    font-size: 16px;
-    line-height: 1;
-    vertical-align: middle;
     color: @borderColor;
     background: @white;
+    cursor: pointer;
 
-    &:hover, &:focus {
+    &:not(:disabled) {
+      transition: border-color .2s ease-in, color .2s ease-in, background-color .2s ease-in;
+      &:hover, &:focus, &:active {
+        outline: none;
+        border-color: @darkBlue;
+        color: @darkBlue;
+      }
+      &:active {
+        background: #e5ecf6;
+      }
+    }
+
+    span {
+      display: table-cell;
+      vertical-align: middle;
+      font-size: 16px;
+      line-height: 16px;
+      width: 18px;
+      height: 18px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      user-select: none;
     }
   }
 

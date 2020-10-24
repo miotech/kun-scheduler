@@ -34,7 +34,7 @@ export const CardPort: React.FC<Props> = memo(function CardPort(props) {
           aria-label="port-collapsed"
           onClick={onExpand}
         >
-          +
+          <span>+</span>
         </button>
       );
     case 'expanded':
@@ -49,7 +49,7 @@ export const CardPort: React.FC<Props> = memo(function CardPort(props) {
           aria-label="port-expanded"
           onClick={onCollapse}
         >
-          -
+          <span>-</span>
         </button>
       );
     case 'loading':
