@@ -112,7 +112,7 @@ public class TaskService {
         Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
         Preconditions.checkNotNull(vo, "Cannot perform update with vo: null");
 
-        Task task = find(taskId);
+        Task task = fetchById(taskId);
         Task taskToUpdate = task.cloneBuilder()
                 .withId(taskId)
                 .withName(StringUtils.isEmpty(vo.getName()) ? task.getName() : vo.getName())
@@ -132,7 +132,7 @@ public class TaskService {
         Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
         Preconditions.checkNotNull(vo, "Cannot perform update with vo: null");
 
-        Task task = find(taskId).cloneBuilder()
+        Task task = fetchById(taskId).cloneBuilder()
                 .withId(taskId)
                 .withName(vo.getName())
                 .withScheduleConf(vo.getScheduleConf())
@@ -173,7 +173,7 @@ public class TaskService {
         Preconditions.checkArgument(0 <= upstreamLevel && upstreamLevel <= 5 , "upstreamLevel should be non negative and no greater than 5");
         Preconditions.checkArgument(0 <= downstreamLevel&& downstreamLevel <= 5, "downstreamLevel should be non negative and no greater than 5");
 
-        Task task = find(taskId);
+        Task task = fetchById(taskId);
         List<Task> result = new ArrayList<>();
         result.add(task);
         if (upstreamLevel > 0) {
@@ -219,12 +219,22 @@ public class TaskService {
      * @param taskId Task id
      * @return task
      */
-    public Task find(Long taskId) {
+    public Task fetchById(Long taskId) {
         Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
         return taskDao.fetchById(taskId)
                 .orElseThrow(() ->
                 new EntityNotFoundException(String.format("Cannot find task with id: %s", taskId))
         );
+    }
+
+    /**
+     * Fetch tasks by given ids
+     * @param taskIds ids of tasks
+     * @returna a map from id to optional task object
+     */
+    public Map<Long, Optional<Task>> fetchByIds(Set<Long> taskIds) {
+        Preconditions.checkNotNull(taskIds, "Invalid argument `taskIds`: null");
+        return taskDao.fetchByIds(taskIds);
     }
 
     public void deleteTask(Task task) {
