@@ -77,7 +77,7 @@ export interface DatasetDetail {
   datasource: string | null;
   database: string | null;
 
-  row_count: number | null;
+  rowCount: number | null;
   flows: Flow[] | null;
 
   dataQualities: DataQualityItem[] | null;
@@ -117,7 +117,7 @@ export const datasetDetail = {
     datasource: null,
     database: null,
 
-    row_count: null,
+    rowCount: null,
     flows: null,
 
     dataQualities: null,
@@ -189,6 +189,26 @@ export const datasetDetail = {
         ...payload,
       },
     }),
+    updateUpstreamPagination: (
+      state: DatasetDetailState,
+      payload: Partial<Pagination>,
+    ) => ({
+      ...state,
+      upstreamLineageTaskListPagination: {
+        ...state.upstreamLineageTaskListPagination,
+        ...payload,
+      },
+    }),
+    updateDownstreamPagination: (
+      state: DatasetDetailState,
+      payload: Partial<Pagination>,
+    ) => ({
+      ...state,
+      downstreamLineageTaskListPagination: {
+        ...state.downstreamLineageTaskListPagination,
+        ...payload,
+      },
+    }),
   },
 
   effects: (dispatch: RootDispatch) => {
@@ -227,27 +247,17 @@ export const datasetDetail = {
           }
           const resp = await fetchLineageTasksService(payload);
           if (resp) {
-            const { tasks, pageNumber, pageSize, totalCount } = resp;
+            const { tasks } = resp;
             if (
               payload.direction === LineageDirection.UPSTREAM &&
               flag === fetchUpstreamLineageTaskListFlag
             ) {
               dispatch.datasetDetail.batchUpdateState({
                 upstreamLineageTaskList: tasks,
-                upstreamLineageTaskListPagination: {
-                  pageNumber,
-                  pageSize,
-                  totalCount,
-                },
               });
             } else if (flag === fetchDownstreamLineageTaskListFlag) {
               dispatch.datasetDetail.batchUpdateState({
                 downstreamLineageTaskList: tasks,
-                downstreamLineageTaskListPagination: {
-                  pageNumber,
-                  pageSize,
-                  totalCount,
-                },
               });
             }
           }

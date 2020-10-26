@@ -16,6 +16,7 @@ import BackButton from '@/components/BackButton/BackButton';
 import useBackPath from '@/hooks/useBackPath';
 import { Watermark } from '@/definitions/Dataset.type';
 import { Column } from '@/rematch/models/datasetDetail';
+import { LineageDirection } from '@/services/lineage';
 
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnDescInput from './components/ColumnDescInput/ColumnDescInput';
@@ -24,7 +25,6 @@ import DataQualityTable from './components/DataQualityTable/DataQualityTable';
 import LineageStreamTaskTable from './components/LineageStreamTaskTable/LineageStreamTaskTable';
 
 import styles from './index.less';
-import { LineageDirection } from '@/services/lineage';
 
 interface MatchParams {
   datasetId: string;
@@ -418,7 +418,7 @@ export default function DatasetDetail({ match }: Props) {
                     {t('dataDetail.baseItem.title.rowCount')}
                   </div>
                   <div className={styles.importantContent}>
-                    {selector.row_count}
+                    {selector.rowCount}
                   </div>
                 </div>
                 <div className={styles.infoBlock}>

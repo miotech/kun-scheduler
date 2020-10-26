@@ -1,22 +1,35 @@
 import { get } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
-import { Pagination } from '@/definitions/common-types';
 import { LineageTask } from '@/rematch/models/datasetDetail';
 
 export enum LineageDirection {
   UPSTREAM = 'UPSTREAM',
   DOWNSTREAM = 'DOWNSTREAM',
 }
-export interface FetchLineageTasksReq extends Pagination {
+export interface FetchLineageTasksReq {
   datasetGid: string;
   direction: LineageDirection;
 }
 
-export interface FetchLineageTasksResp extends Pagination {
+export interface FetchLineageTasksResp {
   tasks: LineageTask[];
 }
 
 export async function fetchLineageTasksService(params: FetchLineageTasksReq) {
+  return get<FetchLineageTasksResp>('/lineage/tasks', {
+    query: params,
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export interface FetchLineageRelatedTasksReq {
+  sourceDatasetGid: string;
+  destDatasetGid: string;
+}
+
+export async function fetchLineageRelatedTasksService(
+  params: FetchLineageRelatedTasksReq,
+) {
   return get<FetchLineageTasksResp>('/lineage/tasks', {
     query: params,
     prefix: DEFAULT_API_PREFIX,

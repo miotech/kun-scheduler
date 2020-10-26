@@ -183,6 +183,7 @@ export default memo(function DataQualityTable({
 
   return (
     <Table
+      rowKey="id"
       loading={selector.fetchDataQualityLoading}
       className={styles.dataQualityTable}
       columns={columns}
