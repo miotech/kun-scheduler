@@ -48,9 +48,9 @@ public class LineageController {
         Map<Long, Optional<Task>> idToTaskMap = taskService.fetchByIds(relatedTaskIds);
 
         return DatasetLineageInfo.newBuilder()
-                .withSourceNode(sourceNode.map(node -> this.datasetNodeToInfo(node, idToTaskMap)).orElse(null))
-                .withUpstreamNodes(datasetNodesToInfoList(upstreamNodes, idToTaskMap))
-                .withDownstreamNodes(datasetNodesToInfoList(downstreamNodes, idToTaskMap))
+                .withSourceNode(sourceNode.map(node -> this.datasetNodeToInfo(node, idToTaskMap, direction)).orElse(null))
+                .withUpstreamNodes(datasetNodesToInfoList(upstreamNodes, idToTaskMap, direction))
+                .withDownstreamNodes(datasetNodesToInfoList(downstreamNodes, idToTaskMap, direction))
                 .withQueryDepth(depth)
                 .build();
     }
@@ -70,24 +70,29 @@ public class LineageController {
         return relatedTaskIds;
     }
 
-    private DatasetNodeInfo datasetNodeToInfo(DatasetNode datasetNode, Map<Long, Optional<Task>> idToTaskMap) {
+    private DatasetNodeInfo datasetNodeToInfo(DatasetNode datasetNode, Map<Long, Optional<Task>> idToTaskMap, String direction) {
+        // Set upstream/downstream tasks to empty if direction is not matching
+        Set<TaskNode> upstreamTaskNodes = !Objects.equals(direction, "DOWNSTREAM") ?
+                datasetNode.getUpstreamTasks() : new HashSet<>();
+        Set<TaskNode> downstreamTaskNodes = !Objects.equals(direction, "UPSTREAM") ?
+                datasetNode.getDownstreamTasks() : new HashSet<>();
         return DatasetNodeInfo.newBuilder()
                 .withGid(datasetNode.getGid())
                 .withDatasetName(datasetNode.getDatasetName())
-                .withUpstreamTasks(datasetNode.getUpstreamTasks().stream()
+                .withUpstreamTasks(upstreamTaskNodes.stream()
                         .map(TaskNode::getTaskId)
-                        .map(taskId -> idToTaskMap.get(taskId).orElse(null))
+                        .map(taskId -> idToTaskMap.getOrDefault(taskId, Optional.empty()).orElse(null))
                         .collect(Collectors.toList()))
-                .withDownstreamTasks(datasetNode.getDownstreamTasks().stream()
+                .withDownstreamTasks(downstreamTaskNodes.stream()
                         .map(TaskNode::getTaskId)
-                        .map(taskId -> idToTaskMap.get(taskId).orElse(null))
+                        .map(taskId -> idToTaskMap.getOrDefault(taskId, Optional.empty()).orElse(null))
                         .collect(Collectors.toList()))
                 .build();
     }
 
-    private List<DatasetNodeInfo> datasetNodesToInfoList(Set<DatasetNode> datasetNodes, Map<Long, Optional<Task>> idToTaskMap) {
+    private List<DatasetNodeInfo> datasetNodesToInfoList(Set<DatasetNode> datasetNodes, Map<Long, Optional<Task>> idToTaskMap, String direction) {
         return datasetNodes.stream()
-                .map(node -> this.datasetNodeToInfo(node, idToTaskMap))
+                .map(node -> this.datasetNodeToInfo(node, idToTaskMap, direction))
                 .collect(Collectors.toList());
     }
 
