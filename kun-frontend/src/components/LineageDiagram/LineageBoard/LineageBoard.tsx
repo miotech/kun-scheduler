@@ -1,14 +1,22 @@
-import React, { memo, RefObject, useMemo, useRef } from 'react';
+import React, { memo, RefObject, useCallback, useMemo, useRef } from 'react';
 import { useSize } from 'ahooks';
 import dagre from 'dagre';
+import { NodeGroup } from 'react-move';
 import { DatasetNodeCard, PortStateType } from '@/components/LineageDiagram/DatasetNodeCard/DatasetNodeCard';
 import LogUtils from '@/utils/logUtils';
+import { KunSpin } from '@/components/KunSpin';
+import { Group } from '@visx/group';
+import { quadIn } from '@/utils/animation/ease/quad';
 
+import { NodeGroupElement, ReactMoveTiming } from '@/definitions/ReactMove.type';
 import { LineageEdge, LineageNode } from '@/definitions/Lineage.type';
+import { Dataset } from '@/definitions/Dataset.type';
+
+import {
+  EDGE_SEP_DEFAULT, NODE_DEFAULT_HEIGHT, NODE_DEFAULT_WIDTH, NODE_SEP_DEFAULT, PORT_WIDTH, RANK_SEP_DEFAULT
+} from './helpers/constants';
 
 import './LineageBoard.less';
-import { Dataset } from '@/definitions/Dataset.type';
-import { KunSpin } from '@/components/KunSpin';
 
 interface OwnProps {
   nodes: LineageNode[];
@@ -37,40 +45,7 @@ type LineageDagreNode = dagre.Node<{
   data: LineageDagreNodeData;
 }>;
 
-const NODE_DEFAULT_WIDTH = 280;
-const PORT_WIDTH = 20;
-const NODE_DEFAULT_HEIGHT = 110;
-const NODE_SEP_DEFAULT = 100;
-const EDGE_SEP_DEFAULT = 30;
-const RANK_SEP_DEFAULT = 140;
-
-function buildLineageEdgePath(fromNode: LineageDagreNode, toNode: LineageDagreNode): string {
-  const [
-    nodeWidth = NODE_DEFAULT_WIDTH,
-    nodeHeight = NODE_DEFAULT_HEIGHT,
-  ] = [
-    fromNode.width,
-    toNode.height,
-  ];
-  const start = {
-    x: fromNode.x + nodeWidth + PORT_WIDTH / 2,
-    y: fromNode.y + nodeHeight / 2,
-  };
-  const end = {
-    x: toNode.x + PORT_WIDTH / 2,
-    y: toNode.y + nodeHeight / 2,
-  };
-  const firstCtrlPoint = {
-    x: start.x + (end.x - start.x) / 2,
-    y: start.y,
-  };
-  const secondCtrlPoint = {
-    x: start.x + (end.x - start.x) / 2,
-    y: end.y,
-  };
-  return `M ${start.x},${start.y} ` +
-    `C ${firstCtrlPoint.x},${firstCtrlPoint.y},${secondCtrlPoint.x},${secondCtrlPoint.y},${end.x},${end.y}`;
-}
+type LineageNodeGroupElement = NodeGroupElement<LineageDagreNode, { x: number, y: number, opacity: number } & ReactMoveTiming>;
 
 export const logger = LogUtils.getLoggers('LineageBoard');
 
@@ -127,69 +102,86 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
     ranker,
   ]);
 
-  const svgNodes = useMemo(() => {
-    let svgElements: React.ReactElement[] = [];
-    graph.nodes().forEach((nodeId: string) => {
-      const node = graph.node(nodeId) as LineageDagreNode;
-      logger.debug('node = %o', node);
-      svgElements = svgElements.concat(
-        <g
-          key={node.id}
-          data-node-id={node.id}
-        >
-          <foreignObject
-            x={node.x}
-            y={node.y}
-            width={(node.width || NODE_DEFAULT_WIDTH) + PORT_WIDTH}
-            height={node.height || NODE_DEFAULT_HEIGHT}
-          >
-            <div style={{ position: 'relative', left: '10px' }}>
-              <DatasetNodeCard
-                state="default"
-                data={node.data}
-                leftPortState={computeNodePortState(node.id, node.data?.expandableUpstream || false, loadingStateNodeIds)}
-                rightPortState={computeNodePortState(node.id, node.data?.expandableDownstream || false, loadingStateNodeIds)}
-                useNativeLink
-              />
-            </div>
-          </foreignObject>
-        </g>
-      );
-    });
-    return svgElements;
+  const nodesData = useMemo(() => {
+    return graph.nodes().map((nodeId: string) => (graph.node(nodeId) as LineageDagreNode));
   }, [
     graph,
   ]);
 
-  const svgEdges = useMemo(() => {
-    let svgElements: React.ReactElement[] = [];
-    graph.edges().forEach((edgeMeta: dagre.Edge) => {
-      const edge = graph.edge(edgeMeta);
-      logger.debug('edgeMeta = %o, path = %o', edgeMeta, edge.points);
-      const fromNode = graph.node(edgeMeta.v) as LineageDagreNode;
-      const toNode = graph.node(edgeMeta.w) as LineageDagreNode;
-      svgElements = svgElements.concat(
-        <g key={`${edgeMeta.v}-${edgeMeta.w}`}>
-          <path
-            fill="transparent"
-            stroke="#d8d8d8"
-            strokeWidth="2"
-            d={buildLineageEdgePath(fromNode, toNode)}
-          />
-        </g>
-      );
-    });
-    return svgElements;
-  }, [
-    graph
-  ]);
+  const renderNodeGroupElement = useCallback((nodeGroupElement: LineageNodeGroupElement) => {
+    const { data: node, state } = nodeGroupElement;
+    logger.trace('In renderNodeGroupElement, nodeGroupElement =', nodeGroupElement);
+    return (
+      <g
+        key={node.id}
+        data-node-id={node.id}
+      >
+        <foreignObject
+          x={state.x}
+          y={state.y}
+          opacity={state.opacity}
+          width={(node.width || NODE_DEFAULT_WIDTH) + PORT_WIDTH}
+          height={node.height || NODE_DEFAULT_HEIGHT}
+        >
+          <div style={{ position: 'relative', left: '10px' }}>
+            <DatasetNodeCard
+              state="default"
+              data={node.data}
+              leftPortState={computeNodePortState(node.id, node.data?.expandableUpstream || false, loadingStateNodeIds)}
+              rightPortState={computeNodePortState(node.id, node.data?.expandableDownstream || false, loadingStateNodeIds)}
+              useNativeLink
+            />
+          </div>
+        </foreignObject>
+      </g>
+    );
+  }, []);
 
   return (
     <div className="lineage-board" ref={ref}>
       <KunSpin spinning={loading}>
         <svg width={size.width || 0} height={size.height || 0}>
-          {svgEdges}
-          {svgNodes}
+          <NodeGroup
+            data={nodesData}
+            keyAccessor={(n: LineageDagreNode) => n.id}
+            start={(n: LineageDagreNode, idx: number) => {
+              logger.trace('In start fn, n =', n, '; idx =', idx);
+              return {
+                x: 0,
+                y: 0,
+                opacity: 1e-6,
+              };
+            }}
+            enter={(n: LineageDagreNode, idx: number) => {
+              logger.trace('In enter fn, n =', n, '; idx =', idx);
+              return {
+                opacity: [1],
+                x: [n.x],
+                y: [n.y],
+                timing: { duration: 500, delay: 0 },
+              };
+            }}
+            update={(n: LineageDagreNode, idx: number) => {
+              logger.trace('In update fn, n =', n, '; idx =', idx);
+              return {
+                opacity: [1],
+                x: [n.x],
+                y: [n.y],
+                timing: { duration: 500, ease: quadIn },
+              };
+            }}
+          >
+            {(renderingNodes: LineageNodeGroupElement[]) => (
+              <Group>
+                {
+                  renderingNodes.map((groupElement) => {
+                    // logger.debug('groupElement =', groupElement);
+                    return renderNodeGroupElement(groupElement);
+                  })
+                }
+              </Group>
+            )}
+          </NodeGroup>
         </svg>
       </KunSpin>
     </div>

@@ -34,11 +34,11 @@ interface OwnProps {
   useNativeLink?: boolean;
 }
 
-type Props = OwnProps & React.ComponentProps<'div'>;
+export type DatasetNodeCardProps = OwnProps & React.ComponentProps<'div'>;
 
 const clsPrefix = 'lineage-dataset-node-card';
 
-export const DatasetNodeCard: React.FC<Props> = memo(function DatasetNodeCard(props) {
+export const DatasetNodeCard: React.FC<DatasetNodeCardProps> = memo(function DatasetNodeCard(props) {
   const {
     state = 'default',
     className,

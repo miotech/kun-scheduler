@@ -22,3 +22,7 @@ export interface LineageEdge {
   /** id of downstream node */
   to: string;
 }
+
+export interface LineageNodeGroupElementState {
+
+}
