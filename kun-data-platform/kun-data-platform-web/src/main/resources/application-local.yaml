@@ -18,6 +18,8 @@ spring:
     locations: classpath:sql
     table: flyway_kun_app_schema_history
     schemas: public
+    baseline-on-migrate: true
+    baseline-version: 0
 
 security:
   base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1

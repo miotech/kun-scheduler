@@ -20,6 +20,11 @@ task buildSparkOperator (type:Exec){
     commandLine "./gradlew",":kun-data-platform:kun-workflow-operators:spark-operators:shadowJar"
 }
 
+task buildDataXOperator (type:Exec){
+    workingDir "../../"
+    commandLine "./gradlew",":kun-data-platform:kun-workflow-operators:datax-operator:shadowJar"
+}
+
 task copyBashOperator(type: Copy){
     from "../kun-workflow-operators/bash-operator/build/libs/bash-operator-0.1.jar"
     rename {
@@ -46,12 +51,22 @@ task copySparkSqlOperator(type: Copy){
     dependsOn(buildSparkOperator)
 }
 
-compileJava.dependsOn(copyBashOperator,copySparkOperator,copySparkSqlOperator)
+task copyDataXSqlOperator(type: Copy){
+    from "../kun-workflow-operators/datax-operator/build/libs/datax-operator-0.1.jar"
+    rename {
+        "datax-operator.jar"
+    }
+    into "src/main/resources"
+    dependsOn(buildDataXOperator)
+}
+
+compileJava.dependsOn(copyBashOperator,copySparkOperator,copySparkSqlOperator,copyDataXSqlOperator)
 
 task deleteLocalJar(type: Delete){
     delete "src/main/resources/bash-operator.jar"
     delete "src/main/resources/spark-operator.jar"
     delete "src/main/resources/sparkSql-operator.jar"
+    delete "src/main/resources/datax-operator.jar"
 
 }
 bootJar.dependsOn(deleteLocalJar)

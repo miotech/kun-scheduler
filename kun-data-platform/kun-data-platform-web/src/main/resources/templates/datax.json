@@ -5,7 +5,7 @@
   "operator":  {
     "name": "dataX",
     "description": "dataX operator",
-    "className": "com.miotech.kun.workflow.operator.dataXOperator"
+    "className": "com.miotech.kun.workflow.operator.DataXOperator"
   },
   "displayParameters": [
     {
