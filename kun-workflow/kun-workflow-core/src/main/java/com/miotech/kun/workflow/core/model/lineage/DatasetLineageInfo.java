@@ -7,7 +7,7 @@ import java.util.List;
 
 public class DatasetLineageInfo implements Serializable {
     @JsonIgnore
-    private static final long serialVersionUID = -1603513011096L;
+    private static final long serialVersionUID = -1603678296414L;
 
     private DatasetLineageInfo(DatasetNodeInfo sourceNode, List<DatasetNodeInfo> downstreamNodes, List<DatasetNodeInfo> upstreamNodes, Integer queryDepth) {
         this.sourceNode = sourceNode;
