@@ -26,6 +26,7 @@ public class WorkflowApi {
     private static final String API_OPERATORS = "/operators";
     private static final String API_TASKS = "/tasks";
     private static final String API_TASK_RUNS = "/taskruns";
+    private static final String API_LINEAGES = "/lineages";
 
     private final String baseUrl;
     private final OkHttpClient client;
@@ -352,7 +353,7 @@ public class WorkflowApi {
         Preconditions.checkNotNull(direction);
         Preconditions.checkArgument(depth > 0, "Invalid depth: {}, should be a positive integer");
 
-        HttpUrl url = buildUrl(API_TASK_RUNS + "/lineages")
+        HttpUrl url = buildUrl(API_LINEAGES)
                 .addQueryParameter("datasetGid", String.valueOf(datasetGid))
                 .addQueryParameter("direction", direction.getQueryParam())
                 .addQueryParameter("depth", String.valueOf(depth))
@@ -366,7 +367,7 @@ public class WorkflowApi {
 
 
     public EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
-        HttpUrl url = buildUrl(API_TASK_RUNS + "/lineages/edges")
+        HttpUrl url = buildUrl(API_LINEAGES + "/edges")
                 .addQueryParameter("upstreamDatasetGid", String.valueOf(upstreamDatasetGid))
                 .addQueryParameter("downstreamDatasetGid", String.valueOf(downstreamDatasetGid))
                 .build();
