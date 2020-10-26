@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
-import com.miotech.kun.workflow.utils.JsonLongListFieldSerializer;
 
 import java.io.Serializable;
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.List;
 @JsonDeserialize(builder = DatasetNodeInfo.DatasetNodeInfoBuilder.class)
 public class DatasetNodeInfo implements Serializable {
     @JsonIgnore
-    private static final long serialVersionUID = -1603512995361L;
+    private static final long serialVersionUID = -1603678269678L;
 
     /**
      * Global id of dataset
@@ -29,19 +29,21 @@ public class DatasetNodeInfo implements Serializable {
 
     private final String datasetName;
 
-    /** List of task ids this dataset serves as input (this dataset -[is input of]-> tasks) */
-    @JsonSerialize(using = JsonLongListFieldSerializer.class)
-    private final List<Long> downstreamTaskIds;
+    /** List of tasks this dataset serves as input (this dataset -[is input of]-> tasks) */
+    private final List<Task> downstreamTasks;
 
-    /** List of task ids this dataset serves as output (tasks -[output to]-> this dataset) */
-    @JsonSerialize(using = JsonLongListFieldSerializer.class)
-    private final List<Long> upstreamTaskIds;
+    /** List of tasks this dataset serves as output (tasks -[output to]-> this dataset) */
+    private final List<Task> upstreamTasks;
 
-    public DatasetNodeInfo(Long gid, String datasetName, List<Long> downstreamTaskIds, List<Long> upstreamTaskIds) {
+    public DatasetNodeInfo(Long gid, String datasetName, List<Task> downstreamTasks, List<Task> upstreamTasks) {
         this.gid = gid;
         this.datasetName = datasetName;
-        this.downstreamTaskIds = downstreamTaskIds;
-        this.upstreamTaskIds = upstreamTaskIds;
+        this.downstreamTasks = downstreamTasks;
+        this.upstreamTasks = upstreamTasks;
+    }
+
+    public static DatasetNodeInfoBuilder newBuilder() {
+        return new DatasetNodeInfoBuilder();
     }
 
     public Long getGid() {
@@ -52,32 +54,28 @@ public class DatasetNodeInfo implements Serializable {
         return datasetName;
     }
 
-    public List<Long> getDownstreamTaskIds() {
-        return downstreamTaskIds;
+    public List<Task> getDownstreamTasks() {
+        return downstreamTasks;
     }
 
-    public List<Long> getUpstreamTaskIds() {
-        return upstreamTaskIds;
-    }
-
-    public static DatasetNodeInfoBuilder newBuilder() {
-        return new DatasetNodeInfoBuilder();
+    public List<Task> getUpstreamTasks() {
+        return upstreamTasks;
     }
 
     public DatasetNodeInfoBuilder cloneBuilder() {
         return new DatasetNodeInfoBuilder()
                 .withGid(gid)
                 .withDatasetName(datasetName)
-                .withDownstreamTaskIds(downstreamTaskIds)
-                .withUpstreamTaskIds(upstreamTaskIds);
+                .withDownstreamTasks(downstreamTasks)
+                .withUpstreamTasks(upstreamTasks);
     }
 
     @JsonPOJOBuilder
     public static final class DatasetNodeInfoBuilder {
         private Long gid;
         private String datasetName;
-        private List<Long> downstreamTaskIds;
-        private List<Long> upstreamTaskIds;
+        private List<Task> downstreamTasks;
+        private List<Task> upstreamTasks;
 
         private DatasetNodeInfoBuilder() {
         }
@@ -92,18 +90,18 @@ public class DatasetNodeInfo implements Serializable {
             return this;
         }
 
-        public DatasetNodeInfoBuilder withDownstreamTaskIds(List<Long> downstreamTaskIds) {
-            this.downstreamTaskIds = downstreamTaskIds;
+        public DatasetNodeInfoBuilder withDownstreamTasks(List<Task> downstreamTasks) {
+            this.downstreamTasks = downstreamTasks;
             return this;
         }
 
-        public DatasetNodeInfoBuilder withUpstreamTaskIds(List<Long> upstreamTaskIds) {
-            this.upstreamTaskIds = upstreamTaskIds;
+        public DatasetNodeInfoBuilder withUpstreamTasks(List<Task> upstreamTasks) {
+            this.upstreamTasks = upstreamTasks;
             return this;
         }
 
         public DatasetNodeInfo build() {
-            return new DatasetNodeInfo(gid, datasetName, downstreamTaskIds, upstreamTaskIds);
+            return new DatasetNodeInfo(gid, datasetName, downstreamTasks, upstreamTasks);
         }
     }
 }

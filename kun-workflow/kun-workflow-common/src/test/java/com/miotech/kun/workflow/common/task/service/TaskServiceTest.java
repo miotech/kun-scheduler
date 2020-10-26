@@ -134,7 +134,7 @@ public class TaskServiceTest extends CommonTestBase {
 
         // Validate
         // 3. task should persist
-        Task persistedTask = taskService.find(createdTask.getId());
+        Task persistedTask = taskService.fetchById(createdTask.getId());
         assertTrue(persistedTask.getId() > 0);
     }
 
@@ -179,7 +179,7 @@ public class TaskServiceTest extends CommonTestBase {
 
         // Validate
         // 4. fetch updated entity and check
-        Task updatedTask = taskService.find(createdTask.getId());
+        Task updatedTask = taskService.fetchById(createdTask.getId());
         assertThat(updatedTask, sameBeanAs(taskToUpdate));
     }
 
@@ -224,7 +224,7 @@ public class TaskServiceTest extends CommonTestBase {
         }
 
         // After all invalid operations, persisted task entity should remain unchanged
-        Task persistedTask = taskService.find(createdTask.getId());
+        Task persistedTask = taskService.fetchById(createdTask.getId());
         assertThat(persistedTask, sameBeanAs(createdTask));
     }
 
@@ -249,7 +249,7 @@ public class TaskServiceTest extends CommonTestBase {
 
         // Validate
         // 4. Fetch updated task
-        Task updatedTask = taskService.find(createdTask.getId());
+        Task updatedTask = taskService.fetchById(createdTask.getId());
         // 5. and `name` property should be updated
         assertThat(updatedTask, samePropertyValuesAs(createdTask,"config", "name"));
         assertThat(updatedTask.getConfig().size(), is(createdTask.getConfig().size()));
@@ -287,7 +287,7 @@ public class TaskServiceTest extends CommonTestBase {
         }
 
         // After all invalid operations, persisted task entity should remain unchanged
-        Task persistedTask = taskService.find(createdTask.getId());
+        Task persistedTask = taskService.fetchById(createdTask.getId());
         assertThat(persistedTask, sameBeanAs(createdTask));
     }
 
