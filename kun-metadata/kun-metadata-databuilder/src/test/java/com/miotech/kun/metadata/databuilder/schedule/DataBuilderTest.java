@@ -60,7 +60,7 @@ public class DataBuilderTest extends DatabaseTestBase {
 
             // verify sweep
             containerBuilder.verifyDatasetRowCount(10L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(10L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -100,7 +100,7 @@ public class DataBuilderTest extends DatabaseTestBase {
             dataBuilder.buildDatasource(1L);
 
             containerBuilder.verifyDatasetRowCount(10L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(10L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -119,7 +119,7 @@ public class DataBuilderTest extends DatabaseTestBase {
             dataBuilder.buildDatasource(1L);
 
             containerBuilder.verifyDatasetRowCount(1L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(1L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -174,7 +174,7 @@ public class DataBuilderTest extends DatabaseTestBase {
 
             // verify
             containerBuilder.verifyDatasetRowCount(10L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(11L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -222,11 +222,10 @@ public class DataBuilderTest extends DatabaseTestBase {
 
             // pull dataset
             dataBuilder.buildDataset(gid);
-            containerBuilder.verifyDatasetRowCount(1L);
 
             // verify
-            containerBuilder.verifyDatasetRowCount(1L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(1L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -246,7 +245,7 @@ public class DataBuilderTest extends DatabaseTestBase {
 
             // verify
             containerBuilder.verifyDatasetRowCount(1L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(2L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
