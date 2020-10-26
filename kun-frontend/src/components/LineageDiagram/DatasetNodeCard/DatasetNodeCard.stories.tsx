@@ -10,7 +10,9 @@ export default {
 } as Meta;
 
 const demoMessage = {
-  'lineageDiagram.nodeCard.rowCount': 'Row Count'
+  'lineage.rowCount': 'Row Count',
+  'lineage.dataSourceName': 'Data Source Name',
+  'lineage.dataSourceType': 'Data Source Type',
 };
 
 export const DatasetNodeCardDemo = () => {

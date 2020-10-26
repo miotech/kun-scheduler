@@ -101,7 +101,7 @@ export const DatasetNodeCard: React.FC<Props> = memo(function DatasetNodeCard(pr
           {/* Row count */}
           <dl data-label="row-count-wrapper">
             <dt data-label="row-count-label">
-              {t('lineageDiagram.nodeCard.rowCount')}
+              {t('lineage.rowCount')}
             </dt>
             <dd data-label="row-count-value">
               {isNumber(rowCount) ? numeral(rowCount).format('0,0') : 'N/A'}
@@ -118,13 +118,13 @@ export const DatasetNodeCard: React.FC<Props> = memo(function DatasetNodeCard(pr
       <div className={`${clsPrefix}__details`}>
         <section className={`${clsPrefix}__left-content`}>
           <dl>
-            <dt className={`${clsPrefix}__def-title`}>Data Source Name</dt>
+            <dt className={`${clsPrefix}__def-title`}>{t('lineage.dataSourceName')}</dt>
             <dd className={`${clsPrefix}__def-desc`}>{data?.datasource ?? 'N/A'}</dd>
           </dl>
         </section>
         <section className={`${clsPrefix}__right-content`}>
           <dl>
-            <dt className={`${clsPrefix}__def-title`}>Data Source Type</dt>
+            <dt className={`${clsPrefix}__def-title`}>{t('lineage.dataSourceType')}</dt>
             <dd className={`${clsPrefix}__def-desc`}>{data?.type ?? 'N/A'}</dd>
           </dl>
         </section>
