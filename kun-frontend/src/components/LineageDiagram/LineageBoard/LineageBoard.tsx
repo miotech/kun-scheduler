@@ -1,7 +1,7 @@
 import React, { memo, RefObject, useMemo, useRef } from 'react';
 import { useSize } from 'ahooks';
 import dagre from 'dagre';
-import { DatasetNodeCard } from '@/components/LineageDiagram/DatasetNodeCard/DatasetNodeCard';
+import { DatasetNodeCard, PortStateType } from '@/components/LineageDiagram/DatasetNodeCard/DatasetNodeCard';
 import LogUtils from '@/utils/logUtils';
 
 import { LineageEdge, LineageNode } from '@/definitions/Lineage.type';
@@ -22,13 +22,23 @@ interface OwnProps {
   ranker?: 'network-simplex' | 'tight-tree' | 'longest-path';
   onExpandUpstream?: (datasetId: string) => any;
   onExpandDownstream?: (datasetId: string) => any;
+  loadingStateNodeIds?: string[];
 }
 
 type Props = OwnProps;
 
-type LineageDagreNode = dagre.Node<{ id: string; data: Dataset }>;
+type LineageDagreNodeData = Dataset & {
+  expandableUpstream?: boolean;
+  expandableDownstream?: boolean;
+};
 
-const NODE_DEFAULT_WIDTH = 282;
+type LineageDagreNode = dagre.Node<{
+  id: string;
+  data: LineageDagreNodeData;
+}>;
+
+const NODE_DEFAULT_WIDTH = 280;
+const PORT_WIDTH = 20;
 const NODE_DEFAULT_HEIGHT = 110;
 const NODE_SEP_DEFAULT = 100;
 const EDGE_SEP_DEFAULT = 30;
@@ -43,11 +53,11 @@ function buildLineageEdgePath(fromNode: LineageDagreNode, toNode: LineageDagreNo
     toNode.height,
   ];
   const start = {
-    x: fromNode.x + nodeWidth,
+    x: fromNode.x + nodeWidth + PORT_WIDTH / 2,
     y: fromNode.y + nodeHeight / 2,
   };
   const end = {
-    x: toNode.x,
+    x: toNode.x + PORT_WIDTH / 2,
     y: toNode.y + nodeHeight / 2,
   };
   const firstCtrlPoint = {
@@ -75,6 +85,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
     rankdir = 'LR',
     align = undefined,
     ranker = 'network-simplex',
+    loadingStateNodeIds = [],
   } = props;
 
   const ref = useRef() as RefObject<HTMLDivElement>;
@@ -129,14 +140,18 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
           <foreignObject
             x={node.x}
             y={node.y}
-            width={node.width || NODE_DEFAULT_WIDTH}
+            width={(node.width || NODE_DEFAULT_WIDTH) + PORT_WIDTH}
             height={node.height || NODE_DEFAULT_HEIGHT}
           >
-            <DatasetNodeCard
-              state="default"
-              data={node.data}
-              useNativeLink
-            />
+            <div style={{ position: 'relative', left: '10px' }}>
+              <DatasetNodeCard
+                state="default"
+                data={node.data}
+                leftPortState={computeNodePortState(node.id, node.data?.expandableUpstream || false, loadingStateNodeIds)}
+                rightPortState={computeNodePortState(node.id, node.data?.expandableDownstream || false, loadingStateNodeIds)}
+                useNativeLink
+              />
+            </div>
           </foreignObject>
         </g>
       );
@@ -180,3 +195,14 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
     </div>
   );
 });
+
+function computeNodePortState(id: string, expandable: boolean, loadingStateNodeIds: string[]): PortStateType {
+  if (loadingStateNodeIds.indexOf(id) >= 0) {
+    return 'loading';
+  }
+  if (expandable) {
+    return 'collapsed';
+  }
+  // else
+  return 'hidden';
+}
