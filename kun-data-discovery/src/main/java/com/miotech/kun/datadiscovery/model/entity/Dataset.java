@@ -18,7 +18,6 @@ import java.util.List;
 @NoArgsConstructor
 public class Dataset extends DatasetBasic {
 
-    @JsonProperty("row_count")
     private Long rowCount;
 
     private List<DataTask> flows;
