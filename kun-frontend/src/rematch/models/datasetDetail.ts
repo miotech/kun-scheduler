@@ -40,7 +40,7 @@ export interface Column {
   id: string;
   name: string;
   type: string;
-  high_watermark: Watermark;
+  highWatermark: Watermark;
   description: string;
   not_null_count: number;
   not_null_percentage: number;
@@ -56,8 +56,8 @@ export interface DatasetDetail {
   name: string | null;
   schema: string | null;
   type: string | null;
-  high_watermark: Watermark | null;
-  low_watermark: Watermark | null;
+  highWatermark: Watermark | null;
+  lowWatermark: Watermark | null;
   description: string | null;
 
   owners: string[] | null;
@@ -87,8 +87,8 @@ export const datasetDetail = {
     name: null,
     schema: null,
     type: null,
-    high_watermark: null,
-    low_watermark: null,
+    highWatermark: null,
+    lowWatermark: null,
     description: null,
 
     owners: null,
@@ -298,10 +298,10 @@ export const datasetDetail = {
         return null;
       },
 
-      async deleteDataQuality(payload: { id: string; datasetId: string }) {
-        const { id, datasetId } = payload;
+      async deleteDataQuality(payload: { id: string }) {
+        const { id } = payload;
         try {
-          const resp = await deleteQualityService(id, { datasetId });
+          const resp = await deleteQualityService(id);
           if (resp) {
             return resp;
           }

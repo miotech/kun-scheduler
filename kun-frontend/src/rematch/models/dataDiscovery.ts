@@ -49,7 +49,7 @@ export interface Dataset {
   type: string;
   datasource: string;
   database: string;
-  high_watermark: Watermark;
+  highWatermark: Watermark;
   owners: string[];
   tags: string[];
   glossaries: GlossaryItem[];
