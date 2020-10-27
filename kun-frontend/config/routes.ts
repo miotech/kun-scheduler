@@ -105,7 +105,7 @@ export const appRoutes = [
                     ],
                   },
                   {
-                    title: 'common.pageTitle.datasetDetail',
+                    title: 'common.pageTitle.lineage',
                     path: '/data-discovery/dataset/:datasetId/lineage',
                     component: 'lineage/index',
                     breadcrumbLink: true,

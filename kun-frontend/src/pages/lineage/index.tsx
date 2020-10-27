@@ -1,42 +1,103 @@
 import { useRouteMatch } from 'umi';
-import React, { useState } from 'react';
-import Button from 'antd/lib/button';
+import React, { useState, useEffect, useCallback } from 'react';
 import Card from '@/components/Card/Card';
+import useRedux from '@/hooks/useRedux';
+import LineageBoard from '@/components/LineageDiagram/LineageBoard';
+import { LineageDagreNodeData } from '@/components/LineageDiagram/LineageBoard/LineageBoard';
+import BackButton from '@/components/BackButton/BackButton';
 import SideDropCard from './components/SideDropCard/SideDropCard';
 
 import styles from './index.less';
+import { transformNodes } from './helpers/transformNodes';
+import { transformEdges } from './helpers/transformEdges';
 
 export default function Lineage() {
+  const { selector, dispatch } = useRedux(state => state.lineage);
+
   const match = useRouteMatch<{ datasetId: string }>();
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentType, setCurrentType] = useState<'dataset' | 'task'>('dataset');
+
+  useEffect(() => {
+    dispatch.lineage.fetchInitialLineageGraphInfo(match.params.datasetId);
+  }, [dispatch.lineage, match.params.datasetId]);
+
+  const nodes = transformNodes(
+    selector.graph.vertices,
+    selector.selectedNodeId,
+  );
+  const edges = transformEdges(
+    selector.graph.edges,
+    `${selector?.selectedEdgeInfo?.sourceNodeId}-${selector?.selectedEdgeInfo?.destNodeId}`,
+  );
+
+  const handleClickNode = useCallback(
+    (node: LineageDagreNodeData) => {
+      setIsExpanded(true);
+      setCurrentType('dataset');
+      dispatch.lineage.updateState({
+        key: 'selectedNodeId',
+        value: node.id,
+      });
+      dispatch.lineage.updateState({
+        key: 'selectedEdgeInfo',
+        value: null,
+      });
+    },
+    [dispatch.lineage],
+  );
+  const handleClickEdge = useCallback(
+    (edgeInfo: { srcNodeId: string; destNodeId: string }) => {
+      setIsExpanded(true);
+      setCurrentType('task');
+      dispatch.lineage.updateState({
+        key: 'selectedEdgeInfo',
+        value: {
+          sourceNodeId: edgeInfo.srcNodeId,
+          destNodeId: edgeInfo.destNodeId,
+          sourceNodeName: '',
+          destNodeName: '',
+        },
+      });
+      dispatch.lineage.updateState({
+        key: 'selectedNodeId',
+        value: null,
+      });
+    },
+    [dispatch.lineage],
+  );
+
+  const handleClickBackground = useCallback(() => {
+    setIsExpanded(false);
+    dispatch.lineage.batchUpdateState({
+      selectedNodeId: null,
+      selectedEdgeInfo: null,
+    });
+  }, [dispatch.lineage]);
+
   return (
     <div className={styles.page}>
+      <BackButton
+        defaultUrl={`/data-discovery/dataset/${match.params.datasetId}`}
+      />
+
       <Card className={styles.content}>
-        123
-        <Button
-          onClick={() => {
-            setCurrentType('dataset');
-            setIsExpanded(true);
-          }}
-        >
-          dataset
-        </Button>
-        <Button
-          onClick={() => {
-            setCurrentType('task');
-            setIsExpanded(true);
-          }}
-        >
-          task
-        </Button>
+        <LineageBoard
+          nodes={nodes}
+          edges={edges}
+          loading={selector.graphLoading}
+          onClickNode={handleClickNode}
+          onClickEdge={handleClickEdge}
+          onClickBackground={handleClickBackground}
+        />
+
         <SideDropCard
           isExpanded={isExpanded}
-          datasetId={match.params.datasetId}
-          sourceDatasetId="63968095944835072"
-          destDatasetId="63969133489815552"
-          sourceDatasetName="source dataset"
-          destDatasetName="dest dataset"
+          datasetId={selector.selectedNodeId}
+          sourceDatasetId={selector.selectedEdgeInfo?.sourceNodeId}
+          destDatasetId={selector.selectedEdgeInfo?.destNodeId}
+          sourceDatasetName={selector.selectedEdgeInfo?.sourceNodeName}
+          destDatasetName={selector.selectedEdgeInfo?.destNodeName}
           onExpand={(v: boolean) => setIsExpanded(v)}
           type={currentType}
         />

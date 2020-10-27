@@ -1,6 +1,7 @@
 import { get } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
 import { LineageTask } from '@/rematch/models/datasetDetail';
+import { Vertex, Edge } from '@/definitions/Dataset.type';
 
 export enum LineageDirection {
   UPSTREAM = 'UPSTREAM',
@@ -33,5 +34,24 @@ export async function fetchLineageRelatedTasksService(
   return get<FetchLineageTasksResp>('/lineage/tasks', {
     query: params,
     prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export interface FetchLineageGraphInfoRequestParams {
+  datasetGid: string;
+  direction?: 'UPSTREAM' | 'DOWNSTREAM' | 'BOTH';
+  depth?: number;
+}
+
+export interface FetchLineageGraphInfoResp {
+  vertices: Vertex[];
+  edges: Edge[];
+}
+
+export async function fetchLineageGraphInfoService(
+  params: FetchLineageGraphInfoRequestParams,
+) {
+  return get<FetchLineageGraphInfoResp>('/lineage/graph', {
+    query: params,
   });
 }

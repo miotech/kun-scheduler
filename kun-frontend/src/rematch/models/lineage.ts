@@ -3,7 +3,9 @@ import {
   FetchLineageTasksReq,
   LineageDirection,
   fetchLineageTasksService,
+  fetchLineageGraphInfoService,
 } from '@/services/lineage';
+import { Vertex, Edge } from '@/definitions/Dataset.type';
 import { LineageTask, DatasetDetail } from './datasetDetail';
 import { RootDispatch } from '../store';
 
@@ -16,6 +18,21 @@ export interface LineageState {
 
   activeFetchUpstreamLineageTaskListLoading: boolean;
   activeFetchDownstreamLineageTaskListLoading: boolean;
+
+  graph: {
+    vertices: Vertex[];
+    edges: Edge[];
+  };
+  graphLoading: boolean;
+
+  selectedNodeId: string | null;
+
+  selectedEdgeInfo: {
+    sourceNodeId: string;
+    destNodeId: string;
+    sourceNodeName: string;
+    destNodeName: string;
+  } | null;
 }
 
 export const lineage = {
@@ -29,6 +46,16 @@ export const lineage = {
 
     activeFetchUpstreamLineageTaskListLoading: false,
     activeFetchDownstreamLineageTaskListLoading: false,
+
+    graph: {
+      vertices: [],
+      edges: [],
+    },
+
+    graphLoading: false,
+
+    selectedNodeId: null,
+    selectedEdgeInfo: null,
   } as LineageState,
   reducers: {
     updateState: (
@@ -44,6 +71,16 @@ export const lineage = {
     ) => ({
       ...state,
       ...payload,
+    }),
+    updateGraph: (
+      state: LineageState,
+      payload: Partial<LineageState['graph']>,
+    ) => ({
+      ...state,
+      graph: {
+        ...state.graph,
+        ...payload,
+      },
     }),
   },
 
@@ -114,6 +151,26 @@ export const lineage = {
               value: false,
             });
           }
+        }
+      },
+
+      async fetchInitialLineageGraphInfo(id: string) {
+        try {
+          dispatch.lineage.updateState({
+            key: 'graphLoading',
+            value: true,
+          });
+          const resp = await fetchLineageGraphInfoService({ datasetGid: id });
+          if (resp) {
+            dispatch.lineage.updateGraph(resp);
+          }
+        } catch (e) {
+          // do nothing
+        } finally {
+          dispatch.lineage.updateState({
+            key: 'graphLoading',
+            value: false,
+          });
         }
       },
     };

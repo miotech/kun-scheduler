@@ -3,19 +3,31 @@ import c from 'clsx';
 import { useSize } from 'ahooks';
 import dagre from 'dagre';
 import { NodeGroup } from 'react-move';
-import { DatasetNodeCard, PortStateType } from '@/components/LineageDiagram/DatasetNodeCard/DatasetNodeCard';
+import isNil from 'lodash/isNil';
+import {
+  DatasetNodeCard,
+  PortStateType,
+} from '@/components/LineageDiagram/DatasetNodeCard/DatasetNodeCard';
 import LogUtils from '@/utils/logUtils';
 import { KunSpin } from '@/components/KunSpin';
 import { Group } from '@visx/group';
 import { quadIn } from '@/utils/animation/ease/quad';
 import { buildLineageEdgePath } from '@/components/LineageDiagram/LineageBoard/helpers/buildLineageEdgePath';
 
-import { NodeGroupElement, ReactMoveTiming } from '@/definitions/ReactMove.type';
+import {
+  NodeGroupElement,
+  ReactMoveTiming,
+} from '@/definitions/ReactMove.type';
 import { LineageEdge, LineageNode } from '@/definitions/Lineage.type';
 import { Dataset } from '@/definitions/Dataset.type';
 
 import {
-  EDGE_SEP_DEFAULT, NODE_DEFAULT_HEIGHT, NODE_DEFAULT_WIDTH, NODE_SEP_DEFAULT, PORT_WIDTH, RANK_SEP_DEFAULT
+  EDGE_SEP_DEFAULT,
+  NODE_DEFAULT_HEIGHT,
+  NODE_DEFAULT_WIDTH,
+  NODE_SEP_DEFAULT,
+  PORT_WIDTH,
+  RANK_SEP_DEFAULT,
 } from './helpers/constants';
 
 import './LineageBoard.less';
@@ -37,8 +49,8 @@ interface OwnProps {
     event: React.MouseEvent<any>,
   ) => any;
   onClickEdge?: (
-    edgeInfo: { srcNodeId: string, destNodeId: string },
-    event: React.MouseEvent<SVGPathElement>
+    edgeInfo: { srcNodeId: string; destNodeId: string },
+    event: React.MouseEvent<SVGPathElement>,
   ) => any;
   onClickBackground?: (event: React.MouseEvent<any>) => any;
   loadingStateNodeIds?: string[];
@@ -46,10 +58,11 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-type LineageDagreNodeData = Dataset & {
+export type LineageDagreNodeData = Dataset & {
   expandableUpstream?: boolean;
   expandableDownstream?: boolean;
   selected?: boolean;
+  rowCount?: number;
 };
 
 type LineageDagreNode = dagre.Node<{
@@ -57,10 +70,22 @@ type LineageDagreNode = dagre.Node<{
   data: LineageDagreNodeData;
 }>;
 
-type LineageNodeGroupElement = NodeGroupElement<LineageDagreNode, { x: number, y: number, opacity: number } & ReactMoveTiming>;
+type LineageNodeGroupElement = NodeGroupElement<
+  LineageDagreNode,
+  { x: number; y: number; opacity: number } & ReactMoveTiming
+>;
 
-type LineageEdgeGroupElement = NodeGroupElement<LineageEdge,
-  { srcNodeX: number; srcNodeY: number; destNodeX: number; destNodeY: number; opacity: number; selected: boolean; } & ReactMoveTiming>;
+type LineageEdgeGroupElement = NodeGroupElement<
+  LineageEdge,
+  {
+    srcNodeX: number;
+    srcNodeY: number;
+    destNodeX: number;
+    destNodeY: number;
+    opacity: number;
+    selected: boolean;
+  } & ReactMoveTiming
+>;
 
 export const logger = LogUtils.getLoggers('LineageBoard');
 
@@ -102,78 +127,81 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
       });
     });
     (edges || []).forEach(edge => {
-      g.setEdge({ v: edge.src, w: edge.dest }, { selected: edge.selected || false });
+      g.setEdge(
+        { v: edge.src, w: edge.dest },
+        { selected: edge.selected || false },
+      );
     });
     dagre.layout(g);
-    logger.trace('generated graph =', g);
+    logger.debug('generated graph =', g);
     return g;
-  }, [
-    nodes,
-    edges,
-    nodesep,
-    edgesep,
-    ranksep,
-    rankdir,
-    align,
-    ranker,
-  ]);
+  }, [nodes, edges, nodesep, edgesep, ranksep, rankdir, align, ranker]);
 
   const nodesData = useMemo(() => {
-    return graph.nodes().map((nodeId: string) => (graph.node(nodeId) as LineageDagreNode));
-  }, [
-    graph,
-  ]);
+    return graph
+      .nodes()
+      .map((nodeId: string) => graph.node(nodeId) as LineageDagreNode);
+  }, [graph]);
 
-  const renderNodeGroupElement = useCallback((nodeGroupElement: LineageNodeGroupElement) => {
-    const { data: node, state } = nodeGroupElement;
-    logger.trace('In renderNodeGroupElement, nodeGroupElement =', nodeGroupElement);
-    return (
-      <g
-        key={node.id}
-        data-node-id={node.id}
-      >
-        <foreignObject
-          x={state.x}
-          y={state.y}
-          opacity={state.opacity}
-          width={(node.width || NODE_DEFAULT_WIDTH) + PORT_WIDTH}
-          height={node.height || NODE_DEFAULT_HEIGHT}
-        >
-          <div style={{ position: 'relative', left: '10px', cursor: 'pointer' }}>
-            <DatasetNodeCard
-              state={node.data?.selected ? 'selected' : 'default'}
-              data={node.data}
-              leftPortState={computeNodePortState(node.id, node.data?.expandableUpstream || false, loadingStateNodeIds)}
-              rightPortState={computeNodePortState(node.id, node.data?.expandableDownstream || false, loadingStateNodeIds)}
-              onExpandLeft={(ev) => {
-                ev.stopPropagation();
-                if (props.onExpandUpstream) {
-                  props.onExpandUpstream(node.id);
-                }
-              }}
-              onExpandRight={(ev) => {
-                ev.stopPropagation();
-                if (props.onExpandDownstream) {
-                  props.onExpandDownstream(node.id);
-                }
-              }}
-              useNativeLink
-              onClick={(ev: React.MouseEvent) => {
-                if (props.onClickNode) {
-                  props.onClickNode(node.data, ev);
-                }
-              }}
-            />
-          </div>
-        </foreignObject>
-      </g>
-    );
-  }, [
-    loadingStateNodeIds,
-    props.onExpandUpstream,
-    props.onExpandDownstream,
-    props.onClickNode,
-  ]);
+  const renderNodeGroupElement = useCallback(
+    (nodeGroupElement: LineageNodeGroupElement) => {
+      const { data: node, state } = nodeGroupElement;
+      logger.trace(
+        'In renderNodeGroupElement, nodeGroupElement =',
+        nodeGroupElement,
+      );
+      return (
+        <g key={node.id} data-node-id={node.id}>
+          <foreignObject
+            x={state.x}
+            y={state.y}
+            opacity={state.opacity}
+            width={(node.width || NODE_DEFAULT_WIDTH) + PORT_WIDTH}
+            height={node.height || NODE_DEFAULT_HEIGHT}
+          >
+            <div
+              style={{ position: 'relative', left: '10px', cursor: 'pointer' }}
+            >
+              <DatasetNodeCard
+                state={node.data?.selected ? 'selected' : 'default'}
+                data={node.data}
+                leftPortState={computeNodePortState(
+                  node.id,
+                  node.data?.expandableUpstream || false,
+                  loadingStateNodeIds,
+                )}
+                rightPortState={computeNodePortState(
+                  node.id,
+                  node.data?.expandableDownstream || false,
+                  loadingStateNodeIds,
+                )}
+                onExpandLeft={ev => {
+                  ev.stopPropagation();
+                  if (props.onExpandUpstream) {
+                    props.onExpandUpstream(node.id);
+                  }
+                }}
+                rowCount={node.data?.rowCount}
+                onExpandRight={ev => {
+                  ev.stopPropagation();
+                  if (props.onExpandDownstream) {
+                    props.onExpandDownstream(node.id);
+                  }
+                }}
+                useNativeLink
+                onClick={(ev: React.MouseEvent) => {
+                  if (props.onClickNode) {
+                    props.onClickNode(node.data, ev);
+                  }
+                }}
+              />
+            </div>
+          </foreignObject>
+        </g>
+      );
+    },
+    [loadingStateNodeIds, props],
+  );
 
   const renderLineageNodesGroup = () => {
     return (
@@ -214,43 +242,59 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
       >
         {(renderingNodes: LineageNodeGroupElement[]) => (
           <Group>
-            {
-              renderingNodes.map((groupElement) => {
-                // logger.debug('groupElement =', groupElement);
-                return renderNodeGroupElement(groupElement);
-              })
-            }
+            {renderingNodes.map(groupElement => {
+              // logger.debug('groupElement =', groupElement);
+              return renderNodeGroupElement(groupElement);
+            })}
           </Group>
         )}
       </NodeGroup>
     );
   };
 
-  const svgDefs = useMemo(() => (
-    <defs>
-      <marker id="arrowEnd" viewBox="0 0 5 5"
-              refX="0" refY="2.5"
-              markerUnits="strokeWidth"
-              markerWidth="5" markerHeight="5"
-              orient="auto">
-        <path d="M 0 0 L 5 2.5 L 0 5 z" fill="#d8d8d8"/>
-      </marker>
-      <marker id="arrowEndHover" viewBox="0 0 5 5"
-              refX="0" refY="2.5"
-              markerUnits="strokeWidth"
-              markerWidth="5" markerHeight="5"
-              orient="auto">
-        <path d="M 0 0 L 5 2.5 L 0 5 z" fill="rgba(26, 115, 232, 0.3)"/>
-      </marker>
-      <marker id="arrowEndActive" viewBox="0 0 5 5"
-              refX="0" refY="2.5"
-              markerUnits="strokeWidth"
-              markerWidth="5" markerHeight="5"
-              orient="auto">
-        <path d="M 0 0 L 5 2.5 L 0 5 z" fill="#1a73e8"/>
-      </marker>
-    </defs>
-  ), []);
+  const svgDefs = useMemo(
+    () => (
+      <defs>
+        <marker
+          id="arrowEnd"
+          viewBox="0 0 5 5"
+          refX="0"
+          refY="2.5"
+          markerUnits="strokeWidth"
+          markerWidth="5"
+          markerHeight="5"
+          orient="auto"
+        >
+          <path d="M 0 0 L 5 2.5 L 0 5 z" fill="#d8d8d8" />
+        </marker>
+        <marker
+          id="arrowEndHover"
+          viewBox="0 0 5 5"
+          refX="0"
+          refY="2.5"
+          markerUnits="strokeWidth"
+          markerWidth="5"
+          markerHeight="5"
+          orient="auto"
+        >
+          <path d="M 0 0 L 5 2.5 L 0 5 z" fill="rgba(26, 115, 232, 0.3)" />
+        </marker>
+        <marker
+          id="arrowEndActive"
+          viewBox="0 0 5 5"
+          refX="0"
+          refY="2.5"
+          markerUnits="strokeWidth"
+          markerWidth="5"
+          markerHeight="5"
+          orient="auto"
+        >
+          <path d="M 0 0 L 5 2.5 L 0 5 z" fill="#1a73e8" />
+        </marker>
+      </defs>
+    ),
+    [],
+  );
 
   const renderLineageEdgesGroup = () => {
     const edgeData = graph.edges().map(e => ({
@@ -258,7 +302,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
       dest: e.w,
       selected: graph.edge(e.v, e.w)?.selected || false,
     }));
-    logger.trace('edgeData =', edgeData)
+    logger.trace('edgeData =', edgeData);
     return (
       <NodeGroup
         data={edgeData}
@@ -282,10 +326,13 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
         }}
         enter={(e: LineageEdge, idx: number) => {
           logger.trace('In enter fn, n =', e, '; idx =', idx);
-          const [ fromNode, destNode ] = [
+          const [fromNode, destNode] = [
             graph.node(e.src) as LineageDagreNode,
             graph.node(e.dest) as LineageDagreNode,
           ];
+          if (!fromNode || !destNode) {
+            return {};
+          }
           return {
             opacity: [1],
             srcNodeX: [fromNode.x],
@@ -298,10 +345,13 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
         }}
         update={(e: LineageEdge, idx: number) => {
           logger.trace('In update fn, n =', e, '; idx =', idx);
-          const [ fromNode, destNode ] = [
+          const [fromNode, destNode] = [
             graph.node(e.src) as LineageDagreNode,
             graph.node(e.dest) as LineageDagreNode,
           ];
+          if (!fromNode || !destNode) {
+            return {};
+          }
           return {
             opacity: [1],
             srcNodeX: [fromNode.x],
@@ -315,40 +365,44 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
       >
         {(renderingEdges: LineageEdgeGroupElement[]) => (
           <Group>
-            {
-              renderingEdges.map((edge) => {
-                const { state } = edge;
-                logger.trace('in rendering edge =', edge);
-                return (
-                  <path
-                    className={c('lineage-edge-path', {
-                      'lineage-edge-path--selected': state.selected,
-                    })}
-                    data-tid={`edge-${edge.data.src}-${edge.data.dest}`}
-                    key={`edge-${edge.data.src}-${edge.data.dest}`}
-                    d={buildLineageEdgePath(
-                      { x: state.srcNodeX, y: state.srcNodeY },
-                      { x: state.destNodeX, y: state.destNodeY },
-                    )}
-                    onClick={(ev: React.MouseEvent<SVGPathElement>) => {
-                      if (props.onClickEdge) {
-                        props.onClickEdge({
+            {renderingEdges.map(edge => {
+              const { state } = edge;
+              if (isNil(state.srcNodeX) || isNil(state.srcNodeY)) {
+                return <></>;
+              }
+              logger.trace('in rendering edge =', edge);
+              return (
+                <path
+                  className={c('lineage-edge-path', {
+                    'lineage-edge-path--selected': state.selected,
+                  })}
+                  data-tid={`edge-${edge.data.src}-${edge.data.dest}`}
+                  key={`edge-${edge.data.src}-${edge.data.dest}`}
+                  d={buildLineageEdgePath(
+                    { x: state.srcNodeX, y: state.srcNodeY },
+                    { x: state.destNodeX, y: state.destNodeY },
+                  )}
+                  onClick={(ev: React.MouseEvent<SVGPathElement>) => {
+                    if (props.onClickEdge) {
+                      props.onClickEdge(
+                        {
                           srcNodeId: edge.data.src,
                           destNodeId: edge.data.dest,
-                        }, ev);
-                      }
-                    }}
-                    stroke="#d8d8d8"
-                    strokeWidth={2}
-                    opacity={state.opacity}
-                    fill="transparent"
-                    markerEnd="url(#arrowEnd)"
-                    cursor="pointer"
-                    pointerEvents="all"
-                  />
-                );
-              })
-            }
+                        },
+                        ev,
+                      );
+                    }
+                  }}
+                  stroke="#d8d8d8"
+                  strokeWidth={2}
+                  opacity={state.opacity}
+                  fill="transparent"
+                  markerEnd="url(#arrowEnd)"
+                  cursor="pointer"
+                  pointerEvents="all"
+                />
+              );
+            })}
           </Group>
         )}
       </NodeGroup>
@@ -358,13 +412,10 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
   return (
     <div className="lineage-board" ref={ref}>
       <KunSpin spinning={loading}>
-        <svg
-          width={size.width || 0}
-          height={size.height || 0}
-        >
+        <svg width={size.width || 0} height={size.height || 0}>
           <rect
             data-tid="lineage-board-background"
-            onClick={(ev) => {
+            onClick={ev => {
               if (props.onClickBackground) {
                 props.onClickBackground(ev);
               }
@@ -383,7 +434,11 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
   );
 });
 
-function computeNodePortState(id: string, expandable: boolean, loadingStateNodeIds: string[]): PortStateType {
+function computeNodePortState(
+  id: string,
+  expandable: boolean,
+  loadingStateNodeIds: string[],
+): PortStateType {
   if (loadingStateNodeIds.indexOf(id) >= 0) {
     return 'loading';
   }

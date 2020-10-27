@@ -7,7 +7,7 @@ import RelatedTaskCard from '../RelatedTaskCard/RelatedTaskCard';
 interface Props {
   isExpanded: boolean;
   onExpand: (v: boolean) => void;
-  datasetId?: string;
+  datasetId?: string | null;
   sourceDatasetId?: string;
   destDatasetId?: string;
   sourceDatasetName?: string;
