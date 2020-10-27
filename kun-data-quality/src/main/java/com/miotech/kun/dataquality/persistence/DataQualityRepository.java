@@ -2,6 +2,7 @@ package com.miotech.kun.dataquality.persistence;
 
 import com.google.common.collect.Lists;
 import com.miotech.kun.common.BaseRepository;
+import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
@@ -78,46 +79,22 @@ public class DataQualityRepository extends BaseRepository {
         jdbcTemplate.update(sql, taskId, caseId);
     }
 
-    public boolean isFullDelete(Long id) {
-        String checkSql = DefaultSQLBuilder.newBuilder()
-                .select("count(1) as related_count")
+    public DeleteCaseResponse deleteCase(Long id) {
+        String fullDeleteSql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from("kun_dq_case")
+                .where("id = ?")
+                .getSQL();
+        jdbcTemplate.update(fullDeleteSql, id);
+
+        String deleteSql = DefaultSQLBuilder.newBuilder()
+                .delete()
                 .from("kun_dq_case_associated_dataset")
                 .where("case_id = ?")
                 .getSQL();
-
-        boolean fullDelete = jdbcTemplate.query(checkSql, rs -> {
-            boolean isSingleRelated = true;
-            if (rs.next()) {
-                if (rs.getLong("related_count") > 1) {
-                    isSingleRelated = false;
-                }
-            }
-            return isSingleRelated;
-        }, id);
-        return fullDelete;
-    }
-
-    public DeleteCaseResponse deleteCase(Long id, Long datasetId) {
-        boolean fullDelete = isFullDelete(id);
-
-        if (fullDelete) {
-            String fullDeleteSql = DefaultSQLBuilder.newBuilder()
-                    .delete()
-                    .from("kun_dq_case")
-                    .where("id = ?")
-                    .getSQL();
-            jdbcTemplate.update(fullDeleteSql, id);
-        } else {
-            String deleteSql = DefaultSQLBuilder.newBuilder()
-                    .delete()
-                    .from("kun_dq_case_associated_dataset")
-                    .where("case_id = ? and dataset_id = ?")
-                    .getSQL();
-            jdbcTemplate.update(deleteSql, id, datasetId);
-        }
+        jdbcTemplate.update(deleteSql, id);
         DeleteCaseResponse response = new DeleteCaseResponse();
         response.setId(id);
-        response.setIsFullDelete(fullDelete);
         return response;
     }
 
@@ -160,7 +137,7 @@ public class DataQualityRepository extends BaseRepository {
                 overwriteRelatedDatasetField(id, fieldIds);
             }
         }
-        overwriteRelatedDataset(id, dataQualityRequest.getRelatedTableIds());
+        overwriteRelatedDataset(id, dataQualityRequest.getRelatedTableIds(), dataQualityRequest.getPrimaryDatasetGid());
         overwriteRelatedRules(id, dataQualityRequest.getValidateRules());
         return id;
     }
@@ -192,7 +169,7 @@ public class DataQualityRepository extends BaseRepository {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void overwriteRelatedDataset(Long caseId, List<Long> datasetIds) {
+    public void overwriteRelatedDataset(Long caseId, List<Long> datasetIds, Long primaryDatasetId) {
         String deleteSql = DefaultSQLBuilder.newBuilder()
                 .delete()
                 .from("kun_dq_case_associated_dataset")
@@ -212,6 +189,21 @@ public class DataQualityRepository extends BaseRepository {
                         datasetId);
             }
         }
+
+        if (IdUtils.isNotEmpty(primaryDatasetId)) {
+            updatePrimaryTable(caseId, primaryDatasetId);
+        }
+    }
+
+    private void updatePrimaryTable(Long caseId, Long datasetGid) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update("kun_dq_case")
+                .set("primary_dataset_id")
+                .asPrepared()
+                .where("id = ?")
+                .getSQL();
+
+        jdbcTemplate.update(sql, datasetGid, caseId);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -343,7 +335,7 @@ public class DataQualityRepository extends BaseRepository {
     public Long addCase(DataQualityRequest dataQualityRequest) {
         String kdcSql = DefaultSQLBuilder.newBuilder()
                 .insert().into("kun_dq_case")
-                .valueSize(11)
+                .valueSize(12)
                 .getSQL();
 
         String dimension = dataQualityRequest.getDimension();
@@ -361,7 +353,8 @@ public class DataQualityRepository extends BaseRepository {
                     dataQualityRequest.getUpdateUser(),
                     millisToTimestamp(dataQualityRequest.getUpdateTime()),
                     dataQualityRequest.getTaskId(),
-                    typesStr);
+                    typesStr,
+                    null);
         } else {
             Long templateId = Long.valueOf((String) dataQualityRequest.getDimensionConfig().get("templateId"));
             jdbcTemplate.update(kdcSql, caseId,
@@ -374,7 +367,8 @@ public class DataQualityRepository extends BaseRepository {
                     dataQualityRequest.getUpdateUser(),
                     millisToTimestamp(dataQualityRequest.getUpdateTime()),
                     dataQualityRequest.getTaskId(),
-                    typesStr);
+                    typesStr,
+                    null);
             if (TemplateType.FIELD.name().equals(dimension)) {
                 String kdcadfSql = DefaultSQLBuilder.newBuilder()
                         .insert().into("kun_dq_case_associated_dataset_field")
@@ -388,16 +382,8 @@ public class DataQualityRepository extends BaseRepository {
                 }
             }
         }
-        String kdcadSql = DefaultSQLBuilder.newBuilder()
-                .insert()
-                .into("kun_dq_case_associated_dataset")
-                .valueSize(3)
-                .getSQL();
-        for (Long relatedTableId : dataQualityRequest.getRelatedTableIds()) {
-            jdbcTemplate.update(kdcadSql, IdGenerator.getInstance().nextId(),
-                    caseId,
-                    relatedTableId);
-        }
+
+        overwriteRelatedDataset(caseId, dataQualityRequest.getRelatedTableIds(), dataQualityRequest.getPrimaryDatasetGid());
         String kdcrSql = DefaultSQLBuilder.newBuilder()
                 .insert()
                 .into("kun_dq_case_rules")
@@ -477,6 +463,28 @@ public class DataQualityRepository extends BaseRepository {
         }, request.getGid());
     }
 
+    public List<DataQualityCase> getAllCases() {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("kdc.id as case_id",
+                        "kdc.execution_string as custom_string")
+                .from("kun_dq_case kdc")
+                .getSQL();
+        return jdbcTemplate.query(sql, rs -> {
+            List<DataQualityCase> result = Lists.newArrayList();
+            while (rs.next()) {
+                DataQualityCase dqCase = new DataQualityCase();
+                String dimension = TemplateType.CUSTOMIZE.name();
+                JSONObject dimensionConfig = new JSONObject();
+                dimensionConfig.put("sql", rs.getString("custom_string"));
+                dqCase.setId(rs.getLong("case_id"));
+                dqCase.setDimension(dimension);
+                dqCase.setDimensionConfig(dimensionConfig);
+                result.add(dqCase);
+            }
+            return result;
+        });
+    }
+
     public DataQualityCase getCase(Long id) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("kdc.id as case_id",
@@ -538,9 +546,20 @@ public class DataQualityRepository extends BaseRepository {
             return ids;
         }, caseId);
 
+        sql = DefaultSQLBuilder.newBuilder()
+                .select("primary_dataset_id")
+                .from("kun_dq_case")
+                .where("id = ?")
+                .getSQL();
+        Long primaryDatasetId = jdbcTemplate.queryForObject(sql, Long.class, caseId);
+
         List<DatasetBasic> datasetBasics = new ArrayList<>();
         for (Long datasetId : datasetIds) {
-            datasetBasics.add(datasetRepository.findBasic(datasetId));
+            DatasetBasic datasetBasic = datasetRepository.findBasic(datasetId);
+            if (datasetBasic.getGid().equals(primaryDatasetId)) {
+                datasetBasic.setIsPrimary(true);
+            }
+            datasetBasics.add(datasetBasic);
         }
         return datasetBasics;
     }

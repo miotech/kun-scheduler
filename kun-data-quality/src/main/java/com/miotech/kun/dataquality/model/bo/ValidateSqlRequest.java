@@ -8,7 +8,6 @@ import lombok.Data;
  */
 @Data
 public class ValidateSqlRequest {
-
     String sqlText;
 
     Long datasetId;

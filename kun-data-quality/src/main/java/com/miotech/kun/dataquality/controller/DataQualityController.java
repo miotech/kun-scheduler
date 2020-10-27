@@ -176,16 +176,11 @@ public class DataQualityController {
     }
 
     @DeleteMapping("/data-quality/{id}/delete")
-    public RequestResult<IdVO> deleteCase(@PathVariable("id") Long id,
-                                          @RequestBody DeleteDataQualityRequest request) {
-
-        if (dataQualityService.isFullDelete(id)) {
-            workflowService.deleteTaskByCase(id);
-        }
-        DeleteCaseResponse response = dataQualityService.deleteCase(id, request.getDatasetId());
+    public RequestResult<IdVO> deleteCase(@PathVariable("id") Long id) {
+        workflowService.deleteTaskByCase(id);
+        DeleteCaseResponse response = dataQualityService.deleteCase(id);
         IdVO vo = new IdVO();
         vo.setId(response.getId());
-
 
         return RequestResult.success(vo);
     }
