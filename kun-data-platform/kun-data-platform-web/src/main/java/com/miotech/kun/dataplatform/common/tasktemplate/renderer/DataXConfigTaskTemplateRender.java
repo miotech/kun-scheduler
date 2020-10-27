@@ -95,7 +95,7 @@ public class DataXConfigTaskTemplateRender extends TaskTemplateRenderer{
         //TODO: throw exception
         String sourcetable = sourceDBTable.split("\\.")[1];
         List<DatasetBaseInfo>  sourceDataSets = metaFacade.fetchDatasetsByDatasourceAndNameLike(readerDataSourceId, sourcetable);
-        String sourceTableGid = "";
+        String sourceTableGid = "0";
         if(!sourceDataSets.isEmpty()){
             sourceTableGid = sourceDataSets.get(0).getGid().toString();
         }
@@ -120,7 +120,7 @@ public class DataXConfigTaskTemplateRender extends TaskTemplateRenderer{
         //TODO: throw error
         String targettable = targetDbTable.split("\\.")[1];
         List<DatasetBaseInfo>  targetDataSets = metaFacade.fetchDatasetsByDatasourceAndNameLike(writerDataSourceId, targettable);
-        String targetTableGid = "";
+        String targetTableGid = "0";
         if(!targetDataSets.isEmpty()){
             targetTableGid = targetDataSets.get(0).getGid().toString();
         }
@@ -173,7 +173,7 @@ public class DataXConfigTaskTemplateRender extends TaskTemplateRenderer{
         configMap.put("targetTable", targettable);
         configMap.put("sourceTableGid", sourceTableGid);
         configMap.put("targetTableGid", targetTableGid);
-        configMap.put("jobjson", config.toString());
+        configMap.put("jobJson", config.toString());
         return configMap;
     }
 

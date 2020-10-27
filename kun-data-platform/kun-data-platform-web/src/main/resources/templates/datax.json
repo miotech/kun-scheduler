@@ -10,7 +10,7 @@
   "displayParameters": [
     {
       "name": "sourceDB",
-      "type": "dataSource",
+      "type": "datasource",
       "required": true,
       "displayName": "Source DB"
     },
@@ -22,7 +22,7 @@
     },
     {
       "name": "targetDB",
-      "type": "dataSource",
+      "type": "datasource",
       "required": true,
       "displayName": "Target DB"
     },
