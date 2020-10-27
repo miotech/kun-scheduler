@@ -10,6 +10,8 @@ import {
 import { searchGlossariesService } from '@/services/glossary';
 import { Pagination } from '@/definitions/common-types';
 import { DbType } from '@/definitions/Database.type';
+import { Dataset } from '@/definitions/Dataset.type';
+
 import { RootDispatch } from '../store';
 import { SearchGlossaryItem } from './glossary';
 
@@ -29,30 +31,6 @@ export enum Quick {
 export enum Mode {
   ABSOLUTE = 'absolute',
   QUICK = 'quick',
-}
-
-export interface Watermark {
-  user: string;
-  time: number;
-}
-
-export interface GlossaryItem {
-  id: string;
-  name: string;
-}
-
-export interface Dataset {
-  id: string;
-  name: string;
-  schema: string;
-  description: string;
-  type: string;
-  datasource: string;
-  database: string;
-  highWatermark: Watermark;
-  owners: string[];
-  tags: string[];
-  glossaries: GlossaryItem[];
 }
 
 export interface SearchParams {
