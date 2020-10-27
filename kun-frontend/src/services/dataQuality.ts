@@ -3,6 +3,7 @@ import {
   DataQualityReq,
   ValidateStatus,
   DataQualityResp,
+  RelatedTableItem,
 } from '@/rematch/models/dataQuality';
 import { delet, get, post } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
@@ -54,6 +55,8 @@ export async function fetchDimensionConfig(datasourceType: string) {
 
 export interface FetchValidateSQLServiceRespBody {
   validateStatus: ValidateStatus;
+  relatedTables: RelatedTableItem[];
+  validateMessage: string;
 }
 
 export async function fetchValidateSQLService(
@@ -87,17 +90,9 @@ export async function editQualityService(id: string, params: EditQualityReq) {
   });
 }
 
-export interface DeleteQualityReq {
-  datasetId: string;
-}
-
-export async function deleteQualityService(
-  id: string,
-  params: DeleteQualityReq,
-) {
+export async function deleteQualityService(id: string) {
   return delet<{ id: string }>('/data-quality/:id/delete', {
     pathParams: { id },
-    data: params,
     prefix: DEFAULT_API_PREFIX,
   });
 }

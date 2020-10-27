@@ -258,21 +258,19 @@ export default function DatasetDetail({ match }: Props) {
 
   const handleConfirmDeleteDataQuality = useCallback(
     qualityId => {
-      dispatch.datasetDetail
-        .deleteDataQuality({ id: qualityId, datasetId: currentId })
-        .then(resp => {
-          if (resp) {
-            const newDataQualities = selector.dataQualities?.filter(
-              i => i.id !== resp.id,
-            );
-            dispatch.datasetDetail.updateState({
-              key: 'dataQualities',
-              value: newDataQualities,
-            });
-          }
-        });
+      dispatch.datasetDetail.deleteDataQuality({ id: qualityId }).then(resp => {
+        if (resp) {
+          const newDataQualities = selector.dataQualities?.filter(
+            i => i.id !== resp.id,
+          );
+          dispatch.datasetDetail.updateState({
+            key: 'dataQualities',
+            value: newDataQualities,
+          });
+        }
+      });
     },
-    [currentId, dispatch.datasetDetail, selector.dataQualities],
+    [dispatch.datasetDetail, selector.dataQualities],
   );
 
   const handleChangeColumnDescription = useCallback(
@@ -331,8 +329,8 @@ export default function DatasetDetail({ match }: Props) {
       },
       {
         title: t('dataDetail.column.updateTime'),
-        dataIndex: 'high_watermark',
-        key: 'high_watermark',
+        dataIndex: 'highWatermark',
+        key: 'highWatermark',
         render: (waterMark: Watermark) => watermarkFormatter(waterMark?.time),
         width: 200,
       },
@@ -429,9 +427,9 @@ export default function DatasetDetail({ match }: Props) {
                     {t('dataDetail.baseItem.title.lastUpdate')}
                   </div>
                   <div className={styles.importantContent}>
-                    {selector.high_watermark?.time && (
+                    {selector.highWatermark?.time && (
                       <span className={styles.watermark}>
-                        {watermarkFormatter(selector.high_watermark?.time)}
+                        {watermarkFormatter(selector.highWatermark?.time)}
                       </span>
                     )}
                   </div>
@@ -448,7 +446,7 @@ export default function DatasetDetail({ match }: Props) {
 
                     <div className={styles.glossaryContent}>
                       {selector.glossaries.map(glossary => (
-                        <div className={styles.glossaryItem}>
+                        <div key={glossary.id} className={styles.glossaryItem}>
                           <FileTextOutlined style={{ marginRight: 4 }} />
                           <Link
                             to={getBackPath(
