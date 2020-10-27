@@ -1,9 +1,14 @@
 package com.miotech.kun.dataplatform.common.taskdefinition.service;
 
 import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.common.commit.vo.CommitRequest;
+import com.miotech.kun.dataplatform.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.*;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
+import com.miotech.kun.dataplatform.model.deploy.Deploy;
+import com.miotech.kun.dataplatform.model.deploy.DeployCommit;
+import com.miotech.kun.dataplatform.model.deploy.DeployStatus;
 import com.miotech.kun.dataplatform.model.taskdefinition.ScheduleConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
@@ -18,10 +23,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.miotech.kun.dataplatform.common.tasktemplate.dao.TaskTemplateDaoTest.TEST_TEMPLATE;
@@ -46,6 +48,9 @@ public class TaskDefinitionServiceTest extends AppTestBase {
 
     @Autowired
     private WorkflowClient workflowClient;
+
+    @Autowired
+    private DeployService deployService;
 
     @Test
     public void find() {
@@ -258,5 +263,26 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(vo.getUpstreamTaskDefinitions().size(), is(1));
         assertThat(vo.getUpstreamTaskDefinitions().get(0).getId(), is(upstreamTaskDefinition.getDefinitionId()));
         assertThat(vo.getUpstreamTaskDefinitions().get(0).getName(), is(""));
+    }
+
+    @Test
+    public void test_delete(){
+        // prepare
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinition);
+        Long defId = taskDefinition.getDefinitionId();
+
+        String msg = "Create test message";
+        CommitRequest request = new CommitRequest(defId, msg);
+
+        // invocation
+        deployService.deployFast(taskDefinition.getDefinitionId(), request);
+        taskDefinitionService.delete(taskDefinition.getDefinitionId());
+
+        Optional<TaskDefinition> definitionOp = taskDefinitionDao.fetchById(defId);
+        assertThat(definitionOp.isPresent(), is(true));
+        TaskDefinition def = definitionOp.get();
+        assertThat(def.isArchived(), is(true));
+
     }
 }

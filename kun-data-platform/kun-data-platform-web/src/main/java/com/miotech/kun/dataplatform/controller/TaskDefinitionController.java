@@ -101,18 +101,7 @@ public class TaskDefinitionController {
     @DeleteMapping("/task-definitions/{id}")
     @ApiOperation("Delete TaskDefinition")
     public RequestResult<Object> deleteTaskDefinitionDetail(@PathVariable Long id) {
-        TaskCommit deleteCommit = taskDefinitionService.delete(id);
-        try{
-            DeployedTask deployedTask = deployedTaskService.find(id);
-            List<Long> commitIds = new ArrayList<>();
-            commitIds.add(deleteCommit.getId());
-            DeployRequest request = new DeployRequest();
-            request.setCommitIds(commitIds);
-            Deploy deploy = deployService.create(request);
-            deployService.publish(deploy.getId());
-        }catch (IllegalArgumentException e){
-            log.debug("task definition \"{}\" not deployed yet, no need to offline", id);
-        }
+        taskDefinitionService.delete(id);
         return RequestResult.success();
     }
 
