@@ -35,11 +35,17 @@ public class DatasetNodeInfo implements Serializable {
     /** List of tasks this dataset serves as output (tasks -[output to]-> this dataset) */
     private final List<Task> upstreamTasks;
 
-    public DatasetNodeInfo(Long gid, String datasetName, List<Task> downstreamTasks, List<Task> upstreamTasks) {
-        this.gid = gid;
-        this.datasetName = datasetName;
-        this.downstreamTasks = downstreamTasks;
-        this.upstreamTasks = upstreamTasks;
+    private final Integer upstreamDatasetCount;
+
+    private final Integer downstreamDatasetCount;
+
+    public DatasetNodeInfo(DatasetNodeInfoBuilder builder) {
+        this.gid = builder.gid;
+        this.datasetName = builder.datasetName;
+        this.downstreamTasks = builder.downstreamTasks;
+        this.upstreamTasks = builder.upstreamTasks;
+        this.upstreamDatasetCount = builder.upstreamDatasetCount;
+        this.downstreamDatasetCount = builder.downstreamDatasetCount;
     }
 
     public static DatasetNodeInfoBuilder newBuilder() {
@@ -67,7 +73,9 @@ public class DatasetNodeInfo implements Serializable {
                 .withGid(gid)
                 .withDatasetName(datasetName)
                 .withDownstreamTasks(downstreamTasks)
-                .withUpstreamTasks(upstreamTasks);
+                .withUpstreamTasks(upstreamTasks)
+                .withUpstreamDatasetCount(upstreamDatasetCount)
+                .withDownstreamDatasetCount(downstreamDatasetCount);
     }
 
     @JsonPOJOBuilder
@@ -76,6 +84,8 @@ public class DatasetNodeInfo implements Serializable {
         private String datasetName;
         private List<Task> downstreamTasks;
         private List<Task> upstreamTasks;
+        private Integer upstreamDatasetCount;
+        private Integer downstreamDatasetCount;
 
         private DatasetNodeInfoBuilder() {
         }
@@ -100,8 +110,18 @@ public class DatasetNodeInfo implements Serializable {
             return this;
         }
 
+        public DatasetNodeInfoBuilder withUpstreamDatasetCount(Integer upstreamDatasetCount) {
+            this.upstreamDatasetCount = upstreamDatasetCount;
+            return this;
+        }
+
+        public DatasetNodeInfoBuilder withDownstreamDatasetCount(Integer downstreamDatasetCount) {
+            this.downstreamDatasetCount = downstreamDatasetCount;
+            return this;
+        }
+
         public DatasetNodeInfo build() {
-            return new DatasetNodeInfo(gid, datasetName, downstreamTasks, upstreamTasks);
+            return new DatasetNodeInfo(this);
         }
     }
 }

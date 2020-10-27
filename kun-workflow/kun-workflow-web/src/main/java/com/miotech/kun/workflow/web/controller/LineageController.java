@@ -87,6 +87,8 @@ public class LineageController {
                         .map(TaskNode::getTaskId)
                         .map(taskId -> idToTaskMap.getOrDefault(taskId, Optional.empty()).orElse(null))
                         .collect(Collectors.toList()))
+                .withUpstreamDatasetCount(lineageService.fetchDatasetDirectUpstreamCount(datasetNode.getGid()))
+                .withDownstreamDatasetCount(lineageService.fetchDatasetDirectDownstreamCount(datasetNode.getGid()))
                 .build();
     }
 
