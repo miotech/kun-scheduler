@@ -7,6 +7,7 @@ import {
   CloseCircleFilled,
   StopFilled,
 } from '@ant-design/icons';
+import uniqueId from 'lodash/uniqueId';
 import {
   DataQualityItem,
   DataQualityHistory,
@@ -108,7 +109,7 @@ export default memo(function DataQualityTable({
           <div>
             {types &&
               types.map(type => (
-                <Tag color={tagColorMap[type]}>
+                <Tag key={type} color={tagColorMap[type]}>
                   {t(`dataDetail.dataQuality.type.${type}`)}
                 </Tag>
               ))}
@@ -132,6 +133,7 @@ export default memo(function DataQualityTable({
               if (history === DataQualityHistory.SUCCESS) {
                 return (
                   <CheckCircleFilled
+                    key={uniqueId()}
                     className={styles.historyIcon}
                     style={{ color: colorMap.green }}
                   />
@@ -140,6 +142,7 @@ export default memo(function DataQualityTable({
               if (history === DataQualityHistory.FAILED) {
                 return (
                   <CloseCircleFilled
+                    key={uniqueId()}
                     className={styles.historyIcon}
                     style={{ color: colorMap.warning }}
                   />
@@ -148,6 +151,7 @@ export default memo(function DataQualityTable({
               if (history === DataQualityHistory.SKIPPED) {
                 return (
                   <StopFilled
+                    key={uniqueId()}
                     className={styles.historyIcon}
                     style={{ color: colorMap.stop }}
                   />

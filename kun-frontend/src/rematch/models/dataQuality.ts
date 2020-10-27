@@ -46,7 +46,7 @@ export const validateOperatorEnumToLocaleString: Record<
 export enum ValidateStatus {
   NO_VALIDATE = -1,
   SUCCESS = 0,
-  FAILD = 1,
+  FAILED = 1,
 }
 
 export interface TableDimensionConfigTemplateItem {
@@ -109,6 +109,7 @@ export interface RelatedTableItem {
   id: string;
   name: string;
   datasource: string;
+  isPrimary?: boolean;
 }
 
 export enum DataQualityType {
@@ -134,6 +135,7 @@ export interface DataQualityBase {
 
 export interface DataQualityReq extends DataQualityBase {
   relatedTableIds: string[];
+  primaryDatasetGid?: string;
 }
 
 export interface DataQualityResp extends DataQuality {

@@ -65,7 +65,7 @@ export interface DataSource extends UpdateDatasourceInfo {
   create_time: number;
   update_user: string;
   update_time: number;
-  high_watermark: Watermark;
+  highWatermark: Watermark;
 }
 
 export interface DataSettingsState {
