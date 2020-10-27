@@ -42,6 +42,52 @@ public class LineageService {
         return Optional.ofNullable(getSession().load(DatasetNode.class, datasetGlobalId));
     }
 
+    /**
+     * Fetch count of upstream dataset nodes that have direct lineage relation to specific dataset
+     * @param datasetGlobalId source dataset node
+     * @return count of upstream dataset nodes that have direct lineage relation to the source dataset node
+     */
+    public Integer fetchDatasetDirectUpstreamCount(Long datasetGlobalId) {
+        Preconditions.checkNotNull(datasetGlobalId, ERROR_MESSAGE_NULL_ARGUMENT);
+        Map<String, Object> paramsMap = new HashMap<>();
+        paramsMap.put("datasetGid", datasetGlobalId);
+        Iterable<Integer> result = getSession().query(
+                Integer.class,
+                "MATCH (d:KUN_DATASET)-->(t:KUN_TASK)-->(src:KUN_DATASET) " +
+                        "WHERE src.gid = $datasetGid " +
+                        "RETURN count(d)",
+                paramsMap
+        );
+        if (result.iterator().hasNext()) {
+            return result.iterator().next();
+        }
+        // else
+        return null;
+    }
+
+    /**
+     * Fetch count of upstream dataset nodes that have direct lineage relation to specific dataset
+     * @param datasetGlobalId source dataset node
+     * @return count of upstream dataset nodes that have direct lineage relation to the source dataset node
+     */
+    public Integer fetchDatasetDirectDownstreamCount(Long datasetGlobalId) {
+        Preconditions.checkNotNull(datasetGlobalId, ERROR_MESSAGE_NULL_ARGUMENT);
+        Map<String, Object> paramsMap = new HashMap<>();
+        paramsMap.put("datasetGid", datasetGlobalId);
+        Iterable<Integer> result = getSession().query(
+                Integer.class,
+                "MATCH (src:KUN_DATASET)-->(t:KUN_TASK)-->(d:KUN_DATASET) " +
+                        "WHERE src.gid = $datasetGid " +
+                        "RETURN count(d)",
+                paramsMap
+        );
+        if (result.iterator().hasNext()) {
+            return result.iterator().next();
+        }
+        // else
+        return null;
+    }
+
     public Optional<TaskNode> fetchTaskNodeById(Long taskId) {
         Preconditions.checkNotNull(taskId, ERROR_MESSAGE_NULL_ARGUMENT);
         return Optional.ofNullable(getSession().load(TaskNode.class, taskId));
