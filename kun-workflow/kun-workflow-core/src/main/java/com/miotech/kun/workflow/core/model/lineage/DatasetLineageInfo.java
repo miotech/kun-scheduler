@@ -1,19 +1,22 @@
 package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
 import java.io.Serializable;
 import java.util.List;
 
+@JsonDeserialize(builder = DatasetLineageInfo.DatasetLineageInfoBuilder.class)
 public class DatasetLineageInfo implements Serializable {
     @JsonIgnore
-    private static final long serialVersionUID = -1603678296414L;
+    private static final long serialVersionUID = -1603800841708L;
 
-    private DatasetLineageInfo(DatasetNodeInfo sourceNode, List<DatasetNodeInfo> downstreamNodes, List<DatasetNodeInfo> upstreamNodes, Integer queryDepth) {
-        this.sourceNode = sourceNode;
-        this.downstreamNodes = downstreamNodes;
-        this.upstreamNodes = upstreamNodes;
-        this.queryDepth = queryDepth;
+    private DatasetLineageInfo(DatasetLineageInfoBuilder builder) {
+        this.sourceNode = builder.sourceNode;
+        this.downstreamNodes = builder.downstreamNodes;
+        this.upstreamNodes = builder.upstreamNodes;
+        this.queryDepth = builder.queryDepth;
     }
 
     private final DatasetNodeInfo sourceNode;
@@ -52,6 +55,7 @@ public class DatasetLineageInfo implements Serializable {
                 .withQueryDepth(queryDepth);
     }
 
+    @JsonPOJOBuilder
     public static final class DatasetLineageInfoBuilder {
         private DatasetNodeInfo sourceNode;
         private List<DatasetNodeInfo> downstreamNodes;
@@ -82,7 +86,7 @@ public class DatasetLineageInfo implements Serializable {
         }
 
         public DatasetLineageInfo build() {
-            return new DatasetLineageInfo(sourceNode, downstreamNodes, upstreamNodes, queryDepth);
+            return new DatasetLineageInfo(this);
         }
     }
 }
