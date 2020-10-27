@@ -11,6 +11,7 @@ import com.miotech.kun.dataplatform.common.taskdefinition.vo.*;
 import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateService;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.common.utils.TagUtils;
+import com.miotech.kun.dataplatform.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.model.tasktemplate.ParameterDefinition;
@@ -207,7 +208,7 @@ public class TaskDefinitionService extends BaseSecurityService {
         Preconditions.checkArgument(nonExisted.isEmpty(), "Task DefinitionId not existed " + String.join(",", nonExisted));
     }
 
-    public void delete(Long taskDefId) {
+    public TaskCommit delete(Long taskDefId) {
         Optional<TaskDefinition> taskDefinition = taskDefinitionDao.fetchById(taskDefId);
         if (taskDefinition.isPresent()) {
             if (taskDefinition.get().isArchived()) {
@@ -217,13 +218,8 @@ public class TaskDefinitionService extends BaseSecurityService {
             throw new IllegalArgumentException(String.format("Task definition not found: \"%s\"", taskDefId));
         }
         taskDefinitionDao.archive(taskDefId);
-        try{
-            DeployedTask deployedTask = deployedTaskService.find(taskDefId);
-            workflowClient.deleteTask(deployedTask.getWorkflowTaskId());
-        }catch (IllegalArgumentException e){
-            log.debug("task definition \"{}\" not deployed yet, no need to delete workflow task", taskDefId);
-        }
-        taskCommitService.commit(taskDefId, "OFFLINE");
+        TaskCommit commit = taskCommitService.commit(taskDefId, "OFFLINE");
+        return commit;
     }
 
     public List<Long> resolveUpstreamTaskDefIds(TaskPayload taskPayload) {
