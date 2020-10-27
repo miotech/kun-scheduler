@@ -278,11 +278,11 @@ export default function DataDisvocery() {
         },
         {
           title: t('dataDiscovery.datasetsTable.header.watermark'),
-          dataIndex: 'high_watermark',
-          key: 'high_watermark',
+          dataIndex: 'highWatermark',
+          key: 'highWatermark',
           sorter: true,
           defaultSortOrder:
-            sortKey === 'high_watermark' ? getOrder(sortOrder) : undefined,
+            sortKey === 'highWatermark' ? getOrder(sortOrder) : undefined,
           width: 150,
           render: (watermark: Watermark) => watermarkFormatter(watermark.time),
         },

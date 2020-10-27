@@ -7,8 +7,18 @@ import React, {
   useRef,
 } from 'react';
 import { Controlled as CodeMirror } from 'react-codemirror2';
+import { ExclamationCircleOutlined } from '@ant-design/icons';
 
-import { Modal, Spin, Input, Radio, Select, message, Button } from 'antd';
+import {
+  Modal,
+  Spin,
+  Input,
+  Radio,
+  Select,
+  message,
+  Button,
+  Tooltip,
+} from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import uniqueId from 'lodash/uniqueId';
 import {
@@ -84,6 +94,12 @@ export default memo(function AddDataQualityModal({
     relatedTables: [relatedTable],
   }));
 
+  // 记录是否改变了sql
+  const [isUpdatedSQL, setIsUpdatedSQL] = useState(false);
+  useEffect(() => {
+    setIsUpdatedSQL(false);
+  }, [visible]);
+
   // 原始 dataquality 信息
   const [oldData, setOldData] = useState<DataQuality | null>(null);
   const [oldDataLoading, setOldDataLoading] = useState(false);
@@ -114,6 +130,11 @@ export default memo(function AddDataQualityModal({
   const [validateRuleError, setValidateRuleError] = useState('');
 
   const [validateSQLLoading, setValidateSQLLoading] = useState(false);
+  const [validateSQLErrorMsg, setValidateSQLErrorMsg] = useState('');
+
+  const [primaryDatasetGid, setPrimaryDatasetGid] = useState<string | null>(
+    null,
+  );
 
   const [customizeInputtingObj, setCustomizeInputtingObj] = useState<any>({});
 
@@ -145,19 +166,27 @@ export default memo(function AddDataQualityModal({
         setOldData(null);
       } else if (dataQualityId) {
         setOldDataLoading(true);
-        const oldData1 = await fetchDataQuality(dataQualityId);
+        const legacyData = await fetchDataQuality(dataQualityId);
         setOldDataLoading(false);
-        if (oldData1) {
-          setOldData(oldData1);
+        if (legacyData) {
+          setOldData(legacyData);
+          if (legacyData.relatedTables) {
+            const primaryTable = legacyData.relatedTables.find(
+              i => i.isPrimary,
+            );
+            if (primaryTable) {
+              setPrimaryDatasetGid(primaryTable.id);
+            }
+          }
           setData({
-            name: oldData1.name,
+            name: legacyData.name,
             // level: DataQualityLevel.LOW,
-            types: oldData1.types,
-            description: oldData1.description,
-            dimension: oldData1.dimension,
-            dimensionConfig: oldData1.dimensionConfig,
-            validateRules: oldData1.validateRules as ValidateRuleItem[],
-            relatedTables: oldData1.relatedTables,
+            types: legacyData.types,
+            description: legacyData.description,
+            dimension: legacyData.dimension,
+            dimensionConfig: legacyData.dimensionConfig,
+            validateRules: legacyData.validateRules as ValidateRuleItem[],
+            relatedTables: legacyData.relatedTables,
           });
         }
       } else {
@@ -215,6 +244,10 @@ export default memo(function AddDataQualityModal({
     setSelectedApplyFieldIds([]);
     setCustomizeInputtingObj({});
   }, [visible]);
+
+  useEffect(() => {
+    setValidateSQLStatus(ValidateStatus.NO_VALIDATE);
+  }, [customizeInputtingObj.sql, data.dimension]);
 
   // 切换 dimension
   useEffect(() => {
@@ -317,11 +350,31 @@ export default memo(function AddDataQualityModal({
     async (sql: string) => {
       setValidateSQLLoading(true);
       const validateSQLLoadingFunc = message.loading(t('common.loading'), 0);
-      const resp = await fetchValidateSQLService(sql, datasetId);
-      setValidateSQLLoading(false);
-      validateSQLLoadingFunc();
-      if (resp) {
-        setValidateSQLStatus(resp.validateStatus);
+      try {
+        const resp = await fetchValidateSQLService(sql, datasetId);
+        setValidateSQLLoading(false);
+        validateSQLLoadingFunc();
+        if (resp) {
+          setValidateSQLStatus(resp.validateStatus);
+          if (resp.validateStatus === ValidateStatus.FAILED) {
+            setValidateSQLErrorMsg(resp.validateMessage);
+          } else {
+            setData(d => ({
+              ...d,
+              relatedTables: resp.relatedTables,
+            }));
+            const primaryTable = resp.relatedTables.find(
+              table => table.isPrimary,
+            );
+            if (primaryTable) {
+              setPrimaryDatasetGid(primaryTable.id);
+            }
+          }
+        }
+      } catch (e) {
+        // do nothing
+      } finally {
+        setValidateSQLLoading(false);
       }
     },
     [datasetId, t],
@@ -343,6 +396,7 @@ export default memo(function AddDataQualityModal({
                 lineWrapping: true,
               }}
               onBeforeChange={(_editor, _data, value) => {
+                setIsUpdatedSQL(true);
                 setCustomizeInputtingObj((obj: any) => ({
                   ...obj,
                   [key]: value,
@@ -355,9 +409,12 @@ export default memo(function AddDataQualityModal({
                   {t('dataDetail.dataQuality.dimension.validate.success')}
                 </span>
               )}
-              {validateSQLStatus === ValidateStatus.FAILD && (
+              {validateSQLStatus === ValidateStatus.FAILED && (
                 <span className={styles.validateSQLFaild}>
-                  {t('dataDetail.dataQuality.dimension.validate.faild')}
+                  {t('dataDetail.dataQuality.dimension.validate.failed')}
+                  <Tooltip title={validateSQLErrorMsg}>
+                    <ExclamationCircleOutlined style={{ marginLeft: 4 }} />
+                  </Tooltip>
                 </span>
               )}
               <Button
@@ -376,6 +433,7 @@ export default memo(function AddDataQualityModal({
       customizeInputtingObj,
       handleValidateSQL,
       t,
+      validateSQLErrorMsg,
       validateSQLLoading,
       validateSQLStatus,
     ],
@@ -495,13 +553,6 @@ export default memo(function AddDataQualityModal({
     setValidateRuleList(list => [...list, { key: uniqueId('validate-rule') }]);
   }, []);
 
-  const handleChangeRelatedTables = useCallback((v: RelatedTableItem[]) => {
-    setData(i => ({
-      ...i,
-      relatedTables: v,
-    }));
-  }, []);
-
   const handleCancel = useCallback(() => {
     onClose();
   }, [onClose]);
@@ -556,6 +607,10 @@ export default memo(function AddDataQualityModal({
       dimensionConfig: currentDimensionConfig!,
       validateRules: allRuleList,
       relatedTableIds: relatedTables.map(i => i.id),
+      primaryDatasetGid:
+        dimension === 'CUSTOMIZE' && primaryDatasetGid
+          ? primaryDatasetGid
+          : undefined,
     };
 
     setConfirmLoading(true);
@@ -588,6 +643,7 @@ export default memo(function AddDataQualityModal({
     dataQualityId,
     onClose,
     onConfirm,
+    primaryDatasetGid,
     selectedApplyFieldIds,
     selectedFieldTemplateId,
     selectedTableTemplateId,
@@ -604,10 +660,20 @@ export default memo(function AddDataQualityModal({
     if (dimension === 'CUSTOMIZE' && !customizeInputtingObj.sql) {
       disabled = true;
     }
+    // 未校验或者校验失败
+    const noOrErrorValidate =
+      validateSQLStatus === ValidateStatus.FAILED ||
+      validateSQLStatus === ValidateStatus.NO_VALIDATE;
+    // 新建的时候
+    if (!dataQualityId && dimension === 'CUSTOMIZE' && noOrErrorValidate) {
+      disabled = true;
+    }
+    // 更新的时候
     if (
+      dataQualityId &&
       dimension === 'CUSTOMIZE' &&
-      (validateSQLStatus === ValidateStatus.FAILD ||
-        validateSQLStatus === ValidateStatus.NO_VALIDATE)
+      isUpdatedSQL &&
+      noOrErrorValidate
     ) {
       disabled = true;
     }
@@ -628,6 +694,8 @@ export default memo(function AddDataQualityModal({
   }, [
     customizeInputtingObj.sql,
     data,
+    dataQualityId,
+    isUpdatedSQL,
     selectedApplyFieldIds,
     selectedFieldTemplateId,
     selectedTableTemplateId,
@@ -767,10 +835,12 @@ export default memo(function AddDataQualityModal({
             </div>
             <div className={styles.fieldContent}>
               <RelatedTablesComp
-                dimension={data.dimension}
-                selectedTables={data.relatedTables}
-                defaultTableId={relatedTable.id}
-                onChange={handleChangeRelatedTables}
+                selectedTables={data.relatedTables || []}
+                defaultTableId={
+                  data.dimension === 'CUSTOMIZE'
+                    ? primaryDatasetGid
+                    : relatedTable.id
+                }
               />
             </div>
           </div>
