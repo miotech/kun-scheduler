@@ -9,12 +9,12 @@ import {
   updateColumnService,
 } from '@/services/datasetDetail';
 import { Pagination } from '@/definitions/common-types';
+import { Watermark, GlossaryItem } from '@/definitions/Dataset.type';
 import {
   deleteQualityService,
   fetchDataAllQualitiesService,
 } from '@/services/dataQuality';
 import { DataQualityType } from './dataQuality';
-import { Watermark, GlossaryItem } from './dataDiscovery';
 import { RootDispatch, RootState } from '../store';
 
 export interface Flow {
