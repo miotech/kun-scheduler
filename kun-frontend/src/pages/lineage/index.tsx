@@ -10,6 +10,7 @@ import SideDropCard from './components/SideDropCard/SideDropCard';
 import styles from './index.less';
 import { transformNodes } from './helpers/transformNodes';
 import { transformEdges } from './helpers/transformEdges';
+import { LineageDirection } from '@/services/lineage';
 
 export default function Lineage() {
   const { selector, dispatch } = useRedux(state => state.lineage);
@@ -75,6 +76,26 @@ export default function Lineage() {
     });
   }, [dispatch.lineage]);
 
+  const handleExpandUpstream = useCallback(
+    (id: string) => {
+      dispatch.lineage.fetchStreamLineageGraphInfo({
+        id,
+        direction: LineageDirection.UPSTREAM,
+      });
+    },
+    [dispatch.lineage],
+  );
+
+  const handleExpandDownstream = useCallback(
+    (id: string) => {
+      dispatch.lineage.fetchStreamLineageGraphInfo({
+        id,
+        direction: LineageDirection.DOWNSTREAM,
+      });
+    },
+    [dispatch.lineage],
+  );
+
   return (
     <div className={styles.page}>
       <BackButton
@@ -89,6 +110,8 @@ export default function Lineage() {
           onClickNode={handleClickNode}
           onClickEdge={handleClickEdge}
           onClickBackground={handleClickBackground}
+          onExpandUpstream={handleExpandUpstream}
+          onExpandDownstream={handleExpandDownstream}
         />
 
         <SideDropCard

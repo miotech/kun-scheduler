@@ -6,8 +6,14 @@ import {
   fetchLineageGraphInfoService,
 } from '@/services/lineage';
 import { Vertex, Edge } from '@/definitions/Dataset.type';
+import { mergeGraph } from '@/pages/lineage/helpers/mergeGraph';
 import { LineageTask, DatasetDetail } from './datasetDetail';
 import { RootDispatch } from '../store';
+
+export interface Graph {
+  vertices: Vertex[];
+  edges: Edge[];
+}
 
 export interface LineageState {
   activeDatasetDetail: DatasetDetail | null;
@@ -19,10 +25,7 @@ export interface LineageState {
   activeFetchUpstreamLineageTaskListLoading: boolean;
   activeFetchDownstreamLineageTaskListLoading: boolean;
 
-  graph: {
-    vertices: Vertex[];
-    edges: Edge[];
-  };
+  graph: Graph;
   graphLoading: boolean;
 
   selectedNodeId: string | null;
@@ -80,6 +83,13 @@ export const lineage = {
       graph: {
         ...state.graph,
         ...payload,
+      },
+    }),
+    mergeExpandeGraph: (state: LineageState, payload: Graph) => ({
+      ...state,
+      graph: {
+        ...state.graph,
+        ...mergeGraph(state.graph, payload),
       },
     }),
   },
@@ -164,6 +174,30 @@ export const lineage = {
           if (resp) {
             dispatch.lineage.updateGraph(resp);
           }
+        } catch (e) {
+          // do nothing
+        } finally {
+          dispatch.lineage.updateState({
+            key: 'graphLoading',
+            value: false,
+          });
+        }
+      },
+
+      async fetchStreamLineageGraphInfo(payload: {
+        id: string;
+        direction: LineageDirection;
+      }) {
+        try {
+          dispatch.lineage.updateState({
+            key: 'graphLoading',
+            value: true,
+          });
+          const resp = await fetchLineageGraphInfoService({
+            datasetGid: payload.id,
+            direction: payload.direction,
+          });
+          dispatch.lineage.mergeExpandeGraph(resp);
         } catch (e) {
           // do nothing
         } finally {
