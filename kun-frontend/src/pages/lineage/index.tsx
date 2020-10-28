@@ -116,7 +116,7 @@ export default function Lineage() {
           style={{ position: 'relative', width: '100%', height: '100%', minHeight: '500px' }}
         >
           <LineageBoardZoomProvider
-            width={boardWidth || 1000} height={(boardHeight || 500) - 2}
+            width={boardWidth || 1000} height={(boardHeight || 500)}
             scaleXMin={0.1}
             scaleYMin={0.1}
             scaleXMax={2}

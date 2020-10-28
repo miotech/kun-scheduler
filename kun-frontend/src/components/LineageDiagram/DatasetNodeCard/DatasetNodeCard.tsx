@@ -38,6 +38,14 @@ export type DatasetNodeCardProps = OwnProps & React.ComponentProps<'div'>;
 
 const clsPrefix = 'lineage-dataset-node-card';
 
+function formatRowCount(rowCount: number) {
+  if (rowCount > 1000000) {
+    return numeral(rowCount).format('0,0.00a');
+  }
+  // else
+  return numeral(rowCount).format('0,0');
+}
+
 export const DatasetNodeCard: React.FC<DatasetNodeCardProps> = memo(function DatasetNodeCard(props) {
   const {
     state = 'default',
@@ -67,12 +75,16 @@ export const DatasetNodeCard: React.FC<DatasetNodeCardProps> = memo(function Dat
         {useNativeLink ? (
           <a href="#">
             <Iconfont type="column" ariaHidden />
-            <span data-label="dataset-name">{data.name}</span>
+            <span data-label="dataset-name" title={data.name}>
+              {data.name}
+            </span>
           </a>
         ) : (
           <Link to="#">
             <Iconfont type="column" ariaHidden />
-            <span data-label="dataset-name">{data.name}</span>
+            <span data-label="dataset-name" title={data.name}>
+              {data.name}
+            </span>
           </Link>
         )}
       </h1>
@@ -104,7 +116,7 @@ export const DatasetNodeCard: React.FC<DatasetNodeCardProps> = memo(function Dat
               {t('lineage.rowCount')}
             </dt>
             <dd data-label="row-count-value">
-              {isNumber(rowCount) ? numeral(rowCount).format('0,0') : 'N/A'}
+              {isNumber(rowCount) ? formatRowCount(rowCount) : 'N/A'}
             </dd>
           </dl>
           {/* Last update time */}
