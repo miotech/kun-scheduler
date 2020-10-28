@@ -1,5 +1,6 @@
 import { useRouteMatch } from 'umi';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useSize } from 'ahooks';
 import Card from '@/components/Card/Card';
 import useRedux from '@/hooks/useRedux';
 import LineageBoard from '@/components/LineageDiagram/LineageBoard';
@@ -11,6 +12,7 @@ import styles from './index.less';
 import { transformNodes } from './helpers/transformNodes';
 import { transformEdges } from './helpers/transformEdges';
 import { LineageDirection } from '@/services/lineage';
+import { LineageBoardZoomProvider } from '@/components/LineageDiagram/LineageBoard/LineageBoardZoomProvider';
 
 export default function Lineage() {
   const { selector, dispatch } = useRedux(state => state.lineage);
@@ -18,6 +20,12 @@ export default function Lineage() {
   const match = useRouteMatch<{ datasetId: string }>();
   const [isExpanded, setIsExpanded] = useState(false);
   const [currentType, setCurrentType] = useState<'dataset' | 'task'>('dataset');
+
+  const boardWrapperRef = useRef<any>();
+  const {
+    width: boardWidth,
+    height: boardHeight,
+  } = useSize(boardWrapperRef);
 
   useEffect(() => {
     dispatch.lineage.fetchInitialLineageGraphInfo(match.params.datasetId);
@@ -103,27 +111,41 @@ export default function Lineage() {
       />
 
       <Card className={styles.content}>
-        <LineageBoard
-          nodes={nodes}
-          edges={edges}
-          loading={selector.graphLoading}
-          onClickNode={handleClickNode}
-          onClickEdge={handleClickEdge}
-          onClickBackground={handleClickBackground}
-          onExpandUpstream={handleExpandUpstream}
-          onExpandDownstream={handleExpandDownstream}
-        />
-
-        <SideDropCard
-          isExpanded={isExpanded}
-          datasetId={selector.selectedNodeId}
-          sourceDatasetId={selector.selectedEdgeInfo?.sourceNodeId}
-          destDatasetId={selector.selectedEdgeInfo?.destNodeId}
-          sourceDatasetName={selector.selectedEdgeInfo?.sourceNodeName}
-          destDatasetName={selector.selectedEdgeInfo?.destNodeName}
-          onExpand={(v: boolean) => setIsExpanded(v)}
-          type={currentType}
-        />
+        <div
+          ref={boardWrapperRef as any}
+          style={{ position: 'relative', width: '100%', height: '100%', minHeight: '500px' }}
+        >
+          <LineageBoardZoomProvider
+            width={boardWidth || 1000} height={(boardHeight || 500) - 2}
+            scaleXMin={0.1}
+            scaleYMin={0.1}
+            scaleXMax={2}
+            scaleYMax={2}
+          >
+            <LineageBoard
+              width={boardWidth || 1000}
+              height={(boardHeight || 600) - 10}
+              nodes={nodes}
+              edges={edges}
+              loading={selector.graphLoading}
+              onClickNode={handleClickNode}
+              onClickEdge={handleClickEdge}
+              onClickBackground={handleClickBackground}
+              onExpandUpstream={handleExpandUpstream}
+              onExpandDownstream={handleExpandDownstream}
+            />
+          </LineageBoardZoomProvider>
+          <SideDropCard
+            isExpanded={isExpanded}
+            datasetId={selector.selectedNodeId}
+            sourceDatasetId={selector.selectedEdgeInfo?.sourceNodeId}
+            destDatasetId={selector.selectedEdgeInfo?.destNodeId}
+            sourceDatasetName={selector.selectedEdgeInfo?.sourceNodeName}
+            destDatasetName={selector.selectedEdgeInfo?.destNodeName}
+            onExpand={(v: boolean) => setIsExpanded(v)}
+            type={currentType}
+          />
+        </div>
       </Card>
     </div>
   );

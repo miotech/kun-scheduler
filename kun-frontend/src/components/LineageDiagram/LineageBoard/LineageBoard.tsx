@@ -13,6 +13,7 @@ import { KunSpin } from '@/components/KunSpin';
 import { Group } from '@visx/group';
 import { quadIn } from '@/utils/animation/ease/quad';
 import { buildLineageEdgePath } from '@/components/LineageDiagram/LineageBoard/helpers/buildLineageEdgePath';
+import { ProvidedZoom } from '@visx/zoom/lib/types';
 
 import {
   NodeGroupElement,
@@ -33,6 +34,8 @@ import {
 import './LineageBoard.less';
 
 interface OwnProps {
+  width?: number;
+  height?: number;
   nodes: LineageNode[];
   edges: LineageEdge[];
   loading?: boolean;
@@ -54,6 +57,11 @@ interface OwnProps {
   ) => any;
   onClickBackground?: (event: React.MouseEvent<any>) => any;
   loadingStateNodeIds?: string[];
+  zoom?: ProvidedZoom;
+  onDragStart?: (ev: React.MouseEvent | React.TouchEvent) => any;
+  onDragMove?: (ev: React.MouseEvent | React.TouchEvent) => any;
+  onDragEnd?: (ev: React.MouseEvent | React.TouchEvent) => any;
+  backgroundCursor?: string;
 }
 
 type Props = OwnProps;
@@ -105,6 +113,9 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
 
   const ref = useRef() as RefObject<HTMLDivElement>;
   const size = useSize(ref);
+
+  const width = isNil(props.width) ? (size.width || 0) : props.width;
+  const height = isNil(props.height) ? (size.height || 0) : props.height;
 
   const graph = useMemo(() => {
     const g = new dagre.graphlib.Graph();
@@ -409,10 +420,14 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
     );
   };
 
+
   return (
     <div className="lineage-board" ref={ref}>
       <KunSpin spinning={loading}>
-        <svg width={size.width || 0} height={size.height || 0}>
+        <svg
+          width={width}
+          height={height}
+        >
           <rect
             data-tid="lineage-board-background"
             onClick={ev => {
@@ -420,14 +435,25 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                 props.onClickBackground(ev);
               }
             }}
+            onMouseDown={props?.onDragStart}
+            onMouseMove={props?.onDragMove}
+            onMouseUp={props?.onDragEnd}
+            onTouchStart={props?.onDragStart}
+            onTouchMove={props?.onDragMove}
+            onTouchEnd={props?.onDragEnd}
+            cursor={props.backgroundCursor || undefined}
             width={size.width || 0}
             height={size.height || 0}
             fill="transparent"
           />
           {svgDefs}
-          {renderLineageEdgesGroup()}
-          {/* Lineage nodes group */}
-          {renderLineageNodesGroup()}
+          <g
+            transform={isNil(props.zoom) ? undefined : props.zoom.toString()}
+          >
+            {renderLineageEdgesGroup()}
+            {/* Lineage nodes group */}
+            {renderLineageNodesGroup()}
+          </g>
         </svg>
       </KunSpin>
     </div>
