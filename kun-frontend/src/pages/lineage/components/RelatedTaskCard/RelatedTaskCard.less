@@ -1,0 +1,50 @@
+.RelatedTaskCard {
+  width: 100%;
+  padding: 16px 25px;
+}
+
+.title {
+  .font(20px, 30px, @darkGray);
+  margin-bottom: 8px;
+}
+
+.relatedRow {
+  display: flex;
+  align-items: center;
+}
+
+.datasetBlock {
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+  color: @darkBlue;
+}
+
+.datasetName {
+  text-decoration: underline;
+  position: relative;
+  top: -2px;
+}
+
+.arrowBody {
+  width: 64px;
+  border-top: 2px solid @fourth;
+}
+
+.arrowHead {
+  border-left: 12px solid @fourth;
+  border-top: 6px solid @noColor;
+  border-bottom: 6px solid @noColor;
+}
+
+.divider {
+  margin: 24px 0;
+  border-right: 1px solid @borderColor;
+}
+
+.taskName {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

@@ -38,8 +38,14 @@
 
   &__left-content, &__right-content {
     position: relative;
-    flex: 1 1;
-    max-width: 50%;
+  }
+
+  &__left-content {
+    flex: 55 50 50%;
+  }
+
+  &__right-content {
+    flex: 50 45 35%;
   }
 
   &__heading &__right-content {
@@ -73,7 +79,13 @@
     }
     [data-label="dataset-name"] {
       display: inline-block;
+      position: relative;
+      vertical-align: top;
       margin-left: 4px;
+      width: calc(100% - 20px);
+      overflow: hidden;
+      word-break: normal;
+      text-overflow: ellipsis;
     }
 
     [data-label="update-time-wrapper"] {
