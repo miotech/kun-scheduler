@@ -68,6 +68,14 @@ public class DatasetNodeInfo implements Serializable {
         return upstreamTasks;
     }
 
+    public Integer getUpstreamDatasetCount() {
+        return upstreamDatasetCount;
+    }
+
+    public Integer getDownstreamDatasetCount() {
+        return downstreamDatasetCount;
+    }
+
     public DatasetNodeInfoBuilder cloneBuilder() {
         return new DatasetNodeInfoBuilder()
                 .withGid(gid)
