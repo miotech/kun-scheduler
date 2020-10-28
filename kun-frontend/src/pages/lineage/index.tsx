@@ -6,13 +6,13 @@ import useRedux from '@/hooks/useRedux';
 import LineageBoard from '@/components/LineageDiagram/LineageBoard';
 import { LineageDagreNodeData } from '@/components/LineageDiagram/LineageBoard/LineageBoard';
 import BackButton from '@/components/BackButton/BackButton';
-import SideDropCard from './components/SideDropCard/SideDropCard';
-
-import styles from './index.less';
-import { transformNodes } from './helpers/transformNodes';
-import { transformEdges } from './helpers/transformEdges';
 import { LineageDirection } from '@/services/lineage';
 import { LineageBoardZoomProvider } from '@/components/LineageDiagram/LineageBoard/LineageBoardZoomProvider';
+import SideDropCard from './components/SideDropCard/SideDropCard';
+import { transformNodes } from './helpers/transformNodes';
+import { transformEdges } from './helpers/transformEdges';
+
+import styles from './index.less';
 
 export default function Lineage() {
   const { selector, dispatch } = useRedux(state => state.lineage);
@@ -22,10 +22,7 @@ export default function Lineage() {
   const [currentType, setCurrentType] = useState<'dataset' | 'task'>('dataset');
 
   const boardWrapperRef = useRef<any>();
-  const {
-    width: boardWidth,
-    height: boardHeight,
-  } = useSize(boardWrapperRef);
+  const { width: boardWidth, height: boardHeight } = useSize(boardWrapperRef);
 
   useEffect(() => {
     dispatch.lineage.fetchInitialLineageGraphInfo(match.params.datasetId);
@@ -113,10 +110,11 @@ export default function Lineage() {
       <Card className={styles.content}>
         <div
           ref={boardWrapperRef as any}
-          style={{ position: 'relative', width: '100%', height: '100%', minHeight: '500px' }}
+          style={{ position: 'relative', width: '100%', height: '100%' }}
         >
           <LineageBoardZoomProvider
-            width={boardWidth || 1000} height={(boardHeight || 500)}
+            width={boardWidth || 1000}
+            height={boardHeight || 500}
             scaleXMin={0.1}
             scaleYMin={0.1}
             scaleXMax={2}
