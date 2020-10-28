@@ -51,7 +51,7 @@ public class DatasetFieldRepository extends BaseRepository {
     }
 
     public DatasetFieldPage findByDatasetGid(Long datasetGid, DatasetFieldSearchRequest searchRequest) {
-        Long rowCount = datasetRepository.getRowCount(datasetGid);
+        Long rowCount = datasetRepository.getLatestStats(datasetGid).getRowCount();
 
         DatasetFieldPage datasetFieldPage = new DatasetFieldPage();
         List<Object> pstmtArgs = new ArrayList<>();
