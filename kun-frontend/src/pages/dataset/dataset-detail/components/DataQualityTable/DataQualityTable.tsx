@@ -17,6 +17,7 @@ import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 
 import styles from './DataQualityTable.less';
+import { dateFormatter } from '@/utils/dateFormatter';
 
 interface Props {
   data: DataQualityItem[];
@@ -116,6 +117,23 @@ export default memo(function DataQualityTable({
           </div>
         ),
       },
+      {
+        key: 'updateTime',
+        dataIndex: 'updateTime',
+        title: t('dataDetail.dataQualityTable.updateTime'),
+        className: styles.nameColumn,
+        width: 150,
+        render: updateTime => dateFormatter(updateTime),
+      },
+      {
+        key: 'createTime',
+        dataIndex: 'createTime',
+        title: t('dataDetail.dataQualityTable.createTime'),
+        className: styles.nameColumn,
+        width: 150,
+        render: createTime => dateFormatter(createTime),
+      },
+
       {
         key: 'updater',
         dataIndex: 'updater',
