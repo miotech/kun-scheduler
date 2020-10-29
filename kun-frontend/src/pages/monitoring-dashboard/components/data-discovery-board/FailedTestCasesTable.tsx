@@ -9,6 +9,8 @@ import { Link } from 'umi';
 import SafeUrlAssembler from 'safe-url-assembler';
 import TestCaseRuleTable from './TestCaseRuleTable';
 
+import styles from './FailedTestCasesTable.less';
+
 interface OwnProps {
   data: FailedTestCase[];
   pageNum: number;
@@ -74,7 +76,11 @@ export const FailedTestCasesTable: React.FC<Props> = memo(
           render: (errorReason, record: FailedTestCase) => {
             if (errorReason) {
               return (
-                <Tooltip title={errorReason} placement="right">
+                <Tooltip
+                  title={errorReason}
+                  placement="right"
+                  overlayClassName={styles.FailedREasonTooltip}
+                >
                   <div
                     style={{
                       overflow: 'hidden',
@@ -93,6 +99,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(
                 title={<TestCaseRuleTable data={record.ruleRecords} />}
                 placement="right"
                 color="#ffffff"
+                overlayClassName={styles.TestCaseRuleTableTooltip}
               >
                 <div
                   style={{
