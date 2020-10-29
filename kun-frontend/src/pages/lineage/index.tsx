@@ -4,7 +4,7 @@ import { useSize } from 'ahooks';
 import Card from '@/components/Card/Card';
 import useRedux from '@/hooks/useRedux';
 import LineageBoard from '@/components/LineageDiagram/LineageBoard';
-import { LineageDagreNodeData } from '@/components/LineageDiagram/LineageBoard/LineageBoard';
+import { LineageDagreNodeData, LineageDagreNode } from '@/components/LineageDiagram/LineageBoard/LineageBoard';
 import BackButton from '@/components/BackButton/BackButton';
 import { LineageDirection } from '@/services/lineage';
 import { LineageBoardZoomProvider } from '@/components/LineageDiagram/LineageBoard/LineageBoardZoomProvider';
@@ -53,7 +53,7 @@ export default function Lineage() {
     [dispatch.lineage],
   );
   const handleClickEdge = useCallback(
-    (edgeInfo: { srcNodeId: string; destNodeId: string }) => {
+    (edgeInfo: { srcNodeId: string; destNodeId: string, srcNode: LineageDagreNode, destNode: LineageDagreNode }) => {
       setIsExpanded(true);
       setCurrentType('task');
       dispatch.lineage.updateState({
@@ -61,8 +61,8 @@ export default function Lineage() {
         value: {
           sourceNodeId: edgeInfo.srcNodeId,
           destNodeId: edgeInfo.destNodeId,
-          sourceNodeName: '',
-          destNodeName: '',
+          sourceNodeName: edgeInfo.srcNode.data?.name || '',
+          destNodeName: edgeInfo.destNode.data?.name || '',
         },
       });
       dispatch.lineage.updateState({
