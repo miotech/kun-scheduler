@@ -383,5 +383,18 @@ public class Props {
         builder.append("}");
         return builder.toString();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Props props = (Props) o;
+        return Objects.equals(propertiesMap, props.propertiesMap);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(propertiesMap);
+    }
 }
 
