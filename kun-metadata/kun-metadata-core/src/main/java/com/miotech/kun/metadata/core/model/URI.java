@@ -30,16 +30,17 @@ public class URI implements Serializable {
     private static final String VALID_HOSTNAME_PATTERN = "(?:(?:(?:[a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*" +
             "(?:[A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9]))";
 
+    private static final String PROP_KEY_VALUE_PATTERN = "(?:(?:[a-zA-Z0-9]|(?:%[0-9a-fA-F]+))+)";
+
     private static final Pattern validatePattern =
             Pattern.compile("^([\\w(?:%[0-9a-fA-F]+)]+)" +  // namespace
                     ":([\\w(?:%[0-9a-fA-F]+)]+)" +          // schema
                     "://" +
-                    "(" + VALID_HOSTNAME_PATTERN + ")" +          // hostname
-                    "(?:\\:([1-6]?[0-9]{0,4}))?" +                                          // port
+                    "(" + VALID_HOSTNAME_PATTERN + ")" +    // hostname
+                    "(?:\\:([1-6]?[0-9]{0,4}))?" +          // port
                     "(?:" +
-                    "(?:/((?:[\\w(?:%[0-9a-fA-F]+)]+=[\\w(?:%[0-9a-fA-F]+)]+)(?:,[\\w(?:%[0-9a-fA-F]+)]+=[\\w(?:%[0-9a-fA-F]+)]+)*))?" +  // required properties
-                    "(?:\\?" +
-                    "((?:[\\w(?:%[0-9a-fA-F]+)]+=[\\w(?:%[0-9a-fA-F]+)]+)(?:,[\\w(?:%[0-9a-fA-F]+)]+=[\\w(?:%[0-9a-fA-F]+)]+)*))?" +  // optional properties
+                    "(?:/(" + PROP_KEY_VALUE_PATTERN + "=" + PROP_KEY_VALUE_PATTERN + "(?:," + PROP_KEY_VALUE_PATTERN + "=" + PROP_KEY_VALUE_PATTERN + ")*))?" +  // required properties
+                    "(?:\\?(" + PROP_KEY_VALUE_PATTERN + "=" + PROP_KEY_VALUE_PATTERN + "(?:," + PROP_KEY_VALUE_PATTERN + "=" + PROP_KEY_VALUE_PATTERN + ")*))?" +  // optional properties
                     ")?$");
 
     private final String string;

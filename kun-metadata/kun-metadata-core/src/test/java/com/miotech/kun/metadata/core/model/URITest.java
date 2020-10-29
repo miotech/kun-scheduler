@@ -62,7 +62,7 @@ public class URITest {
         assertThat(optionalPropsOfUri3.getString("username"), is("root"));
         assertThat(optionalPropsOfUri3.getString("password"), is("example123"));
 
-
+        // Validate URI 4
         URI uri4 = URI.from(uri4String);
         Props requiredPropsOfUri4 = uri4.getRequiredProperties();
         Props optionalPropsOfUri4 = uri4.getOptionalProperties();
@@ -84,7 +84,11 @@ public class URITest {
                 "miotech:postgres://db-server:5432/db=a,db=b",
                 "miotech:postgres://db-server:5432/=",
                 "miotech:postgres://db-server:5432/=,=",
-                "miotech:postgres://db-server:5432/=="
+                "miotech:postgres://db-server:5432/==",
+                "miotech:postgres://db-server:5432/,",
+                "miotech:postgres://db-server:5432/?,",
+                "miotech:postgres://db-server:5432/?a=,",
+                "miotech:postgres://db-server:5432/?=b"
         };
 
         // Validate
