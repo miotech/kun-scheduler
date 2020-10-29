@@ -44,6 +44,7 @@ export default memo(function TestCaseRuleTable({ data }: Props) {
 
   return (
     <Table
+      style={{ width: '100%' }}
       dataSource={data}
       columns={columns}
       pagination={false}

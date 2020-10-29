@@ -92,6 +92,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(
               <Tooltip
                 title={<TestCaseRuleTable data={record.ruleRecords} />}
                 placement="right"
+                color="#ffffff"
               >
                 <div
                   style={{
