@@ -430,7 +430,9 @@ public class DataQualityRepository extends BaseRepository {
                         "kdc.name as case_name",
                         "kdc.update_user as case_update_user",
                         "kdc.types as case_types",
-                        "kdc.task_id as case_task_id")
+                        "kdc.task_id as case_task_id",
+                        "kdc.create_time as create_time",
+                        "kdc.update_time as update_time")
                 .from("kun_dq_case kdc")
                 .join("inner", "kun_dq_case_associated_dataset", "kdcad").on("kdc.id = kdcad.case_id")
                 .where("kdcad.dataset_id = ?");
@@ -454,6 +456,8 @@ public class DataQualityRepository extends BaseRepository {
                 caseBasic.setUpdater(rs.getString("case_update_user"));
                 caseBasic.setTypes(resolveDqCaseTypes(rs.getString("case_types")));
                 caseBasic.setTaskId(rs.getLong("case_task_id"));
+                caseBasic.setCreateTime(timestampToMillis(rs, "create_time"));
+                caseBasic.setUpdateTime(timestampToMillis(rs, "update_time"));
                 caseBasics.add(caseBasic);
             }
             caseBasics.setPageNumber(request.getPageNumber());
