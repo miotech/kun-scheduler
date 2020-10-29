@@ -196,6 +196,8 @@ export default {
   'dataDetail.dataQualityTable.name': '名称',
   'dataDetail.dataQualityTable.updater': '更新者',
   'dataDetail.dataQualityTable.historyList': '历史',
+  'dataDetail.dataQualityTable.updateTime': '更新时间',
+  'dataDetail.dataQualityTable.createTime': '创建时间',
   'lineage.databaseName': '数据库名称',
   'lineage.dataSourceName': '数据来源名称',
   'lineage.dataSourceType': '数据来源种类',
@@ -362,4 +364,9 @@ export default {
   'monitoringDashboard.dataDevelopment.taskDetailsTable.startTime': '开始时间',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.endTime': '结束时间',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.duration': '耗时',
+  'monitoringDashboard.testCaseRuleTable.originalValue': '原始值',
+  'monitoringDashboard.testCaseRuleTable.field': '字段',
+  'monitoringDashboard.testCaseRuleTable.operator': '操作符',
+  'monitoringDashboard.testCaseRuleTable.expectedType': '期望类型',
+  'monitoringDashboard.testCaseRuleTable.expectedValue': '期望值',
 };
