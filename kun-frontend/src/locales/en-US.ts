@@ -197,6 +197,8 @@ export default {
   'dataDetail.dataQualityTable.name': 'Name',
   'dataDetail.dataQualityTable.updater': 'Updater',
   'dataDetail.dataQualityTable.historyList': 'History',
+  'dataDetail.dataQualityTable.updateTime': 'Update Time',
+  'dataDetail.dataQualityTable.createTime': 'Create Time',
   'lineage.databaseName': 'Database Name',
   'lineage.dataSourceName': 'Data Source Name',
   'lineage.dataSourceType': 'Data Source Type',
@@ -377,4 +379,9 @@ export default {
     'Start Time (Default 1D)',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.endTime': 'End Time',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.duration': 'Duration',
+  'monitoringDashboard.testCaseRuleTable.originalValue': 'Original value',
+  'monitoringDashboard.testCaseRuleTable.field': 'Field',
+  'monitoringDashboard.testCaseRuleTable.operator': 'Operator',
+  'monitoringDashboard.testCaseRuleTable.expectedType': 'Expected type',
+  'monitoringDashboard.testCaseRuleTable.expectedValue': 'Expected value',
 };
