@@ -1,19 +1,26 @@
 package com.miotech.kun.datadashboard.persistence;
 
+import com.google.gson.reflect.TypeToken;
 import com.miotech.kun.common.BaseRepository;
+import com.miotech.kun.common.model.RequestResult;
+import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
+import com.miotech.kun.commons.query.datasource.DataSourceType;
 import com.miotech.kun.datadashboard.model.bo.TestCasesRequest;
 import com.miotech.kun.datadashboard.model.constant.TestCaseStatus;
+import com.miotech.kun.datadashboard.model.entity.DataQualityRule;
 import com.miotech.kun.datadashboard.model.entity.DatasetBasic;
-import com.miotech.kun.datadashboard.model.entity.TestCase;
-import com.miotech.kun.datadashboard.model.entity.TestCases;
+import com.miotech.kun.datadashboard.model.entity.DataQualityCase;
+import com.miotech.kun.datadashboard.model.entity.DataQualityCases;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -73,11 +80,12 @@ public class DataQualityRepository extends BaseRepository {
         TEST_CASES_REQUEST_ORDER_MAP.put("continuousFailingCount", "continuous_failing_count");
         TEST_CASES_REQUEST_ORDER_MAP.put("updateTime", "last_update_time");
     }
-    public TestCases getTestCases(TestCasesRequest testCasesRequest) {
+    public DataQualityCases getTestCases(TestCasesRequest testCasesRequest) {
         SQLBuilder preSqlBuilder = DefaultSQLBuilder.newBuilder()
                 .select("kdcm.error_reason as error_reason",
                         "kdcm.update_time as last_update_time",
                         "kdcm.continuous_failing_count as continuous_failing_count",
+                        "kdcm.rule_records as rule_records",
                         "kdc.create_user as case_owner",
                         "kdc.id as case_id",
                         "kdc.name as case_name")
@@ -93,26 +101,29 @@ public class DataQualityRepository extends BaseRepository {
                 .limit(testCasesRequest.getPageSize())
                 .getSQL();
 
-        TestCases testCases = new TestCases();
+        DataQualityCases dataQualityCases = new DataQualityCases();
         Long totalCount = jdbcTemplate.queryForObject(countSql, Long.class);
-        testCases.setPageNumber(testCasesRequest.getPageNumber());
-        testCases.setPageSize(testCasesRequest.getPageSize());
-        testCases.setTotalCount(totalCount);
+        dataQualityCases.setPageNumber(testCasesRequest.getPageNumber());
+        dataQualityCases.setPageSize(testCasesRequest.getPageSize());
+        dataQualityCases.setTotalCount(totalCount);
         return jdbcTemplate.query(sql, rs -> {
             while (rs.next()) {
-                TestCase testCase = new TestCase();
-                testCase.setResult(TestCaseStatus.FAILED.name());
-                testCase.setErrorReason(rs.getString("error_reason"));
-                testCase.setUpdateTime(timestampToMillis(rs, "last_update_time"));
-                testCase.setContinuousFailingCount(rs.getLong("continuous_failing_count"));
-                testCase.setCaseOwner(rs.getString("case_owner"));
-                testCase.setCaseName(rs.getString("case_name"));
+                DataQualityCase dataQualityCase = new DataQualityCase();
+                dataQualityCase.setStatus(TestCaseStatus.FAILED.name());
+                dataQualityCase.setErrorReason(rs.getString("error_reason"));
+                dataQualityCase.setUpdateTime(timestampToMillis(rs, "last_update_time"));
+                dataQualityCase.setContinuousFailingCount(rs.getLong("continuous_failing_count"));
+                dataQualityCase.setCaseOwner(rs.getString("case_owner"));
+                dataQualityCase.setCaseName(rs.getString("case_name"));
                 DatasetBasic datasetBasic = getPrimaryDataset(rs.getLong("case_id"));
-                testCase.setDatasetGid(datasetBasic.getGid());
-                testCase.setDatasetName(datasetBasic.getDatasetName());
-                testCases.add(testCase);
+                dataQualityCase.setDatasetGid(datasetBasic.getGid());
+                dataQualityCase.setDatasetName(datasetBasic.getDatasetName());
+                Type type = new TypeToken<List<DataQualityRule>>() {
+                }.getType();
+                dataQualityCase.setRuleRecords(JSONUtils.toJavaObject(rs.getString("rule_records"), type));
+                dataQualityCases.add(dataQualityCase);
             }
-            return testCases;
+            return dataQualityCases;
         });
     }
 
@@ -122,6 +133,7 @@ public class DataQualityRepository extends BaseRepository {
                         "kmd.name as dataset_name")
                 .from("kun_mt_dataset kmd")
                 .join("inner", "kun_dq_case_associated_dataset", "kdcad").on("kdcad.dataset_id = kmd.gid")
+                .join("inner", "kun_dq_case", "kdc").on("kdc.primary_dataset_id is null or kdc.primary_dataset_id = kmd.gid")
                 .where("kdcad.case_id = ?")
                 .limit(1)
                 .getSQL();

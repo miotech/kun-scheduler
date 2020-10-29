@@ -1,12 +1,17 @@
 package com.miotech.kun.workflow.operator.model;
 
+import lombok.Data;
+
 import java.util.StringJoiner;
 
 /**
  * @author: Jie Chen
  * @created: 2020/7/14
  */
+@Data
 public class DataQualityRule {
+
+    String originalValue;
 
     String field;
 
@@ -15,38 +20,6 @@ public class DataQualityRule {
     String expectedType;
 
     String expectedValue;
-
-    public String getField() {
-        return field;
-    }
-
-    public void setField(String field) {
-        this.field = field;
-    }
-
-    public String getOperator() {
-        return operator;
-    }
-
-    public void setOperator(String operator) {
-        this.operator = operator;
-    }
-
-    public String getExpectedType() {
-        return expectedType;
-    }
-
-    public void setExpectedType(String expectedType) {
-        this.expectedType = expectedType;
-    }
-
-    public String getExpectedValue() {
-        return expectedValue;
-    }
-
-    public void setExpectedValue(String expectedValue) {
-        this.expectedValue = expectedValue;
-    }
 
     @Override
     public String toString() {
