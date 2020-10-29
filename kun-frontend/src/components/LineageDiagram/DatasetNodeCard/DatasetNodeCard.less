@@ -38,14 +38,15 @@
 
   &__left-content, &__right-content {
     position: relative;
+    overflow-x: hidden;
   }
 
   &__left-content {
-    flex: 55 50 50%;
+    flex: 1 1 50%;
   }
 
   &__right-content {
-    flex: 50 45 35%;
+    flex: 1 1 35%;
   }
 
   &__heading &__right-content {
@@ -90,6 +91,9 @@
 
     [data-label="update-time-wrapper"] {
       margin-top: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 11px;
     }
   }
 
