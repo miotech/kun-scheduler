@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author: Jie Chen
  * @created: 2020/9/17
  */
 @Data
-public class TestCase {
+public class DataQualityCase {
 
     @JsonSerialize(using= ToStringSerializer.class)
     Long datasetGid;
@@ -18,7 +20,7 @@ public class TestCase {
 
     String caseName;
 
-    String result;
+    String status;
 
     String errorReason;
 
@@ -27,4 +29,6 @@ public class TestCase {
     Long continuousFailingCount;
 
     String caseOwner;
+
+    List<DataQualityRule> ruleRecords;
 }

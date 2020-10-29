@@ -13,11 +13,11 @@ import java.util.List;
  */
 @EqualsAndHashCode(callSuper = false)
 @Data
-public class TestCases extends PageInfo {
+public class DataQualityCases extends PageInfo {
 
-    List<TestCase> testCases = new ArrayList<>();
+    List<DataQualityCase> dataQualityCases = new ArrayList<>();
 
-    public void add(TestCase testCase) {
-        testCases.add(testCase);
+    public void add(DataQualityCase dataQualityCase) {
+        dataQualityCases.add(dataQualityCase);
     }
 }
