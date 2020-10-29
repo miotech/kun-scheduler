@@ -52,7 +52,7 @@ interface OwnProps {
     event: React.MouseEvent<any>,
   ) => any;
   onClickEdge?: (
-    edgeInfo: { srcNodeId: string; destNodeId: string },
+    edgeInfo: { srcNodeId: string; destNodeId: string, srcNode: LineageDagreNode; destNode: LineageDagreNode; },
     event: React.MouseEvent<SVGPathElement>,
   ) => any;
   onClickBackground?: (event: React.MouseEvent<any>) => any;
@@ -73,7 +73,7 @@ export type LineageDagreNodeData = Dataset & {
   rowCount?: number;
 };
 
-type LineageDagreNode = dagre.Node<{
+export type LineageDagreNode = dagre.Node<{
   id: string;
   data: LineageDagreNodeData;
 }>;
@@ -205,6 +205,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                     props.onClickNode(node.data, ev);
                   }
                 }}
+                lastUpdateTime={node.data?.highWatermark?.time}
               />
             </div>
           </foreignObject>
@@ -399,6 +400,8 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                         {
                           srcNodeId: edge.data.src,
                           destNodeId: edge.data.dest,
+                          srcNode: (graph.node(edge.data.src) as LineageDagreNode),
+                          destNode: (graph.node(edge.data.dest) as LineageDagreNode),
                         },
                         ev,
                       );
