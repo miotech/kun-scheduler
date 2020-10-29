@@ -39,6 +39,8 @@ export interface DataQualityItem {
   updater: string;
   types: DataQualityType[];
   historyList: DataQualityHistory[];
+  updateTime: number;
+  createTime: number;
 }
 
 export interface Column {
