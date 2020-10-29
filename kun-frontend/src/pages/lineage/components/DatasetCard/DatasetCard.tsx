@@ -1,4 +1,4 @@
-import { useRouteMatch, Link } from 'umi';
+import { Link } from 'umi';
 import React, { memo, useEffect, useMemo } from 'react';
 import moment from 'moment';
 import { Spin, Divider } from 'antd';
@@ -19,8 +19,6 @@ interface Props {
 }
 
 export default memo(function DatasetCard({ datasetId, isExpanded }: Props) {
-  const match = useRouteMatch<{ datasetId: string }>();
-
   const { getBackPath } = useBackPath();
 
   const t = useI18n();
@@ -78,9 +76,7 @@ export default memo(function DatasetCard({ datasetId, isExpanded }: Props) {
           <div className={styles.title}>
             <Iconfont type="column" />
             <Link
-              to={getBackPath(
-                `/data-discovery/dataset/${match.params.datasetId}`,
-              )}
+              to={getBackPath(`/data-discovery/dataset/${datasetId}`)}
               className={styles.datasetName}
             >
               {activeDatasetDetail?.name}
