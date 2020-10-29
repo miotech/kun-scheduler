@@ -36,7 +36,7 @@ public class MetadataService {
         return metadataRepository.getRowCountChange(rowCountChangeRequest);
     }
 
-    public TestCases getTestCases(TestCasesRequest testCasesRequest) {
+    public DataQualityCases getTestCases(TestCasesRequest testCasesRequest) {
         return dataQualityRepository.getTestCases(testCasesRequest);
     }
 

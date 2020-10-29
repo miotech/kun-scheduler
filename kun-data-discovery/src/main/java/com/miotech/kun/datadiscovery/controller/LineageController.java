@@ -11,12 +11,14 @@ import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.service.DatasetService;
 import com.miotech.kun.workflow.client.LineageQueryDirection;
+import com.miotech.kun.workflow.client.WorkflowApiException;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.task.Task;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,6 +34,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/kun/api/v1")
+@Slf4j
 public class LineageController {
 
     private static final int LATEST_TASK_LIMIT = 6;
@@ -53,9 +56,15 @@ public class LineageController {
 
     @GetMapping("/lineage/graph")
     public RequestResult<LineageGraph> getLineageGraph(LineageGraphRequest request) {
-        DatasetLineageInfo datasetLineageInfo = workflowClient.getLineageNeighbors(request.getDatasetGid(),
-                LineageQueryDirection.valueOf(request.getDirection()),
-                request.getDepth());
+        DatasetLineageInfo datasetLineageInfo;
+        try {
+           datasetLineageInfo = workflowClient.getLineageNeighbors(request.getDatasetGid(),
+                    LineageQueryDirection.valueOf(request.getDirection()),
+                    request.getDepth());
+        } catch (WorkflowApiException e) {
+            log.error(e.getMessage());
+            return RequestResult.success();
+        }
         LineageGraph lineageGraph = new LineageGraph();
         DatasetNodeInfo centerNode = datasetLineageInfo.getSourceNode();
         Map<Long, LineageVertex> vertexIdMap = new HashMap<>();
@@ -101,14 +110,25 @@ public class LineageController {
             LineageQueryDirection lineageQueryDirection = LineageQueryDirection.valueOf(request.getDirection());
             Map<Long, Task> taskIdMap = new HashMap<>();
             if (lineageQueryDirection == LineageQueryDirection.UPSTREAM) {
-                DatasetLineageInfo datasetLineageInfo = workflowClient.getLineageNeighbors(request.getDatasetGid(), LineageQueryDirection.UPSTREAM, 1);
-                List<Task> tasks = datasetLineageInfo.getSourceNode().getUpstreamTasks();
-                taskIdMap.putAll(tasks.stream().collect(Collectors.toMap(Task::getId, task -> task)));
+
+                try {
+                    DatasetLineageInfo datasetLineageInfo = workflowClient.getLineageNeighbors(request.getDatasetGid(), LineageQueryDirection.UPSTREAM, 1);
+                    List<Task> tasks = datasetLineageInfo.getSourceNode().getUpstreamTasks();
+                    taskIdMap.putAll(tasks.stream().collect(Collectors.toMap(Task::getId, task -> task)));
+                } catch (WorkflowApiException e) {
+                    log.error(e.getMessage());
+                }
 
             } else if (lineageQueryDirection == LineageQueryDirection.DOWNSTREAM) {
-                DatasetLineageInfo datasetLineageInfo = workflowClient.getLineageNeighbors(request.getDatasetGid(), LineageQueryDirection.DOWNSTREAM, 1);
-                List<Task> tasks = datasetLineageInfo.getSourceNode().getDownstreamTasks();
-                taskIdMap.putAll(tasks.stream().collect(Collectors.toMap(Task::getId, task -> task)));
+
+                try {
+                    DatasetLineageInfo datasetLineageInfo = workflowClient.getLineageNeighbors(request.getDatasetGid(), LineageQueryDirection.DOWNSTREAM, 1);
+                    List<Task> tasks = datasetLineageInfo.getSourceNode().getDownstreamTasks();
+                    taskIdMap.putAll(tasks.stream().collect(Collectors.toMap(Task::getId, task -> task)));
+                } catch (WorkflowApiException e) {
+                    log.error(e.getMessage());
+                }
+
             } else {
                 throw ExceptionUtils.wrapIfChecked(new RuntimeException("Unsupported lineage task direction " + request.getDirection()));
             }

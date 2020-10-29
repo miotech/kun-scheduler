@@ -25,4 +25,8 @@ public class DataQualityCaseBasic {
     Long taskId;
 
     List<String> historyList;
+
+    Long createTime;
+
+    Long updateTime;
 }
