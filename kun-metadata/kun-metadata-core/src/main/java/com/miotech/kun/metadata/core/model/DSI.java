@@ -208,6 +208,16 @@ public class DSI implements Serializable {
                 Objects.equals(extras, dsi.extras);
     }
 
+    /**
+     * Is it the same datastore as the other DSI represents?
+     * @param dsi the comparing target
+     * @return compare result
+     */
+    public boolean sameStoreAs(DSI dsi) {
+        return Objects.equals(storeType, dsi.storeType) &&
+                Objects.equals(props, dsi.props);
+    }
+
     @Override
     public int hashCode() {
         return Objects.hash(storeType, props, extras);

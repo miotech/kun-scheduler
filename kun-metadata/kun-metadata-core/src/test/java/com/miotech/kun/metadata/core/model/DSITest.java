@@ -113,10 +113,12 @@ public class DSITest {
 
         // Validate
         assertEquals(dsi1, dsiFromString1);
+        assertTrue(dsi1.sameStoreAs(dsiFromString1));
         assertEquals("mongodb:collection=company,db=test,host=127.0.0.1,port=27017", dsiFromString1.toString());
         assertEquals(dsi1.toString(), dsiFromString1.toString());
 
         assertEquals(dsi2, dsiFromString2);
+        assertTrue(dsi2.sameStoreAs(dsiFromString2));
         assertEquals("file::name=%22foobar.txt%22", dsiFromString2.toString());
         assertEquals(dsi2.toString(), dsiFromString2.toString());
     }
@@ -167,10 +169,19 @@ public class DSITest {
                 .putExtra("password", "he,llo@2020")
                 .build();
 
+        DSI modifiedDSIWithSameProperties = originalDSI.cloneBuilder()
+                .putExtra("password", "he,llo@2020")
+                .build();
+
         // Validate
         assertEquals(originalDSI, unmodifiedDSI);
         assertEquals(originalDSI.toString(), unmodifiedDSI.toString());
+        assertTrue(originalDSI.sameStoreAs(unmodifiedDSI));
 
         assertEquals("mysql:host=127.0.0.1,port=5432:password=he%2Cllo%402020,user=root", modifiedDSI.toString());
+        assertFalse(modifiedDSI.sameStoreAs(originalDSI));
+
+        assertEquals("mysql:host=localhost,port=5432:password=he%2Cllo%402020,user=root", modifiedDSIWithSameProperties.toString());
+        assertTrue(modifiedDSIWithSameProperties.sameStoreAs(originalDSI));
     }
 }
