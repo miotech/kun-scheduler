@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.common.utils.DateUtils;
+import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.common.utils.WorkflowUtils;
 import com.miotech.kun.dataquality.model.bo.*;
@@ -51,8 +52,7 @@ public class DataQualityController {
     public void recreateAllTasks() {
         for (Long caseId : dataQualityService.getAllCaseId()) {
             workflowService.deleteTaskByCase(caseId);
-            Long taskId = workflowService.createTask(caseId);
-            dataQualityService.saveTaskId(caseId, taskId);
+            workflowService.createTask(caseId);
         }
     }
 
@@ -136,6 +136,7 @@ public class DataQualityController {
 
     private void enrichDqCaseBasics(List<DataQualityCaseBasic> caseBasics) {
         Map<Long, DataQualityCaseBasic> taskIdMap = caseBasics.stream()
+                .filter(caseBasic -> IdUtils.isNotEmpty(caseBasic.getTaskId()))
                 .collect(Collectors.toMap(DataQualityCaseBasic::getTaskId, dataQualityCaseBasic -> dataQualityCaseBasic));
         if (CollectionUtils.isNotEmpty(taskIdMap.keySet())) {
             Map<Long, List<TaskRun>> lastestTaskRuns = workflowClient.getLatestTaskRuns(new ArrayList<>(taskIdMap.keySet()), 6);
