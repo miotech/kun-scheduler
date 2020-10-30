@@ -547,9 +547,12 @@ export default function DatasetDetail({ match }: Props) {
               </div>
 
               <Divider className={styles.divider} />
-              <div>
+              <div className={styles.columnsArea}>
                 <div className={styles.lineageTitleRow}>
-                  <span style={{ marginRight: 8 }}>
+                  <span
+                    className={styles.baseItemTitle}
+                    style={{ marginRight: 8 }}
+                  >
                     {t('dataDetail.lineage.title')}
                   </span>
                   <Link
