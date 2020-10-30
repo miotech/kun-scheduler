@@ -79,20 +79,43 @@ public class DataQualityRepository extends BaseRepository {
         jdbcTemplate.update(sql, taskId, caseId);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public DeleteCaseResponse deleteCase(Long id) {
-        String fullDeleteSql = DefaultSQLBuilder.newBuilder()
+        String kdcDeleteSql = DefaultSQLBuilder.newBuilder()
                 .delete()
                 .from("kun_dq_case")
                 .where("id = ?")
                 .getSQL();
-        jdbcTemplate.update(fullDeleteSql, id);
+        jdbcTemplate.update(kdcDeleteSql, id);
 
-        String deleteSql = DefaultSQLBuilder.newBuilder()
+        String kdcadDeleteSql = DefaultSQLBuilder.newBuilder()
                 .delete()
                 .from("kun_dq_case_associated_dataset")
                 .where("case_id = ?")
                 .getSQL();
-        jdbcTemplate.update(deleteSql, id);
+        jdbcTemplate.update(kdcadDeleteSql, id);
+
+        String kdcadfDeleteSql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from("kun_dq_case_associated_dataset_field")
+                .where("case_id = ?")
+                .getSQL();
+        jdbcTemplate.update(kdcadfDeleteSql, id);
+
+        String kdcmDeleteSql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from("kun_dq_case_metrics")
+                .where("dq_case_id = ?")
+                .getSQL();
+        jdbcTemplate.update(kdcmDeleteSql, id);
+
+        String kdcrDeleteSql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from("kun_dq_case_rules")
+                .where("case_id = ?")
+                .getSQL();
+        jdbcTemplate.update(kdcrDeleteSql, id);
+
         DeleteCaseResponse response = new DeleteCaseResponse();
         response.setId(id);
         return response;
