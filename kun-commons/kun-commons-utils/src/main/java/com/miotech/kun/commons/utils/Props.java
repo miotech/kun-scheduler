@@ -10,7 +10,8 @@ import java.util.*;
  * Hashmap implementation of a hierarchical properties with helpful converter functions and
  * Exception throwing. This class is not threadsafe.
  */
-public class Props {
+public class Props implements Serializable {
+    private static final long serialVersionUID = -1604028521829L;
 
     private static final Logger logger = LoggerFactory.getLogger(Props.class);
 
