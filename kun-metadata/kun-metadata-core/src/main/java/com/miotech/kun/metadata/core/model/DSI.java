@@ -41,6 +41,8 @@ public class DSI implements Serializable {
 
     private transient String dsiString;
 
+    private transient String essentialDsiString;
+
     private final String storeType;
 
     private final ImmutableMap<String, String> props;
@@ -162,6 +164,33 @@ public class DSI implements Serializable {
             dsiString = stringBuilder.toString();
         }
         return dsiString;
+    }
+
+    /**
+     * Convert DSI to URL-encoded format string but only reserves props part (extras will not be included)
+     * @return encoded DSI string without extra parts
+     */
+    public String toEssentialString() {
+        // lazy evaluate and cache the urn string since it is immutable
+        if (StringUtils.isBlank(this.essentialDsiString)) {
+            // if dsiString is not initialized
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append(encodeString(storeType));
+            if (!props.keySet().isEmpty()) {
+                stringBuilder.append(":");
+                stringBuilder.append(mapToEncodedString(props));
+            }
+            essentialDsiString = stringBuilder.toString();
+        }
+        return essentialDsiString;
+    }
+
+    /**
+     * Convert DSI to URL-encoded format string
+     * @return encoded DSI string
+     */
+    public String toFullString() {
+        return this.toString();
     }
 
     /**
