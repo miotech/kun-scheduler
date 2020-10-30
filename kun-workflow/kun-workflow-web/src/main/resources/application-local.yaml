@@ -26,3 +26,9 @@ neo4j:
   uri: bolt://${DB_NEO4J_IP}:7687/
   username: ${DB_NEO4J_USERNAME}
   password: ${DB_NEO4J_PASSWORD}
+
+kafka:
+  base-url: ${KAFKA_HOST}:${KAFKA_PORT}
+  notify-group: ${KAFKA_NOTIFY_GROUP}
+  notify-topic: ${KAFKA_NOTIFY_TOPIC}
+

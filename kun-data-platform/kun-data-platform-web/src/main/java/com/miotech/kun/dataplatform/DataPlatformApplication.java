@@ -1,7 +1,10 @@
 package com.miotech.kun.dataplatform;
 
+import com.miotech.kun.dataplatform.notify.TaskAttemptStatusChangeEventSubscriber;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication(scanBasePackages = {
 		"com.miotech.kun.common",
@@ -10,6 +13,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class DataPlatformApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(DataPlatformApplication.class, args);
+		ConfigurableApplicationContext context = SpringApplication.run(DataPlatformApplication.class, args);
+		TaskAttemptStatusChangeEventSubscriber taskAttemptStatusChangeEventSubscriber = context.getBean(TaskAttemptStatusChangeEventSubscriber.class);
+		taskAttemptStatusChangeEventSubscriber.subscribe();
 	}
 }

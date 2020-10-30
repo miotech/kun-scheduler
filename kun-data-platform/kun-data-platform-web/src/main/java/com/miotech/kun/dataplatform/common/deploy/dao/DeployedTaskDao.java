@@ -31,6 +31,9 @@ public class DeployedTaskDao {
     private static final List<String> deployedTaskCols = ImmutableList.of("id", "definition_id", "name", "task_template_name", "wf_task_id", "owner", "commit_id", "is_archived");
 
     private static final String DEFINITION_ID = "definition_id";
+
+    private static final String WORKFLOW_TASK_ID = "wf_task_id";
+
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
@@ -79,6 +82,12 @@ public class DeployedTaskDao {
                 .getSQL();
 
         return jdbcTemplate.queryForList(sql, definitionIds.toArray(), Long.class);
+    }
+
+    public Optional<DeployedTask> fetchByWorkflowTaskId(Long workflowTaskId) {
+        String sql = getSelectSQL(String.format(" %s.%s= ?", DEPLOYED_TASK_MODEL_NAME, WORKFLOW_TASK_ID));
+        List<DeployedTask> deployedTasks = jdbcTemplate.query(sql, DeployedTaskMapper.INSTANCE, workflowTaskId);
+        return deployedTasks.stream().findAny();
     }
 
 
