@@ -48,7 +48,7 @@ public class DataQualityController {
     WorkflowClient workflowClient;
 
     @PostMapping("/data-quality/recreate-all-task")
-    public void createTasks() {
+    public void recreateAllTasks() {
         for (Long caseId : dataQualityService.getAllCaseId()) {
             workflowService.deleteTaskByCase(caseId);
             Long taskId = workflowService.createTask(caseId);
@@ -57,10 +57,17 @@ public class DataQualityController {
     }
 
     @PostMapping("/data-quality/execute-all-task")
-    public void executeTasks() {
+    public void executeAllTasks() {
         //workflowService.executeTask(dataQualityService.getAllCaseId().get(0));
         for (Long caseId : dataQualityService.getAllCaseId()) {
             workflowService.executeTask(caseId);
+        }
+    }
+
+    @PostMapping("/data-quality/delete-all-task")
+    public void deleteAllTasks() {
+        for (Long taskId : dataQualityService.getAllTaskId()) {
+            workflowService.deleteTask(taskId);
         }
     }
 
