@@ -303,4 +303,15 @@ public class DeployedTaskService {
                 taskRun
         );
     }
+
+    public List<String> getUserByTaskId(Long wfTaskId){
+        List<String> userList = new ArrayList<>();
+        Optional<DeployedTask> taskOptional = deployedTaskDao.fetchByWorkflowTaskId(wfTaskId);
+        if(taskOptional.isPresent()){
+            Long userId = taskOptional.get().getOwner();
+            //TODO: find username by id, pending chenjie's kun-security
+            userList.add("aijia");
+        }
+        return userList;
+    }
 }
