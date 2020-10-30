@@ -33,5 +33,7 @@ public abstract class DataStore implements Serializable {
      * Returns data store identifier (DSI) of this datastore object
      * @return data store identifier
      */
+    @JsonIgnore
+    @Nullable
     public abstract DSI getDSI();
 }
