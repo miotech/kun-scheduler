@@ -172,7 +172,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(invoked(), is(false));
 
         // post successful event
-        eventBus.post(new TaskAttemptStatusChangeEvent(attempt1.getId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+        eventBus.post(new TaskAttemptStatusChangeEvent(attempt1.getId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, taskName, taskId));
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);

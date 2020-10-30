@@ -12,6 +12,7 @@ import com.miotech.kun.commons.web.module.CommonModule;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
 import com.miotech.kun.workflow.SchedulerManager;
 import com.miotech.kun.workflow.SchedulerModule;
+import com.miotech.kun.workflow.core.publish.KafkaModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,7 @@ public class KunWorkflowWebServer {
                 new KunWebServerModule(props),
                 new KunWorkflowServerModule(props),
                 new CommonModule(props),
+                new KafkaModule(props),
                 new SchedulerModule()
         );
 

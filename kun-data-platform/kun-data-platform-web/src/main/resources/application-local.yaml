@@ -21,3 +21,12 @@ spring:
 
 security:
   base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
+
+zhongda:
+  host: http://zhongda.miotech.com:8000
+  token: ***REMOVED***
+
+kafka:
+  base-url: ${KAFKA_HOST}:${KAFKA_PORT}
+  notify-group: ${KAFKA_NOTIFY_GROUP}
+  notify-topic: ${KAFKA_NOTIFY_TOPIC}
