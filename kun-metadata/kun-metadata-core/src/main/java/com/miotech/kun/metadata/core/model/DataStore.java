@@ -28,4 +28,6 @@ public abstract class DataStore implements Serializable {
     public DataStore(DataStoreType type) {
         this.type = type;
     }
+
+    public abstract DSI getDSI();
 }
