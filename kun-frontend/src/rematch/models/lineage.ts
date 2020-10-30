@@ -25,6 +25,8 @@ export interface LineageState {
   activeFetchUpstreamLineageTaskListLoading: boolean;
   activeFetchDownstreamLineageTaskListLoading: boolean;
 
+  oldDatasetId: string | null;
+
   graph: Graph;
   graphLoading: boolean;
 
@@ -49,6 +51,8 @@ export const lineage = {
 
     activeFetchUpstreamLineageTaskListLoading: false,
     activeFetchDownstreamLineageTaskListLoading: false,
+
+    oldDatasetId: null,
 
     graph: {
       vertices: [],
