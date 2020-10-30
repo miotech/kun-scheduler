@@ -55,15 +55,6 @@ function Breadcrumb({ route }: Props) {
     if (routeItem.path === '/') {
       return null;
     }
-    if (routeItem.path === '/data-discovery/dataset/:datasetId') {
-      return (
-        <Link
-          to={realPth(routeItem.path || '/', selectedData.currentParams || {})}
-        >
-          {selectedData.datasetName ?? routeItem.title}
-        </Link>
-      );
-    }
     if (routeItem.path === '/data-discovery/glossary/:glossaryId') {
       return (
         <Link
