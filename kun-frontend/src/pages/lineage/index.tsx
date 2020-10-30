@@ -4,7 +4,10 @@ import { useSize } from 'ahooks';
 import Card from '@/components/Card/Card';
 import useRedux from '@/hooks/useRedux';
 import LineageBoard from '@/components/LineageDiagram/LineageBoard';
-import { LineageDagreNodeData, LineageDagreNode } from '@/components/LineageDiagram/LineageBoard/LineageBoard';
+import {
+  LineageDagreNodeData,
+  LineageDagreNode,
+} from '@/components/LineageDiagram/LineageBoard/LineageBoard';
 import BackButton from '@/components/BackButton/BackButton';
 import { LineageDirection } from '@/services/lineage';
 import { LineageBoardZoomProvider } from '@/components/LineageDiagram/LineageBoard/LineageBoardZoomProvider';
@@ -25,8 +28,15 @@ export default function Lineage() {
   const { width: boardWidth, height: boardHeight } = useSize(boardWrapperRef);
 
   useEffect(() => {
-    dispatch.lineage.fetchInitialLineageGraphInfo(match.params.datasetId);
-  }, [dispatch.lineage, match.params.datasetId]);
+    if (match.params.datasetId !== selector.oldDatasetId) {
+      dispatch.lineage.updateState({
+        key: 'oldDatasetId',
+        value: match.params.datasetId,
+      });
+      dispatch.lineage.updateGraph({ edges: [], vertices: [] });
+      dispatch.lineage.fetchInitialLineageGraphInfo(match.params.datasetId);
+    }
+  }, [dispatch.lineage, match.params.datasetId, selector.oldDatasetId]);
 
   const nodes = transformNodes(
     selector.graph.vertices,
@@ -53,7 +63,12 @@ export default function Lineage() {
     [dispatch.lineage],
   );
   const handleClickEdge = useCallback(
-    (edgeInfo: { srcNodeId: string; destNodeId: string, srcNode: LineageDagreNode, destNode: LineageDagreNode }) => {
+    (edgeInfo: {
+      srcNodeId: string;
+      destNodeId: string;
+      srcNode: LineageDagreNode;
+      destNode: LineageDagreNode;
+    }) => {
       setIsExpanded(true);
       setCurrentType('task');
       dispatch.lineage.updateState({
