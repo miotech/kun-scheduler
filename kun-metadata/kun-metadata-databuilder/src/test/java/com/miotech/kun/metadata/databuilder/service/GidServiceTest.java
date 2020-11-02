@@ -32,7 +32,7 @@ public class GidServiceTest extends DatabaseTestBase {
 
         long currentTime = System.currentTimeMillis();
         String dataStoreJson = DataStoreJsonUtil.toJson(dataStore);
-        operator.update("INSERT INTO kun_mt_dataset_gid(data_store, dataset_gid) VALUES (?, ?)", dataStoreJson, currentTime);
+        operator.update("INSERT INTO kun_mt_dataset_gid(data_store, dataset_gid, dsi) VALUES (?, ?, ?)", dataStoreJson, currentTime, dataStore.getDSI().toFullString());
 
         GidService generator = new GidService(operator);
         long generate = generator.generate(dataStore);
