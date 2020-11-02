@@ -22,6 +22,10 @@ public class UserService {
         return userRepository.insert(userInfo);
     }
 
+    public User getUser(Long id) {
+        return userRepository.find(id);
+    }
+
     public User getUserByName(String name) {
         return userRepository.findByName(name);
     }
