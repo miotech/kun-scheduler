@@ -35,17 +35,4 @@ public class MetadataServiceFacadeImpl implements MetadataServiceFacade {
             return null;
         }
     }
-
-    @Override
-    public Dataset getDatasetByDSI(DSI dataStoreIdentifier) {
-        long gid = gidService.getByDSI(dataStoreIdentifier);
-        logger.debug("fetched gid = {}", gid);
-
-        Optional<Dataset> datasetOptional = metadataDatasetService.fetchDatasetByGid(gid);
-        if (datasetOptional.isPresent()) {
-            return datasetOptional.get();
-        } else {
-            return null;
-        }
-    }
 }
