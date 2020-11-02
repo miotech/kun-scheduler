@@ -1,4 +1,4 @@
-package com.miotech.kun.security.common;
+package com.miotech.kun.security.authenticate;
 
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
