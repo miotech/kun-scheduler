@@ -117,6 +117,7 @@ export enum DataQualityType {
   Completeness = 'COMPLETENESS',
   Consistency = 'CONSISTENCY',
   Timeliness = 'TIMELINESS',
+  Uniqueness = 'UNIQUENESS',
 }
 
 export const dataQualityTypes: DataQualityType[] = Object.values(
