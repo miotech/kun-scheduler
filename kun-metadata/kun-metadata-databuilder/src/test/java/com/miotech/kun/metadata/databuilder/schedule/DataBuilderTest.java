@@ -21,6 +21,7 @@ public class DataBuilderTest extends DatabaseTestBase {
 
     private long gid = IdGenerator.getInstance().nextId();
     private String dataStoreJson = "{\"@class\":\"com.miotech.kun.workflow.core.model.lineage.MongoDataStore\",\"url\":\"test-url\",\"database\":\"test-database\",\"collection\":\"test-collection\",\"type\":\"MONGO_COLLECTION\"}";
+    private String dsiString = "mongodb:collection=test-collection,database=test-database,url=test-url";
 
     @Inject
     private DatabaseOperator dbOperator;
@@ -270,8 +271,8 @@ public class DataBuilderTest extends DatabaseTestBase {
     }
 
     private void initDataset(long gid) {
-        dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name) VALUES(?, ?, ?, CAST(? AS JSONB), ?)",
-                gid, "test_dataset", 1, dataStoreJson, "test_database");
+        dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name, dsi) VALUES(?, ?, ?, CAST(? AS JSONB), ?, ?)",
+                gid, "test_dataset", 1, dataStoreJson, "test_database", dsiString);
     }
 
     private DataBuilder buildDataBuild(boolean extractStats) {

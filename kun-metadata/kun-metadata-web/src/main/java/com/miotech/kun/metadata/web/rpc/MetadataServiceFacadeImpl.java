@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.web.rpc;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.service.MetadataDatasetService;
+import com.miotech.kun.metadata.core.model.DSI;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.service.gid.GidService;
@@ -25,6 +26,19 @@ public class MetadataServiceFacadeImpl implements MetadataServiceFacade {
     @Override
     public Dataset getDatasetByDatastore(DataStore datastore) {
         long gid = gidService.generate(datastore);
+        logger.debug("fetched gid = {}", gid);
+
+        Optional<Dataset> datasetOptional = metadataDatasetService.fetchDatasetByGid(gid);
+        if (datasetOptional.isPresent()) {
+            return datasetOptional.get();
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Dataset getDatasetByDSI(DSI dataStoreIdentifier) {
+        long gid = gidService.getByDSI(dataStoreIdentifier);
         logger.debug("fetched gid = {}", gid);
 
         Optional<Dataset> datasetOptional = metadataDatasetService.fetchDatasetByGid(gid);
