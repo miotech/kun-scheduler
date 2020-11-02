@@ -17,14 +17,27 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * A repeatable migration that converts `datastore` column to `dsi` column in following tables:
+ * A migration that converts `datastore` column to `dsi` column in following tables:
  * kun_mt_dataset
  * kun_mt_dataset_gid
- * Note that repeatable migrations are always applied last
+ * This migration will fill up ALL the empty
  */
 @SuppressWarnings("ALL")
-public class R__Transform_datastore_to_DSI extends BaseJavaMigration {
-    private static final Logger logger = LoggerFactory.getLogger(R__Transform_datastore_to_DSI.class);
+public class V5_1__Transform_datastore_to_DSI extends BaseJavaMigration {
+    private static final Logger logger = LoggerFactory.getLogger(V5_1__Transform_datastore_to_DSI.class);
+
+    /**
+     * Change this checksum if you want to trigger flyway's change detection,
+     * since flyway cannot compute the checksum of a java class migration automatically.
+     * DO NOT CHANGE THIS VALUE if you don't understand the mechanism of flyway's validation.
+     * See {@link https://flywaydb.org/documentation/concepts/migrations#checksums-and-validation}
+     **/
+    private static final int CHECKSUM = 140426559;
+
+    @Override
+    public Integer getChecksum() {
+        return CHECKSUM;
+    }
 
     @Override
     public void migrate(Context context) throws Exception {
