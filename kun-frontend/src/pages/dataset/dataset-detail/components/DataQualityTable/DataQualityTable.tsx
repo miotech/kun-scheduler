@@ -15,9 +15,9 @@ import {
 import { DataQualityType } from '@/rematch/models/dataQuality';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
+import { dateFormatter } from '@/utils/dateFormatter';
 
 import styles from './DataQualityTable.less';
-import { dateFormatter } from '@/utils/dateFormatter';
 
 interface Props {
   data: DataQualityItem[];
