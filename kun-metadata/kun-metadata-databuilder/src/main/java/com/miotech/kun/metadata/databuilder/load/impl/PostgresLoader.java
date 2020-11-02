@@ -52,11 +52,21 @@ public class PostgresLoader implements Loader {
         dbOperator.transaction(() -> {
             try {
                 if (datasetExist) {
-                    dbOperator.update("UPDATE kun_mt_dataset SET data_store = CAST(? AS JSONB), name = ?, database_name = ? WHERE gid = ?",
-                            DataStoreJsonUtil.toJson(dataset.getDataStore()), dataset.getName(), dataset.getDatabaseName(), gid);
+                    dbOperator.update("UPDATE kun_mt_dataset SET data_store = CAST(? AS JSONB), name = ?, database_name = ?, dsi = ? WHERE gid = ?",
+                            DataStoreJsonUtil.toJson(dataset.getDataStore()),
+                            dataset.getName(),
+                            dataset.getDatabaseName(),
+                            dataset.getDataStore().getDSI().toFullString(),
+                            gid
+                    );
                 } else {
-                    dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name) VALUES(?, ?, ?, CAST(? AS JSONB), ?)",
-                            gid, dataset.getName(), dataset.getDatasourceId(), DataStoreJsonUtil.toJson(dataset.getDataStore()), dataset.getDatabaseName());
+                    dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name, dsi) VALUES(?, ?, ?, CAST(? AS JSONB), ?, ?)",
+                            gid, dataset.getName(),
+                            dataset.getDatasourceId(),
+                            DataStoreJsonUtil.toJson(dataset.getDataStore()),
+                            dataset.getDatabaseName(),
+                            dataset.getDataStore().getDSI().toFullString()
+                    );
                 }
 
                 DatasetStat datasetStat = dataset.getDatasetStat();
