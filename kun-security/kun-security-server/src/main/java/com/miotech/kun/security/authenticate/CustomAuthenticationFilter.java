@@ -1,13 +1,14 @@
-package com.miotech.kun.security.common;
+package com.miotech.kun.security.authenticate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.miotech.kun.security.common.ConfigKey;
+import com.miotech.kun.security.common.PassToken;
 import com.miotech.kun.security.model.bo.UserInfo;
 import com.miotech.kun.security.service.AbstractSecurityService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
