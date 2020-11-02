@@ -193,6 +193,7 @@ export default {
   'dataDetail.dataQuality.type.COMPLETENESS': 'Completeness',
   'dataDetail.dataQuality.type.CONSISTENCY': 'Consistency',
   'dataDetail.dataQuality.type.TIMELINESS': 'Timeliness',
+  'dataDetail.dataQuality.type.UNIQUENESS': 'Uniqueness',
   'dataDetail.dataQuality.relatedTable': 'Related Tables',
   'dataDetail.dataQualityTable.name': 'Name',
   'dataDetail.dataQualityTable.updater': 'Updater',

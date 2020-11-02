@@ -30,6 +30,7 @@ const tagColorMap = {
   [DataQualityType.Completeness]: 'green',
   [DataQualityType.Consistency]: 'blue',
   [DataQualityType.Timeliness]: 'red',
+  [DataQualityType.Uniqueness]: 'purple',
 };
 
 const colorMap = {
