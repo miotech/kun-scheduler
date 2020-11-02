@@ -192,6 +192,7 @@ export default {
   'dataDetail.dataQuality.type.COMPLETENESS': '完整性',
   'dataDetail.dataQuality.type.CONSISTENCY': '一致性',
   'dataDetail.dataQuality.type.TIMELINESS': '及时性',
+  'dataDetail.dataQuality.type.UNIQUENESS': '唯一性',
   'dataDetail.dataQuality.relatedTable': '相关数据表',
   'dataDetail.dataQualityTable.name': '名称',
   'dataDetail.dataQualityTable.updater': '更新者',
