@@ -555,12 +555,17 @@ export default function DatasetDetail({ match }: Props) {
                   >
                     {t('dataDetail.lineage.title')}
                   </span>
-                  <Link
-                    style={{ textDecoration: 'underLine' }}
-                    to={`/data-discovery/dataset/${currentId}/lineage`}
-                  >
-                    {t('dataDetail.lineage.lineageDetailLink')}
-                  </Link>
+                  {((selector.upstreamLineageTaskList &&
+                    selector.upstreamLineageTaskList.length > 0) ||
+                    (selector.downstreamLineageTaskList &&
+                      selector.downstreamLineageTaskList.length > 0)) && (
+                    <Link
+                      style={{ textDecoration: 'underLine' }}
+                      to={`/data-discovery/dataset/${currentId}/lineage`}
+                    >
+                      {t('dataDetail.lineage.lineageDetailLink')}
+                    </Link>
+                  )}
                 </div>
 
                 <div className={styles.lineageArea}>
