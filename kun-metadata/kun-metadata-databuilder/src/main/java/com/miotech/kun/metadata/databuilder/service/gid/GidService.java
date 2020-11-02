@@ -37,12 +37,8 @@ public class GidService {
             throw ExceptionUtils.wrapIfChecked(e);
         }
 
-        Long gid = dbOperator.fetchOne(
-                "SELECT dataset_gid FROM kun_mt_dataset_gid WHERE (dsi LIKE CONCAT(CAST(? AS TEXT), '%')) OR (data_store = CAST(? AS JSONB))",
-                rs -> rs.getLong(1),
-                dataStore.getDSI().toEssentialString(),
-                dataStoreJson
-        );
+        Long gid = getByDSI(dataStore.getDSI());
+
         if (gid != null && gid > 0) {
             return gid;
         } else {
@@ -57,12 +53,12 @@ public class GidService {
         return gid;
     }
 
-    public long getByDSI(DSI dsi) {
+    public Long getByDSI(DSI dsi) {
         // Convert dataStore to JSON
-        Preconditions.checkNotNull(dsi, "DSI can't be null");
+        Preconditions.checkNotNull(dsi, "DSI cannot be null");
 
         return dbOperator.fetchOne(
-                "SELECT dataset_gid FROM kun_mt_dataset_gid WHERE dsi LIKE CONCAT(CAST(? AS TEXT), '%'))",
+                "SELECT dataset_gid FROM kun_mt_dataset_gid WHERE dsi LIKE CONCAT(CAST(? AS TEXT), '%')",
                 rs -> rs.getLong(1),
                 dsi.toEssentialString()
         );
