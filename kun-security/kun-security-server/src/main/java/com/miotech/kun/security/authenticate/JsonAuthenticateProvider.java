@@ -1,4 +1,4 @@
-package com.miotech.kun.security.common;
+package com.miotech.kun.security.authenticate;
 
 import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.security.model.bo.JsonUsers;
@@ -12,7 +12,6 @@ import org.springframework.security.authentication.InternalAuthenticationService
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.nio.charset.Charset;
 
