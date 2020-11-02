@@ -113,7 +113,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
       >
         <ReflexElement
           className={styles.leftPane}
-          flex={2}
+          flex={5}
           minSize={192}
         >
           <KunSpin spinning={taskRunsIsLoading}>
@@ -131,7 +131,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
         <ReflexSplitter propagate />
         <ReflexElement
           className={styles.RightPanel}
-          flex={1}
+          flex={5}
           minSize={192}
         >
           <div
