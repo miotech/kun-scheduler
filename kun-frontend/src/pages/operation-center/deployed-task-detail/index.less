@@ -32,8 +32,8 @@
 .LeftPanel, .RightPanel {
   &&& {
     min-height: 600px;
-    height: calc(100vh - 182px);
-    overflow-y: auto;
+    height: calc(100vh - 194px);
+    overflow-y: hidden;
   }
 }
 
@@ -47,10 +47,16 @@
   }
 }
 
+.RightPanelTabsContainer {
+  padding-right: 6px;
+  padding-bottom: 2px;
+}
+
 .DAGContainer {
   position: relative;
-  flex: 1 1 300px;
   border: 1px dashed @borderColor;
+  width: 100%;
+  height: 100%;
   overflow: hidden;
 }
 
@@ -59,7 +65,3 @@
   .max-size();
 }
 
-.LogContainer {
-  position: relative;
-  flex: 1 1;
-}
