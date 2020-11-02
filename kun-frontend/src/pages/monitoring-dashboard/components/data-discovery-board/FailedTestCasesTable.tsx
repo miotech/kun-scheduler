@@ -152,6 +152,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(
       <Card bodyStyle={{ padding: '8px' }}>
         <h3>
           {t('monitoringDashboard.dataDiscovery.failedTestCasesTable.title')}
+          {total && <span style={{ marginLeft: 4 }}>({total})</span>}
         </h3>
         <Table<FailedTestCase>
           loading={loading}
