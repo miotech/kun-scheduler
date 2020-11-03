@@ -1,7 +1,7 @@
 import React, { memo, RefObject, useCallback, useMemo, useRef } from 'react';
 import c from 'clsx';
 import { useSize } from 'ahooks';
-import dagre from 'dagre';
+import dagre, { graphlib } from 'dagre';
 import { NodeGroup } from 'react-move';
 import isNil from 'lodash/isNil';
 import {
@@ -32,6 +32,8 @@ import {
 } from './helpers/constants';
 
 import './LineageBoard.less';
+
+type Graph = graphlib.Graph;
 
 interface OwnProps {
   width?: number;
@@ -71,6 +73,8 @@ export type LineageDagreNodeData = Dataset & {
   expandableDownstream?: boolean;
   selected?: boolean;
   rowCount?: number;
+  inDegree: number;
+  outDegree: number;
 };
 
 export type LineageDagreNode = dagre.Node<{
@@ -176,16 +180,20 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
               <DatasetNodeCard
                 state={node.data?.selected ? 'selected' : 'default'}
                 data={node.data}
-                leftPortState={computeNodePortState(
-                  node.id,
-                  node.data?.expandableUpstream || false,
+                leftPortState={computePortState({
+                  id: node.id,
+                  direction: 'upstream',
+                  expectedDegree: node.data.inDegree,
+                  graph,
                   loadingStateNodeIds,
-                )}
-                rightPortState={computeNodePortState(
-                  node.id,
-                  node.data?.expandableDownstream || false,
+                })}
+                rightPortState={computePortState({
+                  id: node.id,
+                  direction: 'downstream',
+                  expectedDegree: node.data.outDegree,
+                  graph,
                   loadingStateNodeIds,
-                )}
+                })}
                 onExpandLeft={ev => {
                   ev.stopPropagation();
                   if (props.onExpandUpstream) {
@@ -212,7 +220,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
         </g>
       );
     },
-    [loadingStateNodeIds, props],
+    [loadingStateNodeIds, props, graph],
   );
 
   const renderLineageNodesGroup = () => {
@@ -463,6 +471,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
   );
 });
 
+/*
 function computeNodePortState(
   id: string,
   expandable: boolean,
@@ -473,6 +482,38 @@ function computeNodePortState(
   }
   if (expandable) {
     return 'collapsed';
+  }
+  // else
+  return 'hidden';
+}
+*/
+
+function computePortState({
+  graph, id, direction, expectedDegree, loadingStateNodeIds
+}: {
+  graph: Graph;
+  id: string;
+  direction: 'upstream' | 'downstream';
+  expectedDegree: number;
+  loadingStateNodeIds: string[];
+}): PortStateType {
+  if (loadingStateNodeIds.indexOf(id) >= 0) {
+    return 'loading';
+  }
+  let currentDegree: number | undefined;
+  if (direction === 'downstream') {
+    currentDegree = graph.outEdges(id)?.length;
+  } else {
+    currentDegree = graph.inEdges(id)?.length;
+  }
+  if (expectedDegree === 0) {
+    return 'hidden';
+  }
+  if ((typeof currentDegree === 'number') && (currentDegree < expectedDegree)) {
+    return 'collapsed';
+  }
+  if ((typeof currentDegree === 'number') && (currentDegree === expectedDegree)) {
+    return 'expanded';
   }
   // else
   return 'hidden';

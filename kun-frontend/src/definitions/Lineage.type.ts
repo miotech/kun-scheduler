@@ -13,6 +13,8 @@ export interface LineageNode {
     expandableDownstream?: boolean;
     /** Is it selected? */
     selected?: boolean;
+    inDegree: number;
+    outDegree: number;
   };
   /** width of the node rectangle. Defaults to 280px */
   width?: number;
