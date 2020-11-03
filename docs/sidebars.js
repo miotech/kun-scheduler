@@ -1,6 +1,6 @@
 module.exports = {
   'docs': {
-    QuickStart: ['quick-start'],
+    QuickStart: ['quick-start-zh', 'quick-start-en'],
     Overview: ['architecture-zh', 'concepts-zh'],
   },
 };
