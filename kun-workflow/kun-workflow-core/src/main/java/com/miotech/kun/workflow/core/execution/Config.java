@@ -1,22 +1,29 @@
 package com.miotech.kun.workflow.core.execution;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.*;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
+import com.miotech.kun.workflow.utils.JSONUtils;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import static java.lang.String.format;
 
+@JsonSerialize(using = Config.ConfigSerializer.class)
+@JsonDeserialize(using = Config.ConfigDeserializer.class)
 public class Config {
     public static final Config EMPTY = new Config(ImmutableMap.of());
 
     private final Map<String, Object> values;
 
-    @JsonCreator
-    public Config(@JsonProperty("values") Map<String, Object> values) {
+    public Config(Map<String, Object> values) {
         validateValues(values);
         this.values = ImmutableMap.copyOf(values);
     }
@@ -128,6 +135,26 @@ public class Config {
         }
 
         public Config build() {
+            return new Config(values);
+        }
+    }
+
+    public static class ConfigSerializer extends JsonSerializer<Config> {
+        @Override
+        public void serialize(Config config, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+            String jsonString = JSONUtils.toJsonString(config.getValues());
+            gen.writeRaw(jsonString);
+        }
+    }
+
+    public static class ConfigDeserializer extends JsonDeserializer<Config> {
+        private static final TypeReference<HashMap<String,Object>> typeRef = new TypeReference<HashMap<String, Object>>() {};
+
+        @Override
+        public Config deserialize(JsonParser parser, DeserializationContext ctxt) throws IOException {
+            // deserialize values from a plain object
+            ObjectMapper mapper = new ObjectMapper();
+            Map<String, Object> values = mapper.readValue(parser, typeRef);
             return new Config(values);
         }
     }
