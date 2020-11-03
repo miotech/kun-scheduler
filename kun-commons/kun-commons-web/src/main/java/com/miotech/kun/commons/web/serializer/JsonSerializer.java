@@ -34,7 +34,7 @@ import java.util.TimeZone;
 public class JsonSerializer {
 
     private final Logger logger = LoggerFactory.getLogger(JsonSerializer.class);
-    private static ObjectMapper objectMapper;
+    private static final ObjectMapper objectMapper;
 
     private void logDeserializeError(IOException e) {
         logger.error("Failed to deserialize object: ", e);

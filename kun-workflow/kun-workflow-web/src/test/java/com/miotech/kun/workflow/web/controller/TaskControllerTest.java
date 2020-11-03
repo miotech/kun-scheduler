@@ -136,7 +136,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         String postJson = String.format("{\"name\":\"scheduled_test_task\"," +
                 "\"description\":\"scheduled_test_task description\"," +
                 "\"operatorId\":\"%s\"," +
-                "\"config\":{\"values\": {}}," +
+                "\"config\":{\"a\": \"b\"}," +
                 "\"dependencies\":[]," +
                 "\"scheduleConf\":{\"type\":\"SCHEDULED\",\"cronExpr\":\"*/1 * * * * ?\"}," +
                 "\"tags\": [{ \"key\": \"version\", \"value\": \"1.2\" }]}", upstreamTask.getOperatorId());
@@ -150,7 +150,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         assertThat(result.get("operatorId").asText(), is(upstreamTask.getOperatorId().toString()));
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description"));
-        assertThat(result.get("config").toString(), is("{\"values\":{}}"));
+        assertThat(result.get("config").toString(), is("{\"a\":\"b\"}"));
         assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"*/1 * * * * ?\"}"));
         assertThat(result.get("dependencies").toString(), is("[]"));
         assertThat(result.get("tags").toString(), is("[{\"key\":\"version\",\"value\":\"1.2\"}]"));
@@ -159,7 +159,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         String putJson = String.format("{\"id\": \"%s\", \"name\":\"scheduled_test_task\"," +
                 "\"description\":\"scheduled_test_task description UPDATED\"," +
                 "\"operatorId\":\"%s\"," +
-                "\"config\":{\"values\": {}}," +
+                "\"config\":{\"a\":\"b\"}," +
                 "\"dependencies\":[]," +
                 "\"scheduleConf\":{\"type\":\"SCHEDULED\",\"cronExpr\":\"*/1 * * * * ?\"}," +
                 "\"tags\": []}", taskID, upstreamTask.getOperatorId());
@@ -172,7 +172,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         assertThat(result.get("operatorId").asText(), is(upstreamTask.getOperatorId().toString()));
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description UPDATED"));
-        assertThat(result.get("config").toString(), is("{\"values\":{}}"));
+        assertThat(result.get("config").toString(), is("{\"a\":\"b\"}"));
         assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"*/1 * * * * ?\"}"));
         assertThat(result.get("dependencies").toString(), is("[]"));
         assertThat(result.get("tags").toString(), is("[]"));
@@ -184,7 +184,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         String postJson = String.format("{\"name\":\"scheduled_test_task\"," +
                 "\"description\":\"scheduled_test_task description\"," +
                 "\"operatorId\":\"%s\"," +
-                "\"config\":{\"values\": {}}," +
+                "\"config\":{}," +
                 "\"scheduleConf\":{\"type\":\"SCHEDULED\",\"cronExpr\":\"*/1 * * * * ?\"}," +
                 "\"dependencies\":[{\"upstreamTaskId\": \"%s\", \"dependencyFunc\": \"latestTaskRun\"}]," +
                 "\"tags\": [{ \"key\": \"version\", \"value\": \"1.2\" }]}", upstreamTask.getOperatorId(), upstreamTask.getId());
@@ -196,7 +196,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         assertThat(result.get("operatorId").asText(), is(upstreamTask.getOperatorId().toString()));
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description"));
-        assertThat(result.get("config").toString(), is("{\"values\":{}}"));
+        assertThat(result.get("config").toString(), is("{}"));
         assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"*/1 * * * * ?\"}"));
         assertThat(result.get("dependencies").toString(), is(String.format("[{\"upstreamTaskId\":\"%s\",\"downstreamTaskId\":null,\"dependencyFunc\":\"latestTaskRun\"}]", upstreamTask.getId())));
         assertThat(result.get("tags").toString(), is("[{\"key\":\"version\",\"value\":\"1.2\"}]"));
