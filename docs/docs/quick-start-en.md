@@ -1,6 +1,8 @@
 # Quick Start
 
-This tutorial aims at guiding user and developer to setup the whole KUN project in local with minimum efforts. 
+KUN is an all-in-one data management platform. This tutorial aims at guiding user and developer to setup the whole KUN project in local with minimum efforts.
+
+KUN embeds gradle as the build tool for the whole project. For involved compiling sub-modules, please refer to the *settings.gradle* file.
 
 ### 0 Prerequisite
 **Docker**  -  v18.0 or above
