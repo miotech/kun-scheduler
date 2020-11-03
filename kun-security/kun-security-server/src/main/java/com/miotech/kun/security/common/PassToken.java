@@ -4,7 +4,7 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 
 public class PassToken extends AbstractAuthenticationToken {
 
-    private String principal = ConfigKey.DEFAULT_PASS_TOKEN_KEY;
+    private String principal = ConfigKey.DEFAULT_INTERNAL_PASS_TOKEN_KEY;
 
     public PassToken() {
         super(null);

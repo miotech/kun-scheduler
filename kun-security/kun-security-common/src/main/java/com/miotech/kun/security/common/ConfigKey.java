@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component;
 @Component
 public class ConfigKey {
 
-    public static final String REQUEST_PASS_TOKEN_KEY = "pass-token";
+    public static final String HTTP_REQUEST_PASS_TOKEN_KEY = "pass-token";
 
-    public static final String DEFAULT_PASS_TOKEN_KEY = "kun-pass-token";
+    public static final String DEFAULT_INTERNAL_PASS_TOKEN_KEY = "kun-pass-token";
 
     public static String SECURITY_SERVER_BASE_URL;
 
