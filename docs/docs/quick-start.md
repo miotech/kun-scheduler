@@ -19,8 +19,8 @@ We have built our latest image and push to dockerhub with public access. If you 
 IMAGE_REMOTE_ORG=miotechoss/ 
 ```
 Alternatively, you can build image on your local by embedded *Dockerfile* in each following module:
+
 #####  kun-data-discovery
-This is a data discovery module including the following features:
 
 ```bash
 ./gradlew kun-data-discovery:bootJar
@@ -34,30 +34,35 @@ docker build -t kun-data-discovery:master -f Dockerfile .
 cd kun-data-dashboard
 docker build -t kun-data-dashboard:master -f Dockerfile .
 ```
+
 #####  kun-data-platform
 ```bash
 ./gradlew kun-data-platform:kun-data-platform-web:bootJar
 cd kun-data-platform
 docker build -t kun-data-platform:master -f Dockerfile .
 ```
+
 #####  kun-frontend
 ```bash
 ./gradlew kun-frontend:yarnBuild
 cd kun-frontend
 docker build -t kun-frontend:master -f Dockerfile .
 ```
+
 #####  kun-metadata
 ```bash
 ./gradlew kun-metadata:shadowJar
 cd kun-data-metadata
 docker build -t kun-metadata:master -f Dockerfile .
 ```
+
 #####  kun-workflow
 ```bash
 ./gradlew kun-workflow:shadowJar
 cd kun-workflow
 docker build -t kun-workflow:master -f Dockerfile .
 ```
+
 #####  kun-security
 ```bash
 ./gradlew kun-security:kun-security-server:bootJar
