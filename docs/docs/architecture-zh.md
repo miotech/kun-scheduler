@@ -1,4 +1,5 @@
 ---
+slug: /docs/overview/architecture-zh
 title: 架构
 ---
 
