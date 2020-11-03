@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.collect.ImmutableMap;
-import com.miotech.kun.workflow.utils.JSONUtils;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -142,8 +141,7 @@ public class Config {
     public static class ConfigSerializer extends JsonSerializer<Config> {
         @Override
         public void serialize(Config config, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-            String jsonString = JSONUtils.toJsonString(config.getValues());
-            gen.writeRaw(jsonString);
+            gen.writeObject(config.getValues());
         }
     }
 
