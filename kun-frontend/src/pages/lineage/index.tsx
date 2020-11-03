@@ -136,6 +136,7 @@ export default function Lineage() {
             scaleYMax={2}
           >
             <LineageBoard
+              centerNodeId={match.params.datasetId || undefined}
               width={boardWidth || 1000}
               height={(boardHeight || 600) - 10}
               nodes={nodes}

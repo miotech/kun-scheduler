@@ -32,10 +32,12 @@ import {
 } from './helpers/constants';
 
 import './LineageBoard.less';
+import { collectDownstreamNodes, collectUpstreamNodes } from '@/pages/lineage/helpers/searchUpstreamDownstream';
 
 type Graph = graphlib.Graph;
 
 interface OwnProps {
+  centerNodeId?: string;
   width?: number;
   height?: number;
   nodes: LineageNode[];
@@ -64,6 +66,7 @@ interface OwnProps {
   onDragMove?: (ev: React.MouseEvent | React.TouchEvent) => any;
   onDragEnd?: (ev: React.MouseEvent | React.TouchEvent) => any;
   backgroundCursor?: string;
+  useNativeLink?: boolean;
 }
 
 type Props = OwnProps;
@@ -105,6 +108,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
   const {
     nodes,
     edges,
+    centerNodeId,
     loading = false,
     nodesep = NODE_SEP_DEFAULT,
     edgesep = EDGE_SEP_DEFAULT,
@@ -158,6 +162,21 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
       .map((nodeId: string) => graph.node(nodeId) as LineageDagreNode);
   }, [graph]);
 
+  const [upstreamNodeIdsCollection, downstreamNodeIdsCollection] = useMemo(() => {
+    if (isNil(centerNodeId)) {
+      logger.debug('Cannot detect centerNodeId');
+      return [[], []] as [string[], string[]];
+    }
+    // else
+    return [
+      collectUpstreamNodes(graph, centerNodeId),
+      collectDownstreamNodes(graph, centerNodeId),
+    ];
+  }, [
+    graph,
+    centerNodeId,
+  ]);
+
   const renderNodeGroupElement = useCallback(
     (nodeGroupElement: LineageNodeGroupElement) => {
       const { data: node, state } = nodeGroupElement;
@@ -186,6 +205,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                   expectedDegree: node.data.inDegree,
                   graph,
                   loadingStateNodeIds,
+                  alwaysHiddenNodeIds: downstreamNodeIdsCollection,
                 })}
                 rightPortState={computePortState({
                   id: node.id,
@@ -193,6 +213,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                   expectedDegree: node.data.outDegree,
                   graph,
                   loadingStateNodeIds,
+                  alwaysHiddenNodeIds: upstreamNodeIdsCollection,
                 })}
                 onExpandLeft={ev => {
                   ev.stopPropagation();
@@ -207,7 +228,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                     props.onExpandDownstream(node.id);
                   }
                 }}
-                useNativeLink
+                useNativeLink={props?.useNativeLink}
                 onClick={(ev: React.MouseEvent) => {
                   if (props.onClickNode) {
                     props.onClickNode(node.data, ev);
@@ -220,7 +241,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
         </g>
       );
     },
-    [loadingStateNodeIds, props, graph],
+    [graph, loadingStateNodeIds, downstreamNodeIdsCollection, upstreamNodeIdsCollection, props],
   );
 
   const renderLineageNodesGroup = () => {
@@ -489,16 +510,20 @@ function computeNodePortState(
 */
 
 function computePortState({
-  graph, id, direction, expectedDegree, loadingStateNodeIds
+  graph, id, direction, expectedDegree, loadingStateNodeIds, alwaysHiddenNodeIds
 }: {
   graph: Graph;
   id: string;
   direction: 'upstream' | 'downstream';
   expectedDegree: number;
   loadingStateNodeIds: string[];
+  alwaysHiddenNodeIds: string[];
 }): PortStateType {
   if (loadingStateNodeIds.indexOf(id) >= 0) {
     return 'loading';
+  }
+  if (alwaysHiddenNodeIds.indexOf(id) >= 0) {
+    return 'hidden';
   }
   let currentDegree: number | undefined;
   if (direction === 'downstream') {
