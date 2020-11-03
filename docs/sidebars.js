@@ -1,5 +1,6 @@
 module.exports = {
-  someSidebar: {
+  'docs': {
+    QuickStart: ['quick-start'],
     Overview: ['architecture-zh', 'concepts-zh'],
   },
 };
