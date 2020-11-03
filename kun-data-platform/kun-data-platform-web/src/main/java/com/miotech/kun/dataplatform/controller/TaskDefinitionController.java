@@ -119,8 +119,12 @@ public class TaskDefinitionController {
     @ApiOperation("Try to run TaskDefinition")
     public RequestResult<TaskTryVO> runTaskDefinition(@PathVariable Long id,
                                                       @RequestBody TaskRunRequest taskRunRequest) {
-        TaskTry taskTry = taskDefinitionService.run(id, taskRunRequest);
-        return RequestResult.success(taskDefinitionService.convertToTaskTryVO(taskTry));
+        try{
+            TaskTry taskTry = taskDefinitionService.run(id, taskRunRequest);
+            return RequestResult.success(taskDefinitionService.convertToTaskTryVO(taskTry));
+        }catch (RuntimeException e){
+            return RequestResult.error(e.getMessage());
+        }
     }
 
     @PostMapping("/task-tries/{id}/_stop")

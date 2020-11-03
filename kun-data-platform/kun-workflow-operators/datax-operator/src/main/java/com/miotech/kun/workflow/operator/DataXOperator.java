@@ -74,7 +74,8 @@ public class DataXOperator extends KunOperator {
 
     private int transfer(File jobJsonFile, String sourceTable) {
         try {
-            String dataXPath = this.getClass().getClassLoader().getResource("datax/bin/datax.py").getPath();
+//            String dataXPath = this.getClass().getClassLoader().getResource("datax/bin/datax.py").getPath();
+            String dataXPath = "/server/lib/datax/bin/datax.py";
             String command = String.format("python %s %s", dataXPath, jobJsonFile.getPath());
             logger.info("Command: {}", command);
             Process process = Runtime.getRuntime().exec(command);
@@ -92,7 +93,7 @@ public class DataXOperator extends KunOperator {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(exec.getInputStream()));
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                logger.debug("Table: {}, Msg: {}", table, line);
+                logger.info("Table: {}, Msg: {}", table, line);
             }
         } catch (IOException e) {
             logger.warn("Process InputStream has closed...");

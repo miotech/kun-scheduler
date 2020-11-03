@@ -92,7 +92,9 @@ public class DataXConfigTaskTemplateRender extends TaskTemplateRenderer{
         //reader config
         Long readerDataSourceId = Long.parseLong(taskConfig.get("sourceDB").toString());
         String sourceDBTable = taskConfig.get("sourceTable").toString();
-        //TODO: throw exception
+
+        if(!sourceDBTable.contains("."))
+            throw new RuntimeException("source table should be in format XX.XX");
         String sourcetable = sourceDBTable.split("\\.")[1];
         List<DatasetBaseInfo>  sourceDataSets = metaFacade.fetchDatasetsByDatasourceAndNameLike(readerDataSourceId, sourcetable);
         String sourceTableGid = "0";
@@ -117,7 +119,9 @@ public class DataXConfigTaskTemplateRender extends TaskTemplateRenderer{
         //writer config
         Long writerDataSourceId = Long.parseLong(taskConfig.get("targetDB").toString());
         String targetDbTable = taskConfig.get("targetTable").toString();
-        //TODO: throw error
+
+        if(!targetDbTable.contains("."))
+            throw new RuntimeException("target table should be in format XX.XX");
         String targettable = targetDbTable.split("\\.")[1];
         List<DatasetBaseInfo>  targetDataSets = metaFacade.fetchDatasetsByDatasourceAndNameLike(writerDataSourceId, targettable);
         String targetTableGid = "0";
@@ -166,6 +170,7 @@ public class DataXConfigTaskTemplateRender extends TaskTemplateRenderer{
 
         } catch (JsonProcessingException e) {
             e.printStackTrace();
+            throw new RuntimeException("build datax json config failed");
         }
 
         Map<String, Object> configMap = new HashMap<>();
@@ -193,6 +198,8 @@ public class DataXConfigTaskTemplateRender extends TaskTemplateRenderer{
             case "sqlserver":
                 jdbc = String.format("jdbc:sqlserver://%s:%s;DatabaseName=%s", host, port, dbName);
                 break;
+            default:
+                throw new RuntimeException(String.format("Database type %s is not supported yet,\nsupported db types are mysql, drds, postgresql, oracle, sqlserver", dbType));
         }
         return jdbc;
     }
