@@ -4,8 +4,12 @@ The easiest way to set up KUN is use docker-compose.
 ``` bash
 cd KUN
 ```
+2. Use docker-compose command to set up KUN, including all the modules below.
+```
+docker-compose up
+```
 
-2. If you want to use docker image from dockerhub, change `.env` file setting:
+3. If you want to use docker image from dockerhub, change `.env` file setting:
 ```
 IMAGE_REMOTE_ORG=miotechoss/ 
 ```
@@ -59,10 +63,7 @@ cd kun-security
 docker build -t kun-security:master -f Dockerfile .
 cd -
 ```
-3. Use docker-compose command to set up KUN, including all the modules above.
-```
-docker-compose up
-```
+
 4. Visit http://localhost:9801  
  - username: admin
  - password: admin
