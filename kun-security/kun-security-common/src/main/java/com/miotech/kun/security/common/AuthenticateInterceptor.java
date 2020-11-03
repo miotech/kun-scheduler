@@ -55,13 +55,13 @@ public class AuthenticateInterceptor extends HandlerInterceptorAdapter {
                 cookieStrBuilder.add(cookieFullStr);
             }
         }
-        String passToken = request.getHeader(ConfigKey.REQUEST_PASS_TOKEN_KEY);
+        String passToken = request.getHeader(ConfigKey.HTTP_REQUEST_PASS_TOKEN_KEY);
         if (StringUtils.isEmpty(passToken)) {
-            passToken = request.getParameter(ConfigKey.REQUEST_PASS_TOKEN_KEY);
+            passToken = request.getParameter(ConfigKey.HTTP_REQUEST_PASS_TOKEN_KEY);
         }
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.COOKIE, cookieStrBuilder.toString());
-        headers.add(ConfigKey.REQUEST_PASS_TOKEN_KEY, passToken);
+        headers.add(ConfigKey.HTTP_REQUEST_PASS_TOKEN_KEY, passToken);
         HttpEntity entity = new HttpEntity(headers);
         String authUrl = ConfigKey.getSecurityServerAuthenticateUrl();
         ResponseEntity<RequestResult<UserInfo>> authResult = restTemplate.exchange(authUrl,
@@ -74,13 +74,11 @@ public class AuthenticateInterceptor extends HandlerInterceptorAdapter {
         }
         UserInfo userInfo = authResult.getBody().getResult();
         SecurityContextHolder.setUserInfo(userInfo);
-        SecurityContextHolder.setHttpHeaderInfo(headers);
         return true;
     }
 
     @Override
     public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
         SecurityContextHolder.removeUserInfo();
-        SecurityContextHolder.removeHttpHeaderInfo();
     }
 }

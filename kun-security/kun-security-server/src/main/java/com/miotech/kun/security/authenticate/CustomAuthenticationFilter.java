@@ -56,7 +56,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         } else if (isEqualToPassToken((HttpServletRequest) req, passToken)) {
             PassToken passToken = new PassToken();
             UserInfo userInfo = new UserInfo();
-            userInfo.setUsername(ConfigKey.DEFAULT_PASS_TOKEN_KEY);
+            userInfo.setUsername(ConfigKey.DEFAULT_INTERNAL_PASS_TOKEN_KEY);
             newAuthentication = passToken;
             com.miotech.kun.security.SecurityContextHolder.setUserInfo(userInfo);
         }
@@ -67,7 +67,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
     private boolean isEqualToPassToken(HttpServletRequest httpServletRequest,
                                        String passToken) {
-        String headerToken = httpServletRequest.getHeader(ConfigKey.REQUEST_PASS_TOKEN_KEY);
+        String headerToken = httpServletRequest.getHeader(ConfigKey.HTTP_REQUEST_PASS_TOKEN_KEY);
         return StringUtils.equals(headerToken, passToken);
     }
 
