@@ -1,3 +1,8 @@
+---
+slug: /
+title: Quick Start
+---
+
 # Quick Start
 
 KUN is an all-in-one data management platform. This tutorial aims at guiding user and developer to setup the whole KUN project in local with minimum efforts.
@@ -26,6 +31,7 @@ Alternatively, you can build image on your local by embedded *Dockerfile* in eac
 
 ```bash
 ./gradlew kun-data-discovery:bootJar
+
 cd kun-data-discovery
 docker build -t kun-data-discovery:master -f Dockerfile .
 ```
