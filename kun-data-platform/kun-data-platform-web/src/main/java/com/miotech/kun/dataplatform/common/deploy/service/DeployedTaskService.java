@@ -13,6 +13,7 @@ import com.miotech.kun.dataplatform.model.commit.TaskSnapshot;
 import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.model.taskdefinition.ScheduleConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskDatasetProps;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
@@ -157,8 +158,16 @@ public class DeployedTaskService {
                 ScheduleType.valueOf(scheduleConfig.getType()),
                 scheduleConfig.getCronExpr());
         // prepare dependencies
+        List<Long> deployedTaskIds = new ArrayList<>();
         List<Long> inputNodes = taskPayload.getScheduleConfig().getInputNodes();
-        List<Long> deployedTaskIds = inputNodes == null ? ImmutableList.of(): inputNodes;
+        deployedTaskIds.addAll( inputNodes == null ? ImmutableList.of(): inputNodes);
+        List<Long> inputDatasets = Optional.ofNullable(taskPayload.getScheduleConfig()
+                .getInputDatasets())
+                .map( x -> x.stream()
+                        .map(TaskDatasetProps::getDefinitionId)
+                        .collect(Collectors.toList()))
+                .orElseGet(ImmutableList::of);
+        deployedTaskIds.addAll(inputDatasets);
         List<Long> existedWorkflowIds = deployedTaskDao.fetchWorkflowTaskId(deployedTaskIds);
         Preconditions.checkArgument(deployedTaskIds.size() == existedWorkflowIds.size());
         List<TaskDependency> dependencies = existedWorkflowIds.stream()
