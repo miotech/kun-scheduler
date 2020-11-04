@@ -18,6 +18,8 @@ export function transformNodes(
         selected: n.vertexId === selectedId,
         expandableUpstream: n.upstreamVertexCount > 0,
         expandableDownstream: n.downstreamVertexCount > 0,
+        inDegree: n.upstreamVertexCount,
+        outDegree: n.downstreamVertexCount,
       },
     };
   });
