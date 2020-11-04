@@ -3,23 +3,21 @@ package com.miotech.kun.security.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.RequestResult;
-import com.miotech.kun.security.util.Constants;
 import com.miotech.kun.security.model.bo.UserInfo;
 import com.miotech.kun.security.model.entity.User;
+import com.miotech.kun.security.util.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-@Service
 public class AbstractSecurityService implements InitializingBean {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
