@@ -258,7 +258,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                 .orElseGet(ImmutableList::of);
 
         allUpstreamIds.addAll(inputDatasets);
-        return allUpstreamIds;
+        return allUpstreamIds.stream().distinct().collect(Collectors.toList());
     }
 
     public TaskTry run(Long taskDefId, TaskRunRequest taskRunRequest) {

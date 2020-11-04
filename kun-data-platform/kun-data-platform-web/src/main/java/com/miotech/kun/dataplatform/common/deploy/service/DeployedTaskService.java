@@ -55,6 +55,10 @@ public class DeployedTaskService {
                 });
     }
 
+    public List<DeployedTask> findByDefIds(List<Long> defIds){
+        return deployedTaskDao.fetchByIds(defIds);
+    }
+
     public PaginationResult<DeployedTask> search(DeployedTaskSearchRequest request) {
         Preconditions.checkArgument(request.getPageNum() > 0, "page number should be a positive number");
         Preconditions.checkArgument(request.getPageSize() > 0, "page size should be a positive number");
@@ -172,6 +176,7 @@ public class DeployedTaskService {
         Preconditions.checkArgument(deployedTaskIds.size() == existedWorkflowIds.size());
         List<TaskDependency> dependencies = existedWorkflowIds.stream()
                 .map(x -> new TaskDependency(x, "latestTaskRun"))
+                .distinct()
                 .collect(Collectors.toList());
         // prepare task
         TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskPayload.getTaskConfig(), taskTemplateName);

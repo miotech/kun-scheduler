@@ -119,8 +119,12 @@ public class TaskDefinitionController {
     @ApiOperation("Commit and Deploy a TaskDefinition")
     public RequestResult<DeployVO> deployTaskDefinitionDirectly(@PathVariable Long id,
                                                                 @RequestBody(required = false) CommitRequest request) {
-        Deploy deploy = deployService.deployFast(id, request);
-        return RequestResult.success(deployService.convertVO(deploy));
+        try{
+            Deploy deploy = deployService.deployFast(id, request);
+            return RequestResult.success(deployService.convertVO(deploy));
+        }catch (RuntimeException e){
+            return RequestResult.error(e.getMessage());
+        }
     }
 
     @PostMapping("/task-definitions/{id}/_run")
