@@ -46,4 +46,4 @@ docker build -t kun-data-discovery:master -f Dockerfile .
 - 元数据服务(kun-metadata)
 - 数据开发服务(kun-data-platform)
 - 调度系统(kun-workflow)
-- 用户服务(kun-security)
+- 安全中心(kun-security)
