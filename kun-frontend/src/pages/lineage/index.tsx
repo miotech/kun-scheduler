@@ -1,5 +1,6 @@
 import { useRouteMatch } from 'umi';
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { graphlib } from 'dagre';
 import { useSize } from 'ahooks';
 import Card from '@/components/Card/Card';
 import useRedux from '@/hooks/useRedux';
@@ -16,6 +17,7 @@ import { transformNodes } from './helpers/transformNodes';
 import { transformEdges } from './helpers/transformEdges';
 
 import styles from './index.less';
+import { collectDownstreamNodes, collectUpstreamNodes } from '@/pages/lineage/helpers/searchUpstreamDownstream';
 
 export default function Lineage() {
   const { selector, dispatch } = useRedux(state => state.lineage);
@@ -46,6 +48,25 @@ export default function Lineage() {
     selector.graph.edges,
     `${selector?.selectedEdgeInfo?.sourceNodeId}-${selector?.selectedEdgeInfo?.destNodeId}`,
   );
+
+  const graph = useMemo(() => {
+    const g = new graphlib.Graph();
+    (nodes || []).forEach(node => {
+      g.setNode(node.id, {
+        ...node,
+      });
+    });
+    (edges || []).forEach(edge => {
+      g.setEdge(
+        { v: edge.src, w: edge.dest },
+        { selected: edge.selected || false },
+      );
+    });
+    return g;
+  }, [
+    nodes,
+    edges,
+  ]);
 
   const handleClickNode = useCallback(
     (node: LineageDagreNodeData) => {
@@ -116,6 +137,26 @@ export default function Lineage() {
     [dispatch.lineage],
   );
 
+  const removeByNodeIds = useCallback((nodeIdCollectionToRemove: string[]) => {
+    const nextStateVertices = [...selector.graph.vertices].filter(n => nodeIdCollectionToRemove.indexOf(n.vertexId) < 0);
+    const nextStateEdges = [...selector.graph.edges].filter(e =>
+      (nodeIdCollectionToRemove.indexOf(e.sourceVertexId) < 0) && (nodeIdCollectionToRemove.indexOf(e.destVertexId) < 0));
+    dispatch.lineage.updateGraph({
+      vertices: nextStateVertices,
+      edges: nextStateEdges,
+    });
+  }, [dispatch.lineage, selector.graph.edges, selector.graph.vertices]);
+
+  const handleCollapseUpstream = useCallback((nodeId: string) => {
+    const upstreamNodesToRemove = collectUpstreamNodes(graph, nodeId);
+    removeByNodeIds(upstreamNodesToRemove);
+  }, [graph, removeByNodeIds]);
+
+  const handleCollapseDownstream = useCallback((nodeId: string) => {
+    const downstreamNodesToRemove = collectDownstreamNodes(graph, nodeId);
+    removeByNodeIds(downstreamNodesToRemove);
+  }, [graph, removeByNodeIds]);
+
   return (
     <div className={styles.page}>
       <BackButton
@@ -147,6 +188,8 @@ export default function Lineage() {
               onClickBackground={handleClickBackground}
               onExpandUpstream={handleExpandUpstream}
               onExpandDownstream={handleExpandDownstream}
+              onCollapseDownstream={handleCollapseDownstream}
+              onCollapseUpstream={handleCollapseUpstream}
             />
           </LineageBoardZoomProvider>
           <SideDropCard

@@ -51,6 +51,8 @@ interface OwnProps {
   ranker?: 'network-simplex' | 'tight-tree' | 'longest-path';
   onExpandUpstream?: (datasetId: string) => any;
   onExpandDownstream?: (datasetId: string) => any;
+  onCollapseUpstream?: (datasetId: string) => any;
+  onCollapseDownstream?: (datasetId: string) => any;
   onClickNode?: (
     node: LineageDagreNodeData,
     event: React.MouseEvent<any>,
@@ -199,6 +201,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
               <DatasetNodeCard
                 state={node.data?.selected ? 'selected' : 'default'}
                 data={node.data}
+                rowCount={node.data?.rowCount}
                 leftPortState={computePortState({
                   id: node.id,
                   direction: 'upstream',
@@ -221,11 +224,22 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                     props.onExpandUpstream(node.id);
                   }
                 }}
-                rowCount={node.data?.rowCount}
+                onCollapseLeft={ev => {
+                  ev.stopPropagation();
+                  if (props.onCollapseUpstream) {
+                    props.onCollapseUpstream(node.id);
+                  }
+                }}
                 onExpandRight={ev => {
                   ev.stopPropagation();
                   if (props.onExpandDownstream) {
                     props.onExpandDownstream(node.id);
+                  }
+                }}
+                onCollapseRight={ev => {
+                  ev.stopPropagation();
+                  if (props.onCollapseDownstream) {
+                    props.onCollapseDownstream(node.id);
                   }
                 }}
                 useNativeLink={props?.useNativeLink}
