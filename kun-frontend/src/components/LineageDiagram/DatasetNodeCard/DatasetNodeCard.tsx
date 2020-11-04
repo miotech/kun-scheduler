@@ -19,7 +19,7 @@ export type PortStateType = 'hidden' | 'collapsed' | 'expanded' | 'loading';
 
 interface OwnProps {
   /** the status of dataset node */
-  state?: 'default' | 'selected' | 'faded';
+  state?: 'default' | 'selected' | 'faded' | 'highlighted';
   data?: Dataset | null;
   rowCount?: number;
   lastUpdateTime?: Date | number | string;

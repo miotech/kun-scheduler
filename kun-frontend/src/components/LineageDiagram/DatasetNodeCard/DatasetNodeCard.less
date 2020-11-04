@@ -24,6 +24,9 @@
     border: solid 1px rgba(26, 115, 232, 0.3);
   }
 
+  &--highlighted {
+  }
+
   &--selected {
     border: 2px solid @darkBlue;
     left: -1px;
@@ -98,6 +101,10 @@
   }
 
   &--selected &__heading {
+    background: rgba(26, 115, 232, 0.1);
+  }
+
+  &--highlighted &__heading {
     background: rgba(26, 115, 232, 0.1);
   }
 

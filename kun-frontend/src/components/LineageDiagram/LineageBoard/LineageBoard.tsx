@@ -199,7 +199,16 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
               style={{ position: 'relative', left: '10px', cursor: 'pointer' }}
             >
               <DatasetNodeCard
-                state={node.data?.selected ? 'selected' : 'default'}
+                state={(() => {
+                  if (node.data?.selected) {
+                    return 'selected';
+                  }
+                  if (node.id === centerNodeId) {
+                    return 'highlighted';
+                  }
+                  // else
+                  return 'default';
+                })()}
                 data={node.data}
                 rowCount={node.data?.rowCount}
                 leftPortState={computePortState({
