@@ -248,11 +248,11 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
             >
               <DatasetNodeCard
                 state={(() => {
-                  if (node.data?.selected) {
-                    return 'selected';
-                  }
                   if (node.id === centerNodeId) {
                     return 'highlighted';
+                  }
+                  if (node.data?.selected) {
+                    return 'selected';
                   }
                   // else
                   return 'default';
