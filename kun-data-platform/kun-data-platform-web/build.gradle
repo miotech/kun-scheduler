@@ -79,6 +79,7 @@ dependencies {
     implementation 'io.springfox:springfox-boot-starter:3.0.0'
     implementation 'com.googlecode.json-simple:json-simple'
     implementation "com.h2database:h2"
+    implementation 'redis.clients:jedis'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"
