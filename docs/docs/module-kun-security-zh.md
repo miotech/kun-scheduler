@@ -1,4 +1,7 @@
-# 安全中心
+---
+slug: /module-kun-data-discovery-zh
+title: 安全中心
+---
 
 安全中心模块包括以下几个子模块：
 - 用户信息管理
