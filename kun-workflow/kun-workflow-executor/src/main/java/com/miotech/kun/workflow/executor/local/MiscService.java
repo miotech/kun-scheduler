@@ -5,7 +5,7 @@ import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import com.miotech.kun.workflow.core.publish.KafkaEventPublisher;
+import com.miotech.kun.workflow.core.publish.EventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +26,7 @@ public class MiscService {
     private EventBus eventBus;
 
     @Inject
-    private KafkaEventPublisher publisher;
+    private EventPublisher publisher;
 
     public void changeTaskAttemptStatus(long attemptId, TaskRunStatus status) {
         changeTaskAttemptStatus(attemptId, status, null, null);

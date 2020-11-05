@@ -26,7 +26,7 @@ zhongda:
   host: http://zhongda.miotech.com:8000
   token: ***REMOVED***
 
-kafka:
-  base-url: ${KAFKA_HOST}:${KAFKA_PORT}
-  notify-group: ${KAFKA_NOTIFY_GROUP}
-  notify-topic: ${KAFKA_NOTIFY_TOPIC}
+redis:
+  host: ${DB_REDIS_IP}
+  port: ${DB_REDIS_PORT}
+  notify-channel: ${NOTIFY_CHANNEL}
