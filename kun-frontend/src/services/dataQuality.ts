@@ -4,6 +4,7 @@ import {
   ValidateStatus,
   DataQualityResp,
   RelatedTableItem,
+  DataQualityHistory,
 } from '@/rematch/models/dataQuality';
 import { delet, get, post } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
@@ -93,6 +94,20 @@ export async function editQualityService(id: string, params: EditQualityReq) {
 export async function deleteQualityService(id: string) {
   return delet<{ id: string }>('/data-quality/:id/delete', {
     pathParams: { id },
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export interface DataQualityHistoryRespItem {
+  caseId: string;
+  historyList: DataQualityHistory[];
+}
+
+export type FetchDataQualityHistoriesResp = DataQualityHistoryRespItem[];
+
+export async function fetchDataQualityHistoriesService(caseIds: string[]) {
+  return get<FetchDataQualityHistoriesResp>('/data-quality/history', {
+    query: { caseIds },
     prefix: DEFAULT_API_PREFIX,
   });
 }

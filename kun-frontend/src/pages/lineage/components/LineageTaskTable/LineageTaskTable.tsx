@@ -1,19 +1,13 @@
 import { Link } from 'umi';
 import React, { memo, useMemo } from 'react';
 import useI18n from '@/hooks/useI18n';
-import {
-  CheckCircleFilled,
-  StopFilled,
-  CloseCircleFilled,
-} from '@ant-design/icons';
+import { CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
 
 import { Table } from 'antd';
 import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
-import {
-  LineageTask,
-  DataQualityHistory,
-} from '@/rematch/models/datasetDetail';
+import { LineageTask } from '@/rematch/models/datasetDetail';
 import useBackPath from '@/hooks/useBackPath';
+import { LineageHistoryStatus } from '@/definitions/Lineage.type';
 import styles from './LineageTaskTable.less';
 
 const colorMap = {
@@ -69,10 +63,10 @@ export default memo(function LineageTaskTable({
         key: 'historyList',
         dataIndex: 'historyList',
         title: t('dataDetail.dataQualityTable.historyList'),
-        render: (historyList: DataQualityHistory[]) => (
+        render: (historyList: LineageHistoryStatus[]) => (
           <div className={styles.historyList}>
             {historyList?.map(history => {
-              if (history === DataQualityHistory.SUCCESS) {
+              if (history === LineageHistoryStatus.SUCCESS) {
                 return (
                   <CheckCircleFilled
                     className={styles.historyIcon}
@@ -80,19 +74,11 @@ export default memo(function LineageTaskTable({
                   />
                 );
               }
-              if (history === DataQualityHistory.FAILED) {
+              if (history === LineageHistoryStatus.FAILED) {
                 return (
                   <CloseCircleFilled
                     className={styles.historyIcon}
                     style={{ color: colorMap.warning }}
-                  />
-                );
-              }
-              if (history === DataQualityHistory.SKIPPED) {
-                return (
-                  <StopFilled
-                    className={styles.historyIcon}
-                    style={{ color: colorMap.stop }}
                   />
                 );
               }

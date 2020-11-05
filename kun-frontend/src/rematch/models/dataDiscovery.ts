@@ -337,9 +337,9 @@ export const dataDiscovery = {
           // do nothing
         }
       },
-      async fetchAllDb() {
+      async fetchAllDb(payload?: { dataSourceIds: string[] }) {
         try {
-          const resp = await fetchAllDbService();
+          const resp = await fetchAllDbService(payload);
           if (resp) {
             dispatch.dataDiscovery.updateState({
               key: 'allDbList',

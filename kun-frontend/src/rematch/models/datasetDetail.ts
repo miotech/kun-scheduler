@@ -18,8 +18,11 @@ import {
 import {
   deleteQualityService,
   fetchDataAllQualitiesService,
+  fetchDataQualityHistoriesService,
+  FetchDataQualityHistoriesResp,
 } from '@/services/dataQuality';
-import { DataQualityType } from './dataQuality';
+import { LineageHistoryStatus } from '@/definitions/Lineage.type';
+import { DataQualityType, DataQualityHistory } from './dataQuality';
 import { RootDispatch, RootState } from '../store';
 
 export interface Flow {
@@ -27,18 +30,13 @@ export interface Flow {
   flow_name: string;
 }
 
-export enum DataQualityHistory {
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  SKIPPED = 'SKIPPED',
-}
-
 export interface DataQualityItem {
   id: string;
   name: string;
   updater: string;
   types: DataQualityType[];
-  historyList: DataQualityHistory[];
+  isPrimary: boolean;
+  historyList?: DataQualityHistory[] | null;
   updateTime: number;
   createTime: number;
 }
@@ -62,7 +60,7 @@ export interface LineageTask {
   taskId: string;
   taskName: string;
   lastExecutedTime: number;
-  historyList: DataQualityHistory[];
+  historyList: LineageHistoryStatus[];
 }
 
 export interface DatasetDetail {
@@ -211,6 +209,19 @@ export const datasetDetail = {
         ...payload,
       },
     }),
+    mergeDataQualityHistories: (
+      state: DatasetDetailState,
+      payload: FetchDataQualityHistoriesResp,
+    ) => ({
+      ...state,
+      dataQualities: state.dataQualities?.map(item => {
+        const histories = payload.find(i => i.caseId === item.id)?.historyList;
+        return {
+          ...item,
+          historyList: histories,
+        };
+      }),
+    }),
   },
 
   effects: (dispatch: RootDispatch) => {
@@ -335,9 +346,26 @@ export const datasetDetail = {
             if (resp) {
               const { dqCases, pageNumber, pageSize, totalCount } = resp;
 
+              const respHistory = await fetchDataQualityHistoriesService(
+                dqCases.map(i => i.id),
+              );
+
+              let cases = dqCases;
+              if (respHistory) {
+                cases = cases.map(caseItem => {
+                  const caseHistory = respHistory.find(
+                    item => item.caseId === caseItem.id,
+                  )?.historyList;
+                  return {
+                    ...caseItem,
+                    historyList: caseHistory,
+                  };
+                });
+              }
+
               dispatch.datasetDetail.updateState({
                 key: 'dataQualities',
-                value: dqCases,
+                value: cases,
               });
               dispatch.datasetDetail.updateDataQualityPagination({
                 pageNumber,
@@ -414,6 +442,20 @@ export const datasetDetail = {
         try {
           const resp = await deleteQualityService(id);
           if (resp) {
+            return resp;
+          }
+        } catch (e) {
+          // do nothing
+        }
+        return null;
+      },
+
+      async fetchDataQualityHistories(payload: { caseIds: string[] }) {
+        const { caseIds } = payload;
+        try {
+          const resp = await fetchDataQualityHistoriesService(caseIds);
+          if (resp) {
+            dispatch.datasetDetail.mergeDataQualityHistories(resp);
             return resp;
           }
         } catch (e) {
