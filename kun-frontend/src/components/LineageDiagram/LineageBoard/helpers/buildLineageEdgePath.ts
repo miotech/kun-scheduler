@@ -13,7 +13,14 @@ type NodeInfo = {
 
 const ARROW_X_OFFSET = 10;
 
-export function buildLineageEdgePath(fromNode: NodeInfo, toNode: NodeInfo): string {
+export type BuildLineageEdgePathOptions = {
+  srcOffsetX: number;
+  srcOffsetY: number;
+  destOffsetX: number;
+  destOffsetY: number;
+}
+
+export function buildLineageEdgePath(fromNode: NodeInfo, toNode: NodeInfo, options: Partial<BuildLineageEdgePathOptions> = {}): string {
   const [
     nodeWidth = NODE_DEFAULT_WIDTH,
     nodeHeight = NODE_DEFAULT_HEIGHT,
@@ -21,13 +28,20 @@ export function buildLineageEdgePath(fromNode: NodeInfo, toNode: NodeInfo): stri
     fromNode.width,
     toNode.height,
   ];
+  const {
+    srcOffsetX = 0,
+    srcOffsetY = 0,
+    destOffsetX = 0,
+    destOffsetY = 0,
+  } = options;
+
   const start = {
-    x: fromNode.x + nodeWidth + PORT_WIDTH / 2,
-    y: fromNode.y + nodeHeight / 2,
+    x: fromNode.x + nodeWidth + PORT_WIDTH / 2 + srcOffsetX,
+    y: fromNode.y + nodeHeight / 2 + srcOffsetY,
   };
   const end = {
-    x: toNode.x + PORT_WIDTH / 2 - ARROW_X_OFFSET,
-    y: toNode.y + nodeHeight / 2,
+    x: toNode.x + PORT_WIDTH / 2 - ARROW_X_OFFSET + destOffsetX,
+    y: toNode.y + nodeHeight / 2 + destOffsetY,
   };
   const firstCtrlPoint = {
     x: start.x + (end.x - start.x) / 2,

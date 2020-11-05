@@ -13,6 +13,7 @@ import { KunSpin } from '@/components/KunSpin';
 import { Group } from '@visx/group';
 import { quadIn } from '@/utils/animation/ease/quad';
 import { buildLineageEdgePath } from '@/components/LineageDiagram/LineageBoard/helpers/buildLineageEdgePath';
+import { collectDownstreamNodes, collectUpstreamNodes } from '@/pages/lineage/helpers/searchUpstreamDownstream';
 import { ProvidedZoom } from '@visx/zoom/lib/types';
 
 import {
@@ -32,7 +33,6 @@ import {
 } from './helpers/constants';
 
 import './LineageBoard.less';
-import { collectDownstreamNodes, collectUpstreamNodes } from '@/pages/lineage/helpers/searchUpstreamDownstream';
 
 type Graph = graphlib.Graph;
 
@@ -179,6 +179,54 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
     centerNodeId,
   ]);
 
+  const leftPortStates = useMemo(() => {
+    const portStates: Record<string, PortStateType> = {};
+    nodes.forEach(node => {
+      if (node.id) {
+        portStates[node.id] = computePortState({
+          id: node.id,
+          direction: 'upstream',
+          expectedDegree: node.data.inDegree,
+          graph,
+          loadingStateNodeIds,
+          alwaysHiddenNodeIds: centerNodeId ?
+            [...downstreamNodeIdsCollection, centerNodeId] : downstreamNodeIdsCollection,
+        });
+      }
+    });
+    return portStates;
+  }, [
+    centerNodeId,
+    downstreamNodeIdsCollection,
+    graph,
+    loadingStateNodeIds,
+    nodes,
+  ]);
+
+  const rightPortStates = useMemo(() => {
+    const portStates: Record<string, PortStateType> = {};
+    nodes.forEach(node => {
+      if (node.id) {
+        portStates[node.id] = computePortState({
+          id: node.id,
+          direction: 'downstream',
+          expectedDegree: node.data.outDegree,
+          graph,
+          loadingStateNodeIds,
+          alwaysHiddenNodeIds: centerNodeId ?
+            [...upstreamNodeIdsCollection, centerNodeId] : upstreamNodeIdsCollection,
+        });
+      }
+    });
+    return portStates;
+  }, [
+    centerNodeId,
+    upstreamNodeIdsCollection,
+    graph,
+    loadingStateNodeIds,
+    nodes,
+  ]);
+
   const renderNodeGroupElement = useCallback(
     (nodeGroupElement: LineageNodeGroupElement) => {
       const { data: node, state } = nodeGroupElement;
@@ -211,22 +259,8 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                 })()}
                 data={node.data}
                 rowCount={node.data?.rowCount}
-                leftPortState={computePortState({
-                  id: node.id,
-                  direction: 'upstream',
-                  expectedDegree: node.data.inDegree,
-                  graph,
-                  loadingStateNodeIds,
-                  alwaysHiddenNodeIds: downstreamNodeIdsCollection,
-                })}
-                rightPortState={computePortState({
-                  id: node.id,
-                  direction: 'downstream',
-                  expectedDegree: node.data.outDegree,
-                  graph,
-                  loadingStateNodeIds,
-                  alwaysHiddenNodeIds: upstreamNodeIdsCollection,
-                })}
+                leftPortState={leftPortStates[node.id] || 'hidden'}
+                rightPortState={rightPortStates[node.id] || 'hidden'}
                 onExpandLeft={ev => {
                   ev.stopPropagation();
                   if (props.onExpandUpstream) {
@@ -264,7 +298,12 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
         </g>
       );
     },
-    [graph, loadingStateNodeIds, downstreamNodeIdsCollection, upstreamNodeIdsCollection, props],
+    [
+      props,
+      leftPortStates,
+      rightPortStates,
+      centerNodeId,
+    ],
   );
 
   const renderLineageNodesGroup = () => {
@@ -436,37 +475,58 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
               }
               logger.trace('in rendering edge =', edge);
               return (
-                <path
-                  className={c('lineage-edge-path', {
-                    'lineage-edge-path--selected': state.selected,
-                  })}
-                  data-tid={`edge-${edge.data.src}-${edge.data.dest}`}
-                  key={`edge-${edge.data.src}-${edge.data.dest}`}
-                  d={buildLineageEdgePath(
-                    { x: state.srcNodeX, y: state.srcNodeY },
-                    { x: state.destNodeX, y: state.destNodeY },
-                  )}
-                  onClick={(ev: React.MouseEvent<SVGPathElement>) => {
-                    if (props.onClickEdge) {
-                      props.onClickEdge(
-                        {
-                          srcNodeId: edge.data.src,
-                          destNodeId: edge.data.dest,
-                          srcNode: (graph.node(edge.data.src) as LineageDagreNode),
-                          destNode: (graph.node(edge.data.dest) as LineageDagreNode),
-                        },
-                        ev,
-                      );
-                    }
-                  }}
-                  stroke="#d8d8d8"
-                  strokeWidth={2}
-                  opacity={state.opacity}
-                  fill="transparent"
-                  markerEnd="url(#arrowEnd)"
-                  cursor="pointer"
-                  pointerEvents="all"
-                />
+                <g>
+                  <path
+                    className={c('lineage-edge-path', {
+                      'lineage-edge-path--selected': state.selected,
+                    })}
+                    data-tid={`edge-${edge.data.src}-${edge.data.dest}`}
+                    key={`edge-${edge.data.src}-${edge.data.dest}`}
+                    d={buildLineageEdgePath(
+                      { x: state.srcNodeX, y: state.srcNodeY },
+                      { x: state.destNodeX, y: state.destNodeY },
+                      {
+                        srcOffsetX: portIsVisibleState(rightPortStates[edge.data.src]) ? (PORT_WIDTH / 2 - 1) : 0,
+                        destOffsetX: portIsVisibleState(leftPortStates[edge.data.dest]) ? -(PORT_WIDTH / 2) : 0,
+                      },
+                    )}
+                    stroke="#d8d8d8"
+                    strokeWidth={2}
+                    opacity={state.opacity}
+                    fill="transparent"
+                    markerEnd="url(#arrowEnd)"
+                  />
+                  {/* A transparent mask which enlarges clickable area of edge */}
+                  <path
+                    stroke="transparent"
+                    strokeWidth={6}
+                    data-tid={`edge-${edge.data.src}-${edge.data.dest}-event-mask`}
+                    d={buildLineageEdgePath(
+                      { x: state.srcNodeX, y: state.srcNodeY },
+                      { x: state.destNodeX, y: state.destNodeY },
+                      {
+                        srcOffsetX: portIsVisibleState(rightPortStates[edge.data.src]) ? (PORT_WIDTH / 2 - 1) : 0,
+                        destOffsetX: portIsVisibleState(leftPortStates[edge.data.dest]) ? -(PORT_WIDTH / 2) : 0,
+                      },
+                    )}
+                    onClick={(ev: React.MouseEvent<SVGPathElement>) => {
+                      if (props.onClickEdge) {
+                        props.onClickEdge(
+                          {
+                            srcNodeId: edge.data.src,
+                            destNodeId: edge.data.dest,
+                            srcNode: (graph.node(edge.data.src) as LineageDagreNode),
+                            destNode: (graph.node(edge.data.dest) as LineageDagreNode),
+                          },
+                          ev,
+                        );
+                      }
+                    }}
+                    cursor="pointer"
+                    fill="transparent"
+                    pointerEvents="all"
+                  />
+                </g>
               );
             })}
           </Group>
@@ -565,4 +625,8 @@ function computePortState({
   }
   // else
   return 'hidden';
+}
+
+function portIsVisibleState(portState?: PortStateType): boolean {
+  return (portState === 'expanded') || (portState === 'loading') || (portState === 'collapsed');
 }
