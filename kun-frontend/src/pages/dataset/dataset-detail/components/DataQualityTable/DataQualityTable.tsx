@@ -1,21 +1,23 @@
 import React, { memo, useMemo, useCallback } from 'react';
-import { Table, Popconfirm, Tag } from 'antd';
+import { Table, Popconfirm, Tag, Tooltip } from 'antd';
 import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
 import {
   DeleteOutlined,
   CheckCircleFilled,
   CloseCircleFilled,
-  StopFilled,
+  CheckOutlined,
 } from '@ant-design/icons';
 import uniqueId from 'lodash/uniqueId';
+import { DataQualityItem } from '@/rematch/models/datasetDetail';
 import {
-  DataQualityItem,
+  DataQualityType,
+  DataQualityHistoryStatus,
   DataQualityHistory,
-} from '@/rematch/models/datasetDetail';
-import { DataQualityType } from '@/rematch/models/dataQuality';
+} from '@/rematch/models/dataQuality';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 import { dateFormatter } from '@/utils/dateFormatter';
+import TestCaseRuleTable from '@/pages/monitoring-dashboard/components/data-discovery-board/TestCaseRuleTable';
 
 import styles from './DataQualityTable.less';
 
@@ -104,6 +106,18 @@ export default memo(function DataQualityTable({
         ),
       },
       {
+        key: 'isPrimary',
+        dataIndex: 'isPrimary',
+        title: t('dataDetail.dataQualityTable.isPrimary'),
+        width: 100,
+        render: (isPrimary: boolean) => {
+          if (isPrimary) {
+            return <CheckOutlined />;
+          }
+          return null;
+        },
+      },
+      {
         key: 'types',
         dataIndex: 'types',
         title: t('dataDetail.dataQuality.type'),
@@ -146,40 +160,55 @@ export default memo(function DataQualityTable({
         key: 'historyList',
         dataIndex: 'historyList',
         title: t('dataDetail.dataQualityTable.historyList'),
-        render: (historyList: DataQualityHistory[]) => (
-          <div className={styles.historyList}>
-            {historyList?.map(history => {
-              if (history === DataQualityHistory.SUCCESS) {
-                return (
-                  <CheckCircleFilled
-                    key={uniqueId()}
-                    className={styles.historyIcon}
-                    style={{ color: colorMap.green }}
-                  />
-                );
-              }
-              if (history === DataQualityHistory.FAILED) {
-                return (
-                  <CloseCircleFilled
-                    key={uniqueId()}
-                    className={styles.historyIcon}
-                    style={{ color: colorMap.warning }}
-                  />
-                );
-              }
-              if (history === DataQualityHistory.SKIPPED) {
-                return (
-                  <StopFilled
-                    key={uniqueId()}
-                    className={styles.historyIcon}
-                    style={{ color: colorMap.stop }}
-                  />
-                );
-              }
-              return null;
-            })}
-          </div>
-        ),
+        render: (historyList: DataQualityHistory[]) => {
+          return (
+            <div className={styles.historyList}>
+              {historyList?.map(history => {
+                if (history.status === DataQualityHistoryStatus.SUCCESS) {
+                  return (
+                    <CheckCircleFilled
+                      key={uniqueId()}
+                      className={styles.historyIcon}
+                      style={{ color: colorMap.green }}
+                    />
+                  );
+                }
+                if (history.status === DataQualityHistoryStatus.FAILED) {
+                  if (!history.errorReason) {
+                    return (
+                      <Tooltip
+                        title={<TestCaseRuleTable data={history.ruleRecords} />}
+                        placement="right"
+                        color="#ffffff"
+                        overlayClassName={styles.TestCaseRuleTableTooltip}
+                      >
+                        <CloseCircleFilled
+                          key={uniqueId()}
+                          className={styles.historyIcon}
+                          style={{ color: colorMap.warning }}
+                        />
+                      </Tooltip>
+                    );
+                  }
+                  return (
+                    <Tooltip
+                      title={history.errorReason}
+                      placement="right"
+                      overlayClassName={styles.FailedREasonTooltip}
+                    >
+                      <CloseCircleFilled
+                        key={uniqueId()}
+                        className={styles.historyIcon}
+                        style={{ color: colorMap.warning }}
+                      />
+                    </Tooltip>
+                  );
+                }
+                return null;
+              })}
+            </div>
+          );
+        },
       },
       {
         key: 'operator',

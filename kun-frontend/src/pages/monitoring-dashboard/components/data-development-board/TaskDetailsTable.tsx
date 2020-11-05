@@ -94,7 +94,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
     <Card>
       <h3>
         {t('monitoringDashboard.dataDevelopment.taskDetailsTable.title')}
-        {total && <span style={{ marginLeft: 4 }}>({total})</span>}
+        {!!total && <span style={{ marginLeft: 4 }}>({total})</span>}
       </h3>
       <Table<DevTaskDetail>
         loading={loading}
