@@ -72,6 +72,7 @@ export interface FailedTestCase {
   datasetGid: string;
   datasetName: string;
   caseName: string;
+  caseId: string;
   ruleRecords: FailedTestCaseRule[];
 }
 

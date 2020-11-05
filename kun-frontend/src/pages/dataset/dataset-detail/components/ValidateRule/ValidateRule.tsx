@@ -59,10 +59,10 @@ const ValidateRule: RefForwardingComponent<ValidateRuleHandle, Props> = (
 
   useEffect(() => {
     if (defaultRule) {
-      setFieldName(defaultRule.fieldName || '');
+      setFieldName(defaultRule.field || '');
       setOperator(defaultRule.operator);
-      setFieldType(defaultRule.fieldType);
-      setFieldValue(defaultRule.fieldValue);
+      setFieldType(defaultRule.expectedType);
+      setFieldValue(defaultRule.expectedValue);
     }
   }, [defaultRule]);
 
@@ -78,10 +78,10 @@ const ValidateRule: RefForwardingComponent<ValidateRuleHandle, Props> = (
 
           return {
             value: {
-              fieldName: resultFieldName || null,
+              field: resultFieldName || null,
               operator,
-              fieldType,
-              fieldValue,
+              expectedType: fieldType,
+              expectedValue: fieldValue,
             },
             key: ruleKey,
           };

@@ -27,6 +27,7 @@ import {
   addDataQualityService,
   fetchDataQualityService,
   editQualityService,
+  fetchDataQualityHistoriesService,
 } from '@/services/dataQuality';
 import {
   DimensionConfigItem,
@@ -44,6 +45,7 @@ import {
   CustomizeDimensionConfig,
   DataQualityType,
   dataQualityTypes,
+  DataQualityHistory,
 } from '@/rematch/models/dataQuality';
 
 import useI18n from '@/hooks/useI18n';
@@ -58,6 +60,7 @@ import 'codemirror/theme/material.css';
 import 'codemirror/mode/sql/sql';
 
 import styles from './AddDataQualityModal.less';
+import HistoryTable from '../HistoryTable/HistoryTable';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -138,6 +141,11 @@ export default memo(function AddDataQualityModal({
 
   const [customizeInputtingObj, setCustomizeInputtingObj] = useState<any>({});
 
+  const [history, setHistory] = useState<DataQualityHistory[]>([]);
+  const [fetchHistoryLoading, setFetchHistoryLoading] = useState<boolean>(
+    false,
+  );
+
   const [validateRuleList, setValidateRuleList] = useState<
     { key: string; rule?: ValidateRuleItem }[]
   >([{ key: uniqueId('validate-rule') }]);
@@ -202,6 +210,27 @@ export default memo(function AddDataQualityModal({
     func();
   }, [visible, relatedTable, dataQualityId, datasetId]);
 
+  // 如果是编辑状态, 拉取历史
+  useEffect(() => {
+    const fetchFunc = async () => {
+      if (dataQualityId) {
+        try {
+          setFetchHistoryLoading(true);
+          const resp = await fetchDataQualityHistoriesService([dataQualityId]);
+          setHistory(resp?.[0]?.historyList);
+        } catch (e) {
+          // do nothing
+        } finally {
+          setFetchHistoryLoading(false);
+        }
+      }
+    };
+    fetchFunc();
+    return () => {
+      setHistory([]);
+    };
+  }, [dataQualityId, visible]);
+
   // 拿到所有的columns 在 dimension Field 模式下用于applyFields
   useEffect(() => {
     const fetchAllColumns = async () => {
@@ -215,7 +244,7 @@ export default memo(function AddDataQualityModal({
         setAllColumns(resp.columns || []);
       }
     };
-    if (!allColumns.length && data.dimension === 'FIELD') {
+    if (!allColumns.length) {
       fetchAllColumns();
     }
   }, [allColumns.length, data.dimension, datasetId]);
@@ -612,7 +641,7 @@ export default memo(function AddDataQualityModal({
       primaryDatasetGid:
         dimension === 'CUSTOMIZE' && primaryDatasetGid
           ? primaryDatasetGid
-          : undefined,
+          : datasetId,
     };
 
     setConfirmLoading(true);
@@ -643,6 +672,7 @@ export default memo(function AddDataQualityModal({
     customizeInputtingObj.sql,
     data,
     dataQualityId,
+    datasetId,
     onClose,
     onConfirm,
     primaryDatasetGid,
@@ -774,11 +804,37 @@ export default memo(function AddDataQualityModal({
                 onChange={onChangeFunctionsMap.dimension}
                 value={data.dimension}
               >
-                {dimensionList.map(i => (
-                  <Radio className={styles.centerItem} key={i} value={i}>
-                    {t(`dataDetail.dataQuality.dimension.${i}`)}
-                  </Radio>
-                ))}
+                {dimensionList.map(i => {
+                  const dimensionConfig = config.find(
+                    item => item.dimension === i,
+                  );
+                  let disabled = false;
+                  if (
+                    (i === 'TABLE' || i === 'FIELD') &&
+                    (!(dimensionConfig as TableDimensionConfigItem)
+                      ?.templates ||
+                      (dimensionConfig as TableDimensionConfigItem).templates
+                        ?.length === 0)
+                  ) {
+                    disabled = true;
+                  }
+                  if (
+                    i === 'FIELD' &&
+                    (!allColumns || allColumns.length === 0)
+                  ) {
+                    disabled = true;
+                  }
+                  return (
+                    <Radio
+                      className={styles.centerItem}
+                      disabled={disabled}
+                      key={i}
+                      value={i}
+                    >
+                      {t(`dataDetail.dataQuality.dimension.${i}`)}
+                    </Radio>
+                  );
+                })}
               </Radio.Group>
             </div>
           </div>
@@ -846,6 +902,21 @@ export default memo(function AddDataQualityModal({
               />
             </div>
           </div>
+
+          {dataQualityId && (
+            <>
+              <div className={styles.separator} />
+
+              <div className={styles.fieldItem}>
+                <div className={styles.fieldTitle}>
+                  {t('dataDetail.dataQuality.history')}
+                </div>
+                <div className={styles.fieldContent}>
+                  <HistoryTable data={history} loading={fetchHistoryLoading} />
+                </div>
+              </div>
+            </>
+          )}
         </div>
         <div className={styles.buttonRow}>
           <Button

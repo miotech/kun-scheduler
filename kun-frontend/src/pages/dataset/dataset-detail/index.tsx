@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link } from 'umi';
+import { useQueryParams, StringParam } from 'use-query-params';
 import { RouteComponentProps } from 'react-router';
 import numeral from 'numeral';
 import { FileTextOutlined } from '@ant-design/icons';
@@ -35,6 +36,9 @@ interface Props extends RouteComponentProps<MatchParams> {}
 const { Option } = Select;
 
 export default function DatasetDetail({ match }: Props) {
+  const [query] = useQueryParams({
+    caseId: StringParam,
+  });
   const t = useI18n();
   const { getBackPath } = useBackPath();
 
@@ -62,13 +66,13 @@ export default function DatasetDetail({ match }: Props) {
   ] = useState(1);
 
   const [AddDataQualityModalVisible, setAddDataQualityModalVisible] = useState(
-    false,
+    !!query.caseId,
   );
 
   // 编辑 dataquality 用
   const [currentDataQualityId, setCurrentDataQualityId] = useState<
     string | null
-  >(null);
+  >(query.caseId || null);
 
   useEffect(() => {
     // 如果更改了搜索关键词, 那么强制切换页码数为1
@@ -522,7 +526,7 @@ export default function DatasetDetail({ match }: Props) {
               <div className={styles.columnsArea}>
                 <Spin spinning={fetchColumnsLoading}>
                   <div className={styles.columnsTitleRow}>
-                    <span className={styles.columnsTitle}>
+                    <span className={styles.baseItemTitle}>
                       {t('dataDetail.baseItem.title.clolumns')}
                     </span>
 
