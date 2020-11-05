@@ -30,3 +30,8 @@ export interface LineageEdge {
 }
 
 export interface LineageNodeGroupElementState {}
+
+export enum LineageHistoryStatus {
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+}

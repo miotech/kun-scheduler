@@ -76,10 +76,10 @@ export type DimensionConfigItem =
   | CustomizeDimensionConfigItem;
 
 export interface ValidateRuleItem {
-  fieldName: string | null;
+  field: string | null;
   operator: ValidateOperatorEnum;
-  fieldType: ValidateFieldType;
-  fieldValue: string;
+  expectedType: ValidateFieldType;
+  expectedValue: string;
 }
 
 export interface FieldDimensionConfig {
@@ -146,4 +146,25 @@ export interface DataQualityResp extends DataQuality {
 
 export interface DataQuality extends DataQualityBase {
   relatedTables: RelatedTableItem[];
+}
+
+export interface RuleRecords {
+  originalValue: string;
+  field: string;
+  operator: string;
+  expectedType: string;
+  expectedValue: string;
+}
+
+export enum DataQualityHistoryStatus {
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+}
+
+export interface DataQualityHistory {
+  status: DataQualityHistoryStatus;
+  errorReason?: string | null;
+  updateTime: number;
+  continuousFailingCount: number;
+  ruleRecords: RuleRecords[];
 }
