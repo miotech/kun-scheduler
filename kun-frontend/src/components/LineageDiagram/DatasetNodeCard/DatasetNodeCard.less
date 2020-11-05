@@ -25,7 +25,7 @@
   }
 
   &--selected {
-    border: 2px solid @darkBlue;
+    border: 1px solid @darkBlue;
     left: -1px;
   }
 
@@ -97,12 +97,13 @@
     }
   }
 
-  &--selected &__heading {
+  &--highlighted &__heading {
     background: rgba(26, 115, 232, 0.1);
   }
 
-  &--highlighted &__heading {
-    background: rgba(26, 115, 232, 0.1);
+  &--highlighted {
+    border: 2px solid @darkBlue;
+    left: -1px;
   }
 
   &__title-link {
