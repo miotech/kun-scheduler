@@ -32,6 +32,25 @@ public class MockTaskFactory {
                 .build();
     }
 
+    public static Task createTaskWithUpstreams(List<Long> upIds,ScheduleConf conf){
+        long taskId = WorkflowIdGenerator.nextTaskId();
+        TaskDependencyFunctionProvider depFuncProvider =
+                Unsafe.getInjector().getInstance(TaskDependencyFunctionProvider.class);
+        List<TaskDependency> dependencies = upIds.stream().map(
+                upId-> new TaskDependency(upId,taskId,depFuncProvider.
+                        from("latestTaskRun"))).collect(Collectors.toList());
+        return Task.newBuilder()
+                .withId(taskId)
+                .withName("task_" + taskId)
+                .withDescription("task_description_" + taskId)
+                .withConfig(Config.EMPTY)
+                .withOperatorId(WorkflowIdGenerator.nextOperatorId())
+                .withScheduleConf(conf)
+                .withDependencies(dependencies)
+                .withTags(new ArrayList<>())
+                .build();
+    }
+
     public static Task createTask() {
         return createTasks(1).get(0);
     }
@@ -81,6 +100,11 @@ public class MockTaskFactory {
      * @return
      */
     public static List<Task> createTasksWithRelations(int num, Long operatorId, String relations) {
+        ScheduleConf scheduleConf = new ScheduleConf(ScheduleType.NONE, null);
+        return createTasksWithRelations(num,operatorId,relations,scheduleConf);
+    }
+
+    public static List<Task> createTasksWithRelations(int num,Long operatorId,String relations,ScheduleConf scheduleConf){
         Map<Integer, List<Integer>> parsed = MockFactoryUtils.parseRelations(relations);
 
         List<Long> ids = new ArrayList<>();
@@ -101,7 +125,7 @@ public class MockTaskFactory {
                     .withDescription("task_description_" + taskId)
                     .withConfig(Config.EMPTY)
                     .withOperatorId(operatorId)
-                    .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                    .withScheduleConf(scheduleConf)
                     .withDependencies(
                             selectItems(ids, parsed.get(i)).stream()
                                     .map(upId -> new TaskDependency(upId, taskId, depFuncProvider.from("latestTaskRun")))
