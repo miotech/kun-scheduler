@@ -35,9 +35,9 @@ public class LocalWorker implements Worker {
 
 
     @Override
-    public void killTask() {
+    public void killTask(Boolean abort) {
         RpcContext.getContext().set("port", port);
-        boolean result = workerFacade.killTask();
+        boolean result = workerFacade.killTask(abort);
         logger.info("kill task result = {}", result);
     }
 

@@ -33,7 +33,7 @@ public class TickDao {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(CHECKPOINT_TICK)
                 .from(CHECKPOINT_TABLE_NAME)
-                .orderBy(CHECKPOINT_TICK_ID)
+                .orderBy(CHECKPOINT_TICK_ID + " desc")
                 .asPrepared()
                 .getSQL();
         List<Tick> tickList =  dbOperator.fetchAll(sql,tickMapper);

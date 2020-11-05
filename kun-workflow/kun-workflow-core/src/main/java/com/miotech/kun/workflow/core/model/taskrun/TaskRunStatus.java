@@ -7,14 +7,15 @@ import java.util.Map;
 public enum TaskRunStatus {
     CREATED,
     QUEUED,
-    SUBMIT,
+    INITIALIZING,
     RUNNING,
     SUCCESS,
     FAILED,
     RETRY,
     SKIPPED,
     ABORTING,
-    ABORTED;
+    ABORTED,
+    TIMEOUT;
 
     private static final Map<String, TaskRunStatus> mappings = new HashMap<>(16);
 
@@ -38,7 +39,7 @@ public enum TaskRunStatus {
     }
 
     public boolean isFailure() {
-        return this == FAILED || this == ABORTED;
+        return this == FAILED || this == ABORTED || this == TIMEOUT;
     }
 
     public boolean isFinished() {

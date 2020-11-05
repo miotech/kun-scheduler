@@ -42,17 +42,21 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
 
     private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:6.0.8");
 
-    public GenericContainer redis = new GenericContainer(REDIS_IMAGE)
-            .withExposedPorts(6379);
+    public static GenericContainer redis = getRedis();
+
+    public static GenericContainer getRedis(){
+        GenericContainer redis = new GenericContainer(REDIS_IMAGE)
+                .withExposedPorts(6379);
+        redis.start();
+        return redis;
+    }
 
     @ClassRule
     public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
             .withAdminPassword("Mi0tech2020");
 
-//    @Inject
     private KunWorkflowWebServer webServer;
 
-//    @Inject
     private Props props;
 
     @Override
@@ -60,10 +64,9 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         super.configuration();
         Props props = PropsUtils.loadAppProps("application-test.yaml");
         int port = 18080 + (new Random()).nextInt(100);
-        redis.start();
         String redisIp = redis.getHost();
         logger.info("redisIp:" + redisIp);
-        props.put("rpc.registry", "redis://" + redisIp + ":" + redis.getFirstMappedPort());
+        props.put("rpc.registry", "redis://" + redisIp + ":" + redis.getMappedPort(6379));
         props.put("rpc.port", 9001);
         logger.info("Start test workflow server in : localhost:{}", port);
         props.put(ConfigurationKeys.PROP_SERVER_PORT, Integer.toString(port));
@@ -103,7 +106,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         }).start();
         await().atMost(60, TimeUnit.SECONDS)
                 .until(() -> {
-//                    logger.info("Webserver is {} at {}", webServer.isReady() ? "running" : "stopped", getBaseUrl());
+                    logger.info("Webserver is {} at {}", webServer.isReady() ? "running" : "stopped", getBaseUrl());
                     return isAvailable();
                 });
     }
@@ -124,7 +127,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         try (Response response = call.execute()) {
             return response.code() == 200;
         } catch (IOException e) {
-//            logger.warn("Resource {} is not available ", getBaseUrl());
+            logger.warn("Resource {} is not available ", getBaseUrl());
             return false;
         }
     }

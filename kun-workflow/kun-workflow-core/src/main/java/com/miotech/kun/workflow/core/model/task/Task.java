@@ -32,7 +32,7 @@ public class Task {
 
     private final ScheduleConf scheduleConf;
 
-    private final Integer recoverTimes;
+    private static final Integer RECOVER_TIMES = 1;
 
     private final List<TaskDependency> dependencies;
 
@@ -81,7 +81,6 @@ public class Task {
         this.scheduleConf = builder.scheduleConf;
         this.dependencies = ImmutableList.copyOf(builder.dependencies);
         this.tags = builder.tags;
-        this.recoverTimes = builder.recoverTimes == null ? 0 : builder.recoverTimes;
     }
 
     public TaskBuilder cloneBuilder() {
@@ -93,18 +92,21 @@ public class Task {
                 .withConfig(config)
                 .withScheduleConf(scheduleConf)
                 .withDependencies(dependencies)
-                .withTags(tags)
-                .withRecoverTimes(recoverTimes);
+                .withTags(tags);
     }
 
     public boolean shouldSchedule(OffsetDateTime scheduleTime, OffsetDateTime currentTime) {
         boolean shouldSchedule = false;
         switch (scheduleConf.getType()) {
             case ONESHOT:
-                return true;
+                shouldSchedule = true;
+                break;
+            case NONE:
+                shouldSchedule = true;
+                break;
             case SCHEDULED:
                 String cronExpression = scheduleConf.getCronExpr();
-                for (int i = 0; i <= recoverTimes; i++) {
+                for (int i = 0; i <= RECOVER_TIMES; i++) {
                     if(scheduleTime.compareTo(currentTime) >= 0){
                         shouldSchedule = true;
                         break;
@@ -117,6 +119,8 @@ public class Task {
                     }
                 }
                 break;
+            default:
+                throw new IllegalArgumentException("unExpect schedule type");
         }
         return shouldSchedule;
     }
@@ -167,6 +171,19 @@ public class Task {
         return Objects.hash(id, name, description, operatorId, config, scheduleConf, dependencies);
     }
 
+    @Override
+    public String toString() {
+        return "Task{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", operatorId=" + operatorId +
+                ", config=" + config +
+                ", scheduleConf=" + scheduleConf +
+                ", dependencies=" + dependencies +
+                ", tags=" + tags +
+                '}';
+    }
 
     public static final class TaskBuilder {
         private Long id;
@@ -223,15 +240,15 @@ public class Task {
         }
 
         public TaskBuilder withRecoverTimes(Integer recoverTimes) {
-            if (recoverTimes == null) {
-                recoverTimes = 1;
-            }
             recoverTimes = recoverTimes > 10 ? 10 : recoverTimes;
             this.recoverTimes = recoverTimes;
             return this;
         }
 
         public Task build() {
+            if (recoverTimes == null) {
+                recoverTimes = 1;
+            }
             return new Task(this);
         }
     }

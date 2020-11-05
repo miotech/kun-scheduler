@@ -24,9 +24,9 @@ public class TestReconnectWorker implements Worker {
     }
 
     @Override
-    public void killTask() {
+    public void killTask(Boolean abort) {
         taskAttemptMsg.setWorkerId(1l);
-        taskAttemptMsg.setTaskRunStatus(TaskRunStatus.ABORTED);
+        taskAttemptMsg.setTaskRunStatus(abort ? TaskRunStatus.ABORTED : TaskRunStatus.FAILED);
         taskAttemptMsg.setOperatorReport(OperatorReport.BLANK);
         workflowExecutorFacade.statusUpdate(taskAttemptMsg);
     }
@@ -60,6 +60,7 @@ public class TestReconnectWorker implements Worker {
             message.setTaskAttemptId(command.getTaskAttemptId());
             message.setTaskRunId(command.getTaskRunId());
             message.setPort(11111);
+            message.setTaskRunStatus(TaskRunStatus.RUNNING);
             workflowExecutorFacade.heartBeat(message);
             try {
                 logger.info("test worker has disconnected");
@@ -67,6 +68,7 @@ public class TestReconnectWorker implements Worker {
             }catch (Exception e){
 
             }
+            message.setTimeoutTimes(0);
             logger.info("test worker has reconnect");
             workflowExecutorFacade.heartBeat(message);
 

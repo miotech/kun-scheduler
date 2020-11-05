@@ -33,12 +33,13 @@ public class OperatorLauncher {
     private static final Logger logger = LoggerFactory.getLogger(OperatorLauncher.class);
     private volatile boolean cancelled = false;
     private volatile KunOperator operator;
-    private volatile TaskRunStatus taskRunStatus = TaskRunStatus.SUBMIT;
+    private volatile boolean abort = false;
+    private volatile TaskRunStatus taskRunStatus = TaskRunStatus.INITIALIZING;
     private final int RPC_RETRY_TIME = 10;
     private final Long HEARTBEAT_INTERVAL = 5 * 1000L;
     private WorkflowExecutorFacade executorFacade;
     private InitService initService;
-    private  Long workerId;
+    private Long workerId;
     private static Props props;
 
     private ArrayBlockingQueue<TaskAttemptMsg> statusUpdateQueue = new ArrayBlockingQueue<>(5);
@@ -66,7 +67,7 @@ public class OperatorLauncher {
                 new WorkerModule(props)
         );
         OperatorLauncher operatorLauncher = injector.getInstance(OperatorLauncher.class);
-        operatorLauncher.start(command,heartBeatMessage,out);
+        operatorLauncher.start(command, heartBeatMessage, out);
     }
 
     private void start(ExecCommand command, HeartBeatMessage heartBeatMessage, String out) {
@@ -77,6 +78,7 @@ public class OperatorLauncher {
         initService = injector.getInstance(InitService.class);
         initService.publishRpcServices();
         heartBeatMessage.setPort(props.getInt("rpc.port"));
+        heartBeatMessage.setTaskRunId(command.getTaskRunId());
         Thread heartbeatTask = new Thread(new HeartBeatTask(heartBeatMessage));
         heartbeatTask.start();
         Thread statusUpdateTask = new Thread(new StatusUpdateTask());
@@ -86,19 +88,19 @@ public class OperatorLauncher {
         try {
             logger.info("wait statusUpdate message send to executor");
             statusUpdateTask.join();
-        }catch (InterruptedException e){
-            logger.info("wait statusUpdate message send to executor failed",e);
+        } catch (InterruptedException e) {
+            logger.info("wait statusUpdate message send to executor failed", e);
         }
         writeResult(out, msg);
         System.exit(exitCode);
     }
 
-    public boolean heartBeatReceive() {
-        return true;
-    }
 
     //rpc
-    public boolean killTask(){
+    public boolean killTask(Boolean abortByUser) {
+        if (abortByUser) {
+            abort = true;
+        }
         cancel();
         return cancelled;
     }
@@ -150,12 +152,12 @@ public class OperatorLauncher {
             operator.init();
             logger.info("Operator has initialized successfully.");
             if (cancelled) {
-                TaskAttemptMsg  cancelledMsg = setCancelledMsg(msg);
+                TaskAttemptMsg cancelledMsg = setCancelledMsg(msg);
                 statusUpdate(cancelledMsg);
                 logger.info("Operator is cancelled, abort execution.");
                 return cancelledMsg;
             }
-            TaskAttemptMsg runningMsg = msg.clone();
+            TaskAttemptMsg runningMsg = msg.copy();
             taskRunStatus = TaskRunStatus.RUNNING;
             runningMsg.setTaskRunStatus(TaskRunStatus.RUNNING);
             statusUpdate(runningMsg);
@@ -171,47 +173,27 @@ public class OperatorLauncher {
                 logger.info("Operator is cancelled, abort execution.");
                 return cancelledMsg;
             } else if (success) {
-                TaskAttemptMsg successMessage = msg.clone();
+                TaskAttemptMsg successMessage = msg.copy();
                 taskRunStatus = TaskRunStatus.SUCCESS;
                 successMessage.setTaskRunStatus(TaskRunStatus.SUCCESS);
                 successMessage.setEndAt(DateTimeUtils.now());
-                if(operator.getReport().isPresent()){
+                if (operator.getReport().isPresent()) {
                     OperatorReport operatorReport = new OperatorReport();
                     operatorReport.copyFromReport(operator.getReport().get());
                     successMessage.setOperatorReport(operatorReport);
-                }else {
+                } else {
                     successMessage.setOperatorReport(OperatorReport.BLANK);
                 }
                 statusUpdate(successMessage);
                 return successMessage;
             } else {
-                TaskAttemptMsg failedMsg = msg.clone();
-                taskRunStatus = TaskRunStatus.FAILED;
-                failedMsg.setTaskRunStatus(TaskRunStatus.FAILED);
-                failedMsg.setEndAt(DateTimeUtils.now());
-                if(operator.getReport().isPresent()){
-                    OperatorReport operatorReport = new OperatorReport();
-                    operatorReport.copyFromReport(operator.getReport().get());
-                    failedMsg.setOperatorReport(operatorReport);
-                }else {
-                    failedMsg.setOperatorReport(OperatorReport.BLANK);
-                }
+                TaskAttemptMsg failedMsg = setFailedMsg(msg);
                 statusUpdate(failedMsg);
                 return failedMsg;
             }
         } catch (Throwable e) {
             logger.error("Unexpected exception occurred.", e);
-            TaskAttemptMsg failedMsg = msg.clone();
-            taskRunStatus = TaskRunStatus.FAILED;
-            failedMsg.setTaskRunStatus(TaskRunStatus.FAILED);
-            failedMsg.setEndAt(DateTimeUtils.now());
-            if(operator != null && operator.getReport().isPresent()){
-                OperatorReport operatorReport = new OperatorReport();
-                operatorReport.copyFromReport(operator.getReport().get());
-                failedMsg.setOperatorReport(operatorReport);
-            }else {
-                failedMsg.setOperatorReport(OperatorReport.BLANK);
-            }
+            TaskAttemptMsg failedMsg = setFailedMsg(msg);
             statusUpdate(failedMsg);
             return failedMsg;
         } finally {
@@ -296,19 +278,38 @@ public class OperatorLauncher {
     }
 
     private TaskAttemptMsg setCancelledMsg(TaskAttemptMsg msg) {
+        if (!abort) {
+            return setFailedMsg(msg);
+        }
         taskRunStatus = TaskRunStatus.ABORTED;
-        TaskAttemptMsg cancelledMsg = msg.clone();
+        TaskAttemptMsg cancelledMsg = msg.copy();
         cancelledMsg.setTaskRunStatus(TaskRunStatus.ABORTED);
         cancelledMsg.setEndAt(DateTimeUtils.now());
-        if(operator.getReport().isPresent()){
+        if (operator.getReport().isPresent()) {
             OperatorReport operatorReport = new OperatorReport();
             operatorReport.copyFromReport(operator.getReport().get());
             cancelledMsg.setOperatorReport(operatorReport);
-        }else {
+        } else {
             cancelledMsg.setOperatorReport(OperatorReport.BLANK);
         }
         return cancelledMsg;
     }
+
+    private TaskAttemptMsg setFailedMsg(TaskAttemptMsg msg) {
+        taskRunStatus = TaskRunStatus.FAILED;
+        TaskAttemptMsg failedMsg = msg.copy();
+        failedMsg.setTaskRunStatus(TaskRunStatus.FAILED);
+        failedMsg.setEndAt(DateTimeUtils.now());
+        if (operator != null && operator.getReport().isPresent()) {
+            OperatorReport operatorReport = new OperatorReport();
+            operatorReport.copyFromReport(operator.getReport().get());
+            failedMsg.setOperatorReport(operatorReport);
+        } else {
+            failedMsg.setOperatorReport(OperatorReport.BLANK);
+        }
+        return failedMsg;
+    }
+
 
     private Long getPid() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
@@ -320,7 +321,7 @@ public class OperatorLauncher {
 
         @Override
         public void run() {
-            while (!cancelled){
+            while (!cancelled) {
                 try {
                     TaskAttemptMsg msg = statusUpdateQueue.take();
                     int sendTime = 0;
@@ -331,40 +332,40 @@ public class OperatorLauncher {
                                 Thread.sleep(HEARTBEAT_INTERVAL);
                             }
                             updateSuccess = executorFacade.statusUpdate(msg);
-                            logger.info("send update task status message = {}, to executor result = {}", msg,updateSuccess);
-                            if(!updateSuccess){
+                            logger.info("send update task status message = {}, to executor result = {}", msg, updateSuccess);
+                            if (!updateSuccess) {
                                 sendTime++;
                             }
                         } catch (Exception e) {
                             sendTime++;
-                            logger.error("send update task status message = {}, to executor failed,retry = {}", msg,sendTime, e);
+                            logger.error("send update task status message = {}, to executor failed,retry = {}", msg, sendTime, e);
                         }
                     }
-                    if(msg.getTaskRunStatus().isFinished()){
+                    if (msg.getTaskRunStatus().isFinished()) {
                         cancelled = true;
                     }
-                }catch (InterruptedException e){
-                    logger.error("take TaskAttemptMsg from queue failed",e);
+                } catch (InterruptedException e) {
+                    logger.error("take TaskAttemptMsg from queue failed", e);
                 }
             }
 
         }
     }
 
-    class HeartBeatTask implements Runnable{
+    class HeartBeatTask implements Runnable {
 
         private HeartBeatMessage heartBeatMessage;
 
-        HeartBeatTask(HeartBeatMessage heartBeatMessage){
+        HeartBeatTask(HeartBeatMessage heartBeatMessage) {
             this.heartBeatMessage = heartBeatMessage;
         }
 
         @Override
         public void run() {
-            while(!taskRunStatus.isFinished()){
+            while (!taskRunStatus.isFinished()) {
                 try {
-                    heartBeatMessage.setIp(cancelled ? 1 : 0);
                     heartBeatMessage.setTaskRunStatus(taskRunStatus);
+                    heartBeatMessage.setTimeoutTimes(0);
                     boolean result = executorFacade.heartBeat(heartBeatMessage);
                     Thread.sleep(HEARTBEAT_INTERVAL);
                     logger.debug("heart beat to executor result = {}", result);

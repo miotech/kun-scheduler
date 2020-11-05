@@ -141,7 +141,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         TaskRun submitted = result.get(0);
         assertThat(submitted.getId(), is(notNullValue()));
         assertThat(submitted.getTask(), safeSameBeanAs(task));
-        assertThat(submitted.getScheduledTick(), is(new Tick(now)));
+        assertThat(submitted.getScheduledTick(), is(new Tick(now.plusMinutes(1))));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
@@ -172,6 +172,22 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         taskDao.create(task);
         TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
         taskRunDao.createTaskRuns(Arrays.asList(taskRun));
+        //taskSpawner restart
+        taskSpawner.init();
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getId(), is(notNullValue()));
+        assertThat(submitted.getTask(), safeSameBeanAs(task));
+        assertThat(submitted.getStartAt(), is(nullValue()));
+        assertThat(submitted.getEndAt(), is(nullValue()));
+        assertThat(submitted.getStatus(), is(nullValue()));
         DatabaseTaskGraph graph = new DatabaseTaskGraph(taskDao);
         List<TaskRun> taskRunList = taskSpawner.run(graph,tick);
         assertThat(taskRunList.size(),is(0));
@@ -191,6 +207,22 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         taskRunDao.createTaskRuns(Arrays.asList(taskRun));
         DatabaseTaskGraph graph = new DatabaseTaskGraph(taskDao);
         graph.updateTasksNextExecutionTick(tick,Arrays.asList(task));
+        //taskSpawner restart
+        taskSpawner.init();
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getId(), is(notNullValue()));
+        assertThat(submitted.getTask(), safeSameBeanAs(task));
+        assertThat(submitted.getStartAt(), is(nullValue()));
+        assertThat(submitted.getEndAt(), is(nullValue()));
+        assertThat(submitted.getStatus(), is(nullValue()));
         Optional<Tick> beforeRunTickOptional =  taskDao.fetchNextExecutionTickByTaskId(task.getId());
         List<TaskRun> taskRunList = taskSpawner.run(graph,tick);
         assertThat(taskRunList.size(),is(0));
@@ -210,6 +242,22 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         DatabaseTaskGraph graph = new DatabaseTaskGraph(taskDao);
         graph.updateTasksNextExecutionTick(tick,Arrays.asList(task));
         tickDao.saveCheckPoint(tick);
+        //taskSpawner restart
+        taskSpawner.init();
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getId(), is(notNullValue()));
+        assertThat(submitted.getTask(), safeSameBeanAs(task));
+        assertThat(submitted.getStartAt(), is(nullValue()));
+        assertThat(submitted.getEndAt(), is(nullValue()));
+        assertThat(submitted.getStatus(), is(nullValue()));
         Tick nextTick = new Tick(tick.toOffsetDateTime().plusMinutes(1));
         List<TaskRun> taskRunList = taskSpawner.run(graph,nextTick);
         assertThat(taskRunList.size(),is(1));
@@ -246,7 +294,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         TaskRun submitted = result.get(0);
         assertThat(submitted.getId(), is(notNullValue()));
         assertThat(submitted.getTask(), safeSameBeanAs(task));
-        assertThat(submitted.getScheduledTick(), is(new Tick(now)));
+        assertThat(submitted.getScheduledTick(), is(new Tick(now.plusMinutes(1))));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
@@ -307,7 +355,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         Task task3 = tasks.get(2);
 
         OffsetDateTime now = DateTimeUtils.freeze();
-        Tick tick = new Tick(now);
+        Tick tick = new Tick(now.plusMinutes(1));
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
 
         // process
@@ -361,7 +409,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         Task task3 = tasks.get(2);
 
         OffsetDateTime now = DateTimeUtils.freeze();
-        Tick tick = new Tick(now);
+        Tick tick = new Tick(now.plusMinutes(1));
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
 
         // process
@@ -506,11 +554,11 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskManager, times(executionTime))
+        verify(taskManager, times(1))
                 .submit(captor.capture());
 
         List<List<TaskRun>> result = captor.getAllValues();
-        assertThat(result.size(), is(executionTime));
+        assertThat(result.size(), is(1));
 
         assertThat(result.stream().filter(x -> !x.isEmpty()).count(), is(1L));
 

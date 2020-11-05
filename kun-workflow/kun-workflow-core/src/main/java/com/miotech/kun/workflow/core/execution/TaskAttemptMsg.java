@@ -5,7 +5,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 
-public class TaskAttemptMsg implements Serializable,Cloneable {
+public class TaskAttemptMsg implements Serializable{
     private long taskAttemptId;
     private long workerId;
     private long taskRunId;
@@ -13,13 +13,8 @@ public class TaskAttemptMsg implements Serializable,Cloneable {
     private OffsetDateTime startAt;
     private OffsetDateTime endAt;
     private OperatorReport operatorReport;
-//    private TaskAttemptReport taskAttemptReport;
 
     private static final long serialVersionUID = 1603849040000l;
-
-//    public TaskAttemptReport getTaskAttemptReport() {
-//        return taskAttemptReport;
-//    }
 
     public long getTaskAttemptId() {
         return taskAttemptId;
@@ -69,9 +64,6 @@ public class TaskAttemptMsg implements Serializable,Cloneable {
         this.workerId = workerId;
     }
 
-//    public void setTaskAttemptReport(TaskAttemptReport taskAttemptReport) {
-//        this.taskAttemptReport = taskAttemptReport;
-//    }
 
     public long getTaskRunId() {
         return taskRunId;
@@ -85,15 +77,14 @@ public class TaskAttemptMsg implements Serializable,Cloneable {
         return taskRunStatus != null ? taskRunStatus.isSuccess():false;
     }
 
-    @Override
-    public TaskAttemptMsg clone(){
-        try {
-            TaskAttemptMsg newTaskAttemptMsg = (TaskAttemptMsg)super.clone();
-            return newTaskAttemptMsg;
-        }catch (CloneNotSupportedException e){
-            e.printStackTrace();
-        }
-        return null;
+    public TaskAttemptMsg copy(){
+        TaskAttemptMsg newTaskAttemptMsg = new TaskAttemptMsg();
+        newTaskAttemptMsg.setWorkerId(workerId);
+        newTaskAttemptMsg.setTaskAttemptId(taskAttemptId);
+        newTaskAttemptMsg.setStartAt(startAt);
+        newTaskAttemptMsg.setTaskRunId(taskRunId);
+        return newTaskAttemptMsg;
+
     }
 
     @Override

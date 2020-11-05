@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.miotech.kun.workflow.facade.WorkflowWorkerFacade;
 import com.miotech.kun.workflow.worker.local.OperatorLauncher;
 
-//@Singleton
 public class LocalWorkflowWorkerFacadeImpl implements WorkflowWorkerFacade {
 
     private OperatorLauncher operatorLauncher;
@@ -15,12 +14,7 @@ public class LocalWorkflowWorkerFacadeImpl implements WorkflowWorkerFacade {
     }
 
     @Override
-    public boolean heartBeat() {
-        return operatorLauncher.heartBeatReceive();
-    }
-
-    @Override
-    public boolean killTask() {
-        return operatorLauncher.killTask();
+    public boolean killTask(Boolean abortByUser) {
+        return operatorLauncher.killTask(abortByUser);
     }
 }

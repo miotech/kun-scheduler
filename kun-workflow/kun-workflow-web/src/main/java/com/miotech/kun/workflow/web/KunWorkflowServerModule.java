@@ -39,7 +39,6 @@ public class KunWorkflowServerModule extends AppModule {
     @Singleton
     @Provides
     public WorkerClusterConsumer workerRpcConsumer() {
-//        checkState(RpcBootstrap.isStarted(), "rpc framework should be bootstrapped.");
         return new WorkerClusterConsumer();
     }
 

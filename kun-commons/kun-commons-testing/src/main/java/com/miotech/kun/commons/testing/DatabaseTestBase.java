@@ -2,7 +2,10 @@ package com.miotech.kun.commons.testing;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.inject.*;
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.DatabaseSetup;
 import com.miotech.kun.commons.utils.Props;
@@ -11,7 +14,6 @@ import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.h2.tools.Server;
 import org.junit.After;
-import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,11 +36,6 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         addModules(new TestDatabaseModule());
     }
 
-    @Before
-    public void setUp() {
-
-
-    }
 
     @Override
     protected void beforeInject(Injector injector) {

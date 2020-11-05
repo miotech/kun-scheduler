@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.web;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.miotech.kun.commons.db.DatabaseModule;
 import com.miotech.kun.commons.db.GraphDatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
@@ -15,7 +16,6 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,8 +52,16 @@ public class KunWebServerTestBase extends GuiceTestBase {
         );
     }
 
-    @Before
-    public void setUp() {
+    @Override
+    protected void beforeInject(Injector injector) {
+        // initialize database
+        setUp(injector);
+    }
+
+    public void setUp(Injector injector) {
+        props = injector.getInstance(Props.class);
+        KunWorkflowWebServer.configureDB(injector,props);
+        webServer = injector.getInstance(KunWorkflowWebServer.class);
         new Thread(() -> webServer.start()).start();
         while(!webServer.isReady()) {
             try {

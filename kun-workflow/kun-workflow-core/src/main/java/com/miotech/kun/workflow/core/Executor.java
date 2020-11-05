@@ -46,4 +46,18 @@ public interface Executor {
      */
     public boolean heartBeatReceive(HeartBeatMessage heartBeatMessage);
 
+    /**
+     * 关闭executor
+     *
+     * @return
+     */
+    public boolean shutdown();
+
+    /**
+     * 恢复executor
+     *
+     * @return
+     */
+    public boolean recover();
+
 }

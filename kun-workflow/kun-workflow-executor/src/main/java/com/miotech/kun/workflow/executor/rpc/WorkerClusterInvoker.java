@@ -22,7 +22,7 @@ public class WorkerClusterInvoker<T> extends DefaultRpcClusterInvoker<T> {
         if (port == null){
             throw new RuntimeException("port is blank ");
         }
-        //2.检查是否有可用invoker
+        //check invoker
         checkInvokers(invokers, invocation);
         Invoker<T> invoked = invokers.stream().filter(invoker -> invoker.getUrl().getPort() == port)
                 .findFirst().orElse(null);
@@ -37,7 +37,7 @@ public class WorkerClusterInvoker<T> extends DefaultRpcClusterInvoker<T> {
 
             return invoked.invoke(invocation);
         } catch (Throwable e) {
-            if (e instanceof RpcException && ((RpcException) e).isBiz()) { // biz exception.
+            if (e instanceof RpcException && ((RpcException) e).isBiz()) {
                 throw (RpcException) e;
             }
             throw new RpcException(e instanceof RpcException ? ((RpcException) e).getCode() : 0,

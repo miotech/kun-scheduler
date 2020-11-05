@@ -24,9 +24,9 @@ public class TestTimeoutWorker implements Worker {
     }
 
     @Override
-    public void killTask() {
+    public void killTask(Boolean abort) {
         taskAttemptMsg.setWorkerId(1l);
-        taskAttemptMsg.setTaskRunStatus(TaskRunStatus.ABORTED);
+        taskAttemptMsg.setTaskRunStatus(abort ? TaskRunStatus.ABORTED : TaskRunStatus.FAILED);
         taskAttemptMsg.setOperatorReport(OperatorReport.BLANK);
         workflowExecutorFacade.statusUpdate(taskAttemptMsg);
     }

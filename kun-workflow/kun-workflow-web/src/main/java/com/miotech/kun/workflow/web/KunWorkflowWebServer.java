@@ -27,7 +27,6 @@ public class KunWorkflowWebServer {
     private KunWebServer server;
     @Inject
     private Props props;
-    //    @Inject
     private DataSource dataSource;
     @Inject
     private SchedulerManager schedulerManager;
@@ -41,7 +40,9 @@ public class KunWorkflowWebServer {
     }
 
     public void start() {
-        initService.publishRpcServices();
+        if(props.containsKey("rpc.registry")){
+            initService.publishRpcServices();
+        }
         schedulerManager.start();
         this.server.start();
     }
