@@ -79,20 +79,43 @@ public class DataQualityRepository extends BaseRepository {
         jdbcTemplate.update(sql, taskId, caseId);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public DeleteCaseResponse deleteCase(Long id) {
-        String fullDeleteSql = DefaultSQLBuilder.newBuilder()
+        String kdcDeleteSql = DefaultSQLBuilder.newBuilder()
                 .delete()
                 .from("kun_dq_case")
                 .where("id = ?")
                 .getSQL();
-        jdbcTemplate.update(fullDeleteSql, id);
+        jdbcTemplate.update(kdcDeleteSql, id);
 
-        String deleteSql = DefaultSQLBuilder.newBuilder()
+        String kdcadDeleteSql = DefaultSQLBuilder.newBuilder()
                 .delete()
                 .from("kun_dq_case_associated_dataset")
                 .where("case_id = ?")
                 .getSQL();
-        jdbcTemplate.update(deleteSql, id);
+        jdbcTemplate.update(kdcadDeleteSql, id);
+
+        String kdcadfDeleteSql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from("kun_dq_case_associated_dataset_field")
+                .where("case_id = ?")
+                .getSQL();
+        jdbcTemplate.update(kdcadfDeleteSql, id);
+
+        String kdcmDeleteSql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from("kun_dq_case_metrics")
+                .where("dq_case_id = ?")
+                .getSQL();
+        jdbcTemplate.update(kdcmDeleteSql, id);
+
+        String kdcrDeleteSql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from("kun_dq_case_rules")
+                .where("case_id = ?")
+                .getSQL();
+        jdbcTemplate.update(kdcrDeleteSql, id);
+
         DeleteCaseResponse response = new DeleteCaseResponse();
         response.setId(id);
         return response;
@@ -430,7 +453,9 @@ public class DataQualityRepository extends BaseRepository {
                         "kdc.name as case_name",
                         "kdc.update_user as case_update_user",
                         "kdc.types as case_types",
-                        "kdc.task_id as case_task_id")
+                        "kdc.task_id as case_task_id",
+                        "kdc.create_time as create_time",
+                        "kdc.update_time as update_time")
                 .from("kun_dq_case kdc")
                 .join("inner", "kun_dq_case_associated_dataset", "kdcad").on("kdc.id = kdcad.case_id")
                 .where("kdcad.dataset_id = ?");
@@ -454,6 +479,8 @@ public class DataQualityRepository extends BaseRepository {
                 caseBasic.setUpdater(rs.getString("case_update_user"));
                 caseBasic.setTypes(resolveDqCaseTypes(rs.getString("case_types")));
                 caseBasic.setTaskId(rs.getLong("case_task_id"));
+                caseBasic.setCreateTime(timestampToMillis(rs, "create_time"));
+                caseBasic.setUpdateTime(timestampToMillis(rs, "update_time"));
                 caseBasics.add(caseBasic);
             }
             caseBasics.setPageNumber(request.getPageNumber());

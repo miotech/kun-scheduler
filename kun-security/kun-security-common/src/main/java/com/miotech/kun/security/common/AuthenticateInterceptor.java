@@ -11,6 +11,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.Cookie;
@@ -24,8 +25,6 @@ import java.util.StringJoiner;
  */
 @Slf4j
 public class AuthenticateInterceptor extends HandlerInterceptorAdapter {
-
-    private String securityBaseUrl;
 
     /**
      * separate from app rest template
@@ -56,15 +55,15 @@ public class AuthenticateInterceptor extends HandlerInterceptorAdapter {
                 cookieStrBuilder.add(cookieFullStr);
             }
         }
-        String passToken = request.getHeader(ConfigKey.REQUEST_PASS_TOKEN_KEY);
+        String passToken = request.getHeader(ConfigKey.HTTP_REQUEST_PASS_TOKEN_KEY);
         if (StringUtils.isEmpty(passToken)) {
-            passToken = request.getParameter(ConfigKey.REQUEST_PASS_TOKEN_KEY);
+            passToken = request.getParameter(ConfigKey.HTTP_REQUEST_PASS_TOKEN_KEY);
         }
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.COOKIE, cookieStrBuilder.toString());
-        headers.add(ConfigKey.REQUEST_PASS_TOKEN_KEY, passToken);
+        headers.add(ConfigKey.HTTP_REQUEST_PASS_TOKEN_KEY, passToken);
         HttpEntity entity = new HttpEntity(headers);
-        String authUrl = securityBaseUrl + "/security/whoami";
+        String authUrl = ConfigKey.getSecurityServerAuthenticateUrl();
         ResponseEntity<RequestResult<UserInfo>> authResult = restTemplate.exchange(authUrl,
                 HttpMethod.GET,
                 entity,
@@ -78,7 +77,8 @@ public class AuthenticateInterceptor extends HandlerInterceptorAdapter {
         return true;
     }
 
-    public void setSecurityBaseUrl(String securityBaseUrl) {
-        this.securityBaseUrl = securityBaseUrl;
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        SecurityContextHolder.removeUserInfo();
     }
 }
