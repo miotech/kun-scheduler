@@ -15,6 +15,7 @@ import {
 import { DataQualityType } from '@/rematch/models/dataQuality';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
+import { dateFormatter } from '@/utils/dateFormatter';
 
 import styles from './DataQualityTable.less';
 
@@ -29,6 +30,7 @@ const tagColorMap = {
   [DataQualityType.Completeness]: 'green',
   [DataQualityType.Consistency]: 'blue',
   [DataQualityType.Timeliness]: 'red',
+  [DataQualityType.Uniqueness]: 'purple',
 };
 
 const colorMap = {
@@ -117,6 +119,23 @@ export default memo(function DataQualityTable({
         ),
       },
       {
+        key: 'updateTime',
+        dataIndex: 'updateTime',
+        title: t('dataDetail.dataQualityTable.updateTime'),
+        className: styles.nameColumn,
+        width: 150,
+        render: updateTime => dateFormatter(updateTime),
+      },
+      {
+        key: 'createTime',
+        dataIndex: 'createTime',
+        title: t('dataDetail.dataQualityTable.createTime'),
+        className: styles.nameColumn,
+        width: 150,
+        render: createTime => dateFormatter(createTime),
+      },
+
+      {
         key: 'updater',
         dataIndex: 'updater',
         title: t('dataDetail.dataQualityTable.updater'),
@@ -183,6 +202,7 @@ export default memo(function DataQualityTable({
 
   return (
     <Table
+      rowKey="id"
       loading={selector.fetchDataQualityLoading}
       className={styles.dataQualityTable}
       columns={columns}

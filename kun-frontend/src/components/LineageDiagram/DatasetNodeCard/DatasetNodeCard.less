@@ -1,4 +1,4 @@
-@lineage-dataset-node-card-width: 280px;
+@lineage-dataset-node-card-width: 300px;
 @lineage-dataset-node-card-height: 108px;
 @port-btn-width: 20px;
 @port-btn-height: 20px;
@@ -38,8 +38,15 @@
 
   &__left-content, &__right-content {
     position: relative;
-    flex: 1 1;
-    max-width: 50%;
+    overflow-x: hidden;
+  }
+
+  &__left-content {
+    flex: 1 1 50%;
+  }
+
+  &__right-content {
+    flex: 1 1 35%;
   }
 
   &__heading &__right-content {
@@ -73,15 +80,28 @@
     }
     [data-label="dataset-name"] {
       display: inline-block;
+      position: relative;
+      vertical-align: top;
       margin-left: 4px;
+      width: calc(100% - 20px);
+      overflow: hidden;
+      word-break: normal;
+      text-overflow: ellipsis;
     }
 
     [data-label="update-time-wrapper"] {
       margin-top: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
     }
   }
 
   &--selected &__heading {
+    background: rgba(26, 115, 232, 0.1);
+  }
+
+  &--highlighted &__heading {
     background: rgba(26, 115, 232, 0.1);
   }
 

@@ -176,6 +176,8 @@ export default memo(function AddDataQualityModal({
             );
             if (primaryTable) {
               setPrimaryDatasetGid(primaryTable.id);
+            } else {
+              setPrimaryDatasetGid(datasetId);
             }
           }
           setData({
@@ -198,7 +200,7 @@ export default memo(function AddDataQualityModal({
     };
 
     func();
-  }, [visible, relatedTable, dataQualityId]);
+  }, [visible, relatedTable, dataQualityId, datasetId]);
 
   // 拿到所有的columns 在 dimension Field 模式下用于applyFields
   useEffect(() => {

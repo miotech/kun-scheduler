@@ -28,4 +28,12 @@ public abstract class DataStore implements Serializable {
     public DataStore(DataStoreType type) {
         this.type = type;
     }
+
+    /**
+     * Returns data store identifier (DSI) of this datastore object
+     * @return data store identifier
+     */
+    @JsonIgnore
+    @Nullable
+    public abstract DSI getDSI();
 }

@@ -3,7 +3,10 @@ package com.miotech.kun.datadashboard.service;
 import com.miotech.kun.datadashboard.model.bo.ColumnMetricsRequest;
 import com.miotech.kun.datadashboard.model.bo.RowCountChangeRequest;
 import com.miotech.kun.datadashboard.model.bo.TestCasesRequest;
-import com.miotech.kun.datadashboard.model.entity.*;
+import com.miotech.kun.datadashboard.model.entity.ColumnMetricsList;
+import com.miotech.kun.datadashboard.model.entity.DataQualityCases;
+import com.miotech.kun.datadashboard.model.entity.DatasetRowCountChanges;
+import com.miotech.kun.datadashboard.model.entity.MetadataMetrics;
 import com.miotech.kun.datadashboard.persistence.DataQualityRepository;
 import com.miotech.kun.datadashboard.persistence.MetadataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +39,7 @@ public class MetadataService {
         return metadataRepository.getRowCountChange(rowCountChangeRequest);
     }
 
-    public TestCases getTestCases(TestCasesRequest testCasesRequest) {
+    public DataQualityCases getTestCases(TestCasesRequest testCasesRequest) {
         return dataQualityRepository.getTestCases(testCasesRequest);
     }
 

@@ -4,13 +4,17 @@ export interface LineageNode {
   /** Lineage node global identifier. REQUIRED and should always be unique. */
   id: string;
   /** internal data */
-  data: Dataset & {
+  data: Partial<Dataset> & {
+    /** Row number of this dataset */
+    rowCount?: number;
     /** Does it have more unexpanded upstream? */
     expandableUpstream?: boolean;
     /** Does it have more unexpanded downstream? */
     expandableDownstream?: boolean;
     /** Is it selected? */
     selected?: boolean;
+    inDegree: number;
+    outDegree: number;
   };
   /** width of the node rectangle. Defaults to 280px */
   width?: number;
@@ -27,6 +31,4 @@ export interface LineageEdge {
   selected?: boolean;
 }
 
-export interface LineageNodeGroupElementState {
-
-}
+export interface LineageNodeGroupElementState {}

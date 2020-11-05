@@ -11,6 +11,11 @@ import {
 import { Pagination } from '@/definitions/common-types';
 import { Watermark, GlossaryItem } from '@/definitions/Dataset.type';
 import {
+  FetchLineageTasksReq,
+  fetchLineageTasksService,
+  LineageDirection,
+} from '@/services/lineage';
+import {
   deleteQualityService,
   fetchDataAllQualitiesService,
 } from '@/services/dataQuality';
@@ -34,6 +39,8 @@ export interface DataQualityItem {
   updater: string;
   types: DataQualityType[];
   historyList: DataQualityHistory[];
+  updateTime: number;
+  createTime: number;
 }
 
 export interface Column {
@@ -51,6 +58,13 @@ export interface Glossary {
   name: string;
 }
 
+export interface LineageTask {
+  taskId: string;
+  taskName: string;
+  lastExecutedTime: number;
+  historyList: DataQualityHistory[];
+}
+
 export interface DatasetDetail {
   id: string | null;
   name: string | null;
@@ -65,7 +79,7 @@ export interface DatasetDetail {
   datasource: string | null;
   database: string | null;
 
-  row_count: number | null;
+  rowCount: number | null;
   flows: Flow[] | null;
 
   dataQualities: DataQualityItem[] | null;
@@ -79,6 +93,15 @@ export interface DatasetDetailState extends DatasetDetail {
 
   dataQualityTablePagination: Pagination;
   fetchDataQualityLoading: boolean;
+
+  upstreamLineageTaskList: LineageTask[] | null;
+  downstreamLineageTaskList: LineageTask[] | null;
+
+  fetchUpstreamLineageTaskListLoading: boolean;
+  fetchDownstreamLineageTaskListLoading: boolean;
+
+  upstreamLineageTaskListPagination: Pagination;
+  downstreamLineageTaskListPagination: Pagination;
 }
 
 export const datasetDetail = {
@@ -96,7 +119,7 @@ export const datasetDetail = {
     datasource: null,
     database: null,
 
-    row_count: null,
+    rowCount: null,
     flows: null,
 
     dataQualities: null,
@@ -115,6 +138,22 @@ export const datasetDetail = {
       totalCount: 0,
     },
     fetchDataQualityLoading: false,
+
+    upstreamLineageTaskList: [],
+    upstreamLineageTaskListPagination: {
+      pageNumber: 1,
+      pageSize: 25,
+      totalCount: 0,
+    },
+    downstreamLineageTaskList: [],
+    downstreamLineageTaskListPagination: {
+      pageNumber: 1,
+      pageSize: 25,
+      totalCount: 0,
+    },
+
+    fetchUpstreamLineageTaskListLoading: false,
+    fetchDownstreamLineageTaskListLoading: false,
   } as DatasetDetailState,
 
   reducers: {
@@ -152,11 +191,33 @@ export const datasetDetail = {
         ...payload,
       },
     }),
+    updateUpstreamPagination: (
+      state: DatasetDetailState,
+      payload: Partial<Pagination>,
+    ) => ({
+      ...state,
+      upstreamLineageTaskListPagination: {
+        ...state.upstreamLineageTaskListPagination,
+        ...payload,
+      },
+    }),
+    updateDownstreamPagination: (
+      state: DatasetDetailState,
+      payload: Partial<Pagination>,
+    ) => ({
+      ...state,
+      downstreamLineageTaskListPagination: {
+        ...state.downstreamLineageTaskListPagination,
+        ...payload,
+      },
+    }),
   },
 
   effects: (dispatch: RootDispatch) => {
     let fetchDatasetColumnsServiceCountFlag = 1;
     let fetchDataQualityServiceCountFlag = 1;
+    let fetchUpstreamLineageTaskListFlag = 1;
+    let fetchDownstreamLineageTaskListFlag = 1;
     return {
       async fetchDatasetDetail(id: string) {
         try {
@@ -166,6 +227,56 @@ export const datasetDetail = {
           }
         } catch (e) {
           // do nothing
+        }
+      },
+      async fetchLineageTasks(payload: FetchLineageTasksReq) {
+        try {
+          let flag;
+          if (payload.direction === LineageDirection.UPSTREAM) {
+            fetchUpstreamLineageTaskListFlag += 1;
+            flag = fetchUpstreamLineageTaskListFlag;
+            dispatch.datasetDetail.updateState({
+              key: 'fetchUpstreamLineageTaskListLoading',
+              value: true,
+            });
+          } else {
+            fetchDownstreamLineageTaskListFlag += 1;
+            flag = fetchDownstreamLineageTaskListFlag;
+            dispatch.datasetDetail.updateState({
+              key: 'fetchDownstreamLineageTaskListLoading',
+              value: true,
+            });
+          }
+          const resp = await fetchLineageTasksService(payload);
+          if (resp) {
+            const { tasks } = resp;
+            if (
+              payload.direction === LineageDirection.UPSTREAM &&
+              flag === fetchUpstreamLineageTaskListFlag
+            ) {
+              dispatch.datasetDetail.batchUpdateState({
+                upstreamLineageTaskList: tasks,
+              });
+            } else if (flag === fetchDownstreamLineageTaskListFlag) {
+              dispatch.datasetDetail.batchUpdateState({
+                downstreamLineageTaskList: tasks,
+              });
+            }
+          }
+        } catch (e) {
+          // do nothing
+        } finally {
+          if (payload.direction === LineageDirection.UPSTREAM) {
+            dispatch.datasetDetail.updateState({
+              key: 'fetchUpstreamLineageTaskListLoading',
+              value: false,
+            });
+          } else {
+            dispatch.datasetDetail.updateState({
+              key: 'fetchDownstreamLineageTaskListLoading',
+              value: false,
+            });
+          }
         }
       },
       async fetchDatasetColumns(payload: {
