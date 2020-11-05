@@ -1,21 +1,17 @@
 package com.miotech.kun.dataplatform.notify;
 
-import com.google.inject.Inject;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.EventReceiver;
-import com.miotech.kun.workflow.core.event.LineageEvent;
-import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.publish.EventSubscriber;
-import com.miotech.kun.workflow.core.publish.KafkaEventSubscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class TaskAttemptStatusChangeEventSubscriber {
 
     @Autowired
-    private KafkaEventSubscriber subscriber;
+    private EventSubscriber subscriber;
 
     @Autowired
-    private WechatNotifier wechatNotifier;
+    private MessageNotifier wechatNotifier;
 
     public void subscribe(){
         EventReceiver receiver = new TaskAttemptStatusChangeEventReceiver();

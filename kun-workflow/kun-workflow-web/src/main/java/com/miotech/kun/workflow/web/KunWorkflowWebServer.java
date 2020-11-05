@@ -61,7 +61,7 @@ public class KunWorkflowWebServer {
                 new KunWebServerModule(props),
                 new KunWorkflowServerModule(props),
                 new CommonModule(props),
-                new KafkaModule(props),
+                new RedisModule(props),
                 new SchedulerModule()
         );
 
