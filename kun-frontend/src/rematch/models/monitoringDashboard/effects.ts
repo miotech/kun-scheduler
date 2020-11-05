@@ -9,19 +9,35 @@ import {
 } from '@/services/monitoring-dashboard';
 import { PaginationReqBody, SortReqBody } from '@/definitions/common-types';
 
+let loadDataDiscoveryMetricsFlag = 0;
+let loadTopDatasetsMaxRowCountChangeFlag = 0;
+let loadFailedTestCasesFlag = 0;
+let loadDatasetMetricsFlag = 0;
+let loadDataDevelopmentMetricsFlag = 0;
+let loadDailyTaskFinishFlag = 0;
+let loadTaskDetailsFlag = 0;
+
 // Data discovery board: fetch top metrics data
 const loadDataDiscoveryMetrics = (dispatch: RootDispatch) => {
   dispatch.monitoringDashboard.setDataDiscoveryMetricsLoading(true);
+  loadDataDiscoveryMetricsFlag += 1;
+  const currentFlag = loadDataDiscoveryMetricsFlag;
   return services
     .fetchMetadataMetrics()
     .then((metrics: MetadataMetrics) => {
-      dispatch.monitoringDashboard.setDataDiscoveryMetrics(metrics || null);
+      if (currentFlag === loadDataDiscoveryMetricsFlag) {
+        dispatch.monitoringDashboard.setDataDiscoveryMetrics(metrics || null);
+      }
     })
     .catch(() => {
-      dispatch.monitoringDashboard.setDataDiscoveryMetrics(null);
+      if (currentFlag === loadDataDiscoveryMetricsFlag) {
+        dispatch.monitoringDashboard.setDataDiscoveryMetrics(null);
+      }
     })
     .finally(() => {
-      dispatch.monitoringDashboard.setDataDiscoveryMetricsLoading(false);
+      if (currentFlag === loadDataDiscoveryMetricsFlag) {
+        dispatch.monitoringDashboard.setDataDiscoveryMetricsLoading(false);
+      }
     });
 };
 
@@ -30,23 +46,31 @@ const loadTopDatasetsMaxRowCountChange = (dispatch: RootDispatch) => {
   dispatch.monitoringDashboard.updateTopDatasetsWithMaxRowChange({
     loading: true,
   });
+
+  loadTopDatasetsMaxRowCountChangeFlag += 1;
+  const currentFlag = loadTopDatasetsMaxRowCountChangeFlag;
+
   services
     .fetchMaxRowCountChange({
       pageSize: 10,
     })
     .then(fetchedData => {
-      dispatch.monitoringDashboard.setTopDatasetsWithMaxRowChange({
-        data: fetchedData.rowCountChanges,
-        error: null,
-        loading: false,
-      });
+      if (currentFlag === loadTopDatasetsMaxRowCountChangeFlag) {
+        dispatch.monitoringDashboard.setTopDatasetsWithMaxRowChange({
+          data: fetchedData.rowCountChanges,
+          error: null,
+          loading: false,
+        });
+      }
     })
     .catch(e => {
-      dispatch.monitoringDashboard.setTopDatasetsWithMaxRowChange({
-        data: [],
-        error: e,
-        loading: false,
-      });
+      if (currentFlag === loadTopDatasetsMaxRowCountChangeFlag) {
+        dispatch.monitoringDashboard.setTopDatasetsWithMaxRowChange({
+          data: [],
+          error: e,
+          loading: false,
+        });
+      }
     });
 };
 
@@ -58,6 +82,10 @@ const loadFailedTestCases = (
   dispatch.monitoringDashboard.updateFailedTestCases({
     loading: true,
   });
+
+  loadFailedTestCasesFlag += 1;
+  const currentFlag = loadFailedTestCasesFlag;
+
   return services
     .fetchFailedTestCases({
       pageNumber: params.pageNumber,
@@ -66,19 +94,23 @@ const loadFailedTestCases = (
       sortOrder: params.sortOrder || undefined,
     })
     .then((fetchedData: FailedTestCasesInfo) => {
-      dispatch.monitoringDashboard.updateFailedTestCases({
-        loading: false,
-        data: fetchedData.dataQualityCases,
-        total: fetchedData.totalCount,
-        error: null,
-      });
+      if (currentFlag === loadFailedTestCasesFlag) {
+        dispatch.monitoringDashboard.updateFailedTestCases({
+          loading: false,
+          data: fetchedData.dataQualityCases,
+          total: fetchedData.totalCount,
+          error: null,
+        });
+      }
     })
     .catch(e => {
-      dispatch.monitoringDashboard.updateFailedTestCases({
-        loading: false,
-        data: [],
-        error: e,
-      });
+      if (currentFlag === loadFailedTestCasesFlag) {
+        dispatch.monitoringDashboard.updateFailedTestCases({
+          loading: false,
+          data: [],
+          error: e,
+        });
+      }
     });
 };
 
@@ -90,39 +122,55 @@ const loadDatasetMetrics = (
   dispatch.monitoringDashboard.updateDatasetMetrics({
     loading: true,
   });
+
+  loadDatasetMetricsFlag += 1;
+  const currentFlag = loadDatasetMetricsFlag;
+
   return services
     .fetchDatasetColumnMetrics({
       pageNumber: params.pageNumber,
       pageSize: params.pageSize,
     })
     .then((fetchedData: DatasetColumnMetricsInfo) => {
-      dispatch.monitoringDashboard.updateDatasetMetrics({
-        loading: false,
-        error: null,
-        data: fetchedData.columnMetricsList,
-        total: fetchedData.totalCount,
-      });
+      if (currentFlag === loadDatasetMetricsFlag) {
+        dispatch.monitoringDashboard.updateDatasetMetrics({
+          loading: false,
+          error: null,
+          data: fetchedData.columnMetricsList,
+          total: fetchedData.totalCount,
+        });
+      }
     })
     .catch(e => {
-      dispatch.monitoringDashboard.updateDatasetMetrics({
-        loading: false,
-        error: e,
-        data: [],
-      });
+      if (currentFlag === loadDatasetMetricsFlag) {
+        dispatch.monitoringDashboard.updateDatasetMetrics({
+          loading: false,
+          error: e,
+          data: [],
+        });
+      }
     });
 };
 
 // Data Development board
 const loadDataDevelopmentMetrics = (dispatch: RootDispatch) => {
   dispatch.monitoringDashboard.setDataDevelopmentMetricsLoading(true);
+
+  loadDataDevelopmentMetricsFlag += 1;
+  const currentFlag = loadDataDevelopmentMetricsFlag;
+
   return services
     .fetchDataDevelopmentMetrics()
     .then((fetchedData: DataDevelopmentMetrics) => {
-      dispatch.monitoringDashboard.setDataDevelopmentMetrics(fetchedData);
+      if (currentFlag === loadDataDevelopmentMetricsFlag) {
+        dispatch.monitoringDashboard.setDataDevelopmentMetrics(fetchedData);
+      }
     })
     .catch(() => {})
     .finally(() => {
-      dispatch.monitoringDashboard.setDataDevelopmentMetricsLoading(false);
+      if (currentFlag === loadDataDevelopmentMetricsFlag) {
+        dispatch.monitoringDashboard.setDataDevelopmentMetricsLoading(false);
+      }
     });
 };
 
@@ -131,21 +179,29 @@ const loadDailyTaskFinish = (dispatch: RootDispatch) => {
   dispatch.monitoringDashboard.updateDailyTaskFinish({
     loading: true,
   });
+
+  loadDailyTaskFinishFlag += 1;
+  const currentFlag = loadDailyTaskFinishFlag;
+
   return services
     .fetchDataDevelopmentDailyTaskCount()
     .then(fetchedData => {
-      dispatch.monitoringDashboard.setDailyTaskFinish({
-        loading: false,
-        data: fetchedData.taskCountList,
-        error: null,
-      });
+      if (currentFlag === loadDailyTaskFinishFlag) {
+        dispatch.monitoringDashboard.setDailyTaskFinish({
+          loading: false,
+          data: fetchedData.taskCountList,
+          error: null,
+        });
+      }
     })
     .catch(e => {
-      dispatch.monitoringDashboard.setDailyTaskFinish({
-        loading: false,
-        data: [],
-        error: e,
-      });
+      if (currentFlag === loadDailyTaskFinishFlag) {
+        dispatch.monitoringDashboard.setDailyTaskFinish({
+          loading: false,
+          data: [],
+          error: e,
+        });
+      }
     });
 };
 
@@ -154,22 +210,30 @@ const loadTaskDetails = (params: PaginationReqBody, dispatch: RootDispatch) => {
   dispatch.monitoringDashboard.updateTaskDetails({
     loading: true,
   });
+
+  loadTaskDetailsFlag += 1;
+  const currentFlag = loadTaskDetailsFlag;
+
   return services
     .fetchDataDevelopmentTaskDetails(params)
     .then(fetchedData => {
-      dispatch.monitoringDashboard.updateTaskDetails({
-        data: fetchedData.tasks,
-        loading: false,
-        error: null,
-        total: fetchedData.totalCount,
-      });
+      if (currentFlag === loadTaskDetailsFlag) {
+        dispatch.monitoringDashboard.updateTaskDetails({
+          data: fetchedData.tasks,
+          loading: false,
+          error: null,
+          total: fetchedData.totalCount,
+        });
+      }
     })
     .catch(e => {
-      dispatch.monitoringDashboard.updateTaskDetails({
-        data: [],
-        loading: false,
-        error: e,
-      });
+      if (currentFlag === loadTaskDetailsFlag) {
+        dispatch.monitoringDashboard.updateTaskDetails({
+          data: [],
+          loading: false,
+          error: e,
+        });
+      }
     });
 };
 

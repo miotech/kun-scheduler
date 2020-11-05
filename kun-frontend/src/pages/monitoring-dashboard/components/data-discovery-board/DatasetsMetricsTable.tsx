@@ -106,7 +106,7 @@ export const DatasetsMetricsTable: React.FC<Props> = memo(
           {t(
             'monitoringDashboard.dataDiscovery.datasetColumnMetricsTable.title',
           )}
-          {total && <span style={{ marginLeft: 4 }}>({total})</span>}
+          {!!total && <span style={{ marginLeft: 4 }}>({total})</span>}
         </h3>
         <Table<ColumnMetrics>
           loading={loading}
