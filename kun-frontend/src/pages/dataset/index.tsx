@@ -15,16 +15,8 @@ import {
 } from 'use-query-params';
 import { CopyOutlined } from '@ant-design/icons';
 import { RootDispatch, RootState } from '@/rematch/store';
-import {
-  Mode,
-  SearchParams,
-  QueryObj,
-} from '@/rematch/models/dataDiscovery';
-import {
-  Dataset,
-  Watermark,
-  GlossaryItem,
-} from '@/definitions/Dataset.type';
+import { Mode, SearchParams, QueryObj } from '@/rematch/models/dataDiscovery';
+import { Dataset, Watermark, GlossaryItem } from '@/definitions/Dataset.type';
 
 import color from '@/styles/color';
 
@@ -176,13 +168,19 @@ export default function DataDisvocery() {
     dispatch.dataDiscovery.fetchAllTagList();
     dispatch.dataSettings.fetchDatabaseTypeList();
     dispatch.dataDiscovery.fetchAllDs('');
-    dispatch.dataDiscovery.fetchAllDb();
+    dispatch.dataDiscovery.fetchAllDb(dsIdList);
     dispatch.dataDiscovery.fetchAllGlossary();
   });
 
   useUpdateEffect(() => {
     fetchDatasets();
   }, [fetchDatasets]);
+
+  useUpdateEffect(() => {
+    dispatch.dataDiscovery.fetchAllDb({
+      dataSourceIds: dsIdList,
+    });
+  }, [dsIdList]);
 
   const setFilterQuery = useCallback(
     (obj, shouldChangePageNum = true) => {
@@ -467,6 +465,31 @@ export default function DataDisvocery() {
 
             <div className={styles.filterItem}>
               <div className={styles.filterItemTitle}>
+                {t('dataDiscovery.datasource')}
+              </div>
+              <div className={styles.filterItemSelect}>
+                <Select
+                  value={dsIdList}
+                  mode="multiple"
+                  size="large"
+                  optionFilterProp="children"
+                  onChange={v => {
+                    setFilterQuery({ dsIdList: v, dbList: [] });
+                  }}
+                  placeholder={t('dataDiscovery.pleaseSelect')}
+                  allowClear
+                >
+                  {allDsList.map(option => (
+                    <Option key={option.id} value={option.id}>
+                      {option.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+
+            <div className={styles.filterItem}>
+              <div className={styles.filterItemTitle}>
                 {t('dataDiscovery.db')}
               </div>
               <div className={styles.filterItemSelect}>
@@ -484,31 +507,6 @@ export default function DataDisvocery() {
                   {allDbList.map(db => (
                     <Option key={db.name} value={db.name}>
                       {db.name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-
-            <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.datasource')}
-              </div>
-              <div className={styles.filterItemSelect}>
-                <Select
-                  value={dsIdList}
-                  mode="multiple"
-                  size="large"
-                  optionFilterProp="children"
-                  onChange={v => {
-                    setFilterQuery({ dsIdList: v });
-                  }}
-                  placeholder={t('dataDiscovery.pleaseSelect')}
-                  allowClear
-                >
-                  {allDsList.map(option => (
-                    <Option key={option.id} value={option.id}>
-                      {option.name}
                     </Option>
                   ))}
                 </Select>
