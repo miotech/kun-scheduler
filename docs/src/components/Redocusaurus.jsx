@@ -1,8 +1,16 @@
 import React from 'react';
 import merge from 'lodash.merge';
-import { RedocStandalone } from 'redoc';
+// import { RedocStandalone } from 'redoc';
 import useThemeContext from '@theme/hooks/useThemeContext';
+import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 import './styles.css';
+
+// Workaround for known Server-Side Rendering bug:
+// https://github.com/facebook/docusaurus/issues/2494#issuecomment-622143023
+let RedocStandalone = () => <div></div>;
+if (ExecutionEnvironment.canUseDOM) {
+  RedocStandalone = require('redoc').RedocStandalone;
+}
 
 /**
  * NOTE: Colors taken from `node_modules/infima/styles/common/dark-mode.css`

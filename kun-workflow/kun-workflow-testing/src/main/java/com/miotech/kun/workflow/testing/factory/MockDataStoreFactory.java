@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.testing.factory;
 
 import com.google.common.collect.Lists;
+import com.miotech.kun.metadata.core.model.DSI;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.DataStoreType;
 
@@ -24,6 +25,11 @@ public class MockDataStoreFactory {
             @Override
             public String getDatabaseName() {
                 return this.getType().name();
+            }
+
+            @Override
+            public DSI getDSI() {
+                return DSI.from(this.getType().toString());
             }
         };
     }

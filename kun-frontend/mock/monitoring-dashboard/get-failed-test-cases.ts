@@ -4,13 +4,15 @@ import { wrapResponseDataWithPagination } from '../../mock-commons/utils/wrap-re
 
 function generateList(pageSize: number): any[] {
   const mockData = Mock.mock({
-    [`list|${pageSize}`]: [{
-      result: '@pick(["SUCCESS", "FAILED", "UNKNOWN"])',
-      errorReason: '@sentence()',
-      updateTime: Date.now(),
-      continuousFailingCount: '@integer(0, 10)',
-      caseOwner: '@word()',
-    }],
+    [`list|${pageSize}`]: [
+      {
+        result: '@pick(["SUCCESS", "FAILED", "UNKNOWN"])',
+        errorReason: '@sentence()',
+        updateTime: Date.now(),
+        continuousFailingCount: '@integer(0, 10)',
+        caseOwner: '@word()',
+      },
+    ],
   });
   return mockData.list;
 }
@@ -25,9 +27,15 @@ export function getFailedTestCases(req: Request, res: Response) {
   if (pageNumber > 5) {
     list = [];
   }
-  return res.json(wrapResponseDataWithPagination(list, {
-    pageNumber,
-    pageSize,
-    totalCount: 5 * pageSize,
-  }, 'testCases'));
+  return res.json(
+    wrapResponseDataWithPagination(
+      list,
+      {
+        pageNumber,
+        pageSize,
+        totalCount: 5 * pageSize,
+      },
+      'dataQualityCases',
+    ),
+  );
 }

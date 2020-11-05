@@ -4,7 +4,9 @@ import com.google.common.collect.Lists;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.common.utils.DateUtils;
+import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.common.utils.JSONUtils;
+import com.miotech.kun.common.utils.WorkflowUtils;
 import com.miotech.kun.dataquality.model.bo.*;
 import com.miotech.kun.dataquality.model.entity.*;
 import com.miotech.kun.dataquality.service.DataQualityService;
@@ -47,19 +49,25 @@ public class DataQualityController {
     WorkflowClient workflowClient;
 
     @PostMapping("/data-quality/recreate-all-task")
-    public void createTasks() {
+    public void recreateAllTasks() {
         for (Long caseId : dataQualityService.getAllCaseId()) {
             workflowService.deleteTaskByCase(caseId);
-            Long taskId = workflowService.createTask(caseId);
-            dataQualityService.saveTaskId(caseId, taskId);
+            workflowService.createTask(caseId);
         }
     }
 
     @PostMapping("/data-quality/execute-all-task")
-    public void executeTasks() {
+    public void executeAllTasks() {
         //workflowService.executeTask(dataQualityService.getAllCaseId().get(0));
         for (Long caseId : dataQualityService.getAllCaseId()) {
             workflowService.executeTask(caseId);
+        }
+    }
+
+    @PostMapping("/data-quality/delete-all-task")
+    public void deleteAllTasks() {
+        for (Long taskId : dataQualityService.getAllTaskId()) {
+            workflowService.deleteTask(taskId);
         }
     }
 
@@ -128,28 +136,17 @@ public class DataQualityController {
 
     private void enrichDqCaseBasics(List<DataQualityCaseBasic> caseBasics) {
         Map<Long, DataQualityCaseBasic> taskIdMap = caseBasics.stream()
+                .filter(caseBasic -> IdUtils.isNotEmpty(caseBasic.getTaskId()))
                 .collect(Collectors.toMap(DataQualityCaseBasic::getTaskId, dataQualityCaseBasic -> dataQualityCaseBasic));
         if (CollectionUtils.isNotEmpty(taskIdMap.keySet())) {
             Map<Long, List<TaskRun>> lastestTaskRuns = workflowClient.getLatestTaskRuns(new ArrayList<>(taskIdMap.keySet()), 6);
             taskIdMap.forEach((taskId, caseBasic) -> {
                 List<String> latestStatus = lastestTaskRuns.get(taskId).stream()
-                        .map(taskRun -> resolveTaskStatus(taskRun.getStatus()))
+                        .map(taskRun -> WorkflowUtils.resolveTaskStatus(taskRun.getStatus()))
                         .filter(StringUtils::isNotEmpty)
                         .collect(Collectors.toList());
                 caseBasic.setHistoryList(latestStatus);
             });
-        }
-    }
-
-    private String resolveTaskStatus(TaskRunStatus taskRunStatus) {
-        if (taskRunStatus.isSuccess()) {
-            return TaskRunStatus.SUCCESS.name();
-        } else if (taskRunStatus.isFailure()) {
-            return TaskRunStatus.FAILED.name();
-        } else if (taskRunStatus.isSkipped()) {
-            return TaskRunStatus.SKIPPED.name();
-        } else {
-            return "";
         }
     }
 

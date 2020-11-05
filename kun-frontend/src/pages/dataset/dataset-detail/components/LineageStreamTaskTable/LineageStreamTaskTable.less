@@ -1,0 +1,39 @@
+.lineageStreamTaskTable {
+  flex: 1;
+  .header {
+    font-size: 12px;
+    & > th {
+      font-weight: 400;
+    }
+    :global {
+      .ant-table-cell {
+        color: @grayFontColor;
+        background-color: @white;
+      }
+    }
+  }
+  .nameColumn {
+    padding-left: 0 !important;
+  }
+
+  .pointerLabel {
+    cursor: pointer;
+    color: @darkBlue;
+    text-decoration: underline;
+  }
+
+  .row {
+    cursor: pointer;
+  }
+
+  .historyList {
+    display: flex;
+    align-items: center;
+  }
+
+  .historyIcon {
+    &:not(:last-child) {
+      margin-right: 4px;
+    }
+  }
+}

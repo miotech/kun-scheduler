@@ -198,8 +198,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = props => {
               {/* Cron Expression */}
               <Form.Item
                 noStyle
-                shouldUpdate={(prevValues, currentValues) =>
-                  prevValues?.taskPayload?.scheduleConfig?.type !== currentValues?.taskPayload?.scheduleConfig?.type}
+                shouldUpdate={() => true}
               >
                 {scheduleInputRenderer}
               </Form.Item>

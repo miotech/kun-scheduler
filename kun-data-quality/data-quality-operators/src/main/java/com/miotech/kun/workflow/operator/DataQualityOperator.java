@@ -29,10 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.miotech.kun.workflow.operator.DataQualityConfiguration.*;
 
@@ -183,11 +180,14 @@ public class DataQualityOperator extends KunOperator {
             throwError("Unsupported template type: " + dimension.name());
         }
 
+        DataQualityCaseMetrics caseMetrics = new DataQualityCaseMetrics();
+        caseMetrics.setCaseId(caseId);
+        caseMetrics.setCaseStatus(CaseStatus.SUCCESS);
         for (String queryString : queryStrings) {
             QueryResultSet queryResultSet = query(queryString, currentDataset);
-            doAssert(queryResultSet, dimension, rules);
+            doAssert(queryResultSet, dimension, rules, caseMetrics);
         }
-
+        dataQualityClient.recordCaseMetrics(caseMetrics);
         return true;
     }
 
@@ -233,7 +233,10 @@ public class DataQualityOperator extends KunOperator {
     }
 
     private void doRuleAssert(Object originalValue,
-                              DataQualityRule rule) {
+                              DataQualityRule rule,
+                              DataQualityCaseMetrics metrics) {
+        rule.setOriginalValue(Objects.toString(originalValue, "$null"));
+        metrics.add(rule);
         boolean ruleCase = AssertUtils.doAssert(rule.getExpectedType(),
                 rule.getOperator(),
                 originalValue,
@@ -241,25 +244,18 @@ public class DataQualityOperator extends KunOperator {
 
         if (ruleCase) {
             logCaseSuccess(originalValue, rule);
-            DataQualityCaseMetrics metrics = new DataQualityCaseMetrics();
-            metrics.setCaseId(caseId);
-            metrics.setCaseStatus(CaseStatus.SUCCESS);
-            dataQualityClient.recordCaseMetrics(metrics);
         } else {
             logCaseFail(originalValue, rule);
             dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
             dataQualityRecord.appendErrorReason(getRecordErrorReason(originalValue, rule));
-            DataQualityCaseMetrics metrics = new DataQualityCaseMetrics();
-            metrics.setCaseId(caseId);
             metrics.setCaseStatus(CaseStatus.FAILED);
-            metrics.setErrorReason(getRecordErrorReason(originalValue, rule));
-            dataQualityClient.recordCaseMetrics(metrics);
         }
     }
 
     private void doAssert(QueryResultSet resultSet,
                           TemplateType templateType,
-                          List<DataQualityRule> rules) {
+                          List<DataQualityRule> rules,
+                          DataQualityCaseMetrics metrics) {
         if (CollectionUtils.isEmpty(resultSet.getResultSet())) {
             throwError("SQL query return empty result set.");
         }
@@ -267,12 +263,12 @@ public class DataQualityOperator extends KunOperator {
         if (templateType == TemplateType.CUSTOMIZE) {
             for (DataQualityRule rule : rules) {
                 Object originalValue = row.get(rule.getField());
-                doRuleAssert(originalValue, rule);
+                doRuleAssert(originalValue, rule, metrics);
             }
         } else {
             Object originalValue = row.values().iterator().next();
             for (DataQualityRule rule : rules) {
-                doRuleAssert(originalValue, rule);
+                doRuleAssert(originalValue, rule, metrics);
             }
         }
     }

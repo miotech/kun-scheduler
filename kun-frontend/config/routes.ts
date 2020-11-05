@@ -87,14 +87,36 @@ export const appRoutes = [
               {
                 title: 'common.pageTitle.datasetDetail',
                 path: '/data-discovery/dataset/:datasetId',
-                component: 'dataset/dataset-detail/index',
                 breadcrumbLink: true,
-                exact: true,
                 permissions: ['DATA_DISCOVERY'],
-                wrappers: [
-                  '@/wrappers/path',
-                  '@/wrappers/isLogin',
-                  '@/wrappers/permission',
+                showChildren: false,
+                routes: [
+                  {
+                    title: 'common.pageTitle.datasetDetail',
+                    path: '.',
+                    component: 'dataset/dataset-detail/index',
+                    breadcrumbLink: true,
+                    exact: true,
+                    permissions: ['DATA_DISCOVERY'],
+                    wrappers: [
+                      '@/wrappers/path',
+                      '@/wrappers/isLogin',
+                      '@/wrappers/permission',
+                    ],
+                  },
+                  {
+                    title: 'common.pageTitle.lineage',
+                    path: '/data-discovery/dataset/:datasetId/lineage',
+                    component: 'lineage/index',
+                    breadcrumbLink: true,
+                    exact: true,
+                    permissions: ['DATA_DISCOVERY'],
+                    wrappers: [
+                      '@/wrappers/path',
+                      '@/wrappers/isLogin',
+                      '@/wrappers/permission',
+                    ],
+                  },
                 ],
               },
               {

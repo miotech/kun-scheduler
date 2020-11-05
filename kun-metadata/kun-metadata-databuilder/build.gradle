@@ -20,6 +20,7 @@ dependencies {
     implementation 'ch.qos.logback:logback-classic'
     implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client'
     implementation 'org.apache.commons:commons-lang3'
+    implementation 'org.flywaydb:flyway-core'
     implementation 'org.postgresql:postgresql'
     implementation 'org.apache.hive:hive-jdbc'
     implementation 'mysql:mysql-connector-java'
