@@ -51,7 +51,7 @@ public class DashboardController {
     }
 
     @GetMapping("/dashboard/test-cases")
-    public RequestResult<TestCases> getTestCases(TestCasesRequest testCasesRequest) {
+    public RequestResult<DataQualityCases> getTestCases(TestCasesRequest testCasesRequest) {
         return RequestResult.success(metadataService.getTestCases(testCasesRequest));
     }
 

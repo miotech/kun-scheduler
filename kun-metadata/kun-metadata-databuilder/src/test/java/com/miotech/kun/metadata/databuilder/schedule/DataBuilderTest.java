@@ -21,6 +21,7 @@ public class DataBuilderTest extends DatabaseTestBase {
 
     private long gid = IdGenerator.getInstance().nextId();
     private String dataStoreJson = "{\"@class\":\"com.miotech.kun.workflow.core.model.lineage.MongoDataStore\",\"url\":\"test-url\",\"database\":\"test-database\",\"collection\":\"test-collection\",\"type\":\"MONGO_COLLECTION\"}";
+    private String dsiString = "mongodb:collection=test-collection,database=test-database,url=test-url";
 
     @Inject
     private DatabaseOperator dbOperator;
@@ -60,7 +61,7 @@ public class DataBuilderTest extends DatabaseTestBase {
 
             // verify sweep
             containerBuilder.verifyDatasetRowCount(10L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(10L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -100,7 +101,7 @@ public class DataBuilderTest extends DatabaseTestBase {
             dataBuilder.buildDatasource(1L);
 
             containerBuilder.verifyDatasetRowCount(10L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(10L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -119,7 +120,7 @@ public class DataBuilderTest extends DatabaseTestBase {
             dataBuilder.buildDatasource(1L);
 
             containerBuilder.verifyDatasetRowCount(1L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(1L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -174,7 +175,7 @@ public class DataBuilderTest extends DatabaseTestBase {
 
             // verify
             containerBuilder.verifyDatasetRowCount(10L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(11L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -222,11 +223,10 @@ public class DataBuilderTest extends DatabaseTestBase {
 
             // pull dataset
             dataBuilder.buildDataset(gid);
-            containerBuilder.verifyDatasetRowCount(1L);
 
             // verify
-            containerBuilder.verifyDatasetRowCount(1L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(1L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -246,7 +246,7 @@ public class DataBuilderTest extends DatabaseTestBase {
 
             // verify
             containerBuilder.verifyDatasetRowCount(1L);
-            containerBuilder.verifyDatasetStatsRowCount(0L);
+            containerBuilder.verifyDatasetStatsRowCount(2L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -270,8 +270,8 @@ public class DataBuilderTest extends DatabaseTestBase {
     }
 
     private void initDataset(long gid) {
-        dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name) VALUES(?, ?, ?, CAST(? AS JSONB), ?)",
-                gid, "test_dataset", 1, dataStoreJson, "test_database");
+        dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name, dsi) VALUES(?, ?, ?, CAST(? AS JSONB), ?, ?)",
+                gid, "test_dataset", 1, dataStoreJson, "test_database", dsiString);
     }
 
     private DataBuilder buildDataBuild(boolean extractStats) {

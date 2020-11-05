@@ -21,3 +21,24 @@ export interface GlossaryItem {
   id: string;
   name: string;
 }
+
+export interface Edge {
+  sourceVertexId: string;
+  destVertexId: string;
+}
+
+export interface DatasetBasic {
+  gid: string;
+  name: string;
+  datasource: string;
+  type: string;
+  rowCount: number;
+  highWatermark: Watermark;
+}
+
+export interface Vertex {
+  vertexId: string;
+  datasetBasic: DatasetBasic;
+  upstreamVertexCount: number;
+  downstreamVertexCount: number;
+}

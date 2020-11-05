@@ -53,7 +53,6 @@ public abstract class ExtractorTemplate extends AbstractExtractor {
             }
 
             List<DatasetFieldStat> fieldStats = Lists.newArrayList();
-            DatasetStat tableStat = null;
             if (extractStats) {
                 for (DatasetField datasetField : fields) {
                     DatasetFieldStat fieldStat = getFieldStats(datasetField);
@@ -65,9 +64,9 @@ public abstract class ExtractorTemplate extends AbstractExtractor {
                         fieldStats.add(fieldStat);
                     }
                 }
-                tableStat = getTableStats();
             }
 
+            DatasetStat tableStat = getTableStats();
             if (logger.isDebugEnabled()) {
                 logger.debug("ExtractorTemplate extract getTableStats: {}", JSONUtils.toJsonString(tableStat));
             }

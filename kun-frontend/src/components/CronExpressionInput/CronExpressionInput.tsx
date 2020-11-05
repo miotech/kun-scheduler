@@ -14,7 +14,7 @@ export interface CronExpressionInputProps {
   hideErrorAlert?: boolean;
 }
 
-export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, CronExpressionInputProps>((props, ref) => {
+export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, CronExpressionInputProps>(function CronExpressionInput(props, ref) {
   const {
     value,
     onChange,

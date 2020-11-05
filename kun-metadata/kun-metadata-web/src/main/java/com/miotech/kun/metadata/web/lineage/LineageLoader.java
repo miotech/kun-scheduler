@@ -63,7 +63,12 @@ public class LineageLoader {
             logger.error("unknown data store error: ", e);
             return 0;
         }
-        Long gid = dbOperator.fetchOne("SELECT gid FROM kun_mt_dataset WHERE data_store = CAST(? AS JSONB)", rs -> rs.getLong(1), dataStoreJson);
+        Long gid = dbOperator.fetchOne(
+                "SELECT gid FROM kun_mt_dataset WHERE (dsi LIKE CONCAT(CAST(? AS TEXT), '%')) OR (data_store = CAST(? AS JSONB))",
+                rs -> rs.getLong(1),
+                store.getDSI().toEssentialString(),
+                dataStoreJson
+        );
         if (gid != null && gid > 0) {
             return gid;
         }
