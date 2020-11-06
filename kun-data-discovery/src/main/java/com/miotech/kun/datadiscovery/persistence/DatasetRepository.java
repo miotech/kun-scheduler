@@ -4,8 +4,10 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.DatabaseRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
@@ -44,14 +46,20 @@ public class DatasetRepository extends BaseRepository {
     @Autowired
     TagRepository tagRepository;
 
-    public List<Database> getAllDatabase() {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("distinct database_name")
-                .from("kun_mt_dataset")
-                .where("database_name is not null")
-                .getSQL();
+    public List<Database> getDatabases(DatabaseRequest request) {
+        SQLBuilder preSql = DefaultSQLBuilder.newBuilder()
+                .select("distinct kmd.database_name")
+                .from("kun_mt_dataset kmd");
+        String whereClause = wrapSql("kmd.database_name is not null");
+        List<Object> slqArgs = new ArrayList<>();
 
-        return jdbcTemplate.query(sql, rs -> {
+        if (CollectionUtils.isNotEmpty(request.getDataSourceIds())) {
+            whereClause += wrapSql("and kmd.datasource_id in " + toColumnSql(request.getDataSourceIds().size()));
+            slqArgs.addAll(request.getDataSourceIds());
+        }
+        preSql.where(whereClause);
+        String finalSql = preSql.getSQL();
+        return jdbcTemplate.query(finalSql, rs -> {
             List<Database> databases = new ArrayList<>();
             while (rs.next()) {
                 Database database = new Database();
@@ -59,7 +67,8 @@ public class DatasetRepository extends BaseRepository {
                 databases.add(database);
             }
             return databases;
-        });
+        }, slqArgs.toArray());
+
     }
 
     public DatasetBasicPage search(BasicSearchRequest basicSearchRequest) {

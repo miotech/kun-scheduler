@@ -10,10 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author: Jie Chen
@@ -68,31 +65,27 @@ public abstract class BaseRepository {
         return "";
     }
 
-    public String toValuesSql(int valLength, int columnLength) {
-        if (valLength == 0 || columnLength == 0) {
+    public String toValuesSql(int rowLength, int columnLength) {
+        if (rowLength == 0 || columnLength == 0) {
             return "";
         }
-        StringBuilder stringBuilder = new StringBuilder();
+        StringJoiner stringJoiner = new StringJoiner(",");
         String columnSql = toColumnSql(columnLength);
-        for (int i = 0; i < valLength; i++) {
-            stringBuilder.append(columnSql).append(",");
+        for (int i = 0; i < rowLength; i++) {
+            stringJoiner.add(columnSql);
         }
-        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-        return stringBuilder.toString();
+        return stringJoiner.toString();
     }
 
     public String toColumnSql(int length) {
         if (length == 0) {
             return "";
         }
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("(");
+        StringJoiner stringJoiner = new StringJoiner(",", "(", ")");
         for (int i = 0; i < length; i++) {
-            stringBuilder.append("?").append(",");
+            stringJoiner.add("?");
         }
-        stringBuilder.deleteCharAt(stringBuilder.length() - 1);
-        stringBuilder.append(")");
-        return stringBuilder.toString();
+        return stringJoiner.toString();
     }
 
     public String toLimitSql(int pageNum, int pageSize) {

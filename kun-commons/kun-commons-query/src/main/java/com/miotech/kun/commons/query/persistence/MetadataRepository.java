@@ -7,6 +7,7 @@ import com.miotech.kun.commons.query.datasource.MetadataDataSource;
 import com.miotech.kun.commons.query.model.MetadataConnectionInfo;
 import com.miotech.kun.commons.query.utils.JSONUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.IdUtils;
 import org.json.simple.parser.ParseException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,8 +61,11 @@ public class MetadataRepository {
                 .getSQL();
 
         Long datasourceId = querySite.getDatasourceId();
-        if (datasourceId == null) {
+        if (IdUtils.isEmpty(datasourceId)) {
             datasourceId = getDatasourceId(querySite.getDatasetId());
+            if (IdUtils.isEmpty(datasourceId)) {
+                throw ExceptionUtils.wrapIfChecked(new RuntimeException("The dataset " + querySite.getDatasetId() + " may be removed"));
+            }
         }
 
         return databaseOperator.fetchOne(sql, rs -> {
