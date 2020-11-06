@@ -78,7 +78,7 @@ public class MiscService {
         }
     }
 
-    public TaskAttempt loadTaskAttempt(Long attemptId){
+    private TaskAttempt loadTaskAttempt(Long attemptId){
         Optional<TaskAttempt> attemptOptional = taskRunDao.fetchAttemptById(attemptId);
         return attemptOptional.get();
     }
