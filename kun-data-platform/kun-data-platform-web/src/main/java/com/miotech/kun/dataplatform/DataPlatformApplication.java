@@ -13,8 +13,6 @@ import org.springframework.context.ConfigurableApplicationContext;
 public class DataPlatformApplication {
 
 	public static void main(String[] args) {
-		ConfigurableApplicationContext context = SpringApplication.run(DataPlatformApplication.class, args);
-		TaskAttemptStatusChangeEventSubscriber taskAttemptStatusChangeEventSubscriber = context.getBean(TaskAttemptStatusChangeEventSubscriber.class);
-		taskAttemptStatusChangeEventSubscriber.subscribe();
+		SpringApplication.run(DataPlatformApplication.class, args);
 	}
 }
