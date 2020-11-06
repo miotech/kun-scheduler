@@ -12,7 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 
 
-public class WechatNotifier extends HttpApiClient implements MessageNotifier {
+public class ZhongdaNotifier extends HttpApiClient implements MessageNotifier {
     private String host;
     private String token;
 
@@ -20,7 +20,7 @@ public class WechatNotifier extends HttpApiClient implements MessageNotifier {
     private DeployedTaskService deployedTaskService;
 
 
-    public WechatNotifier(String host, String token) {
+    public ZhongdaNotifier(String host, String token) {
         this.host = host;
         this.token = token;
     }

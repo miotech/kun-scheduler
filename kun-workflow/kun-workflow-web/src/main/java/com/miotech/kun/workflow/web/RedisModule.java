@@ -16,12 +16,8 @@ public class RedisModule extends AbstractModule {
     }
 
     @Provides
-    public JedisPool getJedisPool(){
-        return new JedisPool(new JedisPoolConfig(), props.getString("redis.host"));
-    }
-
-    @Provides
     public EventPublisher createRedisPublisher() {
-        return new RedisEventPublisher(props.getString("redis.notify-channel"), getJedisPool());
+        JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), props.getString("redis.host"));
+        return new RedisEventPublisher(props.getString("redis.notify-channel"), jedisPool);
     }
 }
