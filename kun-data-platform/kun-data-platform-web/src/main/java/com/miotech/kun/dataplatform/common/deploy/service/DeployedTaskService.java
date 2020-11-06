@@ -15,6 +15,7 @@ import com.miotech.kun.dataplatform.model.taskdefinition.ScheduleConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDatasetProps;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
+import com.miotech.kun.security.model.bo.UserInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.execution.Config;
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import com.miotech.kun.security.service.BaseSecurityService;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,7 +36,7 @@ import static com.miotech.kun.dataplatform.common.utils.TagUtils.TAG_TASK_DEFINI
 
 @Service
 @Slf4j
-public class DeployedTaskService {
+public class DeployedTaskService extends BaseSecurityService{
 
     private static final String TASK_RUN_ID_NOT_NULL = "`taskRunId` should not be null";
 
@@ -311,5 +313,17 @@ public class DeployedTaskService {
                 deployedTask.getTaskCommit().getSnapshot().getTaskPayload(),
                 taskRun
         );
+    }
+
+    public List<String> getUserByTaskId(Long wfTaskId){
+        List<String> userList = new ArrayList<>();
+        Optional<DeployedTask> taskOptional = deployedTaskDao.fetchByWorkflowTaskId(wfTaskId);
+        if(taskOptional.isPresent()){
+            Long userId = taskOptional.get().getOwner();
+            UserInfo userInfo = getUserById(userId);
+            if(userId != null)
+                userList.add(userInfo.getUsername());
+        }
+        return userList;
     }
 }
