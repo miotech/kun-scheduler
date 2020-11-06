@@ -1,6 +1,7 @@
 package com.miotech.kun.datadiscovery.service;
 
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.DatabaseRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
@@ -9,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author: Jie Chen
@@ -25,8 +25,8 @@ public class DatasetService {
         return datasetRepository.getDatasets(datasetGids);
     }
 
-    public List<Database> getAllDatabase() {
-        return datasetRepository.getAllDatabase();
+    public List<Database> getDatabases(DatabaseRequest request) {
+        return datasetRepository.getDatabases(request);
     }
 
     public DatasetBasicPage search(BasicSearchRequest basicSearchRequest) {

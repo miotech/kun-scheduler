@@ -15,7 +15,6 @@ import com.miotech.kun.dataquality.utils.Constants;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunSearchRequest;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -114,6 +113,11 @@ public class DataQualityController {
         }
     }
 
+    @GetMapping("/data-quality/history")
+    public RequestResult<List<DataQualityHistoryRecords>> getHistory(DataQualityHistoryRequest request) {
+        return RequestResult.success(dataQualityService.getHistory(request));
+    }
+
     @GetMapping("/data-quality/dimension/get-config")
     public RequestResult<DimensionConfig> getDimensionConfig(@RequestParam("datasourceType") String dsType) {
         return RequestResult.success(dataQualityService.getDimensionConfig(dsType));
@@ -134,26 +138,9 @@ public class DataQualityController {
         return RequestResult.success(dataQualityService.getCase(id));
     }
 
-    private void enrichDqCaseBasics(List<DataQualityCaseBasic> caseBasics) {
-        Map<Long, DataQualityCaseBasic> taskIdMap = caseBasics.stream()
-                .filter(caseBasic -> IdUtils.isNotEmpty(caseBasic.getTaskId()))
-                .collect(Collectors.toMap(DataQualityCaseBasic::getTaskId, dataQualityCaseBasic -> dataQualityCaseBasic));
-        if (CollectionUtils.isNotEmpty(taskIdMap.keySet())) {
-            Map<Long, List<TaskRun>> lastestTaskRuns = workflowClient.getLatestTaskRuns(new ArrayList<>(taskIdMap.keySet()), 6);
-            taskIdMap.forEach((taskId, caseBasic) -> {
-                List<String> latestStatus = lastestTaskRuns.get(taskId).stream()
-                        .map(taskRun -> WorkflowUtils.resolveTaskStatus(taskRun.getStatus()))
-                        .filter(StringUtils::isNotEmpty)
-                        .collect(Collectors.toList());
-                caseBasic.setHistoryList(latestStatus);
-            });
-        }
-    }
-
     @GetMapping("/data-qualities")
     public RequestResult<DataQualityCaseBasics> getCasesByGid(DataQualitiesRequest request) {
         DataQualityCaseBasics caseBasics = dataQualityService.getCasesByGid(request);
-        enrichDqCaseBasics(caseBasics.getDqCases());
         return RequestResult.success(caseBasics);
     }
 

@@ -90,7 +90,7 @@ public class DataQualityRepository extends BaseRepository {
                         "kdc.id as case_id",
                         "kdc.name as case_name")
                 .from("kun_dq_case_metrics kdcm")
-                .join("inner", "kun_dq_case", "kdc").on("kdcm.dq_case_id = kdc.id")
+                .join("inner", "kun_dq_case", "kdc").on("kdcm.case_id = kdc.id")
                 .where("kdcm.continuous_failing_count > 0");
 
         String countSql = "select count(1) from (" + preSqlBuilder.getSQL() + ") as result";
@@ -113,6 +113,7 @@ public class DataQualityRepository extends BaseRepository {
                 dataQualityCase.setErrorReason(rs.getString("error_reason"));
                 dataQualityCase.setUpdateTime(timestampToMillis(rs, "last_update_time"));
                 dataQualityCase.setContinuousFailingCount(rs.getLong("continuous_failing_count"));
+                dataQualityCase.setCaseId(rs.getLong("case_id"));
                 dataQualityCase.setCaseOwner(rs.getString("case_owner"));
                 dataQualityCase.setCaseName(rs.getString("case_name"));
                 DatasetBasic datasetBasic = getPrimaryDataset(rs.getLong("case_id"));
