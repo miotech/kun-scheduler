@@ -15,10 +15,10 @@ public class TaskAttemptStatusChangeEventSubscriber {
     @Autowired
     private MessageNotifier wechatNotifier;
 
-//    @PostConstruct
-//    private void doSubscribe(){
-//        this.subscribe();
-//    }
+    @PostConstruct
+    private void doSubscribe(){
+        this.subscribe();
+    }
 
     public void subscribe(){
         EventReceiver receiver = new TaskAttemptStatusChangeEventReceiver();

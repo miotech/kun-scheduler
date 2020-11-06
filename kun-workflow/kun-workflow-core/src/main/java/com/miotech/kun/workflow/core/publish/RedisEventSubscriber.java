@@ -6,6 +6,7 @@ import com.miotech.kun.workflow.core.event.EventReceiver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPubSub;
 
 
@@ -14,17 +15,18 @@ public class RedisEventSubscriber implements EventSubscriber {
 
     private final String channel;
 
-    private final Jedis jedis;
+    private final JedisPool jedisPool;
 
-   public RedisEventSubscriber(String channel, Jedis jedis){
+   public RedisEventSubscriber(String channel, JedisPool jedisPool){
        this.channel = channel;
-       this.jedis = jedis;
+       this.jedisPool = jedisPool;
    }
 
     @Override
     public void subscribe(EventReceiver receiver) {
         RedisMsgPubSubListener listener = new RedisMsgPubSubListener(receiver);
-        jedis.subscribe(listener, this.channel);
+        RedisSubscriberThread redisSubscriberThread = new RedisSubscriberThread(listener);
+        redisSubscriberThread.start();
     }
 
     private static class RedisMsgPubSubListener extends JedisPubSub {
@@ -45,5 +47,28 @@ public class RedisEventSubscriber implements EventSubscriber {
             }
             eventReceiver.onReceive(event);
         }
+    }
+
+    private class RedisSubscriberThread extends Thread {
+       private RedisMsgPubSubListener listener;
+
+       public RedisSubscriberThread(RedisMsgPubSubListener listener){
+           this.listener = listener;
+       }
+
+       @Override
+        public void run(){
+           Jedis jedis = null;
+           try {
+               jedis = jedisPool.getResource();
+               jedis.subscribe(listener, channel);
+           } catch (Exception e) {
+               logger.error(String.format("subscribe to channel %s error", channel), e);
+           } finally {
+               if (jedis != null) {
+                   jedis.close();
+               }
+           }
+       }
     }
 }
