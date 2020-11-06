@@ -20,5 +20,11 @@ public class DatasetBasic {
 
     private String name;
 
+    private String database;
+
     private String datasource;
+
+    private String datasourceType;
+
+    private Boolean isPrimary;
 }

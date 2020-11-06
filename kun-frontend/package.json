@@ -15,12 +15,13 @@
     "lint-staged": "lint-staged",
     "lint-staged:js": "eslint --ext .js,.jsx,.ts,.tsx ",
     "start:dev": "HTTPS=1 FORK_TS_CHECKER=1 USE_MOCK=true PROXY_TARGET=\"https://kun-dev.miotech.com\" PROXY_TARGET_DASHBOARD=\"https://kun-dev.miotech.com\" PROXY_PDF_TARGET=\"https://kun-dev.miotech.com\" PROXY_SECURITY_TARGET=\"https://kun-dev.miotech.com\" PORT=9801 umi dev",
+    "start:dev-nochack": "HTTPS=1 USE_MOCK=true PROXY_TARGET=\"https://kun-dev.miotech.com\" PROXY_TARGET_DASHBOARD=\"https://kun-dev.miotech.com\" PROXY_PDF_TARGET=\"https://kun-dev.miotech.com\" PROXY_SECURITY_TARGET=\"https://kun-dev.miotech.com\" PORT=9801 umi dev",
     "start:dev-http": "PROXY_TARGET=\"https://kun-dev.miotech.com\" PROXY_PDF_TARGET=\"https://kun-dev.miotech.com\" PORT=9801 umi dev",
     "start:local": "PROXY_TARGET=\"http://localhost:8080\" PROXY_TARGET_DASHBOARD=\"http://localhost:8083\" PROXY_PDF_TARGET=\"http://localhost:10010\" PROXY_SECURITY_TARGET=\"http://localhost:8079\" PORT=9801 umi dev",
     "start:global": "USE_MOCK=true HTTPS=1 FORK_TS_CHECKER=1 PROXY_TARGET=\"https://kun-global.miotech.com\" PROXY_TARGET_DASHBOARD=\"https://kun-global.miotech.com\" PROXY_SECURITY_TARGET=\"https://kun-global.miotech.com\" PORT=9801 umi dev",
-    "start:chen": "USE_MOCK=false PROXY_TARGET=\"http://192.168.1.87:8080\" PROXY_TARGET_DASHBOARD=\"http://192.168.1.87:8083\" PROXY_SECURITY_TARGET=\"http://192.168.1.87:8079\" PORT=9805 umi dev",
+    "start:chen": "USE_MOCK=false PROXY_TARGET=\"http://192.168.1.99:8080\" PROXY_TARGET_DASHBOARD=\"http://192.168.1.99:8083\" PROXY_SECURITY_TARGET=\"http://192.168.1.99:8079\" PORT=9805 umi dev",
     "i18n": "node i18n-updater/index.js",
-    "storybook": "start-storybook -p 9802"
+    "storybook": "start-storybook -s ./public -p 9802"
   },
   "gitHooks": {
     "pre-commit": "lint-staged"
@@ -100,6 +101,7 @@
     "react-editext": "^3.16.1",
     "react-error-boundary": "^2.3.1",
     "react-lazylog": "^4.5.3",
+    "react-move": "^6.4.0",
     "react-redux": "^7.2.0",
     "react-reflex": "^3.1.0",
     "react-resizable": "^1.10.1",

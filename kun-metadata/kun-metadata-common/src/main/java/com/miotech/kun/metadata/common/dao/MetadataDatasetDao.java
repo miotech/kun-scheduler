@@ -12,6 +12,8 @@ import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.core.model.DatasetBaseInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,6 +22,8 @@ import java.util.Optional;
 
 @Singleton
 public class MetadataDatasetDao {
+    private static final Logger logger = LoggerFactory.getLogger(MetadataDatasetDao.class);
+
     private static final String[] DATASET_COLUMNS = { "gid", "name", "datasource_id", "schema", "data_store", "database_name" };
 
     private static final String DATASET_TABLE_NAME = "kun_mt_dataset";
@@ -38,7 +42,10 @@ public class MetadataDatasetDao {
                 .from(DATASET_TABLE_NAME)
                 .where("gid = ?")
                 .getSQL();
+        logger.debug("Fetching dataset with gid: {}", gid);
+        logger.debug("Dataset query sql: {}", sql);
         Dataset fetchedDataset = dbOperator.fetchOne(sql, MetadataDatasetMapper.INSTANCE, gid);
+        logger.debug("Fetched dataset: {} with gid = {}", fetchedDataset, gid);
         return Optional.ofNullable(fetchedDataset);
     }
 

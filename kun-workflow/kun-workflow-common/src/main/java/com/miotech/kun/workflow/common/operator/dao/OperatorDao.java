@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -128,13 +129,14 @@ public class OperatorDao {
         Preconditions.checkNotNull(operator, "Invalid parameter `operator`: found null object");
 
         String sql = String.format("UPDATE %s SET " +
-                "name = ?, description = ?, class_name = ?, package = ? WHERE id = ?;", DB_TABLE_NAME);
+                "name = ?, description = ?, class_name = ?, package = ?,updated_at = ? WHERE id = ?;", DB_TABLE_NAME);
         int affectedRows = dbOperator.update(
                 sql,
                 operator.getName(),
                 operator.getDescription(),
                 operator.getClassName(),
                 operator.getPackagePath(),
+                LocalDateTime.now(),
                 id
         );
         return affectedRows > 0;

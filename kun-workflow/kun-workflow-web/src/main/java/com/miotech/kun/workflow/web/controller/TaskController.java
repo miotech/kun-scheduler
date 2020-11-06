@@ -51,7 +51,7 @@ public class TaskController {
 
     @RouteMapping(url = "/tasks/{taskId}", method = "GET")
     public Task getTaskById(@RouteVariable Long taskId) {
-        return taskService.find(taskId);
+        return taskService.fetchById(taskId);
     }
 
     @RouteMapping(url= "/tasks", method = "POST")

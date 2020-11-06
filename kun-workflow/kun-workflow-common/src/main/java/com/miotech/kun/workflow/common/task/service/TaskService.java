@@ -23,8 +23,11 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.function.Function;
@@ -32,6 +35,8 @@ import java.util.stream.Collectors;
 
 @Singleton
 public class TaskService {
+    private static final Logger logger = LoggerFactory.getLogger(TaskService.class);
+
     private static final String TASK_ID_SHOULD_NOT_BE_NULL = "Invalid argument `taskId`: null";
 
     private static final String TASK_SHOULD_NOT_BE_NULL = "Invalid argument `task`: null";
@@ -107,7 +112,7 @@ public class TaskService {
         Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
         Preconditions.checkNotNull(vo, "Cannot perform update with vo: null");
 
-        Task task = find(taskId);
+        Task task = fetchById(taskId);
         Task taskToUpdate = task.cloneBuilder()
                 .withId(taskId)
                 .withName(StringUtils.isEmpty(vo.getName()) ? task.getName() : vo.getName())
@@ -127,7 +132,7 @@ public class TaskService {
         Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
         Preconditions.checkNotNull(vo, "Cannot perform update with vo: null");
 
-        Task task = find(taskId).cloneBuilder()
+        Task task = fetchById(taskId).cloneBuilder()
                 .withId(taskId)
                 .withName(vo.getName())
                 .withScheduleConf(vo.getScheduleConf())
@@ -168,7 +173,7 @@ public class TaskService {
         Preconditions.checkArgument(0 <= upstreamLevel && upstreamLevel <= 5 , "upstreamLevel should be non negative and no greater than 5");
         Preconditions.checkArgument(0 <= downstreamLevel&& downstreamLevel <= 5, "downstreamLevel should be non negative and no greater than 5");
 
-        Task task = find(taskId);
+        Task task = fetchById(taskId);
         List<Task> result = new ArrayList<>();
         result.add(task);
         if (upstreamLevel > 0) {
@@ -214,12 +219,22 @@ public class TaskService {
      * @param taskId Task id
      * @return task
      */
-    public Task find(Long taskId) {
+    public Task fetchById(Long taskId) {
         Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
         return taskDao.fetchById(taskId)
                 .orElseThrow(() ->
                 new EntityNotFoundException(String.format("Cannot find task with id: %s", taskId))
         );
+    }
+
+    /**
+     * Fetch tasks by given ids
+     * @param taskIds ids of tasks
+     * @returna a map from id to optional task object
+     */
+    public Map<Long, Optional<Task>> fetchByIds(Set<Long> taskIds) {
+        Preconditions.checkNotNull(taskIds, "Invalid argument `taskIds`: null");
+        return taskDao.fetchByIds(taskIds);
     }
 
     public void deleteTask(Task task) {
@@ -330,6 +345,8 @@ public class TaskService {
     private void updateLineageGraphOnTaskUpdate(Task task) {
         Preconditions.checkNotNull(task, TASK_SHOULD_NOT_BE_NULL);
         // Simply remove the original task nodes then re-create one
+        logger.debug("Performing update on lineage graph during update of task: id = {}, name = {}, config = {}",
+                task.getId(), task.getName(), JSONUtils.toJsonString(task.getConfig()));
         updateLineageGraphOnTaskDelete(task);
         updateLineageGraphOnTaskCreate(task);
     }
@@ -350,6 +367,8 @@ public class TaskService {
         // Load upstream & downstream data stores
         List<DataStore> upstreamDatastore = resolver.resolveUpstreamDataStore(task.getConfig());
         List<DataStore> downstreamDataStore = resolver.resolveDownstreamDataStore(task.getConfig());
+        logger.debug("For task id = {}, resolved {} upstream datastores and {} downstream datastores.",
+                task.getId(), upstreamDatastore.size(), downstreamDataStore.size());
 
         // upsert upstream dataset nodes & relations to task node entity
         for (DataStore store : upstreamDatastore) {
@@ -357,6 +376,11 @@ public class TaskService {
             if (datasetOptional.isPresent()) {
                 DatasetNode datasetNode = DatasetNode.from(datasetOptional.get());
                 taskNode.addInlet(datasetNode);
+                logger.debug("For upstream datastore: {} , found upstream dataset node with gid {} from metadata service",
+                        JSONUtils.toJsonString(store), datasetNode.getGid());
+            } else {
+                logger.debug("For upstream datastore: {} , cannot find corresponding dataset from metadata service",
+                        JSONUtils.toJsonString(store));
             }
         }
         // upsert downstream dataset nodes & relations to task node entity
@@ -365,6 +389,11 @@ public class TaskService {
             if (datasetOptional.isPresent()) {
                 DatasetNode datasetNode = DatasetNode.from(datasetOptional.get());
                 taskNode.addOutlet(datasetNode);
+                logger.debug("For downstream datastore: {} , found downstream dataset node with gid {} from metadata service",
+                        JSONUtils.toJsonString(store), datasetNode.getGid());
+            } else {
+                logger.debug("For downstream datastore: {} , cannot find corresponding dataset from metadata service",
+                        JSONUtils.toJsonString(store));
             }
         }
         // save task node
@@ -379,6 +408,7 @@ public class TaskService {
     private void updateLineageGraphOnTaskDelete(Task task) {
         Preconditions.checkNotNull(task, TASK_SHOULD_NOT_BE_NULL);
         // Is this task node already exists in graph?
+        logger.debug("Clearing related lineage graph info for task with id = {}", task.getId());
         Optional<TaskNode> taskNodeOptional = lineageService.fetchTaskNodeById(task.getId());
         if (!taskNodeOptional.isPresent()) {
             return;

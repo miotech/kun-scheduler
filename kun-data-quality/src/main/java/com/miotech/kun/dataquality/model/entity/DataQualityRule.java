@@ -14,22 +14,21 @@ import java.util.StringJoiner;
 @Data
 public class DataQualityRule {
 
-    @JsonProperty("fieldName")
+    String originalValue;
+
     @JsonSetter(nulls = Nulls.SKIP)
     String field = "";
 
-    @JsonProperty("operator")
     String operator;
 
-    @JsonProperty("fieldType")
     String expectedType;
 
-    @JsonProperty("fieldValue")
     String expectedValue;
 
     @Override
     public String toString() {
         return new StringJoiner(", ", "[", "]")
+                .add("originalValue=" + originalValue)
                 .add("field=" + field)
                 .add("operator=" + operator)
                 .add("expectedType=" + expectedType)

@@ -42,7 +42,7 @@ export default memo(function ColumnItem({ column, onFinishUpdate }: Props) {
         <span className={styles.columnName}>{column.name}</span>
         <span className={styles.type}>{lowerCase(column.type)}</span>
         <span className={styles.watermark}>
-          {watermarkFormatter(column.high_watermark?.time)}
+          {watermarkFormatter(column.highWatermark?.time)}
         </span>
       </div>
 

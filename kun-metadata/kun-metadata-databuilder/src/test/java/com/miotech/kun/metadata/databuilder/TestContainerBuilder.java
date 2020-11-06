@@ -106,6 +106,11 @@ public class TestContainerBuilder {
         return arango;
     }
 
+    public void initDatasource(String host, int port, String username, String password, long typeId, String typeName) {
+        dbOperator.update(String.format(DATASOURCE_INSERT_SQL, host, port, username, password, typeId));
+        dbOperator.update(String.format(DATASOURCE_TYPE_INSERT_SQL, typeId, typeName));
+    }
+
     public void verifyDatasetRowCount(long rowCount) {
         Long datasetRowCount = dbOperator.fetchOne("select count(*) from kun_mt_dataset", rs -> rs.getLong(1));
         MatcherAssert.assertThat(datasetRowCount, Matchers.is(rowCount));

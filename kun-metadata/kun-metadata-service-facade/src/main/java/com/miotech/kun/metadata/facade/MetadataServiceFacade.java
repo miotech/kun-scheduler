@@ -14,6 +14,7 @@ import java.util.List;
 public interface MetadataServiceFacade {
     /**
      * Obtain dataset model object (from remote) by given datastore as search key.
+     * @deprecated use {@code MetadataServiceFacade.getDatasetByDSI} instead.
      * @param datastore key datastore object
      * @return Dataset model object. Returns null if not found by datastore key.
      */

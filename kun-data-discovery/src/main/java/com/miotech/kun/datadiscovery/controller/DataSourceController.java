@@ -4,28 +4,18 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.datadiscovery.model.bo.*;
 import com.miotech.kun.datadiscovery.model.entity.*;
-import com.miotech.kun.datadiscovery.model.vo.DatasetLineageVO;
 import com.miotech.kun.datadiscovery.model.vo.PullDataVO;
+import com.miotech.kun.datadiscovery.service.DataSourceService;
 import com.miotech.kun.datadiscovery.service.DatasetFieldService;
 import com.miotech.kun.datadiscovery.service.DatasetService;
-import com.miotech.kun.datadiscovery.service.DataSourceService;
 import com.miotech.kun.datadiscovery.service.MetadataService;
-import com.miotech.kun.dataquality.model.entity.DataQualityCase;
-import com.miotech.kun.dataquality.model.entity.DataQualityCaseBasic;
 import com.miotech.kun.workflow.client.WorkflowClient;
-import com.miotech.kun.workflow.client.model.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author: Melo
@@ -93,8 +83,8 @@ public class DataSourceController {
     }
 
     @GetMapping("/metadata/databases")
-    public RequestResult<List<Database>> getDatabases() {
-        return RequestResult.success(datasetService.getAllDatabase());
+    public RequestResult<List<Database>> getDatabases(DatabaseRequest request) {
+        return RequestResult.success(datasetService.getDatabases(request));
     }
 
     @GetMapping("/metadata/datasets/search")
@@ -136,11 +126,6 @@ public class DataSourceController {
     public RequestResult<DatasetField> updateDatasetColumn(@PathVariable Long id,
                                                            @RequestBody DatasetFieldRequest datasetFieldRequest) {
         return RequestResult.success(datasetFieldService.update(id, datasetFieldRequest));
-    }
-
-    @GetMapping("/metadata/dataset/{id}/lineages")
-    public RequestResult<DatasetLineageVO> getDatasetLineages(@PathVariable String id) {
-        return RequestResult.success();
     }
 
 }

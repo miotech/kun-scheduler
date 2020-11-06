@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.service.MetadataDatasetService;
 import com.miotech.kun.metadata.common.service.MetadataDatasourceService;
+import com.miotech.kun.metadata.core.model.DSI;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.core.model.DatasetBaseInfo;

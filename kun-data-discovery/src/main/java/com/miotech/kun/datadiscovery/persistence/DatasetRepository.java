@@ -1,12 +1,15 @@
 package com.miotech.kun.datadiscovery.persistence;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.DatabaseRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
-import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.dataquality.persistence.DataQualityRepository;
 import org.apache.commons.collections4.CollectionUtils;
@@ -19,7 +22,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -41,14 +46,20 @@ public class DatasetRepository extends BaseRepository {
     @Autowired
     TagRepository tagRepository;
 
-    public List<Database> getAllDatabase() {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("distinct database_name")
-                .from("kun_mt_dataset")
-                .where("database_name is not null")
-                .getSQL();
+    public List<Database> getDatabases(DatabaseRequest request) {
+        SQLBuilder preSql = DefaultSQLBuilder.newBuilder()
+                .select("distinct kmd.database_name")
+                .from("kun_mt_dataset kmd");
+        String whereClause = wrapSql("kmd.database_name is not null");
+        List<Object> slqArgs = new ArrayList<>();
 
-        return jdbcTemplate.query(sql, rs -> {
+        if (CollectionUtils.isNotEmpty(request.getDataSourceIds())) {
+            whereClause += wrapSql("and kmd.datasource_id in " + toColumnSql(request.getDataSourceIds().size()));
+            slqArgs.addAll(request.getDataSourceIds());
+        }
+        preSql.where(whereClause);
+        String finalSql = preSql.getSQL();
+        return jdbcTemplate.query(finalSql, rs -> {
             List<Database> databases = new ArrayList<>();
             while (rs.next()) {
                 Database database = new Database();
@@ -56,7 +67,8 @@ public class DatasetRepository extends BaseRepository {
                 databases.add(database);
             }
             return databases;
-        });
+        }, slqArgs.toArray());
+
     }
 
     public DatasetBasicPage search(BasicSearchRequest basicSearchRequest) {
@@ -241,7 +253,7 @@ public class DatasetRepository extends BaseRepository {
                 Watermark lowWatermark = new Watermark();
                 lowWatermark.setTime(timestampToMillis(rs, "low_watermark"));
                 dataset.setLowWatermark(lowWatermark);
-                dataset.setRowCount(getRowCount(gid));
+                dataset.setRowCount(getLatestStats(gid).getRowCount());
                 dataset.setGlossaries(glossaryRepository.getGlossariesByDataset(gid));
                 return dataset;
             }
@@ -249,9 +261,10 @@ public class DatasetRepository extends BaseRepository {
         }, gid);
     }
 
-    public Long getRowCount(Long gid) {
+    public DatasetStats getLatestStats(Long gid) {
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("row_count")
+                .select("row_count",
+                        "last_updated_time")
                 .from("kun_mt_dataset_stats")
                 .where("dataset_gid = ?")
                 .orderBy("stats_date desc")
@@ -259,11 +272,14 @@ public class DatasetRepository extends BaseRepository {
                 .getSQL();
 
         return jdbcTemplate.query(sql, rs -> {
-            Long rowCount = null;
+            DatasetStats datasetStats = new DatasetStats();
             if (rs.next()) {
-                rowCount = rs.getLong("row_count");
+                datasetStats.setRowCount(rs.getLong("row_count"));
+                Watermark highWatermark = new Watermark();
+                highWatermark.setTime(timestampToMillis(rs, "last_updated_time"));
+                datasetStats.setHighWatermark(highWatermark);
             }
-            return rowCount;
+            return datasetStats;
         }, gid);
     }
 
@@ -311,30 +327,36 @@ public class DatasetRepository extends BaseRepository {
         datasetBasic.setHighWatermark(highWatermark);
     }
 
-    public Long getHighWatermarkTime(Long gid) {
-        return getLastUpdateTime(gid, "desc");
-    }
-
-    public Long getLowWatermarkTime(Long gid) {
-        return getLastUpdateTime(gid, "asc");
-    }
-
-    public Long getLastUpdateTime(Long gid,
-                                  String sortOrder) {
+    public List<LineageDatasetBasic> getDatasets(List<Long> datasetGids) {
+        if (CollectionUtils.isEmpty(datasetGids)) {
+            return Lists.newArrayList();
+        }
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("last_updated_time")
-                .from("kun_mt_dataset_stats")
-                .where("dataset_gid = ? and last_updated_time is not null")
-                .orderBy("last_updated_time " + sortOrder)
-                .limit(1)
+                .select("kmd.gid as dataset_id",
+                        "kmd.name as dataset_name",
+                        "kmdsrca.name as datasource_name",
+                        "kmdsrct.name as datasource_type")
+                .from("kun_mt_dataset kmd")
+                .join("inner", "kun_mt_datasource", "kmdsrc").on("kmd.datasource_id = kmdsrc.id")
+                .join("inner", "kun_mt_datasource_type", "kmdsrct").on("kmdsrct.id = kmdsrc.type_id")
+                .join("inner", "kun_mt_datasource_attrs", "kmdsrca").on("kmdsrca.datasource_id = kmdsrc.id")
+                .where("kmd.gid in " + toColumnSql(datasetGids.size()))
                 .getSQL();
-
         return jdbcTemplate.query(sql, rs -> {
-            if (rs.next()) {
-                return timestampToMillis(rs, "last_updated_time");
+            List<LineageDatasetBasic> datasetBasics = new ArrayList<>();
+            while (rs.next()) {
+                LineageDatasetBasic datasetBasic = new LineageDatasetBasic();
+                datasetBasic.setGid(rs.getLong("dataset_id"));
+                datasetBasic.setName(rs.getString("dataset_name"));
+                datasetBasic.setDatasource(rs.getString("datasource_name"));
+                datasetBasic.setType(rs.getString("datasource_type"));
+                DatasetStats datasetStats = getLatestStats(datasetBasic.getGid());
+                datasetBasic.setRowCount(datasetStats.getRowCount());
+                datasetBasic.setHighWatermark(datasetStats.getHighWatermark());
+                datasetBasics.add(datasetBasic);
             }
-            return 0L;
-        }, gid);
+            return datasetBasics;
+        }, datasetGids.toArray());
     }
 
 }

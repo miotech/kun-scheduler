@@ -9,12 +9,20 @@ import {
   updateColumnService,
 } from '@/services/datasetDetail';
 import { Pagination } from '@/definitions/common-types';
+import { Watermark, GlossaryItem } from '@/definitions/Dataset.type';
+import {
+  FetchLineageTasksReq,
+  fetchLineageTasksService,
+  LineageDirection,
+} from '@/services/lineage';
 import {
   deleteQualityService,
   fetchDataAllQualitiesService,
+  fetchDataQualityHistoriesService,
+  FetchDataQualityHistoriesResp,
 } from '@/services/dataQuality';
-import { DataQualityType } from './dataQuality';
-import { Watermark, GlossaryItem } from './dataDiscovery';
+import { LineageHistoryStatus } from '@/definitions/Lineage.type';
+import { DataQualityType, DataQualityHistory } from './dataQuality';
 import { RootDispatch, RootState } from '../store';
 
 export interface Flow {
@@ -22,25 +30,22 @@ export interface Flow {
   flow_name: string;
 }
 
-export enum DataQualityHistory {
-  SUCCESS = 'SUCCESS',
-  FAILED = 'FAILED',
-  SKIPPED = 'SKIPPED',
-}
-
 export interface DataQualityItem {
   id: string;
   name: string;
   updater: string;
   types: DataQualityType[];
-  historyList: DataQualityHistory[];
+  isPrimary: boolean;
+  historyList?: DataQualityHistory[] | null;
+  updateTime: number;
+  createTime: number;
 }
 
 export interface Column {
   id: string;
   name: string;
   type: string;
-  high_watermark: Watermark;
+  highWatermark: Watermark;
   description: string;
   not_null_count: number;
   not_null_percentage: number;
@@ -51,13 +56,20 @@ export interface Glossary {
   name: string;
 }
 
+export interface LineageTask {
+  taskId: string;
+  taskName: string;
+  lastExecutedTime: number;
+  historyList: LineageHistoryStatus[];
+}
+
 export interface DatasetDetail {
   id: string | null;
   name: string | null;
   schema: string | null;
   type: string | null;
-  high_watermark: Watermark | null;
-  low_watermark: Watermark | null;
+  highWatermark: Watermark | null;
+  lowWatermark: Watermark | null;
   description: string | null;
 
   owners: string[] | null;
@@ -65,7 +77,7 @@ export interface DatasetDetail {
   datasource: string | null;
   database: string | null;
 
-  row_count: number | null;
+  rowCount: number | null;
   flows: Flow[] | null;
 
   dataQualities: DataQualityItem[] | null;
@@ -79,6 +91,15 @@ export interface DatasetDetailState extends DatasetDetail {
 
   dataQualityTablePagination: Pagination;
   fetchDataQualityLoading: boolean;
+
+  upstreamLineageTaskList: LineageTask[] | null;
+  downstreamLineageTaskList: LineageTask[] | null;
+
+  fetchUpstreamLineageTaskListLoading: boolean;
+  fetchDownstreamLineageTaskListLoading: boolean;
+
+  upstreamLineageTaskListPagination: Pagination;
+  downstreamLineageTaskListPagination: Pagination;
 }
 
 export const datasetDetail = {
@@ -87,8 +108,8 @@ export const datasetDetail = {
     name: null,
     schema: null,
     type: null,
-    high_watermark: null,
-    low_watermark: null,
+    highWatermark: null,
+    lowWatermark: null,
     description: null,
 
     owners: null,
@@ -96,7 +117,7 @@ export const datasetDetail = {
     datasource: null,
     database: null,
 
-    row_count: null,
+    rowCount: null,
     flows: null,
 
     dataQualities: null,
@@ -115,6 +136,22 @@ export const datasetDetail = {
       totalCount: 0,
     },
     fetchDataQualityLoading: false,
+
+    upstreamLineageTaskList: [],
+    upstreamLineageTaskListPagination: {
+      pageNumber: 1,
+      pageSize: 25,
+      totalCount: 0,
+    },
+    downstreamLineageTaskList: [],
+    downstreamLineageTaskListPagination: {
+      pageNumber: 1,
+      pageSize: 25,
+      totalCount: 0,
+    },
+
+    fetchUpstreamLineageTaskListLoading: false,
+    fetchDownstreamLineageTaskListLoading: false,
   } as DatasetDetailState,
 
   reducers: {
@@ -152,11 +189,46 @@ export const datasetDetail = {
         ...payload,
       },
     }),
+    updateUpstreamPagination: (
+      state: DatasetDetailState,
+      payload: Partial<Pagination>,
+    ) => ({
+      ...state,
+      upstreamLineageTaskListPagination: {
+        ...state.upstreamLineageTaskListPagination,
+        ...payload,
+      },
+    }),
+    updateDownstreamPagination: (
+      state: DatasetDetailState,
+      payload: Partial<Pagination>,
+    ) => ({
+      ...state,
+      downstreamLineageTaskListPagination: {
+        ...state.downstreamLineageTaskListPagination,
+        ...payload,
+      },
+    }),
+    mergeDataQualityHistories: (
+      state: DatasetDetailState,
+      payload: FetchDataQualityHistoriesResp,
+    ) => ({
+      ...state,
+      dataQualities: state.dataQualities?.map(item => {
+        const histories = payload.find(i => i.caseId === item.id)?.historyList;
+        return {
+          ...item,
+          historyList: histories,
+        };
+      }),
+    }),
   },
 
   effects: (dispatch: RootDispatch) => {
     let fetchDatasetColumnsServiceCountFlag = 1;
     let fetchDataQualityServiceCountFlag = 1;
+    let fetchUpstreamLineageTaskListFlag = 1;
+    let fetchDownstreamLineageTaskListFlag = 1;
     return {
       async fetchDatasetDetail(id: string) {
         try {
@@ -166,6 +238,56 @@ export const datasetDetail = {
           }
         } catch (e) {
           // do nothing
+        }
+      },
+      async fetchLineageTasks(payload: FetchLineageTasksReq) {
+        try {
+          let flag;
+          if (payload.direction === LineageDirection.UPSTREAM) {
+            fetchUpstreamLineageTaskListFlag += 1;
+            flag = fetchUpstreamLineageTaskListFlag;
+            dispatch.datasetDetail.updateState({
+              key: 'fetchUpstreamLineageTaskListLoading',
+              value: true,
+            });
+          } else {
+            fetchDownstreamLineageTaskListFlag += 1;
+            flag = fetchDownstreamLineageTaskListFlag;
+            dispatch.datasetDetail.updateState({
+              key: 'fetchDownstreamLineageTaskListLoading',
+              value: true,
+            });
+          }
+          const resp = await fetchLineageTasksService(payload);
+          if (resp) {
+            const { tasks } = resp;
+            if (
+              payload.direction === LineageDirection.UPSTREAM &&
+              flag === fetchUpstreamLineageTaskListFlag
+            ) {
+              dispatch.datasetDetail.batchUpdateState({
+                upstreamLineageTaskList: tasks,
+              });
+            } else if (flag === fetchDownstreamLineageTaskListFlag) {
+              dispatch.datasetDetail.batchUpdateState({
+                downstreamLineageTaskList: tasks,
+              });
+            }
+          }
+        } catch (e) {
+          // do nothing
+        } finally {
+          if (payload.direction === LineageDirection.UPSTREAM) {
+            dispatch.datasetDetail.updateState({
+              key: 'fetchUpstreamLineageTaskListLoading',
+              value: false,
+            });
+          } else {
+            dispatch.datasetDetail.updateState({
+              key: 'fetchDownstreamLineageTaskListLoading',
+              value: false,
+            });
+          }
         }
       },
       async fetchDatasetColumns(payload: {
@@ -224,9 +346,26 @@ export const datasetDetail = {
             if (resp) {
               const { dqCases, pageNumber, pageSize, totalCount } = resp;
 
+              const respHistory = await fetchDataQualityHistoriesService(
+                dqCases.map(i => i.id),
+              );
+
+              let cases = dqCases;
+              if (respHistory) {
+                cases = cases.map(caseItem => {
+                  const caseHistory = respHistory.find(
+                    item => item.caseId === caseItem.id,
+                  )?.historyList;
+                  return {
+                    ...caseItem,
+                    historyList: caseHistory,
+                  };
+                });
+              }
+
               dispatch.datasetDetail.updateState({
                 key: 'dataQualities',
-                value: dqCases,
+                value: cases,
               });
               dispatch.datasetDetail.updateDataQualityPagination({
                 pageNumber,
@@ -298,11 +437,25 @@ export const datasetDetail = {
         return null;
       },
 
-      async deleteDataQuality(payload: { id: string; datasetId: string }) {
-        const { id, datasetId } = payload;
+      async deleteDataQuality(payload: { id: string }) {
+        const { id } = payload;
         try {
-          const resp = await deleteQualityService(id, { datasetId });
+          const resp = await deleteQualityService(id);
           if (resp) {
+            return resp;
+          }
+        } catch (e) {
+          // do nothing
+        }
+        return null;
+      },
+
+      async fetchDataQualityHistories(payload: { caseIds: string[] }) {
+        const { caseIds } = payload;
+        try {
+          const resp = await fetchDataQualityHistoriesService(caseIds);
+          if (resp) {
+            dispatch.datasetDetail.mergeDataQualityHistories(resp);
             return resp;
           }
         } catch (e) {

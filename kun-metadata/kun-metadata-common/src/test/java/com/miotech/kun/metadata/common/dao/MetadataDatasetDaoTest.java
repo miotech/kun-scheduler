@@ -31,12 +31,13 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
         // 1. Prepare
         // Force insert a dataset record into database
         databaseOperator.update(
-                "INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name) VALUES(?, ?, ?, CAST(? AS JSONB), ?)",
+                "INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name, dsi) VALUES (?, ?, ?, CAST(? AS JSONB), ?, ?)",
                 1L,
                 "example_dataset",
                 3L,
                 "{\"type\": \"ARANGO_COLLECTION\", \"@class\": \"com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore\", \"database\": \"miotech_test_database\", \"collection\": \"demo_collection\", \"dataStoreUrl\": \"127.0.0.1:7890\"}",
-                "miotech_test_database"
+                "miotech_test_database",
+                "arango:collection=demo_collection,database=miotech_test_database,url=127.0.0.1%3A7890,"
         );
 
         DataStore dataStore = new ArangoCollectionStore(

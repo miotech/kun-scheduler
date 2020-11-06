@@ -3,11 +3,9 @@ package com.miotech.kun.workflow.client;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
-import com.miotech.kun.workflow.client.model.Operator;
-import com.miotech.kun.workflow.client.model.Task;
-import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -220,6 +218,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit) {
         return wfApi.getLatestTaskRuns(taskIds, limit);
+    }
+
+    @Override
+    public DatasetLineageInfo getLineageNeighbors(Long datasetGid, LineageQueryDirection direction, int depth) {
+        return wfApi.getLineageNeighbors(datasetGid, direction, depth);
     }
 
     @Override

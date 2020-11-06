@@ -32,10 +32,8 @@ public class DatasetBasic {
 
     private String type;
 
-    @JsonProperty("high_watermark")
     private Watermark highWatermark;
 
-    @JsonProperty("low_watermark")
     private Watermark lowWatermark;
 
     private List<String> owners;
