@@ -8,14 +8,8 @@ public class TaskAttemptStatusChangeEvent extends Event {
     private final long attemptId;
     private final TaskRunStatus from;
     private final TaskRunStatus to;
-    private String taskName;
-    private Long taskId;
-
-    public TaskAttemptStatusChangeEvent(long attemptId, TaskRunStatus from, TaskRunStatus to) {
-        this.attemptId = attemptId;
-        this.from = from;
-        this.to = to;
-    }
+    private final String taskName;
+    private final Long taskId;
 
     public TaskAttemptStatusChangeEvent(long attemptId, TaskRunStatus from, TaskRunStatus to, String taskName, Long taskId) {
         this.attemptId = attemptId;
