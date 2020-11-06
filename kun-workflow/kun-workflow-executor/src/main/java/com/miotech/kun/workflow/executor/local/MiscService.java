@@ -1,9 +1,13 @@
 package com.miotech.kun.workflow.executor.local;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
+import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.publish.EventPublisher;
@@ -15,6 +19,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 @Singleton
 public class MiscService {
@@ -29,6 +34,15 @@ public class MiscService {
     @Inject
     private EventPublisher publisher;
 
+    private final LoadingCache<Long, TaskAttempt> taskAttemptCache = CacheBuilder.newBuilder()
+            .maximumSize(1024)
+            .build(new CacheLoader<Long, TaskAttempt>() {
+                @Override
+                public TaskAttempt load(Long attemptId) throws Exception {
+                    return loadTaskAttempt(attemptId);
+                }
+            });
+
     public void changeTaskAttemptStatus(long attemptId, TaskRunStatus status) {
         changeTaskAttemptStatus(attemptId, status, null, null);
     }
@@ -39,14 +53,16 @@ public class MiscService {
         TaskRunStatus prevStatus = taskRunDao.updateTaskAttemptStatus(attemptId, status, startAt, endAt)
                 .orElseThrow(() -> new IllegalArgumentException(String.format("TaskAttempt with id %s not found.", attemptId)));
 
-        Optional<TaskAttempt> attemptOptional = taskRunDao.fetchAttemptById(attemptId);
-        if (attemptOptional.isPresent()) {
-            TaskAttempt attempt = attemptOptional.get();
+        TaskAttempt attempt = null;
+        try {
+            attempt = taskAttemptCache.get(attemptId);
             eventBus.post(new TaskAttemptStatusChangeEvent(attemptId, prevStatus, status, attempt.getTaskName(), attempt.getTaskId()));
+        } catch (ExecutionException e) {
+            logger.error(String.format("failed to load taskAttempt from cahce, attempId %d", attemptId), e);
+        }catch (Exception e){
+            logger.error(String.format("task not found from attempId %d", attemptId), e);
         }
-        else {
-            logger.error(String.format("task not found from attempId %d", attemptId));
-        }
+
     }
 
     @Inject
@@ -60,5 +76,10 @@ public class MiscService {
         public void taskAttemptStatusChangeEvent(TaskAttemptStatusChangeEvent event) {
             publisher.publish(event);
         }
+    }
+
+    public TaskAttempt loadTaskAttempt(Long attemptId){
+        Optional<TaskAttempt> attemptOptional = taskRunDao.fetchAttemptById(attemptId);
+        return attemptOptional.get();
     }
 }
