@@ -290,8 +290,8 @@ public class DataBuilder {
     private void sweep(Map<String, Long> latestStates) {
         if (!latestStates.isEmpty()) {
             logger.info("prepare to delete dataset: {}", JSONUtils.toJsonString(latestStates.values()));
-            Object[][] params = latestStates.values().stream().map(gid -> new Object[]{gid}).toArray(Object[][]::new);
-            operator.batch("DELETE FROM kun_mt_dataset WHERE gid = ?", params);
+            /*Object[][] params = latestStates.values().stream().map(gid -> new Object[]{gid}).toArray(Object[][]::new);
+            operator.batch("DELETE FROM kun_mt_dataset WHERE gid = ?", params);*/
         }
     }
 }
