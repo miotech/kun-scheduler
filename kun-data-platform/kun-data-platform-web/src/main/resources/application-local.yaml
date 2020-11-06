@@ -28,5 +28,4 @@ zhongda:
 
 redis:
   host: ${DB_REDIS_IP}
-  port: ${DB_REDIS_PORT}
   notify-channel: ${NOTIFY_CHANNEL}
