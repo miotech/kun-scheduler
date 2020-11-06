@@ -4,12 +4,11 @@ import com.miotech.kun.dataplatform.notify.TaskAttemptStatusChangeEventSubscribe
 import com.miotech.kun.workflow.core.publish.EventSubscriber;
 import com.miotech.kun.workflow.core.publish.RedisEventSubscriber;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
-import javax.annotation.PostConstruct;
 
 @Configuration
 public class EventNotifyConfig {
@@ -20,17 +19,17 @@ public class EventNotifyConfig {
     private String channel;
 
     @Bean
-    public TaskAttemptStatusChangeEventSubscriber getSubscriber(){
+    public TaskAttemptStatusChangeEventSubscriber getSubscriber() {
         return new TaskAttemptStatusChangeEventSubscriber();
     }
 
     @Bean
-    public Jedis getJedis(){
-        return new Jedis(redisHost);
+    public JedisPool getJedisPool() {
+        return new JedisPool(new JedisPoolConfig(), redisHost);
     }
 
     @Bean
-    public EventSubscriber getRedisSubscriber(){
-        return new RedisEventSubscriber(channel, getJedis());
+    public EventSubscriber getRedisSubscriber() {
+        return new RedisEventSubscriber(channel, getJedisPool());
     }
 }
