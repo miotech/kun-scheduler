@@ -21,3 +21,11 @@ spring:
 
 security:
   base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
+
+zhongda:
+  host: http://zhongda.miotech.com:8000
+  token: ***REMOVED***
+
+redis:
+  host: ${DB_REDIS_IP}
+  notify-channel: ${NOTIFY_CHANNEL}
