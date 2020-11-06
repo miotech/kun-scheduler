@@ -39,10 +39,10 @@ export const FailedTestCasesTable: React.FC<Props> = memo(
           ),
         },
         {
-          dataIndex: 'datasetName',
-          key: 'datasetName',
+          dataIndex: 'caseName',
+          key: 'caseName',
           title: t(
-            'monitoringDashboard.dataDiscovery.failedTestCasesTable.datasetName',
+            'monitoringDashboard.dataDiscovery.failedTestCasesTable.caseName',
           ),
           render: (txt: string, record: FailedTestCase) => {
             return (
@@ -63,12 +63,27 @@ export const FailedTestCasesTable: React.FC<Props> = memo(
           },
         },
         {
-          dataIndex: 'caseName',
-          key: 'caseName',
+          dataIndex: 'datasetName',
+          key: 'datasetName',
           title: t(
-            'monitoringDashboard.dataDiscovery.failedTestCasesTable.caseName',
+            'monitoringDashboard.dataDiscovery.failedTestCasesTable.datasetName',
           ),
+          render: (txt: string, record: FailedTestCase) => {
+            return (
+              <Link
+                to={SafeUrlAssembler()
+                  .template('/data-discovery/dataset/:datasetId')
+                  .param({
+                    datasetId: record.datasetGid,
+                  })
+                  .toString()}
+              >
+                {txt}
+              </Link>
+            );
+          },
         },
+
         {
           dataIndex: 'errorReason',
           key: 'errorReason',
