@@ -81,25 +81,26 @@ public class DataQualityRepository extends BaseRepository {
         TEST_CASES_REQUEST_ORDER_MAP.put("updateTime", "last_update_time");
     }
     public DataQualityCases getTestCases(TestCasesRequest testCasesRequest) {
-        SQLBuilder preSqlBuilder = DefaultSQLBuilder.newBuilder()
-                .select("kdcm.error_reason as error_reason",
-                        "kdcm.update_time as last_update_time",
-                        "kdcm.continuous_failing_count as continuous_failing_count",
-                        "kdcm.rule_records as rule_records",
-                        "kdc.create_user as case_owner",
-                        "kdc.id as case_id",
-                        "kdc.name as case_name")
-                .from("kun_dq_case_metrics kdcm")
-                .join("inner", "kun_dq_case", "kdc").on("kdcm.case_id = kdc.id")
-                .where("kdcm.continuous_failing_count > 0");
+        String sql = "select kdcm.error_reason as error_reason, \n" +
+                            "kdcm.update_time as last_update_time, \n" +
+                            "kdcm.continuous_failing_count as continuous_failing_count, \n" +
+                            "kdcm.rule_records as rule_records, \n" +
+                            "kdcm.row_number as row_number, \n" +
+                            "kdc.create_user as case_owner, \n" +
+                            "kdc.id as case_id, \n" +
+                            "kdc.name as case_name from \n" +
+                        "(select *, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY update_time desc) AS row_number \n" +
+                        "from kun_dq_case_metrics) kdcm \n" +
+                     "inner join \n" +
+                        "kun_dq_case kdc on kdcm.case_id = kdc.id \n" +
+                     "where kdcm.row_number <= 1 AND kdcm.continuous_failing_count > 0";
 
-        String countSql = "select count(1) from (" + preSqlBuilder.getSQL() + ") as result";
+        String countSql = "select count(1) from (" + sql + ") as result";
 
-        String sql = preSqlBuilder
-                .orderBy(TEST_CASES_REQUEST_ORDER_MAP.get(testCasesRequest.getSortColumn()) + " " + testCasesRequest.getSortOrder())
-                .offset(getOffset(testCasesRequest.getPageNumber(), testCasesRequest.getPageSize()))
-                .limit(testCasesRequest.getPageSize())
-                .getSQL();
+        sql += "order by " + TEST_CASES_REQUEST_ORDER_MAP.get(testCasesRequest.getSortColumn())
+                + " " + testCasesRequest.getSortOrder() + " \n"
+                + "offset " + getOffset(testCasesRequest.getPageNumber(), testCasesRequest.getPageSize()) + " \n"
+                + "limit " + testCasesRequest.getPageSize();
 
         DataQualityCases dataQualityCases = new DataQualityCases();
         Long totalCount = jdbcTemplate.queryForObject(countSql, Long.class);
