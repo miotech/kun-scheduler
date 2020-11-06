@@ -24,12 +24,8 @@ public class EventNotifyConfig {
     }
 
     @Bean
-    public JedisPool getJedisPool() {
-        return new JedisPool(new JedisPoolConfig(), redisHost);
-    }
-
-    @Bean
     public EventSubscriber getRedisSubscriber() {
-        return new RedisEventSubscriber(channel, getJedisPool());
+        JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), redisHost);
+        return new RedisEventSubscriber(channel, jedisPool);
     }
 }
