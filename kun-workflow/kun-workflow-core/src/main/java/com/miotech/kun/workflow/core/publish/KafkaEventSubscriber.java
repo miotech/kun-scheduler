@@ -32,7 +32,7 @@ public class KafkaEventSubscriber implements EventSubscriber {
                 try {
                     event = EventMapper.toEvent(record.value());
                 } catch (JsonProcessingException e) {
-                    logger.error("parse event failed", e);
+                    logger.warn("parse event failed", e);
                 }
                 receiver.onReceive(event);
             }
