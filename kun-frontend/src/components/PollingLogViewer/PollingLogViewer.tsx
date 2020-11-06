@@ -58,7 +58,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = (props) => {
       >
         <ScrollFollow
           startFollowing
-          render={({ onScroll, follow, startFollowing, stopFollowing }) => (
+          render={({ onScroll, follow}) => (
             <LazyLog
               extraLines={0}
               enableSearch

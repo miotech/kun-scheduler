@@ -2,14 +2,13 @@ import React, { FunctionComponent, RefObject, useCallback, useRef, useState } fr
 import { useMount, useSize, useUnmount, useUpdateEffect } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import { useRouteMatch } from 'umi';
-import TaskRunsFilterBar from '@/pages/operation-center/deployed-task-detail/components/TaskRunsFilterBar';
+import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
 
+import TaskRunsFilterBar from '@/pages/operation-center/deployed-task-detail/components/TaskRunsFilterBar';
 import TaskRunsTable from '@/pages/operation-center/deployed-task-detail/components/TaskRunsTable';
 import { KunSpin } from '@/components/KunSpin';
+import { RightPanel } from '@/pages/operation-center/scheduled-tasks/components/RightPanel';
 import { TaskRun } from '@/definitions/TaskRun.type';
-import { TaskRunDAG } from '@/pages/operation-center/deployed-task-detail/components/TaskRunDAG';
-import { TaskRunLog } from '@/pages/operation-center/deployed-task-detail/components/TaskRunLog';
-import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
 
 import 'react-reflex/styles.css';
 import styles from './index.less';
@@ -112,8 +111,8 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
         orientation="vertical"
       >
         <ReflexElement
-          className={styles.leftPane}
-          flex={2}
+          className={styles.LeftPanel}
+          flex={5}
           minSize={192}
         >
           <KunSpin spinning={taskRunsIsLoading}>
@@ -131,22 +130,13 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
         <ReflexSplitter propagate />
         <ReflexElement
           className={styles.RightPanel}
-          flex={1}
+          flex={5}
           minSize={192}
         >
-          <div
-            ref={rightPanelRef}
-            id="taskrun-dag-container"
-            className={styles.DAGContainer}
-          >
-            <TaskRunDAG
-              taskRun={selectedTaskRun}
-              width={(dagContainerSize.width ?? 0)}
-              height={(dagContainerSize.height ?? 0)}
-            />
-          </div>
-          <TaskRunLog
-            taskRun={selectedTaskRun}
+          <RightPanel
+            rightPanelRef={rightPanelRef}
+            selectedTaskRun={selectedTaskRun}
+            dagContainerSize={dagContainerSize}
           />
         </ReflexElement>
       </ReflexContainer>
