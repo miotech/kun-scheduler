@@ -22,6 +22,7 @@ interface DeployedTasksTableProps {
   loading?: boolean;
   pageNum?: number;
   pageSize?: number;
+  total?: number;
   onChangePagination?: (nextPageNum: number, pageSize?: number) => void;
   selectedTask: DeployedTask | null;
   setSelectedTask: (deployedTask: DeployedTask | null) => any;
@@ -31,7 +32,7 @@ const { Text } = Typography;
 
 const logger = LogUtils.getLoggers('DeployedTasksTableComp');
 
-const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo((props) => {
+const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo(function DeployedTasksTable(props) {
   const t = useI18n();
 
   const {
@@ -41,6 +42,7 @@ const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo((props) => {
   const {
     pageNum = 1,
     pageSize = 25,
+    total = 0,
     onChangePagination,
   } = props;
 
@@ -130,6 +132,8 @@ const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo((props) => {
           onChange: onChangePagination,
           size: 'small',
           showSizeChanger: true,
+          total,
+          showTotal: (_total: number) => t('common.pagination.showTotal', { total: _total }),
         }}
         rowSelection={{
           selectedRowKeys: selectedTask ? [selectedTask.id] : [],
@@ -148,6 +152,7 @@ const mapStateToProps = (s: RootState) => ({
   loading: s.loading.effects.scheduledTasks.fetchScheduledTasks,
   pageNum: s.scheduledTasks.filters.pageNum,
   pageSize: s.scheduledTasks.filters.pageSize,
+  total: s.scheduledTasks.totalCount,
 });
 
 const mapDispatchToProps = (dispatch: RootDispatch) => ({
