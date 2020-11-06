@@ -41,7 +41,7 @@ public class DataBuilderTest extends DatabaseTestBase {
             dataBuilder.buildAll();
 
             // verify sweep
-            containerBuilder.verifyDatasetRowCount(10L);
+            containerBuilder.verifyDatasetRowCount(11L);
             containerBuilder.verifyDatasetStatsRowCount(10L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
@@ -60,7 +60,7 @@ public class DataBuilderTest extends DatabaseTestBase {
             dataBuilder.buildAll();
 
             // verify sweep
-            containerBuilder.verifyDatasetRowCount(10L);
+            containerBuilder.verifyDatasetRowCount(11L);
             containerBuilder.verifyDatasetStatsRowCount(10L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
@@ -80,7 +80,7 @@ public class DataBuilderTest extends DatabaseTestBase {
             dataBuilder.buildDatasource(1L);
 
             // verify
-            containerBuilder.verifyDatasetRowCount(10L);
+            containerBuilder.verifyDatasetRowCount(11L);
             containerBuilder.verifyDatasetStatsRowCount(10L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
@@ -100,7 +100,7 @@ public class DataBuilderTest extends DatabaseTestBase {
             // execute biz logic
             dataBuilder.buildDatasource(1L);
 
-            containerBuilder.verifyDatasetRowCount(10L);
+            containerBuilder.verifyDatasetRowCount(11L);
             containerBuilder.verifyDatasetStatsRowCount(10L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
@@ -119,7 +119,7 @@ public class DataBuilderTest extends DatabaseTestBase {
             // execute biz logic
             dataBuilder.buildDatasource(1L);
 
-            containerBuilder.verifyDatasetRowCount(1L);
+            containerBuilder.verifyDatasetRowCount(2L);
             containerBuilder.verifyDatasetStatsRowCount(1L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
@@ -130,14 +130,14 @@ public class DataBuilderTest extends DatabaseTestBase {
     public void testBuildDatasource_es() {
         DataBuilder dataBuilder = buildDataBuild(false);
         // start es container
-        try (ElasticsearchContainer elasticsearch = containerBuilder.initEs();) {
+        try (ElasticsearchContainer elasticsearch = containerBuilder.initEs()) {
             // init data
             initDataset(gid);
 
             // execute biz logic
             dataBuilder.buildDatasource(1L);
 
-            containerBuilder.verifyDatasetRowCount(1L);
+            containerBuilder.verifyDatasetRowCount(2L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
@@ -225,7 +225,7 @@ public class DataBuilderTest extends DatabaseTestBase {
             dataBuilder.buildDataset(gid);
 
             // verify
-            containerBuilder.verifyDatasetRowCount(0L);
+            containerBuilder.verifyDatasetRowCount(1L);
             containerBuilder.verifyDatasetStatsRowCount(1L);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
