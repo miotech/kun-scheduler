@@ -16,9 +16,11 @@ import { dryRunTaskDefinition, fetchTaskTryLog } from '@/services/data-developme
 
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 
+import { normalizeTaskDefinition } from './helpers';
+
 import styles from './TaskDefinitionConfigView.less';
 
-export const TaskDefinitionConfigView: React.FC<{}> = () => {
+export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionConfigView() {
   const match = useRouteMatch<{ taskDefId: string; }>();
   const t = useI18n();
   const [ form ] = Form.useForm();
@@ -38,17 +40,17 @@ export const TaskDefinitionConfigView: React.FC<{}> = () => {
     }
   });
 
-  useEffect(() => {
-    setDraftTaskDef(initTaskDefinition);
-  }, [
-    initTaskDefinition,
-    setDraftTaskDef,
-  ]);
-
   const [
     taskTemplate,
     taskTemplateIsLoading
   ] = useTaskTemplateByName(initTaskDefinition?.taskTemplateName);
+
+  useEffect(() => {
+    setDraftTaskDef(initTaskDefinition ? normalizeTaskDefinition(initTaskDefinition, taskTemplate || null) : null);
+  }, [
+    initTaskDefinition,
+    taskTemplate,
+  ]);
 
   useUnmount(() => {
     dispatch.dataDevelopment.setEditingTaskDefinition(null);
@@ -90,6 +92,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = () => {
         form={form}
         taskDefId={match.params.taskDefId}
         handleCommitDryRun={handleCommitDryRun}
+        taskTemplate={taskTemplate}
       />
       <main>
         {(() => {
@@ -107,7 +110,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = () => {
           return (
             <div>
               <BodyForm
-                initTaskDefinition={initTaskDefinition || undefined}
+                initTaskDefinition={draftTaskDef || undefined}
                 taskTemplate={taskTemplate}
                 form={form}
               />
