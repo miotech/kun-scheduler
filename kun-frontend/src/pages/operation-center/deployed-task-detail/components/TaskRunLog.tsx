@@ -1,5 +1,6 @@
 import React, { FunctionComponent, memo, useCallback } from 'react';
 import PollingLogViewer from '@/components/PollingLogViewer';
+import isNil from 'lodash/isNil';
 import { fetchScheduledTaskRunLog } from '@/services/task-deployments/deployed-tasks';
 
 import { TaskRun } from '@/definitions/TaskRun.type';
@@ -31,7 +32,7 @@ export const TaskRunLog: FunctionComponent<Props> = memo((props) => {
         <PollingLogViewer
           pollInterval={2000}
           queryFn={onQuery}
-          startPolling={!!taskRun}
+          startPolling={!isNil(taskRun)}
         />
       </div>
     </div>
