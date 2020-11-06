@@ -6,6 +6,7 @@ import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.query.datasource.MetadataDataSource;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.operator.model.*;
 import org.postgresql.util.PGobject;
 
@@ -124,28 +125,36 @@ public class DataQualityClient {
     }
 
     public void recordCaseMetrics(DataQualityCaseMetrics metrics) {
-        String sql = "insert into kun_dq_case_metrics values(?,?,?,?,?) " +
-                "on conflict do nothing";
+        String sql = DefaultSQLBuilder.newBuilder()
+                .insert()
+                .into("kun_dq_case_metrics")
+                .valueSize(6)
+                .getSQL();
 
-        long initFailedCount = 0;
+        long failedCount = 0;
         if (CaseStatus.FAILED == metrics.getCaseStatus()) {
-            initFailedCount = 1;
+            long latestFailingCount = getLatestFailingCount(metrics.getCaseId());
+            failedCount = latestFailingCount + 1;
         }
 
-
-        int insertRowCount = databaseOperator.update(sql, metrics.getCaseId(),
+        databaseOperator.update(sql, IdGenerator.getInstance().nextId(),
                 metrics.getErrorReason(),
-                initFailedCount,
+                failedCount,
                 DateUtils.millisToLocalDateTime(System.currentTimeMillis()),
-                transferRuleRecordsToPGobject(metrics.getRuleRecords()));
+                transferRuleRecordsToPGobject(metrics.getRuleRecords()),
+                metrics.getCaseId());
+    }
 
-        if (insertRowCount == 0) {
-            if (CaseStatus.SUCCESS == metrics.getCaseStatus()) {
-                updateCfc(metrics.getCaseId(), 0L, metrics.getRuleRecords());
-            } else if (CaseStatus.FAILED == metrics.getCaseStatus()) {
-                addCfc(metrics.getCaseId(), metrics.getErrorReason(), metrics.getRuleRecords());
-            }
-        }
+    private Long getLatestFailingCount(Long caseId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("continuous_failing_count")
+                .from("kun_dq_case_metrics")
+                .where("case_id = ?")
+                .orderBy("update_time desc")
+                .limit(1)
+                .getSQL();
+
+        return databaseOperator.fetchOne(sql, rs -> rs.getLong("continuous_failing_count"), caseId);
     }
 
     private PGobject transferRuleRecordsToPGobject(List<DataQualityRule> ruleRecords) {
@@ -157,42 +166,5 @@ public class DataQualityClient {
             throw ExceptionUtils.wrapIfChecked(new RuntimeException(e));
         }
         return jsonObject;
-    }
-
-    private void updateCfc(Long caseId,
-                           Long count,
-                           List<DataQualityRule> ruleRecords) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .update("kun_dq_case_metrics")
-                .set("error_reason",
-                        "continuous_failing_count",
-                        "update_time",
-                        "rule_records")
-                .asPrepared()
-                .where("dq_case_id = ?")
-                .getSQL();
-
-
-        databaseOperator.update(sql, "",
-                count,
-                DateUtils.millisToLocalDateTime(System.currentTimeMillis()),
-                transferRuleRecordsToPGobject(ruleRecords),
-                caseId);
-    }
-
-    private void addCfc(Long caseId,
-                        String errorReason,
-                        List<DataQualityRule> ruleRecords) {
-        String sql = "update kun_dq_case_metrics set " +
-                "error_reason = ?, " +
-                "continuous_failing_count = continuous_failing_count + 1, " +
-                "update_time = ?, " +
-                "rule_records = ? \n" +
-                "where dq_case_id = ?";
-
-        databaseOperator.update(sql, errorReason,
-                DateUtils.millisToLocalDateTime(System.currentTimeMillis()),
-                transferRuleRecordsToPGobject(ruleRecords),
-                caseId);
     }
 }

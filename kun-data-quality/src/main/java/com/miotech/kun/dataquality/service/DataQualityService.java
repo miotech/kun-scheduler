@@ -7,10 +7,7 @@ import com.alibaba.druid.stat.TableStat;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.query.JDBCQuery;
 import com.miotech.kun.commons.query.JDBCQueryExecutor;
-import com.miotech.kun.dataquality.model.bo.DataQualitiesRequest;
-import com.miotech.kun.dataquality.model.bo.DataQualityRequest;
-import com.miotech.kun.dataquality.model.bo.DeleteCaseResponse;
-import com.miotech.kun.dataquality.model.bo.ValidateSqlRequest;
+import com.miotech.kun.dataquality.model.bo.*;
 import com.miotech.kun.dataquality.model.entity.*;
 import com.miotech.kun.dataquality.persistence.DataQualityRepository;
 import com.miotech.kun.dataquality.persistence.DatasetRepository;
@@ -38,6 +35,10 @@ public class DataQualityService extends BaseSecurityService {
 
     @Autowired
     DatasetRepository datasetRepository;
+
+    public List<DataQualityHistoryRecords> getHistory(DataQualityHistoryRequest request) {
+        return dataQualityRepository.getHistory(request);
+    }
 
     public ValidateSqlResult validateSql(ValidateSqlRequest request) {
 
