@@ -101,6 +101,7 @@ body {
 .reflex-splitter {
   /* hack for css priority */
   &&&&& {
+    background-color: rgba(darken(@background, 20%), 10%);
     transition: background-color .2s ease-in;
     &:hover, &:focus {
       background-color: rgba(darken(@background, 20%), 20%);
@@ -111,7 +112,7 @@ body {
 
     &:after {
       content: '||';
-      opacity: 0;
+      opacity: 1;
       font-size: 12px;
       transition: opacity .2s ease-in;
       transform: translate(-50%,-50%) scale(0.25);
