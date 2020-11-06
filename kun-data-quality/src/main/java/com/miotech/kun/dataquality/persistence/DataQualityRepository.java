@@ -1,13 +1,17 @@
 package com.miotech.kun.dataquality.persistence;
 
 import com.google.common.collect.Lists;
+import com.google.gson.reflect.TypeToken;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.common.utils.IdUtils;
+import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.dataquality.model.DataQualityStatus;
 import com.miotech.kun.dataquality.model.TemplateType;
 import com.miotech.kun.dataquality.model.bo.DataQualitiesRequest;
+import com.miotech.kun.dataquality.model.bo.DataQualityHistoryRequest;
 import com.miotech.kun.dataquality.model.bo.DataQualityRequest;
 import com.miotech.kun.dataquality.model.bo.DeleteCaseResponse;
 import com.miotech.kun.dataquality.model.entity.*;
@@ -21,6 +25,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
@@ -33,11 +38,46 @@ import java.util.stream.Collectors;
 @Repository
 public class DataQualityRepository extends BaseRepository {
 
+    private static final Integer HISTORY_RECORD_LIMIT = 6;
+
     @Autowired
     JdbcTemplate jdbcTemplate;
 
     @Autowired
     DatasetRepository datasetRepository;
+
+    public List<DataQualityHistoryRecords> getHistory(DataQualityHistoryRequest request) {
+        if (CollectionUtils.isEmpty(request.getCaseIds())) {
+            return Lists.newArrayList();
+        }
+        String sql = "select * from (select *, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY update_time desc) AS row_number\n" +
+                "from kun_dq_case_metrics\n" +
+                "where case_id in " + toColumnSql(request.getCaseIds().size()) + ") kdcm\n" +
+                "where kdcm.row_number <= " + HISTORY_RECORD_LIMIT;
+        return jdbcTemplate.query(sql, rs -> {
+            Map<Long, DataQualityHistoryRecords> recordsMap = new HashMap<>();
+            while (rs.next()) {
+                Long caseId = rs.getLong("case_id");
+                DataQualityHistoryRecords records = recordsMap.computeIfAbsent(caseId, key -> new DataQualityHistoryRecords());
+                List<DataQualityHistory> historyList = records.getHistoryList();
+                records.setCaseId(caseId);
+                DataQualityHistory history = new DataQualityHistory();
+                if (rs.getLong("continuous_failing_count") == 0) {
+                    history.setStatus(DataQualityStatus.SUCCESS.name());
+                } else {
+                    history.setStatus(DataQualityStatus.FAILED.name());
+                }
+                history.setContinuousFailingCount(rs.getLong("continuous_failing_count"));
+                history.setUpdateTime(timestampToMillis(rs, "update_time"));
+                history.setErrorReason(rs.getString("error_reason"));
+                Type type = new TypeToken<List<DataQualityRule>>() {
+                }.getType();
+                history.setRuleRecords(JSONUtils.toJavaObject(rs.getString("rule_records"), type));
+                historyList.add(history);
+            }
+            return Lists.newArrayList(recordsMap.values());
+        }, request.getCaseIds().toArray());
+    }
 
     public List<Long> getAllTaskId() {
         String sql = DefaultSQLBuilder.newBuilder()
@@ -455,7 +495,8 @@ public class DataQualityRepository extends BaseRepository {
                         "kdc.types as case_types",
                         "kdc.task_id as case_task_id",
                         "kdc.create_time as create_time",
-                        "kdc.update_time as update_time")
+                        "kdc.update_time as update_time",
+                        "kdc.primary_dataset_id as primary_dataset_id")
                 .from("kun_dq_case kdc")
                 .join("inner", "kun_dq_case_associated_dataset", "kdcad").on("kdc.id = kdcad.case_id")
                 .where("kdcad.dataset_id = ?");
@@ -481,6 +522,8 @@ public class DataQualityRepository extends BaseRepository {
                 caseBasic.setTaskId(rs.getLong("case_task_id"));
                 caseBasic.setCreateTime(timestampToMillis(rs, "create_time"));
                 caseBasic.setUpdateTime(timestampToMillis(rs, "update_time"));
+                Long primaryDatasetId = rs.getLong("primary_dataset_id");
+                caseBasic.setIsPrimary(request.getGid().equals(primaryDatasetId));
                 caseBasics.add(caseBasic);
             }
             caseBasics.setPageNumber(request.getPageNumber());

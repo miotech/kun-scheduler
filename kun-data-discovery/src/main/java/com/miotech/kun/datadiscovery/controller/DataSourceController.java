@@ -83,8 +83,8 @@ public class DataSourceController {
     }
 
     @GetMapping("/metadata/databases")
-    public RequestResult<List<Database>> getDatabases() {
-        return RequestResult.success(datasetService.getAllDatabase());
+    public RequestResult<List<Database>> getDatabases(DatabaseRequest request) {
+        return RequestResult.success(datasetService.getDatabases(request));
     }
 
     @GetMapping("/metadata/datasets/search")
