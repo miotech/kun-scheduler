@@ -40,8 +40,8 @@ public class RedisEventSubscriber implements EventSubscriber {
             try {
                 event = EventMapper.toEvent(message);
             } catch (JsonProcessingException e) {
-                logger.error("parse subscribed message failed", e);
-                logger.error(message);
+                logger.warn("parse subscribed message failed", e);
+                logger.warn(message);
             }
             eventReceiver.onReceive(event);
         }
