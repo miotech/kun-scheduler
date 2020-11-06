@@ -5,7 +5,6 @@ import { FormInstance } from 'antd/es/form';
 import { history } from 'umi';
 import isArray from 'lodash/isArray';
 import { EditText } from '@/components/EditText';
-import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import useRedux from '@/hooks/useRedux';
 import useI18n from '@/hooks/useI18n';
 import LogUtils from '@/utils/logUtils';
@@ -17,6 +16,12 @@ import { getFlattenedTaskDefinition } from '@/utils/transformDataset';
 import { TaskCommitModal } from '@/pages/data-development/task-definition-config/components/TaskCommitModal';
 import { UserSelect } from '@/components/UserSelect';
 import { UsernameText } from '@/components/UsernameText';
+
+import { TaskDefinition } from '@/definitions/TaskDefinition.type';
+import { TaskTemplate } from '@/definitions/TaskTemplate.type';
+
+import { transformFormTaskConfig } from '@/pages/data-development/task-definition-config/helpers';
+
 import styles from './Header.less';
 
 export interface Props {
@@ -25,6 +30,7 @@ export interface Props {
   form: FormInstance;
   taskDefId: string | number;
   handleCommitDryRun: () => any;
+  taskTemplate: TaskTemplate | null;
 }
 
 const logger = LogUtils.getLoggers('Header');
@@ -104,13 +110,13 @@ export const Header: React.FC<Props> = props => {
             inputNodes: (form.getFieldValue(['taskPayload', 'scheduleConfig', 'inputNodes']) || [])
               .map((valueObj: { value: string | number }) => valueObj.value),
           },
-          taskConfig: form.getFieldValue(['taskPayload', 'taskConfig']),
+          taskConfig: transformFormTaskConfig(form.getFieldValue(['taskPayload', 'taskConfig']), props.taskTemplate),
         },
       });
       message.success(t('common.operateSuccess'));
       dispatch.dataDevelopment.setDefinitionFormDirty(false);
     } catch (e) {
-      console.warn(e);
+      logger.warn(e);
       // hint each form error
       if (e && e.errorFields && isArray(e.errorFields)) {
         e.errorFields.forEach((fieldErr: { errors: string[] }) => message.error(fieldErr.errors[0]));
@@ -118,8 +124,11 @@ export const Header: React.FC<Props> = props => {
     }
   }, [
     form,
-    taskDefId,
-    draftTaskDef,
+    taskDefId, draftTaskDef?.name,
+    draftTaskDef?.owner,
+    props.taskTemplate,
+    t,
+    dispatch.dataDevelopment,
   ]);
 
   const renderCommitBtn = () => {
