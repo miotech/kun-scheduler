@@ -18,7 +18,6 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 dependencies {
-    implementation project(':kun-commons:kun-commons-db')
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-client')
     implementation "com.fasterxml.jackson.core:jackson-databind"

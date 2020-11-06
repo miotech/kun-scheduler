@@ -4,30 +4,18 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author: Jie Chen
- * @created: 2020/7/16
+ * @created: 2020/11/5
  */
 @Data
-public class DataQualityCaseBasic {
+public class DataQualityHistoryRecords {
 
     @JsonSerialize(using= ToStringSerializer.class)
-    Long id;
+    Long caseId;
 
-    String name;
-
-    List<String> types;
-
-    String updater;
-
-    @JsonSerialize(using= ToStringSerializer.class)
-    Long taskId;
-
-    Long createTime;
-
-    Long updateTime;
-
-    Boolean isPrimary;
+    List<DataQualityHistory> historyList = new ArrayList<>();
 }
