@@ -116,7 +116,7 @@ export const Header: React.FC<Props> = props => {
       message.success(t('common.operateSuccess'));
       dispatch.dataDevelopment.setDefinitionFormDirty(false);
     } catch (e) {
-      console.warn(e);
+      logger.warn(e);
       // hint each form error
       if (e && e.errorFields && isArray(e.errorFields)) {
         e.errorFields.forEach((fieldErr: { errors: string[] }) => message.error(fieldErr.errors[0]));
