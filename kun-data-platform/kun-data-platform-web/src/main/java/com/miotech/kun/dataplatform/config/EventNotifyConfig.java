@@ -16,25 +16,17 @@ public class EventNotifyConfig {
     @Value("${redis.host}")
     private String redisHost = null;
 
-    @Value("${redis.port}")
-    private int redisPort = 6379;
-
-    @Value("${redis.notify-channel}")
-    private String channel = "notify";
+    @Value("${redis.notify-channel:kun-notify}")
+    private String channel;
 
     @Bean
     public TaskAttemptStatusChangeEventSubscriber getSubscriber(){
         return new TaskAttemptStatusChangeEventSubscriber();
     }
 
-//    @PostConstruct
-//    public void startSubscribe(){
-//        getSubscriber().subscribe();
-//    }
-
     @Bean
     public Jedis getJedis(){
-        return new Jedis(redisHost, redisPort);
+        return new Jedis(redisHost);
     }
 
     @Bean
