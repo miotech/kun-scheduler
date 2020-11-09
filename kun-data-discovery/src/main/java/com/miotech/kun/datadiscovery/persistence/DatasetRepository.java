@@ -103,6 +103,14 @@ public class DatasetRepository extends BaseRepository {
         }, toLikeSql(basicSearchRequest.getKeyword().toUpperCase()), basicSearchRequest.getKeyword());
     }
 
+    private static final Map<String, String> SORT_KEY_MAP = new HashMap<>();
+    static {
+        SORT_KEY_MAP.put("name", "name");
+        SORT_KEY_MAP.put("databaseName", "database_name");
+        SORT_KEY_MAP.put("datasourceName", "datasource_name");
+        SORT_KEY_MAP.put("type", "type");
+        SORT_KEY_MAP.put("highWatermark", "high_watermark");
+    }
     public DatasetBasicPage search(DatasetSearchRequest datasetSearchRequest) {
 
         StringBuilder whereClause = new StringBuilder("where 1=1").append("\n");
@@ -143,7 +151,7 @@ public class DatasetRepository extends BaseRepository {
         String orderByClause = "order by name\n";
         if (StringUtils.isNotEmpty(datasetSearchRequest.getSortKey())
                 && StringUtils.isNotEmpty(datasetSearchRequest.getSortOrder())) {
-            orderByClause = "order by " + datasetSearchRequest.getSortKey() + " " + datasetSearchRequest.getSortOrder() + "\n";
+            orderByClause = "order by " + SORT_KEY_MAP.get(datasetSearchRequest.getSortKey()) + " " + datasetSearchRequest.getSortOrder() + "\n";
         }
 
         String limitSql = toLimitSql(datasetSearchRequest.getPageNumber(), datasetSearchRequest.getPageSize());
