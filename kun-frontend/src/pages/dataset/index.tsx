@@ -252,20 +252,20 @@ export default function DataDisvocery() {
         {
           title: t('dataDiscovery.datasetsTable.header.database'),
           dataIndex: 'database',
-          key: 'database_name',
+          key: 'databaseName',
           sorter: true,
           width: 80,
           defaultSortOrder:
-            sortKey === 'database_name' ? getOrder(sortOrder) : undefined,
+            sortKey === 'databaseName' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.datasource'),
           dataIndex: 'datasource',
-          key: 'datasource_name',
+          key: 'datasourceName',
           sorter: true,
           width: 120,
           defaultSortOrder:
-            sortKey === 'datasource_name' ? getOrder(sortOrder) : undefined,
+            sortKey === 'datasourceName' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.dbtype'),
@@ -412,8 +412,9 @@ export default function DataDisvocery() {
   }));
 
   const handleChangeTable = useCallback(
-    (_pagination, _filters, sorter) => {
+    (_pagination, _filters, sorter, extra) => {
       const { columnKey, order } = sorter;
+      const { action } = extra;
       if (
         columnKey &&
         order &&
@@ -425,7 +426,7 @@ export default function DataDisvocery() {
           sortOrder: order ? orderMap[order as 'descend' | 'ascend'] : null,
         });
       }
-      if (columnKey && !order) {
+      if (columnKey && !order && action === 'sort') {
         setFilterQuery({
           sortKey: columnKey,
           sortOrder: null,
