@@ -13,16 +13,19 @@ import java.util.List;
 
 
 public class ZhongdaNotifier extends HttpApiClient implements MessageNotifier {
+
     private String host;
     private String token;
+    private String group;
 
     @Autowired
     private DeployedTaskService deployedTaskService;
 
 
-    public ZhongdaNotifier(String host, String token) {
+    public ZhongdaNotifier(String host, String token, String group) {
         this.host = host;
         this.token = token;
+        this.group = group;
     }
 
     @Override
@@ -30,17 +33,22 @@ public class ZhongdaNotifier extends HttpApiClient implements MessageNotifier {
         return host;
     }
 
-    public String sendMessage(String content, String group, List<String> users) {
+    public void sendMessage(String content, List<String> users) {
         String api = buildUrl("/alertservice/send-wechat");
 
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectNode payload = objectMapper.createObjectNode();
         payload.put("token", token);
-        payload.put("group", group);
         payload.put("body", content);
 
+        //send message to group
+        payload.put("group", group);
+        post(api, payload.toString());
+
+        //send message to owner
+        payload.remove("group");
         payload.put("user_list", String.join(",", users));
-        return post(api, payload.toString());
+        post(api, payload.toString());
     }
 
     @Override
@@ -49,7 +57,7 @@ public class ZhongdaNotifier extends HttpApiClient implements MessageNotifier {
         if(taskAttemptStatusChangeEvent.getToStatus().isFailure() || taskAttemptStatusChangeEvent.getToStatus().isSuccess()){
             String msg = buildMessage(taskAttemptStatusChangeEvent);
             List<String> users = deployedTaskService.getUserByTaskId(taskAttemptStatusChangeEvent.getTaskId());
-            sendMessage(msg, "", users);
+            sendMessage(msg, users);
         }
     }
 
