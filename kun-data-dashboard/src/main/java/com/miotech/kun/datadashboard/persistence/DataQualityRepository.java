@@ -58,7 +58,7 @@ public class DataQualityRepository extends BaseRepository {
 
     public Long getSuccessCount() {
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("count(1) as count")
+                .select("count(distinct case_id) as count")
                 .from("kun_dq_case_metrics")
                 .where("continuous_failing_count = 0")
                 .getSQL();
