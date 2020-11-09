@@ -81,6 +81,7 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-client')
     implementation project(':kun-workflow:kun-workflow-utils')
+    implementation project(':kun-data-platform:kun-workflow-operators:spark-operators')
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation project(':kun-app-common')
@@ -96,7 +97,7 @@ dependencies {
     implementation project(':kun-metadata:kun-metadata-service-facade')
     implementation project(':kun-metadata:kun-metadata-core')
     implementation 'org.apache.dubbo:dubbo-spring-boot-starter'
-    implementation 'redis.clients:jedis:2.9.0'
+    implementation 'redis.clients:jedis'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"

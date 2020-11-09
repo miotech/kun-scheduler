@@ -1,5 +1,7 @@
 package com.miotech.kun.dataplatform;
 
+import com.miotech.kun.dataplatform.notify.TaskAttemptStatusChangeEventSubscriber;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;

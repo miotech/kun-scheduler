@@ -33,3 +33,11 @@ dubbo:
   protocol:
     name: dubbo
     port: -1
+
+zhongda:
+  host: http://zhongda.miotech.com:8000
+  token: ZXGfFpQs7ubLBPJYCZVHn
+
+redis:
+  host: ${DB_REDIS_IP}
+  notify-channel: ${NOTIFY_CHANNEL}
