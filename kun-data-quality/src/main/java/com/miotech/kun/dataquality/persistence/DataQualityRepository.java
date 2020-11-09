@@ -145,7 +145,7 @@ public class DataQualityRepository extends BaseRepository {
         String kdcmDeleteSql = DefaultSQLBuilder.newBuilder()
                 .delete()
                 .from("kun_dq_case_metrics")
-                .where("dq_case_id = ?")
+                .where("case_id = ?")
                 .getSQL();
         jdbcTemplate.update(kdcmDeleteSql, id);
 
