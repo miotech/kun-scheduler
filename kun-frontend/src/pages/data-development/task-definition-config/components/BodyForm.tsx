@@ -1,9 +1,13 @@
 import React from 'react';
 import { Form, Tabs } from 'antd';
 import useI18n from '@/hooks/useI18n';
+import find from 'lodash/find';
+import isEqual from 'lodash/isEqual';
+
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { FormInstance } from 'antd/es/form';
+import { FieldData } from 'rc-field-form/lib/interface';
 
 import { ParamConfig } from '@/pages/data-development/task-definition-config/components/ParamConfig';
 import { SchedulingConfig } from '@/pages/data-development/task-definition-config/components/ScheduingConfig';
@@ -36,8 +40,25 @@ export const BodyForm: React.FC<BodyFormProps> = props => {
     <Form
       className={styles.BodyForm}
       form={form}
-      onFieldsChange={() => {
+      onFieldsChange={(changedFields: FieldData[]) => {
         dispatch.dataDevelopment.setDefinitionFormDirty(true);
+        /* Reset the other field when one of
+        [taskPayload.scheduleConfig.inputDatasets, taskPayload.scheduleConfig.inputNodes] is changed. */
+        if (find(changedFields, field => isEqual(field.name, ['taskPayload', 'scheduleConfig', 'inputDatasets']))) {
+          form.setFields([
+            {
+              name: ['taskPayload', 'scheduleConfig', 'inputNodes'],
+              value: [],
+            },
+          ]);
+        } else if (find(changedFields, field => isEqual(field.name, ['taskPayload', 'scheduleConfig', 'inputNodes']))) {
+          form.setFields([
+            {
+              name: ['taskPayload', 'scheduleConfig', 'inputDatasets'],
+              value: [],
+            },
+          ]);
+        }
       }}
       {...formLayout}
     >

@@ -16,7 +16,7 @@ import { dryRunTaskDefinition, fetchTaskTryLog } from '@/services/data-developme
 
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 
-import { normalizeTaskDefinition } from './helpers';
+import { normalizeTaskDefinition, transformFormTaskConfig } from './helpers';
 
 import styles from './TaskDefinitionConfigView.less';
 
@@ -59,7 +59,10 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
 
   const handleCommitDryRun = () => {
     const id = match.params.taskDefId;
-    const runParameters = form.getFieldValue(['taskPayload', 'taskConfig']);
+    const runParameters = transformFormTaskConfig(
+      form.getFieldValue(['taskPayload', 'taskConfig']),
+      taskTemplate,
+    );
     dryRunTaskDefinition({
       taskDefId: id,
       parameters: runParameters,
