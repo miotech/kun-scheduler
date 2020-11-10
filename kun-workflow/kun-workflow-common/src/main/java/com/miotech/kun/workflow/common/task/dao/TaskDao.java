@@ -4,19 +4,20 @@ import com.cronutils.model.Cron;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
-import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
-import com.miotech.kun.workflow.common.task.vo.TagVO;
-import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.task.ScheduleConf;
-import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
+import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
+import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.miotech.kun.workflow.common.task.vo.TagVO;
+import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.task.ScheduleConf;
+import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -201,10 +202,11 @@ public class TaskDao {
 
     /**
      * Internal use only. Retrieve task ids within the maximum distance from the given source task.
-     * @param srcTask source task
-     * @param distance maximum distance
+     *
+     * @param srcTask        source task
+     * @param distance       maximum distance
      * @param queryDirection upstream or downstream
-     * @param includeSelf include source task or not
+     * @param includeSelf    include source task or not
      * @return Set of task ids in range
      */
     private Set<Long> retrieveTaskIdsWithinDependencyDistance(Task srcTask, int distance, DependencyDirection queryDirection, boolean includeSelf) {
@@ -281,14 +283,63 @@ public class TaskDao {
         List<Long> plainTaskIds = plainTasks.stream().map(Task::getId).collect(Collectors.toList());
         Map<Long, List<TaskDependency>> dependenciesMap = fetchAllRelationsFromDownstreamTaskIds(plainTaskIds);
         Map<Long, List<Tag>> tagsMap = fetchTaskTagsByTaskIds(plainTaskIds);
+        List<Task> sortTasks = topoSort(dependenciesMap, plainTasks);
 
         // re-construct all tasks with full properties
-        return plainTasks.stream()
+        return sortTasks.stream()
                 .map(t -> t.cloneBuilder()
                         .withDependencies(dependenciesMap.get(t.getId()))
                         .withTags(tagsMap.containsKey(t.getId()) ? tagsMap.get(t.getId()) : new ArrayList<>())
                         .build())
                 .collect(Collectors.toList());
+    }
+
+    private List<Task> topoSort(Map<Long, List<TaskDependency>> dependenciesMap, List<Task> plainTasks) {
+        Map<Long, List<Long>> upstreamDependencyMap = coverUpstreamDependencyMap(dependenciesMap);
+        List<Task> sortTasks = new ArrayList<>();
+        Queue<Task> queue = new LinkedList<>();
+        int size = plainTasks.size();
+        do {
+            if (!queue.isEmpty()) {
+                Task sortedTask = queue.poll();
+                upstreamDependencyMap.remove(sortedTask.getId());
+                sortTasks.add(sortedTask);
+            }
+            Iterator<Task> iterator = plainTasks.listIterator();
+            while (iterator.hasNext()) {
+                Task task = iterator.next();
+                if (!taskHasUpstream(task, upstreamDependencyMap)) {
+                    queue.offer(task);
+                    iterator.remove();
+                }
+            }
+        } while (!queue.isEmpty());
+        if (sortTasks.size() != size) {
+            throw ExceptionUtils.wrapIfChecked(new Exception("has cycle in task dependencies"));
+        }
+        return sortTasks;
+    }
+
+    private Boolean taskHasUpstream(Task task, Map<Long, List<Long>> upstreamDependencyMap) {
+        boolean hasUpstream = false;
+        List<Long> taskDependencyList = upstreamDependencyMap.get(task.getId());
+        for (Long taskId : taskDependencyList) {
+            if (upstreamDependencyMap.containsKey(taskId)) {
+                hasUpstream = true;
+                break;
+            }
+        }
+        return hasUpstream;
+    }
+
+    private Map<Long, List<Long>> coverUpstreamDependencyMap(Map<Long, List<TaskDependency>> dependenciesMap) {
+        Map<Long, List<Long>> upstreamDependencyMap = new HashMap<>();
+        for (Map.Entry<Long, List<TaskDependency>> entry : dependenciesMap.entrySet()) {
+            List<Long> upstreamDependency = entry.getValue().stream().
+                    map(TaskDependency::getUpstreamTaskId).collect(Collectors.toList());
+            upstreamDependencyMap.put(entry.getKey(), upstreamDependency);
+        }
+        return upstreamDependencyMap;
     }
 
     public List<Tag> fetchTaskTagsByTaskId(Long taskId) {
@@ -322,7 +373,8 @@ public class TaskDao {
     }
 
     /**
-     *  Fetch all tags in `taskid - [dependencies]` hashmap by given task ids
+     * Fetch all tags in `taskid - [dependencies]` hashmap by given task ids
+     *
      * @param taskIds list of task ids
      * @return
      */
@@ -353,6 +405,7 @@ public class TaskDao {
 
     /**
      * Fetch all relations in a `id - [dependencies]` hashmap whose downstream task ID is included in the given list
+     *
      * @param taskIds list of downstream task IDs
      * @return
      */
@@ -409,7 +462,7 @@ public class TaskDao {
     private String getSelectSQL(String whereClause) {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_MODEL_NAME, taskCols);
-        SQLBuilder builder =  DefaultSQLBuilder.newBuilder()
+        SQLBuilder builder = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_TABLE_NAME, TASK_MODEL_NAME)
                 .autoAliasColumns();
@@ -423,6 +476,7 @@ public class TaskDao {
 
     /**
      * Generator where clause with parameter placeholders and list of params
+     *
      * @param filters task search filter instance
      * @return Pair of (where clause, list of parameter objects)
      */
@@ -454,6 +508,7 @@ public class TaskDao {
 
     /**
      * Get paginated task records that matches the constraints by given filter.
+     *
      * @param filters task search filter instance
      * @return list of filtered and paginated task records
      */
@@ -489,6 +544,7 @@ public class TaskDao {
 
     /**
      * Get total count of task records
+     *
      * @return total count of records
      */
     public Integer fetchTotalCount() {
@@ -497,6 +553,7 @@ public class TaskDao {
 
     /**
      * Get total count of task records that matches the constraints by given filter. Pagination is not affected.
+     *
      * @param filters task search filter instance
      * @return total count of records that matches the constraints by given filter
      */
@@ -627,7 +684,7 @@ public class TaskDao {
                 .addAll(taskCols)
                 .build();
 
-        String sql = DefaultSQLBuilder .newBuilder()
+        String sql = DefaultSQLBuilder.newBuilder()
                 .update(TASK_TABLE_NAME)
                 .set(tableColumns.toArray(new String[0]))
                 .where("id = ?")
@@ -677,8 +734,9 @@ public class TaskDao {
     /**
      * update task scheduled_tick only if next execution time is larger than currentTick.
      * delete tasks which is never called again
+     *
      * @param currentTick
-     * @param tasks: tasks to be updated or deleted
+     * @param tasks:      tasks to be updated or deleted
      */
     public void updateTasksNextExecutionTick(Tick currentTick, List<Task> tasks) {
 
@@ -688,7 +746,7 @@ public class TaskDao {
 
         List<Object[]> taskToBeDeleted = new ArrayList<>();
         List<Object[]> taskToBeUpdated = new ArrayList<>();
-        for (Task task: tasks) {
+        for (Task task : tasks) {
             ScheduleConf scheduleConf = task.getScheduleConf();
             Long taskId = task.getId();
             switch (scheduleConf.getType()) {
@@ -744,11 +802,11 @@ public class TaskDao {
                 .where(TASK_ID_QUERY)
                 .orderBy("scheduled_tick ASC")
                 .limit(1)
-                .toString();
+                .asPrepared().getSQL();
         String nextExecutionTimeString = dbOperator.fetchOne(
                 sql,
                 rs -> rs.getString("scheduled_tick"),
-                taskId
+                taskId, 1
         );
         if (Objects.nonNull(nextExecutionTimeString)) {
             return Optional.of(new Tick(nextExecutionTimeString));
@@ -769,6 +827,7 @@ public class TaskDao {
 
     /**
      * Fetch and return list of one-hop upstream tasks with given source task (source task not included)
+     *
      * @param srcTask source task
      * @return list of upstream tasks
      */
@@ -778,10 +837,11 @@ public class TaskDao {
 
     /**
      * Fetch and return upstream tasks within maximum distance from given source task (source task not included)
-     * @param srcTask source task
+     *
+     * @param srcTask  source task
      * @param distance max distance from source task, required to be positive
-     * @throws IllegalArgumentException when distance is not positive
      * @return list of upstream tasks
+     * @throws IllegalArgumentException when distance is not positive
      */
     public List<Task> fetchUpstreamTasks(Task srcTask, int distance) {
         return fetchUpstreamTasks(srcTask, distance, false);
@@ -789,11 +849,12 @@ public class TaskDao {
 
     /**
      * Fetch and return upstream tasks within maximum distance from given source task
-     * @param srcTask source task
-     * @param distance max distance from source task, required to be positive
+     *
+     * @param srcTask     source task
+     * @param distance    max distance from source task, required to be positive
      * @param includeSelf whether source task should be included
-     * @throws IllegalArgumentException when distance is not positive
      * @return list of upstream tasks
+     * @throws IllegalArgumentException when distance is not positive
      */
     public List<Task> fetchUpstreamTasks(Task srcTask, int distance, boolean includeSelf) {
         Preconditions.checkNotNull(srcTask, "Invalid argument `srcTask`: null");
@@ -804,7 +865,8 @@ public class TaskDao {
     }
 
     /**
-     *  Fetch and return list of one-hop downstream tasks with given source task (source task not included)
+     * Fetch and return list of one-hop downstream tasks with given source task (source task not included)
+     *
      * @param srcTask source task
      * @return list of downstream tasks
      */
@@ -814,10 +876,11 @@ public class TaskDao {
 
     /**
      * Fetch and return downstream tasks within maximum distance from given source task (source task not included)
-     * @param srcTask source task
+     *
+     * @param srcTask  source task
      * @param distance max distance from source task, required to be positive
-     * @throws IllegalArgumentException when distance is not positive
      * @return list of downstream tasks
+     * @throws IllegalArgumentException when distance is not positive
      */
     public List<Task> fetchDownstreamTasks(Task srcTask, int distance) {
         return fetchDownstreamTasks(srcTask, distance, false);
@@ -825,11 +888,12 @@ public class TaskDao {
 
     /**
      * Fetch and return downstream tasks within maximum distance from given source task
-     * @param srcTask source task
-     * @param distance max distance from source task, required to be positive
+     *
+     * @param srcTask     source task
+     * @param distance    max distance from source task, required to be positive
      * @param includeSelf whether source task should be included
-     * @throws IllegalArgumentException when distance is illegal
      * @return list of downstream tasks
+     * @throws IllegalArgumentException when distance is illegal
      */
     public List<Task> fetchDownstreamTasks(Task srcTask, int distance, boolean includeSelf) {
         Preconditions.checkNotNull(srcTask, "Invalid argument `srcTask`: null");
