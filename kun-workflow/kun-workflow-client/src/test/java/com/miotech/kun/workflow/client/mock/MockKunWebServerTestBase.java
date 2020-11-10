@@ -8,6 +8,9 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
+import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.workflow.core.publish.EventPublisher;
+import com.miotech.kun.workflow.core.publish.RedisEventPublisher;
 import com.miotech.kun.workflow.web.KunWorkflowServerModule;
 import com.miotech.kun.workflow.web.KunWorkflowWebServer;
 import okhttp3.Call;
@@ -59,6 +62,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         );
         // create Neo4j session factory since we do not include GraphDatabaseModule here
         bind(SessionFactory.class, initNeo4jSessionFactory());
+        bind(EventPublisher.class, new NopEventPublisher());
     }
 
     public SessionFactory initNeo4jSessionFactory() {
@@ -101,6 +105,13 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         } catch (IOException e) {
             logger.warn("Resource {} is not available ", getBaseUrl());
             return false;
+        }
+    }
+
+    private static class NopEventPublisher implements EventPublisher {
+        @Override
+        public void publish(Event event) {
+            // nop
         }
     }
 }
