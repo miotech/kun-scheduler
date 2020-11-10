@@ -14,9 +14,12 @@ public class ZhongdaNotifierConfig {
     @Value("${zhongda.token}")
     private String token;
 
+    @Value("${zhongda.notify-group}")
+    private String group;
+
     @Bean
     public ZhongdaNotifier createWechatNotifier() {
-        return new ZhongdaNotifier(host, token);
+        return new ZhongdaNotifier(host, token, group);
     }
 
 }
