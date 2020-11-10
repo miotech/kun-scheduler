@@ -19,6 +19,7 @@ import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.publish.EventPublisher;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.executor.local.LocalExecutor;
 import com.miotech.kun.workflow.executor.mock.*;
@@ -75,6 +76,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         super.configuration();
         bind(EventBus.class, new EventBus());
         bind(Executor.class, LocalExecutor.class);
+        bind(EventPublisher.class, new NopEventPublisher());
     }
 
     @Before
@@ -83,6 +85,13 @@ public class LocalExecutorTest extends DatabaseTestBase {
         super.setUp();
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
+    }
+
+    private static class NopEventPublisher implements EventPublisher {
+        @Override
+        public void publish(Event event) {
+            // nop
+        }
     }
 
     @Test
