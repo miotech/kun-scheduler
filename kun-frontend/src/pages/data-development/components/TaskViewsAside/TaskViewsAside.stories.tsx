@@ -47,7 +47,7 @@ export const DatasetNodeCardDemo = () => {
         }}>
         <div style={{ width: '250px', flex: '1 1', position: 'relative' }} data-tid="pseudo-wrapper">
           <TaskViewsAside
-            views={[]}
+            views={demoViews}
           />
         </div>
       </main>
