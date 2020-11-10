@@ -7,6 +7,7 @@ import com.miotech.kun.workflow.client.model.ConfigKey;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.springframework.stereotype.Component;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,10 +75,10 @@ public class SparkConfigTaskTemplateRender extends TaskTemplateRenderer {
                     extraJavaOptions.append(String.format(" -D%s.%s=${dataplatform.datasource.%s}", KUN_DATA_PLATFORM_DATASOURCE_PREFIX, configMap.get(key), configMap.get(key)));
                 }
             }
-            /*if (!extraConfig.isEmpty()) {
+            if (!extraConfig.isEmpty()) {
                 String encodedString = Base64.getEncoder().encodeToString(JSONUtils.toJsonString(extraConfig).getBytes());
                 extraJavaOptions.append(String.format(" -D%s=%s", KUN_DATA_PLATFORM_CONFIG_PREFIX, encodedString));
-            }*/
+            }
 
             sparkConfig.put(SPARK_JAVA_OPTIONS_KEY, extraJavaOptions.toString());
             config.put(SPARK_CONFIG_KEY, JSONUtils.toJsonString(sparkConfig));
