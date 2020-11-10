@@ -4,6 +4,31 @@
   width: 100%;
   background: @white;
   border-right: 1px solid @borderColor;
+  overflow-y: auto;
+}
+
+.AsideHeader {
+  position: relative;
+  height: 55/@em;
+  border-bottom: 1px solid @lightBorderColor;
+  margin: 0;
+
+  h2 {
+    font-size: 17/@em;
+    color: @grayFontColor;
+    padding: 12/@em 20px;
+    margin: 0;
+  }
+}
+
+.CreateViewBtn {
+  .transparent-button();
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  cursor: pointer;
+  font-size: 20/@em;
+  color: @grayFontColor;
 }
 
 .TaskViewsAsideList {
@@ -21,8 +46,9 @@
   .transparent-button();
   cursor: pointer;
   width: 100%;
-  height: 30px;
+  height: 48/@em;
   padding: 0 65px 0 20px;
+  font-size: 14/@em;
   background: transparent;
   overflow-x: hidden;
   white-space: nowrap;
@@ -44,22 +70,24 @@
 
   .ViewName {
     position: relative;
-    line-height: 30px;
+    line-height: 30/@em;
+    color: @darkGray;
   }
 }
 
 .TaskDefCount {
   position: absolute;
   right: 35px;
-  top: 4px;
+  top: 8/@em;
   user-select: none;
   z-index: 1;
+  color: @darkGray;
 }
 
 .EditBtnWrapper {
   position: absolute;
   right: 10px;
-  top: 4px;
+  top: 9/@em;
   z-index: 3;
 }
 

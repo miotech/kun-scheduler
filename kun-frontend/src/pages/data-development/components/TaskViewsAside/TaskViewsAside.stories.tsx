@@ -4,6 +4,8 @@ import { TaskViewsAside } from '@/pages/data-development/components/TaskViewsAsi
 import { IntlProvider } from '@@/core/umiExports';
 import { TaskDefinitionView } from '@/definitions/TaskDefinition.type';
 
+import '@/global.less';
+
 export default {
   title: 'components/DataDevelopment/TaskViewsAside',
   component: TaskViewsAside,
