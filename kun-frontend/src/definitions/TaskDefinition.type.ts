@@ -65,3 +65,10 @@ export interface DeployVO {
   status: DeployStatusEnum;
   submittedAt: string;  // Datetime
 }
+
+export interface TaskDefinitionView {
+  id: string;
+  name: string;
+  creator: number;
+  taskDefIds: string[];
+}
