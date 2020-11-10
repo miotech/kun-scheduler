@@ -4,8 +4,6 @@ import { TaskViewsAside } from '@/pages/data-development/components/TaskViewsAsi
 import { IntlProvider } from '@@/core/umiExports';
 import { TaskDefinitionView } from '@/definitions/TaskDefinition.type';
 
-
-
 export default {
   title: 'components/DataDevelopment/TaskViewsAside',
   component: TaskViewsAside,
@@ -28,7 +26,7 @@ const demoViews: TaskDefinitionView[] = [
   },
   {
     id: '108468000002',
-    name: 'Task View 3 with long long name',
+    name: 'Task View 3 with long long long long long long name',
     creator: 0,
     taskDefIds: ['7', '8'],
   },

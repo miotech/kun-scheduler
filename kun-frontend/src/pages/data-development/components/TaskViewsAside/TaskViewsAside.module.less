@@ -1,0 +1,83 @@
+.TaskViewsAside {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background: @white;
+  border-right: 1px solid @borderColor;
+}
+
+.TaskViewsAsideList {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.TaskViewListItem {
+  position: relative;
+}
+
+.TaskViewListItemInnerBtn {
+  .transparent-button();
+  cursor: pointer;
+  width: 100%;
+  height: 30px;
+  padding: 0 65px 0 20px;
+  background: transparent;
+  overflow-x: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: background-color ease-in .2s;
+  z-index: 2;
+
+  &:hover, &:focus {
+    background: @selectedRowBackground;
+  }
+  &:hover {
+    .EditBtn {
+      opacity: 0.5;
+    }
+  }
+  &:active {
+    background: darken(@selectedRowBackground, 10%);
+  }
+
+  .ViewName {
+    position: relative;
+    line-height: 30px;
+  }
+}
+
+.TaskDefCount {
+  position: absolute;
+  right: 35px;
+  top: 4px;
+  user-select: none;
+  z-index: 1;
+}
+
+.EditBtnWrapper {
+  position: absolute;
+  right: 10px;
+  top: 4px;
+  z-index: 3;
+}
+
+.EditBtn {
+  .transparent-button();
+  display: block;
+  width: 20px;
+  height: 20px;
+  color: @grayFontColor;
+  cursor: pointer;
+  opacity: 0;
+  text-align: center;
+  transition: opacity .2s ease-in;
+
+  &:hover, &:focus {
+    opacity: 0.5;
+  }
+  &:active {
+    opacity: 1;
+  }
+}

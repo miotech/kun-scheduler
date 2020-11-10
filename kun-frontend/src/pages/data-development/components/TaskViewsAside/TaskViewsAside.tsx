@@ -4,7 +4,8 @@ import { TaskViewListItem } from '@/pages/data-development/components/TaskViewsA
 
 import { TaskDefinitionView } from '@/definitions/TaskDefinition.type';
 
-import styles from './TaskViewsAside.less';
+import '@/global.less';
+import styles from './TaskViewsAside.module.less';
 
 interface OwnProps {
   views: TaskDefinitionView[];
@@ -29,7 +30,7 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
 
   return (
     <aside data-tid="task-views-aside" className={styles.TaskViewsAside}>
-      <ul data-tid="task-views-aside-list-wrapper">
+      <ul className={styles.TaskViewsAsideList} data-tid="task-views-aside-list-wrapper">
         {viewItems}
       </ul>
     </aside>

@@ -49,13 +49,21 @@ module.exports = {
 
     // Make whatever fine-grained changes you need
     config.module.rules.push({
-      test: /\.less$/,
+      test: /\.less$/i,
       use: [
         {
           loader: 'style-loader',
         },
         {
           loader: 'css-loader',
+          options: {
+            importLoaders: 1,
+            modules: {
+              auto: true,
+              localIdentName: '[name]__[local]--[hash:base64:5]',
+            },
+            sourceMap: true,
+          },
         },
         {
           loader: 'less-loader',
