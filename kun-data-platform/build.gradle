@@ -60,6 +60,8 @@ bootJar.dependsOn(deleteLocalJar)
 
 dependencies {
     implementation project(':kun-data-platform:kun-data-platform-web')
+    implementation 'org.apache.dubbo:dubbo-spring-boot-starter'
+    implementation 'redis.clients:jedis:2.9.0'
 }
 
 bootJar {

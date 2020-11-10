@@ -38,3 +38,13 @@ management:
   health:
     ldap:
       enabled: false
+
+dubbo:
+  application:
+    name: kun-security
+    id: kun-security
+  registry:
+    address: redis://${DB_REDIS_IP}:6379
+  protocol:
+    name: dubbo
+    port: -1

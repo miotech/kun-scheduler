@@ -1,5 +1,6 @@
 package com.miotech.kun.security;
 
+import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.FilterType;
 @SpringBootApplication
 @ComponentScan(excludeFilters  = {@ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE, classes = {SecurityConfig.class})})
+@EnableDubbo(scanBasePackages = "com.miotech.kun.security.facade")
 public class SecurityServer {
 
     public static void main(String[] args) {

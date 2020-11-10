@@ -1,0 +1,12 @@
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'io.freefair.lombok'
+
+jar {
+    enabled = true
+}
+
+dependencies {
+    compile project(':kun-security:kun-security-common')
+}

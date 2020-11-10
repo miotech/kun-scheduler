@@ -15,6 +15,7 @@ import com.miotech.kun.dataplatform.model.taskdefinition.ScheduleConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDatasetProps;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
+import com.miotech.kun.security.facade.SecurityServiceFacade;
 import com.miotech.kun.security.model.bo.UserInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
@@ -24,6 +25,7 @@ import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -49,6 +51,9 @@ public class DeployedTaskService extends BaseSecurityService{
 
     @Autowired
     private TaskTemplateService taskTemplateService;
+
+    @DubboReference(version = "1.0.0")
+    SecurityServiceFacade securityServiceFacade;
 
     public DeployedTask find(Long definitionId) {
         return deployedTaskDao.fetchById(definitionId)
@@ -320,7 +325,7 @@ public class DeployedTaskService extends BaseSecurityService{
         Optional<DeployedTask> taskOptional = deployedTaskDao.fetchByWorkflowTaskId(wfTaskId);
         if(taskOptional.isPresent()){
             Long userId = taskOptional.get().getOwner();
-            UserInfo userInfo = getUserById(userId);
+            UserInfo userInfo = securityServiceFacade.getUserById(userId);
             if(userId != null)
                 userList.add(userInfo.getUsername());
         }

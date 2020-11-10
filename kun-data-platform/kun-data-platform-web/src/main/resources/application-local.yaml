@@ -29,4 +29,11 @@ zhongda:
 
 redis:
   host: ${DB_REDIS_IP}
-  notify-channel: kun-notify
+  notify-channel: kun-
+
+dubbo:
+  application:
+    name: kun-data-platform
+    id: kun-data-platform
+  registry:
+    address: redis://${DB_REDIS_IP}:6379
