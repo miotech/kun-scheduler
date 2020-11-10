@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.executor.local;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
@@ -69,13 +70,15 @@ public class LocalExecutor implements Executor {
     private LinkedBlockingQueue<TaskAttempt> taskAttemptQueue = new LinkedBlockingQueue<>(QUEUE_SIZE);
 
     private ExecutorService workerStarterThreadPool =
-            new ThreadPoolExecutor(CORES, CORES * 2,
+            new ThreadPoolExecutor(CORES * 2, CORES * 4,
                     5L, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<Runnable>(WORKER_LIMIT));
+                    new LinkedBlockingQueue<>(WORKER_LIMIT),
+                    new ThreadFactoryBuilder().setNameFormat("local-executor-workerStarter-%d").build());
     private ExecutorService workerTimeoutThreadPool =
-            new ThreadPoolExecutor(1, 10,
-                    5L, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<Runnable>(WORKER_LIMIT));
+            new ThreadPoolExecutor(CORES * 2, CORES * 4,
+                    5L, TimeUnit.SECONDS,
+                    new LinkedBlockingQueue<>(WORKER_LIMIT),
+                    new ThreadFactoryBuilder().setNameFormat("local-executor-workerTimeout-%d").build());
 
     @Inject
     public LocalExecutor(Injector injector, TaskRunService taskRunService, ResourceLoader resourceLoader,
@@ -368,8 +371,8 @@ public class LocalExecutor implements Executor {
     private void handleTimeoutAttempt(Long taskAttemptId) {
         workerPool.remove(taskAttemptId);
         workerTimeoutThreadPool.submit(() -> {
-                    miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.TIMEOUT);
-                    notifyFinished(taskAttemptId, TaskRunStatus.TIMEOUT, OperatorReport.BLANK);
+                    miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.FAILED);
+                    notifyFinished(taskAttemptId, TaskRunStatus.FAILED, OperatorReport.BLANK);
                 }
         );
     }

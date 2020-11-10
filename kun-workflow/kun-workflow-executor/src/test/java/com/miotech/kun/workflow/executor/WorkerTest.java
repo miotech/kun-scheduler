@@ -157,15 +157,15 @@ public class WorkerTest extends DatabaseTestBase {
         executor.submit(taskAttempt);
         awaitUntilAttemptDone(taskAttempt.getId());
         TaskAttemptProps attempt = taskRunDao.fetchLatestTaskAttempt(taskAttempt.getTaskRun().getId());
-        assertThat(attempt.getStatus(), is(TaskRunStatus.TIMEOUT));
+        assertThat(attempt.getStatus(), is(TaskRunStatus.FAILED));
         assertStatusProgress(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
-                TaskRunStatus.TIMEOUT);
+                TaskRunStatus.FAILED);
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt.getId());
         assertThat(finishedEvent.getAttemptId(), is(attempt.getId()));
-        assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.TIMEOUT));
+        assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.FAILED));
         assertThat(finishedEvent.getInlets(), hasSize(0));
         assertThat(finishedEvent.getOutlets(), hasSize(0));
     }
@@ -186,11 +186,11 @@ public class WorkerTest extends DatabaseTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
-                TaskRunStatus.TIMEOUT,
+                TaskRunStatus.FAILED,
                 TaskRunStatus.FAILED);
         List<TaskAttemptFinishedEvent> finishedEvents = getFinishedEvents(attempt.getId());
         assertThat(finishedEvents, hasSize(2));
-        assertThat(finishedEvents.get(0).getFinalStatus(), is(TaskRunStatus.TIMEOUT));
+        assertThat(finishedEvents.get(0).getFinalStatus(), is(TaskRunStatus.FAILED));
         assertThat(finishedEvents.get(1).getFinalStatus(), is(TaskRunStatus.FAILED));
     }
 
