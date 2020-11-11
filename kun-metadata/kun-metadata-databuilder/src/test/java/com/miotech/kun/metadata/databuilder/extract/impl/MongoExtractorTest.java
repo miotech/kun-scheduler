@@ -30,7 +30,6 @@ public class MongoExtractorTest extends DatabaseTestBase {
 
     @Before
     public void setUp() {
-        super.setUp();
         mongoDBContainer = containerBuilder.initMongo();
 
         Props props = new Props();

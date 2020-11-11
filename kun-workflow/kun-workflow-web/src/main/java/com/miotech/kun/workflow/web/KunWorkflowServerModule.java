@@ -6,7 +6,13 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.annotation.BasePackageScan;
 import com.miotech.kun.workflow.common.AppModule;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.executor.WorkerFactory;
 import com.miotech.kun.workflow.executor.local.LocalExecutor;
+import com.miotech.kun.workflow.executor.local.LocalWorkerFactory;
+import com.miotech.kun.workflow.executor.rpc.LocalExecutorFacadeImpl;
+import com.miotech.kun.workflow.executor.rpc.WorkerClusterConsumer;
+import com.miotech.kun.workflow.facade.WorkflowExecutorFacade;
+import com.miotech.kun.workflow.facade.WorkflowWorkerFacade;
 
 
 public class KunWorkflowServerModule extends AppModule {
@@ -19,6 +25,8 @@ public class KunWorkflowServerModule extends AppModule {
     protected void configure() {
         super.configure();
         bind(Executor.class).to(LocalExecutor.class);
+        bind(WorkerFactory.class).to(LocalWorkerFactory.class);
+        bind(WorkflowExecutorFacade.class).to(LocalExecutorFacadeImpl.class);
     }
 
     @Provides
@@ -26,6 +34,19 @@ public class KunWorkflowServerModule extends AppModule {
     @BasePackageScan
     public String getPackageScan() {
         return this.getClass().getPackage().getName();
+    }
+
+    @Singleton
+    @Provides
+    public WorkerClusterConsumer workerRpcConsumer() {
+        return new WorkerClusterConsumer();
+    }
+
+
+    @Singleton
+    @Provides
+    public WorkflowWorkerFacade workerFacade(WorkerClusterConsumer workerClusterConsumer){
+        return workerClusterConsumer.getService("default", WorkflowWorkerFacade.class, "1.0");
     }
 
 }

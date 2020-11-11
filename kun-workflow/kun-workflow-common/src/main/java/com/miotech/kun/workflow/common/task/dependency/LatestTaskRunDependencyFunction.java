@@ -6,6 +6,8 @@ import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.DependencyFunction;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -14,6 +16,7 @@ import java.util.List;
 @Singleton
 public class LatestTaskRunDependencyFunction implements DependencyFunction {
     private final String functionType = "latestTaskRun";
+    private final Logger logger = LoggerFactory.getLogger(LatestTaskRunDependencyFunction.class);
 
     // make this field 'transient' to avoid serialization failure of matcher sameBeanAs() in testing
     private transient final TaskRunDao taskRunDao;
@@ -32,6 +35,11 @@ public class LatestTaskRunDependencyFunction implements DependencyFunction {
         }
 
         TaskRun upstreamTaskRun = taskRunDao.fetchLatestTaskRun(upstreamTaskId);
+        if(upstreamTaskRun == null){
+            //todo:fix upstream is null
+            logger.error("upsteam is null, task = {}",self);
+            return Lists.newArrayList();
+        }
         return Lists.newArrayList(upstreamTaskRun.getId());
     }
 

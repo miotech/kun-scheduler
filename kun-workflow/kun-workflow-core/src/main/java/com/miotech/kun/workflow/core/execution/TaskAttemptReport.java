@@ -5,16 +5,18 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.metadata.core.model.DataStore;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class TaskAttemptReport {
-    public static final TaskAttemptReport BLANK = TaskAttemptReport.newBuilder()
+public class TaskAttemptReport implements Serializable {
+    public transient static final TaskAttemptReport BLANK = TaskAttemptReport.newBuilder()
             .withInlets(ImmutableList.of())
             .withOutlets(ImmutableList.of())
             .build();
 
     private final List<DataStore> inlets;
     private final List<DataStore> outlets;
+    private static final long serialVersionUID = 1604031071000l;
 
     @JsonCreator
     public TaskAttemptReport(
@@ -36,7 +38,7 @@ public class TaskAttemptReport {
         return new Builder();
     }
 
-    public static final class Builder {
+    public static final class Builder implements Serializable{
         private List<DataStore> inlets;
         private List<DataStore> outlets;
 

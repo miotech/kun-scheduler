@@ -26,6 +26,7 @@ public class BashOperator extends KunOperator {
     private static final String COMMAND = "command";
     private static final String VARIABLES = "variables";
     private static final String DISPLAY_COMMAND = "bash command";
+    private static final Long FORCES_WAIT_SECONDS_DEFAULT_VALUE = 10l;
 
     private Process process;
 
@@ -87,7 +88,7 @@ public class BashOperator extends KunOperator {
     public ConfigDef config() {
         return new ConfigDef()
                 .define(COMMAND, ConfigDef.Type.STRING, true, "bash command", DISPLAY_COMMAND)
-                .define("forceWaitSeconds", ConfigDef.Type.LONG, 10L, true, "force terminate wait seconds", "forceWaitSeconds")
+                .define("forceWaitSeconds", ConfigDef.Type.LONG, FORCES_WAIT_SECONDS_DEFAULT_VALUE, true, "force terminate wait seconds", "forceWaitSeconds")
                 .define(VARIABLES, ConfigDef.Type.STRING, "{}",true, "bash variables", "variables");
     }
 

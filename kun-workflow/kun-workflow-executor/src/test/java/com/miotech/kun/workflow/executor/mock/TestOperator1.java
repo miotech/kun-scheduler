@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.executor.mock;
 
 import com.google.common.collect.Lists;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.core.model.lineage.MongoDataStore;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class TestOperator1 extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(TestOperator1.class);
@@ -18,6 +20,7 @@ public class TestOperator1 extends KunOperator {
         final String name = "world";
         logger.info("Hello, {}!", new Object[] { name });
         logger.info("ContextClassLoader: {}", Thread.currentThread().getContextClassLoader());
+        Uninterruptibles.sleepUninterruptibly(2000, TimeUnit.MILLISECONDS);
         report(prepareReport());
         return true;
     }

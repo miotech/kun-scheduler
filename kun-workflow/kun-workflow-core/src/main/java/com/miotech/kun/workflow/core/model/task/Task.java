@@ -6,18 +6,17 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.utils.CronUtils;
+import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.time.OffsetDateTime;
+import java.util.*;
 
 @JsonDeserialize(builder = Task.TaskBuilder.class)
 public class Task {
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long id;
 
@@ -25,13 +24,15 @@ public class Task {
 
     private final String description;
 
-    @JsonSerialize(using= ToStringSerializer.class)
+    @JsonSerialize(using = ToStringSerializer.class)
     @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long operatorId;
 
     private final Config config;
 
     private final ScheduleConf scheduleConf;
+
+    private static final Integer RECOVER_TIMES = 1;
 
     private final List<TaskDependency> dependencies;
 
@@ -69,6 +70,8 @@ public class Task {
         return tags;
     }
 
+
+
     private Task(TaskBuilder builder) {
         this.id = builder.id;
         this.name = builder.name;
@@ -92,8 +95,39 @@ public class Task {
                 .withTags(tags);
     }
 
+    public boolean shouldSchedule(OffsetDateTime scheduleTime, OffsetDateTime currentTime) {
+        boolean shouldSchedule = false;
+        switch (scheduleConf.getType()) {
+            case ONESHOT:
+                shouldSchedule = true;
+                break;
+            case NONE:
+                shouldSchedule = true;
+                break;
+            case SCHEDULED:
+                String cronExpression = scheduleConf.getCronExpr();
+                for (int i = 0; i <= RECOVER_TIMES; i++) {
+                    if(scheduleTime.compareTo(currentTime) >= 0){
+                        shouldSchedule = true;
+                        break;
+                    }
+                    Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextExecutionTimeByCronExpr(cronExpression, scheduleTime);
+                    if (nextExecutionTimeOptional.isPresent()) {
+                        scheduleTime = nextExecutionTimeOptional.get();
+                    } else {
+                        break;
+                    }
+                }
+                break;
+            default:
+                throw new IllegalArgumentException("unExpect schedule type");
+        }
+        return shouldSchedule;
+    }
+
     /**
      * Convert tags list of this task instance to key-value map data structure
+     *
      * @return key-value map of tags
      * @throws RuntimeException when detects duplication on tag key
      */
@@ -137,6 +171,19 @@ public class Task {
         return Objects.hash(id, name, description, operatorId, config, scheduleConf, dependencies);
     }
 
+    @Override
+    public String toString() {
+        return "Task{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", operatorId=" + operatorId +
+                ", config=" + config +
+                ", scheduleConf=" + scheduleConf +
+                ", dependencies=" + dependencies +
+                ", tags=" + tags +
+                '}';
+    }
 
     public static final class TaskBuilder {
         private Long id;
@@ -147,6 +194,7 @@ public class Task {
         private ScheduleConf scheduleConf;
         private List<TaskDependency> dependencies;
         private List<Tag> tags;
+        private Integer recoverTimes;
 
         private TaskBuilder() {
         }
@@ -191,7 +239,16 @@ public class Task {
             return this;
         }
 
+        public TaskBuilder withRecoverTimes(Integer recoverTimes) {
+            recoverTimes = recoverTimes > 10 ? 10 : recoverTimes;
+            this.recoverTimes = recoverTimes;
+            return this;
+        }
+
         public Task build() {
+            if (recoverTimes == null) {
+                recoverTimes = 1;
+            }
             return new Task(this);
         }
     }

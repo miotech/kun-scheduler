@@ -28,7 +28,6 @@ public class ElasticsearchExtractorTest extends DatabaseTestBase {
 
     @Before
     public void setUp() {
-        super.setUp();
         elasticsearchContainer = containerBuilder.initEs();
 
         Props props = new Props();
