@@ -1,6 +1,8 @@
 module.exports = {
   'docs': {
-    QuickStart: ['quick-start-setup-zh', 'quick-start-data-discovery-zh', 'quick-start-data-dashboard-zh'],
-    Overview: ['architecture-zh', 'concepts-zh', 'module-kun-data-discovery-zh', 'module-kun-data-dashboard-zh', 'module-workflow-zh', 'module-kun-security-zh'],
+    Overview: ['introduction-zh', 'architecture-zh', 'concepts-zh', {'Component':['workflow-zh', 'metadata-zh']}],
+    Setup: ['installation-zh', {"Configuration":['metadata-config-zh', 'data-dev-config-zh']}],
+    Reference: ['data-dev-operators-zh'],
+    Meta: ['glossary-zh'],
   },
 };
