@@ -109,6 +109,7 @@ subprojects {
                 testImplementation "org.mock-server:mockserver-netty:3.10.8"
                 testImplementation "org.mock-server:mockserver-client-java:3.10.8"
                 testImplementation 'org.apache.dubbo:dubbo-registry-default:2.7.8'
+                testImplementation 'uk.org.lidalia:slf4j-test:1.2.0'
             }
 
             implementation "com.google.inject:guice"

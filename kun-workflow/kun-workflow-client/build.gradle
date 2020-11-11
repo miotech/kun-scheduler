@@ -12,6 +12,7 @@ dependencies {
 
     testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation project(':kun-commons:kun-commons-db')
+    testImplementation project(':kun-commons:kun-commons-rpc')
     testImplementation project(':kun-workflow:kun-workflow-common')
     testImplementation project(':kun-workflow:kun-workflow-scheduler')
     testImplementation project(':kun-workflow:kun-workflow-testing')

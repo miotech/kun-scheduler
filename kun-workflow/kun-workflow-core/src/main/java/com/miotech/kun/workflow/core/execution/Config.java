@@ -79,6 +79,13 @@ public class Config {
         return (List<String>) values.getOrDefault(name, defaultValue);
     }
 
+    @Override
+    public String toString() {
+        return "Config{" +
+                "values=" + values +
+                '}';
+    }
+
     /**
      * Override current {@link Config} by another {@link Config} to generate a combined {@link Config}.
      * @param another another {@link Config}

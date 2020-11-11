@@ -52,9 +52,9 @@
 
     <logger name="com.zaxxer.hikari"  level="ERROR" />
 
-    <logger name="com.miotech" level="INFO" />
+    <logger name="com.miotech" level="DEBUG" />
 
-    <root level="INFO">
+    <root level="DEBUG">
         <appender-ref ref="ASYNCAPPLOG" />
         <appender-ref ref="APPERROR" />
         <appender-ref ref="ASYNCSTDOUT" />

@@ -18,4 +18,13 @@ public class MockTaskAttemptFactory {
                 .withStatus(TaskRunStatus.CREATED)
                 .build();
     }
+
+    public static TaskAttempt createTaskAttemptWithStatus(TaskRun taskRun,TaskRunStatus status) {
+        return TaskAttempt.newBuilder()
+                .withId(WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), 1))
+                .withAttempt(1)
+                .withTaskRun(taskRun)
+                .withStatus(status)
+                .build();
+    }
 }

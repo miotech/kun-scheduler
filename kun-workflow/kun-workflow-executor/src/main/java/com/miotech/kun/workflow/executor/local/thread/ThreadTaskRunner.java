@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.executor.local.thread;
 
 import com.google.common.util.concurrent.ListenableFuture;
-import com.miotech.kun.workflow.executor.ExecCommand;
+import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.executor.ExecResult;
 import com.miotech.kun.workflow.executor.TaskRunner;
 

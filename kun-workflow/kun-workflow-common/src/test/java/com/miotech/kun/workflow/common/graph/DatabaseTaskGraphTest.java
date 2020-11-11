@@ -23,7 +23,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 
 import javax.sql.DataSource;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -97,6 +96,8 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
         taskDao.create(upTask);
         Tick preTick = new Tick(preScheduleTime.get());
         Task preTask = taskGraph.tasksScheduledAt(preTick).get(0);
+        taskGraph.updateTasksNextExecutionTick(preTick,Lists.newArrayList(preTask));
+
         assertThat(preTask.getId(),is(upTask.getId()));
         Tick tick = new Tick(scheduleTime.get());
 
@@ -147,12 +148,6 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
         for (Task task : taskList) {
             taskDao.create(task);
         }
-    }
-
-    private String getCron(OffsetDateTime date) {
-        String dateFormat = "00 mm HH * * ?";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(dateFormat);
-        return date.format(formatter);
     }
 
 

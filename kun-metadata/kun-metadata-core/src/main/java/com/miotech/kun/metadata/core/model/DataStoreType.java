@@ -1,6 +1,8 @@
 package com.miotech.kun.metadata.core.model;
 
-public enum DataStoreType {
+import java.io.Serializable;
+
+public enum DataStoreType implements Serializable {
 
     // Table
     HIVE_TABLE,

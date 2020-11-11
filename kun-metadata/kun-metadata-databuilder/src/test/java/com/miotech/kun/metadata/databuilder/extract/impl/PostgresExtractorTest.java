@@ -30,7 +30,6 @@ public class PostgresExtractorTest extends DatabaseTestBase {
 
     @Before
     public void setUp() {
-        super.setUp();
         postgreSQLContainer = containerBuilder.initPostgres();
 
         Props props = new Props();

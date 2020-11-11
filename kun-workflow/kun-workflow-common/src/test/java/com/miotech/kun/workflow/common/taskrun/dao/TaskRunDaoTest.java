@@ -7,6 +7,7 @@ import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -19,13 +20,12 @@ import org.junit.After;
 import org.junit.Test;
 
 import javax.inject.Inject;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.*;
@@ -639,15 +639,42 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         // Process
         List<TaskRun> filteredTaskRunsWithIncludeStartedOnlyFlag =
                 taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
-                    .newBuilder()
-                    .withIncludeStartedOnly(true)
-                    .withSortKey("id")
-                    .withSortOrder("ASC")
-                    .build());
+                        .newBuilder()
+                        .withIncludeStartedOnly(true)
+                        .withSortKey("id")
+                        .withSortOrder("ASC")
+                        .build());
 
         // Validate
         assertArrayEquals(
                 new Long[]{1L, 2L, 3L},
                 filteredTaskRunsWithIncludeStartedOnlyFlag.stream().map(TaskRun::getId).toArray());
+    }
+
+
+    @Test
+    public void fetchTaskRunByTaskAndTick() {
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        taskRunDao.createTaskRuns(Arrays.asList(taskRun));
+        Tick tick = new Tick(OffsetDateTime.of(
+                2020, 5, 1, 0, 0, 0, 0, ZoneOffset.of("+08:00")
+        ));
+        TaskRun taskRunSaved = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
+        assertEquals(taskRun.getId(), taskRunSaved.getId());
+
+    }
+
+    @Test
+    public void fetchUnStartedTaskRunList() {
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        taskRunDao.createTaskRuns(Arrays.asList(taskRun));
+        List<Long> taskRunIdList = taskRunDao.fetchUnStartedTaskRunList()
+                .stream().map(TaskRun::getId).collect(Collectors.toList());
+        assertEquals(taskRun.getId(), taskRunIdList.get(0));
+
     }
 }
