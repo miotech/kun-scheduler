@@ -1,6 +1,6 @@
 ---
 slug: /
-title: Build and Run
+title: 构建部署
 ---
 
 KUN is an all-in-one data management platform. This tutorial aims at guiding user and developer to setup the whole KUN project in local with minimum efforts.
