@@ -31,6 +31,7 @@ public abstract class GuiceTestBase {
 
         Module[] mods = modules.toArray(new Module[0]);
         injector = Guice.createInjector(Modules.override(mods).with(new InjectMockModule()));
+        beforeInject(injector);
         injector.injectMembers(this);
 
         Unsafe.setInjector(injector);
@@ -44,6 +45,10 @@ public abstract class GuiceTestBase {
         T mockObj = Mockito.mock(clazz);
         mocks.put(clazz, mockObj);
         return mockObj;
+    }
+
+    protected void beforeInject(Injector injector){
+
     }
 
     protected <T> T spy(T target) {

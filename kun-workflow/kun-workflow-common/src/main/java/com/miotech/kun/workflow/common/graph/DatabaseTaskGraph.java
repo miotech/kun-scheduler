@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.common.graph;
 
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
 
@@ -22,7 +21,11 @@ public class DatabaseTaskGraph implements TaskGraph {
     @Override
     public List<Task> tasksScheduledAt(Tick tick) {
         List<Task> scheduledTasks = taskDao.fetchScheduledTaskAtTick(tick);
-        taskDao.updateTasksNextExecutionTick(tick, scheduledTasks);
         return scheduledTasks;
+    }
+
+    @Override
+    public void updateTasksNextExecutionTick(Tick tick, List<Task> scheduledTasks) {
+        taskDao.updateTasksNextExecutionTick(tick, scheduledTasks);
     }
 }

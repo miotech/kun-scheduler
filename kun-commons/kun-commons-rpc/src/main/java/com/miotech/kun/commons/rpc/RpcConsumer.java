@@ -4,6 +4,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.apache.dubbo.config.ReferenceConfig;
+import org.apache.dubbo.rpc.cluster.support.FailoverCluster;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -12,6 +13,8 @@ import java.util.concurrent.ExecutionException;
 
 public class RpcConsumer {
     private final long REFERENCE_CACHE_SIZE = 10L;
+
+    private Integer timeout = 1000;
 
     // ReferenceConfig object are heavily encapsulated, therefore we store them as cache for later reuse
     private final Cache<String, ReferenceConfig<?>> referenceConfigCache = CacheBuilder.newBuilder()
@@ -80,10 +83,21 @@ public class RpcConsumer {
         ReferenceConfig<T> referenceConfig = new ReferenceConfig<>();
         referenceConfig.setVersion(version);
         referenceConfig.setInterface(interfaceClass);
+        referenceConfig.setCluster(configCluster());
+        referenceConfig.setTimeout(timeout);
         return referenceConfig;
+    }
+
+    protected  String configCluster(){
+        return FailoverCluster.NAME;
     }
 
     private String cacheKey(String applicationName, Class<?> clazz) {
        return applicationName + "::" + clazz.getName();
     }
+
+    public void setTimeout(Integer timeout){
+        this.timeout = timeout;
+    }
+
 }

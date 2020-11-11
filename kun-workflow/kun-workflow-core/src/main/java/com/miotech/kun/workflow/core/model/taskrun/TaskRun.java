@@ -113,6 +113,21 @@ public class TaskRun {
                 .withDependentTaskRunIds(dependentTaskRunIds);
     }
 
+    @Override
+    public String toString() {
+        return "TaskRun{" +
+                "id=" + id +
+                ", task=" + task +
+                ", config=" + config +
+                ", scheduledTick=" + scheduledTick +
+                ", status=" + status +
+                ", startAt=" + startAt +
+                ", endAt=" + endAt +
+                ", inlets=" + inlets +
+                ", outlets=" + outlets +
+                ", dependentTaskRunIds=" + dependentTaskRunIds +
+                '}';
+    }
 
     public static final class TaskRunBuilder {
         private Long id;

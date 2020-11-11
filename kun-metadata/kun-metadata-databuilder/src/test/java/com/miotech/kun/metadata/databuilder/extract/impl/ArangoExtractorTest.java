@@ -30,7 +30,6 @@ public class ArangoExtractorTest extends DatabaseTestBase {
 
     @Before
     public void setUp() {
-        super.setUp();
         arangoContainer = containerBuilder.initArango();
 
         Props props = new Props();

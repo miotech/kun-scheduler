@@ -11,4 +11,6 @@ public interface TaskGraph {
      * @return
      */
     public List<Task> tasksScheduledAt(Tick tick);
+
+    public void updateTasksNextExecutionTick(Tick tick,List<Task> scheduledTasks);
 }
