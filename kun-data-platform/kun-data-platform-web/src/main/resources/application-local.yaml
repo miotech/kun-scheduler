@@ -37,7 +37,8 @@ dubbo:
 zhongda:
   host: http://zhongda.miotech.com:8000
   token: ZXGfFpQs7ubLBPJYCZVHn
+  notify-group: kun
 
 redis:
   host: ${DB_REDIS_IP}
-  notify-channel: ${NOTIFY_CHANNEL}
+  notify-channel: kun-notify

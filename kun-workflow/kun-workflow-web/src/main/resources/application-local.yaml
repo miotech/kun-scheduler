@@ -29,5 +29,5 @@ neo4j:
 
 redis:
   host: ${DB_REDIS_IP}
-  notify-channel: ${NOTIFY_CHANNEL}
+  notify-channel: kun-notify
 
