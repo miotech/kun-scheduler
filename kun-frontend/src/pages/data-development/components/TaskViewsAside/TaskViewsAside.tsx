@@ -1,5 +1,6 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useCallback, useMemo, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
+import useI18n from '@/hooks/useI18n';
 
 import { TaskViewListItem } from '@/pages/data-development/components/TaskViewsAside/TaskViewListItem';
 
@@ -12,6 +13,7 @@ interface OwnProps {
   withAllTaskView?: boolean;
   onClickCreateBtn?: (ev: React.MouseEvent) => any;
   onEdit?: (view: TaskDefinitionView) => any;
+  onSearch?: (searchText: string) => any;
 }
 
 type Props = OwnProps;
@@ -21,7 +23,12 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
     views = [],
     onEdit,
     onClickCreateBtn,
+    onSearch,
   } = props;
+
+  const [ searchText, setSearchText ] = useState<string>('');
+
+  const t = useI18n();
 
   const viewItems = useMemo(() => views.map(view => (
     <TaskViewListItem
@@ -34,19 +41,37 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
     views,
   ]);
 
+  const handleViewSearch = useCallback(function handleViewSearch(ev) {
+    setSearchText(ev.target.value);
+    if (onSearch) {
+      onSearch(ev.target.value);
+    }
+  }, [
+    onSearch,
+  ]);
+
   return (
     <aside data-tid="task-views-aside" className={styles.TaskViewsAside}>
       <div data-tid="task-views-aside-header" className={styles.AsideHeader}>
-        <h2>Select View</h2>
-        <button
-          className={styles.CreateViewBtn}
-          type="button"
-          data-tid="task-views-create-btn"
-          aria-label="create new task view"
-          onClick={onClickCreateBtn}
-        >
-          <PlusOutlined />
-        </button>
+        <div className={styles.SearchWrapper}>
+          <input
+            placeholder={t('dataDevelopment.searchView')}
+            className={styles.BorderlessSearchInput}
+            value={searchText}
+            onChange={handleViewSearch}
+          />
+        </div>
+        <div className={styles.CreateViewBtnWrapper}>
+          <button
+            className={styles.CreateViewBtn}
+            type="button"
+            data-tid="task-views-create-btn"
+            aria-label="create new task view"
+            onClick={onClickCreateBtn}
+          >
+            <PlusOutlined />
+          </button>
+        </div>
       </div>
       <ul className={styles.TaskViewsAsideList} data-tid="task-views-aside-list-wrapper">
         {viewItems}

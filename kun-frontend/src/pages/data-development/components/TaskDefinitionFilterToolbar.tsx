@@ -10,7 +10,7 @@ import { RootDispatch, RootState } from '@/rematch/store';
 import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
 
 import { UserSelect } from '@/components/UserSelect';
-import styles from './TaskDefinitionFilterToolbar.less';
+import styles from './TaskDefinitionFilterToolbar.module.less';
 
 interface OwnProps {
   dispatch: RootDispatch;
@@ -32,7 +32,7 @@ export const TaskDefinitionFilterToolbarComponent: React.FC<Props> = memo((props
       if (templates) {
         setTaskTemplates(templates);
       }
-    })
+    });
   });
 
   const taskTemplateFilterOptions = useMemo(() => {

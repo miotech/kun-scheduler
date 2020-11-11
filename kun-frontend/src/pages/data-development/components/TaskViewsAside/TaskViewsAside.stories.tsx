@@ -11,7 +11,9 @@ export default {
   component: TaskViewsAside,
 } as Meta;
 
-const demoMessage = {};
+const demoMessage = {
+  'dataDevelopment.searchView': 'Search View',
+};
 
 const demoViews: TaskDefinitionView[] = [
   {

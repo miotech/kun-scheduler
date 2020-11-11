@@ -260,6 +260,7 @@ export default {
   "dataDevelopment.filterByName": "Search task name",
   "dataDevelopment.filterByTaskType": "Filter by task type",
   "dataDevelopment.filterByOwner": "Filter by owner",
+  "dataDevelopment.searchView": "Search Views",
   "dataDevelopment.definition.property.name": "Task Name",
   "dataDevelopment.definition.property.owner": "Owner",
   "dataDevelopment.definition.property.updater": "Updater",

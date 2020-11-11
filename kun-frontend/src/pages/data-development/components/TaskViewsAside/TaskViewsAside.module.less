@@ -8,6 +8,7 @@
 }
 
 .AsideHeader {
+  display: flex;
   position: relative;
   height: 55/@em;
   border-bottom: 1px solid @lightBorderColor;
@@ -19,6 +20,29 @@
     padding: 12/@em 20px;
     margin: 0;
   }
+}
+
+.SearchWrapper {
+  flex: 1 1;
+  position: relative;
+
+  .BorderlessSearchInput {
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 6/@em 6/@em 6/@em 20/@em;
+    &:hover, &:focus, &:active {
+      border: none;
+      outline: none;
+    }
+    &::placeholder {
+      color: @grayFontColor;
+    }
+  }
+}
+
+.CreateViewBtnWrapper {
+  flex: 0 0 50/@em;
 }
 
 .CreateViewBtn {

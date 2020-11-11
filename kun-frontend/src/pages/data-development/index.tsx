@@ -6,22 +6,21 @@ import {
 } from 'react-reflex';
 import { useEventEmitter, useUnmount, useUpdateEffect } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
-import { TaskTemplate } from '@/definitions/TaskTemplate.type';
+import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
 import { createTaskDefinition } from '@/services/data-development/task-definitions';
 
-import { TaskDefinitionCreationModal } from '@/pages/data-development/components/TaskDefinitionCreationModal';
-import { TaskTypeListPanel } from '@/pages/data-development/sub-layout/TaskTypeListPanel';
-import { TasksGraphPanel } from '@/pages/data-development/sub-layout/TasksGraphPanel';
-import { TaskDefinitionListPanel } from '@/pages/data-development/sub-layout/TaskDefinitionListPanel';
-
-import 'react-reflex/styles.css';
-import { TaskDefinition } from '@/definitions/TaskDefinition.type';
-
-import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
 import { TaskDefinitionFilterToolbar } from '@/pages/data-development/components/TaskDefinitionFilterToolbar';
-import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
-import styles from './index.less';
+import { TaskDefinitionCreationModal } from '@/pages/data-development/components/TaskDefinitionCreationModal';
+import { TasksGraphPanel } from '@/pages/data-development/sub-layout/TasksGraphPanel';
+import { TaskViewsAside } from '@/pages/data-development/components/TaskViewsAside/TaskViewsAside';
+
+import { TaskDefinition } from '@/definitions/TaskDefinition.type';
+import { TaskTemplate } from '@/definitions/TaskTemplate.type';
+import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
+
 import { ViewContext } from './context';
+import 'react-reflex/styles.css';
+import styles from './index.less';
 
 const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
 
@@ -109,9 +108,9 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
             flex={0.192}
             minSize={192}
           >
-            <aside className={styles.paneContentContainer}>
-              <TaskTypeListPanel />
-            </aside>
+            <TaskViewsAside
+              views={[]}
+            />
           </ReflexElement>
           <ReflexSplitter propagate />
 
@@ -126,17 +125,6 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
             </div>
           </ReflexElement>
           <ReflexSplitter propagate />
-
-          {/* Tasks list right aside */}
-          <ReflexElement
-            className={styles.rightPane}
-            flex={0.320}
-            minSize={320}
-          >
-            <aside className={styles.paneContentContainer}>
-              <TaskDefinitionListPanel />
-            </aside>
-          </ReflexElement>
         </ReflexContainer>
         <TaskDefinitionCreationModal
           visible={createModalVisible}
