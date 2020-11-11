@@ -1,5 +1,5 @@
 ---
-slug: /module-kun-data-discovery-zh
+slug: /module-kun-data-dashboard-zh
 title: 运维大屏
 ---
 
