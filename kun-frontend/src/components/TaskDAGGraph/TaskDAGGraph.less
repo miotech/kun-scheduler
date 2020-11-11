@@ -1,0 +1,70 @@
+@task-node-width: 240px;
+@task-node-height: 90px;
+@task-node-border-radius: 6px;
+
+.task-dag-node {
+  display: flex;
+  flex-direction: column;
+  width: @task-node-width;
+  height: @task-node-height;
+  box-sizing: content-box;
+  border: 1px solid @borderColor;
+  border-radius: @task-node-border-radius;
+  user-select: none;
+
+  &__heading, &__center, &__bottom {
+    width: 100%;
+    position: relative;
+  }
+
+  &__heading {
+    flex: 2 2;
+    border-top-left-radius: @task-node-border-radius;
+    border-top-right-radius: @task-node-border-radius;
+    background: @background;
+
+    &__metas {
+      display: block;
+      position: relative;
+      padding: 0 6px;
+    }
+
+    &__icon {
+      font-size: 14/@em;
+    }
+
+    &__task-template-name {
+      font-size: 14/@em;
+      padding-left: 2px;
+    }
+  }
+
+  &__center {
+    flex: 5 5;
+    padding: 6px 8px;
+  }
+
+  &__bottom {
+    flex: 1 1;
+  }
+
+  &__task-def-name {
+    font-size: 14/@em;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &&--interoperable {
+    cursor: pointer;
+  }
+
+  &&--deployed &__heading {
+    &__metas {
+      background: rgba(@green, 0.1);
+    }
+  }
+}

@@ -36,7 +36,7 @@ const demoViews: TaskDefinitionView[] = [
   },
 ];
 
-export const DatasetNodeCardDemo = () => {
+export const Demo = () => {
   return (
     <IntlProvider locale="en-US" messages={demoMessage}>
       <main
