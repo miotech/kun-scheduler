@@ -118,7 +118,7 @@ public class LocalExecutor implements Executor {
         Optional<TaskAttempt> taskAttemptOptional = taskRunDao.fetchAttemptById(taskAttempt.getId());
         logger.debug("submit get taskAttempt from db at {}", System.currentTimeMillis());
         if (!taskAttemptOptional.isPresent()) {
-            logger.error("can not find taskAttempt = {} from database");
+            logger.error("can not find taskAttempt = {} from database",taskAttempt);
             return false;
         } else {
             TaskAttempt savedTaskAttempt = taskAttemptOptional.get();
@@ -146,8 +146,8 @@ public class LocalExecutor implements Executor {
             logger.error("could not get worker from workerFactory");
             return;
         }
-        worker.start(command);
         miscService.changeTaskAttemptStatus(command.getTaskAttemptId(), TaskRunStatus.INITIALIZING);
+        worker.start(command);
     }
 
     //rpc
@@ -171,7 +171,7 @@ public class LocalExecutor implements Executor {
         Long taskAttemptId = heartBeatMessage.getTaskAttemptId();
         heartBeatMessage.setLastHeartBeatTime(DateTimeUtils.now());
         TaskAttemptProps taskAttemptProps = taskRunDao.fetchLatestTaskAttempt(heartBeatMessage.getTaskRunId());
-        if (taskAttemptProps.getStatus().isFinished()) {
+        if (taskAttemptProps.getStatus().isFinished() && !taskAttemptProps.getStatus().isError()) {
             Worker worker = workerFactory.getWorker(heartBeatMessage);
             worker.killTask(false);
             if (workerPool.containsKey(heartBeatMessage.getTaskAttemptId())) {
@@ -371,8 +371,10 @@ public class LocalExecutor implements Executor {
     private void handleTimeoutAttempt(Long taskAttemptId) {
         workerPool.remove(taskAttemptId);
         workerTimeoutThreadPool.submit(() -> {
-                    miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.FAILED);
-                    notifyFinished(taskAttemptId, TaskRunStatus.FAILED, OperatorReport.BLANK);
+                    miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
+                    TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
+                    logger.info("reSubmit timeout taskAttempt = {} to worker", taskAttempt);
+                    workerStarterThreadPool.submit(new WorkerStartRunner(taskAttempt));
                 }
         );
     }

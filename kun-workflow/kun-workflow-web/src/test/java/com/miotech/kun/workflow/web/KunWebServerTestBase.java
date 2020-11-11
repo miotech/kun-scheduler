@@ -10,6 +10,8 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
+import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.workflow.core.publish.EventPublisher;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
@@ -50,6 +52,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
                         "neo4j",
                         neo4jContainer.getAdminPassword())
         );
+        bind(EventPublisher.class, new NopEventPublisher());
     }
 
     @Override
@@ -127,6 +130,13 @@ public class KunWebServerTestBase extends GuiceTestBase {
         } catch (IOException e) {
             logger.error("", e);
             throw ExceptionUtils.wrapIfChecked(e);
+        }
+    }
+
+    private static class NopEventPublisher implements EventPublisher {
+        @Override
+        public void publish(Event event) {
+            // nop
         }
     }
 }

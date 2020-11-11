@@ -15,7 +15,7 @@ public enum TaskRunStatus {
     SKIPPED,
     ABORTING,
     ABORTED,
-    TIMEOUT;
+    ERROR;//系统错误
 
     private static final Map<String, TaskRunStatus> mappings = new HashMap<>(16);
 
@@ -39,11 +39,15 @@ public enum TaskRunStatus {
     }
 
     public boolean isFailure() {
-        return this == FAILED || this == ABORTED || this == TIMEOUT;
+        return this == FAILED || this == ABORTED || this == ERROR;
     }
 
     public boolean isFinished() {
         return isSuccess() || isFailure() || isAborted();
+    }
+
+    public boolean isError() {
+        return this == ERROR;
     }
 
     public boolean isAborted() {
