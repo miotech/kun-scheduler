@@ -29,10 +29,8 @@ public class SchedulerClockTest extends SchedulerTestBase {
         super.configuration();
     }
 
-    @Override
     @Before
     public void setUp() {
-        super.setUp();
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
     }

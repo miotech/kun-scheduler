@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.web;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.miotech.kun.commons.db.DatabaseModule;
 import com.miotech.kun.commons.db.GraphDatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
@@ -9,13 +10,14 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
+import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.workflow.core.publish.EventPublisher;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,10 +52,19 @@ public class KunWebServerTestBase extends GuiceTestBase {
                         "neo4j",
                         neo4jContainer.getAdminPassword())
         );
+        bind(EventPublisher.class, new NopEventPublisher());
     }
 
-    @Before
-    public void setUp() {
+    @Override
+    protected void beforeInject(Injector injector) {
+        // initialize database
+        setUp(injector);
+    }
+
+    public void setUp(Injector injector) {
+        props = injector.getInstance(Props.class);
+        KunWorkflowWebServer.configureDB(injector,props);
+        webServer = injector.getInstance(KunWorkflowWebServer.class);
         new Thread(() -> webServer.start()).start();
         while(!webServer.isReady()) {
             try {
@@ -119,6 +130,13 @@ public class KunWebServerTestBase extends GuiceTestBase {
         } catch (IOException e) {
             logger.error("", e);
             throw ExceptionUtils.wrapIfChecked(e);
+        }
+    }
+
+    private static class NopEventPublisher implements EventPublisher {
+        @Override
+        public void publish(Event event) {
+            // nop
         }
     }
 }

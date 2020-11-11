@@ -51,9 +51,7 @@ public class TaskRunServiceTest extends CommonTestBase {
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
     @Before
-    @Override
     public void setUp() {
-        super.setUp();
         this.taskRunDao = spy(this.taskRunDao);
         this.taskRunService = spy(new TaskRunService(
                 taskRunDao,

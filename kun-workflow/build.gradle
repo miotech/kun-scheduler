@@ -16,6 +16,7 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-testing')
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-common')
+    implementation project(':kun-workflow:kun-workflow-facade')
     implementation project(':kun-workflow:kun-workflow-scheduler')
     implementation project(':kun-workflow:kun-workflow-executor')
     implementation project(':kun-workflow:kun-workflow-web')

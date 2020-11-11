@@ -35,7 +35,6 @@ public class ElasticSearchIndexExtractorTest extends DatabaseTestBase {
 
     @Before
     public void setUp() {
-        super.setUp();
         elasticsearchContainer = containerBuilder.initEs();
 
         Props props = new Props();

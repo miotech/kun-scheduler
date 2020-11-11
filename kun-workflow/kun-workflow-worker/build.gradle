@@ -1,0 +1,23 @@
+jar {
+    from {
+        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+dependencies {
+    implementation project(":kun-commons:kun-commons-rpc")
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-commons:kun-commons-web")
+    implementation project(":kun-workflow:kun-workflow-core")
+    implementation project(":kun-workflow:kun-workflow-common")
+    implementation project(':kun-workflow:kun-workflow-facade')
+    implementation project(":kun-workflow:kun-workflow-utils")
+    implementation 'org.apache.dubbo:dubbo'
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+
+    testImplementation project(":kun-commons:kun-commons-testing")
+    testImplementation project(":kun-workflow:kun-workflow-testing")
+    testRuntimeOnly "com.h2database:h2"
+    testImplementation "net.bytebuddy:byte-buddy"
+}

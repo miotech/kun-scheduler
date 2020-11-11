@@ -1,0 +1,5 @@
+netty3=org.apache.dubbo.remoting.transport.netty.NettyTransporter
+netty4=org.apache.dubbo.remoting.transport.netty4.NettyTransporter
+netty=org.apache.dubbo.remoting.transport.netty4.NettyTransporter
+mina=org.apache.dubbo.remoting.transport.mina.MinaTransporter
+grizzly=org.apache.dubbo.remoting.transport.grizzly.GrizzlyTransporter

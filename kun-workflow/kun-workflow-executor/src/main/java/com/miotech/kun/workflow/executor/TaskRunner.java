@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.executor;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import com.miotech.kun.workflow.core.execution.ExecCommand;
 
 public interface TaskRunner {
     /**

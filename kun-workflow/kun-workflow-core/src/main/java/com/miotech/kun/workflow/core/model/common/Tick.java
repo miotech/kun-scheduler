@@ -11,7 +11,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 
 @JsonDeserialize
-public class Tick {
+public class Tick implements Comparable<Tick>{
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
     private final String time;
@@ -53,5 +53,13 @@ public class Tick {
     @Override
     public int hashCode() {
         return Objects.hash(time);
+    }
+
+    @Override
+    public int compareTo(Tick tick) {
+        if(this == null){
+            return 1;
+        }
+        return this.toOffsetDateTime().compareTo(tick.toOffsetDateTime());
     }
 }
