@@ -1,5 +1,9 @@
 package com.miotech.kun.dataplatform.model.taskdefview;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 
 import java.time.OffsetDateTime;
@@ -10,6 +14,7 @@ public class TaskDefinitionView {
 
     private final String name;
 
+    @JsonSerialize(using = ToStringSerializer.class)
     private final Long creator;
 
     private final Long lastModifier;
@@ -27,7 +32,23 @@ public class TaskDefinitionView {
         this.lastModifier = builder.lastModifier;
         this.createTime = builder.createTime;
         this.updateTime = builder.updateTime;
-        this.includedTaskDefinitions = builder.includedTaskDefinitions;
+        this.includedTaskDefinitions = ImmutableList.copyOf(builder.includedTaskDefinitions);
+    }
+
+    public static TaskDefinitionViewBuilder newBuilder() {
+        return new TaskDefinitionViewBuilder();
+    }
+
+    public TaskDefinitionViewBuilder cloneBuilder() {
+        TaskDefinitionViewBuilder builder = new TaskDefinitionViewBuilder();
+        builder.id = this.id;
+        builder.name = this.name;
+        builder.creator = this.creator;
+        builder.createTime = this.createTime;
+        builder.updateTime = this.updateTime;
+        builder.lastModifier = this.lastModifier;
+        builder.includedTaskDefinitions = Lists.newArrayList(this.includedTaskDefinitions);
+        return builder;
     }
 
     public Long getId() {

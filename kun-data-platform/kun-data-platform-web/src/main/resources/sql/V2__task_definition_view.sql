@@ -8,7 +8,7 @@ CREATE TABLE kun_dp_task_definition_view (
     PRIMARY KEY (id)
 );
 
-CREATE TABLE kun_dp_view_task_definition (
+CREATE TABLE kun_dp_view_task_definition_relation (
     view_id BIGINT NOT NULL,
     task_def_id BIGINT NOT NULL,
     creator BIGINT NOT NULL,
