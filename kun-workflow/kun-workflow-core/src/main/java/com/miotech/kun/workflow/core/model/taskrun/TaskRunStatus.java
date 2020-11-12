@@ -57,8 +57,4 @@ public enum TaskRunStatus {
     public boolean isSkipped() {
         return this == SKIPPED;
     }
-
-    public boolean isWaited() {
-        return this == CREATED || this == QUEUED;
-    }
 }

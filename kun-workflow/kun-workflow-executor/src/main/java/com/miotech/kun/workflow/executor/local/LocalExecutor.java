@@ -57,9 +57,11 @@ public class LocalExecutor implements Executor {
 
     private final Integer CORES = Runtime.getRuntime().availableProcessors();
 
-    private final Integer WORKER_LIMIT = 100;
+    private final Integer TASK_LIMIT = 2048;
 
     private final Props props;
+
+    private Semaphore workerToken = new Semaphore(128);
 
     private Map<Long, HeartBeatMessage> workerPool;//key:taskAttemptId,value:HeartBeatMessage
 
@@ -72,12 +74,12 @@ public class LocalExecutor implements Executor {
     private ExecutorService workerStarterThreadPool =
             new ThreadPoolExecutor(CORES * 2, CORES * 4,
                     5L, TimeUnit.MILLISECONDS,
-                    new LinkedBlockingQueue<>(WORKER_LIMIT),
+                    new LinkedBlockingQueue<>(TASK_LIMIT),
                     new ThreadFactoryBuilder().setNameFormat("local-executor-workerStarter-%d").build());
     private ExecutorService workerTimeoutThreadPool =
             new ThreadPoolExecutor(CORES * 2, CORES * 4,
                     5L, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>(WORKER_LIMIT),
+                    new LinkedBlockingQueue<>(TASK_LIMIT),
                     new ThreadFactoryBuilder().setNameFormat("local-executor-workerTimeout-%d").build());
 
     @Inject
@@ -118,7 +120,7 @@ public class LocalExecutor implements Executor {
         Optional<TaskAttempt> taskAttemptOptional = taskRunDao.fetchAttemptById(taskAttempt.getId());
         logger.debug("submit get taskAttempt from db at {}", System.currentTimeMillis());
         if (!taskAttemptOptional.isPresent()) {
-            logger.error("can not find taskAttempt = {} from database",taskAttempt);
+            logger.error("can not find taskAttempt = {} from database", taskAttempt);
             return false;
         } else {
             TaskAttempt savedTaskAttempt = taskAttemptOptional.get();
@@ -155,6 +157,8 @@ public class LocalExecutor implements Executor {
         logger.info("taskAttempt status change attemptMsg = {}", attemptMsg);
         TaskRunStatus taskRunStatus = attemptMsg.getTaskRunStatus();
         if (taskRunStatus.isFinished()) {
+            workerToken.release();
+            logger.debug("taskAttemptId = {} release worker token, current size = {}", attemptMsg.getTaskAttemptId(), workerToken.availablePermits());
             workerPool.remove(attemptMsg.getTaskAttemptId());
             notifyFinished(attemptMsg.getTaskAttemptId(), taskRunStatus, attemptMsg.getOperatorReport());
         }
@@ -269,10 +273,8 @@ public class LocalExecutor implements Executor {
         logger.debug("recover taskAttempt to workerPool count = {}", runningTaskAttemptList);
         for (TaskAttempt taskAttempt : runningTaskAttemptList) {
             try {
-                while (workerPool.size() >= WORKER_LIMIT) {
-                    logger.info("running worker has reach the limit");
-                    Thread.sleep(1000);
-                }
+                workerToken.acquire();
+                logger.debug("taskAttemptId = {} acquire worker token, current size = {}", taskAttempt.getId(), workerToken.availablePermits());
                 workerPool.put(taskAttempt.getId(), initHeartBeatByTaskAttempt(taskAttempt));
             } catch (InterruptedException e) {
                 logger.error("recover taskAttempt to worker pool falied", e);
@@ -305,11 +307,10 @@ public class LocalExecutor implements Executor {
             }
             while (true) {
                 try {
-                    while (workerPool.size() >= WORKER_LIMIT) {
-                        logger.info("running worker has reach the limit");
-                        Thread.sleep(1000);
-                    }
+                    workerToken.acquire();
+                    logger.debug("acquire worker token, current size = {}", workerToken.availablePermits());
                     TaskAttempt taskAttempt = taskAttemptQueue.take();
+                    logger.debug("taskAttemptId = {} get worker token", taskAttempt.getId());
                     if (workerPool.containsKey(taskAttempt.getId())) {
                         return;
                     }
@@ -369,11 +370,13 @@ public class LocalExecutor implements Executor {
     }
 
     private void handleTimeoutAttempt(Long taskAttemptId) {
+        workerToken.release();
+        logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
         workerPool.remove(taskAttemptId);
         workerTimeoutThreadPool.submit(() -> {
                     miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
                     TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
-                    logger.info("reSubmit timeout taskAttempt = {} to worker", taskAttempt);
+                    logger.debug("reSubmit timeout taskAttempt = {} to worker", taskAttempt);
                     workerStarterThreadPool.submit(new WorkerStartRunner(taskAttempt));
                 }
         );
