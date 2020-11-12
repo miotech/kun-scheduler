@@ -11,7 +11,5 @@ CREATE TABLE kun_dp_task_definition_view (
 CREATE TABLE kun_dp_view_task_definition_relation (
     view_id BIGINT NOT NULL,
     task_def_id BIGINT NOT NULL,
-    creator BIGINT NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (view_id, task_def_id)
 );

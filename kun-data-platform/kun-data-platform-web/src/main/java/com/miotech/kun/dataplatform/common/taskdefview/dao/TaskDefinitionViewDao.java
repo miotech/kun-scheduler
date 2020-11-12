@@ -2,16 +2,19 @@ package com.miotech.kun.dataplatform.common.taskdefview.dao;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
+import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
+import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionCreateInfoVO;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewVO;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.ViewAndTaskDefinitionRelationVO;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -21,9 +24,12 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class TaskDefinitionViewDao {
+    private static final Logger logger = LoggerFactory.getLogger(TaskDefinitionViewDao.class);
+
     private static final String TASK_DEF_VIEW_TABLE_NAME = "kun_dp_task_definition_view";
 
     private static final String TASK_DEF_VIEW_MODEL_NAME = "taskdef_view";
@@ -34,10 +40,17 @@ public class TaskDefinitionViewDao {
 
     private static final List<String> viewCols = ImmutableList.of("id", "name", "creator", "last_modifier", "created_at", "updated_at");
 
-    private static final List<String> viewTaskDefRelationCols = ImmutableList.of("view_id", "task_def_id", "creator", "created_at");
+    private static final List<String> viewTaskDefRelationCols = ImmutableList.of("view_id", "task_def_id");
+
+    private final JdbcTemplate jdbcTemplate;
+
+    private final TaskDefinitionDao taskDefinitionDao;
 
     @Autowired
-    private JdbcTemplate jdbcTemplate;
+    public TaskDefinitionViewDao(JdbcTemplate jdbcTemplate, TaskDefinitionDao taskDefinitionDao) {
+        this.jdbcTemplate = jdbcTemplate;
+        this.taskDefinitionDao = taskDefinitionDao;
+    }
 
     /**
      * Fetch a task definition view by its id.
@@ -46,15 +59,26 @@ public class TaskDefinitionViewDao {
      */
     public Optional<TaskDefinitionView> fetchById(Long taskDefViewId) {
         String sql = getViewSelectSQL(TASK_DEF_VIEW_MODEL_NAME + ".id = ?");
-        List<TaskDefinitionView> resultViews = jdbcTemplate.query(sql, TaskDefinitionViewMapper.INSTANCE, taskDefViewId);
+        List<TaskDefinitionView> resultViews = jdbcTemplate.query(
+                sql,
+                new TaskDefinitionViewMapper(this, taskDefinitionDao),
+                taskDefViewId
+        );
+        if (Objects.isNull(resultViews)) {
+            return Optional.empty();
+        }
         return resultViews.stream().findAny();
     }
 
-    public List<TaskDefinitionView> fetchByIds(List<Long> taskDefIds) {
-    }
-
-    public List<TaskDefinitionViewVO> fetchListBySearchParams(TaskDefinitionViewSearchParams searchParams) {
+    /**
+     * Search and fetch list of task definition view value objects
+     * @param searchParams search parameters in a value object
+     * @return result list
+     */
+    public List<TaskDefinitionView> fetchListBySearchParams(TaskDefinitionViewSearchParams searchParams) {
         Preconditions.checkNotNull(searchParams);
+        Preconditions.checkArgument(Objects.nonNull(searchParams.getPageNum()) && (searchParams.getPageNum() > 0));
+        Preconditions.checkArgument(Objects.nonNull(searchParams.getPageSize()) && (searchParams.getPageSize() >= 0) && (searchParams.getPageSize() <= 100));
 
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_DEF_VIEW_MODEL_NAME, viewCols);
@@ -75,27 +99,30 @@ public class TaskDefinitionViewDao {
             params.add(searchParams.getKeyword().trim());
         }
 
-        // TODO: complete this
-        List<TaskDefinitionViewVO> results = jdbcTemplate.query(sql, null, params.toArray());
+        return jdbcTemplate.query(
+                sql,
+                new TaskDefinitionViewMapper(this, taskDefinitionDao),
+                params.toArray()
+        );
     }
 
     /**
      * Create a task definition view
-     * @param taskDefinitionView view model object
-     * @return true if created an object, false if the object with the same name or id already exists
+     * @param createInfoVO info value object of the creating view
+     * @return true if created an object, false if the object with the same name already exists
      */
-    public boolean create(TaskDefinitionView taskDefinitionView) {
-        Preconditions.checkNotNull(taskDefinitionView);
-        return this.create(TaskDefinitionViewVO.from(taskDefinitionView));
+    public boolean create(TaskDefinitionCreateInfoVO createInfoVO) {
+        return create(createInfoVO, IdGenerator.getInstance().nextId());
     }
 
-    public boolean create(TaskDefinitionViewVO taskDefinitionViewVO) {
-        Preconditions.checkNotNull(taskDefinitionViewVO);
-        Optional<TaskDefinitionView> viewOptional = fetchById(taskDefinitionViewVO.getId());
-        if (viewOptional.isPresent()) {
-            return false;
-        }
-        // TODO: check name duplication
+    /**
+     * Create a task definition view by value object
+     * @param createInfoVO info value object of the creating view
+     * @return true if created an object, false if the object with the same name or id already exists
+     */
+    public boolean create(TaskDefinitionCreateInfoVO createInfoVO, Long id) {
+        Preconditions.checkNotNull(createInfoVO);
+        logger.debug("Creating new task definition view with name: {}; creator id = {}", createInfoVO.getName(), createInfoVO.getCreator());
         String sql = DefaultSQLBuilder.newBuilder()
                 .insert(viewCols.toArray(new String[0]))
                 .into(TASK_DEF_VIEW_TABLE_NAME)
@@ -104,15 +131,96 @@ public class TaskDefinitionViewDao {
                 .getSQL();
         OffsetDateTime currentTime = DateTimeUtils.now();
         Object[] params = {
-                taskDefinitionViewVO.getId(),
-                taskDefinitionViewVO.getName(),
-                taskDefinitionViewVO.getCreator(),
-                taskDefinitionViewVO.getLastModifier(),
-                currentTime,
-                currentTime,
+                id,
+                createInfoVO.getName(),
+                createInfoVO.getCreator(),
+                createInfoVO.getCreator(),   // last_modifier
+                currentTime,                 // create_at
+                currentTime,                 // update_at
         };
         jdbcTemplate.update(sql, params);
         return true;
+    }
+
+    /**
+     * Update a task definition view
+     * @param updateView task definition view model to update
+     * @return affected rows
+     * @throws NullPointerException if view is null or its id is null
+     */
+    public int update(TaskDefinitionView updateView) {
+        Preconditions.checkNotNull(updateView);
+        Preconditions.checkNotNull(updateView.getId(), "Invalid view model with id = null");
+
+        logger.debug("Updating task definition view with id = {}", updateView.getId());
+
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update(TASK_DEF_VIEW_TABLE_NAME)
+                .set(viewCols.subList(1, viewCols.size()).toArray(new String[0]))
+                .where("id = ?")
+                .asPrepared()
+                .getSQL();
+        int affectedRows = jdbcTemplate.update(
+                sql,
+                updateView.getName(),
+                updateView.getCreator(),
+                updateView.getLastModifier(),
+                updateView.getCreateTime(),
+                DateTimeUtils.now()
+        );
+        if (affectedRows > 0) {
+            updateAllRelationsByViewId(
+                    updateView.getId(),
+                    updateView.getIncludedTaskDefinitions().stream()
+                            .map(TaskDefinition::getId)
+                            .collect(Collectors.toList())
+            );
+        }
+        return affectedRows;
+    }
+
+    private void updateAllRelationsByViewId(Long viewId, List<Long> taskDefinitionIds) {
+        Preconditions.checkNotNull(viewId);
+        Preconditions.checkNotNull(taskDefinitionIds);
+
+        removeAllInclusiveTaskDefinitionsByViewId(viewId);
+
+        String insertionSQL = DefaultSQLBuilder.newBuilder()
+                .insert(viewTaskDefRelationCols.toArray(new String[0]))
+                .into(VIEW_AND_TASK_DEF_RELATION_TABLE_NAME)
+                .autoAliasColumns()
+                .asPrepared()
+                .toString();
+
+        List<Object[]> batchParams = taskDefinitionIds.stream()
+                .map(taskDefId -> new Object[]{viewId, taskDefId})
+                .collect(Collectors.toList());
+
+        jdbcTemplate.batchUpdate(insertionSQL, batchParams);
+    }
+
+    /**
+     * Delete as task definition view by id
+     * @param viewId task definition view id
+     * @return true if found and removed successfully. false if target view not found.
+     */
+    public boolean deleteById(Long viewId) {
+        Optional<TaskDefinitionView> taskDefinitionViewOptional = fetchById(viewId);
+        if (!taskDefinitionViewOptional.isPresent()) {
+            return false;
+        }
+        // Remove relations
+        removeAllInclusiveTaskDefinitionsByViewId(viewId);
+        // Remove view
+        String deleteViewSQL = "DELETE FROM " + TASK_DEF_VIEW_TABLE_NAME + " WHERE view_id = ?";
+        jdbcTemplate.update(deleteViewSQL, viewId);
+        return true;
+    }
+
+    private void removeAllInclusiveTaskDefinitionsByViewId(Long viewId) {
+        Preconditions.checkNotNull(viewId);
+        String deleteRelationSQL = "DELETE FROM " + VIEW_AND_TASK_DEF_RELATION_TABLE_NAME + " WHERE view_id = ?";
+        jdbcTemplate.update(deleteRelationSQL, viewId);
     }
 
     private String getViewSelectSQL(String whereClause) {
@@ -144,56 +252,47 @@ public class TaskDefinitionViewDao {
     }
 
     /**
-     * Provide a set of view ids as input, returns related task definition ids in a hashmap
-     * @param viewIds set of view ids to query
-     * @return a hashmap where view ids are keys and corresponding set of related task definition ids as values
+     * Provide id of a specific view, return ids of task definitions it contains.
+     * @param viewId id of target task definition view
+     * @return list of ids of the view's related task definitions
      */
-    private Map<Long, Set<Long>> loadTaskDefIdMappingsForViews(Set<Long> viewIds) {
-        String whereClause = String.format(
-                VIEW_AND_TASK_DEF_RELATION_MODEL_NAME + ".view_id in (%s)",
-                com.miotech.kun.commons.utils.StringUtils.repeatJoin("?", ",", viewIds.size())
-        );
+    protected List<Long> fetchInclusiveTaskDefinitionIdsByViewId(Long viewId) {
+        String whereClause = VIEW_AND_TASK_DEF_RELATION_MODEL_NAME + ".view_id = ?";
         String sql = getViewTaskDefRelationSelectSQL(whereClause);
-        List<ViewAndTaskDefinitionRelationVO> results = jdbcTemplate.query(
-                sql,
-                ViewAndTaskDefinitionRelationVOMapper.INSTANCE,
-                viewIds.toArray()
-        );
-        Map<Long, Set<Long>> resultMap = new HashMap<>();
-        for (ViewAndTaskDefinitionRelationVO relationVO : results) {
-            if (!resultMap.containsKey(relationVO.getViewId())) {
-                resultMap.put(relationVO.getViewId(), Sets.newHashSet(relationVO.getTaskDefinitionId()));
-            } else {
-                resultMap.get(relationVO.getViewId()).add(relationVO.getTaskDefinitionId());
-            }
-        }
-        return resultMap;
+        List<ViewAndTaskDefinitionRelationVO> results =
+                jdbcTemplate.query(sql, ViewAndTaskDefinitionRelationVOMapper.INSTANCE, viewId);
+        return results.stream()
+                .map(ViewAndTaskDefinitionRelationVO::getTaskDefinitionId)
+                .collect(Collectors.toList());
     }
 
     public static class TaskDefinitionViewMapper implements RowMapper<TaskDefinitionView> {
-        public static final TaskDefinitionViewMapper INSTANCE = new TaskDefinitionViewMapper();
+        private final TaskDefinitionViewDao taskDefinitionViewDao;
+
+        private final TaskDefinitionDao taskDefinitionDao;
+
+        public TaskDefinitionViewMapper(TaskDefinitionViewDao taskDefinitionViewDao, TaskDefinitionDao taskDefinitionDao) {
+            this.taskDefinitionViewDao = taskDefinitionViewDao;
+            this.taskDefinitionDao = taskDefinitionDao;
+        }
 
         @Override
         public TaskDefinitionView mapRow(ResultSet rs, int rowNum) throws SQLException {
-            return TaskDefinitionView.newBuilder()
-                    .withId(rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_id"))
+            Long viewId = rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_id");
+            TaskDefinitionView.TaskDefinitionViewBuilder builder = TaskDefinitionView.newBuilder()
+                    .withId(viewId)
                     .withName(rs.getString(TASK_DEF_VIEW_MODEL_NAME + "_name"))
                     .withCreator(rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_creator"))
                     .withLastModifier(rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_last_modifier"))
                     .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_VIEW_MODEL_NAME + "_create_time")))
-                    .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_VIEW_MODEL_NAME + "_update_time")))
-                    // TODO: fill task definition list field
-                    .withIncludedTaskDefinitions(new ArrayList<>())
-                    .build();
-        }
-    }
+                    .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_VIEW_MODEL_NAME + "_update_time")));
 
-    public static class TaskDefinitionViewVOMapper implements RowMapper<TaskDefinitionView> {
-        public static final TaskDefinitionViewVOMapper INSTANCE = new TaskDefinitionViewVOMapper();
+            // Fetch task definitions in detail
+            List<Long> includedTaskDefinitionIds = taskDefinitionViewDao.fetchInclusiveTaskDefinitionIdsByViewId(viewId);
+            List<TaskDefinition> includedTaskDefinitions = taskDefinitionDao.fetchByIds(includedTaskDefinitionIds);
+            builder.withIncludedTaskDefinitions(includedTaskDefinitions);
 
-        @Override
-        public TaskDefinitionView mapRow(ResultSet rs, int rowNum) throws SQLException {
-            // TODO: complete this
+            return builder.build();
         }
     }
 
