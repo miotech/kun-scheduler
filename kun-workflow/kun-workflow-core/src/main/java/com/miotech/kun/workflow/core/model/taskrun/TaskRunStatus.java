@@ -39,7 +39,7 @@ public enum TaskRunStatus {
     }
 
     public boolean isFailure() {
-        return this == FAILED || this == ABORTED || this == ERROR;
+        return this == FAILED || this == ABORTED;
     }
 
     public boolean isFinished() {

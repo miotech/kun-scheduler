@@ -171,7 +171,7 @@ public class LocalExecutor implements Executor {
         Long taskAttemptId = heartBeatMessage.getTaskAttemptId();
         heartBeatMessage.setLastHeartBeatTime(DateTimeUtils.now());
         TaskAttemptProps taskAttemptProps = taskRunDao.fetchLatestTaskAttempt(heartBeatMessage.getTaskRunId());
-        if (taskAttemptProps.getStatus().isFinished() && !taskAttemptProps.getStatus().isError()) {
+        if (taskAttemptProps.getStatus().isFinished()) {
             Worker worker = workerFactory.getWorker(heartBeatMessage);
             worker.killTask(false);
             if (workerPool.containsKey(heartBeatMessage.getTaskAttemptId())) {
