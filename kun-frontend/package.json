@@ -47,6 +47,9 @@
   "dependencies": {
     "@ant-design/icons": "^4.1.0",
     "@dbeining/react-atom": "^4.1.9",
+    "@react-aria/focus": "^3.2.3",
+    "@react-aria/switch": "^3.1.1",
+    "@react-aria/visually-hidden": "^3.2.1",
     "@rematch/core": "^1.4.0",
     "@rematch/loading": "^1.2.1",
     "@types/react-redux": "^7.1.8",

@@ -1,0 +1,32 @@
+.DisplayTypeSwitch {
+  position: relative;
+}
+
+.DisplayTypeSwitchContainer {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  border: 1px solid @lightBorderColor;
+  border-radius: 3px;
+  width: 80px;
+  height: 32px;
+}
+
+.DisplayTypeSwitchBtn {
+  .transparent-button();
+  flex: 1 1;
+  height: 30px;
+  font-size: 18/@em;
+  line-height: 30px;
+  background: @lightBorderColor;
+  color: @grayFontColor;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color ease-in .2s, color ease-in;
+}
+
+.DisplayTypeSwitchBtn.DisplayTypeSwitchBtnActive {
+  background: @white;
+  color: @darkGray;
+  box-shadow: 0 0 2px @lightBorderColor inset;
+}
