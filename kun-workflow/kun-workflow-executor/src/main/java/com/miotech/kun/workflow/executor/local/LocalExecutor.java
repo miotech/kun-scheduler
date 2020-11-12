@@ -61,7 +61,7 @@ public class LocalExecutor implements Executor {
 
     private final Props props;
 
-    private Semaphore workerToken = new Semaphore(128);
+    private Semaphore workerToken = new Semaphore(64);
 
     private Map<Long, HeartBeatMessage> workerPool;//key:taskAttemptId,value:HeartBeatMessage
 
@@ -157,8 +157,10 @@ public class LocalExecutor implements Executor {
         logger.info("taskAttempt status change attemptMsg = {}", attemptMsg);
         TaskRunStatus taskRunStatus = attemptMsg.getTaskRunStatus();
         if (taskRunStatus.isFinished()) {
-            workerToken.release();
-            logger.debug("taskAttemptId = {} release worker token, current size = {}", attemptMsg.getTaskAttemptId(), workerToken.availablePermits());
+            if (workerPool.containsKey(attemptMsg.getTaskAttemptId())) {
+                workerToken.release();
+                logger.debug("taskAttemptId = {} release worker token, current size = {}", attemptMsg.getTaskAttemptId(), workerToken.availablePermits());
+            }
             workerPool.remove(attemptMsg.getTaskAttemptId());
             notifyFinished(attemptMsg.getTaskAttemptId(), taskRunStatus, attemptMsg.getOperatorReport());
         }
@@ -374,6 +376,12 @@ public class LocalExecutor implements Executor {
         logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
         workerPool.remove(taskAttemptId);
         workerTimeoutThreadPool.submit(() -> {
+                    try {
+                        workerToken.acquire();
+                        logger.debug("taskAttemptId = {} acquire worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
+                    } catch (InterruptedException e) {
+                        logger.error("taskAttemptId = {} acquire worker token failed", taskAttemptId);
+                    }
                     miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
                     TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
                     logger.debug("reSubmit timeout taskAttempt = {} to worker", taskAttempt);

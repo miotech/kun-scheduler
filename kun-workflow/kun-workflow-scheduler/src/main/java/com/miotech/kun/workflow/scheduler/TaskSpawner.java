@@ -86,9 +86,9 @@ public class TaskSpawner {
         graphs.add(graph);
     }
 
-    public void init(){
+    public void init() {
         List<TaskRun> unStartedTaskRunList = taskRunDao.fetchUnStartedTaskRunList();
-        if(unStartedTaskRunList.size() > 0){
+        if (unStartedTaskRunList.size() > 0) {
             submit(unStartedTaskRunList);
         }
         logger.info("submit unStartedTaskRun = {}", unStartedTaskRunList);
@@ -107,8 +107,7 @@ public class TaskSpawner {
         checkNotNull(graph, "graph should not be null.");
         checkNotNull(env, "env should not be null.");
         checkState(graph instanceof DirectTaskGraph, "Only DirectTaskGraph is accepted.");
-        //ensure test will not be skip
-        Tick current = new Tick(DateTimeUtils.now().plusMinutes(1));
+        Tick current = new Tick(DateTimeUtils.now());
         return spawn(Lists.newArrayList(graph), current, env);
     }
 
@@ -128,6 +127,18 @@ public class TaskSpawner {
         logger.info("checkPoint = {}", checkPoint);
         OffsetDateTime checkpointTime = checkPoint.toOffsetDateTime();
         OffsetDateTime currentTickTime = tick.toOffsetDateTime();
+        if (graphs.size() > 0 && graphs instanceof ArrayList) {
+            TaskGraph graph = ((ArrayList<TaskGraph>) graphs).get(0);
+            if (graph instanceof DirectTaskGraph) {
+                List<Task> tasksToRun = graph.tasksScheduledAt(tick);
+                logger.debug("run task = {} directly", tasksToRun);
+                taskRuns.addAll(createTaskRuns(tasksToRun, tick, env));
+                save(taskRuns);
+                submit(taskRuns);
+                return taskRuns;
+            }
+
+        }
         while (checkpointTime.compareTo(currentTickTime) < 0) {
             List<TaskRun> recoverTaskRun = new ArrayList<>();
             checkpointTime = checkpointTime.plus(SCHEDULE_INTERVAL, ChronoUnit.MILLIS);
@@ -152,7 +163,7 @@ public class TaskSpawner {
         }
 
         logger.debug("to submit created TaskRuns. TaskRuns={}", taskRuns);
-        if(taskRuns.size() > 0){
+        if (taskRuns.size() > 0) {
             submit(taskRuns);
         }
         return taskRuns;
@@ -173,7 +184,7 @@ public class TaskSpawner {
             TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
             if (taskRun == null) {
                 results.add(createTaskRun(task, tick, env.getConfig(task.getId()), results));
-            }else {
+            } else {
                 results.add(taskRun);
             }
         }
@@ -224,7 +235,7 @@ public class TaskSpawner {
     private void validateConfig(ConfigDef configDef, Config finalConfig, Config runtimeConfig) {
         for (ConfigDef.ConfigKey configKey : configDef.configKeys()) {
             String name = configKey.getName();
-            logger.info("finalConfig = {}",finalConfig);
+            logger.info("finalConfig = {}", finalConfig);
             if (configKey.isRequired() && !finalConfig.contains(name)) {
                 throw new IllegalArgumentException(format("Configuration %s is required but not specified", name));
             }
