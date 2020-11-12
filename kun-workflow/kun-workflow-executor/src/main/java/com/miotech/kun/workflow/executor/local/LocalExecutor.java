@@ -154,8 +154,6 @@ public class LocalExecutor implements Executor {
     public boolean statusUpdate(TaskAttemptMsg attemptMsg) {
         logger.info("taskAttempt status change attemptMsg = {}", attemptMsg);
         TaskRunStatus taskRunStatus = attemptMsg.getTaskRunStatus();
-        miscService.changeTaskAttemptStatus(attemptMsg.getTaskAttemptId(),
-                taskRunStatus, attemptMsg.getStartAt(), attemptMsg.getEndAt());
         if (taskRunStatus.isFinished()) {
             workerPool.remove(attemptMsg.getTaskAttemptId());
             notifyFinished(attemptMsg.getTaskAttemptId(), taskRunStatus, attemptMsg.getOperatorReport());
@@ -163,6 +161,8 @@ public class LocalExecutor implements Executor {
         if (taskRunStatus.isSuccess()) {
             processReport(attemptMsg.getTaskRunId(), attemptMsg.getOperatorReport());
         }
+        miscService.changeTaskAttemptStatus(attemptMsg.getTaskAttemptId(),
+                taskRunStatus, attemptMsg.getStartAt(), attemptMsg.getEndAt());
         return true;
     }
 
