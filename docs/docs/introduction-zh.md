@@ -1,5 +1,5 @@
 ---
-slug: /docs/overview/introduction-zh
+slug: /
 title: 简介
 ---
 ## 什么是 Kun ？
