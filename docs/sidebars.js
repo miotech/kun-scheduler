@@ -23,7 +23,7 @@ module.exports = {
           'setup-configuration-metadata-zh'
         ]
       },
-      'setup-build-and-deploy'
+      'setup-build-and-deploy-zh'
     ],
     Reference: [
       'reference-datadev-operators-zh'
