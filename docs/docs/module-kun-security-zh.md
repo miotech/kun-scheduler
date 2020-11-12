@@ -1,5 +1,5 @@
 ---
-slug: /module-kun-data-discovery-zh
+slug: /module-kun-security-zh
 title: 安全中心
 ---
 
