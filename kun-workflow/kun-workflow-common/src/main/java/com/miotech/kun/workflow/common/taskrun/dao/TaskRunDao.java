@@ -247,6 +247,11 @@ public class TaskRunDao {
      * @throws RuntimeException if primary key (id) is duplicated
      */
     public TaskRun createTaskRun(TaskRun taskRun) {
+
+        Optional<TaskRun> savedTaskRun = fetchTaskRunById(taskRun.getId());
+        if (savedTaskRun.isPresent()) {
+            return savedTaskRun.get();
+        }
         dbOperator.transaction(() -> {
             List<String> tableColumns = new ImmutableList.Builder<String>()
                     .addAll(taskRunCols)

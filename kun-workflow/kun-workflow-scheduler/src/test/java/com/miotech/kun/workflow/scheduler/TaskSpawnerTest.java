@@ -141,7 +141,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         TaskRun submitted = result.get(0);
         assertThat(submitted.getId(), is(notNullValue()));
         assertThat(submitted.getTask(), safeSameBeanAs(task));
-        assertThat(submitted.getScheduledTick(), is(new Tick(now.plusMinutes(1))));
+        assertThat(submitted.getScheduledTick(), is(new Tick(now)));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
@@ -294,7 +294,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         TaskRun submitted = result.get(0);
         assertThat(submitted.getId(), is(notNullValue()));
         assertThat(submitted.getTask(), safeSameBeanAs(task));
-        assertThat(submitted.getScheduledTick(), is(new Tick(now.plusMinutes(1))));
+        assertThat(submitted.getScheduledTick(), is(new Tick(now)));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
@@ -355,7 +355,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         Task task3 = tasks.get(2);
 
         OffsetDateTime now = DateTimeUtils.freeze();
-        Tick tick = new Tick(now.plusMinutes(1));
+        Tick tick = new Tick(now);
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
 
         // process
@@ -409,7 +409,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         Task task3 = tasks.get(2);
 
         OffsetDateTime now = DateTimeUtils.freeze();
-        Tick tick = new Tick(now.plusMinutes(1));
+        Tick tick = new Tick(now);
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
 
         // process
