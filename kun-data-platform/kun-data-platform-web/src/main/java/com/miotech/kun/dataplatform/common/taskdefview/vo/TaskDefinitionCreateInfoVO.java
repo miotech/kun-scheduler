@@ -14,7 +14,7 @@ public class TaskDefinitionCreateInfoVO {
                 view.getName(),
                 view.getCreator(),
                 view.getIncludedTaskDefinitions().stream()
-                        .map(TaskDefinition::getId)
+                        .map(TaskDefinition::getDefinitionId)
                         .collect(Collectors.toList())
         );
     }

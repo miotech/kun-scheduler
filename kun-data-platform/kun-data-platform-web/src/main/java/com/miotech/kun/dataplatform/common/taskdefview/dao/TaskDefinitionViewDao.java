@@ -12,9 +12,8 @@ import com.miotech.kun.dataplatform.common.taskdefview.vo.ViewAndTaskDefinitionR
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -26,19 +25,18 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Repository
 public class TaskDefinitionViewDao {
-    private static final Logger logger = LoggerFactory.getLogger(TaskDefinitionViewDao.class);
-
-    private static final String TASK_DEF_VIEW_TABLE_NAME = "kun_dp_task_definition_view";
+    public static final String TASK_DEF_VIEW_TABLE_NAME = "kun_dp_task_definition_view";
 
     private static final String TASK_DEF_VIEW_MODEL_NAME = "taskdef_view";
 
-    private static final String VIEW_AND_TASK_DEF_RELATION_TABLE_NAME = "kun_dp_view_task_definition_relation";
+    public static final String VIEW_AND_TASK_DEF_RELATION_TABLE_NAME = "kun_dp_view_task_definition_relation";
 
     private static final String VIEW_AND_TASK_DEF_RELATION_MODEL_NAME = "view_taskdef_relation";
 
-    private static final List<String> viewCols = ImmutableList.of("id", "name", "creator", "last_modifier", "created_at", "updated_at");
+    private static final List<String> viewCols = ImmutableList.of("id", "name", "creator", "last_modifier", "create_time", "update_time");
 
     private static final List<String> viewTaskDefRelationCols = ImmutableList.of("view_id", "task_def_id");
 
@@ -64,9 +62,6 @@ public class TaskDefinitionViewDao {
                 new TaskDefinitionViewMapper(this, taskDefinitionDao),
                 taskDefViewId
         );
-        if (Objects.isNull(resultViews)) {
-            return Optional.empty();
-        }
         return resultViews.stream().findAny();
     }
 
@@ -91,8 +86,9 @@ public class TaskDefinitionViewDao {
                 .where(keywordFilterActive ? TASK_DEF_VIEW_MODEL_NAME + ".name LIKE (? AS TEXT)" : "1 = 1")
                 .offset(searchParams.getPageSize() * (searchParams.getPageNum() - 1))
                 .limit(searchParams.getPageSize())
-                .asPrepared()
-                .toString();
+                .orderBy(TASK_DEF_VIEW_MODEL_NAME + "_id DESC")
+                .autoAliasColumns()
+                .getSQL();
 
         List<Object> params = new ArrayList<>();
         if (keywordFilterActive) {
@@ -109,20 +105,27 @@ public class TaskDefinitionViewDao {
     /**
      * Create a task definition view
      * @param createInfoVO info value object of the creating view
-     * @return true if created an object, false if the object with the same name already exists
+     * @return created view model object
+     * @throws IllegalStateException if create failed
      */
-    public boolean create(TaskDefinitionCreateInfoVO createInfoVO) {
+    public TaskDefinitionView create(TaskDefinitionCreateInfoVO createInfoVO) {
         return create(createInfoVO, IdGenerator.getInstance().nextId());
     }
 
     /**
      * Create a task definition view by value object
      * @param createInfoVO info value object of the creating view
-     * @return true if created an object, false if the object with the same name or id already exists
+     * @return created view model object
+     *
+     * @throws IllegalStateException if create failed
      */
-    public boolean create(TaskDefinitionCreateInfoVO createInfoVO, Long id) {
+    public TaskDefinitionView create(TaskDefinitionCreateInfoVO createInfoVO, Long id) {
         Preconditions.checkNotNull(createInfoVO);
-        logger.debug("Creating new task definition view with name: {}; creator id = {}", createInfoVO.getName(), createInfoVO.getCreator());
+        if (fetchById(id).isPresent()) {
+            throw new IllegalArgumentException(String.format("Cannot create task definition view with already existed id = %s", id));
+        }
+
+        log.debug("Creating new task definition view with name: {}; creator id = {}", createInfoVO.getName(), createInfoVO.getCreator());
         String sql = DefaultSQLBuilder.newBuilder()
                 .insert(viewCols.toArray(new String[0]))
                 .into(TASK_DEF_VIEW_TABLE_NAME)
@@ -139,7 +142,10 @@ public class TaskDefinitionViewDao {
                 currentTime,                 // update_at
         };
         jdbcTemplate.update(sql, params);
-        return true;
+        // insert task definition relations
+        updateAllRelationsByViewId(id, createInfoVO.getIncludedTaskDefinitionIds());
+
+        return fetchById(id).orElseThrow(IllegalStateException::new);
     }
 
     /**
@@ -152,7 +158,7 @@ public class TaskDefinitionViewDao {
         Preconditions.checkNotNull(updateView);
         Preconditions.checkNotNull(updateView.getId(), "Invalid view model with id = null");
 
-        logger.debug("Updating task definition view with id = {}", updateView.getId());
+        log.debug("Updating task definition view with id = {}", updateView.getId());
 
         String sql = DefaultSQLBuilder.newBuilder()
                 .update(TASK_DEF_VIEW_TABLE_NAME)
@@ -172,7 +178,7 @@ public class TaskDefinitionViewDao {
             updateAllRelationsByViewId(
                     updateView.getId(),
                     updateView.getIncludedTaskDefinitions().stream()
-                            .map(TaskDefinition::getId)
+                            .map(TaskDefinition::getDefinitionId)
                             .collect(Collectors.toList())
             );
         }
@@ -190,7 +196,7 @@ public class TaskDefinitionViewDao {
                 .into(VIEW_AND_TASK_DEF_RELATION_TABLE_NAME)
                 .autoAliasColumns()
                 .asPrepared()
-                .toString();
+                .getSQL();
 
         List<Object[]> batchParams = taskDefinitionIds.stream()
                 .map(taskDefId -> new Object[]{viewId, taskDefId})

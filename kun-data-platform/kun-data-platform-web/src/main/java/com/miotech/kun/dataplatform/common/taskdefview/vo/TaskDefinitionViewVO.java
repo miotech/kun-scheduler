@@ -19,7 +19,7 @@ public class TaskDefinitionViewVO {
                 view.getCreateTime(),
                 view.getUpdateTime(),
                 view.getIncludedTaskDefinitions().stream()
-                        .map(TaskDefinition::getId)
+                        .map(TaskDefinition::getDefinitionId)
                         .collect(Collectors.toList())
         );
     }
