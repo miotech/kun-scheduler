@@ -1,7 +1,10 @@
 package com.miotech.spark.etl.loader
 
+import java.security.InvalidParameterException
+
 import com.miotech.spark.etl.common.JdbcClient
 import com.miotech.spark.etl.common.SparkDataUtils.implicits._
+import org.apache.commons.lang3.StringUtils
 import org.apache.spark.sql.functions.{col, regexp_replace}
 import org.apache.spark.sql.types.StringType
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
@@ -37,7 +40,7 @@ class JdbcDataLoader(dataStore: DataStore, spark: SparkSession) extends DataLoad
     logger.info(s"Writing table ${writeTableName} with config: ${config}")
     // Write tmp table
     val swapTableName = Seq(
-      writeTableName,
+      trimTableName(writeTableName, 30),
       System.currentTimeMillis().toString,
       scala.util.Random.alphanumeric.take(10).mkString
     ).mkString("_")
@@ -130,4 +133,10 @@ class JdbcDataLoader(dataStore: DataStore, spark: SparkSession) extends DataLoad
       "password" -> dataSet.currentDatastore.dataStorePassword
     )
   }
+
+  private def trimTableName(tableName: String, retentionLength: Int) = {
+    if (StringUtils.isBlank(tableName)) throw new InvalidParameterException(s"Invalid tableName: $tableName")
+    if (tableName.length <= retentionLength) tableName else tableName.substring(0, retentionLength)
+  }
+
 }
