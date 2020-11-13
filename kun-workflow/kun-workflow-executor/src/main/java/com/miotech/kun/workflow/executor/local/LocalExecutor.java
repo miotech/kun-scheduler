@@ -379,12 +379,6 @@ public class LocalExecutor implements Executor {
         logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
         workerPool.remove(taskAttemptId);
         workerTimeoutThreadPool.submit(() -> {
-                    try {
-                        workerToken.acquire();
-                        logger.debug("taskAttemptId = {} acquire worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
-                    } catch (InterruptedException e) {
-                        logger.error("taskAttemptId = {} acquire worker token failed", taskAttemptId);
-                    }
                     miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
                     TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
                     logger.debug("reSubmit timeout taskAttempt = {} to worker", taskAttempt);
