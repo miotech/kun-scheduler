@@ -61,7 +61,7 @@ public class LocalExecutor implements Executor {
 
     private final Props props;
 
-    private Semaphore workerToken = new Semaphore(64);
+    private Semaphore workerToken = new Semaphore(32);
 
     private Map<Long, HeartBeatMessage> workerPool;//key:taskAttemptId,value:HeartBeatMessage
 
