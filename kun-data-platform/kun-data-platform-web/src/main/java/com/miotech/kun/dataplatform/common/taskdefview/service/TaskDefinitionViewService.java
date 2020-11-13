@@ -3,6 +3,7 @@ package com.miotech.kun.dataplatform.common.taskdefview.service;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefview.dao.TaskDefinitionViewDao;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewCreateInfoVO;
@@ -73,6 +74,16 @@ public class TaskDefinitionViewService {
     @Transactional
     public TaskDefinitionView createTaskDefinitionView(TaskDefinitionViewCreateInfoVO viewCreateInfoVO) {
         Preconditions.checkNotNull(viewCreateInfoVO);
+        List<TaskDefinition> taskDefinitions = taskDefinitionDao.fetchByIds(viewCreateInfoVO.getIncludedTaskDefinitionIds());
+        Set<Long> idSet = new HashSet<>(viewCreateInfoVO.getIncludedTaskDefinitionIds());
+        Set<Long> fetchedTaskDefIdSet = taskDefinitions.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet());
+        if (!Objects.equals(idSet, fetchedTaskDefIdSet)) {
+            idSet.removeAll(fetchedTaskDefIdSet);
+            throw new IllegalArgumentException(
+                    String.format("Trying to add non-existing task definition ids: %s into view.",
+                            StringUtils.join(idSet.stream().map(String::valueOf).collect(Collectors.toList()), ",")
+                    ));
+        }
 
         OffsetDateTime currentTime = DateTimeUtils.now();
         TaskDefinitionView viewModelToCreate = TaskDefinitionView.newBuilder()
@@ -82,9 +93,7 @@ public class TaskDefinitionViewService {
                 .withLastModifier(viewCreateInfoVO.getCreator())
                 .withCreateTime(currentTime)
                 .withUpdateTime(currentTime)
-                .withIncludedTaskDefinitions(
-                        taskDefinitionDao.fetchByIds(viewCreateInfoVO.getIncludedTaskDefinitionIds())
-                )
+                .withIncludedTaskDefinitions(taskDefinitions)
                 .build();
         return this.taskDefinitionViewDao.create(viewModelToCreate);
     }
