@@ -4,6 +4,7 @@ plugins {
     id 'java'
     id "io.freefair.lombok"
     id "org.sonarqube"
+    id "com.gorylenko.gradle-git-properties" version "2.2.3"
 }
 
 repositories {

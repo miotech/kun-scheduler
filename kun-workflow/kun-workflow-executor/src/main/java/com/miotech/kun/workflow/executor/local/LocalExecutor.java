@@ -61,7 +61,7 @@ public class LocalExecutor implements Executor {
 
     private final Props props;
 
-    private Semaphore workerToken = new Semaphore(128);
+    private Semaphore workerToken = new Semaphore(32);
 
     private Map<Long, HeartBeatMessage> workerPool;//key:taskAttemptId,value:HeartBeatMessage
 
@@ -157,8 +157,10 @@ public class LocalExecutor implements Executor {
         logger.info("taskAttempt status change attemptMsg = {}", attemptMsg);
         TaskRunStatus taskRunStatus = attemptMsg.getTaskRunStatus();
         if (taskRunStatus.isFinished()) {
-            workerToken.release();
-            logger.debug("taskAttemptId = {} release worker token, current size = {}", attemptMsg.getTaskAttemptId(), workerToken.availablePermits());
+            if (workerPool.containsKey(attemptMsg.getTaskAttemptId())) {
+                workerToken.release();
+                logger.debug("taskAttemptId = {} release worker token, current size = {}", attemptMsg.getTaskAttemptId(), workerToken.availablePermits());
+            }
             workerPool.remove(attemptMsg.getTaskAttemptId());
             notifyFinished(attemptMsg.getTaskAttemptId(), taskRunStatus, attemptMsg.getOperatorReport());
         }
@@ -307,10 +309,7 @@ public class LocalExecutor implements Executor {
             }
             while (true) {
                 try {
-                    workerToken.acquire();
-                    logger.debug("acquire worker token, current size = {}", workerToken.availablePermits());
                     TaskAttempt taskAttempt = taskAttemptQueue.take();
-                    logger.debug("taskAttemptId = {} get worker token", taskAttempt.getId());
                     if (workerPool.containsKey(taskAttempt.getId())) {
                         return;
                     }
@@ -333,6 +332,12 @@ public class LocalExecutor implements Executor {
 
         @Override
         public void run() {
+            try {
+                workerToken.acquire();
+                logger.debug("taskAttemptId = {} acquire worker token, current size = {}", taskAttempt.getId(), workerToken.availablePermits());
+            } catch (InterruptedException e) {
+                logger.error("taskAttemptId = {} acquire worker token failed", taskAttempt.getId());
+            }
             ExecCommand command = buildExecCommand(taskAttempt);
             startWorker(command);
         }
