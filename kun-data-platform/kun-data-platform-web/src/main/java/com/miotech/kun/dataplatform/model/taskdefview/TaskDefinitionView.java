@@ -1,22 +1,31 @@
 package com.miotech.kun.dataplatform.model.taskdefview;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
 import java.time.OffsetDateTime;
 import java.util.List;
 
+@JsonDeserialize(builder = TaskDefinitionView.TaskDefinitionViewBuilder.class)
 public class TaskDefinitionView {
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long id;
 
     private final String name;
 
     @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long creator;
 
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final Long lastModifier;
 
     private final OffsetDateTime createTime;
@@ -79,6 +88,7 @@ public class TaskDefinitionView {
         return includedTaskDefinitions;
     }
 
+    @JsonPOJOBuilder
     public static final class TaskDefinitionViewBuilder {
         private Long id;
         private String name;
@@ -89,10 +99,6 @@ public class TaskDefinitionView {
         private List<TaskDefinition> includedTaskDefinitions;
 
         private TaskDefinitionViewBuilder() {
-        }
-
-        public static TaskDefinitionViewBuilder aTaskDefinitionView() {
-            return new TaskDefinitionViewBuilder();
         }
 
         public TaskDefinitionViewBuilder withId(Long id) {
