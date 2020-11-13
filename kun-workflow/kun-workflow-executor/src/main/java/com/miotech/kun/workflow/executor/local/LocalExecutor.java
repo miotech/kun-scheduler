@@ -309,10 +309,7 @@ public class LocalExecutor implements Executor {
             }
             while (true) {
                 try {
-                    workerToken.acquire();
-                    logger.debug("acquire worker token, current size = {}", workerToken.availablePermits());
                     TaskAttempt taskAttempt = taskAttemptQueue.take();
-                    logger.debug("taskAttemptId = {} get worker token", taskAttempt.getId());
                     if (workerPool.containsKey(taskAttempt.getId())) {
                         return;
                     }
@@ -335,6 +332,12 @@ public class LocalExecutor implements Executor {
 
         @Override
         public void run() {
+            try {
+                workerToken.acquire();
+                logger.debug("taskAttemptId = {} acquire worker token, current size = {}", taskAttempt.getId(), workerToken.availablePermits());
+            } catch (InterruptedException e) {
+                logger.error("taskAttemptId = {} acquire worker token failed", taskAttempt.getId());
+            }
             ExecCommand command = buildExecCommand(taskAttempt);
             startWorker(command);
         }
@@ -376,12 +379,6 @@ public class LocalExecutor implements Executor {
         logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
         workerPool.remove(taskAttemptId);
         workerTimeoutThreadPool.submit(() -> {
-                    try {
-                        workerToken.acquire();
-                        logger.debug("taskAttemptId = {} acquire worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
-                    } catch (InterruptedException e) {
-                        logger.error("taskAttemptId = {} acquire worker token failed", taskAttemptId);
-                    }
                     miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
                     TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
                     logger.debug("reSubmit timeout taskAttempt = {} to worker", taskAttempt);
