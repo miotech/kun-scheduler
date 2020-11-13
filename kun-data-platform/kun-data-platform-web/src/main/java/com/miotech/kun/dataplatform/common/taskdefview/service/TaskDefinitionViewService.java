@@ -1,5 +1,6 @@
 package com.miotech.kun.dataplatform.common.taskdefview.service;
 
+import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
@@ -7,6 +8,7 @@ import com.miotech.kun.dataplatform.common.taskdefview.dao.TaskDefinitionViewDao
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewCreateInfoVO;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewVO;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -39,6 +39,7 @@ public class TaskDefinitionViewService {
      * @return An optional object wrapper for task definition view model
      */
     public Optional<TaskDefinitionView> fetchTaskDefinitionViewById(Long taskDefViewId) {
+        Preconditions.checkNotNull(taskDefViewId);
         return this.taskDefinitionViewDao.fetchById(taskDefViewId);
     }
 
@@ -49,6 +50,8 @@ public class TaskDefinitionViewService {
      * @return page result list of task definition view value objects
      */
     public PageResult<TaskDefinitionViewVO> searchTaskDefinitionViewPage(TaskDefinitionViewSearchParams searchParams) {
+        Preconditions.checkNotNull(searchParams);
+
         List<TaskDefinitionViewVO> viewList = this.taskDefinitionViewDao.fetchListBySearchParams(searchParams)
                 .stream()
                 .map(TaskDefinitionViewVO::from)
@@ -69,6 +72,8 @@ public class TaskDefinitionViewService {
      */
     @Transactional
     public TaskDefinitionView createTaskDefinitionView(TaskDefinitionViewCreateInfoVO viewCreateInfoVO) {
+        Preconditions.checkNotNull(viewCreateInfoVO);
+
         OffsetDateTime currentTime = DateTimeUtils.now();
         TaskDefinitionView viewModelToCreate = TaskDefinitionView.newBuilder()
                 .withId(IdGenerator.getInstance().nextId())
@@ -91,6 +96,8 @@ public class TaskDefinitionViewService {
      */
     @Transactional
     public TaskDefinitionView saveTaskDefinitionView(TaskDefinitionView viewModel) {
+        Preconditions.checkNotNull(viewModel);
+
         Optional<TaskDefinitionView> viewOptionalBeforeSave = this.fetchTaskDefinitionViewById(viewModel.getId());
         Long updatedId;
         if (viewOptionalBeforeSave.isPresent()) {
@@ -116,6 +123,95 @@ public class TaskDefinitionViewService {
      */
     @Transactional
     public boolean deleteTaskDefinitionViewById(Long id) {
+        Preconditions.checkNotNull(id);
         return this.taskDefinitionViewDao.deleteById(id);
+    }
+
+    /**
+     * Put task definitions into view inclusive list. The result should be idempotence.
+     * @param taskDefinitionIds ids of task definitions
+     * @param viewId id of task definition view
+     * @return Updated task definition view
+     * @throws NullPointerException when view with target id not found
+     */
+    @Transactional
+    public TaskDefinitionView putTaskDefinitionsIntoView(Set<Long> taskDefinitionIds, Long viewId, Long modifierId) {
+        TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIds, viewId, modifierId);
+
+        List<TaskDefinition> existingTaskDefinitions = view.getIncludedTaskDefinitions();
+        List<TaskDefinition> updatedContainingTaskDefinitions = loadTaskDefinitionsFromIdSets(
+                existingTaskDefinitions.stream()
+                        .map(TaskDefinition::getDefinitionId)
+                        .collect(Collectors.toSet()),
+                taskDefinitionIds
+        );
+
+        TaskDefinitionView updatedView = view.cloneBuilder()
+                .withLastModifier(modifierId)
+                .withIncludedTaskDefinitions(updatedContainingTaskDefinitions)
+                .build();
+        return this.saveTaskDefinitionView(updatedView);
+    }
+
+    /**
+     * Remove task definitions from view inclusive list. The result should be idempotence.
+     * @param taskDefinitionIdsToRemove ids of task definitions to remove
+     * @param viewId id of task definition view
+     * @return Updated task definition view
+     * @throws NullPointerException when view with target id not found
+     */
+    @Transactional
+    public TaskDefinitionView removeTaskDefinitionsFromView(Set<Long> taskDefinitionIdsToRemove, Long viewId, Long modifierId) {
+        TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIdsToRemove, viewId, modifierId);
+        List<TaskDefinition> existingTaskDefinitions = view.getIncludedTaskDefinitions();
+
+        // Filter out by ids
+        List<TaskDefinition> updatedContainingTaskDefinitions = existingTaskDefinitions
+                        .stream()
+                        .filter(taskDef -> !taskDefinitionIdsToRemove.contains(taskDef.getDefinitionId()))
+                        .collect(Collectors.toList());
+
+        TaskDefinitionView updatedView = view.cloneBuilder()
+                .withLastModifier(modifierId)
+                .withIncludedTaskDefinitions(updatedContainingTaskDefinitions)
+                .build();
+        return this.saveTaskDefinitionView(updatedView);
+    }
+
+    /**
+     * Completely reset containing task definitions of target view. The result should be idempotence.
+     * @param taskDefinitionIds ids of task definitions
+     * @param viewId id of task definition view
+     * @return Updated task definition view
+     * @throws NullPointerException when view with target id not found
+     */
+    @Transactional
+    public TaskDefinitionView overwriteTaskDefinitionsOfView(Set<Long> taskDefinitionIds, Long viewId, Long modifierId) {
+        TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIds, viewId, modifierId);
+        TaskDefinitionView updatedView = view.cloneBuilder()
+                .withLastModifier(modifierId)
+                .withIncludedTaskDefinitions(taskDefinitionDao.fetchByIds(new ArrayList<>(taskDefinitionIds)))
+                .build();
+        return this.saveTaskDefinitionView(updatedView);
+    }
+
+    private TaskDefinitionView checkArgumentsAndFetchTargetView(Set<Long> taskDefIds, Long viewId, Long modifierId) {
+        Preconditions.checkNotNull(taskDefIds);
+        Preconditions.checkNotNull(viewId);
+        Preconditions.checkNotNull(modifierId);
+        Optional<TaskDefinitionView> viewOptional = taskDefinitionViewDao.fetchById(viewId);
+        if (!viewOptional.isPresent()) {
+            throw new NullPointerException(String.format("Cannot find view with id = %s", viewId));
+        }
+        return viewOptional.get();
+    }
+
+    @SafeVarargs
+    private final List<TaskDefinition> loadTaskDefinitionsFromIdSets(Set<Long>... taskDefIds) {
+        Set<Long> finalTaskDefinitionIds = new HashSet<>();
+        for (Set<Long> set : taskDefIds) {
+            finalTaskDefinitionIds.addAll(set);
+        }
+        return taskDefinitionDao.fetchByIds(new ArrayList<>(finalTaskDefinitionIds));
     }
 }
