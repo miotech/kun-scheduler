@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Data
-public class TaskDefinitionCreateInfoVO {
-    public static TaskDefinitionCreateInfoVO from(TaskDefinitionView view) {
-        return new TaskDefinitionCreateInfoVO(
+public class TaskDefinitionViewCreateInfoVO {
+    public static TaskDefinitionViewCreateInfoVO from(TaskDefinitionView view) {
+        return new TaskDefinitionViewCreateInfoVO(
                 view.getName(),
                 view.getCreator(),
                 view.getIncludedTaskDefinitions().stream()

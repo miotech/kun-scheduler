@@ -1,8 +1,8 @@
 package com.miotech.kun.dataplatform.common.taskdefview.dao;
 
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionCreateInfoVO;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionViewFactory;
@@ -111,10 +111,18 @@ public class TaskDefinitionViewDaoTest extends AppTestBase {
     public void create_withValidConfig_shouldPersistModel() {
         // Freeze create time
         OffsetDateTime createTimeExpected = DateTimeUtils.freeze();
-        TaskDefinitionCreateInfoVO createInfoVO = new TaskDefinitionCreateInfoVO("test_view", 1L, new ArrayList<>());
+        TaskDefinitionView viewToCreate = TaskDefinitionView.newBuilder()
+                .withId(IdGenerator.getInstance().nextId())
+                .withName("test_view")
+                .withCreator(1L)
+                .withLastModifier(1L)
+                .withCreateTime(DateTimeUtils.now())
+                .withUpdateTime(DateTimeUtils.now())
+                .withIncludedTaskDefinitions(new ArrayList<>())
+                .build();
 
         // Prepare
-        TaskDefinitionView createdView = taskDefinitionViewDao.create(createInfoVO);
+        TaskDefinitionView createdView = taskDefinitionViewDao.create(viewToCreate);
 
         // Validate
         assertThat(createdView.getName(), is(createdView.getName()));
@@ -135,12 +143,18 @@ public class TaskDefinitionViewDaoTest extends AppTestBase {
             taskDefinitionDao.create(taskDef);
             inclusiveTaskDefinitionIds.add(taskDef.getDefinitionId());
         }
-        TaskDefinitionCreateInfoVO createInfoVO = new TaskDefinitionCreateInfoVO(
-                "test_view", 1L, inclusiveTaskDefinitionIds
-        );
+        TaskDefinitionView viewToCreate = TaskDefinitionView.newBuilder()
+                .withId(IdGenerator.getInstance().nextId())
+                .withName("test_view")
+                .withCreator(1L)
+                .withLastModifier(1L)
+                .withCreateTime(DateTimeUtils.now())
+                .withUpdateTime(DateTimeUtils.now())
+                .withIncludedTaskDefinitions(mockTaskDefinitions)
+                .build();
 
         // Prepare
-        TaskDefinitionView createdView = taskDefinitionViewDao.create(createInfoVO);
+        TaskDefinitionView createdView = taskDefinitionViewDao.create(viewToCreate);
 
         Set<TaskDefinition> taskDefinitionSet = new HashSet<>(mockTaskDefinitions);
         Set<TaskDefinition> fetchedTaskDefinitionSet = new HashSet<>(createdView.getIncludedTaskDefinitions());

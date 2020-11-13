@@ -4,9 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
-import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionCreateInfoVO;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.ViewAndTaskDefinitionRelationVO;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
@@ -25,6 +23,7 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("SqlResolve")
 @Slf4j
 @Repository
 public class TaskDefinitionViewDao {
@@ -104,28 +103,21 @@ public class TaskDefinitionViewDao {
 
     /**
      * Create a task definition view
-     * @param createInfoVO info value object of the creating view
+     * @param createView model object of the view to create
      * @return created view model object
+     * @throws IllegalArgumentException if view id already used
      * @throws IllegalStateException if create failed
      */
-    public TaskDefinitionView create(TaskDefinitionCreateInfoVO createInfoVO) {
-        return create(createInfoVO, IdGenerator.getInstance().nextId());
-    }
-
-    /**
-     * Create a task definition view by value object
-     * @param createInfoVO info value object of the creating view
-     * @return created view model object
-     *
-     * @throws IllegalStateException if create failed
-     */
-    public TaskDefinitionView create(TaskDefinitionCreateInfoVO createInfoVO, Long id) {
-        Preconditions.checkNotNull(createInfoVO);
-        if (fetchById(id).isPresent()) {
-            throw new IllegalArgumentException(String.format("Cannot create task definition view with already existed id = %s", id));
+    public TaskDefinitionView create(TaskDefinitionView createView) {
+        Preconditions.checkNotNull(createView);
+        if (fetchById(createView.getId()).isPresent()) {
+            throw new IllegalArgumentException(
+                    String.format("Cannot create task definition view with already existed id = %s", createView.getId())
+            );
         }
 
-        log.debug("Creating new task definition view with name: {}; creator id = {}", createInfoVO.getName(), createInfoVO.getCreator());
+        log.debug("Creating new task definition view with id: {}; name: {}; creator id = {}",
+                createView.getId(), createView.getName(), createView.getCreator());
         String sql = DefaultSQLBuilder.newBuilder()
                 .insert(viewCols.toArray(new String[0]))
                 .into(TASK_DEF_VIEW_TABLE_NAME)
@@ -134,18 +126,22 @@ public class TaskDefinitionViewDao {
                 .getSQL();
         OffsetDateTime currentTime = DateTimeUtils.now();
         Object[] params = {
-                id,
-                createInfoVO.getName(),
-                createInfoVO.getCreator(),
-                createInfoVO.getCreator(),   // last_modifier
+                createView.getId(),
+                createView.getName(),
+                createView.getCreator(),
+                createView.getCreator(),   // last_modifier
                 currentTime,                 // create_at
                 currentTime,                 // update_at
         };
         jdbcTemplate.update(sql, params);
         // insert task definition relations
-        updateAllRelationsByViewId(id, createInfoVO.getIncludedTaskDefinitionIds());
+        updateAllRelationsByViewId(createView.getId(), createView
+                .getIncludedTaskDefinitions().stream()
+                .map(TaskDefinition::getDefinitionId)
+                .collect(Collectors.toList())
+        );
 
-        return fetchById(id).orElseThrow(IllegalStateException::new);
+        return fetchById(createView.getId()).orElseThrow(IllegalStateException::new);
     }
 
     /**
@@ -206,7 +202,7 @@ public class TaskDefinitionViewDao {
     }
 
     /**
-     * Delete as task definition view by id
+     * Delete a task definition view by id
      * @param viewId task definition view id
      * @return true if found and removed successfully. false if target view not found.
      */
@@ -221,6 +217,16 @@ public class TaskDefinitionViewDao {
         String deleteViewSQL = "DELETE FROM " + TASK_DEF_VIEW_TABLE_NAME + " WHERE view_id = ?";
         jdbcTemplate.update(deleteViewSQL, viewId);
         return true;
+    }
+
+    /**
+     * Fetch total count of task definition view.
+     * @return total count number
+     */
+    public Integer fetchTotalCount() {
+        String sql = "SELECT COUNT(*) AS total FROM " + TASK_DEF_VIEW_TABLE_NAME;
+        List<Integer> result = jdbcTemplate.query(sql, ((rs, rowNum) -> rs.getInt("total")));
+        return result.stream().findFirst().orElseThrow(IllegalStateException::new);
     }
 
     private void removeAllInclusiveTaskDefinitionsByViewId(Long viewId) {
