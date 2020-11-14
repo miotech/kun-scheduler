@@ -331,7 +331,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
 
     @Test
     //taskAttempt下发到worker执行，executor重启,重启前销毁worker
-    public void executorRestartAndKillWorker() throws IOException {
+    public void executorRestartAndKillWorker() throws IOException,InterruptedException {
         TaskRun mockTaskRun = MockTaskRunFactory.createTaskRun();
         TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(mockTaskRun, TaskRunStatus.CREATED);
         prepareAttempt(TestOperator1.class, attempt);
@@ -343,6 +343,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
 
         //executor shutdown and kill worker
         testWorker.killTask(false);
+        //wait worker exit
+        Thread.sleep(1000);
         executor.reset();
         doReturn(localWorker).when(spyFactory).createWorker();
         executor.recover();
@@ -424,13 +426,15 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(submitCreated, is(false));
         assertThat(submitQueued, is(false));
         // events
+        awaitUntilAttemptDone(runningTaskAttempt.getId());
         assertStatusProgress(runningTaskAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
-                TaskRunStatus.RUNNING);
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.SUCCESS);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(31));
+        assertThat(workerToken.availablePermits(),is(32));
 
     }
 

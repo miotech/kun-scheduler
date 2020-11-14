@@ -62,6 +62,8 @@ public class LocalExecutor implements Executor {
 
     private final Props props;
 
+    private final Integer WORKER_TOKEN_SIZE = 32;
+
     private Semaphore workerToken = new Semaphore(32);
 
     private Map<Long, HeartBeatMessage> workerPool;//key:taskAttemptId,value:HeartBeatMessage
@@ -236,7 +238,7 @@ public class LocalExecutor implements Executor {
     @Override
     public boolean reset() {
         logger.info("executor going to shutdown");
-        workerToken = new Semaphore(32);
+        workerToken.release(WORKER_TOKEN_SIZE - workerToken.availablePermits());
         clear();
         return true;
     }
