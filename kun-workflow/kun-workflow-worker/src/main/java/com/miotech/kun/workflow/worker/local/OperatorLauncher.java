@@ -26,6 +26,7 @@ import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
 
 @Singleton
 public class OperatorLauncher {
@@ -40,6 +41,7 @@ public class OperatorLauncher {
     private WorkflowExecutorFacade executorFacade;
     private InitService initService;
     private Long workerId;
+    private CountDownLatch firstHeartBeat = new CountDownLatch(1);
     private static Props props;
 
     private ArrayBlockingQueue<TaskAttemptMsg> statusUpdateQueue = new ArrayBlockingQueue<>(5);
@@ -321,11 +323,11 @@ public class OperatorLauncher {
 
         @Override
         public void run() {
-            try {
-                logger.debug("wait heartbeat start");
-                Thread.sleep(1000);
+            try{
+                logger.debug("wait first heart beat send");
+                firstHeartBeat.await();
             } catch (InterruptedException e) {
-                logger.error("try to sleep failed", e);
+                logger.error("wait first heart beat failed", e);
             }
             while (!cancelled) {
                 try {
@@ -368,11 +370,16 @@ public class OperatorLauncher {
 
         @Override
         public void run() {
+            Boolean first = true;
             while (!taskRunStatus.isFinished()) {
                 try {
                     heartBeatMessage.setTaskRunStatus(taskRunStatus);
                     heartBeatMessage.setTimeoutTimes(0);
                     boolean result = executorFacade.heartBeat(heartBeatMessage);
+                    if (first) {
+                        first = false;
+                        firstHeartBeat.countDown();
+                    }
                     Thread.sleep(HEARTBEAT_INTERVAL);
                     logger.debug("heart beat to executor result = {}", result);
                 } catch (Exception e) {

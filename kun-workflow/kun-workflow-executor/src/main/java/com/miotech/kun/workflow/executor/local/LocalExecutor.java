@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.executor.local;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Injector;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -233,7 +234,7 @@ public class LocalExecutor implements Executor {
     }
 
     @Override
-    public boolean shutdown() {
+    public boolean reset() {
         logger.info("executor going to shutdown");
         workerToken = new Semaphore(32);
         clear();
@@ -330,6 +331,7 @@ public class LocalExecutor implements Executor {
                 logger.debug("taskAttemptId = {} acquire worker token, current size = {}", taskAttempt.getId(), workerToken.availablePermits());
             } catch (InterruptedException e) {
                 logger.error("taskAttemptId = {} acquire worker token failed", taskAttempt.getId());
+                throw ExceptionUtils.wrapIfChecked(e);
             }
             try {
                 ExecCommand command = buildExecCommand(taskAttempt);

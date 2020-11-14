@@ -190,7 +190,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         Worker localWorker = workerFactory.createWorker();
         doReturn(null).when(spyFactory).createWorker();
         executor.submit(attempt);
-        executor.shutdown();
+        executor.reset();
         doReturn(localWorker).when(spyFactory).createWorker();
         executor.recover();
         awaitUntilAttemptDone(attempt.getId());
@@ -237,7 +237,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         TaskRun mockTaskRun = MockTaskRunFactory.createTaskRun();
         TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(mockTaskRun, TaskRunStatus.CREATED);
         prepareAttempt(TestOperator1.class, attempt);
-        executor.shutdown();
+        executor.reset();
         executor.recover();
 
         awaitUntilAttemptDone(attempt.getId());
@@ -287,7 +287,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         prepareAttempt(TestOperator1.class, attempt);
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
-        executor.shutdown();
+        executor.reset();
         executor.recover();
 
         awaitUntilAttemptDone(attempt.getId());
@@ -343,7 +343,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
 
         //executor shutdown and kill worker
         testWorker.killTask(false);
-        executor.shutdown();
+        executor.reset();
         doReturn(localWorker).when(spyFactory).createWorker();
         executor.recover();
         awaitUntilAttemptDone(attempt.getId());
