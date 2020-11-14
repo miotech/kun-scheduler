@@ -343,8 +343,6 @@ public class LocalExecutorTest extends DatabaseTestBase {
 
         //executor shutdown and kill worker
         testWorker.killTask(false);
-        //wait worker exit
-        Thread.sleep(1000);
         executor.reset();
         doReturn(localWorker).when(spyFactory).createWorker();
         executor.recover();

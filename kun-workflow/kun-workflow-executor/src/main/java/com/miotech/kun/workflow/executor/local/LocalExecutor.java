@@ -64,7 +64,7 @@ public class LocalExecutor implements Executor {
 
     private final Integer WORKER_TOKEN_SIZE = 32;
 
-    private Semaphore workerToken = new Semaphore(32);
+    private Semaphore workerToken = new Semaphore(WORKER_TOKEN_SIZE);
 
     private Map<Long, HeartBeatMessage> workerPool;//key:taskAttemptId,value:HeartBeatMessage
 
