@@ -69,7 +69,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
                 .stream()
                 .map(TaskDefinitionViewVO::from)
                 .collect(Collectors.toList());
-        Integer totalCount = this.taskDefinitionViewDao.fetchTotalCount();
+        Integer totalCount = this.taskDefinitionViewDao.fetchTotalCount(searchParams);
         return new PageResult<>(
                 finalParams.getPageSize(),
                 finalParams.getPageNum(),

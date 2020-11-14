@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.common.taskdefview.dao;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
@@ -221,12 +222,24 @@ public class TaskDefinitionViewDao {
     }
 
     /**
-     * Fetch total count of task definition view.
+     * Fetch total count of task definition view by given search parameter
      * @return total count number
      */
-    public Integer fetchTotalCount() {
-        String sql = "SELECT COUNT(*) AS total FROM " + TASK_DEF_VIEW_TABLE_NAME;
-        List<Integer> result = jdbcTemplate.query(sql, ((rs, rowNum) -> rs.getInt("total")));
+    public Integer fetchTotalCount(TaskDefinitionViewSearchParams searchParams) {
+        String sql;
+        Object[] params;
+        if (Objects.isNull(searchParams) || StringUtils.isBlank(searchParams.getKeyword())) {
+            sql = "SELECT COUNT(*) AS total FROM " + TASK_DEF_VIEW_TABLE_NAME;
+            params = new Object[]{};
+        } else {
+            sql = DefaultSQLBuilder.newBuilder()
+                    .select("COUNT(*) AS total")
+                    .from(TASK_DEF_VIEW_TABLE_NAME)
+                    .where(TASK_DEF_VIEW_TABLE_NAME + ".name LIKE CONCAT('%', CAST(? AS TEXT), '%')")
+                    .getSQL();
+            params = Lists.newArrayList(searchParams.getKeyword()).toArray(new Object[0]);
+        }
+        List<Integer> result = jdbcTemplate.query(sql, ((rs, rowNum) -> rs.getInt("total")), params);
         return result.stream().findFirst().orElseThrow(IllegalStateException::new);
     }
 

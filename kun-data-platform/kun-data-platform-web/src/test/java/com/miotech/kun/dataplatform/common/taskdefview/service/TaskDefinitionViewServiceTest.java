@@ -573,6 +573,7 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
         // Validate
         // expected matches: example_task_1, example_task_10, example_task_11, ..., example_task_19
         assertThat(searchResultPage.getRecords().size(), is(11));
+        assertThat(searchResultPage.getTotalCount(), is(11));
     }
 
     @Test
