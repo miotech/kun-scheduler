@@ -430,7 +430,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(31));
 
     }
 
