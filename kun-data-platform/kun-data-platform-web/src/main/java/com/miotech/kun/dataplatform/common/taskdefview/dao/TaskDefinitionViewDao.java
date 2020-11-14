@@ -82,7 +82,7 @@ public class TaskDefinitionViewDao {
         String sql = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_DEF_VIEW_TABLE_NAME, TASK_DEF_VIEW_MODEL_NAME)
-                .where(keywordFilterActive ? TASK_DEF_VIEW_MODEL_NAME + ".name LIKE (? AS TEXT)" : "1 = 1")
+                .where(keywordFilterActive ? TASK_DEF_VIEW_MODEL_NAME + ".name LIKE CONCAT('%', CAST(? AS TEXT), '%')" : "1 = 1")
                 .offset(searchParams.getPageSize() * (searchParams.getPageNum() - 1))
                 .limit(searchParams.getPageSize())
                 .orderBy(TASK_DEF_VIEW_MODEL_NAME + "_id DESC")

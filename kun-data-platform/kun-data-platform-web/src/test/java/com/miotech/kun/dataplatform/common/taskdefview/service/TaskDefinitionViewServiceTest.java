@@ -2,10 +2,14 @@ package com.miotech.kun.dataplatform.common.taskdefview.service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewCreateInfoVO;
+import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
+import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewVO;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
+import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionViewFactory;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -13,9 +17,7 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -41,10 +43,14 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     }
 
     private TaskDefinitionView createSimpleMockViewAndReturn() {
+        return createSimpleMockViewAndReturn(new ArrayList<>());
+    }
+
+    private TaskDefinitionView createSimpleMockViewAndReturn(List<Long> initTaskDefinitionIds) {
         TaskDefinitionViewCreateInfoVO createInfoVO = new TaskDefinitionViewCreateInfoVO(
                 "view_demo",        // name
                 1L,                 // creator id
-                new ArrayList<>()          // task definition ids
+                initTaskDefinitionIds          // task definition ids
         );
 
         // Return persisted view
@@ -96,7 +102,7 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     }
 
     @Test
-    public void fetch_existingTaskDefView_shouldFetchAndReturnTheSameModel() {
+    public void fetchById_existingTaskDefView_shouldFetchAndReturnTheSameModel() {
         // Prepare
         TaskDefinitionView createdView = createSimpleMockViewAndReturn();
 
@@ -109,7 +115,7 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     }
 
     @Test
-    public void fetch_nonExistingTaskDefView_shouldReturnEmptyOptionalObject() {
+    public void fetchById_nonExistingTaskDefView_shouldReturnEmptyOptionalObject() {
         // Process
         Optional<TaskDefinitionView> fetchedView = taskDefinitionViewService.fetchById(1234L);
 
@@ -313,13 +319,280 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
 
     @Test
     public void removeTaskDefinitionsFromView_withExistingTaskDefsAndView_shouldWorkProperly() {
+        // Prepare
+        List<TaskDefinition> mockTaskDefs = createMockTaskDefsAndReturn();
+        List<Long> taskDefIdsAtInit = mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toList());
+        TaskDefinitionView viewCreated = createSimpleMockViewAndReturn(taskDefIdsAtInit);
+        // remove first 2 task defs
+        Set<Long> taskDefIdsToRemove = Sets.newHashSet(mockTaskDefs.get(0).getDefinitionId(), mockTaskDefs.get(1).getDefinitionId());
+        // compute expected remaining task def ids
+        Set<Long> taskDefIdsRemainingExpected = (new HashSet<>(taskDefIdsAtInit));
+        taskDefIdsRemainingExpected.removeAll(taskDefIdsToRemove);
+
+        // Process
+        taskDefinitionViewService.removeTaskDefinitionsFromView(
+                taskDefIdsToRemove,
+                viewCreated.getId(),
+                2L
+        );
+        TaskDefinitionView viewAfterModify = taskDefinitionViewService.fetchById(viewCreated.getId())
+                .orElseThrow(NullPointerException::new);
+
+        // Validate
+        assertThat(viewAfterModify.getIncludedTaskDefinitions().size(), is(taskDefIdsAtInit.size() - taskDefIdsToRemove.size()));
+        assertThat(
+                viewAfterModify.getIncludedTaskDefinitions().stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
+                sameBeanAs(taskDefIdsRemainingExpected)
+        );
+        assertThat(viewAfterModify.getLastModifier(), is(2L));
     }
 
     @Test
     public void removeTaskDefinitionsFromView_withInvalidArguments_shouldThrowException() {
+        // Prepare
+        List<TaskDefinition> mockTaskDefs = createMockTaskDefsAndReturn();
+
+        // Process
+        try {
+            taskDefinitionViewService.removeTaskDefinitionsFromView(
+                    mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
+                    1234L,   // Non-exist view id
+                    2L
+            );
+            // Validate
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(NullPointerException.class));
+        }
     }
 
     @Test
     public void removeTaskDefinitionsFromView_multipleTimes_shouldBeIdempotence() {
+        // Prepare
+        List<TaskDefinition> mockTaskDefs = createMockTaskDefsAndReturn();
+        List<Long> taskDefIdsAtInit = mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toList());
+        TaskDefinitionView viewCreated = createSimpleMockViewAndReturn(taskDefIdsAtInit);
+        // remove first 2 task defs
+        Set<Long> taskDefIdsToRemove = Sets.newHashSet(mockTaskDefs.get(0).getDefinitionId(), mockTaskDefs.get(1).getDefinitionId());
+        // compute expected remaining task def ids
+        Set<Long> taskDefIdsRemainingExpected = (new HashSet<>(taskDefIdsAtInit));
+        taskDefIdsRemainingExpected.removeAll(taskDefIdsToRemove);
+
+        // Process
+        // Perform same action 2 times, with different modifiers
+        taskDefinitionViewService.removeTaskDefinitionsFromView(
+                taskDefIdsToRemove,
+                viewCreated.getId(),
+                2L
+        );
+        taskDefinitionViewService.removeTaskDefinitionsFromView(
+                taskDefIdsToRemove,
+                viewCreated.getId(),
+                3L
+        );
+        // remove with non-relevant task definition ids will not work, but no exception shall be thrown
+        taskDefinitionViewService.removeTaskDefinitionsFromView(
+                Sets.newHashSet(-1L, 12345L),
+                viewCreated.getId(),
+                4L
+        );
+        TaskDefinitionView viewAfterModify = taskDefinitionViewService.fetchById(viewCreated.getId())
+                .orElseThrow(NullPointerException::new);
+
+        // Validate
+        assertThat(viewAfterModify.getIncludedTaskDefinitions().size(), is(taskDefIdsAtInit.size() - taskDefIdsToRemove.size()));
+        assertThat(
+                viewAfterModify.getIncludedTaskDefinitions().stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
+                sameBeanAs(taskDefIdsRemainingExpected)
+        );
+        assertThat(viewAfterModify.getLastModifier(), is(4L));
+    }
+
+    @Test
+    public void overwriteTaskDefinitionsOfView_withExistingTaskDefsAndView_shouldWorkProperly() {
+        // Prepare
+        List<TaskDefinition> mockTaskDefs = createMockTaskDefsAndReturn();
+        List<Long> taskDefIdsAtInit = Lists.newArrayList(
+                mockTaskDefs.get(0).getDefinitionId(),
+                mockTaskDefs.get(1).getDefinitionId(),
+                mockTaskDefs.get(2).getDefinitionId()
+        );
+        List<Long> taskDefIdsOverwrite = Lists.newArrayList(
+                mockTaskDefs.get(2).getDefinitionId(),
+                mockTaskDefs.get(3).getDefinitionId(),
+                mockTaskDefs.get(4).getDefinitionId()
+        );
+        TaskDefinitionView viewCreated = createSimpleMockViewAndReturn(taskDefIdsAtInit);
+
+        // Process
+        TaskDefinitionView viewBeforeModify = taskDefinitionViewService.fetchById(viewCreated.getId())
+                .orElseThrow(NullPointerException::new);
+        taskDefinitionViewService.overwriteTaskDefinitionsOfView(
+                new HashSet<>(taskDefIdsOverwrite),
+                viewCreated.getId(),
+                2L
+        );
+        TaskDefinitionView viewAfterModify = taskDefinitionViewService.fetchById(viewCreated.getId())
+                .orElseThrow(NullPointerException::new);
+
+        // Validate
+        assertThat(
+                viewBeforeModify.getIncludedTaskDefinitions().stream()
+                        .map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
+                sameBeanAs(new HashSet<>(taskDefIdsAtInit))
+        );
+        assertThat(viewBeforeModify.getLastModifier(), is(1L));
+        assertThat(
+                viewAfterModify.getIncludedTaskDefinitions().stream()
+                        .map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
+                sameBeanAs(new HashSet<>(taskDefIdsOverwrite))
+        );
+        assertThat(viewAfterModify.getLastModifier(), is(2L));
+    }
+
+    @Test
+    public void overwriteTaskDefinitionsOfView_withInvalidTaskDefsOrView_shouldThrowException() {
+        // case 1: view not exists
+        // Prepare
+        List<TaskDefinition> mockTaskDefs = createMockTaskDefsAndReturn();
+        // Process
+        try {
+            taskDefinitionViewService.overwriteTaskDefinitionsOfView(
+                    mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet()),
+                    1234L,
+                    2L
+            );
+            // Validate
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(NullPointerException.class));
+        }
+
+        // case 2: task definitions not exists
+        // Prepare
+        TaskDefinitionView viewCreated = createSimpleMockViewAndReturn();
+        // Process
+        try {
+            taskDefinitionViewService.overwriteTaskDefinitionsOfView(
+                    Sets.newHashSet(111L, 222L, 333L),  // task definition ids that do not exist
+                    viewCreated.getId(),
+                    1L
+            );
+            // Validate
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+        }
+    }
+
+    private List<TaskDefinitionView> prepareListOfViews(int num) {
+        List<TaskDefinitionView> views = new ArrayList<>();
+        for (int i = 0; i < num; i++) {
+            TaskDefinitionView view = MockTaskDefinitionViewFactory.createTaskDefView(i + 1000L)
+                    .cloneBuilder()
+                    .withName("example_view_" + i)
+                    .build();
+            taskDefinitionViewService.save(view);
+            views.add(view);
+        }
+        return views;
+    }
+
+    @Test
+    public void searchPage_withValidPageConfigurations_shouldWorkProperly() {
+        // prepare 100 views
+        prepareListOfViews(101);
+        TaskDefinitionViewSearchParams searchParamsPage1 = new TaskDefinitionViewSearchParams(
+                null, // keyword
+                1,   // pageNum
+                60   // pageSize
+        );
+        TaskDefinitionViewSearchParams searchParamsPage2 = new TaskDefinitionViewSearchParams(
+                null, // keyword
+                2,   // pageNum
+                60   // pageSize
+        );
+        TaskDefinitionViewSearchParams searchParamsPage3 = new TaskDefinitionViewSearchParams(
+                null, // keyword
+                3,   // pageNum
+                60   // pageSize
+        );
+        TaskDefinitionViewSearchParams searchParamsPageExtraLarge = new TaskDefinitionViewSearchParams(
+                null,
+                1,
+                100000
+        );
+
+        // Process
+        PageResult<TaskDefinitionViewVO> viewVOsPage1 = taskDefinitionViewService.searchPage(searchParamsPage1);
+        PageResult<TaskDefinitionViewVO> viewVOsPage2 = taskDefinitionViewService.searchPage(searchParamsPage2);
+        PageResult<TaskDefinitionViewVO> viewVOsPage3 = taskDefinitionViewService.searchPage(searchParamsPage3);
+        PageResult<TaskDefinitionViewVO> viewVOWithExceededSearchPageSize =  taskDefinitionViewService.searchPage(searchParamsPageExtraLarge);
+
+        // Validate
+        assertThat(viewVOsPage1.getRecords().size(), is(60));
+        assertThat(viewVOsPage2.getRecords().size(), is(41));
+        assertThat(viewVOsPage3.getRecords().size(), is(0));
+        assertThat(viewVOWithExceededSearchPageSize.getRecords().size(), is(100));
+
+        assertTrue(Objects.equals(viewVOsPage1.getPageNumber(), 1) &&
+                Objects.equals(viewVOsPage2.getPageNumber(), 2) &&
+                Objects.equals(viewVOsPage3.getPageNumber(), 3));
+        assertTrue(Objects.equals(viewVOsPage1.getPageSize(), 60) &&
+                Objects.equals(viewVOsPage2.getPageSize(), 60) &&
+                Objects.equals(viewVOsPage3.getPageSize(), 60));
+        // extra large page size should be
+        assertThat(viewVOWithExceededSearchPageSize.getPageSize(), is(100));
+        assertTrue(Objects.equals(viewVOsPage1.getTotalCount(), 101) &&
+                Objects.equals(viewVOsPage2.getTotalCount(), 101) &&
+                Objects.equals(viewVOsPage3.getTotalCount(), 101) &&
+                Objects.equals(viewVOWithExceededSearchPageSize.getTotalCount(), 101));
+
+        // there should be no duplication on records
+        Set<Long> idsPage1 = viewVOsPage1.getRecords().stream().map(TaskDefinitionViewVO::getId).collect(Collectors.toSet());
+        Set<Long> idsPage2 = viewVOsPage2.getRecords().stream().map(TaskDefinitionViewVO::getId).collect(Collectors.toSet());
+        assertThat(idsPage1.size(), is(60));
+        assertThat(idsPage2.size(), is(41));
+
+        idsPage1.retainAll(idsPage2);
+        // The intersection should be empty
+        assertThat(idsPage1.size(), is(0));
+    }
+
+    @Test
+    public void searchPage_withNonEmptyKeywordAsFilter_shouldDoFiltering() {
+        // prepare 100 views
+        prepareListOfViews(100);
+        TaskDefinitionViewSearchParams searchParamsWithKeyword = new TaskDefinitionViewSearchParams(
+                "view_1",   // keyword
+                1,   // pageNum
+                100   // pageSize
+        );
+        // Process
+        PageResult<TaskDefinitionViewVO> searchResultPage = taskDefinitionViewService.searchPage(searchParamsWithKeyword);
+        // Validate
+        // expected matches: example_task_1, example_task_10, example_task_11, ..., example_task_19
+        assertThat(searchResultPage.getRecords().size(), is(11));
+    }
+
+    @Test
+    public void searchPage_withInvalidArguments_shouldThrowException() {
+        // prepare 100 views
+        prepareListOfViews(100);
+
+        assertSearchWithParamsShouldThrowException("", 0, 100);
+        assertSearchWithParamsShouldThrowException("", -1, 100);
+        assertSearchWithParamsShouldThrowException("", 1, -1);
+        assertSearchWithParamsShouldThrowException("", 1, null);
+        assertSearchWithParamsShouldThrowException("", null, 100);
+    }
+
+    private void assertSearchWithParamsShouldThrowException(String keyword, Integer pageNum, Integer pageSize) {
+        try {
+            taskDefinitionViewService.searchPage(new TaskDefinitionViewSearchParams(keyword, pageNum, pageSize));
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+        }
     }
 }

@@ -28,6 +28,8 @@ public class TaskDefinitionViewService {
 
     private final TaskDefinitionViewDao taskDefinitionViewDao;
 
+    private final int PAGE_SIZE_SEARCH_MAX = 100;
+
     @Autowired
     public TaskDefinitionViewService(TaskDefinitionViewDao taskDefinitionViewDao, TaskDefinitionDao taskDefinitionDao) {
         this.taskDefinitionViewDao = taskDefinitionViewDao;
@@ -46,21 +48,33 @@ public class TaskDefinitionViewService {
 
     /**
      * Search and fetch paginated list of meta information of task definition views,
-     * where task definitions are transformed into definition ids only
+     * where task definitions are transformed into definition ids only.
+     * Maximum page size will not exceed {@link PAGE_SIZE_SEARCH_MAX} or it will be auto adjusted to the upper limit.
      * @param searchParams search parameter object
      * @return page result list of task definition view value objects
      */
     public PageResult<TaskDefinitionViewVO> searchPage(TaskDefinitionViewSearchParams searchParams) {
         Preconditions.checkNotNull(searchParams);
+        Preconditions.checkArgument(Objects.nonNull(searchParams.getPageNum()) && searchParams.getPageNum() >= 1);
+        Preconditions.checkArgument(Objects.nonNull(searchParams.getPageSize()) && searchParams.getPageSize() >= 0);
 
-        List<TaskDefinitionViewVO> viewList = this.taskDefinitionViewDao.fetchListBySearchParams(searchParams)
+        TaskDefinitionViewSearchParams finalParams = searchParams;
+        if (searchParams.getPageSize() > PAGE_SIZE_SEARCH_MAX) {
+            finalParams = new TaskDefinitionViewSearchParams(
+                    searchParams.getKeyword(),
+                    searchParams.getPageNum(),
+                    PAGE_SIZE_SEARCH_MAX
+            );
+        }
+
+        List<TaskDefinitionViewVO> viewList = this.taskDefinitionViewDao.fetchListBySearchParams(finalParams)
                 .stream()
                 .map(TaskDefinitionViewVO::from)
                 .collect(Collectors.toList());
         Integer totalCount = this.taskDefinitionViewDao.fetchTotalCount();
         return new PageResult<>(
-                searchParams.getPageSize(),
-                searchParams.getPageNum(),
+                finalParams.getPageSize(),
+                finalParams.getPageNum(),
                 totalCount,
                 viewList
         );
@@ -200,7 +214,13 @@ public class TaskDefinitionViewService {
      */
     @Transactional
     public TaskDefinitionView overwriteTaskDefinitionsOfView(Set<Long> taskDefinitionIds, Long viewId, Long modifierId) {
+        // Precondition checks:
+        // 1. arguments not null
+        // 2. view exists
         TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIds, viewId, modifierId);
+        // 3. task definitions exists
+        assureAllTaskDefinitionsExists(taskDefinitionIds);
+
         TaskDefinitionView updatedView = view.cloneBuilder()
                 .withLastModifier(modifierId)
                 .withIncludedTaskDefinitions(taskDefinitionDao.fetchByIds(new ArrayList<>(taskDefinitionIds)))
