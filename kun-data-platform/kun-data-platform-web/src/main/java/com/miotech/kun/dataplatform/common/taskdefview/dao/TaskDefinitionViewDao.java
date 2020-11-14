@@ -2,9 +2,9 @@ package com.miotech.kun.dataplatform.common.taskdefview.dao;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
+import com.miotech.kun.commons.db.sql.WhereClause;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.ViewAndTaskDefinitionRelationVO;
@@ -77,29 +77,42 @@ public class TaskDefinitionViewDao {
 
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_DEF_VIEW_MODEL_NAME, viewCols);
-
-        boolean keywordFilterActive = StringUtils.isNotBlank(searchParams.getKeyword());
+        WhereClause whereClause = buildWhereClauseFromSearchParams(searchParams);
 
         String sql = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_DEF_VIEW_TABLE_NAME, TASK_DEF_VIEW_MODEL_NAME)
-                .where(keywordFilterActive ? TASK_DEF_VIEW_MODEL_NAME + ".name LIKE CONCAT('%', CAST(? AS TEXT), '%')" : "1 = 1")
+                .where(whereClause.getPreparedSQLSegment())
                 .offset(searchParams.getPageSize() * (searchParams.getPageNum() - 1))
                 .limit(searchParams.getPageSize())
                 .orderBy(TASK_DEF_VIEW_MODEL_NAME + "_id DESC")
                 .autoAliasColumns()
                 .getSQL();
 
-        List<Object> params = new ArrayList<>();
-        if (keywordFilterActive) {
-            params.add(searchParams.getKeyword().trim());
-        }
+        Object[] params = whereClause.getParams();
 
         return jdbcTemplate.query(
                 sql,
                 new TaskDefinitionViewMapper(this, taskDefinitionDao),
-                params.toArray()
+                params
         );
+    }
+
+    private WhereClause buildWhereClauseFromSearchParams(TaskDefinitionViewSearchParams searchParams) {
+        boolean keywordFilterActive = StringUtils.isNotBlank(searchParams.getKeyword());
+        List<Object> paramsList = new ArrayList<>();
+
+        StringBuilder whereClauseBuilder = new StringBuilder();
+        if (keywordFilterActive) {
+            whereClauseBuilder.append("(" + TASK_DEF_VIEW_MODEL_NAME + ".name LIKE CONCAT('%', CAST(? AS TEXT), '%')) AND ");
+            paramsList.add(searchParams.getKeyword().trim());
+        }
+        if (Objects.nonNull(searchParams.getCreator())) {
+            whereClauseBuilder.append("(" + TASK_DEF_VIEW_MODEL_NAME + ".creator = ?) AND ");
+            paramsList.add(searchParams.getCreator());
+        }
+        String whereClauseString = whereClauseBuilder.append("(1 = 1)").toString();
+        return new WhereClause(whereClauseString, paramsList.toArray(new Object[0]));
     }
 
     /**
@@ -227,19 +240,17 @@ public class TaskDefinitionViewDao {
      */
     public Integer fetchTotalCount(TaskDefinitionViewSearchParams searchParams) {
         String sql;
-        Object[] params;
-        if (Objects.isNull(searchParams) || StringUtils.isBlank(searchParams.getKeyword())) {
-            sql = "SELECT COUNT(*) AS total FROM " + TASK_DEF_VIEW_TABLE_NAME;
-            params = new Object[]{};
-        } else {
-            sql = DefaultSQLBuilder.newBuilder()
-                    .select("COUNT(*) AS total")
-                    .from(TASK_DEF_VIEW_TABLE_NAME)
-                    .where(TASK_DEF_VIEW_TABLE_NAME + ".name LIKE CONCAT('%', CAST(? AS TEXT), '%')")
-                    .getSQL();
-            params = Lists.newArrayList(searchParams.getKeyword()).toArray(new Object[0]);
-        }
-        List<Integer> result = jdbcTemplate.query(sql, ((rs, rowNum) -> rs.getInt("total")), params);
+        WhereClause whereClause = buildWhereClauseFromSearchParams(searchParams);
+        sql = DefaultSQLBuilder.newBuilder()
+                .select("COUNT(*) AS total")
+                .from(TASK_DEF_VIEW_TABLE_NAME)
+                .where(whereClause.getPreparedSQLSegment())
+                .getSQL();
+        List<Integer> result = jdbcTemplate.query(
+                sql,
+                (rs, rowNum) -> rs.getInt("total"),
+                whereClause.getParams()
+        );
         return result.stream().findFirst().orElseThrow(IllegalStateException::new);
     }
 

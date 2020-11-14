@@ -12,6 +12,7 @@ public class TaskDefinitionViewSearchParams {
     String keyword;
     Integer pageNum;
     Integer pageSize;
+    Long creator;
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class TaskDefinitionViewSearchParamsBuilder {}

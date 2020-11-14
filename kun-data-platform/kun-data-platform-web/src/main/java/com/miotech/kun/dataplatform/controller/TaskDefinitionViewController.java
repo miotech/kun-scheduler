@@ -37,12 +37,16 @@ public class TaskDefinitionViewController {
     public RequestResult<PageResult<TaskDefinitionViewVO>> searchTaskDefinitionView(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "100") int pageSize,
-            @RequestParam(defaultValue = "") String keyword
+            @RequestParam(defaultValue = "id") String sortKey,
+            @RequestParam(defaultValue = "DESC") String sortOrder,
+            @RequestParam(defaultValue = "") String keyword,
+            @RequestParam Long creator
     ) {
         TaskDefinitionViewSearchParams params = TaskDefinitionViewSearchParams.builder()
                 .pageNum(pageNum)
                 .pageSize(pageSize)
                 .keyword(keyword)
+                .creator(creator)
                 .build();
         PageResult<TaskDefinitionViewVO> viewVOPageResult = taskDefinitionViewService.searchPage(params);
         return RequestResult.success(viewVOPageResult);
