@@ -19,6 +19,7 @@ dependencies {
     implementation 'org.apache.dubbo:dubbo'
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation 'org.jooq:joor-java-8'
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")

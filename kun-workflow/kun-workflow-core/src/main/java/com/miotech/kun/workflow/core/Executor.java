@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.core;
 
+import com.miotech.kun.workflow.core.annotation.Internal;
 import com.miotech.kun.workflow.core.execution.TaskAttemptMsg;
 import com.miotech.kun.workflow.core.execution.HeartBeatMessage;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -51,7 +52,8 @@ public interface Executor {
      *
      * @return
      */
-    public boolean shutdown();
+    @Internal
+    public boolean reset();
 
     /**
      * 恢复executor
