@@ -91,6 +91,8 @@ subprojects {
                 implementation 'com.alibaba:druid:1.1.23'
                 implementation 'org.springdoc:springdoc-openapi-ui:1.4.8'
                 implementation 'redis.clients:jedis:2.9.0'
+                implementation 'org.jooq:joor-java-8:0.9.13'
+
 
                 testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
