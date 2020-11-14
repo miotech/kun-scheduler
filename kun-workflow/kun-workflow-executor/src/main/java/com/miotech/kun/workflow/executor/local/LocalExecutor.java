@@ -116,7 +116,6 @@ public class LocalExecutor implements Executor {
 
     public boolean submit(TaskAttempt taskAttempt, boolean reSubmit) {
         logger.info("submit taskAttemptId = {} to local executor ", taskAttempt.getId());
-        logger.debug("submit start at {}", System.currentTimeMillis());
         Optional<TaskAttempt> taskAttemptOptional = taskRunDao.fetchAttemptById(taskAttempt.getId());
         logger.debug("submit get taskAttempt from db at {}", System.currentTimeMillis());
         if (!taskAttemptOptional.isPresent()) {
@@ -144,10 +143,6 @@ public class LocalExecutor implements Executor {
 
     private void startWorker(ExecCommand command) {
         Worker worker = workerFactory.createWorker();
-        if (worker == null) {
-            logger.error("could not get worker from workerFactory");
-            return;
-        }
         miscService.changeTaskAttemptStatus(command.getTaskAttemptId(), TaskRunStatus.INITIALIZING);
         worker.start(command);
     }
@@ -176,15 +171,12 @@ public class LocalExecutor implements Executor {
         logger.info("get heart beat from worker = {}", heartBeatMessage);
         Long taskAttemptId = heartBeatMessage.getTaskAttemptId();
         heartBeatMessage.setLastHeartBeatTime(DateTimeUtils.now());
+        workerPool.put(taskAttemptId, heartBeatMessage);
         TaskAttemptProps taskAttemptProps = taskRunDao.fetchLatestTaskAttempt(heartBeatMessage.getTaskRunId());
         if (taskAttemptProps.getStatus().isFinished()) {
             Worker worker = workerFactory.getWorker(heartBeatMessage);
             worker.killTask(false);
-            if (workerPool.containsKey(heartBeatMessage.getTaskAttemptId())) {
-                workerPool.remove(heartBeatMessage.getTaskAttemptId());
-            }
-        } else {
-            workerPool.put(taskAttemptId, heartBeatMessage);
+            workerPool.remove(heartBeatMessage.getTaskAttemptId());
         }
         return true;
     }
@@ -243,6 +235,7 @@ public class LocalExecutor implements Executor {
     @Override
     public boolean shutdown() {
         logger.info("executor going to shutdown");
+        workerToken = new Semaphore(32);
         clear();
         return true;
     }
@@ -338,8 +331,14 @@ public class LocalExecutor implements Executor {
             } catch (InterruptedException e) {
                 logger.error("taskAttemptId = {} acquire worker token failed", taskAttempt.getId());
             }
-            ExecCommand command = buildExecCommand(taskAttempt);
-            startWorker(command);
+            try {
+                ExecCommand command = buildExecCommand(taskAttempt);
+                startWorker(command);
+            }catch (Exception e){
+                logger.error("taskAttemptId = {} could start worker ",taskAttempt.getId(),e);
+                workerToken.release();
+            }
+
         }
     }
 

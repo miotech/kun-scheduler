@@ -321,6 +321,12 @@ public class OperatorLauncher {
 
         @Override
         public void run() {
+            try {
+                logger.debug("wait heartbeat start");
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                logger.error("try to sleep failed", e);
+            }
             while (!cancelled) {
                 try {
                     TaskAttemptMsg msg = statusUpdateQueue.take();
