@@ -73,18 +73,14 @@ public class TaskDefinitionViewService {
      */
     @Transactional
     public TaskDefinitionView create(TaskDefinitionViewCreateInfoVO viewCreateInfoVO) {
+        // Precondition checks:
+        // 1. arguments not null
         Preconditions.checkNotNull(viewCreateInfoVO);
-        List<TaskDefinition> taskDefinitions = taskDefinitionDao.fetchByIds(viewCreateInfoVO.getIncludedTaskDefinitionIds());
+        // 2. included task definitions exists
         Set<Long> idSet = new HashSet<>(viewCreateInfoVO.getIncludedTaskDefinitionIds());
-        Set<Long> fetchedTaskDefIdSet = taskDefinitions.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet());
-        if (!Objects.equals(idSet, fetchedTaskDefIdSet)) {
-            idSet.removeAll(fetchedTaskDefIdSet);
-            throw new IllegalArgumentException(
-                    String.format("Trying to add non-existing task definition ids: %s into view.",
-                            StringUtils.join(idSet.stream().map(String::valueOf).collect(Collectors.toList()), ",")
-                    ));
-        }
+        assureAllTaskDefinitionsExists(idSet);
 
+        List<TaskDefinition> taskDefinitions = taskDefinitionDao.fetchByIds(viewCreateInfoVO.getIncludedTaskDefinitionIds());
         OffsetDateTime currentTime = DateTimeUtils.now();
         TaskDefinitionView viewModelToCreate = TaskDefinitionView.newBuilder()
                 .withId(IdGenerator.getInstance().nextId())
@@ -95,6 +91,7 @@ public class TaskDefinitionViewService {
                 .withUpdateTime(currentTime)
                 .withIncludedTaskDefinitions(taskDefinitions)
                 .build();
+        log.debug("Creating task definition view with id = {}, name = {}", viewModelToCreate.getId(), viewModelToCreate.getName());
         return this.taskDefinitionViewDao.create(viewModelToCreate);
     }
 
@@ -110,11 +107,13 @@ public class TaskDefinitionViewService {
         Optional<TaskDefinitionView> viewOptionalBeforeSave = this.fetchById(viewModel.getId());
         Long updatedId;
         if (viewOptionalBeforeSave.isPresent()) {
+            log.debug("Saving existing task definition view model with id = {}, name = {}", viewModel.getId(), viewModel.getName());
             // do update
             updatedId = viewOptionalBeforeSave.get().getId();
             taskDefinitionViewDao.update(viewModel);
         } else {
             // do create
+            log.debug("Saving non-existing task definition view model with id = {}, name = {}", viewModel.getId(), viewModel.getName());
             updatedId = Objects.isNull(viewModel.getId()) ? IdGenerator.getInstance().nextId() : viewModel.getId();
             TaskDefinitionView viewModelToCreate = viewModel.cloneBuilder()
                     .withId(updatedId)
@@ -145,7 +144,12 @@ public class TaskDefinitionViewService {
      */
     @Transactional
     public TaskDefinitionView putTaskDefinitionsIntoView(Set<Long> taskDefinitionIds, Long viewId, Long modifierId) {
+        // Precondition checks:
+        // 1. arguments not null
+        // 2. view exists
         TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIds, viewId, modifierId);
+        // 3. task definitions exists
+        assureAllTaskDefinitionsExists(taskDefinitionIds);
 
         List<TaskDefinition> existingTaskDefinitions = view.getIncludedTaskDefinitions();
         List<TaskDefinition> updatedContainingTaskDefinitions = loadTaskDefinitionsFromIdSets(
@@ -213,6 +217,21 @@ public class TaskDefinitionViewService {
             throw new NullPointerException(String.format("Cannot find view with id = %s", viewId));
         }
         return viewOptional.get();
+    }
+
+    private void assureAllTaskDefinitionsExists(Set<Long> taskDefinitionIds) {
+        Set<Long> idSet = new HashSet<>(taskDefinitionIds);
+        Set<Long> fetchedTaskDefIdSet = taskDefinitionDao.fetchByIds(
+                taskDefinitionIds.stream().collect(Collectors.toList())
+        ).stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toSet());
+
+        if (!Objects.equals(idSet, fetchedTaskDefIdSet)) {
+            idSet.removeAll(fetchedTaskDefIdSet);
+            throw new IllegalArgumentException(
+                    String.format("Trying to modify view with non-existing task definition ids: %s into view.",
+                            StringUtils.join(idSet.stream().map(String::valueOf).collect(Collectors.toList()), ",")
+                    ));
+        }
     }
 
     @SafeVarargs

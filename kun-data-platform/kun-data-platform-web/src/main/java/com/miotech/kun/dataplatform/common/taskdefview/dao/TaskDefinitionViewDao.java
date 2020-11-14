@@ -215,7 +215,7 @@ public class TaskDefinitionViewDao {
         // Remove relations
         removeAllInclusiveTaskDefinitionsByViewId(viewId);
         // Remove view
-        String deleteViewSQL = "DELETE FROM " + TASK_DEF_VIEW_TABLE_NAME + " WHERE view_id = ?";
+        String deleteViewSQL = "DELETE FROM " + TASK_DEF_VIEW_TABLE_NAME + " WHERE id = ?";
         jdbcTemplate.update(deleteViewSQL, viewId);
         return true;
     }
