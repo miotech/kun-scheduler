@@ -41,6 +41,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.ResourceUtils;
 import com.miotech.kun.workflow.worker.Worker;
+import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -57,6 +58,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -188,7 +190,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         Worker localWorker = workerFactory.createWorker();
         doReturn(null).when(spyFactory).createWorker();
         executor.submit(attempt);
-        executor.shutdown();
+        executor.reset();
         doReturn(localWorker).when(spyFactory).createWorker();
         executor.recover();
         awaitUntilAttemptDone(attempt.getId());
@@ -219,12 +221,13 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
-
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt.getId());
         assertThat(finishedEvent.getAttemptId(), is(attempt.getId()));
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
 
     }
 
@@ -234,7 +237,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         TaskRun mockTaskRun = MockTaskRunFactory.createTaskRun();
         TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(mockTaskRun, TaskRunStatus.CREATED);
         prepareAttempt(TestOperator1.class, attempt);
-        executor.shutdown();
+        executor.reset();
         executor.recover();
 
         awaitUntilAttemptDone(attempt.getId());
@@ -271,6 +274,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
 
     }
 
@@ -282,7 +287,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         prepareAttempt(TestOperator1.class, attempt);
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
-        executor.shutdown();
+        executor.reset();
         executor.recover();
 
         awaitUntilAttemptDone(attempt.getId());
@@ -319,12 +324,14 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
 
     }
 
     @Test
     //taskAttempt下发到worker执行，executor重启,重启前销毁worker
-    public void executorRestartAndKillWorker() throws IOException {
+    public void executorRestartAndKillWorker() throws IOException,InterruptedException {
         TaskRun mockTaskRun = MockTaskRunFactory.createTaskRun();
         TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(mockTaskRun, TaskRunStatus.CREATED);
         prepareAttempt(TestOperator1.class, attempt);
@@ -336,7 +343,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
 
         //executor shutdown and kill worker
         testWorker.killTask(false);
-        executor.shutdown();
+        executor.reset();
         doReturn(localWorker).when(spyFactory).createWorker();
         executor.recover();
         awaitUntilAttemptDone(attempt.getId());
@@ -376,6 +383,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
 
     }
 
@@ -393,6 +402,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertStatusProgress(queuedTaskAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED);
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
     }
 
     @Test
@@ -418,6 +429,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING);
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(31));
 
     }
 
@@ -440,6 +453,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
 
     }
 
@@ -511,6 +526,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
         List<DataStore> outlets = taskRun.getOutlets();
         assertThat(finishedEvent.getInlets(), sameBeanAs(inlets));
         assertThat(finishedEvent.getOutlets(), sameBeanAs(outlets));
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
     }
 
     @Test
@@ -538,6 +555,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
         log = resourceLoader.getResource(attemptProps.getLogPath());
         content = ResourceUtils.content(log.getInputStream());
         assertThat(content, containsString("Hello, world2!"));
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
     }
 
     @Test
@@ -595,6 +614,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.FAILED));
         assertThat(finishedEvent.getInlets(), hasSize(0));
         assertThat(finishedEvent.getOutlets(), hasSize(0));
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
     }
 
     @Test
@@ -633,6 +654,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
     }
 
     @Test
@@ -671,6 +694,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
     }
 
     @Test
@@ -708,6 +733,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.FAILED);
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
     }
 
     @Test
@@ -718,6 +745,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
         // process
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(31));
         executor.cancel(attempt);
 
         // wait until aborted
@@ -748,6 +777,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
+        workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
     }
 
     @Test
@@ -783,6 +814,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
     }
 
     @Test
@@ -823,6 +856,8 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(),is(32));
     }
 
     private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass) {
