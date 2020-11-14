@@ -1,10 +1,18 @@
 package com.miotech.kun.dataplatform.common.taskdefview.vo;
 
-import lombok.Data;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import lombok.Builder;
+import lombok.Value;
 
-@Data
+@Value
+@Builder(toBuilder = true)
+@JsonDeserialize(builder = TaskDefinitionViewSearchParams.TaskDefinitionViewSearchParamsBuilder.class)
 public class TaskDefinitionViewSearchParams {
-    private final String keyword;
-    private final Integer pageNum;
-    private final Integer pageSize;
+    String keyword;
+    Integer pageNum;
+    Integer pageSize;
+
+    @JsonPOJOBuilder(withPrefix = "")
+    public static class TaskDefinitionViewSearchParamsBuilder {}
 }

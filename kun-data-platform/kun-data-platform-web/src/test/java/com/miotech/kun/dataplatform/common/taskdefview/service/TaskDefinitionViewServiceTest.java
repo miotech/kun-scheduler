@@ -47,11 +47,11 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     }
 
     private TaskDefinitionView createSimpleMockViewAndReturn(List<Long> initTaskDefinitionIds) {
-        TaskDefinitionViewCreateInfoVO createInfoVO = new TaskDefinitionViewCreateInfoVO(
-                "view_demo",        // name
-                1L,                 // creator id
-                initTaskDefinitionIds          // task definition ids
-        );
+        TaskDefinitionViewCreateInfoVO createInfoVO = TaskDefinitionViewCreateInfoVO.builder()
+                .name("view_demo")
+                .creator(1L)
+                .includedTaskDefinitionIds(initTaskDefinitionIds)
+                .build();
 
         // Return persisted view
         return taskDefinitionViewService.create(createInfoVO);
@@ -63,11 +63,11 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
         OffsetDateTime mockCurrentTime = DateTimeUtils.freeze();
         List<TaskDefinition> mockTaskDefs = createMockTaskDefsAndReturn();
         List<Long> taskDefIds = mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toList());
-        TaskDefinitionViewCreateInfoVO createInfoVO = new TaskDefinitionViewCreateInfoVO(
-                "view_demo",        // name
-                1L,                 // creator id
-                taskDefIds          // task definition ids
-        );
+        TaskDefinitionViewCreateInfoVO createInfoVO = TaskDefinitionViewCreateInfoVO.builder()
+                .name("view_demo")
+                .creator(1L)
+                .includedTaskDefinitionIds(taskDefIds)
+                .build();
 
         // Process
         TaskDefinitionView persistedView = taskDefinitionViewService.create(createInfoVO);
@@ -86,11 +86,11 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     @Test
     public void create_withInvalidTaskDefinitionIds_shouldThrowException() {
         // Prepare
-        TaskDefinitionViewCreateInfoVO createInfoVO = new TaskDefinitionViewCreateInfoVO(
-                "view_demo",                    // name
-                1L,                             // creator id
-                Lists.newArrayList(100L, 200L)  // task definition ids (not exists)
-        );
+        TaskDefinitionViewCreateInfoVO createInfoVO = TaskDefinitionViewCreateInfoVO.builder()
+                .name("view_demo")
+                .creator(1L)
+                .includedTaskDefinitionIds(Lists.newArrayList(100L, 200L))   // task definition ids (not exists)
+                .build();
 
         // Process
         try {
@@ -502,26 +502,26 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     public void searchPage_withValidPageConfigurations_shouldWorkProperly() {
         // prepare 100 views
         prepareListOfViews(101);
-        TaskDefinitionViewSearchParams searchParamsPage1 = new TaskDefinitionViewSearchParams(
-                null, // keyword
-                1,   // pageNum
-                60   // pageSize
-        );
-        TaskDefinitionViewSearchParams searchParamsPage2 = new TaskDefinitionViewSearchParams(
-                null, // keyword
-                2,   // pageNum
-                60   // pageSize
-        );
-        TaskDefinitionViewSearchParams searchParamsPage3 = new TaskDefinitionViewSearchParams(
-                null, // keyword
-                3,   // pageNum
-                60   // pageSize
-        );
-        TaskDefinitionViewSearchParams searchParamsPageExtraLarge = new TaskDefinitionViewSearchParams(
-                null,
-                1,
-                100000
-        );
+        TaskDefinitionViewSearchParams searchParamsPage1 = TaskDefinitionViewSearchParams.builder()
+                .keyword(null)
+                .pageNum(1)
+                .pageSize(60)
+                .build();
+        TaskDefinitionViewSearchParams searchParamsPage2 = TaskDefinitionViewSearchParams.builder()
+                .keyword(null)
+                .pageNum(2)
+                .pageSize(60)
+                .build();
+        TaskDefinitionViewSearchParams searchParamsPage3 = TaskDefinitionViewSearchParams.builder()
+                .keyword(null)
+                .pageNum(3)
+                .pageSize(60)
+                .build();
+        TaskDefinitionViewSearchParams searchParamsPageExtraLarge = TaskDefinitionViewSearchParams.builder()
+                .keyword(null)
+                .pageNum(1)
+                .pageSize(100000)
+                .build();
 
         // Process
         PageResult<TaskDefinitionViewVO> viewVOsPage1 = taskDefinitionViewService.searchPage(searchParamsPage1);
@@ -563,11 +563,11 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     public void searchPage_withNonEmptyKeywordAsFilter_shouldDoFiltering() {
         // prepare 100 views
         prepareListOfViews(100);
-        TaskDefinitionViewSearchParams searchParamsWithKeyword = new TaskDefinitionViewSearchParams(
-                "view_1",   // keyword
-                1,   // pageNum
-                100   // pageSize
-        );
+        TaskDefinitionViewSearchParams searchParamsWithKeyword = TaskDefinitionViewSearchParams.builder()
+                .keyword("view_1")
+                .pageNum(1)
+                .pageSize(100)
+                .build();
         // Process
         PageResult<TaskDefinitionViewVO> searchResultPage = taskDefinitionViewService.searchPage(searchParamsWithKeyword);
         // Validate
@@ -589,7 +589,12 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
 
     private void assertSearchWithParamsShouldThrowException(String keyword, Integer pageNum, Integer pageSize) {
         try {
-            taskDefinitionViewService.searchPage(new TaskDefinitionViewSearchParams(keyword, pageNum, pageSize));
+            taskDefinitionViewService.searchPage(TaskDefinitionViewSearchParams.builder()
+                .keyword(keyword)
+                .pageNum(pageNum)
+                .pageSize(pageSize)
+                .build()
+            );
             fail();
         } catch (Exception e) {
             assertThat(e, instanceOf(IllegalArgumentException.class));

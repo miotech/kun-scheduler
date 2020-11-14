@@ -6,11 +6,13 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefview.dao.TaskDefinitionViewDao;
+import com.miotech.kun.dataplatform.common.taskdefview.vo.CreateTaskDefViewRequest;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewCreateInfoVO;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewVO;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefview.TaskDefinitionView;
+import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,12 +25,12 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-public class TaskDefinitionViewService {
+public class TaskDefinitionViewService extends BaseSecurityService {
     private final TaskDefinitionDao taskDefinitionDao;
 
     private final TaskDefinitionViewDao taskDefinitionViewDao;
 
-    private final int PAGE_SIZE_SEARCH_MAX = 100;
+    private static final int PAGE_SIZE_SEARCH_MAX = 100;
 
     @Autowired
     public TaskDefinitionViewService(TaskDefinitionViewDao taskDefinitionViewDao, TaskDefinitionDao taskDefinitionDao) {
@@ -49,7 +51,7 @@ public class TaskDefinitionViewService {
     /**
      * Search and fetch paginated list of meta information of task definition views,
      * where task definitions are transformed into definition ids only.
-     * Maximum page size will not exceed {@link PAGE_SIZE_SEARCH_MAX} or it will be auto adjusted to the upper limit.
+     * Maximum page size will not exceed {@code PAGE_SIZE_SEARCH_MAX} or it will be auto adjusted to the upper limit.
      * @param searchParams search parameter object
      * @return page result list of task definition view value objects
      */
@@ -60,11 +62,7 @@ public class TaskDefinitionViewService {
 
         TaskDefinitionViewSearchParams finalParams = searchParams;
         if (searchParams.getPageSize() > PAGE_SIZE_SEARCH_MAX) {
-            finalParams = new TaskDefinitionViewSearchParams(
-                    searchParams.getKeyword(),
-                    searchParams.getPageNum(),
-                    PAGE_SIZE_SEARCH_MAX
-            );
+            finalParams = searchParams.toBuilder().pageSize(PAGE_SIZE_SEARCH_MAX).build();
         }
 
         List<TaskDefinitionViewVO> viewList = this.taskDefinitionViewDao.fetchListBySearchParams(finalParams)
@@ -78,6 +76,17 @@ public class TaskDefinitionViewService {
                 totalCount,
                 viewList
         );
+    }
+
+    @Transactional
+    public TaskDefinitionView create(CreateTaskDefViewRequest createRequest) {
+        Preconditions.checkNotNull(createRequest);
+        TaskDefinitionViewCreateInfoVO createInfoVO = TaskDefinitionViewCreateInfoVO.builder()
+                .name(createRequest.getName())
+                .creator(getCurrentUser().getId())
+                .includedTaskDefinitionIds(createRequest.getTaskDefIds())
+                .build();
+        return create(createInfoVO);
     }
 
     /**
@@ -109,28 +118,38 @@ public class TaskDefinitionViewService {
         return this.taskDefinitionViewDao.create(viewModelToCreate);
     }
 
+    @Transactional
+    public TaskDefinitionView save(TaskDefinitionView viewModel) {
+        return save(viewModel, false);
+    }
+
     /**
      * Update or insert task definition view model into storage
      * @param viewModel view model object
      * @return persisted view model object
      */
     @Transactional
-    public TaskDefinitionView save(TaskDefinitionView viewModel) {
+    public TaskDefinitionView save(TaskDefinitionView viewModel, boolean useCurrentUserAsModifier) {
         Preconditions.checkNotNull(viewModel);
 
         Optional<TaskDefinitionView> viewOptionalBeforeSave = this.fetchById(viewModel.getId());
         Long updatedId;
+        Long modifierId = useCurrentUserAsModifier ? getCurrentUser().getId() : viewModel.getLastModifier();
         if (viewOptionalBeforeSave.isPresent()) {
             log.debug("Saving existing task definition view model with id = {}, name = {}", viewModel.getId(), viewModel.getName());
             // do update
             updatedId = viewOptionalBeforeSave.get().getId();
-            taskDefinitionViewDao.update(viewModel);
+            taskDefinitionViewDao.update(viewModel.cloneBuilder()
+                    .withLastModifier(modifierId)
+                    .build()
+            );
         } else {
             // do create
             log.debug("Saving non-existing task definition view model with id = {}, name = {}", viewModel.getId(), viewModel.getName());
             updatedId = Objects.isNull(viewModel.getId()) ? IdGenerator.getInstance().nextId() : viewModel.getId();
             TaskDefinitionView viewModelToCreate = viewModel.cloneBuilder()
                     .withId(updatedId)
+                    .withLastModifier(modifierId)
                     .build();
             taskDefinitionViewDao.create(viewModelToCreate);
         }
@@ -147,6 +166,11 @@ public class TaskDefinitionViewService {
     public boolean deleteById(Long id) {
         Preconditions.checkNotNull(id);
         return this.taskDefinitionViewDao.deleteById(id);
+    }
+
+    @Transactional
+    public TaskDefinitionView putTaskDefinitionsIntoView(Set<Long> taskDefinitionIds, Long viewId) {
+        return putTaskDefinitionsIntoView(taskDefinitionIds, viewId, getCurrentUser().getId());
     }
 
     /**
@@ -180,6 +204,11 @@ public class TaskDefinitionViewService {
         return this.save(updatedView);
     }
 
+    @Transactional
+    public TaskDefinitionView removeTaskDefinitionsFromView(Set<Long> taskDefinitionIdsToRemove, Long viewId) {
+        return removeTaskDefinitionsFromView(taskDefinitionIdsToRemove, viewId, getCurrentUser().getId());
+    }
+
     /**
      * Remove task definitions from view inclusive list. The result should be idempotence.
      * @param taskDefinitionIdsToRemove ids of task definitions to remove
@@ -203,6 +232,11 @@ public class TaskDefinitionViewService {
                 .withIncludedTaskDefinitions(updatedContainingTaskDefinitions)
                 .build();
         return this.save(updatedView);
+    }
+
+    @Transactional
+    public TaskDefinitionView overwriteTaskDefinitionsOfView(Set<Long> taskDefinitionIds, Long viewId) {
+        return overwriteTaskDefinitionsOfView(taskDefinitionIds, viewId, getCurrentUser().getId());
     }
 
     /**

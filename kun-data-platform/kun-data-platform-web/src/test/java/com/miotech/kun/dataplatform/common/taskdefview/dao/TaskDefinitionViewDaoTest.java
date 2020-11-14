@@ -80,24 +80,35 @@ public class TaskDefinitionViewDaoTest extends AppTestBase {
             insertedViewIds.add(prepareTaskDefinitionViewInstanceAndInsert());
         }
         // Process
-        TaskDefinitionViewSearchParams searchParams1 = new TaskDefinitionViewSearchParams(
-                "", 1, 25
-        );
+        TaskDefinitionViewSearchParams searchParams1 = TaskDefinitionViewSearchParams.builder()
+                .keyword("")
+                .pageNum(1)
+                .pageSize(25)
+                .build();
+
         List<TaskDefinitionView> viewPage1 = taskDefinitionViewDao.fetchListBySearchParams(searchParams1);
 
-        TaskDefinitionViewSearchParams searchParams2 = new TaskDefinitionViewSearchParams(
-                "", 2, 25
-        );
+        TaskDefinitionViewSearchParams searchParams2 = TaskDefinitionViewSearchParams.builder()
+                .keyword("")
+                .pageNum(2)
+                .pageSize(25)
+                .build();
+
         List<TaskDefinitionView> viewPage2 = taskDefinitionViewDao.fetchListBySearchParams(searchParams2);
 
-        TaskDefinitionViewSearchParams searchParams3 = new TaskDefinitionViewSearchParams(
-                "", 3, 25
-        );
+        TaskDefinitionViewSearchParams searchParams3 = TaskDefinitionViewSearchParams.builder()
+                .keyword("")
+                .pageNum(3)
+                .pageSize(25)
+                .build();
+
         List<TaskDefinitionView> viewPage3 = taskDefinitionViewDao.fetchListBySearchParams(searchParams3);
 
-        TaskDefinitionViewSearchParams searchParams4 = new TaskDefinitionViewSearchParams(
-                "", 3, 20
-        );
+        TaskDefinitionViewSearchParams searchParams4 = TaskDefinitionViewSearchParams.builder()
+                .keyword("")
+                .pageNum(3)
+                .pageSize(20)
+                .build();
         List<TaskDefinitionView> viewPage4 = taskDefinitionViewDao.fetchListBySearchParams(searchParams4);
 
         // Validate
