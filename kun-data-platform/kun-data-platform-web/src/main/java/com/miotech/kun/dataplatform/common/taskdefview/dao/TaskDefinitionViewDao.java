@@ -168,7 +168,8 @@ public class TaskDefinitionViewDao {
                 updateView.getCreator(),
                 updateView.getLastModifier(),
                 updateView.getCreateTime(),
-                DateTimeUtils.now()
+                DateTimeUtils.now(),
+                updateView.getId()
         );
         if (affectedRows > 0) {
             updateAllRelationsByViewId(

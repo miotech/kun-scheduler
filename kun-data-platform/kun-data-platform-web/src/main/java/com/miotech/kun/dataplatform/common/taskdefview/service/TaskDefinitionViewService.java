@@ -39,7 +39,7 @@ public class TaskDefinitionViewService {
      * @param taskDefViewId id of target task definition view
      * @return An optional object wrapper for task definition view model
      */
-    public Optional<TaskDefinitionView> fetchTaskDefinitionViewById(Long taskDefViewId) {
+    public Optional<TaskDefinitionView> fetchById(Long taskDefViewId) {
         Preconditions.checkNotNull(taskDefViewId);
         return this.taskDefinitionViewDao.fetchById(taskDefViewId);
     }
@@ -50,7 +50,7 @@ public class TaskDefinitionViewService {
      * @param searchParams search parameter object
      * @return page result list of task definition view value objects
      */
-    public PageResult<TaskDefinitionViewVO> searchTaskDefinitionViewPage(TaskDefinitionViewSearchParams searchParams) {
+    public PageResult<TaskDefinitionViewVO> searchPage(TaskDefinitionViewSearchParams searchParams) {
         Preconditions.checkNotNull(searchParams);
 
         List<TaskDefinitionViewVO> viewList = this.taskDefinitionViewDao.fetchListBySearchParams(searchParams)
@@ -72,7 +72,7 @@ public class TaskDefinitionViewService {
      * @return created view model object
      */
     @Transactional
-    public TaskDefinitionView createTaskDefinitionView(TaskDefinitionViewCreateInfoVO viewCreateInfoVO) {
+    public TaskDefinitionView create(TaskDefinitionViewCreateInfoVO viewCreateInfoVO) {
         Preconditions.checkNotNull(viewCreateInfoVO);
         List<TaskDefinition> taskDefinitions = taskDefinitionDao.fetchByIds(viewCreateInfoVO.getIncludedTaskDefinitionIds());
         Set<Long> idSet = new HashSet<>(viewCreateInfoVO.getIncludedTaskDefinitionIds());
@@ -104,10 +104,10 @@ public class TaskDefinitionViewService {
      * @return persisted view model object
      */
     @Transactional
-    public TaskDefinitionView saveTaskDefinitionView(TaskDefinitionView viewModel) {
+    public TaskDefinitionView save(TaskDefinitionView viewModel) {
         Preconditions.checkNotNull(viewModel);
 
-        Optional<TaskDefinitionView> viewOptionalBeforeSave = this.fetchTaskDefinitionViewById(viewModel.getId());
+        Optional<TaskDefinitionView> viewOptionalBeforeSave = this.fetchById(viewModel.getId());
         Long updatedId;
         if (viewOptionalBeforeSave.isPresent()) {
             // do update
@@ -121,7 +121,7 @@ public class TaskDefinitionViewService {
                     .build();
             taskDefinitionViewDao.create(viewModelToCreate);
         }
-        return this.fetchTaskDefinitionViewById(updatedId)
+        return this.fetchById(updatedId)
                 .orElseThrow(IllegalStateException::new);
     }
 
@@ -131,7 +131,7 @@ public class TaskDefinitionViewService {
      * @return true if found and removed successfully. false if target view not found.
      */
     @Transactional
-    public boolean deleteTaskDefinitionViewById(Long id) {
+    public boolean deleteById(Long id) {
         Preconditions.checkNotNull(id);
         return this.taskDefinitionViewDao.deleteById(id);
     }
@@ -159,7 +159,7 @@ public class TaskDefinitionViewService {
                 .withLastModifier(modifierId)
                 .withIncludedTaskDefinitions(updatedContainingTaskDefinitions)
                 .build();
-        return this.saveTaskDefinitionView(updatedView);
+        return this.save(updatedView);
     }
 
     /**
@@ -174,7 +174,7 @@ public class TaskDefinitionViewService {
         TaskDefinitionView view = checkArgumentsAndFetchTargetView(taskDefinitionIdsToRemove, viewId, modifierId);
         List<TaskDefinition> existingTaskDefinitions = view.getIncludedTaskDefinitions();
 
-        // Filter out by ids
+        // Filter out task definitions to be removed from view by ids
         List<TaskDefinition> updatedContainingTaskDefinitions = existingTaskDefinitions
                         .stream()
                         .filter(taskDef -> !taskDefinitionIdsToRemove.contains(taskDef.getDefinitionId()))
@@ -184,7 +184,7 @@ public class TaskDefinitionViewService {
                 .withLastModifier(modifierId)
                 .withIncludedTaskDefinitions(updatedContainingTaskDefinitions)
                 .build();
-        return this.saveTaskDefinitionView(updatedView);
+        return this.save(updatedView);
     }
 
     /**
@@ -201,7 +201,7 @@ public class TaskDefinitionViewService {
                 .withLastModifier(modifierId)
                 .withIncludedTaskDefinitions(taskDefinitionDao.fetchByIds(new ArrayList<>(taskDefinitionIds)))
                 .build();
-        return this.saveTaskDefinitionView(updatedView);
+        return this.save(updatedView);
     }
 
     private TaskDefinitionView checkArgumentsAndFetchTargetView(Set<Long> taskDefIds, Long viewId, Long modifierId) {

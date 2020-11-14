@@ -41,13 +41,13 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
         });
         List<Long> taskDefIds = mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toList());
         TaskDefinitionViewCreateInfoVO createInfoVO = new TaskDefinitionViewCreateInfoVO(
-                "view_demo",   // name
-                1L,          // creator id
+                "view_demo",        // name
+                1L,                 // creator id
                 taskDefIds          // task definition ids
         );
 
         // Process
-        TaskDefinitionView persistedView = taskDefinitionViewService.createTaskDefinitionView(createInfoVO);
+        TaskDefinitionView persistedView = taskDefinitionViewService.create(createInfoVO);
 
         // Validate
         assertThat(persistedView.getName(), is(createInfoVO.getName()));
@@ -64,14 +64,14 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     public void create_withInvalidTaskDefinitionIds_shouldThrowException() {
         // Prepare
         TaskDefinitionViewCreateInfoVO createInfoVO = new TaskDefinitionViewCreateInfoVO(
-                "view_demo",  // name
-                1L,          // creator id
+                "view_demo",                    // name
+                1L,                             // creator id
                 Lists.newArrayList(100L, 200L)  // task definition ids (not exists)
         );
 
         // Process
         try {
-            taskDefinitionViewService.createTaskDefinitionView(createInfoVO);
+            taskDefinitionViewService.create(createInfoVO);
             fail();
         } catch (Exception e) {
             assertThat(e, instanceOf(IllegalArgumentException.class));
@@ -82,14 +82,14 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     public void fetch_existingTaskDefView_shouldFetchAndReturnTheSameModel() {
         // Prepare
         TaskDefinitionViewCreateInfoVO createInfoVO = new TaskDefinitionViewCreateInfoVO(
-                "view_demo",  // name
-                1L,          // creator id
+                "view_demo",      // name
+                1L,               // creator id
                 new ArrayList<>() // task definition ids
         );
-        TaskDefinitionView createdView = taskDefinitionViewService.createTaskDefinitionView(createInfoVO);
+        TaskDefinitionView createdView = taskDefinitionViewService.create(createInfoVO);
 
         // Process
-        Optional<TaskDefinitionView> fetchedView = taskDefinitionViewService.fetchTaskDefinitionViewById(createdView.getId());
+        Optional<TaskDefinitionView> fetchedView = taskDefinitionViewService.fetchById(createdView.getId());
 
         // Validate
         assertTrue(fetchedView.isPresent());
@@ -99,7 +99,7 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     @Test
     public void fetch_nonExistingTaskDefView_shouldReturnEmptyOptionalObject() {
         // Process
-        Optional<TaskDefinitionView> fetchedView = taskDefinitionViewService.fetchTaskDefinitionViewById(1234L);
+        Optional<TaskDefinitionView> fetchedView = taskDefinitionViewService.fetchById(1234L);
 
         // Validate
         assertFalse(fetchedView.isPresent());
@@ -120,9 +120,9 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
                 .build();
 
         // Process
-        Optional<TaskDefinitionView> viewFetchedBeforeSave = taskDefinitionViewService.fetchTaskDefinitionViewById(1234L);
-        TaskDefinitionView savedView = taskDefinitionViewService.saveTaskDefinitionView(viewNotPersisted);
-        Optional<TaskDefinitionView> viewFetchedAfterSave = taskDefinitionViewService.fetchTaskDefinitionViewById(1234L);
+        Optional<TaskDefinitionView> viewFetchedBeforeSave = taskDefinitionViewService.fetchById(1234L);
+        TaskDefinitionView savedView = taskDefinitionViewService.save(viewNotPersisted);
+        Optional<TaskDefinitionView> viewFetchedAfterSave = taskDefinitionViewService.fetchById(1234L);
 
         // Validate
         assertFalse(viewFetchedBeforeSave.isPresent());
@@ -132,5 +132,40 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
 
         // Teardown
         DateTimeUtils.resetClock();
+    }
+
+    @Test
+    public void save_existingTaskDefView_shouldPerformUpdateAction() {
+        // Prepare
+        OffsetDateTime mockCurrentTime = DateTimeUtils.freeze();
+        TaskDefinitionViewCreateInfoVO createInfoVO = new TaskDefinitionViewCreateInfoVO(
+                "view_demo",         // name
+                1L,                  // creator id
+                new ArrayList<>()    // task definition ids
+        );
+        TaskDefinitionView viewInit = taskDefinitionViewService.create(createInfoVO);
+        TaskDefinitionView viewUpdate = viewInit.cloneBuilder()
+                .withName("view_demo_modified")
+                .withLastModifier(2L)
+                .build();
+
+        // Process
+        Optional<TaskDefinitionView> viewFetchedBeforeSave = taskDefinitionViewService.fetchById(viewInit.getId());
+        TaskDefinitionView savedView = taskDefinitionViewService.save(viewUpdate);
+        Optional<TaskDefinitionView> viewFetchedAfterSave = taskDefinitionViewService.fetchById(viewInit.getId());
+
+        // Validate
+        assertTrue(viewFetchedBeforeSave.isPresent());
+        assertThat(viewFetchedBeforeSave.get().getId(), is(viewInit.getId()));
+        assertThat(viewFetchedBeforeSave.get().getName(), is("view_demo"));
+        assertThat(viewFetchedBeforeSave.get().getCreator(), is(1L));
+        assertThat(viewFetchedBeforeSave.get().getLastModifier(), is(1L));
+
+        assertTrue(viewFetchedAfterSave.isPresent());
+        assertThat(viewFetchedAfterSave.get().getId(), is(viewInit.getId()));
+        assertThat(viewFetchedAfterSave.get().getName(), is("view_demo_modified"));
+        assertThat(viewFetchedAfterSave.get().getCreator(), is(1L));
+        assertThat(viewFetchedAfterSave.get().getLastModifier(), is(2L));
+        assertThat(viewFetchedAfterSave.get(), sameBeanAs(savedView));
     }
 }
