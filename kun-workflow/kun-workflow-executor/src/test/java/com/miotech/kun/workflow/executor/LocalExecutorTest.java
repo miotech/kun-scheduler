@@ -424,13 +424,11 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(submitCreated, is(false));
         assertThat(submitQueued, is(false));
         // events
-        awaitUntilAttemptDone(runningTaskAttempt.getId());
         assertStatusProgress(runningTaskAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
-                TaskRunStatus.RUNNING,
-                TaskRunStatus.SUCCESS);
+                TaskRunStatus.RUNNING);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
         assertThat(workerToken.availablePermits(),is(32));
 
