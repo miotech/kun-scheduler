@@ -747,7 +747,7 @@ public class TaskRunDao {
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where("status is NULL or status = ?")
                 .getSQL();
-        List<TaskRun> taskRunList = dbOperator.fetchAll(sql, taskRunMapperInstance,toNullableString(toNullableString(TaskRunStatus.CREATED)));
+        List<TaskRun> taskRunList = dbOperator.fetchAll(sql, taskRunMapperInstance,toNullableString(TaskRunStatus.CREATED));
         return taskRunList;
     }
 
@@ -769,7 +769,7 @@ public class TaskRunDao {
                 .where(whereCase)
                 .getSQL();
         OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-1);
-        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), toNullableString(toNullableString(TaskRunStatus.QUEUED)), recoverLimit);
+        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), toNullableString(TaskRunStatus.QUEUED), recoverLimit);
     }
 
     public List<TaskAttempt> fetchRunningTaskAttemptList() {
@@ -791,8 +791,8 @@ public class TaskRunDao {
                 .where(whereCase)
                 .getSQL();
         OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-1);
-        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), toNullableString(toNullableString(TaskRunStatus.INITIALIZING)),
-                toNullableString(toNullableString(TaskRunStatus.RUNNING)), recoverLimit);
+        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), toNullableString(TaskRunStatus.INITIALIZING),
+                toNullableString(TaskRunStatus.RUNNING), recoverLimit);
     }
 
 
