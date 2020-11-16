@@ -8,6 +8,7 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.task.DependencyFunction;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -16,6 +17,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 
@@ -676,5 +678,31 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 .stream().map(TaskRun::getId).collect(Collectors.toList());
         assertEquals(taskRun.getId(), taskRunIdList.get(0));
 
+    }
+
+    @Test
+    public void fetchUnStartedTaskRunListWithDependency() {
+        List<Task> taskList  = MockTaskFactory.createTasksWithRelations(2,"0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList,"0>>1");
+        for(Task task : taskList){
+            taskDao.create(task);
+        }
+        taskRunDao.createTaskRuns(taskRunList);
+        List<TaskRun> recoverTaskRunList = taskRunDao.fetchUnStartedTaskRunList();
+        TaskRun taskRun1 = recoverTaskRunList.get(0);
+        TaskRun taskRun2 = recoverTaskRunList.get(1);
+        assertThat(taskRun1.getDependentTaskRunIds(), Matchers.hasSize(0));
+        assertThat(taskRun2.getDependentTaskRunIds(),Matchers.hasSize(1));
+        assertThat(taskRun2.getDependentTaskRunIds(),Matchers.containsInAnyOrder(taskRun1.getId()));
+
+    }
+
+    private List<Long> resolveDependencies(Task task, Tick tick, List<TaskRun> others) {
+        return task.getDependencies().stream()
+                .flatMap(dependency -> {
+                    DependencyFunction depFunc = dependency.getDependencyFunction();
+                    return depFunc.resolveDependency(task, dependency.getUpstreamTaskId(), tick, others)
+                            .stream();
+                }).collect(Collectors.toList());
     }
 }

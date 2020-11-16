@@ -30,7 +30,7 @@ public class MockTaskRunFactory {
         return createTaskRuns(new Task[]{task}).get(0);
     }
 
-    public static TaskRun createTaskRunWithTick(Task task,Tick tick) {
+    public static TaskRun createTaskRunWithTick(Task task, Tick tick) {
         return TaskRun.newBuilder()
                 .withId(WorkflowIdGenerator.nextTaskRunId())
                 .withTask(task)
@@ -45,7 +45,7 @@ public class MockTaskRunFactory {
                 .build();
     }
 
-    public static List<TaskRun> createTaskRuns(Task...tasks) {
+    public static List<TaskRun> createTaskRuns(Task... tasks) {
         return createTaskRuns(Arrays.asList(tasks));
     }
 
@@ -54,6 +54,11 @@ public class MockTaskRunFactory {
     }
 
     public static List<TaskRun> createTaskRunsWithRelations(List<Task> tasks, String relations) {
+        return createTaskRunsWithRelationsAndTick(tasks, relations, tick);
+    }
+
+
+    public static List<TaskRun> createTaskRunsWithRelationsAndTick(List<Task> tasks, String relations, Tick tick) {
         List<TaskRun> taskRuns = new ArrayList<>();
 
         List<Long> ids = Lists.newArrayList();

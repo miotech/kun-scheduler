@@ -75,12 +75,12 @@ public class LocalExecutor implements Executor {
     private LinkedBlockingQueue<TaskAttempt> taskAttemptQueue = new LinkedBlockingQueue<>(QUEUE_SIZE);
 
     private ExecutorService workerStarterThreadPool =
-            new ThreadPoolExecutor(CORES * 2, CORES * 4,
-                    5L, TimeUnit.MILLISECONDS,
+            new ThreadPoolExecutor(CORES, CORES * 4,
+                    5L, TimeUnit.SECONDS,
                     new LinkedBlockingQueue<>(TASK_LIMIT),
                     new ThreadFactoryBuilder().setNameFormat("local-executor-workerStarter-%d").build());
     private ExecutorService workerTimeoutThreadPool =
-            new ThreadPoolExecutor(CORES * 2, CORES * 4,
+            new ThreadPoolExecutor(CORES, CORES * 4,
                     5L, TimeUnit.SECONDS,
                     new LinkedBlockingQueue<>(TASK_LIMIT),
                     new ThreadFactoryBuilder().setNameFormat("local-executor-workerTimeout-%d").build());
@@ -133,7 +133,7 @@ public class LocalExecutor implements Executor {
                 logger.info("taskAttemptId = {} has been submit", taskAttempt.getId());
                 return false;
             }
-            taskAttemptQueue.add(taskAttempt);
+            taskAttemptQueue.add(taskAttempt.cloneBuilder().withStatus(TaskRunStatus.QUEUED).build());
             if (savedTaskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
                 logger.debug("submit change taskAttempt status to db start at {}", System.currentTimeMillis());
                 miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.QUEUED);
@@ -270,15 +270,8 @@ public class LocalExecutor implements Executor {
         List<TaskAttempt> runningTaskAttemptList = taskRunDao.fetchRunningTaskAttemptList();
         logger.debug("recover taskAttempt to workerPool count = {}", runningTaskAttemptList);
         for (TaskAttempt taskAttempt : runningTaskAttemptList) {
-            try {
-                workerToken.acquire();
-                logger.debug("taskAttemptId = {} acquire worker token, current size = {}", taskAttempt.getId(), workerToken.availablePermits());
-                workerPool.put(taskAttempt.getId(), initHeartBeatByTaskAttempt(taskAttempt));
-            } catch (InterruptedException e) {
-                logger.error("recover taskAttempt to worker pool falied", e);
-            }
+            workerStarterThreadPool.submit(new WorkerStartRunner(taskAttempt));
         }
-
         for (int i = 0; i < taskAttemptList.size(); i++) {
             submit(taskAttemptList.get(i), true);
         }
@@ -291,7 +284,7 @@ public class LocalExecutor implements Executor {
         message.setTaskAttemptId(taskAttempt.getId());
         message.setTaskRunId(taskAttempt.getTaskRun().getId());
         message.setTaskRunStatus(taskAttempt.getStatus());
-        message.setLastHeartBeatTime(DateTimeUtils.now());
+        message.setInitTime(DateTimeUtils.now().plusMinutes(1));//初始化1分钟
         return message;
     }
 
@@ -336,10 +329,14 @@ public class LocalExecutor implements Executor {
                 throw ExceptionUtils.wrapIfChecked(e);
             }
             try {
-                ExecCommand command = buildExecCommand(taskAttempt);
-                startWorker(command);
-            }catch (Exception e){
-                logger.error("taskAttemptId = {} could start worker ",taskAttempt.getId(),e);
+                workerPool.put(taskAttempt.getId(), initHeartBeatByTaskAttempt(taskAttempt));
+                //taskAttempt 已经启动（重启恢复）,则只加入workerPool监听心跳
+                if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED) || taskAttempt.getStatus().equals(TaskRunStatus.ERROR)) {
+                    ExecCommand command = buildExecCommand(taskAttempt);
+                    startWorker(command);
+                }
+            } catch (Exception e) {
+                logger.error("taskAttemptId = {} could start worker ", taskAttempt.getId(), e);
                 workerToken.release();
             }
 
@@ -359,7 +356,10 @@ public class LocalExecutor implements Executor {
                 HeartBeatMessage heartBeatMessage = entry.getValue();
                 Long taskAttemptId = entry.getKey();
                 int timeoutTimes = heartBeatMessage.getTimeoutTimes();
-                OffsetDateTime nextHeartbeat = heartBeatMessage.getLastHeartBeatTime().plus(HEARTBEAT_INTERVAL * (timeoutTimes + 1), ChronoUnit.MILLIS);
+                OffsetDateTime lastHearBeat = heartBeatMessage.getLastHeartBeatTime() != null ?
+                        heartBeatMessage.getLastHeartBeatTime() : heartBeatMessage.getInitTime();
+                OffsetDateTime nextHeartbeat = lastHearBeat.
+                        plus(HEARTBEAT_INTERVAL * (timeoutTimes + 1), ChronoUnit.MILLIS);
                 if (currentTime.isAfter(nextHeartbeat)) {
                     timeoutTimes++;
                     if (timeoutTimes >= TIMEOUT_LIMIT) {
