@@ -2,10 +2,7 @@ package com.miotech.kun.dataplatform.common.taskdefview.dao;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
-import com.miotech.kun.commons.db.sql.SQLBuilder;
-import com.miotech.kun.commons.db.sql.SQLUtils;
-import com.miotech.kun.commons.db.sql.WhereClause;
+import com.miotech.kun.commons.db.sql.*;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.ViewAndTaskDefinitionRelationVO;
@@ -87,7 +84,7 @@ public class TaskDefinitionViewDao {
                 .where(whereClause.getPreparedSQLSegment())
                 .offset(searchParams.getPageSize() * (searchParams.getPageNum() - 1))
                 .limit(searchParams.getPageSize())
-                .orderBy(TASK_DEF_VIEW_MODEL_NAME + "_id DESC")
+                .orderBy(buildOrderByString(searchParams))
                 .autoAliasColumns()
                 .getSQL();
 
@@ -125,6 +122,18 @@ public class TaskDefinitionViewDao {
         }
         String whereClauseString = whereClauseBuilder.append("(1 = 1)").toString();
         return new WhereClause(whereClauseString, paramsList.toArray(new Object[0]));
+    }
+
+    private String buildOrderByString(TaskDefinitionViewSearchParams searchParams) {
+        TaskDefinitionViewSearchParams.SortKey sortKey = searchParams.getSortKey();
+        SortOrder sortOrder = searchParams.getSortOrder();
+        if (Objects.isNull(sortOrder)) {
+            sortOrder = SortOrder.DESC;
+        }
+        if (Objects.isNull(sortKey)) {
+            sortKey = TaskDefinitionViewSearchParams.SortKey.ID;
+        }
+        return TASK_DEF_VIEW_MODEL_NAME + "_" + sortKey.getFieldColumnName() + " " + sortOrder.getSqlString();
     }
 
     /**

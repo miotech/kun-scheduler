@@ -6,10 +6,7 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefview.dao.TaskDefinitionViewDao;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.CreateTaskDefViewRequest;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewCreateInfoVO;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewVO;
+import com.miotech.kun.dataplatform.common.taskdefview.vo.*;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.security.service.BaseSecurityService;
@@ -117,6 +114,40 @@ public class TaskDefinitionViewService extends BaseSecurityService {
                 .build();
         log.debug("Creating task definition view with id = {}, name = {}", viewModelToCreate.getId(), viewModelToCreate.getName());
         return this.taskDefinitionViewDao.create(viewModelToCreate);
+    }
+
+    /**
+     * Update a task definition view by request value object
+     * @param viewId id of target view
+     * @param request request body data
+     * @return Updated task definition view model object
+     */
+    @Transactional
+    public TaskDefinitionView update(Long viewId, UpdateTaskDefViewRequest request) {
+        return update(viewId, request, getCurrentUser().getId());
+    }
+
+    @Transactional
+    public TaskDefinitionView update(Long viewId, UpdateTaskDefViewRequest request, Long modifier) {
+        Optional<TaskDefinitionView> fetchedView = fetchById(viewId);
+        if (!fetchedView.isPresent()) {
+            throw new IllegalArgumentException(String.format("Cannot update non-exist task definition view with id = %s", viewId));
+        }
+        OffsetDateTime currentTime = DateTimeUtils.now();
+        TaskDefinitionView viewModelUpdate = fetchedView.get().cloneBuilder()
+                .withName(request.getName())
+                .withUpdateTime(currentTime)
+                .withLastModifier(modifier)
+                .withIncludedTaskDefinitions(
+                        request.getTaskDefinitionIds().stream()
+                                .map(id -> TaskDefinition.newBuilder()
+                                        .withDefinitionId(id)
+                                        .build()
+                                ).collect(Collectors.toList())
+                )
+                .build();
+        taskDefinitionViewDao.update(viewModelUpdate);
+        return this.fetchById(viewId).orElseThrow(IllegalStateException::new);
     }
 
     @Transactional

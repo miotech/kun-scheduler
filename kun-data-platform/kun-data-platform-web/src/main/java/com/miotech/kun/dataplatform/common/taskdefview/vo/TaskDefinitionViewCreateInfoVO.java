@@ -1,15 +1,18 @@
 package com.miotech.kun.dataplatform.common.taskdefview.vo;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefview.TaskDefinitionView;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Data
+@Value
 @Builder(toBuilder = true)
+@JsonDeserialize(builder = TaskDefinitionViewCreateInfoVO.TaskDefinitionViewCreateInfoVOBuilder.class)
 public class TaskDefinitionViewCreateInfoVO {
     public static TaskDefinitionViewCreateInfoVO from(TaskDefinitionView view) {
         return new TaskDefinitionViewCreateInfoVO(
@@ -21,9 +24,12 @@ public class TaskDefinitionViewCreateInfoVO {
         );
     }
 
-    private final String name;
+    String name;
 
-    private final Long creator;
+    Long creator;
 
-    private final List<Long> includedTaskDefinitionIds;
+    List<Long> includedTaskDefinitionIds;
+
+    @JsonPOJOBuilder
+    public static class TaskDefinitionViewCreateInfoVOBuilder {}
 }
