@@ -18,7 +18,7 @@ public class CreateTaskDefViewRequest {
 
     @JsonSerialize(using = JsonLongListFieldSerializer.class)
     @Builder.Default
-    List<Long> taskDefIds = new ArrayList<>();
+    List<Long> taskDefinitionIds = new ArrayList<>();
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class CreateTaskDefViewRequestBuilder {

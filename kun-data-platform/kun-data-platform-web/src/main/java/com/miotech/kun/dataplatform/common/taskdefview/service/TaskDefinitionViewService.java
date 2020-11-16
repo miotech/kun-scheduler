@@ -82,7 +82,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
         TaskDefinitionViewCreateInfoVO createInfoVO = TaskDefinitionViewCreateInfoVO.builder()
                 .name(createRequest.getName())
                 .creator(getCurrentUser().getId())
-                .includedTaskDefinitionIds(createRequest.getTaskDefIds())
+                .includedTaskDefinitionIds(createRequest.getTaskDefinitionIds())
                 .build();
         return create(createInfoVO);
     }

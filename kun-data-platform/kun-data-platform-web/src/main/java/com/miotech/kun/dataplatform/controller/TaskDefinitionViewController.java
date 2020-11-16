@@ -36,8 +36,8 @@ public class TaskDefinitionViewController {
             @RequestParam(defaultValue = "100") int pageSize,
             @RequestParam(defaultValue = "id") String sortKey,
             @RequestParam(defaultValue = "DESC") String sortOrder,
-            @RequestParam(defaultValue = "") String keyword,
-            @RequestParam Long creator
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long creator
     ) {
         TaskDefinitionViewSearchParams params = TaskDefinitionViewSearchParams.builder()
                 .pageNum(pageNum)
