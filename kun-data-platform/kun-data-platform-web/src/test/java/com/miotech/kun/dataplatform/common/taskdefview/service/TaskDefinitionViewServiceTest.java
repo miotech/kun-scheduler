@@ -577,6 +577,58 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     }
 
     @Test
+    public void searchPage_withTaskDefinitionIdsAsFilter_shouldDoFiltering() {
+        // prepare 100 views
+        List<TaskDefinitionView> views = prepareListOfViews(100);
+        List<TaskDefinition> mockTaskDefs = createMockTaskDefsAndReturn();
+        List<Long> taskDefIds = mockTaskDefs.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toList());
+        taskDefinitionViewService.save(
+                views.get(0).cloneBuilder().withIncludedTaskDefinitions(mockTaskDefs.subList(0, 2)).build()
+        );
+        taskDefinitionViewService.save(
+                views.get(1).cloneBuilder().withIncludedTaskDefinitions(mockTaskDefs.subList(0, 3)).build()
+        );
+        taskDefinitionViewService.save(
+                views.get(2).cloneBuilder().withIncludedTaskDefinitions(mockTaskDefs.subList(0, 4)).build()
+        );
+        taskDefinitionViewService.save(
+                views.get(3).cloneBuilder().withIncludedTaskDefinitions(mockTaskDefs.subList(1, 4)).build()
+        );
+
+        TaskDefinitionViewSearchParams searchParams1 = TaskDefinitionViewSearchParams.builder()
+                .taskDefinitionIds(Lists.newArrayList(taskDefIds.get(0)))
+                .pageNum(1)
+                .pageSize(100)
+                .build();
+        TaskDefinitionViewSearchParams searchParams2 = TaskDefinitionViewSearchParams.builder()
+                .taskDefinitionIds(Lists.newArrayList(taskDefIds.get(3)))
+                .pageNum(1)
+                .pageSize(100)
+                .build();
+        TaskDefinitionViewSearchParams searchParams3 = TaskDefinitionViewSearchParams.builder()
+                .taskDefinitionIds(Lists.newArrayList(taskDefIds.get(0), taskDefIds.get(1)))
+                .pageNum(1)
+                .pageSize(100)
+                .build();
+
+        // Process
+        // expected results: view[0], view[1], view[2]
+        PageResult<TaskDefinitionViewVO> searchResult1 = taskDefinitionViewService.searchPage(searchParams1);
+        // expected results: view[2], view[3]
+        PageResult<TaskDefinitionViewVO> searchResult2 = taskDefinitionViewService.searchPage(searchParams2);
+        // expected results: view[0], view[1], view[2], view[3]
+        PageResult<TaskDefinitionViewVO> searchResult3 = taskDefinitionViewService.searchPage(searchParams3);
+
+        // Validate
+        assertThat(searchResult1.getRecords().size(), is(3));
+        assertThat(searchResult1.getTotalCount(), is(3));
+        assertThat(searchResult2.getRecords().size(), is(2));
+        assertThat(searchResult2.getTotalCount(), is(2));
+        assertThat(searchResult3.getRecords().size(), is(4));
+        assertThat(searchResult3.getTotalCount(), is(4));
+    }
+
+    @Test
     public void searchPage_withInvalidArguments_shouldThrowException() {
         // prepare 100 views
         prepareListOfViews(100);

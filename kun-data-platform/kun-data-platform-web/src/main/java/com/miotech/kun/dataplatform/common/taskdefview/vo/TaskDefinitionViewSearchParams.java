@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import lombok.Builder;
 import lombok.Value;
 
+import java.util.List;
+
 @Value
 @Builder(toBuilder = true)
 @JsonDeserialize(builder = TaskDefinitionViewSearchParams.TaskDefinitionViewSearchParamsBuilder.class)
@@ -13,6 +15,7 @@ public class TaskDefinitionViewSearchParams {
     Integer pageNum;
     Integer pageSize;
     Long creator;
+    List<Long> taskDefinitionIds;
 
     @JsonPOJOBuilder(withPrefix = "")
     public static class TaskDefinitionViewSearchParamsBuilder {}

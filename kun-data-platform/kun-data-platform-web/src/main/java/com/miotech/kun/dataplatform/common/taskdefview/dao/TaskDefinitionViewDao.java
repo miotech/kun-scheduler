@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
+import com.miotech.kun.commons.db.sql.SQLUtils;
 import com.miotech.kun.commons.db.sql.WhereClause;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
@@ -17,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -111,6 +113,16 @@ public class TaskDefinitionViewDao {
             whereClauseBuilder.append("(" + TASK_DEF_VIEW_MODEL_NAME + ".creator = ?) AND ");
             paramsList.add(searchParams.getCreator());
         }
+        if (Objects.nonNull(searchParams.getTaskDefinitionIds()) && (!searchParams.getTaskDefinitionIds().isEmpty())) {
+            List<Long> taskDefIds = searchParams.getTaskDefinitionIds();
+            String subSelectSql = DefaultSQLBuilder.newBuilder()
+                    .select("view_id")
+                    .from(VIEW_AND_TASK_DEF_RELATION_TABLE_NAME)
+                    .where("task_def_id IN (" + SQLUtils.generatePreparedInSql(taskDefIds) + ")")
+                    .getSQL();
+            paramsList.addAll(taskDefIds);
+            whereClauseBuilder.append("(" + TASK_DEF_VIEW_MODEL_NAME + ".id IN (" + subSelectSql + ")) AND ");
+        }
         String whereClauseString = whereClauseBuilder.append("(1 = 1)").toString();
         return new WhereClause(whereClauseString, paramsList.toArray(new Object[0]));
     }
@@ -122,6 +134,7 @@ public class TaskDefinitionViewDao {
      * @throws IllegalArgumentException if view id already used
      * @throws IllegalStateException if create failed
      */
+    @Transactional
     public TaskDefinitionView create(TaskDefinitionView createView) {
         Preconditions.checkNotNull(createView);
         if (fetchById(createView.getId()).isPresent()) {
@@ -164,6 +177,7 @@ public class TaskDefinitionViewDao {
      * @return affected rows
      * @throws NullPointerException if view is null or its id is null
      */
+    @Transactional
     public int update(TaskDefinitionView updateView) {
         Preconditions.checkNotNull(updateView);
         Preconditions.checkNotNull(updateView.getId(), "Invalid view model with id = null");
@@ -200,8 +214,10 @@ public class TaskDefinitionViewDao {
         Preconditions.checkNotNull(viewId);
         Preconditions.checkNotNull(taskDefinitionIds);
 
+        // Remove old inclusion relations
         removeAllInclusiveTaskDefinitionsByViewId(viewId);
 
+        // Insert updated inclusion relations
         String insertionSQL = DefaultSQLBuilder.newBuilder()
                 .insert(viewTaskDefRelationCols.toArray(new String[0]))
                 .into(VIEW_AND_TASK_DEF_RELATION_TABLE_NAME)
@@ -221,12 +237,13 @@ public class TaskDefinitionViewDao {
      * @param viewId task definition view id
      * @return true if found and removed successfully. false if target view not found.
      */
+    @Transactional
     public boolean deleteById(Long viewId) {
         Optional<TaskDefinitionView> taskDefinitionViewOptional = fetchById(viewId);
         if (!taskDefinitionViewOptional.isPresent()) {
             return false;
         }
-        // Remove relations
+        // Remove inclusion relations of target view
         removeAllInclusiveTaskDefinitionsByViewId(viewId);
         // Remove view
         String deleteViewSQL = "DELETE FROM " + TASK_DEF_VIEW_TABLE_NAME + " WHERE id = ?";
@@ -243,8 +260,9 @@ public class TaskDefinitionViewDao {
         WhereClause whereClause = buildWhereClauseFromSearchParams(searchParams);
         sql = DefaultSQLBuilder.newBuilder()
                 .select("COUNT(*) AS total")
-                .from(TASK_DEF_VIEW_TABLE_NAME)
+                .from(TASK_DEF_VIEW_TABLE_NAME, TASK_DEF_VIEW_MODEL_NAME)
                 .where(whereClause.getPreparedSQLSegment())
+                .asPrepared()
                 .getSQL();
         List<Integer> result = jdbcTemplate.query(
                 sql,

@@ -55,6 +55,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
      * @param searchParams search parameter object
      * @return page result list of task definition view value objects
      */
+    @Transactional(readOnly = true)
     public PageResult<TaskDefinitionViewVO> searchPage(TaskDefinitionViewSearchParams searchParams) {
         Preconditions.checkNotNull(searchParams);
         Preconditions.checkArgument(Objects.nonNull(searchParams.getPageNum()) && searchParams.getPageNum() >= 1);
