@@ -4,15 +4,15 @@ import useI18n from '@/hooks/useI18n';
 
 import { TaskViewListItem } from '@/pages/data-development/components/TaskViewsAside/TaskViewListItem';
 
-import { TaskDefinitionView } from '@/definitions/TaskDefinition.type';
+import { TaskDefinitionViewVO } from '@/definitions/TaskDefinitionView.type';
 
 import styles from './TaskViewsAside.module.less';
 
 interface OwnProps {
-  views: TaskDefinitionView[];
+  views: TaskDefinitionViewVO[];
   withAllTaskView?: boolean;
   onClickCreateBtn?: (ev: React.MouseEvent) => any;
-  onEdit?: (view: TaskDefinitionView) => any;
+  onEdit?: (view: TaskDefinitionViewVO) => any;
   onSearch?: (searchText: string) => any;
 }
 

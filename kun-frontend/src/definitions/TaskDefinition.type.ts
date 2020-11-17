@@ -3,6 +3,20 @@ import * as T from 'runtypes';
 import { TaskDatasetProperty } from '@/definitions/DatasetTaskDefSummary.type';
 import { DeployStatusEnum, RunStatusEnum } from '@/definitions/StatEnums.type';
 
+export interface TaskDefinitionModel {
+  id: number | string;  // do not use this as identifier, use definitionId instead
+  name: string;
+  definitionId: number | string;
+  taskTemplateName: string;
+  taskPayload: TaskPayload;
+  creator: number | string;
+  owner: number | string;
+  archived: boolean;
+  lastModifier: string;
+  createTime: string;
+  updateTime: string;
+}
+
 export interface TaskDefinition {
   creator: number | string;
   id: number | string;
@@ -64,11 +78,4 @@ export interface DeployVO {
   name: string;
   status: DeployStatusEnum;
   submittedAt: string;  // Datetime
-}
-
-export interface TaskDefinitionView {
-  id: string;
-  name: string;
-  creator: number;
-  taskDefIds: string[];
 }

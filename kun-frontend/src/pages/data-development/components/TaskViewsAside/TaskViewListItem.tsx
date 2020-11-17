@@ -1,13 +1,13 @@
 import React, { memo } from 'react';
 import { EditOutlined } from '@ant-design/icons';
 
-import { TaskDefinitionView } from '@/definitions/TaskDefinition.type';
+import { TaskDefinitionViewVO } from '@/definitions/TaskDefinitionView.type';
 
 import styles from './TaskViewsAside.module.less';
 
 interface OwnProps {
-  view: TaskDefinitionView;
-  onEdit?: (view: TaskDefinitionView) => any;
+  view: TaskDefinitionViewVO;
+  onEdit?: (view: TaskDefinitionViewVO) => any;
 }
 
 type Props = OwnProps;
@@ -34,7 +34,7 @@ export const TaskViewListItem: React.FC<Props> = memo(function TaskViewItem(prop
         className={styles.TaskDefCount}
         data-tid="task-view-list-item-button__task-def-count"
       >
-        {(view.taskDefIds || []).length}
+        {(view.includedTaskDefinitionIds || []).length}
       </span>
       <span
         className={styles.EditBtnWrapper}
