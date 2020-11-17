@@ -15,4 +15,5 @@ dependencies {
     implementation project(':kun-app-common')
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.security:spring-security-test'
+    implementation 'commons-io:commons-io'
 }
