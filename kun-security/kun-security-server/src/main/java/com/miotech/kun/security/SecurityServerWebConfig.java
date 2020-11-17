@@ -1,6 +1,6 @@
 package com.miotech.kun.security;
 
-import com.miotech.kun.security.common.LogInterceptor;
+import com.miotech.kun.security.filter.LogInterceptor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
