@@ -25,6 +25,8 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author: Jie Chen
@@ -105,6 +107,7 @@ public class DashboardController {
         return RequestResult.success(metrics);
     }
 
+    private final ConcurrentMap<OffsetDateTime, DateTimeTaskCount> dateTimeTaskCountMap = new ConcurrentHashMap<>();
     @GetMapping("/dashboard/data-development/date-time-metrics")
     public RequestResult<DateTimeMetrics> getDateTimeMetrics() {
         DateTimeMetrics dateTimeMetrics = new DateTimeMetrics();
@@ -119,6 +122,10 @@ public class DashboardController {
             } else {
                 endTime = computeTime.with(LocalTime.MAX);
             }
+            if (dateTimeTaskCountMap.get(startTime) != null && i != dayOfMonth) {
+                dateTimeMetrics.add(dateTimeTaskCountMap.get(startTime));
+                continue;
+            }
             TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
                     .withDateFrom(startTime)
                     .withDateTo(endTime)
@@ -130,6 +137,7 @@ public class DashboardController {
             taskCount.setTaskCount(totalCount);
             taskCount.setTime(DateUtils.dateTimeToMillis(endTime));
             dateTimeMetrics.add(taskCount);
+            dateTimeTaskCountMap.put(startTime, taskCount);
         }
         return RequestResult.success(dateTimeMetrics);
     }
