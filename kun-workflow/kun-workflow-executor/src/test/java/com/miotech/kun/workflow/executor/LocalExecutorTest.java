@@ -135,7 +135,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         MetadataServiceFacade mockMetadataFacade = Mockito.mock(MetadataServiceFacade.class);
         bind(MetadataServiceFacade.class, mockMetadataFacade);
         bind(WorkflowWorkerFacade.class, workerFacade);
-        bind(WorkerFactory.class,LocalWorkerFactory.class);
+        bind(WorkerFactory.class, LocalWorkerFactory.class);
         bind(EventBus.class, new EventBus());
         bind(EventPublisher.class, new NopEventPublisher());
         bind(WorkflowExecutorFacade.class, LocalExecutorFacadeImpl.class);
@@ -150,9 +150,9 @@ public class LocalExecutorTest extends DatabaseTestBase {
         workerFactory = injector.getInstance(WorkerFactory.class);
         spyFactory = spy(workerFactory);
         try {
-            ReflectUtils.setField(executor,"workerFactory",spyFactory);
-        }catch (IllegalAccessException | NoSuchFieldException e){
-            logger.error("set spyFactory to executor failed",e);
+            ReflectUtils.setField(executor, "workerFactory", spyFactory);
+        } catch (IllegalAccessException | NoSuchFieldException e) {
+            logger.error("set spyFactory to executor failed", e);
         }
         rpcPublisher.exportService(WorkflowExecutorFacade.class, "1.0", localExecutorFacade);
         eventCollector = new EventCollector();
@@ -284,7 +284,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
 
     @Test
     //taskAttempt下发到worker执行，executor重启,重启前销毁worker
-    public void executorRestartAndKillWorker() throws IOException,InterruptedException {
+    public void executorRestartAndKillWorker() throws IOException, InterruptedException {
         TaskRun mockTaskRun = MockTaskRunFactory.createTaskRun();
         TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(mockTaskRun, TaskRunStatus.CREATED);
         prepareAttempt(TestOperator1.class, attempt);
@@ -370,10 +370,10 @@ public class LocalExecutorTest extends DatabaseTestBase {
         localExecutor.submit(runningTaskAttempt);
         //wait heartbeat
         awaitUntilRunning(runningTaskAttempt.getId());
-        TaskAttempt createdTaskAttempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(taskRun,TaskRunStatus.CREATED);
-        TaskAttempt queuedTaskAttempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(taskRun,TaskRunStatus.QUEUED);
+        TaskAttempt createdTaskAttempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(taskRun, TaskRunStatus.CREATED);
+        TaskAttempt queuedTaskAttempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(taskRun, TaskRunStatus.QUEUED);
         boolean submitCreated = localExecutor.submit(createdTaskAttempt);
-        boolean submitQueued = localExecutor.submit(queuedTaskAttempt,true);
+        boolean submitQueued = localExecutor.submit(queuedTaskAttempt, true);
         assertThat(submitCreated, is(false));
         assertThat(submitQueued, is(false));
         // events
@@ -424,6 +424,67 @@ public class LocalExecutorTest extends DatabaseTestBase {
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
         assertThat(attemptProps.getStatus(), is(TaskRunStatus.RUNNING));
 
+    }
+
+    @Test
+    //worker从未收到心跳（启动失败或网络问题）
+    public void workerNeverSendHeartbeat() throws IOException, InterruptedException {
+        TaskRun mockTaskRun = MockTaskRunFactory.createTaskRun();
+        TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(mockTaskRun, TaskRunStatus.CREATED);
+        prepareAttempt(TestOperator1.class, attempt);
+        Worker localWorker = workerFactory.createWorker();
+        Worker testWorker = getNoHeartbeatWorker();
+        doReturn(testWorker).when(spyFactory).createWorker();
+        executor.submit(attempt);
+        awaitUntilInitializing(attempt.getId());
+        //等待worker启动
+        Long waitTime = Reflect.on(executor).field("WAIT_WORKER_INIT_SECOND").get();
+        Thread.sleep(waitTime * 1000);
+
+        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(), is(7));
+
+        //worker正常启动，发送心跳
+        doReturn(localWorker).when(spyFactory).createWorker();
+
+        awaitUntilAttemptDone(attempt.getId());
+
+        TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
+        assertThat(attemptProps.getAttempt(), is(1));
+        assertThat(attemptProps.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(attemptProps.getLogPath(), is(notNullValue()));
+        assertThat(attemptProps.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps.getEndAt(), is(notNullValue()));
+
+        TaskRun taskRun = taskRunDao.fetchLatestTaskRun(attempt.getTaskRun().getTask().getId());
+        assertThat(taskRun.getStatus(), is(attemptProps.getStatus()));
+        assertThat(taskRun.getStartAt(), is(attemptProps.getStartAt()));
+        assertThat(taskRun.getEndAt(), is(attemptProps.getEndAt()));
+
+        // logs
+        Resource log = resourceLoader.getResource(attemptProps.getLogPath());
+        String content = ResourceUtils.content(log.getInputStream());
+        assertThat(content, containsString("Hello, world!"));
+        assertThat(content, containsString("URLClassLoader"));
+        assertThat(content, not(containsString("AppClassLoader")));
+
+        // events
+        assertStatusProgress(attempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.INITIALIZING,
+                TaskRunStatus.ERROR,
+                TaskRunStatus.INITIALIZING,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.SUCCESS);
+
+        TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt.getId());
+        assertThat(finishedEvent.getAttemptId(), is(attempt.getId()));
+        assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(finishedEvent.getInlets(), hasSize(2));
+        assertThat(finishedEvent.getOutlets(), hasSize(1));
+        workerToken = Reflect.on(executor).field("workerToken").get();
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
 
@@ -913,7 +974,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
     }
 
     private void awaitUntilInitializing(Long attemptId) {
-        await().atMost(10, TimeUnit.SECONDS)
+        await().atMost(15, TimeUnit.SECONDS)
                 .until(() -> {
                     TaskAttempt attempt = taskRunDao.fetchAttemptById(attemptId).get();
                     return attempt.getStatus().equals(TaskRunStatus.INITIALIZING);
@@ -932,7 +993,11 @@ public class LocalExecutorTest extends DatabaseTestBase {
         return new TestWorker1(localExecutorFacade);
     }
 
-    private TestWorker2 getTestWorker(){
+    private TestWorker3 getNoHeartbeatWorker() {
+        return new TestWorker3(localExecutorFacade);
+    }
+
+    private TestWorker2 getTestWorker() {
         return new TestWorker2(localExecutorFacade);
     }
 }

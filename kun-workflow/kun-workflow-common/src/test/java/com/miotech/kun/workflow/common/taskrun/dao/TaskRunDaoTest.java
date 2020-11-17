@@ -8,7 +8,6 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.task.DependencyFunction;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -670,9 +669,10 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
     @Test
     public void fetchUnStartedTaskRunList() {
+        Tick tick = new Tick(DateTimeUtils.now());
         Task task = MockTaskFactory.createTask();
         taskDao.create(task);
-        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        TaskRun taskRun = MockTaskRunFactory.createTaskRunWithTick(task, tick);
         taskRunDao.createTaskRuns(Arrays.asList(taskRun));
         List<Long> taskRunIdList = taskRunDao.fetchUnStartedTaskRunList()
                 .stream().map(TaskRun::getId).collect(Collectors.toList());
@@ -682,9 +682,11 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
     @Test
     public void fetchUnStartedTaskRunListWithDependency() {
-        List<Task> taskList  = MockTaskFactory.createTasksWithRelations(2,"0>>1");
-        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList,"0>>1");
-        for(Task task : taskList){
+        Tick tick = new Tick(DateTimeUtils.now());
+
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelationsAndTick(taskList, "0>>1", tick);
+        for (Task task : taskList) {
             taskDao.create(task);
         }
         taskRunDao.createTaskRuns(taskRunList);
@@ -692,17 +694,8 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskRun taskRun1 = recoverTaskRunList.get(0);
         TaskRun taskRun2 = recoverTaskRunList.get(1);
         assertThat(taskRun1.getDependentTaskRunIds(), Matchers.hasSize(0));
-        assertThat(taskRun2.getDependentTaskRunIds(),Matchers.hasSize(1));
-        assertThat(taskRun2.getDependentTaskRunIds(),Matchers.containsInAnyOrder(taskRun1.getId()));
+        assertThat(taskRun2.getDependentTaskRunIds(), Matchers.hasSize(1));
+        assertThat(taskRun2.getDependentTaskRunIds(), Matchers.containsInAnyOrder(taskRun1.getId()));
 
-    }
-
-    private List<Long> resolveDependencies(Task task, Tick tick, List<TaskRun> others) {
-        return task.getDependencies().stream()
-                .flatMap(dependency -> {
-                    DependencyFunction depFunc = dependency.getDependencyFunction();
-                    return depFunc.resolveDependency(task, dependency.getUpstreamTaskId(), tick, others)
-                            .stream();
-                }).collect(Collectors.toList());
     }
 }

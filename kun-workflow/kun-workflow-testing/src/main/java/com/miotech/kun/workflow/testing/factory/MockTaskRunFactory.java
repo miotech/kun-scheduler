@@ -40,7 +40,7 @@ public class MockTaskRunFactory {
                 .withScheduledTick(tick)
                 .withStartAt(DateTimeUtils.now())
                 .withEndAt(DateTimeUtils.now())
-                .withStatus(TaskRunStatus.QUEUED)
+                .withStatus(TaskRunStatus.CREATED)
                 .withConfig(Config.EMPTY)
                 .build();
     }

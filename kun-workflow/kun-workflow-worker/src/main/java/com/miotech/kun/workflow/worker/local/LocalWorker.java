@@ -85,9 +85,9 @@ public class LocalWorker implements Worker {
     private List<String> buildCommand(String inputFile, String configFile, String outputFile,Long taskAttemptId) {
         List<String> command = new ArrayList<>();
         command.add("java");
+        command.addAll(buildJVMArgs(taskAttemptId));
         command.add("-classpath");
         command.add(buildClassPath());
-        command.add(String.format(buildJVMArgs(), taskAttemptId));
         command.add("com.miotech.kun.workflow.worker.local.OperatorLauncher");
         command.add(inputFile);
         command.add(configFile);
@@ -101,8 +101,11 @@ public class LocalWorker implements Worker {
         return classPath;
     }
 
-    private String buildJVMArgs(){
-        String jvmArgs = "-XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/%d/heapdump.hprof";
+    private List<String> buildJVMArgs(Long taskAttemptId){
+        List<String> jvmArgs = new ArrayList<>();
+        jvmArgs.add("-XX:+PrintGCDetails");
+        jvmArgs.add("-XX:+HeapDumpOnOutOfMemoryError");
+        jvmArgs.add(String.format("-XX:HeapDumpPath=/tmp/%d/heapdump.hprof",taskAttemptId));
         return jvmArgs;
     }
 }

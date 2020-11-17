@@ -72,6 +72,8 @@ public class LocalExecutor implements Executor {
 
     private final Long HEARTBEAT_INTERVAL = 5 * 1000L;
 
+    private final Long WAIT_WORKER_INIT_SECOND = 60L;
+
     private LinkedBlockingQueue<TaskAttempt> taskAttemptQueue = new LinkedBlockingQueue<>(QUEUE_SIZE);
 
     private ExecutorService workerStarterThreadPool =
@@ -284,7 +286,7 @@ public class LocalExecutor implements Executor {
         message.setTaskAttemptId(taskAttempt.getId());
         message.setTaskRunId(taskAttempt.getTaskRun().getId());
         message.setTaskRunStatus(taskAttempt.getStatus());
-        message.setInitTime(DateTimeUtils.now().plusMinutes(1));//初始化1分钟
+        message.setInitTime(DateTimeUtils.now().plusSeconds(WAIT_WORKER_INIT_SECOND));//初始化1分钟
         return message;
     }
 
@@ -330,7 +332,7 @@ public class LocalExecutor implements Executor {
             }
             try {
                 workerPool.put(taskAttempt.getId(), initHeartBeatByTaskAttempt(taskAttempt));
-                //taskAttempt 已经启动（重启恢复）,则只加入workerPool监听心跳
+                //taskAttempt 已经启动（重启恢复）,则只加入workerPool监听心跳,正常入队和超时则重新启动
                 if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED) || taskAttempt.getStatus().equals(TaskRunStatus.ERROR)) {
                     ExecCommand command = buildExecCommand(taskAttempt);
                     startWorker(command);
