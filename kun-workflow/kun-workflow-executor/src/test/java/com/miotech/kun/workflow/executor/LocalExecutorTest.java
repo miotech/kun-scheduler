@@ -227,7 +227,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
 
     }
 
@@ -278,7 +278,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
 
     }
 
@@ -337,7 +337,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
 
     }
 
@@ -356,7 +356,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
     }
 
     @Test
@@ -383,7 +383,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(31));
+        assertThat(workerToken.availablePermits(),is(7));
 
     }
 
@@ -407,7 +407,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
 
     }
 
@@ -480,7 +480,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getInlets(), sameBeanAs(inlets));
         assertThat(finishedEvent.getOutlets(), sameBeanAs(outlets));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
     }
 
     @Test
@@ -509,7 +509,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         content = ResourceUtils.content(log.getInputStream());
         assertThat(content, containsString("Hello, world2!"));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
     }
 
     @Test
@@ -568,7 +568,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(0));
         assertThat(finishedEvent.getOutlets(), hasSize(0));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
     }
 
     @Test
@@ -608,7 +608,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
     }
 
     @Test
@@ -648,7 +648,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
     }
 
     @Test
@@ -687,7 +687,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.FAILED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
     }
 
     @Test
@@ -699,7 +699,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(31));
+        assertThat(workerToken.availablePermits(),is(7));
         executor.cancel(attempt);
 
         // wait until aborted
@@ -731,7 +731,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
         workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
     }
 
     @Test
@@ -768,7 +768,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
     }
 
     @Test
@@ -810,7 +810,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(32));
+        assertThat(workerToken.availablePermits(),is(8));
     }
 
     private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass) {
