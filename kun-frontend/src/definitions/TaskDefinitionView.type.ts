@@ -17,3 +17,8 @@ export interface TaskDefinitionViewVO {
   updateTime: string;
   includedTaskDefinitionIds: string[];
 }
+
+export interface TaskDefinitionViewUpdateVO {
+  name: string;
+  includedTaskDefinitionIds?: string[];
+}

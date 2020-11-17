@@ -261,6 +261,8 @@ export default {
   "dataDevelopment.filterByTaskType": "Filter by task type",
   "dataDevelopment.filterByOwner": "Filter by owner",
   "dataDevelopment.searchView": "Search Views",
+  "dataDevelopment.taskDefView.create": "Create task definition view",
+  "dataDevelopment.taskDefView.edit": "Edit task definition view",
   "dataDevelopment.definition.property.name": "Task Name",
   "dataDevelopment.definition.property.owner": "Owner",
   "dataDevelopment.definition.property.updater": "Updater",

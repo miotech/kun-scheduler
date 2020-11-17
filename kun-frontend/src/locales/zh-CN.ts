@@ -261,6 +261,8 @@ export default {
   "dataDevelopment.filterByTaskType": "按任务类型过滤",
   "dataDevelopment.filterByOwner": "按归属人过滤",
   "dataDevelopment.searchView": "搜索视图",
+  "dataDevelopment.taskDefView.create": "创建任务定义视图",
+  "dataDevelopment.taskDefView.edit": "编辑任务定义视图",
   "dataDevelopment.definition.property.name": "任务名称",
   "dataDevelopment.definition.property.owner": "归属人",
   "dataDevelopment.definition.property.updater": "更新人",
