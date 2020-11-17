@@ -62,7 +62,7 @@ public class LocalExecutor implements Executor {
 
     private final Props props;
 
-    private final Integer WORKER_TOKEN_SIZE = 32;
+    private final Integer WORKER_TOKEN_SIZE = 8;
 
     private Semaphore workerToken = new Semaphore(WORKER_TOKEN_SIZE);
 
