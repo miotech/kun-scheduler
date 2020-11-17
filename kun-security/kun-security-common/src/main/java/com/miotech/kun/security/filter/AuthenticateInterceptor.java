@@ -1,7 +1,8 @@
-package com.miotech.kun.security.common;
+package com.miotech.kun.security.filter;
 
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.security.SecurityContextHolder;
+import com.miotech.kun.security.common.ConfigKey;
 import com.miotech.kun.security.model.bo.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
