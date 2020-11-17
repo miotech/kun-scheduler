@@ -1,17 +1,17 @@
 package com.miotech.kun.commons.db.sql;
 
 public class WhereClause {
-    private final String preparedSQLSegment;
+    private final String sqlSegment;
 
     private final Object[] params;
 
-    public WhereClause(String preparedSQLSegment, Object[] params) {
-        this.preparedSQLSegment = preparedSQLSegment;
+    public WhereClause(String sqlSegment, Object[] params) {
+        this.sqlSegment = sqlSegment;
         this.params = params;
     }
 
-    public String getPreparedSQLSegment() {
-        return preparedSQLSegment;
+    public String getSqlSegment() {
+        return sqlSegment;
     }
 
     public Object[] getParams() {

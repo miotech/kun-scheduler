@@ -91,7 +91,7 @@ public class TaskDefinitionViewDao {
         String sql = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_DEF_VIEW_TABLE_NAME, TASK_DEF_VIEW_MODEL_NAME)
-                .where(whereClause.getPreparedSQLSegment())
+                .where(whereClause.getSqlSegment())
                 .offset(searchParams.getPageSize() * (searchParams.getPageNum() - 1))
                 .limit(searchParams.getPageSize())
                 .orderBy(buildOrderByString(searchParams))
@@ -280,7 +280,7 @@ public class TaskDefinitionViewDao {
         sql = DefaultSQLBuilder.newBuilder()
                 .select("COUNT(*) AS total")
                 .from(TASK_DEF_VIEW_TABLE_NAME, TASK_DEF_VIEW_MODEL_NAME)
-                .where(whereClause.getPreparedSQLSegment())
+                .where(whereClause.getSqlSegment())
                 .asPrepared()
                 .getSQL();
         List<Integer> result = jdbcTemplate.query(
