@@ -7,9 +7,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class UpdateTaskDefViewRequest {
-    private String name;
-
+public class UpdateTaskDefViewRelationRequest {
     @JsonSerialize(using = JsonLongListFieldSerializer.class)
     private List<Long> taskDefinitionIds;
 }

@@ -37,7 +37,7 @@ public class TaskDefinitionViewDao {
 
     private static final List<String> viewCols = ImmutableList.of("id", "name", "creator", "last_modifier", "create_time", "update_time");
 
-    private static final List<String> viewTaskDefRelationCols = ImmutableList.of("view_id", "task_def_id");
+    private static final List<String> viewTaskDefRelationCols = ImmutableList.of("view_id", "task_def_id");   //NOSONAR
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -62,6 +62,16 @@ public class TaskDefinitionViewDao {
                 taskDefViewId
         );
         return resultViews.stream().findAny();
+    }
+
+    public List<TaskDefinitionView> fetchAllByTaskDefinitionId(Long taskDefinitionId) {
+        String subQuerySQL = "SELECT DISTINCT view_id FROM " + VIEW_AND_TASK_DEF_RELATION_TABLE_NAME + " WHERE task_def_id = ?";  //NOSONAR
+        String sql = getViewSelectSQL(TASK_DEF_VIEW_MODEL_NAME + ".id IN (" + subQuerySQL + ")");
+        return jdbcTemplate.query(
+                sql,
+                new TaskDefinitionViewMapper(this, taskDefinitionDao),
+                taskDefinitionId
+        );
     }
 
     /**
@@ -255,7 +265,7 @@ public class TaskDefinitionViewDao {
         // Remove inclusion relations of target view
         removeAllInclusiveTaskDefinitionsByViewId(viewId);
         // Remove view
-        String deleteViewSQL = "DELETE FROM " + TASK_DEF_VIEW_TABLE_NAME + " WHERE id = ?";
+        String deleteViewSQL = "DELETE FROM " + TASK_DEF_VIEW_TABLE_NAME + " WHERE id = ?";   //NOSONAR
         jdbcTemplate.update(deleteViewSQL, viewId);
         return true;
     }
@@ -328,6 +338,24 @@ public class TaskDefinitionViewDao {
         return results.stream()
                 .map(ViewAndTaskDefinitionRelationVO::getTaskDefinitionId)
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Remove all inclusion relation of target definition view with all views.
+     * Usually invokes when a task definition being removed.
+     * @param taskDefinitionId id of target task definition
+     * @return affected task definition view ids
+     */
+    @Transactional
+    public Set<Long> removeAllRelationsOfTaskDefinition(Long taskDefinitionId) {
+        String detectAffectedViewIdsSql = "SELECT DISTINCT view_id FROM " + VIEW_AND_TASK_DEF_RELATION_TABLE_NAME + " WHERE task_def_id = ?";
+        List<Long> affectedViewIds = jdbcTemplate.query(detectAffectedViewIdsSql, (rs, rowNum) -> rs.getLong("view_id"), taskDefinitionId);
+        log.debug("Removing task definition and view relation for task definition id = {}; Affected view ids = {};", taskDefinitionId, affectedViewIds);
+
+        // Do deletion
+        String sql = "DELETE FROM " + VIEW_AND_TASK_DEF_RELATION_TABLE_NAME + " WHERE task_def_id = ?";
+        jdbcTemplate.update(sql, taskDefinitionId);
+        return new HashSet<>(affectedViewIds);
     }
 
     public static class TaskDefinitionViewMapper implements RowMapper<TaskDefinitionView> {

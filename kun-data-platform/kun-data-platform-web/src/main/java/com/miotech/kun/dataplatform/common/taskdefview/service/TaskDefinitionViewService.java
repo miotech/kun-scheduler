@@ -76,6 +76,19 @@ public class TaskDefinitionViewService extends BaseSecurityService {
         );
     }
 
+    /**
+     * Fetch all task definition views
+     * @param taskDefinitionIds task definition id
+     * @return list of all views that contains this task definition
+     */
+    @Transactional(readOnly = true)
+    public List<TaskDefinitionViewVO> fetchAllByTaskDefinitionId(Long taskDefinitionIds) {
+        return taskDefinitionViewDao.fetchAllByTaskDefinitionId(taskDefinitionIds)
+                .stream()
+                .map(TaskDefinitionViewVO::from)
+                .collect(Collectors.toList());
+    }
+
     @Transactional
     public TaskDefinitionView create(CreateTaskDefViewRequest createRequest) {
         Preconditions.checkNotNull(createRequest);
@@ -239,6 +252,18 @@ public class TaskDefinitionViewService extends BaseSecurityService {
     @Transactional
     public TaskDefinitionView removeTaskDefinitionsFromView(Set<Long> taskDefinitionIdsToRemove, Long viewId) {
         return removeTaskDefinitionsFromView(taskDefinitionIdsToRemove, viewId, getCurrentUser().getId());
+    }
+
+    /**
+     * Remove all inclusion relation of target definition view with all views.
+     * Usually invokes when a task definition being removed.
+     * @param taskDefinitionId id of target task definition
+     * @return affected task definition view ids
+     */
+    @Transactional
+    public Set<Long> removeAllRelationsOfTaskDefinition(Long taskDefinitionId) {
+        log.debug("Removing task definition relations. Task definition id = {}. User id = {}", taskDefinitionId, getCurrentUser().getId());
+        return taskDefinitionViewDao.removeAllRelationsOfTaskDefinition(taskDefinitionId);
     }
 
     /**

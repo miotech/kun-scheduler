@@ -4,11 +4,10 @@ import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.commons.db.sql.SortOrder;
 import com.miotech.kun.dataplatform.common.taskdefinition.service.TaskDefinitionService;
+import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskDefinitionVO;
 import com.miotech.kun.dataplatform.common.taskdefview.service.TaskDefinitionViewService;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.CreateTaskDefViewRequest;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewSearchParams;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewVO;
-import com.miotech.kun.dataplatform.common.taskdefview.vo.UpdateTaskDefViewRequest;
+import com.miotech.kun.dataplatform.common.taskdefview.vo.*;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefview.TaskDefinitionView;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -16,6 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -60,6 +61,64 @@ public class TaskDefinitionViewController {
         }
         // else
         return RequestResult.error(404, String.format("Cannot find task definition view with id: %s", viewId));
+    }
+
+    @GetMapping("/task-def-views/{viewId}/task-definitions")
+    @ApiOperation("Get task definitions and their DAG relations from target view")
+    public RequestResult<List<TaskDefinitionVO>> getTaskDefinitionsByViewId(@PathVariable Long viewId) {
+        Optional<TaskDefinitionView> taskDefinitionView = taskDefinitionViewService.fetchById(viewId);
+        if (taskDefinitionView.isPresent()) {
+            List<TaskDefinition> taskDefs = taskDefinitionView.get().getIncludedTaskDefinitions();
+            List<TaskDefinitionVO> taskDefVOs = taskDefinitionService.convertToVOList(taskDefs, true);
+            return RequestResult.success(taskDefVOs);
+        }
+        // else
+        return RequestResult.error(404, String.format("Cannot find task definition view with id: %s", viewId));
+    }
+
+    @PutMapping("/task-def-views/{viewId}/task-definitions")
+    @ApiOperation("Overwrite all task definitions of target view and response updated task definitions")
+    public RequestResult<List<TaskDefinitionVO>> overwriteTaskDefinitionsIntoView(
+            @PathVariable Long viewId,
+            @RequestBody UpdateTaskDefViewRelationRequest requestData
+    ) {
+        TaskDefinitionView updatedView = taskDefinitionViewService.overwriteTaskDefinitionsOfView(
+                new HashSet<>(requestData.getTaskDefinitionIds()),
+                viewId
+        );
+        List<TaskDefinition> taskDefs = updatedView.getIncludedTaskDefinitions();
+        List<TaskDefinitionVO> taskDefVOs = taskDefinitionService.convertToVOList(taskDefs, true);
+        return RequestResult.success(taskDefVOs);
+    }
+
+    @PatchMapping("/task-def-views/{viewId}/task-definitions")
+    @ApiOperation("Put task definitions into target view and response updated task definitions")
+    public RequestResult<List<TaskDefinitionVO>> putTaskDefinitionsIntoView(
+            @PathVariable Long viewId,
+            @RequestBody UpdateTaskDefViewRelationRequest requestData
+    ) {
+        TaskDefinitionView updatedView = taskDefinitionViewService.putTaskDefinitionsIntoView(
+                new HashSet<>(requestData.getTaskDefinitionIds()),
+                viewId
+        );
+        List<TaskDefinition> taskDefs = updatedView.getIncludedTaskDefinitions();
+        List<TaskDefinitionVO> taskDefVOs = taskDefinitionService.convertToVOList(taskDefs, true);
+        return RequestResult.success(taskDefVOs);
+    }
+
+    @DeleteMapping("/task-def-views/{viewId}/task-definitions")
+    @ApiOperation("Remove task definitions from target view and response updated task definitions")
+    public RequestResult<List<TaskDefinitionVO>> removeTaskDefinitionsFromView(
+            @PathVariable Long viewId,
+            @RequestBody UpdateTaskDefViewRelationRequest requestData
+    ) {
+        TaskDefinitionView updatedView = taskDefinitionViewService.removeTaskDefinitionsFromView(
+                new HashSet<>(requestData.getTaskDefinitionIds()),
+                viewId
+        );
+        List<TaskDefinition> taskDefs = updatedView.getIncludedTaskDefinitions();
+        List<TaskDefinitionVO> taskDefVOs = taskDefinitionService.convertToVOList(taskDefs, true);
+        return RequestResult.success(taskDefVOs);
     }
 
     @PostMapping("/task-def-views")
