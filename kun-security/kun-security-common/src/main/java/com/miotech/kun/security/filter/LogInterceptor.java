@@ -1,11 +1,14 @@
-package com.miotech.kun.security.common;
+package com.miotech.kun.security.filter;
 
+import com.miotech.kun.security.common.ContentCachingRequestWrapper;
 import com.miotech.kun.security.service.BaseSecurityService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -35,11 +38,13 @@ public class LogInterceptor extends HandlerInterceptorAdapter {
         String parameters = mapToString(request.getParameterMap());
         parameters = new StringJoiner("", "[", "]").add(parameters).toString();
 
-        /*String requestBody = "";
-        if (request.getReader() != null && request.getReader().ready()) {
-            requestBody = IOUtils.toString(request.getReader());
+        String requestBody = "[]";
+        if (request instanceof ContentCachingRequestWrapper) {
+            ContentCachingRequestWrapper requestWrapper = (ContentCachingRequestWrapper) request;
+            requestBody = IOUtils.toString(requestWrapper.getBody(), request.getCharacterEncoding());
+            requestBody = new StringJoiner("", "[", "]").add(requestBody).toString();
         }
-        requestBody = new StringJoiner("", "[", "]").add(requestBody).toString();*/
+
 
         String username = securityService.getCurrentUsername();
         username = new StringJoiner("", "[", "]").add(username).toString();
@@ -51,10 +56,10 @@ public class LogInterceptor extends HandlerInterceptorAdapter {
         stringBuilder.append(path);
         stringBuilder.append(" Method=");
         stringBuilder.append(method);
-        stringBuilder.append(" Parameters=");
+        stringBuilder.append(" Request Parameters=");
         stringBuilder.append(parameters);
-        /*stringBuilder.append(" Body=");
-        stringBuilder.append(requestBody);*/
+        stringBuilder.append(" Request Body=");
+        stringBuilder.append(requestBody);
         log.info(stringBuilder.toString());
         return super.preHandle(request, response, handler);
     }
