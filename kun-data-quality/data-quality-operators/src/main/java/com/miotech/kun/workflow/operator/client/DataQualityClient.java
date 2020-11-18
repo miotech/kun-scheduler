@@ -154,7 +154,11 @@ public class DataQualityClient {
                 .limit(1)
                 .getSQL();
 
-        return databaseOperator.fetchOne(sql, rs -> rs.getLong("continuous_failing_count"), caseId);
+        Long latestFailingCount = databaseOperator.fetchOne(sql, rs -> rs.getLong("continuous_failing_count"), caseId);
+        if (latestFailingCount == null) {
+            return 0L;
+        }
+        return latestFailingCount;
     }
 
     private PGobject transferRuleRecordsToPGobject(List<DataQualityRule> ruleRecords) {
