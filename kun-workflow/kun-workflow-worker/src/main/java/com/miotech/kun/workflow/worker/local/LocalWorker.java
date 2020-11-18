@@ -65,7 +65,7 @@ public class LocalWorker implements Worker {
         ProcessBuilder pb = new ProcessBuilder();
         pb.redirectErrorStream(true);
         pb.redirectOutput(stdoutFile);
-        pb.command(buildCommand(inputFile.getPath(), configFile.getPath(), outputFile.getPath()));
+        pb.command(buildCommand(inputFile.getPath(), configFile.getPath(), outputFile.getPath(),command.getTaskAttemptId()));
         String cmd = Joiner.on(" ").join(pb.command());
         logger.info("Start to run command: {}", cmd);
 
@@ -82,9 +82,10 @@ public class LocalWorker implements Worker {
         this.port = heartBeatMessage.getPort();
     }
 
-    private List<String> buildCommand(String inputFile, String configFile, String outputFile) {
+    private List<String> buildCommand(String inputFile, String configFile, String outputFile,Long taskAttemptId) {
         List<String> command = new ArrayList<>();
         command.add("java");
+        command.addAll(buildJVMArgs(taskAttemptId));
         command.add("-classpath");
         command.add(buildClassPath());
         command.add("com.miotech.kun.workflow.worker.local.OperatorLauncher");
@@ -98,5 +99,13 @@ public class LocalWorker implements Worker {
         String classPath = System.getProperty("java.class.path");
         checkState(StringUtils.isNotEmpty(classPath), "launcher jar should exist.");
         return classPath;
+    }
+
+    private List<String> buildJVMArgs(Long taskAttemptId){
+        List<String> jvmArgs = new ArrayList<>();
+        jvmArgs.add("-XX:+PrintGCDetails");
+        jvmArgs.add("-XX:+HeapDumpOnOutOfMemoryError");
+        jvmArgs.add(String.format("-XX:HeapDumpPath=/tmp/%d/heapdump.hprof",taskAttemptId));
+        return jvmArgs;
     }
 }

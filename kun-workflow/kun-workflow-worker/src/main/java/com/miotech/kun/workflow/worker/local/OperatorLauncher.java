@@ -376,12 +376,12 @@ public class OperatorLauncher {
                     heartBeatMessage.setTaskRunStatus(taskRunStatus);
                     heartBeatMessage.setTimeoutTimes(0);
                     boolean result = executorFacade.heartBeat(heartBeatMessage);
+                    logger.debug("heart beat to executor result = {}", result);
                     if (first) {
                         first = false;
                         firstHeartBeat.countDown();
                     }
                     Thread.sleep(HEARTBEAT_INTERVAL);
-                    logger.debug("heart beat to executor result = {}", result);
                 } catch (Exception e) {
                     logger.error("heart beat to executor time out", e);
                 }
