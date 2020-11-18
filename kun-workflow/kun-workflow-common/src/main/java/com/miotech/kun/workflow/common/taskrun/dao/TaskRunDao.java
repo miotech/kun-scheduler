@@ -20,6 +20,7 @@ import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunDependency;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -51,6 +52,7 @@ public class TaskRunDao {
     private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path");
 
     private static final String RELATION_TABLE_NAME = "kun_wf_task_run_relations";
+    private static final String RELATION_MODEL_NAME = "task_run_relations";
     private static final List<String> taskRunRelationCols = ImmutableList.of("upstream_task_run_id", "downstream_task_run_id");
     private static final Map<String, String> sortKeyToFieldMapper = new HashMap<>();
 
@@ -744,11 +746,53 @@ public class TaskRunDao {
     }
 
     public List<TaskRun> fetchUnStartedTaskRunList() {
+        String whereCase = "(" + TASK_RUN_MODEL_NAME + ".status is NULL or " + TASK_RUN_MODEL_NAME + ".status = ? ) " +
+                "and " + TASK_RUN_MODEL_NAME + ".created_at > ?";
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
-                .where("status is NULL or status = ?")
+                .where(whereCase)
                 .getSQL();
-        List<TaskRun> taskRunList = dbOperator.fetchAll(sql, taskRunMapperInstance,toNullableString(TaskRunStatus.CREATED));
-        return taskRunList;
+        OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-1);
+        List<TaskRun> taskRunList = dbOperator.fetchAll(sql, taskRunMapperInstance, toNullableString(TaskRunStatus.CREATED), recoverLimit);
+        Map<Long, List<Long>> taskRunRelations = fetchAllRelationsFromDownstreamTaskRunIds(taskRunList.stream().map(TaskRun::getId).collect(Collectors.toList()));
+        return taskRunList.stream().map(taskRun -> taskRun.cloneBuilder()
+                .withDependentTaskRunIds(taskRunRelations.get(taskRun.getId()))
+                .build()).collect(Collectors.toList());
+    }
+
+    /**
+     * Fetch all relations in a `id - [dependencies]` hashmap whose downstream taskRun ID is included in the given list
+     *
+     * @param taskRunIds list of downstream taskRun IDs
+     * @return
+     */
+    private Map<Long, List<Long>> fetchAllRelationsFromDownstreamTaskRunIds(List<Long> taskRunIds) {
+        if (taskRunIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        Map<Long, List<Long>> taskRunIdToDependenciesMap = new HashMap<>();
+        taskRunIds.forEach(taskRunId -> {
+            taskRunIdToDependenciesMap.put(taskRunId, new ArrayList<>());
+        });
+        String idsFieldsPlaceholder = "(" + taskRunIds.stream().map(id -> "?")
+                .collect(Collectors.joining(", ")) + ")";
+        Map<String, List<String>> taskRunRelationColumnsMap = new HashMap<>();
+        taskRunRelationColumnsMap.put(RELATION_MODEL_NAME, taskRunRelationCols);
+        String sql = DefaultSQLBuilder.newBuilder()
+                .columns(taskRunRelationColumnsMap)
+                .from(RELATION_TABLE_NAME, RELATION_MODEL_NAME)
+                .autoAliasColumns()
+                .where(RELATION_MODEL_NAME + ".downstream_task_run_id IN " + idsFieldsPlaceholder)
+                .orderBy(RELATION_MODEL_NAME + ".upstream_task_run_id ASC")
+                .asPrepared()
+                .getSQL();
+        List<TaskRunDependency> allDeps = dbOperator.fetchAll(sql, TaskRunDependencyMapper.getInstance(), taskRunIds.toArray());
+        allDeps.forEach(dep -> {
+            List<Long> dependencyList = taskRunIdToDependenciesMap.get(dep.getDownStreamTaskRunId());
+            dependencyList.add(dep.getUpstreamTaskRunId());
+            taskRunIdToDependenciesMap.put(dep.getDownStreamTaskRunId(), dependencyList);
+        });
+        return taskRunIdToDependenciesMap;
     }
 
     public List<TaskAttempt> fetchUnStartedTaskAttemptList() {
@@ -757,7 +801,8 @@ public class TaskRunDao {
         columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
         columnsMap.put(TaskDao.TASK_MODEL_NAME, TaskDao.getTaskCols());
 
-        String whereCase = "(" + TASK_ATTEMPT_MODEL_NAME + ".status = ?) and " + TASK_ATTEMPT_MODEL_NAME + ".created_at > ?";
+        String whereCase = TASK_ATTEMPT_MODEL_NAME + ".status in (?,?) " +
+                "and " + TASK_ATTEMPT_MODEL_NAME + ".created_at > ?";
         String sql = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_ATTEMPT_TABLE_NAME, TASK_ATTEMPT_MODEL_NAME)
@@ -769,7 +814,8 @@ public class TaskRunDao {
                 .where(whereCase)
                 .getSQL();
         OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-1);
-        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), toNullableString(TaskRunStatus.QUEUED), recoverLimit);
+        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance),
+                TaskRunStatus.QUEUED.toString(), TaskRunStatus.ERROR.toString(), recoverLimit);
     }
 
     public List<TaskAttempt> fetchRunningTaskAttemptList() {
@@ -778,8 +824,8 @@ public class TaskRunDao {
         columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
         columnsMap.put(TaskDao.TASK_MODEL_NAME, TaskDao.getTaskCols());
 
-        String whereCase = "(" + TASK_ATTEMPT_MODEL_NAME + ".status = ? or "
-                + TASK_ATTEMPT_MODEL_NAME + ".status = ?" + ") and " + TASK_ATTEMPT_MODEL_NAME + ".created_at > ?";
+        String whereCase = TASK_ATTEMPT_MODEL_NAME + ".status in (?,?) " +
+                "and " + TASK_ATTEMPT_MODEL_NAME + ".created_at > ?";
         String sql = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_ATTEMPT_TABLE_NAME, TASK_ATTEMPT_MODEL_NAME)
@@ -791,8 +837,28 @@ public class TaskRunDao {
                 .where(whereCase)
                 .getSQL();
         OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-1);
-        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), toNullableString(TaskRunStatus.INITIALIZING),
-                toNullableString(TaskRunStatus.RUNNING), recoverLimit);
+        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), TaskRunStatus.INITIALIZING.toString(),
+                TaskRunStatus.RUNNING.toString(), recoverLimit);
+    }
+
+    public static class TaskRunDependencyMapper implements ResultSetMapper<TaskRunDependency> {
+
+        private static TaskRunDao.TaskRunDependencyMapper instance;
+
+        public static TaskRunDao.TaskRunDependencyMapper getInstance() {
+            if (instance == null) {
+                instance = new TaskRunDao.TaskRunDependencyMapper();
+            }
+            return instance;
+        }
+
+        @Override
+        public TaskRunDependency map(ResultSet rs) throws SQLException {
+            return new TaskRunDependency(
+                    rs.getLong(RELATION_MODEL_NAME + "_upstream_task_run_id"),
+                    rs.getLong(RELATION_MODEL_NAME + "_downstream_task_run_id")
+            );
+        }
     }
 
 
