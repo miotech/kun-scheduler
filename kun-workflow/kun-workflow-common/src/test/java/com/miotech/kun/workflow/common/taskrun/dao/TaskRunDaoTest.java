@@ -16,6 +16,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Test;
 
@@ -668,13 +669,33 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
     @Test
     public void fetchUnStartedTaskRunList() {
+        Tick tick = new Tick(DateTimeUtils.now());
         Task task = MockTaskFactory.createTask();
         taskDao.create(task);
-        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        TaskRun taskRun = MockTaskRunFactory.createTaskRunWithTick(task, tick);
         taskRunDao.createTaskRuns(Arrays.asList(taskRun));
         List<Long> taskRunIdList = taskRunDao.fetchUnStartedTaskRunList()
                 .stream().map(TaskRun::getId).collect(Collectors.toList());
         assertEquals(taskRun.getId(), taskRunIdList.get(0));
+
+    }
+
+    @Test
+    public void fetchUnStartedTaskRunListWithDependency() {
+        Tick tick = new Tick(DateTimeUtils.now());
+
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelationsAndTick(taskList, "0>>1", tick);
+        for (Task task : taskList) {
+            taskDao.create(task);
+        }
+        taskRunDao.createTaskRuns(taskRunList);
+        List<TaskRun> recoverTaskRunList = taskRunDao.fetchUnStartedTaskRunList();
+        TaskRun taskRun1 = recoverTaskRunList.get(0);
+        TaskRun taskRun2 = recoverTaskRunList.get(1);
+        assertThat(taskRun1.getDependentTaskRunIds(), Matchers.hasSize(0));
+        assertThat(taskRun2.getDependentTaskRunIds(), Matchers.hasSize(1));
+        assertThat(taskRun2.getDependentTaskRunIds(), Matchers.containsInAnyOrder(taskRun1.getId()));
 
     }
 }

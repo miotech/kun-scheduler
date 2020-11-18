@@ -13,10 +13,19 @@ public class HeartBeatMessage implements Serializable {
     private TaskRunStatus taskRunStatus;
     private Integer port;
     private Integer ip;
+    private OffsetDateTime initTime;//worker 初始化时间
     private int timeoutTimes = 0;
     private OffsetDateTime lastHeartBeatTime;
 
     private static final long serialVersionUID = 1603850205000l;
+
+    public OffsetDateTime getInitTime() {
+        return initTime;
+    }
+
+    public void setInitTime(OffsetDateTime initTime) {
+        this.initTime = initTime;
+    }
 
     public Integer getPort() {
         return port;
