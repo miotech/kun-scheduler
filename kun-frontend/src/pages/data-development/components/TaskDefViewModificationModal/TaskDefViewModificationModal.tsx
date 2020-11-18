@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { Form, Input, Modal } from 'antd';
 import { TaskDefinitionViewUpdateVO } from '@/definitions/TaskDefinitionView.type';
 import useI18n from '@/hooks/useI18n';
@@ -23,6 +23,7 @@ export const TaskDefViewModificationModal: React.FC<Props> = memo(function TaskD
 
   const t = useI18n();
 
+  const [ waitingConfirm, setWaitingConfirm ] = useState<boolean>(false);
   const [ form ] = Form.useForm<{
     name: string;
   }>();
@@ -46,19 +47,28 @@ export const TaskDefViewModificationModal: React.FC<Props> = memo(function TaskD
       title={title}
       visible={visible}
       width={650}
-      onOk={() => {
+      onOk={async () => {
         if (onOk) {
-          onOk({
+          setWaitingConfirm(true);
+          await onOk({
             name: form.getFieldValue('name'),
+            includedTaskDefinitionIds: [],
           });
+          setWaitingConfirm(false);
         }
       }}
       onCancel={onCancel}
+      afterClose={() => {
+        form.resetFields();
+      }}
       destroyOnClose
+      okButtonProps={{
+        loading: waitingConfirm,
+      }}
     >
       <Form form={form}>
-        <Form.Item name="name" required>
-          <Input placeholder="Please input view name" />
+        <Form.Item name="name" label={t('dataDevelopment.taskDefView.name')} required>
+          <Input placeholder={t('dataDevelopment.taskDefView.name.placeholder')} />
         </Form.Item>
       </Form>
     </Modal>
