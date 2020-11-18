@@ -81,11 +81,6 @@ public class LocalExecutor implements Executor {
                     5L, TimeUnit.SECONDS,
                     new LinkedBlockingQueue<>(TASK_LIMIT),
                     new ThreadFactoryBuilder().setNameFormat("local-executor-workerStarter-%d").build());
-    private ExecutorService workerTimeoutThreadPool =
-            new ThreadPoolExecutor(CORES, CORES * 4,
-                    5L, TimeUnit.SECONDS,
-                    new LinkedBlockingQueue<>(TASK_LIMIT),
-                    new ThreadFactoryBuilder().setNameFormat("local-executor-workerTimeout-%d").build());
 
     @Inject
     public LocalExecutor(Injector injector, TaskRunService taskRunService, ResourceLoader resourceLoader,
@@ -136,10 +131,8 @@ public class LocalExecutor implements Executor {
                 return false;
             }
             taskAttemptQueue.add(taskAttempt.cloneBuilder().withStatus(TaskRunStatus.QUEUED).build());
-            if (savedTaskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
-                logger.debug("submit change taskAttempt status to db start at {}", System.currentTimeMillis());
+            if (!savedTaskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
                 miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.QUEUED);
-                logger.debug("submit change taskAttempt status to db end at {}", System.currentTimeMillis());
 
             }
         }
@@ -383,12 +376,8 @@ public class LocalExecutor implements Executor {
         workerToken.release();
         logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
         workerPool.remove(taskAttemptId);
-        workerTimeoutThreadPool.submit(() -> {
-                    miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
-                    TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
-                    logger.debug("reSubmit timeout taskAttempt = {} to worker", taskAttempt);
-                    workerStarterThreadPool.submit(new WorkerStartRunner(taskAttempt));
-                }
-        );
+        miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
+        TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
+        submit(taskAttempt, true);
     }
 }

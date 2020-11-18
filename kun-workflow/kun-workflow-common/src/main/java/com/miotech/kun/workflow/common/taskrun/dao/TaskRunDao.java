@@ -801,28 +801,7 @@ public class TaskRunDao {
         columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
         columnsMap.put(TaskDao.TASK_MODEL_NAME, TaskDao.getTaskCols());
 
-        String whereCase = "(" + TASK_ATTEMPT_MODEL_NAME + ".status = ?) and " + TASK_ATTEMPT_MODEL_NAME + ".created_at > ?";
-        String sql = DefaultSQLBuilder.newBuilder()
-                .columns(columnsMap)
-                .from(TASK_ATTEMPT_TABLE_NAME, TASK_ATTEMPT_MODEL_NAME)
-                .join("INNER", TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
-                .on(TASK_RUN_MODEL_NAME + ".id = " + TASK_ATTEMPT_MODEL_NAME + ".task_run_id")
-                .join("INNER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
-                .on(TaskDao.TASK_MODEL_NAME + ".id = " + TASK_RUN_MODEL_NAME + ".task_id")
-                .autoAliasColumns()
-                .where(whereCase)
-                .getSQL();
-        OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-1);
-        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), toNullableString(TaskRunStatus.QUEUED), recoverLimit);
-    }
-
-    public List<TaskAttempt> fetchRunningTaskAttemptList() {
-        Map<String, List<String>> columnsMap = new HashMap<>();
-        columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
-        columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
-        columnsMap.put(TaskDao.TASK_MODEL_NAME, TaskDao.getTaskCols());
-
-        String whereCase = TASK_ATTEMPT_MODEL_NAME + ".status in (?,?,?) " +
+        String whereCase = TASK_ATTEMPT_MODEL_NAME + ".status in (?,?) " +
                 "and " + TASK_ATTEMPT_MODEL_NAME + ".created_at > ?";
         String sql = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
@@ -835,8 +814,31 @@ public class TaskRunDao {
                 .where(whereCase)
                 .getSQL();
         OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-1);
-        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), toNullableString(TaskRunStatus.INITIALIZING),
-                toNullableString(TaskRunStatus.RUNNING), toNullableString(TaskRunStatus.ERROR), recoverLimit);
+        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance),
+                TaskRunStatus.QUEUED.toString(), TaskRunStatus.ERROR.toString(), recoverLimit);
+    }
+
+    public List<TaskAttempt> fetchRunningTaskAttemptList() {
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
+        columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
+        columnsMap.put(TaskDao.TASK_MODEL_NAME, TaskDao.getTaskCols());
+
+        String whereCase = TASK_ATTEMPT_MODEL_NAME + ".status in (?,?) " +
+                "and " + TASK_ATTEMPT_MODEL_NAME + ".created_at > ?";
+        String sql = DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .from(TASK_ATTEMPT_TABLE_NAME, TASK_ATTEMPT_MODEL_NAME)
+                .join("INNER", TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".id = " + TASK_ATTEMPT_MODEL_NAME + ".task_run_id")
+                .join("INNER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
+                .on(TaskDao.TASK_MODEL_NAME + ".id = " + TASK_RUN_MODEL_NAME + ".task_id")
+                .autoAliasColumns()
+                .where(whereCase)
+                .getSQL();
+        OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-1);
+        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), TaskRunStatus.INITIALIZING.toString(),
+                TaskRunStatus.RUNNING.toString(), recoverLimit);
     }
 
     public static class TaskRunDependencyMapper implements ResultSetMapper<TaskRunDependency> {

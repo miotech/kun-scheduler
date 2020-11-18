@@ -327,6 +327,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ERROR,
+                TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
@@ -474,6 +475,7 @@ public class LocalExecutorTest extends DatabaseTestBase {
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.ERROR,
+                TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
