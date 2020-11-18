@@ -8,7 +8,7 @@ import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import '@/global.less';
 
 export default {
-  title: 'components/TaskDAG/TaskDAGNode',
+  title: 'components/WorkflowDAG/TaskDAGNode',
   component: TaskDAGNode,
 } as Meta;
 
