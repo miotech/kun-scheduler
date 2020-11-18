@@ -3,7 +3,7 @@ import c from 'clsx';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { FunctionOutlined } from '@ant-design/icons';
 
-import './TaskDAGGraph.less';
+import './TaskDAGNode.global.less';
 
 export const TASK_DAG_NODE_WIDTH = 240;
 export const TASK_DAG_NODE_HEIGHT = 60;
@@ -13,6 +13,8 @@ interface OwnProps {
   taskDefinition: TaskDefinition;
   /** allow interact with external inputs (mouse events, etc.)  */
   interoperable?: boolean;
+  /** selection state */
+  selected?: boolean;
 }
 
 type Props = OwnProps;
@@ -23,6 +25,7 @@ export const TaskDAGNode: React.FC<Props> = memo(function TaskDAGNode(props) {
   const {
     taskDefinition,
     interoperable = true,
+    selected = false,
   } = props;
 
   return (
@@ -32,6 +35,7 @@ export const TaskDAGNode: React.FC<Props> = memo(function TaskDAGNode(props) {
         {
           [`${clsPrefix}--interoperable`]: interoperable,
           [`${clsPrefix}--deployed`]: taskDefinition.isDeployed,
+          [`${clsPrefix}--selected`]: selected,
         },
       )}
       data-tid="task-dag-node"

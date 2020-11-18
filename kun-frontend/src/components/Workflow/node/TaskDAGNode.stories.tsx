@@ -1,7 +1,7 @@
 import React from 'react';
 import { Meta } from '@storybook/react';
 
-import { TaskDAGNode } from '@/components/TaskDAGGraph/TaskDAGNode';
+import { TaskDAGNode } from '@/components/Workflow/node/TaskDAGNode.component';
 import { IntlProvider } from '@@/core/umiExports';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 
