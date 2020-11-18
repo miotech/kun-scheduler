@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react';
-import { Modal } from 'antd';
+import { Form, Input, Modal } from 'antd';
 import { TaskDefinitionViewUpdateVO } from '@/definitions/TaskDefinitionView.type';
 import useI18n from '@/hooks/useI18n';
 import { useUnmount } from 'ahooks';
@@ -23,6 +23,10 @@ export const TaskDefViewModificationModal: React.FC<Props> = memo(function TaskD
 
   const t = useI18n();
 
+  const [ form ] = Form.useForm<{
+    name: string;
+  }>();
+
   useUnmount(() => {
   });
 
@@ -36,6 +40,7 @@ export const TaskDefViewModificationModal: React.FC<Props> = memo(function TaskD
     t,
   ]);
 
+  // noinspection RequiredAttributes
   return (
     <Modal
       title={title}
@@ -44,14 +49,18 @@ export const TaskDefViewModificationModal: React.FC<Props> = memo(function TaskD
       onOk={() => {
         if (onOk) {
           onOk({
-            name: '',
+            name: form.getFieldValue('name'),
           });
         }
       }}
       onCancel={onCancel}
       destroyOnClose
     >
-      <div />
+      <Form form={form}>
+        <Form.Item name="name" required>
+          <Input placeholder="Please input view name" />
+        </Form.Item>
+      </Form>
     </Modal>
   );
 });
