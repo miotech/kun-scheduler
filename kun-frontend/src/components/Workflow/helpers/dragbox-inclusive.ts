@@ -15,7 +15,16 @@ export interface NodeRectangle {
   height: number;
 }
 
-export function computeDragIntersection(drag: DragIntersectionParams, nodeInfo: NodeRectangle): boolean {
+export function computeDragInclusive(drag: DragIntersectionParams, nodeInfo: NodeRectangle): boolean {
+  if ((drag.dragStartX <= nodeInfo.x) &&
+    (drag.dragEndX >= nodeInfo.x + nodeInfo.width) &&
+    (drag.dragStartY <= nodeInfo.y) &&
+    (drag.dragEndY >= nodeInfo.y + nodeInfo.height)
+  ) {
+    return true;
+  }
+
+  // else check intersection
   return Intersection.intersectRectangleRectangle(
     new Point2D(drag.dragStartX, drag.dragStartY),
     new Point2D(drag.dragEndX, drag.dragEndY),

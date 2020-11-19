@@ -64,3 +64,28 @@ export const WithDrag = () => {
     </IntlProvider>
   );
 };
+
+export const WithDragAndBoxSelect = () => {
+  return (
+    <IntlProvider locale="en-US" messages={demoMessage}>
+      <main style={mainStyle as any}>
+        <WorkflowCanvas
+          id="demo-canvas-1"
+          width={1280}
+          height={720}
+        >
+          <Drag
+            width={1280}
+            height={720}
+            onDragStart={({ x, y }) => {
+              logger.debug('on drag start, x = %o, y = %o', x, y);
+            }}
+            onDragEnd={({ x, y, dx, dy }) => {
+              logger.debug('on drag end, x = %o, y = %o; dx = %o, dy = %o', x, y, dx, dy);
+            }}
+          />
+        </WorkflowCanvas>
+      </main>
+    </IntlProvider>
+  );
+};
