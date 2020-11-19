@@ -58,6 +58,7 @@
     "@umijs/plugin-locale": "^0.6.1",
     "@umijs/test": "^3.2.0-beta.6",
     "@visx/axis": "^1.1.0",
+    "@visx/drag": "^1.0.0",
     "@visx/event": "^1.0.0",
     "@visx/group": "^1.0.0",
     "@visx/hierarchy": "^1.0.0",
