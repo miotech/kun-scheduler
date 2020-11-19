@@ -15,6 +15,7 @@
   &__heading, &__center, &__bottom {
     width: 100%;
     position: relative;
+    background: @white;
   }
 
   &__heading {
@@ -67,4 +68,8 @@
       background: rgba(@green, 0.1);
     }
   }
+}
+
+.task-dag-node.task-dag-node--selected {
+  border: @darkBlue 2px solid;
 }

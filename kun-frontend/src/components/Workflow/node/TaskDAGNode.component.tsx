@@ -5,12 +5,9 @@ import { FunctionOutlined } from '@ant-design/icons';
 
 import './TaskDAGNode.global.less';
 
-export const TASK_DAG_NODE_WIDTH = 240;
-export const TASK_DAG_NODE_HEIGHT = 60;
-
 interface OwnProps {
   /** Task definition data */
-  taskDefinition: TaskDefinition;
+  taskDefinition: Partial<TaskDefinition>;
   /** allow interact with external inputs (mouse events, etc.)  */
   interoperable?: boolean;
   /** selection state */

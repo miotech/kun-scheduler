@@ -1,7 +1,9 @@
 import React, { memo } from 'react';
 import c from 'clsx';
+import { WorkflowEdge, WorkflowNode } from '@/components/Workflow/Workflow.typings';
 
 import './Canvas.global.less';
+import { NodeRenderer } from '@/components/Workflow/node/NodeRenderer.component';
 
 interface OwnProps {
   /** canvas width */
@@ -14,6 +16,10 @@ interface OwnProps {
   className?: string;
   /** children elements */
   children?: React.ReactNode;
+  /** nodes */
+  nodes: WorkflowNode[];
+  /** edges */
+  edges: WorkflowEdge[];
 }
 
 type Props = OwnProps;
@@ -25,6 +31,8 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     width = '100%',
     height = '100%',
     children,
+    nodes = [],
+    // edges = [],
   } = props;
 
   return (
@@ -58,6 +66,11 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
         height="100%"
         style={{ fill: 'url(#canvasGradient)' }}
       />
+      {/* Render Nodes */}
+      <NodeRenderer
+        nodes={nodes}
+      />
+      {/* Plugins */}
       {children}
     </svg>
   );
