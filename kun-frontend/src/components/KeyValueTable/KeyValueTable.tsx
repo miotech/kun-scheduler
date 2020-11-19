@@ -117,6 +117,12 @@ export const KeyValueTable: React.FC<Props> = memo(function KeyValueTable(props)
         key: '',
         value: '',
       }]);
+    } else if ((value == null) && onChange) {
+      onChange([{
+        ordinal: 0,
+        key: '',
+        value: '',
+      }]);
     }
   }, [
     onChange,
