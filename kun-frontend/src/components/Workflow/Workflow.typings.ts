@@ -15,4 +15,8 @@ export interface WorkflowNode {
 export interface WorkflowEdge {
   srcNodeId: string;
   destNodeId: string;
+  srcX: number;
+  srcY: number;
+  destX: number;
+  destY: number;
 }
