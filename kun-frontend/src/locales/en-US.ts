@@ -268,6 +268,7 @@ export default {
   "dataDevelopment.definition.property.updater": "Updater",
   "dataDevelopment.definition.property.createTime": "Create time",
   "dataDevelopment.definition.property.lastUpdateTime": "Last update time",
+  "dataDevelopment.definition.property.isDeployed": "Deployed",
   "dataDevelopment.definition.paramConfig": "Parameters Config",
   "dataDevelopment.definition.scheduleConfig": "Scheduling Config",
   "dataDevelopment.definition.commitModalTitle": "Commit & Publish Task",

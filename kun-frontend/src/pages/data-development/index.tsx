@@ -1,57 +1,48 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo } from 'react';
 import {
   ReflexContainer,
   ReflexSplitter,
   ReflexElement,
 } from 'react-reflex';
-import { useEventEmitter, useUnmount, useUpdateEffect } from 'ahooks';
+import { useUnmount, useUpdateEffect } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
-import { createTaskDefinition } from '@/services/data-development/task-definitions';
+// import { createTaskDefinition } from '@/services/data-development/task-definitions';
 
-import { TaskDefinitionFilterToolbar } from '@/pages/data-development/components/TaskDefinitionFilterToolbar';
-import { TaskDefinitionCreationModal } from '@/pages/data-development/components/TaskDefinitionCreationModal';
-import { TasksGraphPanel } from '@/pages/data-development/sub-layout/TasksGraphPanel';
+import { TaskDefinitionFilterToolbar } from '@/pages/data-development/components/FilterToolbar/TaskDefinitionFilterToolbar';
+// import { TaskDefinitionCreationModal } from '@/pages/data-development/components/TaskDefinitionCreationModal';
+// import { TasksGraphPanel } from '@/pages/data-development/sub-layout/TasksGraphPanel';
 import { TaskViewsAside } from '@/pages/data-development/components/TaskViewsAside/TaskViewsAside';
 
-import { TaskDefinition } from '@/definitions/TaskDefinition.type';
-import { TaskTemplate } from '@/definitions/TaskTemplate.type';
+// import { TaskDefinition } from '@/definitions/TaskDefinition.type';
+// import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
 
-import { ViewContext } from './context';
 import 'react-reflex/styles.css';
+import { TaskDefinitionTable } from '@/pages/data-development/components/TaskDefinitionTable/TaskDefinitionTable';
 import styles from './index.less';
 
 const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
-
-  const viewportCenter$ = useEventEmitter<string | number>();
-
   const {
     selector: {
-      createModalVisible,
-      creatingTaskTemplate,
       filters,
+      displayType,
     },
     dispatch,
   } = useRedux<{
-    createModalVisible: boolean;
-    creatingTaskTemplate: TaskTemplate | null;
-    editingTaskDefinition: TaskDefinition | null;
     filters: DataDevelopmentModelFilter,
+    displayType: 'LIST' | 'DAG',
   }>(s => ({
-    createModalVisible: (!!s.dataDevelopment.creatingTaskTemplate),
-    creatingTaskTemplate: s.dataDevelopment.creatingTaskTemplate,
-    editingTaskDefinition: s.dataDevelopment.editingTaskDefinition,
     filters: s.dataDevelopment.filters,
+    displayType: s.dataDevelopment.displayType,
   }));
 
   useUnmount(() => {
     // reset state & free up memory
     dispatch.dataDevelopment.setCreatingTaskTemplate(null);
-    dispatch.dataDevelopment.setTaskDefinitions([]);
-    dispatch.dataDevelopment.setEditingTaskDefinition(null);
   });
 
+  /*
   const handleCreationModalCancel = useCallback(() => {
     dispatch.dataDevelopment.setCreatingTaskTemplate(null);
   }, [
@@ -77,6 +68,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     creatingTaskTemplate,
     dispatch,
   ]);
+  */
 
   useUpdateEffect(() => {
     dispatch.dataDevelopment.fetchTaskDefinitions(filters);
@@ -93,47 +85,46 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     filters.name,
   ]);
 
-  return (
-    <ViewContext.Provider value={{
-      viewportCenter$,
-    }}>
-      <main className={styles.Page}>
-        {/* Layout */}
-        <ReflexContainer
-          orientation="vertical"
-        >
-          {/* Task types select left aside */}
-          <ReflexElement
-            className={styles.leftPane}
-            flex={0.192}
-            minSize={192}
-          >
-            <TaskViewsAside
-              views={[]}
-            />
-          </ReflexElement>
-          <ReflexSplitter propagate />
+  const renderGraphOrTable = () => {
+    if (displayType === 'LIST') {
+      return (
+        <div className={styles.tableWrapper}>
+          <TaskDefinitionTable
+            taskDefViewId={null}
+          />
+        </div>
+      );
+    }
+      return null;
+  };
 
-          {/* Center task graph */}
-          <ReflexElement
-            className={styles.midPane}
-            flex={0.847}
-          >
-            <div className={styles.paneContentContainer}>
-              <TaskDefinitionFilterToolbar />
-              <TasksGraphPanel />
-            </div>
-          </ReflexElement>
-          <ReflexSplitter propagate />
-        </ReflexContainer>
-        <TaskDefinitionCreationModal
-          visible={createModalVisible}
-          onOk={handleCreateTask}
-          onCancel={handleCreationModalCancel}
-          taskTemplateName={creatingTaskTemplate?.name}
-        />
-      </main>
-    </ViewContext.Provider>
+  return (
+    <main className={styles.Page}>
+      {/* Layout */}
+      <ReflexContainer
+        orientation="vertical"
+      >
+        {/* Task types select left aside */}
+        <ReflexElement
+          className={styles.leftPane}
+          flex={0.192}
+          minSize={192}
+        >
+          <TaskViewsAside
+            views={[]}
+          />
+        </ReflexElement>
+        <ReflexSplitter propagate />
+        {/* Center task graph */}
+        <ReflexElement
+          className={styles.mainPane}
+          flex={0.847}
+        >
+          <TaskDefinitionFilterToolbar />
+          {renderGraphOrTable()}
+        </ReflexElement>
+      </ReflexContainer>
+    </main>
   );
 });
 

@@ -5,22 +5,10 @@ import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 
 export const reducers = {
-  setTaskDefinitions: (state: ModelState, payload: TaskDefinition[]): ModelState => {
+  setDisplayType: (state: ModelState, payload: 'LIST' | 'DAG'): ModelState => {
     return {
       ...state,
-      taskDefinitions: payload,
-    };
-  },
-  setDAGTaskDefs: (state: ModelState, payload: TaskDefinition[]): ModelState => {
-    return {
-      ...state,
-      dagTaskDefs: payload,
-    };
-  },
-  setTotalCount: (state: ModelState, payload: number): ModelState => {
-    return {
-      ...state,
-      totalCount: payload,
+      displayType: payload,
     };
   },
   setCreatingTaskTemplate: (state: ModelState, payload: TaskTemplate | null): ModelState => {

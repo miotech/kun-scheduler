@@ -13,6 +13,7 @@ export interface DataDevelopmentModelState {
   filters: DataDevelopmentModelFilter;
   totalCount: number;
   taskDefinitions: TaskDefinition[];
+  displayType: 'DAG' | 'LIST';
   dagTaskDefs: TaskDefinition[];
   /* Task type that user dragged into center panel */
   creatingTaskTemplate: TaskTemplate | null;
@@ -30,6 +31,7 @@ export const initState: DataDevelopmentModelState = {
     name: '',
     creatorIds: [],
   },
+  displayType: 'LIST',
   taskDefinitions: [],
   dagTaskDefs: [],
   totalCount: 0,
