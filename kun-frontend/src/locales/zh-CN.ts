@@ -269,6 +269,7 @@ export default {
   "dataDevelopment.definition.property.createTime": "创建时间",
   "dataDevelopment.definition.property.lastUpdateTime": "最后更新时间",
   "dataDevelopment.definition.property.isDeployed": "已发布",
+  "dataDevelopment.definition.property.taskTemplateName": "任务模板名称",
   "dataDevelopment.definition.paramConfig": "参数规则",
   "dataDevelopment.definition.scheduleConfig": "调度规则",
   "dataDevelopment.definition.commitModalTitle": "发布任务",

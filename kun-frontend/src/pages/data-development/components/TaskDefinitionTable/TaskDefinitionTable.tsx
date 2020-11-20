@@ -67,8 +67,14 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
       ),
     },
     {
-      key: 'owner',
+      key: 'taskTemplateName',
       width: 180,
+      title: t('dataDevelopment.definition.property.taskTemplateName'),
+      dataIndex: 'taskTemplateName',
+    },
+    {
+      key: 'owner',
+      width: 160,
       title: t('dataDevelopment.definition.property.owner'),
       dataIndex: 'owner',
       render: (txt: any, record: TaskDefinition) => (

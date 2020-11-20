@@ -269,6 +269,7 @@ export default {
   "dataDevelopment.definition.property.createTime": "Create time",
   "dataDevelopment.definition.property.lastUpdateTime": "Last update time",
   "dataDevelopment.definition.property.isDeployed": "Deployed",
+  "dataDevelopment.definition.property.taskTemplateName": "Task Template Name",
   "dataDevelopment.definition.paramConfig": "Parameters Config",
   "dataDevelopment.definition.scheduleConfig": "Scheduling Config",
   "dataDevelopment.definition.commitModalTitle": "Commit & Publish Task",
