@@ -51,6 +51,8 @@ export default {
   "common.placeholder.datasets.input": "Input Dataset Name",
   "common.placeholder.datasource.select": "Select Datasource",
   "common.pagination.showTotal": "Total {total} Items",
+  "common.table.rowSelectionCount": "Selected {count} rows",
+  "common.table.clearAllSelectedItems": "Clear all selected items",
   "common.pageTitle.homepage": "Home",
   "common.pageTitle.plateformOverview": "Data Monitoring",
   "common.pageTitle.dataDiscovery": "Data Discovery",

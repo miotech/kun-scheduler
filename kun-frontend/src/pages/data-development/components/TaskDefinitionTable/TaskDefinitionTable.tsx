@@ -1,11 +1,15 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
-import { Table } from 'antd';
+import { Button, Space, Table } from 'antd';
+import { CaretRightOutlined } from '@ant-design/icons';
 import { useRequest } from 'ahooks';
 import { Link } from 'umi';
 import { searchTaskDefinition } from '@/services/data-development/task-definitions';
 import useI18n from '@/hooks/useI18n';
 import { UsernameText } from '@/components/UsernameText';
 import dayjs from 'dayjs';
+import SafeUrlAssembler from 'safe-url-assembler';
+import LogUtils from '@/utils/logUtils';
+import { generateAsyncAntdTableRowSelectionProps } from '@/utils/antdTableRowSelectionPropsFactory';
 
 // types
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
@@ -13,7 +17,6 @@ import { ColumnProps } from 'antd/es/table';
 import { TableOnChangeCallback } from '@/definitions/common-types';
 
 // css
-import SafeUrlAssembler from 'safe-url-assembler';
 import styles from './TaskDefinitionTable.module.less';
 
 interface OwnProps {
@@ -22,6 +25,8 @@ interface OwnProps {
 
 type Props = OwnProps;
 
+export const logger = LogUtils.getLoggers('TaskDefinitionTable');
+
 export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinitionTable(props) {
   const {
     taskDefViewId,
@@ -29,6 +34,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
 
   const [ pageNum, setPageNum ] = useState<number>(1);
   const [ pageSize, setPageSize ] = useState<number>(20);
+  const [ selectedRowKeys, setSelectedRowKeys ] = useState<string[]>([]);
   const t = useI18n();
 
   const { data, loading, run: doFetch } = useRequest(searchTaskDefinition, {
@@ -119,26 +125,59 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
     setPageSize(pagination.pageSize || 20);
   }, []);
 
-  return (
-    <Table<TaskDefinition>
-      className={styles.TaskDefTable}
-      data-tid="task-definition-table"
-      columns={columns}
-      dataSource={data?.records || []}
-      rowKey="id"
-      size="small"
-      bordered
-      loading={loading}
-      onChange={handleTableChange}
-      rowSelection={{
+  const rowKeyMapper = useCallback((record: TaskDefinition) => {
+    return `${record.id}`;
+  }, []);
 
-      }}
-      pagination={{
-        current: pageNum,
-        pageSize,
-        total: data?.totalCount || 0,
-        showTotal: (_total: number) => t('common.pagination.showTotal', { total: _total }),
-      }}
-    />
+  return (
+    <div
+      className={styles.TaskDefTableWrapper}
+      data-tid="task-definition-table-wrapper"
+    >
+      <header className={styles.TaskDefTableHeading} data-tid="task-definition-table-heading">
+        <Space>
+          <span className={styles.SelectedItemsCountText} data-tid="selected-items-count">
+            {t('common.table.rowSelectionCount', { count: selectedRowKeys.length })}
+          </span>
+            <span>
+            <Button
+              type="link"
+              disabled={!selectedRowKeys.length}
+              onClick={() => { setSelectedRowKeys([]); }}
+            >
+              {t('common.table.clearAllSelectedItems')}
+            </Button>
+          </span>
+          <Button disabled={!selectedRowKeys.length}>
+            全部提交
+            <CaretRightOutlined />
+          </Button>
+        </Space>
+      </header>
+      <Table<TaskDefinition>
+        className={styles.TaskDefTable}
+        data-tid="task-definition-table"
+        columns={columns}
+        dataSource={data?.records || []}
+        rowKey={rowKeyMapper}
+        size="small"
+        loading={loading}
+        onChange={handleTableChange}
+        rowSelection={{
+          ...generateAsyncAntdTableRowSelectionProps(
+            data?.records || [],
+            rowKeyMapper,
+            selectedRowKeys,
+            setSelectedRowKeys,
+          ),
+        }}
+        pagination={{
+          current: pageNum,
+          pageSize,
+          total: data?.totalCount || 0,
+          showTotal: (_total: number) => t('common.pagination.showTotal', { total: _total }),
+        }}
+      />
+    </div>
   );
 });

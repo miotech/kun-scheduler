@@ -88,7 +88,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   const renderGraphOrTable = () => {
     if (displayType === 'LIST') {
       return (
-        <div className={styles.tableWrapper}>
+        <div className={styles.tableComponentWrapper}>
           <TaskDefinitionTable
             taskDefViewId={null}
           />
