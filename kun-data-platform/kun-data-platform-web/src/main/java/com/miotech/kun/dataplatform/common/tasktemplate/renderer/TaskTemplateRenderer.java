@@ -3,6 +3,7 @@ package com.miotech.kun.dataplatform.common.tasktemplate.renderer;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.workflow.client.model.ConfigKey;
+import com.miotech.kun.workflow.utils.JSONUtils;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +27,14 @@ public abstract class TaskTemplateRenderer {
         if (taskConfig != null) {
             for (String key: taskConfig.keySet()) {
                 if (paramKeys.contains(key)) {
-                    configMap.put(key, taskConfig.get(key));
+                    Object value = taskConfig.get(key);
+                    if (value instanceof Map) {
+                        Map<String, String> valueMap = (Map<String, String>) value;
+                        configMap.put(key, JSONUtils.toJsonString(valueMap));
+                    } else {
+                        configMap.put(key, value);
+                    }
+
                 }
             }
         }

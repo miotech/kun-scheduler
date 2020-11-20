@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.operator.spark.clients;
 
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.workflow.operator.spark.models.AppInfo;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -29,6 +30,16 @@ public class YarnLoggerParser {
     private static final long MAX_FETCH_SIZE = 1000000;
 
     private final OkHttpClient restClient = new OkHttpClient();
+
+    public void tailingYarnLog(AppInfo app) {
+        try {
+            String logUrl = app.getDriverLogUrl();
+            logger.info("Fetch log from {}", logUrl);
+            logger.info(getYarnLogs(logUrl));
+        } catch (Exception e) {
+            logger.error("Error in fetch application logs, {}", e);
+        }
+    }
 
     public String getYarnLogs(String amContainerLogUrl) {
         logger.debug("fetch log from {}", amContainerLogUrl);

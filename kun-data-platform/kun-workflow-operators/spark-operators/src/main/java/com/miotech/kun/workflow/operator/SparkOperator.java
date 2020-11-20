@@ -131,23 +131,13 @@ public class SparkOperator extends LivyBaseSparkOperator {
             waitForSeconds(3);
         } while (!jobState.isFinished());
 
-        tailingYarnLog(appInfo);
+        loggerParser.tailingYarnLog(appInfo);
         logger.info("spark job \"{}\", batch id: {}" , jobState, jobId);
         if (jobState.equals(StateInfo.State.SUCCESS)) {
             lineageAnalysis(context, applicationId);
             return true;
         } else {
             return false;
-        }
-    }
-
-    private void tailingYarnLog(AppInfo app) {
-        try {
-            String logUrl = app.getDriverLogUrl();
-            logger.info("Fetch log from {}", logUrl);
-            logger.info(loggerParser.getYarnLogs(logUrl));
-        } catch (Exception e) {
-            logger.error("Error in fetch application logs, {}", e);
         }
     }
 

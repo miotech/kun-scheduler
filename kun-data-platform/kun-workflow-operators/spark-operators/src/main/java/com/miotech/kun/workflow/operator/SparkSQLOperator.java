@@ -4,6 +4,7 @@ import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.operator.resolver.SparkSqlResolver;
+import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
 import com.miotech.kun.workflow.operator.spark.models.SparkApp;
 import com.miotech.kun.workflow.operator.spark.models.SparkJob;
 import com.miotech.kun.workflow.operator.spark.models.StateInfo;
@@ -25,6 +26,7 @@ import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 public class SparkSQLOperator extends LivyBaseSparkOperator {
 
     private static final Logger logger = LoggerFactory.getLogger(SparkSQLOperator.class);
+    private final YarnLoggerParser loggerParser = new YarnLoggerParser();
 
     private AtomicInteger currentActiveSessionId = new AtomicInteger(-1);
     private boolean isSharedSession;
@@ -78,6 +80,7 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
                 .define(CONF_SPARK_SQL, ConfigDef.Type.STRING, true, "SQL script", CONF_SPARK_SQL)
                 .define(CONF_SPARK_DEFAULT_DB, ConfigDef.Type.STRING, CONF_SPARK_DEFAULT_DB_DEFAULT,true, "Default database name for a sql execution", CONF_SPARK_DEFAULT_DB)
                 .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}", true, "SQL variables, use like `select ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
+                .define(CONF_LIVY_SESSION_CONF, ConfigDef.Type.STRING, "{}", true, "extra user specified spark configurations", CONF_LIVY_SESSION_CONF)
                 ;
     }
 
@@ -87,8 +90,8 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
     }
 
     public boolean execute() {
-
         SparkJob job = new SparkJob();
+        job.setConf(SparkConfiguration.getMap(getContext(), CONF_LIVY_SESSION_CONF));
         logger.info("Submit spark session: {}", JSONUtils.toJsonString(job));
         SparkApp app = livyClient.runSparkSession(job);
         Integer sessionId = app.getId();
@@ -107,6 +110,9 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
             }
             waitForSeconds(3);
         } while (!sessionState.isAvailable());
+
+        SparkApp runningApp = livyClient.getSparkSession(sessionId);
+        logger.info("Application info: {}", JSONUtils.toJsonString(runningApp));
 
         // launch sql
         String sql = SparkConfiguration.getString(getContext(), SparkConfiguration.CONF_SPARK_SQL);
@@ -140,6 +146,7 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
             }
         }
 
+        loggerParser.tailingYarnLog(runningApp.getAppInfo());
         try {
             postRun(sql);
         } catch (Exception e) {

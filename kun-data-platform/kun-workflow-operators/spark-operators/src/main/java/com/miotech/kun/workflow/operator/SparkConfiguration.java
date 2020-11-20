@@ -30,6 +30,7 @@ public class SparkConfiguration {
     // SQL
     public static final String CONF_LIVY_SHARED_SESSION = "sharedSession";
     public static final String CONF_LIVY_SHARED_SESSION_NAME = "sharedSessionName";
+    public static final String CONF_LIVY_SESSION_CONF = "sparkConf";
 
     public static final String CONF_SPARK_SQL = "sparkSQL";
     public static final String CONF_SPARK_DEFAULT_DB = "defaultDatabase";
@@ -49,6 +50,10 @@ public class SparkConfiguration {
 
     public static Boolean getBoolean(OperatorContext context, String key) {
         return context.getConfig().getBoolean(key);
+    }
+
+    public static Map<String, String> getMap(OperatorContext context, String key) {
+        return JSONUtils.jsonToObject(context.getConfig().getString(key), Map.class);
     }
 
     public static Map<String, String> getVariables(OperatorContext context) {

@@ -145,4 +145,9 @@ public class LivyClient extends HttpApiClient {
         }
     }
 
+    public SparkApp getSparkSession(Integer sessionId) {
+        String url = buildUrl(SESSIONS + sessionId);
+        return toObject(this.get(url), SparkApp.class);
+    }
+
 }
