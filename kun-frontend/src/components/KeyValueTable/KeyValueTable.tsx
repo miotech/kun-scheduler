@@ -153,7 +153,7 @@ export const KeyValueTable: React.FC<Props> = memo(function KeyValueTable(props)
         dataSource={value || []}
         footer={footerRender}
         pagination={false}
-        rowKey={r => `${r.ordinal}::${r.key}::${r.value}`}
+        rowKey={r => `${r.ordinal}`}
       />
     </div>
   );
