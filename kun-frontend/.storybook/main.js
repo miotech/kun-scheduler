@@ -73,9 +73,9 @@ module.exports = {
                 path.resolve(__dirname, '..'),
                 path.resolve(__dirname, '../node_modules'),
               ],
-            },
-            modifyVars: {
-              hack: `true; @import "~@/styles/variables.less"; @import "~@/styles/mixins.less"`,
+              modifyVars: {
+                hack: `true; @import "~@/styles/variables.less"; @import "~@/styles/mixins.less"`,
+              },
             },
           },
         },
