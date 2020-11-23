@@ -24,6 +24,16 @@ export async function searchTaskDefinitionViews(searchParams: SearchTaskDefiniti
   });
 }
 
+export async function fetchTaskDefinitionViewDetail(viewId: string) {
+  return get<TaskDefinitionView>('/task-def-views/:viewId', {
+    prefix: API_DATA_PLATFORM_PREFIX,
+    pathParams: {
+      viewId,
+    },
+    mockCode: 'task-def-views.getDetail',
+  });
+}
+
 /**
  * Create a task definition view
  * @param createParams
