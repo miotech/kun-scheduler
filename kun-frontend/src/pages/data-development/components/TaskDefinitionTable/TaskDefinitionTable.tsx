@@ -152,6 +152,9 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
             全部提交
             <CaretRightOutlined />
           </Button>
+          <Button disabled={!selectedRowKeys.length}>
+            添加到任务视图
+          </Button>
         </Space>
       </header>
       <Table<TaskDefinition>

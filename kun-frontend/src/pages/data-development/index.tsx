@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, { memo, useCallback, useState } from 'react';
 import {
   ReflexContainer,
   ReflexSplitter,
@@ -20,6 +20,7 @@ import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/mod
 
 import 'react-reflex/styles.css';
 import { TaskDefinitionTable } from '@/pages/data-development/components/TaskDefinitionTable/TaskDefinitionTable';
+import { TaskDefViewModificationModal } from '@/pages/data-development/components/TaskDefViewModificationModal/TaskDefViewModificationModal';
 import styles from './index.less';
 
 const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
@@ -36,6 +37,8 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     filters: s.dataDevelopment.filters,
     displayType: s.dataDevelopment.displayType,
   }));
+
+  const [ createViewModalVisible, setCreateViewModalVisible ] = useState<boolean>(false);
 
   useUnmount(() => {
     // reset state & free up memory
@@ -98,6 +101,10 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       return null;
   };
 
+  const handleCreateView = useCallback(() => {
+
+  }, []);
+
   return (
     <main className={styles.Page}>
       {/* Layout */}
@@ -108,10 +115,13 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
         <ReflexElement
           className={styles.leftPane}
           flex={0.192}
-          minSize={192}
+          minSize={200}
         >
           <TaskViewsAside
             views={[]}
+            onClickCreateBtn={() => {
+              setCreateViewModalVisible(true);
+            }}
           />
         </ReflexElement>
         <ReflexSplitter propagate />
@@ -119,11 +129,20 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
         <ReflexElement
           className={styles.mainPane}
           flex={0.847}
+          minSize={800}
         >
           <TaskDefinitionFilterToolbar />
           {renderGraphOrTable()}
         </ReflexElement>
       </ReflexContainer>
+      <TaskDefViewModificationModal
+        mode="create"
+        visible={createViewModalVisible}
+        onOk={handleCreateView}
+        onCancel={() => {
+          setCreateViewModalVisible(false);
+        }}
+      />
     </main>
   );
 });
