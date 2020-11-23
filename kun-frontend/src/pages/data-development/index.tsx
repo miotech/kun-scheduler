@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import {
   ReflexContainer,
   ReflexSplitter,
@@ -18,27 +18,48 @@ import { TaskViewsAside } from '@/pages/data-development/components/TaskViewsAsi
 // import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
 
-import 'react-reflex/styles.css';
 import { TaskDefinitionTable } from '@/pages/data-development/components/TaskDefinitionTable/TaskDefinitionTable';
 import { TaskDefViewModificationModal } from '@/pages/data-development/components/TaskDefViewModificationModal/TaskDefViewModificationModal';
+import {
+  TaskDefinitionViewBase, TaskDefinitionViewUpdateVO, TaskDefinitionViewVO
+} from '@/definitions/TaskDefinitionView.type';
+
+import 'react-reflex/styles.css';
+import {
+  createTaskDefinitionView, deleteTaskDefinitionView, updateTaskDefinitionView
+} from '@/services/data-development/task-definition-views';
 import styles from './index.less';
+
 
 const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   const {
     selector: {
       filters,
       displayType,
+      taskDefViewsList,
+      loadingViews,
+      selectedView,
     },
     dispatch,
   } = useRedux<{
     filters: DataDevelopmentModelFilter,
     displayType: 'LIST' | 'DAG',
+    taskDefViewsList: TaskDefinitionViewBase[],
+    loadingViews: boolean,
+    selectedView: TaskDefinitionViewBase | null,
+    loadingTaskDefs: boolean,
   }>(s => ({
     filters: s.dataDevelopment.filters,
     displayType: s.dataDevelopment.displayType,
+    taskDefViewsList: s.dataDevelopment.taskDefViewsList,
+    loadingViews: s.loading.effects.dataDevelopment.fetchTaskDefViews,
+    selectedView: s.dataDevelopment.selectedTaskDefView,
+    loadingTaskDefs: s.loading.effects.dataDevelopment.fetchTaskDefinitions,
   }));
 
+  const [ taskDefViewSearchKeyword, setTaskDefViewSearchKeyword ] = useState<string>('');
   const [ createViewModalVisible, setCreateViewModalVisible ] = useState<boolean>(false);
+  const [ editView, setEditView ] = useState<TaskDefinitionViewVO | null>(null);
 
   useUnmount(() => {
     // reset state & free up memory
@@ -73,6 +94,69 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   ]);
   */
 
+  /* Task definition view effects and callbacks */
+
+  const searchTaskDefViews = () => {
+    dispatch.dataDevelopment.fetchTaskDefViews({
+      keyword: taskDefViewSearchKeyword,
+    });
+  };
+
+  useEffect(() => {
+    searchTaskDefViews();
+    // eslint-disable-next-line
+  }, []);
+
+  useDebouncedUpdateEffect(() => {
+    searchTaskDefViews();
+  }, [
+    taskDefViewSearchKeyword,
+  ], {
+    wait: 1000,
+  });
+
+  const handleCreateView = useCallback(async (updateVO: TaskDefinitionViewUpdateVO) => {
+    try {
+      await createTaskDefinitionView({
+        name: updateVO.name,
+        taskDefinitionIds: updateVO.taskDefinitionIds,
+      });
+      setCreateViewModalVisible(false);
+    } finally {
+      searchTaskDefViews();
+    }
+  }, [
+    searchTaskDefViews,
+  ]);
+
+  const handleUpdateView = useCallback(async (updateVO: TaskDefinitionViewUpdateVO) => {
+    if (editView) {
+      try {
+        await updateTaskDefinitionView(editView.id, {
+          name: updateVO.name,
+          taskDefinitionIds: editView.includedTaskDefinitionIds || [],
+        });
+        setEditView(null);
+      } finally {
+        searchTaskDefViews();
+      }
+    }
+  }, [
+    editView,
+    searchTaskDefViews,
+  ]);
+
+  const handleDeleteView = useCallback(async (viewId: string) => {
+    try {
+      await deleteTaskDefinitionView(viewId);
+      setEditView(null);
+    } finally {
+      searchTaskDefViews();
+    }
+  }, []);
+
+  /* Task definitions effects and callbacks */
+
   useUpdateEffect(() => {
     dispatch.dataDevelopment.fetchTaskDefinitions(filters);
   }, [
@@ -80,6 +164,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     filters.pageSize,
     filters.taskTemplateName,
     filters.creatorIds,
+    selectedView,
   ]);
 
   useDebouncedUpdateEffect(() => {
@@ -93,17 +178,13 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       return (
         <div className={styles.tableComponentWrapper}>
           <TaskDefinitionTable
-            taskDefViewId={null}
+            taskDefViewId={selectedView?.id || null}
           />
         </div>
       );
     }
       return null;
   };
-
-  const handleCreateView = useCallback(() => {
-
-  }, []);
 
   return (
     <main className={styles.Page}>
@@ -118,10 +199,21 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
           minSize={200}
         >
           <TaskViewsAside
-            views={[]}
+            loading={loadingViews}
+            views={taskDefViewsList as any[]}
+            onSearch={(searchText: string) => {
+              setTaskDefViewSearchKeyword(searchText);
+            }}
             onClickCreateBtn={() => {
               setCreateViewModalVisible(true);
             }}
+            onSelectItem={(viewItem) => {
+              dispatch.dataDevelopment.setSelectedTaskDefinitionView(viewItem);
+            }}
+            onEdit={(view) => {
+              setEditView(view);
+            }}
+            selectedView={selectedView}
           />
         </ReflexElement>
         <ReflexSplitter propagate />
@@ -141,6 +233,16 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
         onOk={handleCreateView}
         onCancel={() => {
           setCreateViewModalVisible(false);
+        }}
+      />
+      <TaskDefViewModificationModal
+        mode="edit"
+        visible={editView != null}
+        initView={editView}
+        onOk={handleUpdateView}
+        onDelete={handleDeleteView}
+        onCancel={() => {
+          setEditView(null);
         }}
       />
     </main>

@@ -46,6 +46,7 @@ export const TaskDefinitionCreationModal: React.FC<TaskDefinitionCreationModalPr
       onOk={handleOnOk}
       onCancel={onCancel}
       destroyOnClose
+
     >
       <Form form={form} {...layout}>
         <Form.Item

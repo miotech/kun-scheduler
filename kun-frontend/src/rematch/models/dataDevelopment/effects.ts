@@ -6,8 +6,23 @@ import {
   searchTaskDefinition,
   SearchTaskDefinitionReqParams,
 } from '@/services/data-development/task-definitions';
+import { SearchTaskDefinitionViewParams } from '@/definitions/TaskDefinitionView.type';
+import { searchTaskDefinitionViews } from '@/services/data-development/task-definition-views';
 
 export const effects = (dispatch: RootDispatch) => ({
+  async fetchTaskDefViews(payload: Partial<SearchTaskDefinitionViewParams>) {
+    try {
+      const taskDefViews = await searchTaskDefinitionViews({
+        pageNumber: 1,
+        pageSize: 100,
+        ...payload,
+      });
+      dispatch.dataDevelopment.setTaskDefinitionViewsList(taskDefViews.records);
+    } finally {
+      // do nothing
+    }
+  },
+
   async fetchTaskDefinitionsForDAG() {
     const taskDefs = await fetchAllTaskDefinitions();
     if (taskDefs) {

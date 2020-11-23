@@ -3,6 +3,7 @@ import {
 } from '@/rematch/models/dataDevelopment/model-state';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
+import { TaskDefinitionViewBase } from '@/definitions/TaskDefinitionView.type';
 
 export const reducers = {
   setDisplayType: (state: ModelState, payload: 'LIST' | 'DAG'): ModelState => {
@@ -42,6 +43,23 @@ export const reducers = {
         ...state.filters,
         ...payload,
       },
+    };
+  },
+  setTaskDefinitionViewsList: (state: ModelState, payload: TaskDefinitionViewBase[]): ModelState => {
+    return {
+      ...state,
+      taskDefViewsList: payload,
+    };
+  },
+  addTaskDefinitionViewsToList: (state: ModelState, payload: TaskDefinitionViewBase[]): ModelState => {
+    return {
+      ...state,
+    };
+  },
+  setSelectedTaskDefinitionView: (state: ModelState, payload: TaskDefinitionViewBase | null): ModelState => {
+    return {
+      ...state,
+      selectedTaskDefView: payload,
     };
   },
 };

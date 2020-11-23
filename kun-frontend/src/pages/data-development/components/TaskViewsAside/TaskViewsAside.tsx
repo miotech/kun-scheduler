@@ -4,8 +4,9 @@ import useI18n from '@/hooks/useI18n';
 
 import { TaskViewListItem } from '@/pages/data-development/components/TaskViewsAside/TaskViewListItem';
 
-import { TaskDefinitionViewVO } from '@/definitions/TaskDefinitionView.type';
+import { TaskDefinitionViewBase, TaskDefinitionViewVO } from '@/definitions/TaskDefinitionView.type';
 
+import { KunSpin } from '@/components/KunSpin';
 import styles from './TaskViewsAside.module.less';
 
 interface OwnProps {
@@ -14,6 +15,10 @@ interface OwnProps {
   onClickCreateBtn?: (ev: React.MouseEvent) => any;
   onEdit?: (view: TaskDefinitionViewVO) => any;
   onSearch?: (searchText: string) => any;
+  loading?: boolean;
+  onSelectItem?: (view: TaskDefinitionViewVO | null) => any;
+  selectedView?: TaskDefinitionViewBase | null;
+  allowAllTaskDefsView?: boolean;
 }
 
 type Props = OwnProps;
@@ -24,20 +29,44 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
     onEdit,
     onClickCreateBtn,
     onSearch,
+    onSelectItem,
+    loading,
+    selectedView,
+    allowAllTaskDefsView = true,
   } = props;
 
   const [ searchText, setSearchText ] = useState<string>('');
 
   const t = useI18n();
 
-  const viewItems = useMemo(() => views.map(view => (
-    <TaskViewListItem
-      key={`${view.id}`}
-      view={view}
-      onEdit={onEdit}
-    />
-  )), [
+  const viewItems = useMemo(() => {
+    let viewItemsDOMs = views.map(view => (
+      <TaskViewListItem
+        key={`${view.id}`}
+        view={view}
+        onEdit={onEdit}
+        onSelect={onSelectItem}
+        selected={(selectedView != null) ? view.id === selectedView.id : false}
+      />
+    ));
+    if (allowAllTaskDefsView) {
+      viewItemsDOMs = [
+        <TaskViewListItem
+          view={null}
+          displayName="All Tasks"
+          onSelect={onSelectItem}
+          key="all-items"
+          selected={selectedView == null}
+        />,
+        ...viewItemsDOMs,
+      ];
+    }
+    return viewItemsDOMs;
+  }, [
+    allowAllTaskDefsView,
     onEdit,
+    onSelectItem,
+    selectedView,
     views,
   ]);
 
@@ -73,9 +102,11 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
           </button>
         </div>
       </div>
-      <ul className={styles.TaskViewsAsideList} data-tid="task-views-aside-list-wrapper">
-        {viewItems}
-      </ul>
+      <KunSpin spinning={loading}>
+        <ul className={styles.TaskViewsAsideList} data-tid="task-views-aside-list-wrapper">
+          {viewItems}
+        </ul>
+      </KunSpin>
     </aside>
   );
 });

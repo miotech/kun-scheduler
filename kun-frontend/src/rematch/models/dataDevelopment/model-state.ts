@@ -1,5 +1,6 @@
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
+import { TaskDefinitionViewBase } from '@/definitions/TaskDefinitionView.type';
 
 export interface DataDevelopmentModelFilter {
   pageNum: number;
@@ -21,6 +22,8 @@ export interface DataDevelopmentModelState {
   editingTaskDefinition: TaskDefinition | null;
   backUrl: string | null;
   definitionFormDirty: boolean;
+  taskDefViewsList: TaskDefinitionViewBase[];
+  selectedTaskDefView: TaskDefinitionViewBase | null;
 }
 
 export const initState: DataDevelopmentModelState = {
@@ -39,4 +42,6 @@ export const initState: DataDevelopmentModelState = {
   editingTaskDefinition: null,
   backUrl: null,
   definitionFormDirty: false,
+  taskDefViewsList: [],
+  selectedTaskDefView: null,
 };
