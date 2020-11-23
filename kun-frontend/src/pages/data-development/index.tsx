@@ -4,7 +4,7 @@ import {
   ReflexSplitter,
   ReflexElement,
 } from 'react-reflex';
-import { useUnmount, useUpdateEffect } from 'ahooks';
+import { useMount, useUnmount, useUpdateEffect } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
 // import { createTaskDefinition } from '@/services/data-development/task-definitions';
@@ -28,6 +28,7 @@ import 'react-reflex/styles.css';
 import {
   createTaskDefinitionView, deleteTaskDefinitionView, updateTaskDefinitionView
 } from '@/services/data-development/task-definition-views';
+import { TaskTemplateCreateDropMenu } from '@/pages/data-development/components/TaskTemplateCreateDropMenu/TaskTemplateCreateDropMenu';
 import styles from './index.less';
 
 
@@ -60,6 +61,9 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   const [ taskDefViewSearchKeyword, setTaskDefViewSearchKeyword ] = useState<string>('');
   const [ createViewModalVisible, setCreateViewModalVisible ] = useState<boolean>(false);
   const [ editView, setEditView ] = useState<TaskDefinitionViewVO | null>(null);
+
+  useMount(() => {
+  });
 
   useUnmount(() => {
     // reset state & free up memory
@@ -155,30 +159,14 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     }
   }, []);
 
-  /* Task definitions effects and callbacks */
-
-  useUpdateEffect(() => {
-    dispatch.dataDevelopment.fetchTaskDefinitions(filters);
-  }, [
-    filters.pageNum,
-    filters.pageSize,
-    filters.taskTemplateName,
-    filters.creatorIds,
-    selectedView,
-  ]);
-
-  useDebouncedUpdateEffect(() => {
-    dispatch.dataDevelopment.fetchTaskDefinitions(filters);
-  }, [
-    filters.name,
-  ]);
-
+  /* Task definition table renderer */
   const renderGraphOrTable = () => {
     if (displayType === 'LIST') {
       return (
-        <div className={styles.tableComponentWrapper}>
+        <div key="list-table" className={styles.tableComponentWrapper}>
           <TaskDefinitionTable
             taskDefViewId={selectedView?.id || null}
+            filters={filters}
           />
         </div>
       );
@@ -188,6 +176,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
 
   return (
     <main className={styles.Page}>
+      <TaskTemplateCreateDropMenu />
       {/* Layout */}
       <ReflexContainer
         orientation="vertical"

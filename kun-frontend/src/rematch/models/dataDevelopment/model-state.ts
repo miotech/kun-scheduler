@@ -3,8 +3,6 @@ import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 import { TaskDefinitionViewBase } from '@/definitions/TaskDefinitionView.type';
 
 export interface DataDevelopmentModelFilter {
-  pageNum: number;
-  pageSize: number;
   taskTemplateName: string | null;
   name: string;
   creatorIds: string[];
@@ -24,12 +22,11 @@ export interface DataDevelopmentModelState {
   definitionFormDirty: boolean;
   taskDefViewsList: TaskDefinitionViewBase[];
   selectedTaskDefView: TaskDefinitionViewBase | null;
+  taskTemplates: TaskTemplate[],
 }
 
 export const initState: DataDevelopmentModelState = {
   filters: {
-    pageNum: 1,
-    pageSize: 25,
     taskTemplateName: null,
     name: '',
     creatorIds: [],
@@ -44,4 +41,5 @@ export const initState: DataDevelopmentModelState = {
   definitionFormDirty: false,
   taskDefViewsList: [],
   selectedTaskDefView: null,
+  taskTemplates: [],
 };

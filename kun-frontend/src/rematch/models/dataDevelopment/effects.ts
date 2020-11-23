@@ -8,6 +8,7 @@ import {
 } from '@/services/data-development/task-definitions';
 import { SearchTaskDefinitionViewParams } from '@/definitions/TaskDefinitionView.type';
 import { searchTaskDefinitionViews } from '@/services/data-development/task-definition-views';
+import { fetchTaskTemplates } from '@/services/data-development/task-templates';
 
 export const effects = (dispatch: RootDispatch) => ({
   async fetchTaskDefViews(payload: Partial<SearchTaskDefinitionViewParams>) {
@@ -35,6 +36,17 @@ export const effects = (dispatch: RootDispatch) => ({
     if (taskDefsResp) {
       // dispatch.dataDevelopment.setTaskDefinitions(taskDefsResp.records || []);
       // dispatch.dataDevelopment.setTotalCount(parseInt(`${taskDefsResp.totalCount}`, 10));
+    }
+  },
+
+  async fetchTaskTemplates() {
+    try {
+      const respData = await fetchTaskTemplates();
+      if (respData) {
+        dispatch.dataDevelopment.setTaskTemplates(respData);
+      }
+    } finally {
+      // do nothing
     }
   },
 

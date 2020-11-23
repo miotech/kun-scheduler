@@ -15,12 +15,15 @@ import { generateAsyncAntdTableRowSelectionProps } from '@/utils/antdTableRowSel
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { ColumnProps } from 'antd/es/table';
 import { TableOnChangeCallback } from '@/definitions/common-types';
+import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
 
 // css
+import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
 import styles from './TaskDefinitionTable.module.less';
 
 interface OwnProps {
   taskDefViewId: string | null;
+  filters: DataDevelopmentModelFilter;
 }
 
 type Props = OwnProps;
@@ -30,10 +33,11 @@ export const logger = LogUtils.getLoggers('TaskDefinitionTable');
 export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinitionTable(props) {
   const {
     taskDefViewId,
+    filters,
   } = props;
 
   const [ pageNum, setPageNum ] = useState<number>(1);
-  const [ pageSize, setPageSize ] = useState<number>(20);
+  const [ pageSize, setPageSize ] = useState<number>(25);
   const [ selectedRowKeys, setSelectedRowKeys ] = useState<string[]>([]);
   const t = useI18n();
 
@@ -45,14 +49,34 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
     doFetch({
       pageNum,
       pageSize,
+      name: filters.name,
+      taskTemplateName: filters.taskTemplateName || undefined,
+      creatorIds: filters.creatorIds as any,
       viewId: (taskDefViewId != null) ? taskDefViewId : undefined,
     });
   }, [
+    doFetch,
     taskDefViewId,
+    filters.taskTemplateName,
+    filters.creatorIds,
     pageNum,
     pageSize,
-    doFetch,
   ]);
+
+  useDebouncedUpdateEffect(() => {
+    doFetch({
+      pageNum,
+      pageSize,
+      name: filters.name,
+      taskTemplateName: filters.taskTemplateName || undefined,
+      creatorIds: filters.creatorIds as any,
+      viewId: (taskDefViewId != null) ? taskDefViewId : undefined,
+    });
+  }, [
+    filters.name,
+  ], {
+    wait: 500,
+  });
 
   const columns: ColumnProps<TaskDefinition>[] = useMemo(() => [
     {

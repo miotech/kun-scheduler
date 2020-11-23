@@ -62,4 +62,10 @@ export const reducers = {
       selectedTaskDefView: payload,
     };
   },
+  setTaskTemplates: (state: ModelState, payload: TaskTemplate[]): ModelState => {
+    return {
+      ...state,
+      taskTemplates: payload,
+    };
+  },
 };
