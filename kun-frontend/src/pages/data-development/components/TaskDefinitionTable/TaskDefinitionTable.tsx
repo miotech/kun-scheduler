@@ -24,6 +24,8 @@ import styles from './TaskDefinitionTable.module.less';
 interface OwnProps {
   taskDefViewId: string | null;
   filters: DataDevelopmentModelFilter;
+  /** Triggers table update when changed */
+  updateTime: number;
 }
 
 type Props = OwnProps;
@@ -34,6 +36,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
   const {
     taskDefViewId,
     filters,
+    updateTime,
   } = props;
 
   const [ pageNum, setPageNum ] = useState<number>(1);
@@ -54,6 +57,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
       creatorIds: filters.creatorIds as any,
       viewIds: (taskDefViewId != null) ? [taskDefViewId] : undefined,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     doFetch,
     taskDefViewId,
@@ -61,6 +65,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
     filters.creatorIds,
     pageNum,
     pageSize,
+    updateTime,
   ]);
 
   useDebouncedUpdateEffect(() => {

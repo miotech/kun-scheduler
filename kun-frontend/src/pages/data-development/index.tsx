@@ -7,28 +7,27 @@ import {
 import { useMount, useUnmount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
-// import { createTaskDefinition } from '@/services/data-development/task-definitions';
 
 import { TaskDefinitionFilterToolbar } from '@/pages/data-development/components/FilterToolbar/TaskDefinitionFilterToolbar';
-// import { TaskDefinitionCreationModal } from '@/pages/data-development/components/TaskDefinitionCreationModal';
-// import { TasksGraphPanel } from '@/pages/data-development/sub-layout/TasksGraphPanel';
 import { TaskViewsAside } from '@/pages/data-development/components/TaskViewsAside/TaskViewsAside';
-
-// import { TaskDefinition } from '@/definitions/TaskDefinition.type';
-// import { TaskTemplate } from '@/definitions/TaskTemplate.type';
-import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
-
 import { TaskDefinitionTable } from '@/pages/data-development/components/TaskDefinitionTable/TaskDefinitionTable';
 import { TaskDefViewModificationModal } from '@/pages/data-development/components/TaskDefViewModificationModal/TaskDefViewModificationModal';
+import { TaskTemplateCreateDropMenu } from '@/pages/data-development/components/TaskTemplateCreateDropMenu/TaskTemplateCreateDropMenu';
+
+import {
+  createTaskDefinitionView,
+  deleteTaskDefinitionView,
+  putTaskDefinitionsIntoView,
+  updateTaskDefinitionView,
+} from '@/services/data-development/task-definition-views';
+import { createTaskDefinition } from '@/services/data-development/task-definitions';
+
 import {
   TaskDefinitionViewBase, TaskDefinitionViewUpdateVO, TaskDefinitionViewVO
 } from '@/definitions/TaskDefinitionView.type';
+import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
 
 import 'react-reflex/styles.css';
-import {
-  createTaskDefinitionView, deleteTaskDefinitionView, updateTaskDefinitionView
-} from '@/services/data-development/task-definition-views';
-import { TaskTemplateCreateDropMenu } from '@/pages/data-development/components/TaskTemplateCreateDropMenu/TaskTemplateCreateDropMenu';
 import styles from './index.less';
 
 
@@ -61,6 +60,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   const [ taskDefViewSearchKeyword, setTaskDefViewSearchKeyword ] = useState<string>('');
   const [ createViewModalVisible, setCreateViewModalVisible ] = useState<boolean>(false);
   const [ editView, setEditView ] = useState<TaskDefinitionViewVO | null>(null);
+  const [ updateTime, setUpdateTime ] = useState<number>(Date.now());
 
   useMount(() => {
   });
@@ -69,34 +69,6 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     // reset state & free up memory
     dispatch.dataDevelopment.setCreatingTaskTemplate(null);
   });
-
-  /*
-  const handleCreationModalCancel = useCallback(() => {
-    dispatch.dataDevelopment.setCreatingTaskTemplate(null);
-  }, [
-    dispatch,
-  ]);
-
-  const handleCreateTask = useCallback((taskName: string) => {
-    if (creatingTaskTemplate) {
-      createTaskDefinition({
-        name: taskName,
-        taskTemplateName: creatingTaskTemplate.name,
-      }).then(response => {
-        if (response) {
-          // reset and close modal
-          dispatch.dataDevelopment.setCreatingTaskTemplate(null);
-          // refresh task defs
-          dispatch.dataDevelopment.fetchTaskDefinitions();
-          dispatch.dataDevelopment.fetchTaskDefinitionsForDAG();
-        }
-      });
-    }
-  }, [
-    creatingTaskTemplate,
-    dispatch,
-  ]);
-  */
 
   /* Task definition view effects and callbacks */
 
@@ -167,6 +139,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
           <TaskDefinitionTable
             taskDefViewId={selectedView?.id || null}
             filters={filters}
+            updateTime={updateTime}
           />
         </div>
       );
@@ -174,9 +147,28 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       return null;
   };
 
+  const handleTaskDefinitionCreate = useCallback(async (taskTemplateName: string, name: string, createInCurrentView: boolean) => {
+    try {
+      const createdTaskDefinition = await createTaskDefinition({
+        name,
+        taskTemplateName,
+      });
+      if (createInCurrentView && selectedView && createdTaskDefinition) {
+        await putTaskDefinitionsIntoView(selectedView.id, [createdTaskDefinition.id as string]);
+      }
+    } finally {
+      searchTaskDefViews();
+      setUpdateTime(Date.now);
+    }
+  }, [
+    selectedView,
+  ]);
+
   return (
     <main className={styles.Page}>
-      <TaskTemplateCreateDropMenu />
+      <TaskTemplateCreateDropMenu
+        onCreateTaskDefinition={handleTaskDefinitionCreate}
+      />
       {/* Layout */}
       <ReflexContainer
         orientation="vertical"
@@ -205,8 +197,11 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
             selectedView={selectedView}
           />
         </ReflexElement>
+
+        {/* Splitter */}
         <ReflexSplitter propagate />
-        {/* Center task graph */}
+
+        {/* Center task DAG graph / list table container */}
         <ReflexElement
           className={styles.mainPane}
           flex={0.847}
@@ -216,6 +211,8 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
           {renderGraphOrTable()}
         </ReflexElement>
       </ReflexContainer>
+
+      {/* Floating elements */}
       <TaskDefViewModificationModal
         mode="create"
         visible={createViewModalVisible}

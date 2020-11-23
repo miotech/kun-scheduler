@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState } from 'react';
 import { Button, Dropdown, Menu } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 import { useMount } from 'ahooks';
@@ -7,9 +7,11 @@ import { TaskTemplateIcon } from '@/components/TaskTemplateIcon/TaskTemplateIcon
 
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 
+import { TaskDefinitionCreationModal } from '@/pages/data-development/components/TaskTemplateCreateDropMenu/TaskDefinitionCreationModal';
 import styles from './TaskTemplateCreateDropMenu.module.less';
 
 interface OwnProps {
+  onCreateTaskDefinition: (taskTemplateName: string, name: string, createInCurrentView: boolean) => any;
 }
 
 type Props = OwnProps;
@@ -26,6 +28,8 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
     loading: s.loading.effects.dataDevelopment.fetchTaskTemplates,
   }));
 
+  const [ selectedTemplateName, setSelectedTemplateName ] = useState<string | null>(null);
+
   useMount(() => {
     dispatch.dataDevelopment.fetchTaskTemplates();
   });
@@ -33,7 +37,9 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
   const overlay = useMemo(() => {
     if (taskTemplates && taskTemplates.length) {
       return (
-        <Menu>
+        <Menu onClick={({ key }) => {
+          setSelectedTemplateName(key as string);
+        }}>
           {taskTemplates.map(templateItem => (
             <Menu.Item
               key={templateItem.name}
@@ -53,15 +59,28 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
   }, [taskTemplates]);
 
   return (
-    <Dropdown
-      className={styles.TaskTemplateCreateDropMenu}
-      overlay={overlay}
-      placement="bottomRight"
-    >
-      <Button type="primary" loading={loading}>
-        <span>创建任务</span>
-        <DownOutlined />
-      </Button>
-    </Dropdown>
+    <>
+      <Dropdown
+        className={styles.TaskTemplateCreateDropMenu}
+        overlay={overlay}
+        placement="bottomRight"
+      >
+        <Button type="primary" loading={loading}>
+          <span>创建任务</span>
+          <DownOutlined />
+        </Button>
+      </Dropdown>
+      <TaskDefinitionCreationModal
+        taskTemplateName={selectedTemplateName || undefined}
+        visible={selectedTemplateName != null}
+        onOk={async (name, createInCurrentView) => {
+          await props.onCreateTaskDefinition(selectedTemplateName as string, name, createInCurrentView);
+          setSelectedTemplateName(null);
+        }}
+        onCancel={() => {
+          setSelectedTemplateName(null);
+        }}
+      />
+    </>
   );
 });

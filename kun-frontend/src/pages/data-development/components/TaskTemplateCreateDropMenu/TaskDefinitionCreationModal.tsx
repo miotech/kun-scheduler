@@ -1,11 +1,11 @@
-import React, { useCallback } from 'react';
-import { Modal, Form, Input } from 'antd';
+import React, { useCallback, useState } from 'react';
+import { Modal, Form, Input, Radio } from 'antd';
 import useI18n from '@/hooks/useI18n';
 
 export interface TaskDefinitionCreationModalProps {
   visible: boolean;
   taskTemplateName?: string;
-  onOk: (name: string) => any;
+  onOk: (name: string, createInCurrentView: boolean) => any;
   onCancel: () => any;
 }
 
@@ -26,12 +26,18 @@ export const TaskDefinitionCreationModal: React.FC<TaskDefinitionCreationModalPr
 
   const t = useI18n();
   const [ form ] = useForm();
+  const [ submitting, setSubmitting ] = useState<boolean>(false);
 
   const handleOnOk = useCallback(() => {
-    form.validateFields().then(values => {
+    form.validateFields().then(async values => {
       // if form is validate
-      const { name } = values;
-      onOk(name as string);
+      const { name, createInCurrentView } = values;
+      setSubmitting(true);
+      try {
+        await onOk(name as string, createInCurrentView as boolean);
+      } finally {
+        setSubmitting(false);
+      }
     });
   }, [
     onOk,
@@ -46,7 +52,9 @@ export const TaskDefinitionCreationModal: React.FC<TaskDefinitionCreationModalPr
       onOk={handleOnOk}
       onCancel={onCancel}
       destroyOnClose
-
+      okButtonProps={{
+        loading: submitting,
+      }}
     >
       <Form form={form} {...layout}>
         <Form.Item
@@ -55,6 +63,20 @@ export const TaskDefinitionCreationModal: React.FC<TaskDefinitionCreationModalPr
           rules={[{ required: true }]}
         >
           <Input />
+        </Form.Item>
+        <Form.Item
+          name="createInCurrentView"
+          label="Create in current view"
+          initialValue
+        >
+          <Radio.Group>
+            <Radio value>
+              {t('common.yes')}
+            </Radio>
+            <Radio value={false}>
+              {t('common.no')}
+            </Radio>
+          </Radio.Group>
         </Form.Item>
       </Form>
     </Modal>
