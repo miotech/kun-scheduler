@@ -52,7 +52,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
       name: filters.name,
       taskTemplateName: filters.taskTemplateName || undefined,
       creatorIds: filters.creatorIds as any,
-      viewId: (taskDefViewId != null) ? taskDefViewId : undefined,
+      viewIds: (taskDefViewId != null) ? [taskDefViewId] : undefined,
     });
   }, [
     doFetch,
@@ -70,7 +70,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
       name: filters.name,
       taskTemplateName: filters.taskTemplateName || undefined,
       creatorIds: filters.creatorIds as any,
-      viewId: (taskDefViewId != null) ? taskDefViewId : undefined,
+      viewIds: (taskDefViewId != null) ? [taskDefViewId] : undefined,
     });
   }, [
     filters.name,

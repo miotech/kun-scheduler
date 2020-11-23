@@ -29,7 +29,7 @@ export interface SearchTaskDefinitionReqParams {
   pageNum?: number;
   pageSize?: number;
   taskTemplateName?: string;
-  viewId?: string;
+  viewIds?: string[];
 }
 
 export async function searchTaskDefinition(reqParams: SearchTaskDefinitionReqParams): ServiceRespPromise<PaginationRespBody<TaskDefinition>> {
