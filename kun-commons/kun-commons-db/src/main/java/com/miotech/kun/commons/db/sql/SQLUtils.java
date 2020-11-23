@@ -17,7 +17,7 @@ public class SQLUtils {
         }
     }
 
-    public static <T> String generatePreparedInSql(Collection<T> paramCollection) {
+    public static <T> String generateSqlInClausePlaceholders(Collection<T> paramCollection) {
         return String.join(", ", Collections.nCopies(paramCollection.size(), "?"));
     }
 }

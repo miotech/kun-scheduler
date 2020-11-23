@@ -57,7 +57,8 @@ public class TaskDefinitionController {
             @RequestParam(required = false) List<Long> definitionIds,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String taskTemplateName,
-            @RequestParam(required = false) Optional<Boolean> archived
+            @RequestParam(required = false) Optional<Boolean> archived,
+            @RequestParam(required = false) List<Long> viewIds
     ) {
         TaskDefinitionSearchRequest searchRequest = new TaskDefinitionSearchRequest(
                 pageSize,
@@ -66,7 +67,8 @@ public class TaskDefinitionController {
                 taskTemplateName,
                 definitionIds,
                 creatorIds,
-                archived
+                archived,
+                viewIds
         );
         PaginationResult<TaskDefinition> taskDefintions = taskDefinitionService.search(searchRequest);
         PaginationResult<TaskDefinitionVO> result = new PaginationResult<>(

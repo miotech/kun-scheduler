@@ -125,7 +125,7 @@ public class TaskDefinitionViewDao {
             String subSelectSql = DefaultSQLBuilder.newBuilder()
                     .select("view_id")
                     .from(VIEW_AND_TASK_DEF_RELATION_TABLE_NAME)
-                    .where("task_def_id IN (" + SQLUtils.generatePreparedInSql(taskDefIds) + ")")
+                    .where("task_def_id IN (" + SQLUtils.generateSqlInClausePlaceholders(taskDefIds) + ")")
                     .getSQL();
             paramsList.addAll(taskDefIds);
             whereClauseBuilder.append("(" + TASK_DEF_VIEW_MODEL_NAME + ".id IN (" + subSelectSql + ")) AND ");
