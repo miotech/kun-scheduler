@@ -54,7 +54,7 @@ public class ZhongdaNotifier extends HttpApiClient implements MessageNotifier {
     @Override
     public void notify(Event event) {
         TaskAttemptStatusChangeEvent taskAttemptStatusChangeEvent = (TaskAttemptStatusChangeEvent) event;
-        if(taskAttemptStatusChangeEvent.getToStatus().isFailure() || taskAttemptStatusChangeEvent.getToStatus().isSuccess()){
+        if(taskAttemptStatusChangeEvent.getToStatus().isFailure() ){
             String msg = buildMessage(taskAttemptStatusChangeEvent);
             List<String> users = deployedTaskService.getUserByTaskId(taskAttemptStatusChangeEvent.getTaskId());
             sendMessage(msg, users);
