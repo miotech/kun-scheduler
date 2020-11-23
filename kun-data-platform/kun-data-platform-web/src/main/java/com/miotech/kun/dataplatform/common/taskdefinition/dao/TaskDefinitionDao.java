@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.common.taskdefinition.dao;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.miotech.kun.commons.db.sql.SQLUtils;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskDefinitionSearchRequest;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
@@ -27,6 +28,8 @@ public class TaskDefinitionDao {
     private static final String TASK_DEF_MODEL_NAME = "taskdef";
 
     private static final List<String> taskDefCols = ImmutableList.of("id", "definition_id", "name", "task_template_name", "task_payload", "creator", "owner", "is_archived", "last_modifier", "create_time", "update_time");
+
+    private static final String VIEW_AND_TASK_DEF_RELATION_TABLE_NAME = "kun_dp_view_task_definition_relation";
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -66,13 +69,24 @@ public class TaskDefinitionDao {
 
     public PaginationResult<TaskDefinition> search(TaskDefinitionSearchRequest searchRequest) {
         StringBuilder whereClause = new StringBuilder();
-        whereClause.append(" 1 = 1");
+        whereClause.append(" (1 = 1)");
         List<Object> params = new ArrayList();
         List<Long> definitionIds = searchRequest.getDefinitionIds();
+        List<Long> viewIds = searchRequest.getViewIds();
+
         if (!definitionIds.isEmpty()) {
             whereClause.append(" AND ");
-            whereClause.append(String.format(TASK_DEF_MODEL_NAME + ".definition_id in (%s)", com.miotech.kun.commons.utils.StringUtils.repeatJoin("?", ",", definitionIds.size())));
+            whereClause.append(String.format(TASK_DEF_MODEL_NAME + ".definition_id in (%s)", SQLUtils.generateSqlInClausePlaceholders(definitionIds)));
             params.addAll(definitionIds);
+        }
+
+        if (Objects.nonNull(viewIds) && (!viewIds.isEmpty())) {
+            whereClause.append(" AND ");
+            String inClausePlaceholders = SQLUtils.generateSqlInClausePlaceholders(viewIds);
+            whereClause.append("(" + TASK_DEF_MODEL_NAME + ".definition_id IN (SELECT task_def_id FROM " +
+                    VIEW_AND_TASK_DEF_RELATION_TABLE_NAME + " WHERE view_id IN (" + inClausePlaceholders + ")))"
+            );
+            params.addAll(viewIds);
         }
 
         List<Long> creatorIds = searchRequest.getCreatorIds();
@@ -100,6 +114,7 @@ public class TaskDefinitionDao {
             params.add(searchRequest.getArchived().get());
         }
 
+
         String countSql = DefaultSQLBuilder.newBuilder()
                 .select("COUNT(1)")
                 .from(TASK_DEF_TABLE_NAME, TASK_DEF_MODEL_NAME)
@@ -115,6 +130,7 @@ public class TaskDefinitionDao {
                 .limit(searchRequest.getPageSize())
                 .offset(searchRequest.getPageSize() * (searchRequest.getPageNum()-1))
                 .getSQL();
+
         List<TaskDefinition> taskCommits = jdbcTemplate.query(sql, TaskDefinitionMapper.INSTANCE, params.toArray());
         return new PaginationResult<>(
                 searchRequest.getPageSize(),
