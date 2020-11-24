@@ -3,9 +3,10 @@ package com.miotech.kun.security.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.RequestResult;
+import com.miotech.kun.security.common.Permission;
 import com.miotech.kun.security.model.bo.UserInfo;
 import com.miotech.kun.security.model.entity.User;
-import com.miotech.kun.security.util.Constants;
+import com.miotech.kun.security.common.Constants;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -71,9 +72,9 @@ public class AbstractSecurityService implements InitializingBean {
     }
 
     public UserInfo enrichUserInfo(UserInfo userInfo) {
-        Set<String> permissions = Sets.newHashSet();
-        permissions.add(Constants.PERMISSION_DATA_DISCOVERY);
-        permissions.add(Constants.PERMISSION_DATA_DEVELOPMENT);
+        Set<Permission> permissions = Sets.newHashSet();
+        permissions.add(Permission.DATA_DISCOVERY);
+        permissions.add(Permission.DATA_DEVELOPMENT);
         userInfo.setPermissions(permissions);
         return userInfo;
     }
