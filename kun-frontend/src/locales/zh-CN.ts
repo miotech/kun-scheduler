@@ -268,6 +268,8 @@ export default {
   "dataDevelopment.taskDefView.name": "任务视图名称",
   "dataDevelopment.taskDefView.name.placeholder": "请输入视图名称",
   "dataDevelopment.taskDefView.deleteAlert.title": "确认删除该视图？",
+  "dataDevelopment.transferModal.srcTitle": "未包含任务",
+  "dataDevelopment.transferModal.targetTitle": "视图任务",
   "dataDevelopment.definition.property.name": "任务名称",
   "dataDevelopment.definition.property.owner": "归属人",
   "dataDevelopment.definition.property.updater": "更新人",

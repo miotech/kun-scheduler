@@ -268,6 +268,8 @@ export default {
   "dataDevelopment.taskDefView.name": "Task view name",
   "dataDevelopment.taskDefView.name.placeholder": "Enter view name here",
   "dataDevelopment.taskDefView.deleteAlert.title": "Are you sure you want to delete this view?",
+  "dataDevelopment.transferModal.srcTitle": "Tasks available",
+  "dataDevelopment.transferModal.targetTitle": "View tasks",
   "dataDevelopment.definition.property.name": "Task Name",
   "dataDevelopment.definition.property.owner": "Owner",
   "dataDevelopment.definition.property.updater": "Updater",

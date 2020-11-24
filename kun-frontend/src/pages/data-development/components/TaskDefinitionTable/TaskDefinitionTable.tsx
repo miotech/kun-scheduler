@@ -26,6 +26,7 @@ interface OwnProps {
   filters: DataDevelopmentModelFilter;
   /** Triggers table update when changed */
   updateTime: number;
+  onTransferToThisViewClicked?: () => any;
 }
 
 type Props = OwnProps;
@@ -182,7 +183,17 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
             <CaretRightOutlined />
           </Button>
           <Button disabled={!selectedRowKeys.length}>
-            添加到任务视图
+            添加选中任务到其他视图
+          </Button>
+          <Button
+            disabled={!taskDefViewId}
+            onClick={() => {
+              if (props.onTransferToThisViewClicked) {
+                props.onTransferToThisViewClicked();
+              }
+            }}
+          >
+            修改当前视图任务
           </Button>
         </Space>
       </header>

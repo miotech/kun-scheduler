@@ -28,6 +28,7 @@ import {
 import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
 
 import 'react-reflex/styles.css';
+import { TaskDefToViewTransferModal } from '@/pages/data-development/components/TaskDefToViewTransfererModal/TaskDefToViewTransferModal';
 import styles from './index.less';
 
 
@@ -60,6 +61,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   const [ taskDefViewSearchKeyword, setTaskDefViewSearchKeyword ] = useState<string>('');
   const [ createViewModalVisible, setCreateViewModalVisible ] = useState<boolean>(false);
   const [ editView, setEditView ] = useState<TaskDefinitionViewVO | null>(null);
+  const [ transferModalVisible, setTransferModalVisible ] = useState<boolean>(false);
   const [ updateTime, setUpdateTime ] = useState<number>(Date.now());
 
   useMount(() => {
@@ -140,6 +142,9 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
             taskDefViewId={selectedView?.id || null}
             filters={filters}
             updateTime={updateTime}
+            onTransferToThisViewClicked={() => {
+              setTransferModalVisible(true);
+            }}
           />
         </div>
       );
@@ -230,6 +235,16 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
         onCancel={() => {
           setEditView(null);
         }}
+      />
+      {/* Transfer tasks to current selected view */}
+      <TaskDefToViewTransferModal
+        viewsList={taskDefViewsList}
+        onCancel={() => {
+          setTransferModalVisible(false);
+        }}
+        visible={transferModalVisible}
+        lockTargetView
+        initTargetView={transferModalVisible ? selectedView : null}
       />
     </main>
   );
