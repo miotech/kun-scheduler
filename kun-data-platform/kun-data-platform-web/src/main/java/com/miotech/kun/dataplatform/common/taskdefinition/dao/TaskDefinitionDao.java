@@ -98,7 +98,7 @@ public class TaskDefinitionDao {
 
         if (StringUtils.isNoneBlank(searchRequest.getName())) {
             whereClause.append(" AND ");
-            whereClause.append(TASK_DEF_MODEL_NAME + ".name LIKE CONCAT('%', CAST(? AS TEXT) , '%')");
+            whereClause.append(TASK_DEF_MODEL_NAME + ".name ILIKE CONCAT('%', CAST(? AS TEXT) , '%')");
             params.add(searchRequest.getName());
         }
 
