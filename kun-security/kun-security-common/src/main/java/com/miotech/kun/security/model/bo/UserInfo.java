@@ -2,6 +2,7 @@ package com.miotech.kun.security.model.bo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.miotech.kun.security.common.Permission;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -20,5 +21,5 @@ public class UserInfo implements Serializable {
     @JsonProperty(value = "password", required = true, access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    private Set<String> permissions;
+    private Set<Permission> permissions;
 }
