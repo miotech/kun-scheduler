@@ -50,6 +50,13 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
   });
 
   useEffect(() => {
+    // clear selected row keys when view changed
+    setSelectedRowKeys([]);
+  }, [
+    taskDefViewId,
+  ]);
+
+  useEffect(() => {
     doFetch({
       pageNum,
       pageSize,
