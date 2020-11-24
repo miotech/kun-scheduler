@@ -26,7 +26,9 @@ interface OwnProps {
   filters: DataDevelopmentModelFilter;
   /** Triggers table update when changed */
   updateTime: number;
-  onTransferToThisViewClicked?: () => any;
+  onTransferToThisViewClick?: () => any;
+  onAddToOtherViewBtnClick?: () => any;
+  setSelectedTaskDefIds?: Function;
 }
 
 type Props = OwnProps;
@@ -38,6 +40,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
     taskDefViewId,
     filters,
     updateTime,
+    setSelectedTaskDefIds,
   } = props;
 
   const [ pageNum, setPageNum ] = useState<number>(1);
@@ -54,6 +57,15 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
     setSelectedRowKeys([]);
   }, [
     taskDefViewId,
+  ]);
+
+  useEffect(() => {
+    if (setSelectedTaskDefIds) {
+      setSelectedTaskDefIds(selectedRowKeys);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedRowKeys,
   ]);
 
   useEffect(() => {
@@ -189,15 +201,22 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
             {t('dataDevelopment.submitAll')}
             <CaretRightOutlined />
           </Button>
-          <Button disabled={!selectedRowKeys.length}>
+          <Button
+            disabled={!selectedRowKeys.length}
+            onClick={() => {
+              if (props.onAddToOtherViewBtnClick) {
+                props.onAddToOtherViewBtnClick();
+              }
+            }}
+          >
             {t('dataDevelopment.addSelectedTasksToOtherViews')}
           </Button>
           {(taskDefViewId != null) ? (
             <Button
               disabled={!taskDefViewId}
               onClick={() => {
-                if (props.onTransferToThisViewClicked) {
-                  props.onTransferToThisViewClicked();
+                if (props.onTransferToThisViewClick) {
+                  props.onTransferToThisViewClick();
                 }
               }}
             >

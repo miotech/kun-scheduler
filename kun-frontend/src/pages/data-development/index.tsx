@@ -29,6 +29,7 @@ import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/mod
 
 import 'react-reflex/styles.css';
 import { TaskDefToViewTransferModal } from '@/pages/data-development/components/TaskDefToViewTransfererModal/TaskDefToViewTransferModal';
+import { AddToOtherViewModal } from '@/pages/data-development/components/AddToOtherViewModal/AddToOtherViewModal';
 import styles from './index.less';
 
 
@@ -62,6 +63,9 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   const [ createViewModalVisible, setCreateViewModalVisible ] = useState<boolean>(false);
   const [ editView, setEditView ] = useState<TaskDefinitionViewVO | null>(null);
   const [ transferModalVisible, setTransferModalVisible ] = useState<boolean>(false);
+  const [ addToOtherViewModalVisible, setAddToOtherViewModalVisible ] = useState<boolean>(false);
+  const [ selectedTaskDefIds, setSelectedTaskDefIds ] = useState<string[]>([]);
+
   const [ updateTime, setUpdateTime ] = useState<number>(Date.now());
 
   useMount(() => {
@@ -130,12 +134,18 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
 
   const handleDeleteView = useCallback(async (viewId: string) => {
     try {
+      if (viewId === selectedView?.id) {
+        dispatch.dataDevelopment.setSelectedTaskDefinitionView(null);
+      }
       await deleteTaskDefinitionView(viewId);
       setEditView(null);
     } finally {
       searchTaskDefViews();
     }
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    selectedView?.id,
+  ]);
 
   /* Task definition table renderer */
   const renderGraphOrTable = () => {
@@ -146,9 +156,13 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
             taskDefViewId={selectedView?.id || null}
             filters={filters}
             updateTime={updateTime}
-            onTransferToThisViewClicked={() => {
+            onTransferToThisViewClick={() => {
               setTransferModalVisible(true);
             }}
+            onAddToOtherViewBtnClick={() => {
+              setAddToOtherViewModalVisible(true);
+            }}
+            setSelectedTaskDefIds={setSelectedTaskDefIds}
           />
         </div>
       );
@@ -171,6 +185,20 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     }
   }, [
     selectedView,
+  ]);
+
+  const handleAddTaskDefsToOtherView = useCallback(async (targetViewId: string) => {
+    try {
+      await putTaskDefinitionsIntoView(targetViewId, selectedTaskDefIds);
+    } catch (e) {
+      // do nothing
+    } finally {
+      searchTaskDefViews();
+      forceTableRefresh();
+    }
+  }, [
+    forceTableRefresh,
+    selectedTaskDefIds,
   ]);
 
   return (
@@ -251,6 +279,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
             }
             setTransferModalVisible(false);
           } finally {
+            searchTaskDefViews();
             forceTableRefresh();
           }
         }}
@@ -260,6 +289,19 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
         visible={transferModalVisible}
         lockTargetView
         initTargetView={transferModalVisible ? selectedView : null}
+      />
+      <AddToOtherViewModal
+        visible={addToOtherViewModalVisible}
+        taskDefViews={taskDefViewsList}
+        currentViewId={selectedView?.id || null}
+        onOk={(targetViewId) => {
+          return handleAddTaskDefsToOtherView(targetViewId).then(() => {
+            setAddToOtherViewModalVisible(false);
+          });
+        }}
+        onCancel={() => {
+          setAddToOtherViewModalVisible(false);
+        }}
       />
     </main>
   );
