@@ -1,5 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import c from 'clsx';
+import useI18n from '@/hooks/useI18n';
 import { Tooltip } from 'antd';
 import { ApartmentOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { VisuallyHidden } from '@react-aria/visually-hidden';
@@ -21,6 +22,8 @@ export const DisplayTypeSwitch: React.FC<Props> = memo(function DisplayTypeSwitc
     currentType,
     onChange,
   } = props;
+
+  const t = useI18n();
 
   const ariaElements = useMemo(() => (
     <VisuallyHidden>
@@ -76,7 +79,7 @@ export const DisplayTypeSwitch: React.FC<Props> = memo(function DisplayTypeSwitc
         data-tid="switchButtonContainer"
       >
         {/* DAG display switch button */}
-        <Tooltip title="DAG mode">
+        <Tooltip title={t('dataDevelopment.displayType.dag')}>
           <button
             className={c(styles.DisplayTypeSwitchBtn, {
               [styles.DisplayTypeSwitchBtnActive]: currentType === 'DAG',
@@ -93,7 +96,7 @@ export const DisplayTypeSwitch: React.FC<Props> = memo(function DisplayTypeSwitc
           </button>
         </Tooltip>
         {/* List display switch button */}
-        <Tooltip title="List mode">
+        <Tooltip title={t('dataDevelopment.displayType.list')}>
           <button
             className={c(styles.DisplayTypeSwitchBtn, {
               [styles.DisplayTypeSwitchBtnActive]: currentType === 'LIST',

@@ -186,11 +186,11 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
             </Button>
           </span>
           <Button disabled={!selectedRowKeys.length}>
-            全部提交
+            {t('dataDevelopment.submitAll')}
             <CaretRightOutlined />
           </Button>
           <Button disabled={!selectedRowKeys.length}>
-            添加选中任务到其他视图
+            {t('dataDevelopment.addSelectedTasksToOtherViews')}
           </Button>
           {(taskDefViewId != null) ? (
             <Button
@@ -201,7 +201,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
                 }
               }}
             >
-              修改当前视图任务
+              {t('dataDevelopment.editCurrentViewTasks')}
             </Button>
           ) : <></>}
         </Space>

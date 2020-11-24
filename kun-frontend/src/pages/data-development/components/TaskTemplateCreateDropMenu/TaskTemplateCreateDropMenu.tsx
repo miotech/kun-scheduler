@@ -1,13 +1,15 @@
 import React, { memo, useMemo, useState } from 'react';
 import { Button, Dropdown, Menu } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
+import { DownOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
+import useI18n from '@/hooks/useI18n';
+
 import { TaskTemplateIcon } from '@/components/TaskTemplateIcon/TaskTemplateIcon.component';
+import { TaskDefinitionCreationModal } from '@/pages/data-development/components/TaskTemplateCreateDropMenu/TaskDefinitionCreationModal';
 
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 
-import { TaskDefinitionCreationModal } from '@/pages/data-development/components/TaskTemplateCreateDropMenu/TaskDefinitionCreationModal';
 import styles from './TaskTemplateCreateDropMenu.module.less';
 
 interface OwnProps {
@@ -27,6 +29,8 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
     taskTemplates: s.dataDevelopment.taskTemplates,
     loading: s.loading.effects.dataDevelopment.fetchTaskTemplates,
   }));
+
+  const t = useI18n();
 
   const [ selectedTemplateName, setSelectedTemplateName ] = useState<string | null>(null);
 
@@ -65,8 +69,8 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
         overlay={overlay}
         placement="bottomRight"
       >
-        <Button type="primary" loading={loading}>
-          <span>创建任务</span>
+        <Button type="primary" loading={loading} icon={<PlusOutlined />}>
+          <span>{t('dataDevelopment.definition.creationTitle')}</span>
           <DownOutlined />
         </Button>
       </Dropdown>
