@@ -271,6 +271,7 @@ export default {
   "dataDevelopment.transferModal.srcTitle": "当前视图未包含任务",
   "dataDevelopment.transferModal.targetTitle": "视图任务",
   "dataDevelopment.transferModal.title": "修改当前视图任务",
+  "dataDevelopment.allTasks": "全部任务",
   "dataDevelopment.definition.property.name": "任务名称",
   "dataDevelopment.definition.property.owner": "归属人",
   "dataDevelopment.definition.property.updater": "更新人",

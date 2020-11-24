@@ -192,16 +192,18 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
           <Button disabled={!selectedRowKeys.length}>
             添加选中任务到其他视图
           </Button>
-          <Button
-            disabled={!taskDefViewId}
-            onClick={() => {
-              if (props.onTransferToThisViewClicked) {
-                props.onTransferToThisViewClicked();
-              }
-            }}
-          >
-            修改当前视图任务
-          </Button>
+          {(taskDefViewId != null) ? (
+            <Button
+              disabled={!taskDefViewId}
+              onClick={() => {
+                if (props.onTransferToThisViewClicked) {
+                  props.onTransferToThisViewClicked();
+                }
+              }}
+            >
+              修改当前视图任务
+            </Button>
+          ) : <></>}
         </Space>
       </header>
       <Table<TaskDefinition>

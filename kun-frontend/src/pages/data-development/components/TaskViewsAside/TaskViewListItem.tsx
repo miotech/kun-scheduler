@@ -12,6 +12,8 @@ interface OwnProps {
   onEdit?: (view: TaskDefinitionViewVO) => any;
   onSelect?: (view: TaskDefinitionViewVO | null) => any;
   selected?: boolean;
+  count?: number | null;
+  countIsLoading?: boolean;
 }
 
 type Props = OwnProps;
@@ -59,6 +61,15 @@ export const TaskViewListItem: React.FC<Props> = memo(function TaskViewItem(prop
     view,
   ]);
 
+  const renderCount = () => {
+    if (props.countIsLoading) {
+      return '...';
+    } if (props.count != null) {
+      return props.count;
+    }
+    return (view?.includedTaskDefinitionIds || []).length;
+  };
+
   return (
     <li
       className={c(styles.TaskViewListItem, {
@@ -84,7 +95,7 @@ export const TaskViewListItem: React.FC<Props> = memo(function TaskViewItem(prop
         className={styles.TaskDefCount}
         data-tid="task-view-list-item-button__task-def-count"
       >
-        {(view?.includedTaskDefinitionIds || []).length}
+        {renderCount()}
       </span>
       {editBtn}
     </li>

@@ -271,6 +271,7 @@ export default {
   "dataDevelopment.transferModal.srcTitle": "Tasks available for current view",
   "dataDevelopment.transferModal.targetTitle": "View tasks",
   "dataDevelopment.transferModal.title": "Edit tasks of current view",
+  "dataDevelopment.allTasks": "All Tasks",
   "dataDevelopment.definition.property.name": "Task Name",
   "dataDevelopment.definition.property.owner": "Owner",
   "dataDevelopment.definition.property.updater": "Updater",

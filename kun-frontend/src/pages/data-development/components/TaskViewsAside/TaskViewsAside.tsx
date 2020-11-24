@@ -7,6 +7,8 @@ import { TaskViewListItem } from '@/pages/data-development/components/TaskViewsA
 import { TaskDefinitionViewBase, TaskDefinitionViewVO } from '@/definitions/TaskDefinitionView.type';
 
 import { KunSpin } from '@/components/KunSpin';
+import { useRequest, useUpdateEffect } from 'ahooks';
+import { fetchTaskDefinitionTotalCount } from '@/services/data-development/task-definitions';
 import styles from './TaskViewsAside.module.less';
 
 interface OwnProps {
@@ -19,6 +21,7 @@ interface OwnProps {
   onSelectItem?: (view: TaskDefinitionViewVO | null) => any;
   selectedView?: TaskDefinitionViewBase | null;
   allowAllTaskDefsView?: boolean;
+  updateTime?: number;
 }
 
 type Props = OwnProps;
@@ -33,11 +36,20 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
     loading,
     selectedView,
     allowAllTaskDefsView = true,
+    updateTime,
   } = props;
 
   const [ searchText, setSearchText ] = useState<string>('');
 
   const t = useI18n();
+
+  const { data: taskDefTotalCount, loading: taskDefTotalCountIsLoading, run: reFetchTotalCount } = useRequest(fetchTaskDefinitionTotalCount);
+
+  useUpdateEffect(() => {
+    reFetchTotalCount();
+  }, [
+    updateTime,
+  ]);
 
   const viewItems = useMemo(() => {
     let viewItemsDOMs = views.map(view => (
@@ -53,10 +65,12 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
       viewItemsDOMs = [
         <TaskViewListItem
           view={null}
-          displayName="All Tasks"
+          displayName={t('dataDevelopment.allTasks')}
           onSelect={onSelectItem}
           key="all-items"
           selected={selectedView == null}
+          count={(taskDefTotalCount == null) ? null : taskDefTotalCount}
+          countIsLoading={taskDefTotalCountIsLoading}
         />,
         ...viewItemsDOMs,
       ];
@@ -67,6 +81,9 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
     onEdit,
     onSelectItem,
     selectedView,
+    t,
+    taskDefTotalCount,
+    taskDefTotalCountIsLoading,
     views,
   ]);
 

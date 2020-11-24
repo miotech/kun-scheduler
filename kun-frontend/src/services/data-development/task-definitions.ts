@@ -235,3 +235,21 @@ export async function fetchTaskDefViewsByTaskDefId(taskDefId: string) {
     mockCode: 'task-definitions.get-views-by-def-id',
   });
 }
+
+export async function fetchTaskDefinitionTotalCount(): Promise<number> {
+  return get<PaginationRespBody<TaskDefinition>>('/task-definitions/_search', {
+    prefix: API_DATA_PLATFORM_PREFIX,
+    query: {
+      archived: false,
+      pageNum: 1,
+      pageSize: 0,
+    },
+    mockCode: 'task-definitions.get-total-count',
+  }).then(data => {
+    if (data) {
+      return data.totalCount;
+    }
+    // else
+    return 0;
+  });
+}

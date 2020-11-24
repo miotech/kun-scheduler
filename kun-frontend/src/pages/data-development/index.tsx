@@ -204,6 +204,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
               setEditView(view);
             }}
             selectedView={selectedView}
+            updateTime={updateTime}
           />
         </ReflexElement>
 
