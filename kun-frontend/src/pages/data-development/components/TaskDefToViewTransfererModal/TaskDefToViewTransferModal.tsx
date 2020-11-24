@@ -21,6 +21,7 @@ interface OwnProps {
   lockSrcView?: boolean;
   initTargetView?: TaskDefinitionViewBase | null;
   lockTargetView?: boolean;
+  onOk?: (selectedTaskDefinitionIds: string[]) => any;
   onCancel?: () => any;
 }
 
@@ -206,12 +207,16 @@ export const TaskDefToViewTransferModal: React.FC<Props> = memo(function TaskDef
     dataSource
   ]);
 
-
   return (
     <Modal
-      title="Add tasks to view"
+      title={t('dataDevelopment.transferModal.title')}
       visible={visible}
       width={800}
+      onOk={() => {
+        if (props.onOk) {
+          props.onOk(draftTargetViewDefinitionIds);
+        }
+      }}
       onCancel={props.onCancel}
       destroyOnClose
     >

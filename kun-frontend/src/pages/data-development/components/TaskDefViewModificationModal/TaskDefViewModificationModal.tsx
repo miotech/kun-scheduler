@@ -82,7 +82,7 @@ export const TaskDefViewModificationModal: React.FC<Props> = memo(function TaskD
               setWaitingConfirm(true);
               await onOk({
                 name: form.getFieldValue('name'),
-                includedTaskDefinitionIds: [],
+                taskDefinitionIds: [],
               });
               setWaitingConfirm(false);
             }
@@ -106,7 +106,7 @@ export const TaskDefViewModificationModal: React.FC<Props> = memo(function TaskD
           setWaitingConfirm(true);
           await onOk({
             name: form.getFieldValue('name'),
-            includedTaskDefinitionIds: [],
+            taskDefinitionIds: [],
           });
           setWaitingConfirm(false);
         }

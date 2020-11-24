@@ -16,7 +16,7 @@ import { TaskTemplateCreateDropMenu } from '@/pages/data-development/components/
 
 import {
   createTaskDefinitionView,
-  deleteTaskDefinitionView,
+  deleteTaskDefinitionView, overwriteIncludingTaskDefinitionsOfView,
   putTaskDefinitionsIntoView,
   updateTaskDefinitionView,
 } from '@/services/data-development/task-definition-views';
@@ -79,6 +79,10 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       keyword: taskDefViewSearchKeyword,
     });
   };
+
+  const forceTableRefresh = useCallback(() => {
+    setUpdateTime(Date.now());
+  }, []);
 
   useEffect(() => {
     searchTaskDefViews();
@@ -163,7 +167,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       }
     } finally {
       searchTaskDefViews();
-      setUpdateTime(Date.now);
+      forceTableRefresh();
     }
   }, [
     selectedView,
@@ -239,6 +243,16 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       {/* Transfer tasks to current selected view */}
       <TaskDefToViewTransferModal
         viewsList={taskDefViewsList}
+        onOk={async (selectedTaskDefinitionIds) => {
+          try {
+            if (selectedView) {
+              await overwriteIncludingTaskDefinitionsOfView(selectedView.id, selectedTaskDefinitionIds);
+            }
+            setTransferModalVisible(false);
+          } finally {
+            forceTableRefresh();
+          }
+        }}
         onCancel={() => {
           setTransferModalVisible(false);
         }}
