@@ -113,7 +113,7 @@ public class TaskDefinitionViewDao {
 
         StringBuilder whereClauseBuilder = new StringBuilder();
         if (keywordFilterActive) {
-            whereClauseBuilder.append("(" + TASK_DEF_VIEW_MODEL_NAME + ".name LIKE CONCAT('%', CAST(? AS TEXT), '%')) AND ");
+            whereClauseBuilder.append("(" + TASK_DEF_VIEW_MODEL_NAME + ".name ILIKE CONCAT('%', CAST(? AS TEXT), '%')) AND ");
             paramsList.add(searchParams.getKeyword().trim());
         }
         if (Objects.nonNull(searchParams.getCreator())) {
