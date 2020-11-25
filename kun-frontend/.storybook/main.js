@@ -82,6 +82,29 @@ module.exports = {
       ],
       include: path.resolve(__dirname, '../'),
     });
+    config.module.rules.unshift({
+      test: /\.svg(\?v=\d+\.\d+\.\d+)?$/i,
+      use: [
+        {
+          loader: 'babel-loader',
+          options: {
+            babelrc: false,
+            presets: [
+              // '@babel/preset-env',
+              '@babel/preset-react',
+            ]
+          },
+        },
+        {
+          loader: '@svgr/webpack',
+          options: {
+            babel: false,
+            icon: true,
+            svgo: true,
+          },
+        },
+      ],
+    })
 
     config.resolve = {
       ...config.resolve,

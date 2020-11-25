@@ -128,6 +128,7 @@
     "@storybook/addon-storysource": "^6.1.1",
     "@storybook/core": "^6.1.1",
     "@storybook/react": "^6.1.1",
+    "@svgr/webpack": "^5.5.0",
     "@testing-library/react": "^10.4.3",
     "@testing-library/react-hooks": "^3.4.1",
     "@types/codemirror": "^0.0.96",

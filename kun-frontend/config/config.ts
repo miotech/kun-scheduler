@@ -103,4 +103,30 @@ export default defineConfig({
   },
   define,
   mock: USE_MOCK === 'true' ? {} : false,
+  // modify webpack rules
+  /*
+  async chainWebpack(memo) {
+    memo.module.rule('svg')
+      .test(/\.svg(\?v=\d+\.\d+\.\d+)?$/)
+      // .include
+      //  .add(path.resolve(__dirname, '../src/assets/icons'))
+      //  .end()
+      .use('svg')
+        .loader('babel-loader')
+        .options({
+          babelrc: false,
+          presets: [
+            // '@babel/preset-env',
+            '@babel/preset-react',
+          ],
+        })
+        .loader('@svgr/webpack')
+        .options({
+          babel: false,
+          icon: true,
+          svgo: true,
+        })
+        .loader('url-loader');
+  }
+  */
 }) as IConfig;
