@@ -158,3 +158,25 @@ export const WithDragAndBoxSelect = () => {
     </IntlProvider>
   );
 };
+
+export const WithZoomPan = () => {
+  const [ nodeStates, /* setNodeStates */ ] = useState(exampleNodes);
+
+  return (
+    <IntlProvider locale="en-US" messages={demoMessage}>
+      <main style={mainStyle as any}>
+        <WorkflowCanvas
+          id="demo-canvas-1"
+          width={1280}
+          height={720}
+          nodes={nodeStates}
+          edges={[]}
+          zoomable
+          onNodeClick={(workflowNode) => {
+            logger.debug(`Clicked node: %o`, workflowNode);
+          }}
+        />
+      </main>
+    </IntlProvider>
+  );
+};

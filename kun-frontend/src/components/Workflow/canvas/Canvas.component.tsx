@@ -1,5 +1,8 @@
-import React, { memo } from 'react';
+import React, { memo, useRef } from 'react';
 import c from 'clsx';
+import { useWindowSize } from '@react-hook/window-size';
+import panzoom from 'panzoom';
+
 import { WorkflowEdge, WorkflowNode } from '@/components/Workflow/Workflow.typings';
 
 import './Canvas.global.less';
@@ -20,9 +23,30 @@ interface OwnProps {
   nodes: WorkflowNode[];
   /** edges */
   edges: WorkflowEdge[];
+  /** zoomable */
+  zoomable?: boolean;
+  /** on click node */
+  onNodeClick?: (workflowNode: WorkflowNode) => any;
 }
 
 type Props = OwnProps;
+
+function useZoom<E extends HTMLElement>() {
+  const [width, height] = useWindowSize();
+
+  const ref = React.useCallback((element: E) => {
+    if (!element) return;
+    const zoom = panzoom(element);
+
+    return () => {
+      zoom.dispose();
+    };
+  }, []);
+
+  return {
+    ref
+  };
+}
 
 export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(props) {
   const {
@@ -33,7 +57,12 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     children,
     nodes = [],
     // edges = [],
+    zoomable = false,
+    onNodeClick,
   } = props;
+
+  const svgElementsGroupRef = useRef<any>();
+  const { ref: svgElementsGroupZoomRef } = useZoom<any>();
 
   return (
     <svg
@@ -42,6 +71,7 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
       className={c('workflow-canvas', className)}
       width={width}
       height={height}
+
     >
       {/* Canvas svg constant definitions */}
       <defs>
@@ -66,12 +96,15 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
         height="100%"
         style={{ fill: 'url(#canvasGradient)' }}
       />
-      {/* Render Nodes */}
-      <NodeRenderer
-        nodes={nodes}
-      />
-      {/* Plugins */}
-      {children}
+      <g data-tid="elements-group" ref={zoomable ? svgElementsGroupZoomRef : svgElementsGroupRef}>
+        {/* Render Nodes */}
+        <NodeRenderer
+          nodes={nodes}
+          onNodeClick={onNodeClick}
+        />
+        {/* Plugins */}
+        {children}
+      </g>
     </svg>
   );
 });

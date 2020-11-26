@@ -5,6 +5,8 @@ import { TASK_DAG_NODE_HEIGHT, TASK_DAG_NODE_WIDTH } from '@/components/Workflow
 
 interface OwnProps {
   nodes: WorkflowNode[];
+  /** on click node */
+  onNodeClick?: (workflowNode: WorkflowNode) => any;
 }
 
 type Props = OwnProps;
@@ -24,6 +26,12 @@ export const NodeRenderer: React.FC<Props> = memo(function NodeRenderer(props) {
         <g
           id={`task-def-node-${node.id}`}
           key={`node-${node.id}`}
+          onClick={(ev) => {
+            ev.stopPropagation();
+            if (props.onNodeClick) {
+              props.onNodeClick(node);
+            }
+          }}
         >
           <foreignObject
             x={node.x}
