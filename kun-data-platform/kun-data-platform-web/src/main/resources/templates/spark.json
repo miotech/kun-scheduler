@@ -40,10 +40,10 @@
     }
   ],
   "defaultValues": {
-    "jars": "",
+    "jars": "${ spark.listener.jar }",
     "files": "",
     "livyHost": "${ dataplatform.livy.host }",
-    "sparkConf": "{}",
+    "sparkConf": "{\"spline.hdfs_dispatcher.address\":\"${ spark.hdfs.address }\"}",
     "variables": "{}",
     "application": ""
   },

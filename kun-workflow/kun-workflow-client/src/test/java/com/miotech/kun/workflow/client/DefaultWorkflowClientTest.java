@@ -6,13 +6,19 @@ import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskAttempt;
 import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.task.ScheduleConf;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -111,6 +117,47 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         await().atMost(120, TimeUnit.SECONDS)
                 .until(() ->
                 runFinished(taskRun.getId()));
+        TaskRun result = client.getTaskRun(taskRun.getId());
+        assertTrue(result.getId() > 0);
+        assertTrue(result.getStartAt() != null);
+        assertTrue(result.getEndAt() != null);
+
+        assertThat(result.getAttempts().size(), is(1));
+        TaskAttempt attempt = result.getAttempts().get(0);
+        assertTrue(attempt.getStartAt() != null);
+        assertTrue(attempt.getEndAt() != null);
+    }
+
+    @Ignore
+    public void executeSparkTask() {
+        // prepare
+        Config config = Config.newBuilder()
+                .addConfig("files","file:/Users/shiki/sparklib/shade/testLiviy-1.0-SNAPSHOT.jar")
+                .addConfig("jar", Arrays.asList("file:/Users/shiki/sparklib/spark-2.4-spline-agent-bundle_2.11-0.6.0-SNAPSHOT.jar",
+                        "file:/Users/shiki/sparklib/postgresql-42.1.4.jar",
+                        "file:/Users/shiki/sparklib/spark-sql_2.11-2.4.2.jar"))
+                .addConfig("sparkConf","{\"spline.hdfs_dispatcher.address\":\"${ spark.hdfs.address }\"}")
+                .addConfig("livyHost","${ dataplatform.livy.host }")
+                .addConfig("application","com.spark.sparkapp.SparkTest")
+                .addConfig("sparkJobName","SparkTest")
+                .build();
+        Task task = Task.newBuilder()
+                .withId(1L)
+                .withName("SparkTest")
+                .withDescription("spark lineage test")
+                .withConfig(config)
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 1 * ?"))
+                .withDependencies(new ArrayList<>())
+                .withTags(new ArrayList<>())
+                .withOperatorId(76671693556285440L)
+                .build();
+        TaskRun taskRun = client.executeTask(task,
+                ImmutableMap.of("testKey1", true));
+
+        // verify
+        await().atMost(150, TimeUnit.SECONDS)
+                .until(() ->
+                        runFinished(taskRun.getId()));
         TaskRun result = client.getTaskRun(taskRun.getId());
         assertTrue(result.getId() > 0);
         assertTrue(result.getStartAt() != null);

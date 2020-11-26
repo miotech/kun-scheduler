@@ -180,7 +180,8 @@ public class ConfigDef {
         STRING(String.class),
         INT(Integer.class),
         LONG(Long.class),
-        LIST(List.class);
+        LIST(List.class),
+        MAP(Map.class);
 
         private final Class<?> javaType;
 
