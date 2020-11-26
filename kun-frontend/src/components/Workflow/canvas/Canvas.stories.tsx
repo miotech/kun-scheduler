@@ -171,7 +171,10 @@ export const WithZoomPan = () => {
           height={720}
           nodes={nodeStates}
           edges={[]}
-          zoomable
+          zoom={{
+            maxZoom: 2,
+            minZoom: 0.1,
+          }}
           onNodeClick={(workflowNode) => {
             logger.debug(`Clicked node: %o`, workflowNode);
           }}

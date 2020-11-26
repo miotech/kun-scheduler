@@ -1,7 +1,7 @@
 import React, { memo, useRef } from 'react';
 import c from 'clsx';
-import { useWindowSize } from '@react-hook/window-size';
-import panzoom from 'panzoom';
+// import { useWindowSize } from '@react-hook/window-size';
+import panzoom, { PanZoomOptions } from 'panzoom';
 
 import { WorkflowEdge, WorkflowNode } from '@/components/Workflow/Workflow.typings';
 
@@ -24,27 +24,28 @@ interface OwnProps {
   /** edges */
   edges: WorkflowEdge[];
   /** zoomable */
-  zoomable?: boolean;
+  zoom?: boolean | PanZoomOptions;
   /** on click node */
   onNodeClick?: (workflowNode: WorkflowNode) => any;
 }
 
 type Props = OwnProps;
 
-function useZoom<E extends HTMLElement>() {
-  const [width, height] = useWindowSize();
+function useZoom<E extends HTMLElement>(options: PanZoomOptions = {}) {
+  // const [width, height] = useWindowSize();
 
   const ref = React.useCallback((element: E) => {
-    if (!element) return;
-    const zoom = panzoom(element);
-
+    if (!element) return undefined;
+    const zoom = panzoom(element, {
+      ...options,
+    });
     return () => {
       zoom.dispose();
     };
   }, []);
 
   return {
-    ref
+    ref,
   };
 }
 
@@ -57,12 +58,12 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     children,
     nodes = [],
     // edges = [],
-    zoomable = false,
+    zoom = false,
     onNodeClick,
   } = props;
 
   const svgElementsGroupRef = useRef<any>();
-  const { ref: svgElementsGroupZoomRef } = useZoom<any>();
+  const { ref: svgElementsGroupZoomRef } = useZoom<any>((typeof zoom === 'object') ? zoom : {});
 
   return (
     <svg
@@ -96,7 +97,7 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
         height="100%"
         style={{ fill: 'url(#canvasGradient)' }}
       />
-      <g data-tid="elements-group" ref={zoomable ? svgElementsGroupZoomRef : svgElementsGroupRef}>
+      <g data-tid="elements-group" ref={zoom ? svgElementsGroupZoomRef : svgElementsGroupRef}>
         {/* Render Nodes */}
         <NodeRenderer
           nodes={nodes}
