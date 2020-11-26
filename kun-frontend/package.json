@@ -95,6 +95,7 @@
     "moment-duration-format": "^2.3.2",
     "moment-timezone": "^0.5.31",
     "numeral": "^2.0.6",
+    "panzoom": "^9.4.1",
     "path-to-regexp": "^6.1.0",
     "prettier": "^1.19.1",
     "qs": "^6.9.4",

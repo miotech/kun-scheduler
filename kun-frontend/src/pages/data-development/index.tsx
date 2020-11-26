@@ -30,6 +30,7 @@ import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/mod
 import 'react-reflex/styles.css';
 import { TaskDefToViewTransferModal } from '@/pages/data-development/components/TaskDefToViewTransfererModal/TaskDefToViewTransferModal';
 import { AddToOtherViewModal } from '@/pages/data-development/components/AddToOtherViewModal/AddToOtherViewModal';
+import { TaskDAG } from '@/pages/data-development/components/TaskDAG/TaskDAG';
 import styles from './index.less';
 
 
@@ -167,7 +168,8 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
         </div>
       );
     }
-      return null;
+    // else
+      return <TaskDAG />;
   };
 
   const handleTaskDefinitionCreate = useCallback(async (taskTemplateName: string, name: string, createInCurrentView: boolean) => {
