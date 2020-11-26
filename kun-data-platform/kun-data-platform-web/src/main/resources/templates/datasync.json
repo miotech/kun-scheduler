@@ -65,10 +65,10 @@
   ],
   "defaultValues": {
     "args": "-c com.miotech.spark.etl.operator.DataSyncOperator",
-    "jars": "",
+    "jars": "${ spark.listener.jar }",
     "files": "${ dataplatform.datasync.jar }",
     "livyHost": "${ dataplatform.livy.host }",
-    "sparkConf": "{}",
+    "sparkConf": "{\"spline.hdfs_dispatcher.address\":\"${ spark.hdfs.address }\"}",
     "variables": "{}",
     "application": "com.miotech.spark.etl.Application"
   },

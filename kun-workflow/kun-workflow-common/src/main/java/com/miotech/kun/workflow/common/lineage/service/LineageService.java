@@ -12,6 +12,7 @@ import com.miotech.kun.workflow.common.lineage.node.TaskNode;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeTaskInfo;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;
 import org.slf4j.Logger;
@@ -44,6 +45,7 @@ public class LineageService {
 
     /**
      * Fetch count of upstream dataset nodes that have direct lineage relation to specific dataset
+     *
      * @param datasetGlobalId source dataset node
      * @return count of upstream dataset nodes that have direct lineage relation to the source dataset node
      */
@@ -67,6 +69,7 @@ public class LineageService {
 
     /**
      * Fetch count of upstream dataset nodes that have direct lineage relation to specific dataset
+     *
      * @param datasetGlobalId source dataset node
      * @return count of upstream dataset nodes that have direct lineage relation to the source dataset node
      */
@@ -95,6 +98,7 @@ public class LineageService {
 
     /**
      * Obtain dataset by datastore object as key
+     *
      * @param dataStore datastore object which represents dataset
      * @return Optional dataset object
      */
@@ -105,7 +109,8 @@ public class LineageService {
 
     /**
      * Obtain edge info by upstream and downstream dataset id
-     * @param upstreamDatasetGid global id of upstream dataset
+     *
+     * @param upstreamDatasetGid   global id of upstream dataset
      * @param downstreamDatasetGid global id of downstream dataset
      */
     public EdgeInfo fetchEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
@@ -127,10 +132,10 @@ public class LineageService {
         for (TaskNode taskNode : taskNodes) {
             edgeTaskInfos.add(
                     EdgeTaskInfo.newBuilder()
-                        .withId(taskNode.getTaskId())
-                        .withName(taskNode.getTaskName())
-                        .withDescription(taskNode.getDescription())
-                        .build()
+                            .withId(taskNode.getTaskId())
+                            .withName(taskNode.getTaskName())
+                            .withDescription(taskNode.getDescription())
+                            .build()
             );
         }
         EdgeInfo edgeInfo = EdgeInfo.newBuilder()
@@ -146,6 +151,7 @@ public class LineageService {
 
     /**
      * Save an dataset entity to graph node and return it
+     *
      * @param dataset dataset model entity to save
      * @return saved dataset node
      */
@@ -164,6 +170,7 @@ public class LineageService {
 
     /**
      * Save an task entity to graph node and return it
+     *
      * @param task task model entity to save
      * @return saved task node
      */
@@ -177,6 +184,7 @@ public class LineageService {
 
     /**
      * Update or insert a dataset node into graph storage
+     *
      * @param node dataset node
      * @return <code>true</code> if operation successful
      */
@@ -188,6 +196,7 @@ public class LineageService {
 
     /**
      * Update or insert a task node into graph storage
+     *
      * @param node dataset node
      * @return <code>true</code> if operation successful
      */
@@ -199,6 +208,7 @@ public class LineageService {
 
     /**
      * Delete dataset node
+     *
      * @param nodeId id of dataset node
      * @return <code>true</code> if operation successful, <code>false</code> if node not found
      */
@@ -241,8 +251,8 @@ public class LineageService {
 
     /**
      * @param datasetGlobalId
-     * @throws IllegalArgumentException when depth is not positive integer
      * @return set of upstream dataset nodes
+     * @throws IllegalArgumentException when depth is not positive integer
      */
     public Set<DatasetNode> fetchUpstreamDatasetNodes(Long datasetGlobalId, int depth) {
         Preconditions.checkArgument(depth > 0, "Depth field should be positive but got: %s", depth);
@@ -259,8 +269,8 @@ public class LineageService {
 
     /**
      * @param datasetGlobalId
-     * @throws IllegalArgumentException when depth is not positive integer
      * @return set of downstream dataset nodes
+     * @throws IllegalArgumentException when depth is not positive integer
      */
     public Set<DatasetNode> fetchDownstreamDatasetNodes(Long datasetGlobalId, int depth) {
         Preconditions.checkArgument(depth > 0, "Depth field should be positive but got: %s", depth);
@@ -295,6 +305,50 @@ public class LineageService {
         }
         // else
         return taskNode.getOutlets();
+    }
+
+    /**
+     * @param task
+     * @param upstreamDatastore
+     * @param downstreamDataStore
+     * @return
+     */
+    public void updateTaskLineage(Task task, List<DataStore> upstreamDatastore, List<DataStore> downstreamDataStore) {
+        Optional<TaskNode> taskNodeOptional = fetchTaskNodeById(task.getId());
+        if(taskNodeOptional.isPresent()){
+            deleteTaskNode(taskNodeOptional.get().getTaskId());
+        }
+
+        // Create a task node
+        TaskNode taskNode = TaskNode.from(task);
+        // upsert upstream dataset nodes & relations to task node entity
+        for (DataStore store : upstreamDatastore) {
+            Optional<Dataset> datasetOptional = fetchDatasetByDatastore(store);
+            if (datasetOptional.isPresent()) {
+                DatasetNode datasetNode = DatasetNode.from(datasetOptional.get());
+                taskNode.addInlet(datasetNode);
+                logger.debug("For upstream datastore: {} , found upstream dataset node with gid {} from metadata service",
+                        JSONUtils.toJsonString(store), datasetNode.getGid());
+            } else {
+                logger.debug("For upstream datastore: {} , cannot find corresponding dataset from metadata service",
+                        JSONUtils.toJsonString(store));
+            }
+        }
+        // upsert downstream dataset nodes & relations to task node entity
+        for (DataStore store : downstreamDataStore) {
+            Optional<Dataset> datasetOptional = fetchDatasetByDatastore(store);
+            if (datasetOptional.isPresent()) {
+                DatasetNode datasetNode = DatasetNode.from(datasetOptional.get());
+                taskNode.addOutlet(datasetNode);
+                logger.debug("For downstream datastore: {} , found downstream dataset node with gid {} from metadata service",
+                        JSONUtils.toJsonString(store), datasetNode.getGid());
+            } else {
+                logger.debug("For downstream datastore: {} , cannot find corresponding dataset from metadata service",
+                        JSONUtils.toJsonString(store));
+            }
+        }
+        // save task node
+        saveTaskNode(taskNode);
     }
 
     // ---------------- Private methods ----------------
@@ -337,7 +391,7 @@ public class LineageService {
                         });
             });
         }
-        if (Objects.equals(direction, DirectionEnum.UPSTREAM)){
+        if (Objects.equals(direction, DirectionEnum.UPSTREAM)) {
             Set<TaskNode> nextTaskNodeSet = ds.getUpstreamTasks();
             nextTaskNodeSet.forEach(taskNodePartial -> {
                 Optional<TaskNode> taskNodeOptional = fetchTaskNodeById(taskNodePartial.getTaskId());
