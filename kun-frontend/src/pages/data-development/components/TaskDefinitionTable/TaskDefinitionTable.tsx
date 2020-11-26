@@ -19,6 +19,7 @@ import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/mod
 
 // css
 import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
+import { TaskTemplateIcon } from '@/components/TaskTemplateIcon/TaskTemplateIcon.component';
 import styles from './TaskDefinitionTable.module.less';
 
 interface OwnProps {
@@ -126,6 +127,12 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
       width: 180,
       title: t('dataDevelopment.definition.property.taskTemplateName'),
       dataIndex: 'taskTemplateName',
+      render: (txt, record) => (
+        <Space size="small">
+          <TaskTemplateIcon name={record.taskTemplateName} />
+          <span>{record.taskTemplateName}</span>
+        </Space>
+      ),
     },
     {
       key: 'owner',
