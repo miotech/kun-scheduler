@@ -27,6 +27,9 @@ public class SparkConfiguration {
     public static final String CONF_LIVY_DISPATCH_ADDRESS = "dispatchAddress";
     public static final String CONF_LIVY_DISPATCH_CONFIG = "dispatchConfig";
 
+    //hdfs
+    public static final String CONF_HDFS_URL = "hdfsUrl";
+
     // SQL
     public static final String CONF_LIVY_SHARED_SESSION = "sharedSession";
     public static final String CONF_LIVY_SHARED_SESSION_NAME = "sharedSessionName";
@@ -34,6 +37,7 @@ public class SparkConfiguration {
     public static final String CONF_SPARK_SQL = "sparkSQL";
     public static final String CONF_SPARK_DEFAULT_DB = "defaultDatabase";
     public static final String CONF_SPARK_DEFAULT_DB_DEFAULT = "default";
+    public static final String CONF_SPARK_LISTENER_JAR = "ListenerJar";
 
     public static final String CONF_SPARK_DATASTORE_URL = "dataStoreUrl";
 
