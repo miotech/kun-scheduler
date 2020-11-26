@@ -4,10 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
-import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -359,8 +357,6 @@ public class TaskService {
      */
     private void updateLineageGraphOnTaskCreate(Task task) {
         Preconditions.checkNotNull(task, TASK_SHOULD_NOT_BE_NULL);
-        // Create a task node
-        TaskNode taskNode = TaskNode.from(task);
         // load operator resolver
         Resolver resolver = getResolverByOperatorId(task.getOperatorId());
 
@@ -369,35 +365,7 @@ public class TaskService {
         List<DataStore> downstreamDataStore = resolver.resolveDownstreamDataStore(task.getConfig());
         logger.debug("For task id = {}, resolved {} upstream datastores and {} downstream datastores.",
                 task.getId(), upstreamDatastore.size(), downstreamDataStore.size());
-
-        // upsert upstream dataset nodes & relations to task node entity
-        for (DataStore store : upstreamDatastore) {
-            Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(store);
-            if (datasetOptional.isPresent()) {
-                DatasetNode datasetNode = DatasetNode.from(datasetOptional.get());
-                taskNode.addInlet(datasetNode);
-                logger.debug("For upstream datastore: {} , found upstream dataset node with gid {} from metadata service",
-                        JSONUtils.toJsonString(store), datasetNode.getGid());
-            } else {
-                logger.debug("For upstream datastore: {} , cannot find corresponding dataset from metadata service",
-                        JSONUtils.toJsonString(store));
-            }
-        }
-        // upsert downstream dataset nodes & relations to task node entity
-        for (DataStore store : downstreamDataStore) {
-            Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(store);
-            if (datasetOptional.isPresent()) {
-                DatasetNode datasetNode = DatasetNode.from(datasetOptional.get());
-                taskNode.addOutlet(datasetNode);
-                logger.debug("For downstream datastore: {} , found downstream dataset node with gid {} from metadata service",
-                        JSONUtils.toJsonString(store), datasetNode.getGid());
-            } else {
-                logger.debug("For downstream datastore: {} , cannot find corresponding dataset from metadata service",
-                        JSONUtils.toJsonString(store));
-            }
-        }
-        // save task node
-        lineageService.saveTaskNode(taskNode);
+        lineageService.updateTaskLineage(task,upstreamDatastore,downstreamDataStore);
     }
 
     /**

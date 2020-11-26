@@ -12,6 +12,7 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
@@ -80,10 +81,15 @@ public class TaskRunDao {
     private TaskRunMapper taskRunMapperInstance;
 
     @Inject
-    public TaskRunDao(TaskDao taskDao, DatabaseOperator dbOperator, TaskRunMapper taskRunMapperInstance) {
+    private LineageService lineageService;
+
+    @Inject
+    public TaskRunDao(TaskDao taskDao, DatabaseOperator dbOperator
+            , TaskRunMapper taskRunMapperInstance,LineageService lineageService) {
         this.taskDao = taskDao;
         this.dbOperator = dbOperator;
         this.taskRunMapperInstance = taskRunMapperInstance;
+        this.lineageService = lineageService;
     }
 
     private enum DependencyDirection {
@@ -361,6 +367,10 @@ public class TaskRunDao {
                 }),
                 taskRunId
         );
+
+        TaskRun taskRun = fetchTaskRunById(taskRunId).get();
+        lineageService.updateTaskLineage(taskRun.getTask(),inlets,outlets);
+
     }
 
     /**

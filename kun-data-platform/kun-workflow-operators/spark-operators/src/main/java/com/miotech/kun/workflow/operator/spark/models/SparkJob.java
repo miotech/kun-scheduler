@@ -145,6 +145,10 @@ public class SparkJob {
         this.conf = conf;
     }
 
+    public void addConf(String key,String value){
+        conf.put(key,value);
+    }
+
     /**
      * Amount of memory to use for the driver process
      */
