@@ -13,6 +13,9 @@ import { TaskViewsAside } from '@/pages/data-development/components/TaskViewsAsi
 import { TaskDefinitionTable } from '@/pages/data-development/components/TaskDefinitionTable/TaskDefinitionTable';
 import { TaskDefViewModificationModal } from '@/pages/data-development/components/TaskDefViewModificationModal/TaskDefViewModificationModal';
 import { TaskTemplateCreateDropMenu } from '@/pages/data-development/components/TaskTemplateCreateDropMenu/TaskTemplateCreateDropMenu';
+import { TaskDefToViewTransferModal } from '@/pages/data-development/components/TaskDefToViewTransfererModal/TaskDefToViewTransferModal';
+import { AddToOtherViewModal } from '@/pages/data-development/components/AddToOtherViewModal/AddToOtherViewModal';
+import { TaskDAGViewWrapper } from '@/pages/data-development/components/TaskDAG/TaskDAGViewWrapper';
 
 import {
   createTaskDefinitionView,
@@ -28,9 +31,6 @@ import {
 import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
 
 import 'react-reflex/styles.css';
-import { TaskDefToViewTransferModal } from '@/pages/data-development/components/TaskDefToViewTransfererModal/TaskDefToViewTransferModal';
-import { AddToOtherViewModal } from '@/pages/data-development/components/AddToOtherViewModal/AddToOtherViewModal';
-import { TaskDAG } from '@/pages/data-development/components/TaskDAG/TaskDAG';
 import styles from './index.less';
 
 
@@ -169,7 +169,12 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       );
     }
     // else
-      return <TaskDAG />;
+      return <TaskDAGViewWrapper
+        taskDefViewId={selectedView?.id || null}
+        filters={filters}
+        updateTime={updateTime}
+        setSelectedTaskDefIds={setSelectedTaskDefIds}
+      />;
   };
 
   const handleTaskDefinitionCreate = useCallback(async (taskTemplateName: string, name: string, createInCurrentView: boolean) => {
@@ -186,6 +191,8 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       forceTableRefresh();
     }
   }, [
+    forceTableRefresh,
+    searchTaskDefViews,
     selectedView,
   ]);
 

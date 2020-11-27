@@ -129,3 +129,13 @@ export async function overwriteIncludingTaskDefinitionsOfView(viewId: string, ta
     mockCode: 'task-def-views.overwrite-task-defs-of-view',
   });
 }
+
+export async function fetchAllTaskDefinitionsByViewId(viewId: string): Promise<TaskDefinition[]> {
+  return get('/task-def-views/:viewId/task-definitions', {
+    prefix: API_DATA_PLATFORM_PREFIX,
+    pathParams: {
+      viewId,
+    },
+    mockCode: 'task-def-views.get-task-defs-of-view',
+  });
+}
