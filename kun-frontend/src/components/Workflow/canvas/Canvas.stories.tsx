@@ -7,7 +7,7 @@ import { WorkflowCanvas } from '@/components/Workflow/canvas/Canvas.component';
 import { Drag } from '@/components/Workflow/drag/Drag.component';
 
 import '@/global.less';
-import { WorkflowNode } from '@/components/Workflow/Workflow.typings';
+import { Transform, WorkflowNode } from '@/components/Workflow/Workflow.typings';
 import { computeDragInclusive } from '@/components/Workflow/helpers/dragbox-inclusive';
 import { TASK_DAG_NODE_HEIGHT, TASK_DAG_NODE_WIDTH } from '@/components/Workflow/Workflow.constants';
 import produce from 'immer';
@@ -102,8 +102,9 @@ const exampleNodes: WorkflowNode[] = [
 
 export const WithDragAndBoxSelect = () => {
   const [ nodeStates, setNodeStates ] = useState(exampleNodes);
+  const [ allowDrag, setAllowDrag ] = useState<boolean>(true);
 
-  const handleDragMove = useCallback(({ x, y, dx, dy }) => {
+  const handleDragMove = useCallback(({ x, y, dx, dy }, canvasTransform: Transform) => {
     const nextState = produce(nodeStates, draftState => {
       logger.trace('on drag move, x = %o, y = %o', x, y);
       // eslint-disable-next-line no-restricted-syntax
@@ -114,10 +115,10 @@ export const WithDragAndBoxSelect = () => {
           dragStartY: Math.min(y, y + dy),
           dragEndY: Math.max(y, y + dy),
         }, {
-          x: node.x,
-          y: node.y,
-          width: TASK_DAG_NODE_WIDTH,
-          height: TASK_DAG_NODE_HEIGHT,
+          x: node.x * canvasTransform.scaleX + canvasTransform.transformX,
+          y: node.y * canvasTransform.scaleY + canvasTransform.transformY,
+          width: TASK_DAG_NODE_WIDTH * canvasTransform.scaleX,
+          height: TASK_DAG_NODE_HEIGHT * canvasTransform.scaleY,
         });
         if (isSelected) {
           logger.trace('node id = %o, state = selected', node.id);
@@ -135,6 +136,10 @@ export const WithDragAndBoxSelect = () => {
   return (
     <IntlProvider locale="en-US" messages={demoMessage}>
       <main style={mainStyle as any}>
+        <div>
+          <button type="button" onClick={() => { setAllowDrag(true); }}>Allow drag</button>
+          <button type="button" onClick={() => { setAllowDrag(false); }}>Disable drag</button>
+        </div>
         <WorkflowCanvas
           id="demo-canvas-1"
           width={1280}
@@ -142,25 +147,28 @@ export const WithDragAndBoxSelect = () => {
           nodes={nodeStates}
           edges={[]}
         >
-          <Drag
-            width={1280}
-            height={720}
-            onDragStart={({ x, y }) => {
-              logger.trace('on drag start, x = %o, y = %o', x, y);
-            }}
-            onDragMove={handleDragMove}
-            onDragEnd={({ x, y, dx, dy }) => {
-              logger.trace('on drag end, x = %o, y = %o; dx = %o, dy = %o', x, y, dx, dy);
-            }}
-          />
+          {allowDrag ? (
+            <Drag
+              width={1280}
+              height={720}
+              onDragStart={({ x, y }) => {
+                logger.trace('on drag start, x = %o, y = %o', x, y);
+              }}
+              onDragMove={handleDragMove}
+              onDragEnd={({ x, y, dx, dy }) => {
+                logger.trace('on drag end, x = %o, y = %o; dx = %o, dy = %o', x, y, dx, dy);
+              }}
+            />
+          ) : null}
         </WorkflowCanvas>
       </main>
     </IntlProvider>
   );
 };
 
+
 export const WithZoomPan = () => {
-  const [ nodeStates, /* setNodeStates */ ] = useState(exampleNodes);
+  const [ nodeStates ] = useState(exampleNodes);
 
   return (
     <IntlProvider locale="en-US" messages={demoMessage}>
@@ -171,10 +179,6 @@ export const WithZoomPan = () => {
           height={720}
           nodes={nodeStates}
           edges={[]}
-          zoom={{
-            maxZoom: 2,
-            minZoom: 0.1,
-          }}
           onNodeClick={(workflowNode) => {
             logger.debug(`Clicked node: %o`, workflowNode);
           }}
@@ -183,3 +187,4 @@ export const WithZoomPan = () => {
     </IntlProvider>
   );
 };
+

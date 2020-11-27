@@ -20,3 +20,10 @@ export interface WorkflowEdge {
   destX: number;
   destY: number;
 }
+
+export interface Transform {
+  scaleX: number;
+  scaleY: number;
+  transformX: number;
+  transformY: number;
+}

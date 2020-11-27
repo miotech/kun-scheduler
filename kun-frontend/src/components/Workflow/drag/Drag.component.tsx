@@ -1,5 +1,6 @@
 import React, { memo, useCallback } from 'react';
 import { Drag as VisxDrag } from '@visx/drag';
+import { Transform } from '@/components/Workflow/Workflow.typings';
 
 type Point = {
   x: number;
@@ -15,9 +16,10 @@ type DragState = Partial<Point> & {
 interface OwnProps {
   width?: number;
   height?: number;
-  onDragStart?: (dragState: DragState) => any;
-  onDragMove?: (dragState: DragState) => any;
-  onDragEnd?: (dragState: DragState) => any;
+  onDragStart?: (dragState: DragState, canvasTransform: Transform) => any;
+  onDragMove?: (dragState: DragState, canvasTransform: Transform) => any;
+  onDragEnd?: (dragState: DragState, canvasTransform: Transform) => any;
+  transform?: Transform;
 }
 
 type Props = OwnProps;
@@ -29,29 +31,38 @@ export const Drag: React.FC<Props> = memo(function Drag(props) {
     onDragStart,
     onDragMove,
     onDragEnd,
+    transform = {
+      scaleX: 1,
+      scaleY: 1,
+      transformX: 0,
+      transformY: 0,
+    },
   } = props;
 
   const handleDragStart = useCallback(function handleDragStart(dragState: DragState) {
     if (onDragStart) {
-      onDragStart(dragState);
+      onDragStart(dragState, transform);
     }
   }, [
+    transform,
     onDragStart,
   ]);
 
   const handleDragMove = useCallback(function handleDragMove({ x = 0, y = 0, dx = 0, dy = 0, isDragging = false }: Partial<DragState>) {
     if (onDragMove) {
-      onDragMove({ x, y, dx, dy, isDragging });
+      onDragMove({ x, y, dx, dy, isDragging }, transform);
     }
   }, [
+    transform,
     onDragMove,
   ]);
 
   const handleDragEnd = useCallback(function handleDragEnd(dragState: DragState) {
     if (onDragEnd) {
-      onDragEnd(dragState);
+      onDragEnd(dragState, transform);
     }
   }, [
+    transform,
     onDragEnd,
   ]);
 
@@ -68,7 +79,7 @@ export const Drag: React.FC<Props> = memo(function Drag(props) {
     } = dragState;
 
     return (
-      <g width={width} height={height}>
+      <svg width={width} height={height}>
         {/* drag selection rectangle box */}
         {isDragging ? (
           <rect
@@ -95,7 +106,7 @@ export const Drag: React.FC<Props> = memo(function Drag(props) {
           onTouchMove={dragMove}
           cursor={isDragging ? 'crosshair' : 'default'}
         />
-      </g>
+      </svg>
     );
 
   }, [
@@ -104,7 +115,7 @@ export const Drag: React.FC<Props> = memo(function Drag(props) {
   ]);
 
   return (
-    <>
+    <div style={{ position: 'absolute', top: 0, left: 0, width, height }}>
       {/* drag */}
       <VisxDrag
         width={width}
@@ -116,6 +127,6 @@ export const Drag: React.FC<Props> = memo(function Drag(props) {
       >
         {dragInternalRenderer}
       </VisxDrag>
-    </>
+    </div>
   );
 });
