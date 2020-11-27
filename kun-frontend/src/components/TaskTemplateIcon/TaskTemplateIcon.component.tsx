@@ -9,40 +9,41 @@ import { ReactComponent as ExportIcon } from '@/assets/icons/export.svg';
 
 interface OwnProps {
   name?: string;
+  className?: string;
 }
 
 type Props = OwnProps;
 
-export const TaskTemplateIcon: React.FC<Props> = memo(function TaskTemplateIcon({ name }) {
+export const TaskTemplateIcon: React.FC<Props> = memo(function TaskTemplateIcon({ name, className }) {
   if (!name) {
-    return <SettingOutlined />;
+    return <SettingOutlined className={className} />;
   }
   // spark sql
   if (name.match(/sparksql/i)) {
-    return <Icon component={SparkSQLIcon} />;
+    return <Icon className={className} component={SparkSQLIcon} />;
   }
   // spark
   if (name.match(/spark/i)) {
-    return <Icon component={SparkIcon} />;
+    return <Icon className={className} component={SparkIcon} />;
   }
   // sql
   if (name.match(/sql/i)) {
-    return <ConsoleSqlOutlined />;
+    return <ConsoleSqlOutlined className={className} />;
   }
   if (name.match(/bash/i)) {
-    return <CodeOutlined />;
+    return <CodeOutlined className={className} />;
   }
   // sheet
   if (name.match(/sheet/i)) {
-    return <Icon component={SheetFileIcon} />;
+    return <Icon className={className} component={SheetFileIcon} />;
   }
   // datasync
   if (name.match(/datasync/i)) {
-    return <Icon component={DataSyncIcon} />;
+    return <Icon className={className} component={DataSyncIcon} />;
   }
   // export
   if (name.match(/export/i)) {
-    return <Icon component={ExportIcon} />;
+    return <Icon className={className} component={ExportIcon} />;
   }
-  return <SettingOutlined />;
+  return <SettingOutlined className={className} />;
 });

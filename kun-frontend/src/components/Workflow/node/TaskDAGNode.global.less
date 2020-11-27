@@ -73,3 +73,38 @@
 .task-dag-node.task-dag-node--selected {
   border: @darkBlue 2px solid;
 }
+
+@task-node-simplify-width: 220px;
+@task-node-simplify-height: 60px;
+@task-node-simplify-border-radius: 4px;
+
+.task-dag-node-simplify {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: @task-node-simplify-border-radius;
+  background: #fff;
+  width: @task-node-simplify-width;
+  height: @task-node-simplify-height;
+
+  &__icon-wrapper {
+    flex: 0 0 60px;
+    position: relative;
+    border-right: 1px solid;
+  }
+
+  &__icon {
+    font-size: 1.5em;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+  }
+
+  &__info {
+    flex: 1 1;
+    padding: 8px 16px;
+  }
+}

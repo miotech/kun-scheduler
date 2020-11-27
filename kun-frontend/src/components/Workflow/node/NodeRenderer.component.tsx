@@ -1,7 +1,8 @@
 import React, { memo } from 'react';
 import { WorkflowNode } from '@/components/Workflow/Workflow.typings';
-import { TaskDAGNode } from '@/components/Workflow/node/TaskDAGNode.component';
+// import { TaskDAGNode } from '@/components/Workflow/node/TaskDAGNode.component';
 import { TASK_DAG_NODE_HEIGHT, TASK_DAG_NODE_WIDTH } from '@/components/Workflow/Workflow.constants';
+import { TaskDAGNodeSimplify } from '@/components/Workflow/node/TaskDAGNodeSimplify.component';
 
 interface OwnProps {
   nodes: WorkflowNode[];
@@ -36,10 +37,10 @@ export const NodeRenderer: React.FC<Props> = memo(function NodeRenderer(props) {
           <foreignObject
             x={node.x}
             y={node.y}
-            width={TASK_DAG_NODE_WIDTH}
-            height={TASK_DAG_NODE_HEIGHT}
+            width={TASK_DAG_NODE_WIDTH + 4}
+            height={TASK_DAG_NODE_HEIGHT + 4}
           >
-            <TaskDAGNode
+            <TaskDAGNodeSimplify
               taskDefinition={{
                 id: node.id,
                 name: node.name,
