@@ -1,14 +1,17 @@
 import React, { memo, useRef, useState } from 'react';
 import c from 'clsx';
+import LogUtils from '@/utils/logUtils';
+
 import {
   MODE_IDLE, ReactSVGPanZoom, Tool, TOOL_AUTO, Value as ReactSVGPanZoomValue, ViewerMouseEvent
 } from 'react-svg-pan-zoom';
 import { NodeRenderer } from '@/components/Workflow/node/NodeRenderer.component';
+import { TOOL_BOX_SELECT, WorkflowDAGToolbar } from '@/components/Workflow/toolbar/WorkflowDAGToolbar.component';
 
 import { Transform, WorkflowEdge, WorkflowNode } from '@/components/Workflow/Workflow.typings';
 
 import './Canvas.global.less';
-import LogUtils from '@/utils/logUtils';
+import { Drag } from '@/components/Workflow/drag/Drag.component';
 
 interface OwnProps {
   /** canvas width */
@@ -75,7 +78,7 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     endY: null,
     miniatureOpen: true,
   });
-  const [ panzoomTool, setPanzoomTool ] = useState<Tool>(TOOL_AUTO);
+  const [ panzoomTool, setPanzoomTool ] = useState<Tool | TOOL_BOX_SELECT>(TOOL_AUTO);
 
   return (
     <div className="workflow-canvas-container" style={{ width, height }}>
@@ -114,15 +117,16 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
         ref={reactSVGPanZoomRef}
         width={width}
         height={height}
-        tool={panzoomTool}
+        tool={(panzoomTool === 'box-select') ? 'none' : panzoomTool}
         value={panzoomValue}
         onClick={props.onCanvasClick}
-        onChangeTool={tool => {  setPanzoomTool(tool); }}
+        onChangeTool={tool => { setPanzoomTool(tool); }}
         onChangeValue={value => { setPanzoomValue(value); }}
         background="transparent"
         SVGBackground="transparent"
         scaleFactorMax={2.0}
         scaleFactorMin={0.1}
+        customToolbar={() => <></>}
       >
         <svg data-tid="elements-group" width={Math.max(graphWidth, width)} height={Math.max(graphHeight, height)}>
           {/* Render Nodes */}
@@ -148,6 +152,37 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
         // else
         return null;
       }))}
+      {/* Toolbar */}
+      <WorkflowDAGToolbar
+        currentTool={panzoomTool}
+        onChangeTool={(nextTool) => {
+          setPanzoomTool(nextTool);
+        }}
+        onClickReset={() => {
+          reactSVGPanZoomRef.current?.reset();
+        }}
+      />
+      {
+        (() => {
+          if (panzoomTool === 'box-select') {
+            return (
+              <Drag
+                width={width}
+                height={height}
+                onDragStart={({ x, y }) => {
+                  logger.trace('on drag start, x = %o, y = %o', x, y);
+                }}
+                onDragMove={() => {}}
+                onDragEnd={({ x, y, dx, dy }) => {
+                  logger.trace('on drag end, x = %o, y = %o; dx = %o, dy = %o', x, y, dx, dy);
+                }}
+              />
+            );
+          }
+          // else
+          return null;
+        })()
+      }
     </div>
   );
 });
