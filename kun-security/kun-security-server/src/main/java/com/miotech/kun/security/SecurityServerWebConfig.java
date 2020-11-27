@@ -1,8 +1,12 @@
 package com.miotech.kun.security;
 
-import com.miotech.kun.security.filter.LogInterceptor;
+import com.miotech.kun.security.filter.LogFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -12,8 +16,17 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class SecurityServerWebConfig implements WebMvcConfigurer {
 
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LogInterceptor());
+    @Autowired
+    @Qualifier("dispatcherServletRegistration")
+    private ServletRegistrationBean servletRegistrationBean;
+
+    @Bean
+    public FilterRegistrationBean<LogFilter> logFilter() {
+        FilterRegistrationBean<LogFilter> registration = new FilterRegistrationBean<>();
+        registration.addServletRegistrationBeans(servletRegistrationBean);
+        LogFilter cachingFilter = new LogFilter();
+        registration.setFilter(cachingFilter);
+        registration.setOrder(1);
+        return registration;
     }
 }
