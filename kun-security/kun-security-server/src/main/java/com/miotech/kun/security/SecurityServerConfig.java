@@ -117,8 +117,4 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
         authenticationFilter.setPassToken(passToken);
         return authenticationFilter;
     }
-
-    public String getPassToken() {
-        return passToken;
-    }
 }
