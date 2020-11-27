@@ -1,6 +1,6 @@
-import React, { memo, useState } from 'react';
+import React, { memo, useRef, useState } from 'react';
 import c from 'clsx';
-import { MODE_IDLE, TOOL_NONE, ReactSVGPanZoom, Tool, Value as ReactSVGPanZoomValue } from 'react-svg-pan-zoom';
+import { MODE_PANNING, ReactSVGPanZoom, Tool, TOOL_PAN, Value as ReactSVGPanZoomValue } from 'react-svg-pan-zoom';
 import { NodeRenderer } from '@/components/Workflow/node/NodeRenderer.component';
 
 import { Transform, WorkflowEdge, WorkflowNode } from '@/components/Workflow/Workflow.typings';
@@ -12,6 +12,10 @@ interface OwnProps {
   width?: number;
   /** canvas height */
   height?: number;
+  /** DAG graph svg width */
+  graphWidth?: number;
+  /** DAG graph svg height */
+  graphHeight?: number;
   /** HTML element id */
   id?: string;
   /** CSS classname */
@@ -34,15 +38,19 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     className,
     width = 800,
     height = 600,
+    graphWidth = width,
+    graphHeight = height,
     children,
     nodes = [],
     // edges = [],
     onNodeClick,
   } = props;
 
+  const reactSVGPanZoomRef = useRef<any>();
+
   const [ panzoomValue, setPanzoomValue ] = useState<ReactSVGPanZoomValue>({
     version: 2,
-    mode: MODE_IDLE,
+    mode: MODE_PANNING,
     focus: false,
     a: 1,
     b: 0,
@@ -52,15 +60,15 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     f: 0,
     viewerWidth: width || 0,
     viewerHeight: height || 0,
-    SVGWidth: width || 0,
-    SVGHeight: height || 0,
+    SVGWidth: Math.max(graphWidth, width) || 0,
+    SVGHeight: Math.max(graphHeight, height) || 0,
     startX: null,
     startY: null,
     endX: null,
     endY: null,
     miniatureOpen: true,
   });
-  const [ panzoomTool, setPanzoomTool ] = useState<Tool>(TOOL_NONE);
+  const [ panzoomTool, setPanzoomTool ] = useState<Tool>(TOOL_PAN);
 
   return (
     <div className="workflow-canvas-container" style={{ width, height }}>
@@ -96,6 +104,7 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
         />
       </svg>
       <ReactSVGPanZoom
+        ref={reactSVGPanZoomRef}
         width={width}
         height={height}
         tool={panzoomTool}
@@ -104,8 +113,10 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
         onChangeValue={value => { setPanzoomValue(value); }}
         background="transparent"
         SVGBackground="transparent"
+        scaleFactorMax={2.0}
+        scaleFactorMin={0.1}
       >
-        <svg data-tid="elements-group" width={width} height={height}>
+        <svg data-tid="elements-group" width={Math.max(graphWidth, width)} height={Math.max(graphHeight, height)}>
           {/* Render Nodes */}
           <NodeRenderer
             nodes={nodes}

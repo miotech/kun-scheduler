@@ -24,15 +24,22 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
   } = props;
   const [ nodes, setNodes ] = useState<WorkflowNode[]>([]);
   const [ edges, setEdges ] = useState<WorkflowEdge[]>([]);
+  const [ graphWidth, setGraphWidth ] = useState<number>(0);
+  const [ graphHeight, setGraphHeight ] = useState<number>(0);
+
 
   useEffect(() => {
     if (taskDefinitions && taskDefinitions.length) {
       const {
         nodes: computedNodes,
         edges: computedEdges,
+        graphWidth: computedGraphWidth,
+        graphHeight: computedGraphHeight,
       } = convertTaskDefinitionsToGraph(taskDefinitions);
       setNodes(computedNodes);
       setEdges(computedEdges);
+      setGraphWidth(computedGraphWidth);
+      setGraphHeight(computedGraphHeight);
     }
   }, [
     taskDefinitions,
@@ -52,6 +59,8 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
         height={(height || 3) - 2}
         nodes={nodes}
         edges={edges}
+        graphWidth={graphWidth}
+        graphHeight={graphHeight}
       />
     </div>
   );

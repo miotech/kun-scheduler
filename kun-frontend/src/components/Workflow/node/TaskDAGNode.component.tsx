@@ -1,9 +1,9 @@
 import React, { memo } from 'react';
 import c from 'clsx';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
-import { FunctionOutlined } from '@ant-design/icons';
 
 import './TaskDAGNode.global.less';
+import { TaskTemplateIcon } from '@/components/TaskTemplateIcon/TaskTemplateIcon.component';
 
 interface OwnProps {
   /** Task definition data */
@@ -49,7 +49,7 @@ export const TaskDAGNode: React.FC<Props> = memo(function TaskDAGNode(props) {
             className={`${clsPrefix}__heading__icon`}
             data-tid="task-dag-node-icon"
           >
-            <FunctionOutlined />
+            <TaskTemplateIcon name={taskDefinition.taskTemplateName} />
           </span>
           <span
             className={`${clsPrefix}__heading__task-template-name`}

@@ -16,12 +16,16 @@ const DEFAULT_HEIGHT = 90;
 export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[]): {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
+  graphWidth: number;
+  graphHeight: number;
 } {
   if (!isArray(taskDefinitions)) {
     logger.warn('Invalid argument taskDefinitions: %o', taskDefinitions);
     return {
       nodes: [],
       edges: [],
+      graphWidth: 0,
+      graphHeight: 0,
     };
   }
 
@@ -55,14 +59,19 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[])
 
   dagre.layout(graph, {
     rankdir: 'TB',  // Top-to-bottom
-    nodesep: DEFAULT_WIDTH * 3.0,
-    ranksep: DEFAULT_HEIGHT * 3.0,
-    ranker: 'tight-tree',
+    nodesep: DEFAULT_WIDTH * 6.0,
+    ranksep: DEFAULT_HEIGHT * 6.0,
+    // ranker: 'tight-tree',
   });
+
+  let graphWidth = 0;
+  let graphHeight = 0;
 
   const nodes: WorkflowNode[] = graph.nodes().map(nodeId => {
     const taskDef = find(taskDefinitions, t => `${t.id}` === nodeId);
     const n = graph.node(nodeId);
+    graphWidth = Math.max(graphWidth, n.x + DEFAULT_WIDTH);
+    graphHeight = Math.max(graphHeight, n.y + DEFAULT_HEIGHT);
     return {
       id: nodeId,
       name: taskDef?.name || '',
@@ -92,5 +101,7 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[])
   return {
     nodes,
     edges,
+    graphWidth,
+    graphHeight,
   };
 }
