@@ -74,8 +74,8 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     SVGHeight: Math.max(graphHeight, height) || 0,
     startX: null,
     startY: null,
-    endX: null,
-    endY: null,
+    endX: Math.max(graphWidth, width),
+    endY: Math.max(graphHeight, height),
     miniatureOpen: true,
   });
   const [ panzoomTool, setPanzoomTool ] = useState<Tool | TOOL_BOX_SELECT>(TOOL_AUTO);
@@ -92,13 +92,13 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
         {/* Canvas svg constant definitions */}
         <defs>
           <radialGradient
+            id="canvasGradient"
             cx="10.7991175%"
             cy="11.7361177%"
             fx="10.7991175%"
             fy="11.7361177%"
             r="148.107834%"
             gradientTransform="translate(0.107991,0.117361),scale(0.750000,1.000000),rotate(36.579912),translate(-0.107991,-0.117361)"
-            id="canvasGradient"
           >
             <stop stopColor="#EFEFEF" offset="0%" />
             <stop stopColor="#CCCCCC" offset="100%" />
@@ -122,13 +122,30 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
         onClick={props.onCanvasClick}
         onChangeTool={tool => { setPanzoomTool(tool); }}
         onChangeValue={value => { setPanzoomValue(value); }}
-        background="transparent"
-        SVGBackground="transparent"
+        background="none"
+        SVGBackground="none"
         scaleFactorMax={2.0}
-        scaleFactorMin={0.1}
+        scaleFactorMin={0.5}
         customToolbar={() => <></>}
       >
         <svg data-tid="elements-group" width={Math.max(graphWidth, width)} height={Math.max(graphHeight, height)}>
+          {/* Background grid */}
+          <defs>
+            <pattern id="tenthGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="silver" strokeWidth="0.5"/>
+            </pattern>
+            <pattern id="grid" width="100" height="100" patternUnits="userSpaceOnUse">
+              <rect width="100" height="100" fill="url(#tenthGrid)"/>
+              <path d="M 100 0 L 0 0 0 100" fill="none" stroke="gray" strokeWidth="1"/>
+            </pattern>
+          </defs>
+          <rect
+            x={-2 * Math.max(graphWidth, width)}
+            y={-2 * Math.max(graphHeight, height)}
+            width={Math.max(graphWidth, width) * 5}
+            height={Math.max(graphHeight, height) * 5}
+            style={{ fill: 'url(#grid)' }}
+          />
           {/* Render Nodes */}
           <NodeRenderer
             nodes={nodes}
