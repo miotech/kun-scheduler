@@ -163,6 +163,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
             onAddToOtherViewBtnClick={() => {
               setAddToOtherViewModalVisible(true);
             }}
+            selectedTaskDefIds={selectedTaskDefIds}
             setSelectedTaskDefIds={setSelectedTaskDefIds}
           />
         </div>

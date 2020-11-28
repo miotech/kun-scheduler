@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Space, Table } from 'antd';
 import { CaretRightOutlined } from '@ant-design/icons';
-import { useRequest } from 'ahooks';
+import { useRequest, useUpdateEffect } from 'ahooks';
 import { Link } from 'umi';
 import { searchTaskDefinition } from '@/services/data-development/task-definitions';
 import useI18n from '@/hooks/useI18n';
@@ -29,7 +29,8 @@ interface OwnProps {
   updateTime: number;
   onTransferToThisViewClick?: () => any;
   onAddToOtherViewBtnClick?: () => any;
-  setSelectedTaskDefIds?: Function;
+  selectedTaskDefIds?: string[];
+  setSelectedTaskDefIds?: (keys: string[]) => any;
 }
 
 type Props = OwnProps;
@@ -41,6 +42,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
     taskDefViewId,
     filters,
     updateTime,
+    selectedTaskDefIds,
     setSelectedTaskDefIds,
   } = props;
 
@@ -53,20 +55,14 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
     manual: true,
   });
 
-  useEffect(() => {
+  useUpdateEffect(() => {
     // clear selected row keys when view changed
+    if (setSelectedTaskDefIds) {
+      setSelectedTaskDefIds([]);
+    }
     setSelectedRowKeys([]);
   }, [
     taskDefViewId,
-  ]);
-
-  useEffect(() => {
-    if (setSelectedTaskDefIds) {
-      setSelectedTaskDefIds(selectedRowKeys);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    selectedRowKeys,
   ]);
 
   useEffect(() => {
@@ -193,7 +189,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
       <header className={styles.TaskDefTableHeading} data-tid="task-definition-table-heading">
         <Space>
           <span className={styles.SelectedItemsCountText} data-tid="selected-items-count">
-            {t('common.table.rowSelectionCount', { count: selectedRowKeys.length })}
+            {t('common.table.rowSelectionCount', { count: selectedTaskDefIds?.length ?? selectedRowKeys.length })}
           </span>
             <span>
             <Button
@@ -245,8 +241,8 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
           ...generateAsyncAntdTableRowSelectionProps(
             data?.records || [],
             rowKeyMapper,
-            selectedRowKeys,
-            setSelectedRowKeys,
+            selectedTaskDefIds ?? selectedRowKeys,
+            setSelectedTaskDefIds ?? setSelectedRowKeys,
           ),
         }}
         pagination={{
