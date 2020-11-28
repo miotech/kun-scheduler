@@ -1,4 +1,4 @@
-import React, { memo, useRef, useState } from 'react';
+import React, { memo, useCallback, useRef, useState } from 'react';
 import c from 'clsx';
 import LogUtils from '@/utils/logUtils';
 
@@ -13,6 +13,8 @@ import { Transform, WorkflowEdge, WorkflowNode } from '@/components/Workflow/Wor
 import './Canvas.global.less';
 import { Drag } from '@/components/Workflow/drag/Drag.component';
 import { EdgeRenderer } from '@/components/Workflow/edge/EdgeRenderer.component';
+import { useKeyPress } from 'ahooks';
+import { isMacintosh } from '@/utils/browserDetection';
 
 interface OwnProps {
   /** canvas width */
@@ -34,7 +36,7 @@ interface OwnProps {
   /** edges */
   edges: WorkflowEdge[];
   /** on click node */
-  onNodeClick?: (workflowNode: WorkflowNode) => any;
+  onNodeClick?: (workflowNode: WorkflowNode, multiselectMode?: boolean) => any;
   /** on Canvas click */
   onCanvasClick?: (ev: ViewerMouseEvent<any>) => any;
   /** on drag move */
@@ -82,6 +84,30 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     miniatureOpen: true,
   });
   const [ panzoomTool, setPanzoomTool ] = useState<Tool | TOOL_BOX_SELECT>(TOOL_AUTO);
+
+  // keyboard event listeners
+  const [ multiselectMode, setMultiselectMode ] = useState<boolean>(false);
+
+  useKeyPress(() => true, (event) => {
+    if (event.type === 'keydown') {
+      /* multiselect mode detect */
+      if (isMacintosh() && (panzoomTool === TOOL_AUTO) && (event.key.toLowerCase() === 'meta')) {
+        setMultiselectMode(true);
+      } else if (!isMacintosh()  && (panzoomTool === TOOL_AUTO) && (event.key.toLowerCase() === 'ctrl')) {
+        setMultiselectMode(true);
+      }
+    } else if (event.type === 'keyup') {
+      setMultiselectMode(false);
+    }
+  }, {
+    events: ['keydown', 'keyup'],
+  },);
+
+  const handleNodeClick = useCallback((node: WorkflowNode) => {
+    if (onNodeClick) {
+      onNodeClick(node, multiselectMode);
+    }
+  }, [multiselectMode, onNodeClick]);
 
   return (
     <div className="workflow-canvas-container" style={{ width, height }}>
@@ -164,7 +190,7 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
           {/* Render Nodes */}
           <NodeRenderer
             nodes={nodes}
-            onNodeClick={onNodeClick}
+            onNodeClick={handleNodeClick}
           />
           <EdgeRenderer
             nodes={nodes}
@@ -197,6 +223,7 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
         onClickReset={() => {
           reactSVGPanZoomRef.current?.reset();
         }}
+        multiselectMode={multiselectMode}
       />
       {
         (() => {
