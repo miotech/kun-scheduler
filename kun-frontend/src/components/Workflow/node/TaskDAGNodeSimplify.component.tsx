@@ -1,4 +1,5 @@
 import React, { memo, useMemo } from 'react';
+import c from 'clsx';
 import { TaskTemplateIcon } from '@/components/TaskTemplateIcon/TaskTemplateIcon.component';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { adjustColor, hexToRgbA, operatorNameToHexColor } from '@/components/Workflow/helpers/operatorNameToHexColor';
@@ -19,12 +20,19 @@ type Props = OwnProps;
 export const TaskDAGNodeSimplify: React.FC<Props> = memo(function TaskDAGNodeSimplify(props) {
   const {
     taskDefinition,
+    selected = false,
   } = props;
 
   const color = useMemo(() => operatorNameToHexColor(taskDefinition.taskTemplateName || ''), [taskDefinition.taskTemplateName]);
 
   return (
-    <div className="task-dag-node-simplify" style={{ borderColor: color }} data-tid="task-dag-node-simplify">
+    <div
+      className={c('task-dag-node-simplify', {
+        'task-dag-node-simplify--selected': selected,
+      })}
+      style={{ borderColor: color }}
+      data-tid="task-dag-node-simplify"
+    >
       <div className="task-dag-node-simplify__icon-wrapper" style={{ borderColor: color, background: hexToRgbA(adjustColor(color, 40), 0.2) }} data-tid="dag-node-left">
         <span style={{ color }}>
           <TaskTemplateIcon

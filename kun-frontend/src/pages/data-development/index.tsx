@@ -173,6 +173,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
         taskDefViewId={selectedView?.id || null}
         filters={filters}
         updateTime={updateTime}
+        selectedTaskDefIds={selectedTaskDefIds}
         setSelectedTaskDefIds={setSelectedTaskDefIds}
       />;
   };

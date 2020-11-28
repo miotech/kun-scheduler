@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 // import useRedux from '@/hooks/useRedux';
 import { WorkflowCanvas } from '@/components/Workflow/canvas/Canvas.component';
 import { useSize } from 'ahooks';
@@ -6,12 +6,16 @@ import LogUtils from '@/utils/logUtils';
 import { convertTaskDefinitionsToGraph } from '@/pages/data-development/helpers/taskDefsToGraph';
 
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
-import { WorkflowNode, WorkflowEdge } from '@/components/Workflow/Workflow.typings';
+import { WorkflowNode, WorkflowEdge, Transform } from '@/components/Workflow/Workflow.typings';
 
+import { computeDragInclusive } from '@/components/Workflow/helpers/dragbox-inclusive';
+import { TASK_DAG_NODE_HEIGHT, TASK_DAG_NODE_WIDTH } from '@/components/Workflow/Workflow.constants';
 import styles from './TaskDAG.module.less';
 
 interface OwnProps {
   taskDefinitions: TaskDefinition[];
+  selectedTaskDefIds: string[];
+  setSelectedTaskDefIds?: (taskDefIds: string[]) => any;
 }
 
 type Props = OwnProps;
@@ -21,12 +25,40 @@ export const logger = LogUtils.getLoggers('TaskDAG');
 export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
   const {
     taskDefinitions = [],
+    selectedTaskDefIds = [],
+    setSelectedTaskDefIds = () => {},
   } = props;
   const [ nodes, setNodes ] = useState<WorkflowNode[]>([]);
   const [ edges, setEdges ] = useState<WorkflowEdge[]>([]);
   const [ graphWidth, setGraphWidth ] = useState<number>(0);
   const [ graphHeight, setGraphHeight ] = useState<number>(0);
 
+  const handleDragMove = useCallback(({ x, y, dx, dy }, canvasTransform: Transform) => {
+    const selectedNodeIds = [];
+    // eslint-disable-next-line
+    for (const node of nodes) {
+      const isSelected = computeDragInclusive({
+        dragStartX: Math.min(x, x + dx),
+        dragEndX: Math.max(x, x + dx),
+        dragStartY: Math.min(y, y + dy),
+        dragEndY: Math.max(y, y + dy),
+      }, {
+        x: node.x * canvasTransform.scaleX + canvasTransform.transformX,
+        y: node.y * canvasTransform.scaleY + canvasTransform.transformY,
+        width: TASK_DAG_NODE_WIDTH * canvasTransform.scaleX,
+        height: TASK_DAG_NODE_HEIGHT * canvasTransform.scaleY,
+      });
+      if (isSelected) {
+        logger.trace('node id = %o, state = selected', node.id);
+        selectedNodeIds.push(node.id);
+      }
+    }
+    logger.trace('selectedNodeIds = %o', selectedNodeIds);
+    setSelectedTaskDefIds(selectedNodeIds);
+  }, [
+    nodes,
+    setSelectedTaskDefIds,
+  ]);
 
   useEffect(() => {
     if (taskDefinitions && taskDefinitions.length) {
@@ -35,7 +67,7 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
         edges: computedEdges,
         graphWidth: computedGraphWidth,
         graphHeight: computedGraphHeight,
-      } = convertTaskDefinitionsToGraph(taskDefinitions);
+      } = convertTaskDefinitionsToGraph(taskDefinitions, selectedTaskDefIds);
       setNodes(computedNodes);
       setEdges(computedEdges);
       setGraphWidth(computedGraphWidth);
@@ -43,6 +75,7 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
     }
   }, [
     taskDefinitions,
+    selectedTaskDefIds,
   ]);
 
   const containerRef = useRef<any>();
@@ -61,6 +94,7 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
         edges={edges}
         graphWidth={graphWidth}
         graphHeight={graphHeight}
+        onDragMove={handleDragMove}
       />
     </div>
   );

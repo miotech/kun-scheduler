@@ -13,7 +13,7 @@ const logger = LogUtils.getLoggers('convertTaskDefinitionsToGraph');
 const DEFAULT_WIDTH = 220;
 const DEFAULT_HEIGHT = 60;
 
-export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[]): {
+export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[], selectedTaskDefIds: string[] = []): {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
   graphWidth: number;
@@ -89,7 +89,7 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[])
         width: DEFAULT_WIDTH,
         height: DEFAULT_HEIGHT,
         isDeployed: taskDef?.isDeployed || false,
-        status: 'normal',
+        status: selectedTaskDefIds.indexOf(`${nodeId}`) >= 0 ? 'selected' : 'normal',
         taskTemplateName: taskDef?.taskTemplateName || '',
       });
     }

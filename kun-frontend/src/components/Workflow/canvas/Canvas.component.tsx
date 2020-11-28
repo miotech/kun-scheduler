@@ -37,6 +37,8 @@ interface OwnProps {
   onNodeClick?: (workflowNode: WorkflowNode) => any;
   /** on Canvas click */
   onCanvasClick?: (ev: ViewerMouseEvent<any>) => any;
+  /** on drag move */
+  onDragMove?: Function;
 }
 
 type Props = OwnProps;
@@ -206,7 +208,16 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
                 onDragStart={({ x, y }) => {
                   logger.trace('on drag start, x = %o, y = %o', x, y);
                 }}
-                onDragMove={() => {}}
+                onDragMove={(data) => {
+                  if (props.onDragMove) {
+                    props.onDragMove(data, {
+                      scaleX: panzoomValue.a,
+                      scaleY: panzoomValue.d,
+                      transformX: panzoomValue.e,
+                      transformY: panzoomValue.f,
+                    });
+                  }
+                }}
                 onDragEnd={({ x, y, dx, dy }) => {
                   logger.trace('on drag end, x = %o, y = %o; dx = %o, dy = %o', x, y, dx, dy);
                 }}

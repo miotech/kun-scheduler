@@ -10,7 +10,8 @@ interface OwnProps {
   filters: DataDevelopmentModelFilter;
   /** Triggers update when changed */
   updateTime: number;
-  setSelectedTaskDefIds?: Function;
+  selectedTaskDefIds: string[];
+  setSelectedTaskDefIds?: (taskDefIds: string[]) => any;
 }
 
 type Props = OwnProps;
@@ -20,7 +21,8 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
     taskDefViewId,
     // filters,
     // updateTime,
-    // setSelectedTaskDefIds,
+    selectedTaskDefIds,
+    setSelectedTaskDefIds,
   } = props;
 
   const [ taskDefinitions, setTaskDefinitions ] = useState<TaskDefinition[]>([]);
@@ -48,6 +50,8 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
   return (
     <TaskDAG
       taskDefinitions={taskDefinitions}
+      selectedTaskDefIds={selectedTaskDefIds}
+      setSelectedTaskDefIds={setSelectedTaskDefIds}
     />
   );
 });
