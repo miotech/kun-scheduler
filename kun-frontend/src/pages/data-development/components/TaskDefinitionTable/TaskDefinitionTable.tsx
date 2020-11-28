@@ -1,6 +1,5 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { Button, Space, Table } from 'antd';
-import { CaretRightOutlined } from '@ant-design/icons';
 import { useRequest, useUpdateEffect } from 'ahooks';
 import { Link } from 'umi';
 import { searchTaskDefinition } from '@/services/data-development/task-definitions';
@@ -200,10 +199,12 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
               {t('common.table.clearAllSelectedItems')}
             </Button>
           </span>
+          {/*
           <Button disabled={!selectedRowKeys.length}>
             {t('dataDevelopment.submitAll')}
             <CaretRightOutlined />
           </Button>
+          */}
           <Button
             disabled={!selectedRowKeys.length}
             onClick={() => {
