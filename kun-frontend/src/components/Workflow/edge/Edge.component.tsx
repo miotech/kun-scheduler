@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { WorkflowEdge } from '@/components/Workflow/Workflow.typings';
-import { buildLineageEdgePath } from '@/components/LineageDiagram/LineageBoard/helpers/buildLineageEdgePath';
+import { buildDAGEdgePath } from '@/components/Workflow/helpers/buildDAGEdgePath';
 
 interface OwnProps {
   edge: WorkflowEdge;
@@ -16,12 +16,12 @@ export const TaskDAGEdge: React.FC<Props> = memo(function TaskDAGEdge(props) {
   return (
     <g data-tid={`edge-${edge.srcNodeId}-${edge.destNodeId}-wrapper`}>
       <path
-        stroke="#d8d8d8"
+        stroke="#4869FC"
         strokeWidth={2}
         fill="transparent"
         markerEnd="url(#arrowEnd)"
         data-tid={`edge-${edge.srcNodeId}-${edge.destNodeId}`}
-        d={buildLineageEdgePath({ x: edge.srcX, y: edge.srcY }, { x: edge.destX, y: edge.destY })}
+        d={buildDAGEdgePath(edge, {})}
       />
     </g>
   );

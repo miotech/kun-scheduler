@@ -10,8 +10,8 @@ import { WorkflowEdge, WorkflowNode } from '@/components/Workflow/Workflow.typin
 
 const logger = LogUtils.getLoggers('convertTaskDefinitionsToGraph');
 
-const DEFAULT_WIDTH = 240;
-const DEFAULT_HEIGHT = 90;
+const DEFAULT_WIDTH = 220;
+const DEFAULT_HEIGHT = 60;
 
 export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[]): {
   nodes: WorkflowNode[];
@@ -33,7 +33,12 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[])
     directed: true,
   });
   // Set an object for the graph label
-  graph.setGraph({});
+  graph.setGraph({
+    nodesep: DEFAULT_WIDTH / 2,
+    ranksep: DEFAULT_HEIGHT,
+    width: DEFAULT_WIDTH,
+    height: DEFAULT_HEIGHT,
+  });
   // Default to assigning a new object as a label for each new edge.
   graph.setDefaultEdgeLabel(() => ({}));
 
@@ -59,8 +64,8 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[])
 
   dagre.layout(graph, {
     rankdir: 'TB',  // Top-to-bottom
-    nodesep: DEFAULT_WIDTH * 6.0,
-    ranksep: DEFAULT_HEIGHT * 6.0,
+    nodesep: DEFAULT_WIDTH / 2,
+    ranksep: DEFAULT_HEIGHT,
     // ranker: 'tight-tree',
   });
 
@@ -87,14 +92,17 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[])
 
   const edges: WorkflowEdge[] = [];
   graph.edges().forEach(edgeInfo => {
-    const edge = graph.edge(edgeInfo);
+    // const edge = graph.edge(edgeInfo);
+    const srcNode = graph.node(edgeInfo.v);
+    const destNode = graph.node(edgeInfo.w);
+
     edges.push({
       srcNodeId: `${edgeInfo.v}`,
       destNodeId: `${edgeInfo.w}`,
-      srcX: edge.points[0].x,
-      srcY: edge.points[0].y,
-      destX: edge.points[edge.points.length - 1].x,
-      destY: edge.points[edge.points.length - 1].y,
+      srcX: srcNode.x + DEFAULT_WIDTH / 2,
+      srcY: srcNode.y + DEFAULT_HEIGHT,
+      destX: destNode.x + DEFAULT_WIDTH / 2,
+      destY: destNode.y,
     });
   });
 

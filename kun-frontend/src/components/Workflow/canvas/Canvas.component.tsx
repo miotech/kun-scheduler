@@ -12,6 +12,7 @@ import { Transform, WorkflowEdge, WorkflowNode } from '@/components/Workflow/Wor
 
 import './Canvas.global.less';
 import { Drag } from '@/components/Workflow/drag/Drag.component';
+import { EdgeRenderer } from '@/components/Workflow/edge/EdgeRenderer.component';
 
 interface OwnProps {
   /** canvas width */
@@ -52,7 +53,7 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     graphHeight = height,
     children,
     nodes = [],
-    // edges = [],
+    edges = [],
     onNodeClick,
   } = props;
 
@@ -138,6 +139,18 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
               <rect width="100" height="100" fill="url(#tenthGrid)"/>
               <path d="M 100 0 L 0 0 0 100" fill="none" stroke="gray" strokeWidth="1"/>
             </pattern>
+            <marker
+              id="arrowEnd"
+              viewBox="0 0 5 5"
+              refX="0"
+              refY="2.5"
+              markerUnits="strokeWidth"
+              markerWidth="5"
+              markerHeight="5"
+              orient="auto"
+            >
+              <path d="M 0 0 L 5 2.5 L 0 5 z" fill="#4869FC" />
+            </marker>
           </defs>
           <rect
             x={-2 * Math.max(graphWidth, width)}
@@ -150,6 +163,10 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
           <NodeRenderer
             nodes={nodes}
             onNodeClick={onNodeClick}
+          />
+          <EdgeRenderer
+            nodes={nodes}
+            edges={edges}
           />
         </svg>
       </ReactSVGPanZoom>
