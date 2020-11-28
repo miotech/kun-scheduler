@@ -53,11 +53,13 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[])
     // insert relations
     if (taskDef.upstreamTaskDefinitions?.length > 0) {
       taskDef.upstreamTaskDefinitions.forEach(upstreamTask => {
-        graph.setEdge(
-          `${upstreamTask.id}`,
-          `${taskDef.id}`,
-          {}
-        );
+        if (graph.node(upstreamTask.id) != null) {
+          graph.setEdge(
+            `${upstreamTask.id}`,
+            `${taskDef.id}`,
+            {}
+          );
+        }
       });
     }
   });
@@ -72,22 +74,25 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[])
   let graphWidth = 0;
   let graphHeight = 0;
 
-  const nodes: WorkflowNode[] = graph.nodes().map(nodeId => {
-    const taskDef = find(taskDefinitions, t => `${t.id}` === nodeId);
+  const nodes: WorkflowNode[] = [];
+  graph.nodes().forEach(nodeId => {
+    const taskDef = find(taskDefinitions, t => `${t.id}` === `${nodeId}`);
     const n = graph.node(nodeId);
-    graphWidth = Math.max(graphWidth, n.x + DEFAULT_WIDTH);
-    graphHeight = Math.max(graphHeight, n.y + DEFAULT_HEIGHT);
-    return {
-      id: nodeId,
-      name: taskDef?.name || '',
-      x: n.x,
-      y: n.y,
-      width: DEFAULT_WIDTH,
-      height: DEFAULT_HEIGHT,
-      isDeployed: taskDef?.isDeployed || false,
-      status: 'normal',
-      taskTemplateName: taskDef?.taskTemplateName || '',
-    };
+    if (n != null) {
+      graphWidth = Math.max(graphWidth, (n.x || 0) + DEFAULT_WIDTH);
+      graphHeight = Math.max(graphHeight, (n.y || 0) + DEFAULT_HEIGHT);
+      nodes.push({
+        id: nodeId,
+        name: taskDef?.name || '',
+        x: n.x || 0,
+        y: n.y || 0,
+        width: DEFAULT_WIDTH,
+        height: DEFAULT_HEIGHT,
+        isDeployed: taskDef?.isDeployed || false,
+        status: 'normal',
+        taskTemplateName: taskDef?.taskTemplateName || '',
+      });
+    }
   });
 
   const edges: WorkflowEdge[] = [];
@@ -96,14 +101,16 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[])
     const srcNode = graph.node(edgeInfo.v);
     const destNode = graph.node(edgeInfo.w);
 
-    edges.push({
-      srcNodeId: `${edgeInfo.v}`,
-      destNodeId: `${edgeInfo.w}`,
-      srcX: srcNode.x + DEFAULT_WIDTH / 2,
-      srcY: srcNode.y + DEFAULT_HEIGHT,
-      destX: destNode.x + DEFAULT_WIDTH / 2,
-      destY: destNode.y,
-    });
+    if (srcNode != null && destNode != null) {
+      edges.push({
+        srcNodeId: `${edgeInfo.v}`,
+        destNodeId: `${edgeInfo.w}`,
+        srcX: srcNode.x + DEFAULT_WIDTH / 2,
+        srcY: srcNode.y + DEFAULT_HEIGHT,
+        destX: destNode.x + DEFAULT_WIDTH / 2,
+        destY: destNode.y,
+      });
+    }
   });
 
   return {
