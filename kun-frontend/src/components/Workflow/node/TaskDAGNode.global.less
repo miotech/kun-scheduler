@@ -74,7 +74,7 @@
   border: @darkBlue 2px solid;
 }
 
-@task-node-simplify-width: 220px;
+@task-node-simplify-width: 240px;
 @task-node-simplify-height: 60px;
 @task-node-simplify-border-radius: 4px;
 
@@ -106,7 +106,29 @@
 
   &__info {
     flex: 1 1;
-    padding: 8px 16px;
+    position: relative;
+    padding: 4px 8px;
+    width: @task-node-simplify-width - 60px;
+    height: 100%;
+  }
+
+  &__type {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12 / @em;
+  }
+
+  &__name {
+    font-size: 12 / @em;
+    width: 100%;
+
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    word-break: break-all;
+    text-overflow: ellipsis;
   }
 }
 

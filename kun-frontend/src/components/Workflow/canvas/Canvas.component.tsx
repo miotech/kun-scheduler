@@ -188,13 +188,13 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
             style={{ fill: 'url(#grid)' }}
           />
           {/* Render Nodes */}
-          <NodeRenderer
-            nodes={nodes}
-            onNodeClick={handleNodeClick}
-          />
           <EdgeRenderer
             nodes={nodes}
             edges={edges}
+          />
+          <NodeRenderer
+            nodes={nodes}
+            onNodeClick={handleNodeClick}
           />
         </svg>
       </ReactSVGPanZoom>

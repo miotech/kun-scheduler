@@ -5,13 +5,14 @@ import LogUtils from '@/utils/logUtils';
 
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { WorkflowEdge, WorkflowNode } from '@/components/Workflow/Workflow.typings';
+import { TASK_DAG_NODE_HEIGHT, TASK_DAG_NODE_WIDTH } from '@/components/Workflow/Workflow.constants';
 // import uniqueId from 'lodash/uniqueId';
 
 
 const logger = LogUtils.getLoggers('convertTaskDefinitionsToGraph');
 
-const DEFAULT_WIDTH = 220;
-const DEFAULT_HEIGHT = 60;
+const DEFAULT_WIDTH = TASK_DAG_NODE_WIDTH;
+const DEFAULT_HEIGHT = TASK_DAG_NODE_HEIGHT;
 
 export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[], selectedTaskDefIds: string[] = []): {
   nodes: WorkflowNode[];
@@ -34,10 +35,12 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[],
   });
   // Set an object for the graph label
   graph.setGraph({
-    nodesep: DEFAULT_WIDTH / 2,
-    ranksep: DEFAULT_HEIGHT,
+    rankdir: 'TB',
+    nodesep: DEFAULT_WIDTH / 3,
+    ranksep: DEFAULT_HEIGHT * 1.5,
     width: DEFAULT_WIDTH,
     height: DEFAULT_HEIGHT,
+    ranker: 'tight-tree',
   });
   // Default to assigning a new object as a label for each new edge.
   graph.setDefaultEdgeLabel(() => ({}));
@@ -65,10 +68,6 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[],
   });
 
   dagre.layout(graph, {
-    rankdir: 'TB',  // Top-to-bottom
-    nodesep: DEFAULT_WIDTH / 2,
-    ranksep: DEFAULT_HEIGHT,
-    // ranker: 'tight-tree',
   });
 
   let graphWidth = 0;
