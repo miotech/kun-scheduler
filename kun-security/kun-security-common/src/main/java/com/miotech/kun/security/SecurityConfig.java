@@ -45,7 +45,6 @@ public class SecurityConfig implements WebMvcConfigurer {
     public FilterRegistrationBean<AuthenticateFilter> authenticateFilter() {
         FilterRegistrationBean<AuthenticateFilter> registration = new FilterRegistrationBean<>();
         registration.addServletRegistrationBeans(servletRegistrationBean);
-        registration.addUrlPatterns("/kun");
         AuthenticateFilter cachingFilter = new AuthenticateFilter();
         registration.setFilter(cachingFilter);
         registration.setOrder(0);
