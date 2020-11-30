@@ -1,4 +1,4 @@
-package com.miotech.kun.security.model.bo;
+package com.miotech.kun.security.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;

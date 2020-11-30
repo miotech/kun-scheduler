@@ -1,6 +1,6 @@
 package com.miotech.kun.security.service;
 
-import com.miotech.kun.security.model.bo.UserInfo;
+import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.persistence.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
