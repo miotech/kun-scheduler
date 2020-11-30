@@ -15,7 +15,7 @@ import com.miotech.kun.dataplatform.model.taskdefinition.ScheduleConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDatasetProps;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
-import com.miotech.kun.security.model.bo.UserInfo;
+import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.execution.Config;
