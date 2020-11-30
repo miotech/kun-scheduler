@@ -279,6 +279,7 @@ export default {
   "dataDevelopment.editCurrentViewTasks": "Edit tasks of current view",
   "dataDevelopment.addSelectedTasksToOtherViews.targetViewToAdd": "Target view to add",
   "dataDevelopment.addSelectedTasksToOtherViews.comment": "Note: Only effective when selected task(s) is not contained by target view",
+  "dataDevelopment.goToDefinitionDetails": "Go to task details",
   "dataDevelopment.definition.property.name": "Task Name",
   "dataDevelopment.definition.property.owner": "Owner",
   "dataDevelopment.definition.property.updater": "Updater",

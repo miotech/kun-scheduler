@@ -279,6 +279,7 @@ export default {
   "dataDevelopment.editCurrentViewTasks": "修改当前视图任务",
   "dataDevelopment.addSelectedTasksToOtherViews.targetViewToAdd": "添加到目标视图",
   "dataDevelopment.addSelectedTasksToOtherViews.comment": "注：仅在已选任务未被目标视图包含时生效",
+  "dataDevelopment.goToDefinitionDetails": "查看任务详情",
   "dataDevelopment.definition.property.name": "任务名称",
   "dataDevelopment.definition.property.owner": "归属人",
   "dataDevelopment.definition.property.updater": "更新人",
