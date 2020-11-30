@@ -1,7 +1,7 @@
 package com.miotech.kun.security.authenticate;
 
 import com.miotech.kun.common.utils.JSONUtils;
-import com.miotech.kun.security.model.bo.JsonUsers;
+import com.miotech.kun.security.model.JsonUsers;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
