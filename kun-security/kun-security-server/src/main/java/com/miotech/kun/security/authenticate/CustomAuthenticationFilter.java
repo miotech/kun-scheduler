@@ -3,7 +3,7 @@ package com.miotech.kun.security.authenticate;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.security.common.ConfigKey;
 import com.miotech.kun.security.common.PassToken;
-import com.miotech.kun.security.model.bo.UserInfo;
+import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.service.AbstractSecurityService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;

@@ -3,7 +3,7 @@ package com.miotech.kun.security.service;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.security.SecurityContextHolder;
 import com.miotech.kun.security.common.ConfigKey;
-import com.miotech.kun.security.model.bo.UserInfo;
+import com.miotech.kun.security.model.UserInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
