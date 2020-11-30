@@ -5,6 +5,7 @@ import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { adjustColor, hexToRgbA, operatorNameToHexColor } from '@/components/Workflow/helpers/operatorNameToHexColor';
 
 import './TaskDAGNode.global.less';
+import { Tooltip } from 'antd';
 
 interface OwnProps {
   /** Task definition data */
@@ -33,7 +34,14 @@ export const TaskDAGNodeSimplify: React.FC<Props> = memo(function TaskDAGNodeSim
       style={{ borderColor: color }}
       data-tid="task-dag-node-simplify"
     >
-      <div className="task-dag-node-simplify__icon-wrapper" style={{ borderColor: color, background: hexToRgbA(adjustColor(color, 40), 0.2) }} data-tid="dag-node-left">
+      <div
+        className="task-dag-node-simplify__icon-wrapper"
+        style={{
+          borderColor: color,
+          background: hexToRgbA(adjustColor(color, 40), 0.2),
+        }}
+        data-tid="dag-node-left"
+      >
         <span style={{ color }}>
           <TaskTemplateIcon
             className="task-dag-node-simplify__icon"
@@ -48,9 +56,11 @@ export const TaskDAGNodeSimplify: React.FC<Props> = memo(function TaskDAGNodeSim
         >
           {taskDefinition.taskTemplateName}
         </div>
-        <div className="task-dag-node-simplify__name">
-          {taskDefinition.name}
-        </div>
+        <Tooltip title={taskDefinition.name}>
+          <div className="task-dag-node-simplify__name">
+            {taskDefinition.name}
+          </div>
+        </Tooltip>
       </div>
     </div>
   );
