@@ -3,7 +3,8 @@ package com.miotech.kun.security.filter;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.security.SecurityContextHolder;
 import com.miotech.kun.security.common.ConfigKey;
-import com.miotech.kun.security.model.bo.UserInfo;
+import com.miotech.kun.security.model.NoBodyResponse;
+import com.miotech.kun.security.model.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.ParameterizedTypeReference;
@@ -38,19 +39,17 @@ public class AuthenticateFilter implements Filter {
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpServletRequest = (HttpServletRequest) request;
             try {
-                if (StringUtils.isNotEmpty(httpServletRequest.getRequestURI())
-                        && (httpServletRequest.getRequestURI().startsWith("/v3/api-docs")
-                        || httpServletRequest.getRequestURI().startsWith("/swagger-ui"))) {
-                    chain.doFilter(request, response);
+                if (httpServletRequest.getRequestURI().startsWith("/kun")) {
+                    doAuthenticate(httpServletRequest);
                 }
-                doAuthenticate(httpServletRequest);
             } catch (Exception e) {
                 log.error("Failed to authenticate.", e);
                 if (response instanceof HttpServletResponse) {
                     HttpServletResponse httpServletResponse = (HttpServletResponse) response;
                     httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                    response = httpServletResponse;
+                    response = new NoBodyResponse(httpServletResponse);
                 }
+
             }
         }
         chain.doFilter(request, response);

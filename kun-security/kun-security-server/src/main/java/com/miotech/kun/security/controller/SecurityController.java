@@ -2,7 +2,7 @@ package com.miotech.kun.security.controller;
 
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.security.SecurityContextHolder;
-import com.miotech.kun.security.model.bo.UserInfo;
+import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.model.vo.UserListVO;
 import com.miotech.kun.security.service.AbstractSecurityService;

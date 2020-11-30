@@ -1,6 +1,6 @@
 package com.miotech.kun.security;
 
-import com.miotech.kun.security.model.bo.UserInfo;
+import com.miotech.kun.security.model.UserInfo;
 
 /**
  * @author: Jie Chen
