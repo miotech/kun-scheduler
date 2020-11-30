@@ -7,7 +7,7 @@ import { TaskDAGNodeSimplify } from '@/components/Workflow/node/TaskDAGNodeSimpl
 interface OwnProps {
   nodes: WorkflowNode[];
   /** on click node */
-  onNodeClick?: (workflowNode: WorkflowNode) => any;
+  onNodeClick?: (workflowNode: WorkflowNode, ev: MouseEvent) => any;
 }
 
 type Props = OwnProps;
@@ -30,7 +30,7 @@ export const NodeRenderer: React.FC<Props> = memo(function NodeRenderer(props) {
           onClick={(ev) => {
             ev.stopPropagation();
             if (props.onNodeClick) {
-              props.onNodeClick(node);
+              props.onNodeClick(node, ev as any);
             }
           }}
         >

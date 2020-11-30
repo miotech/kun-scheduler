@@ -10,6 +10,7 @@ import { WorkflowNode, WorkflowEdge, Transform } from '@/components/Workflow/Wor
 
 import { computeDragInclusive } from '@/components/Workflow/helpers/dragbox-inclusive';
 import { TASK_DAG_NODE_HEIGHT, TASK_DAG_NODE_WIDTH } from '@/components/Workflow/Workflow.constants';
+import { ViewerMouseEvent } from 'react-svg-pan-zoom';
 import styles from './TaskDAG.module.less';
 
 interface OwnProps {
@@ -81,6 +82,25 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
   const containerRef = useRef<any>();
   const { width, height } = useSize(containerRef);
 
+  const handleNodeClick = useCallback((workflowNode: WorkflowNode, multiselectMode?: boolean) => {
+    if (multiselectMode) {
+      if (selectedTaskDefIds.indexOf(workflowNode.id) >= 0) {
+        setSelectedTaskDefIds(selectedTaskDefIds.filter(taskDefId => taskDefId !== workflowNode.id));
+      } else {
+        setSelectedTaskDefIds([...selectedTaskDefIds, workflowNode.id]);
+      }
+    } else {
+      setSelectedTaskDefIds([workflowNode.id]);
+    }
+  }, [selectedTaskDefIds, setSelectedTaskDefIds]);
+
+  const handleCanvasClick = useCallback((ev: ViewerMouseEvent<any>) => {
+    ev.stopPropagation();
+    setSelectedTaskDefIds([]);
+  }, [
+    setSelectedTaskDefIds
+  ]);
+
   return (
     <div
       ref={containerRef}
@@ -94,7 +114,9 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
         edges={edges}
         graphWidth={graphWidth}
         graphHeight={graphHeight}
+        onCanvasClick={handleCanvasClick}
         onDragMove={handleDragMove}
+        onNodeClick={handleNodeClick}
       />
     </div>
   );

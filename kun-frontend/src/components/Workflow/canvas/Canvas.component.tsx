@@ -36,7 +36,7 @@ interface OwnProps {
   /** edges */
   edges: WorkflowEdge[];
   /** on click node */
-  onNodeClick?: (workflowNode: WorkflowNode, multiselectMode?: boolean) => any;
+  onNodeClick?: (workflowNode: WorkflowNode, multiselectMode?: boolean, ev?: MouseEvent) => any;
   /** on Canvas click */
   onCanvasClick?: (ev: ViewerMouseEvent<any>) => any;
   /** on drag move */
@@ -103,9 +103,9 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     events: ['keydown', 'keyup'],
   },);
 
-  const handleNodeClick = useCallback((node: WorkflowNode) => {
+  const handleNodeClick = useCallback((node: WorkflowNode, ev: MouseEvent) => {
     if (onNodeClick) {
-      onNodeClick(node, multiselectMode);
+      onNodeClick(node, multiselectMode, ev);
     }
   }, [multiselectMode, onNodeClick]);
 
