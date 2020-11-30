@@ -103,6 +103,7 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
 
   return (
     <div
+      id="app-task-dag-container"
       ref={containerRef}
       className={styles.TaskDAGContainer}
       data-tid="task-dag-container"
