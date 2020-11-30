@@ -6,6 +6,7 @@ import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { fetchAllTaskDefinitionsByViewId } from '@/services/data-development/task-definition-views';
 import { TaskDAG } from '@/pages/data-development/components/TaskDAG/TaskDAG';
 import { DAGNodeInfoDrawer } from '@/pages/data-development/components/DAGNodeInfoDrawer/DAGNodeInfoDrawer';
+import { Button } from 'antd';
 
 interface OwnProps {
   taskDefViewId: string | null;
@@ -14,6 +15,7 @@ interface OwnProps {
   updateTime: number;
   selectedTaskDefIds: string[];
   setSelectedTaskDefIds?: (taskDefIds: string[]) => any;
+  setAddToOtherViewModalVisible?: any;
 }
 
 type Props = OwnProps;
@@ -59,6 +61,22 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
       null
   ), [selectedTaskDefIds, taskDefinitions]);
 
+  const renderTools = () => {
+    if (!selectedTaskDefIds.length) {
+      return <></>;
+    }
+    // else
+    return (
+      <Button onClick={() => {
+        if (props.setAddToOtherViewModalVisible) {
+          props.setAddToOtherViewModalVisible(true);
+        }
+      }}>
+        Add to other views ({selectedTaskDefIds.length} Items)
+      </Button>
+    );
+  };
+
   return (
     <div
       id="app-task-dag-outer-container"
@@ -75,6 +93,9 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
         currentTaskDef={drawerTaskDef}
         getContainer={containerRef.current || false}
       />
+      <div id="view-modification-tools" style={{ position: 'absolute', top: '55px', left: '8px' }}>
+        {renderTools()}
+      </div>
     </div>
   );
 });

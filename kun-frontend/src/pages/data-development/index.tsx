@@ -176,6 +176,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
         updateTime={updateTime}
         selectedTaskDefIds={selectedTaskDefIds}
         setSelectedTaskDefIds={setSelectedTaskDefIds}
+        setAddToOtherViewModalVisible={setAddToOtherViewModalVisible}
       />;
   };
 
