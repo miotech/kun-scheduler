@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import c from 'clsx';
 import LogUtils from '@/utils/logUtils';
 
@@ -41,6 +41,8 @@ interface OwnProps {
   onCanvasClick?: (ev: ViewerMouseEvent<any>) => any;
   /** on drag move */
   onDragMove?: Function;
+  /** update this value to trigger viewport reset */
+  viewportResetHookValue?: number;
 }
 
 type Props = OwnProps;
@@ -59,6 +61,7 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     nodes = [],
     edges = [],
     onNodeClick,
+    viewportResetHookValue,
   } = props;
 
   const reactSVGPanZoomRef = useRef<any>();
@@ -102,6 +105,10 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
   }, {
     events: ['keydown', 'keyup'],
   },);
+
+  useEffect(() => {
+    reactSVGPanZoomRef.current?.reset();
+  }, [viewportResetHookValue]);
 
   const handleNodeClick = useCallback((node: WorkflowNode, ev: MouseEvent) => {
     if (onNodeClick) {

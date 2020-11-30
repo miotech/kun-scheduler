@@ -34,6 +34,7 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
 
   const [ isLoading, setIsLoading ] = useState<boolean>(false);
   const [ taskDefinitions, setTaskDefinitions ] = useState<TaskDefinition[]>([]);
+  const [ viewportResetHookValue, setViewportResetHookValue ] = useState<number>(Date.now());
 
   useEffect(() => {
     setIsLoading(true);
@@ -42,6 +43,7 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
         .then(taskDefPayloads => {
           if (taskDefPayloads) {
             setTaskDefinitions(taskDefPayloads);
+            setViewportResetHookValue(Date.now());
           }
         })
         .finally(() => {
@@ -52,11 +54,12 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
         .then(taskDefPayloads => {
           if (taskDefPayloads) {
             setTaskDefinitions(taskDefPayloads);
+            setViewportResetHookValue(Date.now());
           }
         })
         .finally(() => {
           setIsLoading(false);
-        });;
+        });
     }
   }, [
     taskDefViewId,
@@ -97,6 +100,7 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
           taskDefinitions={taskDefinitions}
           selectedTaskDefIds={selectedTaskDefIds}
           setSelectedTaskDefIds={setSelectedTaskDefIds}
+          viewportResetHookValue={viewportResetHookValue}
         />
         <DAGNodeInfoDrawer
           visible={drawerVisible}

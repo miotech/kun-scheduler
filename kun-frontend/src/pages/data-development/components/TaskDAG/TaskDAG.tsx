@@ -17,6 +17,7 @@ interface OwnProps {
   taskDefinitions: TaskDefinition[];
   selectedTaskDefIds: string[];
   setSelectedTaskDefIds?: (taskDefIds: string[]) => any;
+  viewportResetHookValue?: number;
 }
 
 type Props = OwnProps;
@@ -28,6 +29,7 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
     taskDefinitions = [],
     selectedTaskDefIds = [],
     setSelectedTaskDefIds = () => {},
+    viewportResetHookValue,
   } = props;
   const [ nodes, setNodes ] = useState<WorkflowNode[]>([]);
   const [ edges, setEdges ] = useState<WorkflowEdge[]>([]);
@@ -118,6 +120,7 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
         onCanvasClick={handleCanvasClick}
         onDragMove={handleDragMove}
         onNodeClick={handleNodeClick}
+        viewportResetHookValue={viewportResetHookValue}
       />
     </div>
   );
