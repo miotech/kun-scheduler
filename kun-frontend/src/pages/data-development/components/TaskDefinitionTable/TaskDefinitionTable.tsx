@@ -193,7 +193,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
             <span>
             <Button
               type="link"
-              disabled={!selectedRowKeys.length}
+              disabled={!(selectedTaskDefIds ?? selectedRowKeys).length}
               onClick={() => { setSelectedRowKeys([]); }}
             >
               {t('common.table.clearAllSelectedItems')}
@@ -206,7 +206,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
           </Button>
           */}
           <Button
-            disabled={!selectedRowKeys.length}
+            disabled={!(selectedTaskDefIds ?? selectedRowKeys).length}
             onClick={() => {
               if (props.onAddToOtherViewBtnClick) {
                 props.onAddToOtherViewBtnClick();
