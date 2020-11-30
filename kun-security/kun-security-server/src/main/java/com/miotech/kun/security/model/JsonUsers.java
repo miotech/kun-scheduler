@@ -1,4 +1,4 @@
-package com.miotech.kun.security.model.bo;
+package com.miotech.kun.security.model;
 
 import lombok.Data;
 import org.apache.commons.lang3.StringUtils;
