@@ -16,11 +16,17 @@ export interface NodeRectangle {
 }
 
 export function computeDragInclusive(drag: DragIntersectionParams, nodeInfo: NodeRectangle): boolean {
-  if ((drag.dragStartX <= nodeInfo.x) &&
+  if (
+    ((drag.dragStartX <= nodeInfo.x) &&
     (drag.dragEndX >= nodeInfo.x + nodeInfo.width) &&
     (drag.dragStartY <= nodeInfo.y) &&
     (drag.dragEndY >= nodeInfo.y + nodeInfo.height)
-  ) {
+  ) || (
+    (drag.dragStartX >= nodeInfo.x) &&
+    (drag.dragEndX <= nodeInfo.x + nodeInfo.width) &&
+    (drag.dragStartY >= nodeInfo.y) &&
+    (drag.dragEndY <= nodeInfo.y + nodeInfo.height)
+  )) {
     return true;
   }
 

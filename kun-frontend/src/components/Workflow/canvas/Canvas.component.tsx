@@ -43,6 +43,10 @@ interface OwnProps {
   onDragMove?: Function;
   /** update this value to trigger viewport reset */
   viewportResetHookValue?: number;
+  /** tool selected */
+  panzoomTool?: Tool | TOOL_BOX_SELECT;
+  /** set next tool state */
+  setPanzoomTool?: (nextTool: Tool | TOOL_BOX_SELECT) => any;
 }
 
 type Props = OwnProps;
@@ -86,7 +90,10 @@ export const WorkflowCanvas: React.FC<Props> = memo(function WorkflowCanvas(prop
     endY: Math.max(graphHeight, height),
     miniatureOpen: true,
   });
-  const [ panzoomTool, setPanzoomTool ] = useState<Tool | TOOL_BOX_SELECT>(TOOL_AUTO);
+  const [ panzoomToolInternal, setPanzoomToolInternal ] = useState<Tool | TOOL_BOX_SELECT>(TOOL_AUTO);
+
+  const panzoomTool = props.panzoomTool ?? panzoomToolInternal;
+  const setPanzoomTool = props.setPanzoomTool ?? setPanzoomToolInternal;
 
   // keyboard event listeners
   const [ multiselectMode, setMultiselectMode ] = useState<boolean>(false);

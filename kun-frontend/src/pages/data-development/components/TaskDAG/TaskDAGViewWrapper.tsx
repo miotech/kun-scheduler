@@ -8,6 +8,8 @@ import { TaskDAG } from '@/pages/data-development/components/TaskDAG/TaskDAG';
 import { DAGNodeInfoDrawer } from '@/pages/data-development/components/DAGNodeInfoDrawer/DAGNodeInfoDrawer';
 import { Button } from 'antd';
 import { KunSpin } from '@/components/KunSpin';
+import { Tool, TOOL_AUTO } from 'react-svg-pan-zoom';
+import { TOOL_BOX_SELECT } from '@/components/Workflow/toolbar/WorkflowDAGToolbar.component';
 
 interface OwnProps {
   taskDefViewId: string | null;
@@ -35,6 +37,7 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
   const [ isLoading, setIsLoading ] = useState<boolean>(false);
   const [ taskDefinitions, setTaskDefinitions ] = useState<TaskDefinition[]>([]);
   const [ viewportResetHookValue, setViewportResetHookValue ] = useState<number>(Date.now());
+  const [ panzoomTool, setPanzoomTool ] = useState<Tool | TOOL_BOX_SELECT>(TOOL_AUTO);
 
   useEffect(() => {
     setIsLoading(true);
@@ -101,9 +104,11 @@ export const TaskDAGViewWrapper: React.FC<Props> = memo(function TaskDAGViewWrap
           selectedTaskDefIds={selectedTaskDefIds}
           setSelectedTaskDefIds={setSelectedTaskDefIds}
           viewportResetHookValue={viewportResetHookValue}
+          panzoomTool={panzoomTool}
+          setPanzoomTool={setPanzoomTool}
         />
         <DAGNodeInfoDrawer
-          visible={drawerVisible}
+          visible={drawerVisible && (panzoomTool !== 'box-select')}
           currentTaskDef={drawerTaskDef}
           getContainer={containerRef.current || false}
         />

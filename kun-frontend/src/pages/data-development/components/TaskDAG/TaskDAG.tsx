@@ -10,7 +10,8 @@ import { WorkflowNode, WorkflowEdge, Transform } from '@/components/Workflow/Wor
 
 import { computeDragInclusive } from '@/components/Workflow/helpers/dragbox-inclusive';
 import { TASK_DAG_NODE_HEIGHT, TASK_DAG_NODE_WIDTH } from '@/components/Workflow/Workflow.constants';
-import { ViewerMouseEvent } from 'react-svg-pan-zoom';
+import { Tool, ViewerMouseEvent } from 'react-svg-pan-zoom';
+import { TOOL_BOX_SELECT } from '@/components/Workflow/toolbar/WorkflowDAGToolbar.component';
 import styles from './TaskDAG.module.less';
 
 interface OwnProps {
@@ -18,6 +19,8 @@ interface OwnProps {
   selectedTaskDefIds: string[];
   setSelectedTaskDefIds?: (taskDefIds: string[]) => any;
   viewportResetHookValue?: number;
+  panzoomTool?: Tool | TOOL_BOX_SELECT;
+  setPanzoomTool?: (nextTool: Tool | TOOL_BOX_SELECT) => any;
 }
 
 type Props = OwnProps;
@@ -38,6 +41,8 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
 
   const handleDragMove = useCallback(({ x, y, dx, dy }, canvasTransform: Transform) => {
     const selectedNodeIds = [];
+    const nodeWidth = TASK_DAG_NODE_WIDTH * canvasTransform.scaleX;
+    const nodeHeight = TASK_DAG_NODE_HEIGHT * canvasTransform.scaleY;
     // eslint-disable-next-line
     for (const node of nodes) {
       const isSelected = computeDragInclusive({
@@ -48,8 +53,8 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
       }, {
         x: node.x * canvasTransform.scaleX + canvasTransform.transformX,
         y: node.y * canvasTransform.scaleY + canvasTransform.transformY,
-        width: TASK_DAG_NODE_WIDTH * canvasTransform.scaleX,
-        height: TASK_DAG_NODE_HEIGHT * canvasTransform.scaleY,
+        width: nodeWidth,
+        height: nodeHeight,
       });
       if (isSelected) {
         logger.trace('node id = %o, state = selected', node.id);
@@ -76,8 +81,26 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
       setGraphWidth(computedGraphWidth);
       setGraphHeight(computedGraphHeight);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     taskDefinitions,
+  ]);
+
+  useEffect(() => {
+    const nextNodes = [...nodes];
+      // eslint-disable-next-line no-plusplus
+    for (let i = 0; i < nextNodes.length; i++){
+      const node = nextNodes[i];
+      if (selectedTaskDefIds.indexOf(node.id) >= 0) {
+        node.status = 'selected';
+      } else {
+        node.status = 'normal';
+      }
+    }
+    setNodes(nextNodes);
+  },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  [
     selectedTaskDefIds,
   ]);
 
@@ -121,6 +144,8 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
         onDragMove={handleDragMove}
         onNodeClick={handleNodeClick}
         viewportResetHookValue={viewportResetHookValue}
+        panzoomTool={props.panzoomTool}
+        setPanzoomTool={props.setPanzoomTool}
       />
     </div>
   );
