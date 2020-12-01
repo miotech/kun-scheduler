@@ -4,11 +4,11 @@ import { TaskRunLog } from '@/definitions/TaskRun.type';
 
 import { delet, get, post, put } from '@/utils/requestUtils';
 import { API_DATA_PLATFORM_PREFIX } from '@/constants/api-prefixes';
+import { TaskDefinitionViewVO } from '@/definitions/TaskDefinitionView.type';
 
 /**
-* Get all task definitions (Used by DAG)
-**/
-
+ * Get all task definitions (Used by DAG)
+ */
 export async function fetchAllTaskDefinitions(): ServiceRespPromise<TaskDefinition[]> {
   return get('/task-definitions', {
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -29,6 +29,7 @@ export interface SearchTaskDefinitionReqParams {
   pageNum?: number;
   pageSize?: number;
   taskTemplateName?: string;
+  viewIds?: string[];
 }
 
 export async function searchTaskDefinition(reqParams: SearchTaskDefinitionReqParams): ServiceRespPromise<PaginationRespBody<TaskDefinition>> {
@@ -218,5 +219,37 @@ export async function fetchTaskTryLog(taskTryId: string | number, filters: Fetch
     query: filters,
     prefix: API_DATA_PLATFORM_PREFIX,
     mockCode: 'task-tries.get-log',
+  });
+}
+
+/**
+ * Given a task definition, return all task definition views that contains it.
+ * @param taskDefId
+ */
+export async function fetchTaskDefViewsByTaskDefId(taskDefId: string) {
+  return get<TaskDefinitionViewVO[]>('/task-definitions/:taskDefId/task-def-views', {
+    prefix: API_DATA_PLATFORM_PREFIX,
+    pathParams: {
+      taskDefId,
+    },
+    mockCode: 'task-definitions.get-views-by-def-id',
+  });
+}
+
+export async function fetchTaskDefinitionTotalCount(): Promise<number> {
+  return get<PaginationRespBody<TaskDefinition>>('/task-definitions/_search', {
+    prefix: API_DATA_PLATFORM_PREFIX,
+    query: {
+      archived: false,
+      pageNum: 1,
+      pageSize: 0,
+    },
+    mockCode: 'task-definitions.get-total-count',
+  }).then(data => {
+    if (data) {
+      return data.totalCount;
+    }
+    // else
+    return 0;
   });
 }

@@ -1,0 +1,142 @@
+.TaskViewsAside {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background: @white;
+  border-right: 1px solid @borderColor;
+  overflow-y: auto;
+}
+
+.AsideHeader {
+  display: flex;
+  position: relative;
+  height: 55/@em;
+  border-bottom: 1px solid @lightBorderColor;
+  margin: 0;
+
+  h2 {
+    font-size: 17/@em;
+    color: @grayFontColor;
+    padding: 12/@em 20px;
+    margin: 0;
+  }
+}
+
+.SearchWrapper {
+  flex: 1 1;
+  position: relative;
+
+  .BorderlessSearchInput {
+    width: 100%;
+    height: 100%;
+    border: none;
+    padding: 6/@em 6/@em 6/@em 20/@em;
+    &:hover, &:focus, &:active {
+      border: none;
+      outline: none;
+    }
+    &::placeholder {
+      color: @grayFontColor;
+    }
+  }
+}
+
+.CreateViewBtnWrapper {
+  flex: 0 0 50/@em;
+}
+
+.CreateViewBtn {
+  .transparent-button();
+  position: absolute;
+  top: 10px;
+  right: 16px;
+  cursor: pointer;
+  font-size: 20/@em;
+  color: @grayFontColor;
+}
+
+.TaskViewsAsideList {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.TaskViewListItem {
+  position: relative;
+}
+
+.TaskViewListItemInnerBtn {
+  .transparent-button();
+  cursor: pointer;
+  width: 100%;
+  height: 48/@em;
+  padding: 0 65px 0 20px;
+  font-size: 14/@em;
+  background: transparent;
+  overflow-x: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  transition: background-color ease-in .2s;
+  z-index: 2;
+
+  &:hover, &:focus {
+    background: @selectedRowBackground;
+  }
+  &:hover {
+    .EditBtn {
+      opacity: 0.5;
+    }
+  }
+  &:active {
+    background: darken(@selectedRowBackground, 10%);
+  }
+
+  .ViewName {
+    position: relative;
+    line-height: 30/@em;
+    color: @darkGray;
+  }
+}
+
+.TaskDefCount {
+  position: absolute;
+  right: 35px;
+  top: 8/@em;
+  user-select: none;
+  z-index: 1;
+  color: @darkGray;
+}
+
+.EditBtnWrapper {
+  position: absolute;
+  right: 10px;
+  top: 9/@em;
+  z-index: 3;
+}
+
+.EditBtn {
+  .transparent-button();
+  display: block;
+  width: 20px;
+  height: 20px;
+  color: @grayFontColor;
+  cursor: pointer;
+  opacity: 0;
+  text-align: center;
+  transition: opacity .2s ease-in;
+
+  &:hover, &:focus {
+    opacity: 0.5;
+  }
+  &:active {
+    opacity: 1;
+  }
+}
+
+.TaskViewListItem.TaskViewListItemSelected {
+  background: @lightBlueBackground;
+  .ViewName {
+    font-weight: 600;
+  }
+}

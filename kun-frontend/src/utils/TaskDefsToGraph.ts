@@ -9,7 +9,7 @@ export interface TaskGraphData {
   relations: TaskRelation[];
 }
 
-const logger = LogUtils.getLoggers('taskDefsToGraph')
+const logger = LogUtils.getLoggers('taskDefsToGraph');
 
 export function taskDefsToGraph(taskDefs: TaskDefinition[]): TaskGraphData {
   if (!isArray(taskDefs)) {
@@ -33,12 +33,12 @@ export function taskDefsToGraph(taskDefs: TaskDefinition[]): TaskGraphData {
     // insert relations
     if (taskDef.upstreamTaskDefinitions?.length > 0) {
       taskDef.upstreamTaskDefinitions.forEach(upstreamTask => {
-        relations.push({
+         relations.push({
           downstreamTaskId: `${taskDef.id}`,
           id: uniqueId(),
           upstreamTaskId: `${upstreamTask.id}`,
         });
-      })
+      });
     }
   });
 

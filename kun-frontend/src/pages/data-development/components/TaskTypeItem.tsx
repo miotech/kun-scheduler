@@ -6,7 +6,7 @@ import useRedux from '@/hooks/useRedux';
 
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 
-import styles from './TaskType.less';
+import styles from './TaskType.module.less';
 
 export interface TaskTypeItemProps {
   showTooltip?: boolean;
@@ -74,5 +74,5 @@ export const TaskTypeItem: React.FC<TaskTypeItemProps> = props => {
     <li ref={drag} className={styles.TaskTypeElement} style={{ opacity }}>
       {displayContent}
     </li>
-  )
+  );
 };

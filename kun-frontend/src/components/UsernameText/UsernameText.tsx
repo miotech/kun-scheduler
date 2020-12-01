@@ -6,7 +6,7 @@ import {
 } from '@/components/UsernameText/sharedState';
 
 interface OwnProps {
-  userId?: string;
+  userId?: string | number;
 }
 
 type Props = OwnProps;

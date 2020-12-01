@@ -203,7 +203,7 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
         linkComponent={DAGTaskEdge as any}
         nodeComponent={DAGTaskNode as any}
       />
-    )
+    );
   }, [
     vxGraphData,
     DAGTaskEdge,
