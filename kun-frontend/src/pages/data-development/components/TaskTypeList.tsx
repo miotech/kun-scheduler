@@ -2,7 +2,7 @@ import React from 'react';
 import c from 'clsx';
 
 import { TaskTypeItemProps } from './TaskTypeItem';
-import styles from './TaskType.less';
+import styles from './TaskType.module.less';
 
 export interface TaskTypeListProps extends React.ComponentProps<any> {
   children: React.ReactElement<TaskTypeItemProps> | React.ReactElement<TaskTypeItemProps>[];

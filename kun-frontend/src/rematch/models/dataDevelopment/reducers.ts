@@ -3,24 +3,13 @@ import {
 } from '@/rematch/models/dataDevelopment/model-state';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
+import { TaskDefinitionViewBase } from '@/definitions/TaskDefinitionView.type';
 
 export const reducers = {
-  setTaskDefinitions: (state: ModelState, payload: TaskDefinition[]): ModelState => {
+  setDisplayType: (state: ModelState, payload: 'LIST' | 'DAG'): ModelState => {
     return {
       ...state,
-      taskDefinitions: payload,
-    };
-  },
-  setDAGTaskDefs: (state: ModelState, payload: TaskDefinition[]): ModelState => {
-    return {
-      ...state,
-      dagTaskDefs: payload,
-    };
-  },
-  setTotalCount: (state: ModelState, payload: number): ModelState => {
-    return {
-      ...state,
-      totalCount: payload,
+      displayType: payload,
     };
   },
   setCreatingTaskTemplate: (state: ModelState, payload: TaskTemplate | null): ModelState => {
@@ -54,6 +43,29 @@ export const reducers = {
         ...state.filters,
         ...payload,
       },
+    };
+  },
+  setTaskDefinitionViewsList: (state: ModelState, payload: TaskDefinitionViewBase[]): ModelState => {
+    return {
+      ...state,
+      taskDefViewsList: payload,
+    };
+  },
+  addTaskDefinitionViewsToList: (state: ModelState, payload: TaskDefinitionViewBase[]): ModelState => {
+    return {
+      ...state,
+    };
+  },
+  setSelectedTaskDefinitionView: (state: ModelState, payload: TaskDefinitionViewBase | null): ModelState => {
+    return {
+      ...state,
+      selectedTaskDefView: payload,
+    };
+  },
+  setTaskTemplates: (state: ModelState, payload: TaskTemplate[]): ModelState => {
+    return {
+      ...state,
+      taskTemplates: payload,
     };
   },
 };
