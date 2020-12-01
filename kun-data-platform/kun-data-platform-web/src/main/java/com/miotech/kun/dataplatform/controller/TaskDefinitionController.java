@@ -4,13 +4,12 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
-import com.miotech.kun.dataplatform.common.deploy.vo.DeployRequest;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeployVO;
 import com.miotech.kun.dataplatform.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.*;
-import com.miotech.kun.dataplatform.model.commit.TaskCommit;
+import com.miotech.kun.dataplatform.common.taskdefview.service.TaskDefinitionViewService;
+import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewVO;
 import com.miotech.kun.dataplatform.model.deploy.Deploy;
-import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskTry;
 import com.miotech.kun.workflow.client.model.PaginationResult;
@@ -21,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,6 +31,9 @@ public class TaskDefinitionController {
 
     @Autowired
     private TaskDefinitionService taskDefinitionService;
+
+    @Autowired
+    private TaskDefinitionViewService taskDefinitionViewService;
 
     @Autowired
     private DeployService deployService;
@@ -56,7 +57,8 @@ public class TaskDefinitionController {
             @RequestParam(required = false) List<Long> definitionIds,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String taskTemplateName,
-            @RequestParam(required = false) Optional<Boolean> archived
+            @RequestParam(required = false) Optional<Boolean> archived,
+            @RequestParam(required = false) List<Long> viewIds
     ) {
         TaskDefinitionSearchRequest searchRequest = new TaskDefinitionSearchRequest(
                 pageSize,
@@ -65,7 +67,8 @@ public class TaskDefinitionController {
                 taskTemplateName,
                 definitionIds,
                 creatorIds,
-                archived
+                archived,
+                viewIds
         );
         PaginationResult<TaskDefinition> taskDefintions = taskDefinitionService.search(searchRequest);
         PaginationResult<TaskDefinitionVO> result = new PaginationResult<>(
@@ -159,5 +162,17 @@ public class TaskDefinitionController {
         start.ifPresent(request::withStartLine);
         end.ifPresent(request::withEndLine);
         return RequestResult.success(taskDefinitionService.runLog(request.build()));
+    }
+
+    @GetMapping("/task-definitions/{taskDefId}/task-def-views")
+    @ApiOperation("Fetch all task definition views that contain target task definition")
+    public RequestResult<List<TaskDefinitionViewVO>> getTaskDefinitionViewsContainingTaskDefinition(@PathVariable Long taskDefId) {
+        try {
+            taskDefinitionService.find(taskDefId);   // throws exception if not found
+        } catch (IllegalArgumentException e) {
+            return RequestResult.error(404, e.getMessage());
+        }
+        List<TaskDefinitionViewVO> viewVOList = taskDefinitionViewService.fetchAllByTaskDefinitionId(taskDefId);
+        return RequestResult.success(viewVOList);
     }
 }
