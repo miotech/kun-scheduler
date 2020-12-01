@@ -71,3 +71,7 @@ export function isBrowserSupported(browserKey: SupportedBrowsers) {
       return false;
   }
 }
+
+export function isMacintosh(): boolean {
+  return navigator.platform.indexOf('Mac') >= 0;
+}
