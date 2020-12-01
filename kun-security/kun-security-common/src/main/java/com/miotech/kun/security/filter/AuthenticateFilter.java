@@ -39,9 +39,13 @@ public class AuthenticateFilter implements Filter {
         if (request instanceof HttpServletRequest) {
             HttpServletRequest httpServletRequest = (HttpServletRequest) request;
             try {
-                if (httpServletRequest.getRequestURI().startsWith("/kun")) {
-                    doAuthenticate(httpServletRequest);
+                if (StringUtils.isNotEmpty(httpServletRequest.getRequestURI())
+                        && (httpServletRequest.getRequestURI().startsWith("/v3/api-docs")
+                        || httpServletRequest.getRequestURI().startsWith("/swagger-ui")
+                        || httpServletRequest.getRequestURI().startsWith("/actuator"))) {
+                    chain.doFilter(request, response);
                 }
+                doAuthenticate(httpServletRequest);
             } catch (Exception e) {
                 log.error("Failed to authenticate.", e);
                 if (response instanceof HttpServletResponse) {
