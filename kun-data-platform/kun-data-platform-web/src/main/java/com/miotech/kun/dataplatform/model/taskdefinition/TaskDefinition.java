@@ -49,6 +49,11 @@ public class TaskDefinition {
         this.updateTime = updateTime;
     }
 
+    /**
+     * @deprecated DO NOT USE THIS GETTER EXTERNALLY.
+     * Use {@code getDefinitionId()} as identifier instead
+     */
+    @Deprecated
     public Long getId() {
         return id;
     }

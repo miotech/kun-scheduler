@@ -10,6 +10,7 @@ import com.miotech.kun.dataplatform.common.deploy.vo.DeployRequest;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskTryDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.*;
+import com.miotech.kun.dataplatform.common.taskdefview.dao.TaskDefinitionViewDao;
 import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateService;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.common.utils.TagUtils;
@@ -45,6 +46,9 @@ public class TaskDefinitionService extends BaseSecurityService {
 
     @Autowired
     private TaskDefinitionDao taskDefinitionDao;
+
+    @Autowired
+    private TaskDefinitionViewDao taskDefinitionViewDao;
 
     @Autowired
     private TaskTryDao taskTryDao;
@@ -239,6 +243,8 @@ public class TaskDefinitionService extends BaseSecurityService {
             log.debug("task definition \"{}\" not deployed yet, no need to offline", taskDefId);
         }
 
+        // Remove all relations from target task definition views
+        taskDefinitionViewDao.removeAllRelationsOfTaskDefinition(taskDefId);
     }
 
     public List<Long> resolveUpstreamTaskDefIds(TaskPayload taskPayload) {
