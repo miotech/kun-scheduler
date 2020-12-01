@@ -81,7 +81,9 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 null,
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.of(false));
+                Optional.of(false),
+                Collections.emptyList()
+        );
         taskDefPage = taskDefinitionDao.search(request);
         assertThat(taskDefPage.getTotalCount(), is((long) taskDefinitions.size()));
         assertThat(taskDefPage.getPageSize(), is(10));
@@ -98,7 +100,9 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 null,
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.of(true));
+                Optional.of(true),
+                Collections.emptyList()
+        );
         taskDefPage = taskDefinitionDao.search(request);
         assertThat(taskDefPage.getTotalCount(), is(1L));
         assertThat(taskDefPage.getPageSize(), is(10));
@@ -120,7 +124,9 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 null,
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty());
+                Optional.empty(),
+                Collections.emptyList()
+        );
         taskDefPage = taskDefinitionDao.search(request);
         assertThat(taskDefPage.getTotalCount(), is((long) taskDefinitions.size()));
         assertThat(taskDefPage.getPageSize(), is(10));
@@ -132,7 +138,9 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 taskDefinition.getTaskTemplateName(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty());
+                Optional.empty(),
+                Collections.emptyList()
+        );
         taskDefPage = taskDefinitionDao.search(request);
         assertThat(taskDefPage.getTotalCount(), is((long) taskDefinitions.size()));
         assertThat(taskDefPage.getPageSize(), is(10));
@@ -145,7 +153,9 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 taskDefinition.getTaskTemplateName(),
                 Collections.emptyList(),
                 Collections.emptyList(),
-                Optional.empty());
+                Optional.empty(),
+                Collections.emptyList()
+        );
         taskDefPage = taskDefinitionDao.search(request);
         assertThat(taskDefPage.getTotalCount(), is(1L));
         assertThat(taskDefPage.getPageSize(), is(10));
@@ -158,7 +168,9 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 taskDefinition.getTaskTemplateName(),
                 Collections.singletonList(taskDefinition.getDefinitionId()),
                 Collections.singletonList(taskDefinition.getCreator()),
-                Optional.empty());
+                Optional.empty(),
+                Collections.emptyList()
+        );
         taskDefPage = taskDefinitionDao.search(request);
         assertThat(taskDefPage.getTotalCount(), is(1L));
         assertThat(taskDefPage.getRecords().get(0), sameBeanAs(taskDefinition));
