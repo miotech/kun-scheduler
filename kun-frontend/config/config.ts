@@ -23,6 +23,7 @@ const {
   PROXY_TARGET,
   PROXY_SECURITY_TARGET,
   PROXY_TARGET_DASHBOARD,
+  PROXY_TARGET_DATA_PLATFORM,
   USE_MOCK,
   PATH_REWRITE,
   NO_PROXY,
@@ -49,9 +50,6 @@ export default defineConfig({
           target: PROXY_SECURITY_TARGET || 'http://kun-dev.miotech.com/',
           changeOrigin: true,
           withCredentials: true,
-          pathRewrite: PATH_REWRITE
-            ? { '^/kun/api/v1/security/': '' }
-            : undefined,
         },
         '/kun/api/v1/dashboard/': {
           target: PROXY_TARGET_DASHBOARD || 'http://kun-dev.miotech.com/',
@@ -68,7 +66,7 @@ export default defineConfig({
           pathRewrite: PATH_REWRITE ? { '^/kun/api/v1/': '' } : undefined,
         },
         '/kun/api/data-platform/': {
-          target: PROXY_TARGET || 'http://kun-dev.miotech.com/',
+          target: PROXY_TARGET_DATA_PLATFORM || PROXY_TARGET || 'http://kun-dev.miotech.com/',
           changeOrigin: true,
           withCredentials: true,
           pathRewrite: PATH_REWRITE
@@ -105,4 +103,30 @@ export default defineConfig({
   },
   define,
   mock: USE_MOCK === 'true' ? {} : false,
+  // modify webpack rules
+  /*
+  async chainWebpack(memo) {
+    memo.module.rule('svg')
+      .test(/\.svg(\?v=\d+\.\d+\.\d+)?$/)
+      // .include
+      //  .add(path.resolve(__dirname, '../src/assets/icons'))
+      //  .end()
+      .use('svg')
+        .loader('babel-loader')
+        .options({
+          babelrc: false,
+          presets: [
+            // '@babel/preset-env',
+            '@babel/preset-react',
+          ],
+        })
+        .loader('@svgr/webpack')
+        .options({
+          babel: false,
+          icon: true,
+          svgo: true,
+        })
+        .loader('url-loader');
+  }
+  */
 }) as IConfig;

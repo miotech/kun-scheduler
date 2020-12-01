@@ -7,7 +7,7 @@ describe('cronUtils: dateToOneShotCronExpression', () => {
   beforeAll(() => {
     global.Date.now = jest.fn(() => new Date('2020-10-31 08:30:00+0800').getTime());
     global.Date.prototype.getTimezoneOffset = jest.fn(() => -480);
-  })
+  });
 
   afterAll(() => {
     global.Date.now = realDateNow;
