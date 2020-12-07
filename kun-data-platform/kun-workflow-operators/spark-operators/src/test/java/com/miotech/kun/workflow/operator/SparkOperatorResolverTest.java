@@ -7,7 +7,6 @@ import com.miotech.kun.workflow.core.model.lineage.*;
 import com.miotech.kun.workflow.operator.resolver.SparkOperatorResolver;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -32,16 +31,12 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
 
     private HdfsFileSystem mockHdfsFileSystem;
 
-    private final String HDFS_CONF = "{\"spline.hdfs_dispatcher.address\":\"hdfs://localhost:9000/tmp\"}";
+    private final String HDFS_CONF = "{\"spark.hadoop.spline.hdfs_dispatcher.address\":\"hdfs://localhost:9000/tmp\"}";
 
     @Before
     public void init() {
-        Configuration conf = new Configuration();
         mockHdfsFileSystem = Mockito.mock(HdfsFileSystem.class);
-        sparkOperatorResolver = new SparkOperatorResolver(mockHdfsFileSystem);
-        conf.set("fs.defaultFS", "hdfs://localhost:9000");
-        conf.set("dfs.client.block.write.replace-datanode-on-failure.policy", "NEVER");
-        conf.setBoolean("dfs.client.block.write.replace-datanode-on-failure.enable", true);
+        sparkOperatorResolver = new SparkOperatorResolver(mockHdfsFileSystem,1l);
     }
 
 
@@ -62,9 +57,9 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
                 .build();
 
         //write execPlan
-        writeExecPlanToFile("/tmp/pgExample/123.execPlan.txt", execPlan);
+        writeExecPlanToFile("/tmp/pgExample/1/123.execPlan.txt", execPlan);
 
-        doReturn(getFilesInDir("/tmp/pgExample")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
+        doReturn(getFilesInDir("/tmp/pgExample/1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
         doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
 
 
@@ -100,7 +95,7 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
 
         doReturn(getFilesInDir("/tmp/hive example1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
         doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
-        writeExecPlanToFile("/tmp/hive example1/1.execPlan.txt", execPlan1);
+        writeExecPlanToFile("/tmp/hive example1/1/1.execPlan.txt", execPlan1);
 
         SplineSource execPlan2_up = SplineSource.newBuilder()
                 .withSourceName("file:/Users/shiki/spline-spark-agent/spark-warehouse/sparktest.db/src")
@@ -117,8 +112,8 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
                 .build();
 
         //write execPlan2
-        writeExecPlanToFile("/tmp/hive example1/2.execPlan.txt", execPlan2);
-        doReturn(getFilesInDir("/tmp/hive example1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
+        writeExecPlanToFile("/tmp/hive example1/1/2.execPlan.txt", execPlan2);
+        doReturn(getFilesInDir("/tmp/hive example1/1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
         doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
 
         Config config = Config.newBuilder()
@@ -157,9 +152,9 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
                 .build();
 
         //write execPlan
-        doReturn(getFilesInDir("/tmp/hiveExample2")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
+        writeExecPlanToFile("/tmp/hiveExample2/1/1.execPlan.txt", execPlan1);
+        doReturn(getFilesInDir("/tmp/hiveExample2/1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
         doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
-        writeExecPlanToFile("/tmp/hiveExample2/1.execPlan.txt", execPlan1);
         Config config = Config.newBuilder()
                 .addConfig(SparkConfiguration.CONF_LIVY_BATCH_NAME, "hiveExample2")
                 .addConfig(SparkConfiguration.CONF_LIVY_BATCH_CONF, HDFS_CONF)
@@ -195,8 +190,8 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
                 .build();
 
         //write execPlan
-        writeExecPlanToFile("/tmp/mongoExample/1.execPlan.txt", execPlan);
-        doReturn(getFilesInDir("/tmp/mongoExample")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
+        writeExecPlanToFile("/tmp/mongoExample/1/1.execPlan.txt", execPlan);
+        doReturn(getFilesInDir("/tmp/mongoExample/1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
         doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
 
         Config config = Config.newBuilder()
@@ -234,8 +229,8 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
                 .build();
 
         //write execPlan
-        writeExecPlanToFile("/tmp/esExample/1.execPlan.txt", execPlan);
-        doReturn(getFilesInDir("/tmp/esExample")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
+        writeExecPlanToFile("/tmp/esExample/1/1.execPlan.txt", execPlan);
+        doReturn(getFilesInDir("/tmp/esExample/1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
         doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
 
         Config config = Config.newBuilder()

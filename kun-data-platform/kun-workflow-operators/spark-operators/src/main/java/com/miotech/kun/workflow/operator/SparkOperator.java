@@ -1,6 +1,5 @@
 package com.miotech.kun.workflow.operator;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.utils.IdGenerator;
@@ -33,12 +32,10 @@ public class SparkOperator extends LivyBaseSparkOperator {
     private final YarnLoggerParser loggerParser = new YarnLoggerParser();
     private final String SPLINE_QUERY_LISTENER = "za.co.absa.spline.harvester.listener.SplineQueryExecutionListener";
     private final String SPARK_QUERY_LISTENER = "spark.sql.queryExecutionListeners";
-    private final String SPLINE_HDFS_ADDRESS = "spline.hdfs_dispatcher.address";
+    private final String SPLINE_HDFS_ADDRESS = "spark.hadoop.spline.hdfs_dispatcher.address";
 
 
     private SparkApp app;
-
-    private final ObjectMapper MAPPER = new ObjectMapper();
 
     @Override
     public boolean run() {
@@ -47,13 +44,15 @@ public class SparkOperator extends LivyBaseSparkOperator {
 
         String jars = SparkConfiguration.getString(context, CONF_LIVY_BATCH_JARS);
         String files = SparkConfiguration.getString(context, CONF_LIVY_BATCH_FILES);
-        String application = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_BATCH_APPLICATION);
-        String args = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_BATCH_ARGS);
-        String sparkConf = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_BATCH_CONF);
+        String application = SparkConfiguration.getString(context, CONF_LIVY_BATCH_APPLICATION);
+        String args = SparkConfiguration.getString(context, CONF_LIVY_BATCH_ARGS);
+        String sparkConf = SparkConfiguration.getString(context, CONF_LIVY_BATCH_CONF);
+        Long taskRunId = context.getTaskRunId();
+        logger.info("spark operator taskRunId = {}",taskRunId);
 
 
         // should using task name
-        String sessionName = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_BATCH_NAME);
+        String sessionName = SparkConfiguration.getString(context, CONF_LIVY_BATCH_NAME);
         if (Strings.isNullOrEmpty(sessionName)) {
             sessionName = "Spark Job: " + IdGenerator.getInstance().nextId();
         }
@@ -76,6 +75,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
             job.setConf(JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
         }
         job.addConf(SPARK_QUERY_LISTENER, SPLINE_QUERY_LISTENER);
+        job.addConf("spark.hadoop.taskRunId", taskRunId.toString());
         if (!jobFiles.isEmpty()) {
             String mainEntry = jobFiles.get(0);
             boolean isJava;
@@ -140,7 +140,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
             //wait spline send execPlan
             waitForSeconds(30);
             //解析spark 任务上下游
-            lineageAnalysis(context.getConfig());
+            lineageAnalysis(context.getConfig(), taskRunId);
             return true;
         } else {
             return false;
@@ -185,21 +185,27 @@ public class SparkOperator extends LivyBaseSparkOperator {
         return new NopResolver();
     }
 
-    public void lineageAnalysis(Config config) {
+    public void lineageAnalysis(Config config, Long taskRunId) {
         String sparkConf = config.getString(SparkConfiguration.CONF_LIVY_BATCH_CONF);
         logger.debug("spark conf = {}", sparkConf);
         String hdfsDir = JSONUtils.jsonStringToMap(sparkConf).get(SPLINE_HDFS_ADDRESS).toString();
         Configuration conf = new Configuration();
+        String configS3AccessKey = "fs.s3a.access.key";
+        String configS3SecretKey = "fs.s3a.secret.key";
+        String hdfsHost = "";
+        conf.set(configS3AccessKey, "***REMOVED***");
+        conf.set(configS3SecretKey, "***REMOVED***");
         conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
         String hdfsUri = hdfsDir.substring(0, hdfsDir.lastIndexOf("/"));
+        String hdfsRootPath = "s3a://" + hdfsUri + "/ftp_temp";
         HdfsFileSystem hdfsFileSystem = null;
         try {
             hdfsFileSystem = new HdfsFileSystem(hdfsUri, conf);
         } catch (IOException | URISyntaxException e) {
             logger.error("create hdfs file system failed", e);
         }
-        SparkOperatorResolver resolver = new SparkOperatorResolver(hdfsFileSystem);
+        SparkOperatorResolver resolver = new SparkOperatorResolver(hdfsFileSystem, taskRunId);
         List<DataStore> inputs = resolver.resolveUpstreamDataStore(config);
         List<DataStore> outputs = resolver.resolveDownstreamDataStore(config);
         TaskAttemptReport taskAttemptReport = TaskAttemptReport.newBuilder()

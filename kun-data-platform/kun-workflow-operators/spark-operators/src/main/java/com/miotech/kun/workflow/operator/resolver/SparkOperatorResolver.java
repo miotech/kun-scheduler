@@ -30,18 +30,21 @@ public class SparkOperatorResolver implements Resolver {
 
     private HdfsFileSystem hdfsFileSystem;
 
+    private final Long taskRunId;
+
     private Map<String, Pair<List<DataStore>, List<DataStore>>> resolvedTask = new HashMap<>();
 
 
     private final String HDFS_DEFAULT_FS = "fs.defaultFS";
-    private final String SPLINE_HDFS_ADDRESS = "spline.hdfs_dispatcher.address";
+    private final String SPLINE_HDFS_ADDRESS = "spark.hadoop.spline.hdfs_dispatcher.address";
     private final String JDBC_FORMAT = "jdbc:(.*)://(.*)/(.*):(.*)";
     private final String MONGO_FORMAT = "mongodb://(.*)/(.*)\\.(.*)";
     private final String ES_FORMAT = "elasticsearch://(.*)/(.*)";
     private final String HIVE_FORMAT = "(.*)/(.*)/(.*)";
 
-    public SparkOperatorResolver(HdfsFileSystem hdfsFileSystem){
+    public SparkOperatorResolver(HdfsFileSystem hdfsFileSystem, Long taskRunId){
         this.hdfsFileSystem = hdfsFileSystem;
+        this.taskRunId = taskRunId;
     }
 
 
@@ -74,7 +77,7 @@ public class SparkOperatorResolver implements Resolver {
         String sparkConf = config.getString(SparkConfiguration.CONF_LIVY_BATCH_CONF);
         logger.debug("spark conf = {}", sparkConf);
         String hdfsDir = JSONUtils.jsonStringToMap(sparkConf).get(SPLINE_HDFS_ADDRESS).toString();
-        String dirAddress = hdfsDir.substring(hdfsDir.lastIndexOf("/") + 1) + "/" + taskName;
+        String dirAddress = hdfsDir.substring(hdfsDir.lastIndexOf("/") + 1) + "/" + taskName + "/" + taskRunId;
         logger.debug("read lineage dir = {}", dirAddress);
         List<String> files = new ArrayList<>();
         try {
