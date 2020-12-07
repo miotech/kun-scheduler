@@ -56,7 +56,7 @@
       "jars": "${ spark.listener.jar }",
       "files": "${ dataplatform.etl.jar }",
       "livyHost": "${ dataplatform.livy.host }",
-      "sparkConf": "{\"kun.dataplatform.insertMode\":\"overwrite\",\"kun.dataplatform.emptyAsNull\":\"true\",\"kun.dataplatform.credentialPath\":\"s3://com.miotech.data.prd/google/credentials/google_service_credential.p12\",\"kun.dataplatform.serviceAccount\":\"jentle@bubbly-mission-267911.iam.gserviceaccount.com\",\"kun.dataplatform.readOrWriteMode\":\"READ\",\"spline.hdfs_dispatcher.address\":\"${ spark.hdfs.address }\"}",
+      "sparkConf": "{\"kun.dataplatform.insertMode\":\"overwrite\",\"kun.dataplatform.emptyAsNull\":\"true\",\"kun.dataplatform.credentialPath\":\"s3://com.miotech.data.prd/google/credentials/google_service_credential.p12\",\"kun.dataplatform.serviceAccount\":\"jentle@bubbly-mission-267911.iam.gserviceaccount.com\",\"kun.dataplatform.readOrWriteMode\":\"READ\",\"spark.hadoop.spline.hdfs_dispatcher.address\":\"${ spark.hdfs.address }\"}",
       "variables": "{}",
       "application": "com.miotech.etl.knowledge_graph.app.Application"
     },

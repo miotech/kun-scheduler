@@ -192,8 +192,9 @@ public class TaskSpawner {
     }
 
     private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> others) {
+        Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         TaskRun taskRun = TaskRun.newBuilder()
-                .withId(WorkflowIdGenerator.nextTaskRunId())
+                .withId(taskRunId)
                 .withTask(task)
                 .withConfig(prepareConfig(task, task.getConfig(), runtimeConfig))
                 .withScheduledTick(tick)

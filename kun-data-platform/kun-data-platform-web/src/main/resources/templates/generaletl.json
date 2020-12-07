@@ -32,7 +32,7 @@
     "jars": "${ spark.listener.jar }",
     "files": "${ dataplatform.etl.jar }",
     "livyHost": "${ dataplatform.livy.host }",
-    "sparkConf": "{\"kun.dataplatform.environment\": \"dev\",\"spline.hdfs_dispatcher.address\":\"${ spark.hdfs.address }\"}",
+    "sparkConf": "{\"kun.dataplatform.environment\": \"dev\",\"spark.hadoop.spline.hdfs_dispatcher.address\":\"${ spark.hdfs.address }\"}",
     "variables": "{}",
     "application": "com.miotech.etl.knowledge_graph.app.Application"
   },
