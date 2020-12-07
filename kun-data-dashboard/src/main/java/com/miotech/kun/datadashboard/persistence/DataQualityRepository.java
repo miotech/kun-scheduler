@@ -2,17 +2,14 @@ package com.miotech.kun.datadashboard.persistence;
 
 import com.google.gson.reflect.TypeToken;
 import com.miotech.kun.common.BaseRepository;
-import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
-import com.miotech.kun.commons.db.sql.SQLBuilder;
-import com.miotech.kun.commons.query.datasource.DataSourceType;
 import com.miotech.kun.datadashboard.model.bo.TestCasesRequest;
 import com.miotech.kun.datadashboard.model.constant.TestCaseStatus;
-import com.miotech.kun.datadashboard.model.entity.DataQualityRule;
-import com.miotech.kun.datadashboard.model.entity.DatasetBasic;
 import com.miotech.kun.datadashboard.model.entity.DataQualityCase;
 import com.miotech.kun.datadashboard.model.entity.DataQualityCases;
+import com.miotech.kun.datadashboard.model.entity.DataQualityRule;
+import com.miotech.kun.datadashboard.model.entity.DatasetBasic;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -33,7 +30,7 @@ public class DataQualityRepository extends BaseRepository {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    @Value("${data-dashboard.long-existing-threshold}")
+    @Value("${data-dashboard.long-existing-threshold:30}")
     Integer longExistingThreshold;
 
     public Long getCoveredDatasetCount() {
@@ -49,8 +46,13 @@ public class DataQualityRepository extends BaseRepository {
     public Long getLongExistingCount() {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("count(1) as count")
-                .from("kun_dq_case_metrics")
-                .where("continuous_failing_count >= 30")
+                .from("kun_dq_case_metrics kdcm")
+                .join("inner", "(\n" +
+                        "         select case_id, max(update_time) as last_update_time\n" +
+                        "         from kun_dq_case_metrics\n" +
+                        "         group by case_id\n" +
+                        "     )", "last_metrics")
+                .where("continuous_failing_count >= " + longExistingThreshold)
                 .getSQL();
 
         return jdbcTemplate.queryForObject(sql, Long.class);
@@ -58,8 +60,13 @@ public class DataQualityRepository extends BaseRepository {
 
     public Long getSuccessCount() {
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("count(distinct case_id) as count")
-                .from("kun_dq_case_metrics")
+                .select("count(1) as count")
+                .from("kun_dq_case_metrics kdcm")
+                .join("inner", "(\n" +
+                        "         select case_id, max(update_time) as last_update_time\n" +
+                        "         from kun_dq_case_metrics\n" +
+                        "         group by case_id\n" +
+                        "     )", "last_metrics")
                 .where("continuous_failing_count = 0")
                 .getSQL();
 
@@ -76,24 +83,26 @@ public class DataQualityRepository extends BaseRepository {
     }
 
     private static final Map<String, String> TEST_CASES_REQUEST_ORDER_MAP = new HashMap<>();
+
     static {
         TEST_CASES_REQUEST_ORDER_MAP.put("continuousFailingCount", "continuous_failing_count");
         TEST_CASES_REQUEST_ORDER_MAP.put("updateTime", "last_update_time");
     }
+
     public DataQualityCases getTestCases(TestCasesRequest testCasesRequest) {
         String sql = "select kdcm.error_reason as error_reason, \n" +
-                            "kdcm.update_time as last_update_time, \n" +
-                            "kdcm.continuous_failing_count as continuous_failing_count, \n" +
-                            "kdcm.rule_records as rule_records, \n" +
-                            "kdcm.row_number as row_number, \n" +
-                            "kdc.create_user as case_owner, \n" +
-                            "kdc.id as case_id, \n" +
-                            "kdc.name as case_name from \n" +
-                        "(select *, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY update_time desc) AS row_number \n" +
-                        "from kun_dq_case_metrics) kdcm \n" +
-                     "inner join \n" +
-                        "kun_dq_case kdc on kdcm.case_id = kdc.id \n" +
-                     "where kdcm.row_number <= 1 AND kdcm.continuous_failing_count > 0";
+                "kdcm.update_time as last_update_time, \n" +
+                "kdcm.continuous_failing_count as continuous_failing_count, \n" +
+                "kdcm.rule_records as rule_records, \n" +
+                "kdcm.row_number as row_number, \n" +
+                "kdc.create_user as case_owner, \n" +
+                "kdc.id as case_id, \n" +
+                "kdc.name as case_name from \n" +
+                "(select *, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY update_time desc) AS row_number \n" +
+                "from kun_dq_case_metrics) kdcm \n" +
+                "inner join \n" +
+                "kun_dq_case kdc on kdcm.case_id = kdc.id \n" +
+                "where kdcm.row_number <= 1 AND kdcm.continuous_failing_count > 0";
 
         String countSql = "select count(1) from (" + sql + ") as result";
 
