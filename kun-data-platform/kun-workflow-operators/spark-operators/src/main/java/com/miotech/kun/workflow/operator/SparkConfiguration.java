@@ -23,6 +23,10 @@ public class SparkConfiguration {
     public static final String CONF_LIVY_BATCH_CONF = "sparkConf";
     public static final String CONF_LIVY_BATCH_NAME = "sparkJobName";
 
+    //task
+    public static final String CONF_TASK_RUN_ID = "taskRunId";
+    public static final String CONF_TASK_NAME = "taskName";
+
     // dispatch
     public static final String CONF_LIVY_DISPATCH_ADDRESS = "dispatchAddress";
     public static final String CONF_LIVY_DISPATCH_CONFIG = "dispatchConfig";

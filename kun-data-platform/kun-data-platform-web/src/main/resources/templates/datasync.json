@@ -68,7 +68,7 @@
     "jars": "${ spark.listener.jar }",
     "files": "${ dataplatform.datasync.jar }",
     "livyHost": "${ dataplatform.livy.host }",
-    "sparkConf": "{\"spline.hdfs_dispatcher.address\":\"${ spark.hdfs.address }\"}",
+    "sparkConf": "{\"spline.hdfs_dispatcher.address\":\"${ spark.hadoop.spark.hdfs.address }\"}",
     "variables": "{}",
     "application": "com.miotech.spark.etl.Application"
   },

@@ -44,6 +44,11 @@ public class MockOperatorContextImpl implements OperatorContext {
                 .overrideBy(new Config(configMap));
     }
 
+    @Override
+    public Long getTaskRunId() {
+        return null;
+    }
+
     public List<DataStore> getInlets() {
         return inlets;
     }
