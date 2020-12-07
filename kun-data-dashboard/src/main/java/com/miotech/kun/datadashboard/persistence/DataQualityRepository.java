@@ -51,7 +51,7 @@ public class DataQualityRepository extends BaseRepository {
                         "         select case_id, max(update_time) as last_update_time\n" +
                         "         from kun_dq_case_metrics\n" +
                         "         group by case_id\n" +
-                        "     )", "last_metrics")
+                        "     )", "last_metrics").on("last_metrics.last_update_time = kdcm.update_time")
                 .where("continuous_failing_count >= " + longExistingThreshold)
                 .getSQL();
 
@@ -66,7 +66,7 @@ public class DataQualityRepository extends BaseRepository {
                         "         select case_id, max(update_time) as last_update_time\n" +
                         "         from kun_dq_case_metrics\n" +
                         "         group by case_id\n" +
-                        "     )", "last_metrics")
+                        "     )", "last_metrics").on("last_metrics.last_update_time = kdcm.update_time")
                 .where("continuous_failing_count = 0")
                 .getSQL();
 
