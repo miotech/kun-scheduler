@@ -94,6 +94,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = (props) => {
             onVisibleChange={() => { setCopied(false); }}
           >
             <Button
+              className="tool-btn"
               size="small"
               type="link"
               icon={<CopyOutlined />}
@@ -105,6 +106,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = (props) => {
             onVisibleChange={() => { setCopied(false); }}
           >
             <Button
+              className="tool-btn"
               size="small"
               type="link"
               icon={<DownloadOutlined />}
