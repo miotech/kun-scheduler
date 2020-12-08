@@ -140,7 +140,7 @@ function DailyTaskFinishLineChart(props) {
         >
           <div>
             <div>Count: {tooltipData?.taskCount}</div>
-            <div>Time: {dayjs(new Date(tooltipData?.time || 0)).format("YYYY-MM-DD HH:mm")}</div>
+            <div>Time: {dayjs(new Date(tooltipData?.time || 0)).format("YYYY-MM-DD")}</div>
           </div>
         </TooltipInPortal>
       );
