@@ -139,6 +139,11 @@ export function fetchDataDevelopmentMetrics() {
 // Get Data Development Daily Task Count
 // GET /kun/api/v1/dashboard/data-development/date-time-metrics
 
+export interface FetchDataDevelopmentDailyTaskCountParams {
+  /** timezone offset hours of current browser */
+  hours?: number;
+}
+
 export interface DailyTaskCount {
   time: number;
   taskCount: number;
@@ -148,9 +153,14 @@ export interface DataDevDailyTaskCountInfo {
   taskCountList: DailyTaskCount[];
 }
 
-export function fetchDataDevelopmentDailyTaskCount() {
+export function fetchDataDevelopmentDailyTaskCount(parameters?: FetchDataDevelopmentDailyTaskCountParams) {
   return get<DataDevDailyTaskCountInfo>(
     '/dashboard/data-development/date-time-metrics',
+    {
+      query: {
+        hours: parameters?.hours ?? ((new Date()).getTimezoneOffset() / -60),
+      },
+    },
   );
 }
 
