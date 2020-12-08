@@ -15,5 +15,9 @@ public class DataDevelopmentMetrics {
 
     Long runningTaskCount;
 
+    Long startedTaskCount;
+
+    Long pendingTaskCount;
+
     Long totalTaskCount;
 }
