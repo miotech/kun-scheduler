@@ -32,7 +32,8 @@ public class SparkOperator extends LivyBaseSparkOperator {
     private final YarnLoggerParser loggerParser = new YarnLoggerParser();
     private final String SPLINE_QUERY_LISTENER = "za.co.absa.spline.harvester.listener.SplineQueryExecutionListener";
     private final String SPARK_QUERY_LISTENER = "spark.sql.queryExecutionListeners";
-    private final String SPLINE_HDFS_ADDRESS = "spark.hadoop.spline.hdfs_dispatcher.address";
+    private final String SPLINE_QUERY_LISTENER_PATH = "s3://com.miotech.data.prd/spline/spark-2.4-spline-agent-bundle_2.11-0.6.0-SNAPSHOT.jar";
+    private final String HDFS_ROOT = "s3a://com.miotech.data.prd";
 
 
     private SparkApp app;
@@ -61,6 +62,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
         if (!Strings.isNullOrEmpty(sessionName)) {
             job.setName(sessionName);
         }
+        jars = jars + "," + SPLINE_QUERY_LISTENER_PATH;
         if (!Strings.isNullOrEmpty(jars)) {
             job.setJars(Arrays.asList(jars.split(",")));
         }
@@ -138,7 +140,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
         logger.info("spark job \"{}\", batch id: {}", jobState, jobId);
         if (jobState.equals(StateInfo.State.SUCCESS)) {
             //wait spline send execPlan
-            waitForSeconds(30);
+            waitForSeconds(15);
             //解析spark 任务上下游
             lineageAnalysis(context.getConfig(), taskRunId);
             return true;
@@ -188,20 +190,16 @@ public class SparkOperator extends LivyBaseSparkOperator {
     public void lineageAnalysis(Config config, Long taskRunId) {
         String sparkConf = config.getString(SparkConfiguration.CONF_LIVY_BATCH_CONF);
         logger.debug("spark conf = {}", sparkConf);
-        String hdfsDir = JSONUtils.jsonStringToMap(sparkConf).get(SPLINE_HDFS_ADDRESS).toString();
         Configuration conf = new Configuration();
         String configS3AccessKey = "fs.s3a.access.key";
         String configS3SecretKey = "fs.s3a.secret.key";
-        String hdfsHost = "";
         conf.set(configS3AccessKey, "***REMOVED***");
         conf.set(configS3SecretKey, "***REMOVED***");
         conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
-        String hdfsUri = hdfsDir.substring(0, hdfsDir.lastIndexOf("/"));
-        String hdfsRootPath = "s3a://" + hdfsUri + "/ftp_temp";
         HdfsFileSystem hdfsFileSystem = null;
         try {
-            hdfsFileSystem = new HdfsFileSystem(hdfsUri, conf);
+            hdfsFileSystem = new HdfsFileSystem(HDFS_ROOT, conf);
         } catch (IOException | URISyntaxException e) {
             logger.error("create hdfs file system failed", e);
         }

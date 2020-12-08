@@ -59,10 +59,10 @@
   ],
   "defaultValues": {
     "args": "--sparkConf arangodb.connectionTtl=900000 -e dev -m TASK_CENTER -s GENERAL_GRAPH_STEP",
-    "jars": "${ spark.listener.jar }",
+    "jars": "",
     "files": "${ dataplatform.etl.jar }",
     "livyHost": "${ dataplatform.livy.host }",
-    "sparkConf": "{\"kun.dataplatform.operationType\":\"insert\",\"spark.hadoop.spline.hdfs_dispatcher.address\":\"${ spark.hdfs.address }\"}",
+    "sparkConf": "{\"kun.dataplatform.operationType\":\"insert\"}",
     "variables": "{}",
     "application": "com.miotech.etl.knowledge_graph.app.Application"
   },
