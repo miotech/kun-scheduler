@@ -49,8 +49,6 @@ public class SparkOperator extends LivyBaseSparkOperator {
         String args = SparkConfiguration.getString(context, CONF_LIVY_BATCH_ARGS);
         String sparkConf = SparkConfiguration.getString(context, CONF_LIVY_BATCH_CONF);
         Long taskRunId = context.getTaskRunId();
-        logger.info("spark operator taskRunId = {}",taskRunId);
-
 
         // should using task name
         String sessionName = SparkConfiguration.getString(context, CONF_LIVY_BATCH_NAME);
@@ -62,7 +60,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
         if (!Strings.isNullOrEmpty(sessionName)) {
             job.setName(sessionName);
         }
-        jars = jars + "," + SPLINE_QUERY_LISTENER_PATH;
+//        jars = jars + "," + SPLINE_QUERY_LISTENER_PATH;
         if (!Strings.isNullOrEmpty(jars)) {
             job.setJars(Arrays.asList(jars.split(",")));
         }
@@ -176,9 +174,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
                 .define(CONF_LIVY_BATCH_APPLICATION, ConfigDef.Type.STRING, "", true, "application class name for java application", CONF_LIVY_BATCH_APPLICATION)
                 .define(CONF_LIVY_BATCH_ARGS, ConfigDef.Type.STRING, "", true, "application arguments", CONF_LIVY_BATCH_ARGS)
                 .define(CONF_LIVY_BATCH_CONF, ConfigDef.Type.STRING, "{}", true, "Extra spark configuration , in the format `{\"key\": \"value\"}`", CONF_LIVY_BATCH_CONF)
-                .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}", true, "Spark arguments and configuration variables, use like `--param1 ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
-                .define(CONF_LIVY_BATCH_NAME, ConfigDef.Type.STRING, "", true, "spark task name", CONF_LIVY_BATCH_NAME)
-                ;
+                .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}", true, "Spark arguments and configuration variables, use like `--param1 ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES);
     }
 
     @Override
