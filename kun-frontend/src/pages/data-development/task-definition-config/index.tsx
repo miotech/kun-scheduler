@@ -140,6 +140,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
          startPolling={taskTryId !== null}
          pollInterval={5000}  // poll log every 5 seconds
          queryFn={logQueryFn}
+         saveFileName={taskTryId ?? undefined}
        />
       </BottomLayout>
     </div>
