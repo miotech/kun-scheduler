@@ -42,6 +42,10 @@ const toY = (d: DailyTaskFinishCount) => d.taskCount;
 
 const logger = LogUtils.getLoggers('DailyTaskFinishLineChart');
 
+function tickFormatter(dt: any) {
+  return dayjs(dt).format('MM-DD');
+}
+
 export const DailyTaskFinishLineChart: React.FC<DailyTaskFinishLineChartProps> = memo(
 function DailyTaskFinishLineChart(props) {
   const {
@@ -131,7 +135,6 @@ function DailyTaskFinishLineChart(props) {
     if (tooltipVisible) {
       return (
         <TooltipInPortal
-          key={Math.random()}
           top={tooltipTop}
           left={tooltipLeft}
         >
@@ -197,6 +200,7 @@ function DailyTaskFinishLineChart(props) {
             labelOffset={15}
             numTicks={xNumTicks}
             top={yMax}
+            tickFormat={tickFormatter}
           />
           {/* line path of diagram */}
           <LinePath
