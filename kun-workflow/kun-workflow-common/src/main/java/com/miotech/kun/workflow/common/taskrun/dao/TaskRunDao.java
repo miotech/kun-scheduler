@@ -81,15 +81,11 @@ public class TaskRunDao {
     private TaskRunMapper taskRunMapperInstance;
 
     @Inject
-    private LineageService lineageService;
-
-    @Inject
     public TaskRunDao(TaskDao taskDao, DatabaseOperator dbOperator
             , TaskRunMapper taskRunMapperInstance,LineageService lineageService) {
         this.taskDao = taskDao;
         this.dbOperator = dbOperator;
         this.taskRunMapperInstance = taskRunMapperInstance;
-        this.lineageService = lineageService;
     }
 
     private enum DependencyDirection {
@@ -368,8 +364,6 @@ public class TaskRunDao {
                 taskRunId
         );
 
-        TaskRun taskRun = fetchTaskRunById(taskRunId).get();
-        lineageService.updateTaskLineage(taskRun.getTask(),inlets,outlets);
 
     }
 
