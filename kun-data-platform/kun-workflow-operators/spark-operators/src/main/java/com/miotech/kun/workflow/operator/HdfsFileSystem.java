@@ -35,9 +35,9 @@ public class HdfsFileSystem {
         FileStatus[] fileStatus = fileSystem.listStatus(path);
         logger.debug("file size = {}", fileStatus.length);
         for (FileStatus fileStat : fileStatus) {
-            String localFile = fileStat.getPath().toUri().getPath();
-            fileSystem.copyToLocalFile(fileStat.getPath(), new Path(localFile));
+            String localFile = "/tmp" + fileStat.getPath().toUri().getPath();
             logger.debug("copy hdfs file = {} to local file = {}", fileStat.getPath(), localFile);
+            fileSystem.copyToLocalFile(fileStat.getPath(), new Path(localFile));
             fileList.add(localFile);
         }
         return fileList;

@@ -7,7 +7,6 @@ import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.model.lineage.*;
 import com.miotech.kun.workflow.operator.HdfsFileSystem;
 import com.miotech.kun.workflow.operator.SparkConfiguration;
-import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,8 +75,7 @@ public class SparkOperatorResolver implements Resolver {
         String taskName = config.getString(SparkConfiguration.CONF_LIVY_BATCH_NAME);
         String sparkConf = config.getString(SparkConfiguration.CONF_LIVY_BATCH_CONF);
         logger.debug("spark conf = {}", sparkConf);
-        String hdfsDir = JSONUtils.jsonStringToMap(sparkConf).get(SPLINE_HDFS_ADDRESS).toString();
-        String dirAddress = hdfsDir.substring(hdfsDir.lastIndexOf("/") + 1) + "/" + taskName + "/" + taskRunId;
+        String dirAddress =  "lineage/" + taskName + "/" + taskRunId;
         logger.debug("read lineage dir = {}", dirAddress);
         List<String> files = new ArrayList<>();
         try {
