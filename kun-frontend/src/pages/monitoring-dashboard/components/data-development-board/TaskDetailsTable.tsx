@@ -1,13 +1,16 @@
 import React, { memo, useMemo } from 'react';
-import { Table, Card } from 'antd';
+import { Table, Card, Button, message } from 'antd';
+import { history } from 'umi';
 import dayjs from 'dayjs';
 import isNil from 'lodash/isNil';
 import useI18n from '@/hooks/useI18n';
+import SafeUrlAssembler from 'safe-url-assembler';
 
 import { ColumnProps } from 'antd/es/table';
 import { DevTaskDetail } from '@/services/monitoring-dashboard';
 import { TableOnChangeCallback } from '@/definitions/common-types';
 import getUniqId from '@/utils/getUniqId';
+import { getTaskDefinitionIdByWorkflowTaskId } from '@/services/task-deployments/deployed-tasks';
 
 interface OwnProps {
   pageNum: number;
@@ -43,6 +46,29 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         title: t(
           'monitoringDashboard.dataDevelopment.taskDetailsTable.taskName',
         ),
+        render: ((txt, record) => {
+          return (
+            <Button type="link" onClick={async () => {
+              const dismiss = message.loading('Loading...', 0);
+              const taskDefinitionId = await getTaskDefinitionIdByWorkflowTaskId(record.taskId);
+              if (taskDefinitionId) {
+                history.push(
+                  SafeUrlAssembler()
+                    .template('/data-development/task-definition/:taskDefId')
+                    .param({
+                      taskDefId: taskDefinitionId,
+                    })
+                    .toString(),
+                );
+              } else {
+                message.error(`Cannot find related task definition for: ${record.taskName}`);
+              }
+              dismiss();
+            }}>
+              {record.taskName}
+            </Button>
+          );
+        }),
       },
       {
         dataIndex: 'taskStatus',

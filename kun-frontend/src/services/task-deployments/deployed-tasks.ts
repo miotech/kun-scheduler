@@ -62,6 +62,7 @@ export interface FetchDeployedTasksReqParams extends Partial<PaginationReqBody> 
   ownerId?: (number | string)[];
   status?: RunStatusEnum;
   taskTemplateName?: string;
+  workflowTaskIds?: string[];
 }
 
 export async function fetchDeployedTasks(reqParams: FetchDeployedTasksReqParams): ServiceRespPromise<PaginationRespBody<DeployedTask>> {
@@ -69,6 +70,22 @@ export async function fetchDeployedTasks(reqParams: FetchDeployedTasksReqParams)
     query: { ...reqParams },
     prefix: API_DATA_PLATFORM_PREFIX,
     mockCode: 'deployed-tasks.search',
+  });
+}
+
+export async function getTaskDefinitionIdByWorkflowTaskId(workflowTaskId: string): Promise<string | null> {
+  return get<PaginationRespBody<DeployedTask>>('/deployed-tasks', {
+    query: {
+      workflowTaskIds: [workflowTaskId],
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
+    mockCode: 'deployed-tasks.search',
+  }).then(data => {
+    if (data.records?.length > 0) {
+      return data.records[0].taskDefinitionId;
+    }
+    // else
+    return null;
   });
 }
 

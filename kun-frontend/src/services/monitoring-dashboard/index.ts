@@ -168,6 +168,7 @@ export function fetchDataDevelopmentDailyTaskCount(parameters?: FetchDataDevelop
 // GET /kun/api/v1/dashboard/data-development/tasks
 
 export interface DevTaskDetail {
+  taskId: string;   // workflow task id
   taskName: string;
   taskStatus: string;
   errorMessage: string;

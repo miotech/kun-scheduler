@@ -12,6 +12,8 @@ export interface DeployedTask {
   // stats: Stat[];
   // 'latestRun' can be null when deployed task is not executed/
   latestTaskRun: TaskRun | null;
+  taskDefinitionId: string;
+  workflowTaskId: string;
 }
 
 export interface DeployedTaskDetail extends DeployedTask {
