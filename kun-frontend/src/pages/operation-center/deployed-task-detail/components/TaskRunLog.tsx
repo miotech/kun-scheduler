@@ -13,7 +13,7 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export const TaskRunLog: FunctionComponent<Props> = memo((props) => {
+export const TaskRunLog: FunctionComponent<Props> = memo(function TaskRunLog(props) {
   const { taskRun } = props;
 
   const onQuery = useCallback(() => {
@@ -33,6 +33,7 @@ export const TaskRunLog: FunctionComponent<Props> = memo((props) => {
           pollInterval={2000}
           queryFn={onQuery}
           startPolling={!isNil(taskRun)}
+          saveFileName={taskRun?.id}
         />
       </div>
     </div>
