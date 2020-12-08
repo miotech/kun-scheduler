@@ -140,6 +140,13 @@ public class DeployedTaskDao {
             params.add(searchRequest.getTaskTemplateName());
         }
 
+        List<Long> workflowTaskIds = searchRequest.getWorkflowTaskIds();
+        if (Objects.nonNull(workflowTaskIds) && (!workflowTaskIds.isEmpty())) {
+            whereClause.append(" AND ");
+            whereClause.append(String.format( "%s.%s in (%s)", DEPLOYED_TASK_MODEL_NAME, WORKFLOW_TASK_ID, StringUtils.repeat("?", workflowTaskIds.size())));
+            params.addAll(workflowTaskIds);
+        }
+
         String countSql = DefaultSQLBuilder.newBuilder()
                 .select("COUNT(1)")
                 .from(DEPLOYED_TASK_TABLE_NAME, DEPLOYED_TASK_MODEL_NAME)
