@@ -31,11 +31,9 @@ public class SparkOperatorResolver implements Resolver {
 
     private final Long taskRunId;
 
-    private Map<String, Pair<List<DataStore>, List<DataStore>>> resolvedTask = new HashMap<>();
+    private Map<Long, Pair<List<DataStore>, List<DataStore>>> resolvedTask = new HashMap<>();
 
 
-    private final String HDFS_DEFAULT_FS = "fs.defaultFS";
-    private final String SPLINE_HDFS_ADDRESS = "spark.hadoop.spline.hdfs_dispatcher.address";
     private final String JDBC_FORMAT = "jdbc:(.*)://(.*)/(.*):(.*)";
     private final String MONGO_FORMAT = "mongodb://(.*)/(.*)\\.(.*)";
     private final String ES_FORMAT = "elasticsearch://(.*)/(.*)";
@@ -49,33 +47,30 @@ public class SparkOperatorResolver implements Resolver {
 
     @Override
     public List<DataStore> resolveUpstreamDataStore(Config config) {
-        String taskName = config.getString(SparkConfiguration.CONF_LIVY_BATCH_NAME);
-        if (resolvedTask.containsKey(taskName)) {
-            return resolvedTask.get(taskName).getLeft();
+        if (resolvedTask.containsKey(taskRunId)) {
+            return resolvedTask.get(taskRunId).getLeft();
         }
-        logger.debug("resolve upstream data store for task = {}", taskName);
+        logger.debug("resolve upstream data store for taskRun = {}", taskRunId);
         List<ExecPlan> execPlanList = getExecPlanByConfig(config);
-        return analyzeTaskExecPlan(execPlanList, taskName).getLeft();
+        return analyzeTaskExecPlan(execPlanList).getLeft();
     }
 
     @Override
     public List<DataStore> resolveDownstreamDataStore(Config config) {
-        String taskName = config.getString(SparkConfiguration.CONF_LIVY_BATCH_NAME);
-        if (resolvedTask.containsKey(taskName)) {
-            return resolvedTask.get(taskName).getRight();
+        if (resolvedTask.containsKey(taskRunId)) {
+            return resolvedTask.get(taskRunId).getRight();
         }
-        logger.debug("resolve downstream data store for task = {}", taskName);
+        logger.debug("resolve downstream data store for task = {}", taskRunId);
         List<ExecPlan> execPlanList = getExecPlanByConfig(config);
-        return analyzeTaskExecPlan(execPlanList, taskName).getRight();
+        return analyzeTaskExecPlan(execPlanList).getRight();
     }
 
 
-    //根据taskName（与提交到spark的应用名一致）获取对应的执行计划
+    //根据taskRunI获取对应的执行计划
     private List<ExecPlan> getExecPlanByConfig(Config config) {
-        String taskName = config.getString(SparkConfiguration.CONF_LIVY_BATCH_NAME);
         String sparkConf = config.getString(SparkConfiguration.CONF_LIVY_BATCH_CONF);
         logger.debug("spark conf = {}", sparkConf);
-        String dirAddress =  "lineage/" + taskName + "/" + taskRunId;
+        String dirAddress =  "lineage/" + taskRunId;
         logger.debug("read lineage dir = {}", dirAddress);
         List<String> files = new ArrayList<>();
         try {
@@ -84,12 +79,12 @@ public class SparkOperatorResolver implements Resolver {
         } catch (IOException e) {
             logger.error("lineage analysis from hdfs failed", e);
         }
-        return filesToExecPlan(taskName, files);
+        return filesToExecPlan(files);
     }
 
 
     //解析任务的执行计划，生成数据上下游
-    private Pair<List<DataStore>, List<DataStore>> analyzeTaskExecPlan(List<ExecPlan> execPlanList, String taskName) {
+    private Pair<List<DataStore>, List<DataStore>> analyzeTaskExecPlan(List<ExecPlan> execPlanList) {
         //任务上游数据源
         Map<String, SplineSource> upstream = new HashMap<>();
         //任务下游数据源
@@ -119,13 +114,13 @@ public class SparkOperatorResolver implements Resolver {
                 .collect(Collectors.toList());
         //缓存解析结果
         Pair<List<DataStore>, List<DataStore>> result = Pair.of(upstreamDataStore, downStreamDataStore);
-        resolvedTask.put(taskName, result);
+        resolvedTask.put(taskRunId, result);
         return result;
 
 
     }
 
-    private List<ExecPlan> filesToExecPlan(String taskName, List<String> files) {
+    private List<ExecPlan> filesToExecPlan(List<String> files) {
         List<ExecPlan> execPlanList = new ArrayList<>();
         for (String fileName : files) {
             try {
