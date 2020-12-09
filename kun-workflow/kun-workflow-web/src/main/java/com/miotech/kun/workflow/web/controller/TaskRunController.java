@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.web.annotation.*;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.service.TaskRunService;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
@@ -92,6 +93,21 @@ public class TaskRunController {
         return taskRunService.countTaskRunVOs(filter);
     }
 
+    @RouteMapping(url = "/taskruns/_countByDay", method = "GET")
+    public List<TaskRunDailyStatisticInfo> getCountTaskRunsByDay(
+            @QueryParameter String status,
+            @QueryParameter List<Long> taskIds,
+            @QueryParameter String dateFrom,
+            @QueryParameter String dateTo,
+            @QueryParameter(defaultValue = "false") String includeStartedOnly,
+            @QueryParameter(defaultValue = "0") Integer offsetHours
+    ) {
+        TaskRunSearchFilter.Builder filterBuilder = TaskRunSearchFilter.newBuilder();
+        buildFilter(filterBuilder, status, taskIds, dateFrom, dateTo, null, null, includeStartedOnly);
+        TaskRunSearchFilter filter = filterBuilder.build();
+        return taskRunService.countTaskRunVOsByDate(filter, offsetHours);
+    }
+
     private void buildFilter(
             TaskRunSearchFilter.Builder filterBuilder,
             String status,
@@ -140,6 +156,15 @@ public class TaskRunController {
     public int countTaskRuns(@RequestBody TaskRunSearchFilter requestFilter) {
         TaskRunSearchFilter filter = requestFilter.cloneBuilder().build();
         return taskRunService.countTaskRunVOs(filter);
+    }
+
+    @RouteMapping(url = "/taskruns/_countByDay", method = "POST")
+    public List<TaskRunDailyStatisticInfo> countTaskRunsByDay(
+            @RequestBody TaskRunSearchFilter requestFilter,
+            @QueryParameter(defaultValue = "0") Integer offsetHours
+    ) {
+        TaskRunSearchFilter filter = requestFilter.cloneBuilder().build();
+        return taskRunService.countTaskRunVOsByDate(filter, offsetHours);
     }
 
     @RouteMapping(url = "/taskruns/{taskRunId}/_abort", method = "PUT")

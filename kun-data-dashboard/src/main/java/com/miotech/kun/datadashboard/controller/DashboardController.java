@@ -133,7 +133,7 @@ public class DashboardController {
             if (i == dayOfMonth) {
                 endTime = currentTime;
             } else {
-                endTime = null;
+                endTime = computeTime.with(LocalTime.MAX);
             }
             if (dateTimeTaskCountMap.get(startTime) != null && i != dayOfMonth) {
                 dateTimeMetrics.add(dateTimeTaskCountMap.get(startTime));

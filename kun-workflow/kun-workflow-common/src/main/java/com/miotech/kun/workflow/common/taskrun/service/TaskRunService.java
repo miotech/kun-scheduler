@@ -8,15 +8,13 @@ import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.taskrun.factory.TaskRunLogVOFactory;
 import com.miotech.kun.workflow.common.taskrun.factory.TaskRunStateVOFactory;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
-import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
-import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
-import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
-import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.common.taskrun.vo.*;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -171,6 +169,15 @@ public class TaskRunService {
     public int countTaskRunVOs(TaskRunSearchFilter filter) {
         Preconditions.checkNotNull(filter, "Invalid argument `filter`: null");
         return taskRunDao.fetchTotalCountByFilter(filter);
+    }
+
+    public List<TaskRunDailyStatisticInfo> countTaskRunVOsByDate(TaskRunSearchFilter filter) {
+        return countTaskRunVOsByDate(filter, 0);
+    }
+
+    public List<TaskRunDailyStatisticInfo> countTaskRunVOsByDate(TaskRunSearchFilter filter, int offsetHours) {
+        Preconditions.checkNotNull(filter, "Invalid argument `filter`: null");
+        return taskRunDao.fetchTotalCountByDay(filter, offsetHours);
     }
 
     public TaskRunVO convertToVO(TaskRun taskRun) {
