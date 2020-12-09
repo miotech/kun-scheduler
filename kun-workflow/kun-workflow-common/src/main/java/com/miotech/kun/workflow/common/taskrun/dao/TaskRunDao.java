@@ -14,6 +14,7 @@ import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
@@ -25,6 +26,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +34,10 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nullable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -55,6 +60,8 @@ public class TaskRunDao {
     private static final String RELATION_MODEL_NAME = "task_run_relations";
     private static final List<String> taskRunRelationCols = ImmutableList.of("upstream_task_run_id", "downstream_task_run_id");
     private static final Map<String, String> sortKeyToFieldMapper = new HashMap<>();
+
+    private static final DateTimeFormatter LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     static {
         sortKeyToFieldMapper.put("id", "taskrun_id");
@@ -417,6 +424,35 @@ public class TaskRunDao {
                 .getSQL();
 
         return dbOperator.fetchOne(sql, rs -> rs.getInt(1), params.toArray());
+    }
+
+    public List<TaskRunDailyStatisticInfo> fetchTotalCountByDay(TaskRunSearchFilter filter, Integer offsetHour) {
+        Pair<String, List<Object>> whereClauseAndParams = generateWhereClauseAndParamsByFilter(filter);
+        String whereClause = whereClauseAndParams.getLeft();
+        List<Object> params = whereClauseAndParams.getRight();
+
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(String.format("date_trunc('day', %s.end_at + interval '%s hour') \"day\", %s.status, count(1)", TASK_RUN_MODEL_NAME, offsetHour, TASK_RUN_MODEL_NAME))
+                .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .where(whereClause)
+                .groupBy(TASK_RUN_MODEL_NAME + ".status, day")
+                .orderBy("day ASC")
+                .getSQL();
+
+        return dbOperator.fetchAll(sql, rs -> {
+            String dt = rs.getString(1);
+            String statusString = rs.getString(2);
+            return new TaskRunDailyStatisticInfo(
+                    StringUtils.isNoneEmpty(dt) ?
+                            OffsetDateTime.of(
+                                    LocalDateTime.parse(dt, LOCAL_DATE_TIME_FORMATTER),
+                                    ZoneOffset.ofHours(offsetHour)
+                            ) :
+                            null,
+                    StringUtils.isNoneEmpty(statusString) ? TaskRunStatus.valueOf(statusString) : null,
+                    rs.getInt(3)
+            );
+        }, params.toArray());
     }
 
     /**
