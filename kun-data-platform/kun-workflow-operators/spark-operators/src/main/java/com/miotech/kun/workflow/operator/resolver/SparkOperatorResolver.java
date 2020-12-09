@@ -13,10 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -29,6 +26,9 @@ public class SparkOperatorResolver implements Resolver {
 
     private HdfsFileSystem hdfsFileSystem;
 
+    //todo:metadata 重构后会删除
+    private final String HIVE_PREFIX = "jdbc:awsathena://athena.ap-northeast-1.amazonaws.com:443;S3OutputLocation=";
+
     private final Long taskRunId;
 
     private Map<Long, Pair<List<DataStore>, List<DataStore>>> resolvedTask = new HashMap<>();
@@ -39,7 +39,7 @@ public class SparkOperatorResolver implements Resolver {
     private final String ES_FORMAT = "elasticsearch://(.*)/(.*)";
     private final String HIVE_FORMAT = "(.*)/(.*)/(.*)";
 
-    public SparkOperatorResolver(HdfsFileSystem hdfsFileSystem, Long taskRunId){
+    public SparkOperatorResolver(HdfsFileSystem hdfsFileSystem, Long taskRunId) {
         this.hdfsFileSystem = hdfsFileSystem;
         this.taskRunId = taskRunId;
     }
@@ -70,7 +70,7 @@ public class SparkOperatorResolver implements Resolver {
     private List<ExecPlan> getExecPlanByConfig(Config config) {
         String sparkConf = config.getString(SparkConfiguration.CONF_LIVY_BATCH_CONF);
         logger.debug("spark conf = {}", sparkConf);
-        String dirAddress =  "lineage/" + taskRunId;
+        String dirAddress = "lineage/" + taskRunId;
         logger.debug("read lineage dir = {}", dirAddress);
         List<String> files = new ArrayList<>();
         try {
@@ -91,17 +91,19 @@ public class SparkOperatorResolver implements Resolver {
         Map<String, SplineSource> downStream = new HashMap<>();
         for (ExecPlan execPlan : execPlanList) {
             List<SplineSource> inputSources = execPlan.getInputSources();
-            for (SplineSource splineSource : inputSources) {
-                //若执行计划的上游数据源是其他执行计划的下游，则将该数据源从任务上游数据源中删除
-                if (downStream.containsKey(splineSource.getSourceName())) {
-                    upstream.remove(splineSource.getSourceName());
-                } else {
-                    upstream.put(splineSource.getSourceName(), splineSource);
+            if (inputSources != null) {
+                for (SplineSource splineSource : inputSources) {
+                    //若执行计划的上游数据源是其他执行计划的下游，则将该数据源从任务下游数据源中删除
+                    if (downStream.containsKey(splineSource.getSourceName())) {
+                        downStream.remove(splineSource.getSourceName());
+                    } else {
+                        upstream.put(splineSource.getSourceName(), splineSource);
+                    }
                 }
             }
             SplineSource outputSource = execPlan.getOutputSource();
             if (upstream.containsKey(outputSource.getSourceName())) {
-                downStream.remove(outputSource.getSourceName());
+                upstream.remove(outputSource.getSourceName());
             } else {
                 downStream.put(outputSource.getSourceName(), outputSource);
             }
@@ -121,6 +123,7 @@ public class SparkOperatorResolver implements Resolver {
     }
 
     private List<ExecPlan> filesToExecPlan(List<String> files) {
+        Collections.sort(files);
         List<ExecPlan> execPlanList = new ArrayList<>();
         for (String fileName : files) {
             try {
@@ -159,12 +162,12 @@ public class SparkOperatorResolver implements Resolver {
                             break;
                         case "hive2":
                             dataStore = new HiveTableStore("jdbc:" + dataType + "://" + matcher.group(2),
-                                    matcher.group(3),matcher.group(4));
+                                    matcher.group(3).toLowerCase(), matcher.group(4));
                             break;
 
                         default:
-                            logger.error("unknown datasource type {}", type);
-                            throw new IllegalStateException("Invalid datasource type : " + type);
+                            logger.error("unknown datasource type {}", dataType);
+                            throw new IllegalStateException("Invalid datasource type : " + dataType);
                     }
                 } else {
                     logger.error("unknown datasource type {}", type);
@@ -185,12 +188,7 @@ public class SparkOperatorResolver implements Resolver {
         if (matcher.matches()) {
             String table = matcher.group(3);
             String database = matcher.group(2);
-            if (database.contains(".")) {
-                database = database.split("\\.")[0];
-            } else {
-                database = "default";
-            }
-            return new HiveTableStore(matcher.group(1), database, table);
+            return new HiveTableStore(HIVE_PREFIX + matcher.group(1), database.toLowerCase(), table.toLowerCase());
         } else {
             logger.error("Illegal hive datasource {}", datasource);
             throw new IllegalStateException("Illegal hive datasource : " + datasource);
@@ -220,7 +218,13 @@ public class SparkOperatorResolver implements Resolver {
     }
 
     private PostgresDataStore toPostgres(String url, String database, String tableName) {
-        return new PostgresDataStore(url, database, "", tableName);
+        String schema = "public";
+        if (tableName.contains(".")) {
+            String[] strs = tableName.split("\\.");
+            schema = strs[0];
+            tableName = strs[1];
+        }
+        return new PostgresDataStore(url, database, schema, tableName);
     }
 
     private MongoDataStore toMongo(String datasource) {
