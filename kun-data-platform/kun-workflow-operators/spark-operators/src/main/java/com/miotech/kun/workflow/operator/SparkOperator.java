@@ -18,8 +18,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -193,20 +191,19 @@ public class SparkOperator extends LivyBaseSparkOperator {
         conf.set(configS3SecretKey, "O10ChEQ5u5jRJ8IOuypKZar/0ASaGcTAPaFG6yTt");
         conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
         conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
-        HdfsFileSystem hdfsFileSystem = null;
         try {
-            hdfsFileSystem = new HdfsFileSystem(HDFS_ROOT, conf);
-        } catch (IOException | URISyntaxException e) {
+            HdfsFileSystem hdfsFileSystem = new HdfsFileSystem(HDFS_ROOT, conf);
+            SparkOperatorResolver resolver = new SparkOperatorResolver(hdfsFileSystem, taskRunId);
+            List<DataStore> inputs = resolver.resolveUpstreamDataStore(config);
+            List<DataStore> outputs = resolver.resolveDownstreamDataStore(config);
+            TaskAttemptReport taskAttemptReport = TaskAttemptReport.newBuilder()
+                    .withInlets(inputs)
+                    .withOutlets(outputs)
+                    .build();
+            report(taskAttemptReport);
+        } catch (Exception e) {
             logger.error("create hdfs file system failed", e);
         }
-        SparkOperatorResolver resolver = new SparkOperatorResolver(hdfsFileSystem, taskRunId);
-        List<DataStore> inputs = resolver.resolveUpstreamDataStore(config);
-        List<DataStore> outputs = resolver.resolveDownstreamDataStore(config);
-        TaskAttemptReport taskAttemptReport = TaskAttemptReport.newBuilder()
-                .withInlets(inputs)
-                .withOutlets(outputs)
-                .build();
-        report(taskAttemptReport);
     }
 
 }

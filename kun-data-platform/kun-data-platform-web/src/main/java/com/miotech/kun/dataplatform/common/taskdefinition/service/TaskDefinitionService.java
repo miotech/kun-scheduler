@@ -282,9 +282,9 @@ public class TaskDefinitionService extends BaseSecurityService {
         TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskRunRequest.getParameters(), taskTemplate);
         Config config = new Config(taskConfig.getParams());
         Task task = Task.newBuilder()
-                .withName(taskTryId.toString())
+                .withName(taskDefId.toString())
                 .withOperatorId(operatorId)
-                .withDescription("Try Run Data Platform Task " + taskTryId)
+                .withDescription("Try Run Data Platform Task " + taskDefId)
                 .withConfig(config)
                 .withTags(TagUtils.buildTryRunTags(creator, taskDefId))
                 .withDependencies(new ArrayList<>())
