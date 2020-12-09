@@ -286,6 +286,8 @@ public class DeployedTaskService extends BaseSecurityService{
     public DeployedTaskVO convertVO(DeployedTask deployedTask) {
         return new DeployedTaskVO(
                 deployedTask.getDefinitionId(),
+                deployedTask.getWorkflowTaskId(),
+                deployedTask.getDefinitionId(),
                 deployedTask.getName(),
                 deployedTask.getTaskTemplateName(),
                 deployedTask.getOwner(),
@@ -305,6 +307,8 @@ public class DeployedTaskService extends BaseSecurityService{
         TaskRun taskRun = latestRuns.getTotalCount() > 0 ? latestRuns.getRecords().get(0) : null;
 
         return new DeployedTaskWithRunVO(
+                deployedTask.getDefinitionId(),
+                deployedTask.getWorkflowTaskId(),
                 deployedTask.getDefinitionId(),
                 deployedTask.getName(),
                 deployedTask.getTaskTemplateName(),
