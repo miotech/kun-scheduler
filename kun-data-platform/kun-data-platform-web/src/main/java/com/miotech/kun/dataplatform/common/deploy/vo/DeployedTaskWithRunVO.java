@@ -11,13 +11,15 @@ public class DeployedTaskWithRunVO extends DeployedTaskVO {
     private final TaskRun latestTaskRun;
 
     public DeployedTaskWithRunVO(Long id,
+                                 Long workflowTaskId,
+                                 Long taskDefinitionId,
                                  String name,
                                  String taskTemplateName,
                                  Long owner,
                                  boolean archived,
                                  TaskPayload taskPayload,
                                  TaskRun latestTaskRun) {
-        super(id, name, taskTemplateName, owner, archived, taskPayload);
+        super(id, workflowTaskId, taskDefinitionId, name, taskTemplateName, owner, archived, taskPayload);
         this.latestTaskRun = latestTaskRun;
     }
 }

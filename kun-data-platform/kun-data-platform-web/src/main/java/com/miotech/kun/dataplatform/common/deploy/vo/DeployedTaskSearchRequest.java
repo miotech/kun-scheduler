@@ -19,16 +19,20 @@ public class DeployedTaskSearchRequest extends PageRequest {
 
     private String name;
 
+    private List<Long> workflowTaskIds;
+
     public DeployedTaskSearchRequest(Integer pageSize,
                                      Integer pageNum,
                                      List<Long> definitionIds,
                                      List<Long> ownerIds,
                                      String taskTemplateName,
-                                     String name) {
+                                     String name,
+                                     List<Long> workflowTaskIds) {
         super(pageSize, pageNum);
         this.definitionIds = definitionIds != null ? definitionIds : ImmutableList.of();
         this.ownerIds = ownerIds != null ? ownerIds : ImmutableList.of();
         this.taskTemplateName = taskTemplateName;
+        this.workflowTaskIds = workflowTaskIds;
         this.name = name;
     }
 }
