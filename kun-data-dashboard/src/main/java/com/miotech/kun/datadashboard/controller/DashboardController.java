@@ -1,6 +1,5 @@
 package com.miotech.kun.datadashboard.controller;
 
-import com.miotech.kun.common.model.PageInfo;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.datadashboard.model.bo.*;
@@ -96,14 +95,14 @@ public class DashboardController {
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long startedCount = workflowClient.searchTaskRun(startedRequest).getTotalCount();
+        long startedCount = workflowClient.countTaskRun(startedRequest);
 
         TaskRunSearchRequest pendingRequest = TaskRunSearchRequest.newBuilder()
                 .withIncludeStartedOnly(false)
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long pendingCount = workflowClient.searchTaskRun(pendingRequest).getTotalCount();
+        long pendingCount = workflowClient.countTaskRun(pendingRequest);
 
         TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)

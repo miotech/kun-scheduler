@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
-import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import okhttp3.*;
 import org.apache.commons.collections4.CollectionUtils;
@@ -17,7 +17,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -349,16 +348,12 @@ public class WorkflowApi {
 
     public Integer countTaskRuns(TaskRunSearchRequest request) {
         HttpUrl url = buildUrl("/taskruns/_count")
-                .addQueryParameter("status", Objects.nonNull(request.getStatus()) ? request.getStatus().name() : "")
-                .addQueryParameter("dateFrom", Objects.nonNull(request.getDateFrom()) ? request.getDateFrom().toString() : "")
-                .addQueryParameter("dateTo", Objects.nonNull(request.getDateTo()) ? request.getDateTo().toString() : "")
-                .addQueryParameter("includeStartedOnly", Objects.nonNull(request.getIncludeStartedOnly()) ? request.getIncludeStartedOnly().toString() : "false")
                 .build();
-        Request getRequest = new Request.Builder().url(url)
-                .get()
+        Request postRequest = new Request.Builder().url(url)
+                .post(jsonBody(request))
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(getRequest, Integer.class);
+        return sendRequest(postRequest, Integer.class);
     }
 
     public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit) {
