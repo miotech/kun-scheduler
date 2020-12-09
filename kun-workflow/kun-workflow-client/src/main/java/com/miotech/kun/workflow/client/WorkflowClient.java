@@ -127,6 +127,13 @@ public interface WorkflowClient {
     PaginationResult<TaskRun> searchTaskRun(TaskRunSearchRequest request);
 
     /**
+     * Fetch task run count by filter
+     * @param request
+     * @return
+     */
+    Integer countTaskRun(TaskRunSearchRequest request);
+
+    /**
      * fetch taskRun state
      * @param taskRunId
      * @return

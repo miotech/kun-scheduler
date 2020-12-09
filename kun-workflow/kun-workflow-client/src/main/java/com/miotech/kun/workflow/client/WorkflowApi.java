@@ -4,8 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
-import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import okhttp3.*;
 import org.apache.commons.collections4.CollectionUtils;
@@ -344,6 +344,16 @@ public class WorkflowApi {
                 .build();
         return sendRequest(postRequest, new TypeReference<PaginationResult<TaskRun>>() {
         });
+    }
+
+    public Integer countTaskRuns(TaskRunSearchRequest request) {
+        HttpUrl url = buildUrl("/taskruns/_count")
+                .build();
+        Request postRequest = new Request.Builder().url(url)
+                .post(jsonBody(request))
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(postRequest, Integer.class);
     }
 
     public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit) {
