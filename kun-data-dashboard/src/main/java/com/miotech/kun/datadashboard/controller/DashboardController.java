@@ -1,5 +1,6 @@
 package com.miotech.kun.datadashboard.controller;
 
+import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.datadashboard.model.bo.*;
@@ -69,7 +70,7 @@ public class DashboardController {
     public RequestResult<DataDevelopmentMetrics> getDataDevelopmentMetrics() {
         TaskRunSearchRequest successRequest = TaskRunSearchRequest.newBuilder().
                 withDateFrom(DateTimeUtils.now().minusDays(1))
-                .withStatus(TaskRunStatus.SUCCESS)
+                .withStatus(Sets.newHashSet(TaskRunStatus.SUCCESS))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
@@ -77,14 +78,14 @@ public class DashboardController {
 
         TaskRunSearchRequest failedRequest = TaskRunSearchRequest.newBuilder().
                 withDateFrom(DateTimeUtils.now().minusDays(1))
-                .withStatus(TaskRunStatus.FAILED)
+                .withStatus(Sets.newHashSet(TaskRunStatus.FAILED, TaskRunStatus.ERROR))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
         long failedCount = workflowClient.countTaskRun(failedRequest);
 
         TaskRunSearchRequest runningRequest = TaskRunSearchRequest.newBuilder()
-                .withStatus(TaskRunStatus.RUNNING)
+                .withStatus(Sets.newHashSet(TaskRunStatus.RUNNING))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
@@ -114,6 +115,7 @@ public class DashboardController {
     }
 
     private final ConcurrentMap<OffsetDateTime, DateTimeTaskCount> dateTimeTaskCountMap = new ConcurrentHashMap<>();
+
     @GetMapping("/dashboard/data-development/date-time-metrics")
     public RequestResult<DateTimeMetrics> getDateTimeMetrics(DateTimeMetricsRequest request) {
         DateTimeMetrics dateTimeMetrics = new DateTimeMetrics();
@@ -154,7 +156,7 @@ public class DashboardController {
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageNum(tasksRequest.getPageNumber())
                 .withPageSize(tasksRequest.getPageSize())
-                .withStatus(tasksRequest.getTaskRunStatus())
+                .withStatus(Sets.newHashSet(tasksRequest.getTaskRunStatus()))
                 .withIncludeStartedOnly(tasksRequest.getIncludeStartedOnly())
                 .withSortKey("startAt")
                 .withSortOrder("DESC")
