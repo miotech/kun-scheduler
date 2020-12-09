@@ -76,7 +76,7 @@ public class DashboardController {
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long successCount = workflowClient.searchTaskRun(successRequest).getTotalCount();
+        long successCount = workflowClient.countTaskRun(successRequest);
 
         TaskRunSearchRequest failedRequest = TaskRunSearchRequest.newBuilder().
                 withDateFrom(DateTimeUtils.now().minusDays(1))
@@ -84,20 +84,20 @@ public class DashboardController {
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long failedCount = workflowClient.searchTaskRun(failedRequest).getTotalCount();
+        long failedCount = workflowClient.countTaskRun(failedRequest);
 
         TaskRunSearchRequest runningRequest = TaskRunSearchRequest.newBuilder()
                 .withStatus(TaskRunStatus.RUNNING)
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long runningCount = workflowClient.searchTaskRun(runningRequest).getTotalCount();
+        long runningCount = workflowClient.countTaskRun(runningRequest);
 
         TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long totalCount = workflowClient.searchTaskRun(totalRequest).getTotalCount();
+        long totalCount = workflowClient.countTaskRun(totalRequest);
 
         DataDevelopmentMetrics metrics = new DataDevelopmentMetrics();
         metrics.setSuccessTaskCount(successCount);
@@ -120,7 +120,7 @@ public class DashboardController {
             if (i == dayOfMonth) {
                 endTime = currentTime;
             } else {
-                endTime = computeTime.with(LocalTime.MAX);
+                endTime = null;
             }
             if (dateTimeTaskCountMap.get(startTime) != null && i != dayOfMonth) {
                 dateTimeMetrics.add(dateTimeTaskCountMap.get(startTime));
@@ -132,7 +132,7 @@ public class DashboardController {
                     .withTags(DATA_PLATFORM_FILTER_TAGS)
                     .withPageSize(0)
                     .build();
-            long totalCount = workflowClient.searchTaskRun(totalRequest).getTotalCount();
+            long totalCount = workflowClient.countTaskRun(totalRequest);
             DateTimeTaskCount taskCount = new DateTimeTaskCount();
             taskCount.setTaskCount(totalCount);
             taskCount.setTime(DateUtils.dateTimeToMillis(endTime));
