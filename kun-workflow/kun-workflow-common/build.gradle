@@ -24,6 +24,7 @@ dependencies {
 
 
     testImplementation project(":kun-commons:kun-commons-testing")
+    testImplementation project(":kun-workflow:kun-workflow-common")
     testImplementation project(":kun-workflow:kun-workflow-testing")
     testImplementation "org.testcontainers:neo4j"
     testRuntimeOnly "com.h2database:h2"

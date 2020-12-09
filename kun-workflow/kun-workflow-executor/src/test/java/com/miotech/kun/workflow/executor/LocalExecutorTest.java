@@ -4,7 +4,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 import com.miotech.kun.commons.rpc.RpcModule;
 import com.miotech.kun.commons.rpc.RpcPublisher;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.ReflectUtils;
 import com.miotech.kun.metadata.core.model.DataStore;
@@ -70,7 +69,7 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.doReturn;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
-public class LocalExecutorTest extends DatabaseTestBase {
+public class LocalExecutorTest extends CommonTestBase {
 
     private Executor executor;
 

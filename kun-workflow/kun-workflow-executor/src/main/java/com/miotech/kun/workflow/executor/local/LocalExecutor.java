@@ -122,7 +122,6 @@ public class LocalExecutor implements Executor {
     public boolean submit(TaskAttempt taskAttempt, boolean reSubmit) {
         logger.info("submit taskAttemptId = {} to local executor ", taskAttempt.getId());
         Optional<TaskAttempt> taskAttemptOptional = taskRunDao.fetchAttemptById(taskAttempt.getId());
-        logger.debug("submit get taskAttempt from db at {}", System.currentTimeMillis());
         if (!taskAttemptOptional.isPresent()) {
             logger.error("can not find taskAttempt = {} from database", taskAttempt);
             return false;
@@ -132,7 +131,7 @@ public class LocalExecutor implements Executor {
                 return false;
             }
             if (!reSubmit && !savedTaskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
-                logger.info("taskAttemptId = {} has been submit", taskAttempt.getId());
+                logger.debug("taskAttemptId = {} has been submit", taskAttempt.getId());
                 return false;
             }
             taskAttemptQueue.add(taskAttempt.cloneBuilder().withStatus(TaskRunStatus.QUEUED).build());
@@ -371,7 +370,6 @@ public class LocalExecutor implements Executor {
                     } else {
                         heartBeatMessage.setTimeoutTimes(timeoutTimes);
                         workerPool.put(taskAttemptId, heartBeatMessage);
-                        logger.info("taskAttempt = {} timeout times = {}", heartBeatMessage.getTaskAttemptId(), timeoutTimes);
                     }
                 }
 
