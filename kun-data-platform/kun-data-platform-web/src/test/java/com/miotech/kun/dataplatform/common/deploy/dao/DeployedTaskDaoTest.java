@@ -70,7 +70,8 @@ public class DeployedTaskDaoTest extends AppTestBase {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 null,
-                null);
+                null,
+                Collections.emptyList());
         deployPage = deployedTaskDao.search(request);
         assertThat(deployPage.getTotalCount(), is((long) deployList.size()));
         assertThat(deployPage.getPageSize(), is(10));
@@ -81,7 +82,8 @@ public class DeployedTaskDaoTest extends AppTestBase {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 deployedTask.getTaskTemplateName(),
-                null);
+                null,
+                Collections.emptyList());
         deployPage = deployedTaskDao.search(request);
         assertThat(deployPage.getTotalCount(), is((long) deployList.size()));
         assertThat(deployPage.getPageSize(), is(10));
@@ -93,7 +95,8 @@ public class DeployedTaskDaoTest extends AppTestBase {
                 Collections.emptyList(),
                 Collections.emptyList(),
                 deployedTask.getTaskTemplateName(),
-                deployedTask.getName());
+                deployedTask.getName(),
+                Collections.emptyList());
         deployPage = deployedTaskDao.search(request);
         assertThat(deployPage.getTotalCount(), is(1L));
         assertThat(deployPage.getPageSize(), is(10));
@@ -105,7 +108,8 @@ public class DeployedTaskDaoTest extends AppTestBase {
                 Collections.singletonList(deployedTask.getDefinitionId()),
                 Collections.singletonList(deployedTask.getOwner()),
                 deployedTask.getTaskTemplateName(),
-                deployedTask.getName());
+                deployedTask.getName(),
+                Collections.emptyList());
         deployPage = deployedTaskDao.search(request);
         assertThat(deployPage.getTotalCount(), is(1L));
         assertThat(deployPage.getRecords().get(0), sameBeanAs(deployedTask));
