@@ -12,7 +12,6 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
-import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
@@ -82,7 +81,7 @@ public class TaskRunDao {
 
     @Inject
     public TaskRunDao(TaskDao taskDao, DatabaseOperator dbOperator
-            , TaskRunMapper taskRunMapperInstance,LineageService lineageService) {
+            , TaskRunMapper taskRunMapperInstance) {
         this.taskDao = taskDao;
         this.dbOperator = dbOperator;
         this.taskRunMapperInstance = taskRunMapperInstance;

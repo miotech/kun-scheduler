@@ -12,7 +12,6 @@ import com.miotech.kun.commons.web.module.CommonModule;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
 import com.miotech.kun.workflow.SchedulerManager;
 import com.miotech.kun.workflow.SchedulerModule;
-import com.miotech.kun.workflow.core.publish.KafkaModule;
 import com.miotech.kun.workflow.web.service.InitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,6 +61,7 @@ public class KunWorkflowWebServer {
 
         /* Initialize Guice Injector */
         Props props = PropsUtils.loadAppProps();
+        org.eclipse.jetty.util.log.Log.setLog(new JettyLog());
         final Injector injector = Guice.createInjector(
                 new KunWebServerModule(props),
                 new KunWorkflowServerModule(props),
