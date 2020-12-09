@@ -97,13 +97,6 @@ public class DashboardController {
                 .build();
         long startedCount = workflowClient.countTaskRun(startedRequest);
 
-        TaskRunSearchRequest pendingRequest = TaskRunSearchRequest.newBuilder()
-                .withIncludeStartedOnly(false)
-                .withTags(DATA_PLATFORM_FILTER_TAGS)
-                .withPageSize(0)
-                .build();
-        long pendingCount = workflowClient.countTaskRun(pendingRequest);
-
         TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
@@ -115,7 +108,7 @@ public class DashboardController {
         metrics.setFailedTaskCount(failedCount);
         metrics.setRunningTaskCount(runningCount);
         metrics.setStartedTaskCount(startedCount);
-        metrics.setPendingTaskCount(pendingCount);
+        metrics.setPendingTaskCount(totalCount - startedCount);
         metrics.setTotalTaskCount(totalCount);
         return RequestResult.success(metrics);
     }
