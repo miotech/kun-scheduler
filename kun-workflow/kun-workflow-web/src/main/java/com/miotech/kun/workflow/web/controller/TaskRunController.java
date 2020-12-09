@@ -73,6 +73,35 @@ public class TaskRunController {
                 .withPageNum(pageNum)
                 .withPageSize(pageSize);
 
+        buildFilter(filterBuilder, status, taskIds, dateFrom, dateTo, sortKey, sortOrder, includeStartedOnly);
+
+        TaskRunSearchFilter filter = filterBuilder.build();
+        return taskRunService.searchTaskRunVOs(filter);
+    }
+
+    @RouteMapping(url = "/taskruns/_count", method = "GET")
+    public int getTaskRunCount(@QueryParameter String status,
+                               @QueryParameter List<Long> taskIds,
+                               @QueryParameter String dateFrom,
+                               @QueryParameter String dateTo,
+                               @QueryParameter(defaultValue = "false") String includeStartedOnly
+    ) {
+        TaskRunSearchFilter.Builder filterBuilder = TaskRunSearchFilter.newBuilder();
+        buildFilter(filterBuilder, status, taskIds, dateFrom, dateTo, null, null, includeStartedOnly);
+        TaskRunSearchFilter filter = filterBuilder.build();
+        return taskRunService.countTaskRunVOs(filter);
+    }
+
+    private void buildFilter(
+            TaskRunSearchFilter.Builder filterBuilder,
+            String status,
+            List<Long> taskIds,
+            String dateFrom,
+            String dateTo,
+            String sortKey,
+            String sortOrder,
+            String includeStartedOnly
+    ) {
         if (StringUtils.isNoneBlank(status)) {
             filterBuilder
                     .withStatus(TaskRunStatus.valueOf(status));
@@ -96,8 +125,6 @@ public class TaskRunController {
             filterBuilder.withSortOrder(sortOrder);
         }
         filterBuilder.withIncludeStartedOnly(parseBooleanQueryParameter(includeStartedOnly));
-        TaskRunSearchFilter filter = filterBuilder.build();
-        return taskRunService.searchTaskRunVOs(filter);
     }
 
     @RouteMapping(url = "/taskruns/_search", method = "POST")

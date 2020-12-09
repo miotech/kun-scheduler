@@ -168,6 +168,11 @@ public class TaskRunService {
                 .build();
     }
 
+    public int countTaskRunVOs(TaskRunSearchFilter filter) {
+        Preconditions.checkNotNull(filter, "Invalid argument `filter`: null");
+        return taskRunDao.fetchTotalCountByFilter(filter);
+    }
+
     public TaskRunVO convertToVO(TaskRun taskRun) {
         List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRun.getId())
                 .stream()
