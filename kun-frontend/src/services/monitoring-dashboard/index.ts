@@ -127,6 +127,8 @@ export interface DataDevelopmentMetrics {
   successTaskCount: number;
   failedTaskCount: number;
   runningTaskCount: number;
+  pendingTaskCount: number;
+  startedTaskCount: number;
   totalTaskCount: number;
 }
 
