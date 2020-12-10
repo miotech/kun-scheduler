@@ -6,6 +6,8 @@ import {
   RowCountChange
 } from '@/services/monitoring-dashboard';
 
+export type DataDevelopmentBoardFilterCardType = 'SUCCESS' | 'FAILED' | 'RUNNING' | 'PENDING' | null;
+
 export interface DataDiscoveryBoardData {
   metadataMetrics: MetadataMetrics | null;
   metadataMetricsLoading: boolean;
@@ -46,6 +48,7 @@ export interface DataDevelopmentBoardData {
     data: DailyTaskCount[];
     error: Error | null;
   };
+  taskDetailsSelectedFilter: DataDevelopmentBoardFilterCardType;
   taskDetails: {
     data: DevTaskDetail[];
     loading: boolean;
@@ -97,6 +100,8 @@ export const initState: MonitoringDashboardModelState = {
       failedTaskCount: 0,
       runningTaskCount: 0,
       totalTaskCount: 0,
+      pendingTaskCount: 0,
+      startedTaskCount: 0,
     },
     dataDevelopmentMetricsLoading: false,
     dailyTaskFinish: {
@@ -104,6 +109,7 @@ export const initState: MonitoringDashboardModelState = {
       loading: false,
       error: null,
     },
+    taskDetailsSelectedFilter: null,
     taskDetails: {
       data: [],
       loading: false,

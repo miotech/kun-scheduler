@@ -11,9 +11,13 @@ interface OwnProps {
   /** statistic value shown at the bottom of card */
   value?: number;
   /** theme color for statistic value */
-  textTheme?: 'default' | 'success' | 'failed' | 'running';
+  textTheme?: 'default' | 'success' | 'failed' | 'running' | 'pending';
   /** Loading state */
   loading?: boolean;
+  /** click event */
+  onClick?: () => any;
+  /** selected */
+  selectedAsFilter?: boolean;
 }
 
 export type StatisticCardProps = OwnProps & React.ComponentProps<'div'>;
@@ -25,6 +29,8 @@ export const StatisticCard: React.FC<StatisticCardProps> = memo(function Statist
     className,
     textTheme = 'default',
     loading,
+    onClick,
+    selectedAsFilter = false,
     ...restProps
   } = props;
 
@@ -43,8 +49,12 @@ export const StatisticCard: React.FC<StatisticCardProps> = memo(function Statist
 
   return (
     <div
-      className={c('monitoring-statistic-card', className)}
+      className={c('monitoring-statistic-card', {
+        'monitoring-statistic-card--clickable': (onClick != null),
+        'monitoring-statistic-card--selected': selectedAsFilter,
+      }, className)}
       aria-label="monitoring-statistic-card"
+      onClick={onClick}
       {...restProps}
     >
       <h3 className="monitoring-statistic-card__title">

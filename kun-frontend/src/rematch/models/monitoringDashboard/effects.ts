@@ -1,6 +1,8 @@
 import { RootDispatch } from '@/rematch/store';
 import * as services from '@/services/monitoring-dashboard';
-import { MonitoringDashboardModelState as ModelState } from '@/rematch/models/monitoringDashboard/model-state';
+import {
+  MonitoringDashboardModelState as ModelState
+} from '@/rematch/models/monitoringDashboard/model-state';
 import {
   DataDevelopmentMetrics,
   DatasetColumnMetricsInfo,
@@ -205,8 +207,12 @@ const loadDailyTaskFinish = (dispatch: RootDispatch) => {
     });
 };
 
+export interface LoadTaskDetailsParams extends PaginationReqBody {
+  taskRunStatus?: string;
+}
+
 // task details
-const loadTaskDetails = (params: PaginationReqBody, dispatch: RootDispatch) => {
+const loadTaskDetails = (params: LoadTaskDetailsParams, dispatch: RootDispatch) => {
   dispatch.monitoringDashboard.updateTaskDetails({
     loading: true,
   });
@@ -303,7 +309,7 @@ export const effects = (dispatch: RootDispatch) => ({
   async reloadDailyTaskFinish() {
     await loadDailyTaskFinish(dispatch);
   },
-  async reloadTaskDetails(params: PaginationReqBody) {
+  async reloadTaskDetails(params: LoadTaskDetailsParams) {
     await loadTaskDetails(params, dispatch);
   },
 });
