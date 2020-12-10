@@ -2,6 +2,7 @@ import produce from 'immer';
 import { DataDevelopmentMetrics, MetadataMetrics } from '@/services/monitoring-dashboard';
 
 import {
+  DataDevelopmentBoardFilterCardType,
   initState,
   MonitoringDashboardModelState as ModelState,
 } from './model-state';
@@ -71,5 +72,8 @@ export const reducers = {
       ...draftState.dataDevelopmentBoardData.taskDetails,
       ...payload,
     };
+  }),
+  setTaskDetailsSelectedFilter: produce((draftState: ModelState, payload: DataDevelopmentBoardFilterCardType) => {
+    draftState.dataDevelopmentBoardData.taskDetailsSelectedFilter = payload;
   }),
 };

@@ -36,6 +36,10 @@
     &--running {
       color: @color-running;
     }
+
+    &--pending {
+      color: @color-noticeable;
+    }
   }
 
   &__skeleton {
@@ -44,4 +48,13 @@
     height: 16px;
     bottom: 26px;
   }
+}
+
+.monitoring-statistic-card--clickable {
+  cursor: pointer;
+  transition: background-color .2s ease-in;
+}
+
+.monitoring-statistic-card--selected {
+  background: @selectedRowBackground;
 }
