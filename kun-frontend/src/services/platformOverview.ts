@@ -1,6 +1,5 @@
-import { delet, get, post } from '@/utils/requestUtils';
+import { get } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
-import { Pagination } from '@/definitions/common-types';
 
 export interface FetchMetadataMetricsResp {
   dataQualityCoveredCount: number;

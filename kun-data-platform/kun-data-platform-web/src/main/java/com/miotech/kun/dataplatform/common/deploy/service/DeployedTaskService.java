@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.common.deploy.service;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.miotech.kun.dataplatform.common.deploy.dao.DeployedTaskDao;
 import com.miotech.kun.dataplatform.common.deploy.vo.*;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskRunLogVO;
@@ -237,7 +238,7 @@ public class DeployedTaskService extends BaseSecurityService{
             searchRequestBuilder.withName(request.getName());
         }
         if (request.getStatus() != null) {
-            searchRequestBuilder.withStatus(request.getStatus());
+            searchRequestBuilder.withStatus(Sets.newHashSet(request.getStatus()));
         }
 
         List<Tag> filterTags = TagUtils.buildScheduleSearchTags();

@@ -16,9 +16,8 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.miotech.kun.commons.utils.ArgumentCheckUtils.parseBooleanQueryParameter;
 
@@ -62,7 +61,7 @@ public class TaskRunController {
     public PaginationVO<TaskRunVO> getTaskRuns(
             @QueryParameter(defaultValue = "1") int pageNum,
             @QueryParameter(defaultValue = "100") int pageSize,
-            @QueryParameter String status,
+            @QueryParameter List<String> status,
             @QueryParameter List<Long> taskIds,
             @QueryParameter String dateFrom,
             @QueryParameter String dateTo,
@@ -81,7 +80,7 @@ public class TaskRunController {
     }
 
     @RouteMapping(url = "/taskruns/_count", method = "GET")
-    public int getTaskRunCount(@QueryParameter String status,
+    public int getTaskRunCount(@QueryParameter List<String> status,
                                @QueryParameter List<Long> taskIds,
                                @QueryParameter String dateFrom,
                                @QueryParameter String dateTo,
@@ -95,7 +94,7 @@ public class TaskRunController {
 
     @RouteMapping(url = "/taskruns/_countByDay", method = "GET")
     public List<TaskRunDailyStatisticInfo> getCountTaskRunsByDay(
-            @QueryParameter String status,
+            @QueryParameter List<String> status,
             @QueryParameter List<Long> taskIds,
             @QueryParameter String dateFrom,
             @QueryParameter String dateTo,
@@ -110,7 +109,7 @@ public class TaskRunController {
 
     private void buildFilter(
             TaskRunSearchFilter.Builder filterBuilder,
-            String status,
+            List<String> status,
             List<Long> taskIds,
             String dateFrom,
             String dateTo,
@@ -118,9 +117,11 @@ public class TaskRunController {
             String sortOrder,
             String includeStartedOnly
     ) {
-        if (StringUtils.isNoneBlank(status)) {
-            filterBuilder
-                    .withStatus(TaskRunStatus.valueOf(status));
+        if (status != null && !status.isEmpty()) {
+            Set<TaskRunStatus> statusFilterSet = status.stream()
+                    .map(TaskRunStatus::valueOf)
+                    .collect(Collectors.toSet());
+            filterBuilder.withStatus(statusFilterSet);
         }
         if (StringUtils.isNoneBlank(dateFrom)) {
             filterBuilder

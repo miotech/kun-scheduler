@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.web.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
@@ -116,7 +117,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         );
         // When matches running status filter
         TaskRunSearchFilter createdStatusFilter = defaultPaginatedFilter.cloneBuilder()
-                .withStatus(TaskRunStatus.CREATED).build();
+                .withStatus(Sets.newHashSet(TaskRunStatus.CREATED)).build();
         List<TaskRunVO> taskRunsWithStatusCreated = allTaskRunCollection.stream()
                 .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.CREATED))
                 .map(taskRunService::convertToVO)
@@ -129,7 +130,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
 
         // When matches running status filter
         TaskRunSearchFilter runningStatusFilter = defaultPaginatedFilter.cloneBuilder()
-                .withStatus(TaskRunStatus.RUNNING).build();
+                .withStatus(Sets.newHashSet(TaskRunStatus.RUNNING)).build();
         List<TaskRunVO> taskRunsWithStatusRunning = allTaskRunCollection.stream()
                 .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.RUNNING))
                 .map(taskRunService::convertToVO)
@@ -138,7 +139,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
 
         // When matches success status filter
         TaskRunSearchFilter successStatusFilter = defaultPaginatedFilter.cloneBuilder()
-                .withStatus(TaskRunStatus.SUCCESS).build();
+                .withStatus(Sets.newHashSet(TaskRunStatus.SUCCESS)).build();
         List<TaskRunVO> taskRunsWithStatusSuccess = allTaskRunCollection.stream()
                 .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.SUCCESS))
                 .map(taskRunService::convertToVO)
@@ -164,7 +165,6 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
                 .withPageSize(100)
                 .withSortKey("startAt")
                 .withSortOrder("DESC")
-                .withIncludeStartedOnly(false)
                 .build();
         // setup return behavior on filtering offsetDatetime
         OffsetDateTime timePointMarch10th = OffsetDateTime.of(2020, 3, 10, 0, 0, 0, 0, ZoneOffset.ofHours(0));
