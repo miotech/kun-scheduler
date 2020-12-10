@@ -23,6 +23,7 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -156,7 +157,8 @@ public class DashboardController {
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageNum(tasksRequest.getPageNumber())
                 .withPageSize(tasksRequest.getPageSize())
-                .withStatus(Sets.newHashSet(tasksRequest.getTaskRunStatus()))
+                .withStatus(Objects.nonNull(tasksRequest.getTaskRunStatus()) ?
+                        Sets.newHashSet(tasksRequest.getTaskRunStatus()) : null)
                 .withIncludeStartedOnly(tasksRequest.getIncludeStartedOnly())
                 .withSortKey("startAt")
                 .withSortOrder("DESC")
