@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 
 @JsonDeserialize(builder = TaskRunSearchRequest.Builder.class)
 public class TaskRunSearchRequest {
@@ -28,7 +29,7 @@ public class TaskRunSearchRequest {
 
     private final List<Tag> tags;
 
-    private final TaskRunStatus status;
+    private final Set<TaskRunStatus> status;
 
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     private final OffsetDateTime dateFrom;
@@ -90,7 +91,7 @@ public class TaskRunSearchRequest {
         return tags;
     }
 
-    public TaskRunStatus getStatus() {
+    public Set<TaskRunStatus> getStatus() {
         return status;
     }
 
@@ -121,7 +122,7 @@ public class TaskRunSearchRequest {
         private List<Long> taskRunIds;
         private List<Long> taskIds;
         private List<Tag> tags;
-        private TaskRunStatus status;
+        private Set<TaskRunStatus> status;
         private OffsetDateTime dateFrom;
         private OffsetDateTime dateTo;
         private String sortKey;
@@ -175,7 +176,7 @@ public class TaskRunSearchRequest {
             return this;
         }
 
-        public Builder withStatus(TaskRunStatus status) {
+        public Builder withStatus(Set<TaskRunStatus> status) {
             this.status = status;
             return this;
         }

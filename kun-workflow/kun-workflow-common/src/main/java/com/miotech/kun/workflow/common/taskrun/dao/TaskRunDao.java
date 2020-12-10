@@ -205,8 +205,13 @@ public class TaskRunDao {
 
         // Search by status
         if (Objects.nonNull(filter.getStatus())) {
-            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".status = ? )");
-            sqlArgs.add(filter.getStatus().toString());
+            StringBuilder statusSubWhereClauseBuilder = new StringBuilder("( ");
+            for (TaskRunStatus status : filter.getStatus()) {
+                statusSubWhereClauseBuilder.append("(" + TASK_RUN_MODEL_NAME + ".status = ? ) OR ");
+                sqlArgs.add(status.name());
+            }
+            statusSubWhereClauseBuilder.append(" (1 = 0) )");
+            whereConditions.add(statusSubWhereClauseBuilder.toString());
         }
 
         // Search by tags, if any

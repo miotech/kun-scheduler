@@ -5,6 +5,8 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * @author: Jie Chen
  * @created: 2020/12/8
@@ -13,7 +15,7 @@ import lombok.EqualsAndHashCode;
 @Data
 public class DataDevelopmentTasksRequest extends PageInfo {
 
-    TaskRunStatus taskRunStatus;
+    List<TaskRunStatus> taskRunStatus;
 
     Boolean includeStartedOnly;
 }
