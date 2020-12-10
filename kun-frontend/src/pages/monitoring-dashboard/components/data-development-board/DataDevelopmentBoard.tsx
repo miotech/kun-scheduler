@@ -42,7 +42,7 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
   const topMetricsRow = useMemo(() => {
     return (
       <Row gutter={[8, 8]}>
-        <Col span={6}>
+        <Col flex="1 1">
           <StatisticCard
             title={t('monitoringDashboard.dataDevelopment.successLastDay')}
             value={metrics.successTaskCount}
@@ -50,7 +50,7 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
             loading={dataDevelopmentMetricsLoading}
           />
         </Col>
-        <Col span={6}>
+        <Col flex="1 1">
           <StatisticCard
             title={t('monitoringDashboard.dataDevelopment.failedLastDay')}
             value={metrics.failedTaskCount}
@@ -58,7 +58,7 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
             loading={dataDevelopmentMetricsLoading}
           />
         </Col>
-        <Col span={6}>
+        <Col flex="1 1">
           <StatisticCard
             title={t('monitoringDashboard.dataDevelopment.running')}
             value={metrics.runningTaskCount}
@@ -66,7 +66,15 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
             loading={dataDevelopmentMetricsLoading}
           />
         </Col>
-        <Col span={6}>
+        <Col flex="1 1">
+          <StatisticCard
+            title={t('monitoringDashboard.dataDevelopment.pending')}
+            value={metrics.pendingTaskCount}
+            textTheme="pending"
+            loading={dataDevelopmentMetricsLoading}
+          />
+        </Col>
+        <Col flex="1 1">
           <StatisticCard
             title={t('monitoringDashboard.dataDevelopment.totalTaskCount')}
             value={metrics.totalTaskCount}
