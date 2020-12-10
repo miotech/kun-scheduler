@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.common.taskrun.dao;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -509,11 +510,11 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         // process
         List<TaskRun> runsWithRunningStatus = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
                 .newBuilder()
-                .withStatus(TaskRunStatus.RUNNING)
+                .withStatus(Sets.newHashSet(TaskRunStatus.RUNNING))
                 .build());
         List<TaskRun> runsWithFailedStatus = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
                 .newBuilder()
-                .withStatus(TaskRunStatus.FAILED)
+                .withStatus(Sets.newHashSet(TaskRunStatus.FAILED))
                 .build());
 
         // validate
