@@ -1,4 +1,4 @@
-import React, { memo, useRef } from 'react';
+import React, { memo, useMemo, useRef } from 'react';
 import {
   DailyTaskFinishCount, DailyTaskFinishLineChart
 } from '@/components/Monitoring/DailyTaskFinishLineChart/DailyTaskFinishLineChart';
@@ -6,6 +6,7 @@ import { Card } from 'antd';
 import { useSize } from 'ahooks';
 import useI18n from '@/hooks/useI18n';
 import { KunSpin } from '@/components/KunSpin';
+import dayjs from 'dayjs';
 
 interface OwnProps {
   data: DailyTaskFinishCount[];
@@ -26,6 +27,19 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
 
   const { data, loading } = props;
 
+  const normalizedData = useMemo(() => {
+    if (data && data.length) {
+      return data.map((datum: DailyTaskFinishCount) => ({
+        ...datum,
+        time: dayjs(datum.time).startOf('day').toDate().getTime(),
+      }));
+    }
+    // else
+    return [];
+  }, [
+    data,
+  ]);
+
   if (loading) {
     return (
       <Card bodyStyle={{ padding: '8px' }}>
@@ -37,7 +51,7 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
     );
   }
 
-  if (!data || !data.length) {
+  if (!normalizedData.length) {
     return (
       <Card bodyStyle={{ padding: '8px' }}>
         <h3>{t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title')}</h3>
@@ -51,7 +65,7 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
       <h3>{t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title')}</h3>
       <div ref={chartWrapperRef} style={{ position: 'relative', width: '100%', height: '468px' }}>
         <DailyTaskFinishLineChart
-          data={data || []}
+          data={normalizedData || []}
           // Avoid cases that consistently invoke `useSize` updates
           width={width - 8}
           height={height - 8}
