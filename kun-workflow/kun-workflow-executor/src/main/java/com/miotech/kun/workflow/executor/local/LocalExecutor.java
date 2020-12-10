@@ -101,7 +101,9 @@ public class LocalExecutor implements Executor {
         this.workerFactory = workerFactory;
         this.lineageService = lineageService;
         init();
-        recover();
+        if (props.getBoolean("executor.enableRecover", true)) {
+            recover();
+        }
     }
 
     private void init() {
