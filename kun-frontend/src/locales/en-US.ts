@@ -369,7 +369,7 @@ export default {
   "monitoringDashboard.dataDevelopment.taskDetailsTable.taskName": "Task Name",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.taskStatus": "Task Status",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.errorMessage": "Error Message",
-  "monitoringDashboard.dataDevelopment.taskDetailsTable.startTime": "Start Time (Default 1D)",
+  "monitoringDashboard.dataDevelopment.taskDetailsTable.startTime": "Start Time",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.endTime": "End Time",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.createTime": "Task Created",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.updateTime": "Last Updated",
