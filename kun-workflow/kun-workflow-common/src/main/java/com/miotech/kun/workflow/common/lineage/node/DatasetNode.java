@@ -96,9 +96,7 @@ public class DatasetNode {
         if (o == null || getClass() != o.getClass()) return false;
         DatasetNode that = (DatasetNode) o;
         return Objects.equals(gid, that.gid) &&
-                Objects.equals(datasetName, that.datasetName) &&
-                Objects.equals(asInputs, that.asInputs) &&
-                Objects.equals(asOutputs, that.asOutputs);
+                Objects.equals(datasetName, that.datasetName);
     }
 
     @Override
