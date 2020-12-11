@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.task.vo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.workflow.core.model.task.DependencyLevel;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
 @JsonDeserialize(builder = TaskDependencyVO.Builder.class)
@@ -17,10 +18,18 @@ public class TaskDependencyVO {
 
     private final String dependencyFunc;
 
+    private final String dependencyLevel;
+
     public TaskDependencyVO(Long upstreamTaskId, Long downstreamTaskId, String dependencyFunc) {
+        this(upstreamTaskId, downstreamTaskId, dependencyFunc, DependencyLevel.STRONG.name());
+    }
+
+
+    public TaskDependencyVO(Long upstreamTaskId, Long downstreamTaskId, String dependencyFunc, String dependencyLevel) {
         this.upstreamTaskId = upstreamTaskId;
         this.downstreamTaskId = downstreamTaskId;
         this.dependencyFunc = dependencyFunc;
+        this.dependencyLevel = dependencyLevel;
     }
 
     public Long getUpstreamTaskId() {
@@ -35,7 +44,13 @@ public class TaskDependencyVO {
         return dependencyFunc;
     }
 
-    public static Builder newBuilder() { return new Builder(); }
+    public String getDependencyLevel() {
+        return dependencyLevel;
+    }
+
+    public static Builder newBuilder() {
+        return new Builder();
+    }
 
     public static final class Builder {
         private Long upstreamTaskId;

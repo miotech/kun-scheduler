@@ -103,4 +103,9 @@ public class DateTimeUtils {
         }
         return OffsetDateTime.parse(isoDateTimeString, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
+
+    public static OffsetDateTime todayMorning(){
+        LocalDateTime localDateTime = LocalDateTime.of(LocalDate.now(),LocalTime.MIN);
+        return OffsetDateTime.of(localDateTime,ZONE_OFFSET);
+    }
 }

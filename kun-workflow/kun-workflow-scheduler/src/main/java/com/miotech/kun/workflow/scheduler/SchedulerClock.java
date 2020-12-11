@@ -23,6 +23,8 @@ public class SchedulerClock {
 
     private final EventBus eventBus;
 
+    private final Long RECOVER_LIMIT = 30l;
+
     @Inject
     public SchedulerClock(EventBus eventBus) {
         this.eventBus = eventBus;
@@ -34,6 +36,26 @@ public class SchedulerClock {
         long initDelay = 60000 - System.currentTimeMillis() % 60000 + 10;
         timer.scheduleAtFixedRate(this::emitTick, initDelay, 60000, TimeUnit.MILLISECONDS);
         logger.debug("Initial delay is {} milliseconds.", initDelay);
+    }
+
+    public void start(Tick checkPoint) {
+        if (checkPoint != null) {
+            OffsetDateTime now = DateTimeUtils.now();
+            OffsetDateTime checkPointTime = checkPoint.toOffsetDateTime();
+            OffsetDateTime recoverStartTime = now.plusMinutes(0 - RECOVER_LIMIT);
+            recoverStartTime = checkPointTime.compareTo(recoverStartTime) > 0 ? checkPointTime : recoverStartTime;
+            while (recoverStartTime.compareTo(now) < 0) {
+                try {
+                    TickEvent event = new TickEvent(new Tick(recoverStartTime));
+                    logger.debug("Post TickEvent to TaskFactory. event={}", event);
+                    eventBus.post(event);
+                    recoverStartTime = recoverStartTime.plusMinutes(1);
+                } catch (Exception e) {
+                    logger.error("Failed to emit TickEvent. Continue. now={}", now, e);
+                }
+            }
+        }
+        start();
     }
 
     private void emitTick() {

@@ -14,6 +14,7 @@ import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
+import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.DependencyFunction;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -28,7 +29,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
@@ -107,7 +107,7 @@ public class TaskSpawner {
         checkNotNull(graph, "graph should not be null.");
         checkNotNull(env, "env should not be null.");
         checkState(graph instanceof DirectTaskGraph, "Only DirectTaskGraph is accepted.");
-        Tick current = new Tick(DateTimeUtils.now());
+        Tick current = SpecialTick.DIRECTLY_TICK;
         return spawn(Lists.newArrayList(graph), current, env);
     }
 
@@ -125,43 +125,21 @@ public class TaskSpawner {
             checkPoint = new Tick(tick.toOffsetDateTime().plusMinutes(-1));
         }
         logger.info("checkPoint = {}", checkPoint);
-        OffsetDateTime checkpointTime = checkPoint.toOffsetDateTime();
-        OffsetDateTime currentTickTime = tick.toOffsetDateTime();
-        if (graphs.size() > 0 && graphs instanceof ArrayList) {
-            TaskGraph graph = ((ArrayList<TaskGraph>) graphs).get(0);
-            if (graph instanceof DirectTaskGraph) {
-                List<Task> tasksToRun = graph.tasksScheduledAt(tick);
-                logger.debug("run task = {} directly", tasksToRun);
-                //todo:临时修复一分钟内多次执行同一任务，直接执行和调度执行需要重构
-                taskRuns.addAll(createTaskTunsDirectly(tasksToRun, tick, env));
-                save(taskRuns);
-                submit(taskRuns);
-                return taskRuns;
-            }
+        OffsetDateTime currentTickTime = DateTimeUtils.now();
+        Map<TaskGraph, List<Task>> graphTasks = new HashMap<>();
+        for (TaskGraph graph : graphs) {
+            List<Task> tasksToRun = graph.tasksScheduledAt(tick).stream().
+                    filter(task -> task.shouldSchedule(tick, currentTickTime)).collect(Collectors.toList());
+            logger.debug("tasks to run: {}, at tick {}", tasksToRun, tick);
+            taskRuns.addAll(createTaskRuns(tasksToRun, tick, env));
+            graphTasks.put(graph, tasksToRun);
 
         }
-        while (checkpointTime.compareTo(currentTickTime) < 0) {
-            List<TaskRun> recoverTaskRun = new ArrayList<>();
-            checkpointTime = checkpointTime.plus(SCHEDULE_INTERVAL, ChronoUnit.MILLIS);
-            OffsetDateTime scheduleTime = checkpointTime.compareTo(currentTickTime) < 0 ?
-                    checkpointTime : currentTickTime;
-            Tick recoverTick = new Tick(scheduleTime);
-            Map<TaskGraph, List<Task>> graphTasks = new HashMap<>();
-            for (TaskGraph graph : graphs) {
-                List<Task> tasksToRun = graph.tasksScheduledAt(tick).stream().
-                        filter(task -> task.shouldSchedule(scheduleTime, currentTickTime)).collect(Collectors.toList());
-                logger.debug("tasks to run: {}, at tick {}", tasksToRun, recoverTick);
-                recoverTaskRun.addAll(createTaskRuns(tasksToRun, recoverTick, env));
-                graphTasks.put(graph, tasksToRun);
-
-            }
-            logger.debug("to save created TaskRuns. TaskRuns={}", recoverTaskRun);
-            save(recoverTaskRun);
-            updateGraphsTask(graphTasks, recoverTick);
-            logger.debug("to save checkpoint. checkpoint = {}", recoverTick);
-            tickDao.saveCheckPoint(recoverTick);
-            taskRuns.addAll(recoverTaskRun);
-        }
+        logger.debug("to save created TaskRuns. TaskRuns={}", taskRuns);
+        save(taskRuns);
+        updateGraphsTask(graphTasks, tick);
+        logger.debug("to save checkpoint. checkpoint = {}", tick);
+        tickDao.saveCheckPoint(tick);
 
         logger.debug("to submit created TaskRuns. TaskRuns={}", taskRuns);
         if (taskRuns.size() > 0) {
@@ -182,32 +160,40 @@ public class TaskSpawner {
     private List<TaskRun> createTaskRuns(List<Task> tasks, Tick tick, TaskRunEnv env) {
         List<TaskRun> results = new ArrayList<>(tasks.size());
         for (Task task : tasks) {
-            TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
-            if (taskRun == null) {
-                results.add(createTaskRun(task, tick, env.getConfig(task.getId()), results));
-            } else {
-                results.add(taskRun);
+            List<Long> upstreamTaskRunIds = resolveDependencies(task, tick, results);
+            if (task.getDependencies().size() > upstreamTaskRunIds.size()) {
+                logger.error("dependency not satisfy, taskId = {}", task.getId());
+                continue;
             }
+            try {
+                if (tick == SpecialTick.DIRECTLY_TICK) {
+                    results.add(createTaskRun(task, SpecialTick.DIRECTLY_TICK.toTick(), env.getConfig(task.getId()), upstreamTaskRunIds));
+                } else {
+                    TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
+                    if (taskRun == null) {
+                        results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRunIds));
+                    } else {
+                        results.add(taskRun);
+                    }
+                }
+            } catch (Exception e) {
+                logger.error("create taskRun failed , taskId = {}", task.getId(), e);
+            }
+
         }
         return results;
     }
 
-    private List<TaskRun> createTaskTunsDirectly(List<Task> tasks, Tick tick, TaskRunEnv env){
-        List<TaskRun> results = new ArrayList<>(tasks.size());
-        for (Task task : tasks) {
-            results.add(createTaskRun(task, tick, env.getConfig(task.getId()), results));
-        }
-        return results;
-    }
 
-    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> others) {
+    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<Long> upstreamTaskRunIds) {
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
+        Config config = prepareConfig(task, task.getConfig(), runtimeConfig);
         TaskRun taskRun = TaskRun.newBuilder()
                 .withId(taskRunId)
                 .withTask(task)
-                .withConfig(prepareConfig(task, task.getConfig(), runtimeConfig))
+                .withConfig(config)
                 .withScheduledTick(tick)
-                .withDependentTaskRunIds(resolveDependencies(task, tick, others))
+                .withDependentTaskRunIds(upstreamTaskRunIds)
                 .build();
         logger.debug("TaskRun is created successfully TaskRun={}, Task={}, Tick={}.", taskRun, task, tick);
         return taskRun;

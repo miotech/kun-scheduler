@@ -5,18 +5,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import com.miotech.kun.workflow.common.exception.ExceptionResponse;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
+import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
-import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -209,6 +211,50 @@ public class TaskControllerTest extends KunWebServerTestBase {
         ExceptionResponse exceptionResponse = jsonSerializer.toObject(response, ExceptionResponse.class);
         assertThat(exceptionResponse.getCode(), is(400));
     }
+
+    @Test
+    public void createTaskWithInvalidConfig(){
+        initOperator();
+        Task task = MockTaskFactory.createTask(1l);
+        String payload = JSONUtils.toJsonString(task);
+        String response = post("/tasks",payload);
+        ExceptionResponse exceptionResponse = jsonSerializer.toObject(response, ExceptionResponse.class);
+        assertThat(exceptionResponse.getCode(), is(400));
+
+    }
+
+    @Test
+    public void updateTaskWithInvalidConfig(){
+        initOperator();
+        Config config = Config.newBuilder()
+                .addConfig("var2", "default2").build();
+        Task task = MockTaskFactory.createTask(1l).cloneBuilder().withConfig(config).build();
+        String payload = JSONUtils.toJsonString(task);
+        String response = post("/tasks",payload);
+        Task createdTask = JSONUtils.jsonToObject(response,Task.class);
+        Config errorConfig = Config.newBuilder().addConfig("var3","default3").build();
+        Task updateTask =  createdTask.cloneBuilder().withConfig(errorConfig).build();
+        String updateRes = put("/tasks/" + updateTask.getId(),JSONUtils.toJsonString(updateTask));
+        ExceptionResponse exceptionResponse = jsonSerializer.toObject(updateRes, ExceptionResponse.class);
+        assertThat(exceptionResponse.getCode(), is(400));
+
+    }
+
+    private void initOperator() {
+        long operatorId = 1L;
+        String className = "TestOperator1";
+
+        String packagePath = OperatorCompiler.compileJar(TestOperator.class, className);
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName(className)
+                .withClassName(className)
+                .withPackagePath(packagePath)
+                .build();
+        operatorDao.createWithId(op, operatorId);
+    }
+
 
     @Test
     public void deleteTask_withExistingTaskId_shouldRemoveTaskAndResponse() {
