@@ -193,6 +193,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskRun taskRunWithUpdatedProps = sampleTaskRun.cloneBuilder()
                 .withStartAt(DateTimeUtils.now().plusHours(1))
                 .withStatus(TaskRunStatus.ABORTED)
+                .withCreatedAt(OffsetDateTime.now())
                 .build();
         taskRunDao.updateTaskRun(taskRunWithUpdatedProps);
 
@@ -201,7 +202,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchTaskRunById(1L);
         assertTrue(persistedTaskRunOptional.isPresent());
         TaskRun persistedTaskRun = persistedTaskRunOptional.get();
-        assertThat(persistedTaskRun, sameBeanAs(taskRunWithUpdatedProps));
+        assertThat(persistedTaskRun, sameBeanAs(taskRunWithUpdatedProps).ignoring(startsWith("createdAt")).ignoring(startsWith("updatedAt")));
         // Here startAt & endAt may differ since database converts datetime offset to system default,
         // but epoch second will guaranteed to be the same
         assertEquals(persistedTaskRun.getStartAt().toEpochSecond(), taskRunWithUpdatedProps.getStartAt().toEpochSecond());
@@ -296,7 +297,10 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertThat(attempt, samePropertyValuesAs(baselineModel, "startAt", "endAt", "taskRun"));
         // TaskRun instance should be nested inside
         assertThat(attempt.getTaskRun(), notNullValue());
-        assertThat(attempt.getTaskRun(), sameBeanAs(sampleTaskRun));
+        assertThat(attempt.getTaskRun(), sameBeanAs(sampleTaskRun)
+                .ignoring(startsWith("createdAt"))
+                .ignoring(startsWith("updatedAt"))
+        );
         // And Task model object should be nested inside that TaskRun object
         assertThat(attempt.getTaskRun().getTask(), notNullValue());
         assertThat(attempt.getTaskRun().getTask(), sameBeanAs(task));

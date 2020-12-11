@@ -38,6 +38,14 @@ public class TaskRun {
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime endAt;
 
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    private OffsetDateTime createdAt;
+
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    private OffsetDateTime updatedAt;
+
     private List<TaskAttempt> attempts;
 
     private List<Long> dependencyTaskRunIds;
@@ -116,6 +124,14 @@ public class TaskRun {
         this.endAt = endAt;
     }
 
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
     public List<TaskAttempt> getAttempts() {
         return attempts;
     }
@@ -152,6 +168,10 @@ public class TaskRun {
         private OffsetDateTime startAt;
         @JsonDeserialize(using = CustomDateTimeDeserializer.class)
         private OffsetDateTime endAt;
+        @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+        private OffsetDateTime createdAt;
+        @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+        private OffsetDateTime updatedAt;
         private List<TaskAttempt> attempts;
         private List<Long> dependencyTaskRunIds;
         private List<Tag> tags;
@@ -208,6 +228,16 @@ public class TaskRun {
             return this;
         }
 
+        public Builder withCreatedAt(OffsetDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public Builder withUpdatedAt(OffsetDateTime updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
         public Builder withAttempts(List<TaskAttempt> attempts) {
             this.attempts = attempts;
             return this;
@@ -237,6 +267,8 @@ public class TaskRun {
             taskRunVO.setAttempts(attempts);
             taskRunVO.setDependencyTaskRunIds(dependencyTaskRunIds);
             taskRunVO.setTags(tags);
+            taskRunVO.createdAt = createdAt;
+            taskRunVO.updatedAt = updatedAt;
             return taskRunVO;
         }
     }

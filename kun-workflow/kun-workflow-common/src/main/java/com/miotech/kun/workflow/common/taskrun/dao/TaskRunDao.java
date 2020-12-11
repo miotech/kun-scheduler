@@ -50,7 +50,7 @@ public class TaskRunDao {
     private static final Logger logger = LoggerFactory.getLogger(TaskRunDao.class);
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "start_at", "end_at", "config", "inlets", "outlets");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "start_at", "end_at", "config", "inlets", "outlets", "created_at", "updated_at");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
@@ -267,6 +267,8 @@ public class TaskRunDao {
             return savedTaskRun.get();
         }
         dbOperator.transaction(() -> {
+            OffsetDateTime now = DateTimeUtils.now();
+
             List<String> tableColumns = new ImmutableList.Builder<String>()
                     .addAll(taskRunCols)
                     .build();
@@ -286,7 +288,9 @@ public class TaskRunDao {
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
-                    JSONUtils.toJsonString(taskRun.getOutlets())
+                    JSONUtils.toJsonString(taskRun.getOutlets()),
+                    now,
+                    now
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds());
@@ -313,6 +317,7 @@ public class TaskRunDao {
      * @return
      */
     public TaskRun updateTaskRun(TaskRun taskRun) {
+        OffsetDateTime now = DateTimeUtils.now();
         dbOperator.transaction(() -> {
             List<String> tableColumns = new ImmutableList.Builder<String>()
                     .addAll(taskRunCols)
@@ -335,6 +340,8 @@ public class TaskRunDao {
                     JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets()),
+                    taskRun.getCreatedAt(),       // created_at
+                    now,                          // updated_at
                     taskRun.getId()
             );
 
@@ -924,6 +931,8 @@ public class TaskRunDao {
                     .withDependentTaskRunIds(Collections.emptyList())
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_end_at")))
+                    .withCreatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_created_at")))
+                    .withUpdatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_updated_at")))
                     .withConfig(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_config"), Config.class))
                     .build();
         }
