@@ -32,12 +32,16 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
   const {
     selector: {
       selectedFilterCardType,
+      taskDetailsDisplayStartedOnly,
+      taskDetailsDisplayLast24HoursOnly,
       dataDevelopmentBoardData,
     },
     dispatch,
   } = useRedux(s => ({
     selectedFilterCardType: s.monitoringDashboard.dataDevelopmentBoardData.taskDetailsSelectedFilter,
     dataDevelopmentBoardData: s.monitoringDashboard.dataDevelopmentBoardData,
+    taskDetailsDisplayStartedOnly: s.monitoringDashboard.dataDevelopmentBoardData.taskDetailsDisplayStartedOnly,
+    taskDetailsDisplayLast24HoursOnly: s.monitoringDashboard.dataDevelopmentBoardData.taskDetailsDisplayLast24HoursOnly,
   }));
 
   const {
@@ -64,11 +68,15 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
       pageNumber: taskDetails.pageNum,
       pageSize: taskDetails.pageSize,
       taskRunStatus: (selectedFilterCardType != null) ? computeFilterTypeToRequestParam(selectedFilterCardType) : undefined,
+      includeStartedOnly: (selectedFilterCardType !== 'PENDING') ? taskDetailsDisplayStartedOnly : false,
+      last24HoursOnly: taskDetailsDisplayLast24HoursOnly,
     });
   }, [
     taskDetails.pageNum,
     taskDetails.pageSize,
     selectedFilterCardType,
+    taskDetailsDisplayStartedOnly,
+    taskDetailsDisplayLast24HoursOnly,
   ]);
 
   const topMetricsRow = useMemo(() => {
@@ -195,6 +203,15 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
             total={taskDetails.total}
             data={taskDetails.data}
             onChange={taskDetailsTableChangeHandler}
+            displayStartedOnly={taskDetailsDisplayStartedOnly}
+            displayLast24HoursOnly={taskDetailsDisplayLast24HoursOnly}
+            displayStartedOnlyDisabled={(selectedFilterCardType === 'PENDING')}
+            onChangeDisplayStartedOnly={(nextCheckState) => {
+              dispatch.monitoringDashboard.setTaskDetailsDisplayStartedOnly(nextCheckState);
+            }}
+            onChangeDisplayLast24HoursOnly={(nextCheckState) => {
+              dispatch.monitoringDashboard.setTaskDetailsDisplayLast24HoursOnly(nextCheckState);
+            }}
           />
         </Col>
       </Row>

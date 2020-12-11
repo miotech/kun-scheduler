@@ -201,6 +201,8 @@ public class TaskRunService {
         vo.setDependentTaskRunIds(taskRun.getDependentTaskRunIds());
         vo.setStartAt(taskRun.getStartAt());
         vo.setEndAt(taskRun.getEndAt());
+        vo.setCreatedAt(taskRun.getCreatedAt());
+        vo.setUpdatedAt(taskRun.getUpdatedAt());
         vo.setConfig(taskRun.getConfig());
         vo.setAttempts(attempts);
         return vo;
