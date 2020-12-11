@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class JSONUtils {
@@ -64,6 +65,15 @@ public class JSONUtils {
             return objectMapper.readValue(str, typeRef);
         } catch (JsonProcessingException e) {
             logger.error("Error occurs when converting JSON to object: ", e);
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
+    }
+
+    public static <T> List<T> jsonArrayToList(String str, Class<T> valueType){
+        try {
+            return objectMapper.readValue(str, new TypeReference<List<T>>(){});
+        } catch (JsonProcessingException e) {
+            logger.error("Error occurs when converting JSON to List: ", e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
     }

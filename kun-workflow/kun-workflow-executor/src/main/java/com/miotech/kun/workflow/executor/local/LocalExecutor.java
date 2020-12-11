@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
@@ -19,6 +20,7 @@ import com.miotech.kun.workflow.core.execution.OperatorReport;
 import com.miotech.kun.workflow.core.execution.TaskAttemptMsg;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.executor.WorkerFactory;
 import com.miotech.kun.workflow.executor.local.thread.TaskAttemptSiftingAppender;
@@ -56,6 +58,8 @@ public class LocalExecutor implements Executor {
 
     private final EventBus eventBus;
 
+    private final LineageService lineageService;
+
     private final Integer CORES = Runtime.getRuntime().availableProcessors();
 
     private final Integer TASK_LIMIT = 2048;
@@ -85,7 +89,7 @@ public class LocalExecutor implements Executor {
     @Inject
     public LocalExecutor(Injector injector, TaskRunService taskRunService, ResourceLoader resourceLoader,
                          TaskRunDao taskRunDao, OperatorDao operatorDao, MiscService miscService,
-                         EventBus eventBus, Props props, WorkerFactory workerFactory) {
+                         EventBus eventBus, Props props, WorkerFactory workerFactory, LineageService lineageService) {
         this.injector = injector;
         this.taskRunService = taskRunService;
         this.resourceLoader = resourceLoader;
@@ -95,8 +99,11 @@ public class LocalExecutor implements Executor {
         this.eventBus = eventBus;
         this.props = props;
         this.workerFactory = workerFactory;
+        this.lineageService = lineageService;
         init();
-        recover();
+        if (props.getBoolean("executor.enableRecover", true)) {
+            recover();
+        }
     }
 
     private void init() {
@@ -117,7 +124,6 @@ public class LocalExecutor implements Executor {
     public boolean submit(TaskAttempt taskAttempt, boolean reSubmit) {
         logger.info("submit taskAttemptId = {} to local executor ", taskAttempt.getId());
         Optional<TaskAttempt> taskAttemptOptional = taskRunDao.fetchAttemptById(taskAttempt.getId());
-        logger.debug("submit get taskAttempt from db at {}", System.currentTimeMillis());
         if (!taskAttemptOptional.isPresent()) {
             logger.error("can not find taskAttempt = {} from database", taskAttempt);
             return false;
@@ -127,7 +133,7 @@ public class LocalExecutor implements Executor {
                 return false;
             }
             if (!reSubmit && !savedTaskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
-                logger.info("taskAttemptId = {} has been submit", taskAttempt.getId());
+                logger.debug("taskAttemptId = {} has been submit", taskAttempt.getId());
                 return false;
             }
             taskAttemptQueue.add(taskAttempt.cloneBuilder().withStatus(TaskRunStatus.QUEUED).build());
@@ -257,6 +263,9 @@ public class LocalExecutor implements Executor {
                 taskRunId, report.getInlets(), report.getOutlets());
         taskRunDao.updateTaskRunInletsOutlets(taskRunId,
                 report.getInlets(), report.getOutlets());
+        TaskRun taskRun = taskRunDao.fetchTaskRunById(taskRunId).get();
+        lineageService.updateTaskLineage(taskRun.getTask(),report.getInlets(),report.getOutlets());
+
     }
 
     public boolean recover() {
@@ -363,7 +372,6 @@ public class LocalExecutor implements Executor {
                     } else {
                         heartBeatMessage.setTimeoutTimes(timeoutTimes);
                         workerPool.put(taskAttemptId, heartBeatMessage);
-                        logger.info("taskAttempt = {} timeout times = {}", heartBeatMessage.getTaskAttemptId(), timeoutTimes);
                     }
                 }
 
