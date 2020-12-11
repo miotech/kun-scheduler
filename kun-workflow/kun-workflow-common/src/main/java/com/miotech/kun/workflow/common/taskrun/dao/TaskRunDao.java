@@ -64,12 +64,12 @@ public class TaskRunDao {
     private static final DateTimeFormatter LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     static {
-        sortKeyToFieldMapper.put("id", "taskrun_id");
-        sortKeyToFieldMapper.put("startAt", "start_at");
-        sortKeyToFieldMapper.put("endAt", "ent_at");
-        sortKeyToFieldMapper.put("status", "status");
-        sortKeyToFieldMapper.put("createdAt", "created_at");
-        sortKeyToFieldMapper.put("updatedAt", "updated_at");
+        sortKeyToFieldMapper.put("id", TASK_RUN_MODEL_NAME + "_id");
+        sortKeyToFieldMapper.put("startAt", TASK_RUN_MODEL_NAME + "_start_at");
+        sortKeyToFieldMapper.put("endAt", TASK_RUN_MODEL_NAME + "_end_at");
+        sortKeyToFieldMapper.put("status", TASK_RUN_MODEL_NAME + "_status");
+        sortKeyToFieldMapper.put("createdAt", TASK_RUN_MODEL_NAME + "_created_at");
+        sortKeyToFieldMapper.put("updatedAt", TASK_RUN_MODEL_NAME + "_updated_at");
     }
 
     @Inject
