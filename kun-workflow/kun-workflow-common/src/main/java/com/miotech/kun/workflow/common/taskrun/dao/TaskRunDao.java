@@ -204,7 +204,7 @@ public class TaskRunDao {
         }
 
         // Search by status
-        if (Objects.nonNull(filter.getStatus())) {
+        if (Objects.nonNull(filter.getStatus()) && (!filter.getStatus().isEmpty())) {
             StringBuilder statusSubWhereClauseBuilder = new StringBuilder("( ");
             for (TaskRunStatus status : filter.getStatus()) {
                 statusSubWhereClauseBuilder.append("(" + TASK_RUN_MODEL_NAME + ".status = ? ) OR ");
