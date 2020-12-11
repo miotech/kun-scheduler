@@ -68,6 +68,8 @@ public class TaskRunDao {
         sortKeyToFieldMapper.put("startAt", "start_at");
         sortKeyToFieldMapper.put("endAt", "ent_at");
         sortKeyToFieldMapper.put("status", "status");
+        sortKeyToFieldMapper.put("createdAt", "created_at");
+        sortKeyToFieldMapper.put("updatedAt", "updated_at");
     }
 
     @Inject

@@ -160,7 +160,7 @@ public class DashboardController {
                 .withStatus(Objects.nonNull(tasksRequest.getTaskRunStatus()) ?
                         Sets.newHashSet(tasksRequest.getTaskRunStatus()) : null)
                 .withIncludeStartedOnly(tasksRequest.getIncludeStartedOnly())
-                .withSortKey("id")
+                .withSortKey("createdAt")
                 .withSortOrder("DESC")
                 .build();
 
@@ -173,6 +173,8 @@ public class DashboardController {
             task.setTaskStatus(taskRun.getStatus().name());
             task.setStartTime(DateUtils.dateTimeToMillis(taskRun.getStartAt()));
             task.setEndTime(DateUtils.dateTimeToMillis(taskRun.getEndAt()));
+            task.setCreateTime(DateUtils.dateTimeToMillis(taskRun.getCreatedAt()));
+            task.setUpdateTime(DateUtils.dateTimeToMillis(taskRun.getUpdatedAt()));
             dataDevelopmentTasks.add(task);
         }
         dataDevelopmentTasks.setPageNumber(taskRunResult.getPageNum());
