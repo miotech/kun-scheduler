@@ -15,7 +15,7 @@ import java.util.Set;
 
 @JsonDeserialize(builder = TaskRunSearchRequest.Builder.class)
 public class TaskRunSearchRequest {
-    private static final List<String> AVAILABLE_SORT_KEYS = Lists.newArrayList("id", "status", "startAt", "endAt");
+    private static final List<String> AVAILABLE_SORT_KEYS = Lists.newArrayList("id", "status", "startAt", "endAt", "createdAt", "updatedAt");
 
     private final String name;
 

@@ -18,4 +18,6 @@ public class DataDevelopmentTasksRequest extends PageInfo {
     List<TaskRunStatus> taskRunStatus;
 
     Boolean includeStartedOnly;
+
+    Boolean last24HoursOnly;
 }

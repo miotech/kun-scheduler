@@ -49,6 +49,8 @@ export interface DataDevelopmentBoardData {
     error: Error | null;
   };
   taskDetailsSelectedFilter: DataDevelopmentBoardFilterCardType;
+  taskDetailsDisplayStartedOnly: boolean;
+  taskDetailsDisplayLast24HoursOnly: boolean;
   taskDetails: {
     data: DevTaskDetail[];
     loading: boolean;
@@ -110,6 +112,8 @@ export const initState: MonitoringDashboardModelState = {
       error: null,
     },
     taskDetailsSelectedFilter: null,
+    taskDetailsDisplayStartedOnly: false,
+    taskDetailsDisplayLast24HoursOnly: false,
     taskDetails: {
       data: [],
       loading: false,
