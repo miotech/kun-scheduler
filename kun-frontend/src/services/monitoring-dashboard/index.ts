@@ -176,6 +176,8 @@ export interface DevTaskDetail {
   errorMessage: string;
   startTime: number | null;
   endTime: number | null;
+  createTime: number | null;
+  updateTime: number | null;
   duration: number | null;
 }
 

@@ -24,5 +24,9 @@ public class DataDevelopmentTask {
 
     Long endTime;
 
+    Long createTime;
+
+    Long updateTime;
+
     Long duration;
 }

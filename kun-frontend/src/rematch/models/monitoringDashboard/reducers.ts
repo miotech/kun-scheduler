@@ -76,4 +76,10 @@ export const reducers = {
   setTaskDetailsSelectedFilter: produce((draftState: ModelState, payload: DataDevelopmentBoardFilterCardType) => {
     draftState.dataDevelopmentBoardData.taskDetailsSelectedFilter = payload;
   }),
+  setTaskDetailsDisplayStartedOnly: produce((draftState: ModelState, payload: boolean) => {
+    draftState.dataDevelopmentBoardData.taskDetailsDisplayStartedOnly = payload;
+  }),
+  setTaskDetailsDisplayLast24HoursOnly: produce((draftState: ModelState, payload: boolean) => {
+    draftState.dataDevelopmentBoardData.taskDetailsDisplayLast24HoursOnly = payload;
+  }),
 };
