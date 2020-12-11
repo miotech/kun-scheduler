@@ -65,7 +65,7 @@ public class TaskRunController {
             @QueryParameter List<Long> taskIds,
             @QueryParameter String dateFrom,
             @QueryParameter String dateTo,
-            @QueryParameter(defaultValue = "startAt") String sortKey,
+            @QueryParameter(defaultValue = "id") String sortKey,
             @QueryParameter(defaultValue = "DESC") String sortOrder,
             @QueryParameter(defaultValue = "false") String includeStartedOnly
     ) {
@@ -149,6 +149,8 @@ public class TaskRunController {
         TaskRunSearchFilter filter = requestFilter.cloneBuilder()
                 .withPageNum(Objects.nonNull(requestFilter.getPageNum()) ? requestFilter.getPageNum() : 1)
                 .withPageSize(Objects.nonNull(requestFilter.getPageSize()) ? requestFilter.getPageSize() : 100)
+                .withSortKey(Objects.nonNull(requestFilter.getSortKey()) ? requestFilter.getSortKey() : "id")
+                .withSortOrder(Objects.nonNull(requestFilter.getSortOrder()) ?requestFilter.getSortOrder() : "DESC")
                 .build();
         return taskRunService.searchTaskRunVOs(filter);
     }
