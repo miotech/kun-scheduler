@@ -19,6 +19,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.hamcrest.Matchers;
 import org.junit.After;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.inject.Inject;
@@ -477,6 +478,8 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
+    @Ignore
+    // This test case is no longer effective since we have changed the indicator to create time
     public void fetchTaskRunsByFilter_withDateRangeFilter_shouldReturnFilterTaskRuns() {
         // prepare
         DateTimeUtils.setClock(getMockClock());
