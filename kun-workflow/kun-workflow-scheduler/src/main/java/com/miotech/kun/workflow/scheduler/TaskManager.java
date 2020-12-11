@@ -61,11 +61,11 @@ public class TaskManager {
 
         save(taskAttempts);
         logger.debug("TaskAttempts saved. total={}", taskAttempts.size());
-
-        for (TaskAttempt ta : taskAttempts) {
-            eventLoop.post(ta.getId(), new StartWatchEvent(ta));
-            logger.debug("Submitted TaskAttempt to EventLoop. taskAttemptId={}", ta.getId());
+        List<TaskAttempt> taskAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
+        for (TaskAttempt taskAttempt : taskAttemptList) {
+            executor.submit(taskAttempt);
         }
+
     }
 
     /* ----------- private methods ------------ */
@@ -105,7 +105,13 @@ public class TaskManager {
 
         @Subscribe
         public void onReceive(TaskAttemptStatusChangeEvent event) {
-            post(event.getAttemptId(), event);
+            TaskRunStatus currentStatus = event.getToStatus();
+            if (currentStatus.isFinished()) {
+                List<TaskAttempt> satisfyTaskAttempts = taskRunDao.fetchAllSatisfyTaskAttempt();
+                for (TaskAttempt taskAttempt : satisfyTaskAttempts) {
+                    executor.submit(taskAttempt);
+                }
+            }
         }
     }
 

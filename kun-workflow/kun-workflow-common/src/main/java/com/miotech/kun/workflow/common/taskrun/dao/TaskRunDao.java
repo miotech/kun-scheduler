@@ -19,7 +19,10 @@ import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
+import com.miotech.kun.workflow.core.model.task.DependencyLevel;
+import com.miotech.kun.workflow.core.model.task.DependencyStatus;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunDependency;
@@ -59,7 +62,7 @@ public class TaskRunDao {
 
     private static final String RELATION_TABLE_NAME = "kun_wf_task_run_relations";
     private static final String RELATION_MODEL_NAME = "task_run_relations";
-    private static final List<String> taskRunRelationCols = ImmutableList.of("upstream_task_run_id", "downstream_task_run_id");
+    private static final List<String> taskRunRelationCols = ImmutableList.of("upstream_task_run_id", "downstream_task_run_id", "dependency_level", "dependency_status");
     private static final Map<String, String> sortKeyToFieldMapper = new HashMap<>();
 
     private static final DateTimeFormatter LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -328,7 +331,7 @@ public class TaskRunDao {
                     taskRun.getPriority()
             );
 
-            createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds());
+            createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
             return taskRun;
         });
 
@@ -384,7 +387,7 @@ public class TaskRunDao {
             );
 
             deleteTaskRunDependencies(taskRun.getId());
-            createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds());
+            createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
             return taskRun;
         });
 
@@ -648,9 +651,63 @@ public class TaskRunDao {
             if (prev.isPresent()) {
                 dbOperator.update(sbTa.asPrepared().getSQL(), pmTa.toArray());
                 dbOperator.update(sbTr.asPrepared().getSQL(), pmTr.toArray());
+                if (status.isFinished()) {
+                    DependencyStatus dependencyStatus = status.isSuccess() ? DependencyStatus.SUCCESS : DependencyStatus.FAILED;
+                    updateTaskRunDependency(taskRunId, dependencyStatus);
+                }
             }
             return prev;
         });
+    }
+
+    public List<TaskAttempt> fetchAllSatisfyTaskAttempt() {
+        return dbOperator.transaction(() -> {
+            List<Long> taskRunIdList = fetchAllSatisfyTaskRunId();
+            return fetchAllLatestTaskAttempt(taskRunIdList);
+        });
+    }
+
+    public List<TaskAttempt> fetchAllLatestTaskAttempt(List<Long> taskRunIdList) {
+        if (taskRunIdList.size() == 0) {
+            return Lists.newArrayList();
+        }
+        String taskRunIdFilter = "(" + taskRunIdList.stream().map(id -> "?")
+                .collect(Collectors.joining(", ")) + ")";
+        String fetchIdSql = DefaultSQLBuilder.newBuilder()
+                .select("max(id) as task_attempt_id")
+                .from(TASK_ATTEMPT_TABLE_NAME)
+                .where("task_run_id in " + taskRunIdFilter)
+                .groupBy("task_run_id")
+                .asPrepared()
+                .getSQL();
+        List<Long> taskAttemptIdList = dbOperator.fetchAll(fetchIdSql, rs -> rs.getLong("task_attempt_id"), taskRunIdList.toArray());
+        return fetchTaskAttemptByIds(taskAttemptIdList);
+
+
+    }
+
+    public List<TaskAttempt> fetchTaskAttemptByIds(List<Long> taskAttemptIdList) {
+        if (taskAttemptIdList.size() == 0) {
+            return new ArrayList<>();
+        }
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
+        columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);
+        columnsMap.put(TaskDao.TASK_MODEL_NAME, TaskDao.getTaskCols());
+
+        String attemptIdFilter = "(" + taskAttemptIdList.stream().map(x -> "?").collect(Collectors.joining(",")) + ")";
+
+        String sql = DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .from(TASK_ATTEMPT_TABLE_NAME, TASK_ATTEMPT_MODEL_NAME)
+                .join("INNER", TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".id = " + TASK_ATTEMPT_MODEL_NAME + ".task_run_id")
+                .join("INNER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
+                .on(TaskDao.TASK_MODEL_NAME + ".id = " + TASK_RUN_MODEL_NAME + ".task_id")
+                .autoAliasColumns()
+                .where(TASK_ATTEMPT_MODEL_NAME + ".id in " + attemptIdFilter)
+                .getSQL();
+        return dbOperator.fetchAll(sql, new TaskAttemptMapper(TASK_ATTEMPT_MODEL_NAME, taskRunMapperInstance), taskAttemptIdList.toArray());
     }
 
     public Optional<TaskRunStatus> updateTaskAttemptExecutionTime(Long taskAttemptId, @Nullable OffsetDateTime startAt,
@@ -733,8 +790,22 @@ public class TaskRunDao {
         return dbOperator.update(dependencySQL, taskRunId) >= 0;
     }
 
-    private void createTaskRunDependencies(Long taskRunId, List<Long> dependencies) {
+    private void createTaskRunDependencies(Long taskRunId, List<Long> dependencies, Task task) {
         if (dependencies.isEmpty()) return;
+        Map<Long, DependencyLevel> levelMap = new HashMap<>();
+        for (TaskDependency taskDependency : task.getDependencies()) {
+            levelMap.put(taskDependency.getUpstreamTaskId(), taskDependency.getDependencyLevel());
+        }
+        List<TaskRunDependency> taskRunDependencyList = new ArrayList<>();
+        for (Long upstreamTaskRunId : dependencies) {
+            TaskRun upstreamTaskRun = fetchTaskRunById(upstreamTaskRunId).get();
+            DependencyStatus dependencyStatus = DependencyStatus.CREATED;
+            if (upstreamTaskRun.getStatus() != null && upstreamTaskRun.getStatus().isFinished()) {
+                dependencyStatus = upstreamTaskRun.getStatus().isSuccess() ? DependencyStatus.SUCCESS : DependencyStatus.FAILED;
+            }
+            taskRunDependencyList.add(new TaskRunDependency(upstreamTaskRunId, taskRunId, levelMap.get(upstreamTaskRun.getTask().getId()), dependencyStatus));
+        }
+
         List<String> tableColumns = new ImmutableList.Builder<String>()
                 .addAll(taskRunRelationCols)
                 .build();
@@ -746,8 +817,9 @@ public class TaskRunDao {
                 .getSQL();
 
         Object[][] params = new Object[dependencies.size()][2];
-        for (int i = 0; i < dependencies.size(); i++) {
-            params[i] = new Object[]{dependencies.get(i), taskRunId};
+        for (int i = 0; i < taskRunDependencyList.size(); i++) {
+            params[i] = new Object[]{taskRunDependencyList.get(i).getUpstreamTaskRunId(),
+                    taskRunId, taskRunDependencyList.get(i).getDependencyLevel().name(), taskRunDependencyList.get(i).getDependencyStatus().name()};
         }
 
         dbOperator.batch(dependencySQL, params);
@@ -755,6 +827,15 @@ public class TaskRunDao {
 
     public TaskRun fetchLatestTaskRun(Long taskId) {
         List<TaskRun> latestRunInList = fetchLatestTaskRuns(taskId, 1);
+        if (latestRunInList.isEmpty()) {
+            return null;
+        }
+        // else
+        return latestRunInList.get(0);
+    }
+
+    public TaskRun fetchLatestTaskRunToday(Long taskId) {
+        List<TaskRun> latestRunInList = fetchLatestTaskRunsToday(taskId, 1);
         if (latestRunInList.isEmpty()) {
             return null;
         }
@@ -771,6 +852,17 @@ public class TaskRunDao {
                 .limit(limit)
                 .getSQL();
         return dbOperator.fetchAll(sql, taskRunMapperInstance, taskId);
+    }
+
+    public List<TaskRun> fetchLatestTaskRunsToday(Long taskId, int limit) {
+        checkNotNull(taskId, "taskId should not be null.");
+        OffsetDateTime todayMorning = DateTimeUtils.todayMorning();
+        String sql = getTaskRunSQLBuilderWithDefaultConfig()
+                .where("task_id = ? and " + TASK_RUN_MODEL_NAME + ".created_at > ?")
+                .orderBy("start_at DESC")
+                .limit(limit)
+                .getSQL();
+        return dbOperator.fetchAll(sql, taskRunMapperInstance, taskId, todayMorning);
     }
 
     public TaskAttemptProps fetchLatestTaskAttempt(Long taskRunId) {
@@ -942,6 +1034,58 @@ public class TaskRunDao {
                 TaskRunStatus.RUNNING.toString(), recoverLimit);
     }
 
+
+    //创建TaskRun依赖
+    public void createTaskRunDependency(TaskRunDependency dependency) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .insert(taskRunRelationCols.toArray(new String[0]))
+                .into(RELATION_TABLE_NAME)
+                .asPrepared()
+                .getSQL();
+        dbOperator.create(sql, dependency.getUpstreamTaskRunId(), dependency.getDownStreamTaskRunId(),
+                dependency.getDependencyLevel().name(), dependency.getDependencyStatus().name());
+    }
+
+    //根据taskRunId更新taskRun依赖
+    public void updateTaskRunDependency(long taskRunId, DependencyStatus status) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update(RELATION_TABLE_NAME)
+                .set("dependency_status")
+                .where("upstream_task_run_id = ?")
+                .asPrepared()
+                .getSQL();
+        dbOperator.update(sql, status.name(), taskRunId);
+    }
+    //获取当前满足依赖条件的taskRunId
+//    public List<Long> fetchAllSatisfyTaskRunId(){
+//        String whereCase = TASK_RUN_MODEL_NAME + ".status = " + TaskRunStatus.CREATED.name() + " and (" +
+//                RELATION_MODEL_NAME + ".";
+//        String sql = DefaultSQLBuilder.newBuilder()
+//                .select(TASK_RUN_MODEL_NAME + ".id")
+//                .from(RELATION_TABLE_NAME,RELATION_MODEL_NAME)
+//                .join("INNER",TASK_RUN_TABLE_NAME,TASK_RUN_MODEL_NAME)
+//                .on(TASK_RUN_MODEL_NAME + ".id = " + RELATION_MODEL_NAME + ".downstream_task_run_id")
+//                .where()
+//        return null;
+//    }
+
+    public List<Long> fetchAllSatisfyTaskRunId() {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("id")
+                .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .join("LEFT", RELATION_TABLE_NAME, RELATION_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".id = " + RELATION_MODEL_NAME + ".downstream_task_run_id")
+                .where(TASK_RUN_MODEL_NAME + ".status = ?")
+                .groupBy("id")
+                .having("sum(case when dependency_status = ? or (dependency_level = ? and dependency_status = ?) then 1 else 0 end) = 0")
+                .asPrepared()
+                .getSQL();
+        List<Long> satisfyTaskRunId = dbOperator.fetchAll(sql, rs -> rs.getLong("id"), TaskRunStatus.CREATED.name(),
+                DependencyStatus.CREATED.name(), DependencyLevel.STRONG.name(), DependencyStatus.FAILED.name());
+        return satisfyTaskRunId;
+    }
+
+
     public static class TaskRunDependencyMapper implements ResultSetMapper<TaskRunDependency> {
 
         private static TaskRunDao.TaskRunDependencyMapper instance;
@@ -957,7 +1101,9 @@ public class TaskRunDao {
         public TaskRunDependency map(ResultSet rs) throws SQLException {
             return new TaskRunDependency(
                     rs.getLong(RELATION_MODEL_NAME + "_upstream_task_run_id"),
-                    rs.getLong(RELATION_MODEL_NAME + "_downstream_task_run_id")
+                    rs.getLong(RELATION_MODEL_NAME + "_downstream_task_run_id"),
+                    DependencyLevel.resolve(rs.getString(RELATION_MODEL_NAME + "_dependency_level")),
+                    DependencyStatus.resolve(rs.getString(RELATION_MODEL_NAME + "_dependency_status"))
             );
         }
     }
