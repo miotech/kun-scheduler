@@ -371,6 +371,8 @@ export default {
   "monitoringDashboard.dataDevelopment.taskDetailsTable.errorMessage": "Error Message",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.startTime": "Start Time (Default 1D)",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.endTime": "End Time",
+  "monitoringDashboard.dataDevelopment.taskDetailsTable.createTime": "Task Created",
+  "monitoringDashboard.dataDevelopment.taskDetailsTable.updateTime": "Last Updated",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.duration": "Duration",
   "monitoringDashboard.testCaseRuleTable.originalValue": "Original value",
   "monitoringDashboard.testCaseRuleTable.field": "Field",

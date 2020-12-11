@@ -48,23 +48,27 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         ),
         render: ((txt, record) => {
           return (
-            <Button type="link" onClick={async () => {
-              const dismiss = message.loading('Loading...', 0);
-              const taskDefinitionId = await getTaskDefinitionIdByWorkflowTaskId(record.taskId);
-              if (taskDefinitionId) {
-                history.push(
-                  SafeUrlAssembler()
-                    .template('/data-development/task-definition/:taskDefId')
-                    .param({
-                      taskDefId: taskDefinitionId,
-                    })
-                    .toString(),
-                );
-              } else {
-                message.error(`Cannot find related task definition for: ${record.taskName}`);
-              }
-              dismiss();
-            }}>
+            <Button
+              type="link"
+              onClick={async () => {
+                const dismiss = message.loading('Loading...', 0);
+                const taskDefinitionId = await getTaskDefinitionIdByWorkflowTaskId(record.taskId);
+                if (taskDefinitionId) {
+                  history.push(
+                    SafeUrlAssembler()
+                      .template('/data-development/task-definition/:taskDefId')
+                      .param({
+                        taskDefId: taskDefinitionId,
+                      })
+                      .toString(),
+                  );
+                } else {
+                  message.error(`Cannot find related task definition for: ${record.taskName}`);
+                }
+                dismiss();
+              }}
+              size="small"
+            >
               {record.taskName}
             </Button>
           );
@@ -82,6 +86,20 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         key: 'errorMessage',
         title: t(
           'monitoringDashboard.dataDevelopment.taskDetailsTable.errorMessage',
+        ),
+      },
+      {
+        dataIndex: 'createTime',
+        key: 'createTime',
+        title: t(
+          'monitoringDashboard.dataDevelopment.taskDetailsTable.createTime',
+        ),
+        render: (txt: any, record: DevTaskDetail) => (
+          <span>
+            {!isNil(record.createTime) && dayjs(record.createTime).isValid()
+              ? dayjs(record.createTime).format('YYYY-MM-DD HH:mm')
+              : '-'}
+          </span>
         ),
       },
       {

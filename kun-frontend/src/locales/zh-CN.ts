@@ -371,6 +371,8 @@ export default {
   "monitoringDashboard.dataDevelopment.taskDetailsTable.errorMessage": "错误信息",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.startTime": "开始时间",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.endTime": "结束时间",
+  "monitoringDashboard.dataDevelopment.taskDetailsTable.createTime": "创建时间",
+  "monitoringDashboard.dataDevelopment.taskDetailsTable.updateTime": "更新时间",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.duration": "耗时",
   "monitoringDashboard.testCaseRuleTable.originalValue": "原始值",
   "monitoringDashboard.testCaseRuleTable.field": "字段",
