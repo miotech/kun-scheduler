@@ -50,7 +50,7 @@ public class TaskRunDao {
     private static final Logger logger = LoggerFactory.getLogger(TaskRunDao.class);
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "start_at", "end_at", "config", "inlets", "outlets");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "start_at", "end_at", "config", "inlets", "outlets", "created_at", "updated_at");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
@@ -64,10 +64,12 @@ public class TaskRunDao {
     private static final DateTimeFormatter LOCAL_DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     static {
-        sortKeyToFieldMapper.put("id", "taskrun_id");
-        sortKeyToFieldMapper.put("startAt", "start_at");
-        sortKeyToFieldMapper.put("endAt", "ent_at");
-        sortKeyToFieldMapper.put("status", "status");
+        sortKeyToFieldMapper.put("id", TASK_RUN_MODEL_NAME + "_id");
+        sortKeyToFieldMapper.put("startAt", TASK_RUN_MODEL_NAME + "_start_at");
+        sortKeyToFieldMapper.put("endAt", TASK_RUN_MODEL_NAME + "_end_at");
+        sortKeyToFieldMapper.put("status", TASK_RUN_MODEL_NAME + "_status");
+        sortKeyToFieldMapper.put("createdAt", TASK_RUN_MODEL_NAME + "_created_at");
+        sortKeyToFieldMapper.put("updatedAt", TASK_RUN_MODEL_NAME + "_updated_at");
     }
 
     @Inject
@@ -194,13 +196,14 @@ public class TaskRunDao {
             whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".start_at IS NOT NULL)");
         }
 
+        // Search task created in time range
         // DON'T USE BETWEEN, see: https://wiki.postgresql.org/wiki/Don't_Do_This#Don.27t_use_BETWEEN_.28especially_with_timestamps.29
         if (Objects.nonNull(filter.getDateFrom())) {
-            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".start_at >= ? )");
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".created_at >= ? )");
             sqlArgs.add(filter.getDateFrom());
         }
         if (Objects.nonNull(filter.getDateTo())) {
-            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".end_at <= ? )");
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".created_at <= ? )");
             sqlArgs.add(filter.getDateTo());
         }
 
@@ -268,6 +271,8 @@ public class TaskRunDao {
             return savedTaskRun.get();
         }
         dbOperator.transaction(() -> {
+            OffsetDateTime now = DateTimeUtils.now();
+
             List<String> tableColumns = new ImmutableList.Builder<String>()
                     .addAll(taskRunCols)
                     .build();
@@ -287,7 +292,9 @@ public class TaskRunDao {
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
-                    JSONUtils.toJsonString(taskRun.getOutlets())
+                    JSONUtils.toJsonString(taskRun.getOutlets()),
+                    now,
+                    now
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds());
@@ -314,6 +321,7 @@ public class TaskRunDao {
      * @return
      */
     public TaskRun updateTaskRun(TaskRun taskRun) {
+        OffsetDateTime now = DateTimeUtils.now();
         dbOperator.transaction(() -> {
             List<String> tableColumns = new ImmutableList.Builder<String>()
                     .addAll(taskRunCols)
@@ -336,6 +344,8 @@ public class TaskRunDao {
                     JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets()),
+                    taskRun.getCreatedAt(),       // created_at
+                    now,                          // updated_at
                     taskRun.getId()
             );
 
@@ -927,6 +937,8 @@ public class TaskRunDao {
                     .withDependentTaskRunIds(Collections.emptyList())
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_end_at")))
+                    .withCreatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_created_at")))
+                    .withUpdatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_updated_at")))
                     .withConfig(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_config"), Config.class))
                     .build();
         }

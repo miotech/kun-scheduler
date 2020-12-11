@@ -35,6 +35,10 @@ public class TaskRunVO {
 
     private OffsetDateTime endAt;
 
+    private OffsetDateTime createdAt;
+
+    private OffsetDateTime updatedAt;
+
     private List<TaskAttemptProps> attempts;
 
     @JsonSerialize(contentUsing = ToStringSerializer.class)
@@ -126,5 +130,21 @@ public class TaskRunVO {
 
     public void setDependentTaskRunIds(List<Long> dependencyTaskRunIds) {
         this.dependentTaskRunIds = dependencyTaskRunIds;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(OffsetDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

@@ -209,6 +209,8 @@ const loadDailyTaskFinish = (dispatch: RootDispatch) => {
 
 export interface LoadTaskDetailsParams extends PaginationReqBody {
   taskRunStatus?: string;
+  includeStartedOnly?: boolean;
+  last24HoursOnly?: boolean;
 }
 
 // task details

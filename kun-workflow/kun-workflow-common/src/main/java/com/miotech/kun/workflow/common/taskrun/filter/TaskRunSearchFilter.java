@@ -48,7 +48,7 @@ public class TaskRunSearchFilter {
 
     private final List<Tag> tags;
 
-    private static final List<String> AVAILABLE_SORT_KEYS = Lists.newArrayList("id", "status", "startAt", "endAt");
+    private static final List<String> AVAILABLE_SORT_KEYS = Lists.newArrayList("id", "status", "startAt", "endAt", "createdAt", "updatedAt");
 
     // should be one of: "id", "status", "startAt", "endAt" or null
     // by default, null is equivalent to "startAt" as filter
