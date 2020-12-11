@@ -436,7 +436,6 @@ public class LocalExecutorTest extends CommonTestBase {
         Worker testWorker = getNoHeartbeatWorker();
         doReturn(testWorker).when(spyFactory).createWorker();
         executor.submit(attempt);
-        awaitUntilInitializing(attempt.getId());
         //等待worker启动
         Long waitTime = Reflect.on(executor).field("WAIT_WORKER_INIT_SECOND").get();
         Thread.sleep(waitTime * 1000);
