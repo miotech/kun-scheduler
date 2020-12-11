@@ -182,16 +182,16 @@ public class SparkOperator extends LivyBaseSparkOperator {
     }
 
     public void lineageAnalysis(Config config, Long taskRunId) {
-        String sparkConf = config.getString(SparkConfiguration.CONF_LIVY_BATCH_CONF);
-        logger.debug("spark conf = {}", sparkConf);
-        Configuration conf = new Configuration();
-        String configS3AccessKey = "fs.s3a.access.key";
-        String configS3SecretKey = "fs.s3a.secret.key";
-        conf.set(configS3AccessKey, "AKIAVKWKHNJW3VFEZ5XJ");
-        conf.set(configS3SecretKey, "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");
-        conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-        conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
         try {
+            String sparkConf = config.getString(SparkConfiguration.CONF_LIVY_BATCH_CONF);
+            logger.debug("spark conf = {}", sparkConf);
+            Configuration conf = new Configuration();
+            String configS3AccessKey = "fs.s3a.access.key";
+            String configS3SecretKey = "fs.s3a.secret.key";
+            conf.set(configS3AccessKey, "AKIAVKWKHNJW3VFEZ5XJ");
+            conf.set(configS3SecretKey, "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");
+            conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
+            conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
             HdfsFileSystem hdfsFileSystem = new HdfsFileSystem(HDFS_ROOT, conf);
             SparkOperatorResolver resolver = new SparkOperatorResolver(hdfsFileSystem, taskRunId);
             List<DataStore> inputs = resolver.resolveUpstreamDataStore(config);
