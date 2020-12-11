@@ -195,13 +195,14 @@ public class TaskRunDao {
             whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".start_at IS NOT NULL)");
         }
 
+        // Search task created in time range
         // DON'T USE BETWEEN, see: https://wiki.postgresql.org/wiki/Don't_Do_This#Don.27t_use_BETWEEN_.28especially_with_timestamps.29
         if (Objects.nonNull(filter.getDateFrom())) {
-            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".start_at >= ? )");
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".created_at >= ? )");
             sqlArgs.add(filter.getDateFrom());
         }
         if (Objects.nonNull(filter.getDateTo())) {
-            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".end_at <= ? )");
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".created_at <= ? )");
             sqlArgs.add(filter.getDateTo());
         }
 
