@@ -374,6 +374,8 @@ export default {
   "monitoringDashboard.dataDevelopment.taskDetailsTable.createTime": "Task Created",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.updateTime": "Last Updated",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.duration": "Duration",
+  "monitoringDashboard.dataDevelopment.taskDetailsTable.displayStartedOnly": "Started only",
+  "monitoringDashboard.dataDevelopment.taskDetailsTable.display24HoursOnly": "Last 24 Hours only",
   "monitoringDashboard.testCaseRuleTable.originalValue": "Original value",
   "monitoringDashboard.testCaseRuleTable.field": "Field",
   "monitoringDashboard.testCaseRuleTable.operator": "Operator",

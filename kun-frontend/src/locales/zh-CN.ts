@@ -374,6 +374,8 @@ export default {
   "monitoringDashboard.dataDevelopment.taskDetailsTable.createTime": "创建时间",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.updateTime": "更新时间",
   "monitoringDashboard.dataDevelopment.taskDetailsTable.duration": "耗时",
+  "monitoringDashboard.dataDevelopment.taskDetailsTable.displayStartedOnly": "仅显示已开始任务",
+  "monitoringDashboard.dataDevelopment.taskDetailsTable.display24HoursOnly": "仅显示 24 小时以内",
   "monitoringDashboard.testCaseRuleTable.originalValue": "原始值",
   "monitoringDashboard.testCaseRuleTable.field": "字段",
   "monitoringDashboard.testCaseRuleTable.operator": "操作符",

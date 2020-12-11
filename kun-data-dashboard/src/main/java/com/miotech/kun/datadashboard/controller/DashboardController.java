@@ -160,6 +160,7 @@ public class DashboardController {
                 .withStatus(Objects.nonNull(tasksRequest.getTaskRunStatus()) ?
                         Sets.newHashSet(tasksRequest.getTaskRunStatus()) : null)
                 .withIncludeStartedOnly(tasksRequest.getIncludeStartedOnly())
+                .withDateFrom(Objects.equals(tasksRequest.getLast24HoursOnly(), true) ? DateTimeUtils.now().minusHours(24) : null)
                 .withSortKey("createdAt")
                 .withSortOrder("DESC")
                 .build();

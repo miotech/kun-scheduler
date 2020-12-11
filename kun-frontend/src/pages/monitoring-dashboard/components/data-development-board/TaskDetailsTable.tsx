@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react';
-import { Table, Card, message } from 'antd';
+import { Table, Card, message, Checkbox, Space } from 'antd';
 import { history } from 'umi';
 import dayjs from 'dayjs';
 import isNil from 'lodash/isNil';
@@ -19,6 +19,11 @@ interface OwnProps {
   data: DevTaskDetail[];
   onChange: TableOnChangeCallback<DevTaskDetail>;
   loading?: boolean;
+  displayStartedOnly?: boolean;
+  displayLast24HoursOnly?: boolean;
+  displayStartedOnlyDisabled?: boolean;
+  onChangeDisplayStartedOnly?: (nextCheckState: boolean) => any;
+  onChangeDisplayLast24HoursOnly?: (nextCheckState: boolean) => any;
 }
 
 type Props = OwnProps;
@@ -138,6 +143,35 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
       <h3>
         {t('monitoringDashboard.dataDevelopment.taskDetailsTable.title')}
         {!!total && <span style={{ marginLeft: 4 }}>({total})</span>}
+        <span style={{ float: 'right' }}>
+          <Space>
+            {/* Radio button: display started tasks only */}
+            <Checkbox
+              disabled={props.displayStartedOnlyDisabled || false}
+              checked={(!props.displayStartedOnlyDisabled) ? (props.displayStartedOnly || false) : false}
+              onChange={(e) => {
+                const { checked } = e.target;
+                if (props.onChangeDisplayStartedOnly) {
+                  props.onChangeDisplayStartedOnly(checked);
+                }
+              }}
+            >
+              {t('monitoringDashboard.dataDevelopment.taskDetailsTable.displayStartedOnly')}
+            </Checkbox>
+            {/* Radio button: display tasks in 24 hours only */}
+            <Checkbox
+              checked={props.displayLast24HoursOnly || false}
+              onChange={(e) => {
+                const { checked } = e.target;
+                if (props.onChangeDisplayLast24HoursOnly) {
+                  props.onChangeDisplayLast24HoursOnly(checked);
+                }
+              }}
+            >
+              {t('monitoringDashboard.dataDevelopment.taskDetailsTable.display24HoursOnly')}
+            </Checkbox>
+          </Space>
+        </span>
       </h3>
       <Table<DevTaskDetail>
         loading={loading}
