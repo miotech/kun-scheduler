@@ -132,7 +132,8 @@ public class TaskSpawner {
             if (graph instanceof DirectTaskGraph) {
                 List<Task> tasksToRun = graph.tasksScheduledAt(tick);
                 logger.debug("run task = {} directly", tasksToRun);
-                taskRuns.addAll(createTaskRuns(tasksToRun, tick, env));
+                //todo:临时修复一分钟内多次执行同一任务，直接执行和调度执行需要重构
+                taskRuns.addAll(createTaskTunsDirectly(tasksToRun, tick, env));
                 save(taskRuns);
                 submit(taskRuns);
                 return taskRuns;
@@ -191,9 +192,18 @@ public class TaskSpawner {
         return results;
     }
 
+    private List<TaskRun> createTaskTunsDirectly(List<Task> tasks, Tick tick, TaskRunEnv env){
+        List<TaskRun> results = new ArrayList<>(tasks.size());
+        for (Task task : tasks) {
+            results.add(createTaskRun(task, tick, env.getConfig(task.getId()), results));
+        }
+        return results;
+    }
+
     private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> others) {
+        Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         TaskRun taskRun = TaskRun.newBuilder()
-                .withId(WorkflowIdGenerator.nextTaskRunId())
+                .withId(taskRunId)
                 .withTask(task)
                 .withConfig(prepareConfig(task, task.getConfig(), runtimeConfig))
                 .withScheduledTick(tick)

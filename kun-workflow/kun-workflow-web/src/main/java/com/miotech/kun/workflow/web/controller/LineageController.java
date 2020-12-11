@@ -10,7 +10,9 @@ import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.task.service.TaskService;
-import com.miotech.kun.workflow.core.model.lineage.*;
+import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
+import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.task.Task;
 
 import java.util.*;
@@ -23,6 +25,7 @@ public class LineageController {
 
     @Inject
     private TaskService taskService;
+
 
     @RouteMapping(url= "/lineages", method = "GET")
     public Object getLineageNeighbors(
@@ -153,4 +156,5 @@ public class LineageController {
         Preconditions.checkArgument(Objects.nonNull(downstreamDatasetGid), "downstream dataset gid cannot be null.");
         return lineageService.fetchEdgeInfo(upstreamDatasetGid, downstreamDatasetGid);
     }
+
 }
