@@ -160,6 +160,7 @@ public class OperatorLauncher {
                 return cancelledMsg;
             }
             TaskAttemptMsg runningMsg = msg.copy();
+
             taskRunStatus = TaskRunStatus.RUNNING;
             runningMsg.setTaskRunStatus(TaskRunStatus.RUNNING);
             statusUpdate(runningMsg);
@@ -234,7 +235,7 @@ public class OperatorLauncher {
     }
 
     private OperatorContext initContext(ExecCommand command) {
-        return new OperatorContextImpl(command.getConfig());
+        return new OperatorContextImpl(command.getConfig(),command.getTaskRunId());
     }
 
     private void initLogger(String logPath) {

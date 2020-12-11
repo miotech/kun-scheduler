@@ -1,6 +1,9 @@
 server:
   port: 18088
 
+executor:
+  enableRecover: false
+
 datasource:
   jdbcUrl: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
   username: sa

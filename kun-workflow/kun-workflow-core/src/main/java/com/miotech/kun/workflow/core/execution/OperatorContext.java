@@ -13,4 +13,7 @@ public interface OperatorContext {
      * @return
      */
     public Config getConfig();
+
+    public Long getTaskRunId();
+
 }

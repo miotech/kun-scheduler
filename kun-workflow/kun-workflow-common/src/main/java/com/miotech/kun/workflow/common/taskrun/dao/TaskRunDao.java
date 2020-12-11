@@ -80,7 +80,8 @@ public class TaskRunDao {
     private TaskRunMapper taskRunMapperInstance;
 
     @Inject
-    public TaskRunDao(TaskDao taskDao, DatabaseOperator dbOperator, TaskRunMapper taskRunMapperInstance) {
+    public TaskRunDao(TaskDao taskDao, DatabaseOperator dbOperator
+            , TaskRunMapper taskRunMapperInstance) {
         this.taskDao = taskDao;
         this.dbOperator = dbOperator;
         this.taskRunMapperInstance = taskRunMapperInstance;
@@ -361,6 +362,8 @@ public class TaskRunDao {
                 }),
                 taskRunId
         );
+
+
     }
 
     /**

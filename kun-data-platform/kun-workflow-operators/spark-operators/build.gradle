@@ -8,6 +8,7 @@ dependencies {
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-common')
     implementation project(':kun-metadata:kun-metadata-core')
     implementation 'com.google.guava:guava'
     implementation 'com.squareup.okhttp3:okhttp:3.14.6'
@@ -16,14 +17,17 @@ dependencies {
     implementation "org.jsoup:jsoup:1.13.1"
     implementation "org.apache.hadoop:hadoop-client:2.7.3"
     implementation "org.apache.hadoop:hadoop-aws:2.7.3"
+    implementation "org.apache.hadoop:hadoop-hdfs:2.7.3"
     implementation "com.amazonaws:aws-java-sdk-s3:1.11.306"
-    implementation'com.alibaba:druid'
+    implementation 'org.apache.hadoop:hadoop-aws:2.7.3'
+    implementation 'com.alibaba:druid'
 
     testImplementation project(':kun-workflow:kun-workflow-testing')
     testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation "org.mock-server:mockserver-netty"
     testImplementation "org.mock-server:mockserver-client-java"
     testImplementation "org.awaitility:awaitility"
+    testImplementation 'org.jooq:joor-java-8'
 }
 
 shadowJar {
