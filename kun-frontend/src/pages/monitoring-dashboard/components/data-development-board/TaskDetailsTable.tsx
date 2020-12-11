@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react';
-import { Table, Card, Button, message } from 'antd';
+import { Table, Card, message } from 'antd';
 import { history } from 'umi';
 import dayjs from 'dayjs';
 import isNil from 'lodash/isNil';
@@ -48,8 +48,8 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         ),
         render: ((txt, record) => {
           return (
-            <Button
-              type="link"
+            <a
+              href="#"
               onClick={async () => {
                 const dismiss = message.loading('Loading...', 0);
                 const taskDefinitionId = await getTaskDefinitionIdByWorkflowTaskId(record.taskId);
@@ -67,10 +67,9 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
                 }
                 dismiss();
               }}
-              size="small"
             >
               {record.taskName}
-            </Button>
+            </a>
           );
         }),
       },
