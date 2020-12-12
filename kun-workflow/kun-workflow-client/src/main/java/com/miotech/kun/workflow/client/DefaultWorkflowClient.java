@@ -145,7 +145,8 @@ public class DefaultWorkflowClient implements WorkflowClient {
         Task saved;
         Optional<Task> taskOptional = getTask(task.getName());
         if (taskOptional.isPresent()) {
-            saved = taskOptional.get();
+            Task existTask = taskOptional.get();
+            saved = wfApi.updateTask(existTask.getId(), task);
         } else {
             saved = wfApi.createTask(task);
         }
