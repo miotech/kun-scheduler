@@ -27,7 +27,7 @@ public class LineageController {
     private TaskService taskService;
 
 
-    @RouteMapping(url= "/lineages", method = "GET")
+    @RouteMapping(url = "/lineages", method = "GET")
     public Object getLineageNeighbors(
             @QueryParameter Long datasetGid,
             @QueryParameter(defaultValue = "BOTH") String direction,
@@ -62,6 +62,12 @@ public class LineageController {
         Set<Long> relatedTaskIds = new HashSet<>();
         Set<DatasetNode> upstreamNodes = searchResult.getUpstreamNodes();
         Set<DatasetNode> downstreamNodes = searchResult.getDownstreamNodes();
+        Optional<DatasetNode> sourceNode = searchResult.getSourceNode();
+        if (sourceNode.isPresent()) {
+            relatedTaskIds.addAll(sourceNode.get().getUpstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toSet()));
+            relatedTaskIds.addAll(sourceNode.get().getDownstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toSet()));
+
+        }
         upstreamNodes.forEach(node -> {
             relatedTaskIds.addAll(node.getUpstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toSet()));
             relatedTaskIds.addAll(node.getDownstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toSet()));

@@ -113,6 +113,9 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         TaskRun taskRun = client.executeTask(task,
                 ImmutableMap.of("testKey1", true));
 
+        TaskRun taskRun2 = client.executeTask(task,
+                ImmutableMap.of("testKey1", true));
+
         // verify
         await().atMost(120, TimeUnit.SECONDS)
                 .until(() ->
@@ -126,6 +129,7 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         TaskAttempt attempt = result.getAttempts().get(0);
         assertTrue(attempt.getStartAt() != null);
         assertTrue(attempt.getEndAt() != null);
+        assertTrue(taskRun.getTask().getId().equals(taskRun2.getTask().getId()));
     }
 
     @Ignore
