@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.core.model.task;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Preconditions;
@@ -185,6 +186,7 @@ public class Task {
                 '}';
     }
 
+    @JsonPOJOBuilder
     public static final class TaskBuilder {
         private Long id;
         private String name;
