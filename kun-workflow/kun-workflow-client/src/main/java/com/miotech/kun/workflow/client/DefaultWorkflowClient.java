@@ -43,7 +43,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
 
     @Override
     public Operator updateOperator(Long operatorId, Operator operator) {
-        return wfApi.updateOperator(operatorId,operator);
+        return wfApi.updateOperator(operatorId, operator);
     }
 
     @Override
@@ -53,7 +53,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
 
     @Override
     public void uploadOperatorJar(Long id, File jarFile) {
-        wfApi.uploadJar(id,jarFile);
+        wfApi.uploadJar(id, jarFile);
     }
 
     @Override
@@ -127,7 +127,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
             logger.debug("Update task \"{}\" with tag \"{}\"", task.getName(), tags);
             return wfApi.updateTask(tasks.get(0).getId(), task);
         } else if (task.getId() > 0) {
-            logger.debug("Update task \"{}\" with id \"{}\"", task.getName() , task.getId());
+            logger.debug("Update task \"{}\" with id \"{}\"", task.getName(), task.getId());
             return wfApi.updateTask(task.getId(), task);
         } else {
             logger.debug("Create new task \"{}\"", task.getName());
@@ -142,7 +142,14 @@ public class DefaultWorkflowClient implements WorkflowClient {
 
     @Override
     public TaskRun executeTask(Task task, Map<String, Object> taskConfig) {
-        Task saved = wfApi.createTask(task);
+        Task saved;
+        Optional<Task> taskOptional = getTask(task.getName());
+        if (taskOptional.isPresent()) {
+            Task existTask = taskOptional.get();
+            saved = wfApi.updateTask(existTask.getId(), task);
+        } else {
+            saved = wfApi.createTask(task);
+        }
         return executeTask(saved.getId(), taskConfig);
     }
 
