@@ -58,7 +58,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
         if (!Strings.isNullOrEmpty(sessionName)) {
             job.setName(sessionName);
         }
-        jars = jars + "," + SPLINE_QUERY_LISTENER_PATH;
+//        jars = jars + "," + SPLINE_QUERY_LISTENER_PATH;
         if (!Strings.isNullOrEmpty(jars)) {
             job.setJars(Arrays.asList(jars.split(",")));
         }
@@ -72,7 +72,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
         if (!Strings.isNullOrEmpty(sparkConf)) {
             job.setConf(JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
         }
-        job.addConf(SPARK_QUERY_LISTENER, SPLINE_QUERY_LISTENER);
+//        job.addConf(SPARK_QUERY_LISTENER, SPLINE_QUERY_LISTENER);
         job.addConf("spark.hadoop.taskRunId", taskRunId.toString());
         if (!jobFiles.isEmpty()) {
             String mainEntry = jobFiles.get(0);
