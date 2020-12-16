@@ -18,6 +18,7 @@ public class MockOperatorContextImpl implements OperatorContext {
 
     private List<DataStore> inlets = Collections.emptyList();
     private List<DataStore> outlets = Collections.emptyList();
+    private Long taskRunId = 1l;
 
     private KunOperator operator;
 
@@ -46,7 +47,7 @@ public class MockOperatorContextImpl implements OperatorContext {
 
     @Override
     public Long getTaskRunId() {
-        return null;
+        return taskRunId;
     }
 
     public List<DataStore> getInlets() {
