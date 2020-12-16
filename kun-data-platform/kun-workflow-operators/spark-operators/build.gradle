@@ -8,7 +8,6 @@ dependencies {
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
-    implementation project(':kun-workflow:kun-workflow-common')
     implementation project(':kun-metadata:kun-metadata-core')
     implementation 'com.google.guava:guava'
     implementation 'com.squareup.okhttp3:okhttp:3.14.6'
