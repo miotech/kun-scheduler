@@ -8,6 +8,7 @@ import com.miotech.kun.dataplatform.config.ZhongdaNotifierConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -86,5 +87,11 @@ public class AppTestBase {
             log.error("Failed to establish connection.", e);
             throw new RuntimeException(e);
         }
+    }
+
+    @Test
+    public void defaultTest(){
+        // DO NOT REMOVE THIS TEST CASE
+        // AppTestBase requires at least one test case to bootstrap
     }
 }
