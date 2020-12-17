@@ -4,6 +4,7 @@ plugins {
     id 'java'
     id "io.freefair.lombok"
     id "org.sonarqube"
+    id "com.gorylenko.gradle-git-properties" version "2.2.3"
 }
 
 repositories {
@@ -11,13 +12,13 @@ repositories {
 }
 
 task buildBashOperator (type:Exec){
-    workingDir "../kun-workflow-operators/bash-operator"
-    commandLine "gradle","shadowJar"
+    workingDir "../../"
+    commandLine "./gradlew",":kun-data-platform:kun-workflow-operators:bash-operator:shadowJar"
 }
 
 task buildSparkOperator (type:Exec){
-    workingDir "../kun-workflow-operators/spark-operators"
-    commandLine "gradle","shadowJar"
+    workingDir "../../"
+    commandLine "./gradlew",":kun-data-platform:kun-workflow-operators:spark-operators:shadowJar"
 }
 
 task copyBashOperator(type: Copy){
@@ -66,6 +67,7 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-client')
     implementation project(':kun-workflow:kun-workflow-utils')
+    implementation project(':kun-data-platform:kun-workflow-operators:spark-operators')
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation project(':kun-app-common')
@@ -78,6 +80,7 @@ dependencies {
     implementation 'io.springfox:springfox-boot-starter:3.0.0'
     implementation 'com.googlecode.json-simple:json-simple'
     implementation "com.h2database:h2"
+    implementation 'redis.clients:jedis'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"

@@ -3,10 +3,9 @@ package com.miotech.kun.workflow.client;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
-import com.miotech.kun.workflow.client.model.Operator;
-import com.miotech.kun.workflow.client.model.Task;
-import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +43,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
 
     @Override
     public Operator updateOperator(Long operatorId, Operator operator) {
-        return wfApi.updateOperator(operatorId,operator);
+        return wfApi.updateOperator(operatorId, operator);
     }
 
     @Override
@@ -54,7 +53,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
 
     @Override
     public void uploadOperatorJar(Long id, File jarFile) {
-        wfApi.uploadJar(id,jarFile);
+        wfApi.uploadJar(id, jarFile);
     }
 
     @Override
@@ -128,7 +127,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
             logger.debug("Update task \"{}\" with tag \"{}\"", task.getName(), tags);
             return wfApi.updateTask(tasks.get(0).getId(), task);
         } else if (task.getId() > 0) {
-            logger.debug("Update task \"{}\" with id \"{}\"", task.getName() , task.getId());
+            logger.debug("Update task \"{}\" with id \"{}\"", task.getName(), task.getId());
             return wfApi.updateTask(task.getId(), task);
         } else {
             logger.debug("Create new task \"{}\"", task.getName());
@@ -143,7 +142,14 @@ public class DefaultWorkflowClient implements WorkflowClient {
 
     @Override
     public TaskRun executeTask(Task task, Map<String, Object> taskConfig) {
-        Task saved = wfApi.createTask(task);
+        Task saved;
+        Optional<Task> taskOptional = getTask(task.getName());
+        if (taskOptional.isPresent()) {
+            Task existTask = taskOptional.get();
+            saved = wfApi.updateTask(existTask.getId(), task);
+        } else {
+            saved = wfApi.createTask(task);
+        }
         return executeTask(saved.getId(), taskConfig);
     }
 
@@ -187,6 +193,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
+    public Integer countTaskRun(TaskRunSearchRequest request) {
+        return wfApi.countTaskRuns(request);
+    }
+
+    @Override
     public TaskRunState getTaskRunState(Long taskRunId) {
         return wfApi.getTaskRunStatus(taskRunId);
     }
@@ -219,5 +230,15 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit) {
         return wfApi.getLatestTaskRuns(taskIds, limit);
+    }
+
+    @Override
+    public DatasetLineageInfo getLineageNeighbors(Long datasetGid, LineageQueryDirection direction, int depth) {
+        return wfApi.getLineageNeighbors(datasetGid, direction, depth);
+    }
+
+    @Override
+    public EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
+        return wfApi.getLineageEdgeInfo(upstreamDatasetGid, downstreamDatasetGid);
     }
 }

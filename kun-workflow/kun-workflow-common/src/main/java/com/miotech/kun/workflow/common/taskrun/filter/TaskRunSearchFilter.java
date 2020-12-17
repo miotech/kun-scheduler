@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.miotech.kun.commons.utils.ArgumentCheckUtils;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -11,12 +12,31 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 @JsonDeserialize(builder = TaskRunSearchFilter.Builder.class)
 public class TaskRunSearchFilter {
+    public static final Set<TaskRunStatus> UNSTARTED_STATUS_SET = Sets.newHashSet(
+            TaskRunStatus.CREATED,
+            TaskRunStatus.INITIALIZING,
+            TaskRunStatus.QUEUED
+    );
+
+    public static final Set<TaskRunStatus> STARTED_STATUS_SET = Sets.newHashSet(
+            TaskRunStatus.RUNNING,
+            TaskRunStatus.SUCCESS,
+            TaskRunStatus.SUCCESS,
+            TaskRunStatus.FAILED,
+            TaskRunStatus.RETRY,
+            TaskRunStatus.SKIPPED,
+            TaskRunStatus.ABORTING,
+            TaskRunStatus.ABORTED,
+            TaskRunStatus.ERROR
+    );
+
     private final List<Long> taskIds;
 
-    private final TaskRunStatus status;
+    private final Set<TaskRunStatus> status;
 
     private final OffsetDateTime dateFrom;
 
@@ -28,7 +48,7 @@ public class TaskRunSearchFilter {
 
     private final List<Tag> tags;
 
-    private static final List<String> AVAILABLE_SORT_KEYS = Lists.newArrayList("id", "status", "startAt", "endAt");
+    private static final List<String> AVAILABLE_SORT_KEYS = Lists.newArrayList("id", "status", "startAt", "endAt", "createdAt", "updatedAt");
 
     // should be one of: "id", "status", "startAt", "endAt" or null
     // by default, null is equivalent to "startAt" as filter
@@ -63,7 +83,7 @@ public class TaskRunSearchFilter {
         return taskIds;
     }
 
-    public TaskRunStatus getStatus() {
+    public Set<TaskRunStatus> getStatus() {
         return status;
     }
 
@@ -107,8 +127,7 @@ public class TaskRunSearchFilter {
                 .withPageSize(pageSize)
                 .withTags(tags)
                 .withSortKey(sortKey)
-                .withSortOrder(sortOrder)
-                .withIncludeStartedOnly(includeStartedOnly);
+                .withSortOrder(sortOrder);
     }
 
     @Override
@@ -135,7 +154,7 @@ public class TaskRunSearchFilter {
     @JsonPOJOBuilder
     public static final class Builder {
         private List<Long> taskIds;
-        private TaskRunStatus status;
+        private Set<TaskRunStatus> status;
         private OffsetDateTime dateFrom;
         private OffsetDateTime dateTo;
         private Integer pageNum;
@@ -153,7 +172,7 @@ public class TaskRunSearchFilter {
             return this;
         }
 
-        public Builder withStatus(TaskRunStatus status) {
+        public Builder withStatus(Set<TaskRunStatus> status) {
             this.status = status;
             return this;
         }

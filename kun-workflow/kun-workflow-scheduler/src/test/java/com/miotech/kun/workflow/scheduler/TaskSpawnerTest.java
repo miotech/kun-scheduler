@@ -9,6 +9,7 @@ import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.common.tick.TickDao;
 import com.miotech.kun.workflow.common.variable.dao.VariableDao;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.execution.Config;
@@ -24,6 +25,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.testing.factory.MockVariableFactory;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
+import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.shazam.shazamcrest.matcher.CustomisableMatcher;
 import org.junit.After;
@@ -34,14 +36,17 @@ import org.mockito.Mockito;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -80,8 +85,10 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Inject
     private TaskManager taskManager;
 
-    private Long operatorId;
+    @Inject
+    private TickDao tickDao;
 
+    private Long operatorId;
     @Override
     protected void configuration() {
         super.configuration();
@@ -146,6 +153,120 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
         assertThat(submitted, safeSameBeanAs(saved));
     }
+
+    private Task prepareTask(){
+        ScheduleConf scheduleConf = new ScheduleConf(ScheduleType.SCHEDULED,"0 */1 * * * ?");
+        return MockTaskFactory.createTask(operatorId).cloneBuilder()
+                .withConfig(Config.EMPTY)
+                .withRecoverTimes(1)
+                .withScheduleConf(scheduleConf)
+                .build();
+    }
+
+    @Test
+    public void restartAfterTaskRunSave(){
+        Tick tick = new Tick(DateTimeUtils.now());
+        Tick checkPoint = new Tick(tick.toOffsetDateTime().plusMinutes(-1));
+        tickDao.saveCheckPoint(checkPoint);
+        Task task = prepareTask();
+        taskDao.create(task);
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        taskRunDao.createTaskRuns(Arrays.asList(taskRun));
+        //taskSpawner restart
+        taskSpawner.init();
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getId(), is(notNullValue()));
+        assertThat(submitted.getTask(), safeSameBeanAs(task));
+        assertThat(submitted.getStartAt(), is(nullValue()));
+        assertThat(submitted.getEndAt(), is(nullValue()));
+        assertThat(submitted.getStatus(), is(nullValue()));
+        DatabaseTaskGraph graph = new DatabaseTaskGraph(taskDao);
+        List<TaskRun> taskRunList = taskSpawner.run(graph,tick);
+        assertThat(taskRunList.size(),is(0));
+        List<Long> unStartedTaskRunIdList = taskRunDao.fetchUnStartedTaskRunList()
+                .stream().map(TaskRun::getId).collect(Collectors.toList());
+        assertThat(unStartedTaskRunIdList,containsInAnyOrder(taskRun.getId()));
+    }
+
+    @Test
+    public void restartAfterUpdateGraphSave(){
+        Tick tick = new Tick(DateTimeUtils.now());
+        Tick checkPoint = new Tick(tick.toOffsetDateTime().plusMinutes(-1));
+        tickDao.saveCheckPoint(checkPoint);
+        Task task = prepareTask();
+        taskDao.create(task);
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        taskRunDao.createTaskRuns(Arrays.asList(taskRun));
+        DatabaseTaskGraph graph = new DatabaseTaskGraph(taskDao);
+        graph.updateTasksNextExecutionTick(tick,Arrays.asList(task));
+        //taskSpawner restart
+        taskSpawner.init();
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getId(), is(notNullValue()));
+        assertThat(submitted.getTask(), safeSameBeanAs(task));
+        assertThat(submitted.getStartAt(), is(nullValue()));
+        assertThat(submitted.getEndAt(), is(nullValue()));
+        assertThat(submitted.getStatus(), is(nullValue()));
+        Optional<Tick> beforeRunTickOptional =  taskDao.fetchNextExecutionTickByTaskId(task.getId());
+        List<TaskRun> taskRunList = taskSpawner.run(graph,tick);
+        assertThat(taskRunList.size(),is(0));
+        Optional<Tick> nextTickOptional =  taskDao.fetchNextExecutionTickByTaskId(task.getId());
+        assertEquals(beforeRunTickOptional.get(),nextTickOptional.get());
+    }
+
+    @Test
+    public void restartAfterCheckPointSave(){
+        Tick tick = new Tick(DateTimeUtils.now());
+        Tick checkPoint = new Tick(tick.toOffsetDateTime().plusMinutes(-1));
+        tickDao.saveCheckPoint(checkPoint);
+        Task task = prepareTask();
+        taskDao.create(task);
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        taskRunDao.createTaskRuns(Arrays.asList(taskRun));
+        DatabaseTaskGraph graph = new DatabaseTaskGraph(taskDao);
+        graph.updateTasksNextExecutionTick(tick,Arrays.asList(task));
+        tickDao.saveCheckPoint(tick);
+        //taskSpawner restart
+        taskSpawner.init();
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getId(), is(notNullValue()));
+        assertThat(submitted.getTask(), safeSameBeanAs(task));
+        assertThat(submitted.getStartAt(), is(nullValue()));
+        assertThat(submitted.getEndAt(), is(nullValue()));
+        assertThat(submitted.getStatus(), is(nullValue()));
+        Tick nextTick = new Tick(tick.toOffsetDateTime().plusMinutes(1));
+        List<TaskRun> taskRunList = taskSpawner.run(graph,nextTick);
+        assertThat(taskRunList.size(),is(1));
+        Optional<OffsetDateTime> expectNextScheduleTimeOptional = CronUtils.getNextExecutionTimeByCronExpr(task.getScheduleConf().getCronExpr(),
+                nextTick.toOffsetDateTime());
+        Optional<Tick> nextTickOptional =  taskDao.fetchNextExecutionTickByTaskId(task.getId());
+        assertEquals(expectNextScheduleTimeOptional.get(),nextTickOptional.get().toOffsetDateTime());
+    }
+
 
     @Test
     public void testRun_graph_of_single_task_with_configured_variables() {
@@ -433,11 +554,11 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskManager, times(executionTime))
+        verify(taskManager, times(1))
                 .submit(captor.capture());
 
         List<List<TaskRun>> result = captor.getAllValues();
-        assertThat(result.size(), is(executionTime));
+        assertThat(result.size(), is(1));
 
         assertThat(result.stream().filter(x -> !x.isEmpty()).count(), is(1L));
 

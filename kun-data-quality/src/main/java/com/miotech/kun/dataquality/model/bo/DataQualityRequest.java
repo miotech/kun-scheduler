@@ -1,6 +1,7 @@
 package com.miotech.kun.dataquality.model.bo;
 
 import com.miotech.kun.dataquality.model.entity.DataQualityRule;
+import com.miotech.kun.dataquality.model.entity.DatasetBasic;
 import lombok.Data;
 import org.json.simple.JSONObject;
 
@@ -26,6 +27,8 @@ public class DataQualityRequest {
     private List<DataQualityRule> validateRules;
 
     private List<Long> relatedTableIds;
+
+    private Long primaryDatasetGid;
 
     private Long taskId;
 

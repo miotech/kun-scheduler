@@ -12,7 +12,9 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-common')
+    implementation project(":kun-commons:kun-commons-rpc")
     implementation project(':kun-workflow:kun-workflow-scheduler')
+    implementation project(':kun-workflow:kun-workflow-facade')
     implementation project(':kun-workflow:kun-workflow-executor')
     implementation project(':kun-metadata:kun-metadata-core')
     implementation project(':kun-commons:kun-commons-db')
@@ -35,6 +37,8 @@ dependencies {
     implementation "org.postgresql:postgresql"
     implementation "com.h2database:h2"
     implementation 'commons-fileupload:commons-fileupload'
+    implementation 'redis.clients:jedis'
+
 
     runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16'
 

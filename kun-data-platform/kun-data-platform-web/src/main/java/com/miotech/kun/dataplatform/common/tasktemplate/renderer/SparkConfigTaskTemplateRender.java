@@ -75,9 +75,11 @@ public class SparkConfigTaskTemplateRender extends TaskTemplateRenderer {
                     extraJavaOptions.append(String.format(" -D%s.%s=${dataplatform.datasource.%s}", KUN_DATA_PLATFORM_DATASOURCE_PREFIX, configMap.get(key), configMap.get(key)));
                 }
             }
-            String encodedString = Base64.getEncoder().encodeToString(JSONUtils.toJsonString(extraConfig).getBytes());
+            if (!extraConfig.isEmpty()) {
+                String encodedString = Base64.getEncoder().encodeToString(JSONUtils.toJsonString(extraConfig).getBytes());
+                extraJavaOptions.append(String.format(" -D%s=%s", KUN_DATA_PLATFORM_CONFIG_PREFIX, encodedString));
+            }
 
-            extraJavaOptions.append(String.format(" -D%s=%s", KUN_DATA_PLATFORM_CONFIG_PREFIX, encodedString));
             sparkConfig.put(SPARK_JAVA_OPTIONS_KEY, extraJavaOptions.toString());
             config.put(SPARK_CONFIG_KEY, JSONUtils.toJsonString(sparkConfig));
         } else {

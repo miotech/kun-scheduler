@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.miotech.kun.metadata.core.model.DSI;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.DataStoreType;
 
@@ -29,5 +30,13 @@ public class ElasticSearchIndexStore extends DataStore {
     @Override
     public String getDatabaseName() {
         return null;
+    }
+
+    @Override
+    public DSI getDSI() {
+        return DSI.newBuilder().withStoreType("elasticsearch")
+                .putProperty("url", dataStoreUrl)
+                .putProperty("index", index)
+                .build();
     }
 }

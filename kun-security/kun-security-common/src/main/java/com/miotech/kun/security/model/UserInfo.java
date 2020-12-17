@@ -1,0 +1,25 @@
+package com.miotech.kun.security.model;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.miotech.kun.security.common.Permission;
+import lombok.Data;
+
+import java.io.Serializable;
+import java.util.Set;
+
+@Data
+public class UserInfo implements Serializable {
+
+    @JsonProperty("id")
+    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    private Long id;
+
+    @JsonProperty(value = "username", required = true)
+    private String username;
+
+    @JsonProperty(value = "password", required = true, access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
+
+    private Set<Permission> permissions;
+}

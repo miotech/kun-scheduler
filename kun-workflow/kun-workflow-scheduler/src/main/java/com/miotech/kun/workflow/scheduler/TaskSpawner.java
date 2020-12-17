@@ -8,6 +8,7 @@ import com.miotech.kun.commons.utils.EventLoop;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.common.tick.TickDao;
 import com.miotech.kun.workflow.common.variable.service.VariableService;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TickEvent;
@@ -26,6 +27,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
@@ -48,6 +51,10 @@ public class TaskSpawner {
 
     private final EventBus eventBus;
 
+    private final TickDao tickDao;
+
+    private final long SCHEDULE_INTERVAL = 60000l;
+
     private final Deque<TaskGraph> graphs;
     private final InnerEventLoop eventLoop;
 
@@ -56,7 +63,8 @@ public class TaskSpawner {
                        TaskRunDao taskRunDao,
                        OperatorService operatorService,
                        VariableService variableService,
-                       EventBus eventBus) {
+                       EventBus eventBus,
+                       TickDao tickDao) {
         this.taskManager = taskManager;
         this.taskRunDao = taskRunDao;
         this.operatorService = operatorService;
@@ -66,7 +74,9 @@ public class TaskSpawner {
         this.graphs = new ConcurrentLinkedDeque<>();
         this.eventLoop = new InnerEventLoop();
         this.eventBus.register(this.eventLoop);
+        this.tickDao = tickDao;
         this.eventLoop.start();
+        init();
     }
 
     /* ----------- public methods ------------ */
@@ -76,15 +86,27 @@ public class TaskSpawner {
         graphs.add(graph);
     }
 
+    public void init() {
+        List<TaskRun> unStartedTaskRunList = taskRunDao.fetchUnStartedTaskRunList();
+        if (unStartedTaskRunList.size() > 0) {
+            submit(unStartedTaskRunList);
+        }
+        logger.info("submit unStartedTaskRun = {}", unStartedTaskRunList);
+    }
+
     public List<TaskRun> run(TaskGraph graph) {
         return run(graph, TaskRunEnv.EMPTY);
+    }
+
+    public List<TaskRun> run(TaskGraph graph, Tick tick) {
+        checkNotNull(graph, "graph should not be null.");
+        return spawn(Lists.newArrayList(graph), tick, TaskRunEnv.EMPTY);
     }
 
     public List<TaskRun> run(TaskGraph graph, TaskRunEnv env) {
         checkNotNull(graph, "graph should not be null.");
         checkNotNull(env, "env should not be null.");
         checkState(graph instanceof DirectTaskGraph, "Only DirectTaskGraph is accepted.");
-
         Tick current = new Tick(DateTimeUtils.now());
         return spawn(Lists.newArrayList(graph), current, env);
     }
@@ -92,28 +114,85 @@ public class TaskSpawner {
     /* ----------- private methods ------------ */
 
     private void handleTickEvent(TickEvent tickEvent) {
-        logger.debug("handle TickEvent. event={}", tickEvent);
+        logger.debug("handle TickEvent tickEvent={}", tickEvent);
         spawn(graphs, tickEvent.getTick(), TaskRunEnv.EMPTY);
     }
 
     private List<TaskRun> spawn(Collection<TaskGraph> graphs, Tick tick, TaskRunEnv env) {
         List<TaskRun> taskRuns = new ArrayList<>();
-        for (TaskGraph graph : graphs) {
-            List<Task> tasksToRun = graph.tasksScheduledAt(tick);
-            logger.debug("tasks to run: {}, at tick {}", tasksToRun, tick);
-            taskRuns.addAll(createTaskRuns(tasksToRun, tick, env));
+        Tick checkPoint = tickDao.getLatestCheckPoint();
+        if (checkPoint == null) {
+            checkPoint = new Tick(tick.toOffsetDateTime().plusMinutes(-1));
+        }
+        logger.info("checkPoint = {}", checkPoint);
+        OffsetDateTime checkpointTime = checkPoint.toOffsetDateTime();
+        OffsetDateTime currentTickTime = tick.toOffsetDateTime();
+        if (graphs.size() > 0 && graphs instanceof ArrayList) {
+            TaskGraph graph = ((ArrayList<TaskGraph>) graphs).get(0);
+            if (graph instanceof DirectTaskGraph) {
+                List<Task> tasksToRun = graph.tasksScheduledAt(tick);
+                logger.debug("run task = {} directly", tasksToRun);
+                //todo:临时修复一分钟内多次执行同一任务，直接执行和调度执行需要重构
+                taskRuns.addAll(createTaskTunsDirectly(tasksToRun, tick, env));
+                save(taskRuns);
+                submit(taskRuns);
+                return taskRuns;
+            }
+
+        }
+        while (checkpointTime.compareTo(currentTickTime) < 0) {
+            List<TaskRun> recoverTaskRun = new ArrayList<>();
+            checkpointTime = checkpointTime.plus(SCHEDULE_INTERVAL, ChronoUnit.MILLIS);
+            OffsetDateTime scheduleTime = checkpointTime.compareTo(currentTickTime) < 0 ?
+                    checkpointTime : currentTickTime;
+            Tick recoverTick = new Tick(scheduleTime);
+            Map<TaskGraph, List<Task>> graphTasks = new HashMap<>();
+            for (TaskGraph graph : graphs) {
+                List<Task> tasksToRun = graph.tasksScheduledAt(tick).stream().
+                        filter(task -> task.shouldSchedule(scheduleTime, currentTickTime)).collect(Collectors.toList());
+                logger.debug("tasks to run: {}, at tick {}", tasksToRun, recoverTick);
+                recoverTaskRun.addAll(createTaskRuns(tasksToRun, recoverTick, env));
+                graphTasks.put(graph, tasksToRun);
+
+            }
+            logger.debug("to save created TaskRuns. TaskRuns={}", recoverTaskRun);
+            save(recoverTaskRun);
+            updateGraphsTask(graphTasks, recoverTick);
+            logger.debug("to save checkpoint. checkpoint = {}", recoverTick);
+            tickDao.saveCheckPoint(recoverTick);
+            taskRuns.addAll(recoverTaskRun);
         }
 
-        logger.debug("to save created TaskRuns. TaskRuns={}", taskRuns);
-        save(taskRuns);
-
         logger.debug("to submit created TaskRuns. TaskRuns={}", taskRuns);
-        submit(taskRuns);
-
+        if (taskRuns.size() > 0) {
+            submit(taskRuns);
+        }
         return taskRuns;
     }
 
+    private void updateGraphsTask(Map<TaskGraph, List<Task>> graphTasks, Tick tick) {
+        for (Map.Entry<TaskGraph, List<Task>> entry : graphTasks.entrySet()) {
+            TaskGraph graph = entry.getKey();
+            logger.debug("to update graph. graph = {} , tasks = {}", graph, entry.getValue());
+            graph.updateTasksNextExecutionTick(tick, entry.getValue());
+        }
+    }
+
+    //幂等，重放tick不会创建新的taskRun
     private List<TaskRun> createTaskRuns(List<Task> tasks, Tick tick, TaskRunEnv env) {
+        List<TaskRun> results = new ArrayList<>(tasks.size());
+        for (Task task : tasks) {
+            TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
+            if (taskRun == null) {
+                results.add(createTaskRun(task, tick, env.getConfig(task.getId()), results));
+            } else {
+                results.add(taskRun);
+            }
+        }
+        return results;
+    }
+
+    private List<TaskRun> createTaskTunsDirectly(List<Task> tasks, Tick tick, TaskRunEnv env){
         List<TaskRun> results = new ArrayList<>(tasks.size());
         for (Task task : tasks) {
             results.add(createTaskRun(task, tick, env.getConfig(task.getId()), results));
@@ -122,8 +201,9 @@ public class TaskSpawner {
     }
 
     private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> others) {
+        Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         TaskRun taskRun = TaskRun.newBuilder()
-                .withId(WorkflowIdGenerator.nextTaskRunId())
+                .withId(taskRunId)
                 .withTask(task)
                 .withConfig(prepareConfig(task, task.getConfig(), runtimeConfig))
                 .withScheduledTick(tick)
@@ -165,7 +245,7 @@ public class TaskSpawner {
     private void validateConfig(ConfigDef configDef, Config finalConfig, Config runtimeConfig) {
         for (ConfigDef.ConfigKey configKey : configDef.configKeys()) {
             String name = configKey.getName();
-
+            logger.info("finalConfig = {}", finalConfig);
             if (configKey.isRequired() && !finalConfig.contains(name)) {
                 throw new IllegalArgumentException(format("Configuration %s is required but not specified", name));
             }

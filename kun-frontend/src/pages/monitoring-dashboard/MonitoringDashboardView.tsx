@@ -14,65 +14,62 @@ interface OwnProps {}
 
 type Props = OwnProps;
 
-export const MonitoringDashboardView: React.FC<Props> = memo(function MonitoringDashboardView() {
-  const t = useI18n();
-  const { selector: {
-    viewState,
-    allSettled,
-  }, dispatch } = useRedux(state => ({
-    viewState: state.monitoringDashboard,
-    allSettled: state.monitoringDashboard.allSettled,
-  }));
+export const MonitoringDashboardView: React.FC<Props> = memo(
+  function MonitoringDashboardView() {
+    const t = useI18n();
+    const {
+      selector: { viewState, allSettled },
+      dispatch,
+    } = useRedux(state => ({
+      viewState: state.monitoringDashboard,
+      allSettled: state.monitoringDashboard.allSettled,
+    }));
 
-  useMount(() => {
-    if (!viewState.allSettled) {
+    useMount(() => {
       dispatch.monitoringDashboard.reloadAll(viewState);
-    }
-  });
+    });
 
-  useUnmount(() => {
-    dispatch.monitoringDashboard.resetAll();
-  });
+    useUnmount(() => {
+      dispatch.monitoringDashboard.resetAll();
+    });
 
-  const floatRefreshButton = useMemo(() => {
+    const floatRefreshButton = useMemo(() => {
+      return (
+        <div className={styles.ReloadBtnWrapper}>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={() => {
+              dispatch.monitoringDashboard.reloadAll(viewState);
+            }}
+            loading={!allSettled}
+          >
+            {t('common.refresh')}
+          </Button>
+        </div>
+      );
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [allSettled, t]);
+
     return (
-      <div className={styles.ReloadBtnWrapper}>
-        <Button
-          icon={<ReloadOutlined />}
-          onClick={() => {
-            dispatch.monitoringDashboard.reloadAll(viewState);
-          }}
-          loading={!allSettled}
-        >
-          {t('common.refresh')}
-        </Button>
+      <div id="monitoring-dashboard-view" className={styles.View}>
+        {floatRefreshButton}
+        <Row>
+          {/* Left panel: data discovery monitoring boards */}
+          <Col xl={12} md={24} className={styles.Col}>
+            <div className={styles.PrimaryDivision}>
+              <h2>{t('monitoringDashboard.dataDiscovery.title')}</h2>
+              <DataDiscoveryBoard />
+            </div>
+          </Col>
+          {/* Right panel: data development monitoring boards */}
+          <Col xl={12} md={24} className={styles.Col}>
+            <div className={styles.PrimaryDivision}>
+              <h2>{t('monitoringDashboard.dataDevelopment.title')}</h2>
+              <DataDevelopmentBoard />
+            </div>
+          </Col>
+        </Row>
       </div>
     );
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    allSettled,
-    t,
-  ]);
-
-  return (
-    <div id="monitoring-dashboard-view" className={styles.View}>
-      {floatRefreshButton}
-      <Row>
-        {/* Left panel: data discovery monitoring boards */}
-        <Col xl={12} md={24} className={styles.Col}>
-          <div className={styles.PrimaryDivision}>
-            <h2>{t('monitoringDashboard.dataDiscovery.title')}</h2>
-            <DataDiscoveryBoard />
-          </div>
-        </Col>
-        {/* Right panel: data development monitoring boards */}
-        <Col xl={12} md={24} className={styles.Col}>
-          <div className={styles.PrimaryDivision}>
-            <h2>{t('monitoringDashboard.dataDevelopment.title')}</h2>
-            <DataDevelopmentBoard />
-          </div>
-        </Col>
-      </Row>
-    </div>
-  );
-});
+  },
+);

@@ -2,6 +2,8 @@ package com.miotech.kun.workflow.client;
 
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 
 import java.io.File;
 import java.util.List;
@@ -125,6 +127,13 @@ public interface WorkflowClient {
     PaginationResult<TaskRun> searchTaskRun(TaskRunSearchRequest request);
 
     /**
+     * Fetch task run count by filter
+     * @param request
+     * @return
+     */
+    Integer countTaskRun(TaskRunSearchRequest request);
+
+    /**
      * fetch taskRun state
      * @param taskRunId
      * @return
@@ -168,4 +177,21 @@ public interface WorkflowClient {
      * @return Mapped results in dictionary, where task id is the key, and its latest runs in a list as value
      */
     Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit);
+
+    /**
+     * Get neighbouring upstream / downstream lineage dataset nodes of specific dataset
+     * @param datasetGid global id of dataset
+     * @param direction upstream, downstream or both
+     * @param depth query depth
+     * @return dataset lineage info
+     */
+    DatasetLineageInfo getLineageNeighbors(Long datasetGid, LineageQueryDirection direction, int depth);
+
+    /**
+     * Get lineage edge info
+     * @param upstreamDatasetGid global id of upstream dataset
+     * @param downstreamDatasetGid global id of downstream dataset
+     * @return edge info object
+     */
+    EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid);
 }

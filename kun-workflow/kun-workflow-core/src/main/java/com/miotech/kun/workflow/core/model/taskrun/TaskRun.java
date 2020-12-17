@@ -31,6 +31,10 @@ public class TaskRun {
 
     private final OffsetDateTime endAt;
 
+    private final OffsetDateTime createdAt;
+
+    private final OffsetDateTime updatedAt;
+
     private final List<DataStore> inlets;
 
     private final List<DataStore> outlets;
@@ -67,6 +71,14 @@ public class TaskRun {
         return endAt;
     }
 
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
     public List<DataStore> getInlets() {
         return inlets;
     }
@@ -80,8 +92,8 @@ public class TaskRun {
     }
 
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status,
-                   OffsetDateTime startAt, OffsetDateTime endAt, List<DataStore> inlets, List<DataStore> outlets,
-                   List<Long> dependentTaskRunIds) {
+                   OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
+                   List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
@@ -90,6 +102,8 @@ public class TaskRun {
         this.status = status;
         this.startAt = startAt;
         this.endAt = endAt;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
         this.inlets = inlets;
         this.outlets = outlets;
         this.dependentTaskRunIds = dependentTaskRunIds;
@@ -113,6 +127,21 @@ public class TaskRun {
                 .withDependentTaskRunIds(dependentTaskRunIds);
     }
 
+    @Override
+    public String toString() {
+        return "TaskRun{" +
+                "id=" + id +
+                ", task=" + task +
+                ", config=" + config +
+                ", scheduledTick=" + scheduledTick +
+                ", status=" + status +
+                ", startAt=" + startAt +
+                ", endAt=" + endAt +
+                ", inlets=" + inlets +
+                ", outlets=" + outlets +
+                ", dependentTaskRunIds=" + dependentTaskRunIds +
+                '}';
+    }
 
     public static final class TaskRunBuilder {
         private Long id;
@@ -122,6 +151,8 @@ public class TaskRun {
         private TaskRunStatus status;
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
+        private OffsetDateTime createdAt;
+        private OffsetDateTime updatedAt;
         private List<DataStore> inlets;
         private List<DataStore> outlets;
         private List<Long> dependentTaskRunIds;
@@ -164,6 +195,16 @@ public class TaskRun {
             return this;
         }
 
+        public TaskRunBuilder withCreatedAt(OffsetDateTime createdAt) {
+            this.createdAt = createdAt;
+            return this;
+        }
+
+        public TaskRunBuilder withUpdatedAt(OffsetDateTime updatedAt) {
+            this.updatedAt = updatedAt;
+            return this;
+        }
+
         public TaskRunBuilder withInlets(List<DataStore> inlets) {
             this.inlets = inlets;
             return this;
@@ -180,7 +221,7 @@ public class TaskRun {
         }
 
         public TaskRun build() {
-            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, inlets, outlets, dependentTaskRunIds);
+            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets, outlets, dependentTaskRunIds);
         }
     }
 }

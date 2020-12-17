@@ -7,4 +7,5 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "org.apache.kafka:kafka-clients"
+    implementation 'redis.clients:jedis'
 }

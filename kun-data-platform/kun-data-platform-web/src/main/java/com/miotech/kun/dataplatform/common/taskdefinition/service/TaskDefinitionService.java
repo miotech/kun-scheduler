@@ -11,6 +11,7 @@ import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskRelationDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskTryDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.*;
+import com.miotech.kun.dataplatform.common.taskdefview.dao.TaskDefinitionViewDao;
 import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateService;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.common.utils.TagUtils;
@@ -49,6 +50,9 @@ public class TaskDefinitionService extends BaseSecurityService {
 
     @Autowired
     private TaskRelationDao taskRelationDao;
+
+    @Autowired
+    private TaskDefinitionViewDao taskDefinitionViewDao;
 
     @Autowired
     private TaskTryDao taskTryDao;
@@ -270,6 +274,8 @@ public class TaskDefinitionService extends BaseSecurityService {
             log.debug("task definition \"{}\" not deployed yet, no need to offline", taskDefId);
         }
 
+        // Remove all relations from target task definition views
+        taskDefinitionViewDao.removeAllRelationsOfTaskDefinition(taskDefId);
     }
 
     public List<Long> resolveUpstreamTaskDefIds(TaskPayload taskPayload) {
@@ -307,9 +313,9 @@ public class TaskDefinitionService extends BaseSecurityService {
         TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskRunRequest.getParameters(), taskTemplate);
         Config config = new Config(taskConfig.getParams());
         Task task = Task.newBuilder()
-                .withName(taskTryId.toString())
+                .withName(taskDefId.toString())
                 .withOperatorId(operatorId)
-                .withDescription("Try Run Data Platform Task " + taskTryId)
+                .withDescription("Try Run Data Platform Task " + taskDefId)
                 .withConfig(config)
                 .withTags(TagUtils.buildTryRunTags(creator, taskDefId))
                 .withDependencies(new ArrayList<>())

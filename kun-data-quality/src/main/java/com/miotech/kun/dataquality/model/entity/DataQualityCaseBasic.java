@@ -22,7 +22,12 @@ public class DataQualityCaseBasic {
 
     String updater;
 
+    @JsonSerialize(using= ToStringSerializer.class)
     Long taskId;
 
-    List<String> historyList;
+    Long createTime;
+
+    Long updateTime;
+
+    Boolean isPrimary;
 }

@@ -26,3 +26,8 @@ neo4j:
   uri: bolt://${DB_NEO4J_IP}:7687/
   username: ${DB_NEO4J_USERNAME}
   password: ${DB_NEO4J_PASSWORD}
+
+redis:
+  host: ${DB_REDIS_IP}
+  notify-channel: kun-notify
+

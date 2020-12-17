@@ -34,7 +34,9 @@
 **/kun-security-logs
 **/kun-data-dashboard-logs
 
+# Compiled jars
 kun-data-discovery/src/main/resources/*.jar
+kun-data-platform/**/*.jar
 
 #docker
 redis_data

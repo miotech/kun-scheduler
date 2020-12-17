@@ -1,8 +1,8 @@
 package com.miotech.kun.security;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.security.common.CustomAuthenticationFilter;
-import com.miotech.kun.security.common.JsonAuthenticateProvider;
+import com.miotech.kun.security.authenticate.CustomAuthenticationFilter;
+import com.miotech.kun.security.authenticate.JsonAuthenticateProvider;
 import com.miotech.kun.security.model.constant.SecurityType;
 import com.miotech.kun.security.service.AbstractSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,5 +1,9 @@
 import { get } from '@/utils/requestUtils';
-import { PaginationReqBody, PaginationRespBodyBase, SortReqBody } from '@/definitions/common-types';
+import {
+  PaginationReqBody,
+  PaginationRespBodyBase,
+  SortReqBody,
+} from '@/definitions/common-types';
 
 // Get Metadata Metrics
 // GET /kun/api/v1/dashboard/metadata/metrics
@@ -27,7 +31,7 @@ export interface RowCountChange {
   dataSource: string;
   rowChange: number;
   rowCount: number;
-  rowChangeRatio: number;  // 0 <= rowChangeRatio <= 1.0
+  rowChangeRatio: number; // 0 <= rowChangeRatio <= 1.0
 }
 
 export interface MaxRowCountChange {
@@ -38,7 +42,9 @@ export interface FetchMaxRowCountChangeReqParams {
   pageSize?: number;
 }
 
-export function fetchMaxRowCountChange(reqParams: FetchMaxRowCountChangeReqParams = {}) {
+export function fetchMaxRowCountChange(
+  reqParams: FetchMaxRowCountChangeReqParams = {},
+) {
   return get<MaxRowCountChange>('/dashboard/metadata/max-row-count-change', {
     query: { ...reqParams },
     mockCode: 'monitoring-dashboard.get-max-row-count-change',
@@ -48,8 +54,16 @@ export function fetchMaxRowCountChange(reqParams: FetchMaxRowCountChangeReqParam
 // Get Failed Test Cases
 // GET /kun/api/v1/dashboard/test-cases
 
+export interface FailedTestCaseRule {
+  originalValue: string;
+  field: string;
+  operator: string;
+  expectedType: string;
+  expectedValue: string;
+}
+
 export interface FailedTestCase {
-  result: string;
+  status: string;
   errorReason: string;
   updateTime: number;
   // default sort column
@@ -58,16 +72,20 @@ export interface FailedTestCase {
   datasetGid: string;
   datasetName: string;
   caseName: string;
+  caseId: string;
+  ruleRecords: FailedTestCaseRule[];
 }
 
 export interface FailedTestCasesInfo extends PaginationRespBodyBase {
-  testCases: FailedTestCase[];
+  dataQualityCases: FailedTestCase[];
 }
 
-export type FetchFailedTestCasesReqParams =
-  Partial<PaginationReqBody> & Partial<SortReqBody<keyof FailedTestCase>>;
+export type FetchFailedTestCasesReqParams = Partial<PaginationReqBody> &
+  Partial<SortReqBody<keyof FailedTestCase>>;
 
-export function fetchFailedTestCases(reqParams: FetchFailedTestCasesReqParams = {}) {
+export function fetchFailedTestCases(
+  reqParams: FetchFailedTestCasesReqParams = {},
+) {
   return get<FailedTestCasesInfo>('/dashboard/test-cases', {
     query: {
       ...reqParams,
@@ -91,10 +109,12 @@ export interface DatasetColumnMetricsInfo extends PaginationRespBodyBase {
   columnMetricsList: ColumnMetrics[];
 }
 
-export type FetchDatasetColumnMetricsReqParams =
-  Partial<PaginationReqBody> & Partial<SortReqBody<keyof ColumnMetrics>>;
+export type FetchDatasetColumnMetricsReqParams = Partial<PaginationReqBody> &
+  Partial<SortReqBody<keyof ColumnMetrics>>;
 
-export function fetchDatasetColumnMetrics(reqParams: FetchDatasetColumnMetricsReqParams = {}) {
+export function fetchDatasetColumnMetrics(
+  reqParams: FetchDatasetColumnMetricsReqParams = {},
+) {
   return get<DatasetColumnMetricsInfo>('/dashboard/metadata/column/metrics', {
     query: reqParams,
   });
@@ -107,6 +127,8 @@ export interface DataDevelopmentMetrics {
   successTaskCount: number;
   failedTaskCount: number;
   runningTaskCount: number;
+  pendingTaskCount: number;
+  startedTaskCount: number;
   totalTaskCount: number;
 }
 
@@ -119,6 +141,11 @@ export function fetchDataDevelopmentMetrics() {
 // Get Data Development Daily Task Count
 // GET /kun/api/v1/dashboard/data-development/date-time-metrics
 
+export interface FetchDataDevelopmentDailyTaskCountParams {
+  /** timezone offset hours of current browser */
+  hours?: number;
+}
+
 export interface DailyTaskCount {
   time: number;
   taskCount: number;
@@ -128,19 +155,29 @@ export interface DataDevDailyTaskCountInfo {
   taskCountList: DailyTaskCount[];
 }
 
-export function fetchDataDevelopmentDailyTaskCount() {
-  return get<DataDevDailyTaskCountInfo>('/dashboard/data-development/date-time-metrics');
+export function fetchDataDevelopmentDailyTaskCount(parameters?: FetchDataDevelopmentDailyTaskCountParams) {
+  return get<DataDevDailyTaskCountInfo>(
+    '/dashboard/data-development/date-time-metrics',
+    {
+      query: {
+        hours: parameters?.hours ?? ((new Date()).getTimezoneOffset() / -60),
+      },
+    },
+  );
 }
 
 // Get Data Development Task Details
 // GET /kun/api/v1/dashboard/data-development/tasks
 
 export interface DevTaskDetail {
+  taskId: string;   // workflow task id
   taskName: string;
   taskStatus: string;
   errorMessage: string;
   startTime: number | null;
   endTime: number | null;
+  createTime: number | null;
+  updateTime: number | null;
   duration: number | null;
 }
 
@@ -148,7 +185,9 @@ export interface DevTaskDetailsInfo extends PaginationRespBodyBase {
   tasks: DevTaskDetail[];
 }
 
-export function fetchDataDevelopmentTaskDetails(reqParams: Partial<PaginationReqBody> = {}) {
+export function fetchDataDevelopmentTaskDetails(
+  reqParams: Partial<PaginationReqBody> = {},
+) {
   return get<DevTaskDetailsInfo>('/dashboard/data-development/tasks', {
     query: reqParams,
   });

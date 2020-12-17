@@ -8,15 +8,13 @@ import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.taskrun.factory.TaskRunLogVOFactory;
 import com.miotech.kun.workflow.common.taskrun.factory.TaskRunStateVOFactory;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
-import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
-import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
-import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
-import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.common.taskrun.vo.*;
+import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -91,6 +89,10 @@ public class TaskRunService {
             taskAttempt = attempts.get(0);
         }
         Resource resource = resourceLoader.getResource(taskAttempt.getLogPath());
+        if(resource == null){
+            List<String> logs = new ArrayList<>();
+            return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLine, startLine, logs);
+        }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
 
@@ -164,6 +166,20 @@ public class TaskRunService {
                 .build();
     }
 
+    public int countTaskRunVOs(TaskRunSearchFilter filter) {
+        Preconditions.checkNotNull(filter, "Invalid argument `filter`: null");
+        return taskRunDao.fetchTotalCountByFilter(filter);
+    }
+
+    public List<TaskRunDailyStatisticInfo> countTaskRunVOsByDate(TaskRunSearchFilter filter) {
+        return countTaskRunVOsByDate(filter, 0);
+    }
+
+    public List<TaskRunDailyStatisticInfo> countTaskRunVOsByDate(TaskRunSearchFilter filter, int offsetHours) {
+        Preconditions.checkNotNull(filter, "Invalid argument `filter`: null");
+        return taskRunDao.fetchTotalCountByDay(filter, offsetHours);
+    }
+
     public TaskRunVO convertToVO(TaskRun taskRun) {
         List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRun.getId())
                 .stream()
@@ -185,6 +201,8 @@ public class TaskRunService {
         vo.setDependentTaskRunIds(taskRun.getDependentTaskRunIds());
         vo.setStartAt(taskRun.getStartAt());
         vo.setEndAt(taskRun.getEndAt());
+        vo.setCreatedAt(taskRun.getCreatedAt());
+        vo.setUpdatedAt(taskRun.getUpdatedAt());
         vo.setConfig(taskRun.getConfig());
         vo.setAttempts(attempts);
         return vo;

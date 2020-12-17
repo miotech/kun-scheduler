@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.LineageEvent;
+import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.event.TickEvent;
 
 
@@ -14,6 +15,7 @@ public class EventMapper {
     static {
         MAPPER.registerSubtypes(new NamedType(LineageEvent.class, "LineageEvent"));
         MAPPER.registerSubtypes(new NamedType(TickEvent.class, "TickEvent"));
+        MAPPER.registerSubtypes(new NamedType(TaskAttemptStatusChangeEvent.class, "TaskAttemptStatusChangeEvent"));
     }
 
     public static String toJson(Event event) throws JsonProcessingException {

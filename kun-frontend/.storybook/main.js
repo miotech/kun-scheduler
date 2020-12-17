@@ -49,13 +49,21 @@ module.exports = {
 
     // Make whatever fine-grained changes you need
     config.module.rules.push({
-      test: /\.less$/,
+      test: /\.less$/i,
       use: [
         {
           loader: 'style-loader',
         },
         {
           loader: 'css-loader',
+          options: {
+            importLoaders: 1,
+            modules: {
+              auto: true,
+              localIdentName: '[name]__[local]--[hash:base64:5]',
+            },
+            sourceMap: true,
+          },
         },
         {
           loader: 'less-loader',
@@ -65,21 +73,45 @@ module.exports = {
                 path.resolve(__dirname, '..'),
                 path.resolve(__dirname, '../node_modules'),
               ],
-            },
-            modifyVars: {
-              hack: `true; @import "~@/styles/variables.less"; @import "~@/styles/mixins.less"`,
+              modifyVars: {
+                hack: `true; @import "~@/styles/variables.less"; @import "~@/styles/mixins.less"`,
+              },
             },
           },
         },
       ],
       include: path.resolve(__dirname, '../'),
     });
+    config.module.rules.unshift({
+      test: /\.svg(\?v=\d+\.\d+\.\d+)?$/i,
+      use: [
+        {
+          loader: 'babel-loader',
+          options: {
+            babelrc: false,
+            presets: [
+              // '@babel/preset-env',
+              '@babel/preset-react',
+            ]
+          },
+        },
+        {
+          loader: '@svgr/webpack',
+          options: {
+            babel: false,
+            icon: true,
+            svgo: true,
+          },
+        },
+      ],
+    })
 
     config.resolve = {
       ...config.resolve,
       alias: {
         ...config.resolve.alias,
         '@': path.resolve(__dirname, '../src'),
+        '@@': path.resolve(__dirname, '../src/.umi'),
       },
     };
 

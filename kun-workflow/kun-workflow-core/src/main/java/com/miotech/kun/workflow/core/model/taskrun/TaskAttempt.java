@@ -91,6 +91,19 @@ public class TaskAttempt {
                 .withEndAt(endAt);
     }
 
+    @Override
+    public String toString() {
+        return "TaskAttempt{" +
+                "id=" + id +
+                ", taskRun=" + taskRun +
+                ", attempt=" + attempt +
+                ", status=" + status +
+                ", logPath='" + logPath + '\'' +
+                ", startAt=" + startAt +
+                ", endAt=" + endAt +
+                '}';
+    }
+
     @JsonPOJOBuilder
     public static final class Builder {
         private Long id;

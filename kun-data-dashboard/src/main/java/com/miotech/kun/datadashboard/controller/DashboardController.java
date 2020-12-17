@@ -1,11 +1,9 @@
 package com.miotech.kun.datadashboard.controller;
 
-import com.miotech.kun.common.model.PageInfo;
+import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.utils.DateUtils;
-import com.miotech.kun.datadashboard.model.bo.ColumnMetricsRequest;
-import com.miotech.kun.datadashboard.model.bo.RowCountChangeRequest;
-import com.miotech.kun.datadashboard.model.bo.TestCasesRequest;
+import com.miotech.kun.datadashboard.model.bo.*;
 import com.miotech.kun.datadashboard.model.constant.Constants;
 import com.miotech.kun.datadashboard.model.entity.*;
 import com.miotech.kun.datadashboard.service.MetadataService;
@@ -25,6 +23,9 @@ import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * @author: Jie Chen
@@ -51,7 +52,7 @@ public class DashboardController {
     }
 
     @GetMapping("/dashboard/test-cases")
-    public RequestResult<TestCases> getTestCases(TestCasesRequest testCasesRequest) {
+    public RequestResult<DataQualityCases> getTestCases(TestCasesRequest testCasesRequest) {
         return RequestResult.success(metadataService.getTestCases(testCasesRequest));
     }
 
@@ -70,45 +71,56 @@ public class DashboardController {
     public RequestResult<DataDevelopmentMetrics> getDataDevelopmentMetrics() {
         TaskRunSearchRequest successRequest = TaskRunSearchRequest.newBuilder().
                 withDateFrom(DateTimeUtils.now().minusDays(1))
-                .withStatus(TaskRunStatus.SUCCESS)
+                .withStatus(Sets.newHashSet(TaskRunStatus.SUCCESS))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long successCount = workflowClient.searchTaskRun(successRequest).getTotalCount();
+        long successCount = workflowClient.countTaskRun(successRequest);
 
         TaskRunSearchRequest failedRequest = TaskRunSearchRequest.newBuilder().
                 withDateFrom(DateTimeUtils.now().minusDays(1))
-                .withStatus(TaskRunStatus.FAILED)
+                .withStatus(Sets.newHashSet(TaskRunStatus.FAILED, TaskRunStatus.ERROR))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long failedCount = workflowClient.searchTaskRun(failedRequest).getTotalCount();
+        long failedCount = workflowClient.countTaskRun(failedRequest);
 
         TaskRunSearchRequest runningRequest = TaskRunSearchRequest.newBuilder()
-                .withStatus(TaskRunStatus.RUNNING)
+                .withStatus(Sets.newHashSet(TaskRunStatus.RUNNING))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long runningCount = workflowClient.searchTaskRun(runningRequest).getTotalCount();
+        long runningCount = workflowClient.countTaskRun(runningRequest);
+
+        TaskRunSearchRequest startedRequest = TaskRunSearchRequest.newBuilder()
+                .withIncludeStartedOnly(true)
+                .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withPageSize(0)
+                .build();
+        long startedCount = workflowClient.countTaskRun(startedRequest);
 
         TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long totalCount = workflowClient.searchTaskRun(totalRequest).getTotalCount();
+        long totalCount = workflowClient.countTaskRun(totalRequest);
 
         DataDevelopmentMetrics metrics = new DataDevelopmentMetrics();
         metrics.setSuccessTaskCount(successCount);
         metrics.setFailedTaskCount(failedCount);
         metrics.setRunningTaskCount(runningCount);
+        metrics.setStartedTaskCount(startedCount);
+        metrics.setPendingTaskCount(totalCount - startedCount);
         metrics.setTotalTaskCount(totalCount);
         return RequestResult.success(metrics);
     }
 
+    private final ConcurrentMap<OffsetDateTime, DateTimeTaskCount> dateTimeTaskCountMap = new ConcurrentHashMap<>();
+
     @GetMapping("/dashboard/data-development/date-time-metrics")
-    public RequestResult<DateTimeMetrics> getDateTimeMetrics() {
+    public RequestResult<DateTimeMetrics> getDateTimeMetrics(DateTimeMetricsRequest request) {
         DateTimeMetrics dateTimeMetrics = new DateTimeMetrics();
-        OffsetDateTime currentTime = DateTimeUtils.now();
+        OffsetDateTime currentTime = DateUtils.getCurrentDateTime(request.getHours());
         int dayOfMonth = currentTime.getDayOfMonth();
         for (int i = 1; i <= dayOfMonth; i++) {
             OffsetDateTime computeTime = currentTime.minusDays(dayOfMonth - i);
@@ -119,29 +131,37 @@ public class DashboardController {
             } else {
                 endTime = computeTime.with(LocalTime.MAX);
             }
+            if (dateTimeTaskCountMap.get(startTime) != null && i != dayOfMonth) {
+                dateTimeMetrics.add(dateTimeTaskCountMap.get(startTime));
+                continue;
+            }
             TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
                     .withDateFrom(startTime)
                     .withDateTo(endTime)
                     .withTags(DATA_PLATFORM_FILTER_TAGS)
                     .withPageSize(0)
                     .build();
-            long totalCount = workflowClient.searchTaskRun(totalRequest).getTotalCount();
+            long totalCount = workflowClient.countTaskRun(totalRequest);
             DateTimeTaskCount taskCount = new DateTimeTaskCount();
             taskCount.setTaskCount(totalCount);
             taskCount.setTime(DateUtils.dateTimeToMillis(endTime));
             dateTimeMetrics.add(taskCount);
+            dateTimeTaskCountMap.put(startTime, taskCount);
         }
         return RequestResult.success(dateTimeMetrics);
     }
 
     @GetMapping("/dashboard/data-development/tasks")
-    public RequestResult<DataDevelopmentTasks> getDataDevelopmentTasks(PageInfo pageInfo) {
+    public RequestResult<DataDevelopmentTasks> getDataDevelopmentTasks(DataDevelopmentTasksRequest tasksRequest) {
         TaskRunSearchRequest searchRequest = TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
-                .withPageNum(pageInfo.getPageNumber())
-                .withPageSize(pageInfo.getPageSize())
-                .withIncludeStartedOnly(true)
-                .withSortKey("startAt")
+                .withPageNum(tasksRequest.getPageNumber())
+                .withPageSize(tasksRequest.getPageSize())
+                .withStatus(Objects.nonNull(tasksRequest.getTaskRunStatus()) ?
+                        Sets.newHashSet(tasksRequest.getTaskRunStatus()) : null)
+                .withIncludeStartedOnly(tasksRequest.getIncludeStartedOnly())
+                .withDateFrom(Objects.equals(tasksRequest.getLast24HoursOnly(), true) ? DateTimeUtils.now().minusHours(24) : null)
+                .withSortKey("createdAt")
                 .withSortOrder("DESC")
                 .build();
 
@@ -149,10 +169,13 @@ public class DashboardController {
         PaginationResult<TaskRun> taskRunResult = workflowClient.searchTaskRun(searchRequest);
         for (TaskRun taskRun : taskRunResult.getRecords()) {
             DataDevelopmentTask task = new DataDevelopmentTask();
+            task.setTaskId(taskRun.getTask().getId());
             task.setTaskName(taskRun.getTask().getName());
             task.setTaskStatus(taskRun.getStatus().name());
             task.setStartTime(DateUtils.dateTimeToMillis(taskRun.getStartAt()));
             task.setEndTime(DateUtils.dateTimeToMillis(taskRun.getEndAt()));
+            task.setCreateTime(DateUtils.dateTimeToMillis(taskRun.getCreatedAt()));
+            task.setUpdateTime(DateUtils.dateTimeToMillis(taskRun.getUpdatedAt()));
             dataDevelopmentTasks.add(task);
         }
         dataDevelopmentTasks.setPageNumber(taskRunResult.getPageNum());

@@ -1,0 +1,141 @@
+@task-node-width: 240px;
+@task-node-height: 90px;
+@task-node-border-radius: 6px;
+
+.task-dag-node {
+  display: flex;
+  flex-direction: column;
+  width: @task-node-width;
+  height: @task-node-height;
+  box-sizing: content-box;
+  border: 1px solid @borderColor;
+  border-radius: @task-node-border-radius;
+  user-select: none;
+
+  &__heading, &__center, &__bottom {
+    width: 100%;
+    position: relative;
+    background: @white;
+  }
+
+  &__heading {
+    flex: 2 2;
+    border-top-left-radius: @task-node-border-radius;
+    border-top-right-radius: @task-node-border-radius;
+    background: @background;
+
+    &__metas {
+      display: block;
+      position: relative;
+      padding: 0 6px;
+    }
+
+    &__icon {
+      font-size: 14/@em;
+    }
+
+    &__task-template-name {
+      font-size: 14/@em;
+      padding-left: 2px;
+    }
+  }
+
+  &__center {
+    flex: 5 5;
+    padding: 6px 8px;
+  }
+
+  &__bottom {
+    flex: 1 1;
+  }
+
+  &__task-def-name {
+    font-size: 14/@em;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    overflow-x: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &&--interoperable {
+    cursor: pointer;
+  }
+
+  &&--deployed &__heading {
+    &__metas {
+      background: rgba(@green, 0.1);
+    }
+  }
+}
+
+.task-dag-node.task-dag-node--selected {
+  border: @darkBlue 2px solid;
+}
+
+@task-node-simplify-width: 240px;
+@task-node-simplify-height: 60px;
+@task-node-simplify-border-radius: 4px;
+
+.task-dag-node-simplify {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: @task-node-simplify-border-radius;
+  background: #fff;
+  width: @task-node-simplify-width;
+  height: @task-node-simplify-height;
+  cursor: pointer;
+
+  &__icon-wrapper {
+    flex: 0 0 60px;
+    position: relative;
+    border-right: 1px solid;
+  }
+
+  &__icon {
+    font-size: 1.5em;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%);
+  }
+
+  &__info {
+    flex: 1 1;
+    position: relative;
+    padding: 4px 8px;
+    width: @task-node-simplify-width - 60px;
+    height: 100%;
+  }
+
+  &__type {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12 / @em;
+  }
+
+  &__name {
+    font-size: 12 / @em;
+    width: 100%;
+
+    display: -webkit-box;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    word-break: break-all;
+    text-overflow: ellipsis;
+  }
+}
+
+.task-dag-node-simplify.task-dag-node-simplify--selected {
+  border-width: 2px;
+
+  .task-dag-node-simplify__info {
+    font-weight: 600;
+  }
+}

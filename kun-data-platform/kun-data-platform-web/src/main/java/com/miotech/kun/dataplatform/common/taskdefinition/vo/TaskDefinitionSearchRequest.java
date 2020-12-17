@@ -23,18 +23,23 @@ public class TaskDefinitionSearchRequest extends PageRequest {
 
     private final Optional<Boolean> archived;
 
+    private final List<Long> viewIds;
+
     public TaskDefinitionSearchRequest(Integer pageSize,
                                        Integer pageNum,
                                        String name,
                                        String taskTemplateName,
                                        List<Long> definitionIds,
                                        List<Long> creatorIds,
-                                       Optional<Boolean> archived) {
+                                       Optional<Boolean> archived,
+                                       List<Long> viewIds
+    ) {
         super(pageSize, pageNum);
         this.name = name;
         this.taskTemplateName = taskTemplateName;
         this.definitionIds = definitionIds != null ? definitionIds : ImmutableList.of();
         this.creatorIds = creatorIds != null ? creatorIds : ImmutableList.of();
         this.archived = archived;
+        this.viewIds = viewIds;
     }
 }

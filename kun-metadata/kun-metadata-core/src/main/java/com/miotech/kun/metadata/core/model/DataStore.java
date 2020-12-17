@@ -8,6 +8,8 @@ import java.io.Serializable;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 public abstract class DataStore implements Serializable {
+    @JsonIgnore
+    private static final long serialVersionUID = -1603335452366L;
 
     private final DataStoreType type;
 
@@ -26,4 +28,12 @@ public abstract class DataStore implements Serializable {
     public DataStore(DataStoreType type) {
         this.type = type;
     }
+
+    /**
+     * Returns data store identifier (DSI) of this datastore object
+     * @return data store identifier
+     */
+    @JsonIgnore
+    @Nullable
+    public abstract DSI getDSI();
 }

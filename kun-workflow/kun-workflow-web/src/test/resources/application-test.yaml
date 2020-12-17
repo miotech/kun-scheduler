@@ -1,6 +1,9 @@
 server:
   port: 18088
 
+executor:
+  enableRecover: false
+
 datasource:
   jdbcUrl: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
   username: sa
@@ -14,3 +17,5 @@ flyway:
   locations: sql/
   table: flyway_kun_wf_schema_history
   initSql: CREATE DOMAIN IF NOT EXISTS "JSONB" AS TEXT
+  baselineOnMigrate: true
+  baselineVersion: 0

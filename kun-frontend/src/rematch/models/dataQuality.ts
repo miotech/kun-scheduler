@@ -46,7 +46,7 @@ export const validateOperatorEnumToLocaleString: Record<
 export enum ValidateStatus {
   NO_VALIDATE = -1,
   SUCCESS = 0,
-  FAILD = 1,
+  FAILED = 1,
 }
 
 export interface TableDimensionConfigTemplateItem {
@@ -76,10 +76,10 @@ export type DimensionConfigItem =
   | CustomizeDimensionConfigItem;
 
 export interface ValidateRuleItem {
-  fieldName: string | null;
+  field: string | null;
   operator: ValidateOperatorEnum;
-  fieldType: ValidateFieldType;
-  fieldValue: string;
+  expectedType: ValidateFieldType;
+  expectedValue: string;
 }
 
 export interface FieldDimensionConfig {
@@ -109,6 +109,7 @@ export interface RelatedTableItem {
   id: string;
   name: string;
   datasource: string;
+  isPrimary?: boolean;
 }
 
 export enum DataQualityType {
@@ -116,6 +117,7 @@ export enum DataQualityType {
   Completeness = 'COMPLETENESS',
   Consistency = 'CONSISTENCY',
   Timeliness = 'TIMELINESS',
+  Uniqueness = 'UNIQUENESS',
 }
 
 export const dataQualityTypes: DataQualityType[] = Object.values(
@@ -134,6 +136,7 @@ export interface DataQualityBase {
 
 export interface DataQualityReq extends DataQualityBase {
   relatedTableIds: string[];
+  primaryDatasetGid?: string;
 }
 
 export interface DataQualityResp extends DataQuality {
@@ -143,4 +146,25 @@ export interface DataQualityResp extends DataQuality {
 
 export interface DataQuality extends DataQualityBase {
   relatedTables: RelatedTableItem[];
+}
+
+export interface RuleRecords {
+  originalValue: string;
+  field: string;
+  operator: string;
+  expectedType: string;
+  expectedValue: string;
+}
+
+export enum DataQualityHistoryStatus {
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
+}
+
+export interface DataQualityHistory {
+  status: DataQualityHistoryStatus;
+  errorReason?: string | null;
+  updateTime: number;
+  continuousFailingCount: number;
+  ruleRecords: RuleRecords[];
 }

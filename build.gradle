@@ -47,6 +47,7 @@ subprojects {
                 implementation "commons-dbutils:commons-dbutils:1.7"
                 implementation 'org.apache.commons:commons-lang3:3.10'
                 implementation 'org.apache.commons:commons-collections4:4.4'
+                implementation 'commons-io:commons-io:2.8.0'
                 implementation "com.zaxxer:HikariCP:3.4.5"
                 implementation 'ch.qos.logback:logback-classic:1.2.3'
                 implementation "org.yaml:snakeyaml:1.21"
@@ -82,7 +83,6 @@ subprojects {
                 implementation 'com.googlecode.json-simple:json-simple:1.1.1'
                 implementation "org.ow2.asm:asm:8.0.1"
                 implementation "org.ow2.asm:asm-commons:8.0.1"
-                implementation'com.alibaba:druid:1.1.22'
                 implementation 'commons-fileupload:commons-fileupload:1.4'
                 implementation "org.jooq:joor-java-8:0.9.12"
                 implementation "org.neo4j:neo4j-ogm-core:3.2.16"
@@ -91,6 +91,9 @@ subprojects {
                 implementation 'org.apache.dubbo:dubbo-spring-boot-starter:2.7.8'
                 implementation 'com.alibaba:druid:1.1.23'
                 implementation 'org.springdoc:springdoc-openapi-ui:1.4.8'
+                implementation 'redis.clients:jedis:2.9.0'
+                implementation 'org.jooq:joor-java-8:0.9.13'
+
 
                 testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
@@ -109,6 +112,7 @@ subprojects {
                 testImplementation "org.mock-server:mockserver-netty:3.10.8"
                 testImplementation "org.mock-server:mockserver-client-java:3.10.8"
                 testImplementation 'org.apache.dubbo:dubbo-registry-default:2.7.8'
+                testImplementation 'uk.org.lidalia:slf4j-test:1.2.0'
             }
 
             implementation "com.google.inject:guice"

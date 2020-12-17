@@ -1,10 +1,14 @@
 package com.miotech.kun.security;
 
-import com.miotech.kun.security.common.AuthenticateInterceptor;
-import com.miotech.kun.security.common.LogInterceptor;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import com.miotech.kun.security.filter.AuthenticateFilter;
+import com.miotech.kun.security.filter.AuthenticateInterceptor;
+import com.miotech.kun.security.filter.LogFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.boot.web.servlet.ServletRegistrationBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -17,14 +21,33 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @ConditionalOnExpression("#{environment.getActiveProfiles()[0] != 'test'}")
 public class SecurityConfig implements WebMvcConfigurer {
 
-    @Value("${security.base-url:http://kun-security:8084}")
-    String securityBaseUrl;
+    @Autowired
+    @Qualifier("dispatcherServletRegistration")
+    private ServletRegistrationBean servletRegistrationBean;
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         AuthenticateInterceptor authenticateInterceptor = new AuthenticateInterceptor();
-        authenticateInterceptor.setSecurityBaseUrl(securityBaseUrl);
         registry.addInterceptor(authenticateInterceptor);
-        registry.addInterceptor(new LogInterceptor());
+    }
+
+    @Bean
+    public FilterRegistrationBean<LogFilter> logFilter() {
+        FilterRegistrationBean<LogFilter> registration = new FilterRegistrationBean<>();
+        registration.addServletRegistrationBeans(servletRegistrationBean);
+        LogFilter cachingFilter = new LogFilter();
+        registration.setFilter(cachingFilter);
+        registration.setOrder(1);
+        return registration;
+    }
+
+    @Bean
+    public FilterRegistrationBean<AuthenticateFilter> authenticateFilter() {
+        FilterRegistrationBean<AuthenticateFilter> registration = new FilterRegistrationBean<>();
+        registration.addServletRegistrationBeans(servletRegistrationBean);
+        AuthenticateFilter cachingFilter = new AuthenticateFilter();
+        registration.setFilter(cachingFilter);
+        registration.setOrder(0);
+        return registration;
     }
 }

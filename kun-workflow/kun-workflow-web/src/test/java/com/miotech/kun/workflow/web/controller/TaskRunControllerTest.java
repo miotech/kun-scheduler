@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.web.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
@@ -28,10 +29,7 @@ import org.mockito.Mockito;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -72,13 +70,32 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
      * @param count
      */
     private void setupMockitoWithTaskRunSearchFilter(TaskRunSearchFilter filterToMatch, List<TaskRunVO> records, int count) {
-        Mockito.when(taskRunService.searchTaskRunVOs(ArgumentMatchers.eq(filterToMatch)))
+        Mockito.when(taskRunService.searchTaskRunVOs(ArgumentMatchers.argThat(argument -> {
+            TaskRunSearchFilter filterToMatchEasyMatchProps = (filterToMatch != null) ?
+                    filterToMatch.cloneBuilder()
+                        .withStatus(null)
+                        .build()
+                    : null;
+            TaskRunSearchFilter argumentEasyMatchProps = (argument != null) ? argument.cloneBuilder().withStatus(null).build() : null;
+            return Objects.equals(filterToMatchEasyMatchProps, argumentEasyMatchProps) &&
+                    matchStatusFilter(
+                            filterToMatch != null ? filterToMatch.getStatus() : null,
+                            argument != null ? argument.getStatus() : null
+                    );
+        })))
                 .thenReturn(PaginationVO.<TaskRunVO>newBuilder()
                         .withPageNumber(filterToMatch.getPageNum())
                         .withPageSize(filterToMatch.getPageSize())
                         .withRecords(records)
                         .withTotalCount(count)
                         .build());
+    }
+
+    private boolean matchStatusFilter(Set<TaskRunStatus> firstFilters, Set<TaskRunStatus> secondFilters) {
+        return Objects.equals(
+                firstFilters == null ? new HashSet<>() : firstFilters,
+                secondFilters == null ? new HashSet<>() : secondFilters
+        );
     }
 
     private PaginationVO<TaskRunVO> jsonToPaginationVO(String json) {
@@ -104,7 +121,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         TaskRunSearchFilter defaultPaginatedFilter = TaskRunSearchFilter.newBuilder()
                 .withPageNum(1)
                 .withPageSize(100)
-                .withSortKey("startAt")
+                .withSortKey("id")
                 .withSortOrder("DESC")
                 .withIncludeStartedOnly(false)
                 .build();
@@ -116,7 +133,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         );
         // When matches running status filter
         TaskRunSearchFilter createdStatusFilter = defaultPaginatedFilter.cloneBuilder()
-                .withStatus(TaskRunStatus.CREATED).build();
+                .withStatus(Sets.newHashSet(TaskRunStatus.CREATED)).build();
         List<TaskRunVO> taskRunsWithStatusCreated = allTaskRunCollection.stream()
                 .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.CREATED))
                 .map(taskRunService::convertToVO)
@@ -129,7 +146,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
 
         // When matches running status filter
         TaskRunSearchFilter runningStatusFilter = defaultPaginatedFilter.cloneBuilder()
-                .withStatus(TaskRunStatus.RUNNING).build();
+                .withStatus(Sets.newHashSet(TaskRunStatus.RUNNING)).build();
         List<TaskRunVO> taskRunsWithStatusRunning = allTaskRunCollection.stream()
                 .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.RUNNING))
                 .map(taskRunService::convertToVO)
@@ -138,7 +155,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
 
         // When matches success status filter
         TaskRunSearchFilter successStatusFilter = defaultPaginatedFilter.cloneBuilder()
-                .withStatus(TaskRunStatus.SUCCESS).build();
+                .withStatus(Sets.newHashSet(TaskRunStatus.SUCCESS)).build();
         List<TaskRunVO> taskRunsWithStatusSuccess = allTaskRunCollection.stream()
                 .filter(run -> Objects.equals(run.getStatus(), TaskRunStatus.SUCCESS))
                 .map(taskRunService::convertToVO)
@@ -162,9 +179,8 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         TaskRunSearchFilter defaultPaginatedFilter = TaskRunSearchFilter.newBuilder()
                 .withPageNum(1)
                 .withPageSize(100)
-                .withSortKey("startAt")
+                .withSortKey("id")
                 .withSortOrder("DESC")
-                .withIncludeStartedOnly(false)
                 .build();
         // setup return behavior on filtering offsetDatetime
         OffsetDateTime timePointMarch10th = OffsetDateTime.of(2020, 3, 10, 0, 0, 0, 0, ZoneOffset.ofHours(0));
@@ -352,7 +368,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
         TaskRunSearchFilter defaultPaginatedFilter = TaskRunSearchFilter.newBuilder()
                 .withPageNum(1)
                 .withPageSize(100)
-                .withSortKey("startAt")
+                .withSortKey("id")
                 .withSortOrder("DESC")
                 .withIncludeStartedOnly(false)
                 .build();

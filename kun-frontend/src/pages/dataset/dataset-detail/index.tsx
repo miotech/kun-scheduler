@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Link } from 'umi';
+import { useQueryParams, StringParam } from 'use-query-params';
 import { RouteComponentProps } from 'react-router';
 import numeral from 'numeral';
 import { FileTextOutlined } from '@ant-design/icons';
@@ -14,13 +15,15 @@ import useRedux from '@/hooks/useRedux';
 import useDebounce from '@/hooks/useDebounce';
 import BackButton from '@/components/BackButton/BackButton';
 import useBackPath from '@/hooks/useBackPath';
-import { Watermark } from '@/rematch/models/dataDiscovery';
+import { Watermark } from '@/definitions/Dataset.type';
 import { Column } from '@/rematch/models/datasetDetail';
+import { LineageDirection } from '@/services/lineage';
 
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnDescInput from './components/ColumnDescInput/ColumnDescInput';
 import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
 import DataQualityTable from './components/DataQualityTable/DataQualityTable';
+import LineageStreamTaskTable from './components/LineageStreamTaskTable/LineageStreamTaskTable';
 
 import styles from './index.less';
 
@@ -33,6 +36,9 @@ interface Props extends RouteComponentProps<MatchParams> {}
 const { Option } = Select;
 
 export default function DatasetDetail({ match }: Props) {
+  const [query] = useQueryParams({
+    caseId: StringParam,
+  });
   const t = useI18n();
   const { getBackPath } = useBackPath();
 
@@ -60,13 +66,13 @@ export default function DatasetDetail({ match }: Props) {
   ] = useState(1);
 
   const [AddDataQualityModalVisible, setAddDataQualityModalVisible] = useState(
-    false,
+    !!query.caseId,
   );
 
   // 编辑 dataquality 用
   const [currentDataQualityId, setCurrentDataQualityId] = useState<
     string | null
-  >(null);
+  >(query.caseId || null);
 
   useEffect(() => {
     // 如果更改了搜索关键词, 那么强制切换页码数为1
@@ -258,21 +264,19 @@ export default function DatasetDetail({ match }: Props) {
 
   const handleConfirmDeleteDataQuality = useCallback(
     qualityId => {
-      dispatch.datasetDetail
-        .deleteDataQuality({ id: qualityId, datasetId: currentId })
-        .then(resp => {
-          if (resp) {
-            const newDataQualities = selector.dataQualities?.filter(
-              i => i.id !== resp.id,
-            );
-            dispatch.datasetDetail.updateState({
-              key: 'dataQualities',
-              value: newDataQualities,
-            });
-          }
-        });
+      dispatch.datasetDetail.deleteDataQuality({ id: qualityId }).then(resp => {
+        if (resp) {
+          const newDataQualities = selector.dataQualities?.filter(
+            i => i.id !== resp.id,
+          );
+          dispatch.datasetDetail.updateState({
+            key: 'dataQualities',
+            value: newDataQualities,
+          });
+        }
+      });
     },
-    [currentId, dispatch.datasetDetail, selector.dataQualities],
+    [dispatch.datasetDetail, selector.dataQualities],
   );
 
   const handleChangeColumnDescription = useCallback(
@@ -331,8 +335,8 @@ export default function DatasetDetail({ match }: Props) {
       },
       {
         title: t('dataDetail.column.updateTime'),
-        dataIndex: 'high_watermark',
-        key: 'high_watermark',
+        dataIndex: 'highWatermark',
+        key: 'highWatermark',
         render: (waterMark: Watermark) => watermarkFormatter(waterMark?.time),
         width: 200,
       },
@@ -418,7 +422,7 @@ export default function DatasetDetail({ match }: Props) {
                     {t('dataDetail.baseItem.title.rowCount')}
                   </div>
                   <div className={styles.importantContent}>
-                    {selector.row_count}
+                    {selector.rowCount}
                   </div>
                 </div>
                 <div className={styles.infoBlock}>
@@ -429,9 +433,9 @@ export default function DatasetDetail({ match }: Props) {
                     {t('dataDetail.baseItem.title.lastUpdate')}
                   </div>
                   <div className={styles.importantContent}>
-                    {selector.high_watermark?.time && (
+                    {selector.highWatermark?.time && (
                       <span className={styles.watermark}>
-                        {watermarkFormatter(selector.high_watermark?.time)}
+                        {watermarkFormatter(selector.highWatermark?.time)}
                       </span>
                     )}
                   </div>
@@ -448,7 +452,7 @@ export default function DatasetDetail({ match }: Props) {
 
                     <div className={styles.glossaryContent}>
                       {selector.glossaries.map(glossary => (
-                        <div className={styles.glossaryItem}>
+                        <div key={glossary.id} className={styles.glossaryItem}>
                           <FileTextOutlined style={{ marginRight: 4 }} />
                           <Link
                             to={getBackPath(
@@ -522,7 +526,7 @@ export default function DatasetDetail({ match }: Props) {
               <div className={styles.columnsArea}>
                 <Spin spinning={fetchColumnsLoading}>
                   <div className={styles.columnsTitleRow}>
-                    <span className={styles.columnsTitle}>
+                    <span className={styles.baseItemTitle}>
                       {t('dataDetail.baseItem.title.clolumns')}
                     </span>
 
@@ -547,6 +551,40 @@ export default function DatasetDetail({ match }: Props) {
               </div>
 
               <Divider className={styles.divider} />
+              <div className={styles.columnsArea}>
+                <div className={styles.lineageTitleRow}>
+                  <span
+                    className={styles.baseItemTitle}
+                    style={{ marginRight: 8 }}
+                  >
+                    {t('dataDetail.lineage.title')}
+                  </span>
+                  {((selector.upstreamLineageTaskList &&
+                    selector.upstreamLineageTaskList.length > 0) ||
+                    (selector.downstreamLineageTaskList &&
+                      selector.downstreamLineageTaskList.length > 0)) && (
+                    <Link
+                      style={{ textDecoration: 'underLine' }}
+                      to={`/data-discovery/dataset/${currentId}/lineage`}
+                    >
+                      {t('dataDetail.lineage.lineageDetailLink')}
+                    </Link>
+                  )}
+                </div>
+
+                <div className={styles.lineageArea}>
+                  <LineageStreamTaskTable
+                    datasetId={currentId}
+                    direction={LineageDirection.UPSTREAM}
+                  />
+                  <div className={styles.lineageDivider} />
+                  <LineageStreamTaskTable
+                    datasetId={currentId}
+                    direction={LineageDirection.DOWNSTREAM}
+                  />
+                </div>
+              </div>
+              <Divider className={styles.divider} />
 
               <div className={styles.dataQualityArea}>
                 <div className={styles.baseItemTitle}>
@@ -569,33 +607,6 @@ export default function DatasetDetail({ match }: Props) {
                     )}
                 </div>
               </div>
-
-              {/* <div className={styles.baseItem}>
-                <div className={styles.baseItemTitle}>
-                  {t('dataDetail.baseItem.title.lineage')}
-                </div>
-                <div className={styles.baseContent}>
-
-                </div>
-              </div> */}
-
-              {/* {(selector.flows?.length ?? 0) > 0 && (
-                <div className={styles.baseItem}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.task')}
-                  </div>
-                  <div className={styles.baseContent}>
-                    {selector.flows?.map(flow => (
-                      <Link
-                        key={flow.flow_id}
-                        to={`/flow-and-operator/flow/${flow.flow_id}`}
-                      >
-                        {flow.flow_name}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )} */}
             </Spin>
           </div>
         </Card>

@@ -1,6 +1,7 @@
 package com.miotech.kun.security.testing;
 
-import com.miotech.kun.security.model.bo.UserInfo;
+import com.miotech.kun.security.common.Permission;
+import com.miotech.kun.security.model.UserInfo;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,8 +18,9 @@ public class WithMockTestUserSecurityContextFactory
     public SecurityContext createSecurityContext(WithMockTestUser userInfo) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
 
-        Set<String> perms = Arrays.stream(userInfo.permissions())
+        Set<Permission> perms = Arrays.stream(userInfo.permissions())
                 .filter(StringUtils::isNoneBlank)
+                .map(Permission::valueOf)
                 .collect(Collectors.toSet());
 
         UserInfo principal = new UserInfo();

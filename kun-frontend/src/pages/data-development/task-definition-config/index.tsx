@@ -16,9 +16,11 @@ import { dryRunTaskDefinition, fetchTaskTryLog } from '@/services/data-developme
 
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 
+import { normalizeTaskDefinition, transformFormTaskConfig } from './helpers';
+
 import styles from './TaskDefinitionConfigView.less';
 
-export const TaskDefinitionConfigView: React.FC<{}> = () => {
+export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionConfigView() {
   const match = useRouteMatch<{ taskDefId: string; }>();
   const t = useI18n();
   const [ form ] = Form.useForm();
@@ -38,17 +40,17 @@ export const TaskDefinitionConfigView: React.FC<{}> = () => {
     }
   });
 
-  useEffect(() => {
-    setDraftTaskDef(initTaskDefinition);
-  }, [
-    initTaskDefinition,
-    setDraftTaskDef,
-  ]);
-
   const [
     taskTemplate,
     taskTemplateIsLoading
   ] = useTaskTemplateByName(initTaskDefinition?.taskTemplateName);
+
+  useEffect(() => {
+    setDraftTaskDef(initTaskDefinition ? normalizeTaskDefinition(initTaskDefinition, taskTemplate || null) : null);
+  }, [
+    initTaskDefinition,
+    taskTemplate,
+  ]);
 
   useUnmount(() => {
     dispatch.dataDevelopment.setEditingTaskDefinition(null);
@@ -57,7 +59,10 @@ export const TaskDefinitionConfigView: React.FC<{}> = () => {
 
   const handleCommitDryRun = () => {
     const id = match.params.taskDefId;
-    const runParameters = form.getFieldValue(['taskPayload', 'taskConfig']);
+    const runParameters = transformFormTaskConfig(
+      form.getFieldValue(['taskPayload', 'taskConfig']),
+      taskTemplate,
+    );
     dryRunTaskDefinition({
       taskDefId: id,
       parameters: runParameters,
@@ -90,6 +95,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = () => {
         form={form}
         taskDefId={match.params.taskDefId}
         handleCommitDryRun={handleCommitDryRun}
+        taskTemplate={taskTemplate}
       />
       <main>
         {(() => {
@@ -107,7 +113,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = () => {
           return (
             <div>
               <BodyForm
-                initTaskDefinition={initTaskDefinition || undefined}
+                initTaskDefinition={draftTaskDef || undefined}
                 taskTemplate={taskTemplate}
                 form={form}
               />
@@ -134,6 +140,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = () => {
          startPolling={taskTryId !== null}
          pollInterval={5000}  // poll log every 5 seconds
          queryFn={logQueryFn}
+         saveFileName={taskTryId ?? undefined}
        />
       </BottomLayout>
     </div>

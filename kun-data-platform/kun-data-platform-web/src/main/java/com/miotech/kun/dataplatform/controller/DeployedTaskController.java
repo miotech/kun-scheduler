@@ -45,9 +45,9 @@ public class DeployedTaskController {
             @RequestParam(defaultValue = "100") int pageSize,
             @RequestParam(required = false) List<Long> ownerIds,
             @RequestParam(required = false) List<Long> definitionIds,
+            @RequestParam(required = false) List<Long> workflowTaskIds,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String taskTemplateName
-
     ) {
         DeployedTaskSearchRequest deploySearchRequest = new DeployedTaskSearchRequest(
                 pageSize,
@@ -55,7 +55,8 @@ public class DeployedTaskController {
                 definitionIds,
                 ownerIds,
                 taskTemplateName,
-                name
+                name,
+                workflowTaskIds
         );
         PaginationResult<DeployedTask> deploys = deployedTaskService.search(deploySearchRequest);
         PaginationResult<DeployedTaskWithRunVO> result = new PaginationResult<>(

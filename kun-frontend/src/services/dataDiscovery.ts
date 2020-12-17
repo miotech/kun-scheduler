@@ -1,7 +1,7 @@
 import { Pagination, Sort } from '@/definitions/common-types';
+import { Dataset } from '@/definitions/Dataset.type';
 
 import {
-  Dataset,
   SearchParamsObj,
   DsFilterItem,
   DatabaseFilterItem,
@@ -73,6 +73,8 @@ export async function searchAllDsService(keyword: string) {
 }
 
 export type FetchAllDbService = DatabaseFilterItem[];
-export async function fetchAllDbService() {
-  return get<SearchAllDsServiceResp>('/metadata/databases');
+export async function fetchAllDbService(params?: { dataSourceIds: string[] }) {
+  return get<SearchAllDsServiceResp>('/metadata/databases', {
+    query: params,
+  });
 }

@@ -1,6 +1,6 @@
 package com.miotech.kun.security.service;
 
-import com.miotech.kun.security.model.bo.UserInfo;
+import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.persistence.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +20,10 @@ public class UserService {
 
     public User addUser(UserInfo userInfo) {
         return userRepository.insert(userInfo);
+    }
+
+    public User getUser(Long id) {
+        return userRepository.find(id);
     }
 
     public User getUserByName(String name) {

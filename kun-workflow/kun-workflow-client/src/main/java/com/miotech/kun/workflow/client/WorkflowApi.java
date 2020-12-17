@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
+import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import okhttp3.*;
 import org.apache.commons.collections4.CollectionUtils;
@@ -15,6 +17,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class WorkflowApi {
@@ -24,13 +27,20 @@ public class WorkflowApi {
     private static final String API_OPERATORS = "/operators";
     private static final String API_TASKS = "/tasks";
     private static final String API_TASK_RUNS = "/taskruns";
+    private static final String API_LINEAGES = "/lineages";
 
     private final String baseUrl;
     private final OkHttpClient client;
 
+    private final Long READ_TIME_OUT = 3 * 60 * 1000L;
+    private final Long WRITE_TIME_OUT = 60 * 1000l;
+
     public WorkflowApi(String url) {
         this.baseUrl = url;
-        this.client = new OkHttpClient();
+        this.client = new OkHttpClient.Builder()
+                .writeTimeout(WRITE_TIME_OUT, TimeUnit.MILLISECONDS)
+                .readTimeout(READ_TIME_OUT, TimeUnit.MILLISECONDS)
+                .build();
     }
 
     private HttpUrl getUrl(String path) {
@@ -44,9 +54,9 @@ public class WorkflowApi {
 
     private String sendRequest(Request request) {
         Call call = client.newCall(request);
-        try(Response response = call.execute()) {
+        try (Response response = call.execute()) {
             int statusCode = response.code();
-            if (statusCode >=400 || statusCode < 200) {
+            if (statusCode >= 400 || statusCode < 200) {
                 throw new WorkflowApiException(String.format("\"%s %s\" is not valid: %s", request.method(), request.url(), response.body().string()));
             }
             return response.body().string();
@@ -141,7 +151,8 @@ public class WorkflowApi {
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
 
-        return sendRequest(getRequest, new TypeReference<PaginationResult<Operator>>() {});
+        return sendRequest(getRequest, new TypeReference<PaginationResult<Operator>>() {
+        });
     }
 
     public Operator getOperator(Long operatorId) {
@@ -186,7 +197,8 @@ public class WorkflowApi {
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
 
-        return sendRequest(postRequest, new TypeReference<PaginationResult<Task>>() {}).getRecords();
+        return sendRequest(postRequest, new TypeReference<PaginationResult<Task>>() {
+        }).getRecords();
     }
 
     public Task updateTask(Long taskId, Task task) {
@@ -210,7 +222,8 @@ public class WorkflowApi {
                 .post(jsonBody(request))
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(postRequest, new TypeReference<PaginationResult<Task>>() {});
+        return sendRequest(postRequest, new TypeReference<PaginationResult<Task>>() {
+        });
     }
 
     public List<Long> runTasks(RunTaskRequest request) {
@@ -221,7 +234,8 @@ public class WorkflowApi {
                 .post(jsonBody(request.getRunTasks()))
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(postRequest, new TypeReference<List<Long>>() {});
+        return sendRequest(postRequest, new TypeReference<List<Long>>() {
+        });
     }
 
     public TaskDAG getTaskDAG(Long taskId, int upstreamLevel, int downstreamLevel) {
@@ -317,7 +331,8 @@ public class WorkflowApi {
                 .url(urlBuilder.build())
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(getRequest, new TypeReference<PaginationResult<TaskRun>>() {});
+        return sendRequest(getRequest, new TypeReference<PaginationResult<TaskRun>>() {
+        });
     }
 
     public PaginationResult<TaskRun> searchTaskRuns(TaskRunSearchRequest request) {
@@ -327,7 +342,18 @@ public class WorkflowApi {
                 .post(jsonBody(request))
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(postRequest, new TypeReference<PaginationResult<TaskRun>>() {});
+        return sendRequest(postRequest, new TypeReference<PaginationResult<TaskRun>>() {
+        });
+    }
+
+    public Integer countTaskRuns(TaskRunSearchRequest request) {
+        HttpUrl url = buildUrl("/taskruns/_count")
+                .build();
+        Request postRequest = new Request.Builder().url(url)
+                .post(jsonBody(request))
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(postRequest, Integer.class);
     }
 
     public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit) {
@@ -342,6 +368,39 @@ public class WorkflowApi {
                 .url(url).get()
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(getRequest, new TypeReference<Map<Long, List<TaskRun>>>() {});
+        return sendRequest(getRequest, new TypeReference<Map<Long, List<TaskRun>>>() {
+        });
+    }
+
+    public DatasetLineageInfo getLineageNeighbors(Long datasetGid, LineageQueryDirection direction, int depth) {
+        Preconditions.checkNotNull(datasetGid);
+        Preconditions.checkNotNull(direction);
+        Preconditions.checkArgument(depth > 0, "Invalid depth: {}, should be a positive integer");
+
+        HttpUrl url = buildUrl(API_LINEAGES)
+                .addQueryParameter("datasetGid", String.valueOf(datasetGid))
+                .addQueryParameter("direction", direction.getQueryParam())
+                .addQueryParameter("depth", String.valueOf(depth))
+                .build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<DatasetLineageInfo>() {
+        });
+    }
+
+
+    public EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
+        HttpUrl url = buildUrl(API_LINEAGES + "/edges")
+                .addQueryParameter("upstreamDatasetGid", String.valueOf(upstreamDatasetGid))
+                .addQueryParameter("downstreamDatasetGid", String.valueOf(downstreamDatasetGid))
+                .build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<EdgeInfo>() {
+        });
     }
 }

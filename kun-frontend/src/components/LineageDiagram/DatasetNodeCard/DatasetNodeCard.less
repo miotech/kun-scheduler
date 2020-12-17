@@ -1,0 +1,198 @@
+@lineage-dataset-node-card-width: 300px;
+@lineage-dataset-node-card-height: 108px;
+@port-btn-width: 20px;
+@port-btn-height: 20px;
+
+.lineage-dataset-node-card {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  font-family: @default-font-family;
+  width: @lineage-dataset-node-card-width;
+  height: @lineage-dataset-node-card-height;
+  font-size: 12px;
+  border: 1px solid @borderColor;
+  border-radius: 3px;
+  transition: border-color .2s ease-in;
+
+  /* hack for css priority */
+  &&& {
+    box-sizing: content-box;
+  }
+
+  &--default:hover {
+    border: solid 1px rgba(26, 115, 232, 0.3);
+  }
+
+  &--selected {
+    border: 1px solid @darkBlue;
+    left: -1px;
+  }
+
+  &__heading,
+  &__details {
+    display: flex;
+    flex: 1 1 54px;
+    padding: 8px 12px;
+  }
+
+  &__left-content, &__right-content {
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  &__left-content {
+    flex: 1 1 50%;
+  }
+
+  &__right-content {
+    flex: 1 1 35%;
+  }
+
+  &__heading &__right-content {
+    text-align: right;
+  }
+
+  &__heading {
+    background: @background;
+    color: @secondary;
+    transition: background-color .2s ease-in;
+
+    dl {
+      margin: 0;
+      line-height: 1;
+    }
+
+    [data-label="row-count-wrapper"] {
+      line-height: 19px;
+    }
+
+    [data-label="row-count-label"],
+    [data-label="row-count-value"] {
+      display: inline;
+    }
+
+    [data-label="row-count-label"] {
+      line-height: 14px;
+      &:after {
+        content: ': ';
+      }
+    }
+    [data-label="dataset-name"] {
+      display: inline-block;
+      position: relative;
+      vertical-align: top;
+      margin-left: 4px;
+      width: calc(100% - 20px);
+      overflow: hidden;
+      word-break: normal;
+      text-overflow: ellipsis;
+    }
+
+    [data-label="update-time-wrapper"] {
+      margin-top: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 12px;
+    }
+  }
+
+  &--highlighted &__heading {
+    background: rgba(26, 115, 232, 0.1);
+  }
+
+  &--highlighted {
+    border: 2px solid @darkBlue;
+    left: -1px;
+  }
+
+  &__title-link {
+    margin: 0;
+    padding: 0;
+    line-height: 18px;
+    font-size: 14px;
+    a {
+      color: @darkBlue;
+    }
+  }
+
+  &__def-title {
+    color: @secondary;
+  }
+  &__def-desc {
+    color: @darkGray;
+    font-size: 14px;
+  }
+
+  &__description {
+    width: 100%;
+    margin: 1px 0 0 0;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    color: @secondary;
+  }
+
+  &__port-btn {
+    display: table-cell;
+    position: absolute;
+    width: @port-btn-width;
+    height: @port-btn-height;
+    border: 1px solid @borderColor;
+    border-radius: 3px;
+    color: @borderColor;
+    background: @white;
+    cursor: pointer;
+
+    &:not(:disabled) {
+      transition: border-color .2s ease-in, color .2s ease-in, background-color .2s ease-in;
+      &:hover, &:focus, &:active {
+        outline: none;
+        border-color: @darkBlue;
+        color: @darkBlue;
+      }
+      &:active {
+        background: #e5ecf6;
+      }
+    }
+
+    span {
+      display: table-cell;
+      vertical-align: middle;
+      font-size: 16px;
+      line-height: 16px;
+      width: 18px;
+      height: 18px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      user-select: none;
+    }
+  }
+
+  &__port-btn.left-port {
+    left: -0.5 * @port-btn-width;
+    top: 0.5 * (@lineage-dataset-node-card-height - @port-btn-width);
+  }
+
+  &__port-btn.right-port {
+    right: -0.5 * @port-btn-width;
+    top: 0.5 * (@lineage-dataset-node-card-height - @port-btn-width);
+  }
+}
+
+.lineage-edge-path {
+  &:hover, &:focus {
+    stroke: rgba(26, 115, 232, 0.3);
+    marker-end: url(#arrowEndHover);
+  }
+}
+
+.lineage-edge-path--selected {
+  stroke: @darkBlue;
+  marker-end: url(#arrowEndActive);
+  &:hover, &:focus {
+    stroke: @darkBlue;
+    marker-end: url(#arrowEndActive);
+  }
+}

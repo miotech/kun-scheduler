@@ -3,7 +3,7 @@ import { ParameterDisplayType } from '@/definitions/TaskTemplate.type';
 import { SQLEditor } from '@/components/SQLEditor';
 import { Input } from 'antd';
 import { DataSourceSingleSelect } from '@/components/DataSourceSelect';
-import { KeyValueField } from '@/components/KeyValueField';
+import { KeyValueTable } from '@/components/KeyValueTable/KeyValueTable';
 
 /**
  * Generate form component by given parameter display type
@@ -37,7 +37,7 @@ export function formComponentFactory(type: ParameterDisplayType | string, props:
         />
       );
     case 'keyvalue':
-      return <KeyValueField
+      return <KeyValueTable
         {...props}
       />;
     default:

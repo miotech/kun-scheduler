@@ -42,7 +42,7 @@ const formItemLayoutWithOutLabel = {
 
 const logger = LogUtils.getLoggers('SchedulingConfig');
 
-export const SchedulingConfig: React.FC<SchedulingConfigProps> = props => {
+export const SchedulingConfig: React.FC<SchedulingConfigProps> = function SchedulingConfig(props) {
   const t = useI18n();
 
   const { form, initTaskDefinition } = props;
@@ -198,8 +198,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = props => {
               {/* Cron Expression */}
               <Form.Item
                 noStyle
-                shouldUpdate={(prevValues, currentValues) =>
-                  prevValues?.taskPayload?.scheduleConfig?.type !== currentValues?.taskPayload?.scheduleConfig?.type}
+                shouldUpdate={() => true}
               >
                 {scheduleInputRenderer}
               </Form.Item>
@@ -266,7 +265,6 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = props => {
                       <TaskSearchSelector />
                     </Form.Item>
                   );
-
               })()}
             </Row>
           </Col>
