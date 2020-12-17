@@ -36,6 +36,11 @@ public class TestReconnectWorker implements Worker {
         new Thread(new TestOperatorLaunch(command)).start();
     }
 
+    @Override
+    public boolean forceAbort() {
+        return true;
+    }
+
     class TestOperatorLaunch implements Runnable{
 
         private ExecCommand command;

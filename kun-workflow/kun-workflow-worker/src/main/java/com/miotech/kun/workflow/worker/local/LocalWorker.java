@@ -28,6 +28,10 @@ public class LocalWorker implements Worker {
 
     private Integer port;
 
+    private Long processId;
+
+    private Long taskAttemptId;
+
     @Inject
     public LocalWorker(WorkflowWorkerFacade workerFacade) {
         this.workerFacade = workerFacade;
@@ -39,6 +43,26 @@ public class LocalWorker implements Worker {
         RpcContext.getContext().set("port", port);
         boolean result = workerFacade.killTask(abort);
         logger.info("kill task result = {}", result);
+    }
+
+    @Override
+    public boolean forceAbort() {
+        Runtime rt = Runtime.getRuntime();
+        try {
+            Process process;
+            if (System.getProperty("os.name").toLowerCase().indexOf("windows") > -1)
+                process = rt.exec("taskkill " + processId);
+            else {
+                process = rt.exec("kill -9 " + processId);
+            }
+            int exitCode = process.waitFor();
+            return exitCode == 0 ? true : false;
+
+        } catch (IOException | InterruptedException e) {
+            logger.error("force kill worker failed processId = {} , taskAttemptId = {}", processId, taskAttemptId);
+        }
+        return false;
+
     }
 
     @Override
@@ -65,7 +89,7 @@ public class LocalWorker implements Worker {
         ProcessBuilder pb = new ProcessBuilder();
         pb.redirectErrorStream(true);
         pb.redirectOutput(stdoutFile);
-        pb.command(buildCommand(inputFile.getPath(), configFile.getPath(), outputFile.getPath(),command.getTaskAttemptId()));
+        pb.command(buildCommand(inputFile.getPath(), configFile.getPath(), outputFile.getPath(), command.getTaskAttemptId()));
         String cmd = Joiner.on(" ").join(pb.command());
         logger.info("Start to run command: {}", cmd);
 
@@ -79,10 +103,12 @@ public class LocalWorker implements Worker {
     }
 
     public void bind(HeartBeatMessage heartBeatMessage) {
+        this.processId = heartBeatMessage.getWorkerId();
         this.port = heartBeatMessage.getPort();
+        this.taskAttemptId = taskAttemptId;
     }
 
-    private List<String> buildCommand(String inputFile, String configFile, String outputFile,Long taskAttemptId) {
+    private List<String> buildCommand(String inputFile, String configFile, String outputFile, Long taskAttemptId) {
         List<String> command = new ArrayList<>();
         command.add("java");
         command.addAll(buildJVMArgs(taskAttemptId));
@@ -101,11 +127,11 @@ public class LocalWorker implements Worker {
         return classPath;
     }
 
-    private List<String> buildJVMArgs(Long taskAttemptId){
+    private List<String> buildJVMArgs(Long taskAttemptId) {
         List<String> jvmArgs = new ArrayList<>();
         jvmArgs.add("-XX:+PrintGCDetails");
         jvmArgs.add("-XX:+HeapDumpOnOutOfMemoryError");
-        jvmArgs.add(String.format("-XX:HeapDumpPath=/tmp/%d/heapdump.hprof",taskAttemptId));
+        jvmArgs.add(String.format("-XX:HeapDumpPath=/tmp/%d/heapdump.hprof", taskAttemptId));
         return jvmArgs;
     }
 }

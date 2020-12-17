@@ -37,6 +37,11 @@ public class TestWorker1 implements Worker {
         new Thread(new TestOperatorLaunch(command)).start();
     }
 
+    @Override
+    public boolean forceAbort() {
+        return false;
+    }
+
     class TestOperatorLaunch implements Runnable {
 
         private ExecCommand command;

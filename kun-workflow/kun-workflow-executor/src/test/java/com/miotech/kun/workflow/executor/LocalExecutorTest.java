@@ -46,6 +46,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.Logger;
@@ -66,7 +67,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class LocalExecutorTest extends CommonTestBase {
@@ -808,6 +809,11 @@ public class LocalExecutorTest extends CommonTestBase {
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
 
+        ArgumentCaptor<HeartBeatMessage> captor = ArgumentCaptor.forClass(HeartBeatMessage.class);
+        verify(spyFactory,times(1)).killWorker(captor.capture());
+        HeartBeatMessage message = captor.getValue();
+
+
         // verify
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
         assertThat(attemptProps.getAttempt(), is(1));
@@ -815,6 +821,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(attemptProps.getLogPath(), is(notNullValue()));
         assertThat(attemptProps.getStartAt(), is(notNullValue()));
         assertThat(attemptProps.getEndAt(), is(notNullValue()));
+        assertThat(attemptProps.getId(),is(message.getTaskAttemptId()));
 
         TaskRun taskRun = taskRunDao.fetchLatestTaskRun(attempt.getTaskRun().getTask().getId());
         assertThat(taskRun.getStatus(), is(attemptProps.getStatus()));

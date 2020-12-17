@@ -8,4 +8,6 @@ public interface WorkerFactory {
     public Worker createWorker();
 
     public Worker getWorker(HeartBeatMessage message);
+
+    public Boolean killWorker(HeartBeatMessage message);
 }
