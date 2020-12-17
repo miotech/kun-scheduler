@@ -11,53 +11,6 @@ repositories {
     mavenCentral()
 }
 
-task buildBashOperator (type:Exec){
-    workingDir "kun-workflow-operators/bash-operator"
-    commandLine "gradle","shadowJar"
-}
-
-task buildSparkOperator (type:Exec){
-    workingDir "kun-workflow-operators/spark-operators"
-    commandLine "gradle","shadowJar"
-}
-
-task copyBashOperator(type: Copy){
-    from "kun-workflow-operators/bash-operator/build/libs/bash-operator-0.1.jar"
-    rename {
-        "bash-operator.jar"
-    }
-    into "kun-data-platform-web/src/main/resources"
-    dependsOn(buildBashOperator)
-}
-task copySparkOperator(type: Copy){
-    from "kun-workflow-operators/spark-operators/build/libs/spark-operators-0.1.jar"
-    rename {
-        "spark-operator.jar"
-    }
-    into "kun-data-platform-web/src/main/resources"
-    dependsOn(buildSparkOperator)
-}
-
-task copySparkSqlOperator(type: Copy){
-    from "kun-workflow-operators/spark-operators/build/libs/spark-operators-0.1.jar"
-    rename {
-        "sparkSql-operator.jar"
-    }
-    into "kun-data-platform-web/src/main/resources"
-    dependsOn(buildSparkOperator)
-}
-
-compileJava.dependsOn(copyBashOperator,copySparkOperator,copySparkSqlOperator)
-
-task deleteLocalJar(type: Delete){
-    delete "kun-data-platform-web/src/main/resources/bash-operator.jar"
-    delete "kun-data-platform-web/src/main/resources/spark-operator.jar"
-    delete "kun-data-platform-web/src/main/resources/sparkSql-operator.jar"
-
-}
-bootJar.dependsOn(deleteLocalJar)
-
-
 dependencies {
     implementation project(':kun-data-platform:kun-data-platform-web')
 }
