@@ -84,7 +84,7 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
     @Test
     public void resolveHive() throws IOException {
         SplineSource execPlan1_down = SplineSource.newBuilder()
-                .withSourceName("file:/Users/shiki/spline-spark-agent/spark-warehouse/sparktest.db/hive_test")
+                .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test")
                 .withSourceType("hive")
                 .build();
         ExecPlan execPlan1 = ExecPlan.newBuilder()
@@ -98,11 +98,11 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         writeExecPlanToFile("/tmp/hive example1/1/1.execPlan.txt", execPlan1);
 
         SplineSource execPlan2_up = SplineSource.newBuilder()
-                .withSourceName("file:/Users/shiki/spline-spark-agent/spark-warehouse/sparktest.db/src")
+                .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src")
                 .withSourceType("hive")
                 .build();
         SplineSource execPlan2_down = SplineSource.newBuilder()
-                .withSourceName("file:/Users/shiki/spline-spark-agent/spark-warehouse/sparktest.db/hive_test")
+                .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test")
                 .withSourceType("hive")
                 .build();
         ExecPlan execPlan2 = ExecPlan.newBuilder()
@@ -130,8 +130,8 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(downStore.getDatabase(), is("sparktest.db"));
         assertThat(upStore.getTable(), is("src"));
         assertThat(downStore.getTable(), is("hive_test"));
-        assertThat(upStore.getDataStoreUrl(), is("file:/Users/shiki/spline-spark-agent/spark-warehouse"));
-        assertThat(downStore.getDataStoreUrl(), is("file:/Users/shiki/spline-spark-agent/spark-warehouse"));
+        assertThat(upStore.getDataStoreUrl(), is("jdbc:awsathena://athena.ap-northeast-1.amazonaws.com:443;S3OutputLocation=file:/spline/spline-spark-agent/spark-warehouse"));
+        assertThat(downStore.getDataStoreUrl(), is("jdbc:awsathena://athena.ap-northeast-1.amazonaws.com:443;S3OutputLocation=file:/spline/spline-spark-agent/spark-warehouse"));
     }
 
     @Test
