@@ -101,8 +101,12 @@ public class TaskDefinitionController {
     @DeleteMapping("/task-definitions/{id}")
     @ApiOperation("Delete TaskDefinition")
     public RequestResult<Object> deleteTaskDefinitionDetail(@PathVariable Long id) {
-        taskDefinitionService.delete(id);
-        return RequestResult.success();
+        try{
+            taskDefinitionService.delete(id);
+            return RequestResult.success();
+        }catch (RuntimeException e){
+            return RequestResult.error(e.getMessage());
+        }
     }
 
     /*--------- actions ----------*/

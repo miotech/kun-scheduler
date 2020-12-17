@@ -143,14 +143,16 @@ public class DeployService extends BaseSecurityService {
         }
 
         // if current deploy package contains non-deployed task as dependency, should fail to deploy
-        Set<Long> dependentDefIds = new HashSet<>(allUpstreamDefIds);
-        List<DeployedTask> deployedTasks = deployedTaskService.findByDefIds(allUpstreamDefIds);
-        Set<Long> deployedDefIds = deployedTasks.stream().filter(x -> !x.isArchived()).map(x -> x.getDefinitionId()).collect(Collectors.toSet());
-        Set<Long> currentDeployDefIds = deployPackage.keySet();
-        dependentDefIds.removeAll(deployedDefIds);
-        dependentDefIds.removeAll(currentDeployDefIds);
-        if(!dependentDefIds.isEmpty()){
-            throw new RuntimeException("upstream not deployed yet, should deploy the upstream tasks first");
+        if(! allUpstreamDefIds.isEmpty()){
+            Set<Long> dependentDefIds = new HashSet<>(allUpstreamDefIds);
+            List<DeployedTask> deployedTasks = deployedTaskService.findByDefIds(allUpstreamDefIds);
+            Set<Long> deployedDefIds = deployedTasks.stream().filter(x -> !x.isArchived()).map(x -> x.getDefinitionId()).collect(Collectors.toSet());
+            Set<Long> currentDeployDefIds = deployPackage.keySet();
+            dependentDefIds.removeAll(deployedDefIds);
+            dependentDefIds.removeAll(currentDeployDefIds);
+            if(!dependentDefIds.isEmpty()){
+                throw new RuntimeException("upstream not deployed yet, should deploy the upstream tasks first");
+            }
         }
 
         Collection<Long> pendingDefinitionIds = deployPackage.keySet();
