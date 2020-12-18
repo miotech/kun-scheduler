@@ -250,7 +250,7 @@ public class TaskDefinitionService extends BaseSecurityService {
 
         List<TaskRelation> downStreamTaskDefIds = taskRelationDao.fetchByUpstreamId(taskDefId);
         if(!downStreamTaskDefIds.isEmpty()){
-            throw new RuntimeException(String.format("Task definition \"%s\" has downStream dependencies, please update downStream task definition first", taskDefId));
+            throw new RuntimeException(String.format("Task definition has downStream dependencies, please update downStream task definition first, \"%s\"", taskDefId));
         }
         List<Long> downStreamWorkflowTaskIds = deployedTaskService.getDownStreamWorkflowTasks(taskDefId);
         if(!downStreamWorkflowTaskIds.isEmpty()){
