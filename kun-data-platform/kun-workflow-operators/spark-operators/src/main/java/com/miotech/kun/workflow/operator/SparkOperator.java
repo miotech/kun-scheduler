@@ -171,6 +171,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
                 .define(CONF_LIVY_BATCH_FILES, ConfigDef.Type.STRING, "", true, "files to use, seperated with `,`, the first file would be used as main entry", CONF_LIVY_BATCH_FILES)
                 .define(CONF_LIVY_BATCH_APPLICATION, ConfigDef.Type.STRING, "", true, "application class name for java application", CONF_LIVY_BATCH_APPLICATION)
                 .define(CONF_LIVY_BATCH_ARGS, ConfigDef.Type.STRING, "", true, "application arguments", CONF_LIVY_BATCH_ARGS)
+                .define(CONF_LIVY_BATCH_NAME, ConfigDef.Type.STRING, "",true, "application session name", CONF_LIVY_BATCH_NAME)
                 .define(CONF_LIVY_BATCH_CONF, ConfigDef.Type.STRING, "{}", true, "Extra spark configuration , in the format `{\"key\": \"value\"}`", CONF_LIVY_BATCH_CONF)
                 .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}", true, "Spark arguments and configuration variables, use like `--param1 ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES);
     }
