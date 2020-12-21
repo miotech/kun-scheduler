@@ -310,7 +310,7 @@ public class TaskDefinitionService extends BaseSecurityService {
         Long creator = getCurrentUser().getId();
         Long taskTryId = DataPlatformIdGenerator.nextTaskTryId();
         // merge default config with request config
-        TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskRunRequest.getParameters(), taskTemplate);
+        TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskRunRequest.getParameters(), taskTemplate, taskDefinition);
         Config config = new Config(taskConfig.getParams());
         Task task = Task.newBuilder()
                 .withName(taskDefId.toString())

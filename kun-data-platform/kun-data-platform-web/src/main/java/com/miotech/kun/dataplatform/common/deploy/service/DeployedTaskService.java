@@ -189,7 +189,13 @@ public class DeployedTaskService extends BaseSecurityService{
                 .distinct()
                 .collect(Collectors.toList());
         // prepare task
-        TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskPayload.getTaskConfig(), taskTemplateName);
+        TaskDefinition taskDefinition = TaskDefinition.newBuilder()
+                .withName(snapshot.getName())
+                .withTaskTemplateName(snapshot.getTaskTemplateName())
+                .withTaskPayload(snapshot.getTaskPayload())
+                .withOwner(snapshot.getOwner())
+                .build();
+        TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskPayload.getTaskConfig(), taskTemplateName, taskDefinition);
         Task task = Task.newBuilder()
                 .withName(snapshot.getName())
                 .withOperatorId(operatorId)

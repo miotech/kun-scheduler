@@ -1,9 +1,12 @@
 package com.miotech.kun.dataplatform.common.tasktemplate.renderer;
 
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.ParameterDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.workflow.client.model.ConfigKey;
+import com.miotech.kun.workflow.operator.SparkConfiguration;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.springframework.stereotype.Component;
 
@@ -23,8 +26,8 @@ public class SparkConfigTaskTemplateRender extends TaskTemplateRenderer {
     private static final String SPARK_JAVA_OPTIONS_KEY = "spark.driver.extraJavaOptions";
 
     @Override
-    public TaskConfig render(Map<String, Object> taskConfig, TaskTemplate taskTemplate) {
-        Map<String, Object> configMap = buildTaskConfig(taskConfig, taskTemplate);
+    public TaskConfig render(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition) {
+        Map<String, Object> configMap = buildTaskConfig(taskConfig, taskTemplate, taskDefinition);
 
         return  TaskConfig.newBuilder()
                 .withParams(configMap)
@@ -32,8 +35,8 @@ public class SparkConfigTaskTemplateRender extends TaskTemplateRenderer {
     }
 
     @Override
-    public Map<String, Object> buildTaskConfig(Map<String, Object> taskConfig, TaskTemplate taskTemplate) {
-        Map<String, Object> configMap = super.buildTaskConfig(taskConfig, taskTemplate);
+    public Map<String, Object> buildTaskConfig(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition) {
+        Map<String, Object> configMap = super.buildTaskConfig(taskConfig, taskTemplate, taskDefinition);
         for (String key: taskConfig.keySet()) {
             if (!configMap.containsKey(key)) {
                 configMap.put(key, taskConfig.get(key));
@@ -85,6 +88,7 @@ public class SparkConfigTaskTemplateRender extends TaskTemplateRenderer {
         } else {
             config.putAll(configMap);
         }
+        config.put(SparkConfiguration.CONF_LIVY_BATCH_NAME, taskDefinition.getName() + " - " + IdGenerator.getInstance().nextId());
         return config;
     }
 }
