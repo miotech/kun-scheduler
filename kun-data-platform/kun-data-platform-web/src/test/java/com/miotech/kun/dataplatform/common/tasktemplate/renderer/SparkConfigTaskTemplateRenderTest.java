@@ -1,11 +1,13 @@
 package com.miotech.kun.dataplatform.common.tasktemplate.renderer;
 
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.ParameterDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.workflow.client.model.ConfigKey;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
+import com.miotech.kun.workflow.operator.SparkConfiguration;
 import org.junit.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
@@ -13,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertThat;
 
 public class SparkConfigTaskTemplateRenderTest {
@@ -28,9 +31,12 @@ public class SparkConfigTaskTemplateRenderTest {
                         .build()
         );
         TaskTemplate templateWithDatasource = initSparkTemplate(sourceParams);
-        TaskConfig taskConfig = taskTemplateRenderer.render(ImmutableMap.of("sourceDataSource", "1"), templateWithDatasource);
+        TaskConfig taskConfig = taskTemplateRenderer.render(ImmutableMap.of("sourceDataSource", "1"),
+                templateWithDatasource,
+                TaskDefinition.newBuilder().withName("sparkJobName").build());
         assertThat(taskConfig.getParams().get("sparkConf"),
                 is("{\"spark.driver.extraJavaOptions\":\" -Dkun.dataplatform.datasource.1=${dataplatform.datasource.1} -Dkun.dataplatform=eyJzb3VyY2VEYXRhU291cmNlIjoiMSJ9\"}"));
+        assertThat((String) taskConfig.getParams().get(SparkConfiguration.CONF_LIVY_BATCH_NAME), startsWith("sparkJobName"));
     }
 
     private TaskTemplate initSparkTemplate(List<ParameterDefinition> parameters) {
