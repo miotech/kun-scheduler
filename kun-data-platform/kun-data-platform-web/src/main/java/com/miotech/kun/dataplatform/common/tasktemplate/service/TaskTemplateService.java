@@ -8,6 +8,7 @@ import com.miotech.kun.dataplatform.common.tasktemplate.renderer.TaskTemplateRen
 import com.miotech.kun.dataplatform.common.tasktemplate.vo.TaskTemplateReqeustVO;
 import com.miotech.kun.dataplatform.common.tasktemplate.vo.TaskTemplateVO;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Operator;
@@ -82,11 +83,11 @@ public class TaskTemplateService {
         return taskTemplate;
     }
 
-    public TaskConfig getTaskConfig(Map<String, Object> taskConfig, String taskTemplateName) {
-        return getTaskConfig(taskConfig, find(taskTemplateName));
+    public TaskConfig getTaskConfig(Map<String, Object> taskConfig, String taskTemplateName, TaskDefinition taskDefinition) {
+        return getTaskConfig(taskConfig, find(taskTemplateName), taskDefinition);
     }
 
-    public TaskConfig getTaskConfig(Map<String, Object> taskConfig, TaskTemplate taskTemplate) {
+    public TaskConfig getTaskConfig(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition) {
         String renderClass = taskTemplate.getRenderClassName() != null
                 ? taskTemplate.getRenderClassName()
                 : DefaultTaskTemplateRenderer.class.getName();
@@ -95,7 +96,7 @@ public class TaskTemplateService {
             Class<?> render = Class.forName(renderClass);
             assert renderClass != null;
             return ((TaskTemplateRenderer) applicationContext.getBean(render))
-            .render(taskConfig, taskTemplate);
+            .render(taskConfig, taskTemplate, taskDefinition);
         } catch (Exception e) {
             log.error("", e);
             throw ExceptionUtils.wrapIfChecked(e);

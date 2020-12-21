@@ -12,10 +12,7 @@ import com.miotech.kun.dataplatform.common.utils.TagUtils;
 import com.miotech.kun.dataplatform.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.model.commit.TaskSnapshot;
 import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
-import com.miotech.kun.dataplatform.model.taskdefinition.ScheduleConfig;
-import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
-import com.miotech.kun.dataplatform.model.taskdefinition.TaskDatasetProps;
-import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
+import com.miotech.kun.dataplatform.model.taskdefinition.*;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
@@ -177,7 +174,13 @@ public class DeployedTaskService extends BaseSecurityService{
                 .map(x -> new TaskDependency(x, "latestTaskRun"))
                 .collect(Collectors.toList());
         // prepare task
-        TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskPayload.getTaskConfig(), taskTemplateName);
+        TaskDefinition taskDefinition = TaskDefinition.newBuilder()
+                .withName(snapshot.getName())
+                .withTaskTemplateName(snapshot.getTaskTemplateName())
+                .withTaskPayload(snapshot.getTaskPayload())
+                .withOwner(snapshot.getOwner())
+                .build();
+        TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskPayload.getTaskConfig(), taskTemplateName, taskDefinition);
         Task task = Task.newBuilder()
                 .withName(snapshot.getName())
                 .withOperatorId(operatorId)
