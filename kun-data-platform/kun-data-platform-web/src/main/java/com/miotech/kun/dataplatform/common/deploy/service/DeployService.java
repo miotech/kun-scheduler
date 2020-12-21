@@ -13,6 +13,7 @@ import com.miotech.kun.dataplatform.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.model.deploy.DeployCommit;
 import com.miotech.kun.dataplatform.model.deploy.DeployStatus;
+import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -131,12 +132,27 @@ public class DeployService extends BaseSecurityService {
     private void reorderAndDeploy(List<TaskCommit> commits) {
         Map<Long, List<Long>> deployPackage = new HashMap<>();
         Map<Long, TaskCommit> deployCommitsMap = new HashMap<>();
+        List<Long> allUpstreamDefIds = new ArrayList<>();
         for (TaskCommit taskCommit : commits) {
             List<Long> dependencyDefinitionIds = taskDefinitionService.resolveUpstreamTaskDefIds(
                     taskCommit.getSnapshot().getTaskPayload());
+            allUpstreamDefIds.addAll(dependencyDefinitionIds);
             Long definitionId = taskCommit.getDefinitionId();
             deployPackage.put(definitionId, dependencyDefinitionIds);
             deployCommitsMap.put(definitionId, taskCommit);
+        }
+
+        // if current deploy package contains non-deployed task as dependency, should fail to deploy
+        if(! allUpstreamDefIds.isEmpty()){
+            Set<Long> dependentDefIds = new HashSet<>(allUpstreamDefIds);
+            List<DeployedTask> deployedTasks = deployedTaskService.findByDefIds(allUpstreamDefIds);
+            Set<Long> deployedDefIds = deployedTasks.stream().filter(x -> !x.isArchived()).map(x -> x.getDefinitionId()).collect(Collectors.toSet());
+            Set<Long> currentDeployDefIds = deployPackage.keySet();
+            dependentDefIds.removeAll(deployedDefIds);
+            dependentDefIds.removeAll(currentDeployDefIds);
+            if(!dependentDefIds.isEmpty()){
+                throw new RuntimeException("upstream not deployed yet, should deploy the upstream tasks first");
+            }
         }
 
         Collection<Long> pendingDefinitionIds = deployPackage.keySet();
