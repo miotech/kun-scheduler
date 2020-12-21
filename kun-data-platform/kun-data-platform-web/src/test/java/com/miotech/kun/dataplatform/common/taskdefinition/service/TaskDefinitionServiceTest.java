@@ -4,15 +4,13 @@ import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
+import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskRelationDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.*;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.model.deploy.DeployCommit;
 import com.miotech.kun.dataplatform.model.deploy.DeployStatus;
-import com.miotech.kun.dataplatform.model.taskdefinition.ScheduleConfig;
-import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
-import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
-import com.miotech.kun.dataplatform.model.taskdefinition.TaskTry;
+import com.miotech.kun.dataplatform.model.taskdefinition.*;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
@@ -32,8 +30,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
 @Ignore
@@ -45,6 +42,9 @@ public class TaskDefinitionServiceTest extends AppTestBase {
 
     @Autowired
     private TaskDefinitionDao taskDefinitionDao;
+
+    @Autowired
+    private TaskRelationDao taskRelationDao;
 
     @Autowired
     private WorkflowClient workflowClient;
@@ -132,6 +132,10 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(updated.getName(), is(updateRequest.getName()));
         assertThat(updated.getOwner(), is(updateRequest.getOwner()));
         assertThat(updated.getTaskPayload(), sameBeanAs(updateRequest.getTaskPayload()));
+
+        TaskRelation taskRelation = taskRelationDao.fetchByDownstreamId(taskDefinition.getDefinitionId()).get(0);
+        assertEquals(upstreamTaskDefinition.getDefinitionId(), taskRelation.getUpstreamId());
+        assertEquals(taskDefinition.getDefinitionId(), taskRelation.getDownstreamId());
     }
 
     @Test
@@ -284,5 +288,65 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         TaskDefinition def = definitionOp.get();
         assertThat(def.isArchived(), is(true));
 
+    }
+
+    @Test
+    public void test_delete_with_downstream_dependency(){
+        // if task has downstream dependencies, fail to delete
+
+        // prepare with dependencies
+        TaskDefinition upstreamTaskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(upstreamTaskDefinition);
+
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinition);
+        TaskPayload taskPayload = taskDefinition.getTaskPayload();
+        Map<String, Object> taskConfig = taskPayload.getTaskConfig();
+        taskConfig.put("sql", "select 2");
+        ScheduleConfig scheduleConfig = ScheduleConfig.newBuilder()
+                .withInputNodes(Collections.singletonList(upstreamTaskDefinition.getDefinitionId()))
+                .build();
+        TaskPayload updatedTaskPayload = taskPayload
+                .cloneBuilder()
+                .withTaskConfig(taskConfig)
+                .withScheduleConfig(scheduleConfig)
+                .build();
+
+        UpdateTaskDefinitionRequest updateRequest = new UpdateTaskDefinitionRequest(
+                taskDefinition.getDefinitionId(),
+                taskDefinition.getName() + "_updated",
+                updatedTaskPayload,
+                1L
+        );
+
+        TaskDefinition updated = taskDefinitionService.update(updateRequest.getDefinitionId(), updateRequest);
+
+        // delete upstream task should fail
+        RuntimeException exception = null;
+        try{
+            taskDefinitionService.delete(upstreamTaskDefinition.getDefinitionId());
+        }catch (RuntimeException e){
+            exception = e;
+        }
+        assertNotNull(exception);
+        assertTrue(exception.getMessage().startsWith("Task definition has downStream dependencies"));
+
+        // delete downstream first, then delete upstream
+        taskDefinitionService.delete(taskDefinition.getDefinitionId());
+        Optional<TaskDefinition> downstreamTask = taskDefinitionDao.fetchById(taskDefinition.getDefinitionId());
+        assertTrue(downstreamTask.get().isArchived());
+
+        List<TaskRelation> taskRelations = taskRelationDao.fetchByDownstreamId(taskDefinition.getDefinitionId());
+        assertTrue(taskRelations.isEmpty());
+
+        taskDefinitionService.delete(upstreamTaskDefinition.getDefinitionId());
+        Optional<TaskDefinition> upstreamTask = taskDefinitionDao.fetchById(taskDefinition.getDefinitionId());
+        assertTrue(upstreamTask.get().isArchived());
+    }
+
+    @Test
+    public void test_deploy_fail_when_upstream_not_deployed(){
+        // task relation should be removed as well when delete task
+        //need mock workflow
     }
 }
