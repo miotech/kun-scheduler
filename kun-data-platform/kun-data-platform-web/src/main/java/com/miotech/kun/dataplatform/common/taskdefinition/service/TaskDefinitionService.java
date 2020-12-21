@@ -8,6 +8,7 @@ import com.miotech.kun.dataplatform.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeployRequest;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
+import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskRelationDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskTryDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.*;
 import com.miotech.kun.dataplatform.common.taskdefview.dao.TaskDefinitionViewDao;
@@ -46,6 +47,9 @@ public class TaskDefinitionService extends BaseSecurityService {
 
     @Autowired
     private TaskDefinitionDao taskDefinitionDao;
+
+    @Autowired
+    private TaskRelationDao taskRelationDao;
 
     @Autowired
     private TaskDefinitionViewDao taskDefinitionViewDao;
@@ -157,6 +161,22 @@ public class TaskDefinitionService extends BaseSecurityService {
         List<TaskDatasetProps> outputDatasets = updated.getTaskPayload()
                 .getScheduleConfig().getOutputDatasets();
         datasetService.createTaskDatasets(definitionId, outputDatasets);
+
+        List<Long> upstream = new ArrayList<>();
+        upstream.addAll(updated.getTaskPayload().getScheduleConfig().getInputNodes());
+        upstream.addAll(updated.getTaskPayload().getScheduleConfig().getInputDatasets()
+                .stream()
+                .map(x -> x.getDefinitionId())
+                .distinct()
+                .collect(Collectors.toList())
+        );
+
+        if(!upstream.isEmpty()){
+            taskRelationDao.delete(definitionId);
+            List<TaskRelation> taskRelations = upstream.stream().map(x -> new TaskRelation(x, definitionId, DateTimeUtils.now(), DateTimeUtils.now())).collect(Collectors.toList());
+            taskRelationDao.create(taskRelations);
+        }
+
         return updated;
     }
 
@@ -227,7 +247,18 @@ public class TaskDefinitionService extends BaseSecurityService {
         } else {
             throw new IllegalArgumentException(String.format("Task definition not found: \"%s\"", taskDefId));
         }
+
+        List<TaskRelation> downStreamTaskDefIds = taskRelationDao.fetchByUpstreamId(taskDefId);
+        if(!downStreamTaskDefIds.isEmpty()){
+            throw new RuntimeException(String.format("Task definition has downStream dependencies, please update downStream task definition first, \"%s\"", taskDefId));
+        }
+        List<Long> downStreamWorkflowTaskIds = deployedTaskService.getDownStreamWorkflowTasks(taskDefId);
+        if(!downStreamWorkflowTaskIds.isEmpty()){
+            throw new RuntimeException(String.format("Task definition \"%s\" has deployed downStream dependencies, please update downStream task and deploy first", taskDefId));
+        }
+
         taskDefinitionDao.archive(taskDefId);
+        taskRelationDao.delete(taskDefId);
 
         //offline deployed task
         TaskCommit commit = taskCommitService.commit(taskDefId, "OFFLINE");
@@ -264,7 +295,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                 .orElseGet(ImmutableList::of);
 
         allUpstreamIds.addAll(inputDatasets);
-        return allUpstreamIds;
+        return allUpstreamIds.stream().distinct().collect(Collectors.toList());
     }
 
     public TaskTry run(Long taskDefId, TaskRunRequest taskRunRequest) {

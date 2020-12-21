@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Sets;
 import com.miotech.kun.dataplatform.common.deploy.dao.DeployedTaskDao;
 import com.miotech.kun.dataplatform.common.deploy.vo.*;
+import com.miotech.kun.dataplatform.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskRunLogVO;
 import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateService;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
@@ -12,6 +13,10 @@ import com.miotech.kun.dataplatform.common.utils.TagUtils;
 import com.miotech.kun.dataplatform.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.model.commit.TaskSnapshot;
 import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
+import com.miotech.kun.dataplatform.model.taskdefinition.ScheduleConfig;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskDatasetProps;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
 import com.miotech.kun.dataplatform.model.taskdefinition.*;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -21,6 +26,7 @@ import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.sun.javafx.binding.StringFormatter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -48,11 +54,18 @@ public class DeployedTaskService extends BaseSecurityService{
     @Autowired
     private TaskTemplateService taskTemplateService;
 
+    @Autowired
+    private TaskDefinitionService taskDefinitionService;
+
     public DeployedTask find(Long definitionId) {
         return deployedTaskDao.fetchById(definitionId)
                 .<IllegalArgumentException>orElseThrow(() -> {
                     throw new IllegalArgumentException(String.format("Deployed Task not found: \"%s\"", definitionId));
                 });
+    }
+
+    public List<DeployedTask> findByDefIds(List<Long> defIds){
+        return deployedTaskDao.fetchByIds(defIds);
     }
 
     public PaginationResult<DeployedTask> search(DeployedTaskSearchRequest request) {
@@ -122,7 +135,7 @@ public class DeployedTaskService extends BaseSecurityService{
     private DeployedTask offlineDeployedTask(TaskCommit commit) {
         DeployedTask task = find(commit.getDefinitionId());
         Task remoteTask = workflowClient.getTask(task.getWorkflowTaskId());
-        // remote all dependencies and do not schedule anymore
+        // remote upstream dependencies and do not schedule anymore
         List<Tag> updatedTags = TagUtils.buildScheduleRunTags(
                 task.getDefinitionId(),
                 commit.getId(),
@@ -139,6 +152,7 @@ public class DeployedTaskService extends BaseSecurityService{
                 .withArchived(true)
                 .build();
         deployedTaskDao.update(updated);
+
         return updated;
     }
 
@@ -172,6 +186,7 @@ public class DeployedTaskService extends BaseSecurityService{
         Preconditions.checkArgument(deployedTaskIds.size() == existedWorkflowIds.size());
         List<TaskDependency> dependencies = existedWorkflowIds.stream()
                 .map(x -> new TaskDependency(x, "latestTaskRun"))
+                .distinct()
                 .collect(Collectors.toList());
         // prepare task
         TaskDefinition taskDefinition = TaskDefinition.newBuilder()
@@ -221,6 +236,36 @@ public class DeployedTaskService extends BaseSecurityService{
                 tasks,
                 dependencies
         );
+    }
+
+    public List<Long> getDownStreamWorkflowTasks(Long definitionId){
+        try{
+            DeployedTask deployedTask = find(definitionId);
+
+            TaskDAG taskDAG = workflowClient.getTaskDAG(deployedTask.getWorkflowTaskId(), 1, 1);
+
+            List<Long> downStreamTaskIds = taskDAG.getEdges()
+                    .stream()
+                    .filter(x -> x.getUpstreamTaskId() == deployedTask.getWorkflowTaskId())
+                    .map(x -> x.getDownstreamTaskId())
+                    .collect(Collectors.toList());
+            return downStreamTaskIds;
+        }catch (IllegalArgumentException e){
+            return new ArrayList<Long>();
+        }
+    }
+
+    public Task removeTaskDependendy(Long taskId, Set<Long> dependentTaskIds){
+        Task task = workflowClient.getTask(taskId);
+        Set<Long> dependencies = task.getDependencies().stream().map(x -> x.getUpstreamTaskId()).collect(Collectors.toSet());
+        dependencies.removeAll(dependentTaskIds);
+
+        List<TaskDependency> depen = dependencies.stream()
+                .map(x -> new TaskDependency(x, "latestTaskRun"))
+                .distinct()
+                .collect(Collectors.toList());
+
+        return task.cloneBuilder().withDependencies(depen).build();
     }
 
     /*------ Deployed Task Runs -----*/
