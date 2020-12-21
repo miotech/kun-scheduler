@@ -153,16 +153,6 @@ public class DeployedTaskService extends BaseSecurityService{
                 .build();
         deployedTaskDao.update(updated);
 
-        // force remove down stream dependencies
-//        List<Long> downStreamTaskIds = getDownStreamWorkflowTasks(commit.getDefinitionId());
-//        Set<Long> dependentToRemove = new HashSet<>();
-//        dependentToRemove.add(task.getWorkflowTaskId());
-//
-//        for(Long taskId : downStreamTaskIds){
-//            Task update = removeTaskDependendy(taskId, dependentToRemove);
-//            workflowClient.saveTask(update, null);
-//        }
-
         return updated;
     }
 
