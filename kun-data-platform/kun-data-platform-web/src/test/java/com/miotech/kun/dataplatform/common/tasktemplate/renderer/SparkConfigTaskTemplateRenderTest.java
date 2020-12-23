@@ -36,7 +36,7 @@ public class SparkConfigTaskTemplateRenderTest {
                 TaskDefinition.newBuilder().withName("sparkJobName").build());
         assertThat(taskConfig.getParams().get("sparkConf"),
                 is("{\"spark.driver.extraJavaOptions\":\" -Dkun.dataplatform.datasource.1=${dataplatform.datasource.1} -Dkun.dataplatform=eyJzb3VyY2VEYXRhU291cmNlIjoiMSJ9\"}"));
-        assertThat((String) taskConfig.getParams().get(SparkConfiguration.CONF_LIVY_BATCH_NAME), startsWith("sparkJobName"));
+        assertThat((String) taskConfig.getParams().get(SparkConfiguration.CONF_LIVY_BATCH_NAME), is("sparkJobName"));
     }
 
     private TaskTemplate initSparkTemplate(List<ParameterDefinition> parameters) {

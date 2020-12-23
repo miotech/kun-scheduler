@@ -88,7 +88,7 @@ public class SparkConfigTaskTemplateRender extends TaskTemplateRenderer {
         } else {
             config.putAll(configMap);
         }
-        config.put(SparkConfiguration.CONF_LIVY_BATCH_NAME, taskDefinition.getName() + " - " + IdGenerator.getInstance().nextId());
+        config.put(SparkConfiguration.CONF_LIVY_BATCH_NAME, taskDefinition.getName());
         return config;
     }
 }
