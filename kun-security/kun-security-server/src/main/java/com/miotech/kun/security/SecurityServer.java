@@ -13,7 +13,6 @@ import org.springframework.context.annotation.FilterType;
 @ComponentScan(excludeFilters  = {@ComponentScan.Filter(
         type = FilterType.ASSIGNABLE_TYPE, classes = {SecurityConfig.class})})
 public class SecurityServer {
-
     public static void main(String[] args) {
         SpringApplication.run(SecurityServer.class);
     }
