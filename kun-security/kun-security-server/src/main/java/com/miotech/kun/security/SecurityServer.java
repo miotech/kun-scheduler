@@ -17,4 +17,5 @@ public class SecurityServer {
     public static void main(String[] args) {
         SpringApplication.run(SecurityServer.class);
     }
+    
 }
