@@ -52,6 +52,8 @@ public class SparkOperator extends LivyBaseSparkOperator {
         String sessionName = SparkConfiguration.getString(context, CONF_LIVY_BATCH_NAME);
         if (Strings.isNullOrEmpty(sessionName)) {
             sessionName = "Spark Job: " + IdGenerator.getInstance().nextId();
+        } else {
+            sessionName = sessionName + " - " + IdGenerator.getInstance().nextId();
         }
 
         SparkJob job = new SparkJob();
