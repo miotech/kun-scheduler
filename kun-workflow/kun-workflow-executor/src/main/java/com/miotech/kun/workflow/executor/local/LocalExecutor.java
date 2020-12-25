@@ -68,7 +68,7 @@ public class LocalExecutor implements Executor {
 
     private final Integer WORKER_TOKEN_SIZE = 8;
 
-    private Semaphore workerToken = new Semaphore(WORKER_TOKEN_SIZE);
+    private Semaphore workerToken;
 
     private Map<Long, HeartBeatMessage> workerPool;//key:taskAttemptId,value:HeartBeatMessage
 
@@ -100,6 +100,7 @@ public class LocalExecutor implements Executor {
         this.props = props;
         this.workerFactory = workerFactory;
         this.lineageService = lineageService;
+        workerToken = new Semaphore(props.getInt("executor.workerTokenSize", WORKER_TOKEN_SIZE));
         init();
         if (props.getBoolean("executor.enableRecover", true)) {
             recover();
@@ -264,7 +265,7 @@ public class LocalExecutor implements Executor {
         taskRunDao.updateTaskRunInletsOutlets(taskRunId,
                 report.getInlets(), report.getOutlets());
         TaskRun taskRun = taskRunDao.fetchTaskRunById(taskRunId).get();
-        lineageService.updateTaskLineage(taskRun.getTask(),report.getInlets(),report.getOutlets());
+        lineageService.updateTaskLineage(taskRun.getTask(), report.getInlets(), report.getOutlets());
 
     }
 
