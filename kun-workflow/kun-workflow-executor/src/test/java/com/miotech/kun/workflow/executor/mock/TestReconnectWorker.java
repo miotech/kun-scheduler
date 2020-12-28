@@ -37,7 +37,7 @@ public class TestReconnectWorker implements Worker {
     }
 
     @Override
-    public boolean forceAbort() {
+    public boolean shutdown() {
         return true;
     }
 

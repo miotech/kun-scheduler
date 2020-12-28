@@ -23,10 +23,4 @@ public class LocalWorkerFactory implements WorkerFactory {
         localWorker.bind(message);
         return localWorker;
     }
-
-    @Override
-    public Boolean killWorker(HeartBeatMessage message) {
-        Worker worker = getWorker(message);
-        return worker.forceAbort();
-    }
 }

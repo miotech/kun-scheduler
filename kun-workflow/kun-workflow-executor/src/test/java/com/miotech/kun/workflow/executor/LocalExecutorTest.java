@@ -49,10 +49,12 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
+import uk.org.lidalia.slf4jext.Level;
+import uk.org.lidalia.slf4jtest.LoggingEvent;
+import uk.org.lidalia.slf4jtest.TestLogger;
+import uk.org.lidalia.slf4jtest.TestLoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -103,7 +105,8 @@ public class LocalExecutorTest extends CommonTestBase {
 
     private static final MetadataServiceFacade mockMetadataFacade = Mockito.mock(MetadataServiceFacade.class);
 
-    private final Logger logger = LoggerFactory.getLogger(LocalExecutorTest.class);
+//    private final Logger logger = LoggerFactory.getLogger(LocalExecutorTest.class);
+    private TestLogger logger = TestLoggerFactory.getTestLogger("com.miotech.kun.workflow");
 
     private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:6.0.8");
 
@@ -145,6 +148,7 @@ public class LocalExecutorTest extends CommonTestBase {
 
     @Before
     public void setUp() {
+        logger.setEnabledLevelsForAllThreads(Level.DEBUG,Level.INFO);
         executor = injector.getInstance(Executor.class);
         localExecutor = injector.getInstance(LocalExecutor.class);
         workerFactory = injector.getInstance(WorkerFactory.class);
@@ -807,10 +811,13 @@ public class LocalExecutorTest extends CommonTestBase {
         executor.cancel(attempt);
 
         // wait until aborted
-        awaitUntilAttemptDone(attempt.getId());
+        awaitUntilAttemptAbort(attempt.getId());
+
+        List<LoggingEvent> loggingEventList = logger.getAllLoggingEvents();
+
 
         ArgumentCaptor<HeartBeatMessage> captor = ArgumentCaptor.forClass(HeartBeatMessage.class);
-        verify(spyFactory,times(1)).killWorker(captor.capture());
+        verify(spyFactory,times(2)).getWorker(captor.capture());
         HeartBeatMessage message = captor.getValue();
 
 
@@ -993,6 +1000,13 @@ public class LocalExecutorTest extends CommonTestBase {
         await().atMost(120, TimeUnit.SECONDS).until(() -> {
             Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(attemptId);
             return s.isPresent() && (s.get().isFinished());
+        });
+    }
+
+    private void awaitUntilAttemptAbort(long attemptId) {
+        await().atMost(20, TimeUnit.SECONDS).until(() -> {
+            Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(attemptId);
+            return s.isPresent() && (s.get().isAborted());
         });
     }
 

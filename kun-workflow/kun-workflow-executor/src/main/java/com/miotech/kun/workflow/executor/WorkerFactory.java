@@ -9,5 +9,4 @@ public interface WorkerFactory {
 
     public Worker getWorker(HeartBeatMessage message);
 
-    public Boolean killWorker(HeartBeatMessage message);
 }

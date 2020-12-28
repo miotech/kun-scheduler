@@ -34,7 +34,7 @@ public class TestWorker3 implements Worker {
     }
 
     @Override
-    public boolean forceAbort() {
+    public boolean shutdown() {
         return false;
     }
 

@@ -37,7 +37,7 @@ public class TestTimeoutWorker implements Worker {
     }
 
     @Override
-    public boolean forceAbort() {
+    public boolean shutdown() {
         return true;
     }
 

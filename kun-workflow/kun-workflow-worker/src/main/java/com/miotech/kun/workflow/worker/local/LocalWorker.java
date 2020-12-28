@@ -46,7 +46,8 @@ public class LocalWorker implements Worker {
     }
 
     @Override
-    public boolean forceAbort() {
+    public boolean shutdown() {
+        logger.info("worker going to shutdown, processId = {}, taskAttemptId", processId, taskAttemptId);
         Runtime rt = Runtime.getRuntime();
         try {
             Process process;

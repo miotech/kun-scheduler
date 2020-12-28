@@ -410,7 +410,8 @@ public class LocalExecutor implements Executor {
             }
             if (workerPool.containsKey(taskAttemptId)) {
                 logger.info("force kill taskAttempt = {}", taskAttemptId);
-                if (workerFactory.killWorker(workerPool.get(taskAttemptId))) {
+                Worker worker = workerFactory.getWorker(workerPool.get(taskAttemptId));
+                if (worker.shutdown()) {
                     workerPool.remove(taskAttemptId);
                     workerToken.release();
                     notifyFinished(taskAttemptId, TaskRunStatus.ABORTED, OperatorReport.BLANK);
