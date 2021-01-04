@@ -40,12 +40,14 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.ResourceUtils;
 import com.miotech.kun.workflow.worker.Worker;
+import com.miotech.kun.workflow.worker.local.LocalWorker;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 import org.slf4j.Logger;
@@ -66,7 +68,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.Silent.class)
 public class LocalExecutorTest extends CommonTestBase {
@@ -103,6 +105,8 @@ public class LocalExecutorTest extends CommonTestBase {
     private static final MetadataServiceFacade mockMetadataFacade = Mockito.mock(MetadataServiceFacade.class);
 
     private final Logger logger = LoggerFactory.getLogger(LocalExecutorTest.class);
+
+    private ch.qos.logback.core.Appender<ch.qos.logback.classic.spi.ILoggingEvent> appender;
 
     private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:6.0.8");
 
@@ -156,6 +160,8 @@ public class LocalExecutorTest extends CommonTestBase {
         rpcPublisher.exportService(WorkflowExecutorFacade.class, "1.0", localExecutorFacade);
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
+        appender = mock(ch.qos.logback.core.Appender.class);
+        ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(LocalWorker.class)).addAppender(appender);
     }
 
     private static class NopEventPublisher implements EventPublisher {
@@ -226,7 +232,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
 
     }
 
@@ -277,7 +283,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
 
     }
 
@@ -337,7 +343,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
 
     }
 
@@ -356,7 +362,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
     @Test
@@ -383,7 +389,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(7));
+        assertThat(workerToken.availablePermits(), is(7));
 
     }
 
@@ -407,7 +413,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
 
     }
 
@@ -541,7 +547,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), sameBeanAs(inlets));
         assertThat(finishedEvent.getOutlets(), sameBeanAs(outlets));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
     @Test
@@ -570,7 +576,7 @@ public class LocalExecutorTest extends CommonTestBase {
         content = ResourceUtils.content(log.getInputStream());
         assertThat(content, containsString("Hello, world2!"));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
     @Test
@@ -629,7 +635,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(0));
         assertThat(finishedEvent.getOutlets(), hasSize(0));
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
     @Test
@@ -669,7 +675,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
     @Test
@@ -709,7 +715,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
     @Test
@@ -748,7 +754,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.FAILED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
     @Test
@@ -760,7 +766,7 @@ public class LocalExecutorTest extends CommonTestBase {
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(7));
+        assertThat(workerToken.availablePermits(), is(7));
         executor.cancel(attempt);
 
         // wait until aborted
@@ -792,7 +798,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
         workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
     @Test
@@ -800,13 +806,30 @@ public class LocalExecutorTest extends CommonTestBase {
         // prepare
         TaskAttempt attempt = prepareAttempt(TestOperator5.class);
 
+        ArgumentCaptor<ch.qos.logback.classic.spi.ILoggingEvent> logCaptor = ArgumentCaptor.forClass(ch.qos.logback.classic.spi.ILoggingEvent.class);
+
+
         // process
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
         executor.cancel(attempt);
 
         // wait until aborted
-        awaitUntilAttemptDone(attempt.getId());
+        awaitUntilAttemptAbort(attempt.getId());
+
+
+
+        verify(appender, atLeast(0)).doAppend(logCaptor.capture());
+        List<String> logList = logCaptor.getAllValues().stream().map(log -> log.getMessage()).collect(Collectors.toList());
+        assertThat(logList.get(0),is("Start to run command: {}"));
+        assertThat(logList.get(1),is("kill task result = {}"));
+        assertThat(logList.get(2),is("worker going to shutdown, taskAttemptId = {}"));
+
+
+        ArgumentCaptor<HeartBeatMessage> captor = ArgumentCaptor.forClass(HeartBeatMessage.class);
+        verify(spyFactory, times(2)).getWorker(captor.capture());
+        HeartBeatMessage message = captor.getValue();
+
 
         // verify
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
@@ -815,6 +838,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(attemptProps.getLogPath(), is(notNullValue()));
         assertThat(attemptProps.getStartAt(), is(notNullValue()));
         assertThat(attemptProps.getEndAt(), is(notNullValue()));
+        assertThat(attemptProps.getId(), is(message.getTaskAttemptId()));
 
         TaskRun taskRun = taskRunDao.fetchLatestTaskRun(attempt.getTaskRun().getTask().getId());
         assertThat(taskRun.getStatus(), is(attemptProps.getStatus()));
@@ -829,7 +853,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
     @Test
@@ -871,7 +895,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(),is(8));
+        assertThat(workerToken.availablePermits(), is(8));
     }
 
     private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass) {
@@ -986,6 +1010,13 @@ public class LocalExecutorTest extends CommonTestBase {
         await().atMost(120, TimeUnit.SECONDS).until(() -> {
             Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(attemptId);
             return s.isPresent() && (s.get().isFinished());
+        });
+    }
+
+    private void awaitUntilAttemptAbort(long attemptId) {
+        await().atMost(20, TimeUnit.SECONDS).until(() -> {
+            Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(attemptId);
+            return s.isPresent() && (s.get().isAborted());
         });
     }
 

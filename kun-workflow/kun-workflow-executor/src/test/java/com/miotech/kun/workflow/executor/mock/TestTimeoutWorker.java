@@ -36,6 +36,11 @@ public class TestTimeoutWorker implements Worker {
         new Thread(new TestOperatorLaunch(command)).start();
     }
 
+    @Override
+    public boolean shutdown() {
+        return true;
+    }
+
     class TestOperatorLaunch implements Runnable{
 
         private ExecCommand command;

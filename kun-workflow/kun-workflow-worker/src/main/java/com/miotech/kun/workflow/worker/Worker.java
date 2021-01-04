@@ -8,4 +8,6 @@ public interface Worker {
 
     public void start(ExecCommand command);
 
+    public boolean shutdown();
+
 }

@@ -22,7 +22,7 @@ public class TestOperator5 extends KunOperator {
     @SuppressWarnings("java:S2925")
     public boolean run() {
         logger.info("START RUNNING");
-        Uninterruptibles.sleepUninterruptibly(20000, TimeUnit.MILLISECONDS);
+        Uninterruptibles.sleepUninterruptibly(60000, TimeUnit.MILLISECONDS);
         return true;
     }
 
