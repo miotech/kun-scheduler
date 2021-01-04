@@ -8,4 +8,5 @@ public interface WorkerFactory {
     public Worker createWorker();
 
     public Worker getWorker(HeartBeatMessage message);
+
 }

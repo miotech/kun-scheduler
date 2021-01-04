@@ -204,6 +204,8 @@ public class LocalExecutor implements Executor {
             HeartBeatMessage message = workerPool.get(attemptId);
             Worker worker = workerFactory.getWorker(message);
             worker.killTask(true);
+            Thread thread = new Thread(new WaitAbort(attemptId));
+            thread.start();
             return true;
         }
     }
@@ -388,5 +390,37 @@ public class LocalExecutor implements Executor {
         miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
         TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
         submit(taskAttempt, true);
+    }
+
+    class WaitAbort implements Runnable {
+
+        private Long taskAttemptId;
+
+        WaitAbort(Long taskAttemptId) {
+            this.taskAttemptId = taskAttemptId;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(2 * HEARTBEAT_INTERVAL);
+            } catch (InterruptedException e) {
+                logger.error("Failed in wait for : {}s", 10, e);
+                Thread.currentThread().interrupt();
+            }
+            if (workerPool.containsKey(taskAttemptId)) {
+                logger.info("force kill taskAttempt = {}", taskAttemptId);
+                Worker worker = workerFactory.getWorker(workerPool.get(taskAttemptId));
+                if (worker.shutdown()) {
+                    workerPool.remove(taskAttemptId);
+                    workerToken.release();
+                    notifyFinished(taskAttemptId, TaskRunStatus.ABORTED, OperatorReport.BLANK);
+                    miscService.changeTaskAttemptStatus(taskAttemptId,
+                            TaskRunStatus.ABORTED, null, DateTimeUtils.now());
+                } else {
+                    logger.error("force abort taskAttempt = {} failed", taskAttemptId);
+                }
+            }
+        }
     }
 }

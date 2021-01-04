@@ -33,6 +33,11 @@ public class TestWorker3 implements Worker {
         new Thread(new TestWorker3.TestOperatorLaunch(command)).start();
     }
 
+    @Override
+    public boolean shutdown() {
+        return false;
+    }
+
     class TestOperatorLaunch implements Runnable {
 
         private ExecCommand command;
