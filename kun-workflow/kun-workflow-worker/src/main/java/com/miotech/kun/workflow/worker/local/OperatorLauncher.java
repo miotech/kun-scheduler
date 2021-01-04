@@ -59,6 +59,8 @@ public class OperatorLauncher {
         String config = args[1];
         String out = args[2];
         ExecCommand command = readCommand(in);
+        // 初始化logger
+        initLogger(command.getLogPath());
         HeartBeatMessage heartBeatMessage = readConfig(config);
         props = new Props();
         props.put("rpc.registry", command.getRegisterUrl());
@@ -135,8 +137,6 @@ public class OperatorLauncher {
         Thread thread = Thread.currentThread();
         ClassLoader cl = thread.getContextClassLoader();
         try {
-            // 初始化
-            initLogger(command.getLogPath());
             // 加载Operator
             operator = loadOperator(command.getJarPath(), command.getClassName());
             operator.setContext(initContext(command));
@@ -238,7 +238,7 @@ public class OperatorLauncher {
         return new OperatorContextImpl(command.getConfig(),command.getTaskRunId());
     }
 
-    private void initLogger(String logPath) {
+    private static void initLogger(String logPath) {
         ch.qos.logback.classic.Logger rootLogger
                 = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
@@ -257,6 +257,10 @@ public class OperatorLauncher {
         appender.start();
 
         rootLogger.addAppender(appender);
+        //remove app appenders
+        rootLogger.detachAppender("APPLOG");
+        rootLogger.detachAppender("APPERROR");
+        rootLogger.detachAppender("ASYNCAPPLOG");
     }
 
     private KunOperator loadOperator(String jarPath, String mainClass) {
@@ -273,7 +277,7 @@ public class OperatorLauncher {
         }
     }
 
-    private String trimPrefix(String logPath) {
+    private static String trimPrefix(String logPath) {
         if (!logPath.startsWith("file:")) {
             throw new IllegalArgumentException("Not a file resource: " + logPath);
         }
