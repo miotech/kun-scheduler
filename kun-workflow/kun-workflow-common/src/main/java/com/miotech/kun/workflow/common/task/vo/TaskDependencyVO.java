@@ -20,10 +20,6 @@ public class TaskDependencyVO {
 
     private final String dependencyLevel;
 
-    public TaskDependencyVO(Long upstreamTaskId, Long downstreamTaskId, String dependencyFunc) {
-        this(upstreamTaskId, downstreamTaskId, dependencyFunc, DependencyLevel.STRONG.name());
-    }
-
 
     public TaskDependencyVO(Long upstreamTaskId, Long downstreamTaskId, String dependencyFunc, String dependencyLevel) {
         this.upstreamTaskId = upstreamTaskId;
@@ -56,6 +52,7 @@ public class TaskDependencyVO {
         private Long upstreamTaskId;
         private Long downstreamTaskId;
         private String dependencyFunc;
+        private String dependencyLevel;
 
         private Builder() {
         }
@@ -75,8 +72,14 @@ public class TaskDependencyVO {
             return this;
         }
 
+        public Builder withDependencyLevel(String dependencyLevel) {
+            this.dependencyLevel = dependencyLevel;
+            return this;
+        }
+
         public TaskDependencyVO build() {
-            return new TaskDependencyVO(upstreamTaskId, downstreamTaskId, dependencyFunc);
+            dependencyLevel = dependencyLevel == null ? DependencyLevel.STRONG.name() : dependencyLevel;
+            return new TaskDependencyVO(upstreamTaskId, downstreamTaskId, dependencyFunc, dependencyLevel);
         }
     }
 }

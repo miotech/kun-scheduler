@@ -134,9 +134,11 @@ public class TaskSpawner {
         }
         logger.debug("to save created TaskRuns. TaskRuns={}", taskRuns);
         save(taskRuns);
-        updateGraphsTask(graphTasks, tick);
-        logger.debug("to save checkpoint. checkpoint = {}", tick);
-        tickDao.saveCheckPoint(tick);
+        if(tick != SpecialTick.DIRECTLY_TICK){
+            updateGraphsTask(graphTasks, tick);
+            logger.debug("to save checkpoint. checkpoint = {}", tick);
+            tickDao.saveCheckPoint(tick);
+        }
 
         logger.debug("to submit created TaskRuns. TaskRuns={}", taskRuns);
         if (taskRuns.size() > 0) {

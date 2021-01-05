@@ -19,7 +19,7 @@ public class NopOperator extends KunOperator {
     @Override
     public ConfigDef config() {
         return new ConfigDef()
-                .define("testKey1", ConfigDef.Type.BOOLEAN, true, "test key 1", "testKey1");
+                .define("testKey1", ConfigDef.Type.BOOLEAN,false, true, "test key 1", "testKey1");
     }
 
     @Override

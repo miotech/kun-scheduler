@@ -10,6 +10,7 @@ import com.miotech.kun.workflow.common.exception.ExceptionResponse;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
+import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.operator.Operator;
@@ -33,7 +34,8 @@ import static org.junit.Assert.assertTrue;
 
 public class TaskControllerTest extends KunWebServerTestBase {
 
-    private static final TypeReference<PaginationVO<Task>> taskPaginationVOTypeRef = new TypeReference<PaginationVO<Task>>() {};
+    private static final TypeReference<PaginationVO<Task>> taskPaginationVOTypeRef = new TypeReference<PaginationVO<Task>>() {
+    };
     private List<Task> mockTaskList = new ArrayList<>();
 
     @Inject
@@ -148,7 +150,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         // verify
         JsonNode result = JSONUtils.jsonToObject(response, JsonNode.class);
         Long taskID = Long.parseLong(result.get("id").asText());
-        assertTrue(taskID > 0 );
+        assertTrue(taskID > 0);
         assertThat(result.get("operatorId").asText(), is(upstreamTask.getOperatorId().toString()));
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description"));
@@ -170,7 +172,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
 
         // verify
         result = JSONUtils.jsonToObject(response, JsonNode.class);
-        assertThat( Long.parseLong(result.get("id").asText()), is(taskID) );
+        assertThat(Long.parseLong(result.get("id").asText()), is(taskID));
         assertThat(result.get("operatorId").asText(), is(upstreamTask.getOperatorId().toString()));
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description UPDATED"));
@@ -194,7 +196,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         String response = post("/tasks", postJson);
 
         JsonNode result = JSONUtils.jsonToObject(response, JsonNode.class);
-        assertTrue(Long.parseLong(result.get("id").asText()) > 0 );
+        assertTrue(Long.parseLong(result.get("id").asText()) > 0);
         assertThat(result.get("operatorId").asText(), is(upstreamTask.getOperatorId().toString()));
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description"));
@@ -213,32 +215,58 @@ public class TaskControllerTest extends KunWebServerTestBase {
     }
 
     @Test
-    public void createTaskWithInvalidConfig(){
+    public void createTaskWithInvalidConfig() {
         initOperator();
         Task task = MockTaskFactory.createTask(1l);
         String payload = JSONUtils.toJsonString(task);
-        String response = post("/tasks",payload);
+        String response = post("/tasks", payload);
         ExceptionResponse exceptionResponse = jsonSerializer.toObject(response, ExceptionResponse.class);
         assertThat(exceptionResponse.getCode(), is(400));
+        assertThat(exceptionResponse.getMessage(),is("Configuration var2 is required but not specified"));
+
 
     }
 
     @Test
-    public void updateTaskWithInvalidConfig(){
+    public void updateTaskWithInvalidConfig() {
         initOperator();
         Config config = Config.newBuilder()
                 .addConfig("var2", "default2").build();
         Task task = MockTaskFactory.createTask(1l).cloneBuilder().withConfig(config).build();
         String payload = JSONUtils.toJsonString(task);
-        String response = post("/tasks",payload);
-        Task createdTask = JSONUtils.jsonToObject(response,Task.class);
-        Config errorConfig = Config.newBuilder().addConfig("var3","default3").build();
-        Task updateTask =  createdTask.cloneBuilder().withConfig(errorConfig).build();
-        String updateRes = put("/tasks/" + updateTask.getId(),JSONUtils.toJsonString(updateTask));
+        String response = post("/tasks", payload);
+        Task createdTask = JSONUtils.jsonToObject(response, Task.class);
+        Config errorConfig = Config.newBuilder().addConfig("var3", "default3").build();
+        Task updateTask = createdTask.cloneBuilder().withConfig(errorConfig).build();
+        String updateRes = put("/tasks/" + updateTask.getId(), JSONUtils.toJsonString(updateTask));
         ExceptionResponse exceptionResponse = jsonSerializer.toObject(updateRes, ExceptionResponse.class);
         assertThat(exceptionResponse.getCode(), is(400));
+        assertThat(exceptionResponse.getMessage(),is("Configuration var2 is required but not specified"));
 
     }
+
+    @Test
+    public void executeTaskWithInvalidConfig() {
+        initOperator();
+        Config config = Config.newBuilder()
+                .addConfig("var2", "default2").build();
+        Task task = MockTaskFactory.createTask(1l).cloneBuilder().withConfig(config).build();
+        String payload = JSONUtils.toJsonString(task);
+        String response = post("/tasks", payload);
+        Task createdTask = JSONUtils.jsonToObject(response, Task.class);
+        RunTaskVO taskVO = new RunTaskVO();
+        Config errorConfig = Config.newBuilder().addConfig("var3", "default3").build();
+        taskVO.setTaskId(createdTask.getId());
+        taskVO.setConfig(errorConfig.getValues());
+        String request = JSONUtils.toJsonString(Lists.newArrayList(taskVO));
+        String runRes = post("/tasks/_run",request);
+        ExceptionResponse exceptionResponse = jsonSerializer.toObject(runRes, ExceptionResponse.class);
+        assertThat(exceptionResponse.getCode(),is(400));
+        assertThat(exceptionResponse.getMessage(),is("Unknown configuration 'var3'"));
+
+
+    }
+
 
     private void initOperator() {
         long operatorId = 1L;

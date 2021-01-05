@@ -136,7 +136,12 @@ public class TaskService {
         ConfigDef configDef = operatorService.getOperatorConfigDef(task.getOperatorId());
         Config config = new Config(runtimeConfig);
         config.validateBy(configDef);
-        checkConfig(configDef,config);
+        for (ConfigDef.ConfigKey configKey : configDef.configKeys()) {
+            String name = configKey.getName();
+            if (!configKey.isReconfigurable() && config.contains(name)) {
+                throw new IllegalArgumentException(format("Configuration %s should not be reconfigured.", name));
+            }
+        }
     }
 
     public Task partialUpdateTask(Long taskId, TaskPropsVO vo) {

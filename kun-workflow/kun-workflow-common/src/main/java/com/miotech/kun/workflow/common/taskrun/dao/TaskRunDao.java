@@ -1056,31 +1056,20 @@ public class TaskRunDao {
                 .getSQL();
         dbOperator.update(sql, status.name(), taskRunId);
     }
-    //获取当前满足依赖条件的taskRunId
-//    public List<Long> fetchAllSatisfyTaskRunId(){
-//        String whereCase = TASK_RUN_MODEL_NAME + ".status = " + TaskRunStatus.CREATED.name() + " and (" +
-//                RELATION_MODEL_NAME + ".";
-//        String sql = DefaultSQLBuilder.newBuilder()
-//                .select(TASK_RUN_MODEL_NAME + ".id")
-//                .from(RELATION_TABLE_NAME,RELATION_MODEL_NAME)
-//                .join("INNER",TASK_RUN_TABLE_NAME,TASK_RUN_MODEL_NAME)
-//                .on(TASK_RUN_MODEL_NAME + ".id = " + RELATION_MODEL_NAME + ".downstream_task_run_id")
-//                .where()
-//        return null;
-//    }
 
     public List<Long> fetchAllSatisfyTaskRunId() {
+        OffsetDateTime notifyLimit = DateTimeUtils.now().plusDays(-1);
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("id")
                 .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
                 .join("LEFT", RELATION_TABLE_NAME, RELATION_MODEL_NAME)
                 .on(TASK_RUN_MODEL_NAME + ".id = " + RELATION_MODEL_NAME + ".downstream_task_run_id")
-                .where(TASK_RUN_MODEL_NAME + ".status = ?")
+                .where(TASK_RUN_MODEL_NAME + ".status = ? and " + TASK_RUN_MODEL_NAME + ".created_at > ?")
                 .groupBy("id")
                 .having("sum(case when dependency_status = ? or (dependency_level = ? and dependency_status = ?) then 1 else 0 end) = 0")
                 .asPrepared()
                 .getSQL();
-        List<Long> satisfyTaskRunId = dbOperator.fetchAll(sql, rs -> rs.getLong("id"), TaskRunStatus.CREATED.name(),
+        List<Long> satisfyTaskRunId = dbOperator.fetchAll(sql, rs -> rs.getLong("id"), TaskRunStatus.CREATED.name(), notifyLimit,
                 DependencyStatus.CREATED.name(), DependencyLevel.STRONG.name(), DependencyStatus.FAILED.name());
         return satisfyTaskRunId;
     }
