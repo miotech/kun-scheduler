@@ -275,7 +275,7 @@ public class LocalExecutor implements Executor {
         List<TaskAttempt> taskAttemptList = taskRunDao.fetchUnStartedTaskAttemptList();
         logger.debug("recover taskAttempt to queue count = {}", taskAttemptList.size());
         List<TaskAttempt> runningTaskAttemptList = taskRunDao.fetchRunningTaskAttemptList();
-        logger.debug("recover taskAttempt to workerPool count = {}", runningTaskAttemptList);
+        logger.debug("recover taskAttempt to workerPool count = {}", runningTaskAttemptList.size());
         for (TaskAttempt taskAttempt : runningTaskAttemptList) {
             workerStarterThreadPool.submit(new WorkerStartRunner(taskAttempt));
         }

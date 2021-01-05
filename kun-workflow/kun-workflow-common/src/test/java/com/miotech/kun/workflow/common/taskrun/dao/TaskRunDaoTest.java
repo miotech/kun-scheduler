@@ -31,9 +31,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.samePropertyValuesAs;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 public class TaskRunDaoTest extends DatabaseTestBase {
@@ -686,6 +684,19 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 .stream().map(TaskRun::getId).collect(Collectors.toList());
         assertEquals(taskRun.getId(), taskRunIdList.get(0));
 
+    }
+
+    @Test
+    public void fetchOldSatisfyTaskRunId(){
+        Tick tick = new Tick(DateTimeUtils.now());
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+        TaskRun newTaskRun = MockTaskRunFactory.createTaskRunWithTick(task, tick);
+        TaskRun oldTaskRun = MockTaskRunFactory.createTaskRun();
+        taskRunDao.createTaskRuns(Arrays.asList(newTaskRun,oldTaskRun));
+        List<Long> taskRunIds =  taskRunDao.fetchAllSatisfyTaskRunId();
+        assertThat(taskRunIds,hasSize(1));
+        assertThat(taskRunIds.get(0),is(newTaskRun.getId()));
     }
 
     @Test

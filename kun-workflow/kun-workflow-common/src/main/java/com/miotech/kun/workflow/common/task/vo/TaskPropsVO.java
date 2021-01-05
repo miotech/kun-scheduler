@@ -42,6 +42,7 @@ public class TaskPropsVO {
                                 .toFunctionType())
                         .withDownstreamTaskId(x.getDownstreamTaskId())
                         .withUpstreamTaskId(x.getUpstreamTaskId())
+                        .withDependencyLevel(x.getDependencyLevel().name())
                         .build())
                 .collect(Collectors.toList());
 

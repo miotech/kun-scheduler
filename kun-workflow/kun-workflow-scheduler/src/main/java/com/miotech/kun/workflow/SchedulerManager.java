@@ -29,6 +29,7 @@ public class SchedulerManager {
     public void start() {
         logger.info("Start SchedulerManager using LocalScheduler");
         Tick checkPoint = tickDao.getLatestCheckPoint();
+        logger.info("start clock checkPoint = {}",checkPoint);
         schedulerClock.start(checkPoint);
         scheduler.schedule(taskGraph);
     }
