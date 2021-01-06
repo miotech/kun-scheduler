@@ -197,10 +197,6 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         assertThat(taskRuns.getPageSize(),is(10));
         assertThat(taskRuns.getRecords(),hasSize(2));
         assertThat(taskRuns.getTotalCount(),is(2l));
-//        TaskRun search1 = taskRuns.getRecords().get(0);
-//        assertThat(search1.getId(),is(taskRun1.getId()));
-//        TaskRun search2 = taskRuns.getRecords().get(1);
-//        assertThat(search2.getId(),is(taskRun2.getId()));
 
         TaskRunSearchRequest request2 = TaskRunSearchRequest
                 .newBuilder()

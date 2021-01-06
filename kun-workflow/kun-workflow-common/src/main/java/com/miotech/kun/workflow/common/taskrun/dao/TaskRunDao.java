@@ -16,13 +16,11 @@ import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
+import com.miotech.kun.workflow.common.tick.TickDao;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.task.ScheduleType;
-import com.miotech.kun.workflow.core.model.task.DependencyLevel;
-import com.miotech.kun.workflow.core.model.task.DependencyStatus;
-import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskDependency;
+import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunDependency;
@@ -84,6 +82,9 @@ public class TaskRunDao {
 
     @Inject
     private TaskRunMapper taskRunMapperInstance;
+
+    @Inject
+    private TickDao tickDao;
 
     @Inject
     public TaskRunDao(TaskDao taskDao, DatabaseOperator dbOperator
@@ -346,6 +347,66 @@ public class TaskRunDao {
 
     public List<TaskRun> createTaskRuns(List<TaskRun> taskRuns) {
         return taskRuns.stream().map(this::createTaskRun).collect(Collectors.toList());
+    }
+
+    public List<TaskRun> createTaskRuns(Map<TaskGraph, List<TaskRun>> graphTaskRuns) {
+        List<TaskRun> result = new ArrayList<>();
+        for (Map.Entry<TaskGraph, List<TaskRun>> entry : graphTaskRuns.entrySet()) {
+            TaskGraph graph = entry.getKey();
+            List<TaskRun> taskRunList = entry.getValue();
+            for (TaskRun taskRun : taskRunList) {
+                logger.debug("to create taskRun , taskRunId = {}", taskRun.getId());
+                result.add(createTaskRun(taskRun, graph));
+            }
+        }
+        return result;
+    }
+
+    public TaskRun createTaskRun(TaskRun taskRun, TaskGraph taskGraph) {
+        Optional<TaskRun> savedTaskRun = fetchTaskRunById(taskRun.getId());
+        if (savedTaskRun.isPresent()) {
+            return savedTaskRun.get();
+        }
+        dbOperator.transaction(() -> {
+            OffsetDateTime now = DateTimeUtils.now();
+
+            List<String> tableColumns = new ImmutableList.Builder<String>()
+                    .addAll(taskRunCols)
+                    .build();
+
+            String sql = DefaultSQLBuilder.newBuilder()
+                    .insert(tableColumns.toArray(new String[0]))
+                    .into(TASK_RUN_TABLE_NAME)
+                    .asPrepared()
+                    .getSQL();
+            String scheduleType = taskRun.getScheduledType() != null ?
+                    taskRun.getScheduledType().name() : taskRun.getTask().getScheduleConf().getType().name();
+
+            dbOperator.update(sql,
+                    taskRun.getId(),
+                    taskRun.getTask().getId(),
+                    taskRun.getScheduledTick().toString(),
+                    toNullableString(taskRun.getStatus()),
+                    scheduleType,
+                    taskRun.getStartAt(),
+                    taskRun.getEndAt(),
+                    JSONUtils.toJsonString(taskRun.getConfig()),
+                    JSONUtils.toJsonString(taskRun.getInlets()),
+                    JSONUtils.toJsonString(taskRun.getOutlets()),
+                    now,
+                    now,
+                    taskRun.getQueueName(),
+                    taskRun.getPriority()
+            );
+
+            createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
+            if (taskRun.getScheduledTick() != SpecialTick.DIRECTLY_TICK) {
+                taskGraph.updateTasksNextExecutionTick(taskRun.getScheduledTick(), Lists.newArrayList(taskRun.getTask()));
+            }
+            return taskRun;
+        });
+
+        return taskRun;
     }
 
     /**
@@ -859,7 +920,7 @@ public class TaskRunDao {
         OffsetDateTime todayMorning = DateTimeUtils.todayMorning();
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where("task_id = ? and " + TASK_RUN_MODEL_NAME + ".created_at > ?")
-                .orderBy("start_at DESC")
+                .orderBy(TASK_RUN_MODEL_NAME + ".created_at DESC")
                 .limit(limit)
                 .getSQL();
         return dbOperator.fetchAll(sql, taskRunMapperInstance, taskId, todayMorning);

@@ -2,12 +2,8 @@ package com.miotech.kun.workflow.scheduler;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
-import com.miotech.kun.commons.utils.EventConsumer;
-import com.miotech.kun.commons.utils.EventLoop;
-import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
-import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -18,19 +14,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Singleton
 public class TaskManager {
     private static final Logger logger = LoggerFactory.getLogger(TaskManager.class);
-
-    private static final Integer EVENT_LOOP_WORKER_NUM = Runtime.getRuntime().availableProcessors() * 2;
 
     private final Executor executor;
 
@@ -45,8 +36,7 @@ public class TaskManager {
         this.executor = executor;
         this.taskRunDao = taskRunDao;
 
-        this.eventLoop = new InnerEventLoop(EVENT_LOOP_WORKER_NUM);
-        this.eventLoop.start();
+        this.eventLoop = new InnerEventLoop();
 
         this.eventBus = eventBus;
         this.eventBus.register(this.eventLoop);
@@ -62,6 +52,7 @@ public class TaskManager {
         save(taskAttempts);
         logger.debug("TaskAttempts saved. total={}", taskAttempts.size());
         List<TaskAttempt> taskAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
+        logger.debug("fetch satisfy taskAttempt size = {}",taskAttemptList.size());
         for (TaskAttempt taskAttempt : taskAttemptList) {
             executor.submit(taskAttempt);
         }
@@ -95,13 +86,7 @@ public class TaskManager {
         }
     }
 
-    private class InnerEventLoop extends EventLoop<Long, Event> {
-        public InnerEventLoop(int nThreads) {
-            super("task-manager");
-            addConsumers(IntStream.range(0, nThreads)
-                    .mapToObj(i -> new Watcher())
-                    .collect(Collectors.toList()));
-        }
+    private class InnerEventLoop  {
 
         @Subscribe
         public void onReceive(TaskAttemptStatusChangeEvent event) {
@@ -115,85 +100,4 @@ public class TaskManager {
         }
     }
 
-    private class Watcher extends EventConsumer<Long, Event> {
-        private final WaitList<TaskAttempt, Long> waitList = new WaitList<>();
-
-        @Override
-        public void onReceive(Event event) {
-            if (event instanceof StartWatchEvent) {
-                startWatch(((StartWatchEvent) event).getTaskAttempt());
-            }
-        }
-
-        private void startWatch(TaskAttempt taskAttempt) {
-            // 首先注册对所有上游任务的监听（无论上游任务是否已经完成）
-            List<Long> dependentTaskRunIds = taskAttempt.getTaskRun().getDependentTaskRunIds();
-            Collection<Long> dependentTaskAttemptIds = queryAttemptIds(dependentTaskRunIds);
-            logger.debug("Dependencies of taskAttempt {} is: DependentTaskRunIds={}, DependentTaskAttemptIds={}",
-                    taskAttempt, dependentTaskRunIds, dependentTaskAttemptIds);
-
-            for (Long dependentTaskAttemptId : dependentTaskAttemptIds) {
-                listenTo(dependentTaskAttemptId, this::onUpstreamStatusChange);
-            }
-            waitList.addWait(taskAttempt, dependentTaskAttemptIds);
-
-            // 向数据库check依赖的任务的状态
-            List<TaskAttemptProps> attempts = taskRunDao.fetchLatestTaskAttempt(dependentTaskRunIds);
-            for (TaskAttemptProps atp : attempts) {
-                logger.debug("Fetched latest TaskAttempt. taskRunId={}, attempt={}, status={}",
-                        atp.getTaskRunId(), atp.getAttempt(), atp.getStatus());
-                if (atp.getStatus().isSuccess()) {
-                    waitList.removeWait(atp.getId());
-                    unlistenTo(atp.getId());
-                }
-            }
-
-            executeIfPossible();
-        }
-
-        private void onUpstreamStatusChange(Event e) {
-            if (e instanceof TaskAttemptStatusChangeEvent) {
-                TaskAttemptStatusChangeEvent event = (TaskAttemptStatusChangeEvent) e;
-                logger.debug("TaskAttempt status changed. TaskAttemptId={}, from={}, to={}",
-                        event.getAttemptId(), event.getFromStatus(), event.getToStatus());
-
-                if (event.getToStatus().isSuccess()) {
-                    Long taskAttemptId = event.getAttemptId();
-                    waitList.removeWait(taskAttemptId);
-                    unlistenTo(taskAttemptId);
-                }
-
-                executeIfPossible();
-            }
-        }
-
-        private Collection<Long> queryAttemptIds(List<Long> taskRunIds) {
-            List<TaskAttemptProps> attemptProps = taskRunDao.fetchLatestTaskAttempt(taskRunIds);
-            Map<Long, Long> attemptTaskRunMap = attemptProps.stream()
-                    .collect(Collectors.toMap(i -> i.getTaskRunId(), i -> i.getId()));
-            return attemptTaskRunMap.values();
-        }
-
-        private void executeIfPossible() {
-            List<TaskAttempt> tasksCouldRun = waitList.pop();
-            if (!tasksCouldRun.isEmpty()) {
-                logger.debug("Submit taskAttempts to executor. taskAttempts={}", tasksCouldRun);
-                for (TaskAttempt ta : tasksCouldRun) {
-                    executor.submit(ta);
-                }
-            }
-        }
-    }
-
-    private static class StartWatchEvent extends Event {
-        private final TaskAttempt taskAttempt;
-
-        public StartWatchEvent(TaskAttempt taskAttempt) {
-            this.taskAttempt = taskAttempt;
-        }
-
-        public TaskAttempt getTaskAttempt() {
-            return taskAttempt;
-        }
-    }
 }

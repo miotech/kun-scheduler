@@ -45,7 +45,7 @@ public class Tick implements Comparable<Tick>{
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null) return false;
         Tick tick = (Tick) o;
         return Objects.equals(time, tick.time);
     }

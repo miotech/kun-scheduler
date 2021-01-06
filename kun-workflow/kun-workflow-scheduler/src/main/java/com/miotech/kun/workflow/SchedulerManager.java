@@ -7,8 +7,11 @@ import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.scheduler.SchedulerClock;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.time.OffsetDateTime;
 
 @Singleton
 public class SchedulerManager {
@@ -26,11 +29,24 @@ public class SchedulerManager {
     @Inject
     private TickDao tickDao;
 
+    private final Long RECOVER_LIMIT = 30l;
+
     public void start() {
         logger.info("Start SchedulerManager using LocalScheduler");
         Tick checkPoint = tickDao.getLatestCheckPoint();
-        logger.info("start clock checkPoint = {}",checkPoint);
-        schedulerClock.start(checkPoint);
+        if (checkPoint != null) {
+            OffsetDateTime now = DateTimeUtils.now();
+            OffsetDateTime recoverStartTime = now.plusMinutes(0 - RECOVER_LIMIT);
+            OffsetDateTime checkPointTime = checkPoint.toOffsetDateTime();
+            if(checkPointTime.compareTo(recoverStartTime) > 0){
+                recoverStartTime = checkPointTime;
+            }
+            logger.info("start clock checkPoint = {}", recoverStartTime);
+            schedulerClock.start(recoverStartTime);
+        } else {
+            logger.info("start clock");
+            schedulerClock.start();
+        }
         scheduler.schedule(taskGraph);
     }
 }

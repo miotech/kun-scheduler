@@ -4,6 +4,7 @@ public class SpecialTick extends Tick {
 
     public final static SpecialTick DIRECTLY_TICK = new SpecialTick("197001010000",TickType.DIRECTLY);
 
+
     private final TickType type;
 
     public SpecialTick(String dateTime) {
