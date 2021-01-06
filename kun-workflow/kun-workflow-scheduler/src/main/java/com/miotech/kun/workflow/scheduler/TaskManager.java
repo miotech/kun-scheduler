@@ -62,6 +62,7 @@ public class TaskManager {
         save(taskAttempts);
         logger.debug("TaskAttempts saved. total={}", taskAttempts.size());
         List<TaskAttempt> taskAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
+        logger.debug("fetch satisfy taskAttempt size = {}",taskAttemptList.size());
         for (TaskAttempt taskAttempt : taskAttemptList) {
             executor.submit(taskAttempt);
         }
