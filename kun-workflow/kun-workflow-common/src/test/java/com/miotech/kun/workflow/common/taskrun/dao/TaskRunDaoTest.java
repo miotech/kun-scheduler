@@ -46,7 +46,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     private List<TaskRun> prepareTaskRunsWithDependencyRelations() {
-        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;0>>2;1>>3;1>>3");
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;0>>2;1>>3;2>>3");
         for (Task task : taskList) {
             taskDao.create(task);
         }
@@ -101,11 +101,22 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         // Prepare
         Clock mockClock = getMockClock();
         DateTimeUtils.setClock(mockClock);
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
 
-        Task task = MockTaskFactory.createTask();
-        taskDao.create(task);
+        for (Task task : taskList) {
+            taskDao.create(task);
+        }
+        TaskRun taskRunA = MockTaskRunFactory.createTaskRun(1L, taskList.get(0))
+                .cloneBuilder()
+                .withDependentTaskRunIds(new ArrayList<>())
+                .withStartAt(DateTimeUtils.now().plusHours(-1))
+                .withEndAt(DateTimeUtils.now().plusHours(-1))
+                .withStatus(TaskRunStatus.SUCCESS)
+                .build();
 
-        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(1L, task)
+        taskRunDao.createTaskRun(taskRunA);
+
+        TaskRun sampleTaskRun = MockTaskRunFactory.createTaskRun(2L, taskList.get(1))
                 .cloneBuilder()
                 .withDependentTaskRunIds(Lists.newArrayList(Long.valueOf(1L)))
                 .build();
@@ -114,11 +125,13 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskRunDao.createTaskRun(sampleTaskRun);
 
         // Validate
-        Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchTaskRunById(1L);
+        Optional<TaskRun> persistedTaskRunOptional = taskRunDao.fetchTaskRunById(2L);
         assertTrue(persistedTaskRunOptional.isPresent());
 
         TaskRun persistedTaskRun = persistedTaskRunOptional.get();
-        assertThat(persistedTaskRun, sameBeanAs(sampleTaskRun));
+        assertThat(persistedTaskRun.getId(), is(sampleTaskRun.getId()));
+        assertThat(persistedTaskRun.getDependentTaskRunIds(),is(sampleTaskRun.getDependentTaskRunIds()));
+        assertThat(persistedTaskRun.getTask().getId(),is(sampleTaskRun.getTask().getId()));
     }
 
     @Test
@@ -532,7 +545,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     @Test
     public void fetchTaskRunsByFilter_withIdsFilter_shouldReturnFilteredTaskRuns() {
         // Prepare
-        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>1;1>2;2>3;3>4");
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;0>>2;1>>3;2>>3");
         for (Task task : taskList) {
             taskDao.create(task);
         }
@@ -565,7 +578,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     public void fetchTaskRunsByFilter_withTaskTags_shouldReturnFilteredTaskRuns() {
 
         // Prepare
-        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>1;1>2;2>3;3>4");
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;0>>2;1>>3;2>>3");
         List<Task> tagTaskList = new ArrayList<>();
         for (Task task : taskList) {
             // Prepare
@@ -614,7 +627,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         // Prepare
 
         // Prepare
-        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>1;1>2;2>3;3>4");
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;0>>2;1>>3;2>>3");
         List<Task> tagTaskList = new ArrayList<>();
         for (Task task : taskList) {
             // Prepare
@@ -656,7 +669,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     public void fetchTaskRunsByFilter_withIncludeStartedOnlyFlag_shouldFilterOutNonStarted() {
 
         // Prepare
-        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>1;1>2;2>3;3>4");
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;0>>2;1>>3;2>>3");
         List<Task> tagTaskList = new ArrayList<>();
         for (Task task : taskList) {
             // Prepare

@@ -61,7 +61,7 @@ public class TaskDao {
 
     private static final List<String> tickTaskCols = ImmutableList.of("task_id", "scheduled_tick");
 
-    private static final List<String> taskRelationCols = ImmutableList.of("upstream_task_id", "downstream_task_id", "dependency_function","dependency_level");
+    private static final List<String> taskRelationCols = ImmutableList.of("upstream_task_id", "downstream_task_id", "dependency_function", "dependency_level");
 
     private static final String TASK_ID_QUERY = " task_id = ? ";
     private final DatabaseOperator dbOperator;
@@ -791,11 +791,10 @@ public class TaskDao {
                 .asPrepared()
                 .getSQL();
 
-        dbOperator.transaction(() -> {
-            dbOperator.batch(tickTaskUpdateSql, taskToBeUpdated.stream().toArray(Object[][]::new));
-            dbOperator.batch(deleteTickTask, taskToBeDeleted.stream().toArray(Object[][]::new));
-            return true;
-        });
+
+        dbOperator.batch(tickTaskUpdateSql, taskToBeUpdated.stream().toArray(Object[][]::new));
+        dbOperator.batch(deleteTickTask, taskToBeDeleted.stream().toArray(Object[][]::new));
+
     }
 
     public Optional<Tick> fetchNextExecutionTickByTaskId(Long taskId) {

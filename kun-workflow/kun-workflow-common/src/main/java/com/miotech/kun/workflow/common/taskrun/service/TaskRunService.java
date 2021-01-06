@@ -43,7 +43,7 @@ public class TaskRunService {
     private Executor executor;
 
     @Inject
-    public TaskRunService(TaskRunDao taskRunDao,  ResourceLoader resourceLoader, Executor executor) {
+    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor) {
         this.taskRunDao = taskRunDao;
         this.resourceLoader = resourceLoader;
         this.executor = executor;
@@ -72,7 +72,7 @@ public class TaskRunService {
                                       final int attempt,
                                       final long startLine,
                                       final long endLine) {
-        Preconditions.checkArgument(startLine >=0, "startLine should larger or equal to 0");
+        Preconditions.checkArgument(startLine >= 0, "startLine should larger or equal to 0");
         Preconditions.checkArgument(endLine >= startLine, "endLine should not smaller than startLine");
 
         List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId);
@@ -83,16 +83,17 @@ public class TaskRunService {
             taskAttempt = attempts.stream()
                     .filter(x -> x.getAttempt() == attempt)
                     .findFirst()
-                    .orElseThrow(() -> new EntityNotFoundException("Cannot find log for attempt " + attempt ));
+                    .orElseThrow(() -> new EntityNotFoundException("Cannot find log for attempt " + attempt));
         } else {
             attempts.sort((o1, o2) -> o1.getAttempt() < o2.getAttempt() ? 1 : -1);
             taskAttempt = attempts.get(0);
         }
-        Resource resource = resourceLoader.getResource(taskAttempt.getLogPath());
-        if(resource == null){
+        if (taskAttempt == null) {
             List<String> logs = new ArrayList<>();
-            return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLine, startLine, logs);
+            return TaskRunLogVOFactory.create(taskRunId, 0, startLine, startLine, logs);
         }
+
+        Resource resource = resourceLoader.getResource(taskAttempt.getLogPath());
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
 
@@ -112,8 +113,8 @@ public class TaskRunService {
     }
 
     public TaskRunDAGVO getNeighbors(Long taskRunId, int upstreamLevel, int downstreamLevel) {
-        Preconditions.checkArgument(0 <= upstreamLevel && upstreamLevel <= 5 , "upstreamLevel should be non negative and no greater than 5");
-        Preconditions.checkArgument(0 <= downstreamLevel&& downstreamLevel <= 5, "downstreamLevel should be non negative and no greater than 5");
+        Preconditions.checkArgument(0 <= upstreamLevel && upstreamLevel <= 5, "upstreamLevel should be non negative and no greater than 5");
+        Preconditions.checkArgument(0 <= downstreamLevel && downstreamLevel <= 5, "downstreamLevel should be non negative and no greater than 5");
 
         TaskRun taskRun = findTaskRun(taskRunId);
         List<TaskRun> result = new ArrayList<>();
@@ -130,7 +131,7 @@ public class TaskRunService {
                 .collect(Collectors.toList());
         List<TaskRunDependencyVO> edges = result.stream()
                 .flatMap(x -> x.getDependentTaskRunIds().stream()
-                        .map(t -> new TaskRunDependencyVO(x.getId(),t)))
+                        .map(t -> new TaskRunDependencyVO(x.getId(), t)))
                 .collect(Collectors.toList());
         return new TaskRunDAGVO(nodes, edges);
     }

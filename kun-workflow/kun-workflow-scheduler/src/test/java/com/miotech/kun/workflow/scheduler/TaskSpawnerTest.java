@@ -195,12 +195,13 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         ArgumentCaptor<ch.qos.logback.classic.spi.ILoggingEvent> logCaptor = ArgumentCaptor.forClass(ch.qos.logback.classic.spi.ILoggingEvent.class);
 
+        taskSpawner.run(graph);
+
         //verify log
         verify(appender, atLeast(0)).doAppend(logCaptor.capture());
         String logs = logCaptor.getAllValues().stream().map(log -> log.getMessage()).collect(Collectors.joining(";"));
         assertThat(logs,containsString("create taskRun failed , taskId = {}"));
 
-        taskSpawner.run(graph);
 
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
@@ -282,7 +283,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         taskRunDao.createTaskRuns(Arrays.asList(taskRun));
         //taskSpawner restart
         taskSpawner.init();
-        schedulerClock.start(checkPoint);
+        schedulerClock.start(checkPoint.toOffsetDateTime());
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
@@ -318,7 +319,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         graph.updateTasksNextExecutionTick(tick, Arrays.asList(task));
         //taskSpawner restart
         taskSpawner.init();
-        schedulerClock.start(checkPoint);
+        schedulerClock.start(checkPoint.toOffsetDateTime());
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
@@ -354,7 +355,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         tickDao.saveCheckPoint(tick);
         //taskSpawner restart
         taskSpawner.init();
-        schedulerClock.start(checkPoint);
+        schedulerClock.start(checkPoint.toOffsetDateTime());
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
         // verify
         await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
