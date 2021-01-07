@@ -1,6 +1,5 @@
-import React, { memo, useMemo } from 'react';
-import { Table, Card, message, Checkbox, Space } from 'antd';
-import { history } from 'umi';
+import React, { memo, useEffect, useMemo, useState } from 'react';
+import { Table, Card, Checkbox, Space } from 'antd';
 import dayjs from 'dayjs';
 import isNil from 'lodash/isNil';
 import useI18n from '@/hooks/useI18n';
@@ -10,7 +9,7 @@ import { ColumnProps } from 'antd/es/table';
 import { DevTaskDetail } from '@/services/monitoring-dashboard';
 import { TableOnChangeCallback } from '@/definitions/common-types';
 import getUniqId from '@/utils/getUniqId';
-import { getTaskDefinitionIdByWorkflowTaskId } from '@/services/task-deployments/deployed-tasks';
+import { getTaskDefinitionIdByWorkflowIds } from '@/services/task-deployments/deployed-tasks';
 
 interface OwnProps {
   pageNum: number;
@@ -28,12 +27,57 @@ interface OwnProps {
 
 type Props = OwnProps;
 
+function getComputedLinkHref(
+  taskDefIdsMap: Record<string, string | null>,
+  taskId: string,
+): string {
+  if (!taskDefIdsMap[taskId]) {
+    return '#';
+  }
+  // else
+  return SafeUrlAssembler()
+    .template('/operation-center/scheduled-tasks/:taskDefId')
+    .param({
+      taskDefId: taskDefIdsMap[taskId],
+    })
+    .toString();
+}
+
 export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
   props,
 ) {
   const { data, pageNum, pageSize, total, onChange, loading } = props;
 
+  const [definitionIdsLoading, setDefinitionIdsLoading] = useState<boolean>(
+    false,
+  );
+  const [
+    workflowIdToTaskDefinitionIdMap,
+    setWorkflowIdToTaskDefinitionIdMap,
+  ] = useState<Record<string, string | null>>({});
+
   const t = useI18n();
+
+  const workflowIds = useMemo(() => {
+    return (data || []).map(datum => datum.taskId);
+  }, [data]);
+
+  useEffect(() => {
+    setDefinitionIdsLoading(true);
+    const effectAsync = async () => {
+      try {
+        if (workflowIds.length) {
+          const workflowIdToTaskDefIdMapPayload = await getTaskDefinitionIdByWorkflowIds(
+            workflowIds,
+          );
+          setWorkflowIdToTaskDefinitionIdMap(workflowIdToTaskDefIdMapPayload);
+        }
+      } finally {
+        setDefinitionIdsLoading(false);
+      }
+    };
+    effectAsync();
+  }, [workflowIds]);
 
   const columns: ColumnProps<DevTaskDetail>[] = useMemo(
     () => [
@@ -51,32 +95,21 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         title: t(
           'monitoringDashboard.dataDevelopment.taskDetailsTable.taskName',
         ),
-        render: ((txt, record) => {
+        render: (txt, record) => {
+          const linkHref = getComputedLinkHref(
+            workflowIdToTaskDefinitionIdMap,
+            record.taskId,
+          );
+          if (linkHref === '#') {
+            return <span>{record.taskName}</span>;
+          }
+          // else
           return (
-            <a
-              href="#"
-              onClick={async () => {
-                const dismiss = message.loading('Loading...', 0);
-                const taskDefinitionId = await getTaskDefinitionIdByWorkflowTaskId(record.taskId);
-                if (taskDefinitionId) {
-                  history.push(
-                    SafeUrlAssembler()
-                      .template('/data-development/task-definition/:taskDefId')
-                      .param({
-                        taskDefId: taskDefinitionId,
-                      })
-                      .toString(),
-                  );
-                } else {
-                  message.error(`Cannot find related task definition for: ${record.taskName}`);
-                }
-                dismiss();
-              }}
-            >
+            <a href={linkHref} rel="noopener nofollow">
               {record.taskName}
             </a>
           );
-        }),
+        },
       },
       {
         dataIndex: 'taskStatus',
@@ -135,7 +168,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         ),
       },
     ],
-    [t, pageNum, pageSize],
+    [t, pageNum, pageSize, workflowIdToTaskDefinitionIdMap],
   );
 
   return (
@@ -148,33 +181,41 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
             {/* Radio button: display started tasks only */}
             <Checkbox
               disabled={props.displayStartedOnlyDisabled || false}
-              checked={(!props.displayStartedOnlyDisabled) ? (props.displayStartedOnly || false) : false}
-              onChange={(e) => {
+              checked={
+                !props.displayStartedOnlyDisabled
+                  ? props.displayStartedOnly || false
+                  : false
+              }
+              onChange={e => {
                 const { checked } = e.target;
                 if (props.onChangeDisplayStartedOnly) {
                   props.onChangeDisplayStartedOnly(checked);
                 }
               }}
             >
-              {t('monitoringDashboard.dataDevelopment.taskDetailsTable.displayStartedOnly')}
+              {t(
+                'monitoringDashboard.dataDevelopment.taskDetailsTable.displayStartedOnly',
+              )}
             </Checkbox>
             {/* Radio button: display tasks in 24 hours only */}
             <Checkbox
               checked={props.displayLast24HoursOnly || false}
-              onChange={(e) => {
+              onChange={e => {
                 const { checked } = e.target;
                 if (props.onChangeDisplayLast24HoursOnly) {
                   props.onChangeDisplayLast24HoursOnly(checked);
                 }
               }}
             >
-              {t('monitoringDashboard.dataDevelopment.taskDetailsTable.display24HoursOnly')}
+              {t(
+                'monitoringDashboard.dataDevelopment.taskDetailsTable.display24HoursOnly',
+              )}
             </Checkbox>
           </Space>
         </span>
       </h3>
       <Table<DevTaskDetail>
-        loading={loading}
+        loading={loading || definitionIdsLoading}
         dataSource={data}
         size="small"
         columns={columns}
