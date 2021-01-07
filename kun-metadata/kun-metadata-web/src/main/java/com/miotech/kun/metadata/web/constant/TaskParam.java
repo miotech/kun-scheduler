@@ -1,31 +1,23 @@
 package com.miotech.kun.metadata.web.constant;
 
-import com.google.common.base.Preconditions;
-
 public enum TaskParam {
-    AUTO(WorkflowApiParam.DATA_BUILDER_TASK_AUTO, PropKey.TASK_ID_AUTO),
-    MANUAL(WorkflowApiParam.DATA_BUILDER_TASK_MANUAL, PropKey.TASK_ID_MANUAL);
+    MCE_TASK("mce-task"),
+    MSE_TASK("mse-task")
+    ;
 
     private String name;
-    private String taskKey;
+
+    TaskParam(String name) {
+        this.name = name;
+    }
 
     public String getName() {
         return name;
     }
 
-    public String getTaskKey() {
-        return taskKey;
-    }
-
-    TaskParam(String name, String taskKey) {
-        this.name = name;
-        this.taskKey = taskKey;
-    }
-
-    public static TaskParam get(String name) {
-        Preconditions.checkNotNull(name);
+    public static TaskParam convert(String name) {
         for (TaskParam value : values()) {
-            if (name.equals(value.name)) {
+            if (value.getName().equals(name)) {
                 return value;
             }
         }

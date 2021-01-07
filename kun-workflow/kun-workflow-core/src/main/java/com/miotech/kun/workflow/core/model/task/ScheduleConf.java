@@ -45,16 +45,16 @@ public class ScheduleConf {
         return Objects.hash(type, cronExpr);
     }
 
+    public static ScheduleConfBuilder newBuilder() {
+        return new ScheduleConfBuilder();
+    }
+
     @JsonPOJOBuilder
     public static final class ScheduleConfBuilder {
         private ScheduleType type;
         private String cronExpr;
 
         private ScheduleConfBuilder() {
-        }
-
-        public static ScheduleConfBuilder aScheduleConf() {
-            return new ScheduleConfBuilder();
         }
 
         public ScheduleConfBuilder withType(ScheduleType type) {

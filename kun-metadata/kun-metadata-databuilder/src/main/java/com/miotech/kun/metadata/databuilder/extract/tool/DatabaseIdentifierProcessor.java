@@ -10,9 +10,9 @@ public class DatabaseIdentifierProcessor {
     public static String escape(String name, DatabaseType dbType) {
         switch (dbType) {
             case ATHENA:
+            case POSTGRES:
                 return "\"" + name + "\"";
             case HIVE:
-            case POSTGRES:
             case PRESTO:
                 return "`" + name + "`";
             default:

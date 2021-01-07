@@ -1,0 +1,55 @@
+package com.miotech.kun.metadata.databuilder.extract.impl.arango;
+
+import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.DatasetFieldStat;
+import com.miotech.kun.metadata.core.model.DatasetStat;
+import com.miotech.kun.metadata.databuilder.client.ArangoClient;
+import com.miotech.kun.metadata.databuilder.extract.stat.DatasetStatExtractor;
+import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
+import com.miotech.kun.metadata.databuilder.model.DataSource;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+public class ArangoStatExtractor extends ArangoExistenceExtractor implements DatasetStatExtractor {
+
+    @Override
+    public Dataset extract(Dataset dataset, DataSource dataSource) {
+        ArangoDataSource arangoDataSource = (ArangoDataSource) dataSource;
+        ArangoClient arangoClient = null;
+        Dataset.Builder resultBuilder = Dataset.newBuilder().withGid(dataset.getGid());
+        try {
+            arangoClient = new ArangoClient(arangoDataSource);
+            final ArangoClient finalArangoClient = arangoClient;
+
+            List<DatasetFieldStat> fieldStats = dataset.getFields().stream().map(field -> {
+                String query = String.format("FOR c IN %s FILTER c.%s != NULL COLLECT WITH COUNT INTO length RETURN length", dataset.getName(), field.getName());
+                Integer count = finalArangoClient.count(dataset.getDatabaseName(), query);
+                return DatasetFieldStat.newBuilder()
+                        .withFieldName(field.getName())
+                        .withNonnullCount(count)
+                        .withStatDate(LocalDateTime.now()).build();
+            }).collect(Collectors.toList());
+            resultBuilder.withFieldStats(fieldStats);
+
+            String query = String.format("RETURN LENGTH(%s)", dataset.getName());
+            Integer count = finalArangoClient.count(dataset.getDatabaseName(), query);
+            resultBuilder.withDatasetStat(DatasetStat.newBuilder()
+                    .withRowCount(count)
+                    .withStatDate(LocalDateTime.now())
+                    .withLastUpdatedTime(getLastUpdateTime())
+                    .build());
+
+            return resultBuilder.build();
+        } catch (Exception e) {
+            throw ExceptionUtils.wrapIfChecked(e);
+        } finally {
+            if (arangoClient != null) {
+                arangoClient.close();
+            }
+        }
+    }
+
+}
