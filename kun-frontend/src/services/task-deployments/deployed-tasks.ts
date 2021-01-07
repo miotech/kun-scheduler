@@ -1,17 +1,26 @@
 import { get } from '@/utils/requestUtils';
 import { API_DATA_PLATFORM_PREFIX } from '@/constants/api-prefixes';
 
-import { PaginationReqBody, PaginationRespBody, ServiceRespPromise } from '@/definitions/common-types';
+import {
+  PaginationReqBody,
+  PaginationRespBody,
+  ServiceRespPromise,
+} from '@/definitions/common-types';
 import { TaskRun, TaskRunDAG, TaskRunLog } from '@/definitions/TaskRun.type';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
-import { DeployedTask, DeployedTaskDAG, DeployedTaskDetail } from '@/definitions/DeployedTask.type';
+import {
+  DeployedTask,
+  DeployedTaskDAG,
+  DeployedTaskDetail,
+} from '@/definitions/DeployedTask.type';
 
 /**
  * GET /deploy-taskruns
  * Search scheduled taskruns
  */
 
-export interface FetchScheduledTaskRunsReqParams extends Partial<PaginationReqBody> {
+export interface FetchScheduledTaskRunsReqParams
+  extends Partial<PaginationReqBody> {
   name?: string;
   definitionsIds?: string[];
   ownerId?: (number | string)[];
@@ -19,7 +28,9 @@ export interface FetchScheduledTaskRunsReqParams extends Partial<PaginationReqBo
   taskTemplateName?: string;
 }
 
-export async function fetchScheduledTaskRuns(reqParams: FetchScheduledTaskRunsReqParams = {}): ServiceRespPromise<PaginationRespBody<TaskRun>> {
+export async function fetchScheduledTaskRuns(
+  reqParams: FetchScheduledTaskRunsReqParams = {},
+): ServiceRespPromise<PaginationRespBody<TaskRun>> {
   return get('/deployed-taskruns', {
     query: { ...reqParams },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -32,7 +43,9 @@ export async function fetchScheduledTaskRuns(reqParams: FetchScheduledTaskRunsRe
  * Get detail of scheduled taskrun
  */
 
-export async function fetchDetailedScheduledTaskRun(taskRunId: string): ServiceRespPromise<TaskRun> {
+export async function fetchDetailedScheduledTaskRun(
+  taskRunId: string,
+): ServiceRespPromise<TaskRun> {
   return get('/deployed-taskruns/:id', {
     pathParams: { id: taskRunId },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -44,7 +57,9 @@ export async function fetchDetailedScheduledTaskRun(taskRunId: string): ServiceR
  * Get log of scheduled taskrun
  */
 
-export async function fetchScheduledTaskRunLog(taskRunId: string): ServiceRespPromise<TaskRunLog> {
+export async function fetchScheduledTaskRunLog(
+  taskRunId: string,
+): ServiceRespPromise<TaskRunLog> {
   return get('/deployed-taskruns/:id/log', {
     pathParams: { id: taskRunId },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -56,7 +71,8 @@ export async function fetchScheduledTaskRunLog(taskRunId: string): ServiceRespPr
  * Search deployed tasks
  */
 
-export interface FetchDeployedTasksReqParams extends Partial<PaginationReqBody> {
+export interface FetchDeployedTasksReqParams
+  extends Partial<PaginationReqBody> {
   name?: string;
   definitionsIds?: string[];
   ownerId?: (number | string)[];
@@ -65,7 +81,9 @@ export interface FetchDeployedTasksReqParams extends Partial<PaginationReqBody> 
   workflowTaskIds?: string[];
 }
 
-export async function fetchDeployedTasks(reqParams: FetchDeployedTasksReqParams): ServiceRespPromise<PaginationRespBody<DeployedTask>> {
+export async function fetchDeployedTasks(
+  reqParams: FetchDeployedTasksReqParams,
+): ServiceRespPromise<PaginationRespBody<DeployedTask>> {
   return get('/deployed-tasks', {
     query: { ...reqParams },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -73,7 +91,9 @@ export async function fetchDeployedTasks(reqParams: FetchDeployedTasksReqParams)
   });
 }
 
-export async function getTaskDefinitionIdByWorkflowTaskId(workflowTaskId: string): Promise<string | null> {
+export async function getTaskDefinitionIdByWorkflowTaskId(
+  workflowTaskId: string,
+): Promise<string | null> {
   return get<PaginationRespBody<DeployedTask>>('/deployed-tasks', {
     query: {
       workflowTaskIds: [workflowTaskId],
@@ -89,12 +109,40 @@ export async function getTaskDefinitionIdByWorkflowTaskId(workflowTaskId: string
   });
 }
 
+export async function getTaskDefinitionIdByWorkflowIds(
+  workflowTaskIds: string[],
+): Promise<Record<string, string | null>> {
+  return get<PaginationRespBody<DeployedTask>>('/deployed-tasks', {
+    query: {
+      workflowTaskIds: [...workflowTaskIds],
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
+    mockCode: 'deployed-tasks.search',
+  }).then(data => {
+    const ret: Record<string, string | null> = {};
+    workflowTaskIds.forEach(workflowTaskId => {
+      const item = data.records.find(
+        record => record.workflowTaskId === workflowTaskId,
+      );
+      if (item) {
+        ret[workflowTaskId] = item.taskDefinitionId;
+      } else {
+        ret[workflowTaskId] = null;
+      }
+    });
+    // else
+    return ret;
+  });
+}
+
 /**
  * GET /deployed-tasks/{id}
  * Get deployed task
  */
 
-export async function fetchDeployedTaskDetail(deployedTaskId: string): ServiceRespPromise<DeployedTaskDetail> {
+export async function fetchDeployedTaskDetail(
+  deployedTaskId: string,
+): ServiceRespPromise<DeployedTaskDetail> {
   return get('/deployed-tasks/:id', {
     pathParams: { id: deployedTaskId },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -131,14 +179,17 @@ export async function fetchDeployedTaskDAG(
  * Search task runs of deployed task
  */
 
-export interface FetchTaskRunsOfDeployedTaskReqParams extends Partial<PaginationReqBody> {
+export interface FetchTaskRunsOfDeployedTaskReqParams
+  extends Partial<PaginationReqBody> {
   id: string;
   startTime?: string;
   endTime?: string;
   status?: RunStatusEnum;
 }
 
-export async function fetchTaskRunsOfDeployedTask(reqParams: FetchTaskRunsOfDeployedTaskReqParams): ServiceRespPromise<PaginationRespBody<TaskRun>> {
+export async function fetchTaskRunsOfDeployedTask(
+  reqParams: FetchTaskRunsOfDeployedTaskReqParams,
+): ServiceRespPromise<PaginationRespBody<TaskRun>> {
   const { id, ...restParams } = reqParams;
   return get('/deployed-tasks/:id/taskruns', {
     pathParams: { id },
