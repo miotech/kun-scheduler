@@ -117,14 +117,14 @@ public class DeployedTaskDao {
         List<Long> ownerIds = searchRequest.getOwnerIds();
         if (!ownerIds.isEmpty()) {
             whereClause.append(" AND ");
-            whereClause.append(String.format(DEPLOYED_TASK_MODEL_NAME + ".owner in (%s)", StringUtils.repeat("?", ownerIds.size())));
+            whereClause.append(String.format(DEPLOYED_TASK_MODEL_NAME + ".owner in (%s)", StringUtils.repeat("?", ",", ownerIds.size())));
             params.addAll(ownerIds);
         }
 
         List<Long> definitionIds = searchRequest.getDefinitionIds();
         if (!definitionIds.isEmpty()) {
             whereClause.append(" AND ");
-            whereClause.append(String.format( "%s.%s in (%s)", DEPLOYED_TASK_MODEL_NAME, DEFINITION_ID, StringUtils.repeat("?", definitionIds.size())));
+            whereClause.append(String.format( "%s.%s in (%s)", DEPLOYED_TASK_MODEL_NAME, DEFINITION_ID, StringUtils.repeat("?", ",", definitionIds.size())));
             params.addAll(definitionIds);
         }
 
@@ -143,7 +143,7 @@ public class DeployedTaskDao {
         List<Long> workflowTaskIds = searchRequest.getWorkflowTaskIds();
         if (Objects.nonNull(workflowTaskIds) && (!workflowTaskIds.isEmpty())) {
             whereClause.append(" AND ");
-            whereClause.append(String.format( "%s.%s in (%s)", DEPLOYED_TASK_MODEL_NAME, WORKFLOW_TASK_ID, StringUtils.repeat("?", workflowTaskIds.size())));
+            whereClause.append(String.format( "%s.%s in (%s)", DEPLOYED_TASK_MODEL_NAME, WORKFLOW_TASK_ID, StringUtils.repeat("?", ",", workflowTaskIds.size())));
             params.addAll(workflowTaskIds);
         }
 
