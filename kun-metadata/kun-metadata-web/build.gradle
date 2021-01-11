@@ -9,6 +9,7 @@ sourceSets {
 }
 
 dependencies {
+    implementation project(':kun-app-common')
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-commons:kun-commons-testing")
     implementation project(":kun-commons:kun-commons-utils")
@@ -39,6 +40,9 @@ dependencies {
     implementation "org.apache.dubbo:dubbo"
     implementation 'org.apache.dubbo:dubbo-registry-redis'
     implementation "org.apache.commons:commons-pool2"
+    implementation "org.apache.kafka:kafka-clients"
+    implementation 'com.squareup.okhttp3:okhttp'
+    implementation 'com.googlecode.json-simple:json-simple'
 
     testImplementation "junit:junit"
     testRuntimeOnly "org.mockito:mockito-core"

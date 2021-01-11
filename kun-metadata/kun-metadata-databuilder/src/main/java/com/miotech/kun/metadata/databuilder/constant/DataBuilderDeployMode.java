@@ -6,7 +6,8 @@ public enum  DataBuilderDeployMode {
 
     ALL,
     DATASOURCE,
-    DATASET;
+    DATASET,
+    PUSH;
 
     public static DataBuilderDeployMode resolve(String method) {
         Preconditions.checkNotNull(method);

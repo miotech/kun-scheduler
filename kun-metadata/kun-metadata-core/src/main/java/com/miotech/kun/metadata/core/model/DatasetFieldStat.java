@@ -9,7 +9,7 @@ public class DatasetFieldStat implements Serializable {
     @JsonIgnore
     private static final long serialVersionUID = -1603335393385L;
 
-    private final String name;
+    private final String fieldName;
 
     private final long distinctCount;
 
@@ -19,8 +19,8 @@ public class DatasetFieldStat implements Serializable {
 
     private final LocalDateTime statDate;
 
-    public String getName() {
-        return name;
+    public String getFieldName() {
+        return fieldName;
     }
 
     public long getDistinctCount() {
@@ -39,8 +39,8 @@ public class DatasetFieldStat implements Serializable {
         return statDate;
     }
 
-    public DatasetFieldStat(String name, long distinctCount, long nonnullCount, String updatedBy, LocalDateTime statDate) {
-        this.name = name;
+    public DatasetFieldStat(String fieldName, long distinctCount, long nonnullCount, String updatedBy, LocalDateTime statDate) {
+        this.fieldName = fieldName;
         this.distinctCount = distinctCount;
         this.nonnullCount = nonnullCount;
         this.updatedBy = updatedBy;
@@ -52,14 +52,14 @@ public class DatasetFieldStat implements Serializable {
     }
 
     public static final class Builder {
-        private String name;
+        private String fieldName;
         private long distinctCount;
         private long nonnullCount;
         private String updatedBy;
         private LocalDateTime statDate;
 
-        public Builder withName(String name) {
-            this.name = name;
+        public Builder withFieldName(String fieldName) {
+            this.fieldName = fieldName;
             return this;
         }
 
@@ -84,7 +84,7 @@ public class DatasetFieldStat implements Serializable {
         }
 
         public DatasetFieldStat build() {
-            return new DatasetFieldStat(name, distinctCount, nonnullCount, updatedBy, statDate);
+            return new DatasetFieldStat(fieldName, distinctCount, nonnullCount, updatedBy, statDate);
         }
     }
 }

@@ -14,6 +14,6 @@ public interface Extractor {
      * Get All the table metadata
      * @return
      */
-    Iterator<Dataset> extract();
+    Iterator<Dataset> extract() throws Exception;
 
 }
