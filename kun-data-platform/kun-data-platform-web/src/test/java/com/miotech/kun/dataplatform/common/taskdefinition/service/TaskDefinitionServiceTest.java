@@ -2,14 +2,13 @@ package com.miotech.kun.dataplatform.common.taskdefinition.service;
 
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.common.commit.vo.CommitRequest;
+import com.miotech.kun.dataplatform.common.deploy.dao.DeployedTaskDao;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskRelationDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.*;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
-import com.miotech.kun.dataplatform.model.deploy.Deploy;
-import com.miotech.kun.dataplatform.model.deploy.DeployCommit;
-import com.miotech.kun.dataplatform.model.deploy.DeployStatus;
+import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.model.taskdefinition.*;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -32,8 +31,6 @@ import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
-// TODO: figure out a solution to bootstrap Workflow facade related tests
-@Ignore
 @WithMockTestUser
 public class TaskDefinitionServiceTest extends AppTestBase {
 
@@ -51,6 +48,9 @@ public class TaskDefinitionServiceTest extends AppTestBase {
 
     @Autowired
     private DeployService deployService;
+
+    @Autowired
+    private DeployedTaskDao deployedTaskDao;
 
     @Test
     public void find() {
@@ -137,7 +137,8 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertEquals(upstreamTaskDefinition.getDefinitionId(), taskRelation.getUpstreamId());
         assertEquals(taskDefinition.getDefinitionId(), taskRelation.getDownstreamId());
     }
-
+    // TODO: solve this test case by mocking `workflowClient.executeTask` method
+    @Ignore
     @Test
     public void testRun_ok() {
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
@@ -168,6 +169,8 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         }
     }
 
+    // TODO: solve this test case by mocking `workflowClient.executeTask` method
+    @Ignore
     @Test
     public void testStop_ok() {
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
@@ -188,6 +191,8 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(taskRun.getStatus(), is(ABORTED));
     }
 
+    // TODO: solve this test case by mocking `workflowClient.executeTask` method
+    @Ignore
     @Test
     public void test_RunLog_ok() {
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
@@ -269,6 +274,8 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(vo.getUpstreamTaskDefinitions().get(0).getName(), is(""));
     }
 
+    // TODO: solve this test case by mocking `workflowClient.getTaskDAG` method
+    @Ignore
     @Test
     public void test_delete(){
         // prepare
@@ -348,5 +355,41 @@ public class TaskDefinitionServiceTest extends AppTestBase {
     public void test_deploy_fail_when_upstream_not_deployed(){
         // task relation should be removed as well when delete task
         //need mock workflow
+    }
+
+    @Test
+    public void updateTaskDefinition_withNameUpdated_shouldAlsoUpdateDeployedTaskNames() {
+        // 1. Prepare
+        // Mock task definition
+        assertTrue(Objects.nonNull(jdbcTemplate));
+
+        TaskDefinition taskDef = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDef);
+        // Mock deploy task definition
+        deployService.deployFast(
+                taskDef.getDefinitionId(),
+                new CommitRequest(taskDef.getDefinitionId(), "Test deployment")
+        );
+
+        // 2. Process
+        // Update task definition with name changed
+        String originalName = taskDef.getName();
+        String renamedName = "foobar";
+        TaskDefinition updatedTaskDefinition = taskDef.cloneBuilder().withName(renamedName).build();
+        UpdateTaskDefinitionRequest updateRequest = new UpdateTaskDefinitionRequest(
+                taskDef.getDefinitionId(),
+                renamedName,
+                taskDef.getTaskPayload(),
+                taskDef.getOwner()
+        );
+        taskDefinitionService.update(taskDef.getDefinitionId(), updateRequest);
+
+        // 3. Validate
+        TaskDefinition persistedTaskDef = taskDefinitionService.find(taskDef.getDefinitionId());
+        assertThat(persistedTaskDef.getName(), is(renamedName));
+
+        Optional<DeployedTask> deployedTask = deployedTaskDao.fetchById(taskDef.getDefinitionId());
+        assertTrue(deployedTask.isPresent());
+        assertThat(deployedTask.get().getName(), is(renamedName));
     }
 }

@@ -4,8 +4,10 @@ import com.google.common.collect.Lists;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.ConfigKey;
 import com.miotech.kun.workflow.client.model.Operator;
+import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.operator.OperatorUpload;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
 @Configuration
@@ -47,6 +50,15 @@ public class TestWorkflowConfig {
         doReturn(Optional.of(getMockOperator())).when(mockClient).getOperator(anyString());
 
         doReturn(getMockOperator()).when(mockClient).getOperator(anyLong());
+
+        doAnswer((invocation) -> {
+            Task task = invocation.getArgument(0);
+            List<Tag> filterTags = invocation.getArgument(1);
+            return task.cloneBuilder()
+                    .withId(task.getId() == null ? WorkflowIdGenerator.nextTaskId() : task.getId())
+                    .withTags(filterTags)
+                    .build();
+        }).when(mockClient).saveTask(any(), any());
 
         return mockClient;
     }

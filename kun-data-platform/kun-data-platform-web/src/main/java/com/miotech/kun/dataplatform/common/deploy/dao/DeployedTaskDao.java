@@ -57,6 +57,11 @@ public class DeployedTaskDao {
     }
 
     public Optional<DeployedTask> fetchById(Long definitionId) {
+        // SELECT taskcommit.id AS taskcommit_id, taskcommit.task_def_id AS taskcommit_task_def_id, taskcommit.version AS taskcommit_version, taskcommit.message AS taskcommit_message, taskcommit.snapshot AS taskcommit_snapshot, taskcommit.committer AS taskcommit_committer, taskcommit.committed_at AS taskcommit_committed_at, taskcommit.commit_type AS taskcommit_commit_type, taskcommit.commit_status AS taskcommit_commit_status, taskcommit.is_latest AS taskcommit_is_latest, deployedtask.id AS deployedtask_id, deployedtask.definition_id AS deployedtask_definition_id, deployedtask.name AS deployedtask_name, deployedtask.task_template_name AS deployedtask_task_template_name, deployedtask.wf_task_id AS deployedtask_wf_task_id, deployedtask.owner AS deployedtask_owner, deployedtask.commit_id AS deployedtask_commit_id, deployedtask.is_archived AS deployedtask_is_archived
+        // FROM kun_dp_deployed_task AS deployedtask
+        // INNER JOIN kun_dp_task_commit AS taskcommit
+        // ON deployedtask.commit_id = taskcommit.id
+        // WHERE deployedtask.definition_id= ?
         String sql = getSelectSQL(String.format(" %s.%s= ?", DEPLOYED_TASK_MODEL_NAME, DEFINITION_ID));
         List<DeployedTask> deployedTasks = jdbcTemplate.query(sql, DeployedTaskMapper.INSTANCE, definitionId);
         return deployedTasks.stream().findAny();

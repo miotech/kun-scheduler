@@ -4,6 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.dataplatform.common.commit.service.TaskCommitService;
 import com.miotech.kun.dataplatform.common.datastore.service.DatasetService;
+import com.miotech.kun.dataplatform.common.deploy.dao.DeployDao;
+import com.miotech.kun.dataplatform.common.deploy.dao.DeployedTaskDao;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeployRequest;
@@ -44,6 +46,12 @@ import java.util.stream.Collectors;
 @Service
 @Slf4j
 public class TaskDefinitionService extends BaseSecurityService {
+
+    @Autowired
+    private DeployDao deployDao;
+
+    @Autowired
+    private DeployedTaskDao deployedTaskDao;
 
     @Autowired
     private TaskDefinitionDao taskDefinitionDao;
@@ -155,6 +163,19 @@ public class TaskDefinitionService extends BaseSecurityService {
                 .withUpdateTime(DateTimeUtils.now())
                 .build();
         taskDefinitionDao.update(updated);
+
+        // If name has been updated, all related deployed tasks and deployments should also be updated.
+        if (!Objects.equals(request.getName(), taskDefinition.getName())) {
+            // update deployed tasks
+            Optional<DeployedTask> deployedTaskOptional = deployedTaskDao.fetchById(definitionId);
+            if (deployedTaskOptional.isPresent()) {
+                DeployedTask updatedDeployTask = deployedTaskOptional.get()
+                        .cloneBuilder()
+                        .withName(request.getName())
+                        .build();
+                deployedTaskDao.update(updatedDeployTask);
+            }
+        }
 
         // update output datasets
         // TODO: validate datasets
