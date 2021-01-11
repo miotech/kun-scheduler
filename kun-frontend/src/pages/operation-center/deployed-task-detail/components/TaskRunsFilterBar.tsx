@@ -3,7 +3,11 @@ import c from 'clsx';
 import { Link } from 'umi';
 import { Space, DatePicker, Button } from 'antd';
 import moment, { Moment } from 'moment';
-import { LeftOutlined, ReloadOutlined } from '@ant-design/icons';
+import {
+  ArrowLeftOutlined,
+  LeftOutlined,
+  ReloadOutlined,
+} from '@ant-design/icons';
 
 import useI18n from '@/hooks/useI18n';
 import { StatusFilterSelect } from '@/components/StatusFilterSelect';
@@ -12,8 +16,8 @@ import { TaskRunListFilter } from '@/rematch/models/operationCenter/deployedTask
 import { RootDispatch } from '@/rematch/store';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 
-import styles from './TaskRunsFilterBar.less';
 import SafeUrlAssembler from 'safe-url-assembler';
+import styles from './TaskRunsFilterBar.less';
 
 export interface TaskRunsFilterBarProps {
   filter: TaskRunListFilter;
@@ -22,19 +26,20 @@ export interface TaskRunsFilterBarProps {
   taskDefId?: string;
 }
 
-const TaskRunsFilterBar: FunctionComponent<TaskRunsFilterBarProps> = (props) => {
+const TaskRunsFilterBar: FunctionComponent<TaskRunsFilterBarProps> = props => {
   const t = useI18n();
 
   const { filter, dispatch, onClickRefresh } = props;
 
-  const handleTimeRangeFilterChange = useCallback((dates?: [Moment, Moment]) => {
-    dispatch.deployedTaskDetail.updateFilter({
-      startTime: dates?.[0] || null,
-      endTime: dates?.[1] || null,
-    });
-  }, [
-    dispatch
-  ]);
+  const handleTimeRangeFilterChange = useCallback(
+    (dates?: [Moment, Moment]) => {
+      dispatch.deployedTaskDetail.updateFilter({
+        startTime: dates?.[0] || null,
+        endTime: dates?.[1] || null,
+      });
+    },
+    [dispatch],
+  );
 
   return (
     <nav id="taskruns-filter-bar" className={styles.TaskRunsFilterBar}>
@@ -78,7 +83,7 @@ const TaskRunsFilterBar: FunctionComponent<TaskRunsFilterBarProps> = (props) => 
                 moment().endOf('month'),
               ],
             }}
-            allowEmpty={[ true, true ]}
+            allowEmpty={[true, true]}
             allowClear
             showNow
             showTime
@@ -89,18 +94,20 @@ const TaskRunsFilterBar: FunctionComponent<TaskRunsFilterBarProps> = (props) => 
         </span>
       </Space>
       <span className={c(styles.FilterItemBlock, styles.RefreshBtnWrapper)}>
-        <Button
-          icon={<ReloadOutlined />}
-          onClick={onClickRefresh}
-        >
+        <Button icon={<ReloadOutlined />} onClick={onClickRefresh}>
           {t('common.refresh')}
         </Button>
       </span>
       <span className={c(styles.FilterItemBlock, styles.JumpToDefBtnWrapper)}>
-        <Link to={SafeUrlAssembler().template('/data-development/task-definition/:taskDefId').param({
-          taskDefId: props.taskDefId || '',
-        }).toString()}>
-          <Button>
+        <Link
+          to={SafeUrlAssembler()
+            .template('/data-development/task-definition/:taskDefId')
+            .param({
+              taskDefId: props.taskDefId || '',
+            })
+            .toString()}
+        >
+          <Button icon={<ArrowLeftOutlined />}>
             {t('scheduledTasks.jumpToTaskDef')}
           </Button>
         </Link>
