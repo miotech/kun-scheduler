@@ -1,7 +1,6 @@
 package com.miotech.kun.metadata.databuilder.extract.tool;
 
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
-import com.miotech.kun.metadata.databuilder.extract.tool.DatabaseIdentifierProcessor;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -33,7 +32,7 @@ public class DatabaseIdentifierProcessorTest {
     public void testProcessTableNameIdentifier_postgres() {
         String tableName = "table";
         String tableNameIdentifier = DatabaseIdentifierProcessor.escape(tableName, DatabaseType.POSTGRES);
-        MatcherAssert.assertThat(String.format("`%s`", tableName), Matchers.is(tableNameIdentifier));
+        MatcherAssert.assertThat(String.format("\"%s\"", tableName), Matchers.is(tableNameIdentifier));
     }
 
     @Test

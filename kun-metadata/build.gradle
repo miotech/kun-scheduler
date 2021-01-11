@@ -35,19 +35,29 @@ task buildOperator (type:Exec){
     commandLine "./gradlew",":kun-metadata:kun-metadata-databuilder:shadowJar"
 }
 
-task copyOperator(type: Copy){
+task copyMCEOperator(type: Copy){
     from "kun-metadata-databuilder/build/libs/databuilder-operator-1.0.jar"
     rename {
-        "databuilder-operator.jar"
+        "mce-operator.jar"
     }
     into "kun-metadata-web/src/main/resources"
     dependsOn(buildOperator)
 }
 
-compileJava.dependsOn(copyOperator)
+task copyMSEOperator(type: Copy){
+    from "kun-metadata-databuilder/build/libs/databuilder-operator-1.0.jar"
+    rename {
+        "mse-operator.jar"
+    }
+    into "kun-metadata-web/src/main/resources"
+    dependsOn(buildOperator)
+}
+
+compileJava.dependsOn(copyMCEOperator, copyMSEOperator)
 
 task deleteLocalJar(type: Delete){
-    delete "kun-metadata-web/src/main/resources/databuilder-operator.jar"
+    delete "kun-metadata-web/src/main/resources/mce-operator.jar"
+    delete "kun-metadata-web/src/main/resources/mse-operator.jar"
 }
 shadowJar.dependsOn(deleteLocalJar)
 

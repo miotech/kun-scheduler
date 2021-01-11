@@ -22,3 +22,10 @@ workflow:
 rpc:
   registry: redis://${DB_REDIS_IP}:6379/
   port: ${METADATA_RPC_SERVICE_PORT}
+
+kafka:
+  bootstrapServers: 127.0.0.1:9092
+  mceTopicName: kun-metadata-mce
+  mseTopicName: kun-metadata-mse
+  mceGroupId: 87f367957a9b49c48ce708fae38a158c
+  mseGroupId: 18bf66dc2c4249baa45618c43fae51b5

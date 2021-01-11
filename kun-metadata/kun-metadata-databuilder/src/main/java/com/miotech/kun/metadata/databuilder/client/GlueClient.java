@@ -5,16 +5,23 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.glue.AWSGlue;
 import com.amazonaws.services.glue.AWSGlueClientBuilder;
+import com.amazonaws.services.glue.model.PropertyPredicate;
 import com.amazonaws.services.glue.model.SearchTablesRequest;
 import com.amazonaws.services.glue.model.SearchTablesResult;
 import com.amazonaws.services.glue.model.Table;
-import com.miotech.kun.metadata.databuilder.exception.TableNotFoundException;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class GlueClient {
+
+    private static Map<String, Table> tables = Maps.newHashMap();
+    private static AtomicBoolean initedCache = new AtomicBoolean(false);
 
     private GlueClient() {
     }
@@ -31,10 +38,24 @@ public class GlueClient {
         String nextToken = null;
 
         do {
-            SearchTablesResult searchTablesResult = awsGlue.searchTables(new SearchTablesRequest().withNextToken(nextToken));
+            SearchTablesRequest searchTablesRequest = new SearchTablesRequest();
+            searchTablesRequest.withNextToken(nextToken);
 
-            List<Table> tableList = searchTablesResult.getTableList();
-            for (Table table : tableList) {
+            List<PropertyPredicate> filters = Lists.newArrayList();
+
+            PropertyPredicate databaseNameFilter = new PropertyPredicate();
+            databaseNameFilter.withKey("databaseName");
+            databaseNameFilter.withValue(targetDatabase);
+            filters.add(databaseNameFilter);
+
+            PropertyPredicate tableNameFilter = new PropertyPredicate();
+            tableNameFilter.withKey("name");
+            tableNameFilter.withValue(targetTable);
+            filters.add(tableNameFilter);
+
+            searchTablesRequest.setFilters(filters);
+            SearchTablesResult searchTablesResult = awsGlue.searchTables(searchTablesRequest);
+            for (Table table : searchTablesResult.getTableList()) {
                 if (targetDatabase.equals(table.getDatabaseName()) && targetTable.equals(table.getName())) {
                     return table;
                 }
@@ -43,7 +64,31 @@ public class GlueClient {
             nextToken = searchTablesResult.getNextToken();
         } while (StringUtils.isNotBlank(nextToken));
 
-        throw new TableNotFoundException(String.format("Table not found, database: %s, table: %s", targetDatabase, targetTable));
+        return null;
+    }
+
+    public static Table searchTableWithSnapshot(AWSDataSource awsDataSource, String targetDatabase, String targetTable) {
+        if (initedCache.compareAndSet(false, true)) {
+            initCache(awsDataSource);
+        }
+
+        return tables.get(targetDatabase + "." + targetTable);
+    }
+
+    private static void initCache(AWSDataSource awsDataSource) {
+        AWSGlue awsGlue = getAWSGlue(awsDataSource.getGlueAccessKey(), awsDataSource.getGlueSecretKey(), awsDataSource.getGlueRegion());
+        String nextToken = null;
+
+        do {
+            SearchTablesResult searchTablesResult = awsGlue.searchTables(new SearchTablesRequest().withNextToken(nextToken));
+
+            List<Table> tableList = searchTablesResult.getTableList();
+            for (Table table : tableList) {
+                tables.put(table.getDatabaseName() + "." + table.getName(), table);
+            }
+
+            nextToken = searchTablesResult.getNextToken();
+        } while (StringUtils.isNotBlank(nextToken));
     }
 
 }
