@@ -497,9 +497,9 @@ public class TaskServiceTest extends CommonTestBase {
         // Mock returning random dataset by metadata facade given any datastore
         doAnswer(invocation -> {
             Dataset dataset = Dataset.newBuilder()
+                    .withGid(IdGenerator.getInstance().nextId())
                     .withDataStore(null)
                     .build();
-            dataset.setGid(IdGenerator.getInstance().nextId());
             return dataset;
         }).when(metadataFacade).getDatasetByDatastore(any());
 

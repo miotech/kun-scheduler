@@ -62,8 +62,6 @@ public class GlueTableIterator implements Iterator<Table> {
 
     private String searchTables() {
         AWSGlue awsGlueClient = GlueClient.getAWSGlue(accessKey, secretKey, region);
-        /* Filter not available, because Comparator can only apply to time fields
-           reference: https://docs.aws.amazon.com/zh_cn/glue/latest/webapi/API_SearchTables.html */
         SearchTablesResult searchTablesResult = awsGlueClient.searchTables(new SearchTablesRequest().withNextToken(nextToken));
         Preconditions.checkNotNull(searchTablesResult, "SearchTablesResult should not be null");
 

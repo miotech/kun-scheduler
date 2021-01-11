@@ -118,4 +118,8 @@ public class JSONUtils {
         return objectMapper.treeToValue(jsonNode,valueType);
     }
 
+    public static JsonNode objectToJsonNode(Object obj) {
+        return objectMapper.convertValue(obj, JsonNode.class);
+    }
+
 }
