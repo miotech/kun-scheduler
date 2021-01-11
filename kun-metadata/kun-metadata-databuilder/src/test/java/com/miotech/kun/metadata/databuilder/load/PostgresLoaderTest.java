@@ -38,8 +38,7 @@ public class PostgresLoaderTest extends DatabaseTestBase {
                 .withFieldStats(ImmutableList.of(new DatasetFieldStat("id", 2,  98, "admin", LocalDateTime.now()),
                         new DatasetFieldStat("name", 3, 67, "admin", LocalDateTime.now())))
                 .withDataStore(new HiveTableStore("", "test_database", "test_table"));
-        dataset = datasetBuilder.build();
-        dataset.setGid(1L);
+        dataset = datasetBuilder.withGid(1L).build();
     }
 
     @Test

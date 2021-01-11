@@ -38,7 +38,9 @@ public class HDFSOperator {
 
     public static void close(FileSystem fileSystem) {
         try {
-            fileSystem.close();
+            if (fileSystem != null) {
+                fileSystem.close();
+            }
         } catch (IOException e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }

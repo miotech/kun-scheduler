@@ -10,6 +10,7 @@ import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.commons.web.KunWebServer;
 import com.miotech.kun.commons.web.module.CommonModule;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
+import com.miotech.kun.metadata.web.kafka.MetadataConsumerStarter;
 import com.miotech.kun.metadata.web.service.InitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,12 +24,15 @@ public class Application {
     private final Props props;
     private final DataSource dataSource;
     private InitService initService;
+    private MetadataConsumerStarter metadataConsumerStarter;
 
     @Inject
-    public Application(Props props, DataSource dataSource, InitService initService) {
+    public Application(Props props, DataSource dataSource, InitService initService,
+                       MetadataConsumerStarter metadataConsumerStarter) {
         this.props = props;
         this.dataSource = dataSource;
         this.initService = initService;
+        this.metadataConsumerStarter = metadataConsumerStarter;
     }
 
     public static void main(String[] args) {
@@ -50,6 +54,9 @@ public class Application {
         initService.initDataBuilder();
         initService.publishRpcServices();
         configureDB();
+
+        // start kafka consumer
+        metadataConsumerStarter.start();
     }
 
     private void configureDB() {

@@ -1,23 +1,26 @@
 package com.miotech.kun.metadata.web.service;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.rpc.RpcPublisher;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
-import com.miotech.kun.metadata.web.constant.PropKey;
+import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.TaskParam;
-import com.miotech.kun.metadata.web.constant.WorkflowApiParam;
+import com.miotech.kun.metadata.web.model.vo.DataSource;
+import com.miotech.kun.metadata.web.util.DataDiscoveryApi;
 import com.miotech.kun.metadata.web.util.RequestParameterBuilder;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.operator.OperatorUpload;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Singleton
 public class InitService {
@@ -33,9 +36,6 @@ public class InitService {
     private RpcPublisher rpcPublisher;
 
     @Inject
-    private Injector injector;
-
-    @Inject
     private MetadataServiceFacade metadataServiceFacade;
 
     public void publishRpcServices() {
@@ -43,15 +43,37 @@ public class InitService {
     }
 
     public void initDataBuilder() {
-        String workflowUrl = props.getString("workflow.url");
-        OperatorUpload operatorUpload = new OperatorUpload(workflowUrl);
-        operatorUpload.autoUpload();
-        checkOperator(WorkflowApiParam.DATA_BUILDER_OPERATOR);
-        checkTask(WorkflowApiParam.DATA_BUILDER_TASK_MANUAL, WorkflowApiParam.DATA_BUILDER_TASK_AUTO);
-    }
+        // Verify whether the operator & task exists
+        try {
+            String dataDiscoveryUrl = props.getString("data-discovery.baseUrl");
+            if (StringUtils.isBlank(dataDiscoveryUrl)) {
+                return;
+            }
 
-    private void uploadJar() {
-        // Upload jar
+            checkOperator(OperatorParam.MCE.getName(), OperatorParam.MSE.getName());
+            String workflowUrl = props.getString("workflow.url");
+            OperatorUpload operatorUpload = new OperatorUpload(workflowUrl);
+            operatorUpload.autoUpload();
+
+            for (OperatorParam value : OperatorParam.values()) {
+                switch (value) {
+                    case MCE:
+                        DataDiscoveryApi dataDiscoveryApi = new DataDiscoveryApi(dataDiscoveryUrl);
+                        List<DataSource> dataSources = dataDiscoveryApi.searchDataSources().getResult().getDatasources();
+                        List<String> taskNames = dataSources.stream().map(dataSource -> "mce-task-auto:" + dataSource.getId()).collect(Collectors.toList());
+                        checkTask(props.getLong(OperatorParam.MCE.getName()), taskNames.toArray(new String[taskNames.size()]));
+                        checkTask(props.getLong(OperatorParam.MCE.getName()), TaskParam.MCE_TASK.getName());
+                        break;
+                    case MSE:
+                        checkTask(props.getLong(OperatorParam.MSE.getName()), TaskParam.MSE_TASK.getName());
+                        break;
+                    default:
+                        throw new UnsupportedOperationException("Unsupported value: " + value);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Init DataBuilder Task error: ", e);
+        }
     }
 
     private Optional<Operator> findOperatorByName(String operatorName) {
@@ -64,20 +86,20 @@ public class InitService {
 
     private void createOperator(String operatorName) {
         Operator operatorOfCreated = workflowClient.saveOperator(operatorName, RequestParameterBuilder.buildOperatorForCreate(operatorName));
-        setProp(PropKey.OPERATOR_ID, operatorOfCreated.getId().toString());
+        setProp(operatorName, operatorOfCreated.getId().toString());
     }
 
-    private void createTask(String taskName) {
+    private void createTask(Long operatorId, String taskName) {
         Task taskOfCreated = workflowClient.createTask(RequestParameterBuilder.buildTaskForCreate(taskName,
-                props.getLong(PropKey.OPERATOR_ID), props));
-        setProp(TaskParam.get(taskName).getTaskKey(), taskOfCreated.getId().toString());
+                operatorId, props));
+        setProp(taskName, taskOfCreated.getId().toString());
     }
 
     private void checkOperator(String... operatorNames) {
         for (String operatorName : operatorNames) {
             Optional<Operator> operatorOpt = findOperatorByName(operatorName);
             if (operatorOpt.isPresent()) {
-                props.put(PropKey.OPERATOR_ID, operatorOpt.get().getId().toString());
+                props.put(operatorName, operatorOpt.get().getId().toString());
             } else {
                 createOperator(operatorName);
                 logger.info("Create Operator: {} Success", operatorName);
@@ -85,13 +107,13 @@ public class InitService {
         }
     }
 
-    private void checkTask(String... taskNames) {
+    private void checkTask(Long operatorId, String... taskNames) {
         for (String taskName : taskNames) {
             Optional<Task> taskOpt = findTaskByName(taskName);
             if (taskOpt.isPresent()) {
-                props.put(TaskParam.get(taskName).getTaskKey(), taskOpt.get().getId().toString());
+                props.put(taskName, taskOpt.get().getId().toString());
             } else {
-                createTask(taskName);
+                createTask(operatorId, taskName);
                 logger.info("Create Task: {} Success", taskName);
             }
         }

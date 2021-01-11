@@ -11,20 +11,25 @@ import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.DatasetField;
+import com.miotech.kun.metadata.core.model.DatasetFieldType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Optional;
 
 @Singleton
 public class MetadataDatasetDao {
     private static final Logger logger = LoggerFactory.getLogger(MetadataDatasetDao.class);
 
-    private static final String[] DATASET_COLUMNS = { "gid", "name", "datasource_id", "schema", "data_store", "database_name" };
+    private static final String[] DATASET_COLUMNS = { "gid", "name", "datasource_id", "schema", "data_store", "database_name", "deleted" };
+    private static final String[] DATASET_FIELD_COLUMNS = { "name", "type", "description", "raw_type" };
 
     private static final String DATASET_TABLE_NAME = "kun_mt_dataset";
+    private static final String DATASET_FIELD_TABLE_NAME = "kun_mt_dataset_field";
 
     @Inject
     DatabaseOperator dbOperator;
@@ -44,7 +49,22 @@ public class MetadataDatasetDao {
         logger.debug("Dataset query sql: {}", sql);
         Dataset fetchedDataset = dbOperator.fetchOne(sql, MetadataDatasetMapper.INSTANCE, gid);
         logger.debug("Fetched dataset: {} with gid = {}", fetchedDataset, gid);
-        return Optional.ofNullable(fetchedDataset);
+
+        if (fetchedDataset == null) {
+            return Optional.ofNullable(null);
+        }
+
+        SQLBuilder fieldsSQLBuilder = new DefaultSQLBuilder();
+        String fieldsSQL = fieldsSQLBuilder.select(DATASET_FIELD_COLUMNS)
+                .from(DATASET_FIELD_TABLE_NAME)
+                .where("dataset_gid = ?")
+                .getSQL();
+
+        List<DatasetField> fields = dbOperator.fetchAll(fieldsSQL, MetadataDatasetFieldMapper.INSTANCE, gid);
+        Dataset dataset = fetchedDataset.cloneBuilder()
+                .withFields(fields).build();
+
+        return Optional.ofNullable(dataset);
     }
 
     /**
@@ -64,16 +84,35 @@ public class MetadataDatasetDao {
             }
 
             Dataset dataset = Dataset.newBuilder()
+                    .withGid(rs.getLong(1))
                     .withName(rs.getString(2))
                     .withDatasourceId(rs.getLong(3))
+                    .withDeleted(rs.getBoolean(7))
                     // TODO: parse missing fields
                     .withDatasetStat(null)
                     .withFields(null)
                     .withFieldStats(null)
                     .withDataStore(dataStore)
                     .build();
-            dataset.setGid(rs.getLong(1));
             return dataset;
+        }
+    }
+
+    private static class MetadataDatasetFieldMapper implements ResultSetMapper<DatasetField> {
+        public static final ResultSetMapper<DatasetField> INSTANCE = new MetadataDatasetFieldMapper();
+
+
+        @Override
+        public DatasetField map(ResultSet rs) throws SQLException {
+            String name = rs.getString(1);
+            String type = rs.getString(2);
+            String description = rs.getString(3);
+            String rawType = rs.getString(4);
+            return DatasetField.newBuilder()
+                    .withName(name)
+                    .withComment(description)
+                    .withFieldType(new DatasetFieldType(DatasetFieldType.convertRawType(type), rawType))
+                    .build();
         }
     }
 }

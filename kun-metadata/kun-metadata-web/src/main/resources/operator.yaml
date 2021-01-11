@@ -1,4 +1,7 @@
 operators:
-  - name: databuilder-operator
-    className: com.miotech.kun.metadata.databuilder.schedule.DataBuilderOperator
-    description: auto upload DatabuilderOperator
+  - name: mce-operator
+    className: com.miotech.kun.metadata.databuilder.operator.MCEOperator
+    description: MetadataChangeEvent Operator
+  - name: mse-operator
+    className: com.miotech.kun.metadata.databuilder.operator.MSEOperator
+    description: MetadataStatEvent Operator
