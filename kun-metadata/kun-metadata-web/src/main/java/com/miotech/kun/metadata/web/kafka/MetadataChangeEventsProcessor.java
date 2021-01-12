@@ -35,6 +35,11 @@ public class MetadataChangeEventsProcessor extends EventProcessor {
 
     @Override
     public void consume() {
+        if (!props.getBoolean("kafka.pushMode")) {
+            logger.warn("MCE Processor stopped because of `kafka.pushMode` is off");
+            return;
+        }
+
         Properties properties = generateGeneralConsumerProperties();
         properties.put("bootstrap.servers", props.getString("kafka.bootstrapServers"));
         properties.put("group.id", props.getString("kafka.mceGroupId"));

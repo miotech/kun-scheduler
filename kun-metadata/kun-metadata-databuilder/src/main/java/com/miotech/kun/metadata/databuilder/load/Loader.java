@@ -7,8 +7,6 @@ import java.util.List;
 
 public interface Loader {
 
-    void load(Dataset dataset);
-
     void loadSchema(Long gid, List<DatasetField> fields);
 
     void loadSchema(Dataset dataset);

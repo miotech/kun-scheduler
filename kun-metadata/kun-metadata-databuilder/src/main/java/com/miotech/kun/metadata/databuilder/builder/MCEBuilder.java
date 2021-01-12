@@ -11,11 +11,11 @@ import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.core.model.mce.MetadataChangeEvent;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
+import com.miotech.kun.metadata.databuilder.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractorFactory;
 import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
 import com.miotech.kun.metadata.databuilder.extract.tool.KafkaUtil;
-import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
@@ -25,6 +25,7 @@ import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -41,15 +42,17 @@ public class MCEBuilder {
     private final GidService gidService;
     private final MetadataDatasetDao datasetDao;
     private final DataSourceBuilder dataSourceBuilder;
+    private final PostgresLoader postgresLoader;
 
     @Inject
     public MCEBuilder(Props props, DatabaseOperator operator, GidService gidService, MetadataDatasetDao datasetDao,
-                      DataSourceBuilder dataSourceBuilder) {
+                      DataSourceBuilder dataSourceBuilder, PostgresLoader postgresLoader) {
         this.props = props;
         this.operator = operator;
         this.gidService = gidService;
         this.datasetDao = datasetDao;
         this.dataSourceBuilder = dataSourceBuilder;
+        this.postgresLoader = postgresLoader;
     }
 
     public void extractSchemaOfDataSource(Long datasourceId) throws Exception {
@@ -72,8 +75,7 @@ public class MCEBuilder {
 
         Iterator<Dataset> datasetIterator = extractor.extract(dataSource);
         while (datasetIterator.hasNext()) {
-            Loader loader = new PostgresLoader(operator);
-            loader.loadSchema(datasetIterator.next());
+            postgresLoader.loadSchema(datasetIterator.next());
 
             // 发送消息
 //            KafkaUtil.send(null, null, null);
@@ -100,8 +102,7 @@ public class MCEBuilder {
         }
 
         List<DatasetField> fields = extractor.extract(dataset.get(), dataSource);
-        Loader loader = new PostgresLoader(operator);
-        loader.loadSchema(gid, fields);
+        postgresLoader.loadSchema(gid, fields);
 
         // 发送消息
         try {
@@ -142,7 +143,7 @@ public class MCEBuilder {
         extractSchemaOfDataset(gid);
     }
 
-    private boolean judgeDatasetExistence(long gid, DataSource dataSource, DatasetSchemaExtractor extractor, DatasetExistenceJudgeMode judgeMode) throws Exception {
+    private boolean judgeDatasetExistence(long gid, DataSource dataSource, DatasetSchemaExtractor extractor, DatasetExistenceJudgeMode judgeMode) {
         Optional<Dataset> dataset = datasetDao.fetchDatasetByGid(gid);
         if (!dataset.isPresent()) {
             logger.warn("Dataset not found, gid: {}", gid);
@@ -152,7 +153,7 @@ public class MCEBuilder {
         return judgeDatasetExistence(dataset, dataSource, extractor, judgeMode);
     }
 
-    private boolean judgeDatasetExistence(Optional<Dataset> dataset, DataSource dataSource, DatasetSchemaExtractor extractor, DatasetExistenceJudgeMode judgeMode) throws Exception {
+    private boolean judgeDatasetExistence(Optional<Dataset> dataset, DataSource dataSource, DatasetSchemaExtractor extractor, DatasetExistenceJudgeMode judgeMode) {
         if (!dataset.isPresent()) {
             return false;
         }
@@ -162,13 +163,21 @@ public class MCEBuilder {
 
     private void updateDatasetStatus(boolean existed, long gid) {
         if (existed) {
-            operator.update("UPDATE kun_mt_dataset SET deleted = false WHERE gid = ?", gid);
+            int updateRowCount = operator.update("UPDATE kun_mt_dataset SET deleted = false WHERE gid = ? AND deleted is true", gid);
+            if (updateRowCount == 1) {
+                // 记录MANAGED事件
+                operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.MANAGED.name(), LocalDateTime.now());
+            }
         } else {
             if (logger.isDebugEnabled()) {
                 logger.debug("Dataset: {} no longer existed, marked as `deleted`", gid);
             }
 
-            operator.update("UPDATE kun_mt_dataset SET deleted = true WHERE gid = ?", gid);
+            int updateRowCount = operator.update("UPDATE kun_mt_dataset SET deleted = true WHERE gid = ? AND deleted is false", gid);
+            if (updateRowCount == 1) {
+                // 记录DELETED事件
+                operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.DELETED.name(), LocalDateTime.now());
+            }
         }
     }
 
