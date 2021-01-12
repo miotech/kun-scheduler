@@ -4,17 +4,25 @@ import find from 'lodash/find';
 import LogUtils from '@/utils/logUtils';
 
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
-import { WorkflowEdge, WorkflowNode } from '@/components/Workflow/Workflow.typings';
-import { TASK_DAG_NODE_HEIGHT, TASK_DAG_NODE_WIDTH } from '@/components/Workflow/Workflow.constants';
+import {
+  WorkflowEdge,
+  WorkflowNode,
+} from '@/components/Workflow/Workflow.typings';
+import {
+  TASK_DAG_NODE_HEIGHT,
+  TASK_DAG_NODE_WIDTH,
+} from '@/components/Workflow/Workflow.constants';
 // import uniqueId from 'lodash/uniqueId';
-
 
 const logger = LogUtils.getLoggers('convertTaskDefinitionsToGraph');
 
 const DEFAULT_WIDTH = TASK_DAG_NODE_WIDTH;
 const DEFAULT_HEIGHT = TASK_DAG_NODE_HEIGHT;
 
-export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[], selectedTaskDefIds: string[] = []): {
+export function convertTaskDefinitionsToGraph(
+  taskDefinitions: TaskDefinition[],
+  selectedTaskDefIds: string[] = [],
+): {
   nodes: WorkflowNode[];
   edges: WorkflowEdge[];
   graphWidth: number;
@@ -45,6 +53,12 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[],
   // Default to assigning a new object as a label for each new edge.
   graph.setDefaultEdgeLabel(() => ({}));
 
+  taskDefinitions.sort(
+    (taskDefA, taskDefB) =>
+      (taskDefA.upstreamTaskDefinitions?.length || 0) -
+      (taskDefB.upstreamTaskDefinitions?.length || 0),
+  );
+
   taskDefinitions.forEach(taskDef => {
     // insert node
     graph.setNode(`${taskDef.id}`, {
@@ -53,22 +67,20 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[],
       width: DEFAULT_WIDTH,
       height: DEFAULT_HEIGHT,
     });
-    // insert relations
+  });
+
+  // insert relations
+  taskDefinitions.forEach(taskDef => {
     if (taskDef.upstreamTaskDefinitions?.length > 0) {
       taskDef.upstreamTaskDefinitions.forEach(upstreamTask => {
         if (graph.node(upstreamTask.id) != null) {
-          graph.setEdge(
-            `${upstreamTask.id}`,
-            `${taskDef.id}`,
-            {}
-          );
+          graph.setEdge(`${upstreamTask.id}`, `${taskDef.id}`, {});
         }
       });
     }
   });
 
-  dagre.layout(graph, {
-  });
+  dagre.layout(graph, {});
 
   let graphWidth = 0;
   let graphHeight = 0;
@@ -88,7 +100,8 @@ export function convertTaskDefinitionsToGraph(taskDefinitions: TaskDefinition[],
         width: DEFAULT_WIDTH,
         height: DEFAULT_HEIGHT,
         isDeployed: taskDef?.isDeployed || false,
-        status: selectedTaskDefIds.indexOf(`${nodeId}`) >= 0 ? 'selected' : 'normal',
+        status:
+          selectedTaskDefIds.indexOf(`${nodeId}`) >= 0 ? 'selected' : 'normal',
         taskTemplateName: taskDef?.taskTemplateName || '',
       });
     }
