@@ -43,7 +43,7 @@ public class TaskRunService {
     private Executor executor;
 
     @Inject
-    public TaskRunService(TaskRunDao taskRunDao,  ResourceLoader resourceLoader, Executor executor) {
+    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor) {
         this.taskRunDao = taskRunDao;
         this.resourceLoader = resourceLoader;
         this.executor = executor;
@@ -72,7 +72,7 @@ public class TaskRunService {
                                       final int attempt,
                                       final long startLine,
                                       final long endLine) {
-        Preconditions.checkArgument(startLine >=0, "startLine should larger or equal to 0");
+        Preconditions.checkArgument(startLine >= 0, "startLine should larger or equal to 0");
         Preconditions.checkArgument(endLine >= startLine, "endLine should not smaller than startLine");
 
         List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId);
@@ -83,13 +83,13 @@ public class TaskRunService {
             taskAttempt = attempts.stream()
                     .filter(x -> x.getAttempt() == attempt)
                     .findFirst()
-                    .orElseThrow(() -> new EntityNotFoundException("Cannot find log for attempt " + attempt ));
+                    .orElseThrow(() -> new EntityNotFoundException("Cannot find log for attempt " + attempt));
         } else {
             attempts.sort((o1, o2) -> o1.getAttempt() < o2.getAttempt() ? 1 : -1);
             taskAttempt = attempts.get(0);
         }
         Resource resource = resourceLoader.getResource(taskAttempt.getLogPath());
-        if(resource == null){
+        if (resource == null) {
             List<String> logs = new ArrayList<>();
             return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLine, startLine, logs);
         }
@@ -112,8 +112,8 @@ public class TaskRunService {
     }
 
     public TaskRunDAGVO getNeighbors(Long taskRunId, int upstreamLevel, int downstreamLevel) {
-        Preconditions.checkArgument(0 <= upstreamLevel && upstreamLevel <= 5 , "upstreamLevel should be non negative and no greater than 5");
-        Preconditions.checkArgument(0 <= downstreamLevel&& downstreamLevel <= 5, "downstreamLevel should be non negative and no greater than 5");
+        Preconditions.checkArgument(0 <= upstreamLevel && upstreamLevel <= 5, "upstreamLevel should be non negative and no greater than 5");
+        Preconditions.checkArgument(0 <= downstreamLevel && downstreamLevel <= 5, "downstreamLevel should be non negative and no greater than 5");
 
         TaskRun taskRun = findTaskRun(taskRunId);
         List<TaskRun> result = new ArrayList<>();
@@ -130,7 +130,7 @@ public class TaskRunService {
                 .collect(Collectors.toList());
         List<TaskRunDependencyVO> edges = result.stream()
                 .flatMap(x -> x.getDependentTaskRunIds().stream()
-                        .map(t -> new TaskRunDependencyVO(x.getId(),t)))
+                        .map(t -> new TaskRunDependencyVO(x.getId(), t)))
                 .collect(Collectors.toList());
         return new TaskRunDAGVO(nodes, edges);
     }
@@ -234,5 +234,20 @@ public class TaskRunService {
             mappings.put(taskId, latestTaskRuns.stream().map(this::convertToVO).collect(Collectors.toList()));
         }
         return mappings;
+    }
+
+    public boolean changeTaskAttemptPriority(long taskRunId, int priority) {
+        Optional<TaskRun> taskRunOptional = taskRunDao.fetchTaskRunById(taskRunId);
+        if (!taskRunOptional.isPresent()) {
+            throw new IllegalArgumentException("taskRun is not found for taskRunId: " + taskRunId);
+        }
+        TaskAttemptProps attempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
+        if (Objects.isNull(attempt)) {
+            throw new IllegalArgumentException("Attempt is not found for taskRunId: " + taskRunId);
+        }
+        executor.changePriority(attempt.getQueueName(), attempt.getId(), priority);
+        taskRunDao.updateTaskRun(taskRunOptional.get().
+                cloneBuilder().withPriority(priority).build());
+        return true;
     }
 }

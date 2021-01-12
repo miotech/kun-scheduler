@@ -200,4 +200,9 @@ public class TaskRunController {
         Map<Long, List<TaskRunVO>> taskRunsVO = taskRunService.fetchLatestTaskRuns(taskIds, safeLimit);
         return taskRunsVO;
     }
+
+    @RouteMapping(url = "/taskruns/changePriority", method = "PUT")
+    public Object changeTaskRunPriority(@QueryParameter long taskRunId, @QueryParameter int priority) {
+        return taskRunService.changeTaskAttemptPriority(taskRunId, priority);
+    }
 }

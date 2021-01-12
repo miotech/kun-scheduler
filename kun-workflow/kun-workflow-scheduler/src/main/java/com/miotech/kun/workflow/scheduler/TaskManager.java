@@ -81,6 +81,7 @@ public class TaskManager {
                 .withAttempt(attempt)
                 .withStatus(TaskRunStatus.CREATED)
                 .withQueueName(taskRun.getQueueName())
+                .withPriority(taskRun.getPriority())
                 .build();
         logger.debug("Created taskAttempt. taskAttempt={}", taskAttempt);
 

@@ -4,10 +4,7 @@ import com.miotech.kun.commons.testing.Unsafe;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.model.task.ScheduleConf;
-import com.miotech.kun.workflow.core.model.task.ScheduleType;
-import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskDependency;
+import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 
 import java.util.ArrayList;
@@ -30,6 +27,7 @@ public class MockTaskFactory {
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .withQueueName("default")
+                .withPriority(TaskPriority.MEDIUM.name())
                 .build();
     }
 
@@ -50,6 +48,7 @@ public class MockTaskFactory {
                 .withDependencies(dependencies)
                 .withTags(new ArrayList<>())
                 .withQueueName("default")
+                .withPriority(TaskPriority.MEDIUM.getPriority())
                 .build();
     }
 
@@ -80,6 +79,7 @@ public class MockTaskFactory {
                     .withDependencies(new ArrayList<>())
                     .withTags(new ArrayList<>())
                     .withQueueName("default")
+                    .withPriority(TaskPriority.MEDIUM.getPriority())
                     .build());
         }
         return tasks;
@@ -130,6 +130,7 @@ public class MockTaskFactory {
                     .withOperatorId(operatorId)
                     .withScheduleConf(scheduleConf)
                     .withQueueName("default")
+                    .withPriority(TaskPriority.MEDIUM.getPriority())
                     .withDependencies(
                             selectItems(ids, parsed.get(i)).stream()
                                     .map(upId -> new TaskDependency(upId, taskId, depFuncProvider.from("latestTaskRun")))
