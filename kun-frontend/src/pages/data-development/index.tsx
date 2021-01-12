@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { ReflexContainer, ReflexSplitter, ReflexElement } from 'react-reflex';
-import { useMount, useUnmount } from 'ahooks';
+import { useUnmount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
 
@@ -31,6 +31,7 @@ import {
 import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/model-state';
 
 import 'react-reflex/styles.css';
+import { StringParam, useQueryParams } from 'use-query-params';
 import styles from './index.less';
 
 const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
@@ -59,6 +60,9 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     loadingTaskDefs: s.loading.effects.dataDevelopment.fetchTaskDefinitions,
   }));
 
+  const [query, setQuery] = useQueryParams({
+    view: StringParam,
+  });
   const [taskDefViewSearchKeyword, setTaskDefViewSearchKeyword] = useState<
     string
   >('');
@@ -76,11 +80,29 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
 
   const [updateTime, setUpdateTime] = useState<number>(Date.now());
 
-  useMount(() => {});
+  const [viewIdFromQueryInitialized, setViewIdFromQueryInitialized] = useState<
+    boolean
+  >(false);
+
+  useEffect(() => {
+    if (
+      !viewIdFromQueryInitialized &&
+      taskDefViewsList &&
+      taskDefViewsList.length &&
+      query.view
+    ) {
+      const targetView = taskDefViewsList.find(view => view.id === query.view);
+      if (targetView) {
+        dispatch.dataDevelopment.setSelectedTaskDefinitionView(targetView);
+      }
+      setViewIdFromQueryInitialized(true);
+    }
+  }, [dispatch.dataDevelopment, query.view, taskDefViewsList, viewIdFromQueryInitialized]);
 
   useUnmount(() => {
     // reset state & free up memory
     dispatch.dataDevelopment.setCreatingTaskTemplate(null);
+    setViewIdFromQueryInitialized(false);
   });
 
   /* Task definition view effects and callbacks */
@@ -148,6 +170,9 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       try {
         if (viewId === selectedView?.id) {
           dispatch.dataDevelopment.setSelectedTaskDefinitionView(null);
+          setQuery({
+            view: null,
+          });
         }
         await deleteTaskDefinitionView(viewId);
         setEditView(null);
@@ -267,6 +292,9 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
             }}
             onSelectItem={viewItem => {
               dispatch.dataDevelopment.setSelectedTaskDefinitionView(viewItem);
+              setQuery({
+                view: viewItem?.id || '',
+              });
             }}
             onEdit={view => {
               setEditView(view);
