@@ -279,6 +279,8 @@ export default {
   "dataDevelopment.displayType.list": "列表模式",
   "dataDevelopment.submitAll": "全部提交",
   "dataDevelopment.addSelectedTasksToOtherViews": "添加选中任务到其他视图",
+  "dataDevelopment.removeFromCurrentView": "从当前视图中移除",
+  "dataDevelopment.removeFromCurrentViewAlertTitle": "确认从当前视图中删除 {count} 个任务？",
   "dataDevelopment.editCurrentViewTasks": "修改当前视图任务",
   "dataDevelopment.addSelectedTasksToOtherViews.targetViewToAdd": "添加到目标视图",
   "dataDevelopment.addSelectedTasksToOtherViews.comment": "注：仅在已选任务未被目标视图包含时生效",
