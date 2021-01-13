@@ -170,6 +170,7 @@ public class DashboardController {
         for (TaskRun taskRun : taskRunResult.getRecords()) {
             DataDevelopmentTask task = new DataDevelopmentTask();
             task.setTaskId(taskRun.getTask().getId());
+            task.setTaskRunId(taskRun.getId());
             task.setTaskName(taskRun.getTask().getName());
             task.setTaskStatus(taskRun.getStatus().name());
             task.setStartTime(DateUtils.dateTimeToMillis(taskRun.getStartAt()));

@@ -30,6 +30,7 @@ type Props = OwnProps;
 function getComputedLinkHref(
   taskDefIdsMap: Record<string, string | null>,
   taskId: string,
+  taskRunId: string,
 ): string {
   if (!taskDefIdsMap[taskId]) {
     return '#';
@@ -39,6 +40,9 @@ function getComputedLinkHref(
     .template('/operation-center/scheduled-tasks/:taskDefId')
     .param({
       taskDefId: taskDefIdsMap[taskId],
+    })
+    .query({
+      taskRunId,
     })
     .toString();
 }
@@ -99,6 +103,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
           const linkHref = getComputedLinkHref(
             workflowIdToTaskDefinitionIdMap,
             record.taskId,
+            record.taskRunId,
           );
           if (linkHref === '#') {
             return <span>{record.taskName}</span>;
