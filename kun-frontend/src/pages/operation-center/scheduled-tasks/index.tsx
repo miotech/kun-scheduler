@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from 'antd';
-import { useMount, useSize, useUnmount, useUpdateEffect } from 'ahooks';
+import { useSize, useUnmount, useUpdateEffect } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
 
@@ -11,35 +11,26 @@ import { Headings } from './components/Headings';
 
 import styles from './index.less';
 
-interface ScheduledTaskViewProps extends React.ComponentProps<'div'> {
-}
+interface ScheduledTaskViewProps extends React.ComponentProps<'div'> {}
 
 export const ScheduledTaskView: React.FC<ScheduledTaskViewProps> = () => {
-
-  const { selector: {
-    shouldRefresh,
-    filters,
-  }, dispatch } = useRedux(s => ({
+  const {
+    selector: { shouldRefresh, filters },
+    dispatch,
+  } = useRedux(s => ({
     shouldRefresh: s.scheduledTasks.shouldRefresh,
     filters: s.scheduledTasks.filters,
     loading: s.loading.effects.scheduledTasks.fetchScheduledTasks,
   }));
 
-  const [ selectedTask, setSelectedTask ] = useState<DeployedTask | null>(null);
-
-  useMount(() => {
-    // highlight corresponding aside menu item
-    dispatch.route.updateCurrentPath('/operation-center/scheduled-tasks');
-  });
+  const [selectedTask, setSelectedTask] = useState<DeployedTask | null>(null);
 
   useEffect(() => {
     if (shouldRefresh) {
       dispatch.scheduledTasks.fetchScheduledTasks(filters);
     }
-  }, [
-    shouldRefresh,
-    filters,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldRefresh, filters]);
 
   const elem = document.querySelector('#deployed-task-dag-container');
   const DAGContainerSize = useSize(elem as any);
@@ -47,9 +38,7 @@ export const ScheduledTaskView: React.FC<ScheduledTaskViewProps> = () => {
   // add debounced refresh effect on changing search name value
   useDebouncedUpdateEffect(() => {
     dispatch.scheduledTasks.setShouldRefresh(true);
-  }, [
-    filters.searchName,
-  ]);
+  }, [filters.searchName]);
 
   // when other filters change, reload table data immediately.
   // Shall not trigger after mount
@@ -69,7 +58,10 @@ export const ScheduledTaskView: React.FC<ScheduledTaskViewProps> = () => {
   return (
     <div id="scheduled-task-view">
       <Headings />
-      <main id="scheduled-task-view-main-content" className={styles.MainContent}>
+      <main
+        id="scheduled-task-view-main-content"
+        className={styles.MainContent}
+      >
         {/* Table container */}
         <section className={styles.TableContainer}>
           <Card>
@@ -80,7 +72,10 @@ export const ScheduledTaskView: React.FC<ScheduledTaskViewProps> = () => {
           </Card>
         </section>
         {/* DAG container */}
-        <section id="deployed-task-dag-container" className={styles.DAGContainer}>
+        <section
+          id="deployed-task-dag-container"
+          className={styles.DAGContainer}
+        >
           <DeployedTaskDAG
             task={selectedTask}
             width={DAGContainerSize.width}
