@@ -155,12 +155,14 @@ export interface DataDevDailyTaskCountInfo {
   taskCountList: DailyTaskCount[];
 }
 
-export function fetchDataDevelopmentDailyTaskCount(parameters?: FetchDataDevelopmentDailyTaskCountParams) {
+export function fetchDataDevelopmentDailyTaskCount(
+  parameters?: FetchDataDevelopmentDailyTaskCountParams,
+) {
   return get<DataDevDailyTaskCountInfo>(
     '/dashboard/data-development/date-time-metrics',
     {
       query: {
-        hours: parameters?.hours ?? ((new Date()).getTimezoneOffset() / -60),
+        hours: parameters?.hours ?? new Date().getTimezoneOffset() / -60,
       },
     },
   );
@@ -170,7 +172,8 @@ export function fetchDataDevelopmentDailyTaskCount(parameters?: FetchDataDevelop
 // GET /kun/api/v1/dashboard/data-development/tasks
 
 export interface DevTaskDetail {
-  taskId: string;   // workflow task id
+  taskId: string; // workflow task id
+  taskRunId: string;
   taskName: string;
   taskStatus: string;
   errorMessage: string;
