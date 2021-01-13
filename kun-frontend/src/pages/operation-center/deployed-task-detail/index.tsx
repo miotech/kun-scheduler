@@ -1,4 +1,11 @@
-import React, { FunctionComponent, RefObject, useCallback, useRef, useState } from 'react';
+import React, {
+  FunctionComponent,
+  RefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useMount, useSize, useUnmount, useUpdateEffect } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import { useRouteMatch } from 'umi';
@@ -11,6 +18,7 @@ import { RightPanel } from '@/pages/operation-center/scheduled-tasks/components/
 import { TaskRun } from '@/definitions/TaskRun.type';
 
 import 'react-reflex/styles.css';
+import { StringParam, useQueryParams } from 'use-query-params';
 import styles from './index.less';
 
 interface DeployedTaskDetailViewProps {}
@@ -20,21 +28,29 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
 
   const rightPanelRef = useRef() as RefObject<any>;
 
-  const { selector: {
-    filters,
-    taskRunsData,
-    taskRunsCount,
-    taskDetailIsLoading,
-    taskRunsIsLoading,
-  }, dispatch } = useRedux(s => ({
+  const {
+    selector: {
+      filters,
+      taskRunsData,
+      taskRunsCount,
+      taskDetailIsLoading,
+      taskRunsIsLoading,
+    },
+    dispatch,
+  } = useRedux(s => ({
     filters: s.deployedTaskDetail.filters,
     taskRunsData: s.deployedTaskDetail.taskRuns,
     taskRunsCount: s.deployedTaskDetail.taskRunsCount,
-    taskDetailIsLoading: s.loading.effects.deployedTaskDetail.loadDeployedTaskDetailById,
+    taskDetailIsLoading:
+      s.loading.effects.deployedTaskDetail.loadDeployedTaskDetailById,
     taskRunsIsLoading: s.loading.effects.deployedTaskDetail.loadTaskRuns,
   }));
 
-  const [ selectedTaskRun, setSelectedTaskRun ] = useState<TaskRun | null>(null);
+  const [selectedTaskRun, setSelectedTaskRun] = useState<TaskRun | null>(null);
+
+  const [query, setQuery] = useQueryParams({
+    taskRunId: StringParam,
+  });
 
   useMount(() => {
     // highlight corresponding aside menu item
@@ -50,8 +66,38 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
     });
   });
 
+  const [selectedTaskInitialized, setSelectedTaskInitialized] = useState<
+    boolean
+  >(false);
+
+  useMount(() => {
+    // highlight corresponding aside menu item
+    dispatch.route.updateCurrentPath('/operation-center/scheduled-tasks');
+  });
+
+  useEffect(() => {
+    if (query.taskRunId && query.taskRunId.length && !selectedTaskInitialized) {
+      const matchedTaskRunRecord = (taskRunsData || []).find(
+        record => record.id === query.taskRunId,
+      );
+      if (matchedTaskRunRecord != null) {
+        setSelectedTaskRun(matchedTaskRunRecord);
+        setSelectedTaskInitialized(true);
+      }
+    }
+  }, [query.taskRunId, selectedTaskInitialized, taskRunsData]);
+
+  useUpdateEffect(() => {
+    if (selectedTaskRun?.id) {
+      setQuery({
+        taskRunId: selectedTaskRun.id,
+      });
+    }
+  }, [selectedTaskRun?.id]);
+
   useUnmount(() => {
     // clear state after unmount
+    setSelectedTaskInitialized(false);
     dispatch.deployedTaskDetail.resetAll();
   });
 
@@ -74,18 +120,17 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
       id: match.params.id,
       ...filters,
     });
-  }, [
-    dispatch,
-    match.params.id,
-    filters,
-  ]);
+  }, [dispatch, match.params.id, filters]);
 
-  const handleChangePagination = useCallback((nextPageNum: number, nextPageSize?: number) => {
-    dispatch.deployedTaskDetail.updateFilter({
-      pageNum: nextPageNum,
-      pageSize: nextPageSize,
-    });
-  }, [dispatch]);
+  const handleChangePagination = useCallback(
+    (nextPageNum: number, nextPageSize?: number) => {
+      dispatch.deployedTaskDetail.updateFilter({
+        pageNum: nextPageNum,
+        pageSize: nextPageSize,
+      });
+    },
+    [dispatch],
+  );
 
   const dagContainerSize = useSize(rightPanelRef.current);
 
@@ -110,11 +155,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
         className={styles.ContentContainer}
         orientation="vertical"
       >
-        <ReflexElement
-          className={styles.LeftPanel}
-          flex={5}
-          minSize={192}
-        >
+        <ReflexElement className={styles.LeftPanel} flex={5} minSize={192}>
           <KunSpin spinning={taskRunsIsLoading}>
             <TaskRunsTable
               tableData={taskRunsData || []}
@@ -128,11 +169,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
           </KunSpin>
         </ReflexElement>
         <ReflexSplitter propagate />
-        <ReflexElement
-          className={styles.RightPanel}
-          flex={5}
-          minSize={192}
-        >
+        <ReflexElement className={styles.RightPanel} flex={5} minSize={192}>
           <RightPanel
             rightPanelRef={rightPanelRef}
             selectedTaskRun={selectedTaskRun}
