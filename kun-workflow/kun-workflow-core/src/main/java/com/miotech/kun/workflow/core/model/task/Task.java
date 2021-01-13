@@ -39,6 +39,8 @@ public class Task {
 
     private final List<Tag> tags;
 
+    private final String queueName;
+
     public Long getId() {
         return id;
     }
@@ -71,7 +73,9 @@ public class Task {
         return tags;
     }
 
-
+    public String getQueueName() {
+        return queueName;
+    }
 
     private Task(TaskBuilder builder) {
         this.id = builder.id;
@@ -82,6 +86,7 @@ public class Task {
         this.scheduleConf = builder.scheduleConf;
         this.dependencies = ImmutableList.copyOf(builder.dependencies);
         this.tags = builder.tags;
+        this.queueName = builder.queueName;
     }
 
     public TaskBuilder cloneBuilder() {
@@ -93,7 +98,8 @@ public class Task {
                 .withConfig(config)
                 .withScheduleConf(scheduleConf)
                 .withDependencies(dependencies)
-                .withTags(tags);
+                .withTags(tags)
+                .withQueueName(queueName);
     }
 
     public boolean shouldSchedule(OffsetDateTime scheduleTime, OffsetDateTime currentTime) {
@@ -183,6 +189,7 @@ public class Task {
                 ", scheduleConf=" + scheduleConf +
                 ", dependencies=" + dependencies +
                 ", tags=" + tags +
+                ", queueName='" + queueName + '\'' +
                 '}';
     }
 
@@ -197,6 +204,7 @@ public class Task {
         private List<TaskDependency> dependencies;
         private List<Tag> tags;
         private Integer recoverTimes;
+        private String queueName;
 
         private TaskBuilder() {
         }
@@ -244,6 +252,11 @@ public class Task {
         public TaskBuilder withRecoverTimes(Integer recoverTimes) {
             recoverTimes = recoverTimes > 10 ? 10 : recoverTimes;
             this.recoverTimes = recoverTimes;
+            return this;
+        }
+
+        public TaskBuilder withQueueName(String queueName){
+            this.queueName = queueName;
             return this;
         }
 

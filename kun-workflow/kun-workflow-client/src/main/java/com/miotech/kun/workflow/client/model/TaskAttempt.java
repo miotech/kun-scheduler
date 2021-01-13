@@ -17,6 +17,8 @@ public class TaskAttempt {
 
     private int attempt;
 
+    private String queueName;
+
     private TaskRunStatus status;
 
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
@@ -57,4 +59,7 @@ public class TaskAttempt {
         return endAt;
     }
 
+    public String getQueueName() {
+        return queueName;
+    }
 }

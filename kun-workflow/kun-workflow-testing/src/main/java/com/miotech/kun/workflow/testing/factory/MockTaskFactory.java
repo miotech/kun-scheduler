@@ -29,6 +29,7 @@ public class MockTaskFactory {
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
+                .withQueueName("default")
                 .build();
     }
 
@@ -48,6 +49,7 @@ public class MockTaskFactory {
                 .withScheduleConf(conf)
                 .withDependencies(dependencies)
                 .withTags(new ArrayList<>())
+                .withQueueName("default")
                 .build();
     }
 
@@ -77,6 +79,7 @@ public class MockTaskFactory {
                     .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                     .withDependencies(new ArrayList<>())
                     .withTags(new ArrayList<>())
+                    .withQueueName("default")
                     .build());
         }
         return tasks;
@@ -126,6 +129,7 @@ public class MockTaskFactory {
                     .withConfig(Config.EMPTY)
                     .withOperatorId(operatorId)
                     .withScheduleConf(scheduleConf)
+                    .withQueueName("default")
                     .withDependencies(
                             selectItems(ids, parsed.get(i)).stream()
                                     .map(upId -> new TaskDependency(upId, taskId, depFuncProvider.from("latestTaskRun")))

@@ -305,6 +305,7 @@ public class TaskService {
                 .withConfig(vo.getConfig())
                 .withDependencies(parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags())
+                .withQueueName(vo.getQueueName())
                 .build();
     }
 

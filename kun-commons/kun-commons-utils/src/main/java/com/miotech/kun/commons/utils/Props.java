@@ -301,6 +301,34 @@ public class Props {
     }
 
     /**
+     * Returns the String list representation of the value. If the value is null, then a
+     * UndefinedPropertyException will be thrown. If the value isn't a double, then a parse exception
+     * will be thrown.
+     */
+    public List<String> getStringList(final String name, final String sep) {
+        final String val = get(name);
+        if (val == null || val.trim().length() == 0) {
+            return Collections.emptyList();
+        }
+
+        if (containsKey(name)) {
+            return Arrays.asList(val.split(sep));
+        } else {
+            throw new UndefinedPropertyException("Missing required property '" + name
+                    + "'");
+        }
+    }
+
+    /**
+     * Returns the String list representation of the value. If the value is null, then a
+     * UndefinedPropertyException will be thrown. If the value isn't a double, then a parse exception
+     * will be thrown.
+     */
+    public List<String> getStringList(final String name) {
+        return getStringList(name, ",");
+    }
+
+    /**
      * Clones the Props p object.
      */
     public static Props clone(final Props p) {
