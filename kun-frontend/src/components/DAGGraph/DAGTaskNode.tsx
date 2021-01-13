@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Link } from 'umi';
 import { Group } from '@visx/group';
-import {TaskDefinition} from "@/definitions/TaskDefinition.type";
+import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { Tooltip } from 'antd';
 import SafeUrlAssembler from 'safe-url-assembler';
 
@@ -11,7 +11,10 @@ export interface Node {
   height: number;
   width: number;
   title?: string;
-  data?: TaskDefinition;
+  data?: TaskDefinition &
+    Partial<{
+      isCenter?: boolean;
+    }>;
 }
 
 export interface DAGTaskNodeProps {
@@ -20,7 +23,7 @@ export interface DAGTaskNodeProps {
 
 export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
   // const ref = useRef() as RefObject<SVGGElement>;
-  const { x, y, width, height, title, data } = props.node || {};
+  const { width, height, title, data } = props.node || {};
 
   const strokeColor = useMemo(() => {
     if (data?.isArchived) {
@@ -29,12 +32,12 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
     if (data?.isDeployed) {
       return '#4cc5ca';
     }
+    if (data?.isCenter) {
+      return '#6997e3';
+    }
     // else
     return '#ffbe3d';
-  }, [
-    data?.isArchived,
-    data?.isDeployed,
-  ]);
+  }, [data?.isArchived, data?.isCenter, data?.isDeployed]);
 
   const textColor = useMemo(() => {
     if (data?.isArchived) {
@@ -42,16 +45,11 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
     }
     // else
     return '#262a2f';
-  }, [
-    data?.isArchived
-  ]);
+  }, [data?.isArchived]);
 
   const rect = useMemo(() => {
     return (
-      <Group
-        top={0}
-        left={0}
-      >
+      <Group top={0} left={0}>
         <rect
           width={width}
           height={height}
@@ -59,7 +57,7 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
           x={-width / 2}
           rx="8"
           stroke={strokeColor}
-          strokeWidth={1}
+          strokeWidth={data?.isCenter ? 2 : 1}
           fill="#fff"
           cursor="pointer"
         />
@@ -95,9 +93,18 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
             }}
           >
             <Tooltip title={title}>
-              <Link to={data?.id ? SafeUrlAssembler().template('/data-development/task-definition/:id').param({
-                id: data.id,
-              }).toString() : '#'}>
+              <Link
+                to={
+                  data?.id
+                    ? SafeUrlAssembler()
+                        .template('/data-development/task-definition/:id')
+                        .param({
+                          id: data.id,
+                        })
+                        .toString()
+                    : '#'
+                }
+              >
                 <p
                   style={{
                     fontSize: '12px',
@@ -120,14 +127,8 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
           </div>
         </foreignObject>
       </Group>
-    )
-  }, [
-    width,
-    height,
-    x,
-    y,
-    title,
-  ]);
+    );
+  }, [width, height, strokeColor, data?.isCenter, data?.id, title, textColor]);
 
   return rect;
 };
