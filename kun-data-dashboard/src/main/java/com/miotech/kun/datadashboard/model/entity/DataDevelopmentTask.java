@@ -14,6 +14,9 @@ public class DataDevelopmentTask {
     @JsonSerialize(using= ToStringSerializer.class)
     Long taskId;
 
+    @JsonSerialize(using = ToStringSerializer.class)
+    Long taskRunId;
+
     String taskName;
 
     String taskStatus;
