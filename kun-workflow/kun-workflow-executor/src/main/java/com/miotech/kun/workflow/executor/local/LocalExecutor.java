@@ -384,9 +384,7 @@ public class LocalExecutor implements Executor {
     }
 
     private void handleTimeoutAttempt(Long taskAttemptId) {
-        workerToken.release();
-        logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
-        workerPool.remove(taskAttemptId);
+        killTaskAttempt(taskAttemptId);
         miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
         TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
         submit(taskAttempt, true);
@@ -414,6 +412,7 @@ public class LocalExecutor implements Executor {
                 if (worker.shutdown()) {
                     workerPool.remove(taskAttemptId);
                     workerToken.release();
+                    logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
                     notifyFinished(taskAttemptId, TaskRunStatus.ABORTED, OperatorReport.BLANK);
                     miscService.changeTaskAttemptStatus(taskAttemptId,
                             TaskRunStatus.ABORTED, null, DateTimeUtils.now());
