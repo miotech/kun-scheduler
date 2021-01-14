@@ -13,11 +13,6 @@ public class PrintLoader implements Loader {
     private static Logger logger = LoggerFactory.getLogger(PrintLoader.class);
 
     @Override
-    public void load(Dataset dataset) {
-        logger.info("load dataset: {}", JSONUtils.toJsonString(dataset));
-    }
-
-    @Override
     public void loadSchema(Long gid, List<DatasetField> fields) {
         logger.info("loadSchema gid: {}, fields: {}", gid, JSONUtils.toJsonString(fields));
     }
