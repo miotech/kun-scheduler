@@ -15,6 +15,10 @@ public class DatasetField implements Serializable {
 
     private final String comment;
 
+    private final boolean isPrimaryKey;
+
+    private final boolean isNullable;
+
     public String getName() {
         return name;
     }
@@ -27,10 +31,41 @@ public class DatasetField implements Serializable {
         return comment;
     }
 
+    public boolean isPrimaryKey() {
+        return isPrimaryKey;
+    }
+
+    public boolean isNullable() {
+        return isNullable;
+    }
+
     public DatasetField(String name, DatasetFieldType fieldType, String comment) {
+        this(name, fieldType, comment, false, true);
+    }
+
+    public DatasetField(String name, DatasetFieldType fieldType, String comment, boolean isPrimaryKey, boolean isNullable) {
         this.name = name;
         this.fieldType = fieldType;
         this.comment = comment;
+        this.isPrimaryKey = isPrimaryKey;
+        this.isNullable = isNullable;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DatasetField that = (DatasetField) o;
+        return isPrimaryKey == that.isPrimaryKey &&
+                isNullable == that.isNullable &&
+                Objects.equals(name, that.name) &&
+                Objects.equals(fieldType, that.fieldType) &&
+                Objects.equals(comment, that.comment);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, fieldType, comment, isPrimaryKey, isNullable);
     }
 
     @Override
@@ -39,22 +74,9 @@ public class DatasetField implements Serializable {
                 "name='" + name + '\'' +
                 ", fieldType=" + fieldType +
                 ", comment='" + comment + '\'' +
+                ", isPrimaryKey=" + isPrimaryKey +
+                ", isNullable=" + isNullable +
                 '}';
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        DatasetField field = (DatasetField) o;
-        return Objects.equals(name, field.name) &&
-                Objects.equals(fieldType, field.fieldType) &&
-                Objects.equals(comment, field.comment);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, fieldType, comment);
     }
 
     public static Builder newBuilder() {
@@ -65,6 +87,8 @@ public class DatasetField implements Serializable {
         private String name;
         private DatasetFieldType fieldType;
         private String comment;
+        private boolean isPrimaryKey;
+        private boolean isNullable;
 
         private Builder() {
         }
@@ -84,8 +108,18 @@ public class DatasetField implements Serializable {
             return this;
         }
 
+        public Builder withIsPrimaryKey(boolean isPrimaryKey) {
+            this.isPrimaryKey = isPrimaryKey;
+            return this;
+        }
+
+        public Builder withIsNullable(boolean isNullable) {
+            this.isNullable = isNullable;
+            return this;
+        }
+
         public DatasetField build() {
-            return new DatasetField(name, fieldType, comment);
+            return new DatasetField(name, fieldType, comment, isPrimaryKey, isNullable);
         }
     }
 }

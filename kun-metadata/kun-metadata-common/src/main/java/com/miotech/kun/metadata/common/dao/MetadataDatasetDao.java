@@ -26,7 +26,7 @@ public class MetadataDatasetDao {
     private static final Logger logger = LoggerFactory.getLogger(MetadataDatasetDao.class);
 
     private static final String[] DATASET_COLUMNS = { "gid", "name", "datasource_id", "schema", "data_store", "database_name", "deleted" };
-    private static final String[] DATASET_FIELD_COLUMNS = { "name", "type", "description", "raw_type" };
+    private static final String[] DATASET_FIELD_COLUMNS = { "name", "type", "description", "raw_type, is_primary_key, is_nullable" };
 
     private static final String DATASET_TABLE_NAME = "kun_mt_dataset";
     private static final String DATASET_FIELD_TABLE_NAME = "kun_mt_dataset_field";
@@ -108,10 +108,14 @@ public class MetadataDatasetDao {
             String type = rs.getString(2);
             String description = rs.getString(3);
             String rawType = rs.getString(4);
+            boolean isPrimaryKey = rs.getBoolean(5);
+            boolean isNullable = rs.getBoolean(6);
             return DatasetField.newBuilder()
                     .withName(name)
                     .withComment(description)
                     .withFieldType(new DatasetFieldType(DatasetFieldType.convertRawType(type), rawType))
+                    .withIsPrimaryKey(isPrimaryKey)
+                    .withIsNullable(isNullable)
                     .build();
         }
     }
