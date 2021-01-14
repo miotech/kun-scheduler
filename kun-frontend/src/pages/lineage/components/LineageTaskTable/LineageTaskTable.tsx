@@ -2,6 +2,7 @@ import { Link } from 'umi';
 import React, { memo, useEffect, useMemo, useState } from 'react';
 import useI18n from '@/hooks/useI18n';
 import { CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
+import dayjs from 'dayjs';
 
 import { Table } from 'antd';
 import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
@@ -63,7 +64,8 @@ export default memo(function LineageTaskTable({
         dataIndex: 'taskName',
         title: taskColumnName,
         className: styles.nameColumn,
-        width: 90,
+        width: 140,
+        ellipsis: true,
         render: (taskName: string, record: LineageTask) => {
           if (taskIdToDefIdMap[record.taskId] != null) {
             return (
@@ -88,7 +90,8 @@ export default memo(function LineageTaskTable({
         dataIndex: 'lastExecutedTime',
         title: t('dataDetail.lineage.table.lastExecutedTime'),
         className: styles.nameColumn,
-        width: 140,
+        width: 120,
+        render: (txt: string) => txt != null ? dayjs(txt).format('YYYY-MM-DD HH:mm:ss') : '-',
       },
       {
         key: 'historyList',
@@ -120,7 +123,7 @@ export default memo(function LineageTaskTable({
         width: 140,
       },
     ],
-    [getBackPath, t, taskColumnName],
+    [getBackPath, t, taskColumnName, taskIdToDefIdMap],
   );
 
   return (
