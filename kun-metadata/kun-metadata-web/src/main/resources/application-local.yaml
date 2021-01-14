@@ -26,6 +26,7 @@ rpc:
 kafka:
   bootstrapServers: 127.0.0.1:9092
   mceTopicName: kun-metadata-mce
-  mseTopicName: kun-metadata-mse
+  mseTopicName: kun-metadata-mse-dev
   mceGroupId: 87f367957a9b49c48ce708fae38a158c
   mseGroupId: 18bf66dc2c4249baa45618c43fae51b5
+  pushMode: off
