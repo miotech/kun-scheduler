@@ -15,7 +15,6 @@ import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtracto
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractorFactory;
 import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
 import com.miotech.kun.metadata.databuilder.extract.tool.KafkaUtil;
-import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
@@ -41,15 +40,17 @@ public class MCEBuilder {
     private final GidService gidService;
     private final MetadataDatasetDao datasetDao;
     private final DataSourceBuilder dataSourceBuilder;
+    private final PostgresLoader postgresLoader;
 
     @Inject
     public MCEBuilder(Props props, DatabaseOperator operator, GidService gidService, MetadataDatasetDao datasetDao,
-                      DataSourceBuilder dataSourceBuilder) {
+                      DataSourceBuilder dataSourceBuilder, PostgresLoader postgresLoader) {
         this.props = props;
         this.operator = operator;
         this.gidService = gidService;
         this.datasetDao = datasetDao;
         this.dataSourceBuilder = dataSourceBuilder;
+        this.postgresLoader = postgresLoader;
     }
 
     public void extractSchemaOfDataSource(Long datasourceId) throws Exception {
@@ -72,8 +73,7 @@ public class MCEBuilder {
 
         Iterator<Dataset> datasetIterator = extractor.extract(dataSource);
         while (datasetIterator.hasNext()) {
-            Loader loader = new PostgresLoader(operator);
-            loader.loadSchema(datasetIterator.next());
+            postgresLoader.loadSchema(datasetIterator.next());
 
             // 发送消息
 //            KafkaUtil.send(null, null, null);
@@ -100,8 +100,7 @@ public class MCEBuilder {
         }
 
         List<DatasetField> fields = extractor.extract(dataset.get(), dataSource);
-        Loader loader = new PostgresLoader(operator);
-        loader.loadSchema(gid, fields);
+        postgresLoader.loadSchema(gid, fields);
 
         // 发送消息
         try {
@@ -142,7 +141,7 @@ public class MCEBuilder {
         extractSchemaOfDataset(gid);
     }
 
-    private boolean judgeDatasetExistence(long gid, DataSource dataSource, DatasetSchemaExtractor extractor, DatasetExistenceJudgeMode judgeMode) throws Exception {
+    private boolean judgeDatasetExistence(long gid, DataSource dataSource, DatasetSchemaExtractor extractor, DatasetExistenceJudgeMode judgeMode) {
         Optional<Dataset> dataset = datasetDao.fetchDatasetByGid(gid);
         if (!dataset.isPresent()) {
             logger.warn("Dataset not found, gid: {}", gid);
@@ -152,7 +151,7 @@ public class MCEBuilder {
         return judgeDatasetExistence(dataset, dataSource, extractor, judgeMode);
     }
 
-    private boolean judgeDatasetExistence(Optional<Dataset> dataset, DataSource dataSource, DatasetSchemaExtractor extractor, DatasetExistenceJudgeMode judgeMode) throws Exception {
+    private boolean judgeDatasetExistence(Optional<Dataset> dataset, DataSource dataSource, DatasetSchemaExtractor extractor, DatasetExistenceJudgeMode judgeMode) {
         if (!dataset.isPresent()) {
             return false;
         }
