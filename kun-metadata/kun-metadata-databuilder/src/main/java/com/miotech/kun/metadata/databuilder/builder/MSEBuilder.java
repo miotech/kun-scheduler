@@ -2,14 +2,12 @@ package com.miotech.kun.metadata.databuilder.builder;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.databuilder.extract.stat.DatasetStatExtractor;
 import com.miotech.kun.metadata.databuilder.extract.stat.DatasetStatExtractorFactory;
 import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
-import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 import org.slf4j.Logger;
@@ -21,15 +19,15 @@ import java.util.Optional;
 public class MSEBuilder {
     private static final Logger logger = LoggerFactory.getLogger(MSEBuilder.class);
 
-    private final DatabaseOperator operator;
     private final MetadataDatasetDao datasetDao;
     private final DataSourceBuilder dataSourceBuilder;
+    private final PostgresLoader postgresLoader;
 
     @Inject
-    public MSEBuilder(DatabaseOperator operator, MetadataDatasetDao datasetDao, DataSourceBuilder dataSourceBuilder) {
-        this.operator = operator;
+    public MSEBuilder(MetadataDatasetDao datasetDao, DataSourceBuilder dataSourceBuilder, PostgresLoader postgresLoader) {
         this.datasetDao = datasetDao;
         this.dataSourceBuilder = dataSourceBuilder;
+        this.postgresLoader = postgresLoader;
     }
 
     public void extractStat(Long gid) throws Exception {
@@ -57,8 +55,7 @@ public class MSEBuilder {
         }
 
         Dataset datasetWithStat = extractor.extract(dataset.get(), dataSource);
-        Loader loader = new PostgresLoader(operator);
-        loader.loadStat(datasetWithStat);
+        postgresLoader.loadStat(datasetWithStat);
 
     }
 }
