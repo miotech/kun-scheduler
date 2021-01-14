@@ -8,6 +8,8 @@ public class DatasetFieldPO {
 
     private String type;
 
+    private String rawType;
+
     public long getId() {
         return id;
     }
@@ -20,11 +22,15 @@ public class DatasetFieldPO {
         return type;
     }
 
-    public DatasetFieldPO(long id, String name, String type) {
+    public String getRawType() {
+        return rawType;
+    }
+
+    public DatasetFieldPO(long id, String name, String type, String rawType) {
         this.id = id;
         this.name = name;
         this.type = type;
+        this.rawType = rawType;
     }
-
 
 }
