@@ -4,17 +4,19 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.databuilder.load.Loader;
+import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 
 import javax.sql.DataSource;
 import java.util.concurrent.TimeUnit;
 
-public class MCEBuilderModule extends AbstractModule {
+public class BuilderModule extends AbstractModule {
 
     private final Props props;
 
-    public MCEBuilderModule(Props props) {
+    public BuilderModule(Props props) {
         this.props = props;
     }
 
@@ -38,4 +40,8 @@ public class MCEBuilderModule extends AbstractModule {
         return props;
     }
 
+    @Override
+    protected void configure() {
+        bind(Loader.class).to(PostgresLoader.class);
+    }
 }
