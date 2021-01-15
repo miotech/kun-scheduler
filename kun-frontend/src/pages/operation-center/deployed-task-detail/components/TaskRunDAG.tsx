@@ -16,16 +16,15 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export const TaskRunDAG: FunctionComponent<Props> = (props) => {
+export const TaskRunDAG: FunctionComponent<Props> = props => {
   const { taskRun, width, height } = props;
 
-  const {
-    data: dagData,
-    loading,
-    run: fetchDAGFromRemote,
-  } = useRequest(fetchTaskRunDAG, {
-    manual: true,
-  });
+  const { data: dagData, loading, run: fetchDAGFromRemote } = useRequest(
+    fetchTaskRunDAG,
+    {
+      manual: true,
+    },
+  );
 
   useEffect(() => {
     if (taskRun) {
@@ -34,10 +33,7 @@ export const TaskRunDAG: FunctionComponent<Props> = (props) => {
         downstreamLevel: 3,
       });
     }
-  }, [
-    fetchDAGFromRemote,
-    taskRun,
-  ]);
+  }, [fetchDAGFromRemote, taskRun]);
 
   const DAGDom = useMemo(() => {
     if (loading) {
@@ -61,21 +57,13 @@ export const TaskRunDAG: FunctionComponent<Props> = (props) => {
           height={height}
           nodes={nodes || []}
           relations={edges || []}
+          centerTaskId={taskRun?.id as string | undefined}
         />
       );
     }
     // else
     return <></>;
-  }, [
-    loading,
-    dagData,
-    width,
-    height,
-  ]);
+  }, [loading, dagData, width, height]);
 
-  return (
-    <div data-tid="deployed-task-dag">
-      {DAGDom}
-    </div>
-  );
+  return <div data-tid="deployed-task-dag">{DAGDom}</div>;
 };

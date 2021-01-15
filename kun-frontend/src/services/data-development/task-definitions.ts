@@ -1,15 +1,27 @@
-import { PaginationRespBody, ServiceRespPromise } from '@/definitions/common-types';
-import { DeployVO, TaskDefinition, TaskPayload, TaskTryVO } from '@/definitions/TaskDefinition.type';
+import {
+  PaginationRespBody,
+  ServiceRespPromise,
+} from '@/definitions/common-types';
+import {
+  DeployVO,
+  TaskDefinition,
+  TaskPayload,
+  TaskTryVO,
+} from '@/definitions/TaskDefinition.type';
 import { TaskRunLog } from '@/definitions/TaskRun.type';
 
 import { delet, get, post, put } from '@/utils/requestUtils';
 import { API_DATA_PLATFORM_PREFIX } from '@/constants/api-prefixes';
 import { TaskDefinitionViewVO } from '@/definitions/TaskDefinitionView.type';
+import axios from 'axios';
+import SafeUrlAssembler from 'safe-url-assembler';
 
 /**
  * Get all task definitions (Used by DAG)
  */
-export async function fetchAllTaskDefinitions(): ServiceRespPromise<TaskDefinition[]> {
+export async function fetchAllTaskDefinitions(): ServiceRespPromise<
+  TaskDefinition[]
+> {
   return get('/task-definitions', {
     prefix: API_DATA_PLATFORM_PREFIX,
     mockCode: 'task-definitions.fetchAll',
@@ -32,7 +44,9 @@ export interface SearchTaskDefinitionReqParams {
   viewIds?: string[];
 }
 
-export async function searchTaskDefinition(reqParams: SearchTaskDefinitionReqParams): ServiceRespPromise<PaginationRespBody<TaskDefinition>> {
+export async function searchTaskDefinition(
+  reqParams: SearchTaskDefinitionReqParams,
+): ServiceRespPromise<PaginationRespBody<TaskDefinition>> {
   return get('/task-definitions/_search', {
     query: {
       // by default, we filter out archived
@@ -56,7 +70,9 @@ export interface CreateTaskDefinitionReqParams {
   taskTemplateName: string;
 }
 
-export async function createTaskDefinition(reqParams: CreateTaskDefinitionReqParams): ServiceRespPromise<TaskDefinition> {
+export async function createTaskDefinition(
+  reqParams: CreateTaskDefinitionReqParams,
+): ServiceRespPromise<TaskDefinition> {
   return post('/task-definitions', {
     data: { ...reqParams },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -69,7 +85,9 @@ export async function createTaskDefinition(reqParams: CreateTaskDefinitionReqPar
  * GET /api/task-definitions/{id}
  */
 
-export async function fetchTaskDefinitionDetail(id: string | number): ServiceRespPromise<TaskDefinition> {
+export async function fetchTaskDefinitionDetail(
+  id: string | number,
+): ServiceRespPromise<TaskDefinition> {
   return get('/task-definitions/:id', {
     pathParams: {
       id: `${id}`,
@@ -91,11 +109,10 @@ export interface UpdateTaskDefinitionReqParams {
   owner: string | number;
 }
 
-export async function updateTaskDefinition(reqParams: UpdateTaskDefinitionReqParams): ServiceRespPromise<TaskDefinition> {
-  const {
-    id,
-    ...restReqParams
-  } = reqParams;
+export async function updateTaskDefinition(
+  reqParams: UpdateTaskDefinitionReqParams,
+): ServiceRespPromise<TaskDefinition> {
+  const { id, ...restReqParams } = reqParams;
   return put('/task-definitions/:id', {
     pathParams: { id: `${id}` },
     data: {
@@ -112,7 +129,9 @@ export async function updateTaskDefinition(reqParams: UpdateTaskDefinitionReqPar
  * DELETE /task-definitions/{id}
  */
 
-export async function deleteTaskDefinition(id: string | number): ServiceRespPromise<{}> {
+export async function deleteTaskDefinition(
+  id: string | number,
+): ServiceRespPromise<{}> {
   return delet('/task-definitions/:id', {
     pathParams: {
       id: `${id}`,
@@ -133,7 +152,9 @@ export interface DryRunTaskDefReqParams {
   variables: Record<string, any>;
 }
 
-export async function dryRunTaskDefinition(reqParams: DryRunTaskDefReqParams): ServiceRespPromise<TaskTryVO> {
+export async function dryRunTaskDefinition(
+  reqParams: DryRunTaskDefReqParams,
+): ServiceRespPromise<TaskTryVO> {
   return post('/task-definitions/:id/_run', {
     pathParams: {
       id: reqParams.taskDefId,
@@ -143,8 +164,27 @@ export async function dryRunTaskDefinition(reqParams: DryRunTaskDefReqParams): S
       variables: reqParams.variables,
     },
     prefix: API_DATA_PLATFORM_PREFIX,
-    mockCode: 'task-definitions.run'
+    mockCode: 'task-definitions.run',
   });
+}
+
+export async function dryRunTaskDefinitionWithoutErrorNotification(
+  reqParams: DryRunTaskDefReqParams,
+): ServiceRespPromise<TaskTryVO> {
+  const axiosInstance = axios.create();
+  return axiosInstance.post(
+    SafeUrlAssembler()
+      .template('/task-definitions/:id/_run')
+      .prefix(API_DATA_PLATFORM_PREFIX)
+      .param({
+        id: reqParams.taskDefId,
+      })
+      .toString(),
+    {
+      parameters: reqParams.parameters,
+      variables: reqParams.variables,
+    },
+  );
 }
 
 /**
@@ -152,11 +192,13 @@ export async function dryRunTaskDefinition(reqParams: DryRunTaskDefReqParams): S
  * POST /task-definitions/{id}/_check
  */
 
-export async function checkTaskDefinitionConfigIsValid(taskDefId: string | number): ServiceRespPromise<TaskTryVO> {
+export async function checkTaskDefinitionConfigIsValid(
+  taskDefId: string | number,
+): ServiceRespPromise<TaskTryVO> {
   return post('/task-definitions/:id/_check', {
     pathParams: { id: taskDefId },
     prefix: API_DATA_PLATFORM_PREFIX,
-    mockCode: 'task-definitions.check'
+    mockCode: 'task-definitions.check',
   });
 }
 
@@ -165,7 +207,10 @@ export async function checkTaskDefinitionConfigIsValid(taskDefId: string | numbe
  * POST /task-definitions/{id}/_deploy
  */
 
-export async function commitAndDeployTaskDefinition(taskDefId: string | number, message: string): ServiceRespPromise<DeployVO> {
+export async function commitAndDeployTaskDefinition(
+  taskDefId: string | number,
+  message: string,
+): ServiceRespPromise<DeployVO> {
   return post('/task-definitions/:id/_deploy', {
     pathParams: { id: taskDefId },
     data: {
@@ -173,7 +218,7 @@ export async function commitAndDeployTaskDefinition(taskDefId: string | number, 
       message,
     },
     prefix: API_DATA_PLATFORM_PREFIX,
-    mockCode: 'task-definitions.deploy'
+    mockCode: 'task-definitions.deploy',
   });
 }
 
@@ -182,7 +227,9 @@ export async function commitAndDeployTaskDefinition(taskDefId: string | number, 
  * GET /task-tries/{id}
  */
 
-export async function fetchTaskTry(taskTryId: string | number): ServiceRespPromise<TaskTryVO> {
+export async function fetchTaskTry(
+  taskTryId: string | number,
+): ServiceRespPromise<TaskTryVO> {
   return get('/task-tries/:id', {
     pathParams: { id: taskTryId },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -195,7 +242,9 @@ export async function fetchTaskTry(taskTryId: string | number): ServiceRespPromi
  * POST /task-tries/{id}
  */
 
-export async function stopTaskTry(taskTryId: string | number): ServiceRespPromise<TaskTryVO> {
+export async function stopTaskTry(
+  taskTryId: string | number,
+): ServiceRespPromise<TaskTryVO> {
   return post('/task-tries/:id/_stop', {
     pathParams: { id: taskTryId },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -213,7 +262,10 @@ export interface FetchTaskTryLogExtraParams {
   end?: number | string;
 }
 
-export async function fetchTaskTryLog(taskTryId: string | number, filters: FetchTaskTryLogExtraParams = {}): ServiceRespPromise<TaskRunLog> {
+export async function fetchTaskTryLog(
+  taskTryId: string | number,
+  filters: FetchTaskTryLogExtraParams = {},
+): ServiceRespPromise<TaskRunLog> {
   return get('/task-tries/:id/log', {
     pathParams: { id: taskTryId },
     query: filters,
@@ -227,13 +279,16 @@ export async function fetchTaskTryLog(taskTryId: string | number, filters: Fetch
  * @param taskDefId
  */
 export async function fetchTaskDefViewsByTaskDefId(taskDefId: string) {
-  return get<TaskDefinitionViewVO[]>('/task-definitions/:taskDefId/task-def-views', {
-    prefix: API_DATA_PLATFORM_PREFIX,
-    pathParams: {
-      taskDefId,
+  return get<TaskDefinitionViewVO[]>(
+    '/task-definitions/:taskDefId/task-def-views',
+    {
+      prefix: API_DATA_PLATFORM_PREFIX,
+      pathParams: {
+        taskDefId,
+      },
+      mockCode: 'task-definitions.get-views-by-def-id',
     },
-    mockCode: 'task-definitions.get-views-by-def-id',
-  });
+  );
 }
 
 export async function fetchTaskDefinitionTotalCount(): Promise<number> {
