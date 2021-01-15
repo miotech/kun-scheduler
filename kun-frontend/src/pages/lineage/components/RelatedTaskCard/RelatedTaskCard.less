@@ -14,10 +14,15 @@
 }
 
 .datasetBlock {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   margin-right: 12px;
   color: @darkBlue;
+  max-width: 120px;
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+  height: auto;
+  overflow-wrap: anywhere;
 }
 
 .datasetName {

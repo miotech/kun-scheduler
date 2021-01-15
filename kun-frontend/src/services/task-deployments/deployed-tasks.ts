@@ -13,6 +13,8 @@ import {
   DeployedTaskDAG,
   DeployedTaskDetail,
 } from '@/definitions/DeployedTask.type';
+import axios from 'axios';
+import SafeUrlAssembler from 'safe-url-assembler';
 
 /**
  * GET /deploy-taskruns
@@ -64,6 +66,23 @@ export async function fetchScheduledTaskRunLog(
     pathParams: { id: taskRunId },
     prefix: API_DATA_PLATFORM_PREFIX,
   });
+}
+
+export async function fetchScheduledTaskRunLogWithoutErrorNotification(
+  taskRunId: string,
+): ServiceRespPromise<TaskRunLog> {
+  const axiosInstance = axios.create();
+  return axiosInstance
+    .get(
+      SafeUrlAssembler()
+        .template('/deployed-taskruns/:id/log')
+        .prefix(API_DATA_PLATFORM_PREFIX)
+        .param({
+          id: taskRunId,
+        })
+        .toString(),
+    )
+    .then(response => response.data?.result);
 }
 
 /**
