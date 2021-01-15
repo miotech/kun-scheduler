@@ -10,6 +10,10 @@ public class DatasetFieldPO {
 
     private String rawType;
 
+    private boolean isPrimaryKey;
+
+    private boolean isNullable;
+
     public long getId() {
         return id;
     }
@@ -26,11 +30,20 @@ public class DatasetFieldPO {
         return rawType;
     }
 
-    public DatasetFieldPO(long id, String name, String type, String rawType) {
+    public boolean isPrimaryKey() {
+        return isPrimaryKey;
+    }
+
+    public boolean isNullable() {
+        return isNullable;
+    }
+
+    public DatasetFieldPO(long id, String name, String type, String rawType, boolean isPrimaryKey, boolean isNullable) {
         this.id = id;
         this.name = name;
         this.type = type;
         this.rawType = rawType;
+        this.isPrimaryKey = isPrimaryKey;
+        this.isNullable = isNullable;
     }
-
 }

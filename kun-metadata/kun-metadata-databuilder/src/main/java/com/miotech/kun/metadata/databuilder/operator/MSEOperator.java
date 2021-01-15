@@ -33,7 +33,7 @@ public class MSEOperator extends KunOperator {
             }
 
             Props props = buildPropsFromVariable();
-            Injector injector = Guice.createInjector(new DataSourceModule(props));
+            Injector injector = Guice.createInjector(new BuilderModule(props));
             dataSource = injector.getInstance(DataSource.class);
             MSEBuilder dataBuilder = injector.getInstance(MSEBuilder.class);
             dataBuilder.extractStat(Long.parseLong(operatorContext.getConfig().getString("gid")));

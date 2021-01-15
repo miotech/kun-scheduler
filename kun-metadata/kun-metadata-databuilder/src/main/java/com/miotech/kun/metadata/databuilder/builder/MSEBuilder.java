@@ -8,7 +8,7 @@ import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.databuilder.extract.stat.DatasetStatExtractor;
 import com.miotech.kun.metadata.databuilder.extract.stat.DatasetStatExtractorFactory;
 import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
-import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
+import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,13 +21,13 @@ public class MSEBuilder {
 
     private final MetadataDatasetDao datasetDao;
     private final DataSourceBuilder dataSourceBuilder;
-    private final PostgresLoader postgresLoader;
+    private final Loader loader;
 
     @Inject
-    public MSEBuilder(MetadataDatasetDao datasetDao, DataSourceBuilder dataSourceBuilder, PostgresLoader postgresLoader) {
+    public MSEBuilder(MetadataDatasetDao datasetDao, DataSourceBuilder dataSourceBuilder, Loader loader) {
         this.datasetDao = datasetDao;
         this.dataSourceBuilder = dataSourceBuilder;
-        this.postgresLoader = postgresLoader;
+        this.loader = loader;
     }
 
     public void extractStat(Long gid) throws Exception {
@@ -55,7 +55,7 @@ public class MSEBuilder {
         }
 
         Dataset datasetWithStat = extractor.extract(dataset.get(), dataSource);
-        postgresLoader.loadStat(datasetWithStat);
+        loader.loadStat(datasetWithStat);
 
     }
 }

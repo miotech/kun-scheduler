@@ -50,19 +50,22 @@ public class PostgresLoader implements Loader {
 
         for (DatasetField field : fields) {
             if (survivorFields.contains(field.getName())) {
-                if (!fieldInfos.get(field.getName()).getRawType().equals(field.getFieldType().getRawType())) {
+                if (isFieldChanged(fieldInfos.get(field.getName()), field)) {
                     // update field type
                     if (logger.isDebugEnabled()) {
-                        logger.debug("Update field type, oldType: {}, newType: {}", fieldInfos.get(field.getName()).getType(), field.getFieldType().getType());
+                        logger.debug("Update field type, oldType: {}, newType: {}, isPrimaryKeyOldValue: {}, isPrimaryKey: {}, isNullableOldValue: {}, isNullable: {}",
+                                fieldInfos.get(field.getName()).getType(), field.getFieldType().getType(),
+                                fieldInfos.get(field.getName()).isPrimaryKey(), field.isPrimaryKey(),
+                                fieldInfos.get(field.getName()).isNullable(), field.isNullable());
                     }
 
-                    dbOperator.update("UPDATE kun_mt_dataset_field SET type = ?, raw_type = ? WHERE dataset_gid = ? and name = ?",
-                            field.getFieldType().getType().toString(), field.getFieldType().getRawType(), gid, field.getName());
+                    dbOperator.update("UPDATE kun_mt_dataset_field SET type = ?, raw_type = ?, is_primary_key = ?, is_nullable = ? WHERE dataset_gid = ? and name = ?",
+                            field.getFieldType().getType().toString(), field.getFieldType().getRawType(), field.isPrimaryKey(), field.isNullable(), gid, field.getName());
                 }
             } else {
                 // new field
-                dbOperator.create("INSERT INTO kun_mt_dataset_field(dataset_gid, name, type, raw_type) VALUES(?, ?, ?, ?)",
-                        gid, field.getName(), field.getFieldType().getType().toString(), field.getFieldType().getRawType());
+                dbOperator.create("INSERT INTO kun_mt_dataset_field(dataset_gid, name, type, raw_type, is_primary_key, is_nullable) VALUES(?, ?, ?, ?, ?, ?)",
+                        gid, field.getName(), field.getFieldType().getType().toString(), field.getFieldType().getRawType(), field.isPrimaryKey(), field.isNullable());
             }
         }
     }
@@ -142,11 +145,13 @@ public class PostgresLoader implements Loader {
                       List<String> survivorFields, long gid) {
         List<String> extractFields = fields.stream().map(DatasetField::getName).collect(Collectors.toList());
 
-        dbOperator.fetchAll("SELECT id, name, type, description, raw_type FROM kun_mt_dataset_field WHERE dataset_gid = ?", rs -> {
-            long id = rs.getLong(1);
-            String name = rs.getString(2);
-            String type = rs.getString(3);
-            String rawType = rs.getString(5);
+        dbOperator.fetchAll("SELECT id, name, type, description, raw_type, is_primary_key, is_nullable FROM kun_mt_dataset_field WHERE dataset_gid = ?", rs -> {
+            long id = rs.getLong("id");
+            String name = rs.getString("name");
+            String type = rs.getString("type");
+            String rawType = rs.getString("raw_type");
+            boolean isPrimaryKey = rs.getBoolean("is_primary_key");
+            boolean isNullable = rs.getBoolean("is_nullable");
 
             if (!extractFields.contains(name)) {
                 dropFields.add(name);
@@ -154,10 +159,16 @@ public class PostgresLoader implements Loader {
                 survivorFields.add(name);
             }
 
-            DatasetFieldPO fieldPO = new DatasetFieldPO(id, name, type, rawType);
+            DatasetFieldPO fieldPO = new DatasetFieldPO(id, name, type, rawType, isPrimaryKey, isNullable);
             fieldInfos.put(name, fieldPO);
             return null;
         }, gid);
+    }
+
+    private boolean isFieldChanged(DatasetFieldPO oldField, DatasetField newField) {
+        return !oldField.getRawType().equals(newField.getFieldType().getRawType()) ||
+                oldField.isPrimaryKey() != newField.isPrimaryKey() ||
+                oldField.isNullable() != newField.isNullable();
     }
 
 }

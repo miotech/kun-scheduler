@@ -15,7 +15,7 @@ import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtracto
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractorFactory;
 import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
 import com.miotech.kun.metadata.databuilder.extract.tool.KafkaUtil;
-import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
+import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 import com.miotech.kun.metadata.databuilder.service.gid.GidService;
@@ -40,17 +40,17 @@ public class MCEBuilder {
     private final GidService gidService;
     private final MetadataDatasetDao datasetDao;
     private final DataSourceBuilder dataSourceBuilder;
-    private final PostgresLoader postgresLoader;
+    private final Loader loader;
 
     @Inject
     public MCEBuilder(Props props, DatabaseOperator operator, GidService gidService, MetadataDatasetDao datasetDao,
-                      DataSourceBuilder dataSourceBuilder, PostgresLoader postgresLoader) {
+                      DataSourceBuilder dataSourceBuilder, Loader loader) {
         this.props = props;
         this.operator = operator;
         this.gidService = gidService;
         this.datasetDao = datasetDao;
         this.dataSourceBuilder = dataSourceBuilder;
-        this.postgresLoader = postgresLoader;
+        this.loader = loader;
     }
 
     public void extractSchemaOfDataSource(Long datasourceId) throws Exception {
@@ -73,7 +73,7 @@ public class MCEBuilder {
 
         Iterator<Dataset> datasetIterator = extractor.extract(dataSource);
         while (datasetIterator.hasNext()) {
-            postgresLoader.loadSchema(datasetIterator.next());
+            loader.loadSchema(datasetIterator.next());
 
             // 发送消息
 //            KafkaUtil.send(null, null, null);
@@ -100,7 +100,7 @@ public class MCEBuilder {
         }
 
         List<DatasetField> fields = extractor.extract(dataset.get(), dataSource);
-        postgresLoader.loadSchema(gid, fields);
+        loader.loadSchema(gid, fields);
 
         // 发送消息
         try {

@@ -33,7 +33,7 @@ public class MCEOperator extends KunOperator {
             }
 
             Props props = buildPropsFromVariable();
-            Injector injector = Guice.createInjector(new MCEBuilderModule(props));
+            Injector injector = Guice.createInjector(new BuilderModule(props));
             dataSource = injector.getInstance(DataSource.class);
             MCEBuilder dataBuilder = injector.getInstance(MCEBuilder.class);
 
