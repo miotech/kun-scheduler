@@ -41,8 +41,8 @@ public class PostgresLoaderTest extends DatabaseTestBase {
         Dataset dataset = Dataset.newBuilder()
                 .withName("datasetName")
                 .withDatasourceId(1L)
-                .withFields(ImmutableList.of(new DatasetField("id", new DatasetFieldType(DatasetFieldType.convertRawType("int"), "int"), "auto increment"),
-                        new DatasetField("name", new DatasetFieldType(DatasetFieldType.convertRawType("string"), "string"), "test name")))
+                .withFields(ImmutableList.of(new DatasetField("id", new DatasetFieldType(DatasetFieldType.convertRawType("int"), "int"), "auto increment", false, false),
+                        new DatasetField("name", new DatasetFieldType(DatasetFieldType.convertRawType("string"), "string"), "test name", false, true)))
                 .withDataStore(new HiveTableStore("", "test_database", "test_table"))
                 .build();
 
@@ -60,13 +60,19 @@ public class PostgresLoaderTest extends DatabaseTestBase {
                 .withFieldType(new DatasetFieldType(DatasetFieldType.convertRawType("int"), "int"))
                 .withComment(Strings.EMPTY)
                 .withName("id")
+                .withIsPrimaryKey(true)
+                .withIsNullable(true)
                 .build());
         postgresLoader.loadSchema(gid, fields);
 
         datasetOpt = metadataDatasetDao.fetchDatasetByGid(gid);
         Assert.assertTrue(datasetOpt.isPresent());
-        MatcherAssert.assertThat(datasetOpt.get().getName(), Matchers.is(dataset.getName()));
-        MatcherAssert.assertThat(datasetOpt.get().getFields().size(), Matchers.is(1));
+        Dataset datasetResult = datasetOpt.get();
+        MatcherAssert.assertThat(datasetResult.getName(), Matchers.is(dataset.getName()));
+        MatcherAssert.assertThat(datasetResult.getFields().size(), Matchers.is(1));
+        DatasetField datasetField = datasetResult.getFields().get(0);
+        MatcherAssert.assertThat(datasetField.isPrimaryKey(), Matchers.is(true));
+        MatcherAssert.assertThat(datasetField.isNullable(), Matchers.is(true));
     }
 
     @Test
