@@ -6,7 +6,6 @@ import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.operator.spark.clients.HttpApiClient;
-import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -54,7 +53,7 @@ public class ZhongdaNotifier extends HttpApiClient implements MessageNotifier {
     @Override
     public void notify(Event event) {
         TaskAttemptStatusChangeEvent taskAttemptStatusChangeEvent = (TaskAttemptStatusChangeEvent) event;
-        if(taskAttemptStatusChangeEvent.getToStatus().isFailure() ){
+        if(taskAttemptStatusChangeEvent.getToStatus().isFailure() && !"mse-task".equals(taskAttemptStatusChangeEvent.getTaskName())){
             String msg = buildMessage(taskAttemptStatusChangeEvent);
             List<String> users = deployedTaskService.getUserByTaskId(taskAttemptStatusChangeEvent.getTaskId());
             sendMessage(msg, users);
