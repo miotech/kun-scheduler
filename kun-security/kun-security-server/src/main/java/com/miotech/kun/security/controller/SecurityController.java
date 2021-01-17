@@ -1,15 +1,20 @@
 package com.miotech.kun.security.controller;
 
+import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.security.SecurityContextHolder;
 import com.miotech.kun.security.model.UserInfo;
+import com.miotech.kun.security.model.entity.Permission;
+import com.miotech.kun.security.model.entity.Permissions;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.model.vo.UserListVO;
 import com.miotech.kun.security.service.AbstractSecurityService;
+import com.miotech.kun.security.service.PermissionService;
 import com.miotech.kun.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,12 +30,18 @@ public class SecurityController {
     UserService userService;
 
     @Autowired
+    PermissionService permissionService;
+
+    @Autowired
     AbstractSecurityService abstractSecurityService;
 
     @GetMapping("/whoami")
     public RequestResult<UserInfo> whoami() {
         UserInfo userInfo = SecurityContextHolder.getUserInfo();
-        return RequestResult.success(abstractSecurityService.enrichUserInfo(userInfo));
+        Permissions permissions = permissionService.findByUserId(userInfo.getId());
+        userInfo.setPermissions(Sets.newHashSet(permissions.getPermissions().stream()
+                .map(Permission::toPermissionString).collect(Collectors.toList())));
+        return RequestResult.success(userInfo);
     }
 
     @GetMapping("/user/search")
@@ -44,7 +55,6 @@ public class SecurityController {
     public RequestResult<List<UserInfo>> getUserList() {
         List<UserInfo> userInfos = userService.getUsers().stream()
                 .map(abstractSecurityService::convertToUserInfo)
-                .map(abstractSecurityService::enrichUserInfo)
                 .collect(Collectors.toList());
         return RequestResult.success(userInfos);
     }

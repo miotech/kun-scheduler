@@ -13,13 +13,17 @@ import java.util.List;
  * @created: 2020/7/1
  */
 @Service
-public class UserService {
+public class UserService extends BaseSecurityService {
 
     @Autowired
     UserRepository userRepository;
 
     public User addUser(UserInfo userInfo) {
-        return userRepository.insert(userInfo);
+        userInfo.setCreateUser(getCurrentUsername());
+        userInfo.setCreateTime(System.currentTimeMillis());
+        userInfo.setUpdateUser(getCurrentUsername());
+        userInfo.setUpdateTime(System.currentTimeMillis());
+        return userRepository.addUser(userInfo);
     }
 
     public User getUser(Long id) {
@@ -31,6 +35,6 @@ public class UserService {
     }
 
     public List<User> getUsers() {
-        return userRepository.findAll();
+        return userRepository.findAllUser();
     }
 }

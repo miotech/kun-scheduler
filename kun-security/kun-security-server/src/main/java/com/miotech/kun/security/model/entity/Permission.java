@@ -1,22 +1,23 @@
 package com.miotech.kun.security.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.security.model.constant.PermissionType;
 import lombok.Data;
 
 /**
  * @author: Jie Chen
- * @created: 2020/6/29
+ * @created: 2021/1/19
  */
 @Data
-public class User {
+public class Permission {
 
     @JsonSerialize(using= ToStringSerializer.class)
-    private Long id;
+    Long id;
 
-    @JsonProperty("username")
-    private String name;
+    String resourceName;
+
+    PermissionType type;
 
     String createUser;
 
@@ -25,4 +26,8 @@ public class User {
     String updateUser;
 
     Long updateTime;
+
+    public String toPermissionString() {
+        return resourceName + "_" + type.name();
+    }
 }

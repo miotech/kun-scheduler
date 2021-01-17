@@ -1,8 +1,8 @@
 package com.miotech.kun.security.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.security.common.Permission;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -12,7 +12,7 @@ import java.util.Set;
 public class UserInfo implements Serializable {
 
     @JsonProperty("id")
-    @JsonFormat(shape = JsonFormat.Shape.STRING)
+    @JsonSerialize(using= ToStringSerializer.class)
     private Long id;
 
     @JsonProperty(value = "username", required = true)
@@ -21,5 +21,13 @@ public class UserInfo implements Serializable {
     @JsonProperty(value = "password", required = true, access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    private Set<Permission> permissions;
+    private Set<String> permissions;
+
+    String createUser;
+
+    Long createTime;
+
+    String updateUser;
+
+    Long updateTime;
 }

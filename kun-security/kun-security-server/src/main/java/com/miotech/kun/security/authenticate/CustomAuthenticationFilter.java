@@ -14,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.FilterChain;
@@ -28,7 +29,7 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
     private static final Log LOG = LogFactory.getLog(CustomAuthenticationFilter.class);
 
-    private static final String ERROR_MESSAGE = "Something went wrong while parsing /login request body";
+    private static final String ERROR_MESSAGE = "Failed to authenticate.";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -44,25 +45,33 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         if (authentication != null
                 && StringUtils.isNotEmpty(authentication.getName())
                 && !StringUtils.equals(authentication.getName(), "anonymousUser")) {
-            if (authentication.getClass().isAssignableFrom(UsernamePasswordAuthenticationToken.class)) {
+            if (authentication.getClass().isAssignableFrom(UsernamePasswordAuthenticationToken.class)
+            || authentication.getClass().isAssignableFrom(OAuth2AuthenticationToken.class)) {
                 String saveUsername = authentication.getName().toLowerCase();
                 UserInfo savedUser = abstractSecurityService.getOrSave(saveUsername);
                 newAuthentication = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(),
                         authentication.getCredentials(),
                         authentication.getAuthorities());
-
                 com.miotech.kun.security.SecurityContextHolder.setUserInfo(savedUser);
+            } else if (authentication.getClass().isAssignableFrom(PassToken.class)) {
+                UserInfo userInfo = getPassTokenUserInfo();
+                com.miotech.kun.security.SecurityContextHolder.setUserInfo(userInfo);
             }
         } else if (isEqualToPassToken((HttpServletRequest) req, passToken)) {
             PassToken passToken = new PassToken();
-            UserInfo userInfo = new UserInfo();
-            userInfo.setUsername(ConfigKey.DEFAULT_INTERNAL_PASS_TOKEN_KEY);
+            UserInfo userInfo = getPassTokenUserInfo();
             newAuthentication = passToken;
             com.miotech.kun.security.SecurityContextHolder.setUserInfo(userInfo);
         }
 
         SecurityContextHolder.getContext().setAuthentication(newAuthentication);
         super.doFilter(req, res, chain);
+    }
+
+    private UserInfo getPassTokenUserInfo() {
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUsername(ConfigKey.DEFAULT_INTERNAL_PASS_TOKEN_KEY);
+        return userInfo;
     }
 
     private boolean isEqualToPassToken(HttpServletRequest httpServletRequest,

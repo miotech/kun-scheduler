@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright 2014-2020 the original author or authors.
+    Licensed under the Apache License, Version 2.0 (the "License");
+    you may not use this file except in compliance with the License.
+    You may obtain a copy of the License at
+         http://www.apache.org/licenses/LICENSE-2.0
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+-->
+<changelog xmlns="http://www.liquigraph.org/schema/1.0/liquigraph.xsd">
+    <changeset id="init-root-resource" author="jiechen">
+        <query>CREATE (n:RESOURCE {id: 0, name:'ROOT_RESOURCE'}) RETURN n</query>
+    </changeset>
+    <changeset id="create-constraint-on-resource-id" author="jiechen">
+        <query>CREATE CONSTRAINT ON (res:RESOURCE) ASSERT res.id IS UNIQUE</query>
+    </changeset>
+    <changeset id="create-constraint-on-resource-name" author="jiechen">
+        <query>CREATE CONSTRAINT ON (res:RESOURCE) ASSERT res.name IS UNIQUE</query>
+    </changeset>
+    <changeset id="create-constraint-on-user-id" author="jiechen">
+        <query>CREATE CONSTRAINT ON (u:USER) ASSERT u.id IS UNIQUE</query>
+    </changeset>
+    <changeset id="create-constraint-on-user-name" author="jiechen">
+        <query>CREATE CONSTRAINT ON (u:USER) ASSERT u.name IS UNIQUE</query>
+    </changeset>
+    <changeset id="create-constraint-on-permission-id" author="jiechen">
+        <query>CREATE CONSTRAINT ON (p:HAS_PERMISSION) ASSERT p.id IS UNIQUE</query>
+    </changeset>
+</changelog>
