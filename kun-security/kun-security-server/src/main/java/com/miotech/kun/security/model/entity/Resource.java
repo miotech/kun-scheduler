@@ -1,22 +1,20 @@
 package com.miotech.kun.security.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 /**
  * @author: Jie Chen
- * @created: 2020/6/29
+ * @created: 2021/1/18
  */
 @Data
-public class User {
+public class Resource {
 
     @JsonSerialize(using= ToStringSerializer.class)
-    private Long id;
+    Long id;
 
-    @JsonProperty("username")
-    private String name;
+    String name;
 
     String createUser;
 

@@ -38,7 +38,7 @@ metadata:
     password: ${DB_PG_PASSWORD}
 
 workflow:
-  enable: true
+  enable: false
   base-url: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
 
 data-quality:
