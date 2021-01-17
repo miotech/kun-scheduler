@@ -13,10 +13,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -24,6 +26,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -58,14 +61,11 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
         http
                 .csrf()
                 .disable();
+
         http
                 .authorizeRequests()
                 .antMatchers("/kun/api/**")
                 .authenticated()
-                .and()
-                .authorizeRequests()
-                .anyRequest()
-                .permitAll()
                 .and()
                 .addFilterBefore(
                         customAuthenticationFilter(),
@@ -73,11 +73,17 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
                 .logout()
                 .logoutUrl(apiPrefix + "/v1/security/logout")
                 .logoutSuccessHandler(abstractSecurityService.logoutSuccessHandler())
+                // 无效会话
+                .invalidateHttpSession(true)
+                // 清除身份验证
+                .clearAuthentication(true)
 
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
 
+        http
+                .oauth2Login();
         http
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
@@ -103,7 +109,6 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
             default:
                 throw ExceptionUtils.wrapIfChecked(new RuntimeException("Unsupported security type: " + securityType));
         }
-
     }
 
     @Bean

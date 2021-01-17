@@ -40,6 +40,7 @@ kun-data-platform/**/*.jar
 
 #docker
 redis_data
+neo4j_data
 
 !config-client-java/src/main/resources/application.conf
 */src/main/resources/application.conf
