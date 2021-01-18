@@ -18,6 +18,7 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -31,6 +32,7 @@ import java.io.Writer;
 import java.util.*;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
 
 public class TaskRunServiceTest extends CommonTestBase {
@@ -277,6 +279,63 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(mappings.get(task1Id).size(), is(10));
         assertThat(mappings.get(task2Id).size(), is(5));
         assertThat(mappings.get(task3Id).size(), is(0));
+    }
+
+
+    @Test
+    public void fetchLatestTaskRunsOrderByCreateTime(){
+        prepareTaskRuns();
+        List<Long> taskIdsToQuery = Lists.newArrayList(22L);
+        Map<Long, List<TaskRunVO>> mappings = taskRunService.fetchLatestTaskRuns(taskIdsToQuery, 10);
+        List<TaskRunVO> taskRunVOS = mappings.get(22L);
+        assertThat(taskRunVOS,hasSize(2));
+        assertThat(taskRunVOS.get(0).getId(),is(2L));
+        assertThat(taskRunVOS.get(1).getId(),is(1L));
+    }
+
+
+    private void prepareTaskRuns(){
+        Task task1 = Task.newBuilder().withId(22L)
+                .withName("test task 1")
+                .withDescription("")
+                .withOperatorId(1L)
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withConfig(Config.EMPTY)
+                .withDependencies(new ArrayList<>())
+                .withTags(new ArrayList<>())
+                .build();
+
+        taskDao.create(task1);
+        TaskRun taskRun1 = TaskRun.newBuilder()
+                .withId(1L)
+                .withTask(task1)
+                .withStatus(TaskRunStatus.INITIALIZING)
+                .withConfig(Config.EMPTY)
+                .withDependentTaskRunIds(Collections.emptyList())
+                .withInlets(Collections.emptyList())
+                .withOutlets(Collections.emptyList())
+                .withScheduledTick(new Tick(DateTimeUtils.now()))
+                .build();
+        taskRunDao.createTaskRun(taskRun1);
+        try {
+            Thread.sleep(1000l);
+        }catch (Exception e){
+
+        }
+
+
+        TaskRun taskRun2 = TaskRun.newBuilder()
+                .withId(2L)
+                .withTask(task1)
+                .withStatus(TaskRunStatus.RUNNING)
+                .withConfig(Config.EMPTY)
+                .withDependentTaskRunIds(Collections.emptyList())
+                .withInlets(Collections.emptyList())
+                .withOutlets(Collections.emptyList())
+                .withScheduledTick(new Tick(DateTimeUtils.now().plusMinutes(-1)))
+                .withStartAt(DateTimeUtils.now().plusMinutes(-1))
+                .build();
+        taskRunDao.createTaskRun(taskRun2);
     }
 
     private void prepareDataForFetchLatestTaskRuns() {

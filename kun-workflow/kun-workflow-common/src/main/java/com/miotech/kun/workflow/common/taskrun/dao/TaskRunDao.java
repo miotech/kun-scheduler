@@ -726,7 +726,7 @@ public class TaskRunDao {
 
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where("task_id = ?")
-                .orderBy("start_at DESC")
+                .orderBy(TASK_RUN_MODEL_NAME + ".id DESC")
                 .limit(limit)
                 .getSQL();
         return dbOperator.fetchAll(sql, taskRunMapperInstance, taskId);
