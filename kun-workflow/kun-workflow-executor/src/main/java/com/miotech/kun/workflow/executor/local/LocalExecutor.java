@@ -275,7 +275,7 @@ public class LocalExecutor implements Executor {
         List<TaskAttempt> taskAttemptList = taskRunDao.fetchUnStartedTaskAttemptList();
         logger.debug("recover taskAttempt to queue count = {}", taskAttemptList.size());
         List<TaskAttempt> runningTaskAttemptList = taskRunDao.fetchRunningTaskAttemptList();
-        logger.debug("recover taskAttempt to workerPool count = {}", runningTaskAttemptList);
+        logger.debug("recover taskAttempt to workerPool count = {}", runningTaskAttemptList.size());
         for (TaskAttempt taskAttempt : runningTaskAttemptList) {
             workerStarterThreadPool.submit(new WorkerStartRunner(taskAttempt));
         }
@@ -384,12 +384,19 @@ public class LocalExecutor implements Executor {
     }
 
     private void handleTimeoutAttempt(Long taskAttemptId) {
-        workerToken.release();
-        logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
-        workerPool.remove(taskAttemptId);
-        miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
-        TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
-        submit(taskAttempt, true);
+        //kill worker when worker time out
+        if (workerPool.containsKey(taskAttemptId)) {
+            Worker worker = workerFactory.getWorker(workerPool.get(taskAttemptId));
+            worker.shutdown();
+            logger.debug("worker is shutdown,taskAttemptId = {}", taskAttemptId);
+            workerPool.remove(taskAttemptId);
+            logger.debug("taskAttempt is removed from worker pool,taskAttemptId = {}", taskAttemptId);
+            workerToken.release();
+            logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
+            miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
+            TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
+            submit(taskAttempt, true);
+        }
     }
 
     class WaitAbort implements Runnable {
