@@ -388,7 +388,9 @@ public class LocalExecutor implements Executor {
         if (workerPool.containsKey(taskAttemptId)) {
             Worker worker = workerFactory.getWorker(workerPool.get(taskAttemptId));
             worker.shutdown();
+            logger.debug("worker is shutdown,taskAttemptId = {}", taskAttemptId);
             workerPool.remove(taskAttemptId);
+            logger.debug("taskAttempt is removed from worker pool,taskAttemptId = {}", taskAttemptId);
             workerToken.release();
             logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
             miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
