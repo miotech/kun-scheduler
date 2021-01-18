@@ -240,7 +240,7 @@ public class OperatorLauncher {
 
     private static void initLogger(String logPath) {
         ch.qos.logback.classic.Logger rootLogger
-                = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
+                = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("com.miotech.kun.workflow");
 
         LoggerContext context = rootLogger.getLoggerContext();
 
