@@ -12,6 +12,10 @@
   position: relative;
   background: @white;
   width: 100%;
-  height: calc(100% - 10px);
+  height: 100%;
   min-height: 600px;
+
+  :global(.ant-spin-container) {
+    height: calc(100% - 30px);
+  }
 }
