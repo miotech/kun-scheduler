@@ -199,7 +199,23 @@ public class LocalExecutor implements Executor {
 
     private boolean killTaskAttempt(Long attemptId) {
         if (!workerPool.containsKey(attemptId)) {
-            return false;
+            Optional<TaskAttempt> taskAttemptOptional = taskRunDao.fetchAttemptById(attemptId);
+            if (!taskAttemptOptional.isPresent()) {
+                logger.warn("taskAttempt not found,attemptId = {}", attemptId);
+                return false;
+            }
+            TaskAttempt taskAttempt = taskAttemptOptional.get();
+            if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
+                for (TaskAttempt queuedTaskAttempt : taskAttemptQueue) {
+                    if (queuedTaskAttempt.getId().equals(taskAttempt.getId())) {
+                        taskAttemptQueue.remove(taskAttempt);
+                        logger.debug("remove taskAttempt from queue,attemptId = {}", attemptId);
+                        break;
+                    }
+                }
+            }
+            taskRunDao.updateTaskAttemptStatus(attemptId, TaskRunStatus.ABORTED);
+            return true;
         } else {
             HeartBeatMessage message = workerPool.get(attemptId);
             Worker worker = workerFactory.getWorker(message);
