@@ -106,7 +106,7 @@ public class LocalWorker implements Worker {
     public void bind(HeartBeatMessage heartBeatMessage) {
         this.processId = heartBeatMessage.getWorkerId();
         this.port = heartBeatMessage.getPort();
-        this.taskAttemptId = taskAttemptId;
+        this.taskAttemptId = heartBeatMessage.getTaskAttemptId();
     }
 
     private List<String> buildCommand(String inputFile, String configFile, String outputFile, Long taskAttemptId) {
