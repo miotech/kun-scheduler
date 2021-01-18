@@ -24,7 +24,7 @@ public class Dataset implements Serializable {
 
     private final List<DatasetFieldStat> fieldStats;
 
-    private final DatasetStat datasetStat;
+    private final TableStatistics tableStatistics;
 
     public Long getGid() { return gid; }
 
@@ -52,8 +52,8 @@ public class Dataset implements Serializable {
         return fieldStats;
     }
 
-    public DatasetStat getDatasetStat() {
-        return datasetStat;
+    public TableStatistics getTableStatistics() {
+        return tableStatistics;
     }
 
     @Nullable
@@ -63,7 +63,7 @@ public class Dataset implements Serializable {
     }
 
     public Dataset(Long gid, Long datasourceId, String name, DataStore dataStore, boolean deleted,
-                   List<DatasetField> fields, List<DatasetFieldStat> fieldStats, DatasetStat datasetStat) {
+                   List<DatasetField> fields, List<DatasetFieldStat> fieldStats, TableStatistics tableStatistics) {
         this.gid = gid;
         this.datasourceId = datasourceId;
         this.name = name;
@@ -71,7 +71,7 @@ public class Dataset implements Serializable {
         this.deleted = deleted;
         this.fields = fields;
         this.fieldStats = fieldStats;
-        this.datasetStat = datasetStat;
+        this.tableStatistics = tableStatistics;
     }
 
     public static Builder newBuilder() {
@@ -86,7 +86,7 @@ public class Dataset implements Serializable {
                 .withDeleted(deleted)
                 .withFields(fields)
                 .withFieldStats(fieldStats)
-                .withDatasetStat(datasetStat);
+                .withDatasetStat(tableStatistics);
     }
 
     public static final class Builder {
@@ -97,7 +97,7 @@ public class Dataset implements Serializable {
         private boolean deleted;
         private List<DatasetField> fields;
         private List<DatasetFieldStat> fieldStats;
-        private DatasetStat datasetStat;
+        private TableStatistics tableStatistics;
 
         private Builder() {
         }
@@ -137,13 +137,13 @@ public class Dataset implements Serializable {
             return this;
         }
 
-        public Builder withDatasetStat(DatasetStat datasetStat) {
-            this.datasetStat = datasetStat;
+        public Builder withDatasetStat(TableStatistics tableStatistics) {
+            this.tableStatistics = tableStatistics;
             return this;
         }
 
         public Dataset build() {
-            return new Dataset(gid, datasourceId, name, dataStore, deleted, fields, fieldStats, datasetStat);
+            return new Dataset(gid, datasourceId, name, dataStore, deleted, fields, fieldStats, tableStatistics);
         }
     }
 }

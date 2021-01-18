@@ -1,13 +1,11 @@
 package com.miotech.kun.metadata.common.dao;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
-import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
@@ -75,13 +73,7 @@ public class MetadataDatasetDao {
 
         @Override
         public Dataset map(ResultSet rs) throws SQLException {
-            DataStore dataStore;
-
-            try {
-                dataStore = DataStoreJsonUtil.toDataStore(rs.getString(5));
-            } catch (JsonProcessingException e) {
-                throw ExceptionUtils.wrapIfChecked(e);
-            }
+            DataStore dataStore = DataStoreJsonUtil.toDataStore(rs.getString(5));
 
             Dataset dataset = Dataset.newBuilder()
                     .withGid(rs.getLong(1))
