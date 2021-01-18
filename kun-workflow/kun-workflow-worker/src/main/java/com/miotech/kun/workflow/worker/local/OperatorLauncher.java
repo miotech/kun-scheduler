@@ -240,7 +240,7 @@ public class OperatorLauncher {
 
     private static void initLogger(String logPath) {
         ch.qos.logback.classic.Logger rootLogger
-                = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("com.miotech.kun.workflow");
+                = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger(Logger.ROOT_LOGGER_NAME);
 
         LoggerContext context = rootLogger.getLoggerContext();
 
@@ -257,8 +257,13 @@ public class OperatorLauncher {
         appender.start();
 
         rootLogger.addAppender(appender);
-        //remove app appenders
-        rootLogger.detachAppender("APPLOG");
+
+        //remove app appenderslo
+        ch.qos.logback.classic.Logger workerLogger
+                = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("com.miotech.kun.workflow");
+
+        workerLogger.detachAppender("APPERROR");
+        workerLogger.detachAppender("ASYNCAPPLOG");
         rootLogger.detachAppender("APPERROR");
         rootLogger.detachAppender("ASYNCAPPLOG");
     }
