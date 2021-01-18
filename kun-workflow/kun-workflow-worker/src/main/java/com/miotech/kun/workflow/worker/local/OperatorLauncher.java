@@ -256,16 +256,13 @@ public class OperatorLauncher {
         appender.setEncoder(encoder);
         appender.start();
 
-        rootLogger.addAppender(appender);
-
-        //remove app appenderslo
+        //remove all exist appender
         ch.qos.logback.classic.Logger workerLogger
                 = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("com.miotech.kun.workflow");
+        workerLogger.detachAndStopAllAppenders();
+        rootLogger.detachAndStopAllAppenders();
 
-        workerLogger.detachAppender("APPERROR");
-        workerLogger.detachAppender("ASYNCAPPLOG");
-        rootLogger.detachAppender("APPERROR");
-        rootLogger.detachAppender("ASYNCAPPLOG");
+        rootLogger.addAppender(appender);
     }
 
     private KunOperator loadOperator(String jarPath, String mainClass) {
