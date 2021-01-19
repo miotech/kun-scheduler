@@ -141,7 +141,7 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void runTasks() {
         RunTaskRequest runTaskRequest = new RunTaskRequest();
-        runTaskRequest.addTaskVariable(1L, Maps.newHashMap());
+        runTaskRequest.addTaskConfig(1L, Maps.newHashMap());
         mockPost("/tasks/_run", JSONUtils.toJsonString(runTaskRequest.getRunTasks()), "[1]");
         List<Long> result = wfApi.runTasks(runTaskRequest);
         assertThat(result.size(), is(1));

@@ -156,7 +156,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public TaskRun executeTask(Long taskId, Map<String, Object> taskConfig) {
         RunTaskRequest request = new RunTaskRequest();
-        request.addTaskVariable(taskId, taskConfig != null ? taskConfig : Maps.newHashMap());
+        request.addTaskConfig(taskId, taskConfig != null ? taskConfig : Maps.newHashMap());
         List<Long> taskRunIds = wfApi.runTasks(request);
         if (taskRunIds.isEmpty()) {
             throw new WorkflowClientException("No task run found after execution for task: " + taskId);

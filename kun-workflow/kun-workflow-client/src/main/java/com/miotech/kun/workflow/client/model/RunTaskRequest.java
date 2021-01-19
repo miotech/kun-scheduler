@@ -7,14 +7,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class RunTaskRequest {
-    private Map<Long, Map<String, Object>> taskVariables = Maps.newHashMap();
+    private Map<Long, Map<String, Object>> taskConfigs = Maps.newHashMap();
 
-    public void addTaskVariable(Long taskId, Map<String, Object> taskConfig) {
-        this.taskVariables.put(taskId, taskConfig);
+    public void addTaskConfig(Long taskId, Map<String, Object> taskConfig) {
+        this.taskConfigs.put(taskId, taskConfig);
     }
 
     public List<RunTaskInfo> getRunTasks() {
-        return this.taskVariables.entrySet()
+        return this.taskConfigs.entrySet()
                 .stream().map(x -> new RunTaskInfo(
                         x.getKey(),
                         x.getValue())
