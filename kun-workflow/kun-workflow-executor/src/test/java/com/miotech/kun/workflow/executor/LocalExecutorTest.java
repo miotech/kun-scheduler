@@ -898,6 +898,43 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(workerToken.availablePermits(), is(8));
     }
 
+    @Test
+    public void abortTaskAttemptInQueue(){
+        Reflect.on(executor).set("workerToken",new Semaphore(0));
+        //prepare
+        TaskAttempt taskAttempt = prepareAttempt(TestOperator1.class);
+
+        executor.submit(taskAttempt);
+
+        //verify
+        TaskAttempt saved =  taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+        assertThat(saved.getStatus(),is(TaskRunStatus.QUEUED));
+        executor.cancel(taskAttempt.getId());
+        awaitUntilAttemptAbort(taskAttempt.getId());
+        // events
+        assertStatusProgress(taskAttempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.ABORTED);
+
+    }
+
+    @Test
+    public void abortTaskAttemptCreated(){
+        //prepare
+        TaskAttempt taskAttempt = prepareAttempt(TestOperator1.class);
+        //verify
+        TaskAttempt saved =  taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+        assertThat(saved.getStatus(),is(TaskRunStatus.CREATED));
+        executor.cancel(taskAttempt.getId());
+        awaitUntilAttemptAbort(taskAttempt.getId());
+        // events
+        assertStatusProgress(taskAttempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.ABORTED);
+
+    }
+
     private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass) {
         return prepareAttempt(operatorClass, operatorClass.getSimpleName());
     }

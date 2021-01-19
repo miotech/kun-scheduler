@@ -214,16 +214,15 @@ public class LocalExecutor implements Executor {
                     }
                 }
             }
-            taskRunDao.updateTaskAttemptStatus(attemptId, TaskRunStatus.ABORTED);
-            return true;
+            miscService.changeTaskAttemptStatus(attemptId, TaskRunStatus.ABORTED);
         } else {
             HeartBeatMessage message = workerPool.get(attemptId);
             Worker worker = workerFactory.getWorker(message);
             worker.killTask(true);
             Thread thread = new Thread(new WaitAbort(attemptId));
             thread.start();
-            return true;
         }
+        return true;
     }
 
     private ExecCommand buildExecCommand(TaskAttempt attempt) {
