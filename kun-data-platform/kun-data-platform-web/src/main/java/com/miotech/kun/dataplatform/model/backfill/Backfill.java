@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,7 +19,15 @@ public class Backfill {
 
     private final String name;
 
-    private final List<TaskRun> taskRuns;
+    private final List<Long> taskRunIds;
+
+    private final List<Long> taskDefinitionIds;
+
+    private final OffsetDateTime createTime;
+
+    private final OffsetDateTime updateTime;
+
+    private final Long creator;
 
     public Long getId() {
         return id;
@@ -29,17 +37,37 @@ public class Backfill {
         return name;
     }
 
-    public List<TaskRun> getTaskRuns() {
-        return taskRuns;
+    public List<Long> getTaskRunIds() {
+        return taskRunIds;
+    }
+
+    public List<Long> getTaskDefinitionIds() {
+        return taskDefinitionIds;
+    }
+
+    public OffsetDateTime getCreateTime() {
+        return createTime;
+    }
+
+    public OffsetDateTime getUpdateTime() {
+        return updateTime;
+    }
+
+    public Long getCreator() {
+        return creator;
     }
 
     private Backfill(BackFillBuilder builder) {
         this.id = builder.id;
         this.name = builder.name;
-        this.taskRuns = ImmutableList.copyOf(builder.taskRuns);
+        this.taskRunIds = ImmutableList.copyOf(builder.taskRunIds);
+        this.taskDefinitionIds = ImmutableList.copyOf(builder.taskDefinitionIds);
+        this.createTime = builder.createTime;
+        this.updateTime = builder.updateTime;
+        this.creator = builder.creator;
     }
 
-    public BackFillBuilder newBuilder() {
+    public static BackFillBuilder newBuilder() {
         return new BackFillBuilder();
     }
 
@@ -47,7 +75,11 @@ public class Backfill {
         BackFillBuilder builder = new BackFillBuilder();
         builder.id = this.id;
         builder.name = this.name;
-        builder.taskRuns = this.taskRuns;
+        builder.taskDefinitionIds = this.taskDefinitionIds;
+        builder.taskRunIds = this.taskRunIds;
+        builder.createTime = this.createTime;
+        builder.updateTime = this.updateTime;
+        builder.creator = this.creator;
         return builder;
     }
 
@@ -56,19 +88,23 @@ public class Backfill {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Backfill that = (Backfill) o;
-        return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(taskRuns, that.taskRuns);
+        return Objects.equals(id, that.id) && Objects.equals(name, that.name) && Objects.equals(taskRunIds, that.taskRunIds);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, taskRuns);
+        return Objects.hash(id, name, taskRunIds);
     }
 
     @JsonPOJOBuilder
     public static final class BackFillBuilder {
         private Long id;
         private String name;
-        private List<TaskRun> taskRuns;
+        private List<Long> taskRunIds;
+        private List<Long> taskDefinitionIds;
+        private OffsetDateTime createTime;
+        private OffsetDateTime updateTime;
+        private Long creator;
 
         private BackFillBuilder() {
         }
@@ -83,8 +119,28 @@ public class Backfill {
             return this;
         }
 
-        public BackFillBuilder withTaskRuns(List<TaskRun> taskRuns) {
-            this.taskRuns = taskRuns;
+        public BackFillBuilder withTaskRunIds(List<Long> taskRunIds) {
+            this.taskRunIds = taskRunIds;
+            return this;
+        }
+
+        public BackFillBuilder withCreateTime(OffsetDateTime createTime) {
+            this.createTime = createTime;
+            return this;
+        }
+
+        public BackFillBuilder withUpdateTime(OffsetDateTime updateTime) {
+            this.updateTime = updateTime;
+            return this;
+        }
+
+        public BackFillBuilder withCreator(Long creator) {
+            this.creator = creator;
+            return this;
+        }
+
+        public BackFillBuilder withTaskDefinitionIds(List<Long> taskDefinitionIds) {
+            this.taskDefinitionIds = taskDefinitionIds;
             return this;
         }
 
