@@ -171,6 +171,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
         TaskRunSearchRequest taskRunSearchRequest = TaskRunSearchRequest
                 .newBuilder()
                 .withTaskRunIds(taskRunIds)
+                .withPageSize(10)
                 .build();
         List<TaskRun> taskRunList = wfApi.searchTaskRuns(taskRunSearchRequest)
                 .getRecords();

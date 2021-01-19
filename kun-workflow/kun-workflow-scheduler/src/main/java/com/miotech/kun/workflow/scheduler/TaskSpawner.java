@@ -15,10 +15,7 @@ import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.task.DependencyFunction;
-import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskGraph;
-import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
+import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -195,7 +192,8 @@ public class TaskSpawner {
     private List<TaskRun> createTaskTunsDirectly(List<Task> tasks, Tick tick, TaskRunEnv env){
         List<TaskRun> results = new ArrayList<>(tasks.size());
         for (Task task : tasks) {
-            results.add(createTaskRun(task, tick, env.getConfig(task.getId()), results));
+            results.add(createTaskRun(task.cloneBuilder().
+                    withScheduleConf(ScheduleConf.newBuilder().withType(ScheduleType.NONE).build()).build(), tick, env.getConfig(task.getId()), results));
         }
         return results;
     }

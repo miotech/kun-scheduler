@@ -133,7 +133,8 @@ public class TaskRun {
                 .withEndAt(endAt)
                 .withInlets(inlets)
                 .withOutlets(outlets)
-                .withDependentTaskRunIds(dependentTaskRunIds);
+                .withDependentTaskRunIds(dependentTaskRunIds)
+                .withScheduleType(scheduledType);
     }
 
     @Override
@@ -143,6 +144,7 @@ public class TaskRun {
                 ", task=" + task +
                 ", config=" + config +
                 ", scheduledTick=" + scheduledTick +
+                ", scheduledType=" + scheduledType +
                 ", status=" + status +
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +

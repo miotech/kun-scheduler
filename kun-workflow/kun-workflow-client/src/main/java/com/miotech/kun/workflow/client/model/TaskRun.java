@@ -30,6 +30,8 @@ public class TaskRun {
 
     private List<DataStore> outlets;
 
+    private String scheduleType;
+
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime startAt;
@@ -152,6 +154,10 @@ public class TaskRun {
         return dependencyTaskRunIds;
     }
 
+    public String getScheduleType() {
+        return scheduleType;
+    }
+
     public void setDependencyTaskRunIds(List<Long> dependencyTaskRunIds) {
         this.dependencyTaskRunIds = dependencyTaskRunIds;
     }
@@ -175,6 +181,7 @@ public class TaskRun {
         private List<TaskAttempt> attempts;
         private List<Long> dependencyTaskRunIds;
         private List<Tag> tags;
+        private String scheduleType;
 
         private Builder() {
         }
@@ -253,6 +260,11 @@ public class TaskRun {
             return this;
         }
 
+        public Builder withScheduleType(String scheduleType){
+            this.scheduleType = scheduleType;
+            return this;
+        }
+
         public TaskRun build() {
             TaskRun taskRunVO = new TaskRun();
             taskRunVO.setId(id);
@@ -269,6 +281,7 @@ public class TaskRun {
             taskRunVO.setTags(tags);
             taskRunVO.createdAt = createdAt;
             taskRunVO.updatedAt = updatedAt;
+            taskRunVO.scheduleType = scheduleType;
             return taskRunVO;
         }
     }

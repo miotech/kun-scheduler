@@ -9,6 +9,7 @@ import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 
 import java.util.ArrayList;
 
@@ -35,7 +36,7 @@ public class MockingFactory {
     public static  Task mockTask(Long operatorId) {
         return Task.newBuilder()
                 .withId(1L)
-                .withName("test")
+                .withName("test" + WorkflowIdGenerator.nextTaskId())
                 .withDescription("")
                 .withConfig(Config.EMPTY)
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?"))

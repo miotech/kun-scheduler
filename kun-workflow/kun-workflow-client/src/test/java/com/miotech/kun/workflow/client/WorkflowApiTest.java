@@ -223,6 +223,7 @@ public class WorkflowApiTest extends MockServerTestBase {
         assertTrue(taskRun1.getId() > 0);
     }
 
+
     @Test
     public void getLatestTaskRuns_shouldWork() {
         Task task = mockTask();

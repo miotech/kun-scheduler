@@ -42,9 +42,8 @@ public class TaskRunController {
     }
 
     /**
-     *
      * @param taskRunId
-     * @param attempt: if attempt not specified, use -1 mark as latest
+     * @param attempt:  if attempt not specified, use -1 mark as latest
      * @param startLine
      * @param endLine
      * @return
@@ -67,13 +66,14 @@ public class TaskRunController {
             @QueryParameter String dateTo,
             @QueryParameter(defaultValue = "id") String sortKey,
             @QueryParameter(defaultValue = "DESC") String sortOrder,
-            @QueryParameter(defaultValue = "false") String includeStartedOnly
+            @QueryParameter(defaultValue = "false") String includeStartedOnly,
+            @QueryParameter List<String> scheduleTypes
     ) {
         TaskRunSearchFilter.Builder filterBuilder = TaskRunSearchFilter.newBuilder()
                 .withPageNum(pageNum)
                 .withPageSize(pageSize);
 
-        buildFilter(filterBuilder, status, taskIds, dateFrom, dateTo, sortKey, sortOrder, includeStartedOnly);
+        buildFilter(filterBuilder, status, taskIds, dateFrom, dateTo, sortKey, sortOrder, includeStartedOnly, scheduleTypes);
 
         TaskRunSearchFilter filter = filterBuilder.build();
         return taskRunService.searchTaskRunVOs(filter);
@@ -84,10 +84,12 @@ public class TaskRunController {
                                @QueryParameter List<Long> taskIds,
                                @QueryParameter String dateFrom,
                                @QueryParameter String dateTo,
-                               @QueryParameter(defaultValue = "false") String includeStartedOnly
+                               @QueryParameter(defaultValue = "false") String includeStartedOnly,
+                               @QueryParameter List<String> scheduleTypes
+
     ) {
         TaskRunSearchFilter.Builder filterBuilder = TaskRunSearchFilter.newBuilder();
-        buildFilter(filterBuilder, status, taskIds, dateFrom, dateTo, null, null, includeStartedOnly);
+        buildFilter(filterBuilder, status, taskIds, dateFrom, dateTo, null, null, includeStartedOnly, scheduleTypes);
         TaskRunSearchFilter filter = filterBuilder.build();
         return taskRunService.countTaskRunVOs(filter);
     }
@@ -99,10 +101,12 @@ public class TaskRunController {
             @QueryParameter String dateFrom,
             @QueryParameter String dateTo,
             @QueryParameter(defaultValue = "false") String includeStartedOnly,
-            @QueryParameter(defaultValue = "0") Integer offsetHours
+            @QueryParameter(defaultValue = "0") Integer offsetHours,
+            @QueryParameter List<String> scheduleTypes
+
     ) {
         TaskRunSearchFilter.Builder filterBuilder = TaskRunSearchFilter.newBuilder();
-        buildFilter(filterBuilder, status, taskIds, dateFrom, dateTo, null, null, includeStartedOnly);
+        buildFilter(filterBuilder, status, taskIds, dateFrom, dateTo, null, null, includeStartedOnly, scheduleTypes);
         TaskRunSearchFilter filter = filterBuilder.build();
         return taskRunService.countTaskRunVOsByDate(filter, offsetHours);
     }
@@ -115,7 +119,8 @@ public class TaskRunController {
             String dateTo,
             String sortKey,
             String sortOrder,
-            String includeStartedOnly
+            String includeStartedOnly,
+            List<String> scheduleTypes
     ) {
         if (status != null && !status.isEmpty()) {
             Set<TaskRunStatus> statusFilterSet = status.stream()
@@ -141,6 +146,9 @@ public class TaskRunController {
         if (StringUtils.isNoneBlank(sortOrder)) {
             filterBuilder.withSortOrder(sortOrder);
         }
+        if (scheduleTypes != null && !scheduleTypes.isEmpty()) {
+            filterBuilder.withScheduleType(scheduleTypes);
+        }
         filterBuilder.withIncludeStartedOnly(parseBooleanQueryParameter(includeStartedOnly));
     }
 
@@ -150,7 +158,7 @@ public class TaskRunController {
                 .withPageNum(Objects.nonNull(requestFilter.getPageNum()) ? requestFilter.getPageNum() : 1)
                 .withPageSize(Objects.nonNull(requestFilter.getPageSize()) ? requestFilter.getPageSize() : 100)
                 .withSortKey(Objects.nonNull(requestFilter.getSortKey()) ? requestFilter.getSortKey() : "id")
-                .withSortOrder(Objects.nonNull(requestFilter.getSortOrder()) ?requestFilter.getSortOrder() : "DESC")
+                .withSortOrder(Objects.nonNull(requestFilter.getSortOrder()) ? requestFilter.getSortOrder() : "DESC")
                 .build();
         return taskRunService.searchTaskRunVOs(filter);
     }
@@ -177,10 +185,10 @@ public class TaskRunController {
 
     @RouteMapping(url = "/taskruns/{id}/neighbors", method = "GET")
     public Object getTaskRunNeighbors(@RouteVariable Long id,
-                                                       @QueryParameter(defaultValue = "1") int upstreamLevel,
-                                                       @QueryParameter(defaultValue = "1") int downstreamLevel
-                                                       ) {
-       return taskRunService.getNeighbors(id, upstreamLevel, downstreamLevel);
+                                      @QueryParameter(defaultValue = "1") int upstreamLevel,
+                                      @QueryParameter(defaultValue = "1") int downstreamLevel
+    ) {
+        return taskRunService.getNeighbors(id, upstreamLevel, downstreamLevel);
     }
 
     @RouteMapping(url = "/taskruns/latest", method = "GET")

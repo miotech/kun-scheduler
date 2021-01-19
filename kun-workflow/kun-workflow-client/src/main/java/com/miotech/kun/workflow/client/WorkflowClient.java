@@ -100,6 +100,7 @@ public interface WorkflowClient {
     /**
      * launch existed tasks
      * @param request
+     * @return key:taskId,value:taskRun
      */
     Map<Long,TaskRun> executeTasks(RunTaskRequest request);
 

@@ -2,10 +2,7 @@ package com.miotech.kun.workflow.client;
 
 import com.google.common.collect.ImmutableMap;
 import com.miotech.kun.workflow.client.mock.MockKunWebServerTestBase;
-import com.miotech.kun.workflow.client.model.Operator;
-import com.miotech.kun.workflow.client.model.Task;
-import com.miotech.kun.workflow.client.model.TaskAttempt;
-import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.model.common.Tag;
@@ -17,14 +14,12 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static com.miotech.kun.workflow.client.mock.MockingFactory.*;
 import static org.awaitility.Awaitility.await;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -67,6 +62,9 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         // prepare
         Operator operator = mockOperator();
         operator = client.saveOperator(operator.getName(), operator);
+
+        File jarFile =  new File(nopOperatorPath.replace("file:", ""));
+        client.updateOperatorJar(operator.getName(), jarFile);
 
         Task task = mockTask(operator.getId());
         Task result = client.createTask(task);
@@ -130,6 +128,96 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         assertTrue(attempt.getStartAt() != null);
         assertTrue(attempt.getEndAt() != null);
         assertTrue(taskRun.getTask().getId().equals(taskRun2.getTask().getId()));
+    }
+
+    @Test
+    public void executeTasks(){
+        // prepare
+        Operator operator = mockOperator();
+        operator = client.saveOperator(operator.getName(), operator);
+        File jarFile =  new File(nopOperatorPath.replace("file:", ""));
+        client.updateOperatorJar(operator.getName(), jarFile);
+        RunTaskRequest runTaskRequest = new RunTaskRequest();
+        Config config = Config.newBuilder().addConfig("testKey1",false).build();
+        Task task1 =  mockTask(operator.getId()).cloneBuilder().withConfig(config).build();
+        Task created1 = client.createTask(task1);
+        runTaskRequest.addTaskVariable(created1.getId(),new HashMap<>());
+        Task task2 = task1.cloneBuilder().withName("executeTask2").build();
+        Task created2 = client.createTask(task2);
+        runTaskRequest.addTaskVariable(created2.getId(),new HashMap<>());
+
+        //execute
+        Map<Long, TaskRun> taskRunMap = client.executeTasks(runTaskRequest);
+        assertThat(taskRunMap,hasKey(created1.getId()));
+        assertThat(taskRunMap,hasKey(created2.getId()));
+        assertThat(taskRunMap.get(created1.getId()).getId(),greaterThan(0l));
+        assertThat(taskRunMap.get(created2.getId()).getId(),greaterThan(0l));
+
+        // cleanup
+        client.deleteTask(created1.getId());
+        client.deleteTask(created2.getId());
+    }
+
+    @Test
+    public void searchTaskRunsWithScheduleType(){
+        // prepare
+        // prepare
+        Operator operator = mockOperator();
+        operator = client.saveOperator(operator.getName(), operator);
+        File jarFile =  new File(nopOperatorPath.replace("file:", ""));
+        client.updateOperatorJar(operator.getName(), jarFile);
+        RunTaskRequest runTaskRequest = new RunTaskRequest();
+        Config config = Config.newBuilder().addConfig("testKey1",false).build();
+        Task task1 =  mockTask(operator.getId()).cloneBuilder().withConfig(config).build();
+        Task created1 = client.createTask(task1);
+        runTaskRequest.addTaskVariable(created1.getId(),new HashMap<>());
+        Task task2 = task1.cloneBuilder().withName("test2").
+                withScheduleConf(ScheduleConf.newBuilder().withType(ScheduleType.NONE).build()).build();
+        Task created2 = client.createTask(task2);
+        runTaskRequest.addTaskVariable(created2.getId(),new HashMap<>());
+
+        //execute
+        Map<Long, TaskRun> taskRunMap = client.executeTasks(runTaskRequest);
+        TaskRun taskRun1 = taskRunMap.get(created1.getId());
+        TaskRun taskRun2 = taskRunMap.get(created2.getId());
+        assertThat(taskRunMap,hasKey(created1.getId()));
+        assertThat(taskRunMap,hasKey(created2.getId()));
+        assertThat(taskRun1.getId(),greaterThan(0l));
+        assertThat(taskRun2.getId(),greaterThan(0l));
+
+        //search
+        TaskRunSearchRequest request = TaskRunSearchRequest
+                .newBuilder()
+                .withPageNum(0)
+                .withPageSize(10)
+                .withScheduleTypes(Arrays.asList(ScheduleType.NONE.name()))
+                .build();
+        PaginationResult<TaskRun> taskRuns = client.searchTaskRun(request);
+        assertThat(taskRuns.getPageNum(),is(0));
+        assertThat(taskRuns.getPageSize(),is(10));
+        assertThat(taskRuns.getRecords(),hasSize(2));
+        assertThat(taskRuns.getTotalCount(),is(2l));
+//        TaskRun search1 = taskRuns.getRecords().get(0);
+//        assertThat(search1.getId(),is(taskRun1.getId()));
+//        TaskRun search2 = taskRuns.getRecords().get(1);
+//        assertThat(search2.getId(),is(taskRun2.getId()));
+
+        TaskRunSearchRequest request2 = TaskRunSearchRequest
+                .newBuilder()
+                .withPageNum(0)
+                .withPageSize(10)
+                .withScheduleTypes(Arrays.asList(ScheduleType.SCHEDULED.name()))
+                .build();
+        PaginationResult<TaskRun> taskRuns2 = client.searchTaskRun(request2);
+        assertThat(taskRuns2.getPageNum(),is(0));
+        assertThat(taskRuns2.getPageSize(),is(10));
+        assertThat(taskRuns2.getRecords(),hasSize(0));
+        assertThat(taskRuns2.getTotalCount(),is(0l));
+
+        // cleanup
+        client.deleteTask(created1.getId());
+        client.deleteTask(created2.getId());
+
     }
 
     @Ignore
