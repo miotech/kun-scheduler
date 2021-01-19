@@ -51,7 +51,7 @@ public class TaskRunDao {
     private static final Logger logger = LoggerFactory.getLogger(TaskRunDao.class);
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type","start_at", "end_at", "config", "inlets", "outlets", "created_at", "updated_at");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "start_at", "end_at", "config", "inlets", "outlets", "created_at", "updated_at");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
@@ -230,25 +230,25 @@ public class TaskRunDao {
         }
 
         // Search by scheduleType
-        if(Objects.nonNull(filter.getScheduleTypes()) && (!filter.getScheduleTypes().isEmpty())){
+        if (Objects.nonNull(filter.getScheduleTypes()) && (!filter.getScheduleTypes().isEmpty())) {
             List<String> scheduleTypes = filter.getScheduleTypes();
-            if(scheduleTypes.size() == 1){
+            if (scheduleTypes.size() == 1) {
                 whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".schedule_type = ?)");
                 sqlArgs.add(scheduleTypes.get(0));
-            }else {
-                String filterScheduleTypes = scheduleTypes.stream().map(x->"?").collect(Collectors.joining(","));
+            } else {
+                String filterScheduleTypes = scheduleTypes.stream().map(x -> "?").collect(Collectors.joining(","));
                 whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".schedule_type in (" + filterScheduleTypes + "))");
                 sqlArgs.addAll(scheduleTypes);
             }
         }
 
         //Search by taskRunIds
-        if(Objects.nonNull(filter.getTaskRunIds()) && (!filter.getTaskRunIds().isEmpty())){
+        if (Objects.nonNull(filter.getTaskRunIds()) && (!filter.getTaskRunIds().isEmpty())) {
             List<Long> taskRunIds = filter.getTaskRunIds();
-            if(taskRunIds.size() == 1){
+            if (taskRunIds.size() == 1) {
                 whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".id = ?)");
                 sqlArgs.add(taskRunIds.get(0));
-            }else {
+            } else {
                 String filterTaskRunIds = taskRunIds.stream().map(x -> "?").collect(Collectors.joining(","));
                 whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".id in (" + filterTaskRunIds + "))");
                 sqlArgs.addAll(taskRunIds);
@@ -309,13 +309,14 @@ public class TaskRunDao {
                     .into(TASK_RUN_TABLE_NAME)
                     .asPrepared()
                     .getSQL();
-
+            String scheduleType = taskRun.getScheduledType() != null ?
+                    taskRun.getScheduledType().name() : taskRun.getTask().getScheduleConf().getType().name();
             dbOperator.update(sql,
                     taskRun.getId(),
                     taskRun.getTask().getId(),
                     taskRun.getScheduledTick().toString(),
                     toNullableString(taskRun.getStatus()),
-                    taskRun.getScheduledType().name(),
+                    scheduleType,
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),

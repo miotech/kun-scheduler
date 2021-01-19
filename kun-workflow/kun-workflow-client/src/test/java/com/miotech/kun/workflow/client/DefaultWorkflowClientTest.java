@@ -141,10 +141,10 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         Config config = Config.newBuilder().addConfig("testKey1",false).build();
         Task task1 =  mockTask(operator.getId()).cloneBuilder().withConfig(config).build();
         Task created1 = client.createTask(task1);
-        runTaskRequest.addTaskVariable(created1.getId(),new HashMap<>());
+        runTaskRequest.addTaskConfig(created1.getId(),new HashMap<>());
         Task task2 = task1.cloneBuilder().withName("executeTask2").build();
         Task created2 = client.createTask(task2);
-        runTaskRequest.addTaskVariable(created2.getId(),new HashMap<>());
+        runTaskRequest.addTaskConfig(created2.getId(),new HashMap<>());
 
         //execute
         Map<Long, TaskRun> taskRunMap = client.executeTasks(runTaskRequest);
@@ -170,11 +170,11 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         Config config = Config.newBuilder().addConfig("testKey1",false).build();
         Task task1 =  mockTask(operator.getId()).cloneBuilder().withConfig(config).build();
         Task created1 = client.createTask(task1);
-        runTaskRequest.addTaskVariable(created1.getId(),new HashMap<>());
+        runTaskRequest.addTaskConfig(created1.getId(),new HashMap<>());
         Task task2 = task1.cloneBuilder().withName("test2").
                 withScheduleConf(ScheduleConf.newBuilder().withType(ScheduleType.NONE).build()).build();
         Task created2 = client.createTask(task2);
-        runTaskRequest.addTaskVariable(created2.getId(),new HashMap<>());
+        runTaskRequest.addTaskConfig(created2.getId(),new HashMap<>());
 
         //execute
         Map<Long, TaskRun> taskRunMap = client.executeTasks(runTaskRequest);
