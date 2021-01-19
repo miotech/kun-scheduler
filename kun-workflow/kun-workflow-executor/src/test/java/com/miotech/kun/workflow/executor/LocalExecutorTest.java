@@ -59,6 +59,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -909,6 +910,8 @@ public class LocalExecutorTest extends CommonTestBase {
         //verify
         TaskAttempt saved =  taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
         assertThat(saved.getStatus(),is(TaskRunStatus.QUEUED));
+        LinkedBlockingQueue<TaskAttempt> taskAttemptQueue = Reflect.on(executor).field("taskAttemptQueue").get();
+        assertThat(taskAttemptQueue,hasSize(1));
         executor.cancel(taskAttempt.getId());
         awaitUntilAttemptAbort(taskAttempt.getId());
         // events
@@ -916,6 +919,9 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.ABORTED);
+        taskAttemptQueue = Reflect.on(executor).field("taskAttemptQueue").get();
+        assertThat(taskAttemptQueue,hasSize(0));
+
 
     }
 

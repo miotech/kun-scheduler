@@ -33,6 +33,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -198,6 +199,7 @@ public class LocalExecutor implements Executor {
     }
 
     private boolean killTaskAttempt(Long attemptId) {
+        logger.debug("going to abort taskAttempt,attemptId = {}", attemptId);
         if (!workerPool.containsKey(attemptId)) {
             Optional<TaskAttempt> taskAttemptOptional = taskRunDao.fetchAttemptById(attemptId);
             if (!taskAttemptOptional.isPresent()) {
@@ -205,10 +207,13 @@ public class LocalExecutor implements Executor {
                 return false;
             }
             TaskAttempt taskAttempt = taskAttemptOptional.get();
-            if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
-                for (TaskAttempt queuedTaskAttempt : taskAttemptQueue) {
-                    if (queuedTaskAttempt.getId().equals(taskAttempt.getId())) {
-                        taskAttemptQueue.remove(taskAttempt);
+            if (taskAttempt.getStatus() == TaskRunStatus.QUEUED) {
+                logger.debug("taskAttempt to be abort has add to queue,attemptId = {}", attemptId);
+                Iterator<TaskAttempt> iterator = taskAttemptQueue.iterator();
+                while (iterator.hasNext()){
+                    TaskAttempt queuedTaskAttempt = iterator.next();
+                    if (queuedTaskAttempt.getId().equals(attemptId)) {
+                        iterator.remove();
                         logger.debug("remove taskAttempt from queue,attemptId = {}", attemptId);
                         break;
                     }
@@ -350,15 +355,22 @@ public class LocalExecutor implements Executor {
                 logger.error("taskAttemptId = {} acquire worker token failed", taskAttempt.getId());
                 throw ExceptionUtils.wrapIfChecked(e);
             }
+            TaskAttempt taskAttemptToRun = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+            if(taskAttemptToRun.getStatus().isFinished()){
+                logger.info("taskAttemptToRun is finished,attemptId = {},status = {}",taskAttemptToRun.getId(),taskAttemptToRun.getStatus().name());
+                workerToken.release();
+                logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptToRun.getId(), workerToken.availablePermits());
+                return;
+            }
             try {
-                workerPool.put(taskAttempt.getId(), initHeartBeatByTaskAttempt(taskAttempt));
+                workerPool.put(taskAttemptToRun.getId(), initHeartBeatByTaskAttempt(taskAttemptToRun));
                 //taskAttempt 已经启动（重启恢复）,则只加入workerPool监听心跳,正常入队和超时则重新启动
-                if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED) || taskAttempt.getStatus().equals(TaskRunStatus.ERROR)) {
-                    ExecCommand command = buildExecCommand(taskAttempt);
+                if (taskAttemptToRun.getStatus().equals(TaskRunStatus.QUEUED) || taskAttemptToRun.getStatus().equals(TaskRunStatus.ERROR)) {
+                    ExecCommand command = buildExecCommand(taskAttemptToRun);
                     startWorker(command);
                 }
             } catch (Exception e) {
-                logger.error("taskAttemptId = {} could start worker ", taskAttempt.getId(), e);
+                logger.error("taskAttemptId = {} could start worker ", taskAttemptToRun.getId(), e);
                 workerToken.release();
             }
 
