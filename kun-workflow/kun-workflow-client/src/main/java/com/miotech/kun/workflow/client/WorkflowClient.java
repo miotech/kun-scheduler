@@ -101,7 +101,7 @@ public interface WorkflowClient {
      * launch existed tasks
      * @param request
      */
-    List<TaskRun> executeTasks(RunTaskRequest request);
+    Map<Long,TaskRun> executeTasks(RunTaskRequest request);
 
     /**
      * get task DAG

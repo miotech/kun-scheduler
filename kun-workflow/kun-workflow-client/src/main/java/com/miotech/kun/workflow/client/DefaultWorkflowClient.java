@@ -4,8 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,15 +166,15 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
-    public List<TaskRun> executeTasks(RunTaskRequest request) {
+    public Map<Long, TaskRun> executeTasks(RunTaskRequest request) {
         List<Long> taskRunIds = wfApi.runTasks(request);
-
         TaskRunSearchRequest taskRunSearchRequest = TaskRunSearchRequest
                 .newBuilder()
                 .withTaskRunIds(taskRunIds)
                 .build();
-        return wfApi.searchTaskRuns(taskRunSearchRequest)
+        List<TaskRun> taskRunList = wfApi.searchTaskRuns(taskRunSearchRequest)
                 .getRecords();
+        return taskRunList.stream().collect(Collectors.toMap(x -> x.getTask().getId(), x -> x));
     }
 
     @Override
