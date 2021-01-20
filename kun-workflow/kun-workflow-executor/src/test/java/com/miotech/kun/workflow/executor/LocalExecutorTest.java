@@ -59,6 +59,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -896,6 +897,48 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.ABORTED);
         Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
         assertThat(workerToken.availablePermits(), is(8));
+    }
+
+    @Test
+    public void abortTaskAttemptInQueue(){
+        Reflect.on(executor).set("workerToken",new Semaphore(0));
+        //prepare
+        TaskAttempt taskAttempt = prepareAttempt(TestOperator1.class);
+
+        executor.submit(taskAttempt);
+
+        //verify
+        TaskAttempt saved =  taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+        assertThat(saved.getStatus(),is(TaskRunStatus.QUEUED));
+        LinkedBlockingQueue<TaskAttempt> taskAttemptQueue = Reflect.on(executor).field("taskAttemptQueue").get();
+        assertThat(taskAttemptQueue,hasSize(1));
+        executor.cancel(taskAttempt.getId());
+        awaitUntilAttemptAbort(taskAttempt.getId());
+        // events
+        assertStatusProgress(taskAttempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.ABORTED);
+        taskAttemptQueue = Reflect.on(executor).field("taskAttemptQueue").get();
+        assertThat(taskAttemptQueue,hasSize(0));
+
+
+    }
+
+    @Test
+    public void abortTaskAttemptCreated(){
+        //prepare
+        TaskAttempt taskAttempt = prepareAttempt(TestOperator1.class);
+        //verify
+        TaskAttempt saved =  taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+        assertThat(saved.getStatus(),is(TaskRunStatus.CREATED));
+        executor.cancel(taskAttempt.getId());
+        awaitUntilAttemptAbort(taskAttempt.getId());
+        // events
+        assertStatusProgress(taskAttempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.ABORTED);
+
     }
 
     private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass) {
