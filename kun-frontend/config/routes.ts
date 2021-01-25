@@ -23,7 +23,6 @@ export const appRoutes = [
         menuDisplay: true,
         showChildren: false,
         breadcrumbLink: true,
-        permissions: ['DATA_DISCOVERY'],
         routes: [
           {
             title: 'common.pageTitle.monitoringDashboard',
@@ -31,7 +30,6 @@ export const appRoutes = [
             component: 'monitoring-dashboard/index',
             exact: true,
             breadcrumbLink: true,
-            permissions: ['DATA_DISCOVERY'],
             wrappers: [
               '@/wrappers/path',
               '@/wrappers/isLogin',
@@ -47,7 +45,6 @@ export const appRoutes = [
         menuDisplay: true,
         showChildren: false,
         breadcrumbLink: true,
-        permissions: ['DATA_DISCOVERY'],
         routes: [
           {
             title: 'common.pageTitle.dataDiscovery',
@@ -55,7 +52,6 @@ export const appRoutes = [
             component: 'data-discovery/index',
             exact: true,
             breadcrumbLink: true,
-            permissions: ['DATA_DISCOVERY'],
             wrappers: [
               '@/wrappers/path',
               '@/wrappers/isLogin',
@@ -69,7 +65,6 @@ export const appRoutes = [
             icon: 'SnippetsOutlined',
             showChildren: false,
             breadcrumbLink: true,
-            permissions: ['DATA_DISCOVERY'],
             routes: [
               {
                 title: 'common.pageTitle.datasets',
@@ -77,7 +72,6 @@ export const appRoutes = [
                 component: 'dataset/index',
                 breadcrumbLink: true,
                 exact: true,
-                permissions: ['DATA_DISCOVERY'],
                 wrappers: [
                   '@/wrappers/path',
                   '@/wrappers/isLogin',
@@ -88,7 +82,6 @@ export const appRoutes = [
                 title: 'common.pageTitle.datasetDetail',
                 path: '/data-discovery/dataset/:datasetId',
                 breadcrumbLink: true,
-                permissions: ['DATA_DISCOVERY'],
                 showChildren: false,
                 routes: [
                   {
@@ -97,7 +90,6 @@ export const appRoutes = [
                     component: 'dataset/dataset-detail/index',
                     breadcrumbLink: true,
                     exact: true,
-                    permissions: ['DATA_DISCOVERY'],
                     wrappers: [
                       '@/wrappers/path',
                       '@/wrappers/isLogin',
@@ -110,7 +102,6 @@ export const appRoutes = [
                     component: 'lineage/index',
                     breadcrumbLink: true,
                     exact: true,
-                    permissions: ['DATA_DISCOVERY'],
                     wrappers: [
                       '@/wrappers/path',
                       '@/wrappers/isLogin',
@@ -138,7 +129,6 @@ export const appRoutes = [
                 component: 'glossary/index',
                 breadcrumbLink: true,
                 exact: true,
-                permissions: ['DATA_DISCOVERY'],
                 wrappers: [
                   '@/wrappers/path',
                   '@/wrappers/isLogin',
@@ -151,7 +141,6 @@ export const appRoutes = [
                 component: 'glossary/glossary-detail/index',
                 breadcrumbLink: true,
                 exact: true,
-                permissions: ['DATA_DISCOVERY'],
                 wrappers: [
                   '@/wrappers/path',
                   '@/wrappers/isLogin',
@@ -164,7 +153,6 @@ export const appRoutes = [
                 component: 'glossary/glossary-detail/index',
                 breadcrumbLink: true,
                 exact: true,
-                permissions: ['DATA_DISCOVERY'],
                 wrappers: [
                   '@/wrappers/path',
                   '@/wrappers/isLogin',
@@ -185,7 +173,6 @@ export const appRoutes = [
         title: 'common.pageTitle.dataDevelopment',
         path: '/data-development',
         icon: 'ApartmentOutlined',
-        permissions: ['DATA_DEVELOPMENT'],
         menuDisplay: true,
         routes: [
           {
@@ -193,7 +180,6 @@ export const appRoutes = [
             path: '.',
             exact: true,
             component: '@/pages/data-development/index',
-            permissions: ['DATA_DEVELOPMENT'],
             wrappers: [
               '@/wrappers/path',
               '@/wrappers/isLogin',
@@ -206,7 +192,6 @@ export const appRoutes = [
             path: '/data-development/task-definition/:taskDefId',
             component: 'data-development/task-definition-config',
             exact: true,
-            permissions: ['DATA_DEVELOPMENT'],
             wrappers: [
               '@/wrappers/path',
               '@/wrappers/isLogin',
@@ -223,7 +208,6 @@ export const appRoutes = [
         menuDisplay: true,
         path: '/operation-center',
         icon: 'ToolOutlined',
-        permissions: ['DATA_DEVELOPMENT'],
         showChildren: true,
         routes: [
           {
@@ -236,7 +220,6 @@ export const appRoutes = [
                 path: '.',
                 exact: true,
                 component: '@/pages/operation-center/scheduled-tasks',
-                permissions: ['DATA_DEVELOPMENT'],
                 wrappers: [
                   '@/wrappers/path',
                   '@/wrappers/isLogin',
@@ -249,7 +232,6 @@ export const appRoutes = [
                 path: './:id',
                 component: '@/pages/operation-center/deployed-task-detail',
                 exact: true,
-                permissions: ['DATA_DEVELOPMENT'],
                 wrappers: [
                   '@/wrappers/path',
                   '@/wrappers/isLogin',
@@ -270,7 +252,6 @@ export const appRoutes = [
         icon: 'SettingOutlined',
         component: 'data-settings/index',
         breadcrumbLink: true,
-        permissions: ['DATA_DISCOVERY'],
         exact: true,
         wrappers: [
           '@/wrappers/path',
