@@ -10,7 +10,6 @@ CREATE TABLE kun_dp_backfill (
 CREATE TABLE kun_dp_backfill_task_run_relation (
     backfill_id BIGINT NOT NULL,
     task_run_id BIGINT NOT NULL,
-    task_id BIGINT NOT NULL,
     task_definition_id BIGINT NOT NULL,
     PRIMARY KEY (backfill_id, task_run_id)
 );
@@ -18,5 +17,7 @@ CREATE TABLE kun_dp_backfill_task_run_relation (
 CREATE INDEX IF NOT EXISTS kun_dp_backfill_idx_name on kun_dp_backfill (name);
 
 CREATE INDEX IF NOT EXISTS kun_dp_backfill__idx_creator on kun_dp_backfill (creator);
+
+CREATE INDEX IF NOT EXISTS kun_dp_backfill__idx_create_time on kun_dp_backfill (create_time);
 
 CREATE INDEX IF NOT EXISTS kun_dp_backfill_task_run_relation__idx_backfill_id on kun_dp_backfill_task_run_relation (backfill_id);
