@@ -14,6 +14,7 @@ import com.miotech.kun.dataplatform.model.backfill.Backfill;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -107,12 +108,14 @@ public class BackfillDao {
         );
 
         // Load where, sort and order parameters
+        int limit = Objects.nonNull(searchParams.getPageSize()) ? searchParams.getPageSize() : 100;
+        int offset = Objects.nonNull(searchParams.getPageNumber()) ? limit * (searchParams.getPageNumber() - 1) : 0;
         String sortKey = Objects.isNull(searchParams.getSortKey()) ? "id" : searchParams.getSortKey();
         String sortOrder = Objects.isNull(searchParams.getSortOrder()) ? "DESC" : searchParams.getSortOrder().getSqlString();
         WhereClause whereClause = getWhereClause(searchParams);
 
         // Generate SQL
-        String sql = getSelectSQL(whereClause.getSqlSegment(), searchParams.getPageSize(), searchParams.getPageNumber(), String.format("%s %s", sortKey, sortOrder));
+        String sql = getSelectSQL(whereClause.getSqlSegment(), limit, offset, String.format("%s %s", sortKey, sortOrder));
 
         // do query
         List<Backfill> result = jdbcTemplate.query(
@@ -132,9 +135,9 @@ public class BackfillDao {
         //noinspection ConstantConditions
         return jdbcTemplate.query(
                 sql,
-                rs -> { return rs.getInt("count"); },
+                (rs, rowNum) -> rs.getInt("count"),
                 whereClause.getParams()
-        );
+        ).get(0);
     }
 
     private WhereClause getWhereClause(BackfillSearchParams searchParams) {
@@ -167,6 +170,7 @@ public class BackfillDao {
      * Create a backfill instance
      * @param backfill backfill instance
      * @return persisted instance
+     * @throws DuplicateKeyException if primary key conflict observed
      */
     @Transactional
     public Backfill create(Backfill backfill) {
