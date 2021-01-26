@@ -248,6 +248,7 @@ public class BackfillDao {
                     backfillId
             );
             builder.withTaskRunIds(taskRunIds)
+                    .withWorkflowTaskIds(workflowTaskIds)
                     .withTaskDefinitionIds(taskDefinitionIds);
             return builder.build();
         }

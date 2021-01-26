@@ -27,6 +27,7 @@ public class MockBackfillFactory {
                     .withName("example-backfill-" + i)
                     .withCreator(1L)
                     .withTaskRunIds(ImmutableList.of(1000L * i + 1, 1000L * i + 2, 1000L * i + 3))
+                    .withWorkflowTaskIds(ImmutableList.of(101L, 102L, 103L))
                     .withTaskDefinitionIds(ImmutableList.of(1L, 2L, 3L))
                     .withCreateTime(now)
                     .withUpdateTime(now)
