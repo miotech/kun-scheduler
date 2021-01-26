@@ -13,6 +13,8 @@ import com.miotech.kun.dataplatform.common.backfill.vo.BackfillSearchParams;
 import com.miotech.kun.dataplatform.model.backfill.Backfill;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.logging.log4j.util.Strings;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,6 +30,8 @@ import java.util.stream.Collectors;
 
 @Repository
 public class BackfillDao {
+    private static final Logger logger = LoggerFactory.getLogger(BackfillDao.class);
+
     private static final String BACKFILL_TABLE_NAME = "kun_dp_backfill";
 
     private static final String BACKFILL_MODEL_NAME = "backfill";
@@ -38,11 +42,11 @@ public class BackfillDao {
 
     private static final List<String> BACKFILL_TASK_RUN_RELATION_TABLE_COLS =  ImmutableList.of("backfill_id", "task_run_id", "task_definition_id");
 
-    private static final String INSERT_BACKFILL_TABLE_SQL =
+    private static final String INSERT_BACKFILL_TABLE_SQL_STMT =
             "INSERT INTO " + BACKFILL_TABLE_NAME + " (" + BACKFILL_TABLE_COLS.stream().collect(Collectors.joining(","))
             + ") VALUES (" + StringUtils.repeatJoin("?", ",", BACKFILL_TABLE_COLS.size()) + ")";
 
-    private static final String INSERT_BACKFILL_RELATION_SQL =
+    private static final String INSERT_BACKFILL_RELATION_SQL_STMT =
             "INSERT INTO " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + "(" + BACKFILL_TASK_RUN_RELATION_TABLE_COLS.stream().collect(Collectors.joining(","))
             + ") VALUES (" + StringUtils.repeatJoin("?", ",", BACKFILL_TASK_RUN_RELATION_TABLE_COLS.size()) + ")";
 
@@ -151,7 +155,7 @@ public class BackfillDao {
             sqlParams.addAll(searchParams.getCreators());
         }
         if (Strings.isNotBlank(searchParams.getName())) {
-            whereClauseBuilder.append(" AND (" + BACKFILL_MODEL_NAME + ".name ILIKE CONCAT('%', CAST(? AS TEXT) , '%'))");
+            whereClauseBuilder.append(" AND (" + BACKFILL_MODEL_NAME + ".name ILIKE CONCAT('%', CAST(? AS TEXT), '%'))");
             sqlParams.add(searchParams.getName().trim());
         }
         if (Objects.nonNull(searchParams.getTimeRngStart())) {
@@ -163,6 +167,7 @@ public class BackfillDao {
             sqlParams.add(searchParams.getTimeRngEnd());
         }
 
+        logger.debug("Searching backfills with SQL statement: {}", whereClauseBuilder.toString());
         return new WhereClause(whereClauseBuilder.toString(), sqlParams.toArray());
     }
 
@@ -181,7 +186,7 @@ public class BackfillDao {
         );
 
         // insert record
-        jdbcTemplate.update(INSERT_BACKFILL_TABLE_SQL, backfill.getId(), backfill.getName(), backfill.getCreator(), backfill.getCreateTime(), backfill.getUpdateTime());
+        jdbcTemplate.update(INSERT_BACKFILL_TABLE_SQL_STMT, backfill.getId(), backfill.getName(), backfill.getCreator(), backfill.getCreateTime(), backfill.getUpdateTime());
 
         // insert relations
         List<Object[]> relationInsertParams = new ArrayList<>();
@@ -189,7 +194,7 @@ public class BackfillDao {
             Object[] insertParams = { backfill.getId(), backfill.getTaskRunIds().get(i), backfill.getTaskDefinitionIds().get(i) };
             relationInsertParams.add(insertParams);
         }
-        jdbcTemplate.batchUpdate(INSERT_BACKFILL_RELATION_SQL, relationInsertParams);
+        jdbcTemplate.batchUpdate(INSERT_BACKFILL_RELATION_SQL_STMT, relationInsertParams);
 
         // return persisted instance
         return fetchById(backfill.getId()).get();
@@ -211,25 +216,16 @@ public class BackfillDao {
         // insert record
         OffsetDateTime now = DateTimeUtils.now();
         long id = IdGenerator.getInstance().nextId();
-        jdbcTemplate.update(
-                INSERT_BACKFILL_TABLE_SQL,
-                id,
-                backfillCreateInfo.getName(),
-                backfillCreateInfo.getCreator(),
-                now,
-                now
-        );
-
-        // insert relations
-        List<Object[]> relationInsertParams = new ArrayList<>();
-        for (int i = 0; i < backfillCreateInfo.getTaskRunIds().size(); ++i) {
-            Object[] insertParams = { id, backfillCreateInfo.getTaskRunIds().get(i), backfillCreateInfo.getTaskDefinitionIds().get(i) };
-            relationInsertParams.add(insertParams);
-        }
-        jdbcTemplate.batchUpdate(INSERT_BACKFILL_RELATION_SQL, relationInsertParams);
-
-        // return persisted instance
-        return fetchById(id).get();
+        Backfill backfillToCreate = Backfill.newBuilder()
+                .withId(id)
+                .withName(backfillCreateInfo.getName())
+                .withCreator(backfillCreateInfo.getCreator())
+                .withCreateTime(now)
+                .withUpdateTime(now)
+                .withTaskDefinitionIds(backfillCreateInfo.getTaskDefinitionIds())
+                .withTaskRunIds(backfillCreateInfo.getTaskRunIds())
+                .build();
+        return create(backfillToCreate);
     }
 
     public static class BackfillMapper implements RowMapper<Backfill> {

@@ -15,9 +15,13 @@ public class MockBackfillFactory {
     }
 
     public static List<Backfill> createBackfill(int size) {
+        return createBackfill(size, 0);
+    }
+
+    public static List<Backfill> createBackfill(int size, int indexOffset) {
         OffsetDateTime now = DateTimeUtils.now();
         List<Backfill> backfillList = new ArrayList<>();
-        for (int i = 1; i <= size; ++i) {
+        for (int i = indexOffset + 1; i <= size + indexOffset; ++i) {
             Backfill exampleBackfillInstance = Backfill.newBuilder()
                     .withId(100L + i)
                     .withName("example-backfill-" + i)
