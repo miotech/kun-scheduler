@@ -4,7 +4,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.dataplatform.AppTestBase;
-import com.miotech.kun.dataplatform.common.backfill.vo.BackfillCreateInfo;
 import com.miotech.kun.dataplatform.common.backfill.vo.BackfillSearchParams;
 import com.miotech.kun.dataplatform.mocking.MockBackfillFactory;
 import com.miotech.kun.dataplatform.model.backfill.Backfill;
@@ -44,37 +43,6 @@ public class BackfillDaoTest extends AppTestBase {
         assertTrue(persistedBackfill.isPresent());
         assertThat(persistedBackfill.get(), sameBeanAs(exampleBackfillInstance));
         assertThat(returnedBackfill, sameBeanAs(exampleBackfillInstance));
-
-        // 4. tear down
-        DateTimeUtils.resetClock();
-    }
-
-    @Test
-    public void createBackfill_withProperInfoValueObject_shouldWork() {
-        // 1. Prepare
-        OffsetDateTime now = DateTimeUtils.freeze();
-        BackfillCreateInfo createInfo = new BackfillCreateInfo(
-                "backfill-created-by-info-vo",
-                123L,
-                // Task run ids
-                Lists.newArrayList(101L, 102L, 103L),
-                // Task def ids
-                Lists.newArrayList(1L, 2L, 3L)
-        );
-
-        // 2. process
-        Backfill backfillReturned = backfillDao.create(createInfo);
-
-        // 3. Validate
-        Optional<Backfill> persistedBackfill = backfillDao.fetchById(backfillReturned.getId());
-        assertTrue(persistedBackfill.isPresent());
-        assertThat(persistedBackfill.get(), sameBeanAs(backfillReturned));
-        assertThat(backfillReturned.getName(), is(createInfo.getName()));
-        assertThat(backfillReturned.getCreator(), is(createInfo.getCreator()));
-        assertThat(backfillReturned.getTaskDefinitionIds(), is(createInfo.getTaskDefinitionIds()));
-        assertThat(backfillReturned.getTaskRunIds(), is(createInfo.getTaskRunIds()));
-        assertThat(backfillReturned.getCreateTime(), is(now));
-        assertThat(backfillReturned.getUpdateTime(), is(now));
 
         // 4. tear down
         DateTimeUtils.resetClock();

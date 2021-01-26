@@ -8,8 +8,6 @@ import java.util.List;
 public class BackfillCreateInfo {
     private final String name;
 
-    private final Long creator;
-
     private final List<Long> taskRunIds;
 
     private final List<Long> taskDefinitionIds;

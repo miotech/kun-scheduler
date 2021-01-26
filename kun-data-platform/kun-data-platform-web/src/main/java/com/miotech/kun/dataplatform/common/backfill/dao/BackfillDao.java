@@ -6,9 +6,7 @@ import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.db.sql.WhereClause;
-import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.commons.utils.StringUtils;
-import com.miotech.kun.dataplatform.common.backfill.vo.BackfillCreateInfo;
 import com.miotech.kun.dataplatform.common.backfill.vo.BackfillSearchParams;
 import com.miotech.kun.dataplatform.model.backfill.Backfill;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -24,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -198,34 +195,6 @@ public class BackfillDao {
 
         // return persisted instance
         return fetchById(backfill.getId()).get();
-    }
-
-    /**
-     * Create a backfill instance by info value object
-     * @param backfillCreateInfo creation info object
-     * @return persisted instance
-     */
-    @Transactional
-    public Backfill create(BackfillCreateInfo backfillCreateInfo) {
-        Preconditions.checkNotNull(backfillCreateInfo);
-        Preconditions.checkArgument(
-                backfillCreateInfo.getTaskDefinitionIds().size() == backfillCreateInfo.getTaskRunIds().size(),
-                "Task runs should have same size as task definitions."
-        );
-
-        // insert record
-        OffsetDateTime now = DateTimeUtils.now();
-        long id = IdGenerator.getInstance().nextId();
-        Backfill backfillToCreate = Backfill.newBuilder()
-                .withId(id)
-                .withName(backfillCreateInfo.getName())
-                .withCreator(backfillCreateInfo.getCreator())
-                .withCreateTime(now)
-                .withUpdateTime(now)
-                .withTaskDefinitionIds(backfillCreateInfo.getTaskDefinitionIds())
-                .withTaskRunIds(backfillCreateInfo.getTaskRunIds())
-                .build();
-        return create(backfillToCreate);
     }
 
     public static class BackfillMapper implements RowMapper<Backfill> {
