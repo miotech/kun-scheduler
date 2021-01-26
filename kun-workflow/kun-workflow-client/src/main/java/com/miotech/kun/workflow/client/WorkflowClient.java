@@ -173,8 +173,10 @@ public interface WorkflowClient {
 
     /**
      * stop taskRuns
+     * @param taskRunIds
+     * * @return
      */
-    void stopTaskRuns(List<Long> taskRunId);
+    void stopTaskRuns(List<Long> taskRunIds);
 
     /**
      * Get latest N task runs of given task ids.
