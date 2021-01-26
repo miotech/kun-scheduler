@@ -37,7 +37,7 @@ public class BackfillDao {
 
     private static final List<String> BACKFILL_TABLE_COLS = ImmutableList.of("id", "name", "creator", "create_time", "update_time");
 
-    private static final List<String> BACKFILL_TASK_RUN_RELATION_TABLE_COLS =  ImmutableList.of("backfill_id", "task_run_id", "task_definition_id");
+    private static final List<String> BACKFILL_TASK_RUN_RELATION_TABLE_COLS =  ImmutableList.of("backfill_id", "task_run_id", "task_id", "task_definition_id");
 
     private static final String INSERT_BACKFILL_TABLE_SQL_STMT =
             "INSERT INTO " + BACKFILL_TABLE_NAME + " (" + BACKFILL_TABLE_COLS.stream().collect(Collectors.joining(","))
@@ -176,11 +176,7 @@ public class BackfillDao {
      */
     @Transactional
     public Backfill create(Backfill backfill) {
-        Preconditions.checkNotNull(backfill);
-        Preconditions.checkArgument(
-                backfill.getTaskDefinitionIds().size() == backfill.getTaskRunIds().size(),
-                "Task runs should have same size as task definitions."
-        );
+        checkBackfillArgumentBeforeCreate(backfill);
 
         // insert record
         jdbcTemplate.update(INSERT_BACKFILL_TABLE_SQL_STMT, backfill.getId(), backfill.getName(), backfill.getCreator(), backfill.getCreateTime(), backfill.getUpdateTime());
@@ -188,13 +184,36 @@ public class BackfillDao {
         // insert relations
         List<Object[]> relationInsertParams = new ArrayList<>();
         for (int i = 0; i < backfill.getTaskRunIds().size(); ++i) {
-            Object[] insertParams = { backfill.getId(), backfill.getTaskRunIds().get(i), backfill.getTaskDefinitionIds().get(i) };
+            Object[] insertParams = { backfill.getId(), backfill.getTaskRunIds().get(i), backfill.getWorkflowTaskIds().get(i), backfill.getTaskDefinitionIds().get(i) };
             relationInsertParams.add(insertParams);
         }
         jdbcTemplate.batchUpdate(INSERT_BACKFILL_RELATION_SQL_STMT, relationInsertParams);
 
         // return persisted instance
-        return fetchById(backfill.getId()).get();
+        Optional<Backfill> persistedBackfill = fetchById(backfill.getId());
+        if (!persistedBackfill.isPresent()) {
+            throw new IllegalStateException(String.format("Cannot retrieve persisted backfill with id: %s", backfill.getId()));
+        }
+        // else
+        return persistedBackfill.get();
+    }
+
+    private static void checkBackfillArgumentBeforeCreate(Backfill backfill) {
+        Preconditions.checkNotNull(backfill);
+        Preconditions.checkNotNull(backfill.getTaskRunIds());
+        Preconditions.checkNotNull(backfill.getWorkflowTaskIds());
+        Preconditions.checkNotNull(backfill.getTaskDefinitionIds());
+        Preconditions.checkArgument(
+                backfill.getTaskDefinitionIds().size() == backfill.getTaskRunIds().size(),
+                "Task runs should have same size as task definitions."
+        );
+        Preconditions.checkArgument(
+                backfill.getWorkflowTaskIds().size() == backfill.getTaskRunIds().size(),
+                "Task runs should have same size as workflow task ids."
+        );
+        Preconditions.checkArgument(backfill.getTaskRunIds().stream().noneMatch(Objects::isNull), "Cannot have null id in task run ids");
+        Preconditions.checkArgument(backfill.getTaskDefinitionIds().stream().noneMatch(Objects::isNull), "Cannot have null id in task definitions");
+        Preconditions.checkArgument(backfill.getWorkflowTaskIds().stream().noneMatch(Objects::isNull), "Cannot have null id in workflow task ids");
     }
 
     public static class BackfillMapper implements RowMapper<Backfill> {
@@ -218,10 +237,12 @@ public class BackfillDao {
             // search related task run ids and construct array list
             List<Long> taskRunIds = new LinkedList<>();
             List<Long> taskDefinitionIds = new LinkedList<>();
+            List<Long> workflowTaskIds = new LinkedList<>();
             jdbcTemplate.query(
-                    "SELECT backfill_id, task_run_id, task_definition_id FROM " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + " WHERE backfill_id = ?",
+                    "SELECT backfill_id, task_run_id, task_id, task_definition_id FROM " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + " WHERE backfill_id = ?",
                     rsRelation -> {
                         taskRunIds.add(rsRelation.getLong("task_run_id"));
+                        workflowTaskIds.add(rsRelation.getLong("task_id"));
                         taskDefinitionIds.add(rsRelation.getLong("task_definition_id"));
                     },
                     backfillId

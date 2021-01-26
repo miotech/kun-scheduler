@@ -8,7 +8,7 @@ import java.util.List;
 public class BackfillCreateInfo {
     private final String name;
 
-    private final List<Long> taskRunIds;
+    private final List<Long> workflowTaskIds;
 
     private final List<Long> taskDefinitionIds;
 }

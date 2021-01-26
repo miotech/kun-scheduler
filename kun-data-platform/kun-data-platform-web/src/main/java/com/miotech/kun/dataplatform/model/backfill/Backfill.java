@@ -21,6 +21,8 @@ public class Backfill {
 
     private final List<Long> taskRunIds;
 
+    private final List<Long> workflowTaskIds;
+
     private final List<Long> taskDefinitionIds;
 
     private final OffsetDateTime createTime;
@@ -45,6 +47,10 @@ public class Backfill {
         return taskDefinitionIds;
     }
 
+    public List<Long> getWorkflowTaskIds() {
+        return workflowTaskIds;
+    }
+
     public OffsetDateTime getCreateTime() {
         return createTime;
     }
@@ -62,6 +68,7 @@ public class Backfill {
         this.name = builder.name;
         this.taskRunIds = ImmutableList.copyOf(builder.taskRunIds);
         this.taskDefinitionIds = ImmutableList.copyOf(builder.taskDefinitionIds);
+        this.workflowTaskIds = ImmutableList.copyOf(builder.workflowTaskIds);
         this.createTime = builder.createTime;
         this.updateTime = builder.updateTime;
         this.creator = builder.creator;
@@ -77,6 +84,7 @@ public class Backfill {
         builder.name = this.name;
         builder.taskDefinitionIds = this.taskDefinitionIds;
         builder.taskRunIds = this.taskRunIds;
+        builder.workflowTaskIds = this.workflowTaskIds;
         builder.createTime = this.createTime;
         builder.updateTime = this.updateTime;
         builder.creator = this.creator;
@@ -101,6 +109,7 @@ public class Backfill {
         private Long id;
         private String name;
         private List<Long> taskRunIds;
+        private List<Long> workflowTaskIds;
         private List<Long> taskDefinitionIds;
         private OffsetDateTime createTime;
         private OffsetDateTime updateTime;
@@ -121,6 +130,11 @@ public class Backfill {
 
         public BackFillBuilder withTaskRunIds(List<Long> taskRunIds) {
             this.taskRunIds = taskRunIds;
+            return this;
+        }
+
+        public BackFillBuilder withWorkflowTaskIds(List<Long> workflowTaskIds) {
+            this.workflowTaskIds = workflowTaskIds;
             return this;
         }
 

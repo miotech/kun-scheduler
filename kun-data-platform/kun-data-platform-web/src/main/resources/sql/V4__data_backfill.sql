@@ -10,6 +10,7 @@ CREATE TABLE kun_dp_backfill (
 CREATE TABLE kun_dp_backfill_task_run_relation (
     backfill_id BIGINT NOT NULL,
     task_run_id BIGINT NOT NULL,
+    task_id BIGINT NOT NULL,
     task_definition_id BIGINT NOT NULL,
     PRIMARY KEY (backfill_id, task_run_id)
 );
