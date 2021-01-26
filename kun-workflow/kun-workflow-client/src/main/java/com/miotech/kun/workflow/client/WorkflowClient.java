@@ -172,6 +172,11 @@ public interface WorkflowClient {
     TaskRun stopTaskRun(Long taskRunId);
 
     /**
+     * stop taskRuns
+     */
+    void stopTaskRuns(List<Long> taskRunId);
+
+    /**
      * Get latest N task runs of given task ids.
      * @param taskIds ids of the tasks for the query
      * @param limit size of the task run list for each task
