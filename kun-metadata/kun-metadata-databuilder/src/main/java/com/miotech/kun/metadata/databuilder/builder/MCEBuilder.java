@@ -10,6 +10,7 @@ import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.core.model.mce.MetadataChangeEvent;
+import com.miotech.kun.metadata.core.model.mce.MetadataStatisticsEvent;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractorFactory;
@@ -53,7 +54,7 @@ public class MCEBuilder {
         this.loader = loader;
     }
 
-    public void extractSchemaOfDataSource(Long datasourceId) throws Exception {
+    public void extractSchemaOfDataSource(Long datasourceId) {
         if (logger.isDebugEnabled()) {
             logger.debug("Begin to extractSchemaOfDataSource, datasourceId: {}", datasourceId);
         }
@@ -73,14 +74,18 @@ public class MCEBuilder {
 
         Iterator<Dataset> datasetIterator = extractor.extract(dataSource);
         while (datasetIterator.hasNext()) {
-            loader.loadSchema(datasetIterator.next());
+            long gid = loader.loadSchema(datasetIterator.next());
+            if (gid < 0) {
+                continue;
+            }
 
             // 发送消息
-//            KafkaUtil.send(null, null, null);
+            /*MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.TABLE, gid);
+            KafkaUtil.send(props.getString(BROKERS), props.getString(MSE_TOPIC), JSONUtils.toJsonString(mse));*/
         }
     }
 
-    public void extractSchemaOfDataset(Long gid) throws Exception {
+    public void extractSchemaOfDataset(Long gid) {
         if (logger.isDebugEnabled()) {
             logger.debug("Begin to extractSchemaOfDataset, gid: {}", gid);
         }
@@ -104,14 +109,15 @@ public class MCEBuilder {
 
         // 发送消息
         try {
-            KafkaUtil.send(props.getString(BROKERS), props.getString(MSE_TOPIC), gid.toString());
+            MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.FIELD, gid);
+            KafkaUtil.send(props.getString(BROKERS), props.getString(MSE_TOPIC), JSONUtils.toJsonString(mse));
         } catch (Exception e) {
             logger.warn("send mse message error: ", e);
         }
 
     }
 
-    public void extractSchemaOfPush(String message) throws Exception {
+    public void extractSchemaOfPush(String message) {
         MetadataChangeEvent mce = JSONUtils.jsonToObject(message, MetadataChangeEvent.class);
 
         String connectionInfo = operator.fetchOne("SELECT connection_info FROM kun_mt_datasource WHERE id = ?",

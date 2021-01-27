@@ -1,6 +1,5 @@
 package com.miotech.kun.metadata.databuilder.service;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
@@ -27,7 +26,7 @@ public class GidServiceTest extends DatabaseTestBase {
     }
 
     @Test
-    public void testGenerate_existed() throws JsonProcessingException {
+    public void testGenerate_existed() {
         DataStore dataStore = new HiveTableStore("", "db1", "tb");
 
         long currentTime = System.currentTimeMillis();

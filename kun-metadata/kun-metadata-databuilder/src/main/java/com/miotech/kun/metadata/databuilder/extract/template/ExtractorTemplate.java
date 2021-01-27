@@ -30,7 +30,7 @@ public abstract class ExtractorTemplate extends AbstractExtractor {
 
     protected abstract DatasetFieldStat getFieldStats(DatasetField datasetField);
 
-    protected abstract DatasetStat getTableStats();
+    protected abstract TableStatistics getTableStats();
 
     protected abstract DataStore getDataStore();
 
@@ -66,7 +66,7 @@ public abstract class ExtractorTemplate extends AbstractExtractor {
                 }
             }
 
-            DatasetStat tableStat = getTableStats();
+            TableStatistics tableStat = getTableStats();
             if (logger.isDebugEnabled()) {
                 logger.debug("ExtractorTemplate extract getTableStats: {}", JSONUtils.toJsonString(tableStat));
             }

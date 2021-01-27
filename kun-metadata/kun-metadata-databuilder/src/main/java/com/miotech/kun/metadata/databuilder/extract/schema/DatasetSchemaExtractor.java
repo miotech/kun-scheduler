@@ -9,8 +9,8 @@ import java.util.List;
 
 public interface DatasetSchemaExtractor extends DatasetExistenceExtractor {
 
-    List<DatasetField> extract(Dataset dataset, DataSource dataSource) throws Exception;
+    List<DatasetField> extract(Dataset dataset, DataSource dataSource);
 
-    Iterator<Dataset> extract(DataSource dataSource) throws Exception;
+    Iterator<Dataset> extract(DataSource dataSource);
 
 }

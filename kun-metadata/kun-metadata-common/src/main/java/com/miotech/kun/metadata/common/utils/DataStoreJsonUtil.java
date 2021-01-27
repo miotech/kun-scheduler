@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.common.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.model.lineage.*;
 
@@ -21,12 +22,20 @@ public class DataStoreJsonUtil {
     private DataStoreJsonUtil() {
     }
 
-    public static String toJson(DataStore dataStore) throws JsonProcessingException {
-        return MAPPER.writeValueAsString(dataStore);
+    public static String toJson(DataStore dataStore) {
+        try {
+            return MAPPER.writeValueAsString(dataStore);
+        } catch (JsonProcessingException jsonProcessingException) {
+            throw ExceptionUtils.wrapIfChecked(jsonProcessingException);
+        }
     }
 
-    public static DataStore toDataStore(String json) throws JsonProcessingException {
-        return MAPPER.readValue(json, DataStore.class);
+    public static DataStore toDataStore(String json) {
+        try {
+            return MAPPER.readValue(json, DataStore.class);
+        } catch (JsonProcessingException jsonProcessingException) {
+            throw ExceptionUtils.wrapIfChecked(jsonProcessingException);
+        }
     }
 
 }

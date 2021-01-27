@@ -1,18 +1,17 @@
 package com.miotech.kun.metadata.databuilder.client;
 
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
 import com.miotech.kun.metadata.databuilder.model.HiveDataSource;
 import com.miotech.kun.metadata.databuilder.model.PostgresDataSource;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
-import java.sql.*;
-import java.util.concurrent.TimeUnit;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 /**
  * Universal JDBC connection tool, which adapts to Hive and Postgres
@@ -21,18 +20,6 @@ import java.util.concurrent.TimeUnit;
 public class JDBCClient {
     private static Logger logger = LoggerFactory.getLogger(JDBCClient.class);
     private JDBCClient() {
-    }
-
-    public static DataSource getDataSource(String url, String username, String password, DatabaseType dbType) {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(url);
-        config.setUsername(username);
-        config.setPassword(password);
-        config.setDriverClassName(selectSpecificDriver(dbType));
-        config.setMaximumPoolSize(2);
-        config.setMinimumIdle(0);
-        config.setIdleTimeout(TimeUnit.SECONDS.toMillis(10));
-        return new HikariDataSource(config);
     }
 
     private static String selectSpecificDriver(DatabaseType dbType) {
@@ -68,17 +55,21 @@ public class JDBCClient {
         }
     }
 
-    public static Connection getConnection(String url, String user, String password, DatabaseType dbType) throws ClassNotFoundException, SQLException {
+    public static Connection getConnection(String url, String user, String password, DatabaseType dbType) {
         if (dbType == null) {
             throw new RuntimeException("dbType must not be null");
         }
 
         String driverName = selectSpecificDriver(dbType);
-        Class.forName(driverName);
-        return DriverManager.getConnection(url, user, password);
+        try {
+            Class.forName(driverName);
+            return DriverManager.getConnection(url, user, password);
+        } catch (ClassNotFoundException | SQLException e) {
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
     }
 
-    public static Connection getConnection(com.miotech.kun.metadata.databuilder.model.DataSource dataSource, String dbName, String schemaName) throws SQLException, ClassNotFoundException {
+    public static Connection getConnection(com.miotech.kun.metadata.databuilder.model.DataSource dataSource, String dbName, String schemaName) {
         com.miotech.kun.metadata.databuilder.model.DataSource.Type dbType = dataSource.getType();
         switch (dbType) {
             case AWS:
@@ -91,7 +82,7 @@ public class JDBCClient {
                 PostgresDataSource postgresDataSource = (PostgresDataSource) dataSource;
                 return getConnection(UseDatabaseUtil.useSchema(postgresDataSource.getUrl(), dbName, schemaName), postgresDataSource.getUsername(), postgresDataSource.getPassword(), DatabaseType.POSTGRES);
             default:
-                throw new UnsupportedOperationException(String.format("invalid dataSourceType: {}", dataSource.getType()));
+                throw new IllegalArgumentException(String.format("invalid dataSourceType: {}", dataSource.getType()));
         }
     }
 }

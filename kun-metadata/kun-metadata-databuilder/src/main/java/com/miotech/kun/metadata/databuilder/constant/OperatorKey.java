@@ -6,6 +6,7 @@ public class OperatorKey {
     }
 
     public static final String DEPLOY_MODE = "deployMode";
+    public static final String STATISTICS_MODE = "statisticsMode";
     public static final String DATASOURCE_ID = "datasourceId";
     public static final String GID = "gid";
     public static final String MCE = "mce";

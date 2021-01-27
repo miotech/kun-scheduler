@@ -18,12 +18,13 @@ public class PrintLoader implements Loader {
     }
 
     @Override
-    public void loadSchema(Dataset dataset) {
+    public long loadSchema(Dataset dataset) {
         logger.info("loadSchema dataset: {}", JSONUtils.toJsonString(dataset));
+        return -1L;
     }
 
     @Override
-    public void loadStat(Dataset dataset) {
+    public void loadStatistics(Dataset dataset) {
         logger.info("loadStat dataset: {}", JSONUtils.toJsonString(dataset));
     }
 
