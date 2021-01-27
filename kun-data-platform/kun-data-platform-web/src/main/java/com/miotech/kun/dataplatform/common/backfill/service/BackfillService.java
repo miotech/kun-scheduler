@@ -93,7 +93,17 @@ public class BackfillService extends BaseSecurityService {
             return false;
         }
         Backfill backfill = backfillOptional.get();
-        runWorkflowTasks(backfill.getWorkflowTaskIds());
+        Map<Long, TaskRun> taskIdToUpdatedTaskRuns = runWorkflowTasks(backfill.getWorkflowTaskIds());
+
+        // update task run ids
+        List<Long> updatedTaskRunIds = new ArrayList<>();
+        for (Long taskId : backfill.getWorkflowTaskIds()) {
+            updatedTaskRunIds.add(taskIdToUpdatedTaskRuns.get(taskId).getId());
+        }
+        Backfill updatedBackfill = backfill.cloneBuilder()
+                .withTaskRunIds(updatedTaskRunIds)
+                .build();
+        backfillDao.update(backfillId, updatedBackfill);
         return true;
     }
 

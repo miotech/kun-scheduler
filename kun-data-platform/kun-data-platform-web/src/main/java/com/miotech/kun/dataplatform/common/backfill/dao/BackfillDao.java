@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.common.backfill.dao;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
@@ -46,6 +47,14 @@ public class BackfillDao {
     private static final String INSERT_BACKFILL_RELATION_SQL_STMT =
             "INSERT INTO " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + "(" + BACKFILL_TASK_RUN_RELATION_TABLE_COLS.stream().collect(Collectors.joining(","))
             + ") VALUES (" + StringUtils.repeatJoin("?", ",", BACKFILL_TASK_RUN_RELATION_TABLE_COLS.size()) + ")";
+
+    private static final String UPDATE_BACKFILL_TABLE_SQL_STMT = "UPDATE " + BACKFILL_TABLE_NAME + " SET "
+            + BACKFILL_TABLE_COLS.stream()
+                .map(colName -> colName + " = ?")
+                .collect(Collectors.joining(","))
+            + " WHERE id = ?";
+
+    private static final String DELETE_BACKFILL_RELATION_SQL_STMT = "DELETE FROM " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + " WHERE backfill_id = ?";
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -176,7 +185,7 @@ public class BackfillDao {
      */
     @Transactional
     public Backfill create(Backfill backfill) {
-        checkBackfillArgumentBeforeCreate(backfill);
+        checkBackfillArgumentBeforeModify(backfill);
 
         // insert record
         jdbcTemplate.update(INSERT_BACKFILL_TABLE_SQL_STMT, backfill.getId(), backfill.getName(), backfill.getCreator(), backfill.getCreateTime(), backfill.getUpdateTime());
@@ -198,7 +207,44 @@ public class BackfillDao {
         return persistedBackfill.get();
     }
 
-    private static void checkBackfillArgumentBeforeCreate(Backfill backfill) {
+    @Transactional
+    public Backfill update(Long updateId, Backfill backfill) {
+        // 1. Preconditions check
+        Preconditions.checkNotNull(updateId, "Argument `updateId` should not be null");
+        checkBackfillArgumentBeforeModify(backfill);
+
+        // 2. Generate sql statement parameters
+        // "id", "name", "creator", "create_time", "update_time", original id
+        List<Object> params = Lists.newArrayList(
+                backfill.getId(),
+                backfill.getName(),
+                backfill.getCreator(),
+                backfill.getCreateTime(),
+                backfill.getUpdateTime(),
+                updateId
+        );
+        List<Object[]> relationInsertParams = new ArrayList<>(backfill.getTaskRunIds().size());
+        for (int i = 0; i < backfill.getTaskRunIds().size(); ++i) {
+            Object[] insertParams = { backfill.getId(), backfill.getTaskRunIds().get(i), backfill.getWorkflowTaskIds().get(i), backfill.getTaskDefinitionIds().get(i) };
+            relationInsertParams.add(insertParams);
+        }
+
+        // 3. update entity
+        int affectedRowCount = jdbcTemplate.update(UPDATE_BACKFILL_TABLE_SQL_STMT, params.toArray());
+        if (affectedRowCount == 0) {
+            throw new IllegalArgumentException(String.format("Cannot update backfill with id = %s", updateId));
+        }
+        // 4. update relations
+        // remove previous relations
+        jdbcTemplate.update(DELETE_BACKFILL_RELATION_SQL_STMT, updateId);
+        // insert relations
+        jdbcTemplate.batchUpdate(INSERT_BACKFILL_RELATION_SQL_STMT, relationInsertParams);
+
+        // 5. return updated record
+        return fetchById(backfill.getId()).get();
+    }
+
+    private static void checkBackfillArgumentBeforeModify(Backfill backfill) {
         Preconditions.checkNotNull(backfill);
         Preconditions.checkNotNull(backfill.getTaskRunIds());
         Preconditions.checkNotNull(backfill.getWorkflowTaskIds());
