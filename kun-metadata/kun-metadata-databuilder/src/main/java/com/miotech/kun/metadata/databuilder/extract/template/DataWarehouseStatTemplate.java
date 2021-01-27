@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 
 public class DataWarehouseStatTemplate {
@@ -31,7 +30,7 @@ public class DataWarehouseStatTemplate {
     private final DatabaseType databaseType;
     private final Connection connection;
 
-    public DataWarehouseStatTemplate(String dbName, String schemaName, String tableName, DatabaseType databaseType, DataSource dataSource) throws SQLException, ClassNotFoundException {
+    public DataWarehouseStatTemplate(String dbName, String schemaName, String tableName, DatabaseType databaseType, DataSource dataSource) {
         this.dbName = dbName;
         this.dbNameAfterEscape = DatabaseIdentifierProcessor.escape(dbName, databaseType);
         this.schemaName = schemaName;
@@ -146,10 +145,8 @@ public class DataWarehouseStatTemplate {
         }
     }
 
-    public void close() throws SQLException {
-        if (connection != null) {
-            connection.close();
-        }
+    public void close() {
+        JDBCClient.close(connection);
     }
 
     private boolean isIgnored(DatasetFieldType.Type type) {

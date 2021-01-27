@@ -91,18 +91,22 @@ public class PostgresLoaderTest extends DatabaseTestBase {
 
         Dataset dataset = Dataset.newBuilder()
                 .withGid(gid)
-                .withDatasetStat(DatasetStat.newBuilder()
+                .withDatasetStat(TableStatistics.newBuilder()
                         .withLastUpdatedTime(LocalDateTime.now())
                         .withStatDate(LocalDateTime.now())
                         .withRowCount(rowCount)
+                        .withTotalByteSize(1024L)
                         .build())
                 .withFieldStats(fieldStats)
                 .build();
 
-        postgresLoader.loadStat(dataset);
+        postgresLoader.loadStatistics(dataset);
 
         Long rowCountResult = operator.fetchOne("SELECT row_count FROM kun_mt_dataset_stats WHERE dataset_gid = ?", rs -> rs.getLong(1), gid);
         MatcherAssert.assertThat(rowCountResult, Matchers.is(rowCount));
+
+        Long totalByteSize = operator.fetchOne("SELECT total_byte_size FROM kun_mt_dataset_stats WHERE dataset_gid = ?", rs -> rs.getLong(1), gid);
+        MatcherAssert.assertThat(totalByteSize, Matchers.is(1024L));
     }
 
 }

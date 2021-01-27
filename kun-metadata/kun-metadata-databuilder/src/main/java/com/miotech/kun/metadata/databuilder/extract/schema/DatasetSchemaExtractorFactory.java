@@ -1,12 +1,12 @@
 package com.miotech.kun.metadata.databuilder.extract.schema;
 
 import com.google.common.base.Preconditions;
-import com.miotech.kun.metadata.databuilder.extract.impl.arango.ArangoSchemaExtractor;
+import com.miotech.kun.metadata.databuilder.extract.impl.arangodb.ArangoDBSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticSearchSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.glue.GlueSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.hive.HiveSchemaExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.mongo.MongoSchemaExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.postgres.PostgreSQLSchemaExtractor;
+import com.miotech.kun.metadata.databuilder.extract.impl.mongodb.MongoDBSchemaExtractor;
+import com.miotech.kun.metadata.databuilder.extract.impl.postgresql.PostgreSQLSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 
 public class DatasetSchemaExtractorFactory {
@@ -19,9 +19,9 @@ public class DatasetSchemaExtractorFactory {
             case HIVE:
                 return new HiveSchemaExtractor();
             case ARANGO:
-                return new ArangoSchemaExtractor();
+                return new ArangoDBSchemaExtractor();
             case MONGODB:
-                return new MongoSchemaExtractor();
+                return new MongoDBSchemaExtractor();
             case POSTGRESQL:
                 return new PostgreSQLSchemaExtractor();
             case ELASTICSEARCH:

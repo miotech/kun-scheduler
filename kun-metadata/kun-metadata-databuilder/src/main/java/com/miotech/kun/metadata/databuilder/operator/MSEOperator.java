@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.builder.MSEBuilder;
+import com.miotech.kun.metadata.databuilder.constant.StatisticsMode;
 import com.miotech.kun.workflow.core.execution.*;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
@@ -36,7 +37,8 @@ public class MSEOperator extends KunOperator {
             Injector injector = Guice.createInjector(new BuilderModule(props));
             dataSource = injector.getInstance(DataSource.class);
             MSEBuilder dataBuilder = injector.getInstance(MSEBuilder.class);
-            dataBuilder.extractStat(Long.parseLong(operatorContext.getConfig().getString("gid")));
+            dataBuilder.extractStatistics(Long.parseLong(operatorContext.getConfig().getString(GID)),
+                    StatisticsMode.valueOf(operatorContext.getConfig().getString(STATISTICS_MODE).toUpperCase()));
 
             return true;
         } catch (Exception e) {
@@ -61,7 +63,8 @@ public class MSEOperator extends KunOperator {
                 .define(DATASOURCE_USERNAME, ConfigDef.Type.STRING, true, "username", "username")
                 .define(DATASOURCE_PASSWORD, ConfigDef.Type.STRING, true, "password", "password")
                 .define(DATASOURCE_DRIVER_CLASS_NAME, ConfigDef.Type.STRING, true, "driverClassName", "driverClassName")
-                .define(GID, ConfigDef.Type.STRING, "", true, GID, GID);
+                .define(GID, ConfigDef.Type.STRING, true, GID, GID)
+                .define(STATISTICS_MODE, ConfigDef.Type.STRING, StatisticsMode.TABLE.name(), true, STATISTICS_MODE, STATISTICS_MODE);
         return configDef;
     }
 

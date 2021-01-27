@@ -1,6 +1,5 @@
 package com.miotech.kun.metadata.web.lineage;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
@@ -56,13 +55,7 @@ public class LineageLoader {
     }
 
     private long findDataSetId(DataStore store) {
-        String dataStoreJson;
-        try {
-            dataStoreJson = DataStoreJsonUtil.toJson(store);
-        } catch (JsonProcessingException e) {
-            logger.error("unknown data store error: ", e);
-            return 0;
-        }
+        String dataStoreJson = DataStoreJsonUtil.toJson(store);
         Long gid = dbOperator.fetchOne(
                 "SELECT gid FROM kun_mt_dataset WHERE (dsi LIKE CONCAT(CAST(? AS TEXT), '%')) OR (data_store = CAST(? AS JSONB))",
                 rs -> rs.getLong(1),
