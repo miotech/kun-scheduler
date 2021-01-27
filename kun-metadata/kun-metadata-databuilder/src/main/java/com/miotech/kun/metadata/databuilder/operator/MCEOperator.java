@@ -45,11 +45,11 @@ public class MCEOperator extends KunOperator {
                     dataBuilder.extractSchemaOfDataSource(datasourceId);
                     break;
                 case DATASET:
-                    Long gid = Long.parseLong(operatorContext.getConfig().getString("gid"));
+                    Long gid = Long.parseLong(operatorContext.getConfig().getString(GID));
                     dataBuilder.extractSchemaOfDataset(gid);
                     break;
                 case PUSH:
-                    dataBuilder.extractSchemaOfPush(operatorContext.getConfig().getString("mce"));
+                    dataBuilder.extractSchemaOfPush(operatorContext.getConfig().getString(MCE));
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid deployMode: " + deployModeStr);

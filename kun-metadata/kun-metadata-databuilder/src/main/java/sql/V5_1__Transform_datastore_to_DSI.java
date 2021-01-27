@@ -1,6 +1,5 @@
 package sql;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.DataStore;
@@ -94,11 +93,7 @@ public class V5_1__Transform_datastore_to_DSI extends BaseJavaMigration {
     }
 
     private DataStore parseDataStoreJSON(String datastoreJson) {
-        try {
-            return DataStoreJsonUtil.toDataStore(datastoreJson);
-        } catch (JsonProcessingException e) {
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
+        return DataStoreJsonUtil.toDataStore(datastoreJson);
     }
 
     private int countUpdateRows(int[] successRows) {

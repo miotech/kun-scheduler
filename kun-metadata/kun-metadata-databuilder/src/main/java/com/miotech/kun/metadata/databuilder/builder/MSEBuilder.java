@@ -5,8 +5,9 @@ import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
-import com.miotech.kun.metadata.databuilder.extract.stat.DatasetStatExtractor;
-import com.miotech.kun.metadata.databuilder.extract.stat.DatasetStatExtractorFactory;
+import com.miotech.kun.metadata.databuilder.constant.StatisticsMode;
+import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatisticsExtractor;
+import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatisticsExtractorFactory;
 import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
 import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
@@ -30,7 +31,7 @@ public class MSEBuilder {
         this.loader = loader;
     }
 
-    public void extractStat(Long gid) throws Exception {
+    public void extractStatistics(Long gid, StatisticsMode statisticsMode)  {
         if (logger.isDebugEnabled()) {
             logger.debug("Begin to extractStat, gid: {}", gid);
         }
@@ -47,15 +48,15 @@ public class MSEBuilder {
         }
 
         DataSource dataSource = dataSourceBuilder.fetchByGid(gid);
-        DatasetStatExtractor extractor = DatasetStatExtractorFactory.createExtractor(dataSource.getType());
+        DatasetStatisticsExtractor extractor = DatasetStatisticsExtractorFactory.createExtractor(dataSource.getType());
         boolean existed = extractor.judgeExistence(dataset.get(), dataSource, DatasetExistenceJudgeMode.DATASET);
         if (!existed) {
             logger.warn("Dataset: {} no longer existed， need to be marked as `deleted`", gid);
             return;
         }
 
-        Dataset datasetWithStat = extractor.extract(dataset.get(), dataSource);
-        loader.loadStat(datasetWithStat);
+        Dataset datasetWithStat = extractor.extract(dataset.get(), dataSource, statisticsMode);
+        loader.loadStatistics(datasetWithStat);
 
     }
 }

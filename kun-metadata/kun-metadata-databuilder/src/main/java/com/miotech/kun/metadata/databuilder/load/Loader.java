@@ -9,7 +9,7 @@ public interface Loader {
 
     void loadSchema(Long gid, List<DatasetField> fields);
 
-    void loadSchema(Dataset dataset);
+    long loadSchema(Dataset dataset);
 
-    void loadStat(Dataset dataset);
+    void loadStatistics(Dataset dataset);
 }

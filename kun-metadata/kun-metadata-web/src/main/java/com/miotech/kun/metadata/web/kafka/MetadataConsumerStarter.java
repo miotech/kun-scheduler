@@ -7,10 +7,10 @@ import com.google.inject.Singleton;
 public class MetadataConsumerStarter {
 
     private MetadataChangeEventsProcessor mceProcessor;
-    private MetadataStatEventsProcessor mseProcessor;
+    private MetadataStatisticsEventsProcessor mseProcessor;
 
     @Inject
-    public MetadataConsumerStarter(MetadataChangeEventsProcessor mceProcessor, MetadataStatEventsProcessor mseProcessor) {
+    public MetadataConsumerStarter(MetadataChangeEventsProcessor mceProcessor, MetadataStatisticsEventsProcessor mseProcessor) {
         this.mceProcessor = mceProcessor;
         this.mseProcessor = mseProcessor;
     }

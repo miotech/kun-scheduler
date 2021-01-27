@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.databuilder.extract.impl.hive;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Iterators;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
@@ -13,6 +14,7 @@ import com.miotech.kun.metadata.databuilder.model.HiveDataSource;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,7 +35,7 @@ public class HiveSchemaExtractor extends HiveExistenceExtractor implements Datas
     }
 
     @Override
-    public Iterator<Dataset> extract(DataSource dataSource) throws Exception {
+    public Iterator<Dataset> extract(DataSource dataSource) {
         HiveDataSource hiveDataSource = (HiveDataSource) dataSource;
         Connection connection = null;
         PreparedStatement statement = null;
@@ -54,6 +56,8 @@ public class HiveSchemaExtractor extends HiveExistenceExtractor implements Datas
             }
 
             return Iterators.concat(databases.stream().map(databasesName -> new HiveDatabaseSchemaExtractor(hiveDataSource, databasesName).extract()).iterator());
+        } catch (SQLException sqlException) {
+            throw ExceptionUtils.wrapIfChecked(sqlException);
         } finally {
             JDBCClient.close(connection, statement, resultSet);
         }
