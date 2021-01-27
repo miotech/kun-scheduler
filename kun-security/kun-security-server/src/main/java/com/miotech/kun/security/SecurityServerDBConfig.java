@@ -1,8 +1,10 @@
 package com.miotech.kun.security;
 
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.session.JdbcSessionDataSourceInitializer;
@@ -25,7 +27,14 @@ import javax.sql.DataSource;
  * @created: 2021/1/17
  */
 @Configuration
+@Slf4j
 public class SecurityServerDBConfig implements InitializingBean {
+
+    @Value("${spring.datasource.username}")
+    String username;
+
+    @Value("${spring.datasource.password}")
+    String password;
 
     @Bean("primaryDataSourceProperties")
     @Primary
@@ -38,6 +47,7 @@ public class SecurityServerDBConfig implements InitializingBean {
     @Primary
     @ConfigurationProperties("spring.datasource.configuration")
     DataSource getPrimaryDataSource() {
+        log.info("Primary datasource username {} password {}", username, password);
         return primaryDataSourceProperties()
                 .initializeDataSourceBuilder()
                 .type(HikariDataSource.class)
