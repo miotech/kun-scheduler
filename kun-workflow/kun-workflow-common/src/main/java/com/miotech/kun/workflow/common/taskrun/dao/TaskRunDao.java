@@ -434,6 +434,8 @@ public class TaskRunDao {
      */
     public List<TaskRun> fetchTaskRunsByFilter(TaskRunSearchFilter filter) {
         Preconditions.checkNotNull(filter, "Invalid argument `filter`: null");
+        Preconditions.checkArgument(Objects.isNull(filter.getPageNum()) || filter.getPageNum() > 0, "page number should be positive");
+        Preconditions.checkArgument(Objects.isNull(filter.getPageSize()) || filter.getPageSize() > 0, "page size should be positive");
 
         int pageNum = Objects.nonNull(filter.getPageNum()) ? filter.getPageNum() : 1;
         int pageSize = Objects.nonNull(filter.getPageSize()) ? filter.getPageSize() : 100;

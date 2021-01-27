@@ -155,8 +155,8 @@ public class TaskRunController {
     @RouteMapping(url = "/taskruns/_search", method = "POST")
     public PaginationVO<TaskRunVO> searchTaskRuns(@RequestBody TaskRunSearchFilter requestFilter) {
         TaskRunSearchFilter filter = requestFilter.cloneBuilder()
-                .withPageNum(Objects.nonNull(requestFilter.getPageNum()) ? requestFilter.getPageNum() : 1)
-                .withPageSize(Objects.nonNull(requestFilter.getPageSize()) ? requestFilter.getPageSize() : 100)
+                .withPageNum(Objects.nonNull(requestFilter.getPageNum()) && (requestFilter.getPageNum() > 0) ? requestFilter.getPageNum() : 1)
+                .withPageSize(Objects.nonNull(requestFilter.getPageSize()) && (requestFilter.getPageSize() > 0) ? requestFilter.getPageSize() : 100)
                 .withSortKey(Objects.nonNull(requestFilter.getSortKey()) ? requestFilter.getSortKey() : "id")
                 .withSortOrder(Objects.nonNull(requestFilter.getSortOrder()) ? requestFilter.getSortOrder() : "DESC")
                 .build();
