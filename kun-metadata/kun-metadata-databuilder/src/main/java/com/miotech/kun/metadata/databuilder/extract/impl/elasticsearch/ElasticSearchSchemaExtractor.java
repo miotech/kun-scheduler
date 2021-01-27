@@ -1,6 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch;
 
 import com.google.common.collect.Iterators;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.client.ElasticSearchClient;
@@ -12,6 +13,7 @@ import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +37,7 @@ public class ElasticSearchSchemaExtractor extends ElasticsearchExistenceExtracto
     }
 
     @Override
-    public Iterator<Dataset> extract(DataSource dataSource) throws Exception {
+    public Iterator<Dataset> extract(DataSource dataSource) {
         ElasticSearchClient elasticSearchClient = null;
         try {
             ElasticSearchDataSource elasticSearchDataSource = (ElasticSearchDataSource) dataSource;
@@ -50,6 +52,8 @@ public class ElasticSearchSchemaExtractor extends ElasticsearchExistenceExtracto
 
             return Iterators.concat(indices.stream().map(index ->
                     new ElasticSearchIndexSchemaExtractor(elasticSearchDataSource, index).extract()).iterator());
+        } catch (IOException e) {
+            throw ExceptionUtils.wrapIfChecked(e);
         } finally {
             if (elasticSearchClient != null) {
                 elasticSearchClient.close();

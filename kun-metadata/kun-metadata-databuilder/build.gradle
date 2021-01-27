@@ -12,7 +12,6 @@ dependencies {
     implementation project(":kun-commons:kun-commons-testing")
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-commons:kun-commons-web")
-    implementation project(":kun-workflow:kun-workflow-utils")
     implementation project(":kun-metadata:kun-metadata-core")
     implementation project(":kun-metadata:kun-metadata-common")
     implementation 'com.typesafe:config'
@@ -32,6 +31,9 @@ dependencies {
     implementation "com.syncron.amazonaws:simba-athena-jdbc-driver"
     implementation "com.arangodb:arangodb-java-driver"
     implementation "org.apache.kafka:kafka-clients"
+    implementation "com.amazonaws:aws-java-sdk-s3"
+    implementation 'org.apache.hadoop:hadoop-aws'
+
     testImplementation "junit:junit"
     testRuntimeOnly "com.h2database:h2"
     testRuntimeOnly "org.mockito:mockito-core"

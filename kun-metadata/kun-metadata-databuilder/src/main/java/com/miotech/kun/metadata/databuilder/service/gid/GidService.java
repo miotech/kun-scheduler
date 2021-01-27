@@ -1,23 +1,17 @@
 package com.miotech.kun.metadata.databuilder.service.gid;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.miotech.kun.commons.db.DatabaseOperator;
-import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.DSI;
 import com.miotech.kun.metadata.core.model.DataStore;
 import io.prestosql.jdbc.$internal.guava.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
 
 @Singleton
 public class GidService {
-    private static final Logger logger = LoggerFactory.getLogger(GidService.class);
-
     private final DatabaseOperator dbOperator;
 
     @Inject
@@ -29,14 +23,7 @@ public class GidService {
         // Convert dataStore to JSON
         Preconditions.checkNotNull(dataStore, "dataStore can't be null");
 
-        String dataStoreJson;
-        try {
-            dataStoreJson = DataStoreJsonUtil.toJson(dataStore);
-        } catch (JsonProcessingException e) {
-            logger.error("serialize fail, dataStoreType: {}", dataStore.getType());
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
-
+        String dataStoreJson = DataStoreJsonUtil.toJson(dataStore);
         Long gid = getByDSI(dataStore.getDSI());
 
         if (gid != null && gid > 0) {
