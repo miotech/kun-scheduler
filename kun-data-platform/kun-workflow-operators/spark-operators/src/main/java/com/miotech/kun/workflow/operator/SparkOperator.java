@@ -32,6 +32,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
     private final String SPARK_QUERY_LISTENER = "spark.sql.queryExecutionListeners";
     private final String SPLINE_QUERY_LISTENER_PATH = "s3://com.miotech.data.prd/spline/spark-2.4-spline-agent-bundle_2.11-0.6.0-SNAPSHOT.jar";
     private final String HDFS_ROOT = "s3a://com.miotech.data.prd";
+    private final Integer LIVY_TIMEOUT_LIMIT = 3;
 
 
     private SparkApp app;
@@ -116,21 +117,31 @@ public class SparkOperator extends LivyBaseSparkOperator {
         int jobId = app.getId();
         logger.info("Execute spark application using livy : batch id {}", jobId);
 
-        StateInfo.State jobState;
+        StateInfo.State jobState = null;
         String applicationId = null;
         AppInfo appInfo = null;
+        Integer timeout = 0;
         do {
-            if (StringUtils.isEmpty(applicationId)
-                    || StringUtils.isEmpty(app.getAppInfo().getDriverLogUrl())) {
-                app = livyClient.getSparkJob(jobId);
-                applicationId = app.getAppId();
-                appInfo = app.getAppInfo();
-                if (!StringUtils.isEmpty(applicationId)) {
-                    logger.info("Application info: {}", JSONUtils.toJsonString(app));
+            try {
+                if (StringUtils.isEmpty(applicationId)
+                        || StringUtils.isEmpty(app.getAppInfo().getDriverLogUrl())) {
+                    app = livyClient.getSparkJob(jobId);
+                    applicationId = app.getAppId();
+                    appInfo = app.getAppInfo();
+                    if (!StringUtils.isEmpty(applicationId)) {
+                        logger.info("Application info: {}", JSONUtils.toJsonString(app));
+                    }
+                }
+                jobState = livyClient.getSparkJobState(app.getId()).getState();
+                timeout = 0;
+            } catch (RuntimeException e) {
+                timeout++;
+                logger.warn("get job information from livy timeout, times = {}", timeout);
+                if (timeout >= LIVY_TIMEOUT_LIMIT) {
+                    logger.error("get job information from livy failed", e);
+                    throw e;
                 }
             }
-
-            jobState = livyClient.getSparkJobState(app.getId()).getState();
             if (jobState == null) {
                 throw new IllegalStateException("Cannot find state for job: " + app.getId());
             }
