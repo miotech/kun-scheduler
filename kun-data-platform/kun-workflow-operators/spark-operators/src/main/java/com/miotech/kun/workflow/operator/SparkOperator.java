@@ -138,6 +138,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
                 timeout++;
                 logger.warn("get job information from livy timeout, times = {}", timeout);
                 if (timeout >= LIVY_TIMEOUT_LIMIT) {
+                    logger.error("get job information from livy failed", e);
                     throw e;
                 }
             }
