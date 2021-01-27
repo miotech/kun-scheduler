@@ -126,10 +126,15 @@ public class BackfillService extends BaseSecurityService {
         return taskRuns;
     }
 
-    /** 停止 id 对应的 Backfill 中的所有 TaskRuns。若停止成功，返回 true；
-     * 若停止失败（例如：当前 backfill 已经完成/停止，或者 backfill 不存在）则返回 false */
-    public boolean stopBackfillById(long backfillId) {
-        // TODO: complete this
-        return false;
+    /** 停止 id 对应的 Backfill 中的所有 TaskRuns */
+    public void stopBackfillById(Long backfillId) {
+        Preconditions.checkNotNull(backfillId, "Argument `backfillId` should not be null.");
+        Optional<Backfill> backfillOptional = backfillDao.fetchById(backfillId);
+        if (!backfillOptional.isPresent()) {
+            throw new IllegalArgumentException(String.format("Cannot find backfill with id: %s", backfillId));
+        }
+        Backfill backfill = backfillOptional.get();
+
+        workflowClient.stopTaskRuns(backfill.getTaskRunIds());
     }
 }
