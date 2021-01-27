@@ -207,6 +207,10 @@ public class LocalExecutor implements Executor {
                 return false;
             }
             TaskAttempt taskAttempt = taskAttemptOptional.get();
+            if (taskAttempt.getStatus().isFinished()) {
+                logger.warn("taskAttempt has finished, taskAttemptId = {}", attemptId);
+                return false;
+            }
             if (taskAttempt.getStatus() == TaskRunStatus.QUEUED) {
                 logger.debug("taskAttempt to be abort has add to queue,attemptId = {}", attemptId);
                 Iterator<TaskAttempt> iterator = taskAttemptQueue.iterator();
@@ -364,7 +368,7 @@ public class LocalExecutor implements Executor {
             }
             try {
                 workerPool.put(taskAttemptToRun.getId(), initHeartBeatByTaskAttempt(taskAttemptToRun));
-                logger.info("taskAttempt = {} status is {},is in queue {}", taskAttemptToRun.getId(), taskAttemptToRun.getStatus().name(),taskAttemptToRun.getStatus().equals(TaskRunStatus.QUEUED));
+                logger.info("taskAttempt = {} status is {},is in queue {}", taskAttemptToRun.getId(), taskAttemptToRun.getStatus().name(), taskAttemptToRun.getStatus().equals(TaskRunStatus.QUEUED));
                 //taskAttempt 已经启动（重启恢复）,则只加入workerPool监听心跳,正常入队和超时则重新启动
                 if (taskAttemptToRun.getStatus().equals(TaskRunStatus.QUEUED) || taskAttemptToRun.getStatus().equals(TaskRunStatus.ERROR)) {
                     ExecCommand command = buildExecCommand(taskAttemptToRun);
