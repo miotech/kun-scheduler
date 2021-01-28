@@ -1,4 +1,5 @@
 import {
+  BackendRespData,
   PaginationRespBody,
   ServiceRespPromise,
 } from '@/definitions/common-types';
@@ -170,7 +171,7 @@ export async function dryRunTaskDefinition(
 
 export async function dryRunTaskDefinitionWithoutErrorNotification(
   reqParams: DryRunTaskDefReqParams,
-): ServiceRespPromise<TaskTryVO> {
+): ServiceRespPromise<{ data: BackendRespData<TaskTryVO> }> {
   const axiosInstance = axios.create();
   return axiosInstance.post(
     SafeUrlAssembler()
