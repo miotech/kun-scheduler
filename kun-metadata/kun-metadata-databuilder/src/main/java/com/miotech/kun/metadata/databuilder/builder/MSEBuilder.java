@@ -31,7 +31,7 @@ public class MSEBuilder {
         this.loader = loader;
     }
 
-    public void extractStatistics(Long gid, StatisticsMode statisticsMode)  {
+    public void extractStatistics(Long gid, Long snapshotId, StatisticsMode statisticsMode)  {
         if (logger.isDebugEnabled()) {
             logger.debug("Begin to extractStat, gid: {}", gid);
         }
@@ -56,7 +56,6 @@ public class MSEBuilder {
         }
 
         Dataset datasetWithStat = extractor.extract(dataset.get(), dataSource, statisticsMode);
-        loader.loadStatistics(datasetWithStat);
-
+        loader.loadStatistics(snapshotId, datasetWithStat);
     }
 }

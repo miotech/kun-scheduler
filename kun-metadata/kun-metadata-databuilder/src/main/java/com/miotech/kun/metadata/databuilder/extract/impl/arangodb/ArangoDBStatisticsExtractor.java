@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.databuilder.extract.impl.arangodb;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.DatasetFieldStat;
+import com.miotech.kun.metadata.core.model.FieldStatistics;
 import com.miotech.kun.metadata.databuilder.client.ArangoClient;
 import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatisticsExtractor;
 import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
@@ -30,7 +30,7 @@ public class ArangoDBStatisticsExtractor extends ArangoDBExistenceExtractor impl
     }
 
     @Override
-    public List<DatasetFieldStat> extractFieldStatistics(Dataset dataset, DataSource dataSource) {
+    public List<FieldStatistics> extractFieldStatistics(Dataset dataset, DataSource dataSource) {
         ArangoDataSource arangoDataSource = (ArangoDataSource) dataSource;
         ArangoClient arangoClient = null;
         try {
@@ -40,7 +40,7 @@ public class ArangoDBStatisticsExtractor extends ArangoDBExistenceExtractor impl
             return dataset.getFields().stream().map(field -> {
                 String query = String.format("FOR c IN %s FILTER c.%s != NULL COLLECT WITH COUNT INTO length RETURN length", dataset.getName(), field.getName());
                 Integer count = finalArangoClient.count(dataset.getDatabaseName(), query);
-                return DatasetFieldStat.newBuilder()
+                return FieldStatistics.newBuilder()
                         .withFieldName(field.getName())
                         .withNonnullCount(count)
                         .withStatDate(LocalDateTime.now()).build();

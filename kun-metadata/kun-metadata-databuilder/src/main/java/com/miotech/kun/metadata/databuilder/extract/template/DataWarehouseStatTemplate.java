@@ -2,13 +2,13 @@ package com.miotech.kun.metadata.databuilder.extract.template;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.DatasetField;
-import com.miotech.kun.metadata.core.model.DatasetFieldStat;
 import com.miotech.kun.metadata.core.model.DatasetFieldType;
+import com.miotech.kun.metadata.core.model.FieldStatistics;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.tool.DatabaseIdentifierProcessor;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
-import com.miotech.kun.workflow.utils.JSONUtils;
+import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +41,7 @@ public class DataWarehouseStatTemplate {
         this.connection = JDBCClient.getConnection(dataSource, dbName, schemaName);
     }
 
-    public DatasetFieldStat getFieldStats(DatasetField datasetField, String distinctCountSql, String nonNullCountSql) {
+    public FieldStatistics getFieldStats(DatasetField datasetField, String distinctCountSql, String nonNullCountSql) {
         if (logger.isDebugEnabled()) {
             logger.debug("DataWarehouseStatTemplate getFieldStats start. database: {}, table: {}, datasetField: {}", dbName,
                     tableName, JSONUtils.toJsonString(datasetField));
@@ -54,7 +54,7 @@ public class DataWarehouseStatTemplate {
                 logger.debug("DataWarehouseStatTemplate getFieldStats nonnullCount sql: {}", nonNullCountSql);
             }
 
-            DatasetFieldStat.Builder fieldStatBuilder = DatasetFieldStat.newBuilder();
+            FieldStatistics.Builder fieldStatBuilder = FieldStatistics.newBuilder();
             fieldStatBuilder.withFieldName(datasetField.getName()).withStatDate(LocalDateTime.now());
 
             if (isIgnored(datasetField.getFieldType().getType())) {
@@ -79,7 +79,7 @@ public class DataWarehouseStatTemplate {
         }
     }
 
-    public DatasetFieldStat getFieldStats(DatasetField datasetField, DataSource.Type type) {
+    public FieldStatistics getFieldStats(DatasetField datasetField, DataSource.Type type) {
         String fieldNameAfterEscape = DatabaseIdentifierProcessor.escape(datasetField.getName(), databaseType);
 
         switch (type) {

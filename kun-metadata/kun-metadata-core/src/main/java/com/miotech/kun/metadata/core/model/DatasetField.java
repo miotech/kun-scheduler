@@ -1,6 +1,8 @@
 package com.miotech.kun.metadata.core.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -31,11 +33,11 @@ public class DatasetField implements Serializable {
         return comment;
     }
 
-    public boolean isPrimaryKey() {
+    public boolean getIsPrimaryKey() {
         return isPrimaryKey;
     }
 
-    public boolean isNullable() {
+    public boolean getIsNullable() {
         return isNullable;
     }
 
@@ -43,7 +45,23 @@ public class DatasetField implements Serializable {
         this(name, fieldType, comment, false, true);
     }
 
-    public DatasetField(String name, DatasetFieldType fieldType, String comment, boolean isPrimaryKey, boolean isNullable) {
+    public SchemaSnapshot.Schema convert() {
+        return SchemaSnapshot.Schema.newBuilder()
+                .withName(this.name)
+                .withType(this.fieldType.getType().name())
+                .withRawType(this.fieldType.getRawType())
+                .withDescription(this.comment)
+                .withIsPrimaryKey(this.isPrimaryKey)
+                .withIsNullable(this.isNullable)
+                .build();
+    }
+
+    @JsonCreator
+    public DatasetField(@JsonProperty("name") String name,
+                        @JsonProperty("fieldType") DatasetFieldType fieldType,
+                        @JsonProperty("comment") String comment,
+                        @JsonProperty("isPrimaryKey") boolean isPrimaryKey,
+                        @JsonProperty("isNullable") boolean isNullable) {
         this.name = name;
         this.fieldType = fieldType;
         this.comment = comment;
