@@ -74,9 +74,9 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
       parameters: runParameters,
       variables: {},
     })
-      .then(vo => {
-        if (vo) {
-          setTaskTryId(vo.id);
+      .then(response => {
+        if (response?.data?.result) {
+          setTaskTryId(response?.data?.result.id);
         }
         setAlertMessage(null);
       })
