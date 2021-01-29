@@ -31,12 +31,6 @@ public class UserService extends BaseSecurityService {
         userInfo.setCreateTime(System.currentTimeMillis());
         userInfo.setUpdateUser(getCurrentUsername());
         userInfo.setUpdateTime(System.currentTimeMillis());
-        if (PasswordUtils.checkRawPassword(userInfo.getPassword())) {
-            String encodePassword = passwordEncoder.encode(userInfo.getPassword());
-            userInfo.setPassword(encodePassword);
-        } else {
-            throw ExceptionUtils.wrapIfChecked(new RuntimeException("Invalid password"));
-        }
         return userRepository.addUser(userInfo);
     }
 

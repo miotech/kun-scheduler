@@ -52,3 +52,8 @@ management:
       enabled: false
     ldap:
       enabled: false
+
+springdoc:
+  swagger-ui:
+    operationsSorter: method
+  use-fqn: true
