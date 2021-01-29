@@ -37,7 +37,7 @@ spring:
 
 security:
   auth:
-    type: ${SECURITY_AUTH_TYPE:JSON}
+    type: ${SECURITY_AUTH_TYPE:DAO}
 
 liquigraph:
   change-log: classpath:security/db/migration/changelog.xml

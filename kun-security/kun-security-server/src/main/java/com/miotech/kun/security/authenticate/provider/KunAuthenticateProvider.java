@@ -1,4 +1,4 @@
-package com.miotech.kun.security.authenticate;
+package com.miotech.kun.security.authenticate.provider;
 
 import org.springframework.stereotype.Component;
 
