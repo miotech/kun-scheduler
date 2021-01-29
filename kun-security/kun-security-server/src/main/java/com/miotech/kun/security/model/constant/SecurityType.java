@@ -6,6 +6,8 @@ package com.miotech.kun.security.model.constant;
  */
 public enum SecurityType {
 
+    DAO,
+
     JSON,
 
     LDAP,

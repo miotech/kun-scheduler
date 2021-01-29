@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.security.common.ConfigKey;
 import com.miotech.kun.security.common.PassToken;
 import com.miotech.kun.security.model.UserInfo;
-import com.miotech.kun.security.service.AbstractSecurityService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -25,15 +24,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+public class DefaultAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private static final Log LOG = LogFactory.getLog(CustomAuthenticationFilter.class);
+    private static final Log LOG = LogFactory.getLog(DefaultAuthenticationFilter.class);
 
     private static final String ERROR_MESSAGE = "Failed to authenticate.";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private AbstractSecurityService abstractSecurityService;
+    private DefaultSecurityService defaultSecurityService;
 
     private String passToken;
 
@@ -43,12 +42,13 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
         Authentication newAuthentication = authentication;
         if (authentication != null
+                && authentication.isAuthenticated()
                 && StringUtils.isNotEmpty(authentication.getName())
                 && !StringUtils.equals(authentication.getName(), "anonymousUser")) {
             if (authentication.getClass().isAssignableFrom(UsernamePasswordAuthenticationToken.class)
             || authentication.getClass().isAssignableFrom(OAuth2AuthenticationToken.class)) {
                 String saveUsername = authentication.getName().toLowerCase();
-                UserInfo savedUser = abstractSecurityService.getOrSave(saveUsername);
+                UserInfo savedUser = defaultSecurityService.getOrSave(saveUsername);
                 newAuthentication = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(),
                         authentication.getCredentials(),
                         authentication.getAuthorities());
@@ -99,8 +99,8 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         }
     }
 
-    public void setAbstractSecurityService(AbstractSecurityService abstractSecurityService) {
-        this.abstractSecurityService = abstractSecurityService;
+    public void setDefaultSecurityService(DefaultSecurityService defaultSecurityService) {
+        this.defaultSecurityService = defaultSecurityService;
     }
 
     public void setPassToken(String passToken) {
