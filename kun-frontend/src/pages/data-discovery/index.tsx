@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { DatabaseOutlined, FileTextOutlined } from '@ant-design/icons';
+import { DatabaseOutlined, TagsOutlined } from '@ant-design/icons';
 import { Link } from 'umi';
 import Card from '@/components/Card/Card';
 import useI18n from '@/hooks/useI18n';
@@ -26,7 +26,7 @@ function Homepage() {
         title: t('common.pageTitle.glossary'),
         path: '/data-discovery/glossary',
         icon: (
-          <FileTextOutlined
+          <TagsOutlined
             className={styles.functionItemIcon}
             style={{ marginBottom: 20 }}
           />
