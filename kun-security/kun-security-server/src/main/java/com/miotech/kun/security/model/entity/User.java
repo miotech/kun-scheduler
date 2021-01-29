@@ -18,6 +18,9 @@ public class User {
     @JsonProperty("username")
     private String name;
 
+    @JsonProperty(value = "password", required = true, access = JsonProperty.Access.WRITE_ONLY)
+    String password;
+
     String createUser;
 
     Long createTime;

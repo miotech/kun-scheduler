@@ -28,6 +28,7 @@ public class UserRepository {
     private void convertNodeToUser(Map<String, Object> nodeMap, User user) {
         user.setId((Long) nodeMap.get("id"));
         user.setName((String) nodeMap.get("name"));
+        user.setPassword((String) nodeMap.get("password"));
         user.setCreateUser((String) nodeMap.get("createUser"));
         user.setCreateTime((Long) nodeMap.get("createTime"));
         user.setUpdateUser((String) nodeMap.get("updateUser"));
@@ -96,5 +97,12 @@ public class UserRepository {
                 userInfo.getCreateTime(),
                 userInfo.getUpdateUser(),
                 userInfo.getUpdateTime());
+    }
+
+    public Long removeUser(Long id) {
+        String query = "MATCH (u:USER {id: ?}) DETACH DELETE u";
+
+        jdbcTemplate.update(query, id);
+        return id;
     }
 }

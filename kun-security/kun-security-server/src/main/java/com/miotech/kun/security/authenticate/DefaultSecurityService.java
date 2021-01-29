@@ -1,4 +1,4 @@
-package com.miotech.kun.security.service;
+package com.miotech.kun.security.authenticate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.common.model.RequestResult;
@@ -9,13 +9,17 @@ import com.miotech.kun.security.model.bo.HasPermission;
 import com.miotech.kun.security.model.bo.PermissionRequest;
 import com.miotech.kun.security.model.constant.PermissionType;
 import com.miotech.kun.security.model.entity.User;
+import com.miotech.kun.security.service.PermissionService;
+import com.miotech.kun.security.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
+import org.springframework.stereotype.Service;
 
-public class AbstractSecurityService {
+@Service
+public class DefaultSecurityService {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
