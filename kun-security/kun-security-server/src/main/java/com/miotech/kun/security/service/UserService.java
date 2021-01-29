@@ -1,11 +1,11 @@
 package com.miotech.kun.security.service;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.persistence.UserRepository;
 import com.miotech.kun.security.utils.PasswordUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -31,6 +31,9 @@ public class UserService extends BaseSecurityService {
         userInfo.setCreateTime(System.currentTimeMillis());
         userInfo.setUpdateUser(getCurrentUsername());
         userInfo.setUpdateTime(System.currentTimeMillis());
+        if (StringUtils.isNotBlank(userInfo.getPassword())) {
+            userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
+        }
         return userRepository.addUser(userInfo);
     }
 
