@@ -38,6 +38,9 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
     @Qualifier("defaultUserDetailsService")
     UserDetailsService userDetailsService;
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
     @Value("${security.auth.type}")
     SecurityType securityType;
 
@@ -99,7 +102,8 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         switch (securityType) {
             case DAO:
-                auth.userDetailsService(userDetailsService);
+                auth.userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder);
                 break;
             case JSON:
                 auth.authenticationProvider(new JsonAuthenticateProvider());
