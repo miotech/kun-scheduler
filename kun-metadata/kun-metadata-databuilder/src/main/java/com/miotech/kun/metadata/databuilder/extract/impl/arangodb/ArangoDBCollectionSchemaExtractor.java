@@ -1,17 +1,15 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.arangodb;
 
 import com.beust.jcommander.internal.Lists;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.core.model.DatasetFieldType;
 import com.miotech.kun.metadata.databuilder.client.ArangoClient;
 import com.miotech.kun.metadata.databuilder.extract.schema.SchemaExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
+import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore;
-import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +39,7 @@ public class ArangoDBCollectionSchemaExtractor extends SchemaExtractorTemplate {
         String doc = client.getDoc(dbName, query);
         if (doc == null)
             return Lists.newArrayList();
-        JsonNode json;
-        try {
-            json = JSONUtils.stringToJson(doc);
-        } catch (JsonProcessingException e) {
-            logger.error("Doc to Json error: ", e);
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
+        JsonNode json= JSONUtils.stringToJson(doc);
         return docToFields(json, null);
     }
 

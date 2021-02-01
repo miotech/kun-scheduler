@@ -7,7 +7,6 @@ plugins {
 
 dependencies {
     implementation project(":kun-workflow:kun-workflow-core")
-    implementation project(":kun-workflow:kun-workflow-utils")
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-commons:kun-commons-testing")
     implementation project(":kun-commons:kun-commons-utils")

@@ -38,6 +38,7 @@ public class MSEOperator extends KunOperator {
             dataSource = injector.getInstance(DataSource.class);
             MSEBuilder dataBuilder = injector.getInstance(MSEBuilder.class);
             dataBuilder.extractStatistics(Long.parseLong(operatorContext.getConfig().getString(GID)),
+                    Long.parseLong(operatorContext.getConfig().getString(SNAPSHOT_ID)),
                     StatisticsMode.valueOf(operatorContext.getConfig().getString(STATISTICS_MODE).toUpperCase()));
 
             return true;
@@ -64,6 +65,7 @@ public class MSEOperator extends KunOperator {
                 .define(DATASOURCE_PASSWORD, ConfigDef.Type.STRING, true, "password", "password")
                 .define(DATASOURCE_DRIVER_CLASS_NAME, ConfigDef.Type.STRING, true, "driverClassName", "driverClassName")
                 .define(GID, ConfigDef.Type.STRING, true, GID, GID)
+                .define(SNAPSHOT_ID, ConfigDef.Type.STRING, true, SNAPSHOT_ID, SNAPSHOT_ID)
                 .define(STATISTICS_MODE, ConfigDef.Type.STRING, StatisticsMode.TABLE.name(), true, STATISTICS_MODE, STATISTICS_MODE);
         return configDef;
     }

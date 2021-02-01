@@ -14,10 +14,10 @@ public interface DatasetStatisticsExtractor extends DatasetExistenceExtractor, T
         Dataset.Builder resultBuilder = Dataset.newBuilder().withGid(dataset.getGid());
 
         if (statisticsMode.equals(StatisticsMode.FIELD)) {
-            resultBuilder.withFieldStats(extractFieldStatistics(dataset, dataSource));
-            resultBuilder.withDatasetStat(extractTableStatistics(dataset, dataSource));
+            resultBuilder.withFieldStatistics(extractFieldStatistics(dataset, dataSource));
+            resultBuilder.withTableStatistics(extractTableStatistics(dataset, dataSource));
         } else if (statisticsMode.equals(StatisticsMode.TABLE)) {
-            resultBuilder.withDatasetStat(extractTableStatistics(dataset, dataSource));
+            resultBuilder.withTableStatistics(extractTableStatistics(dataset, dataSource));
         } else {
             throw new IllegalArgumentException("Invalid statisticsMode: " + statisticsMode);
         }

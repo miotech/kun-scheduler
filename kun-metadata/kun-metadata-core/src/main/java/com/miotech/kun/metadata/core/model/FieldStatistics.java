@@ -1,11 +1,12 @@
 package com.miotech.kun.metadata.core.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-public class DatasetFieldStat implements Serializable {
+public class FieldStatistics implements Serializable {
     @JsonIgnore
     private static final long serialVersionUID = -1603335393385L;
 
@@ -17,6 +18,7 @@ public class DatasetFieldStat implements Serializable {
 
     private final String updatedBy;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private final LocalDateTime statDate;
 
     public String getFieldName() {
@@ -39,7 +41,7 @@ public class DatasetFieldStat implements Serializable {
         return statDate;
     }
 
-    public DatasetFieldStat(String fieldName, long distinctCount, long nonnullCount, String updatedBy, LocalDateTime statDate) {
+    public FieldStatistics(String fieldName, long distinctCount, long nonnullCount, String updatedBy, LocalDateTime statDate) {
         this.fieldName = fieldName;
         this.distinctCount = distinctCount;
         this.nonnullCount = nonnullCount;
@@ -49,6 +51,15 @@ public class DatasetFieldStat implements Serializable {
 
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    public Builder cloneBuilder() {
+        return new Builder()
+                .withFieldName(this.fieldName)
+                .withDistinctCount(this.distinctCount)
+                .withNonnullCount(this.nonnullCount)
+                .withStatDate(this.statDate)
+                .withUpdatedBy(this.updatedBy);
     }
 
     public static final class Builder {
@@ -83,8 +94,8 @@ public class DatasetFieldStat implements Serializable {
             return this;
         }
 
-        public DatasetFieldStat build() {
-            return new DatasetFieldStat(fieldName, distinctCount, nonnullCount, updatedBy, statDate);
+        public FieldStatistics build() {
+            return new FieldStatistics(fieldName, distinctCount, nonnullCount, updatedBy, statDate);
         }
     }
 }

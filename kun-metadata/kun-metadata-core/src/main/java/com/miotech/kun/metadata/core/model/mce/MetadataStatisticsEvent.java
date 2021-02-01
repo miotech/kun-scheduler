@@ -10,11 +10,15 @@ public class MetadataStatisticsEvent {
 
     private final long gid;
 
+    private final long snapshotId;
+
     @JsonCreator
     public MetadataStatisticsEvent(@JsonProperty("eventType") EventType eventType,
-                                   @JsonProperty("gid") long gid) {
+                                   @JsonProperty("gid") long gid,
+                                   @JsonProperty("snapshotId") long snapshotId) {
         this.eventType = eventType;
         this.gid = gid;
+        this.snapshotId = snapshotId;
     }
 
     public EventType getEventType() {
@@ -23,6 +27,10 @@ public class MetadataStatisticsEvent {
 
     public long getGid() {
         return gid;
+    }
+
+    public long getSnapshotId() {
+        return snapshotId;
     }
 
     public enum EventType {
@@ -47,6 +55,7 @@ public class MetadataStatisticsEvent {
     public static final class Builder {
         private EventType eventType;
         private long gid;
+        private long snapshotId;
 
         private Builder() {
         }
@@ -61,8 +70,13 @@ public class MetadataStatisticsEvent {
             return this;
         }
 
+        public Builder withSnapshotId(long snapshotId) {
+            this.snapshotId = snapshotId;
+            return this;
+        }
+
         public MetadataStatisticsEvent build() {
-            return new MetadataStatisticsEvent(eventType, gid);
+            return new MetadataStatisticsEvent(eventType, gid, snapshotId);
         }
     }
 }

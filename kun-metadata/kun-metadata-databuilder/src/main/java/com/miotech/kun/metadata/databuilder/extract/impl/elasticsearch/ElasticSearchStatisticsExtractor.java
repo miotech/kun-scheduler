@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch;
 
 import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.DatasetFieldStat;
+import com.miotech.kun.metadata.core.model.FieldStatistics;
 import com.miotech.kun.metadata.databuilder.client.ElasticSearchClient;
 import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatisticsExtractor;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
@@ -36,7 +36,7 @@ public class ElasticSearchStatisticsExtractor extends ElasticsearchExistenceExtr
     }
 
     @Override
-    public List<DatasetFieldStat> extractFieldStatistics(Dataset dataset, DataSource dataSource) {
+    public List<FieldStatistics> extractFieldStatistics(Dataset dataset, DataSource dataSource) {
         ElasticSearchDataSource elasticSearchDataSource = (ElasticSearchDataSource) dataSource;
         ElasticSearchClient elasticSearchClient = null;
         try {
@@ -49,7 +49,7 @@ public class ElasticSearchStatisticsExtractor extends ElasticsearchExistenceExtr
                 searchSourceBuilder.query(QueryBuilders.existsQuery(fieldName));
                 countRequest.source(searchSourceBuilder);
                 Long count = finalElasticSearchClient.count(countRequest);
-                return DatasetFieldStat.newBuilder()
+                return FieldStatistics.newBuilder()
                         .withFieldName(field.getName())
                         .withNonnullCount(count)
                         .withStatDate(LocalDateTime.now()).build();

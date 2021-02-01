@@ -7,7 +7,7 @@ import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.*;
 import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.databuilder.extract.AbstractExtractor;
-import com.miotech.kun.workflow.utils.JSONUtils;
+import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +28,7 @@ public abstract class ExtractorTemplate extends AbstractExtractor {
 
     protected abstract List<DatasetField> getSchema();
 
-    protected abstract DatasetFieldStat getFieldStats(DatasetField datasetField);
+    protected abstract FieldStatistics getFieldStats(DatasetField datasetField);
 
     protected abstract TableStatistics getTableStats();
 
@@ -52,10 +52,10 @@ public abstract class ExtractorTemplate extends AbstractExtractor {
                 logger.debug("ExtractorTemplate extract getSchema: {}", JSONUtils.toJsonString(fields));
             }
 
-            List<DatasetFieldStat> fieldStats = Lists.newArrayList();
+            List<FieldStatistics> fieldStats = Lists.newArrayList();
             if (extractStats) {
                 for (DatasetField datasetField : fields) {
-                    DatasetFieldStat fieldStat = getFieldStats(datasetField);
+                    FieldStatistics fieldStat = getFieldStats(datasetField);
                     if (logger.isDebugEnabled()) {
                         logger.debug("ExtractorTemplate extract getFieldStats: {}", JSONUtils.toJsonString(fieldStat));
                     }
@@ -79,8 +79,8 @@ public abstract class ExtractorTemplate extends AbstractExtractor {
             datasetBuilder.withName(getName())
                     .withDatasourceId(datasourceId)
                     .withFields(fields)
-                    .withFieldStats(fieldStats)
-                    .withDatasetStat(tableStat)
+                    .withFieldStatistics(fieldStats)
+                    .withTableStatistics(tableStat)
                     .withDataStore(dataStore);
         } catch (Exception e) {
             logger.error("ExtractorTemplate extract error dataStore: {}", getDataStore(), e);
