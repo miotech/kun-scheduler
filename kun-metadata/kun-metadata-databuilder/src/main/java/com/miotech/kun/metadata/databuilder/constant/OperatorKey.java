@@ -9,6 +9,7 @@ public class OperatorKey {
     public static final String STATISTICS_MODE = "statisticsMode";
     public static final String DATASOURCE_ID = "datasourceId";
     public static final String GID = "gid";
+    public static final String SNAPSHOT_ID = "snapshotId";
     public static final String MCE = "mce";
     public static final String DATASOURCE_JDBC_URL = "datasource.jdbcUrl";
     public static final String DATASOURCE_USERNAME = "datasource.username";

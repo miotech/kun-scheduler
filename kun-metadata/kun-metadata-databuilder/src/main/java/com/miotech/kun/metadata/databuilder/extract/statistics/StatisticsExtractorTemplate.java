@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.statistics;
 
 import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.DatasetFieldStat;
+import com.miotech.kun.metadata.core.model.FieldStatistics;
 import com.miotech.kun.metadata.databuilder.extract.template.DataWarehouseStatTemplate;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 
@@ -27,7 +27,7 @@ public abstract class StatisticsExtractorTemplate implements DatasetStatisticsEx
     }
 
     @Override
-    public List<DatasetFieldStat> extractFieldStatistics(Dataset dataset, DataSource dataSource) {
+    public List<FieldStatistics> extractFieldStatistics(Dataset dataset, DataSource dataSource) {
         DataWarehouseStatTemplate statTemplate = null;
         try {
             statTemplate = buildDataWarehouseStatTemplate(dataset, dataSource);
