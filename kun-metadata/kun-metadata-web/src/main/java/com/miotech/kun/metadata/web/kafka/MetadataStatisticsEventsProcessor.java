@@ -49,7 +49,7 @@ public class MetadataStatisticsEventsProcessor extends EventProcessor {
                 try {
                     MetadataStatisticsEvent mse = JSONUtils.jsonToObject(record.value(), MetadataStatisticsEvent.class);
 
-                    workflowClient.executeTask(props.getLong(TaskParam.MSE_TASK.getName()), buildVariablesForTaskRun(mse.getGid(), mse.getEventType()));
+                    workflowClient.executeTask(props.getLong(TaskParam.MSE_TASK.getName()), buildVariablesForTaskRun(mse.getGid(), mse.getSnapshotId(), mse.getEventType()));
                 } catch (Exception e) {
                     logger.error("MSE Processor Error", e);
                     logger.error("Message: {}", record);
@@ -63,13 +63,14 @@ public class MetadataStatisticsEventsProcessor extends EventProcessor {
         new Thread(() -> consume()).start();
     }
 
-    private Map<String, Object> buildVariablesForTaskRun(long gid, MetadataStatisticsEvent.EventType eventType) {
+    private Map<String, Object> buildVariablesForTaskRun(long gid, long snapshotId, MetadataStatisticsEvent.EventType eventType) {
         Map<String, Object> conf = Maps.newHashMap();
         conf.put(OperatorKey.DATASOURCE_JDBC_URL, props.get(PropKey.JDBC_URL));
         conf.put(OperatorKey.DATASOURCE_USERNAME, props.get(PropKey.USERNAME));
         conf.put(OperatorKey.DATASOURCE_PASSWORD, props.get(PropKey.PASSWORD));
         conf.put(OperatorKey.DATASOURCE_DRIVER_CLASS_NAME, props.get(PropKey.DRIVER_CLASS_NAME));
         conf.put(OperatorKey.GID, String.valueOf(gid));
+        conf.put(OperatorKey.SNAPSHOT_ID, String.valueOf(snapshotId));
         conf.put(OperatorKey.STATISTICS_MODE, eventType.name());
 
         return conf;

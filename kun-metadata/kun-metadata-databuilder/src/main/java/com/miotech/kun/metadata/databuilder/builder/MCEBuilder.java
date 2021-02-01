@@ -12,6 +12,7 @@ import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.core.model.mce.MetadataChangeEvent;
 import com.miotech.kun.metadata.core.model.mce.MetadataStatisticsEvent;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
+import com.miotech.kun.metadata.databuilder.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractorFactory;
 import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
@@ -19,12 +20,14 @@ import com.miotech.kun.metadata.databuilder.extract.tool.KafkaUtil;
 import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
+import com.miotech.kun.metadata.databuilder.model.LoadSchemaResult;
 import com.miotech.kun.metadata.databuilder.service.gid.GidService;
+import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
-import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -74,13 +77,13 @@ public class MCEBuilder {
 
         Iterator<Dataset> datasetIterator = extractor.extract(dataSource);
         while (datasetIterator.hasNext()) {
-            long gid = loader.loadSchema(datasetIterator.next());
-            if (gid < 0) {
+            LoadSchemaResult loadSchemaResult = loader.loadSchema(datasetIterator.next());
+            if (loadSchemaResult.getGid() < 0) {
                 continue;
             }
 
             // 发送消息
-            /*MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.TABLE, gid);
+            /*MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.TABLE, loadSchemaResult.getGid(), loadSchemaResult.getSnapshotId());
             KafkaUtil.send(props.getString(BROKERS), props.getString(MSE_TOPIC), JSONUtils.toJsonString(mse));*/
         }
     }
@@ -105,11 +108,11 @@ public class MCEBuilder {
         }
 
         List<DatasetField> fields = extractor.extract(dataset.get(), dataSource);
-        loader.loadSchema(gid, fields);
+        LoadSchemaResult loadSchemaResult = loader.loadSchema(gid, fields);
 
         // 发送消息
         try {
-            MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.FIELD, gid);
+            MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.FIELD, gid, loadSchemaResult.getSnapshotId());
             KafkaUtil.send(props.getString(BROKERS), props.getString(MSE_TOPIC), JSONUtils.toJsonString(mse));
         } catch (Exception e) {
             logger.warn("send mse message error: ", e);
@@ -167,13 +170,21 @@ public class MCEBuilder {
 
     private void updateDatasetStatus(boolean existed, long gid) {
         if (existed) {
-            operator.update("UPDATE kun_mt_dataset SET deleted = false WHERE gid = ?", gid);
+            int updateRowCount = operator.update("UPDATE kun_mt_dataset SET deleted = false WHERE gid = ? AND deleted is true", gid);
+            if (updateRowCount == 1) {
+                // 记录MANAGED事件
+                operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.MANAGED.name(), LocalDateTime.now());
+            }
         } else {
             if (logger.isDebugEnabled()) {
                 logger.debug("Dataset: {} no longer existed, marked as `deleted`", gid);
             }
 
-            operator.update("UPDATE kun_mt_dataset SET deleted = true WHERE gid = ?", gid);
+            int updateRowCount = operator.update("UPDATE kun_mt_dataset SET deleted = true WHERE gid = ? AND deleted is false", gid);
+            if (updateRowCount == 1) {
+                // 记录DELETED事件
+                operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.DELETED.name(), LocalDateTime.now());
+            }
         }
     }
 
