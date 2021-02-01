@@ -81,9 +81,9 @@ public class MetadataDatasetDao {
                     .withDatasourceId(rs.getLong(3))
                     .withDeleted(rs.getBoolean(7))
                     // TODO: parse missing fields
-                    .withDatasetStat(null)
+                    .withTableStatistics(null)
                     .withFields(null)
-                    .withFieldStats(null)
+                    .withFieldStatistics(null)
                     .withDataStore(dataStore)
                     .build();
             return dataset;

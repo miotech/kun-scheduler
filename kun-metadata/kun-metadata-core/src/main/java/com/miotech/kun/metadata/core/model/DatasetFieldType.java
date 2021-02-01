@@ -1,6 +1,9 @@
 package com.miotech.kun.metadata.core.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +18,8 @@ public class DatasetFieldType implements Serializable {
     private final Type type;
     private final String rawType;
 
-    public DatasetFieldType(Type type, String rawType) {
+    @JsonCreator
+    public DatasetFieldType(@JsonProperty("type") Type type, @JsonProperty("rawType") String rawType) {
         this.type = type;
         this.rawType = rawType;
     }
@@ -38,7 +42,17 @@ public class DatasetFieldType implements Serializable {
         DATETIME,
         BOOLEAN,
         JSON,
-        UNKNOW
+        UNKNOW;
+
+        @JsonCreator
+        public static DatasetFieldType.Type forValue(String value) {
+            return valueOf(value);
+        }
+
+        @JsonValue
+        public String toValue() {
+            return this.name();
+        }
     }
 
     public static Type convertRawType(String rawType) {

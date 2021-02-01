@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.model.*;
-import com.miotech.kun.workflow.utils.JSONUtils;
+import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 
 @Singleton
 public class DataSourceBuilder {

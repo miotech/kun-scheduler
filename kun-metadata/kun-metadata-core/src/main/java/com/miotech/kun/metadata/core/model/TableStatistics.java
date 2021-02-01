@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.core.model;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serializable;
@@ -13,8 +14,10 @@ public class TableStatistics implements Serializable {
 
     private final Long totalByteSize;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private final LocalDateTime statDate;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private final LocalDateTime lastUpdatedTime;
 
     public Long getRowCount() {
@@ -42,6 +45,14 @@ public class TableStatistics implements Serializable {
 
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    public Builder cloneBuilder() {
+        return new Builder()
+                .withRowCount(this.rowCount)
+                .withTotalByteSize(this.totalByteSize)
+                .withLastUpdatedTime(this.lastUpdatedTime)
+                .withStatDate(this.statDate);
     }
 
     public static final class Builder {

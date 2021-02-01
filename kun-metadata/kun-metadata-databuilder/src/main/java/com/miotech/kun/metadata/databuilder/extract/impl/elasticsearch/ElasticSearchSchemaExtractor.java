@@ -8,7 +8,7 @@ import com.miotech.kun.metadata.databuilder.client.ElasticSearchClient;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 import com.miotech.kun.metadata.databuilder.model.ElasticSearchDataSource;
-import com.miotech.kun.workflow.utils.JSONUtils;
+import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import org.apache.http.util.EntityUtils;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
