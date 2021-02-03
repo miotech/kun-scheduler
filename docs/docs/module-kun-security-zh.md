@@ -15,8 +15,8 @@ title: 安全中心
 目前提供基于JSON的认证作为默认的认证方式，用户可以修改`kun-security:kun-security-server`模块下的`src/main/resources/kun-users.json`文件来添加或删除用户。
 
 同时也提供了基于spring security的自定义接口，让用户能够自己实现认证：
-1. 在`kun-security:kun-security-server`模块下的`com.miotech.kun.security.authenticate`包下创建自定义类并实现`org.springframework.security.authentication.AuthenticationProvider`接口
-2. 在自定义类上添加注解`@KunAuthenticateProvider`（用户可参考示例类`com.miotech.kun.security.authenticate.CustomAuthenticateProvider`）
+1. 在`kun-security:kun-security-server`模块下的`com.miotech.kun.security.authenticate.provider`包下创建自定义类并实现`org.springframework.security.authentication.AuthenticationProvider`接口
+2. 在自定义类上添加注解`@KunAuthenticateProvider`（用户可参考示例类`com.miotech.kun.security.authenticate.provider.CustomAuthenticateProvider`）
 3. 修改`kun-security:kun-security-server`模块下的`src/main/resources/application-local.yaml`配置文件：
     ```
     security:
