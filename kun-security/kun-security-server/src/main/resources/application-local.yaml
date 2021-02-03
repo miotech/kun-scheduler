@@ -3,32 +3,44 @@ server:
 
 spring:
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun_security
-    username: ${DB_PG_USERNAME}
-    password: ${DB_PG_PASSWORD}
+    driver-class-name: org.neo4j.jdbc.bolt.BoltDriver
+    url: jdbc:neo4j:bolt://${DB_NEO4J_IP}:7687
+    username: ${DB_NEO4J_USERNAME}
+    password: ${DB_NEO4J_PASSWORD}
 
   session:
+    datasource:
+      driver-class-name: org.postgresql.Driver
+      url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun_security
+      username: ${DB_PG_USERNAME}
+      password: ${DB_PG_PASSWORD}
     jdbc:
-      initialize-schema: never
-      table-name: kun_user_session
+      initialize-schema: always
     timeout: 30d
 
   flyway:
-    enabled: true
-    clean-disabled: true
-    locations: classpath:security/db/migration
-    table: flyway_kun_security_schema_history
-    baseline-on-migrate: true
-    baseline-version: 0
-    encoding: UTF-8
-    out-of-order: false
-    schemas: public
-    validate-on-migrate: true
+    enabled: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          okta:
+            client-id: 0oa37lfa3y3QbRy1c5d6
+            client-secret: I7ToFyyRrAF5yLSRChda7jvcmU-xcz41G-zaz_ot
+        provider:
+          okta:
+            authorization-uri: https://dev-7959592.okta.com/oauth2/v1/authorize
+            token-uri: https://dev-7959592.okta.com/oauth2/v1/token
+            user-info-uri: https://dev-7959592.okta.com/oauth2/v1/userinfo
+            jwk-set-uri: https://dev-7959592.okta.com/oauth2/v1/keys
 
 security:
   auth:
-    type: ${SECURITY_AUTH_TYPE:JSON}
+    type: ${SECURITY_AUTH_TYPE:DAO}
+
+liquigraph:
+  change-log: classpath:security/db/migration/changelog.xml
 
 management:
   endpoints:
@@ -36,5 +48,12 @@ management:
       exposure:
         include: "*"
   health:
+    db:
+      enabled: false
     ldap:
       enabled: false
+
+springdoc:
+  swagger-ui:
+    operationsSorter: method
+  use-fqn: true
