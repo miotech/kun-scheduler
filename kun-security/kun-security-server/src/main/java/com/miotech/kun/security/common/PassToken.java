@@ -2,12 +2,14 @@ package com.miotech.kun.security.common;
 
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 
+import java.util.Collections;
+
 public class PassToken extends AbstractAuthenticationToken {
 
     private String principal = ConfigKey.DEFAULT_INTERNAL_PASS_TOKEN_KEY;
 
     public PassToken() {
-        super(null);
+        super(Collections.singletonList(() -> "ADMIN"));
         this.setAuthenticated(true);
     }
 

@@ -1,9 +1,14 @@
 package com.miotech.kun.security.service;
 
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.persistence.UserRepository;
+import com.miotech.kun.security.utils.PasswordUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,13 +18,27 @@ import java.util.List;
  * @created: 2020/7/1
  */
 @Service
-public class UserService {
+public class UserService extends BaseSecurityService {
 
     @Autowired
     UserRepository userRepository;
 
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
     public User addUser(UserInfo userInfo) {
-        return userRepository.insert(userInfo);
+        userInfo.setCreateUser(getCurrentUsername());
+        userInfo.setCreateTime(System.currentTimeMillis());
+        userInfo.setUpdateUser(getCurrentUsername());
+        userInfo.setUpdateTime(System.currentTimeMillis());
+        if (StringUtils.isNotBlank(userInfo.getPassword())) {
+            userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
+        }
+        return userRepository.addUser(userInfo);
+    }
+
+    public Long removeUser(Long id) {
+        return userRepository.removeUser(id);
     }
 
     public User getUser(Long id) {
@@ -31,6 +50,6 @@ public class UserService {
     }
 
     public List<User> getUsers() {
-        return userRepository.findAll();
+        return userRepository.findAllUser();
     }
 }
