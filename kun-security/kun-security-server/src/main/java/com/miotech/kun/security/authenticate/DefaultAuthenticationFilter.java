@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.security.common.ConfigKey;
 import com.miotech.kun.security.common.PassToken;
 import com.miotech.kun.security.model.UserInfo;
-import com.miotech.kun.security.service.AbstractSecurityService;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
@@ -14,6 +13,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import javax.servlet.FilterChain;
@@ -24,15 +24,15 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
-public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
+public class DefaultAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
-    private static final Log LOG = LogFactory.getLog(CustomAuthenticationFilter.class);
+    private static final Log LOG = LogFactory.getLog(DefaultAuthenticationFilter.class);
 
-    private static final String ERROR_MESSAGE = "Something went wrong while parsing /login request body";
+    private static final String ERROR_MESSAGE = "Failed to authenticate.";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    private AbstractSecurityService abstractSecurityService;
+    private DefaultSecurityService defaultSecurityService;
 
     private String passToken;
 
@@ -42,27 +42,36 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
 
         Authentication newAuthentication = authentication;
         if (authentication != null
+                && authentication.isAuthenticated()
                 && StringUtils.isNotEmpty(authentication.getName())
                 && !StringUtils.equals(authentication.getName(), "anonymousUser")) {
-            if (authentication.getClass().isAssignableFrom(UsernamePasswordAuthenticationToken.class)) {
+            if (authentication.getClass().isAssignableFrom(UsernamePasswordAuthenticationToken.class)
+            || authentication.getClass().isAssignableFrom(OAuth2AuthenticationToken.class)) {
                 String saveUsername = authentication.getName().toLowerCase();
-                UserInfo savedUser = abstractSecurityService.getOrSave(saveUsername);
+                UserInfo savedUser = defaultSecurityService.getOrSave(saveUsername);
                 newAuthentication = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(),
                         authentication.getCredentials(),
                         authentication.getAuthorities());
-
                 com.miotech.kun.security.SecurityContextHolder.setUserInfo(savedUser);
+            } else if (authentication.getClass().isAssignableFrom(PassToken.class)) {
+                UserInfo userInfo = getPassTokenUserInfo();
+                com.miotech.kun.security.SecurityContextHolder.setUserInfo(userInfo);
             }
         } else if (isEqualToPassToken((HttpServletRequest) req, passToken)) {
             PassToken passToken = new PassToken();
-            UserInfo userInfo = new UserInfo();
-            userInfo.setUsername(ConfigKey.DEFAULT_INTERNAL_PASS_TOKEN_KEY);
+            UserInfo userInfo = getPassTokenUserInfo();
             newAuthentication = passToken;
             com.miotech.kun.security.SecurityContextHolder.setUserInfo(userInfo);
         }
 
         SecurityContextHolder.getContext().setAuthentication(newAuthentication);
         super.doFilter(req, res, chain);
+    }
+
+    private UserInfo getPassTokenUserInfo() {
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUsername(ConfigKey.DEFAULT_INTERNAL_PASS_TOKEN_KEY);
+        return userInfo;
     }
 
     private boolean isEqualToPassToken(HttpServletRequest httpServletRequest,
@@ -90,8 +99,8 @@ public class CustomAuthenticationFilter extends UsernamePasswordAuthenticationFi
         }
     }
 
-    public void setAbstractSecurityService(AbstractSecurityService abstractSecurityService) {
-        this.abstractSecurityService = abstractSecurityService;
+    public void setDefaultSecurityService(DefaultSecurityService defaultSecurityService) {
+        this.defaultSecurityService = defaultSecurityService;
     }
 
     public void setPassToken(String passToken) {

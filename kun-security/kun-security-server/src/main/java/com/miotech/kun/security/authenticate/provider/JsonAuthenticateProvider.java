@@ -1,4 +1,4 @@
-package com.miotech.kun.security.authenticate;
+package com.miotech.kun.security.authenticate.provider;
 
 import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.security.model.JsonUsers;

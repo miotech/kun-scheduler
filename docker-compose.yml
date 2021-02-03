@@ -20,6 +20,8 @@ services:
       - 6379:6379
   kun-neo4j:
     image: "neo4j:3.5.22"
+    environment:
+      NEO4J_AUTH: "${DB_NEO4J_USERNAME}/${DB_NEO4J_PASSWORD}"
     restart: always
     volumes:
       - ./neo4j_data:/data

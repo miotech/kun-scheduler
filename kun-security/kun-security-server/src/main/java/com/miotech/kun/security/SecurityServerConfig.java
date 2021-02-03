@@ -1,10 +1,10 @@
 package com.miotech.kun.security;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.security.authenticate.CustomAuthenticationFilter;
-import com.miotech.kun.security.authenticate.JsonAuthenticateProvider;
+import com.miotech.kun.security.authenticate.DefaultAuthenticationFilter;
+import com.miotech.kun.security.authenticate.provider.JsonAuthenticateProvider;
 import com.miotech.kun.security.model.constant.SecurityType;
-import com.miotech.kun.security.service.AbstractSecurityService;
+import com.miotech.kun.security.authenticate.DefaultSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,10 +13,14 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.AbstractAuthenticationProcessingFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
@@ -24,12 +28,20 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
-    AbstractSecurityService abstractSecurityService;
+    DefaultSecurityService defaultSecurityService;
 
-    @Value("${security.auth.type:JSON}")
+    @Autowired
+    @Qualifier("defaultUserDetailsService")
+    UserDetailsService userDetailsService;
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
+
+    @Value("${security.auth.type}")
     SecurityType securityType;
 
     @Value("${spring.ldap.urls:}")
@@ -58,26 +70,29 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
         http
                 .csrf()
                 .disable();
+
         http
                 .authorizeRequests()
                 .antMatchers("/kun/api/**")
                 .authenticated()
                 .and()
-                .authorizeRequests()
-                .anyRequest()
-                .permitAll()
-                .and()
                 .addFilterBefore(
-                        customAuthenticationFilter(),
+                        defaultAuthenticationFilter(),
                         UsernamePasswordAuthenticationFilter.class)
                 .logout()
                 .logoutUrl(apiPrefix + "/v1/security/logout")
-                .logoutSuccessHandler(abstractSecurityService.logoutSuccessHandler())
+                .logoutSuccessHandler(defaultSecurityService.logoutSuccessHandler())
+                // 无效会话
+                .invalidateHttpSession(true)
+                // 清除身份验证
+                .clearAuthentication(true)
 
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
 
+        http
+                .oauth2Login();
         http
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
@@ -86,6 +101,10 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         switch (securityType) {
+            case DAO:
+                auth.userDetailsService(userDetailsService)
+                .passwordEncoder(passwordEncoder);
+                break;
             case JSON:
                 auth.authenticationProvider(new JsonAuthenticateProvider());
                 break;
@@ -103,18 +122,22 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
             default:
                 throw ExceptionUtils.wrapIfChecked(new RuntimeException("Unsupported security type: " + securityType));
         }
-
     }
 
     @Bean
-    public AbstractAuthenticationProcessingFilter customAuthenticationFilter() throws Exception {
-        CustomAuthenticationFilter authenticationFilter = new CustomAuthenticationFilter();
-        authenticationFilter.setAuthenticationSuccessHandler(abstractSecurityService.loginSuccessHandler());
-        authenticationFilter.setAuthenticationFailureHandler(abstractSecurityService.loginFailureHandler());
+    public AbstractAuthenticationProcessingFilter defaultAuthenticationFilter() throws Exception {
+        DefaultAuthenticationFilter authenticationFilter = new DefaultAuthenticationFilter();
+        authenticationFilter.setAuthenticationSuccessHandler(defaultSecurityService.loginSuccessHandler());
+        authenticationFilter.setAuthenticationFailureHandler(defaultSecurityService.loginFailureHandler());
         authenticationFilter.setRequiresAuthenticationRequestMatcher(new AntPathRequestMatcher(apiPrefix + "/v1/security/login", "POST"));
         authenticationFilter.setAuthenticationManager(authenticationManagerBean());
-        authenticationFilter.setAbstractSecurityService(abstractSecurityService);
+        authenticationFilter.setDefaultSecurityService(defaultSecurityService);
         authenticationFilter.setPassToken(passToken);
         return authenticationFilter;
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
