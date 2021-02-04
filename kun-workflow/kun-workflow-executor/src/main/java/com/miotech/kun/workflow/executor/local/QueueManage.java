@@ -24,6 +24,7 @@ public class QueueManage {
     public QueueManage(Props props) {
         queueMap = new ConcurrentHashMap<>();
         List<String> queueNames = props.getStringList("executor.queue");
+        logger.info("init queueManage , size = {}", queueNames.size());
         if (queueNames.size() == 0) {
             TaskAttemptQueue queue = new TaskAttemptQueue("default", DEFAULT_WORKER_TOKEN_SIZE);
             queueMap.put(queue.getName(), queue);
@@ -32,6 +33,7 @@ public class QueueManage {
             String prefix = "executor.queue." + queueName;
             Integer capacity = props.getInt(prefix + ".capacity", 0);
             TaskAttemptQueue queue = new TaskAttemptQueue(queueName, capacity);
+            logger.info("init queue name = {}, capacity = {}", queueName, capacity);
             queueMap.put(queueName, queue);
         }
     }
@@ -46,8 +48,8 @@ public class QueueManage {
                 throw new NoSuchElementException("no such queue,name = " + queueName);
             }
             queue.add(taskAttempt);
-            if(queue.getSize() == 1){
-                logger.debug("queue = {} is not empty,wake up consumer",queue.getName());
+            if (queue.getSize() == 1) {
+                logger.debug("queue = {} is not empty,wake up consumer", queue.getName());
                 hasElement.signal();
             }
         } finally {
@@ -117,8 +119,8 @@ public class QueueManage {
                 throw new NoSuchElementException("no such queue,name = " + queueName);
             }
             queue.release();
-            if(queue.getRemainCapacity() == 1){
-                logger.debug("queue = {} release resource,wake up consumer",queue.getName());
+            if (queue.getRemainCapacity() == 1) {
+                logger.debug("queue = {} release resource,wake up consumer", queue.getName());
                 hasElement.signal();
             }
         } finally {
