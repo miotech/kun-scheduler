@@ -17,7 +17,6 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -49,7 +48,6 @@ public class BackfillService extends BaseSecurityService {
     }
 
     /** 创建一个 backfill 并立即执行 */
-    @Transactional
     public Backfill createAndRun(BackfillCreateInfo createInfo) {
         UserInfo userInfo = getCurrentUser();
         if (Objects.isNull(userInfo)) {
@@ -82,7 +80,6 @@ public class BackfillService extends BaseSecurityService {
     }
 
     /** 按 id 执行对应的 backfill。若成功返回 true，若 Backfill 不存在返回 false */
-    @Transactional
     public boolean runBackfillById(Long backfillId) {
         // preconditions check
         Preconditions.checkNotNull(backfillId, "Backfill id cannot be null");
