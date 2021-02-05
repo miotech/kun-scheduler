@@ -5,14 +5,13 @@ import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.core.model.DatasetField;
-import com.miotech.kun.metadata.databuilder.extract.Extractor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.List;
 
-public abstract class SchemaExtractorTemplate implements Extractor {
+public abstract class SchemaExtractorTemplate {
 
     private static final Logger logger = LoggerFactory.getLogger(SchemaExtractorTemplate.class);
 
@@ -30,8 +29,7 @@ public abstract class SchemaExtractorTemplate implements Extractor {
 
     protected abstract void close();
 
-    @Override
-    public Iterator<Dataset> extract() {
+    public final Iterator<Dataset> extract() {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
 
         try {

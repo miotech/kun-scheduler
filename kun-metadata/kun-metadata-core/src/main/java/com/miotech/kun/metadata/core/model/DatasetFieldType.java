@@ -42,7 +42,7 @@ public class DatasetFieldType implements Serializable {
         DATETIME,
         BOOLEAN,
         JSON,
-        UNKNOW;
+        UNKNOWN;
 
         @JsonCreator
         public static DatasetFieldType.Type forValue(String value) {
@@ -70,10 +70,10 @@ public class DatasetFieldType implements Serializable {
         } else if ("boolean".equals(rawType) || "BOOL".equals(rawType)) {
             return Type.BOOLEAN;
         } else if ("UNKNOW".equals(rawType)) {
-            return Type.UNKNOW;
+            return Type.UNKNOWN;
         } else {
             logger.warn("unknown type: {}", rawType);
-            return Type.UNKNOW;
+            return Type.UNKNOWN;
         }
     }
 }

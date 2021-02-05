@@ -11,7 +11,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class FieldFlatUtilTest {
+public class FieldTypeParserTest {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test
@@ -19,7 +19,7 @@ public class FieldFlatUtilTest {
         String json = "{\"id\":1,\"name\":\"test\",\"hobbies\":[\"rubik\",\"cooking\"],\"married\":false}";
         JsonNode jsonNode = MAPPER.readTree(json);
 
-        List<DatasetField> fields = FieldFlatUtil.flatFields(jsonNode, null);
+        List<DatasetField> fields = FieldTypeParser.parse(jsonNode, null);
         List<String> fieldStrs = datasetField2String(fields);
 
         MatcherAssert.assertThat(fieldStrs, Matchers.containsInAnyOrder("id-NUMBER-", "name-STRING-", "hobbies-ARRAY-", "married-BOOL-"));
@@ -30,7 +30,7 @@ public class FieldFlatUtilTest {
         String json = "{\"id\":null,\"name\":\"test\",\"hobbies\":[\"rubik\",\"cooking\"],\"married\":false}";
         JsonNode jsonNode = MAPPER.readTree(json);
 
-        List<DatasetField> fields = FieldFlatUtil.flatFields(jsonNode, null);
+        List<DatasetField> fields = FieldTypeParser.parse(jsonNode, null);
         List<String> fieldStrs = datasetField2String(fields);
 
         MatcherAssert.assertThat(fieldStrs, Matchers.containsInAnyOrder("id-UNKNOWN-", "name-STRING-", "hobbies-ARRAY-", "married-BOOL-"));
@@ -41,7 +41,7 @@ public class FieldFlatUtilTest {
         String json = "{\"id\":1,\"name\":\"test\",\"hobbies\":[{\"name\":\"rubik\"},{\"name\":\"cooking\"}],\"married\":false}";
         JsonNode jsonNode = MAPPER.readTree(json);
 
-        List<DatasetField> fields = FieldFlatUtil.flatFields(jsonNode, null);
+        List<DatasetField> fields = FieldTypeParser.parse(jsonNode, null);
         List<String> fieldStrs = datasetField2String(fields);
 
         MatcherAssert.assertThat(fieldStrs, Matchers.containsInAnyOrder("id-NUMBER-", "name-STRING-", "hobbies.name-STRING-", "married-BOOL-"));
@@ -52,7 +52,7 @@ public class FieldFlatUtilTest {
         String json = "{\"id\":1,\"name\":\"test\",\"hobbies\":[],\"married\":false}";
         JsonNode jsonNode = MAPPER.readTree(json);
 
-        List<DatasetField> fields = FieldFlatUtil.flatFields(jsonNode, null);
+        List<DatasetField> fields = FieldTypeParser.parse(jsonNode, null);
         List<String> fieldStrs = datasetField2String(fields);
 
         MatcherAssert.assertThat(fieldStrs, Matchers.containsInAnyOrder("id-NUMBER-", "name-STRING-", "hobbies-ARRAY-", "married-BOOL-"));

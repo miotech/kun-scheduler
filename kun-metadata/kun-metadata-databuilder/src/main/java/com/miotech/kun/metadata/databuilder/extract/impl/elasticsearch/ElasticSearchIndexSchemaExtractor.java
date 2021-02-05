@@ -1,7 +1,6 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch;
 
 import com.beust.jcommander.internal.Lists;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.inject.Guice;
@@ -86,7 +85,7 @@ public class ElasticSearchIndexSchemaExtractor extends SchemaExtractorTemplate {
         }
     }
 
-    private String getEsVersion() throws JsonProcessingException {
+    private String getEsVersion() {
         String version = parseVersion(httpClientUtil.doGet("http://" + elasticSearchDataSource.getUrl()));
         if (StringUtils.isBlank(version)) {
             throw new ElasticSearchServiceUnavailableException("get es version error");
@@ -95,7 +94,7 @@ public class ElasticSearchIndexSchemaExtractor extends SchemaExtractorTemplate {
         return version;
     }
 
-    private String parseVersion(String result) throws JsonProcessingException {
+    private String parseVersion(String result) {
         Preconditions.checkState(StringUtils.isNotBlank(result), "call es, response empty");
         JsonNode root = JSONUtils.stringToJson(result);
         if (root == null || root.isEmpty()) {
@@ -142,7 +141,7 @@ public class ElasticSearchIndexSchemaExtractor extends SchemaExtractorTemplate {
                     fieldType = DatasetFieldType.Type.DATETIME;
                     break;
                 default:
-                    fieldType = DatasetFieldType.Type.UNKNOW;
+                    fieldType = DatasetFieldType.Type.UNKNOWN;
             }
             datasetFields.add(new DatasetField(name, new DatasetFieldType(fieldType, type), ""));
         }
