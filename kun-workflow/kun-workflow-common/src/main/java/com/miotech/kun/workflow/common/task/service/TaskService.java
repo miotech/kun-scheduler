@@ -74,6 +74,7 @@ public class TaskService {
 
     /**
      * Create a task by given task properties value object, will throw exception if required properties or binding operator not found
+     *
      * @param vo a task properties value object
      * @return created task
      */
@@ -120,6 +121,7 @@ public class TaskService {
                 .withScheduleConf(Objects.isNull(vo.getScheduleConf()) ? task.getScheduleConf() : vo.getScheduleConf())
                 .withDependencies(vo.getDependencies() == null ? task.getDependencies() : parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags() == null ? task.getTags() : vo.getTags())
+                .withQueueName(vo.getQueueName() == null ? task.getQueueName() : vo.getQueueName())
                 .build();
 
         // 4. perform update
@@ -138,6 +140,7 @@ public class TaskService {
                 .withConfig(vo.getConfig())
                 .withDescription(vo.getDescription())
                 .withOperatorId(vo.getOperatorId())
+                .withQueueName(vo.getQueueName())
                 .withTags(vo.getTags())
                 .build();
         return fullUpdateTask(task);
@@ -168,8 +171,8 @@ public class TaskService {
     }
 
     public TaskDAGVO getNeighbors(Long taskId, int upstreamLevel, int downstreamLevel) {
-        Preconditions.checkArgument(0 <= upstreamLevel && upstreamLevel <= 5 , "upstreamLevel should be non negative and no greater than 5");
-        Preconditions.checkArgument(0 <= downstreamLevel&& downstreamLevel <= 5, "downstreamLevel should be non negative and no greater than 5");
+        Preconditions.checkArgument(0 <= upstreamLevel && upstreamLevel <= 5, "upstreamLevel should be non negative and no greater than 5");
+        Preconditions.checkArgument(0 <= downstreamLevel && downstreamLevel <= 5, "downstreamLevel should be non negative and no greater than 5");
 
         Task task = fetchById(taskId);
         List<Task> result = new ArrayList<>();
@@ -189,6 +192,7 @@ public class TaskService {
 
     /**
      * Fetch task page with filters
+     *
      * @param filters
      * @return
      */
@@ -204,6 +208,7 @@ public class TaskService {
 
     /**
      * Fetch tasks of tasks that matches filter constraints
+     *
      * @param filters filter instance
      * @return total number of records that matches filter constraints
      */
@@ -214,6 +219,7 @@ public class TaskService {
 
     /**
      * Fetch single task by id
+     *
      * @param taskId Task id
      * @return task
      */
@@ -221,12 +227,13 @@ public class TaskService {
         Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
         return taskDao.fetchById(taskId)
                 .orElseThrow(() ->
-                new EntityNotFoundException(String.format("Cannot find task with id: %s", taskId))
-        );
+                        new EntityNotFoundException(String.format("Cannot find task with id: %s", taskId))
+                );
     }
 
     /**
      * Fetch tasks by given ids
+     *
      * @param taskIds ids of tasks
      * @returna a map from id to optional task object
      */
@@ -290,9 +297,9 @@ public class TaskService {
     }
 
     private List<TaskDependency> parseDependencyVO(List<TaskDependencyVO> vo) {
-        return vo.stream().map( x -> new TaskDependency(x.getUpstreamTaskId(),
-                x.getDownstreamTaskId(),dependencyFunctionProvider.from(
-                        x.getDependencyFunction())))
+        return vo.stream().map(x -> new TaskDependency(x.getUpstreamTaskId(),
+                x.getDownstreamTaskId(), dependencyFunctionProvider.from(
+                x.getDependencyFunction())))
                 .collect(Collectors.toList());
     }
 
@@ -318,7 +325,7 @@ public class TaskService {
     private void validateTaskPropsVOIntegrity(TaskPropsVO vo) {
         validateTaskPropsVONotNull(vo);
         Preconditions.checkArgument(Objects.nonNull(vo.getName()), "Invalid task property object with property `name`: null");
-        Preconditions.checkArgument(Objects.nonNull(vo.getDescription()),"Invalid task property object with property `description`: null" );
+        Preconditions.checkArgument(Objects.nonNull(vo.getDescription()), "Invalid task property object with property `description`: null");
         Preconditions.checkArgument(Objects.nonNull(vo.getOperatorId()), "Invalid task property object with property `operatorId`: null");
         Preconditions.checkArgument(Objects.nonNull(vo.getScheduleConf()), "Invalid task property object with property `scheduleConf`: null");
         Preconditions.checkArgument(Objects.nonNull(vo.getConfig()), "Invalid task property object with property `config`: null");
@@ -337,9 +344,10 @@ public class TaskService {
 
     /**
      * Perform update on lineage graph during update of a task model
+     *
      * @param task {@link Task} model instance
      * @throws EntityNotFoundException if operator not found
-     * @throws NullPointerException if argument task is null, or id of task is null, or resolver of operator is not defined
+     * @throws NullPointerException    if argument task is null, or id of task is null, or resolver of operator is not defined
      */
     private void updateLineageGraphOnTaskUpdate(Task task) {
         Preconditions.checkNotNull(task, TASK_SHOULD_NOT_BE_NULL);
@@ -352,9 +360,10 @@ public class TaskService {
 
     /**
      * Perform update on lineage graph during creation of a task model
+     *
      * @param task {@link Task} model instance
      * @throws EntityNotFoundException if operator not found
-     * @throws NullPointerException if argument task is null or id of task is null
+     * @throws NullPointerException    if argument task is null or id of task is null
      */
     private void updateLineageGraphOnTaskCreate(Task task) {
         Preconditions.checkNotNull(task, TASK_SHOULD_NOT_BE_NULL);
@@ -366,11 +375,12 @@ public class TaskService {
         List<DataStore> downstreamDataStore = resolver.resolveDownstreamDataStore(task.getConfig());
         logger.debug("For task id = {}, resolved {} upstream datastores and {} downstream datastores.",
                 task.getId(), upstreamDatastore.size(), downstreamDataStore.size());
-        lineageService.updateTaskLineage(task,upstreamDatastore,downstreamDataStore);
+        lineageService.updateTaskLineage(task, upstreamDatastore, downstreamDataStore);
     }
 
     /**
      * Perform update on lineage graph during deletion of a task model
+     *
      * @param task {@link Task} model instance
      * @throws NullPointerException if argument task is null or id of task is null
      */
@@ -389,10 +399,11 @@ public class TaskService {
 
     /**
      * Get the {@link Resolver} of operator by given id of target operator
+     *
      * @param operatorId id of target operator
      * @return the resolver of operator
      * @throws EntityNotFoundException if operator not found
-     * @throws NullPointerException if argument operatorId is null, or resolver of operator is not defined
+     * @throws NullPointerException    if argument operatorId is null, or resolver of operator is not defined
      */
     private Resolver getResolverByOperatorId(Long operatorId) {
         Preconditions.checkNotNull(operatorId, "Invalid argument `operatorId`: null");
