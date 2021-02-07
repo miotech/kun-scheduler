@@ -40,19 +40,11 @@ public class BackfillDao {
 
     private static final List<String> BACKFILL_TASK_RUN_RELATION_TABLE_COLS =  ImmutableList.of("backfill_id", "task_run_id", "task_id", "task_definition_id");
 
-    private static final String INSERT_BACKFILL_TABLE_SQL_STMT =
-            "INSERT INTO " + BACKFILL_TABLE_NAME + " (" + BACKFILL_TABLE_COLS.stream().collect(Collectors.joining(","))
-            + ") VALUES (" + StringUtils.repeatJoin("?", ",", BACKFILL_TABLE_COLS.size()) + ")";
+    private static final String INSERT_BACKFILL_TABLE_SQL_STMT = "INSERT INTO " + BACKFILL_TABLE_NAME + " (id, name, creator, create_time, update_time) VALUES (?, ?, ?, ?, ?)";
 
-    private static final String INSERT_BACKFILL_RELATION_SQL_STMT =
-            "INSERT INTO " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + "(" + BACKFILL_TASK_RUN_RELATION_TABLE_COLS.stream().collect(Collectors.joining(","))
-            + ") VALUES (" + StringUtils.repeatJoin("?", ",", BACKFILL_TASK_RUN_RELATION_TABLE_COLS.size()) + ")";
+    private static final String INSERT_BACKFILL_RELATION_SQL_STMT = "INSERT INTO " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + " (backfill_id, task_run_id, task_id, task_definition_id) VALUES (?, ?, ?, ?)";
 
-    private static final String UPDATE_BACKFILL_TABLE_SQL_STMT = "UPDATE " + BACKFILL_TABLE_NAME + " SET "
-            + BACKFILL_TABLE_COLS.stream()
-                .map(colName -> colName + " = ?")
-                .collect(Collectors.joining(","))
-            + " WHERE id = ?";
+    private static final String UPDATE_BACKFILL_TABLE_SQL_STMT = "UPDATE " + BACKFILL_TABLE_NAME + " SET id = ?, name = ?, creator = ?, create_time = ?, update_time = ? WHERE id = ?";
 
     private static final String DELETE_BACKFILL_RELATION_SQL_STMT = "DELETE FROM " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + " WHERE backfill_id = ?";
 
