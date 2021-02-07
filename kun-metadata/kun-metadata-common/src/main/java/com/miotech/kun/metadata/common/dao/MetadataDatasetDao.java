@@ -105,7 +105,7 @@ public class MetadataDatasetDao {
             return DatasetField.newBuilder()
                     .withName(name)
                     .withComment(description)
-                    .withFieldType(new DatasetFieldType(DatasetFieldType.convertRawType(type), rawType))
+                    .withFieldType(new DatasetFieldType(DatasetFieldType.Type.valueOf(type), rawType))
                     .withIsPrimaryKey(isPrimaryKey)
                     .withIsNullable(isNullable)
                     .build();
