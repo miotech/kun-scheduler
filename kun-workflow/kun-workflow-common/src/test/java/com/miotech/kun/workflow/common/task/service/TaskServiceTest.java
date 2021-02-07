@@ -450,7 +450,9 @@ public class TaskServiceTest extends CommonTestBase {
     @Test
     public void runTask_single_task_no_variables() {
         // prepare
-        Task task = MockTaskFactory.createTask();
+        Operator operator = MockOperatorFactory.createOperator();
+        operatorDao.create(operator);
+        Task task = MockTaskFactory.createTask(operator.getId());
         taskDao.create(task);
 
         RunTaskVO vo = new RunTaskVO();
