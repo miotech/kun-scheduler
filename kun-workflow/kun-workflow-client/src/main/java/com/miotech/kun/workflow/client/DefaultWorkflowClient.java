@@ -4,8 +4,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -156,7 +156,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public TaskRun executeTask(Long taskId, Map<String, Object> taskConfig) {
         RunTaskRequest request = new RunTaskRequest();
-        request.addTaskVariable(taskId, taskConfig != null ? taskConfig : Maps.newHashMap());
+        request.addTaskConfig(taskId, taskConfig != null ? taskConfig : Maps.newHashMap());
         List<Long> taskRunIds = wfApi.runTasks(request);
         if (taskRunIds.isEmpty()) {
             throw new WorkflowClientException("No task run found after execution for task: " + taskId);
@@ -166,15 +166,16 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
-    public List<TaskRun> executeTasks(RunTaskRequest request) {
+    public Map<Long, TaskRun> executeTasks(RunTaskRequest request) {
         List<Long> taskRunIds = wfApi.runTasks(request);
-
         TaskRunSearchRequest taskRunSearchRequest = TaskRunSearchRequest
                 .newBuilder()
                 .withTaskRunIds(taskRunIds)
+                .withPageSize(10)
                 .build();
-        return wfApi.searchTaskRuns(taskRunSearchRequest)
+        List<TaskRun> taskRunList = wfApi.searchTaskRuns(taskRunSearchRequest)
                 .getRecords();
+        return taskRunList.stream().collect(Collectors.toMap(x -> x.getTask().getId(), x -> x));
     }
 
     @Override
@@ -225,6 +226,13 @@ public class DefaultWorkflowClient implements WorkflowClient {
     public TaskRun stopTaskRun(Long taskRunId) {
         wfApi.stopTaskRun(taskRunId);
         return wfApi.getTaskRun(taskRunId);
+    }
+
+    @Override
+    public void stopTaskRuns(List<Long> taskRunIds) {
+        for (Long taskRunId : taskRunIds) {
+            wfApi.stopTaskRun(taskRunId);
+        }
     }
 
     @Override
