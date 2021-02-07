@@ -36,11 +36,15 @@ public class TaskRunSearchFilter {
 
     private final List<Long> taskIds;
 
+    private final List<Long> taskRunIds;
+
     private final Set<TaskRunStatus> status;
 
     private final OffsetDateTime dateFrom;
 
     private final OffsetDateTime dateTo;
+
+    private final List<String> scheduleTypes;
 
     private final Integer pageNum;
 
@@ -77,6 +81,8 @@ public class TaskRunSearchFilter {
         this.sortKey = builder.sortKey;
         this.sortOrder = builder.sortOrder;
         this.includeStartedOnly = builder.includeStartedOnly;
+        this.scheduleTypes = builder.scheduleTypes;
+        this.taskRunIds = builder.taskRunIds;
     }
 
     public List<Long> getTaskIds() {
@@ -113,8 +119,16 @@ public class TaskRunSearchFilter {
 
     public Boolean getIncludeStartedOnly() { return includeStartedOnly; }
 
+    public List<String> getScheduleTypes() {
+        return scheduleTypes;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    public List<Long> getTaskRunIds() {
+        return taskRunIds;
     }
 
     public Builder cloneBuilder() {
@@ -127,28 +141,33 @@ public class TaskRunSearchFilter {
                 .withPageSize(pageSize)
                 .withTags(tags)
                 .withSortKey(sortKey)
-                .withSortOrder(sortOrder);
+                .withSortOrder(sortOrder)
+                .withScheduleType(scheduleTypes)
+                .withTaskRunIds(taskRunIds);
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof TaskRunSearchFilter)) return false;
         TaskRunSearchFilter that = (TaskRunSearchFilter) o;
-        return Objects.equals(taskIds, that.taskIds) &&
-                status == that.status &&
-                Objects.equals(dateFrom, that.dateFrom) &&
-                Objects.equals(dateTo, that.dateTo) &&
-                Objects.equals(pageNum, that.pageNum) &&
-                Objects.equals(pageSize, that.pageSize) &&
-                Objects.equals(tags, that.tags) &&
-                Objects.equals(sortKey, that.sortKey) &&
-                Objects.equals(sortOrder, that.sortOrder);
+        return Objects.equals(getTaskIds(), that.getTaskIds()) &&
+                Objects.equals(getTaskRunIds(), that.getTaskRunIds()) &&
+                Objects.equals(getStatus(), that.getStatus()) &&
+                Objects.equals(getDateFrom(), that.getDateFrom()) &&
+                Objects.equals(getDateTo(), that.getDateTo()) &&
+                Objects.equals(getScheduleTypes(), that.getScheduleTypes()) &&
+                Objects.equals(getPageNum(), that.getPageNum()) &&
+                Objects.equals(getPageSize(), that.getPageSize()) &&
+                Objects.equals(getTags(), that.getTags()) &&
+                Objects.equals(getSortKey(), that.getSortKey()) &&
+                Objects.equals(getSortOrder(), that.getSortOrder()) &&
+                Objects.equals(getIncludeStartedOnly(), that.getIncludeStartedOnly());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(taskIds, status, dateFrom, dateTo, pageNum, pageSize, sortKey, sortOrder, includeStartedOnly);
+        return Objects.hash(getTaskIds(), getTaskRunIds(), getStatus(), getDateFrom(), getDateTo(), getScheduleTypes(), getPageNum(), getPageSize(), getTags(), getSortKey(), getSortOrder(), getIncludeStartedOnly());
     }
 
     @JsonPOJOBuilder
@@ -163,6 +182,9 @@ public class TaskRunSearchFilter {
         private String sortKey;
         private String sortOrder;
         private Boolean includeStartedOnly;
+        private List<String> scheduleTypes;
+        private List<Long> taskRunIds;
+
 
         private Builder() {
         }
@@ -219,6 +241,16 @@ public class TaskRunSearchFilter {
 
         public Builder withIncludeStartedOnly(Boolean includeStartedOnly) {
             this.includeStartedOnly = includeStartedOnly;
+            return this;
+        }
+
+        public Builder withScheduleType(List<String> scheduleTypes){
+            this.scheduleTypes = scheduleTypes;
+            return this;
+        }
+
+        public Builder withTaskRunIds(List<Long> taskIds){
+            this.taskRunIds = taskIds;
             return this;
         }
 

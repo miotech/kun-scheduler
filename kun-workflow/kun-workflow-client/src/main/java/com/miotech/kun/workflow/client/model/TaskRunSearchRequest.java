@@ -31,6 +31,8 @@ public class TaskRunSearchRequest {
 
     private final Set<TaskRunStatus> status;
 
+    private final List<String> scheduleTypes;
+
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     private final OffsetDateTime dateFrom;
 
@@ -38,7 +40,6 @@ public class TaskRunSearchRequest {
     private final OffsetDateTime dateTo;
 
     /**
-     * Consistent with {@link com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter}
      * should be one of: "id", "status", "startAt", "endAt" or null
      * by default, null is equivalent to "startAt" as filter
      */
@@ -65,6 +66,7 @@ public class TaskRunSearchRequest {
         this.sortKey = builder.sortKey;
         this.sortOrder = builder.sortOrder;
         this.includeStartedOnly = builder.includeStartedOnly;
+        this.scheduleTypes = builder.scheduleTypes;
     }
 
     public String getName() {
@@ -95,9 +97,13 @@ public class TaskRunSearchRequest {
         return status;
     }
 
-    public OffsetDateTime getDateFrom() { return dateFrom; }
+    public OffsetDateTime getDateFrom() {
+        return dateFrom;
+    }
 
-    public OffsetDateTime getDateTo() { return dateTo; }
+    public OffsetDateTime getDateTo() {
+        return dateTo;
+    }
 
     public String getSortKey() {
         return sortKey;
@@ -109,6 +115,11 @@ public class TaskRunSearchRequest {
 
     public Boolean getIncludeStartedOnly() {
         return includeStartedOnly;
+    }
+
+
+    public List<String> getScheduleTypes() {
+        return scheduleTypes;
     }
 
     public static Builder newBuilder() {
@@ -128,6 +139,7 @@ public class TaskRunSearchRequest {
         private String sortKey;
         private String sortOrder;
         private Boolean includeStartedOnly;
+        private List<String> scheduleTypes;
 
         private Builder() {
         }
@@ -195,6 +207,11 @@ public class TaskRunSearchRequest {
 
         public Builder withIncludeStartedOnly(Boolean includeStartedOnly) {
             this.includeStartedOnly = includeStartedOnly;
+            return this;
+        }
+
+        public Builder withScheduleTypes(List<String> scheduleTypes) {
+            this.scheduleTypes = scheduleTypes;
             return this;
         }
     }

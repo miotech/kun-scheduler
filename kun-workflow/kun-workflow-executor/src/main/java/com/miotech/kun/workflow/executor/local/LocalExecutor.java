@@ -138,11 +138,11 @@ public class LocalExecutor implements Executor {
                 logger.debug("taskAttemptId = {} has been submit", taskAttempt.getId());
                 return false;
             }
-            taskAttemptQueue.add(taskAttempt.cloneBuilder().withStatus(TaskRunStatus.QUEUED).build());
             if (!savedTaskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
                 miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.QUEUED);
 
             }
+            taskAttemptQueue.add(taskAttempt.cloneBuilder().withStatus(TaskRunStatus.QUEUED).build());
         }
         return true;
     }
@@ -207,10 +207,14 @@ public class LocalExecutor implements Executor {
                 return false;
             }
             TaskAttempt taskAttempt = taskAttemptOptional.get();
+            if (taskAttempt.getStatus().isFinished()) {
+                logger.warn("taskAttempt has finished, taskAttemptId = {}", attemptId);
+                return false;
+            }
             if (taskAttempt.getStatus() == TaskRunStatus.QUEUED) {
                 logger.debug("taskAttempt to be abort has add to queue,attemptId = {}", attemptId);
                 Iterator<TaskAttempt> iterator = taskAttemptQueue.iterator();
-                while (iterator.hasNext()){
+                while (iterator.hasNext()) {
                     TaskAttempt queuedTaskAttempt = iterator.next();
                     if (queuedTaskAttempt.getId().equals(attemptId)) {
                         iterator.remove();
@@ -356,14 +360,15 @@ public class LocalExecutor implements Executor {
                 throw ExceptionUtils.wrapIfChecked(e);
             }
             TaskAttempt taskAttemptToRun = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
-            if(taskAttemptToRun.getStatus().isFinished()){
-                logger.info("taskAttemptToRun is finished,attemptId = {},status = {}",taskAttemptToRun.getId(),taskAttemptToRun.getStatus().name());
+            if (taskAttemptToRun.getStatus().isFinished()) {
+                logger.info("taskAttemptToRun is finished,attemptId = {},status = {}", taskAttemptToRun.getId(), taskAttemptToRun.getStatus().name());
                 workerToken.release();
                 logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptToRun.getId(), workerToken.availablePermits());
                 return;
             }
             try {
                 workerPool.put(taskAttemptToRun.getId(), initHeartBeatByTaskAttempt(taskAttemptToRun));
+                logger.info("taskAttempt = {} status is {},is in queue {}", taskAttemptToRun.getId(), taskAttemptToRun.getStatus().name(), taskAttemptToRun.getStatus().equals(TaskRunStatus.QUEUED));
                 //taskAttempt 已经启动（重启恢复）,则只加入workerPool监听心跳,正常入队和超时则重新启动
                 if (taskAttemptToRun.getStatus().equals(TaskRunStatus.QUEUED) || taskAttemptToRun.getStatus().equals(TaskRunStatus.ERROR)) {
                     ExecCommand command = buildExecCommand(taskAttemptToRun);

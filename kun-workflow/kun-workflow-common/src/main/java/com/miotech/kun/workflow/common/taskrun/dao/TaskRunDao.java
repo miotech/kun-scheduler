@@ -18,6 +18,7 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -50,7 +51,7 @@ public class TaskRunDao {
     private static final Logger logger = LoggerFactory.getLogger(TaskRunDao.class);
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "start_at", "end_at", "config", "inlets", "outlets", "created_at", "updated_at");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "start_at", "end_at", "config", "inlets", "outlets", "created_at", "updated_at");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
@@ -228,6 +229,32 @@ public class TaskRunDao {
             sqlArgs.addAll(filterByTagSQLParams);
         }
 
+        // Search by scheduleType
+        if (Objects.nonNull(filter.getScheduleTypes()) && (!filter.getScheduleTypes().isEmpty())) {
+            List<String> scheduleTypes = filter.getScheduleTypes();
+            if (scheduleTypes.size() == 1) {
+                whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".schedule_type = ?)");
+                sqlArgs.add(scheduleTypes.get(0));
+            } else {
+                String filterScheduleTypes = scheduleTypes.stream().map(x -> "?").collect(Collectors.joining(","));
+                whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".schedule_type in (" + filterScheduleTypes + "))");
+                sqlArgs.addAll(scheduleTypes);
+            }
+        }
+
+        //Search by taskRunIds
+        if (Objects.nonNull(filter.getTaskRunIds()) && (!filter.getTaskRunIds().isEmpty())) {
+            List<Long> taskRunIds = filter.getTaskRunIds();
+            if (taskRunIds.size() == 1) {
+                whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".id = ?)");
+                sqlArgs.add(taskRunIds.get(0));
+            } else {
+                String filterTaskRunIds = taskRunIds.stream().map(x -> "?").collect(Collectors.joining(","));
+                whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".id in (" + filterTaskRunIds + "))");
+                sqlArgs.addAll(taskRunIds);
+            }
+        }
+
         String whereClause;
         if (whereConditions.isEmpty()) {
             whereClause = "1 = 1";
@@ -282,12 +309,14 @@ public class TaskRunDao {
                     .into(TASK_RUN_TABLE_NAME)
                     .asPrepared()
                     .getSQL();
-
+            String scheduleType = taskRun.getScheduledType() != null ?
+                    taskRun.getScheduledType().name() : taskRun.getTask().getScheduleConf().getType().name();
             dbOperator.update(sql,
                     taskRun.getId(),
                     taskRun.getTask().getId(),
                     taskRun.getScheduledTick().toString(),
                     toNullableString(taskRun.getStatus()),
+                    scheduleType,
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
@@ -339,6 +368,7 @@ public class TaskRunDao {
                     taskRun.getTask().getId(),
                     taskRun.getScheduledTick().toString(),
                     toNullableString(taskRun.getStatus()),
+                    taskRun.getScheduledType().name(),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
@@ -404,6 +434,8 @@ public class TaskRunDao {
      */
     public List<TaskRun> fetchTaskRunsByFilter(TaskRunSearchFilter filter) {
         Preconditions.checkNotNull(filter, "Invalid argument `filter`: null");
+        Preconditions.checkArgument(Objects.isNull(filter.getPageNum()) || filter.getPageNum() > 0, "page number should be positive");
+        Preconditions.checkArgument(Objects.isNull(filter.getPageSize()) || filter.getPageSize() > 0, "page size should be positive");
 
         int pageNum = Objects.nonNull(filter.getPageNum()) ? filter.getPageNum() : 1;
         int pageSize = Objects.nonNull(filter.getPageSize()) ? filter.getPageSize() : 100;
@@ -438,6 +470,9 @@ public class TaskRunDao {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("COUNT(*)")
                 .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .join("INNER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".task_id = " + TaskDao.TASK_MODEL_NAME + ".id")
+                .autoAliasColumns()
                 .where(whereClause)
                 .getSQL();
 
@@ -930,6 +965,7 @@ public class TaskRunDao {
                     .withId(rs.getLong(TASK_RUN_MODEL_NAME + "_id"))
                     .withScheduledTick(new Tick(rs.getString(TASK_RUN_MODEL_NAME + "_scheduled_tick")))
                     .withStatus(TaskRunStatus.resolve(rs.getString(TASK_RUN_MODEL_NAME + "_status")))
+                    .withScheduleType(ScheduleType.valueOf(rs.getString(TASK_RUN_MODEL_NAME + "_schedule_type")))
                     .withInlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_inlets"), new TypeReference<List<DataStore>>() {
                     }))
                     .withOutlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_outlets"), new TypeReference<List<DataStore>>() {
