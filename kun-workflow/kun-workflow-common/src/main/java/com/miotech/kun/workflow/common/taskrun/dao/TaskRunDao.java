@@ -768,7 +768,13 @@ public class TaskRunDao {
     }
 
     public TaskAttemptProps fetchLatestTaskAttempt(Long taskRunId) {
-        return fetchLatestTaskAttempt(Lists.newArrayList(taskRunId)).get(0);
+        Preconditions.checkNotNull(taskRunId, "task run id should not be null");
+
+        List<TaskAttemptProps> attemptPropsList = fetchLatestTaskAttempt(Lists.newArrayList(taskRunId));
+        if (attemptPropsList.isEmpty()) {
+            return null;
+        }
+        return attemptPropsList.get(0);
     }
 
     public List<TaskAttemptProps> fetchLatestTaskAttempt(List<Long> taskRunIds) {
