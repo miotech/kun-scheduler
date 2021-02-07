@@ -133,7 +133,7 @@ public class TaskManager {
             List<TaskAttemptProps> attempts = taskRunDao.fetchLatestTaskAttempt(dependentTaskRunIds);
             for (TaskAttemptProps atp : attempts) {
                 logger.debug("Fetched latest TaskAttempt. taskRunId={}, attempt={}, status={}",
-                        atp.getTaskId(), atp.getAttempt(), atp.getStatus());
+                        atp.getTaskRunId(), atp.getAttempt(), atp.getStatus());
                 if (atp.getStatus().isSuccess()) {
                     waitList.removeWait(atp.getId());
                     unlistenTo(atp.getId());

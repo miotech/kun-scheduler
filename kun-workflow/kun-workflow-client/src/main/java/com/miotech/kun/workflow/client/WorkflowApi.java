@@ -327,6 +327,11 @@ public class WorkflowApi {
         if (request.getPageSize() > 0) {
             urlBuilder.addQueryParameter("pageSize", "" + request.getPageSize());
         }
+        if(request.getScheduleTypes() != null && !request.getScheduleTypes().isEmpty()){
+            String filterScheduleTypes = request.getScheduleTypes()
+                    .stream().collect(Collectors.joining(","));
+            urlBuilder.addQueryParameter("scheduleTypes",filterScheduleTypes);
+        }
         Request getRequest = new Request.Builder()
                 .url(urlBuilder.build())
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())

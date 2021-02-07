@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
@@ -24,6 +25,8 @@ public class TaskRun {
     private final Config config;
 
     private final Tick scheduledTick;
+
+    private final ScheduleType scheduledType;
 
     private final TaskRunStatus status;
 
@@ -91,9 +94,13 @@ public class TaskRun {
         return dependentTaskRunIds;
     }
 
+    public ScheduleType getScheduledType() {
+        return scheduledType;
+    }
+
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status,
                    OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
-                   List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds) {
+                   List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, ScheduleType scheduledType) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
@@ -107,6 +114,8 @@ public class TaskRun {
         this.inlets = inlets;
         this.outlets = outlets;
         this.dependentTaskRunIds = dependentTaskRunIds;
+        this.scheduledType = scheduledType;
+
     }
 
     public static TaskRunBuilder newBuilder() {
@@ -124,7 +133,8 @@ public class TaskRun {
                 .withEndAt(endAt)
                 .withInlets(inlets)
                 .withOutlets(outlets)
-                .withDependentTaskRunIds(dependentTaskRunIds);
+                .withDependentTaskRunIds(dependentTaskRunIds)
+                .withScheduleType(scheduledType);
     }
 
     @Override
@@ -134,6 +144,7 @@ public class TaskRun {
                 ", task=" + task +
                 ", config=" + config +
                 ", scheduledTick=" + scheduledTick +
+                ", scheduledType=" + scheduledType +
                 ", status=" + status +
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +
@@ -156,6 +167,7 @@ public class TaskRun {
         private List<DataStore> inlets;
         private List<DataStore> outlets;
         private List<Long> dependentTaskRunIds;
+        private ScheduleType scheduleType;
 
         private TaskRunBuilder() {
         }
@@ -220,8 +232,13 @@ public class TaskRun {
             return this;
         }
 
+        public TaskRunBuilder withScheduleType(ScheduleType scheduleType){
+            this.scheduleType = scheduleType;
+            return this;
+        }
+
         public TaskRun build() {
-            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets, outlets, dependentTaskRunIds);
+            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets, outlets, dependentTaskRunIds,scheduleType);
         }
     }
 }

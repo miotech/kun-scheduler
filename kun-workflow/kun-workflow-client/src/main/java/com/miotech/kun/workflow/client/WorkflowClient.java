@@ -100,8 +100,9 @@ public interface WorkflowClient {
     /**
      * launch existed tasks
      * @param request
+     * @return key:taskId,value:taskRun
      */
-    List<TaskRun> executeTasks(RunTaskRequest request);
+    Map<Long,TaskRun> executeTasks(RunTaskRequest request);
 
     /**
      * get task DAG
@@ -169,6 +170,13 @@ public interface WorkflowClient {
      * @return
      */
     TaskRun stopTaskRun(Long taskRunId);
+
+    /**
+     * stop taskRuns
+     * @param taskRunIds
+     * * @return
+     */
+    void stopTaskRuns(List<Long> taskRunIds);
 
     /**
      * Get latest N task runs of given task ids.
