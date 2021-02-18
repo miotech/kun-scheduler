@@ -39,6 +39,10 @@ public class VariableService {
                 });
     }
 
+    public boolean removeByKey(String key) {
+        return variableDao.removeByKey(key);
+    }
+
     public String get(String key) {
         return find(key).getValue();
     }

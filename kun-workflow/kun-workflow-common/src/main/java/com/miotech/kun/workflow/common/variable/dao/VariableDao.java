@@ -24,6 +24,8 @@ public class VariableDao {
     protected static final String VARIABLE_TABLE_NAME = "kun_wf_variable";
     private static final List<String> variableCols = ImmutableList.of("key", "value", "is_encrypted");
 
+    private static final String REMOVE_BY_KEY_STMT = "DELETE FROM " + VARIABLE_TABLE_NAME + " WHERE key = ?";
+
     @Inject
     private DatabaseOperator dbOperator;
 
@@ -111,6 +113,11 @@ public class VariableDao {
                 var.getFullKey()
         );
         return var;
+    }
+
+    public boolean removeByKey(String key) {
+        int affectedRows = dbOperator.update(REMOVE_BY_KEY_STMT, key);
+        return affectedRows > 0;
     }
 
     public static class VariableMapper implements ResultSetMapper<Variable> {
