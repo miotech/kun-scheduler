@@ -43,18 +43,18 @@ public class DefaultSecurityService {
     }
 
     public UserInfo getOrSave(String username) {
-        UserInfo userInfo = getUserFromDB(username);
-        if (userInfo == null) {
-            userInfo = new UserInfo();
-            userInfo.setUsername(username);
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUsername(username);
+        return getOrSave(userInfo);
+    }
+
+    public UserInfo getOrSave(UserInfo userInfo) {
+        UserInfo savedUserInfo = convertToUserInfo(userService.getUserByName(userInfo.getUsername()));
+        if (savedUserInfo == null) {
             SecurityContextHolder.setUserInfo(userInfo);
             userInfo = saveUser(userInfo);
         }
         return userInfo;
-    }
-
-    public UserInfo getUserFromDB(String username) {
-        return convertToUserInfo(userService.getUserByName(username));
     }
 
     public UserInfo convertToUserInfo(User user) {

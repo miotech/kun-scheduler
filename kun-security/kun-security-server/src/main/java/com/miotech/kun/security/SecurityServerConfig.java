@@ -2,9 +2,9 @@ package com.miotech.kun.security;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.security.authenticate.DefaultAuthenticationFilter;
-import com.miotech.kun.security.authenticate.provider.JsonAuthenticateProvider;
-import com.miotech.kun.security.model.constant.SecurityType;
 import com.miotech.kun.security.authenticate.DefaultSecurityService;
+import com.miotech.kun.security.model.UserInfo;
+import com.miotech.kun.security.model.constant.SecurityType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -59,6 +59,15 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
     @Value("${security.pass-token:40A4C5379B73F31D6CD24F6A7C5C3ACB}")
     private String passToken;
 
+    @Value("${spring.security.oauth2.client.enable:false}")
+    private Boolean oauth2ClientEnable;
+
+    @Value("${security.admin.username}")
+    private String adminUsername;
+
+    @Value("${security.admin.password}")
+    private String adminPassword;
+
     @Autowired
     @Qualifier("kunAuthProvider")
     private AuthenticationProvider customAuthProvider;
@@ -92,21 +101,25 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
 
         http
-                .oauth2Login();
-        http
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED);
+
+        if (oauth2ClientEnable) {
+            http.oauth2Login();
+        }
     }
 
     @Override
     public void configure(AuthenticationManagerBuilder auth) throws Exception {
         switch (securityType) {
             case DAO:
-                auth.userDetailsService(userDetailsService)
-                .passwordEncoder(passwordEncoder);
-                break;
-            case JSON:
-                auth.authenticationProvider(new JsonAuthenticateProvider());
+                auth
+                        .userDetailsService(userDetailsService)
+                        .passwordEncoder(passwordEncoder);
+                UserInfo userInfo = new UserInfo();
+                userInfo.setUsername(adminUsername);
+                userInfo.setPassword(adminPassword);
+                defaultSecurityService.getOrSave(userInfo);
                 break;
             case LDAP:
                 auth
@@ -117,7 +130,8 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
                         .url(ldapUrls[0] + "/" + ldapRootBase);
                 break;
             case CUSTOM:
-                auth.authenticationProvider(customAuthProvider);
+                auth
+                        .authenticationProvider(customAuthProvider);
                 break;
             default:
                 throw ExceptionUtils.wrapIfChecked(new RuntimeException("Unsupported security type: " + securityType));

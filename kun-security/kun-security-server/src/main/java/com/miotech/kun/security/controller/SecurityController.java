@@ -8,7 +8,9 @@ import com.miotech.kun.security.model.entity.Permission;
 import com.miotech.kun.security.model.entity.Permissions;
 import com.miotech.kun.security.service.PermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.stream.Collectors;
 
