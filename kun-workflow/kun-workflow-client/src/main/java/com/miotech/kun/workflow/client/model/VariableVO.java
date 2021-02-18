@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.common.variable.vo;
+package com.miotech.kun.workflow.client.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
