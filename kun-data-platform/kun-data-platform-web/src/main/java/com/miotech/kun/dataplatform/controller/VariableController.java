@@ -1,7 +1,7 @@
 package com.miotech.kun.dataplatform.controller;
 
 import com.miotech.kun.common.model.RequestResult;
-import com.miotech.kun.dataplatform.model.variable.VariableRemovalInfoVO;
+import com.miotech.kun.dataplatform.constant.VariableNamespace;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.VariableVO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +12,9 @@ import java.util.List;
 public class VariableController {
     @Autowired
     private WorkflowClient workflowClient;
+
+    @Autowired
+    private VariableNamespace variableNamespace;
 
     @GetMapping("/variables")
     public RequestResult<List<VariableVO>> fetchAllVariables() {
@@ -43,10 +46,10 @@ public class VariableController {
         }
     }
 
-    @DeleteMapping("/variables")
-    public RequestResult<Boolean> deleteVariable(@RequestBody VariableRemovalInfoVO removalInfoVO) {
+    @DeleteMapping("/variables/{key}")
+    public RequestResult<Boolean> deleteVariable(@PathVariable String key) {
         try {
-            Boolean successFlag = workflowClient.deleteVariable(removalInfoVO.getNamespace(), removalInfoVO.getKey());
+            Boolean successFlag = workflowClient.deleteVariable(variableNamespace.toString(), key);
             return RequestResult.success(successFlag);
         } catch (Exception e) {
             return RequestResult.error(e.getMessage());
