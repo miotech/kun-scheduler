@@ -2,9 +2,8 @@ package com.miotech.kun.workflow.client;
 
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
-import com.miotech.kun.workflow.core.model.variable.Variable;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 
 import java.io.File;
 import java.util.List;
@@ -215,7 +214,7 @@ public interface WorkflowClient {
      * Fetch all defined variables in workflow
      * @return list of variables defined in system
      */
-    List<Variable> getAllVariables();
+    List<VariableVO> getAllVariables();
 
     /**
      * Create a variable with provided value object

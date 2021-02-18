@@ -6,7 +6,6 @@ import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
-import com.miotech.kun.workflow.core.model.variable.Variable;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import okhttp3.*;
 import org.apache.commons.collections4.CollectionUtils;
@@ -419,13 +418,13 @@ public class WorkflowApi {
         });
     }
 
-    public List<Variable> getAllVariables() {
+    public List<VariableVO> getAllVariables() {
         HttpUrl url = buildUrl(API_VARIABLES).build();
         Request getRequest = new Request.Builder()
                 .url(url).get()
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(getRequest, new TypeReference<List<Variable>>() {});
+        return sendRequest(getRequest, new TypeReference<List<VariableVO>>() {});
     }
 
     public VariableVO createVariable(VariableVO variableVO) {

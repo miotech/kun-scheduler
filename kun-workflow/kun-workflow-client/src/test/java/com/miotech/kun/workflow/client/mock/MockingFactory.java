@@ -3,9 +3,11 @@ package com.miotech.kun.workflow.client.mock;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.client.model.VariableVO;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
+import com.miotech.kun.workflow.core.model.variable.Variable;
 import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -54,6 +56,25 @@ public class MockingFactory {
                 .withQueueName("default")
                 .withStartAt(DateTimeUtils.now())
                 .withEndAt(DateTimeUtils.now())
+                .build();
+    }
+
+    public static Variable mockVariable() {
+        return Variable.newBuilder()
+                .withKey("test-key")
+                .withNamespace("test-namespace")
+                .withValue("test-value")
+                .withEncrypted(false)
+                .build();
+    }
+
+    public static VariableVO mockVariableVO() {
+        Variable variable = mockVariable();
+        return VariableVO.newBuilder()
+                .withNamespace(variable.getNamespace())
+                .withKey(variable.getKey())
+                .withValue(variable.getValue())
+                .withEncrypted(variable.isEncrypted())
                 .build();
     }
 

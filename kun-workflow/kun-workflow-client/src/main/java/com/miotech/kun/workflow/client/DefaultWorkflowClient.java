@@ -258,7 +258,7 @@ public class DefaultWorkflowClient implements WorkflowClient {
     }
 
     @Override
-    public List<Variable> getAllVariables() {
+    public List<VariableVO> getAllVariables() {
         return wfApi.getAllVariables();
     }
 
