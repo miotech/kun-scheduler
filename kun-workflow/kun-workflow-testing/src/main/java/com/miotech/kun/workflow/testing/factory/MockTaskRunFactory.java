@@ -43,6 +43,7 @@ public class MockTaskRunFactory {
                 .withEndAt(DateTimeUtils.now())
                 .withStatus(TaskRunStatus.CREATED)
                 .withConfig(Config.EMPTY)
+                .withQueueName(task.getQueueName())
                 .build();
     }
 
@@ -82,6 +83,7 @@ public class MockTaskRunFactory {
                     .withScheduledTick(tick)
                     .withStartAt(null)
                     .withEndAt(null)
+                    .withQueueName(tasks.get(i).getQueueName())
                     .build();
             taskRuns.add(tr);
         }
@@ -102,6 +104,7 @@ public class MockTaskRunFactory {
                 .withEndAt(DateTimeUtils.now())
                 .withStatus(TaskRunStatus.QUEUED)
                 .withConfig(Config.EMPTY)
+                .withQueueName(task.getQueueName())
                 .build();
     }
 
@@ -114,6 +117,7 @@ public class MockTaskRunFactory {
                 .withEndAt(DateTimeUtils.now().plusHours(1))
                 .withLogPath("/var/log_" + taskRun + "_" + attempt + ".log")
                 .withStatus(TaskRunStatus.RUNNING)
+                .withQueueName(taskRun.getQueueName())
                 .build();
     }
 }

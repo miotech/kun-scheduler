@@ -10,6 +10,7 @@ public class HeartBeatMessage implements Serializable {
     private String workerUrl;//worker的Rpc地址
     private Long taskAttemptId;
     private Long taskRunId;
+    private String queueName;
     private TaskRunStatus taskRunStatus;
     private Integer port;
     private Integer ip;
@@ -33,6 +34,14 @@ public class HeartBeatMessage implements Serializable {
 
     public void setPort(Integer port) {
         this.port = port;
+    }
+
+    public String getQueueName() {
+        return queueName;
+    }
+
+    public void setQueueName(String queueName) {
+        this.queueName = queueName;
     }
 
     public Integer getIp() {
@@ -106,9 +115,11 @@ public class HeartBeatMessage implements Serializable {
                 ", workerUrl='" + workerUrl + '\'' +
                 ", taskAttemptId=" + taskAttemptId +
                 ", taskRunId=" + taskRunId +
+                ", queueName='" + queueName + '\'' +
                 ", taskRunStatus=" + taskRunStatus +
                 ", port=" + port +
                 ", ip=" + ip +
+                ", initTime=" + initTime +
                 ", timeoutTimes=" + timeoutTimes +
                 ", lastHeartBeatTime=" + lastHeartBeatTime +
                 '}';

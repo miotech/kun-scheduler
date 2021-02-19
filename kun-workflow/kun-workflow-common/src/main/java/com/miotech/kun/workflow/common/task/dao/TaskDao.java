@@ -54,7 +54,7 @@ public class TaskDao {
 
     public static final String TASK_TAGS_MODEL_NAME = "task_tags";
 
-    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule");
+    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule","queue_name");
 
     private static final List<String> taskTagCols = ImmutableList.of("task_id", "tag_key", "tag_value");
 
@@ -668,7 +668,8 @@ public class TaskDao {
                     task.getDescription(),
                     task.getOperatorId(),
                     JSONUtils.toJsonString(task.getConfig()),
-                    JSONUtils.toJsonString(task.getScheduleConf())
+                    JSONUtils.toJsonString(task.getScheduleConf()),
+                    task.getQueueName()
             );
             insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
             // Update tags
@@ -700,6 +701,7 @@ public class TaskDao {
                     task.getOperatorId(),
                     JSONUtils.toJsonString(task.getConfig()),
                     JSONUtils.toJsonString(task.getScheduleConf()),
+                    task.getQueueName(),
                     task.getId()
             );
 
@@ -917,6 +919,7 @@ public class TaskDao {
                     .withScheduleConf(JSONUtils.jsonToObject(rs.getString(TASK_MODEL_NAME + "_schedule"), ScheduleConf.class))
                     .withDependencies(new ArrayList<>())
                     .withTags(new ArrayList<>())
+                    .withQueueName(rs.getString(TASK_MODEL_NAME + "_queue_name"))
                     .build();
         }
     }

@@ -207,6 +207,7 @@ public class TaskSpawner {
                 .withScheduledTick(tick)
                 .withScheduleType(task.getScheduleConf().getType())
                 .withDependentTaskRunIds(resolveDependencies(task, tick, others))
+                .withQueueName(task.getQueueName())
                 .build();
         logger.debug("TaskRun is created successfully TaskRun={}, Task={}, Tick={}.", taskRun, task, tick);
         return taskRun;

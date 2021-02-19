@@ -1,3 +1,12 @@
+executor:
+  queue:
+    default:
+      capacity: 8
+      policy: FIFO
+    pdf:
+      capacity: 0
+      policy: FIFO
+
 
 server:
   port: ${WORKFLOW_PORT}

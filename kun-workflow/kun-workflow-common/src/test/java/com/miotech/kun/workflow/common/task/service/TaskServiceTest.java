@@ -184,6 +184,27 @@ public class TaskServiceTest extends CommonTestBase {
     }
 
     @Test
+    public void updateTask_withQueueName_shouldSuccess() {
+        // Prepare
+        // 1. create a valid task value object
+        Pair<Task, List<Operator>> preparedEntities = mockOperatorsAndCreateSingleTask();
+        Task createdTask = preparedEntities.getLeft();
+        // 2. produce task vo with overwritten properties
+        Task taskToUpdate = createdTask.cloneBuilder()
+                .withQueueName("user")
+                .build();
+
+        // Process
+        // 3. perform full update
+        taskService.fullUpdateTask(taskToUpdate);
+
+        // Validate
+        // 4. fetch updated entity and check
+        Task updatedTask = taskService.fetchById(createdTask.getId());
+        assertThat(updatedTask, sameBeanAs(taskToUpdate));
+    }
+
+    @Test
     public void updateTask_withInvalidProps_shouldThrowException() {
         // Prepare
         Pair<Task, List<Operator>> preparedEntities = mockOperatorsAndCreateSingleTask();
