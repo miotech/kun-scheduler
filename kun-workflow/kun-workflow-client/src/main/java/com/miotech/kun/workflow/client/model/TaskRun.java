@@ -32,6 +32,8 @@ public class TaskRun {
 
     private String scheduleType;
 
+    private String queueName;
+
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime startAt;
@@ -162,6 +164,14 @@ public class TaskRun {
         this.dependencyTaskRunIds = dependencyTaskRunIds;
     }
 
+    public String getQueueName() {
+        return queueName;
+    }
+
+    public void setQueueName(String queueName) {
+        this.queueName = queueName;
+    }
+
     public static final class Builder {
         private Long id;
         private Task task;
@@ -182,6 +192,7 @@ public class TaskRun {
         private List<Long> dependencyTaskRunIds;
         private List<Tag> tags;
         private String scheduleType;
+        private String queueName;
 
         private Builder() {
         }
@@ -260,8 +271,12 @@ public class TaskRun {
             return this;
         }
 
-        public Builder withScheduleType(String scheduleType){
+        public Builder withScheduleType(String scheduleType) {
             this.scheduleType = scheduleType;
+            return this;
+        }
+        public Builder withQueueName(String queueName){
+            this.queueName = queueName;
             return this;
         }
 
@@ -279,6 +294,7 @@ public class TaskRun {
             taskRunVO.setAttempts(attempts);
             taskRunVO.setDependencyTaskRunIds(dependencyTaskRunIds);
             taskRunVO.setTags(tags);
+            taskRunVO.setQueueName(queueName);
             taskRunVO.createdAt = createdAt;
             taskRunVO.updatedAt = updatedAt;
             taskRunVO.scheduleType = scheduleType;
