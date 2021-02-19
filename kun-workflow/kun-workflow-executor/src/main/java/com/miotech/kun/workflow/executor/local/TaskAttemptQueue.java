@@ -9,9 +9,6 @@ import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
-/**
- * this queue is not thread safe
- */
 public class TaskAttemptQueue {
     private Queue<TaskAttempt> queue;
     private final Integer capacity;//队列资源容量

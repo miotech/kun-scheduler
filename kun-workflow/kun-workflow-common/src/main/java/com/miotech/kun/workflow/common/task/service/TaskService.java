@@ -312,7 +312,7 @@ public class TaskService {
                 .withConfig(vo.getConfig())
                 .withDependencies(parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags())
-                .withQueueName(vo.getQueueName())
+                .withQueueName(vo.getQueueName() == null ? "default" : vo.getQueueName())
                 .build();
     }
 
