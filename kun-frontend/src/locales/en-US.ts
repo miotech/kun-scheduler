@@ -415,5 +415,7 @@ export default {
   "operationCenter.backfill.taskrun.operation.rerun": "Rerun",
   "operationCenter.backfill.taskrun.operation.logs": "View Logs",
   "operationCenter.backfill.operation.stopAll.alert": "Are you sure to stop all tasks in this backfill instance?",
-  "operationCenter.backfill.operation.rerun.alert": "Are you sure to rerun all tasks in this backfill instance?"
+  "operationCenter.backfill.operation.rerun.alert": "Are you sure to rerun all tasks in this backfill instance?",
+  "operationCenter.taskrun.operation.stop.alert": "Are you sure to stop this run instance?",
+  "operationCenter.taskrun.operation.rerun.alert": "Are you sure to rerun this run instance?"
 }

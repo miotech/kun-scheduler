@@ -15,9 +15,13 @@ import com.miotech.kun.workflow.common.taskrun.factory.TaskRunStateVOFactory;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
+import org.apache.dubbo.common.utils.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +45,8 @@ public class TaskRunService {
 
     @Inject
     private Executor executor;
+
+    private final Set<Long> rerunningTaskRunIds = new ConcurrentHashSet<>();
 
     @Inject
     public TaskRunService(TaskRunDao taskRunDao,  ResourceLoader resourceLoader, Executor executor) {
@@ -206,6 +212,72 @@ public class TaskRunService {
         vo.setConfig(taskRun.getConfig());
         vo.setAttempts(attempts);
         return vo;
+    }
+
+    /**
+     * Re-run a taskrun instance. Any currently unfinished task attempts shall be aborted.
+     * @param taskRunId id of target taskrun
+     * @return <code>true</code> if success, <code>false</code> if failed to rerun.
+     * @throws IllegalStateException when cannot find latest task attempt corresponding to task run
+     */
+    public boolean rerunTaskRun(Long taskRunId) {
+        // 1. Preconditions check
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "Argument `taskRunId` should not be null");
+        Optional<TaskRun> taskRunOptional = taskRunDao.fetchTaskRunById(taskRunId);
+        logger.info("Trying to re-run taskrun instance with id = {}.", taskRunId);
+        if (!taskRunOptional.isPresent()) {
+            logger.warn("Cannot rerun taskrun instance with id = {}. Reason: task run does not exists.", taskRunId);
+            return false;
+        }
+        TaskRun taskRun = taskRunOptional.get();
+        // Does the same re-run request invoked in another threads?
+        if (!rerunningTaskRunIds.add(taskRunId)) {
+            return false;
+        }
+
+        try {
+            // 2. check if latest task attempt is finished.
+            // If it is still running, we shall not create another attempt before it is finished.
+            TaskAttemptProps latestAttempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
+            if (!latestAttemptIsFinished(latestAttempt, taskRunId)) {
+                return false;
+            }
+            // 3. Submit a new attempt to executor
+            return submitReRunToExecutor(taskRun, latestAttempt);
+        } catch (Exception e) {
+            logger.error("Failed to re-run taskrun with id = {} due to exceptions.", taskRunId);
+            throw e;
+        } finally {
+            // release the lock
+            rerunningTaskRunIds.remove(taskRunId);
+        }
+    }
+
+    private boolean latestAttemptIsFinished(TaskAttemptProps latestAttempt, Long taskRunId) {
+        if (Objects.isNull(latestAttempt)) {
+            throw new IllegalStateException(
+                    String.format("Unexpected state: cannot find any attempt for task run with id = %s when trying to rerun.", taskRunId)
+            );
+        }
+        if (!latestAttempt.getStatus().isFinished()) {
+            logger.info("Cannot rerun taskrun instance with id = {}. Reason: latest attempt (id = {}) is still running.", taskRunId, latestAttempt.getId());
+            return false;
+        }
+        return true;
+    }
+
+    private boolean submitReRunToExecutor(TaskRun taskRun, TaskAttemptProps latestAttempt) {
+        Preconditions.checkNotNull(taskRun);
+        // TODO: @yide 不应该在TaskManager以外的地方直接构造TaskAttempt并提交给Executor，否则依赖等会有问题，
+        // 因为依赖的管理目前是由TaskManager完成的。
+        TaskAttempt newAttempt = TaskAttempt.newBuilder()
+                .withId(WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), latestAttempt.getAttempt() + 1))
+                .withTaskRun(taskRun)
+                .withAttempt(latestAttempt.getAttempt() + 1)
+                .withStatus(TaskRunStatus.CREATED)
+                .build();
+        taskRunDao.createAttempt(newAttempt);
+        return executor.submit(newAttempt);
     }
 
     public boolean abortTaskRun(Long taskRunId) {
