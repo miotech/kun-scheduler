@@ -1,0 +1,44 @@
+.ViewFilters {
+  display: flex;
+  flex-direction: row;
+  height: 40px;
+}
+
+.SearchInputWrapper {
+  display: inline-block;
+  position: relative;
+  flex: 2 2 300px;
+  padding: 0 8px 0 0;
+}
+
+.UserSelectWrapper {
+  display: inline-block;
+  position: relative;
+  flex: 1 1 200px;
+  padding: 0 8px 0 0;
+
+  :global {
+    .ant-select {
+      width: 100%;
+    }
+  }
+}
+
+.RangePickerWrapper {
+  display: inline-block;
+  position: relative;
+  flex: 1 1 200px;
+  padding: 0 8px 0 0;
+
+  :global {
+    .ant-picker {
+      width: 100%;
+    }
+  }
+}
+
+.ReloadBtnWrapper {
+  display: inline-block;
+  position: relative;
+  flex: 0 0 82px;
+}

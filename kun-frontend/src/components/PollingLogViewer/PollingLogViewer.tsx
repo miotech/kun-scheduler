@@ -24,10 +24,12 @@ interface PollingLogViewerProps {
   saveFileName?: string;
 }
 
-const PollingLogViewer: FC<PollingLogViewerProps> = (props) => {
+const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(
+  props,
+) {
   const {
     pollInterval = 3000,
-    queryFn = (() => Promise.resolve(null)),
+    queryFn = () => Promise.resolve(null),
     startPolling = false,
     saveFileName,
   } = props;
@@ -35,10 +37,10 @@ const PollingLogViewer: FC<PollingLogViewerProps> = (props) => {
   const t = useI18n();
 
   // React Lazylog requires at least 1 line of text
-  const [ text, setText ] = React.useState<string>('\n');
-  const [ terminated, setTerminated ] = React.useState<boolean>(false);
-  const [ loading, setLoading ] = React.useState<boolean>(false);
-  const [ copied, setCopied ] = React.useState<boolean>(false);
+  const [text, setText] = React.useState<string>('\n');
+  const [terminated, setTerminated] = React.useState<boolean>(false);
+  const [loading, setLoading] = React.useState<boolean>(false);
+  const [copied, setCopied] = React.useState<boolean>(false);
 
   /* When startPolling or query function changed, reset terminate flag */
   useEffect(() => {
@@ -46,10 +48,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = (props) => {
       setTerminated(false);
       setLoading(true);
     }
-  }, [
-    startPolling,
-    queryFn,
-  ]);
+  }, [startPolling, queryFn]);
 
   useInterval(async () => {
     if (startPolling && !terminated) {
@@ -62,36 +61,43 @@ const PollingLogViewer: FC<PollingLogViewerProps> = (props) => {
     }
   }, pollInterval);
 
-  const handleCopyToClipboard = useCallback(function handleCopyToClipboard() {
-    writeText(text).then(() => {
-      setCopied(true);
-    });
-  }, [
-    text,
-  ]);
+  const handleCopyToClipboard = useCallback(
+    function handleCopyToClipboard() {
+      writeText(text).then(() => {
+        setCopied(true);
+      });
+    },
+    [text],
+  );
 
-  const handleDownloadLog = useCallback(function handleDownloadLog() {
-    const blob = new Blob([text], {
-      type: 'text/plain;charset=utf-8'
-    });
-    FileSaver.saveAs(blob, saveFileName ?
-      `${saveFileName}-${dayjs().format('YYYY-MM-DD_HH_mm_ss')}.log` :
-      `${dayjs().format('YYYY-MM-DD_HH_mm_ss')}.log`);
-  }, [
-    text,
-    saveFileName,
-  ]);
+  const handleDownloadLog = useCallback(
+    function handleDownloadLog() {
+      const blob = new Blob([text], {
+        type: 'text/plain;charset=utf-8',
+      });
+      FileSaver.saveAs(
+        blob,
+        saveFileName
+          ? `${saveFileName}-${dayjs().format('YYYY-MM-DD_HH_mm_ss')}.log`
+          : `${dayjs().format('YYYY-MM-DD_HH_mm_ss')}.log`,
+      );
+    },
+    [text, saveFileName],
+  );
 
   return (
     <div className={c('polling-lazylog-wrapper', props.className)}>
-      <KunSpin
-        spinning={loading}
-        className="lazylog-spin-container"
-      >
+      <KunSpin spinning={loading} className="lazylog-spin-container">
         <div className="lazylog-button-group">
           <Tooltip
-            title={copied ? t('common.reactlazylog.copyToClipboardSuccess') : t('common.reactlazylog.copyToClipboard')}
-            onVisibleChange={() => { setCopied(false); }}
+            title={
+              copied
+                ? t('common.reactlazylog.copyToClipboardSuccess')
+                : t('common.reactlazylog.copyToClipboard')
+            }
+            onVisibleChange={() => {
+              setCopied(false);
+            }}
           >
             <Button
               className="tool-btn"
@@ -103,7 +109,9 @@ const PollingLogViewer: FC<PollingLogViewerProps> = (props) => {
           </Tooltip>
           <Tooltip
             title={t('common.reactlazylog.downloadAsFile')}
-            onVisibleChange={() => { setCopied(false); }}
+            onVisibleChange={() => {
+              setCopied(false);
+            }}
           >
             <Button
               className="tool-btn"
@@ -116,7 +124,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = (props) => {
         </div>
         <ScrollFollow
           startFollowing
-          render={({ onScroll, follow}) => (
+          render={({ onScroll, follow }) => (
             <LazyLog
               extraLines={0}
               enableSearch
