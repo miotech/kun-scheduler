@@ -132,9 +132,14 @@ public class QueueManage {
     }
 
     public void reset() {
-        for (Map.Entry<String, TaskAttemptQueue> entry : queueMap.entrySet()) {
-            TaskAttemptQueue queue = entry.getValue();
-            queue.reset();
+        lock.lock();
+        try {
+            for (Map.Entry<String, TaskAttemptQueue> entry : queueMap.entrySet()) {
+                TaskAttemptQueue queue = entry.getValue();
+                queue.reset();
+            }
+        } finally {
+            lock.unlock();
         }
     }
 

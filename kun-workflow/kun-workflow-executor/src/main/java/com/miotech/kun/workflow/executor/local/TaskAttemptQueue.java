@@ -88,7 +88,7 @@ public class TaskAttemptQueue {
         logger.debug("acquire worker token from queue : {}, current size = {},max size = {}", name, remainCapacity, capacity);
     }
 
-    public void reset() {
+    public synchronized void reset() {
         queue.clear();
         remainCapacity = capacity;
     }
