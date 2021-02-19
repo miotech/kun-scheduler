@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import { TaskRun } from '@/definitions/TaskRun.type';
-import { Badge, Button, Table, Tooltip } from 'antd';
+import { Badge, Button, Popconfirm, Table, Tooltip } from 'antd';
 import { ColumnsType } from 'antd/es/table';
 import useI18n from '@/hooks/useI18n';
 import { Link } from 'umi';
@@ -20,6 +20,8 @@ interface OwnProps {
   data: TaskRun[];
   taskDefinitionIds: string[];
   onClickViewLog: (taskTryId: string | null) => any;
+  onClickStopTaskRun: (taskRunId: string) => any;
+  onClickRerunTaskRun: (taskRunId: string) => any;
 }
 
 type Props = OwnProps;
@@ -143,15 +145,30 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(
                 <Tooltip
                   title={t('operationCenter.backfill.taskrun.operation.stop')}
                 >
-                  <Button
-                    icon={<PauseOutlined />}
+                  <Popconfirm
+                    title="Confirm?"
                     disabled={isStoppedStatus(record.status)}
-                  />
+                    onConfirm={() => {
+                      props.onClickStopTaskRun(record.id);
+                    }}
+                  >
+                    <Button
+                      icon={<PauseOutlined />}
+                      disabled={isStoppedStatus(record.status)}
+                    />
+                  </Popconfirm>
                 </Tooltip>
                 <Tooltip
                   title={t('operationCenter.backfill.taskrun.operation.rerun')}
                 >
-                  <Button icon={<PlayCircleOutlined />} />
+                  <Popconfirm
+                    title="Confirm?"
+                    onConfirm={() => {
+                      props.onClickRerunTaskRun(record.id);
+                    }}
+                  >
+                    <Button icon={<PlayCircleOutlined />} />
+                  </Popconfirm>
                 </Tooltip>
                 <Tooltip
                   title={t('operationCenter.backfill.taskrun.operation.logs')}

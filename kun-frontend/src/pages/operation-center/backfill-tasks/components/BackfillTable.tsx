@@ -21,6 +21,8 @@ interface OwnProps {
   data: BackfillDetail[];
   onClickStopBackfill: (backfill: BackfillDetail) => any;
   onClickRerunBackfill: (backfill: BackfillDetail) => any;
+  onClickStopTaskRun: (taskRunId: string) => any;
+  onClickRerunTaskRun: (taskRunId: string) => any;
 }
 
 type Props = OwnProps;
@@ -67,6 +69,8 @@ export const BackfillTable: React.FC<Props> = memo(function BackfillTable(
     data,
     onClickStopBackfill,
     onClickRerunBackfill,
+    onClickStopTaskRun,
+    onClickRerunTaskRun,
   } = props;
 
   const { dispatch } = useRedux(() => {});
@@ -210,6 +214,8 @@ export const BackfillTable: React.FC<Props> = memo(function BackfillTable(
             data={record.taskRunList || []}
             taskDefinitionIds={record.taskDefinitionIds}
             onClickViewLog={handleClickViewLog}
+            onClickStopTaskRun={onClickStopTaskRun}
+            onClickRerunTaskRun={onClickRerunTaskRun}
           />
         )}
         pagination={{

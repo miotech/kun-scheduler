@@ -5,8 +5,9 @@ import {
   ServiceRespPromise,
 } from '@/definitions/common-types';
 import { Backfill, BackfillDetail } from '@/definitions/Backfill.type';
-import { delet, get, post } from '@/utils/requestUtils';
+import { delet, get, post, put } from '@/utils/requestUtils';
 import { API_DATA_PLATFORM_PREFIX } from '@/constants/api-prefixes';
+import { TaskRun } from '@/definitions/TaskRun.type';
 
 export interface SearchBackfillParams extends PaginationReqBody {
   name?: string;
@@ -77,6 +78,28 @@ export async function rerunBackfillInstance(
 ): ServiceRespPromise<AcknowledgementVO> {
   return post('/backfills/:backfillId/_run', {
     pathParams: { backfillId },
+    prefix: API_DATA_PLATFORM_PREFIX,
+  });
+}
+
+export async function restartTaskRunInstance(
+  taskRunId: string,
+): ServiceRespPromise<TaskRun> {
+  return post('/backfills/taskruns/:taskRunId/_restart', {
+    pathParams: {
+      taskRunId,
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
+  });
+}
+
+export async function abortTaskRunInstance(
+  taskRunId: string,
+): ServiceRespPromise<TaskRun> {
+  return put('/backfills/taskruns/:taskRunId/_abort', {
+    pathParams: {
+      taskRunId,
+    },
     prefix: API_DATA_PLATFORM_PREFIX,
   });
 }
