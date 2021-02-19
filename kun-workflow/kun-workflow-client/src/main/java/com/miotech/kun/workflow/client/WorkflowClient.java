@@ -172,6 +172,13 @@ public interface WorkflowClient {
     TaskRun stopTaskRun(Long taskRunId);
 
     /**
+     * Restart a taskRun immediately
+     * @param taskRunId id of target task run
+     * @return
+     */
+    TaskRun restartTaskRun(Long taskRunId);
+
+    /**
      * stop taskRuns
      * @param taskRunIds
      * * @return
