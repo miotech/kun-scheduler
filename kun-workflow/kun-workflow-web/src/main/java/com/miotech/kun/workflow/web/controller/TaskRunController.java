@@ -178,6 +178,11 @@ public class TaskRunController {
         return taskRunService.countTaskRunVOsByDate(filter, offsetHours);
     }
 
+    @RouteMapping(url = "/taskruns/{taskRunId}/_rerun", method = "POST")
+    public Boolean rerunTaskRuns(@RouteVariable long taskRunId) {
+        return taskRunService.rerunTaskRun(taskRunId);
+    }
+
     @RouteMapping(url = "/taskruns/{taskRunId}/_abort", method = "PUT")
     public Boolean abortTaskRuns(@RouteVariable long taskRunId) {
         return taskRunService.abortTaskRun(taskRunId);
