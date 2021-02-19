@@ -146,7 +146,7 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(
                   title={t('operationCenter.backfill.taskrun.operation.stop')}
                 >
                   <Popconfirm
-                    title="Confirm?"
+                    title={t('operationCenter.taskrun.operation.stop.alert')}
                     disabled={isStoppedStatus(record.status)}
                     onConfirm={() => {
                       props.onClickStopTaskRun(record.id);
@@ -162,7 +162,7 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(
                   title={t('operationCenter.backfill.taskrun.operation.rerun')}
                 >
                   <Popconfirm
-                    title="Confirm?"
+                    title={t('operationCenter.taskrun.operation.rerun.alert')}
                     onConfirm={() => {
                       props.onClickRerunTaskRun(record.id);
                     }}
@@ -187,7 +187,13 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(
           },
         },
       ],
-      [props.taskDefinitionIds, t],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [
+        props.taskDefinitionIds,
+        props.onClickRerunTaskRun,
+        props.onClickStopTaskRun,
+        t,
+      ],
     );
 
     return (

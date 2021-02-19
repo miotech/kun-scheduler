@@ -112,7 +112,7 @@ export const BackfillTable: React.FC<Props> = memo(function BackfillTable(
         key: 'name',
       },
       {
-        title: 'Status',
+        title: t('operationCenter.backfill.property.status'),
         key: 'status',
         render: (txt: any, record: BackfillDetail) => {
           return renderByTaskRunListStatus(
@@ -197,7 +197,7 @@ export const BackfillTable: React.FC<Props> = memo(function BackfillTable(
         },
       },
     ],
-    [t],
+    [onClickRerunBackfill, onClickStopBackfill, t],
   );
 
   return (
