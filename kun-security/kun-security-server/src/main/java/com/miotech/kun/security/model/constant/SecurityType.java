@@ -8,8 +8,6 @@ public enum SecurityType {
 
     DAO,
 
-    JSON,
-
     LDAP,
 
     CUSTOM
