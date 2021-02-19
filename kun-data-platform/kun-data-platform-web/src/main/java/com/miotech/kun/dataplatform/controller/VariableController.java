@@ -4,11 +4,17 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.constant.VariableNamespace;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.VariableVO;
+import io.swagger.annotations.Api;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+@RestController
+@RequestMapping("/")
+@Api(tags = "Variables")
+@Slf4j
 public class VariableController {
     @Autowired
     private WorkflowClient workflowClient;
