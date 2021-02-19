@@ -9,6 +9,7 @@ public class TaskAttemptMsg implements Serializable{
     private long taskAttemptId;
     private long workerId;
     private long taskRunId;
+    private String queueName;
     private TaskRunStatus taskRunStatus;
     private OffsetDateTime startAt;
     private OffsetDateTime endAt;
@@ -64,6 +65,13 @@ public class TaskAttemptMsg implements Serializable{
         this.workerId = workerId;
     }
 
+    public String getQueueName() {
+        return queueName;
+    }
+
+    public void setQueueName(String queueName) {
+        this.queueName = queueName;
+    }
 
     public long getTaskRunId() {
         return taskRunId;
@@ -83,6 +91,7 @@ public class TaskAttemptMsg implements Serializable{
         newTaskAttemptMsg.setTaskAttemptId(taskAttemptId);
         newTaskAttemptMsg.setStartAt(startAt);
         newTaskAttemptMsg.setTaskRunId(taskRunId);
+        newTaskAttemptMsg.setQueueName(queueName);
         return newTaskAttemptMsg;
 
     }
@@ -93,6 +102,7 @@ public class TaskAttemptMsg implements Serializable{
                 "taskAttemptId=" + taskAttemptId +
                 ", workerId=" + workerId +
                 ", taskRunId=" + taskRunId +
+                ", queueName='" + queueName + '\'' +
                 ", taskRunStatus=" + taskRunStatus +
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +

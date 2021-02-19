@@ -42,6 +42,7 @@ public class MockingFactory {
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?"))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
+                .withQueueName("default")
                 .withOperatorId(operatorId)
                 .build();
     }
@@ -50,6 +51,7 @@ public class MockingFactory {
         return TaskRun.newBuilder()
                 .withId(1L)
                 .withTask(mockTask())
+                .withQueueName("default")
                 .withStartAt(DateTimeUtils.now())
                 .withEndAt(DateTimeUtils.now())
                 .build();

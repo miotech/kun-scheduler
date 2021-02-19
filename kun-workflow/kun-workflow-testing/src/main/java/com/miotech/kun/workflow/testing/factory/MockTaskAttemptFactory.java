@@ -16,6 +16,7 @@ public class MockTaskAttemptFactory {
                 .withAttempt(1)
                 .withTaskRun(taskRun)
                 .withStatus(TaskRunStatus.CREATED)
+                .withQueueName(taskRun.getQueueName())
                 .build();
     }
 
@@ -25,6 +26,7 @@ public class MockTaskAttemptFactory {
                 .withAttempt(1)
                 .withTaskRun(taskRun)
                 .withStatus(status)
+                .withQueueName(taskRun.getQueueName())
                 .build();
     }
 }

@@ -97,11 +97,18 @@ public class PropsUtils {
             Object value = source.get(key);
 
             if (value instanceof Map) {
-                Map<String, Object> subMap = flatten((Map<String, Object>) value);
-
+                Map<String, Object> valueMap = (Map<String, Object>) value;
+                StringBuilder joiner = new StringBuilder();
+                String separator = "";
+                for (String subkey : valueMap.keySet()) {
+                    joiner.append(separator).append(subkey);
+                    separator = ",";
+                }
+                Map<String, Object> subMap = flatten(valueMap);
                 for (String subkey : subMap.keySet()) {
                     result.put(key + "." + subkey, subMap.get(subkey));
                 }
+                result.put(key, joiner.toString());
             } else if (value instanceof Collection) {
                 StringBuilder joiner = new StringBuilder();
                 String separator = "";

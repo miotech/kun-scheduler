@@ -21,6 +21,7 @@ import com.miotech.kun.workflow.core.execution.HeartBeatMessage;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.TaskAttemptMsg;
 import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -28,6 +29,8 @@ import com.miotech.kun.workflow.core.publish.EventPublisher;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.executor.local.LocalExecutor;
 import com.miotech.kun.workflow.executor.local.LocalWorkerFactory;
+import com.miotech.kun.workflow.executor.local.QueueManage;
+import com.miotech.kun.workflow.executor.local.TaskAttemptQueue;
 import com.miotech.kun.workflow.executor.mock.*;
 import com.miotech.kun.workflow.executor.rpc.LocalExecutorFacadeImpl;
 import com.miotech.kun.workflow.executor.rpc.WorkerClusterConsumer;
@@ -36,6 +39,7 @@ import com.miotech.kun.workflow.facade.WorkflowWorkerFacade;
 import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
+import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.ResourceUtils;
@@ -59,8 +63,6 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -232,8 +234,9 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
 
     }
 
@@ -283,8 +286,9 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
 
     }
 
@@ -343,8 +347,9 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
 
     }
 
@@ -362,8 +367,9 @@ public class LocalExecutorTest extends CommonTestBase {
         assertStatusProgress(queuedTaskAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED);
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -389,9 +395,9 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING);
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(7));
-
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
     }
 
     @Test
@@ -413,9 +419,9 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
-
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
 
@@ -447,8 +453,9 @@ public class LocalExecutorTest extends CommonTestBase {
         Long waitTime = Reflect.on(executor).field("WAIT_WORKER_INIT_SECOND").get();
         Thread.sleep(waitTime * 1000);
 
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(7));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
 
         //worker正常启动，发送心跳
         doReturn(localWorker).when(spyFactory).createWorker();
@@ -490,8 +497,9 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
-        workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        queueManage = Reflect.on(executor).field("queueManage").get();
+        taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
 
@@ -547,8 +555,9 @@ public class LocalExecutorTest extends CommonTestBase {
         List<DataStore> outlets = taskRun.getOutlets();
         assertThat(finishedEvent.getInlets(), sameBeanAs(inlets));
         assertThat(finishedEvent.getOutlets(), sameBeanAs(outlets));
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -576,8 +585,9 @@ public class LocalExecutorTest extends CommonTestBase {
         log = resourceLoader.getResource(attemptProps.getLogPath());
         content = ResourceUtils.content(log.getInputStream());
         assertThat(content, containsString("Hello, world2!"));
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -635,8 +645,9 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.FAILED));
         assertThat(finishedEvent.getInlets(), hasSize(0));
         assertThat(finishedEvent.getOutlets(), hasSize(0));
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -675,8 +686,9 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -715,8 +727,9 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -754,8 +767,9 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.FAILED);
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -766,8 +780,9 @@ public class LocalExecutorTest extends CommonTestBase {
         // process
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(7));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
         executor.cancel(attempt);
 
         // wait until aborted
@@ -798,8 +813,9 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
-        workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        queueManage = Reflect.on(executor).field("queueManage").get();
+        taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -819,12 +835,11 @@ public class LocalExecutorTest extends CommonTestBase {
         awaitUntilAttemptAbort(attempt.getId());
 
 
-
         verify(appender, atLeast(0)).doAppend(logCaptor.capture());
         List<String> logList = logCaptor.getAllValues().stream().map(log -> log.getMessage()).collect(Collectors.toList());
-        assertThat(logList.get(0),is("Start to run command: {}"));
-        assertThat(logList.get(1),is("kill task result = {}"));
-        assertThat(logList.get(2),is("worker going to shutdown, taskAttemptId = {}"));
+        assertThat(logList.get(0), is("Start to run command: {}"));
+        assertThat(logList.get(1), is("kill task result = {}"));
+        assertThat(logList.get(2), is("worker going to shutdown, taskAttemptId = {}"));
 
 
         ArgumentCaptor<HeartBeatMessage> captor = ArgumentCaptor.forClass(HeartBeatMessage.class);
@@ -853,8 +868,9 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -895,23 +911,27 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
-        Semaphore workerToken = Reflect.on(executor).field("workerToken").get();
-        assertThat(workerToken.availablePermits(), is(8));
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
     @Test
-    public void abortTaskAttemptInQueue(){
-        Reflect.on(executor).set("workerToken",new Semaphore(0));
+    public void abortTaskAttemptInQueue() {
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        Reflect.on(taskAttemptQueue).set("remainCapacity", 0);
         //prepare
         TaskAttempt taskAttempt = prepareAttempt(TestOperator1.class);
 
         executor.submit(taskAttempt);
 
         //verify
-        TaskAttempt saved =  taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
-        assertThat(saved.getStatus(),is(TaskRunStatus.QUEUED));
-        LinkedBlockingQueue<TaskAttempt> taskAttemptQueue = Reflect.on(executor).field("taskAttemptQueue").get();
-        assertThat(taskAttemptQueue,hasSize(1));
+        TaskAttempt saved = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+        assertThat(saved.getStatus(), is(TaskRunStatus.QUEUED));
+        queueManage = Reflect.on(executor).field("queueManage").get();
+        taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getSize(), is(1));
         executor.cancel(taskAttempt.getId());
         awaitUntilAttemptAbort(taskAttempt.getId());
         // events
@@ -919,19 +939,19 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.ABORTED);
-        taskAttemptQueue = Reflect.on(executor).field("taskAttemptQueue").get();
-        assertThat(taskAttemptQueue,hasSize(0));
+        taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getSize(), is(0));
 
 
     }
 
     @Test
-    public void abortTaskAttemptCreated(){
+    public void abortTaskAttemptCreated() {
         //prepare
         TaskAttempt taskAttempt = prepareAttempt(TestOperator1.class);
         //verify
-        TaskAttempt saved =  taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
-        assertThat(saved.getStatus(),is(TaskRunStatus.CREATED));
+        TaskAttempt saved = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+        assertThat(saved.getStatus(), is(TaskRunStatus.CREATED));
         executor.cancel(taskAttempt.getId());
         awaitUntilAttemptAbort(taskAttempt.getId());
         // events
@@ -940,6 +960,61 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.ABORTED);
 
     }
+
+    @Test
+    public void resourceIsolationTest(){
+        //prepare queue
+        QueueManage queueManage = prepareQueueManage();
+        Reflect.on(executor).set("queueManage",queueManage);
+
+        //prepare TaskAttempt
+        TaskAttempt defaultAttempt = prepareAttempt(TestOperator6.class);
+        //submit default queue attempt
+        executor.submit(defaultAttempt);
+        Task task = MockTaskFactory.createTask().cloneBuilder().withQueueName("user").build();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+        TaskAttempt userAttempt = prepareAttempt(TestOperator6.class,taskAttempt);
+        // submit user attempt
+        executor.submit(userAttempt);
+        awaitUntilAttemptDone(userAttempt.getId());
+        // verify default attempt
+        TaskAttemptProps defaultAttemptProps = taskRunDao.fetchLatestTaskAttempt(defaultAttempt.getTaskRun().getId());
+        assertThat(defaultAttemptProps.getAttempt(), is(1));
+        assertThat(defaultAttemptProps.getStatus(), is(TaskRunStatus.QUEUED));
+        // verify events
+        assertStatusProgress(defaultAttempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED);
+
+        // verify user attempt
+        TaskAttemptProps userAttemptProps = taskRunDao.fetchLatestTaskAttempt(userAttempt.getTaskRun().getId());
+        assertThat(userAttemptProps.getAttempt(), is(1));
+        assertThat(userAttemptProps.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(userAttemptProps.getLogPath(), is(notNullValue()));
+        assertThat(userAttemptProps.getStartAt(), is(notNullValue()));
+        assertThat(userAttemptProps.getEndAt(), is(notNullValue()));
+
+        // events
+        assertStatusProgress(userAttempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.INITIALIZING,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.SUCCESS);
+
+        //verity resource
+        queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue defaultAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(defaultAttemptQueue.getRemainCapacity(), is(0));
+        assertThat(defaultAttemptQueue.getSize(), is(1));
+        TaskAttemptQueue userAttemptQueue = queueManage.getTaskAttemptQueue("user");
+        assertThat(userAttemptQueue.getRemainCapacity(), is(1));
+        assertThat(userAttemptQueue.getSize(), is(0));
+
+    }
+
+
 
     private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass) {
         return prepareAttempt(operatorClass, operatorClass.getSimpleName());
@@ -998,6 +1073,14 @@ public class LocalExecutorTest extends CommonTestBase {
         taskRunDao.createAttempt(attempt);
 
         return attempt;
+    }
+
+    private QueueManage prepareQueueManage(){
+        Props props = new Props();
+        props.put("executor.queue","default,user");
+        props.put("executor.queue.default.capacity",0);
+        props.put("executor.queue.user.capacity",1);
+        return new QueueManage(props);
     }
 
     private String compileJar(Class<? extends KunOperator> operatorClass, String operatorClassName) {
