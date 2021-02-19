@@ -274,6 +274,7 @@ public class TaskRunService {
                 .withAttempt(latestAttempt.getAttempt() + 1)
                 .withStatus(TaskRunStatus.CREATED)
                 .build();
+        taskRunDao.createAttempt(newAttempt);
         return executor.submit(newAttempt);
     }
 
