@@ -1,7 +1,6 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch;
 
 import com.beust.jcommander.internal.Lists;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Preconditions;
 import com.google.inject.Guice;
@@ -12,9 +11,11 @@ import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.core.model.DatasetFieldType;
 import com.miotech.kun.metadata.databuilder.client.ElasticSearchClient;
+import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
 import com.miotech.kun.metadata.databuilder.exception.ElasticSearchServiceUnavailableException;
 import com.miotech.kun.metadata.databuilder.extract.schema.SchemaExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.model.ElasticSearchDataSource;
+import com.miotech.kun.metadata.databuilder.service.fieldmapping.FieldMappingService;
 import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import org.apache.commons.lang3.StringUtils;
@@ -32,6 +33,7 @@ public class ElasticSearchIndexSchemaExtractor extends SchemaExtractorTemplate {
     private final ElasticSearchDataSource elasticSearchDataSource;
     private final ElasticSearchClient elasticSearchClient;
     private final HttpClientUtil httpClientUtil;
+    private final FieldMappingService fieldMappingService;
 
     @Inject
     public ElasticSearchIndexSchemaExtractor(ElasticSearchDataSource elasticSearchDataSource, String index) {
@@ -40,6 +42,7 @@ public class ElasticSearchIndexSchemaExtractor extends SchemaExtractorTemplate {
         this.elasticSearchDataSource = elasticSearchDataSource;
         this.elasticSearchClient = new ElasticSearchClient(elasticSearchDataSource);
         this.httpClientUtil = Guice.createInjector().getInstance(HttpClientUtil.class);
+        this.fieldMappingService = ApplicationContext.getContext().getInjector().getInstance(FieldMappingService.class);
     }
 
     @Override
@@ -86,7 +89,7 @@ public class ElasticSearchIndexSchemaExtractor extends SchemaExtractorTemplate {
         }
     }
 
-    private String getEsVersion() throws JsonProcessingException {
+    private String getEsVersion() {
         String version = parseVersion(httpClientUtil.doGet("http://" + elasticSearchDataSource.getUrl()));
         if (StringUtils.isBlank(version)) {
             throw new ElasticSearchServiceUnavailableException("get es version error");
@@ -95,7 +98,7 @@ public class ElasticSearchIndexSchemaExtractor extends SchemaExtractorTemplate {
         return version;
     }
 
-    private String parseVersion(String result) throws JsonProcessingException {
+    private String parseVersion(String result) {
         Preconditions.checkState(StringUtils.isNotBlank(result), "call es, response empty");
         JsonNode root = JSONUtils.stringToJson(result);
         if (root == null || root.isEmpty()) {
@@ -115,36 +118,17 @@ public class ElasticSearchIndexSchemaExtractor extends SchemaExtractorTemplate {
         for (final JsonNode node : root.get("rows")) {
             Iterator<JsonNode> it = node.iterator();
             String name = it.next().asText();
-            if (name.endsWith("keyword"))
+            if (name.endsWith("keyword")) {
                 continue;
-            String type = it.next().asText();
-            if (type.equals("STRUCT"))
-                continue;
-            DatasetFieldType.Type fieldType;
-            switch (type) {
-                case "VARCHAR":
-                case "VARBINARY":
-                    fieldType = DatasetFieldType.Type.CHARACTER;
-                    break;
-                case "REAL":
-                case "TINYINT":
-                case "SMALLINT":
-                case "INTEGER":
-                case "BIGINT":
-                case "DOUBLE":
-                case "FLOAT":
-                    fieldType = DatasetFieldType.Type.NUMBER;
-                    break;
-                case "BOOLEAN":
-                    fieldType = DatasetFieldType.Type.BOOLEAN;
-                    break;
-                case "TIMESTAMP":
-                    fieldType = DatasetFieldType.Type.DATETIME;
-                    break;
-                default:
-                    fieldType = DatasetFieldType.Type.UNKNOW;
             }
-            datasetFields.add(new DatasetField(name, new DatasetFieldType(fieldType, type), ""));
+
+            String rawType = it.next().asText();
+            if (DatasetFieldType.Type.STRUCT.name().equals(rawType)) {
+                continue;
+            }
+
+            DatasetFieldType.Type type = fieldMappingService.parse(elasticSearchDataSource.getType().name(), rawType);
+            datasetFields.add(new DatasetField(name, new DatasetFieldType(type, rawType), ""));
         }
 
         return datasetFields;
