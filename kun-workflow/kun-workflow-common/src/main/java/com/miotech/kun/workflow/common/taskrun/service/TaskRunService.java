@@ -232,6 +232,7 @@ public class TaskRunService {
         TaskRun taskRun = taskRunOptional.get();
         // Does the same re-run request invoked in another threads?
         if (!rerunningTaskRunIds.add(taskRunId)) {
+            logger.warn("Cannot rerun taskrun instance with id = {}. Reason: another thread is attempting to re-run the same task run.", taskRunId);
             return false;
         }
 
