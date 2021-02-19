@@ -224,6 +224,7 @@ public class TaskRunService {
         // 1. Preconditions check
         Preconditions.checkArgument(Objects.nonNull(taskRunId), "Argument `taskRunId` should not be null");
         Optional<TaskRun> taskRunOptional = taskRunDao.fetchTaskRunById(taskRunId);
+        logger.info("Trying to re-run taskrun instance with id = {}.", taskRunId);
         if (!taskRunOptional.isPresent()) {
             logger.warn("Cannot rerun taskrun instance with id = {}. Reason: task run does not exists.", taskRunId);
             return false;
