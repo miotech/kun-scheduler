@@ -93,7 +93,7 @@ export async function fetchScheduledTaskRunLogWithoutErrorNotification(
 export interface FetchDeployedTasksReqParams
   extends Partial<PaginationReqBody> {
   name?: string;
-  definitionsIds?: string[];
+  definitionIds?: string[];
   ownerId?: (number | string)[];
   status?: RunStatusEnum;
   taskTemplateName?: string;
@@ -104,7 +104,12 @@ export async function fetchDeployedTasks(
   reqParams: FetchDeployedTasksReqParams,
 ): ServiceRespPromise<PaginationRespBody<DeployedTask>> {
   return get('/deployed-tasks', {
-    query: { ...reqParams },
+    query: {
+      ...reqParams,
+      definitionIds: reqParams?.definitionIds?.length
+        ? reqParams.definitionIds?.join(',')
+        : reqParams.definitionIds,
+    },
     prefix: API_DATA_PLATFORM_PREFIX,
     mockCode: 'deployed-tasks.search',
   });
