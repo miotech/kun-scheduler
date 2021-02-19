@@ -8,8 +8,10 @@ import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.core.model.DatasetFieldType;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
+import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
 import com.miotech.kun.metadata.databuilder.extract.schema.SchemaExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.model.HiveDataSource;
+import com.miotech.kun.metadata.databuilder.service.fieldmapping.FieldMappingService;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 
 import java.sql.Connection;
@@ -22,12 +24,14 @@ public class HiveTableSchemaExtractor extends SchemaExtractorTemplate {
     private final String dbName;
     private final String tableName;
     private final HiveDataSource hiveDataSource;
+    private final FieldMappingService fieldMappingService;
 
     public HiveTableSchemaExtractor(HiveDataSource hiveDataSource, String dbName, String tableName) {
         super(hiveDataSource.getId());
         this.dbName = dbName;
         this.tableName = tableName;
         this.hiveDataSource = hiveDataSource;
+        this.fieldMappingService = ApplicationContext.getContext().getInjector().getInstance(FieldMappingService.class);
     }
 
     @Override
@@ -71,9 +75,9 @@ public class HiveTableSchemaExtractor extends SchemaExtractorTemplate {
             List<DatasetField> fields = Lists.newArrayList();
             while (resultSet.next()) {
                 String name = resultSet.getString(6);
-                String type = resultSet.getString(8);
+                String rawType = resultSet.getString(8);
                 String description = resultSet.getString(9);
-                fields.add(new DatasetField(name, new DatasetFieldType(DatasetFieldType.convertRawType(type), type), description));
+                fields.add(new DatasetField(name, new DatasetFieldType(fieldMappingService.parse(hiveDataSource.getType().name(), rawType), rawType), description));
             }
 
             return fields;

@@ -85,9 +85,12 @@ public class PostgresLoader implements Loader {
     }
 
     private void writeStatisticsWithSnapshot(Long snapshotId, Dataset dataset) {
-        StatisticsSnapshot statisticsSnapshot = new StatisticsSnapshot(dataset.getTableStatistics().cloneBuilder().withStatDate(null).build(),
-                dataset.getFieldStatistics().stream().map(field -> field.cloneBuilder().withStatDate(null).build()).collect(Collectors.toList()));
+        List<FieldStatistics> fieldStatistics = null;
+        if (CollectionUtils.isNotEmpty(dataset.getFieldStatistics())) {
+            fieldStatistics = dataset.getFieldStatistics().stream().map(field -> field.cloneBuilder().withStatDate(null).build()).collect(Collectors.toList());
+        }
 
+        StatisticsSnapshot statisticsSnapshot = new StatisticsSnapshot(dataset.getTableStatistics().cloneBuilder().withStatDate(null).build(), fieldStatistics);
         dbOperator.update("UPDATE kun_mt_dataset_snapshot SET statistics_snapshot = CAST(? AS JSONB), statistics_at = ? WHERE id = ?",
                 JSONUtils.toJsonString(statisticsSnapshot), LocalDateTime.now(), snapshotId);
     }

@@ -9,14 +9,14 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-public class FieldFlatUtil {
+public class FieldTypeParser {
 
     private static final String ARRAY = "ARRAY";
 
-    private FieldFlatUtil() {
+    private FieldTypeParser() {
     }
 
-    public static List<DatasetField> flatFields(JsonNode root, String parent) {
+    public static List<DatasetField> parse(JsonNode root, String parent) {
         List<DatasetField> fieldList = new ArrayList<>();
         Iterator<String> fieldNames = root.fieldNames();
         while (fieldNames.hasNext()) {
@@ -24,18 +24,18 @@ public class FieldFlatUtil {
             String keyName = parent == null ? fieldName : String.format("%s.%s", parent, fieldName);
             JsonNode node = root.get(fieldName);
             if (node.isObject()) {
-                fieldList.addAll(flatFields(node, keyName));
+                fieldList.addAll(parse(node, keyName));
             } else if (node.isArray()) {
                 if (node.isEmpty()) {
-                    fieldList.add(new DatasetField(keyName, new DatasetFieldType(DatasetFieldType.convertRawType(ARRAY), ARRAY), ""));
+                    fieldList.add(new DatasetField(keyName, new DatasetFieldType(DatasetFieldType.Type.valueOf(ARRAY), ARRAY), ""));
                     continue;
                 }
 
                 JsonNode firstElement = node.get(0);
                 if (firstElement instanceof ObjectNode) {
-                    fieldList.addAll(flatFields(firstElement, keyName));
+                    fieldList.addAll(parse(firstElement, keyName));
                 } else {
-                    fieldList.add(new DatasetField(keyName, new DatasetFieldType(DatasetFieldType.convertRawType(ARRAY), ARRAY), ""));
+                    fieldList.add(new DatasetField(keyName, new DatasetFieldType(DatasetFieldType.Type.valueOf(ARRAY), ARRAY), ""));
                 }
             } else {
                 String fieldType = null;
@@ -45,11 +45,11 @@ public class FieldFlatUtil {
                     if (node.isNumber())
                         fieldType = "NUMBER";
                     else if (node.isTextual() || node.isBinary())
-                        fieldType = "STRING";
+                        fieldType = "CHARACTER";
                     else if (node.isBoolean())
-                        fieldType = "BOOL";
+                        fieldType = "BOOLEAN";
                 }
-                DatasetField field = new DatasetField(keyName, new DatasetFieldType(DatasetFieldType.convertRawType(fieldType), fieldType), "");
+                DatasetField field = new DatasetField(keyName, new DatasetFieldType(DatasetFieldType.Type.valueOf(fieldType), fieldType), "");
                 fieldList.add(field);
             }
         }
