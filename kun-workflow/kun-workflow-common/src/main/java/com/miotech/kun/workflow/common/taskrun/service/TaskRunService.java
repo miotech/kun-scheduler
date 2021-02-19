@@ -268,6 +268,8 @@ public class TaskRunService {
 
     private boolean submitReRunToExecutor(TaskRun taskRun, TaskAttemptProps latestAttempt) {
         Preconditions.checkNotNull(taskRun);
+        // TODO: @yide 不应该在TaskManager以外的地方直接构造TaskAttempt并提交给Executor，否则依赖等会有问题，
+        // 因为依赖的管理目前是由TaskManager完成的。
         TaskAttempt newAttempt = TaskAttempt.newBuilder()
                 .withId(WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), latestAttempt.getAttempt() + 1))
                 .withTaskRun(taskRun)
