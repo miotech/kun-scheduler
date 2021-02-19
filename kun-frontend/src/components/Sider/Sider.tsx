@@ -2,39 +2,16 @@ import React, { memo, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { IRoute, Link } from 'umi';
 import { Layout, Menu } from 'antd';
-import _ from 'lodash';
-import {
-  FileTextOutlined,
-  SettingOutlined,
-  SnippetsOutlined,
-  FilePdfOutlined,
-  CalendarOutlined,
-  ApartmentOutlined,
-  ToolOutlined,
-  LineChartOutlined,
-} from '@ant-design/icons';
+import take from 'lodash/take';
 import { RootState } from '@/rematch/store';
 import hasOptionalPermissions from '@/utils/hasOptionalPermissions';
+
+import { iconComponentMap } from './iconmap';
 
 import css from './Sider.less';
 
 const { Sider: AntdSider } = Layout;
 const { SubMenu } = Menu;
-
-interface IconCompMap {
-  [key: string]: React.ReactNode;
-}
-
-const iconCompMap: IconCompMap = {
-  FileTextOutlined: <FileTextOutlined />,
-  SettingOutlined: <SettingOutlined />,
-  SnippetsOutlined: <SnippetsOutlined />,
-  FilePdfOutlined: <FilePdfOutlined />,
-  CalendarOutlined: <CalendarOutlined />,
-  ToolOutlined: <ToolOutlined />,
-  ApartmentOutlined: <ApartmentOutlined />,
-  LineChartOutlined: <LineChartOutlined />,
-};
 
 interface Props {
   route: IRoute;
@@ -64,7 +41,7 @@ export default memo(function Sider({ route }: Props) {
     }
     const resultList: string[] = [];
     usablePathList.forEach((i, index) => {
-      resultList.push(_.take(usablePathList, index + 1).join('/') || '/');
+      resultList.push(take(usablePathList, index + 1).join('/') || '/');
     });
     return resultList;
   }, [currentPath]);
@@ -85,7 +62,7 @@ export default memo(function Sider({ route }: Props) {
           return (
             <SubMenu
               key={routeItem.path}
-              icon={iconCompMap[icon]}
+              icon={iconComponentMap[icon]}
               title={routeItem.title}
             >
               {childCompArray}
@@ -95,7 +72,7 @@ export default memo(function Sider({ route }: Props) {
         return (
           <Menu.Item
             key={routeItem.path}
-            icon={iconCompMap[icon]}
+            icon={iconComponentMap[icon]}
             title={routeItem.title}
           >
             <Link to={routeItem.path || '/'}>{routeItem.title}</Link>

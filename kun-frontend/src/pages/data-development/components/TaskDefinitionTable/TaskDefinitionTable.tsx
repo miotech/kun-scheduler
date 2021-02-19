@@ -31,6 +31,7 @@ interface OwnProps {
   onRemoveTaskDefsFromView?: (taskDefIds: string[], viewId: string) => any;
   selectedTaskDefIds?: string[];
   setSelectedTaskDefIds?: (keys: string[]) => any;
+  onClickRunBackfill?: (keys: string[]) => any;
 }
 
 type Props = OwnProps;
@@ -46,6 +47,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(
       selectedTaskDefIds,
       setSelectedTaskDefIds,
       onRemoveTaskDefsFromView,
+      onClickRunBackfill,
     } = props;
 
     const [pageNum, setPageNum] = useState<number>(1);
@@ -210,6 +212,9 @@ export const TaskDefinitionTable: React.FC<Props> = memo(
                 type="link"
                 disabled={!(selectedTaskDefIds ?? selectedRowKeys).length}
                 onClick={() => {
+                  if (setSelectedTaskDefIds) {
+                    setSelectedTaskDefIds([]);
+                  }
                   setSelectedRowKeys([]);
                 }}
               >
@@ -266,6 +271,16 @@ export const TaskDefinitionTable: React.FC<Props> = memo(
             ) : (
               <></>
             )}
+            <Button
+              disabled={(selectedTaskDefIds?.length || 0) === 0}
+              onClick={() => {
+                if (onClickRunBackfill) {
+                  onClickRunBackfill(selectedTaskDefIds || []);
+                }
+              }}
+            >
+              {t('dataDevelopment.runBackfill')}
+            </Button>
           </Space>
         </header>
         <Table<TaskDefinition>
