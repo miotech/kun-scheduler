@@ -7,7 +7,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.DatasetField;
-import com.miotech.kun.metadata.databuilder.extract.tool.FieldFlatUtil;
+import com.miotech.kun.metadata.databuilder.extract.tool.FieldTypeParser;
 import com.miotech.kun.metadata.databuilder.extract.schema.SchemaExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.model.MongoDataSource;
 import com.miotech.kun.workflow.core.model.lineage.MongoDataStore;
@@ -45,7 +45,7 @@ public class MongoDBCollectionSchemaExtractor extends SchemaExtractorTemplate {
             Document document = documents.find().first();
             if (document != null) {
                 JsonNode jsonNode = objectMapper.convertValue(document, JsonNode.class);
-                fields = FieldFlatUtil.flatFields(jsonNode, null);
+                fields = FieldTypeParser.parse(jsonNode, null);
             }
 
             return fields;

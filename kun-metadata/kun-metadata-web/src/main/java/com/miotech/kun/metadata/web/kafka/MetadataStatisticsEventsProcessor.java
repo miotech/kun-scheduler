@@ -4,7 +4,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.metadata.core.model.mce.MetadataStatisticsEvent;
+import com.miotech.kun.metadata.core.model.event.MetadataStatisticsEvent;
 import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;

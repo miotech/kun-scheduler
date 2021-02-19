@@ -1,11 +1,11 @@
 package com.miotech.kun.metadata.databuilder.operator;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.builder.MSEBuilder;
 import com.miotech.kun.metadata.databuilder.constant.StatisticsMode;
+import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
 import com.miotech.kun.workflow.core.execution.*;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
@@ -17,12 +17,12 @@ import static com.miotech.kun.metadata.databuilder.constant.OperatorKey.*;
 
 public class MSEOperator extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(MSEOperator.class);
-
-    private OperatorContext operatorContext;
+    private Props props;
 
     @Override
     public void init() {
-        operatorContext = getContext();
+        props = buildPropsFromVariable(getContext());
+        ApplicationContext.init(props);
     }
 
     @Override
@@ -30,20 +30,19 @@ public class MSEOperator extends KunOperator {
         DataSource dataSource = null;
         try {
             if (logger.isDebugEnabled()) {
-                logger.debug("MSEOperator use operatorContext: {}", operatorContext.getConfig());
+                logger.debug("MSEOperator use props: {}", ApplicationContext.getContext().getProps());
             }
 
-            Props props = buildPropsFromVariable();
-            Injector injector = Guice.createInjector(new BuilderModule(props));
+            Injector injector = ApplicationContext.getContext().getInjector();
             dataSource = injector.getInstance(DataSource.class);
             MSEBuilder dataBuilder = injector.getInstance(MSEBuilder.class);
-            dataBuilder.extractStatistics(Long.parseLong(operatorContext.getConfig().getString(GID)),
-                    Long.parseLong(operatorContext.getConfig().getString(SNAPSHOT_ID)),
-                    StatisticsMode.valueOf(operatorContext.getConfig().getString(STATISTICS_MODE).toUpperCase()));
+            dataBuilder.extractStatistics(Long.parseLong(props.getString(GID)),
+                    Long.parseLong(props.getString(SNAPSHOT_ID)),
+                    StatisticsMode.valueOf(props.getString(STATISTICS_MODE).toUpperCase()));
 
             return true;
         } catch (Exception e) {
-            logger.error("MCEOperator run error:", e);
+            logger.error("MSEOperator run error:", e);
             throw ExceptionUtils.wrapIfChecked(e);
         } finally {
             if (dataSource instanceof HikariDataSource) {
@@ -75,12 +74,12 @@ public class MSEOperator extends KunOperator {
         return new NopResolver();
     }
 
-    private Props buildPropsFromVariable() {
-        Props props = new Props();
-        props.put(DATASOURCE_JDBC_URL, operatorContext.getConfig().getString(DATASOURCE_JDBC_URL));
-        props.put(DATASOURCE_USERNAME, operatorContext.getConfig().getString(DATASOURCE_USERNAME));
-        props.put(DATASOURCE_PASSWORD, operatorContext.getConfig().getString(DATASOURCE_PASSWORD));
-        props.put(DATASOURCE_DRIVER_CLASS_NAME, operatorContext.getConfig().getString(DATASOURCE_DRIVER_CLASS_NAME));
+    private Props buildPropsFromVariable(OperatorContext operatorContext) {
+        Props props = PropsBuilder.putConn(operatorContext);
+
+        props.put(GID, operatorContext.getConfig().getString(GID));
+        props.put(SNAPSHOT_ID, operatorContext.getConfig().getString(SNAPSHOT_ID));
+        props.put(STATISTICS_MODE, operatorContext.getConfig().getString(STATISTICS_MODE));
         return props;
     }
 

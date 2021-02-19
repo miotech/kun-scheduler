@@ -1,11 +1,11 @@
 package com.miotech.kun.metadata.databuilder.operator;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.builder.MCEBuilder;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
+import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
 import com.miotech.kun.workflow.core.execution.*;
 import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
@@ -17,11 +17,12 @@ import static com.miotech.kun.metadata.databuilder.constant.OperatorKey.*;
 
 public class MCEOperator extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(MCEOperator.class);
-    private OperatorContext operatorContext;
+    private Props props;
 
     @Override
     public void init() {
-        operatorContext = getContext();
+        props = buildPropsFromVariable(getContext());
+        ApplicationContext.init(props);
     }
 
     @Override
@@ -29,27 +30,26 @@ public class MCEOperator extends KunOperator {
         DataSource dataSource = null;
         try {
             if (logger.isDebugEnabled()) {
-                logger.debug("MCEOperator use operatorContext: {}", operatorContext.getConfig());
+                logger.debug("MCEOperator use props: {}", ApplicationContext.getContext().getProps());
             }
 
-            Props props = buildPropsFromVariable();
-            Injector injector = Guice.createInjector(new BuilderModule(props));
+            Injector injector = ApplicationContext.getContext().getInjector();
             dataSource = injector.getInstance(DataSource.class);
             MCEBuilder dataBuilder = injector.getInstance(MCEBuilder.class);
 
-            String deployModeStr = operatorContext.getConfig().getString(DEPLOY_MODE);
+            String deployModeStr = props.getString(DEPLOY_MODE);
             DataBuilderDeployMode deployMode = DataBuilderDeployMode.resolve(deployModeStr);
             switch (deployMode) {
                 case DATASOURCE:
-                    Long datasourceId = Long.parseLong(operatorContext.getConfig().getString(DATASOURCE_ID));
+                    Long datasourceId = Long.parseLong(props.getString(DATASOURCE_ID));
                     dataBuilder.extractSchemaOfDataSource(datasourceId);
                     break;
                 case DATASET:
-                    Long gid = Long.parseLong(operatorContext.getConfig().getString(GID));
+                    Long gid = Long.parseLong(props.getString(GID));
                     dataBuilder.extractSchemaOfDataset(gid);
                     break;
                 case PUSH:
-                    dataBuilder.extractSchemaOfPush(operatorContext.getConfig().getString(MCE));
+                    dataBuilder.extractSchemaOfPush(props.getString(MCE));
                     break;
                 default:
                     throw new IllegalArgumentException("Invalid deployMode: " + deployModeStr);
@@ -92,15 +92,15 @@ public class MCEOperator extends KunOperator {
         return new NopResolver();
     }
 
-    private Props buildPropsFromVariable() {
-        Props props = new Props();
-        props.put(DATASOURCE_JDBC_URL, operatorContext.getConfig().getString(DATASOURCE_JDBC_URL));
-        props.put(DATASOURCE_USERNAME, operatorContext.getConfig().getString(DATASOURCE_USERNAME));
-        props.put(DATASOURCE_PASSWORD, operatorContext.getConfig().getString(DATASOURCE_PASSWORD));
-        props.put(DATASOURCE_DRIVER_CLASS_NAME, operatorContext.getConfig().getString(DATASOURCE_DRIVER_CLASS_NAME));
+    private Props buildPropsFromVariable(OperatorContext operatorContext) {
+        Props props = PropsBuilder.putConn(operatorContext);
 
+        props.put(DEPLOY_MODE, operatorContext.getConfig().getString(DEPLOY_MODE));
+        props.put(DATASOURCE_ID, operatorContext.getConfig().getString(DATASOURCE_ID));
         props.put(BROKERS, operatorContext.getConfig().getString(BROKERS));
         props.put(MSE_TOPIC, operatorContext.getConfig().getString(MSE_TOPIC));
+        props.put(GID, operatorContext.getConfig().getString(GID));
+        props.put(MCE, operatorContext.getConfig().getString(MCE));
         return props;
     }
 
