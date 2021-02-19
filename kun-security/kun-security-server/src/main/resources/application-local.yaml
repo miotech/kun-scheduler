@@ -38,6 +38,9 @@ spring:
 security:
   auth:
     type: ${SECURITY_AUTH_TYPE:DAO}
+  admin:
+    username: admin
+    password: admin
 
 liquigraph:
   change-log: classpath:security/db/migration/changelog.xml
