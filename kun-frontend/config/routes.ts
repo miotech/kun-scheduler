@@ -41,7 +41,7 @@ export const appRoutes = [
       {
         title: 'common.pageTitle.dataDiscovery',
         path: '/data-discovery',
-        icon: 'FileTextOutlined',
+        icon: 'DataDiscovery',
         menuDisplay: true,
         showChildren: false,
         breadcrumbLink: true,
@@ -172,7 +172,7 @@ export const appRoutes = [
       {
         title: 'common.pageTitle.dataDevelopment',
         path: '/data-development',
-        icon: 'ApartmentOutlined',
+        icon: 'DataDevelopment',
         menuDisplay: true,
         routes: [
           {
@@ -207,16 +207,17 @@ export const appRoutes = [
         title: 'common.pageTitle.operationCenter',
         menuDisplay: true,
         path: '/operation-center',
-        icon: 'ToolOutlined',
+        icon: 'OperationCenter',
         showChildren: true,
         routes: [
           {
             title: 'common.pageTitle.operationCenter.scheduledTasks',
             path: './scheduled-tasks',
             menuDisplay: true,
-            icon: 'CalendarOutlined',
+            icon: 'TaskScheduled',
             routes: [
               {
+                title: 'common.pageTitle.operationCenter.scheduledTasks',
                 path: '.',
                 exact: true,
                 component: '@/pages/operation-center/scheduled-tasks',
@@ -240,6 +241,25 @@ export const appRoutes = [
               },
               {
                 component: 'error-page/Error404/index',
+              },
+            ],
+          },
+          {
+            title: 'common.pageTitle.operationCenter.backfillTasks',
+            path: './backfill-tasks',
+            menuDisplay: true,
+            icon: 'TaskInstant',
+            routes: [
+              {
+                title: 'common.pageTitle.operationCenter.backfillTasks',
+                path: '.',
+                exact: true,
+                component: '@/pages/operation-center/backfill-tasks',
+                wrappers: [
+                  '@/wrappers/path',
+                  '@/wrappers/isLogin',
+                  '@/wrappers/permission',
+                ],
               },
             ],
           },

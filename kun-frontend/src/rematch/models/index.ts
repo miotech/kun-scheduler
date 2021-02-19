@@ -9,6 +9,7 @@ import { scheduledTasks } from './operationCenter/scheduledTasks';
 import { deployedTaskDetail } from './operationCenter/deployedTaskDetail';
 import { monitoringDashboard } from './monitoringDashboard';
 import { lineage } from './lineage';
+import { backfillTasks } from './operationCenter/backfillTasks';
 
 export interface RootModel {
   user: typeof user;
@@ -19,6 +20,7 @@ export interface RootModel {
   glossary: typeof glossary;
   dataDevelopment: typeof dataDevelopment;
   scheduledTasks: typeof scheduledTasks;
+  backfillTasks: typeof backfillTasks;
   deployedTaskDetail: typeof deployedTaskDetail;
   monitoringDashboard: typeof monitoringDashboard;
   lineage: typeof lineage;
@@ -33,6 +35,7 @@ export const models: RootModel = {
   glossary,
   dataDevelopment,
   scheduledTasks,
+  backfillTasks,
   deployedTaskDetail,
   monitoringDashboard,
   lineage,
