@@ -513,9 +513,9 @@ public class TaskRunServiceTest extends CommonTestBase {
 
     private void mockExecutorOnSubmit() {
         Mockito.doAnswer(invocation -> {
-            TaskAttempt attempt = invocation.getArgument(0);
-            TaskAttemptProps persistedLatestAttempt = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
-            return persistedLatestAttempt.getStatus().isFinished();
+            TaskAttempt attemptArgument = invocation.getArgument(0);
+            TaskAttemptProps persistedLatestAttempt = taskRunDao.fetchLatestTaskAttempt(attemptArgument.getTaskRun().getId());
+            return persistedLatestAttempt.getId().equals(attemptArgument.getId());
         }).when(executor).submit(Mockito.isA(TaskAttempt.class));
     }
 }
