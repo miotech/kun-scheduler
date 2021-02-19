@@ -1035,6 +1035,7 @@ public class TaskRunDao {
                     .withLogPath(rs.getString(column("log_path", tableAlias)))
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(column("start_at", tableAlias))))
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(column("end_at", tableAlias))))
+                    .withQueueName(rs.getString(column("queue_name", tableAlias)))
                     .build();
         }
     }
