@@ -415,5 +415,7 @@ export default {
   "operationCenter.backfill.taskrun.operation.rerun": "重新运行",
   "operationCenter.backfill.taskrun.operation.logs": "查看日志",
   "operationCenter.backfill.operation.stopAll.alert": "确认停止当前回填实例中的所有任务吗？",
-  "operationCenter.backfill.operation.rerun.alert": "确认重新运行当前回填实例中的所有任务吗？"
+  "operationCenter.backfill.operation.rerun.alert": "确认重新运行当前回填实例中的所有任务吗？",
+  "operationCenter.taskrun.operation.stop.alert": "确认停止这个任务吗？",
+  "operationCenter.taskrun.operation.rerun.alert": "确认重新运行这个任务吗？"
 }

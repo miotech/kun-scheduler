@@ -267,6 +267,14 @@ public class WorkflowApi {
         return put(url, Maps.newHashMap(), Object.class);
     }
 
+    public Object restartTaskRun(Long taskRunId) {
+        HttpUrl url = buildUrl(API_TASK_RUNS)
+                .addPathSegment(taskRunId.toString())
+                .addPathSegment("_rerun")
+                .build();
+        return post(url, Maps.newHashMap(), Object.class);
+    }
+
     public TaskRunState getTaskRunStatus(Long taskRunId) {
         HttpUrl url = buildUrl(API_TASK_RUNS)
                 .addPathSegment(taskRunId.toString())
