@@ -15,10 +15,12 @@ import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -30,7 +32,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.*;
+import java.util.concurrent.*;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
@@ -388,4 +392,130 @@ public class TaskRunServiceTest extends CommonTestBase {
         }
     }
 
+    @Test
+    public void rerunTaskRun_whenLatestAttemptIsFinished_shouldSubmitNewAttemptToExecutor() {
+        // 1. Prepare
+        TaskRun taskRunFailed = prepareTaskRunAndTaskAttempt(TaskRunStatus.FAILED);
+        mockExecutorOnSubmit();
+
+        // 2. Process
+        boolean rerunSuccessfully = taskRunService.rerunTaskRun(taskRunFailed.getId());
+
+        // 3. Validate
+        assertTrue(rerunSuccessfully);
+    }
+
+    @Test
+    public void rerunTaskRun_whenLatestAttemptNotFinished_shouldProduceNoEffect() {
+        // 1. Prepare
+        TaskRun taskRunFailed = prepareTaskRunAndTaskAttempt(TaskRunStatus.RUNNING);
+        mockExecutorOnSubmit();
+
+        // 2. Process
+        boolean rerunSuccessfully = taskRunService.rerunTaskRun(taskRunFailed.getId());
+
+        // 3. Validate
+        assertFalse(rerunSuccessfully);
+    }
+
+    @Test
+    public void rerunTaskRun_whenTaskRunDoesNotExist_shouldProduceNoEffect() {
+        // 1. Prepare
+        mockExecutorOnSubmit();
+
+        // 2. Process
+        boolean rerunSuccessfully = taskRunService.rerunTaskRun(1234567L);
+
+        // 3. Validate
+        assertFalse(rerunSuccessfully);
+    }
+
+    @Test
+    public void rerunTaskRun_whenLatestAttemptNotFound_shouldThrowIllegalStateException() {
+        // 1. Prepare a task run but does not create any task run
+        TaskRun preparedTaskRunWithoutAttempt = prepareData();
+
+        try {
+            taskRunService.rerunTaskRun(preparedTaskRunWithoutAttempt.getId());
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalStateException.class));
+        }
+    }
+
+    @Test
+    public void rerunTaskRun_whenConcurrentlyInvoked_shouldOnlyTakeOneEffect() throws Exception {
+        // 1. Prepare
+        TaskRun taskRunFailed = prepareTaskRunAndTaskAttempt(TaskRunStatus.FAILED);
+        mockExecutorOnSubmit();
+
+        List<RunnableFuture> futures = new ArrayList<>();
+        for (int i = 0; i < 5; ++i) {
+            futures.add(new FutureTask(() -> {
+                return taskRunService.rerunTaskRun(taskRunFailed.getId());
+            }));
+        }
+
+        // 2. Process
+        ExecutorService es = Executors.newCachedThreadPool();
+        futures.forEach(future -> {
+            es.execute(future);
+        });
+        int successCount = 0;
+        for (int i = 0; i < 5; ++i) {
+            Boolean rerunSuccessFlag = (Boolean) futures.get(i).get();
+            if (rerunSuccessFlag) {
+                successCount += 1;
+            }
+        }
+
+        // 3. Validate
+        assertThat(successCount, is(1));
+    }
+
+    private TaskRun prepareTaskRunAndTaskAttempt(TaskRunStatus runStatus) {
+        long taskId = WorkflowIdGenerator.nextTaskId();
+        long taskRunId = WorkflowIdGenerator.nextTaskRunId();
+        long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId, 1);
+
+        Task task = Task.newBuilder().withId(taskId)
+                .withName("test task")
+                .withDescription("")
+                .withOperatorId(1L)
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withConfig(Config.EMPTY)
+                .withDependencies(new ArrayList<>())
+                .withTags(new ArrayList<>())
+                .build();
+        taskDao.create(task);
+
+        TaskRun taskRun = TaskRun.newBuilder()
+                .withId(taskRunId)
+                .withTask(task)
+                .withStatus(runStatus)
+                .withConfig(Config.EMPTY)
+                .withScheduleType(task.getScheduleConf().getType())
+                .withDependentTaskRunIds(Collections.emptyList())
+                .withInlets(Collections.emptyList())
+                .withOutlets(Collections.emptyList())
+                .withScheduledTick(new Tick(""))
+                .build();
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(TaskAttempt.newBuilder()
+                .withId(taskAttemptId)
+                .withTaskRun(taskRun)
+                .withAttempt(1)
+                .withStatus(runStatus)
+                .build()
+        );
+        return taskRun;
+    }
+
+    private void mockExecutorOnSubmit() {
+        Mockito.doAnswer(invocation -> {
+            TaskAttempt attempt = invocation.getArgument(0);
+            TaskAttemptProps persistedLatestAttempt = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
+            return persistedLatestAttempt.getStatus().isFinished();
+        }).when(executor).submit(Mockito.isA(TaskAttempt.class));
+    }
 }

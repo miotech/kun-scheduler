@@ -11,7 +11,9 @@ import { BackfillModelState } from '@/rematch/models/operationCenter/backfillTas
 import { BackfillDetail } from '@/definitions/Backfill.type';
 
 import {
+  abortTaskRunInstance,
   rerunBackfillInstance,
+  restartTaskRunInstance,
   stopBackfillInstance,
 } from '@/services/data-backfill/backfill.services';
 import css from './index.less';
@@ -118,6 +120,28 @@ export const BackfillTaskView: React.FC<Props> = memo(
       [fetchData],
     );
 
+    const handleRestartTaskRun = useCallback(
+      async function handleRestartTaskRun(taskRunId: string) {
+        try {
+          await restartTaskRunInstance(taskRunId);
+        } finally {
+          fetchData();
+        }
+      },
+      [fetchData],
+    );
+
+    const handleAbortTaskRun = useCallback(
+      async function handleAbortTaskRun(taskRunId: string) {
+        try {
+          await abortTaskRunInstance(taskRunId);
+        } finally {
+          fetchData();
+        }
+      },
+      [fetchData],
+    );
+
     return (
       <div id="backfill-task-view">
         <main id="backfill-task-view-main-content" className={css.MainContent}>
@@ -140,6 +164,8 @@ export const BackfillTaskView: React.FC<Props> = memo(
               loading={tableIsLoading}
               onClickStopBackfill={handleStopBackfillInstance}
               onClickRerunBackfill={handleRerunBackfillInstance}
+              onClickRerunTaskRun={handleRestartTaskRun}
+              onClickStopTaskRun={handleAbortTaskRun}
             />
           </Card>
         </main>
