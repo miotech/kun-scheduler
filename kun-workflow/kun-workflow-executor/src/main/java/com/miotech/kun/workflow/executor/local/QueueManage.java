@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor.local;
 
+import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ public class QueueManage {
     private Condition hasElement = lock.newCondition();
     private static Logger logger = LoggerFactory.getLogger(QueueManage.class);
     private final Integer DEFAULT_WORKER_TOKEN_SIZE = 8;
+    private final String DEFAULT_QUEUE = "default";
 
 
     public QueueManage(Props props) {
@@ -26,7 +28,7 @@ public class QueueManage {
         List<String> queueNames = props.getStringList("executor.queue");
         logger.info("init queueManage , size = {}", queueNames.size());
         if (queueNames.size() == 0) {
-            TaskAttemptQueue queue = new TaskAttemptQueue("default", DEFAULT_WORKER_TOKEN_SIZE);
+            TaskAttemptQueue queue = new TaskAttemptQueue(DEFAULT_QUEUE, DEFAULT_WORKER_TOKEN_SIZE);
             queueMap.put(queue.getName(), queue);
         }
         for (String queueName : queueNames) {
@@ -42,10 +44,10 @@ public class QueueManage {
     public void submit(TaskAttempt taskAttempt) {
         lock.lock();
         try {
-            String queueName = taskAttempt.getQueueName() != null ? taskAttempt.getQueueName() : "default";
-            TaskAttemptQueue queue = queueMap.get(queueName);
+            Preconditions.checkNotNull(taskAttempt.getQueueName(), "Invalid argument `queueName`: null");
+            TaskAttemptQueue queue = queueMap.get(taskAttempt.getQueueName());
             if (queue == null) {
-                throw new NoSuchElementException("no such queue,name = " + queueName);
+                throw new NoSuchElementException("no such queue,name = " + taskAttempt.getQueueName());
             }
             queue.add(taskAttempt);
             if (queue.getSize() == 1) {

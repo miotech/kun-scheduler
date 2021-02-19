@@ -301,9 +301,7 @@ public class Props {
     }
 
     /**
-     * Returns the String list representation of the value. If the value is null, then a
-     * UndefinedPropertyException will be thrown. If the value isn't a double, then a parse exception
-     * will be thrown.
+     * Returns the String list representation of the value.
      */
     public List<String> getStringList(final String name, final String sep) {
         final String val = get(name);
@@ -320,9 +318,7 @@ public class Props {
     }
 
     /**
-     * Returns the String list representation of the value. If the value is null, then a
-     * UndefinedPropertyException will be thrown. If the value isn't a double, then a parse exception
-     * will be thrown.
+     * Returns a list of strings with the comma as the separator of the value
      */
     public List<String> getStringList(final String name) {
         return getStringList(name, ",");
