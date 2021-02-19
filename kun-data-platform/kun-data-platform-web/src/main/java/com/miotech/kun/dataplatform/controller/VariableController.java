@@ -1,8 +1,9 @@
 package com.miotech.kun.dataplatform.controller;
 
 import com.miotech.kun.common.model.RequestResult;
-import com.miotech.kun.dataplatform.constant.VariableNamespace;
+import com.miotech.kun.dataplatform.config.WorkflowConfig;
 import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.client.model.VariableUpsertVO;
 import com.miotech.kun.workflow.client.model.VariableVO;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -20,7 +21,7 @@ public class VariableController {
     private WorkflowClient workflowClient;
 
     @Autowired
-    private VariableNamespace variableNamespace;
+    private WorkflowConfig workflowConfig;
 
     @GetMapping("/variables")
     public RequestResult<List<VariableVO>> fetchAllVariables() {
@@ -33,9 +34,9 @@ public class VariableController {
     }
 
     @PostMapping("/variables")
-    public RequestResult<VariableVO> createVariable(@RequestBody VariableVO createVO) {
+    public RequestResult<VariableVO> createVariable(@RequestBody VariableUpsertVO createVO) {
         try {
-            VariableVO resultVO = workflowClient.createVariable(createVO);
+            VariableVO resultVO = workflowClient.createVariable(convertUpsertVO(createVO));
             return RequestResult.success(resultVO);
         } catch (Exception e) {
             return RequestResult.error(e.getMessage());
@@ -43,9 +44,9 @@ public class VariableController {
     }
 
     @PutMapping("/variables")
-    public RequestResult<VariableVO> updateVariable(@RequestBody VariableVO createVO) {
+    public RequestResult<VariableVO> updateVariable(@RequestBody VariableUpsertVO createVO) {
         try {
-            VariableVO resultVO = workflowClient.updateVariable(createVO);
+            VariableVO resultVO = workflowClient.updateVariable(convertUpsertVO(createVO));
             return RequestResult.success(resultVO);
         } catch (Exception e) {
             return RequestResult.error(e.getMessage());
@@ -55,10 +56,19 @@ public class VariableController {
     @DeleteMapping("/variables/{key}")
     public RequestResult<Boolean> deleteVariable(@PathVariable String key) {
         try {
-            Boolean successFlag = workflowClient.deleteVariable(variableNamespace.toString(), key);
+            Boolean successFlag = workflowClient.deleteVariable(workflowConfig.getVariableNamespace(), key);
             return RequestResult.success(successFlag);
         } catch (Exception e) {
             return RequestResult.error(e.getMessage());
         }
+    }
+
+    private VariableVO convertUpsertVO(VariableUpsertVO upsertVO) {
+        return VariableVO.newBuilder()
+                .withNamespace(workflowConfig.getVariableNamespace())
+                .withKey(upsertVO.getKey())
+                .withValue(upsertVO.getValue())
+                .withEncrypted(upsertVO.isEncrypted())
+                .build();
     }
 }

@@ -1,6 +1,5 @@
 package com.miotech.kun.dataplatform.config;
 
-import com.miotech.kun.dataplatform.constant.VariableNamespace;
 import com.miotech.kun.workflow.client.DefaultWorkflowClient;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,8 +22,7 @@ public class WorkflowConfig {
     @Value("${workflow.variableNamespace}")
     private String variableNamespace = "dataplatform";
 
-    @Bean
-    public VariableNamespace getVariableNamespace() {
-        return new VariableNamespace(this.variableNamespace);
+    public String getVariableNamespace() {
+        return this.variableNamespace;
     }
 }
