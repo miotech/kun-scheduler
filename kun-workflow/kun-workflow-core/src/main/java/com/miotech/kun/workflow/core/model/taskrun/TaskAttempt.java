@@ -22,13 +22,16 @@ public class TaskAttempt {
 
     private final TaskRunStatus status;
 
+    private final String queueName;
+
     private final String logPath;
 
     private final OffsetDateTime startAt;
 
     private final OffsetDateTime endAt;
 
-    public TaskAttempt(Long id, TaskRun taskRun, int attempt, TaskRunStatus status, String logPath, OffsetDateTime startAt, OffsetDateTime endAt) {
+    public TaskAttempt(Long id, TaskRun taskRun, int attempt, TaskRunStatus status,
+                       String logPath, OffsetDateTime startAt, OffsetDateTime endAt,String queueName) {
         checkNotNull(taskRun, "taskRun should not be null.");
         checkNotNull(taskRun.getTask(), "task should not be null.");
         this.id = id;
@@ -38,6 +41,7 @@ public class TaskAttempt {
         this.logPath = logPath;
         this.startAt = startAt;
         this.endAt = endAt;
+        this.queueName = queueName;
     }
 
     public Long getId() {
@@ -76,6 +80,10 @@ public class TaskAttempt {
         return getTaskRun().getTask().getName();
     }
 
+    public String getQueueName() {
+        return queueName;
+    }
+
     public static TaskAttempt.Builder newBuilder() {
         return new TaskAttempt.Builder();
     }
@@ -88,7 +96,8 @@ public class TaskAttempt {
                 .withStatus(status)
                 .withLogPath(logPath)
                 .withStartAt(startAt)
-                .withEndAt(endAt);
+                .withEndAt(endAt)
+                .withQueueName(queueName);
     }
 
     @Override
@@ -98,6 +107,7 @@ public class TaskAttempt {
                 ", taskRun=" + taskRun +
                 ", attempt=" + attempt +
                 ", status=" + status +
+                ", queueName='" + queueName + '\'' +
                 ", logPath='" + logPath + '\'' +
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +
@@ -113,6 +123,7 @@ public class TaskAttempt {
         private String logPath;
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
+        private String queueName;
 
         private Builder() {
         }
@@ -152,8 +163,13 @@ public class TaskAttempt {
             return this;
         }
 
+        public Builder withQueueName(String queueName){
+            this.queueName = queueName;
+            return this;
+        }
+
         public TaskAttempt build() {
-            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt);
+            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt,queueName);
         }
     }
 }

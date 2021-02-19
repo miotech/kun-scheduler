@@ -19,6 +19,7 @@ public class TaskPropsVO {
     private final ScheduleConf scheduleConf;
     private final List<TaskDependencyVO> dependencies;
     private final List<Tag> tags;
+    private final String queueName;
 
     private TaskPropsVO(TaskPropsVOBuilder builder) {
         this.name = builder.name;
@@ -28,6 +29,7 @@ public class TaskPropsVO {
         this.scheduleConf = builder.scheduleConf;
         this.dependencies = builder.dependencies;
         this.tags = builder.tags;
+        this.queueName = builder.queueName;
     }
 
     public static TaskPropsVOBuilder newBuilder() {
@@ -53,6 +55,7 @@ public class TaskPropsVO {
                 .withScheduleConf(task.getScheduleConf())
                 .withDependencies(dependencies)
                 .withTags(task.getTags())
+                .withQueueName(task.getQueueName())
                 .build();
     }
 
@@ -93,6 +96,11 @@ public class TaskPropsVO {
 
     public List<TaskDependencyVO> getDependencies() { return dependencies; }
 
+
+    public String getQueueName() {
+        return queueName;
+    }
+
     @JsonPOJOBuilder
     public static final class TaskPropsVOBuilder {
         private String name;
@@ -102,6 +110,7 @@ public class TaskPropsVO {
         private ScheduleConf scheduleConf;
         private List<TaskDependencyVO> dependencies;
         private List<Tag> tags;
+        private String queueName;
 
         private TaskPropsVOBuilder() {
         }
@@ -138,6 +147,11 @@ public class TaskPropsVO {
 
         public TaskPropsVOBuilder withTags(List<Tag> tags) {
             this.tags = tags;
+            return this;
+        }
+
+        public TaskPropsVOBuilder withQueueName(String queueName){
+            this.queueName = queueName;
             return this;
         }
 

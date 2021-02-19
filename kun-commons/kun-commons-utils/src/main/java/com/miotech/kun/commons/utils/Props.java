@@ -301,6 +301,30 @@ public class Props {
     }
 
     /**
+     * Returns the String list representation of the value.
+     */
+    public List<String> getStringList(final String name, final String sep) {
+        final String val = get(name);
+        if (val == null || val.trim().length() == 0) {
+            return Collections.emptyList();
+        }
+
+        if (containsKey(name)) {
+            return Arrays.asList(val.split(sep));
+        } else {
+            throw new UndefinedPropertyException("Missing required property '" + name
+                    + "'");
+        }
+    }
+
+    /**
+     * Returns a list of strings with the comma as the separator of the value
+     */
+    public List<String> getStringList(final String name) {
+        return getStringList(name, ",");
+    }
+
+    /**
      * Clones the Props p object.
      */
     public static Props clone(final Props p) {

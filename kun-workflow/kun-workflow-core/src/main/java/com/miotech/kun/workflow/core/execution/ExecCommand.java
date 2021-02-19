@@ -8,6 +8,7 @@ public class ExecCommand {
     private String registerUrl;
     private Long taskRunId;
     private Long taskAttemptId;
+    private String queueName;
     private Boolean keepAlive;
 
     public String getJarPath() {
@@ -72,5 +73,13 @@ public class ExecCommand {
 
     public void setRegisterUrl(String registerUrl) {
         this.registerUrl = registerUrl;
+    }
+
+    public String getQueueName() {
+        return queueName;
+    }
+
+    public void setQueueName(String queueName) {
+        this.queueName = queueName;
     }
 }

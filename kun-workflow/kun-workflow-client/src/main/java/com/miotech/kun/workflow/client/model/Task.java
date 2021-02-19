@@ -15,6 +15,7 @@ public class Task {
     private final String description;
     private final Long operatorId;
     private final Config config;
+    private final String queueName;
     private final ScheduleConf scheduleConf;
     private final List<TaskDependency> dependencies;
     private final List<Tag> tags;
@@ -28,6 +29,7 @@ public class Task {
         this.scheduleConf = builder.scheduleConf;
         this.dependencies = builder.dependencies;
         this.tags = builder.tags;
+        this.queueName = builder.queueName;
 
     }
 
@@ -44,7 +46,8 @@ public class Task {
                 .withScheduleConf(scheduleConf)
                 .withOperatorId(operatorId)
                 .withTags(tags)
-                .withConfig(config);
+                .withConfig(config)
+                .withQueueName(queueName);
     }
 
     public Long getId() { return id; }
@@ -73,6 +76,10 @@ public class Task {
 
     public List<Tag> getTags() { return tags; }
 
+    public String getQueueName() {
+        return queueName;
+    }
+
     @JsonPOJOBuilder
     public static final class Builder {
         private Long id;
@@ -83,6 +90,7 @@ public class Task {
         private ScheduleConf scheduleConf;
         private List<TaskDependency> dependencies;
         private List<Tag> tags;
+        private String queueName;
 
         private Builder() {
         }
@@ -124,6 +132,11 @@ public class Task {
 
         public Builder withTags(List<Tag> tags) {
             this.tags = tags;
+            return this;
+        }
+
+        public Builder withQueueName(String queueName){
+            this.queueName = queueName;
             return this;
         }
 

@@ -3,7 +3,6 @@ package com.miotech.kun.workflow.executor.local;
 import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Injector;
-import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
@@ -33,7 +32,6 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -67,10 +65,6 @@ public class LocalExecutor implements Executor {
 
     private final Props props;
 
-    private final Integer WORKER_TOKEN_SIZE = 8;
-
-    private Semaphore workerToken;
-
     private Map<Long, HeartBeatMessage> workerPool;//key:taskAttemptId,value:HeartBeatMessage
 
     private final WorkerFactory workerFactory;
@@ -79,7 +73,7 @@ public class LocalExecutor implements Executor {
 
     private final Long WAIT_WORKER_INIT_SECOND = 60L;
 
-    private LinkedBlockingQueue<TaskAttempt> taskAttemptQueue = new LinkedBlockingQueue<>(QUEUE_SIZE);
+    private QueueManage queueManage;
 
     private ExecutorService workerStarterThreadPool =
             new ThreadPoolExecutor(CORES, CORES * 4,
@@ -101,7 +95,7 @@ public class LocalExecutor implements Executor {
         this.props = props;
         this.workerFactory = workerFactory;
         this.lineageService = lineageService;
-        workerToken = new Semaphore(props.getInt("executor.workerTokenSize", WORKER_TOKEN_SIZE));
+        queueManage = new QueueManage(props);
         init();
         if (props.getBoolean("executor.enableRecover", true)) {
             recover();
@@ -138,11 +132,11 @@ public class LocalExecutor implements Executor {
                 logger.debug("taskAttemptId = {} has been submit", taskAttempt.getId());
                 return false;
             }
+            queueManage.submit(taskAttempt.cloneBuilder().withStatus(TaskRunStatus.QUEUED).build());
             if (!savedTaskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
                 miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.QUEUED);
 
             }
-            taskAttemptQueue.add(taskAttempt.cloneBuilder().withStatus(TaskRunStatus.QUEUED).build());
         }
         return true;
     }
@@ -159,8 +153,7 @@ public class LocalExecutor implements Executor {
         TaskRunStatus taskRunStatus = attemptMsg.getTaskRunStatus();
         if (taskRunStatus.isFinished()) {
             if (workerPool.containsKey(attemptMsg.getTaskAttemptId())) {
-                workerToken.release();
-                logger.debug("taskAttemptId = {} release worker token, current size = {}", attemptMsg.getTaskAttemptId(), workerToken.availablePermits());
+                queueManage.release(attemptMsg.getQueueName());
             }
             workerPool.remove(attemptMsg.getTaskAttemptId());
             notifyFinished(attemptMsg.getTaskAttemptId(), taskRunStatus, attemptMsg.getOperatorReport());
@@ -213,15 +206,7 @@ public class LocalExecutor implements Executor {
             }
             if (taskAttempt.getStatus() == TaskRunStatus.QUEUED) {
                 logger.debug("taskAttempt to be abort has add to queue,attemptId = {}", attemptId);
-                Iterator<TaskAttempt> iterator = taskAttemptQueue.iterator();
-                while (iterator.hasNext()) {
-                    TaskAttempt queuedTaskAttempt = iterator.next();
-                    if (queuedTaskAttempt.getId().equals(attemptId)) {
-                        iterator.remove();
-                        logger.debug("remove taskAttempt from queue,attemptId = {}", attemptId);
-                        break;
-                    }
-                }
+                queueManage.remove(taskAttempt);
             }
             miscService.changeTaskAttemptStatus(attemptId, TaskRunStatus.ABORTED);
         } else {
@@ -254,6 +239,7 @@ public class LocalExecutor implements Executor {
         command.setLogPath(logPath);
         command.setJarPath(operatorDetail.getPackagePath());
         command.setClassName(operatorDetail.getClassName());
+        command.setQueueName(attempt.getQueueName());
         logger.debug("Execute task. attemptId={}, command={}", attemptId, command);
         return command;
     }
@@ -266,13 +252,12 @@ public class LocalExecutor implements Executor {
     @Override
     public boolean reset() {
         logger.info("executor going to shutdown");
-        workerToken.release(WORKER_TOKEN_SIZE - workerToken.availablePermits());
+        queueManage.reset();
         clear();
         return true;
     }
 
     private synchronized void clear() {
-        taskAttemptQueue.clear();
         workerPool.clear();
     }
 
@@ -311,6 +296,7 @@ public class LocalExecutor implements Executor {
 
     private HeartBeatMessage initHeartBeatByTaskAttempt(TaskAttempt taskAttempt) {
         HeartBeatMessage message = new HeartBeatMessage();
+        message.setQueueName(taskAttempt.getQueueName());
         message.setTimeoutTimes(0);
         message.setTaskAttemptId(taskAttempt.getId());
         message.setTaskRunId(taskAttempt.getTaskRun().getId());
@@ -329,7 +315,7 @@ public class LocalExecutor implements Executor {
             }
             while (true) {
                 try {
-                    TaskAttempt taskAttempt = taskAttemptQueue.take();
+                    TaskAttempt taskAttempt = queueManage.take();
                     if (workerPool.containsKey(taskAttempt.getId())) {
                         return;
                     }
@@ -352,32 +338,30 @@ public class LocalExecutor implements Executor {
 
         @Override
         public void run() {
-            try {
-                workerToken.acquire();
-                logger.debug("taskAttemptId = {} acquire worker token, current size = {}", taskAttempt.getId(), workerToken.availablePermits());
-            } catch (InterruptedException e) {
-                logger.error("taskAttemptId = {} acquire worker token failed", taskAttempt.getId());
-                throw ExceptionUtils.wrapIfChecked(e);
-            }
             TaskAttempt taskAttemptToRun = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
             if (taskAttemptToRun.getStatus().isFinished()) {
                 logger.info("taskAttemptToRun is finished,attemptId = {},status = {}", taskAttemptToRun.getId(), taskAttemptToRun.getStatus().name());
-                workerToken.release();
-                logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptToRun.getId(), workerToken.availablePermits());
+                queueManage.release(taskAttemptToRun.getQueueName());
                 return;
             }
-            try {
-                workerPool.put(taskAttemptToRun.getId(), initHeartBeatByTaskAttempt(taskAttemptToRun));
-                logger.info("taskAttempt = {} status is {},is in queue {}", taskAttemptToRun.getId(), taskAttemptToRun.getStatus().name(), taskAttemptToRun.getStatus().equals(TaskRunStatus.QUEUED));
-                //taskAttempt 已经启动（重启恢复）,则只加入workerPool监听心跳,正常入队和超时则重新启动
-                if (taskAttemptToRun.getStatus().equals(TaskRunStatus.QUEUED) || taskAttemptToRun.getStatus().equals(TaskRunStatus.ERROR)) {
-                    ExecCommand command = buildExecCommand(taskAttemptToRun);
+            //taskAttempt 已经启动（重启恢复）,则只加入workerPool监听心跳,正常入队和超时则重新启动
+            if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED) || taskAttempt.getStatus().equals(TaskRunStatus.ERROR)) {
+                try {
+                    logger.info("taskAttemptId = {},queue = {} going to start ", taskAttempt.getId(), taskAttempt.getQueueName());
+                    workerPool.put(taskAttempt.getId(), initHeartBeatByTaskAttempt(taskAttempt));
+                    ExecCommand command = buildExecCommand(taskAttempt);
                     startWorker(command);
+                    return;
+                } catch (Exception e) {
+                    logger.error("taskAttemptId = {} could not start worker ", taskAttempt.getId(), e);
+                    queueManage.release(taskAttempt.getQueueName());
+                    workerPool.remove(taskAttempt.getTaskId());
                 }
-            } catch (Exception e) {
-                logger.error("taskAttemptId = {} could start worker ", taskAttemptToRun.getId(), e);
-                workerToken.release();
             }
+            logger.info("recover taskAttempt,id = {} , queueName = {}", taskAttempt.getId(), taskAttempt.getQueueName());
+            queueManage.recover(taskAttempt.getQueueName());
+            workerPool.put(taskAttempt.getId(), initHeartBeatByTaskAttempt(taskAttempt));
+
 
         }
     }
@@ -421,10 +405,9 @@ public class LocalExecutor implements Executor {
             Worker worker = workerFactory.getWorker(workerPool.get(taskAttemptId));
             worker.shutdown();
             logger.debug("worker is shutdown,taskAttemptId = {}", taskAttemptId);
-            workerPool.remove(taskAttemptId);
+            HeartBeatMessage message = workerPool.remove(taskAttemptId);
             logger.debug("taskAttempt is removed from worker pool,taskAttemptId = {}", taskAttemptId);
-            workerToken.release();
-            logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
+            queueManage.release(message.getQueueName());
             miscService.changeTaskAttemptStatus(taskAttemptId, TaskRunStatus.ERROR);
             TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
             submit(taskAttempt, true);
@@ -451,9 +434,9 @@ public class LocalExecutor implements Executor {
                 logger.info("force kill taskAttempt = {}", taskAttemptId);
                 Worker worker = workerFactory.getWorker(workerPool.get(taskAttemptId));
                 if (worker.shutdown()) {
-                    workerPool.remove(taskAttemptId);
-                    workerToken.release();
-                    logger.debug("taskAttemptId = {} release worker token, current size = {}", taskAttemptId, workerToken.availablePermits());
+                    HeartBeatMessage message = workerPool.remove(taskAttemptId);
+                    logger.debug("taskAttemptId = {} release worker token, queueName = {},", taskAttemptId, message.getQueueName());
+                    queueManage.release(message.getQueueName());
                     notifyFinished(taskAttemptId, TaskRunStatus.ABORTED, OperatorReport.BLANK);
                     miscService.changeTaskAttemptStatus(taskAttemptId,
                             TaskRunStatus.ABORTED, null, DateTimeUtils.now());

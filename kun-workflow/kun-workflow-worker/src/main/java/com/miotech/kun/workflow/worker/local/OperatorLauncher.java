@@ -83,6 +83,7 @@ public class OperatorLauncher {
         initService.publishRpcServices();
         heartBeatMessage.setPort(props.getInt("rpc.port"));
         heartBeatMessage.setTaskRunId(command.getTaskRunId());
+        heartBeatMessage.setQueueName(command.getQueueName());
         Thread heartbeatTask = new Thread(new HeartBeatTask(heartBeatMessage));
         heartbeatTask.start();
         Thread statusUpdateTask = new Thread(new StatusUpdateTask());
@@ -134,6 +135,7 @@ public class OperatorLauncher {
         msg.setTaskRunId(command.getTaskRunId());
         msg.setTaskAttemptId(command.getTaskAttemptId());
         msg.setStartAt(DateTimeUtils.now());
+        msg.setQueueName(command.getQueueName());
         Thread thread = Thread.currentThread();
         ClassLoader cl = thread.getContextClassLoader();
         try {
