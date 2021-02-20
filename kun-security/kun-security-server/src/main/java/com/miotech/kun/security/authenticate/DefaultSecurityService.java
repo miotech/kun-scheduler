@@ -52,9 +52,10 @@ public class DefaultSecurityService {
         UserInfo savedUserInfo = convertToUserInfo(userService.getUserByName(userInfo.getUsername()));
         if (savedUserInfo == null) {
             SecurityContextHolder.setUserInfo(userInfo);
-            userInfo = saveUser(userInfo);
+            savedUserInfo = saveUser(userInfo);
+            SecurityContextHolder.setUserInfo(savedUserInfo);
         }
-        return userInfo;
+        return savedUserInfo;
     }
 
     public UserInfo convertToUserInfo(User user) {
