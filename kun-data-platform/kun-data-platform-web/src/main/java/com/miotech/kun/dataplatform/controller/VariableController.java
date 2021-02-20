@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/")
@@ -26,7 +28,10 @@ public class VariableController {
     @GetMapping("/variables")
     public RequestResult<List<VariableVO>> fetchAllVariables() {
         try {
-            List<VariableVO> variableVOS = workflowClient.getAllVariables();
+            List<VariableVO> variableVOS = workflowClient.getAllVariables()
+                    .stream()
+                    .filter(variable -> Objects.equals(variable.getNamespace(), workflowConfig.getVariableNamespace()))
+                    .collect(Collectors.toList());
             return RequestResult.success(variableVOS);
         } catch (Exception e) {
             return RequestResult.error(e.getMessage());
