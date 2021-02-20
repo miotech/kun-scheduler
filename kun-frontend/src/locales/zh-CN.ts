@@ -62,7 +62,9 @@ export default {
   "common.pageTitle.glossaryDetail": "标签集详情",
   "common.pageTitle.glossaryCreate": "创建标签集",
   "common.pageTitle.login": "登录",
-  "common.pageTitle.dataSettings": "设置",
+  "common.pageTitle.settings": "设置",
+  "common.pageTitle.dataSettings": "数据源设置",
+  "common.pageTitle.variableSettings": "全局变量设置",
   "common.pageTitle.dataDevelopment": "数据开发",
   "common.pageTitle.taskDefinition": "任务定义",
   "common.pageTitle.operationCenter": "运维中心",
@@ -417,5 +419,13 @@ export default {
   "operationCenter.backfill.operation.stopAll.alert": "确认停止当前回填实例中的所有任务吗？",
   "operationCenter.backfill.operation.rerun.alert": "确认重新运行当前回填实例中的所有任务吗？",
   "operationCenter.taskrun.operation.stop.alert": "确认停止这个任务吗？",
-  "operationCenter.taskrun.operation.rerun.alert": "确认重新运行这个任务吗？"
+  "operationCenter.taskrun.operation.rerun.alert": "确认重新运行这个任务吗？",
+  "settings.variableSettings.title": "全局变量设置",
+  "settings.variableSettings.key": "键",
+  "settings.variableSettings.value": "值",
+  "settings.variableSettings.isSecret": "保密",
+  "settings.variableSettings.isSecret.hint": "表示当前变量的值包含敏感/认证信息（如密码、Token、手机号等），设置该属性为 True 后，将不会对外展示该变量的真实值",
+  "settings.variableSettings.create": "创建新变量",
+  "settings.variableSettings.setValue": "设置值",
+  "settings.variableSettings.removeVariable": "移除该变量"
 }
