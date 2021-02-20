@@ -47,7 +47,7 @@ public class DefaultAuthenticationFilter extends UsernamePasswordAuthenticationF
                 && !StringUtils.equals(authentication.getName(), "anonymousUser")) {
             if (authentication.getClass().isAssignableFrom(UsernamePasswordAuthenticationToken.class)
             || authentication.getClass().isAssignableFrom(OAuth2AuthenticationToken.class)) {
-                String saveUsername = authentication.getName().toLowerCase();
+                String saveUsername = authentication.getName();
                 UserInfo savedUser = defaultSecurityService.getOrSave(saveUsername);
                 newAuthentication = new UsernamePasswordAuthenticationToken(authentication.getPrincipal(),
                         authentication.getCredentials(),
