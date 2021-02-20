@@ -250,6 +250,11 @@ public class LocalExecutor implements Executor {
     }
 
     @Override
+    public void changePriority(String queueName, long attemptId, int priority) {
+        queueManage.changePriority(queueName, attemptId, priority);
+    }
+
+    @Override
     public boolean reset() {
         logger.info("executor going to shutdown");
         queueManage.reset();

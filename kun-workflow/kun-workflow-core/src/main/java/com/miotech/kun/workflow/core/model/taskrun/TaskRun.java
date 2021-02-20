@@ -42,6 +42,8 @@ public class TaskRun {
 
     private final List<DataStore> outlets;
 
+    private final Integer priority;
+
     @JsonSerialize(using = ToStringSerializer.class)
     @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final List<Long> dependentTaskRunIds;
@@ -99,13 +101,18 @@ public class TaskRun {
     public ScheduleType getScheduledType() {
         return scheduledType;
     }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
     public String getQueueName() {
         return queueName;
     }
 
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status,
                    OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
-                   List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds,ScheduleType scheduledType,String queueName) {
+                   List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, ScheduleType scheduledType,String queueName,Integer priority) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
@@ -121,6 +128,7 @@ public class TaskRun {
         this.dependentTaskRunIds = dependentTaskRunIds;
         this.scheduledType = scheduledType;
         this.queueName = queueName;
+        this.priority = priority;
     }
 
     public static TaskRunBuilder newBuilder() {
@@ -140,7 +148,8 @@ public class TaskRun {
                 .withOutlets(outlets)
                 .withDependentTaskRunIds(dependentTaskRunIds)
                 .withScheduleType(scheduledType)
-                .withQueueName(queueName);
+                .withQueueName(queueName)
+                .withPriority(priority);
     }
 
     @Override
@@ -156,6 +165,7 @@ public class TaskRun {
                 ", endAt=" + endAt +
                 ", inlets=" + inlets +
                 ", outlets=" + outlets +
+                ", priority=" + priority +
                 ", dependentTaskRunIds=" + dependentTaskRunIds +
                 ", queueName='" + queueName + '\'' +
                 '}';
@@ -176,6 +186,7 @@ public class TaskRun {
         private List<Long> dependentTaskRunIds;
         private ScheduleType scheduleType;
         private String queueName;
+        private Integer priority;
 
         private TaskRunBuilder() {
         }
@@ -249,8 +260,13 @@ public class TaskRun {
             return this;
         }
 
+        public TaskRunBuilder withPriority(Integer priority){
+            this.priority = priority;
+            return this;
+        }
+
         public TaskRun build() {
-            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets, outlets, dependentTaskRunIds,scheduleType,queueName);
+            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets, outlets, dependentTaskRunIds, scheduleType,queueName,priority);
         }
     }
 }

@@ -32,6 +32,15 @@ public interface Executor {
     public boolean cancel(Long taskAttemptId);
 
     /**
+     * 修改一个待执行taskAttempt的优先级
+     *
+     * @param taskAttempt
+     * @param priority
+     * @return
+     */
+    public void changePriority(String queueName, long taskAttempt, int priority);
+
+    /**
      * 处理TaskAttempt执行状态变更
      *
      * @param msg

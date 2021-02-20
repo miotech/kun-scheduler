@@ -19,6 +19,7 @@ import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskDependency;
+import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -125,6 +126,7 @@ public class TaskService {
                 .withDependencies(vo.getDependencies() == null ? task.getDependencies() : parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags() == null ? task.getTags() : vo.getTags())
                 .withQueueName(vo.getQueueName() == null ? task.getQueueName() : vo.getQueueName())
+                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.getPriorityByName(vo.getPriority()))
                 .build();
 
         // 4. perform update
@@ -145,6 +147,7 @@ public class TaskService {
                 .withOperatorId(vo.getOperatorId())
                 .withQueueName(vo.getQueueName())
                 .withTags(vo.getTags())
+                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.getPriorityByName(vo.getPriority()))
                 .build();
         return fullUpdateTask(task);
     }
@@ -316,6 +319,7 @@ public class TaskService {
                 .withDependencies(parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags())
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
+                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.getPriorityByName(vo.getPriority()))
                 .build();
     }
 

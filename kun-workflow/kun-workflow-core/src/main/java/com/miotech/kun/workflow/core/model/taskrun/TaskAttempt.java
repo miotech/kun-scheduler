@@ -24,6 +24,8 @@ public class TaskAttempt {
 
     private final String queueName;
 
+    private final Integer priority;
+
     private final String logPath;
 
     private final OffsetDateTime startAt;
@@ -31,7 +33,7 @@ public class TaskAttempt {
     private final OffsetDateTime endAt;
 
     public TaskAttempt(Long id, TaskRun taskRun, int attempt, TaskRunStatus status,
-                       String logPath, OffsetDateTime startAt, OffsetDateTime endAt,String queueName) {
+                       String logPath, OffsetDateTime startAt, OffsetDateTime endAt,String queueName,Integer priority) {
         checkNotNull(taskRun, "taskRun should not be null.");
         checkNotNull(taskRun.getTask(), "task should not be null.");
         this.id = id;
@@ -42,6 +44,7 @@ public class TaskAttempt {
         this.startAt = startAt;
         this.endAt = endAt;
         this.queueName = queueName;
+        this.priority = priority;
     }
 
     public Long getId() {
@@ -84,6 +87,10 @@ public class TaskAttempt {
         return queueName;
     }
 
+    public Integer getPriority() {
+        return priority;
+    }
+
     public static TaskAttempt.Builder newBuilder() {
         return new TaskAttempt.Builder();
     }
@@ -97,7 +104,8 @@ public class TaskAttempt {
                 .withLogPath(logPath)
                 .withStartAt(startAt)
                 .withEndAt(endAt)
-                .withQueueName(queueName);
+                .withQueueName(queueName)
+                .withPriority(priority);
     }
 
     @Override
@@ -108,6 +116,7 @@ public class TaskAttempt {
                 ", attempt=" + attempt +
                 ", status=" + status +
                 ", queueName='" + queueName + '\'' +
+                ", priority=" + priority +
                 ", logPath='" + logPath + '\'' +
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +
@@ -124,6 +133,7 @@ public class TaskAttempt {
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
         private String queueName;
+        private Integer priority;
 
         private Builder() {
         }
@@ -168,8 +178,13 @@ public class TaskAttempt {
             return this;
         }
 
+        public Builder withPriority(Integer priority){
+            this.priority = priority;
+            return this;
+        }
+
         public TaskAttempt build() {
-            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt,queueName);
+            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt,queueName,priority);
         }
     }
 }
