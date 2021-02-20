@@ -41,6 +41,8 @@ public class Task {
 
     private final String queueName;
 
+    private final Integer priority;
+
     public Long getId() {
         return id;
     }
@@ -73,6 +75,10 @@ public class Task {
         return tags;
     }
 
+    public Integer getPriority() {
+        return priority;
+    }
+
     public String getQueueName() {
         return queueName;
     }
@@ -87,6 +93,7 @@ public class Task {
         this.dependencies = ImmutableList.copyOf(builder.dependencies);
         this.tags = builder.tags;
         this.queueName = builder.queueName;
+        this.priority = builder.priority;
     }
 
     public TaskBuilder cloneBuilder() {
@@ -99,7 +106,8 @@ public class Task {
                 .withScheduleConf(scheduleConf)
                 .withDependencies(dependencies)
                 .withTags(tags)
-                .withQueueName(queueName);
+                .withQueueName(queueName)
+                .withPriority(priority);
     }
 
     public boolean shouldSchedule(OffsetDateTime scheduleTime, OffsetDateTime currentTime) {
@@ -161,21 +169,23 @@ public class Task {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Task)) return false;
         Task task = (Task) o;
-        return Objects.equals(id, task.id) &&
-                Objects.equals(name, task.name) &&
-                Objects.equals(description, task.description) &&
-                Objects.equals(operatorId, task.operatorId) &&
-                Objects.equals(config, task.config) &&
-                Objects.equals(scheduleConf, task.scheduleConf) &&
-                Objects.equals(dependencies, task.dependencies) &&
-                Objects.equals(tags, task.tags);
+        return Objects.equals(getId(), task.getId()) &&
+                Objects.equals(getName(), task.getName()) &&
+                Objects.equals(getDescription(), task.getDescription()) &&
+                Objects.equals(getOperatorId(), task.getOperatorId()) &&
+                Objects.equals(getConfig(), task.getConfig()) &&
+                Objects.equals(getScheduleConf(), task.getScheduleConf()) &&
+                Objects.equals(getDependencies(), task.getDependencies()) &&
+                Objects.equals(getTags(), task.getTags()) &&
+                Objects.equals(getPriority(), task.getPriority()) &&
+                Objects.equals(getQueueName(), task.getQueueName());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, description, operatorId, config, scheduleConf, dependencies);
+        return Objects.hash(getId(), getName(), getDescription(), getOperatorId(), getConfig(), getScheduleConf(), getDependencies(), getTags(), getPriority(), getQueueName());
     }
 
     @Override
@@ -189,6 +199,7 @@ public class Task {
                 ", scheduleConf=" + scheduleConf +
                 ", dependencies=" + dependencies +
                 ", tags=" + tags +
+                ", priority=" + priority +
                 ", queueName='" + queueName + '\'' +
                 '}';
     }
@@ -205,6 +216,7 @@ public class Task {
         private List<Tag> tags;
         private Integer recoverTimes;
         private String queueName;
+        private Integer priority;
 
         private TaskBuilder() {
         }
@@ -255,6 +267,10 @@ public class Task {
             return this;
         }
 
+        public TaskBuilder withPriority(Integer priority) {
+            this.priority = priority;
+            return this;
+        }
         public TaskBuilder withQueueName(String queueName){
             this.queueName = queueName;
             return this;

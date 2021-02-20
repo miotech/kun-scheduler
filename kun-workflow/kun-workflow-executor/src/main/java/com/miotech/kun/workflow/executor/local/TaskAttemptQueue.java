@@ -9,6 +9,13 @@ import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Queue;
 
+import com.miotech.kun.workflow.core.model.taskrun.TaskPriorityComparator;
+
+import java.util.*;
+
+/**
+ * this queue is not thread safe
+ */
 public class TaskAttemptQueue {
     private Queue<TaskAttempt> queue;
     private final Integer capacity;//队列资源容量
@@ -29,7 +36,7 @@ public class TaskAttemptQueue {
     }
 
     public TaskAttemptQueue(String name, Integer capacity) {
-        queue = new LinkedList<>();
+        queue = new PriorityQueue<>(new TaskPriorityComparator());
         this.name = name;
         this.capacity = capacity;
         remainCapacity = capacity;
@@ -91,6 +98,33 @@ public class TaskAttemptQueue {
     public synchronized void reset() {
         queue.clear();
         remainCapacity = capacity;
+    }
+
+    public synchronized void changePriority(long attemptId ,int priority){
+        TaskAttempt queued = getTaskAttemptById(attemptId);
+        if(queued == null){
+            throw new IllegalStateException("taskAttempt = " + attemptId +
+                    " to change priority is not in queue");
+        }
+        TaskAttempt change = queued.cloneBuilder().withPriority(priority).build();
+        remove(queued);
+        add(change);
+
+    }
+
+    public boolean containsAttempt(TaskAttempt taskAttempt){
+        return getTaskAttemptById(taskAttempt.getId()) != null;
+    }
+
+    public TaskAttempt getTaskAttemptById(Long attemptId){
+        Iterator<TaskAttempt> iterator = queue.iterator();
+        while (iterator.hasNext()) {
+            TaskAttempt queued = iterator.next();
+            if (queued.getId().equals(attemptId)) {
+                return queued;
+            }
+        }
+        return null;
     }
 
     public boolean hasCapacity() {
