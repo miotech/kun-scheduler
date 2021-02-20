@@ -51,11 +51,11 @@ public class TaskRunDao {
     private static final Logger logger = LoggerFactory.getLogger(TaskRunDao.class);
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "start_at", "end_at", "config", "inlets", "outlets", "created_at", "updated_at", "queue_name");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status","schedule_type", "start_at", "end_at", "config", "inlets", "outlets", "created_at", "updated_at", "queue_name", "priority");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
-    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path", "queue_name");
+    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path", "queue_name","priority");
 
     private static final String RELATION_TABLE_NAME = "kun_wf_task_run_relations";
     private static final String RELATION_MODEL_NAME = "task_run_relations";
@@ -324,7 +324,8 @@ public class TaskRunDao {
                     JSONUtils.toJsonString(taskRun.getOutlets()),
                     now,
                     now,
-                    taskRun.getQueueName()
+                    taskRun.getQueueName(),
+                    taskRun.getPriority()
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds());
@@ -378,6 +379,7 @@ public class TaskRunDao {
                     taskRun.getCreatedAt(),       // created_at
                     now,                          // updated_at
                     taskRun.getQueueName(),
+                    taskRun.getPriority(),
                     taskRun.getId()
             );
 
@@ -580,7 +582,8 @@ public class TaskRunDao {
                 taskAttempt.getStartAt(),
                 taskAttempt.getEndAt(),
                 taskAttempt.getLogPath(),
-                taskAttempt.getQueueName()
+                taskAttempt.getQueueName(),
+                taskAttempt.getPriority()
         );
         return taskAttempt;
     }
@@ -986,6 +989,7 @@ public class TaskRunDao {
                     .withUpdatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_updated_at")))
                     .withConfig(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_config"), Config.class))
                     .withQueueName(rs.getString(TASK_RUN_MODEL_NAME + "_queue_name"))
+                    .withPriority(rs.getInt(TASK_RUN_MODEL_NAME + "_priority"))
                     .build();
         }
     }
@@ -1011,6 +1015,7 @@ public class TaskRunDao {
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(column("end_at", tableAlias))))
                     .withLogPath(rs.getString(column("log_path", tableAlias)))
                     .withQueueName(rs.getString(column("queue_name", tableAlias)))
+                    .withPriority(rs.getInt(column("priority", tableAlias)))
                     .build();
         }
     }
@@ -1036,6 +1041,7 @@ public class TaskRunDao {
                     .withLogPath(rs.getString(column("log_path", tableAlias)))
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(column("start_at", tableAlias))))
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(column("end_at", tableAlias))))
+                    .withQueueName(rs.getString(column("queue_name", tableAlias)))
                     .build();
         }
     }

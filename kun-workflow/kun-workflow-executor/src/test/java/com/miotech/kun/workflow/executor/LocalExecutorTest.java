@@ -22,6 +22,7 @@ import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.TaskAttemptMsg;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -1011,6 +1012,53 @@ public class LocalExecutorTest extends CommonTestBase {
         TaskAttemptQueue userAttemptQueue = queueManage.getTaskAttemptQueue("user");
         assertThat(userAttemptQueue.getRemainCapacity(), is(1));
         assertThat(userAttemptQueue.getSize(), is(0));
+
+    }
+
+    @Test
+    public void runTaskWithPriority(){
+        //prepare queue
+        QueueManage queueManage = prepareQueueManage();
+        Reflect.on(executor).set("queueManage",queueManage);
+        Task task1 = MockTaskFactory.createTask().cloneBuilder().withQueueName("user").
+                withPriority(TaskPriority.MEDIUM.getPriority()).build();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskAttempt taskAttempt1 = prepareAttempt(TestOperator1.class,MockTaskAttemptFactory.createTaskAttempt(taskRun1));
+        Task task2 = MockTaskFactory.createTask().cloneBuilder().withQueueName("user").
+                withPriority(TaskPriority.HIGH.getPriority()).build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
+        TaskAttempt taskAttempt2 = prepareAttempt(TestOperator1.class,MockTaskAttemptFactory.createTaskAttempt(taskRun2));
+        Task task3 = MockTaskFactory.createTask().cloneBuilder().withQueueName("user").
+                withPriority(TaskPriority.LOW.getPriority()).build();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task3);
+        TaskAttempt taskAttempt3 = prepareAttempt(TestOperator1.class,MockTaskAttemptFactory.createTaskAttempt(taskRun3));
+        executor.submit(taskAttempt1);
+        executor.submit(taskAttempt2);
+        executor.submit(taskAttempt3);
+
+        awaitUntilAttemptDone(taskAttempt3.getId());
+
+        //verify
+        TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun1.getId());
+        assertThat(attemptProps1.getAttempt(), is(1));
+        assertThat(attemptProps1.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(attemptProps1.getLogPath(), is(notNullValue()));
+        assertThat(attemptProps1.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps1.getEndAt(), is(notNullValue()));
+        TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
+        assertThat(attemptProps2.getAttempt(), is(1));
+        assertThat(attemptProps2.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(attemptProps2.getLogPath(), is(notNullValue()));
+        assertThat(attemptProps2.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps2.getEndAt(), is(notNullValue()));
+        TaskAttemptProps attemptProps3 = taskRunDao.fetchLatestTaskAttempt(taskRun3.getId());
+        assertThat(attemptProps3.getAttempt(), is(1));
+        assertThat(attemptProps3.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(attemptProps3.getLogPath(), is(notNullValue()));
+        assertThat(attemptProps3.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps3.getEndAt(), is(notNullValue()));
+        assertThat(attemptProps3.getStartAt(),greaterThan(attemptProps2.getStartAt()));
+        assertThat(attemptProps1.getStartAt(),lessThan(attemptProps3.getStartAt()));
 
     }
 

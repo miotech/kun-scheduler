@@ -8,10 +8,7 @@ import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.task.ScheduleConf;
-import com.miotech.kun.workflow.core.model.task.ScheduleType;
-import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskDependency;
+import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -72,6 +69,8 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withOperatorId(1L)
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
+                .withQueueName("default")
+                .withPriority(TaskPriority.MEDIUM.getPriority())
                 .build();
 
         created.add(taskExample);
@@ -202,6 +201,8 @@ public class TaskDaoTest extends DatabaseTestBase {
                         new Tag("owner", "foo"),
                         new Tag("version", "1")
                 ))
+                .withQueueName("default")
+                .withPriority(TaskPriority.MEDIUM.getPriority())
                 .build();
 
         // Process

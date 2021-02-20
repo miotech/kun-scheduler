@@ -44,6 +44,7 @@ public class MockTaskRunFactory {
                 .withStatus(TaskRunStatus.CREATED)
                 .withConfig(Config.EMPTY)
                 .withQueueName(task.getQueueName())
+                .withPriority(task.getPriority())
                 .build();
     }
 
@@ -84,6 +85,7 @@ public class MockTaskRunFactory {
                     .withStartAt(null)
                     .withEndAt(null)
                     .withQueueName(tasks.get(i).getQueueName())
+                    .withPriority(tasks.get(i).getPriority())
                     .build();
             taskRuns.add(tr);
         }
@@ -105,6 +107,7 @@ public class MockTaskRunFactory {
                 .withStatus(TaskRunStatus.QUEUED)
                 .withConfig(Config.EMPTY)
                 .withQueueName(task.getQueueName())
+                .withPriority(task.getPriority())
                 .build();
     }
 
@@ -118,6 +121,7 @@ public class MockTaskRunFactory {
                 .withLogPath("/var/log_" + taskRun + "_" + attempt + ".log")
                 .withStatus(TaskRunStatus.RUNNING)
                 .withQueueName(taskRun.getQueueName())
+                .withPriority(taskRun.getPriority())
                 .build();
     }
 }

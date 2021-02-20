@@ -20,6 +20,7 @@ public class TaskPropsVO {
     private final List<TaskDependencyVO> dependencies;
     private final List<Tag> tags;
     private final String queueName;
+    private final String priority;
 
     private TaskPropsVO(TaskPropsVOBuilder builder) {
         this.name = builder.name;
@@ -30,6 +31,7 @@ public class TaskPropsVO {
         this.dependencies = builder.dependencies;
         this.tags = builder.tags;
         this.queueName = builder.queueName;
+        this.priority = builder.priority;
     }
 
     public static TaskPropsVOBuilder newBuilder() {
@@ -94,8 +96,13 @@ public class TaskPropsVO {
         return tags;
     }
 
-    public List<TaskDependencyVO> getDependencies() { return dependencies; }
+    public List<TaskDependencyVO> getDependencies() {
+        return dependencies;
+    }
 
+    public String getPriority() {
+        return priority;
+    }
 
     public String getQueueName() {
         return queueName;
@@ -111,6 +118,7 @@ public class TaskPropsVO {
         private List<TaskDependencyVO> dependencies;
         private List<Tag> tags;
         private String queueName;
+        private String priority;
 
         private TaskPropsVOBuilder() {
         }
@@ -150,6 +158,10 @@ public class TaskPropsVO {
             return this;
         }
 
+        public TaskPropsVOBuilder withPriority(String priority) {
+            this.priority = priority;
+            return this;
+        }
         public TaskPropsVOBuilder withQueueName(String queueName){
             this.queueName = queueName;
             return this;
