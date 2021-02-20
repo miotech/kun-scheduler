@@ -93,6 +93,19 @@ public class QueueManage {
         }
     }
 
+    public void changePriority(String queueName,long attemptId, int priority) {
+        lock.lock();
+        try {
+            TaskAttemptQueue queue = queueMap.get(queueName);
+            if (queue == null) {
+                throw new NoSuchElementException("no such queue,name = " + queueName);
+            }
+            queue.changePriority(attemptId, priority);
+        } finally {
+            lock.unlock();
+        }
+    }
+
     public boolean isEmpty() {
         for (Map.Entry<String, TaskAttemptQueue> entry : queueMap.entrySet()) {
             TaskAttemptQueue queue = entry.getValue();

@@ -38,6 +38,8 @@ public class TaskAttemptProps {
 
     private final OffsetDateTime endAt;
 
+    private final String queueName;
+
     public Long getId() {
         return id;
     }
@@ -74,8 +76,12 @@ public class TaskAttemptProps {
         return endAt;
     }
 
+    public String getQueueName() {
+        return queueName;
+    }
+
     public TaskAttemptProps(Long id, Long taskRunId, Long taskId, String taskName, int attempt, TaskRunStatus status,
-                            String logPath, OffsetDateTime startAt, OffsetDateTime endAt) {
+                            String logPath, OffsetDateTime startAt, OffsetDateTime endAt, String queueName) {
         this.id = id;
         this.taskRunId = taskRunId;
         this.taskId = taskId;
@@ -85,6 +91,7 @@ public class TaskAttemptProps {
         this.logPath = logPath;
         this.startAt = startAt;
         this.endAt = endAt;
+        this.queueName = queueName;
     }
 
     public static TaskAttemptInfoBuilder newBuilder() {
@@ -93,15 +100,16 @@ public class TaskAttemptProps {
 
     public TaskAttemptInfoBuilder cloneBuilder() {
         return new TaskAttemptInfoBuilder()
-                .withId(this.id)
-                .withTaskRunId(this.taskRunId)
-                .withTaskId(this.taskId)
-                .withTaskName(this.taskName)
-                .withAttempt(this.attempt)
-                .withStatus(this.status)
-                .withLogPath(this.logPath)
-                .withStartAt(this.startAt)
-                .withEndAt(this.endAt);
+                .withId(id)
+                .withTaskRunId(taskRunId)
+                .withTaskId(taskId)
+                .withTaskName(taskName)
+                .withAttempt(attempt)
+                .withStatus(status)
+                .withLogPath(logPath)
+                .withStartAt(startAt)
+                .withEndAt(endAt)
+                .withQueueName(queueName);
     }
 
     public static final class TaskAttemptInfoBuilder {
@@ -114,6 +122,7 @@ public class TaskAttemptProps {
         private String logPath;
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
+        private String queueName;
 
         private TaskAttemptInfoBuilder() {
         }
@@ -163,8 +172,13 @@ public class TaskAttemptProps {
             return this;
         }
 
+        public TaskAttemptInfoBuilder withQueueName(String queueName){
+            this.queueName = queueName;
+            return this;
+        }
+
         public TaskAttemptProps build() {
-            return new TaskAttemptProps(id, taskRunId, taskId, taskName, attempt, status, logPath, startAt, endAt);
+            return new TaskAttemptProps(id, taskRunId, taskId, taskName, attempt, status, logPath, startAt, endAt,queueName);
         }
     }
 }
