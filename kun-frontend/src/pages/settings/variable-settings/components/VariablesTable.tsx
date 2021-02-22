@@ -87,6 +87,9 @@ export const VariablesTable: React.FC<Props> = memo(function VariablesTable(
               <Typography.Text
                 editable={{
                   onChange(nextValue) {
+                    if (record.value === nextValue) {
+                      return;
+                    }
                     onUpdateValue(record.key, nextValue);
                   },
                 }}
