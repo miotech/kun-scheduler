@@ -10,8 +10,9 @@ import com.miotech.kun.workflow.core.model.variable.Variable;
 import com.miotech.kun.workflow.testing.factory.MockVariableFactory;
 import org.junit.Test;
 
+import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class VariableServiceTest extends DatabaseTestBase {
 
@@ -89,7 +90,8 @@ public class VariableServiceTest extends DatabaseTestBase {
                 .withKey("test-key")
                 .build();
         try {
-            Variable variable = variableService.createVariable(vo);
+            variableService.createVariable(vo);
+            fail();
         } catch (Exception e) {
             assertThat(e.getClass(), is(NullPointerException.class));
             assertThat(e.getMessage(), is("Value should not be `null`"));
@@ -193,5 +195,38 @@ public class VariableServiceTest extends DatabaseTestBase {
         assertThat(result.getKey(), is(variable.getKey()));
         assertThat(result.getValue(), is("XXXXX"));
         assertThat(result.isEncrypted(), is(variable.isEncrypted()));
+    }
+
+    @Test
+    public void removeVariable_whenVariableExists_shouldReturnTrue() {
+        // 1. Prepare
+        VariableVO vo = VariableVO.newBuilder()
+                .withNamespace("test-name")
+                .withKey("test-key")
+                .withValue("test-value")
+                .withEncrypted(false)
+                .build();
+        Variable variable = variableService.createVariable(vo);
+
+        // 2. Process
+        boolean removeSuccess = variableService.removeByKey(variable.getFullKey());
+
+        // 3. Validate
+        assertTrue(removeSuccess);
+        try {
+            variableService.find(variable.getFullKey());
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+        }
+    }
+
+    @Test
+    public void removeVariable_whenVariableNotExists_shouldReturnFalse() {
+        // 1. Process
+        boolean removeSuccess = variableService.removeByKey("not.existing");
+
+        // 2. Validate
+        assertFalse(removeSuccess);
     }
 }

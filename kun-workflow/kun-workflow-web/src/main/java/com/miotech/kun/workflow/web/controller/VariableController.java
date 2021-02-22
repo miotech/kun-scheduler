@@ -47,4 +47,9 @@ public class VariableController {
     public Object getVariable(@RouteVariable String key) {
         return variableService.convertVO(variableService.find(key));
     }
+
+    @RouteMapping(url = "/variables/{key}", method = "DELETE")
+    public Object removeVariable(@RouteVariable String key) {
+        return variableService.removeByKey(key);
+    }
 }

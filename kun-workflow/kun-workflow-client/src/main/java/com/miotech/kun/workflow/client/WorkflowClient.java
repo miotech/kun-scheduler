@@ -2,8 +2,8 @@ package com.miotech.kun.workflow.client;
 
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
-import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
+import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 
 import java.io.File;
 import java.util.List;
@@ -209,4 +209,32 @@ public interface WorkflowClient {
      * @return edge info object
      */
     EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid);
+
+    /**
+     * Fetch all defined variables in workflow
+     * @return list of variables defined in system
+     */
+    List<VariableVO> getAllVariables();
+
+    /**
+     * Create a variable with provided value object
+     * @param variableVO value object of variable to create
+     * @return persisted variable value object
+     */
+    VariableVO createVariable(VariableVO variableVO);
+
+    /**
+     * Update a variable with provided value. It will update the variable with the same namespace and key.
+     * @param variableVO value object of variable to create.
+     * @return persisted variable value object
+     */
+    VariableVO updateVariable(VariableVO variableVO);
+
+    /**
+     * Remove a variable by its namespace and key
+     * @param namespace namespace of the variable to delete
+     * @param key key of the variable to delete
+     * @return {true} if success, {false} if not existing
+     */
+    Boolean deleteVariable(String namespace, String key);
 }

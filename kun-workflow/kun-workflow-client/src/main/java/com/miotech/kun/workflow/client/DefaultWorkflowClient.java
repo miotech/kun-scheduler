@@ -6,6 +6,7 @@ import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.variable.Variable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -254,5 +255,25 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
         return wfApi.getLineageEdgeInfo(upstreamDatasetGid, downstreamDatasetGid);
+    }
+
+    @Override
+    public List<VariableVO> getAllVariables() {
+        return wfApi.getAllVariables();
+    }
+
+    @Override
+    public VariableVO createVariable(VariableVO variableVO) {
+        return wfApi.createVariable(variableVO);
+    }
+
+    @Override
+    public VariableVO updateVariable(VariableVO variableVO) {
+        return wfApi.updateVariable(variableVO);
+    }
+
+    @Override
+    public Boolean deleteVariable(String namespace, String key) {
+        return wfApi.deleteVariable(namespace + "." + key);
     }
 }
