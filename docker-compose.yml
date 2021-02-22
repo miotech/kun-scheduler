@@ -44,6 +44,7 @@ services:
       - 8079:${SECURITY_PORT}
     depends_on:
       - kun-postgres
+      - kun-neo4j
   kun-workflow:
     image: "${IMAGE_REMOTE_ORG}kun-workflow:master"
     environment:
