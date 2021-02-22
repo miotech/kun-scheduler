@@ -88,6 +88,13 @@ public class WorkflowApi {
         return sendRequest(request, responseClz);
     }
 
+    private <T> T patch(HttpUrl url, Object payload, Class<T> responseClz) {
+        Request request = new Request.Builder().url(url)
+                .patch(jsonBody(payload))
+                .build();
+        return sendRequest(request, responseClz);
+    }
+
     private <T> T get(HttpUrl url, Class<T> responseClz) {
         Request request = new Request.Builder().url(url)
                 .get()
@@ -205,7 +212,7 @@ public class WorkflowApi {
         HttpUrl url = buildUrl(API_TASKS)
                 .addPathSegment(taskId.toString())
                 .build();
-        return put(url, task, Task.class);
+        return patch(url, task, Task.class);
     }
 
     public void deleteTask(Long taskId) {
