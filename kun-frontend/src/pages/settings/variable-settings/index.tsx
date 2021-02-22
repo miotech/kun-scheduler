@@ -53,7 +53,7 @@ export default function VariableSettingsPage() {
     try {
       await createGlobalVariable({
         key: formValues.key.trim(),
-        value: formValues.value,
+        value: formValues.value ? formValues.value.trim() : '',
         encrypted: formValues.secret || false,
       });
     } finally {
