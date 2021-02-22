@@ -145,7 +145,7 @@ public class TaskService {
                 .withConfig(vo.getConfig())
                 .withDescription(vo.getDescription())
                 .withOperatorId(vo.getOperatorId())
-                .withQueueName(vo.getQueueName())
+                .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
                 .withTags(vo.getTags())
                 .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.getPriorityByName(vo.getPriority()))
                 .build();
