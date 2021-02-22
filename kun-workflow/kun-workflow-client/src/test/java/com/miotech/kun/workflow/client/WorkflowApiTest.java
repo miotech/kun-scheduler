@@ -241,4 +241,41 @@ public class WorkflowApiTest extends MockServerTestBase {
         Map<Long, List<TaskRun>> result = wfApi.getLatestTaskRuns(Lists.newArrayList(task.getId()), 10);
         assertThat(result, sameBeanAs(mockResult));
     }
+
+    @Test
+    public void getAllVariables_shouldWork() {
+        VariableVO vo = mockVariableVO();
+        List<VariableVO> mockList = Lists.newArrayList(vo);
+        mockGet("/variables", JSONUtils.toJsonString(mockList));
+
+        List<VariableVO> result = wfApi.getAllVariables();
+        assertThat(result, sameBeanAs(mockList));
+    }
+
+    @Test
+    public void createVariable_shouldWork() {
+        VariableVO vo = mockVariableVO();
+        mockPost("/variables", JSONUtils.toJsonString(vo), JSONUtils.toJsonString(vo));
+
+        VariableVO result = wfApi.createVariable(vo);
+        assertThat(result, sameBeanAs(vo));
+    }
+
+    @Test
+    public void updateVariable_shouldWork() {
+        VariableVO vo = mockVariableVO();
+        mockPut("/variables", JSONUtils.toJsonString(vo), JSONUtils.toJsonString(vo));
+
+        VariableVO result = wfApi.updateVariable(vo);
+        assertThat(result, sameBeanAs(vo));
+    }
+
+    @Test
+    public void deleteVariable_shouldWork() {
+        VariableVO vo = mockVariableVO();
+        mockDelete("/variables/" + vo.getNamespace() + "." + vo.getKey(), JSONUtils.toJsonString(true));
+
+        Boolean result = wfApi.deleteVariable(vo.getNamespace() + "." + vo.getKey());
+        assertThat(result, is(true));
+    }
 }
