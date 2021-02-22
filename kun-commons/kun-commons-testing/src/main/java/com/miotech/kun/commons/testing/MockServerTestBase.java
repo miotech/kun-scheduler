@@ -49,6 +49,14 @@ public class MockServerTestBase {
         mockRequest("PUT", url, payload, statusCode, response);
     }
 
+    public void mockPatch(String url, String payload, String response) {
+        mockPatch(url, payload, response, 201);
+    }
+
+    public void mockPatch(String url, String payload, String response, int statusCode) {
+        mockRequest("PATCH", url, payload, statusCode, response);
+    }
+
     public void mockGet(String url, String response) {
         mockGet(url, response, 200);
     }
