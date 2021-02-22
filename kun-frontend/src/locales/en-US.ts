@@ -427,5 +427,9 @@ export default {
   "settings.variableSettings.isSecret.hint": "Refers to value of the variable containing sensitive or credential information (e.g. password, token, phone numbers...). Setting this attribute to TRUE will always hide actual value of this variable.",
   "settings.variableSettings.create": "Create new variable",
   "settings.variableSettings.setValue": "Set Value",
-  "settings.variableSettings.removeVariable": "Remove variable"
+  "settings.variableSettings.removeVariable": "Remove variable",
+  "settings.variableSettings.searchByKeyName": "Search by key name",
+  "settings.variableSettings.deleteAlert": "Confirm delete variable {key}? You may not undo this action later.",
+  "settings.variableSettings.duplicateKeyAlert": "Key {key} already exists",
+  "settings.variableSettings.updateSecretVariableAlert": "Confirm overwrite variable {key} to the following value?"
 }

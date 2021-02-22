@@ -1,4 +1,33 @@
 .View {
   position: relative;
-  padding: 16px;
+  padding: 18px;
+}
+
+.KeyValueWrapper {
+  &&&&&&& {
+    position: relative;
+
+    & :global(.ant-input) {
+      position: relative;
+      top: 0;
+      left: 0;
+      margin-bottom: -12 / @em;
+      transform: translate(0, 0%);
+    }
+
+    & :global(.anticon-enter) {
+      transform: translate(0, 12px);
+    }
+  }
+}
+
+.FilterHeading {
+  margin-bottom: 16px;
+}
+
+.ValueBlockQuote {
+  display: block;
+  min-height: 24 / @em;
+  background: @lightGray;
+  margin: 0;
 }

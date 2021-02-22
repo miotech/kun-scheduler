@@ -427,5 +427,9 @@ export default {
   "settings.variableSettings.isSecret.hint": "表示当前变量的值包含敏感/认证信息（如密码、Token、手机号等），设置该属性为 True 后，将不会对外展示该变量的真实值",
   "settings.variableSettings.create": "创建新变量",
   "settings.variableSettings.setValue": "设置值",
-  "settings.variableSettings.removeVariable": "移除该变量"
+  "settings.variableSettings.removeVariable": "移除该变量",
+  "settings.variableSettings.searchByKeyName": "按键名称搜索",
+  "settings.variableSettings.deleteAlert": "确认删除变量 {key} 吗？该操作无法撤销。",
+  "settings.variableSettings.duplicateKeyAlert": "键 {key} 已经存在",
+  "settings.variableSettings.updateSecretVariableAlert": "确认将变量 {key} 覆写为如下值？"
 }

@@ -1,12 +1,19 @@
-import React, { memo, useMemo } from 'react';
-import { Table } from 'antd';
+import React, { memo, useMemo, useState } from 'react';
+import { Button, Modal, Popconfirm, Space, Table, Typography } from 'antd';
 import useI18n from '@/hooks/useI18n';
 
 import { GlobalVariable } from '@/definitions/GlobalVariable.type';
+import { SecretHintIcon } from '@/pages/settings/variable-settings/components/SecretHintIcon';
+import { DeleteOutlined } from '@ant-design/icons';
+import { ColumnsType } from 'antd/es/table';
+
+import css from '../index.less';
 
 interface OwnProps {
   variableList: GlobalVariable[];
   loading?: boolean;
+  onUpdateValue: (key: string, newValue: string) => any;
+  onDeleteVariable: (key: string) => any;
 }
 
 type Props = OwnProps;
@@ -14,16 +21,25 @@ type Props = OwnProps;
 export const VariablesTable: React.FC<Props> = memo(function VariablesTable(
   props,
 ) {
-  const { variableList = [], loading = false } = props;
+  const {
+    variableList = [],
+    loading = false,
+    onUpdateValue,
+    onDeleteVariable,
+  } = props;
+  const [editingSecretVariableKey, setEditingSecretVariableKey] = useState<
+    string | null
+  >(null);
   const t = useI18n();
 
-  const columns = useMemo(
+  const columns: ColumnsType<GlobalVariable> = useMemo(
     () => [
       {
         title: t('settings.variableSettings.key'),
         dataIndex: 'key',
         key: 'key',
-        render: (txt: any, record: GlobalVariable) => {
+        width: 360,
+        render: (txt: unknown, record: GlobalVariable) => {
           return <code>{record.key}</code>;
         },
       },
@@ -31,25 +47,101 @@ export const VariablesTable: React.FC<Props> = memo(function VariablesTable(
         title: t('settings.variableSettings.value'),
         dataIndex: 'value',
         key: 'value',
-        render: (txt: any, record: GlobalVariable) => {
+        className: css.KeyValueWrapper,
+        render: (txt: unknown, record: GlobalVariable) => {
           return record.encrypted ? (
-            <code>******</code>
+            <code>
+              <span>
+                {editingSecretVariableKey === record.key ? '' : '******'}
+              </span>
+              <Typography.Text
+                editable={{
+                  onStart() {
+                    setEditingSecretVariableKey(record.key);
+                  },
+                  onChange(nextValue: string) {
+                    Modal.confirm({
+                      title: t(
+                        'settings.variableSettings.updateSecretVariableAlert',
+                        {
+                          key: record.key,
+                        },
+                      ),
+                      content: (
+                        <blockquote className={css.ValueBlockQuote}>
+                          <code>{nextValue.trim()}</code>
+                        </blockquote>
+                      ),
+                      async onOk() {
+                        await onUpdateValue(record.key, nextValue);
+                      },
+                    });
+                    setEditingSecretVariableKey(null);
+                  },
+                }}
+              />
+            </code>
           ) : (
-            <code>{record.value}</code>
+            <code>
+              <Typography.Text
+                editable={{
+                  onChange(nextValue) {
+                    onUpdateValue(record.key, nextValue);
+                  },
+                }}
+              >
+                {record.value}
+              </Typography.Text>
+            </code>
           );
         },
       },
       {
-        title: t('settings.variableSettings.isSecret'),
+        title: () => (
+          <Space size={4}>
+            <span>{t('settings.variableSettings.isSecret')}</span>
+            <SecretHintIcon />
+          </Space>
+        ),
+        align: 'center',
         dataIndex: 'secret',
         key: 'secret',
-        width: 80,
-        render: (txt: any, record: GlobalVariable) => {
+        width: t('common.lang') === 'zh-CN' ? 80 : 110,
+        render: (txt: unknown, record: GlobalVariable) => {
           return record.encrypted ? t('common.yes') : t('common.no');
         },
       },
+      {
+        title: '',
+        key: 'operations',
+        width: 100,
+        align: 'center',
+        render: (txt: unknown, record: GlobalVariable) => {
+          return (
+            <span>
+              <Button.Group size="small">
+                <Popconfirm
+                  title={t('settings.variableSettings.deleteAlert', {
+                    key: record.key,
+                  })}
+                  okButtonProps={{
+                    danger: true,
+                  }}
+                  onConfirm={() => {
+                    onDeleteVariable(record.key);
+                  }}
+                >
+                  <Button icon={<DeleteOutlined />} danger type="link">
+                    {t('common.button.delete')}
+                  </Button>
+                </Popconfirm>
+              </Button.Group>
+            </span>
+          );
+        },
+      },
     ],
-    [t],
+    [t, editingSecretVariableKey, onUpdateValue, onDeleteVariable],
   );
 
   return (
@@ -59,10 +151,11 @@ export const VariablesTable: React.FC<Props> = memo(function VariablesTable(
       dataSource={variableList}
       bordered
       rowKey="key"
-      size="small"
       pagination={{
         size: 'small',
-        pageSize: 50,
+        pageSize: 25,
+        showTotal: (_total: number) =>
+          t('common.pagination.showTotal', { total: _total }),
       }}
     />
   );
