@@ -162,7 +162,6 @@ public class DatasetRepository extends BaseRepository {
                 "kmda.description as dataset_description, " +
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
                 "string_agg(distinct(kmdt.tag), ',') as tags, " +
-                "string_agg(concat_ws('_', kmg.id, kmg.name), ',') as glossaries, " +
                 "watermark.high_watermark as high_watermark\n" +
                 "from kun_mt_dataset kmd\n" +
                 "         inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
@@ -171,9 +170,7 @@ public class DatasetRepository extends BaseRepository {
                 "         left join kun_mt_dataset_attrs kmda on kmd.gid = kmda.dataset_gid\n" +
                 "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
                 "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
-                "         left join (select dataset_gid, max(last_updated_time) as high_watermark from kun_mt_dataset_stats group by dataset_gid) watermark on watermark.dataset_gid = kmd.gid\n" +
-                "         left join kun_mt_glossary_to_dataset_ref kmgtdr on kmd.gid = kmgtdr.dataset_id\n" +
-                "         left join kun_mt_glossary kmg on kmgtdr.glossary_id = kmg.id\n";
+                "         left join (select dataset_gid, max(last_updated_time) as high_watermark from kun_mt_dataset_stats group by dataset_gid) watermark on watermark.dataset_gid = kmd.gid\n";
 
         String groupClause = "group by kmd.gid, kmd.name, kmd.datasource_id, kmd.schema, kmd.data_store, kmd.database_name, type, datasource_name, dataset_description, watermark.high_watermark\n";
         sql += whereClause;
@@ -193,16 +190,8 @@ public class DatasetRepository extends BaseRepository {
             while (rs.next()) {
                 DatasetBasic datasetBasic = new DatasetBasic();
                 setDatasetBasicField(datasetBasic, rs);
-                if (StringUtils.isNotEmpty(rs.getString("glossaries"))) {
-                    List<GlossaryBasic> glossaryBasics = sqlToList(rs.getString("glossaries")).stream().map(glossary -> {
-                        GlossaryBasic glossaryBasic = new GlossaryBasic();
-                        String[] fields = glossary.split("_");
-                        glossaryBasic.setId(Long.valueOf(fields[0]));
-                        glossaryBasic.setName(fields[1]);
-                        return glossaryBasic;
-                    }).collect(Collectors.toList());
-                    datasetBasic.setGlossaries(glossaryBasics);
-                }
+                List<GlossaryBasic> glossaryBasics = glossaryRepository.getGlossariesByDataset(datasetBasic.getGid());
+                datasetBasic.setGlossaries(glossaryBasics);
                 pageResult.add(datasetBasic);
             }
             return pageResult;
