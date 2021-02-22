@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.common.variable.vo;
+package com.miotech.kun.workflow.client.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
@@ -18,7 +18,7 @@ public class VariableVO {
         this.namespace = namespace;
         this.key = key;
         this.value = value;
-        this.encrypted = encrypted == null ? false: encrypted;
+        this.encrypted = encrypted != null && encrypted;
     }
 
     public String getNamespace() {
