@@ -28,6 +28,7 @@ public class WorkflowApi {
     private static final String API_TASKS = "/tasks";
     private static final String API_TASK_RUNS = "/taskruns";
     private static final String API_LINEAGES = "/lineages";
+    private static final String API_VARIABLES = "/variables";
 
     private final String baseUrl;
     private final OkHttpClient client;
@@ -422,5 +423,44 @@ public class WorkflowApi {
                 .build();
         return sendRequest(getRequest, new TypeReference<EdgeInfo>() {
         });
+    }
+
+    public List<VariableVO> getAllVariables() {
+        HttpUrl url = buildUrl(API_VARIABLES).build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<List<VariableVO>>() {});
+    }
+
+    public VariableVO createVariable(VariableVO variableVO) {
+        HttpUrl url = buildUrl(API_VARIABLES).build();
+        Request postRequest = new Request.Builder()
+                .url(url)
+                .post(jsonBody(variableVO))
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(postRequest, new TypeReference<VariableVO>() {});
+    }
+
+    public VariableVO updateVariable(VariableVO variableVO) {
+        HttpUrl url = buildUrl(API_VARIABLES).build();
+        Request putRequest = new Request.Builder()
+                .url(url)
+                .put(jsonBody(variableVO))
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(putRequest, new TypeReference<VariableVO>() {});
+    }
+
+    public Boolean deleteVariable(String fullKey) {
+        HttpUrl url = buildUrl(API_VARIABLES).addPathSegment(fullKey).build();
+        Request deleteRequest = new Request.Builder()
+                .url(url)
+                .delete()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(deleteRequest, new TypeReference<Boolean>() {});
     }
 }

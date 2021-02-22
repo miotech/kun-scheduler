@@ -1,28 +1,20 @@
-package com.miotech.kun.workflow.common.variable.vo;
+package com.miotech.kun.workflow.client.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
-@JsonDeserialize(builder = VariableVO.Builder.class)
-public class VariableVO {
-
-    private final String namespace;
-
+@JsonDeserialize(builder = VariableUpsertVO.Builder.class)
+public class VariableUpsertVO {
     private final String key;
 
     private final String value;
 
     private final Boolean encrypted;
 
-    private VariableVO(String namespace, String key, String value, Boolean encrypted) {
-        this.namespace = namespace;
+    private VariableUpsertVO(String key, String value, Boolean encrypted) {
         this.key = key;
         this.value = value;
-        this.encrypted = encrypted == null ? false: encrypted;
-    }
-
-    public String getNamespace() {
-        return namespace;
+        this.encrypted = encrypted != null && encrypted;
     }
 
     public String getKey() {
@@ -41,17 +33,11 @@ public class VariableVO {
 
     @JsonPOJOBuilder
     public static final class Builder {
-        private String namespace;
         private String key;
         private String value;
         private Boolean encrypted;
 
         private Builder() {
-        }
-
-        public Builder withNamespace(String namespace) {
-            this.namespace = namespace;
-            return this;
         }
 
         public Builder withKey(String key) {
@@ -69,8 +55,8 @@ public class VariableVO {
             return this;
         }
 
-        public VariableVO build() {
-            return new VariableVO(namespace, key, value, encrypted);
+        public VariableUpsertVO build() {
+            return new VariableUpsertVO(key, value, encrypted);
         }
     }
 }

@@ -19,4 +19,10 @@ public class WorkflowConfig {
          return new DefaultWorkflowClient(workflowUrl);
     }
 
+    @Value("${workflow.variableNamespace}")
+    private String variableNamespace = "dataplatform";
+
+    public String getVariableNamespace() {
+        return this.variableNamespace;
+    }
 }
