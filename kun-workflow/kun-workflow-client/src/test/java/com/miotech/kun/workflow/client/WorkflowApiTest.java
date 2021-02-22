@@ -103,7 +103,7 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void updateTask() {
         Task task = mockTask();
-        mockPut("/tasks/1", JSONUtils.toJsonString(task),  JSONUtils.toJsonString(task));
+        mockPatch("/tasks/1", JSONUtils.toJsonString(task),  JSONUtils.toJsonString(task));
         Task result = wfApi.updateTask(task.getId(), task);
         assertTrue(result.getId() > 0);
         assertThat(result.getName(), is(task.getName()));
