@@ -38,6 +38,7 @@ export const VariablesTable: React.FC<Props> = memo(function VariablesTable(
         title: t('settings.variableSettings.key'),
         dataIndex: 'key',
         key: 'key',
+        sorter: (a, b) => a.key.localeCompare(b.key),
         width: 360,
         render: (txt: unknown, record: GlobalVariable) => {
           return <code>{record.key}</code>;
@@ -103,10 +104,11 @@ export const VariablesTable: React.FC<Props> = memo(function VariablesTable(
             <SecretHintIcon />
           </Space>
         ),
+        sorter: (a, b) => (a.encrypted ? 1 : -1) - (b.encrypted ? 1 : -1),
         align: 'center',
         dataIndex: 'secret',
         key: 'secret',
-        width: t('common.lang') === 'zh-CN' ? 80 : 110,
+        width: t('common.lang') === 'zh-CN' ? 100 : 130,
         render: (txt: unknown, record: GlobalVariable) => {
           return record.encrypted ? t('common.yes') : t('common.no');
         },
