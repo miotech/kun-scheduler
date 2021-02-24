@@ -52,7 +52,7 @@ public class TaskManager {
         save(taskAttempts);
         logger.debug("TaskAttempts saved. total={}", taskAttempts.size());
         List<TaskAttempt> taskAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
-        logger.debug("fetch satisfy taskAttempt size = {}",taskAttemptList.size());
+        logger.debug("fetch satisfy taskAttempt size = {}", taskAttemptList.size());
         for (TaskAttempt taskAttempt : taskAttemptList) {
             executor.submit(taskAttempt);
         }
@@ -86,13 +86,14 @@ public class TaskManager {
         }
     }
 
-    private class InnerEventLoop  {
+    private class InnerEventLoop {
 
         @Subscribe
         public void onReceive(TaskAttemptStatusChangeEvent event) {
             TaskRunStatus currentStatus = event.getToStatus();
             if (currentStatus.isFinished()) {
                 List<TaskAttempt> satisfyTaskAttempts = taskRunDao.fetchAllSatisfyTaskAttempt();
+                logger.info("invoke downStream task attempt size = {}", satisfyTaskAttempts.size());
                 for (TaskAttempt taskAttempt : satisfyTaskAttempts) {
                     executor.submit(taskAttempt);
                 }
