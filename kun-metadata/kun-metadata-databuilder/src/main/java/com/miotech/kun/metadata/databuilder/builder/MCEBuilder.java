@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.databuilder.builder;
 
+import com.amazonaws.services.glue.model.Table;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
@@ -11,6 +12,7 @@ import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.core.model.event.MetadataChangeEvent;
 import com.miotech.kun.metadata.core.model.event.MetadataStatisticsEvent;
+import com.miotech.kun.metadata.databuilder.client.GlueClient;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.databuilder.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
@@ -125,8 +127,17 @@ public class MCEBuilder {
 
         String connectionInfo = operator.fetchOne("SELECT connection_info FROM kun_mt_datasource WHERE id = ?",
                 rs -> rs.getString("connection_info"), mce.getDataSourceId());
-        AWSDataSource awsDataSource = JSONUtils.jsonToObject(connectionInfo, AWSDataSource.class);
-        DataStore dataStore = new HiveTableStore(awsDataSource.getAthenaUrl(), mce.getDatabaseName(), mce.getTableName());
+
+        DataStore dataStore = operator.fetchOne("SELECT data_store FROM kun_mt_dataset WHERE datasource_id = ? AND database_name = ? AND name = ?",
+                rs -> DataStoreJsonUtil.toDataStore(rs.getString("data_store")), mce.getDataSourceId(), mce.getDatabaseName(), mce.getTableName());
+        if (dataStore == null) {
+            AWSDataSource awsDataSource = JSONUtils.jsonToObject(connectionInfo, AWSDataSource.class);
+            Table table = GlueClient.searchTable(awsDataSource, mce.getDatabaseName(), mce.getTableName());
+            if (table == null) {
+                return;
+            }
+            dataStore = new HiveTableStore(table.getStorageDescriptor().getLocation(), mce.getDatabaseName(), mce.getTableName());
+        }
 
         // 生成gid
         long gid = gidService.generate(dataStore);
