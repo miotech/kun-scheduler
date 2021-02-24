@@ -78,7 +78,6 @@ public class TaskDependencyVO {
         }
 
         public TaskDependencyVO build() {
-            dependencyLevel = dependencyLevel == null ? DependencyLevel.STRONG.name() : dependencyLevel;
             return new TaskDependencyVO(upstreamTaskId, downstreamTaskId, dependencyFunc, dependencyLevel);
         }
     }

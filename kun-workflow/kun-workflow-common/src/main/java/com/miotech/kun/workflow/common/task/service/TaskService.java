@@ -346,7 +346,8 @@ public class TaskService {
     private List<TaskDependency> parseDependencyVO(List<TaskDependencyVO> vo) {
         return vo.stream().map(x -> new TaskDependency(x.getUpstreamTaskId(),
                 x.getDownstreamTaskId(), dependencyFunctionProvider.from(
-                x.getDependencyFunction()), DependencyLevel.resolve(x.getDependencyLevel())))
+                x.getDependencyFunction()),
+                x.getDependencyLevel() == null ? DependencyLevel.STRONG : DependencyLevel.resolve(x.getDependencyLevel())))
                 .collect(Collectors.toList());
     }
 
