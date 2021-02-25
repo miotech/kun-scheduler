@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
+import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.operator.Operator;
@@ -217,7 +218,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
     @Test
     public void createTaskWithInvalidConfig() {
         Operator operator = initOperator();
-        Task task = MockTaskFactory.createTask(operator.getId());
+        TaskPropsVO task = MockTaskFactory.createTaskPropsVOWithOperator(operator.getId());
         String payload = JSONUtils.toJsonString(task);
         String response = post("/tasks", payload);
         ExceptionResponse exceptionResponse = jsonSerializer.toObject(response, ExceptionResponse.class);
@@ -232,7 +233,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         Operator op = initOperator();
         Config config = Config.newBuilder()
                 .addConfig("var2", "default2").build();
-        Task task = MockTaskFactory.createTask(op.getId()).cloneBuilder().withConfig(config).build();
+        TaskPropsVO task = MockTaskFactory.createTaskPropsVOWithOperator(op.getId()).cloneBuilder().withConfig(config).build();
         String payload = JSONUtils.toJsonString(task);
         String response = post("/tasks", payload);
         Task createdTask = JSONUtils.jsonToObject(response, Task.class);
@@ -250,7 +251,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         Operator op = initOperator();
         Config config = Config.newBuilder()
                 .addConfig("var2", "default2").build();
-        Task task = MockTaskFactory.createTask(op.getId()).cloneBuilder().withConfig(config).build();
+        TaskPropsVO task = MockTaskFactory.createTaskPropsVOWithOperator(op.getId()).cloneBuilder().withConfig(config).build();
         String payload = JSONUtils.toJsonString(task);
         String response = post("/tasks", payload);
         Task createdTask = JSONUtils.jsonToObject(response, Task.class);
@@ -277,6 +278,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
                 .withClassName(generatedString)
                 .withPackagePath(packagePath)
                 .build();
+        operatorDao.create(op);
         return op;
     }
 
