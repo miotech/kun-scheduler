@@ -16,12 +16,16 @@ import static com.miotech.kun.workflow.testing.factory.MockFactoryUtils.selectIt
 
 public class MockTaskFactory {
     public static TaskPropsVO createTaskPropsVO() {
-        Long mockId = WorkflowIdGenerator.nextTaskId();
         Long mockOperatorId = WorkflowIdGenerator.nextOperatorId();
+        return createTaskPropsVOWithOperator(mockOperatorId);
+    }
+
+    public static TaskPropsVO createTaskPropsVOWithOperator(long operatorId) {
+        Long mockId = WorkflowIdGenerator.nextTaskId();
         return TaskPropsVO.newBuilder()
                 .withName("task_" + mockId)
                 .withDescription("task_description_" + mockId)
-                .withOperatorId(mockOperatorId)
+                .withOperatorId(operatorId)
                 .withConfig(Config.EMPTY)
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withDependencies(new ArrayList<>())
@@ -31,7 +35,8 @@ public class MockTaskFactory {
                 .build();
     }
 
-    public static Task createTaskWithUpstreams(List<Long> upIds,ScheduleConf conf){
+
+        public static Task createTaskWithUpstreams(List<Long> upIds,ScheduleConf conf){
         long taskId = WorkflowIdGenerator.nextTaskId();
         TaskDependencyFunctionProvider depFuncProvider =
                 Unsafe.getInjector().getInstance(TaskDependencyFunctionProvider.class);

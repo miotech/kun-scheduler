@@ -19,10 +19,20 @@ public class TaskDependency {
 
     private final DependencyFunction dependencyFunc;
 
+    private final DependencyLevel dependencyLevel;
+
+    public TaskDependency(Long upstreamTaskId, Long downstreamTaskId, DependencyFunction dependencyFunc,DependencyLevel dependencyLevel) {
+        this.upstreamTaskId = upstreamTaskId;
+        this.downstreamTaskId = downstreamTaskId;
+        this.dependencyFunc = dependencyFunc;
+        this.dependencyLevel = dependencyLevel;
+    }
+
     public TaskDependency(Long upstreamTaskId, Long downstreamTaskId, DependencyFunction dependencyFunc) {
         this.upstreamTaskId = upstreamTaskId;
         this.downstreamTaskId = downstreamTaskId;
         this.dependencyFunc = dependencyFunc;
+        this.dependencyLevel = DependencyLevel.STRONG;
     }
 
     public Long getUpstreamTaskId() {
@@ -31,6 +41,10 @@ public class TaskDependency {
 
     public Long getDownstreamTaskId() {
         return downstreamTaskId;
+    }
+
+    public DependencyLevel getDependencyLevel() {
+        return dependencyLevel;
     }
 
     public static TaskDependencyBuilder newBuilder() { return new TaskDependencyBuilder(); }
@@ -50,6 +64,7 @@ public class TaskDependency {
         private Long upstreamTaskId;
         private Long downstreamTaskId;
         private DependencyFunction dependencyFunc;
+        private DependencyLevel dependencyLevel;
 
         private TaskDependencyBuilder() {
         }
@@ -64,6 +79,11 @@ public class TaskDependency {
             return this;
         }
 
+        public TaskDependencyBuilder withDependencyLevel(DependencyLevel dependencyLevel){
+            this.dependencyLevel = dependencyLevel;
+            return this;
+        }
+
         @JsonIgnore
         public TaskDependencyBuilder withDependencyFunc(DependencyFunction dependencyFunc) {
             this.dependencyFunc = dependencyFunc;
@@ -71,7 +91,7 @@ public class TaskDependency {
         }
 
         public TaskDependency build() {
-            return new TaskDependency(upstreamTaskId, downstreamTaskId, dependencyFunc);
+            return new TaskDependency(upstreamTaskId, downstreamTaskId, dependencyFunc,dependencyLevel);
         }
     }
 }

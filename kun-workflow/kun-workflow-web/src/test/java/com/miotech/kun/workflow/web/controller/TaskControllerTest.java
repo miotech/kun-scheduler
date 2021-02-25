@@ -5,18 +5,22 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import com.miotech.kun.workflow.common.exception.ExceptionResponse;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
+import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
+import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
+import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
-import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -31,7 +35,8 @@ import static org.junit.Assert.assertTrue;
 
 public class TaskControllerTest extends KunWebServerTestBase {
 
-    private static final TypeReference<PaginationVO<Task>> taskPaginationVOTypeRef = new TypeReference<PaginationVO<Task>>() {};
+    private static final TypeReference<PaginationVO<Task>> taskPaginationVOTypeRef = new TypeReference<PaginationVO<Task>>() {
+    };
     private List<Task> mockTaskList = new ArrayList<>();
 
     @Inject
@@ -146,11 +151,11 @@ public class TaskControllerTest extends KunWebServerTestBase {
         // verify
         JsonNode result = JSONUtils.jsonToObject(response, JsonNode.class);
         Long taskID = Long.parseLong(result.get("id").asText());
-        assertTrue(taskID > 0 );
+        assertTrue(taskID > 0);
         assertThat(result.get("operatorId").asText(), is(upstreamTask.getOperatorId().toString()));
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description"));
-        assertThat(result.get("config").toString(), is("{\"values\":{}}"));
+        assertThat(result.get("config").toString(), is("{\"values\":{\"testKey1\":false}}"));
         assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"*/1 * * * * ?\"}"));
         assertThat(result.get("dependencies").toString(), is("[]"));
         assertThat(result.get("tags").toString(), is("[{\"key\":\"version\",\"value\":\"1.2\"}]"));
@@ -168,11 +173,11 @@ public class TaskControllerTest extends KunWebServerTestBase {
 
         // verify
         result = JSONUtils.jsonToObject(response, JsonNode.class);
-        assertThat( Long.parseLong(result.get("id").asText()), is(taskID) );
+        assertThat(Long.parseLong(result.get("id").asText()), is(taskID));
         assertThat(result.get("operatorId").asText(), is(upstreamTask.getOperatorId().toString()));
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description UPDATED"));
-        assertThat(result.get("config").toString(), is("{\"values\":{}}"));
+        assertThat(result.get("config").toString(), is("{\"values\":{\"testKey1\":false}}"));
         assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"*/1 * * * * ?\"}"));
         assertThat(result.get("dependencies").toString(), is("[]"));
         assertThat(result.get("tags").toString(), is("[]"));
@@ -192,13 +197,13 @@ public class TaskControllerTest extends KunWebServerTestBase {
         String response = post("/tasks", postJson);
 
         JsonNode result = JSONUtils.jsonToObject(response, JsonNode.class);
-        assertTrue(Long.parseLong(result.get("id").asText()) > 0 );
+        assertTrue(Long.parseLong(result.get("id").asText()) > 0);
         assertThat(result.get("operatorId").asText(), is(upstreamTask.getOperatorId().toString()));
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description"));
-        assertThat(result.get("config").toString(), is("{\"values\":{}}"));
+        assertThat(result.get("config").toString(), is("{\"values\":{\"testKey1\":false}}"));
         assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"*/1 * * * * ?\"}"));
-        assertThat(result.get("dependencies").toString(), is(String.format("[{\"upstreamTaskId\":\"%s\",\"downstreamTaskId\":null,\"dependencyFunc\":\"latestTaskRun\"}]", upstreamTask.getId())));
+        assertThat(result.get("dependencies").toString(), is(String.format("[{\"upstreamTaskId\":\"%s\",\"downstreamTaskId\":null,\"dependencyFunc\":\"latestTaskRun\",\"dependencyLevel\":\"STRONG\"}]", upstreamTask.getId())));
         assertThat(result.get("tags").toString(), is("[{\"key\":\"version\",\"value\":\"1.2\"}]"));
     }
 
@@ -209,6 +214,74 @@ public class TaskControllerTest extends KunWebServerTestBase {
         ExceptionResponse exceptionResponse = jsonSerializer.toObject(response, ExceptionResponse.class);
         assertThat(exceptionResponse.getCode(), is(400));
     }
+
+    @Test
+    public void createTaskWithInvalidConfig() {
+        Operator operator = initOperator();
+        TaskPropsVO task = MockTaskFactory.createTaskPropsVOWithOperator(operator.getId());
+        String payload = JSONUtils.toJsonString(task);
+        String response = post("/tasks", payload);
+        ExceptionResponse exceptionResponse = jsonSerializer.toObject(response, ExceptionResponse.class);
+        assertThat(exceptionResponse.getCode(), is(400));
+        assertThat(exceptionResponse.getMessage(),is("Configuration var2 is required but not specified"));
+
+
+    }
+
+    @Test
+    public void updateTaskWithInvalidConfig() {
+        Operator op = initOperator();
+        Config config = Config.newBuilder()
+                .addConfig("var2", "default2").build();
+        TaskPropsVO task = MockTaskFactory.createTaskPropsVOWithOperator(op.getId()).cloneBuilder().withConfig(config).build();
+        String payload = JSONUtils.toJsonString(task);
+        String response = post("/tasks", payload);
+        Task createdTask = JSONUtils.jsonToObject(response, Task.class);
+        Config errorConfig = Config.newBuilder().addConfig("var3", "default3").build();
+        Task updateTask = createdTask.cloneBuilder().withConfig(errorConfig).build();
+        String updateRes = put("/tasks/" + updateTask.getId(), JSONUtils.toJsonString(updateTask));
+        ExceptionResponse exceptionResponse = jsonSerializer.toObject(updateRes, ExceptionResponse.class);
+        assertThat(exceptionResponse.getCode(), is(400));
+        assertThat(exceptionResponse.getMessage(),is("Configuration var2 is required but not specified"));
+
+    }
+
+    @Test
+    public void executeTaskWithInvalidConfig() {
+        Operator op = initOperator();
+        Config config = Config.newBuilder()
+                .addConfig("var2", "default2").build();
+        TaskPropsVO task = MockTaskFactory.createTaskPropsVOWithOperator(op.getId()).cloneBuilder().withConfig(config).build();
+        String payload = JSONUtils.toJsonString(task);
+        String response = post("/tasks", payload);
+        Task createdTask = JSONUtils.jsonToObject(response, Task.class);
+        RunTaskVO taskVO = new RunTaskVO();
+        Config errorConfig = Config.newBuilder().addConfig("var3", "default3").build();
+        taskVO.setTaskId(createdTask.getId());
+        taskVO.setConfig(errorConfig.getValues());
+        String request = JSONUtils.toJsonString(Lists.newArrayList(taskVO));
+        String runRes = post("/tasks/_run",request);
+        ExceptionResponse exceptionResponse = jsonSerializer.toObject(runRes, ExceptionResponse.class);
+        assertThat(exceptionResponse.getCode(),is(400));
+        assertThat(exceptionResponse.getMessage(),is("Unknown configuration 'var3'"));
+
+
+    }
+
+
+    private Operator initOperator() {
+        String generatedString = RandomStringUtils.randomAlphabetic(10);
+        String packagePath = OperatorCompiler.compileJar(TestOperator.class, generatedString);
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withName(generatedString)
+                .withClassName(generatedString)
+                .withPackagePath(packagePath)
+                .build();
+        operatorDao.create(op);
+        return op;
+    }
+
 
     @Test
     public void deleteTask_withExistingTaskId_shouldRemoveTaskAndResponse() {
