@@ -10,6 +10,7 @@ import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
@@ -32,7 +33,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -53,6 +57,8 @@ public class TaskRunServiceTest extends CommonTestBase {
 
     private final Executor executor = mock(Executor.class);
 
+    private final Scheduler scheduler = mock(Scheduler.class);
+
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
@@ -62,7 +68,8 @@ public class TaskRunServiceTest extends CommonTestBase {
         this.taskRunService = spy(new TaskRunService(
                 taskRunDao,
                 resourceLoader,
-                executor
+                executor,
+                scheduler
         ));
     }
 

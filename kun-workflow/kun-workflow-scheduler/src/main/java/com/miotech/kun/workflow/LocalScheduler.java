@@ -30,4 +30,10 @@ public class LocalScheduler implements Scheduler {
         logger.info("run graph {} with env {}", graph, env);
         return taskSpawner.run(graph, env);
     }
+
+    @Override
+    public boolean rerun(TaskRun taskRun) {
+        taskSpawner.rerun(taskRun);
+        return true;
+    }
 }

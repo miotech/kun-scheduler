@@ -15,6 +15,7 @@ import com.miotech.kun.workflow.common.taskrun.factory.TaskRunStateVOFactory;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -46,13 +47,17 @@ public class TaskRunService {
     @Inject
     private Executor executor;
 
+    @Inject
+    private Scheduler scheduler;
+
     private final Set<Long> rerunningTaskRunIds = new ConcurrentHashSet<>();
 
     @Inject
-    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor) {
+    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor,Scheduler scheduler) {
         this.taskRunDao = taskRunDao;
         this.resourceLoader = resourceLoader;
         this.executor = executor;
+        this.scheduler = scheduler;
     }
 
     /* --------------------------------------- */
@@ -231,28 +236,9 @@ public class TaskRunService {
             return false;
         }
         TaskRun taskRun = taskRunOptional.get();
-        // Does the same re-run request invoked in another threads?
-        if (!rerunningTaskRunIds.add(taskRunId)) {
-            logger.warn("Cannot rerun taskrun instance with id = {}. Reason: another thread is attempting to re-run the same task run.", taskRunId);
-            return false;
-        }
+        return scheduler.rerun(taskRun);
 
-        try {
-            // 2. check if latest task attempt is finished.
-            // If it is still running, we shall not create another attempt before it is finished.
-            TaskAttemptProps latestAttempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
-            if (!latestAttemptIsFinished(latestAttempt, taskRunId)) {
-                return false;
-            }
-            // 3. Submit a new attempt to executor
-            return submitReRunToExecutor(taskRun, latestAttempt);
-        } catch (Exception e) {
-            logger.error("Failed to re-run taskrun with id = {} due to exceptions.", taskRunId);
-            throw e;
-        } finally {
-            // release the lock
-            rerunningTaskRunIds.remove(taskRunId);
-        }
+
     }
 
     private boolean latestAttemptIsFinished(TaskAttemptProps latestAttempt, Long taskRunId) {
