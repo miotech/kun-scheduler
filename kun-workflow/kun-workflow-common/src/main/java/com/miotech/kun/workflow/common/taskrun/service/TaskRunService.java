@@ -94,11 +94,12 @@ public class TaskRunService {
             attempts.sort((o1, o2) -> o1.getAttempt() < o2.getAttempt() ? 1 : -1);
             taskAttempt = attempts.get(0);
         }
-        Resource resource = resourceLoader.getResource(taskAttempt.getLogPath());
-        if (resource == null) {
+        if (taskAttempt == null) {
             List<String> logs = new ArrayList<>();
-            return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLine, startLine, logs);
+            return TaskRunLogVOFactory.create(taskRunId, 0, startLine, startLine, logs);
         }
+
+        Resource resource = resourceLoader.getResource(taskAttempt.getLogPath());
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
 
