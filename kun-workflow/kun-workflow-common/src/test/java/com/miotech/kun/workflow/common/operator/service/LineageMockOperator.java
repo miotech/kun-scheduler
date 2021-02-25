@@ -24,7 +24,9 @@ public class LineageMockOperator extends KunOperator {
 
     @Override
     public ConfigDef config() {
-        return new ConfigDef();
+        return new ConfigDef()
+                .define("upstreamStoreCount", ConfigDef.Type.INT, true, "test key 1", "testKey1")
+                .define("downstreamStoreCount", ConfigDef.Type.INT, true, "test key 2", "testKey2");
     }
 
     @Override
