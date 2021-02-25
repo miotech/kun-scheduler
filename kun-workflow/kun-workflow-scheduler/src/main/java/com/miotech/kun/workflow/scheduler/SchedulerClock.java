@@ -36,6 +36,21 @@ public class SchedulerClock {
         logger.debug("Initial delay is {} milliseconds.", initDelay);
     }
 
+    public void start(OffsetDateTime recoverStartTime) {
+        OffsetDateTime now = DateTimeUtils.now();
+        while (recoverStartTime.compareTo(now) < 0) {
+            try {
+                TickEvent event = new TickEvent(new Tick(recoverStartTime));
+                logger.debug("Post TickEvent to TaskFactory. event={}", event);
+                eventBus.post(event);
+                recoverStartTime = recoverStartTime.plusMinutes(1);
+            } catch (Exception e) {
+                logger.error("Failed to emit TickEvent. Continue. now={}", now, e);
+            }
+        }
+        start();
+    }
+
     private void emitTick() {
         OffsetDateTime now = DateTimeUtils.now();
         try {

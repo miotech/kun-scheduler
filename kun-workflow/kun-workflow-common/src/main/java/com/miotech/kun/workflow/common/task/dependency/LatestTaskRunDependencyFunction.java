@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.util.List;
 
+//默认选择一天以内的最近一次
 @Singleton
 public class LatestTaskRunDependencyFunction implements DependencyFunction {
     private final String functionType = "latestTaskRun";
@@ -34,10 +35,9 @@ public class LatestTaskRunDependencyFunction implements DependencyFunction {
             }
         }
 
-        TaskRun upstreamTaskRun = taskRunDao.fetchLatestTaskRun(upstreamTaskId);
+        TaskRun upstreamTaskRun = taskRunDao.fetchLatestTaskRunToday(upstreamTaskId);
         if(upstreamTaskRun == null){
-            //todo:fix upstream is null
-            logger.error("upsteam is null, task = {}",self);
+            logger.error("upstreamTask never start, task = {}",self);
             return Lists.newArrayList();
         }
         return Lists.newArrayList(upstreamTaskRun.getId());

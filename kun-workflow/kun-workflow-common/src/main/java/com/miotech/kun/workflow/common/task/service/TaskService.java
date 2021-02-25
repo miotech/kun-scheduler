@@ -15,8 +15,12 @@ import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionPro
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.vo.*;
 import com.miotech.kun.workflow.core.Scheduler;
+import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.Resolver;
+import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.core.model.task.DependencyLevel;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskDependency;
 import com.miotech.kun.workflow.core.model.task.TaskPriority;
@@ -31,6 +35,8 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static java.lang.String.format;
 
 @Singleton
 public class TaskService {
@@ -101,13 +107,41 @@ public class TaskService {
         Task task = taskWithProps.cloneBuilder()
                 .withId(WorkflowIdGenerator.nextTaskId())
                 .build();
-
         // 5. persist with DAO
         taskDao.create(task);
 
         // 6. update lineage
         updateLineageGraphOnTaskCreate(task);
         return task;
+    }
+
+    private Config parseConfig(TaskPropsVO vo) {
+        ConfigDef configDef = operatorService.getOperatorConfigDef(vo.getOperatorId());
+        // populate default values
+        Config config = new Config(configDef, vo.getConfig().getValues());
+        checkConfig(configDef,config);
+        return config;
+    }
+
+    private void checkConfig(ConfigDef configDef, Config config) {
+        for (ConfigDef.ConfigKey configKey : configDef.configKeys()) {
+            String name = configKey.getName();
+            if (configKey.isRequired() && !config.contains(name)) {
+                throw new IllegalArgumentException(format("Configuration %s is required but not specified", name));
+            }
+        }
+    }
+
+    private void checkRuntimeConfig(Map<String, Object> runtimeConfig, Task task) {
+        ConfigDef configDef = operatorService.getOperatorConfigDef(task.getOperatorId());
+        Config config = new Config(runtimeConfig);
+        config.validateBy(configDef);
+        for (ConfigDef.ConfigKey configKey : configDef.configKeys()) {
+            String name = configKey.getName();
+            if (!configKey.isReconfigurable() && config.contains(name)) {
+                throw new IllegalArgumentException(format("Configuration %s should not be reconfigured.", name));
+            }
+        }
     }
 
     public Task partialUpdateTask(Long taskId, TaskPropsVO vo) {
@@ -137,12 +171,14 @@ public class TaskService {
         Preconditions.checkNotNull(taskId, TASK_ID_SHOULD_NOT_BE_NULL);
         Preconditions.checkNotNull(vo, "Cannot perform update with vo: null");
 
+        Config config = parseConfig(vo);
+
         Task task = fetchById(taskId).cloneBuilder()
                 .withId(taskId)
                 .withName(vo.getName())
                 .withScheduleConf(vo.getScheduleConf())
                 .withDependencies(parseDependencyVO(vo.getDependencies()))
-                .withConfig(vo.getConfig())
+                .withConfig(config)
                 .withDescription(vo.getDescription())
                 .withOperatorId(vo.getOperatorId())
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
@@ -281,10 +317,15 @@ public class TaskService {
         TaskRunEnv.Builder envBuilder = TaskRunEnv.newBuilder();
         for (Task t : tasks) {
             Long taskId = t.getId();
+            Optional<Operator> operatorOptional = operatorDao.fetchById(t.getOperatorId());
+            if (!operatorOptional.isPresent()) {
+                throw new EntityNotFoundException(String.format("Cannot create task with operator id: %d, target operator not found.", t.getOperatorId()));
+            }
             Map<String, Object> config = rtvMap.get(taskId).getConfig();
             if (config == null) {
                 config = Collections.emptyMap();
             }
+            checkRuntimeConfig(config, t);
             envBuilder.addConfig(taskId, config);
         }
 
@@ -305,17 +346,19 @@ public class TaskService {
     private List<TaskDependency> parseDependencyVO(List<TaskDependencyVO> vo) {
         return vo.stream().map(x -> new TaskDependency(x.getUpstreamTaskId(),
                 x.getDownstreamTaskId(), dependencyFunctionProvider.from(
-                x.getDependencyFunction())))
+                x.getDependencyFunction()),
+                x.getDependencyLevel() == null ? DependencyLevel.STRONG : DependencyLevel.resolve(x.getDependencyLevel())))
                 .collect(Collectors.toList());
     }
 
     private Task convertTaskPropsVoToTask(TaskPropsVO vo) {
+        Config config = parseConfig(vo);
         return Task.newBuilder()
                 .withName(vo.getName())
                 .withDescription(vo.getDescription())
                 .withOperatorId(vo.getOperatorId())
                 .withScheduleConf(vo.getScheduleConf())
-                .withConfig(vo.getConfig())
+                .withConfig(config)
                 .withDependencies(parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags())
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())

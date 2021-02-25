@@ -8,7 +8,9 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
@@ -110,7 +112,11 @@ public class Task {
                 .withPriority(priority);
     }
 
-    public boolean shouldSchedule(OffsetDateTime scheduleTime, OffsetDateTime currentTime) {
+    public boolean shouldSchedule(Tick tick, OffsetDateTime currentTime) {
+        if(tick == SpecialTick.DIRECTLY_TICK){
+            return true;
+        }
+        OffsetDateTime scheduleTime = tick.toOffsetDateTime();
         boolean shouldSchedule = false;
         switch (scheduleConf.getType()) {
             case ONESHOT:

@@ -15,6 +15,7 @@ import com.miotech.kun.workflow.common.task.vo.TagVO;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.task.DependencyLevel;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskDependency;
@@ -60,7 +61,7 @@ public class TaskDao {
 
     private static final List<String> tickTaskCols = ImmutableList.of("task_id", "scheduled_tick");
 
-    private static final List<String> taskRelationCols = ImmutableList.of("upstream_task_id", "downstream_task_id", "dependency_function");
+    private static final List<String> taskRelationCols = ImmutableList.of("upstream_task_id", "downstream_task_id", "dependency_function", "dependency_level");
 
     private static final String TASK_ID_QUERY = " task_id = ? ";
     private final DatabaseOperator dbOperator;
@@ -81,6 +82,7 @@ public class TaskDao {
         boolean shouldInsertTickTask;
 
         switch (scheduleConf.getType()) {
+            case ONESHOT:
             case SCHEDULED:
                 shouldInsertTickTask = true;
                 break;
@@ -150,7 +152,8 @@ public class TaskDao {
                             // downstream_task_id
                             task.getId(),
                             // dependency_function
-                            taskDependency.getDependencyFunction().toFunctionType()
+                            taskDependency.getDependencyFunction().toFunctionType(),
+                            taskDependency.getDependencyLevel().name()
                     })
                     .collect(Collectors.toList())
                     .toArray(new Object[0][0]);
@@ -792,11 +795,10 @@ public class TaskDao {
                 .asPrepared()
                 .getSQL();
 
-        dbOperator.transaction(() -> {
-            dbOperator.batch(tickTaskUpdateSql, taskToBeUpdated.stream().toArray(Object[][]::new));
-            dbOperator.batch(deleteTickTask, taskToBeDeleted.stream().toArray(Object[][]::new));
-            return true;
-        });
+
+        dbOperator.batch(tickTaskUpdateSql, taskToBeUpdated.stream().toArray(Object[][]::new));
+        dbOperator.batch(deleteTickTask, taskToBeDeleted.stream().toArray(Object[][]::new));
+
     }
 
     public Optional<Tick> fetchNextExecutionTickByTaskId(Long taskId) {
@@ -948,7 +950,8 @@ public class TaskDao {
             return new TaskDependency(
                     rs.getLong(TASK_RELATION_MODEL_NAME + "_upstream_task_id"),
                     rs.getLong(TASK_RELATION_MODEL_NAME + "_downstream_task_id"),
-                    functionProvider.from(rs.getString(TASK_RELATION_MODEL_NAME + "_dependency_function"))
+                    functionProvider.from(rs.getString(TASK_RELATION_MODEL_NAME + "_dependency_function")),
+                    DependencyLevel.resolve(rs.getString(TASK_RELATION_MODEL_NAME + "_dependency_level"))
             );
         }
     }

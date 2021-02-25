@@ -23,7 +23,6 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
@@ -70,7 +69,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskAttempt taskAttempt = result.get(0);
         assertThat(taskAttempt.getId(), is(WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), 1)));
         assertThat(taskAttempt.getAttempt(), is(1));
-        assertThat(taskAttempt.getTaskRun(), sameBeanAs(taskRun));
+        checkTaskRun(taskAttempt.getTaskRun(),taskRun);
         assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
         assertThat(taskAttempt.getLogPath(), is(nullValue()));
         assertThat(taskAttempt.getStartAt(), is(nullValue()));
@@ -91,7 +90,7 @@ public class TaskManagerTest extends SchedulerTestBase {
     @Test
     public void testSubmit_task_upstream_is_success() {
         // prepare
-        List<Task> tasks = MockTaskFactory.createTasks(2);
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2,"0>>1");
         List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1");
         for (TaskRun taskRun : taskRuns) {
             taskDao.create(taskRun.getTask());
@@ -117,7 +116,8 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskAttempt taskAttempt = result.get(0);
         assertThat(taskAttempt.getId(), is(WorkflowIdGenerator.nextTaskAttemptId(taskRun2.getId(), 1)));
         assertThat(taskAttempt.getAttempt(), is(1));
-        assertThat(taskAttempt.getTaskRun(), sameBeanAs(taskRun2));
+        assertThat(taskAttempt.getTaskRun().getId(), is(taskRun2.getId()));
+        checkTaskRun(taskAttempt.getTaskRun(),taskRun2);
         assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
         assertThat(taskAttempt.getLogPath(), is(nullValue()));
         assertThat(taskAttempt.getStartAt(), is(nullValue()));
@@ -127,7 +127,7 @@ public class TaskManagerTest extends SchedulerTestBase {
     @Test
     public void testSubmit_task_upstream_is_failed() throws InterruptedException {
         // prepare
-        List<Task> tasks = MockTaskFactory.createTasks(2);
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2,"0>>1");
         List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1");
         for (TaskRun taskRun : taskRuns) {
             taskDao.create(taskRun.getTask());
@@ -152,7 +152,7 @@ public class TaskManagerTest extends SchedulerTestBase {
     @Test
     public void testSubmit_task_waiting_for_upstream_becomes_success() throws InterruptedException {
         // prepare
-        List<Task> tasks = MockTaskFactory.createTasks(2);
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2,"0>>1");
         List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1");
         for (TaskRun taskRun : taskRuns) {
             taskDao.create(taskRun.getTask());
@@ -171,6 +171,8 @@ public class TaskManagerTest extends SchedulerTestBase {
         TimeUnit.SECONDS.sleep(2);
         assertThat(invoked(), is(false));
 
+        //
+        taskRunDao.updateTaskAttemptStatus(attempt1.getId(), TaskRunStatus.SUCCESS, null, null);
         // post successful event
         eventBus.post(new TaskAttemptStatusChangeEvent(attempt1.getId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "test task", 0L));
 
@@ -183,11 +185,19 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskAttempt taskAttempt = result.get(0);
         assertThat(taskAttempt.getId(), is(WorkflowIdGenerator.nextTaskAttemptId(taskRun2.getId(), 1)));
         assertThat(taskAttempt.getAttempt(), is(1));
-        assertThat(taskAttempt.getTaskRun(), sameBeanAs(taskRun2));
+        checkTaskRun(taskAttempt.getTaskRun(),taskRun2);
         assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
         assertThat(taskAttempt.getLogPath(), is(nullValue()));
         assertThat(taskAttempt.getStartAt(), is(nullValue()));
         assertThat(taskAttempt.getEndAt(), is(nullValue()));
+    }
+
+    private void checkTaskRun(TaskRun actual,TaskRun except){
+        assertThat(actual.getId(),is(except.getId()));
+        assertThat(actual.getPriority(),is(except.getPriority()));
+        assertThat(actual.getQueueName(),is(except.getQueueName()));
+        assertThat(actual.getScheduledTick(),is(except.getScheduledTick()));
+        assertThat(actual.getScheduledType(),is(except.getScheduledType()));
     }
 
     private boolean invoked() {
