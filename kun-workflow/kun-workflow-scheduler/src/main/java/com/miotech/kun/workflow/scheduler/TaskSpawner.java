@@ -108,8 +108,8 @@ public class TaskSpawner {
         return spawn(Lists.newArrayList(graph), current, env);
     }
 
-    public void rerun(TaskRun taskRun){
-        taskManager.retry(taskRun);
+    public boolean rerun(TaskRun taskRun){
+        return taskManager.retry(taskRun);
     }
 
     /* ----------- private methods ------------ */

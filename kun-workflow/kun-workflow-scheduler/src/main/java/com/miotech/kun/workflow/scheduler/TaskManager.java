@@ -64,14 +64,20 @@ public class TaskManager {
      *
      * @param taskRun
      */
-    public void retry(TaskRun taskRun) {
+    public boolean retry(TaskRun taskRun) {
         checkState(taskRun.getStatus().isFinished(), "taskRun status must be finished ");
+        // Does the same re-run request invoked in another threads?
+        if (rerunningTaskRunIds.containsKey(taskRun.getId())) {
+            logger.warn("Cannot rerun taskrun instance with id = {}. Reason: another thread is attempting to re-run the same task run.", taskRun.getId());
+            return false;
+        }
         try {
-            // Does the same re-run request invoked in another threads?
-            if (rerunningTaskRunIds.containsKey(taskRun.getId())) {
-                logger.warn("Cannot rerun taskrun instance with id = {}. Reason: another thread is attempting to re-run the same task run.", taskRun.getId());
-            }
             rerunningTaskRunIds.put(taskRun.getId(), 1);
+            TaskAttempt taskAttempt = createTaskAttempt(taskRun);
+            logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
+            save(Arrays.asList(taskAttempt));
+            submitSatisfyTaskAttemptToExecutor();
+            return true;
         } catch (Exception e) {
             logger.error("Failed to re-run taskrun with id = {} due to exceptions.", taskRun.getId());
             throw e;
@@ -79,10 +85,6 @@ public class TaskManager {
             // release the lock
             rerunningTaskRunIds.remove(taskRun.getId());
         }
-        TaskAttempt taskAttempt = createTaskAttempt(taskRun);
-        logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
-        save(Arrays.asList(taskAttempt));
-        submitSatisfyTaskAttemptToExecutor();
     }
 
     /* ----------- private methods ------------ */

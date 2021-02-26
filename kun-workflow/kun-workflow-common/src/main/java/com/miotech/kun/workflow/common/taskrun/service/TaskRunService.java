@@ -16,12 +16,9 @@ import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
-import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
-import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.dubbo.common.utils.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -239,33 +236,6 @@ public class TaskRunService {
         return scheduler.rerun(taskRun);
 
 
-    }
-
-    private boolean latestAttemptIsFinished(TaskAttemptProps latestAttempt, Long taskRunId) {
-        if (Objects.isNull(latestAttempt)) {
-            throw new IllegalStateException(
-                    String.format("Unexpected state: cannot find any attempt for task run with id = %s when trying to rerun.", taskRunId)
-            );
-        }
-        if (!latestAttempt.getStatus().isFinished()) {
-            logger.info("Cannot rerun taskrun instance with id = {}. Reason: latest attempt (id = {}) is still running.", taskRunId, latestAttempt.getId());
-            return false;
-        }
-        return true;
-    }
-
-    private boolean submitReRunToExecutor(TaskRun taskRun, TaskAttemptProps latestAttempt) {
-        Preconditions.checkNotNull(taskRun);
-        // TODO: @yide 不应该在TaskManager以外的地方直接构造TaskAttempt并提交给Executor，否则依赖等会有问题，
-        // 因为依赖的管理目前是由TaskManager完成的。
-        TaskAttempt newAttempt = TaskAttempt.newBuilder()
-                .withId(WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), latestAttempt.getAttempt() + 1))
-                .withTaskRun(taskRun)
-                .withAttempt(latestAttempt.getAttempt() + 1)
-                .withStatus(TaskRunStatus.CREATED)
-                .build();
-        taskRunDao.createAttempt(newAttempt);
-        return executor.submit(newAttempt);
     }
 
     public boolean abortTaskRun(Long taskRunId) {

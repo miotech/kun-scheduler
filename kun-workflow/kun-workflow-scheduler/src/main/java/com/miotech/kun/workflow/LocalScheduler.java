@@ -33,7 +33,6 @@ public class LocalScheduler implements Scheduler {
 
     @Override
     public boolean rerun(TaskRun taskRun) {
-        taskSpawner.rerun(taskRun);
-        return true;
+        return taskSpawner.rerun(taskRun);
     }
 }
