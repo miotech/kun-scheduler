@@ -8,12 +8,14 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.ReflectUtils;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
+import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
@@ -148,6 +150,7 @@ public class LocalExecutorTest extends CommonTestBase {
         bind(WorkflowExecutorFacade.class, LocalExecutorFacadeImpl.class);
         bind(Props.class, props);
         bind(Executor.class, LocalExecutor.class);
+        bind(Scheduler.class, LocalScheduler.class);
     }
 
     @Before

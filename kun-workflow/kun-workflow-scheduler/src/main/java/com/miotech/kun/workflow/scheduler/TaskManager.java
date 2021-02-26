@@ -97,7 +97,6 @@ public class TaskManager {
 
         int attempt = 1;
         if (savedTaskAttempt != null) {
-            checkState(taskRun.getStatus().isFinished(), "rerun taskAttempt status must be finished ");
             attempt = savedTaskAttempt.getAttempt() + 1;
         }
         TaskAttempt taskAttempt = TaskAttempt.newBuilder()
