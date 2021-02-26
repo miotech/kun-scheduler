@@ -81,6 +81,7 @@ dependencies {
     implementation 'com.googlecode.json-simple:json-simple'
     implementation "com.h2database:h2"
     implementation 'redis.clients:jedis'
+    implementation "org.flywaydb:flyway-core"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"
