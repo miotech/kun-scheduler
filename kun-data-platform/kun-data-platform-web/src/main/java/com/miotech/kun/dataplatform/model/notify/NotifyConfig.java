@@ -10,8 +10,6 @@ import java.util.List;
  * and a test rule which judges whether notifications should be sent or not.
  */
 public abstract class NotifyConfig {
-    private List<NotifierUserConfig> notifierConfigs;
-
     /**
      * Test if a event should be notified
      * @param event the event object to be tested
@@ -22,7 +20,5 @@ public abstract class NotifyConfig {
     /**
      * Get user configurations of applied notifiers
      */
-    public List<NotifierUserConfig> getNotifierConfigs() {
-        return this.notifierConfigs;
-    }
+    public abstract List<NotifierUserConfig> getNotifierConfigs();
 }
