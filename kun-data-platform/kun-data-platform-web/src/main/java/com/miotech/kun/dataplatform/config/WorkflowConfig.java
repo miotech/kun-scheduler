@@ -8,19 +8,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnExpression("${workflow.enabled:true}")
 public class WorkflowConfig {
-
     @Value("${workflow.baseUrl}")
     private String workflowUrl;
 
+    @ConditionalOnExpression("${workflow.enabled:true}")
     @Bean
     public WorkflowClient getWorkflowClient() {
-         return new DefaultWorkflowClient(workflowUrl);
+        return new DefaultWorkflowClient(workflowUrl);
     }
 
     @Value("${workflow.variableNamespace:dataplatform}")
-    private String variableNamespace = "dataplatform";
+    private String variableNamespace;
 
     public String getVariableNamespace() {
         return this.variableNamespace;
