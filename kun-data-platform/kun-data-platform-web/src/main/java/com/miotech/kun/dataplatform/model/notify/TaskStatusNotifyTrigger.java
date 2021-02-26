@@ -12,7 +12,7 @@ public enum TaskStatusNotifyTrigger {
     private final String typeName;
 
     @JsonValue
-    public String getTriggerType() {
+    public String getTypeName() {
         return this.typeName;
     }
 

@@ -46,7 +46,7 @@ public class TaskNotifyConfig extends NotifyConfig {
         return notifierConfigs;
     }
 
-    public TaskNotifyConfigBuilder newBuilder() {
+    public static TaskNotifyConfigBuilder newBuilder() {
         return new TaskNotifyConfigBuilder();
     }
 
