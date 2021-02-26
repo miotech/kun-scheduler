@@ -26,9 +26,9 @@ public class TestOperator1 extends KunOperator {
     }
 
     private TaskAttemptReport prepareReport() {
-        DataStore ds1 = new PostgresDataStore("jdbc:postgresql://10.0.0.1", "test", "", "test1");
-        DataStore ds2 = new PostgresDataStore("jdbc:postgresql://10.0.0.1", "test", "", "test2");
-        DataStore ds3 = new MongoDataStore("10.0.0.2", "test", "test2");
+        DataStore ds1 = new PostgresDataStore("10.0.0.1", 5432, "test", "", "test1");
+        DataStore ds2 = new PostgresDataStore("10.0.0.1", 5432, "test", "", "test2");
+        DataStore ds3 = new MongoDataStore("10.0.0.2", 27017, "test", "test2");
 
         List<DataStore> inlets = Lists.newArrayList(ds1, ds2);
         List<DataStore> outlets = Lists.newArrayList(ds3);

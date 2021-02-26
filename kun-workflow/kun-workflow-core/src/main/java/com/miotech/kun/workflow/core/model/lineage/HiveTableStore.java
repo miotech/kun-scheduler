@@ -10,14 +10,14 @@ import java.util.Objects;
 
 public class HiveTableStore extends DataStore {
 
-    private final String dataStoreUrl;
+    private final String location;
 
     private final String database;
 
     private final String table;
 
-    public String getDataStoreUrl() {
-        return dataStoreUrl;
+    public String getLocation() {
+        return location;
     }
 
     public String getDatabase() {
@@ -29,11 +29,11 @@ public class HiveTableStore extends DataStore {
     }
 
     @JsonCreator
-    public HiveTableStore(@JsonProperty("dataStoreUrl") String dataStoreUrl,
+    public HiveTableStore(@JsonProperty("location") String location,
                           @JsonProperty("database") String database,
                           @JsonProperty("table") String table) {
         super(DataStoreType.HIVE_TABLE);
-        this.dataStoreUrl = dataStoreUrl;
+        this.location = location;
         this.database = database;
         this.table = table;
     }
@@ -46,7 +46,7 @@ public class HiveTableStore extends DataStore {
     @Override
     public DSI getDSI() {
         return DSI.newBuilder().withStoreType("hive")
-                .putProperty("url", dataStoreUrl)
+                .putProperty("location", location)
                 .putProperty("database", database)
                 .putProperty("table", table)
                 .build();
@@ -57,13 +57,13 @@ public class HiveTableStore extends DataStore {
         if (this == o) return true;
         if (!(o instanceof HiveTableStore)) return false;
         HiveTableStore that = (HiveTableStore) o;
-        return Objects.equals(getDataStoreUrl(), that.getDataStoreUrl()) &&
+        return Objects.equals(getLocation(), that.getLocation()) &&
                 Objects.equals(getDatabase(), that.getDatabase()) &&
                 Objects.equals(getTable(), that.getTable());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getDataStoreUrl(), getDatabase(), getTable());
+        return Objects.hash(getLocation(), getDatabase(), getTable());
     }
 }

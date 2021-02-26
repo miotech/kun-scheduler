@@ -3,25 +3,32 @@ package com.miotech.kun.metadata.databuilder.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class ElasticSearchDataSource extends DataSource{
-    private final String url;
+public class ElasticSearchDataSource extends DataSource {
+    private final String host;
+    private final int port;
     private final String username;
     private final String password;
 
 
     @JsonCreator
     public ElasticSearchDataSource(@JsonProperty("id") long id,
-                                @JsonProperty("url") String url,
-                                @JsonProperty("username") String username,
-                                @JsonProperty("password") String password) {
+                                   @JsonProperty("host") String host,
+                                   @JsonProperty("port") int port,
+                                   @JsonProperty("username") String username,
+                                   @JsonProperty("password") String password) {
         super(id, Type.ELASTICSEARCH);
-        this.url = url;
+        this.host = host;
+        this.port = port;
         this.username = username;
         this.password = password;
     }
 
-    public String getUrl() {
-        return url;
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public String getUsername() {
@@ -35,7 +42,8 @@ public class ElasticSearchDataSource extends DataSource{
     @Override
     public String toString() {
         return "ElasticSearchDataSource{" +
-                ", url='" + url + '\'' +
+                "host='" + host + '\'' +
+                ", port=" + port +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 '}';
@@ -46,7 +54,8 @@ public class ElasticSearchDataSource extends DataSource{
     }
 
     public static final class Builder {
-        private String url;
+        private String host;
+        private int port;
         private String username;
         private String password;
         private long id;
@@ -54,8 +63,13 @@ public class ElasticSearchDataSource extends DataSource{
         private Builder() {
         }
 
-        public Builder withUrl(String url) {
-            this.url = url;
+        public Builder withHost(String host) {
+            this.host = host;
+            return this;
+        }
+
+        public Builder withPort(int port) {
+            this.port = port;
             return this;
         }
 
@@ -75,7 +89,7 @@ public class ElasticSearchDataSource extends DataSource{
         }
 
         public ElasticSearchDataSource build() {
-            return new ElasticSearchDataSource(id, url, username, password);
+            return new ElasticSearchDataSource(id, host, port, username, password);
         }
     }
 

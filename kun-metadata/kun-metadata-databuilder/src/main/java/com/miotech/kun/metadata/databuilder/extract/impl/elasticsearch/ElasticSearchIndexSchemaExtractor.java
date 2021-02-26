@@ -68,7 +68,7 @@ public class ElasticSearchIndexSchemaExtractor extends SchemaExtractorTemplate {
 
     @Override
     public DataStore getDataStore() {
-        return new ElasticSearchIndexStore(elasticSearchDataSource.getUrl(), index);
+        return new ElasticSearchIndexStore(elasticSearchDataSource.getHost(), elasticSearchDataSource.getPort(), index);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class ElasticSearchIndexSchemaExtractor extends SchemaExtractorTemplate {
     }
 
     private String getEsVersion() {
-        String version = parseVersion(httpClientUtil.doGet("http://" + elasticSearchDataSource.getUrl()));
+        String version = parseVersion(httpClientUtil.doGet("http://" + elasticSearchDataSource.getHost() + ":" + elasticSearchDataSource.getPort()));
         if (StringUtils.isBlank(version)) {
             throw new ElasticSearchServiceUnavailableException("get es version error");
         }

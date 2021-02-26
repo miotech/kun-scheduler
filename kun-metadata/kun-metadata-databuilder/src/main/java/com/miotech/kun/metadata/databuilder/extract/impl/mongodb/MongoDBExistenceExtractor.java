@@ -13,7 +13,8 @@ public class MongoDBExistenceExtractor implements DatasetExistenceExtractor {
 
     @Override
     public boolean judgeExistence(Dataset dataset, DataSource dataSource, DatasetExistenceJudgeMode judgeMode) {
-        try (MongoClient client = new MongoClient(new MongoClientURI(((MongoDataSource) dataSource).getUrl()))) {
+        MongoDataSource mongoDataSource = (MongoDataSource) dataSource;
+        try (MongoClient client = new MongoClient(new MongoClientURI(mongoDataSource.getUrl()))) {
             return client.getDatabase(dataset.getDatabaseName()).listCollectionNames().into(Lists.newArrayList()).contains(dataset.getName());
         }
     }

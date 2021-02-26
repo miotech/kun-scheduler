@@ -31,8 +31,8 @@ public class ElasticSearchClient {
         requestBuilder.setConnectTimeout(120000);
         requestBuilder.setConnectionRequestTimeout(120000);
 
-        RestClientBuilder builder = RestClient.builder(new HttpHost(dataSource.getUrl().split(":")[0],
-                Integer.parseInt(dataSource.getUrl().split(":")[1]),
+        RestClientBuilder builder = RestClient.builder(new HttpHost(dataSource.getHost(),
+                dataSource.getPort(),
                 "http"))
                 .setHttpClientConfigCallback(
                         httpClientBuilder -> httpClientBuilder

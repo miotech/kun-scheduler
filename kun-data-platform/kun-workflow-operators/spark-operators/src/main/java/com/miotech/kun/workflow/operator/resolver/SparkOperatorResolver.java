@@ -26,9 +26,6 @@ public class SparkOperatorResolver implements Resolver {
 
     private HdfsFileSystem hdfsFileSystem;
 
-    //todo:metadata 重构后会删除
-    private final String HIVE_PREFIX = "jdbc:awsathena://athena.ap-northeast-1.amazonaws.com:443;S3OutputLocation=";
-
     private final Long taskRunId;
 
     private Map<Long, Pair<List<DataStore>, List<DataStore>>> resolvedTask = new HashMap<>();
@@ -157,7 +154,7 @@ public class SparkOperatorResolver implements Resolver {
                     String dataType = matcher.group(1);
                     switch (dataType) {
                         case "postgresql":
-                            dataStore = toPostgres("jdbc:" + dataType + "://" + matcher.group(2),
+                            dataStore = toPostgres(matcher.group(2),
                                     matcher.group(3), matcher.group(4));
                             break;
                         case "hive2":
@@ -188,7 +185,7 @@ public class SparkOperatorResolver implements Resolver {
         if (matcher.matches()) {
             String table = matcher.group(3);
             String database = matcher.group(2);
-            return new HiveTableStore(HIVE_PREFIX + matcher.group(1), database.toLowerCase(), table.toLowerCase());
+            return new HiveTableStore(datasource, database.toLowerCase(), table.toLowerCase());
         } else {
             logger.error("Illegal hive datasource {}", datasource);
             throw new IllegalStateException("Illegal hive datasource : " + datasource);
@@ -206,7 +203,8 @@ public class SparkOperatorResolver implements Resolver {
                 host = strs[0];
                 index = strs[1];
             }
-            return new ElasticSearchIndexStore("elasticsearch://" + host, index);
+            String[] hostAndPort = host.split(":");
+            return new ElasticSearchIndexStore(hostAndPort[0], Integer.parseInt(hostAndPort[1]), index);
         } else {
             logger.error("Illegal es datasource {}", datasource);
             throw new IllegalStateException("Illegal es datasource : " + datasource);
@@ -224,7 +222,9 @@ public class SparkOperatorResolver implements Resolver {
             schema = strs[0];
             tableName = strs[1];
         }
-        return new PostgresDataStore(url, database, schema, tableName);
+
+        String[] hostAndPort = url.split(":");
+        return new PostgresDataStore(hostAndPort[0], Integer.parseInt(hostAndPort[1]), database, schema, tableName);
     }
 
     private MongoDataStore toMongo(String datasource) {
@@ -239,7 +239,9 @@ public class SparkOperatorResolver implements Resolver {
                 String auth = connect.substring(0, index + 1);
                 connect = connect.replace(auth, "");
             }
-            return new MongoDataStore("mongodb://" + connect, database, collection);
+
+            String[] hostAndPort = connect.split(":");
+            return new MongoDataStore(hostAndPort[0], Integer.parseInt(hostAndPort[1]), database, collection);
 
         } else {
             logger.error("Illegal mongo datasource {}", datasource);

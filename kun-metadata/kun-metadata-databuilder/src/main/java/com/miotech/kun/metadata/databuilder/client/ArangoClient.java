@@ -14,7 +14,7 @@ public class ArangoClient {
 
     public ArangoClient(ArangoDataSource dataSource) {
         this.client = new ArangoDB.Builder()
-                .host(dataSource.getUrl().split(":")[0], Integer.parseInt(dataSource.getUrl().split(":")[1]))
+                .host(dataSource.getHost(), dataSource.getPort())
                 .user(dataSource.getUsername())
                 .password(dataSource.getPassword())
                 .build();

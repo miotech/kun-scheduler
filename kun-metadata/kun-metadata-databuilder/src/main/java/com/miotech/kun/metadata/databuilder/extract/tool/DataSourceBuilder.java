@@ -3,7 +3,6 @@ package com.miotech.kun.metadata.databuilder.extract.tool;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
-import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.model.*;
 import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 
@@ -40,24 +39,24 @@ public class DataSourceBuilder {
             case POSTGRESQL:
                 PostgresDataSource.Builder postgresDataSourceBuilder = PostgresDataSource.newBuilder();
                 postgresDataSourceBuilder.withId(id)
-                        .withUrl(ConnectUrlUtil.convertToConnectUrl(jdbcConnection.getHost(), jdbcConnection.getPort(),
-                                jdbcConnection.getUsername(), jdbcConnection.getPassword(), DatabaseType.POSTGRES))
+                        .withHost(jdbcConnection.getHost())
+                        .withPort(jdbcConnection.getPort())
                         .withUsername(jdbcConnection.getUsername())
                         .withPassword(jdbcConnection.getPassword());
                 return postgresDataSourceBuilder.build();
             case MONGODB:
                 MongoDataSource.Builder mongoDataSourceBuilder = MongoDataSource.newBuilder();
                 mongoDataSourceBuilder.withId(id)
-                        .withUrl(ConnectUrlUtil.convertToConnectUrl(jdbcConnection.getHost(), jdbcConnection.getPort(),
-                                jdbcConnection.getUsername(), jdbcConnection.getPassword(), DatabaseType.MONGO))
+                        .withHost(jdbcConnection.getHost())
+                        .withPort(jdbcConnection.getPort())
                         .withUsername(jdbcConnection.getUsername())
                         .withPassword(jdbcConnection.getPassword());
                 return mongoDataSourceBuilder.build();
             case ELASTICSEARCH:
                 ElasticSearchDataSource elasticSearchDataSource = ElasticSearchDataSource.newBuilder()
                         .withId(id)
-                        .withUrl(ConnectUrlUtil.convertToConnectUrl(jdbcConnection.getHost(), jdbcConnection.getPort(),
-                                jdbcConnection.getUsername(), jdbcConnection.getPassword(), DatabaseType.ELASTICSEARCH))
+                        .withHost(jdbcConnection.getHost())
+                        .withPort(jdbcConnection.getPort())
                         .withUsername(jdbcConnection.getUsername())
                         .withPassword(jdbcConnection.getPassword())
                         .build();
@@ -65,8 +64,8 @@ public class DataSourceBuilder {
             case ARANGO:
                 ArangoDataSource arangoDataSource = ArangoDataSource.newBuilder()
                         .withId(id)
-                        .withUrl(ConnectUrlUtil.convertToConnectUrl(jdbcConnection.getHost(), jdbcConnection.getPort(),
-                                jdbcConnection.getUsername(), jdbcConnection.getPassword(), DatabaseType.ARANGO))
+                        .withHost(jdbcConnection.getHost())
+                        .withPort(jdbcConnection.getPort())
                         .withUsername(jdbcConnection.getUsername())
                         .withPassword(jdbcConnection.getPassword())
                         .build();

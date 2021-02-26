@@ -47,7 +47,7 @@ public class PostgreSQLTableSchemaExtractor extends SchemaExtractorTemplate {
         try {
             List<DatasetField> fields = Lists.newArrayList();
             connection = JDBCClient.getConnection(UseDatabaseUtil.useSchema(postgresDataSource.getUrl(), dbName, schemaName),
-                    this.postgresDataSource.getUsername(), this.postgresDataSource.getPassword(), DatabaseType.POSTGRES);
+                    postgresDataSource.getUsername(), postgresDataSource.getPassword(), DatabaseType.POSTGRES);
 
             List<String> primaryKeys = Lists.newArrayList();
             String primaryKeySQL = "SELECT a.attname " +
@@ -93,7 +93,7 @@ public class PostgreSQLTableSchemaExtractor extends SchemaExtractorTemplate {
 
     @Override
     protected DataStore getDataStore() {
-        return new PostgresDataStore(postgresDataSource.getUrl(), dbName, schemaName, tableName);
+        return new PostgresDataStore(postgresDataSource.getHost(), postgresDataSource.getPort(), dbName, schemaName, tableName);
     }
 
     @Override
