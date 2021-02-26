@@ -34,7 +34,7 @@ public class TaskManager {
 
     private InnerEventLoop eventLoop;
 
-    private final Map<Long, Object> rerunningTaskRunIds = new ConcurrentHashMap<>();
+    private final Map<Long, Boolean> rerunningTaskRunIds = new ConcurrentHashMap<>();
 
 
     @Inject
@@ -67,12 +67,11 @@ public class TaskManager {
     public boolean retry(TaskRun taskRun) {
         checkState(taskRun.getStatus().isFinished(), "taskRun status must be finished ");
         // Does the same re-run request invoked in another threads?
-        if (rerunningTaskRunIds.containsKey(taskRun.getId())) {
+        if (rerunningTaskRunIds.put(taskRun.getId(), Boolean.TRUE) != null) {
             logger.warn("Cannot rerun taskrun instance with id = {}. Reason: another thread is attempting to re-run the same task run.", taskRun.getId());
             return false;
         }
         try {
-            rerunningTaskRunIds.put(taskRun.getId(), 1);
             TaskAttempt taskAttempt = createTaskAttempt(taskRun);
             logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
             save(Arrays.asList(taskAttempt));
