@@ -4,6 +4,7 @@ server:
 workflow:
   enabled: false
   baseUrl: ${WORKFLOW_URL:}
+  variableNamespace: dataplatform
 
 spring:
   datasource:
