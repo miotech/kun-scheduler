@@ -9,14 +9,32 @@ import static com.miotech.kun.metadata.core.model.DataStoreType.ARANGO_COLLECTIO
 
 public class ArangoCollectionStore extends DataStore {
 
-    private final String dataStoreUrl;
+    private final String host;
+
+    private final int port;
 
     private final String database;
 
     private final String collection;
 
-    public String getDataStoreUrl() {
-        return dataStoreUrl;
+    @JsonCreator
+    public ArangoCollectionStore(@JsonProperty("host") String host,
+                                 @JsonProperty("port") int port,
+                                 @JsonProperty("database") String database,
+                                 @JsonProperty("collection") String collection) {
+        super(ARANGO_COLLECTION);
+        this.host = host;
+        this.port = port;
+        this.database = database;
+        this.collection = collection;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public String getDatabase() {
@@ -25,16 +43,6 @@ public class ArangoCollectionStore extends DataStore {
 
     public String getCollection() {
         return collection;
-    }
-
-    @JsonCreator
-    public ArangoCollectionStore(@JsonProperty("dataStoreUrl") String dataStoreUrl,
-                          @JsonProperty("database") String database,
-                          @JsonProperty("collection") String collection) {
-        super(ARANGO_COLLECTION);
-        this.dataStoreUrl = dataStoreUrl;
-        this.database = database;
-        this.collection = collection;
     }
 
     @Override
@@ -46,7 +54,8 @@ public class ArangoCollectionStore extends DataStore {
     public DSI getDSI() {
         return DSI.newBuilder()
                 .withStoreType("arango")
-                .putProperty("url", dataStoreUrl)
+                .putProperty("host", host)
+                .putProperty("port", String.valueOf(port))
                 .putProperty("database", database)
                 .putProperty("collection", collection)
                 .build();

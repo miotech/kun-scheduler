@@ -8,7 +8,9 @@ import com.miotech.kun.metadata.core.model.DataStoreType;
 
 public class PostgresDataStore extends DataStore {
 
-    private final String url;
+    private final String host;
+
+    private final int port;
 
     private final String database;
 
@@ -16,8 +18,28 @@ public class PostgresDataStore extends DataStore {
 
     private final String tableName;
 
-    public String getUrl() {
-        return url;
+
+
+    @JsonCreator
+    public PostgresDataStore(@JsonProperty("host") String host,
+                             @JsonProperty("port") int port,
+                             @JsonProperty("database") String database,
+                             @JsonProperty("schema") String schema,
+                             @JsonProperty("tableName") String tableName) {
+        super(DataStoreType.POSTGRES_TABLE);
+        this.host = host;
+        this.port = port;
+        this.database = database;
+        this.schema = schema;
+        this.tableName = tableName;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public String getDatabase() {
@@ -32,18 +54,6 @@ public class PostgresDataStore extends DataStore {
         return tableName;
     }
 
-    @JsonCreator
-    public PostgresDataStore(@JsonProperty("url") String url,
-                             @JsonProperty("database") String database,
-                             @JsonProperty("schema") String schema,
-                             @JsonProperty("tableName") String tableName) {
-        super(DataStoreType.POSTGRES_TABLE);
-        this.url = url;
-        this.database = database;
-        this.schema = schema;
-        this.tableName = tableName;
-    }
-
     @Override
     public String getDatabaseName() {
         return String.format("%s.%s", database, schema);
@@ -53,8 +63,9 @@ public class PostgresDataStore extends DataStore {
     public DSI getDSI() {
         return DSI.newBuilder()
                 .withStoreType("postgres")
-                .putProperty("url", url)
-                .putProperty("db", database)
+                .putProperty("host", host)
+                .putProperty("port", String.valueOf(port))
+                .putProperty("database", database)
                 .putProperty("schema", schema)
                 .putProperty("table", tableName)
                 .build();

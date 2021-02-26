@@ -33,9 +33,9 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
                 1L,
                 "example_dataset",
                 3L,
-                "{\"type\": \"ARANGO_COLLECTION\", \"@class\": \"com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore\", \"database\": \"miotech_test_database\", \"collection\": \"demo_collection\", \"dataStoreUrl\": \"127.0.0.1:7890\"}",
+                "{\"type\": \"ARANGO_COLLECTION\", \"@class\": \"com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore\", \"database\": \"miotech_test_database\", \"collection\": \"demo_collection\", \"host\": \"127.0.0.1\", \"port\": 7890}",
                 "miotech_test_database",
-                "arango:collection=demo_collection,database=miotech_test_database,url=127.0.0.1%3A7890,",
+                "arango:collection=demo_collection,database=miotech_test_database,host=127.0.0.1,port=7890",
                 true
         );
 
@@ -47,7 +47,8 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
                 "decimal(18,0)");
 
         DataStore dataStore = new ArangoCollectionStore(
-                "127.0.0.1:7890",
+                "127.0.0.1",
+                7890,
                 "miotech_test_database",
                 "demo_collection"
         );

@@ -40,7 +40,7 @@ public class GlueTableSchemaExtractor extends SchemaExtractorTemplate {
 
     @Override
     protected DataStore getDataStore() {
-        return new HiveTableStore(awsDataSource.getAthenaUrl(), table.getDatabaseName(), table.getName());
+        return new HiveTableStore(table.getStorageDescriptor().getLocation(), table.getDatabaseName(), table.getName());
     }
 
     @Override

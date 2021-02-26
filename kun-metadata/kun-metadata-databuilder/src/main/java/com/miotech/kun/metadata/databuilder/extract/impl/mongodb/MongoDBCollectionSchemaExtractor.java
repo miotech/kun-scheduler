@@ -7,8 +7,8 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.DatasetField;
-import com.miotech.kun.metadata.databuilder.extract.tool.FieldTypeParser;
 import com.miotech.kun.metadata.databuilder.extract.schema.SchemaExtractorTemplate;
+import com.miotech.kun.metadata.databuilder.extract.tool.FieldTypeParser;
 import com.miotech.kun.metadata.databuilder.model.MongoDataSource;
 import com.miotech.kun.workflow.core.model.lineage.MongoDataStore;
 import com.mongodb.MongoClient;
@@ -54,7 +54,7 @@ public class MongoDBCollectionSchemaExtractor extends SchemaExtractorTemplate {
 
     @Override
     protected DataStore getDataStore() {
-        return new MongoDataStore(mongoDataSource.getUrl(), dbName, collectionName);
+        return new MongoDataStore(mongoDataSource.getHost(), mongoDataSource.getPort(), dbName, collectionName);
     }
 
     @Override
