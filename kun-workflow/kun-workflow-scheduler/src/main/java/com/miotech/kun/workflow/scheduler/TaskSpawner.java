@@ -104,7 +104,7 @@ public class TaskSpawner {
         checkNotNull(graph, "graph should not be null.");
         checkNotNull(env, "env should not be null.");
         checkState(graph instanceof DirectTaskGraph, "Only DirectTaskGraph is accepted.");
-        Tick current = SpecialTick.DIRECTLY_TICK;
+        Tick current = SpecialTick.NULL;
         return spawn(Lists.newArrayList(graph), current, env);
     }
 
@@ -137,8 +137,9 @@ public class TaskSpawner {
         logger.debug("to save created TaskRuns. TaskRun={}", taskRuns);
         taskRunDao.createTaskRuns(graphTaskRuns);
         logger.debug("to save checkpoint. checkpoint = {}", tick);
-        tickDao.saveCheckPoint(tick);
-
+        if(tick != SpecialTick.NULL){
+            tickDao.saveCheckPoint(tick);
+        }
         logger.debug("to submit created TaskRuns. TaskRuns={}", taskRuns);
         if (taskRuns.size() > 0) {
             submit(taskRuns);
@@ -157,7 +158,7 @@ public class TaskSpawner {
                 continue;
             }
             try {
-                if (tick == SpecialTick.DIRECTLY_TICK) {
+                if (tick == SpecialTick.NULL) {
                     results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRunIds));
                 } else {
                     TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
@@ -180,8 +181,8 @@ public class TaskSpawner {
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         Config config = prepareConfig(task, task.getConfig(), runtimeConfig);
         ScheduleType scheduleType = task.getScheduleConf().getType();
-        if(tick == SpecialTick.DIRECTLY_TICK){
-            tick  = SpecialTick.DIRECTLY_TICK.toTick();
+        if(tick == SpecialTick.NULL){
+            tick  = SpecialTick.NULL.toTick();
             scheduleType = ScheduleType.NONE;
         }
         TaskRun taskRun = TaskRun.newBuilder()
@@ -230,7 +231,6 @@ public class TaskSpawner {
     private void validateConfig(ConfigDef configDef, Config finalConfig, Config runtimeConfig) {
         for (ConfigDef.ConfigKey configKey : configDef.configKeys()) {
             String name = configKey.getName();
-            logger.info("finalConfig = {}", finalConfig);
             if (configKey.isRequired() && !finalConfig.contains(name)) {
                 throw new IllegalArgumentException(format("Configuration %s is required but not specified", name));
             }

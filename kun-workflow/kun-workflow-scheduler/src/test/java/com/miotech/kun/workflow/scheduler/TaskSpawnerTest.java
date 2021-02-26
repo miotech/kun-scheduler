@@ -159,7 +159,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         TaskRun submitted = result.get(0);
         assertThat(submitted.getId(), is(notNullValue()));
         assertThat(submitted.getTask(), safeSameBeanAs(taskList.get(0)));
-        assertThat(submitted.getScheduledTick(), is(SpecialTick.DIRECTLY_TICK.toTick()));
+        assertThat(submitted.getScheduledTick(), is(SpecialTick.NULL.toTick()));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
@@ -212,7 +212,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         TaskRun submitted = result.get(0);
         assertThat(submitted.getId(), is(notNullValue()));
         assertThat(submitted.getTask(), safeSameBeanAs(task));
-        assertThat(submitted.getScheduledTick(), is(SpecialTick.DIRECTLY_TICK.toTick()));
+        assertThat(submitted.getScheduledTick(), is(SpecialTick.NULL.toTick()));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
@@ -250,7 +250,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         TaskRun submitted = result.get(0);
         assertThat(submitted.getId(), is(notNullValue()));
         assertThat(submitted.getTask(), safeSameBeanAs(task));
-        assertThat(submitted.getScheduledTick(), is(SpecialTick.DIRECTLY_TICK.toTick()));
+        assertThat(submitted.getScheduledTick(), is(SpecialTick.NULL.toTick()));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
@@ -406,7 +406,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         TaskRun submitted = result.get(0);
         assertThat(submitted.getId(), is(notNullValue()));
         assertThat(submitted.getTask(), safeSameBeanAs(task));
-        assertThat(submitted.getScheduledTick(), is(SpecialTick.DIRECTLY_TICK.toTick()));
+        assertThat(submitted.getScheduledTick(), is(SpecialTick.NULL.toTick()));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(nullValue()));
@@ -466,7 +466,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         Task task1 = tasks.get(0);
         Task task3 = tasks.get(2);
 
-        Tick tick = SpecialTick.DIRECTLY_TICK.toTick();
+        Tick tick = SpecialTick.NULL.toTick();
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
 
         // process
@@ -519,7 +519,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         Task task2 = tasks.get(1);
         Task task3 = tasks.get(2);
 
-        Tick tick = SpecialTick.DIRECTLY_TICK.toTick();
+        Tick tick = SpecialTick.NULL.toTick();
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
 
         // process
@@ -848,7 +848,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         taskDao.create(task);
 
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
-        Tick tick = SpecialTick.DIRECTLY_TICK.toTick();
+        Tick tick = SpecialTick.NULL.toTick();
         List<TaskRun> submitTaskRuns = new ArrayList<>();
         // process
         for (int i = 0; i < 5; i++) {
