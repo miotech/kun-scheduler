@@ -40,7 +40,7 @@ public class ArangoDBCollectionSchemaExtractor extends SchemaExtractorTemplate {
 
     @Override
     public DataStore getDataStore() {
-        return new ArangoCollectionStore(arangoDataSource.getUrl(), dbName, collectionName);
+        return new ArangoCollectionStore(arangoDataSource.getHost(), arangoDataSource.getPort(), dbName, collectionName);
     }
 
     @Override

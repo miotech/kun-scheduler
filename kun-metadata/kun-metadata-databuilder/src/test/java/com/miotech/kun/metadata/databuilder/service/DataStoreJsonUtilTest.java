@@ -19,10 +19,10 @@ public class DataStoreJsonUtilTest {
         MatcherAssert.assertThat(hiveDataStoreFromJson.getClass(), Matchers.theInstance(HiveTableStore.class));
 
         HiveTableStore hiveTableStore = (HiveTableStore) hiveDataStoreFromJson;
-        String dataStoreUrl = hiveTableStore.getDataStoreUrl();
+        String dataStoreUrl = hiveTableStore.getLocation();
         MatcherAssert.assertThat(dataStoreUrl, Matchers.is("url"));
 
-        DataStore postgresDataStore = new PostgresDataStore("jdbc:postgresql://localhost:5432/mdp", "pg_database", "pg_schema", "pg_table");
+        DataStore postgresDataStore = new PostgresDataStore("localhost", 5432, "pg_database", "pg_schema", "pg_table");
         String pgJson = DataStoreJsonUtil.toJson(postgresDataStore);
 
         DataStore pgDataStoreFromJson = DataStoreJsonUtil.toDataStore(pgJson);

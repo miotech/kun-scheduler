@@ -44,8 +44,8 @@ public class KafkaEventPublisherTest {
         long taskId = 111;
         List<DataStore> inlets = new ArrayList<>();
         List<DataStore> outlets = new ArrayList<>();
-        inlets.add(new ElasticSearchIndexStore("127.0.0.1", "test1"));
-        outlets.add(new ElasticSearchIndexStore("127.0.0.1", "test2"));
+        inlets.add(new ElasticSearchIndexStore("127.0.0.1", 9200, "test1"));
+        outlets.add(new ElasticSearchIndexStore("127.0.0.1", 9200, "test2"));
         Event event = new LineageEvent(taskId, inlets, outlets);
         publisher.publish(event);
     }
