@@ -7,24 +7,33 @@ import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.DataStoreType;
 
 public class ElasticSearchIndexStore extends DataStore {
-    private final String dataStoreUrl;
+
+    private final String host;
+
+    private final int port;
 
     private final String index;
 
-    public String getDataStoreUrl() {
-        return dataStoreUrl;
+    @JsonCreator
+    public ElasticSearchIndexStore(@JsonProperty("host") String host,
+                                   @JsonProperty("port") int port,
+                                   @JsonProperty("index") String index) {
+        super(DataStoreType.ELASTICSEARCH_INDEX);
+        this.host = host;
+        this.port = port;
+        this.index = index;
+    }
+
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public String getIndex() {
         return index;
-    }
-
-    @JsonCreator
-    public ElasticSearchIndexStore(@JsonProperty("dataStoreUrl") String dataStoreUrl,
-                          @JsonProperty("index") String index) {
-        super(DataStoreType.ELASTICSEARCH_INDEX);
-        this.dataStoreUrl = dataStoreUrl;
-        this.index = index;
     }
 
     @Override
@@ -35,7 +44,8 @@ public class ElasticSearchIndexStore extends DataStore {
     @Override
     public DSI getDSI() {
         return DSI.newBuilder().withStoreType("elasticsearch")
-                .putProperty("url", dataStoreUrl)
+                .putProperty("host", host)
+                .putProperty("port", String.valueOf(port))
                 .putProperty("index", index)
                 .build();
     }

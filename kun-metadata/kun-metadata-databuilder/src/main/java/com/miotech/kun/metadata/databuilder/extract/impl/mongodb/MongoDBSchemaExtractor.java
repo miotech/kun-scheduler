@@ -27,7 +27,7 @@ public class MongoDBSchemaExtractor extends MongoDBExistenceExtractor implements
     @Override
     public Iterator<Dataset> extract(DataSource dataSource) {
         MongoDataSource mongoDataSource = (MongoDataSource) dataSource;
-        try (MongoClient client = new MongoClient(new MongoClientURI((mongoDataSource).getUrl()))) {
+        try (MongoClient client = new MongoClient(new MongoClientURI(mongoDataSource.getUrl()))) {
             List<String> databases = Lists.newArrayList();
             MongoIterable<String> databaseIterable = client.listDatabaseNames();
             for (String database : databaseIterable) {

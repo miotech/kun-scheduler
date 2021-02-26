@@ -4,23 +4,30 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class ArangoDataSource extends DataSource{
-    final String url;
-    final String username;
-    final String password;
+    private final String host;
+    private final int port;
+    private final String username;
+    private final String password;
 
     @JsonCreator
     public ArangoDataSource(@JsonProperty("id") long id,
-                            @JsonProperty("url") String url,
+                            @JsonProperty("host") String host,
+                            @JsonProperty("port") int port,
                             @JsonProperty("username") String username,
                             @JsonProperty("password") String password) {
         super(id, Type.ARANGO);
-        this.url = url;
+        this.host = host;
+        this.port = port;
         this.username = username;
         this.password = password;
     }
 
-    public String getUrl() {
-        return url;
+    public String getHost() {
+        return host;
+    }
+
+    public int getPort() {
+        return port;
     }
 
     public String getUsername() {
@@ -34,7 +41,8 @@ public class ArangoDataSource extends DataSource{
     @Override
     public String toString() {
         return "ArangoDataSource{" +
-                "url='" + url + '\'' +
+                "host='" + host + '\'' +
+                ", port=" + port +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
                 '}';
@@ -44,18 +52,23 @@ public class ArangoDataSource extends DataSource{
         return new ArangoDataSourceBuilder();
     }
 
-
     public static final class ArangoDataSourceBuilder {
-        String url;
-        String username;
-        String password;
+        private String host;
+        private int port;
+        private String username;
+        private String password;
         private long id;
 
         private ArangoDataSourceBuilder() {
         }
 
-        public ArangoDataSourceBuilder withUrl(String url) {
-            this.url = url;
+        public ArangoDataSourceBuilder withHost(String host) {
+            this.host = host;
+            return this;
+        }
+
+        public ArangoDataSourceBuilder withPort(int port) {
+            this.port = port;
             return this;
         }
 
@@ -75,7 +88,7 @@ public class ArangoDataSource extends DataSource{
         }
 
         public ArangoDataSource build() {
-            return new ArangoDataSource(id, url, username, password);
+            return new ArangoDataSource(id, host, port, username, password);
         }
     }
 }

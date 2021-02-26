@@ -77,8 +77,10 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(downStore.getDatabase(), is("kun"));
         assertThat(upStore.getTableName(), is("input"));
         assertThat(downStore.getTableName(), is("output"));
-        assertThat(upStore.getUrl(), is("jdbc:postgresql://127.0.0.1:5432"));
-        assertThat(downStore.getUrl(), is("jdbc:postgresql://127.0.0.1:5432"));
+        assertThat(upStore.getHost(), is("127.0.0.1"));
+        assertThat(upStore.getPort(), is(5432));
+        assertThat(downStore.getHost(), is("127.0.0.1"));
+        assertThat(downStore.getPort(), is(5432));
     }
 
     @Test
@@ -130,8 +132,8 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(downStore.getDatabase(), is("sparktest.db"));
         assertThat(upStore.getTable(), is("src"));
         assertThat(downStore.getTable(), is("hive_test"));
-        assertThat(upStore.getDataStoreUrl(), is("jdbc:awsathena://athena.ap-northeast-1.amazonaws.com:443;S3OutputLocation=file:/spline/spline-spark-agent/spark-warehouse"));
-        assertThat(downStore.getDataStoreUrl(), is("jdbc:awsathena://athena.ap-northeast-1.amazonaws.com:443;S3OutputLocation=file:/spline/spline-spark-agent/spark-warehouse"));
+        assertThat(upStore.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse"));
+        assertThat(downStore.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse"));
     }
 
     @Test
@@ -169,8 +171,8 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(downStore.getDatabase(), is("sparktest"));
         assertThat(upStore.getTable(), is("input"));
         assertThat(downStore.getTable(), is("output"));
-        assertThat(upStore.getDataStoreUrl(), is("jdbc:hive2://127.0.0.1:10000"));
-        assertThat(downStore.getDataStoreUrl(), is("jdbc:hive2://127.0.0.1:10000"));
+        assertThat(upStore.getLocation(), is("jdbc:hive2://127.0.0.1:10000"));
+        assertThat(downStore.getLocation(), is("jdbc:hive2://127.0.0.1:10000"));
     }
 
     @Test
@@ -208,8 +210,10 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(downStore.getDatabase(), is("spline"));
         assertThat(upStore.getCollection(), is("input"));
         assertThat(downStore.getCollection(), is("output"));
-        assertThat(upStore.getUrl(), is("mongodb://127.0.0.1:27017"));
-        assertThat(downStore.getUrl(), is("mongodb://127.0.0.1:27017"));
+        assertThat(upStore.getHost(), is("127.0.0.1"));
+        assertThat(upStore.getPort(), is(27017));
+        assertThat(downStore.getHost(), is("127.0.0.1"));
+        assertThat(downStore.getPort(), is(27017));
     }
 
     @Test
@@ -219,7 +223,7 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
                 .withSourceType("jdbc")
                 .build();
         SplineSource down = SplineSource.newBuilder()
-                .withSourceName("elasticsearch://localhost/test_es_spline/blog")
+                .withSourceName("elasticsearch://localhost:9200/test_es_spline/blog")
                 .withSourceType("elasticsearch")
                 .build();
         ExecPlan execPlan = ExecPlan.newBuilder()
@@ -247,8 +251,10 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(upStore.getDatabase(), is("spline"));
         assertThat(upStore.getTableName(), is("input"));
         assertThat(downStore.getIndex(), is("test_es_spline"));
-        assertThat(upStore.getUrl(), is("jdbc:postgresql://127.0.0.1:5432"));
-        assertThat(downStore.getDataStoreUrl(), is("elasticsearch://localhost"));
+        assertThat(upStore.getHost(), is("127.0.0.1"));
+        assertThat(upStore.getPort(), is(5432));
+        assertThat(downStore.getHost(), is("localhost"));
+        assertThat(downStore.getPort(), is(9200));
     }
 
 
