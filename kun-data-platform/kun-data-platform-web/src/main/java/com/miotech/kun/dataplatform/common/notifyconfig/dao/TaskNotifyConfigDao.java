@@ -41,15 +41,15 @@ public class TaskNotifyConfigDao {
     // Query by notify config id
     private static final String NOTIFY_CONFIG_QUERY_BY_ID_STMT = String.format(
             "SELECT %s FROM %s WHERE id = ?",
-            TASK_NOTIFY_CONFIG_TABLE_NAME,
-            StringUtils.join(taskDefCols, ",")
+            StringUtils.join(taskDefCols, ","),
+            TASK_NOTIFY_CONFIG_TABLE_NAME
     );
 
     // Query by workflow id
     private static final String NOTIFY_CONFIG_QUERY_BY_WORKFLOW_TASK_ID_STMT = String.format(
             "SELECT %s FROM %s WHERE workflow_task_id = ?",
-            TASK_NOTIFY_CONFIG_TABLE_NAME,
-            StringUtils.join(taskDefCols, ",")
+            StringUtils.join(taskDefCols, ","),
+            TASK_NOTIFY_CONFIG_TABLE_NAME
     );
 
     // Insertion statement
@@ -143,7 +143,7 @@ public class TaskNotifyConfigDao {
         );
 
         // 4. Fetch persisted record
-        return fetchById(taskNotifyConfig.getId()).orElseThrow(IllegalStateException::new);
+        return fetchByWorkflowTaskId(taskNotifyConfig.getWorkflowTaskId()).orElseThrow(IllegalStateException::new);
     }
 
     /**
@@ -224,11 +224,11 @@ public class TaskNotifyConfigDao {
     public static void checkTaskNotifyConfig(TaskNotifyConfig taskNotifyConfig, boolean checkId) {
         Preconditions.checkNotNull(taskNotifyConfig, "Argument `taskNotifyConfig` cannot be null");
         if (checkId) {
-            Preconditions.checkNotNull(taskNotifyConfig.getId(), "Property `id` cannot be null");
+            Preconditions.checkArgument(taskNotifyConfig.getId() != null, "Property `id` cannot be null");
         }
-        Preconditions.checkNotNull(taskNotifyConfig.getWorkflowTaskId(), "Property `workflowTaskId` cannot be null");
-        Preconditions.checkNotNull(taskNotifyConfig.getTriggerType(), "Property `triggerType` cannot be null");
-        Preconditions.checkNotNull(taskNotifyConfig.getNotifierConfigs(), "Property `notifierConfigs` cannot be null");
+        Preconditions.checkArgument(taskNotifyConfig.getWorkflowTaskId() != null, "Property `workflowTaskId` cannot be null");
+        Preconditions.checkArgument(taskNotifyConfig.getTriggerType() != null, "Property `triggerType` cannot be null");
+        Preconditions.checkArgument(taskNotifyConfig.getNotifierConfigs() != null, "Property `notifierConfigs` cannot be null");
     }
 
     /**
