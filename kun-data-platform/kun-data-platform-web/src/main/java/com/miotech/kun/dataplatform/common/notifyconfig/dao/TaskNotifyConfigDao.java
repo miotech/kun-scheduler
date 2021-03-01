@@ -11,6 +11,7 @@ import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
 import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
 import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +33,6 @@ public class TaskNotifyConfigDao {
     private static final String TASK_NOTIFY_CONFIG_TABLE_NAME = "kun_dp_task_notify_config";
 
     private static final List<String> taskDefCols = Lists.newArrayList("id", "workflow_task_id", "notify_when", "notify_config", "created_at", "updated_at");
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -123,7 +122,7 @@ public class TaskNotifyConfigDao {
         checkTaskNotifyConfig(taskNotifyConfig, false);
 
         // 2. Convert properties
-        String userConfigListJSON = convertNotifierUserConfigsToJsonString(taskNotifyConfig.getNotifierConfigs());
+        String userConfigListJSON = JSONUtils.toJsonString(taskNotifyConfig.getNotifierConfigs());
         OffsetDateTime currentTime = DateTimeUtils.now();
 
         // 3. Perform insertion
@@ -158,7 +157,7 @@ public class TaskNotifyConfigDao {
         checkTaskNotifyConfig(taskNotifyConfig, true);
 
         // 2. Convert properties
-        String userConfigListJSON = convertNotifierUserConfigsToJsonString(taskNotifyConfig.getNotifierConfigs());
+        String userConfigListJSON = JSONUtils.toJsonString(taskNotifyConfig.getNotifierConfigs());
         OffsetDateTime currentTime = DateTimeUtils.now();
 
         // 3. Perform update
@@ -228,15 +227,6 @@ public class TaskNotifyConfigDao {
         Preconditions.checkNotNull(taskNotifyConfig.getWorkflowTaskId(), "Property `workflowTaskId` cannot be null");
         Preconditions.checkNotNull(taskNotifyConfig.getTriggerType(), "Property `triggerType` cannot be null");
         Preconditions.checkNotNull(taskNotifyConfig.getNotifierConfigs(), "Property `notifierConfigs` cannot be null");
-    }
-
-    private static String convertNotifierUserConfigsToJsonString(List<NotifierUserConfig> notifierUserConfigs) {
-        try {
-            return objectMapper.writeValueAsString(notifierUserConfigs);
-        } catch (JsonProcessingException e) {
-            logger.error("Failed to parse type `NotifierUserConfig` to JSON string: {}", notifierUserConfigs);
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
     }
 
     /**
