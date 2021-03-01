@@ -10,13 +10,14 @@ import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
 import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
 import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
+import com.miotech.kun.workflow.core.annotation.Internal;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -26,10 +27,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@Slf4j
+@Repository
 @SuppressWarnings("SqlResolve")
 public class TaskNotifyConfigDao {
-    private static final Logger logger = LoggerFactory.getLogger(TaskNotifyConfigDao.class);
-
     private static final String TASK_NOTIFY_CONFIG_TABLE_NAME = "kun_dp_task_notify_config";
 
     private static final List<String> taskDefCols = Lists.newArrayList("id", "workflow_task_id", "notify_when", "notify_config", "created_at", "updated_at");
@@ -84,10 +85,10 @@ public class TaskNotifyConfigDao {
     /**
      * Fetch a task notify config by its id
      * @param taskNotifyConfigId id of the configuration record
-     * @return an optional object wrapper on TaskNotifyConfig
+     * @return An optional object wrapper on TaskNotifyConfig
      */
     public Optional<TaskNotifyConfig> fetchById(Long taskNotifyConfigId) {
-        Preconditions.checkNotNull(taskNotifyConfigId, "Argument `taskNotifyConfigId` cannot be null");
+        Preconditions.checkNotNull(taskNotifyConfigId, "`taskNotifyConfigId` cannot be null");
         return jdbcTemplate.query(
                 NOTIFY_CONFIG_QUERY_BY_ID_STMT,
                 TaskNotifyConfigMapper.INSTANCE,
@@ -96,12 +97,12 @@ public class TaskNotifyConfigDao {
     }
 
     /**
-     * Fetch a task notify config by its binding workflow task id
+     * Fetch a task notify config by its bound workflow task id
      * @param workflowTaskId id of target workflow task
-     * @return an optional object wrapper on TaskNotifyConfig
+     * @return An optional object wrapper on TaskNotifyConfig
      */
     public Optional<TaskNotifyConfig> fetchByWorkflowTaskId(Long workflowTaskId) {
-        Preconditions.checkNotNull(workflowTaskId, "Argument `workflowTaskId` cannot be null");
+        Preconditions.checkNotNull(workflowTaskId, "`workflowTaskId` cannot be null");
         return jdbcTemplate.query(
                 NOTIFY_CONFIG_QUERY_BY_WORKFLOW_TASK_ID_STMT,
                 TaskNotifyConfigMapper.INSTANCE,
@@ -114,7 +115,7 @@ public class TaskNotifyConfigDao {
      * @param taskNotifyConfig configuration object to persist.
      *                         All properties are required to be not null except `id`
      *                         since it will be auto generated.
-     * @return persisted TaskNotifyConfig record
+     * @return Persisted TaskNotifyConfig record
      * @throws IllegalStateException when persisted record not found
      */
     public TaskNotifyConfig create(TaskNotifyConfig taskNotifyConfig) {
@@ -126,7 +127,7 @@ public class TaskNotifyConfigDao {
         OffsetDateTime currentTime = DateTimeUtils.now();
 
         // 3. Perform insertion
-        logger.debug("Attempting to insert notify config record: workflow_task_id = {}, triggerType = {}, notifyConfigs = {}",
+        log.debug("Attempting to insert notify config record: workflow_task_id = {}, triggerType = {}, notifyConfigs = {}",
                 taskNotifyConfig.getWorkflowTaskId(),
                 taskNotifyConfig.getTriggerType().getTypeName(),
                 userConfigListJSON
@@ -148,7 +149,7 @@ public class TaskNotifyConfigDao {
     /**
      * Update an existing TaskNotifyConfig record
      * @param taskNotifyConfig configuration object to persist. All properties are required to be not null.
-     * @return persisted TaskNotifyConfig record
+     * @return Persisted TaskNotifyConfig record
      * @throws IllegalArgumentException when task notify config record does not exists
      * @throws IllegalStateException when persisted record not found
      */
@@ -161,7 +162,7 @@ public class TaskNotifyConfigDao {
         OffsetDateTime currentTime = DateTimeUtils.now();
 
         // 3. Perform update
-        logger.debug("Attempting to update notify config record: id = {}, workflow_task_id = {}, triggerType = {}, notifyConfigs = {}",
+        log.debug("Attempting to update notify config record: id = {}, workflow_task_id = {}, triggerType = {}, notifyConfigs = {}",
                 taskNotifyConfig.getId(),
                 taskNotifyConfig.getWorkflowTaskId(),
                 taskNotifyConfig.getTriggerType().getTypeName(),
@@ -196,14 +197,14 @@ public class TaskNotifyConfigDao {
 
         // 2. Perform deletion
         int affectedRows = jdbcTemplate.update(NOTIFY_CONFIG_DELETE_BY_ID_STMT, taskNotifyConfigId);
-        logger.debug("Attempting to delete TaskNotifyConfig record by id = {}. Affected rows = {}", taskNotifyConfigId, affectedRows);
+        log.debug("Attempting to delete TaskNotifyConfig record by id = {}. Affected rows = {}", taskNotifyConfigId, affectedRows);
 
         // 3. Return success of not
         return affectedRows > 0;
     }
 
     /**
-     * Remove a TaskNotifyConfig record by its binding workflow task id
+     * Remove a TaskNotifyConfig record by its bound workflow task id
      * @param workflowTaskId id of the config record to remove
      * @return {true} if success. {false} if target record not found.
      */
@@ -213,13 +214,14 @@ public class TaskNotifyConfigDao {
 
         // 2. Perform deletion
         int affectedRows = jdbcTemplate.update(NOTIFY_CONFIG_DELETE_BY_WORKFLOW_TASK_ID_STMT, workflowTaskId);
-        logger.debug("Attempting to delete TaskNotifyConfig record by workflow task id = {}. Affected rows = {}", workflowTaskId, affectedRows);
+        log.debug("Attempting to delete TaskNotifyConfig record by workflow task id = {}. Affected rows = {}", workflowTaskId, affectedRows);
 
         // 3. Return success of not
         return affectedRows > 0;
     }
 
-    private static void checkTaskNotifyConfig(TaskNotifyConfig taskNotifyConfig, boolean checkId) {
+    @Internal
+    public static void checkTaskNotifyConfig(TaskNotifyConfig taskNotifyConfig, boolean checkId) {
         Preconditions.checkNotNull(taskNotifyConfig, "Argument `taskNotifyConfig` cannot be null");
         if (checkId) {
             Preconditions.checkNotNull(taskNotifyConfig.getId(), "Property `id` cannot be null");
@@ -253,7 +255,7 @@ public class TaskNotifyConfigDao {
             try {
                 return objectMapper.readValue(jsonStr, NOTIFIER_USER_CONFIG_LIST_TYPE_REF);
             } catch (JsonProcessingException e) {
-                logger.error("Failed to parse JSON string to type `NotifierUserConfig`: {}", jsonStr);
+                log.error("Failed to parse JSON string to type `NotifierUserConfig`: {}", jsonStr);
                 throw ExceptionUtils.wrapIfChecked(e);
             }
         }
