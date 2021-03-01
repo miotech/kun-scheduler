@@ -1,5 +1,6 @@
 package com.miotech.kun.security.model.bo;
 
+import com.miotech.kun.security.model.constant.EntityType;
 import com.miotech.kun.security.model.constant.PermissionType;
 import lombok.Builder;
 import lombok.Data;
@@ -10,13 +11,17 @@ import lombok.Data;
  */
 @Data
 @Builder
-public class HasPermission {
+public class HasPermissionRequest {
 
     Long permissionId;
 
-    Long userId;
+    Long subjectId;
 
-    Long resourceId;
+    EntityType subjectType;
+
+    Long objectId;
+
+    EntityType objectType;
 
     PermissionType permissionType;
 

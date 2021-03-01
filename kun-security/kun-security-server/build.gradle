@@ -23,6 +23,7 @@ dependencies {
     implementation 'org.springframework.session:spring-session-jdbc'
     implementation 'org.springframework.security:spring-security-oauth2-client'
     implementation 'org.springframework.security:spring-security-oauth2-jose'
+    implementation 'org.springframework.security:spring-security-saml2-service-provider'
     implementation 'org.springdoc:springdoc-openapi-ui'
     implementation 'org.neo4j:neo4j-jdbc-driver:3.5.1'
     implementation 'org.liquigraph:liquigraph-spring-boot-starter:3.1.2'
@@ -31,6 +32,7 @@ dependencies {
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.google.code.gson:gson'
     implementation 'commons-io:commons-io:2.6'
+    implementation 'com.unboundid.product.scim2:scim2-sdk-client:2.3.5'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }

@@ -7,6 +7,7 @@ import com.miotech.kun.security.model.NoBodyResponse;
 import com.miotech.kun.security.model.UserInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -46,7 +47,7 @@ public class AuthenticateFilter implements Filter {
                     doAuthenticate(httpServletRequest);
                 }
             } catch (Exception e) {
-                log.error("Failed to authenticate.", e);
+                log.error("Failed to authenticate, request uri {}", httpServletRequest.getRequestURI(), e);
                 if (response instanceof HttpServletResponse) {
                     HttpServletResponse httpServletResponse = (HttpServletResponse) response;
                     httpServletResponse.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
