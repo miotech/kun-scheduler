@@ -41,18 +41,24 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(
   const [terminated, setTerminated] = React.useState<boolean>(false);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [copied, setCopied] = React.useState<boolean>(false);
+  const [lastRequestReturned, setLastRequestReturned] = React.useState<boolean>(
+    true,
+  );
 
   /* When startPolling or query function changed, reset terminate flag */
   useEffect(() => {
     if (queryFn && startPolling) {
       setTerminated(false);
+      setLastRequestReturned(true);
       setLoading(true);
     }
   }, [startPolling, queryFn]);
 
   useInterval(async () => {
-    if (startPolling && !terminated) {
+    if (startPolling && lastRequestReturned && !terminated) {
+      setLastRequestReturned(false);
       const response = await queryFn();
+      setLastRequestReturned(true);
       setLoading(false);
       if (response && response.logs) {
         setText(response.logs.join('\n') || '\n');
