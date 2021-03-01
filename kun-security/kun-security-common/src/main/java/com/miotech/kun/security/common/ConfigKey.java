@@ -12,7 +12,13 @@ public class ConfigKey {
 
     public static final String HTTP_REQUEST_PASS_TOKEN_KEY = "pass-token";
 
+    public static final Long DEFAULT_INTERNAL_PASS_TOKEN_ID = -1L;
+
     public static final String DEFAULT_INTERNAL_PASS_TOKEN_KEY = "kun-pass-token";
+
+    public static final String INITIAL_RESOURCE_NAME = "ROOT";
+
+    public static final String INITIAL_USER_GROUP_NAME = "MioTech";
 
     public static String SECURITY_SERVER_BASE_URL;
 

@@ -2,6 +2,8 @@ server:
   port: ${SECURITY_PORT}
 
 spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration
   datasource:
     driver-class-name: org.neo4j.jdbc.bolt.BoltDriver
     url: jdbc:neo4j:bolt://${DB_NEO4J_IP}:7687
@@ -24,23 +26,36 @@ spring:
   security:
     oauth2:
       client:
+        enable: ${SECURITY_OAUTH2_CLIENT_ENABLE:false}
         registration:
           okta:
             client-id: ***REMOVED***
             client-secret: ***REMOVED***
+            redirect-uri: http://localhost:9801/sso
         provider:
           okta:
             authorization-uri: https://dev-7959592.okta.com/oauth2/v1/authorize
             token-uri: https://dev-7959592.okta.com/oauth2/v1/token
             user-info-uri: https://dev-7959592.okta.com/oauth2/v1/userinfo
             jwk-set-uri: https://dev-7959592.okta.com/oauth2/v1/keys
+    saml2:
+      relyingparty:
+        authorityMapping:
+          okta: Groups
+        identityMapping:
+          okta:
+            givenName: FirstName
+            familyName: LastName
+            email: Email
+        registration:
+          okta:
+            entity-id: http://localhost.miotech.com/saml2/service-provider-metadata/{registrationId}
+            identityprovider:
+              metadata-uri: https://dev-7959592.okta.com/app/exkb49nl6sfYtNTwV5d6/sso/saml/metadata
 
 security:
   auth:
     type: ${SECURITY_AUTH_TYPE:DAO}
-  admin:
-    username: admin
-    password: admin
 
 liquigraph:
   change-log: classpath:security/db/migration/changelog.xml
@@ -62,3 +77,6 @@ springdoc:
   swagger-ui:
     operationsSorter: method
   use-fqn: true
+
+frontend:
+  url: ${KUN_ROOT_URL}
