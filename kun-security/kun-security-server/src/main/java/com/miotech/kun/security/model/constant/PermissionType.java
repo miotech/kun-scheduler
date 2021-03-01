@@ -6,9 +6,14 @@ package com.miotech.kun.security.model.constant;
  */
 public enum PermissionType {
 
-    ADMIN,
+    ADMIN(0),
 
-    READ,
+    WRITE(1),
 
-    WRITE
+    READ(2);
+
+    private final int code;
+    PermissionType(int code) {
+        this.code = code;
+    }
 }

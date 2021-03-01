@@ -7,6 +7,10 @@ package com.miotech.kun.common.utils;
 
 public class IdUtils {
 
+    public static boolean equals(Long id1, Long id2) {
+        return isNotEmpty(id1) && isNotEmpty(id2) && id1.equals(id2);
+    }
+
     public static boolean isEmpty(Long id) {
         return id == null || id.equals(0L);
     }
