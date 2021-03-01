@@ -77,10 +77,10 @@ public class TaskNotifyConfigDao {
     );
 
     // Delete by id statement
-    private static final String NOTIFY_CONFIG_DELETE_BY_ID_STMT = "DELETE FROM %s WHERE id = ?";
+    private static final String NOTIFY_CONFIG_DELETE_BY_ID_STMT = String.format("DELETE FROM %s WHERE id = ?", TASK_NOTIFY_CONFIG_TABLE_NAME);
 
     // Delete by id statement
-    private static final String NOTIFY_CONFIG_DELETE_BY_WORKFLOW_TASK_ID_STMT = "DELETE FROM %s WHERE workflow_task_id = ?";
+    private static final String NOTIFY_CONFIG_DELETE_BY_WORKFLOW_TASK_ID_STMT = String.format("DELETE FROM %s WHERE workflow_task_id = ?", TASK_NOTIFY_CONFIG_TABLE_NAME);
 
     /**
      * Fetch a task notify config by its id
