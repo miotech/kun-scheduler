@@ -66,7 +66,10 @@ export default defineConfig({
           pathRewrite: PATH_REWRITE ? { '^/kun/api/v1/': '' } : undefined,
         },
         '/kun/api/data-platform/': {
-          target: PROXY_TARGET_DATA_PLATFORM || PROXY_TARGET || 'http://kun-dev.miotech.com/',
+          target:
+            PROXY_TARGET_DATA_PLATFORM ||
+            PROXY_TARGET ||
+            'http://kun-dev.miotech.com/',
           changeOrigin: true,
           withCredentials: true,
           pathRewrite: PATH_REWRITE

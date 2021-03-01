@@ -23,11 +23,21 @@ public class UserInfo implements Serializable {
 
     private Set<String> permissions;
 
-    String createUser;
+    String authOrigin;
+
+    String firstName;
+
+    String lastName;
+
+    String email;
+
+    Long userGroupId;
+
+    Long createUser;
 
     Long createTime;
 
-    String updateUser;
+    Long updateUser;
 
     Long updateTime;
 }

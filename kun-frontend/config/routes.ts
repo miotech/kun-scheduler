@@ -17,6 +17,12 @@ export const appRoutes = [
         wrappers: ['@/wrappers/path', '@/wrappers/isLogin'],
       },
       {
+        path: '/sso',
+        exact: true,
+        menuDisplay: false,
+        component: 'sso-page/index',
+      },
+      {
         title: 'common.pageTitle.monitoringDashboard',
         path: '/monitoring-dashboard',
         icon: 'LineChartOutlined',

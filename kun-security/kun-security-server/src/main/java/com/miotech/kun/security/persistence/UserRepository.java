@@ -1,13 +1,15 @@
 package com.miotech.kun.security.persistence;
 
-import com.miotech.kun.common.BaseRepository;
+import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.security.common.ConfigKey;
+import com.miotech.kun.security.common.UserStatus;
 import com.miotech.kun.security.model.UserInfo;
-import com.miotech.kun.security.model.entity.Resource;
 import com.miotech.kun.security.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,18 +22,32 @@ import java.util.Map;
  * @created: 2020/6/29
  */
 @Repository
+@Transactional(rollbackFor = Exception.class)
 public class UserRepository {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
 
+    public String getUsernameById(Long id) {
+        if (IdUtils.equals(id, ConfigKey.DEFAULT_INTERNAL_PASS_TOKEN_ID)) {
+            return ConfigKey.DEFAULT_INTERNAL_PASS_TOKEN_KEY;
+        }
+        String query = "MATCH (u:USER {id: ?}) RETURN u.name";
+
+        return jdbcTemplate.queryForObject(query, String.class, id);
+    }
+
     private void convertNodeToUser(Map<String, Object> nodeMap, User user) {
         user.setId((Long) nodeMap.get("id"));
         user.setName((String) nodeMap.get("name"));
         user.setPassword((String) nodeMap.get("password"));
-        user.setCreateUser((String) nodeMap.get("createUser"));
+        user.setFirstName((String) nodeMap.get("firstName"));
+        user.setLastName((String) nodeMap.get("lastName"));
+        user.setEmail((String) nodeMap.get("email"));
+        user.setAuthOrigin((String) nodeMap.get("authOrigin"));
+        user.setCreateUser(getUsernameById((Long) nodeMap.get("createUser")));
         user.setCreateTime((Long) nodeMap.get("createTime"));
-        user.setUpdateUser((String) nodeMap.get("updateUser"));
+        user.setUpdateUser(getUsernameById((Long) nodeMap.get("updateUser")));
         user.setUpdateTime((Long) nodeMap.get("updateTime"));
     }
 
@@ -80,7 +96,7 @@ public class UserRepository {
     }
 
     public User addUser(UserInfo userInfo) {
-        String query = "CREATE (u:USER {id: ?, name: ?,  password: ?, createUser: ?, createTime: ?, updateUser: ?, updateTime: ?}) RETURN u";
+        String query = "CREATE (u:USER {id: ?, name: ?, email: ?, firstName: ?, lastName: ?, authOrigin: ?,  password: ?, createUser: ?, createTime: ?, updateUser: ?, updateTime: ?}) RETURN u";
 
         Long id = IdGenerator.getInstance().nextId();
         return jdbcTemplate.query(query, rs -> {
@@ -92,17 +108,21 @@ public class UserRepository {
                 },
                 id,
                 userInfo.getUsername(),
+                userInfo.getEmail(),
+                userInfo.getFirstName(),
+                userInfo.getLastName(),
+                userInfo.getAuthOrigin(),
                 userInfo.getPassword(),
-                userInfo.getCreateUser(),
+                id,
                 userInfo.getCreateTime(),
-                userInfo.getUpdateUser(),
+                id,
                 userInfo.getUpdateTime());
     }
 
-    public Long removeUser(Long id) {
-        String query = "MATCH (u:USER {id: ?}) DETACH DELETE u";
+    public Long updateUserStatus(Long id, UserStatus userStatus) {
+        String query = "MATCH (u:USER {id: ?}) SET u.status = ?";
 
-        jdbcTemplate.update(query, id);
+        jdbcTemplate.update(query, id, userStatus.name());
         return id;
     }
 }

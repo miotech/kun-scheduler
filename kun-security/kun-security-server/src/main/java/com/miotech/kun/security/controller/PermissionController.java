@@ -2,8 +2,7 @@ package com.miotech.kun.security.controller;
 
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
-import com.miotech.kun.security.model.bo.PermissionRequest;
-import com.miotech.kun.security.model.entity.Permission;
+import com.miotech.kun.security.model.bo.SavePermissionRequest;
 import com.miotech.kun.security.model.entity.Permissions;
 import com.miotech.kun.security.service.PermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +20,8 @@ public class PermissionController {
     PermissionService permissionService;
 
     @PostMapping("/save")
-    public RequestResult<Permissions> savePermission(@RequestBody PermissionRequest permissionRequest) {
-        return RequestResult.success(permissionService.savePermission(permissionRequest));
+    public RequestResult<Permissions> savePermission(@RequestBody SavePermissionRequest savePermissionRequest) {
+        return RequestResult.success(permissionService.savePermission(savePermissionRequest));
     }
 
     @PostMapping("/remove/{id}")
