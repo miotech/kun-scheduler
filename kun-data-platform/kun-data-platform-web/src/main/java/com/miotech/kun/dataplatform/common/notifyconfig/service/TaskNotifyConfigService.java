@@ -22,7 +22,7 @@ public class TaskNotifyConfigService {
      * @param notifyConfigId Id of target config record
      * @return An optional object wrapper on TaskNotifyConfig
      */
-    public Optional<TaskNotifyConfig> getTaskNotifyConfigById(Long notifyConfigId) {
+    public Optional<TaskNotifyConfig> fetchTaskNotifyConfigById(Long notifyConfigId) {
         Preconditions.checkNotNull(notifyConfigId, "Task notify config id cannot be null");
         return taskNotifyConfigDao.fetchById(notifyConfigId);
     }
@@ -32,7 +32,7 @@ public class TaskNotifyConfigService {
      * @param workflowTaskId Id of bounded workflow task to target config record
      * @return An optional object wrapper on TaskNotifyConfig
      */
-    public Optional<TaskNotifyConfig> getTaskNotifyConfigByWorkflowTaskId(Long workflowTaskId) {
+    public Optional<TaskNotifyConfig> fetchTaskNotifyConfigByWorkflowTaskId(Long workflowTaskId) {
         Preconditions.checkNotNull(workflowTaskId, "Workflow task id cannot be null");
         return taskNotifyConfigDao.fetchByWorkflowTaskId(workflowTaskId);
     }
@@ -64,7 +64,7 @@ public class TaskNotifyConfigService {
         Long id = taskNotifyConfigUpdate.getId();
         Optional<TaskNotifyConfig> configOptional = taskNotifyConfigDao.fetchById(id);
         if (!configOptional.isPresent()) {
-            throw new IllegalStateException(String.format("Cannot find target config record with id = %s", id));
+            throw new IllegalArgumentException(String.format("Cannot find target config record with id = %s", id));
         }
         // if presented
         return taskNotifyConfigDao.update(taskNotifyConfigUpdate);
