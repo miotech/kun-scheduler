@@ -1,12 +1,12 @@
 package com.miotech.kun.dataplatform.config;
 
-import com.miotech.kun.dataplatform.notify.ZhongdaNotifier;
+import com.miotech.kun.dataplatform.notify.service.ZhongdaService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class ZhongdaNotifierConfig {
+public class ZhongdaServiceConfig {
 
     @Value("${zhongda.host}")
     private String host = null;
@@ -18,8 +18,7 @@ public class ZhongdaNotifierConfig {
     private String group;
 
     @Bean
-    public ZhongdaNotifier createWechatNotifier() {
-        return new ZhongdaNotifier(host, token, group);
+    public ZhongdaService createZhongdaService() {
+        return new ZhongdaService(host, token, group);
     }
-
 }

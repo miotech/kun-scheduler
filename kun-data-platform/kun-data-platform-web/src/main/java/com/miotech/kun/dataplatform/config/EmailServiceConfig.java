@@ -1,0 +1,23 @@
+package com.miotech.kun.dataplatform.config;
+
+import com.miotech.kun.dataplatform.notify.service.EmailService;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class EmailServiceConfig {
+    @Value("${email.smtpHost}")
+    private String smtpHost;
+
+    @Value("${email.smtpUsername}")
+    private String smtpUsername;
+
+    @Value("${email.smtpPassword}")
+    private String smtpPassword;
+
+    @Bean
+    public EmailService createEmailService() {
+        return new EmailService(this.smtpHost, this.smtpUsername, this.smtpPassword);
+    }
+}

@@ -1,6 +1,7 @@
 package com.miotech.kun.dataplatform.model.notify;
 
 import com.fasterxml.jackson.annotation.JsonValue;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 public enum TaskStatusNotifyTrigger {
     SYSTEM_DEFAULT("SYSTEM_DEFAULT"),
@@ -35,5 +36,21 @@ public enum TaskStatusNotifyTrigger {
             default:
                 throw new IllegalArgumentException(String.format("Unknown task status notifier trigger type: \"%s\"", value));
         }
+    }
+
+    public boolean matches(TaskRunStatus toStatus) {
+        switch (this) {
+            case ON_SUCCESS:
+                return toStatus.isSuccess();
+            case ON_FAIL:
+                return toStatus.isFailure();
+            case ON_FINISH:
+                return toStatus.isFinished();
+            case NEVER:
+                return false;
+            default:
+                break;
+        }
+        return toStatus.isFailure();
     }
 }
