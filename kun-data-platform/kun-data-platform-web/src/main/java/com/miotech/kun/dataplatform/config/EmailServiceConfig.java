@@ -16,8 +16,14 @@ public class EmailServiceConfig {
     @Value("${email.smtpPassword}")
     private String smtpPassword;
 
+    @Value("${email.emailFrom}")
+    private String emailFrom;
+
+    @Value("${email.emailFromName:Kun Notification}")
+    private String emailFromName;
+
     @Bean
     public EmailService createEmailService() {
-        return new EmailService(this.smtpHost, this.smtpUsername, this.smtpPassword);
+        return new EmailService(this.smtpHost, this.smtpUsername, this.smtpPassword, this.emailFrom, this.emailFromName);
     }
 }
