@@ -3,6 +3,8 @@ package com.miotech.kun.dataplatform.model.notify;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
 import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.util.List;
 
@@ -18,7 +20,11 @@ public class TaskNotifyConfig extends NotifyConfig {
 
     @Override
     public boolean test(Event event) {
-        // TODO
+        if (event instanceof TaskAttemptStatusChangeEvent) {
+            TaskRunStatus toStatus = ((TaskAttemptStatusChangeEvent) event).getToStatus();
+            return this.triggerType.matches(toStatus);
+        }
+        // else
         return false;
     }
 

@@ -2,7 +2,6 @@ package com.miotech.kun.dataplatform.notify;
 
 import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfigService;
 import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
-import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
 import com.miotech.kun.dataplatform.notify.notifier.EmailNotifier;
 import com.miotech.kun.dataplatform.notify.notifier.WeComNotifier;
 import com.miotech.kun.dataplatform.notify.service.EmailService;
@@ -54,9 +53,8 @@ public class WorkflowEventDispatcher {
         if (taskNotifyConfigOptional.isPresent()) {
             // 3. If there is, read the configuration and notify by notifiers
             TaskNotifyConfig notifyConfig = taskNotifyConfigOptional.get();
-            TaskStatusNotifyTrigger triggerType = notifyConfig.getTriggerType();
             // 4. Does this change event match configuration trigger type?
-            if (triggerType.matches(statusChangeEvent.getToStatus())) {
+            if (notifyConfig.test(statusChangeEvent)) {
                 // 5. If matches, construct notifiers
                 List<MessageNotifier> notifiers = constructNotifiersFromUserConfig(notifyConfig.getNotifierConfigs());
                 // 6. Notify by each notifier
