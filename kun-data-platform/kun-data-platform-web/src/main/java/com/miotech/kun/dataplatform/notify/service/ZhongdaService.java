@@ -6,7 +6,6 @@ import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.operator.spark.clients.HttpApiClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.Objects;
@@ -15,7 +14,6 @@ public class ZhongdaService extends HttpApiClient {
     /**
      * Zhongda 的 Host
      */
-    @Value("")
     private String host;
 
     /**

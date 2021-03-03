@@ -4,12 +4,12 @@ import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfig
 import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
 import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
 import com.miotech.kun.dataplatform.notify.notifier.EmailNotifier;
-import com.miotech.kun.dataplatform.notify.notifier.ZhongdaNotifier;
+import com.miotech.kun.dataplatform.notify.notifier.WeComNotifier;
 import com.miotech.kun.dataplatform.notify.service.EmailService;
-import com.miotech.kun.dataplatform.notify.service.ZhongdaService;
+import com.miotech.kun.dataplatform.notify.service.WeComService;
 import com.miotech.kun.dataplatform.notify.userconfig.EmailNotifierUserConfig;
 import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
-import com.miotech.kun.dataplatform.notify.userconfig.ZhongdaNotifierUserConfig;
+import com.miotech.kun.dataplatform.notify.userconfig.WeComNotifierUserConfig;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.publish.EventSubscriber;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +25,7 @@ public class WorkflowEventDispatcher {
     private EventSubscriber workflowEventSubscriber;
 
     @Autowired
-    private ZhongdaService zhongdaService;
+    private WeComService weComService;
 
     @Autowired
     private EmailService emailService;
@@ -73,8 +73,8 @@ public class WorkflowEventDispatcher {
                     EmailNotifier emailNotifier = new EmailNotifier(emailService, (EmailNotifierUserConfig) userConfig);
                     notifiers.add(emailNotifier);
                     break;
-                case "ZHONGDA":
-                    ZhongdaNotifier zhongdaNotifier = new ZhongdaNotifier(zhongdaService, (ZhongdaNotifierUserConfig) userConfig);
+                case "WECOM":
+                    WeComNotifier zhongdaNotifier = new WeComNotifier(weComService, (WeComNotifierUserConfig) userConfig);
                     notifiers.add(zhongdaNotifier);
                     break;
                 default:

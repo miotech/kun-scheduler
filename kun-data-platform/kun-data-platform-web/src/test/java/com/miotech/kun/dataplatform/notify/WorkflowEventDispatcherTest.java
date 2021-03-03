@@ -5,7 +5,7 @@ import com.miotech.kun.dataplatform.TestEventDispatcherConfig;
 import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfigService;
 import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
 import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
-import com.miotech.kun.dataplatform.notify.userconfig.ZhongdaNotifierUserConfig;
+import com.miotech.kun.dataplatform.notify.userconfig.WeComNotifierUserConfig;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -34,17 +34,17 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
         // 1. Prepare
         Event nonRelatedEvent = new RandomMockEvent();
         int emailNotifyInvokeCountBeforeEventArrive = testEventDispatcherConfig.getEmailServiceNotifyInvokeCount();
-        int zhongdaNotifyInvokeCountBeforeEventArrive = testEventDispatcherConfig.getZhongdaServiceNotifyInvokeCount();
+        int weComNotifyInvokeCountBeforeEventArrive = testEventDispatcherConfig.getWeComServiceNotifyInvokeCount();
 
         // 2. Process
         testEventDispatcherConfig.getEventPubSubListener().mockReceiveEventFromWorkflow(nonRelatedEvent);
 
         // 3. Validate
         int emailNotifyInvokeCountAfterEventArrive = testEventDispatcherConfig.getEmailServiceNotifyInvokeCount();
-        int zhongdaNotifyInvokeCountAfterEventArrive = testEventDispatcherConfig.getZhongdaServiceNotifyInvokeCount();
+        int weComNotifyInvokeCountAfterEventArrive = testEventDispatcherConfig.getWeComServiceNotifyInvokeCount();
 
         assertThat(emailNotifyInvokeCountAfterEventArrive, is(emailNotifyInvokeCountBeforeEventArrive));
-        assertThat(zhongdaNotifyInvokeCountAfterEventArrive, is(zhongdaNotifyInvokeCountBeforeEventArrive));
+        assertThat(weComNotifyInvokeCountAfterEventArrive, is(weComNotifyInvokeCountBeforeEventArrive));
     }
 
     @Test
@@ -54,14 +54,14 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
         Long taskId = 1230L;
 
         int emailNotifyInvokeCountBeforeEventArrive = testEventDispatcherConfig.getEmailServiceNotifyInvokeCount();
-        int zhongdaNotifyInvokeCountBeforeEventArrive = testEventDispatcherConfig.getZhongdaServiceNotifyInvokeCount();
+        int weComNotifyInvokeCountBeforeEventArrive = testEventDispatcherConfig.getWeComServiceNotifyInvokeCount();
 
-        // Should only trigger zhongda notifier, do not trigger email notifier
+        // Should only trigger WeCom notifier, do not trigger email notifier
         taskNotifyConfigService.upsertTaskNotifyConfig(TaskNotifyConfig.newBuilder()
                 .withWorkflowTaskId(taskId)
                 .withTriggerType(TaskStatusNotifyTrigger.ON_FAIL)
                 .withNotifierConfigs(Lists.newArrayList(
-                        new ZhongdaNotifierUserConfig()
+                        new WeComNotifierUserConfig()
                 ))
                 .build());
         TaskAttemptStatusChangeEvent event = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
@@ -73,10 +73,10 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
 
         // 3. Validate
         int emailNotifyInvokeCountAfterEventArrive = testEventDispatcherConfig.getEmailServiceNotifyInvokeCount();
-        int zhongdaNotifyInvokeCountAfterEventArrive = testEventDispatcherConfig.getZhongdaServiceNotifyInvokeCount();
+        int weComNotifyInvokeCountAfterEventArrive = testEventDispatcherConfig.getWeComServiceNotifyInvokeCount();
 
         assertThat(emailNotifyInvokeCountAfterEventArrive, is(emailNotifyInvokeCountBeforeEventArrive));
-        assertThat(zhongdaNotifyInvokeCountAfterEventArrive, is(zhongdaNotifyInvokeCountBeforeEventArrive + 1));
+        assertThat(weComNotifyInvokeCountAfterEventArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
     }
 
 

@@ -3,6 +3,7 @@ package com.miotech.kun.dataplatform;
 import com.miotech.kun.dataplatform.notify.MockWorkflowEventPubSubListener;
 import com.miotech.kun.dataplatform.notify.WorkflowEventDispatcher;
 import com.miotech.kun.dataplatform.notify.service.EmailService;
+import com.miotech.kun.dataplatform.notify.service.WeComService;
 import com.miotech.kun.dataplatform.notify.service.ZhongdaService;
 import com.miotech.kun.dataplatform.notify.userconfig.EmailNotifierUserConfig;
 import com.miotech.kun.workflow.core.event.Event;
@@ -25,7 +26,7 @@ public class TestEventDispatcherConfig {
 
     private volatile int emailServiceNotifyInvokeCount = 0;
 
-    private volatile int zhongdaServiceNotifyInvokeCount = 0;
+    private volatile int weComServiceNotifyInvokeCount = 0;
 
     @Bean
     public EmailService createMockEmailService() {
@@ -41,12 +42,17 @@ public class TestEventDispatcherConfig {
     @Bean
     public ZhongdaService createMockZhongdaService() {
         Mockito.doAnswer(invocation -> {
-            zhongdaServiceNotifyInvokeCount += 1;
+            weComServiceNotifyInvokeCount += 1;
             return null;
         })
                 .when(mockZhongdaService)
                 .sendMessage(Mockito.isA(TaskAttemptStatusChangeEvent.class));
         return mockZhongdaService;
+    }
+
+    @Bean
+    public WeComService createMockWeComService() {
+        return new WeComService();
     }
 
     @Bean
@@ -72,7 +78,7 @@ public class TestEventDispatcherConfig {
         return emailServiceNotifyInvokeCount;
     }
 
-    public int getZhongdaServiceNotifyInvokeCount() {
-        return zhongdaServiceNotifyInvokeCount;
+    public int getWeComServiceNotifyInvokeCount() {
+        return weComServiceNotifyInvokeCount;
     }
 }

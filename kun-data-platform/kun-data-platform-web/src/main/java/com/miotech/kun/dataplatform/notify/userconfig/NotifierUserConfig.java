@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "notifierType")
 @JsonSubTypes({
-        @JsonSubTypes.Type(name = "ZHONGDA", value = ZhongdaNotifierUserConfig.class),
+        @JsonSubTypes.Type(name = "WECOM", value = WeComNotifierUserConfig.class),
         @JsonSubTypes.Type(name = "EMAIL", value = EmailNotifierUserConfig.class)
 })
 @JsonSerialize
