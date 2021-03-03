@@ -9,11 +9,16 @@ import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.HtmlEmail;
 
+import javax.mail.internet.AddressException;
+import javax.mail.internet.InternetAddress;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
 public class EmailService {
     private final String smtpHost;
+
+    private final Integer smtpPort;
 
     private final String smtpUserName;
 
@@ -23,8 +28,9 @@ public class EmailService {
 
     private final String emailFromName;
 
-    public EmailService(String smtpHost, String smtpUsername, String smtpPassword, String emailFrom, String emailFromName) {
+    public EmailService(String smtpHost, Integer smtpPort, String smtpUsername, String smtpPassword, String emailFrom, String emailFromName) {
         this.smtpHost = smtpHost;
+        this.smtpPort = smtpPort;
         this.smtpUserName = smtpUsername;
         this.smtpPassword = smtpPassword;
         this.emailFrom = emailFrom;
@@ -35,8 +41,17 @@ public class EmailService {
         Email email = prepareEmail(userConfig.getEmailList());
         try {
             email.setMsg(event.toString());
+            email.setHostName(this.smtpHost);
+            email.setSmtpPort(this.smtpPort);
+            email.setFrom(this.emailFrom, this.emailFromName);
+
+            List<InternetAddress> sendToAddresses = new ArrayList<>();
+            for (String toEmail : userConfig.getEmailList()) {
+                sendToAddresses.add(InternetAddress.parse(toEmail)[0]);
+            }
+            email.setTo(sendToAddresses);
             email.send();
-        } catch (EmailException e) {
+        } catch (EmailException | AddressException e) {
             log.error("Error occurs when trying to send emails to list: {}", userConfig.getEmailList());
             log.error("Email send error message: {}", e.getMessage());
             throw ExceptionUtils.wrapIfChecked(e);

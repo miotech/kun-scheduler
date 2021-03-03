@@ -12,6 +12,9 @@ public class EmailServiceConfig {
     @Value("${email.smtpHost}")
     private String smtpHost;
 
+    @Value("$(email.smtpPort:25}")
+    private Integer smtpPort;
+
     @Value("${email.smtpUsername}")
     private String smtpUsername;
 
@@ -26,6 +29,6 @@ public class EmailServiceConfig {
 
     @Bean
     public EmailService createEmailService() {
-        return new EmailService(this.smtpHost, this.smtpUsername, this.smtpPassword, this.emailFrom, this.emailFromName);
+        return new EmailService(smtpHost, smtpPort, smtpUsername, smtpPassword, emailFrom, emailFromName);
     }
 }
