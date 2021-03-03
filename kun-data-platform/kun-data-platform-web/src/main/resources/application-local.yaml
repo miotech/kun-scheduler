@@ -31,3 +31,10 @@ zhongda:
 redis:
   host: ${DB_REDIS_IP}
   notify-channel: kun-notify
+
+management:
+  health:
+    elasticsearch:
+      enabled: false
+    ldap:
+      enabled: false
