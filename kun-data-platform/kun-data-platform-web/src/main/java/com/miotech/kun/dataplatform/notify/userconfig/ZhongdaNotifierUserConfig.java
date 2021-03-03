@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("ZHONGDA")
 public class ZhongdaNotifierUserConfig extends NotifierUserConfig {
-    ZhongdaNotifierUserConfig() {
+    public ZhongdaNotifierUserConfig() {
         super("ZHONGDA");
     }
 }

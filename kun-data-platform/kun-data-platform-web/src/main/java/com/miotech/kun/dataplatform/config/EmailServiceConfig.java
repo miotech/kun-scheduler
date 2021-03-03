@@ -2,10 +2,12 @@ package com.miotech.kun.dataplatform.config;
 
 import com.miotech.kun.dataplatform.notify.service.EmailService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@ConditionalOnProperty(value = "testenv", havingValue = "false", matchIfMissing = true)
 public class EmailServiceConfig {
     @Value("${email.smtpHost}")
     private String smtpHost;
