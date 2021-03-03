@@ -16,7 +16,9 @@ dependencies {
     implementation "org.jsoup:jsoup:1.13.1"
     implementation "org.apache.hadoop:hadoop-client:2.7.3"
     implementation "org.apache.hadoop:hadoop-aws:2.7.3"
-    implementation "org.apache.hadoop:hadoop-hdfs:2.7.3"
+    implementation("org.apache.hadoop:hadoop-hdfs:2.7.3") {
+        exclude group: 'javax.servlet', module: 'servlet-api'
+    }
     implementation "com.amazonaws:aws-java-sdk-s3:1.11.306"
     implementation 'org.apache.hadoop:hadoop-aws:2.7.3'
     implementation 'com.alibaba:druid'
