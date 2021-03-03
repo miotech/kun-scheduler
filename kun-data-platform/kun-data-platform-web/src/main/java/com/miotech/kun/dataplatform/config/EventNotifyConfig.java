@@ -10,9 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
-
-@ConditionalOnProperty(value = "testenv", havingValue = "false", matchIfMissing = true)
 @Configuration
+@ConditionalOnProperty(value = "testenv", havingValue = "false", matchIfMissing = true)
 public class EventNotifyConfig {
     @Value("${redis.host}")
     private String redisHost = null;
