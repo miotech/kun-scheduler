@@ -11,13 +11,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class WeComServiceConfig {
 
-    @Value("${zhongda.host}")
+    @Value("${notify.zhongda.host}")
     private String host = null;
 
-    @Value("${zhongda.token}")
+    @Value("${notify.zhongda.token}")
     private String token;
 
-    @Value("${zhongda.notify-group}")
+    @Value("${notify.zhongda.notify-group}")
     private String group;
 
     @Bean

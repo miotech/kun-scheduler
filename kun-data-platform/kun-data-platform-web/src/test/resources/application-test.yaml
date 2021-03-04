@@ -39,8 +39,13 @@ security:
     configuration:
       connection-init-sql: create table if not exists kun_user (id bigint not null constraint kun_user_pk primary key,name varchar(100) not null)
 
-email:
-  smtpHost: 0.0.0.0
-  smtpUsername: foo
-  smtpPassword: bar
-  emailFrom: foo@bar.com
+notify:
+  systemDefault:
+    triggerType: ON_FAIL
+    userConfigJson: '[{"notifierType": "WECOM"}]'
+  email:
+    smtpHost: 0.0.0.0
+    smtpPort: 25
+    smtpUsername: foo
+    smtpPassword: bar
+    emailFrom: foo@bar.com

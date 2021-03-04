@@ -9,22 +9,22 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConditionalOnProperty(value = "testenv", havingValue = "false", matchIfMissing = true)
 public class EmailServiceConfig {
-    @Value("${email.smtpHost}")
+    @Value("${notify.email.smtpHost}")
     private String smtpHost;
 
-    @Value("$(email.smtpPort:25}")
+    @Value("$(notify.email.smtpPort:25}")
     private Integer smtpPort;
 
-    @Value("${email.smtpUsername}")
+    @Value("${notify.email.smtpUsername}")
     private String smtpUsername;
 
-    @Value("${email.smtpPassword}")
+    @Value("${notify.email.smtpPassword}")
     private String smtpPassword;
 
-    @Value("${email.emailFrom}")
+    @Value("${notify.email.emailFrom}")
     private String emailFrom;
 
-    @Value("${email.emailFromName:Kun Notification}")
+    @Value("${notify.email.emailFromName:Kun Notification}")
     private String emailFromName;
 
     @Bean
