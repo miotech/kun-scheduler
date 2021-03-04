@@ -2,8 +2,11 @@ package com.miotech.kun.workflow.scheduler;
 
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.miotech.kun.commons.utils.EventConsumer;
+import com.miotech.kun.commons.utils.EventLoop;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -14,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -86,16 +90,30 @@ public class TaskManager {
         }
     }
 
-    private class InnerEventLoop {
+    private class InnerEventLoop extends EventLoop<Long, Event> {
+        public InnerEventLoop() {
+            super("task-manager");
+            addConsumers(Arrays.asList(new StatusChangeEventConsumer()));
+        }
 
         @Subscribe
         public void onReceive(TaskAttemptStatusChangeEvent event) {
-            TaskRunStatus currentStatus = event.getToStatus();
-            if (currentStatus.isFinished()) {
-                List<TaskAttempt> satisfyTaskAttempts = taskRunDao.fetchAllSatisfyTaskAttempt();
-                logger.info("invoke downStream task attempt size = {}", satisfyTaskAttempts.size());
-                for (TaskAttempt taskAttempt : satisfyTaskAttempts) {
-                    executor.submit(taskAttempt);
+            post(event.getAttemptId(), event);
+        }
+    }
+
+    private class StatusChangeEventConsumer extends EventConsumer<Long, Event> {
+        @Override
+        public void onReceive(Event event) {
+            if (event instanceof TaskAttemptStatusChangeEvent) {
+                TaskAttemptStatusChangeEvent taskAttemptStatusChangeEvent = (TaskAttemptStatusChangeEvent) event;
+                TaskRunStatus currentStatus = taskAttemptStatusChangeEvent.getToStatus();
+                if (currentStatus.isFinished()) {
+                    List<TaskAttempt> satisfyTaskAttempts = taskRunDao.fetchAllSatisfyTaskAttempt();
+                    logger.info("invoke downStream task attempt size = {}", satisfyTaskAttempts.size());
+                    for (TaskAttempt taskAttempt : satisfyTaskAttempts) {
+                        executor.submit(taskAttempt);
+                    }
                 }
             }
         }
