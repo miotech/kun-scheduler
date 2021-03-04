@@ -72,8 +72,8 @@ public class WorkflowEventDispatcher {
                     notifiers.add(emailNotifier);
                     break;
                 case "WECOM":
-                    WeComNotifier zhongdaNotifier = new WeComNotifier(weComService, (WeComNotifierUserConfig) userConfig);
-                    notifiers.add(zhongdaNotifier);
+                    WeComNotifier weComNotifier = new WeComNotifier(weComService, (WeComNotifierUserConfig) userConfig);
+                    notifiers.add(weComNotifier);
                     break;
                 default:
                     throw new IllegalArgumentException(String.format("Unknown user notification config with notifier type = \"%s\"", userConfig.getNotifierType()));

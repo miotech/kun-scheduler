@@ -20,7 +20,7 @@ public class WeComNotifier implements MessageNotifier {
     @Override
     public void notify(Event event) {
         if (event instanceof TaskAttemptStatusChangeEvent) {
-            weComService.sendMessage((TaskAttemptStatusChangeEvent) event);
+            weComService.sendMessage(event);
         }
         // else: do not handle
     }
