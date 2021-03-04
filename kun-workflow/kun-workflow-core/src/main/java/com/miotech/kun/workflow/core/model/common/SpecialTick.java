@@ -2,7 +2,7 @@ package com.miotech.kun.workflow.core.model.common;
 
 public class SpecialTick extends Tick {
 
-    public final static SpecialTick NULL = new SpecialTick(null,TickType.DIRECTLY);
+    public final static SpecialTick NULL = new SpecialTick("",TickType.DIRECTLY);
 
 
     private final TickType type;

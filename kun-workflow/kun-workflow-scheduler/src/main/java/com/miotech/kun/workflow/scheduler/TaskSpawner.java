@@ -105,6 +105,7 @@ public class TaskSpawner {
         checkNotNull(env, "env should not be null.");
         checkState(graph instanceof DirectTaskGraph, "Only DirectTaskGraph is accepted.");
         Tick current = SpecialTick.NULL;
+        logger.info("run task directly size = {}", ((DirectTaskGraph) graph).getTasks().size());
         return spawn(Lists.newArrayList(graph), current, env);
     }
 
@@ -117,11 +118,6 @@ public class TaskSpawner {
 
     private List<TaskRun> spawn(Collection<TaskGraph> graphs, Tick tick, TaskRunEnv env) {
         List<TaskRun> taskRuns = new ArrayList<>();
-        Tick checkPoint = tickDao.getLatestCheckPoint();
-        if (checkPoint == null) {
-            checkPoint = new Tick(tick.toOffsetDateTime().plusMinutes(-1));
-        }
-        logger.info("checkPoint = {}", checkPoint);
         OffsetDateTime currentTickTime = DateTimeUtils.now();
         Map<TaskGraph, List<TaskRun>> graphTaskRuns = new HashMap<>();
         for (TaskGraph graph : graphs) {
@@ -136,8 +132,8 @@ public class TaskSpawner {
         }
         logger.debug("to save created TaskRuns. TaskRun={}", taskRuns);
         taskRunDao.createTaskRuns(graphTaskRuns);
-        logger.debug("to save checkpoint. checkpoint = {}", tick);
-        if(tick != SpecialTick.NULL){
+        if (tick != SpecialTick.NULL) {
+            logger.debug("to save checkpoint. checkpoint = {}", tick);
             tickDao.saveCheckPoint(tick);
         }
         logger.debug("to submit created TaskRuns. TaskRuns={}", taskRuns);
@@ -181,8 +177,8 @@ public class TaskSpawner {
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         Config config = prepareConfig(task, task.getConfig(), runtimeConfig);
         ScheduleType scheduleType = task.getScheduleConf().getType();
-        if(tick == SpecialTick.NULL){
-            tick  = SpecialTick.NULL.toTick();
+        if (tick == SpecialTick.NULL) {
+            tick = SpecialTick.NULL.toTick();
             scheduleType = ScheduleType.NONE;
         }
         TaskRun taskRun = TaskRun.newBuilder()

@@ -41,6 +41,7 @@ public class TaskManager {
         this.taskRunDao = taskRunDao;
 
         this.eventLoop = new InnerEventLoop();
+        eventLoop.start();
 
         this.eventBus = eventBus;
         this.eventBus.register(this.eventLoop);
@@ -98,6 +99,7 @@ public class TaskManager {
 
         @Subscribe
         public void onReceive(TaskAttemptStatusChangeEvent event) {
+
             post(event.getAttemptId(), event);
         }
     }

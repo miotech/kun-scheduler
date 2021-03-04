@@ -36,7 +36,7 @@ public class OperatorLauncher {
     private volatile KunOperator operator;
     private volatile boolean abort = false;
     private volatile TaskRunStatus taskRunStatus = TaskRunStatus.INITIALIZING;
-    private final int RPC_RETRY_TIME = 10;
+    private final int RPC_RETRY_TIME = 5;
     private final Long HEARTBEAT_INTERVAL = 5 * 1000L;
     private WorkflowExecutorFacade executorFacade;
     private InitService initService;
@@ -390,10 +390,15 @@ public class OperatorLauncher {
                         first = false;
                         firstHeartBeat.countDown();
                     }
-                    Thread.sleep(HEARTBEAT_INTERVAL);
                 } catch (Exception e) {
-                    logger.error("heart beat to executor time out", e);
+                    logger.error("heart beat to executor failed", e);
                 }
+                try {
+                    Thread.sleep(HEARTBEAT_INTERVAL);
+                }catch (InterruptedException e){
+                    logger.error("heat beat thread sleep failed",e);
+                }
+
             }
         }
     }

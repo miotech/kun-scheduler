@@ -126,7 +126,7 @@ public class LocalExecutor implements Executor {
         } else {
             TaskAttempt savedTaskAttempt = taskAttemptOptional.get();
             if (workerPool.containsKey(taskAttempt.getId())) {
-                logger.warn("taskAttemptId = {} exist in worker pool");
+                logger.warn("taskAttemptId = {} exist in worker pool", taskAttempt.getId());
                 return false;
             }
             if (!reSubmit && !savedTaskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
