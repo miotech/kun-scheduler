@@ -59,6 +59,11 @@ public class DeployedTaskService extends BaseSecurityService{
                 });
     }
 
+    public Optional<DeployedTask> findOptional(Long taskDefinitionId) {
+        Preconditions.checkNotNull(taskDefinitionId);
+        return deployedTaskDao.fetchById(taskDefinitionId);
+    }
+
     public List<DeployedTask> findByDefIds(List<Long> defIds){
         return deployedTaskDao.fetchByIds(defIds);
     }

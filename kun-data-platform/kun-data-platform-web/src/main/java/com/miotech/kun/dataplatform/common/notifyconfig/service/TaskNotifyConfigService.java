@@ -3,6 +3,7 @@ package com.miotech.kun.dataplatform.common.notifyconfig.service;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.dataplatform.common.notifyconfig.dao.TaskNotifyConfigDao;
 import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefNotifyConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -92,5 +93,29 @@ public class TaskNotifyConfigService {
     public Boolean removeTaskNotifyConfigByWorkflowTaskId(Long workflowTaskId) {
         Preconditions.checkNotNull(workflowTaskId, "id of workflow task id should not be null");
         return taskNotifyConfigDao.removeByWorkflowTaskId(workflowTaskId);
+    }
+
+    @Transactional
+    public void updateRelatedTaskNotificationConfig(Long workflowTaskId, TaskDefNotifyConfig taskDefNotifyConfig) {
+        Optional<TaskNotifyConfig> currentTaskNotifyConfigOptional = fetchTaskNotifyConfigByWorkflowTaskId(workflowTaskId);
+        if (currentTaskNotifyConfigOptional.isPresent()) {
+            TaskNotifyConfig currentTaskNotifyConfig = currentTaskNotifyConfigOptional.get();
+            // if present, do update
+            upsertTaskNotifyConfig(
+                    currentTaskNotifyConfig
+                            .cloneBuilder()
+                            .withNotifierConfigs(taskDefNotifyConfig.getNotifierUserConfigList())
+                            .withTriggerType(taskDefNotifyConfig.getNotifyWhen())
+                            .build()
+            );
+        } else {
+            // else, do insert
+            upsertTaskNotifyConfig(
+                    TaskNotifyConfig.newBuilder()
+                            .withNotifierConfigs(taskDefNotifyConfig.getNotifierUserConfigList())
+                            .withTriggerType(taskDefNotifyConfig.getNotifyWhen())
+                            .build()
+            );
+        }
     }
 }

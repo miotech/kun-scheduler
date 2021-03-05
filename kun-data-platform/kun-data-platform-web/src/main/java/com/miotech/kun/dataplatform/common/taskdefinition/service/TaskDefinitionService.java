@@ -7,6 +7,7 @@ import com.miotech.kun.dataplatform.common.datastore.service.DatasetService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeployRequest;
+import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfigService;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskRelationDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskTryDao;
@@ -73,6 +74,9 @@ public class TaskDefinitionService extends BaseSecurityService {
 
     @Autowired
     private DeployService deployService;
+
+    @Autowired
+    private TaskNotifyConfigService taskNotifyConfigService;
 
     @Autowired
     @Lazy
@@ -180,8 +184,17 @@ public class TaskDefinitionService extends BaseSecurityService {
             taskRelationDao.create(taskRelations);
         }
 
+        // Update deployed task notification configuration if presented
+        Optional<DeployedTask> deployedTaskOptional = deployedTaskService.findOptional(taskDefinition.getDefinitionId());
+        deployedTaskOptional.ifPresent(deployedTask -> taskNotifyConfigService.updateRelatedTaskNotificationConfig(
+                deployedTask.getWorkflowTaskId(),
+                taskDefinition.getTaskPayload().getNotifyConfig()
+        ));
+
         return updated;
     }
+
+
 
     public void checkRule(TaskDefinition taskDefinition) {
         Preconditions.checkNotNull(taskDefinition.getTaskPayload(), "taskPayload should not be `null`");
