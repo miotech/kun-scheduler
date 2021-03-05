@@ -32,6 +32,8 @@ management:
       exposure:
         include: "*"
   health:
+    elasticsearch:
+      enabled: false
     ldap:
       enabled: false
 
