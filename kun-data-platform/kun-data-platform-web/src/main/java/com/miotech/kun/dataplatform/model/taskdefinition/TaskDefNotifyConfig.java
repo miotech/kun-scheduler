@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
 import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
 
+import java.util.Collections;
 import java.util.List;
 
 public class TaskDefNotifyConfig {
@@ -12,6 +13,11 @@ public class TaskDefNotifyConfig {
 
     @JsonProperty("notifierConfig")
     private final List<NotifierUserConfig> notifierUserConfigList;
+
+    public static final TaskDefNotifyConfig DEFAULT_TASK_NOTIFY_CONFIG = new TaskDefNotifyConfig(
+            TaskStatusNotifyTrigger.SYSTEM_DEFAULT,
+            Collections.emptyList()
+    );
 
     public TaskDefNotifyConfig(
             @JsonProperty("notifyWhen") TaskStatusNotifyTrigger notifyWhen,

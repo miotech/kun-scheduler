@@ -41,6 +41,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.miotech.kun.dataplatform.model.taskdefinition.TaskDefNotifyConfig.DEFAULT_TASK_NOTIFY_CONFIG;
+
 @Service
 @Slf4j
 public class TaskDefinitionService extends BaseSecurityService {
@@ -112,6 +114,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                         .withInputDatasets(ImmutableList.of())
                         .withOutputDatasets(ImmutableList.of())
                         .build())
+                .withNotifyConfig(DEFAULT_TASK_NOTIFY_CONFIG)
                 .withTaskConfig(new HashMap<>())
                 .build();
         TaskDefinition taskDefinition = TaskDefinition.newBuilder()
