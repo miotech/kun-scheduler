@@ -12,7 +12,7 @@ public class EmailServiceConfig {
     @Value("${notify.email.smtpHost}")
     private String smtpHost;
 
-    @Value("$(notify.email.smtpPort:25}")
+    @Value("${notify.email.smtpPort:25}")
     private Integer smtpPort;
 
     @Value("${notify.email.smtpUsername}")
