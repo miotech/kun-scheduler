@@ -3,12 +3,14 @@ package com.miotech.kun.dataplatform.common.notifyconfig.service;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.dataplatform.common.notifyconfig.dao.TaskNotifyConfigDao;
 import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
+import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefNotifyConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -97,6 +99,8 @@ public class TaskNotifyConfigService {
 
     @Transactional
     public void updateRelatedTaskNotificationConfig(Long workflowTaskId, TaskDefNotifyConfig taskDefNotifyConfig) {
+        // TODO: Preconditions check: arguments should not be null
+
         Optional<TaskNotifyConfig> currentTaskNotifyConfigOptional = fetchTaskNotifyConfigByWorkflowTaskId(workflowTaskId);
         if (currentTaskNotifyConfigOptional.isPresent()) {
             TaskNotifyConfig currentTaskNotifyConfig = currentTaskNotifyConfigOptional.get();
@@ -104,16 +108,27 @@ public class TaskNotifyConfigService {
             upsertTaskNotifyConfig(
                     currentTaskNotifyConfig
                             .cloneBuilder()
-                            .withNotifierConfigs(taskDefNotifyConfig.getNotifierUserConfigList())
-                            .withTriggerType(taskDefNotifyConfig.getNotifyWhen())
+                            .withId(currentTaskNotifyConfig.getId())
+                            .withWorkflowTaskId(workflowTaskId)
+                            .withNotifierConfigs(
+                                    Objects.nonNull(taskDefNotifyConfig) ?
+                                            taskDefNotifyConfig.getNotifierUserConfigList() :
+                                            Collections.emptyList()
+                            )
+                            .withTriggerType(Objects.nonNull(taskDefNotifyConfig) ? taskDefNotifyConfig.getNotifyWhen() : TaskStatusNotifyTrigger.SYSTEM_DEFAULT)
                             .build()
             );
         } else {
             // else, do insert
             upsertTaskNotifyConfig(
                     TaskNotifyConfig.newBuilder()
-                            .withNotifierConfigs(taskDefNotifyConfig.getNotifierUserConfigList())
-                            .withTriggerType(taskDefNotifyConfig.getNotifyWhen())
+                            .withWorkflowTaskId(workflowTaskId)
+                            .withNotifierConfigs(
+                                    Objects.nonNull(taskDefNotifyConfig) ?
+                                            taskDefNotifyConfig.getNotifierUserConfigList() :
+                                            Collections.emptyList()
+                            )
+                            .withTriggerType(Objects.nonNull(taskDefNotifyConfig) ? taskDefNotifyConfig.getNotifyWhen() : TaskStatusNotifyTrigger.SYSTEM_DEFAULT)
                             .build()
             );
         }

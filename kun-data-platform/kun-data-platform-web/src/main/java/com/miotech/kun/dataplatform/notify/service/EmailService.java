@@ -81,12 +81,21 @@ public class EmailService {
     private Email prepareEmail(List<String> emailToList) {
         Email email = new SimpleEmail();
         email.setHostName(this.smtpHost);
+        email.setSmtpPort(this.smtpPort);
+        // SSL/TLS port 465
+        if (this.smtpPort == 465) {
+            email.setSSLOnConnect(true);
+            email.setSSLCheckServerIdentity(true);
+        }
+        // STARTTLS port 587
+        else if (this.smtpPort == 587) {
+            email.setStartTLSEnabled(true);
+            email.setSSLCheckServerIdentity(true);
+        }
         email.setAuthenticator(new DefaultAuthenticator(this.smtpUserName, this.smtpPassword));
         try {
             email.addTo(emailToList.toArray(new String[0]));
             email.setFrom(this.emailFrom, this.emailFromName);
-            email.setHostName(this.smtpHost);
-            email.setSmtpPort(this.smtpPort);
             email.setFrom(this.emailFrom, this.emailFromName);
         } catch (EmailException e) {
             log.error("Failed to prepare email for email list: {}", emailToList);
