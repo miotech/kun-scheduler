@@ -109,6 +109,10 @@ public class TaskSpawner {
         return spawn(Lists.newArrayList(graph), current, env);
     }
 
+    public boolean rerun(TaskRun taskRun){
+        return taskManager.retry(taskRun);
+    }
+
     /* ----------- private methods ------------ */
 
     private void handleTickEvent(TickEvent tickEvent) {

@@ -11,7 +11,11 @@ import com.miotech.kun.workflow.executor.local.TaskAttemptQueue;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import org.joor.Reflect;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Queue;
 
@@ -22,10 +26,14 @@ import static org.hamcrest.Matchers.is;
 
 public class QueueManageTest extends GuiceTestBase {
 
+    private final Logger logger = LoggerFactory.getLogger(QueueManageTest.class);
+
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Test
     public void testChangeAttemptPriority() {
-        QueueManage queueManage = prepareQueueManage();
+        QueueManage queueManage = prepareQueueManage(3);
         Task task1 = MockTaskFactory.createTask().cloneBuilder().
                 withPriority(TaskPriority.MEDIUM.getPriority()).build();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
@@ -43,7 +51,7 @@ public class QueueManageTest extends GuiceTestBase {
         queueManage.submit(taskAttempt3);
         TaskAttemptQueue attemptQueue = queueManage.getTaskAttemptQueue("default");
         Queue queue = Reflect.on(attemptQueue).field("queue").get();
-        Object[] attempts =  queue.toArray();
+        Object[] attempts = queue.toArray();
         assertThat(((TaskAttempt) attempts[0]).getId(), is(taskAttempt2.getId()));
         assertThat(((TaskAttempt) attempts[1]).getId(), is(taskAttempt1.getId()));
         assertThat(((TaskAttempt) attempts[2]).getId(), is(taskAttempt3.getId()));
@@ -54,10 +62,99 @@ public class QueueManageTest extends GuiceTestBase {
 
     }
 
-    private QueueManage prepareQueueManage() {
+    @Test
+    public void repeatReleaseTest() {
+        //prepare
+        QueueManage queueManage = prepareQueueManage(8);
+        Task task1 = MockTaskFactory.createTask();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskAttempt taskAttempt1 = createTaskAttempt(taskRun1);
+        queueManage.submit(taskAttempt1);
+        Task task2 = MockTaskFactory.createTask().cloneBuilder().
+                withPriority(TaskPriority.HIGH.getPriority()).build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
+        TaskAttempt taskAttempt2 = createTaskAttempt(taskRun2);
+        queueManage.submit(taskAttempt2);
+
+        try {
+            //take taskAttempt from queue
+            queueManage.take();
+            queueManage.take();
+        } catch (InterruptedException e) {
+            logger.error("take taskAttempt from queue failed", e);
+        }
+        //release token once
+        queueManage.release(taskAttempt1.getQueueName(), taskAttempt1.getId());
+
+        thrown.expect(IllegalStateException.class);
+        thrown.expectMessage("token with taskAttemptId = " + taskAttempt1.getId() + "has been released");
+        //release token twice should throw exception
+        queueManage.release(taskAttempt1.getQueueName(), taskAttempt1.getId());
+
+    }
+
+    @Test
+    public void repeatAcquireTest() {
+        //prepare
+        QueueManage queueManage = prepareQueueManage(8);
+        Task task1 = MockTaskFactory.createTask();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskAttempt taskAttempt1 = createTaskAttempt(taskRun1);
+        queueManage.submit(taskAttempt1);
+        Task task2 = MockTaskFactory.createTask().cloneBuilder().
+                withPriority(TaskPriority.HIGH.getPriority()).build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
+        TaskAttempt taskAttempt2 = createTaskAttempt(taskRun2);
+        queueManage.submit(taskAttempt2);
+
+        try {
+            //take taskAttempt from queue
+            queueManage.take();
+            queueManage.take();
+        } catch (InterruptedException e) {
+            logger.error("take taskAttempt from queue failed", e);
+        }
+        //release token once
+        queueManage.release(taskAttempt1.getQueueName(), taskAttempt1.getId());
+
+        thrown.expect(IllegalStateException.class);
+        thrown.expectMessage("token with taskAttemptId = " + taskAttempt1.getId() + "has been released");
+        //release token twice should throw exception
+        queueManage.release(taskAttempt1.getQueueName(), taskAttempt1.getId());
+
+    }
+
+    @Test
+    public void releaseTokenUnCorrect() {
+        //prepare
+        QueueManage queueManage = prepareQueueManage(8);
+        Task task1 = MockTaskFactory.createTask();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskAttempt taskAttempt1 = createTaskAttempt(taskRun1);
+        queueManage.submit(taskAttempt1);
+        Task task2 = MockTaskFactory.createTask().cloneBuilder().
+                withPriority(TaskPriority.HIGH.getPriority()).build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
+        TaskAttempt taskAttempt2 = createTaskAttempt(taskRun2);
+
+        try {
+            //take taskAttempt from queue
+            queueManage.take();
+        } catch (InterruptedException e) {
+            logger.error("take taskAttempt from queue failed", e);
+        }
+        //release token with taskAttempt2
+
+        thrown.expect(IllegalStateException.class);
+        thrown.expectMessage("token with taskAttemptId = " + taskAttempt2.getId() + "has been released");
+        queueManage.release(taskAttempt2.getQueueName(), taskAttempt2.getId());
+
+    }
+
+    private QueueManage prepareQueueManage(int defaultCapacity) {
         Props props = new Props();
         props.put("executor.queue", "default,user");
-        props.put("executor.queue.default.capacity", 3);
+        props.put("executor.queue.default.capacity", defaultCapacity);
         props.put("executor.queue.user.capacity", 0);
         return new QueueManage(props);
     }
