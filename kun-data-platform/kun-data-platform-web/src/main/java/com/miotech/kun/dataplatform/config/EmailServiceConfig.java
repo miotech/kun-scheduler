@@ -27,8 +27,19 @@ public class EmailServiceConfig {
     @Value("${notify.email.emailFromName:Kun Notification}")
     private String emailFromName;
 
+    @Value("${notify.email.smtpSecurity:auto}")
+    private String smtpSecurityProtocol;
+
     @Bean
     public EmailService createEmailService() {
-        return new EmailService(smtpHost, smtpPort, smtpUsername, smtpPassword, emailFrom, emailFromName);
+        return EmailService.newBuilder()
+                .withSmtpHost(smtpHost)
+                .withSmtpPort(smtpPort)
+                .withSmtpUserName(smtpUsername)
+                .withSmtpPassword(smtpPassword)
+                .withEmailFrom(emailFrom)
+                .withEmailFromName(emailFromName)
+                .withSecurityProtocol(smtpSecurityProtocol)
+                .build();
     }
 }

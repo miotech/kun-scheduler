@@ -30,16 +30,15 @@ public class EmailServiceTest extends AppTestBase {
     private EmailService prepareEmailService() {
         greenMail.setUser(TEST_EMAIL_FROM, TEST_SMTP_USERNAME, TEST_SMTP_PASSWORD);
 
-        EmailService emailService = new EmailService(
-                greenMail.getSmtp().getServerSetup().getBindAddress(),
-                greenMail.getSmtp().getPort(),
-                TEST_SMTP_USERNAME,
-                TEST_SMTP_PASSWORD,
-                TEST_EMAIL_FROM,
-                TEST_EMAIL_FROM_NAME
-        );
-
-        return emailService;
+        return EmailService.newBuilder()
+                .withSmtpHost(greenMail.getSmtp().getServerSetup().getBindAddress())
+                .withSmtpPort(greenMail.getSmtp().getPort())
+                .withSmtpUserName(TEST_SMTP_USERNAME)
+                .withSmtpPassword(TEST_SMTP_PASSWORD)
+                .withEmailFrom(TEST_EMAIL_FROM)
+                .withEmailFromName(TEST_EMAIL_FROM_NAME)
+                .withSecurityProtocol("auto")
+                .build();
     }
 
     @Test

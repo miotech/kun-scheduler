@@ -34,17 +34,29 @@ management:
     ldap:
       enabled: false
 
+# Notification configurations items
 notify:
+  # System default configurations to be applied for default task definitions.
   systemDefault:
     # Allowed trigger types: ON_SUCCESS, ON_FAIL, ON_FINISH, NEVER
     triggerType: ON_FAIL
     userConfigJson: '[{"notifierType": "WECOM"}]'
+  # Email notifier settings
   email:
+    # Host of SMTP server to connect
     smtpHost: ${SMTP_HOST}
+    # Port of SMTP server to connect
     smtpPort: ${SMTP_PORT:465}
+    # Username of SMTP server to connect
     smtpUsername: ${SMTP_USERNAME}
+    # Password of SMTP server to connect
     smtpPassword: ${SMTP_PASSWORD}
+    # Connection transmission security protocol. Available options: auto (default), ssl_tls, starttls, none.
+    # When set to "auto", the application will automatically determine which security protocol to use by smtp port number.
+    smtpSecurity: ${SMTP_SECURITY_PROTOCOL:auto}
+    # Displayed email address of sending from
     emailFrom: ${EMAIL_FROM:noreply@miotech.com}
+    # Displayed name of sending from
     emailFromName: ${EMAIL_FROM_NAME:kun-robot}
 
   zhongda:
