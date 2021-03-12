@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.core.event;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -55,6 +56,7 @@ public class TaskAttemptStatusChangeEvent extends Event {
         return taskId;
     }
 
+    @JsonIgnore
     public Long getTaskRunId() {
         // taskAttemptId = taskRunId | attemptNum
         return IdGenerator.getInstance().split(attemptId)[0];
