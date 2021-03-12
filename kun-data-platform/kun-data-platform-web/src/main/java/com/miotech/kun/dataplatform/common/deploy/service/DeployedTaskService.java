@@ -398,4 +398,8 @@ public class DeployedTaskService extends BaseSecurityService{
         }
         return userList;
     }
+
+    public Optional<DeployedTask> findByWorkflowTaskId(Long workflowTaskId) {
+        return deployedTaskDao.fetchByWorkflowTaskId(workflowTaskId);
+    }
 }

@@ -2,14 +2,19 @@ package com.miotech.kun.dataplatform.notify.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.miotech.kun.dataplatform.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
+import com.miotech.kun.dataplatform.notify.NotifyLinkConfigContext;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.operator.spark.clients.HttpApiClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
+@Slf4j
 public class ZhongdaService extends HttpApiClient {
     /**
      * Zhongda 的 Host
@@ -26,13 +31,22 @@ public class ZhongdaService extends HttpApiClient {
      */
     private String group;
 
+    /**
+     * 通知中的链接相关配置上下文
+     */
+    private NotifyLinkConfigContext notifyLinkConfigContext;
+
     @Autowired
     private DeployedTaskService deployedTaskService;
 
-    public ZhongdaService(String host, String token, String group) {
+    @Autowired
+    private BackfillService backfillService;
+
+    public ZhongdaService(String host, String token, String group, NotifyLinkConfigContext notifyLinkConfigContext) {
         this.host = host;
         this.token = token;
         this.group = group;
+        this.notifyLinkConfigContext = notifyLinkConfigContext;
     }
 
     @Override
@@ -70,7 +84,26 @@ public class ZhongdaService extends HttpApiClient {
         post(api, payload.toString());
     }
 
-    private String buildMessage(TaskAttemptStatusChangeEvent event){
+    private String buildMessage(TaskAttemptStatusChangeEvent event) {
+        if (notifyLinkConfigContext.isEnabled()) {
+            long taskRunId = event.getTaskRunId();
+            Optional<Long> derivingBackfillId = this.backfillService.findDerivedFromBackfill(taskRunId);
+            Optional<Long> taskDefinitionId = deployedTaskService.findByWorkflowTaskId(event.getTaskId()).map(deployedTask -> deployedTask.getDefinitionId());
+            log.debug("Pushing status message with link. task run id = {}, backfill id = {}, task definition id = {}.", taskRunId, derivingBackfillId.orElse(null), taskDefinitionId.orElse(null));
+            // If it is not a backfill task run, and corresponding deployment task is found, then it should be a scheduled task run
+            if (taskDefinitionId.isPresent() && (!derivingBackfillId.isPresent())) {
+                return String.format("Deployed task: '%s' in state: %s%n%nSee link: %s",
+                        event.getTaskName(),
+                        event.getToStatus().name(),
+                        generateLinkUrl(taskDefinitionId.get(), taskRunId)
+                );
+            }
+            // TODO: @joshoy generate a link for backfill webpage. Should be supported by frontend UI first.
+        }
         return String.format("Task: '%s' in state: %s", event.getTaskName(), event.getToStatus().name());
+    }
+
+    private String generateLinkUrl(long taskDefinitionId, long taskRunId) {
+       return notifyLinkConfigContext.getPrefix() + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", taskDefinitionId, taskRunId);
     }
 }

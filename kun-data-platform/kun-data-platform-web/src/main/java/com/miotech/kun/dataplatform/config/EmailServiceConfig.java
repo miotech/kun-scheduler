@@ -1,5 +1,6 @@
 package com.miotech.kun.dataplatform.config;
 
+import com.miotech.kun.dataplatform.notify.NotifyLinkConfigContext;
 import com.miotech.kun.dataplatform.notify.service.EmailService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -9,6 +10,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConditionalOnProperty(value = "testenv", havingValue = "false", matchIfMissing = true)
 public class EmailServiceConfig {
+    @Value("${notify.email.enabled:false}")
+    private Boolean emailNotifierEnabled;
+
     @Value("${notify.email.smtpHost}")
     private String smtpHost;
 
@@ -30,9 +34,17 @@ public class EmailServiceConfig {
     @Value("${notify.email.smtpSecurity:auto}")
     private String smtpSecurityProtocol;
 
+    @Value("${notify.urlLink.enabled:true}")
+    private Boolean notifyUrlLinkEnabled;
+
+    @Value("${notify.urlLink.prefix}")
+    private String notifyUrlLinkPrefix;
+
     @Bean
     public EmailService createEmailService() {
+        NotifyLinkConfigContext notifyLinkConfigContext = new NotifyLinkConfigContext(notifyUrlLinkEnabled, notifyUrlLinkPrefix);
         return EmailService.newBuilder()
+                .withEnabled(emailNotifierEnabled)
                 .withSmtpHost(smtpHost)
                 .withSmtpPort(smtpPort)
                 .withSmtpUserName(smtpUsername)
@@ -40,6 +52,7 @@ public class EmailServiceConfig {
                 .withEmailFrom(emailFrom)
                 .withEmailFromName(emailFromName)
                 .withSecurityProtocol(smtpSecurityProtocol)
+                .withNotifyUrlLink(notifyLinkConfigContext)
                 .build();
     }
 }

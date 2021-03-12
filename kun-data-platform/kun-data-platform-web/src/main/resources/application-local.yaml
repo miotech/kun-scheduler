@@ -43,14 +43,16 @@ notify:
     userConfigJson: '[{"notifierType": "WECOM"}]'
   # Email notifier settings
   email:
+    # For developers, usually, we do not spend extra time on configuring these SMTP connection settings
+    enabled: ${EMAIL_NOTIFIER_ENABLED:false}
     # Host of SMTP server to connect
-    smtpHost: ${SMTP_HOST}
+    smtpHost: ${SMTP_HOST:}
     # Port of SMTP server to connect
     smtpPort: ${SMTP_PORT:465}
     # Username of SMTP server to connect
-    smtpUsername: ${SMTP_USERNAME}
+    smtpUsername: ${SMTP_USERNAME:}
     # Password of SMTP server to connect
-    smtpPassword: ${SMTP_PASSWORD}
+    smtpPassword: ${SMTP_PASSWORD:}
     # Connection transmission security protocol. Available options: auto (default), ssl_tls, starttls, none.
     # When set to "auto", the application will automatically determine which security protocol to use by smtp port number.
     smtpSecurity: ${SMTP_SECURITY_PROTOCOL:auto}
@@ -58,6 +60,11 @@ notify:
     emailFrom: ${EMAIL_FROM:noreply@miotech.com}
     # Displayed name of sending from
     emailFromName: ${EMAIL_FROM_NAME:kun-robot}
+  # Decide whether notification content contains issue link URL, if possible
+  urlLink:
+    enabled: ${NOTIFY_URL_LINK_ENABLED:true}
+    # Your web link host url prefix in format of {PROTOCOL}://{HOST}[:PORT]. For instance, "https://kun.miotech.com", "http://127.0.0.1:12345", etc.
+    prefix: ${NOTIFY_URL_LINK_PREFIX:http://localhost:9801}
 
   zhongda:
     host: http://zhongda.miotech.com:8000

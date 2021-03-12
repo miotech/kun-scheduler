@@ -3,6 +3,9 @@ package com.miotech.kun.dataplatform.notify.service;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.dataplatform.common.backfill.service.BackfillService;
+import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
+import com.miotech.kun.dataplatform.notify.NotifyLinkConfigContext;
 import com.miotech.kun.dataplatform.notify.userconfig.EmailNotifierUserConfig;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
@@ -11,12 +14,14 @@ import org.apache.commons.mail.DefaultAuthenticator;
 import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 public class EmailService {
@@ -27,6 +32,36 @@ public class EmailService {
     private static final String SECURITY_TYPE_SSL_TLS = "ssl_tls";
 
     private static final String SECURITY_TYPE_NONE = "none";
+
+    public static final String STATUS_CHANGE_EMAIL_MSG_TEMPLATE = "Task \"%s\" ends in status \"%s\".\n" +
+            "\n" +
+            "Detailed information for further debugging:\n" +
+            "\n" +
+            "Task name: %s\n" +
+            "Task ID: %s\n" +
+            "Task run ID: %s\n" +
+            "Task Attempt ID: %s\n" +
+            "Timestamp: %s\n";
+
+    public static final String STATUS_CHANGE_EMAIL_MSG_SCHEDULED_TASK_TEMPLATE = "Deployed task \"%s\" ends in status \"%s\".\n" +
+            "\n" +
+            "Detailed information for further debugging:\n" +
+            "\n" +
+            "Task name: %s\n" +
+            "Task ID: %s\n" +
+            "Task run ID: %s\n" +
+            "Task Attempt ID: %s\n" +
+            "Timestamp: %s\n" +
+            "\n"  +
+            "See link: %s";
+
+    @Autowired
+    private DeployedTaskService deployedTaskService;
+
+    @Autowired
+    private BackfillService backfillService;
+
+    private final boolean enabled;
 
     private final String smtpHost;
 
@@ -45,23 +80,18 @@ public class EmailService {
      */
     private final String securityProtocol;
 
-    public static final String STATUS_CHANGE_EMAIL_MSG_TEMPLATE = "Task \"%s\" goes from status \"%s\" to status \"%s\".\n" +
-            "\n" +
-            "Detailed information for further debugging:\n" +
-            "\n" +
-            "Task name: %s\n" +
-            "Task ID: %s\n" +
-            "Task Attempt ID: %s\n" +
-            "Timestamp: %s\n";
+    private final NotifyLinkConfigContext notifyLinkConfigContext;
 
     private EmailService(EmailServiceBuilder builder) {
+        this.enabled = builder.enabled;
         this.smtpHost = builder.smtpHost;
         this.smtpPort = builder.smtpPort;
         this.smtpUserName = builder.smtpUsername;
         this.smtpPassword = builder.smtpPassword;
         this.emailFrom = builder.emailFrom;
         this.emailFromName = builder.emailFromName;
-        this.securityProtocol = builder.securityProtocol;
+        this.securityProtocol = (builder.securityProtocol == null) ? SECURITY_TYPE_AUTO : builder.securityProtocol;
+        this.notifyLinkConfigContext = builder.notifyLinkConfigContext;
     }
 
     public static EmailServiceBuilder newBuilder() {
@@ -69,6 +99,9 @@ public class EmailService {
     }
 
     public void sendEmailByEventAndUserConfig(Event event, EmailNotifierUserConfig userConfig) {
+        if (!enabled) {
+            return;
+        }
         Email email = prepareEmail(userConfig.getEmailList());
         try {
             List<InternetAddress> sendToAddresses = getSendToListFromUserConfig(userConfig);
@@ -160,20 +193,45 @@ public class EmailService {
         if (event instanceof TaskAttemptStatusChangeEvent) {
             TaskAttemptStatusChangeEvent e = (TaskAttemptStatusChangeEvent) event;
             String emailSubject = String.format("[KUN-ALERT] Task \"%s\" in state \"%s\"", e.getTaskName(), e.getToStatus());
-            String emailContent = String.format(STATUS_CHANGE_EMAIL_MSG_TEMPLATE,
-                    e.getTaskName(),
-                    e.getFromStatus(),
-                    e.getToStatus(),
-                    e.getTaskName(),
-                    e.getTaskId(),
-                    e.getAttemptId(),
-                    DateTimeUtils.fromTimestamp(e.getTimestamp())
-            );
+            String emailContent;
+
+            long taskRunId = e.getTaskRunId();
+            Optional<Long> derivingBackfillId = backfillService.findDerivedFromBackfill(taskRunId);
+            Optional<Long> taskDefinitionId = deployedTaskService.findByWorkflowTaskId(e.getTaskId()).map(deployedTask -> deployedTask.getDefinitionId());
+
+            // If it is not a backfill task run, and corresponding deployment task is found, then it should be a scheduled task run
+            if (taskDefinitionId.isPresent() && !derivingBackfillId.isPresent()) {
+                emailContent = String.format(STATUS_CHANGE_EMAIL_MSG_SCHEDULED_TASK_TEMPLATE,
+                        e.getTaskName(),
+                        e.getToStatus(),
+                        e.getTaskName(),
+                        e.getTaskId(),
+                        e.getTaskRunId(),
+                        e.getAttemptId(),
+                        DateTimeUtils.fromTimestamp(e.getTimestamp()),
+                        generateLinkUrl(taskDefinitionId.get(), taskRunId)
+                );
+            } else {
+                // TODO: @joshoy generate a link for backfill webpage. Should be supported by frontend UI first.
+                emailContent = String.format(STATUS_CHANGE_EMAIL_MSG_TEMPLATE,
+                        e.getTaskName(),
+                        e.getToStatus(),
+                        e.getTaskName(),
+                        e.getTaskId(),
+                        e.getTaskRunId(),
+                        e.getAttemptId(),
+                        DateTimeUtils.fromTimestamp(e.getTimestamp())
+                );
+            }
 
             return new EmailContent(emailSubject, emailContent);
         }
         // else
         throw new IllegalStateException(String.format("Unknown event type: \"%s\" for email service to handle", event.getClass().getName()));
+    }
+
+    private String generateLinkUrl(long taskDefinitionId, long taskRunId) {
+        return notifyLinkConfigContext.getPrefix() + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", taskDefinitionId, taskRunId);
     }
 
     public static class EmailContent {
@@ -195,6 +253,7 @@ public class EmailService {
     }
 
     public static final class EmailServiceBuilder {
+        private boolean enabled;
         private String smtpHost;
         private Integer smtpPort;
         private String smtpUsername;
@@ -202,8 +261,14 @@ public class EmailService {
         private String emailFrom;
         private String emailFromName;
         private String securityProtocol;
+        private NotifyLinkConfigContext notifyLinkConfigContext;
 
         private EmailServiceBuilder() {
+        }
+
+        public EmailServiceBuilder withEnabled(boolean enabled) {
+            this.enabled = enabled;
+            return this;
         }
 
         public EmailServiceBuilder withSmtpHost(String smtpHost) {
@@ -233,6 +298,11 @@ public class EmailService {
 
         public EmailServiceBuilder withEmailFromName(String emailFromName) {
             this.emailFromName = emailFromName;
+            return this;
+        }
+
+        public EmailServiceBuilder withNotifyUrlLink(NotifyLinkConfigContext notifyLinkConfigContext) {
+            this.notifyLinkConfigContext = notifyLinkConfigContext;
             return this;
         }
 

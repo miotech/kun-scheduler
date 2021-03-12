@@ -1,5 +1,6 @@
 package com.miotech.kun.dataplatform.config;
 
+import com.miotech.kun.dataplatform.notify.NotifyLinkConfigContext;
 import com.miotech.kun.dataplatform.notify.service.WeComService;
 import com.miotech.kun.dataplatform.notify.service.ZhongdaService;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,9 +21,15 @@ public class WeComServiceConfig {
     @Value("${notify.zhongda.notify-group}")
     private String group;
 
+    @Value("${notify.urlLink.enabled:true}")
+    private Boolean notifyUrlLinkEnabled;
+
+    @Value("${notify.urlLink.prefix}")
+    private String notifyUrlLinkPrefix;
+
     @Bean
     public ZhongdaService createZhongdaService() {
-        return new ZhongdaService(host, token, group);
+        return new ZhongdaService(host, token, group, new NotifyLinkConfigContext(notifyUrlLinkEnabled, notifyUrlLinkPrefix));
     }
 
     @Bean
