@@ -344,7 +344,7 @@ public class DeployedTaskService extends BaseSecurityService{
         TaskRunSearchRequest searchRequest = TaskRunSearchRequest.newBuilder()
                 .withTaskIds(deployedTasks.stream().map(DeployedTask::getWorkflowTaskId).collect(Collectors.toList()))
                 .withPageNum(1)
-                .withPageSize(deployedTasks.size())
+                .withPageSize(deployedTasks.size() * 4)
                 .build();
 
         // Fetch corresponding task runs by batch querying workflow API
@@ -358,20 +358,18 @@ public class DeployedTaskService extends BaseSecurityService{
             Optional<TaskRun> correspondingTaskRun = taskRuns.stream()
                     .filter(taskRun -> Objects.equals(taskRun.getTask().getId(), deployedTask.getWorkflowTaskId()))
                     .findAny();
-            if (correspondingTaskRun.isPresent()) {
-                DeployedTaskWithRunVO vo = new DeployedTaskWithRunVO(
-                        deployedTask.getDefinitionId(),
-                        deployedTask.getWorkflowTaskId(),
-                        deployedTask.getDefinitionId(),
-                        deployedTask.getName(),
-                        deployedTask.getTaskTemplateName(),
-                        deployedTask.getOwner(),
-                        deployedTask.isArchived(),
-                        deployedTask.getTaskCommit().getSnapshot().getTaskPayload(),
-                        correspondingTaskRun.orElse(null)
-                );
-                results.add(vo);
-            }
+            DeployedTaskWithRunVO vo = new DeployedTaskWithRunVO(
+                    deployedTask.getDefinitionId(),
+                    deployedTask.getWorkflowTaskId(),
+                    deployedTask.getDefinitionId(),
+                    deployedTask.getName(),
+                    deployedTask.getTaskTemplateName(),
+                    deployedTask.getOwner(),
+                    deployedTask.isArchived(),
+                    deployedTask.getTaskCommit().getSnapshot().getTaskPayload(),
+                    correspondingTaskRun.orElse(null)
+            );
+            results.add(vo);
         }
 
         return results;
