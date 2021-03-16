@@ -26,6 +26,9 @@ flyway:
   table: flyway_kun_wf_schema_history
   baselineOnMigrate: true
   baselineVersion: 0
+  # Ref: https://flywaydb.org/documentation/configuration/parameters/outOfOrder
+  # If you already have versions 1.0 and 3.0 applied, and now a version 2.0 is found, it will be applied too instead of being ignored.
+  outOfOrder: true
 
 rpc:
   registry: redis://${DB_REDIS_IP}:6379/

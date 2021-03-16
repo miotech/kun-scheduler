@@ -148,7 +148,7 @@ public class DeployedTaskDao {
         }
 
         String countSql = DefaultSQLBuilder.newBuilder()
-                .select("COUNT(1)")
+                .select("COUNT(*)")
                 .from(DEPLOYED_TASK_TABLE_NAME, DEPLOYED_TASK_MODEL_NAME)
                 .where(whereClause.toString())
                 .getSQL();

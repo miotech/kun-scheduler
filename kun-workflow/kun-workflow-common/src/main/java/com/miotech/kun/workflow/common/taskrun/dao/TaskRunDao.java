@@ -107,7 +107,7 @@ public class TaskRunDao {
         return DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
-                .join("INNER", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
+                .join("LEFT", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
                 .on(TASK_RUN_MODEL_NAME + ".task_id = " + TaskDao.TASK_MODEL_NAME + ".id")
                 .autoAliasColumns();
     }

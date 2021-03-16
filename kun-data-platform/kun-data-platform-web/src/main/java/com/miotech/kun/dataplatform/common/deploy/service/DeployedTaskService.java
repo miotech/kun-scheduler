@@ -340,27 +340,39 @@ public class DeployedTaskService extends BaseSecurityService{
         );
     }
 
-    public DeployedTaskWithRunVO convertToListVO(DeployedTask deployedTask) {
+    public List<DeployedTaskWithRunVO> convertToListVOs(List<DeployedTask> deployedTasks) {
         TaskRunSearchRequest searchRequest = TaskRunSearchRequest.newBuilder()
-                .withTaskIds(Collections.singletonList(deployedTask.getWorkflowTaskId()))
+                .withTaskIds(deployedTasks.stream().map(DeployedTask::getWorkflowTaskId).collect(Collectors.toList()))
                 .withPageNum(1)
-                .withPageSize(1)
+                .withPageSize(deployedTasks.size() * 4)
                 .build();
 
+        // Fetch corresponding task runs by batch querying workflow API
         PaginationResult<TaskRun> latestRuns = workflowClient.searchTaskRun(searchRequest);
-        TaskRun taskRun = latestRuns.getTotalCount() > 0 ? latestRuns.getRecords().get(0) : null;
 
-        return new DeployedTaskWithRunVO(
-                deployedTask.getDefinitionId(),
-                deployedTask.getWorkflowTaskId(),
-                deployedTask.getDefinitionId(),
-                deployedTask.getName(),
-                deployedTask.getTaskTemplateName(),
-                deployedTask.getOwner(),
-                deployedTask.isArchived(),
-                deployedTask.getTaskCommit().getSnapshot().getTaskPayload(),
-                taskRun
-        );
+        // Match taskRuns to deployed tasks one-by-one
+        List<TaskRun> taskRuns = latestRuns.getRecords();
+        List<DeployedTaskWithRunVO> results = new ArrayList<>();
+
+        for (DeployedTask deployedTask : deployedTasks) {
+            Optional<TaskRun> correspondingTaskRun = taskRuns.stream()
+                    .filter(taskRun -> Objects.equals(taskRun.getTask().getId(), deployedTask.getWorkflowTaskId()))
+                    .findAny();
+            DeployedTaskWithRunVO vo = new DeployedTaskWithRunVO(
+                    deployedTask.getDefinitionId(),
+                    deployedTask.getWorkflowTaskId(),
+                    deployedTask.getDefinitionId(),
+                    deployedTask.getName(),
+                    deployedTask.getTaskTemplateName(),
+                    deployedTask.getOwner(),
+                    deployedTask.isArchived(),
+                    deployedTask.getTaskCommit().getSnapshot().getTaskPayload(),
+                    correspondingTaskRun.orElse(null)
+            );
+            results.add(vo);
+        }
+
+        return results;
     }
 
     public List<String> getUserByTaskId(Long wfTaskId){
