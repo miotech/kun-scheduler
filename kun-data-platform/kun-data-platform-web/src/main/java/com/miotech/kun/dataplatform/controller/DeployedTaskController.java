@@ -20,7 +20,6 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/")
@@ -63,9 +62,7 @@ public class DeployedTaskController {
                 deploys.getPageSize(),
                 deploys.getPageNum(),
                 deploys.getTotalCount(),
-                deploys.getRecords().stream()
-                        .map(deployedTaskService::convertToListVO)
-                        .collect(Collectors.toList())
+                deployedTaskService.convertToListVOs(deploys.getRecords())
         );
         return RequestResult.success(result);
     }
