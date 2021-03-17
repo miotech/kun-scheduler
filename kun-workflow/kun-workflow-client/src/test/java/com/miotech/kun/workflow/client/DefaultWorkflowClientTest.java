@@ -169,11 +169,22 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         client.updateOperatorJar(operator.getName(), jarFile);
         RunTaskRequest runTaskRequest = new RunTaskRequest();
         Config config = Config.newBuilder().addConfig("testKey1",false).build();
-        Task task1 =  mockTask(operator.getId()).cloneBuilder().withConfig(config).build();
+        Task task1 =  mockTask(operator.getId()).cloneBuilder()
+                .withConfig(config)
+                .withScheduleConf(ScheduleConf
+                        .newBuilder()
+                        .withType(ScheduleType.SCHEDULED)
+                        .withCronExpr("0 0 0 * * ?")
+                        .build())
+                .build();
         Task created1 = client.createTask(task1);
         runTaskRequest.addTaskConfig(created1.getId(),new HashMap<>());
-        Task task2 = task1.cloneBuilder().withName("test2").
-                withScheduleConf(ScheduleConf.newBuilder().withType(ScheduleType.NONE).build()).build();
+        Task task2 = task1.cloneBuilder().withName("test2")
+                .withConfig(Config.EMPTY)
+                .withScheduleConf(ScheduleConf.newBuilder()
+                        .withType(ScheduleType.NONE)
+                        .build()
+                ).build();
         Task created2 = client.createTask(task2);
         runTaskRequest.addTaskConfig(created2.getId(),new HashMap<>());
 
