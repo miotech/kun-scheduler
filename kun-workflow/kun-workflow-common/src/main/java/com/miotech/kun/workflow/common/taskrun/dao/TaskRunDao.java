@@ -45,6 +45,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.miotech.kun.commons.db.sql.SQLUtils.column;
+import static com.miotech.kun.commons.utils.StringUtils.repeatJoin;
 import static com.miotech.kun.commons.utils.StringUtils.toNullableString;
 
 @Singleton
@@ -110,6 +111,26 @@ public class TaskRunDao {
                 .join("LEFT", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
                 .on(TASK_RUN_MODEL_NAME + ".task_id = " + TaskDao.TASK_MODEL_NAME + ".id")
                 .autoAliasColumns();
+    }
+
+    private SQLBuilder getTaskRunSQLBuilderForLatestTaskRuns() {
+        List<String> taskRunColsSelectAliasSubStrings = new ArrayList<>();
+        List<String> taskColsSelectAliasSubStrings = new ArrayList<>();
+        for (String taskRunCol : taskRunCols) {
+            taskRunColsSelectAliasSubStrings.add(TASK_RUN_MODEL_NAME + "." + taskRunCol + " AS " + TASK_RUN_MODEL_NAME + "_" + taskRunCol);
+        }
+        for (String taskCol : TaskDao.getTaskCols()) {
+            taskColsSelectAliasSubStrings.add(TaskDao.TASK_MODEL_NAME + "." + taskCol + " AS " + TaskDao.TASK_MODEL_NAME + "_" + taskCol);
+        }
+        String taskRunColsSelectAlias = String.join(", ", taskRunColsSelectAliasSubStrings.toArray(new String[0]));
+        String taskColsSelectAlias = String.join(", ", taskColsSelectAliasSubStrings.toArray(new String[0]));
+        String rowNumSelect = "row_number() OVER (PARTITION BY " + TASK_RUN_MODEL_NAME + ".task_id ORDER BY " + TASK_RUN_MODEL_NAME + ".id DESC) as row_num";
+
+        return DefaultSQLBuilder.newBuilder()
+                .select(taskRunColsSelectAlias + ", " + taskColsSelectAlias + ", " + rowNumSelect)
+                .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
+                .join("LEFT", TaskDao.TASK_TABLE_NAME, TaskDao.TASK_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".task_id = " + TaskDao.TASK_MODEL_NAME + ".id");
     }
 
     private String getSelectSQL(String whereClause) {
@@ -913,6 +934,32 @@ public class TaskRunDao {
                 .limit(limit)
                 .getSQL();
         return dbOperator.fetchAll(sql, taskRunMapperInstance, taskId);
+    }
+
+    public Map<Long, List<TaskRun>> fetchLatestTaskRunsByBatch(List<Long> taskIds, int limitPerTask) {
+        String subQuery = getTaskRunSQLBuilderForLatestTaskRuns()
+                .where("task_id IN (" + repeatJoin("?", ",", taskIds.size()) + ")")
+                .orderBy(TASK_RUN_MODEL_NAME + ".task_id DESC, " + TASK_RUN_MODEL_NAME + ".id DESC")
+                .getSQL();
+        String sql = "SELECT * FROM (" + subQuery + ") as t WHERE t.row_num <= ?";
+        List<Object> params = new ArrayList<>(taskIds.size() + 1);
+        for (Long taskId : taskIds) {
+            params.add(taskId);
+        }
+        params.add(limitPerTask);
+
+        List<TaskRun> taskRunsList = dbOperator.fetchAll(sql, taskRunMapperInstance, params.toArray());
+
+        Map<Long, List<TaskRun>> resultMap = new HashMap<>();
+        for (Long taskId : taskIds) {
+            resultMap.put(taskId, new LinkedList<>());
+        }
+        for (TaskRun taskRun : taskRunsList) {
+            Long taskId = taskRun.getTask().getId();
+            resultMap.get(taskId).add(taskRun);
+        }
+
+        return resultMap;
     }
 
     public List<TaskRun> fetchLatestTaskRunsToday(Long taskId, int limit) {
