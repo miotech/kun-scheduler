@@ -25,7 +25,7 @@ import java.sql.SQLException;
 import java.util.List;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {DataPlatformApplication.class, TestWorkflowConfig.class})
+@SpringBootTest(classes = {DataPlatformApplication.class, TestWorkflowConfig.class, TestOnlyController.class})
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Slf4j
