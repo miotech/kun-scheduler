@@ -27,45 +27,29 @@ public class VariableController {
 
     @GetMapping("/variables")
     public RequestResult<List<VariableVO>> fetchAllVariables() {
-        try {
-            List<VariableVO> variableVOS = workflowClient.getAllVariables()
-                    .stream()
-                    .filter(variable -> Objects.equals(variable.getNamespace(), workflowConfig.getVariableNamespace()))
-                    .collect(Collectors.toList());
-            return RequestResult.success(variableVOS);
-        } catch (Exception e) {
-            return RequestResult.error(e.getMessage());
-        }
+        List<VariableVO> variableVOS = workflowClient.getAllVariables()
+                .stream()
+                .filter(variable -> Objects.equals(variable.getNamespace(), workflowConfig.getVariableNamespace()))
+                .collect(Collectors.toList());
+        return RequestResult.success(variableVOS);
     }
 
     @PostMapping("/variables")
     public RequestResult<VariableVO> createVariable(@RequestBody VariableUpsertVO createVO) {
-        try {
-            VariableVO resultVO = workflowClient.createVariable(convertUpsertVO(createVO));
-            return RequestResult.success(resultVO);
-        } catch (Exception e) {
-            return RequestResult.error(e.getMessage());
-        }
+        VariableVO resultVO = workflowClient.createVariable(convertUpsertVO(createVO));
+        return RequestResult.success(resultVO);
     }
 
     @PutMapping("/variables")
     public RequestResult<VariableVO> updateVariable(@RequestBody VariableUpsertVO createVO) {
-        try {
-            VariableVO resultVO = workflowClient.updateVariable(convertUpsertVO(createVO));
-            return RequestResult.success(resultVO);
-        } catch (Exception e) {
-            return RequestResult.error(e.getMessage());
-        }
+        VariableVO resultVO = workflowClient.updateVariable(convertUpsertVO(createVO));
+        return RequestResult.success(resultVO);
     }
 
     @DeleteMapping("/variables/{key}")
     public RequestResult<Boolean> deleteVariable(@PathVariable String key) {
-        try {
-            Boolean successFlag = workflowClient.deleteVariable(workflowConfig.getVariableNamespace(), key);
-            return RequestResult.success(successFlag);
-        } catch (Exception e) {
-            return RequestResult.error(e.getMessage());
-        }
+        Boolean successFlag = workflowClient.deleteVariable(workflowConfig.getVariableNamespace(), key);
+        return RequestResult.success(successFlag);
     }
 
     private VariableVO convertUpsertVO(VariableUpsertVO upsertVO) {
