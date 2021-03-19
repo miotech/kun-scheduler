@@ -218,7 +218,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
                     .withOutlets(outputs)
                     .build();
             report(taskAttemptReport);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             logger.error("create hdfs file system failed", e);
         }
     }

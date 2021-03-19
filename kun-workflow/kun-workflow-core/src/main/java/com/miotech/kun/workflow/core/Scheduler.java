@@ -19,4 +19,9 @@ public interface Scheduler {
      * @param context
      */
     public List<TaskRun> run(TaskGraph graph, TaskRunEnv context);
+
+    /**
+     * 重新运行一个taskRun
+     */
+    public boolean rerun(TaskRun taskRun);
 }
