@@ -178,7 +178,14 @@ public class DeployedTaskService extends BaseSecurityService{
                 .orElseGet(ImmutableList::of);
         deployedTaskIds.addAll(inputDatasets);
         List<Long> existedWorkflowIds = deployedTaskDao.fetchWorkflowTaskId(deployedTaskIds);
-        Preconditions.checkArgument(deployedTaskIds.size() == existedWorkflowIds.size());
+        Preconditions.checkState(
+                deployedTaskIds.size() == existedWorkflowIds.size(),
+                "Failed on checking equality on {} deployed tasks corresponding to {} existing workflow task ids. Deployed task ids = {}; Workflow task ids = {}.",
+                deployedTaskIds.size(),
+                existedWorkflowIds.size(),
+                deployedTaskIds,
+                existedWorkflowIds
+        );
         List<TaskDependency> dependencies = existedWorkflowIds.stream()
                 .map(x -> new TaskDependency(x, "latestTaskRun"))
                 .distinct()
