@@ -22,6 +22,8 @@ public class TickDao {
 
     private static final String CHECKPOINT_TICK_ID = "id";
 
+    private static final Integer TICK_LIMIT = 1;
+
 
     private static final ResultSetMapper<Tick> tickMapper =
             rs -> new Tick(rs.getString(CHECKPOINT_TICK));
@@ -34,9 +36,10 @@ public class TickDao {
                 .select(CHECKPOINT_TICK)
                 .from(CHECKPOINT_TABLE_NAME)
                 .orderBy(CHECKPOINT_TICK_ID + " desc")
+                .limit()
                 .asPrepared()
                 .getSQL();
-        List<Tick> tickList =  dbOperator.fetchAll(sql,tickMapper);
+        List<Tick> tickList =  dbOperator.fetchAll(sql,tickMapper,TICK_LIMIT);
         if(tickList.size() == 0){
             return null;
         }else {

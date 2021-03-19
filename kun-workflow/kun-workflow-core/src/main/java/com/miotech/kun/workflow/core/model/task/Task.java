@@ -113,7 +113,7 @@ public class Task {
     }
 
     public boolean shouldSchedule(Tick tick, OffsetDateTime currentTime) {
-        if(tick == SpecialTick.DIRECTLY_TICK){
+        if(tick == SpecialTick.NULL){
             return true;
         }
         OffsetDateTime scheduleTime = tick.toOffsetDateTime();
