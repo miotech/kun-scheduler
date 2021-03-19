@@ -4,6 +4,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -27,6 +28,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class OperatorLauncher {
@@ -36,8 +38,8 @@ public class OperatorLauncher {
     private volatile KunOperator operator;
     private volatile boolean abort = false;
     private volatile TaskRunStatus taskRunStatus = TaskRunStatus.INITIALIZING;
-    private final int RPC_RETRY_TIME = 10;
-    private final Long HEARTBEAT_INTERVAL = 5 * 1000L;
+    private final int RPC_RETRY_TIME = 3;
+    private final Long HEARTBEAT_INTERVAL = 5L;
     private WorkflowExecutorFacade executorFacade;
     private InitService initService;
     private Long workerId;
@@ -346,7 +348,7 @@ public class OperatorLauncher {
                     while (!updateSuccess && sendTime <= RPC_RETRY_TIME) {
                         try {
                             if (sendTime > 0) {
-                                Thread.sleep(HEARTBEAT_INTERVAL);
+                                Uninterruptibles.sleepUninterruptibly(HEARTBEAT_INTERVAL, TimeUnit.SECONDS);
                             }
                             updateSuccess = executorFacade.statusUpdate(msg);
                             logger.info("send update task status message = {}, to executor result = {}", msg, updateSuccess);
@@ -390,10 +392,10 @@ public class OperatorLauncher {
                         first = false;
                         firstHeartBeat.countDown();
                     }
-                    Thread.sleep(HEARTBEAT_INTERVAL);
                 } catch (Exception e) {
-                    logger.error("heart beat to executor time out", e);
+                    logger.error("heart beat to executor failed", e);
                 }
+                Uninterruptibles.sleepUninterruptibly(HEARTBEAT_INTERVAL, TimeUnit.SECONDS);
             }
         }
     }

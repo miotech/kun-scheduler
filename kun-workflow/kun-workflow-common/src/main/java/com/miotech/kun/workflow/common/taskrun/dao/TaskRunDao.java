@@ -400,7 +400,7 @@ public class TaskRunDao {
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
-            if (taskRun.getScheduledTick() != SpecialTick.DIRECTLY_TICK) {
+            if (taskRun.getScheduledTick() != SpecialTick.NULL) {
                 taskGraph.updateTasksNextExecutionTick(taskRun.getScheduledTick(), Lists.newArrayList(taskRun.getTask()));
             }
             return taskRun;

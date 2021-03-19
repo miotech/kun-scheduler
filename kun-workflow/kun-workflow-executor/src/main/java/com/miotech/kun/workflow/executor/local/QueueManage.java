@@ -93,7 +93,7 @@ public class QueueManage {
         }
     }
 
-    public void changePriority(String queueName,long attemptId, int priority) {
+    public void changePriority(String queueName, long attemptId, int priority) {
         lock.lock();
         try {
             TaskAttemptQueue queue = queueMap.get(queueName);
@@ -126,14 +126,14 @@ public class QueueManage {
         return false;
     }
 
-    public void release(String queueName) {
+    public void release(String queueName, Long taskAttemptId) {
         lock.lock();
         try {
             TaskAttemptQueue queue = queueMap.get(queueName);
             if (queue == null) {
                 throw new NoSuchElementException("no such queue,name = " + queueName);
             }
-            queue.release();
+            queue.release(taskAttemptId);
             if (queue.getRemainCapacity() == 1) {
                 logger.debug("queue = {} release resource,wake up consumer", queue.getName());
                 hasElement.signal();
@@ -156,7 +156,7 @@ public class QueueManage {
         }
     }
 
-    public void recover(String queueName) {
+    public void recover(String queueName, Long taskAttemptId) {
         lock.lock();
         try {
             TaskAttemptQueue queue = queueMap.get(queueName);
@@ -164,7 +164,7 @@ public class QueueManage {
                 throw new NoSuchElementException("no such queue,name = " + queueName);
             }
             logger.debug("recover taskAttempt for queue : {}", queueName);
-            queue.acquire();
+            queue.acquire(taskAttemptId);
         } finally {
             lock.unlock();
         }
