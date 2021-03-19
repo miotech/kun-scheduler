@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.common.taskrun.service;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
+import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -24,6 +25,7 @@ import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
@@ -32,7 +34,10 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RunnableFuture;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -53,8 +58,15 @@ public class TaskRunServiceTest extends CommonTestBase {
 
     private final Executor executor = mock(Executor.class);
 
+    @Inject
+    private LocalScheduler scheduler;
+
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
+
+    @Rule
+    public ExpectedException expectedEx = ExpectedException.none();
+
 
     @Before
     public void setUp() {
@@ -62,7 +74,8 @@ public class TaskRunServiceTest extends CommonTestBase {
         this.taskRunService = spy(new TaskRunService(
                 taskRunDao,
                 resourceLoader,
-                executor
+                executor,
+                scheduler
         ));
     }
 
@@ -406,16 +419,18 @@ public class TaskRunServiceTest extends CommonTestBase {
     }
 
     @Test
-    public void rerunTaskRun_whenLatestAttemptNotFinished_shouldProduceNoEffect() {
+    public void rerunTaskRun_whenLatestAttemptNotFinished_shouldThrowsIllegalStateException() throws IllegalStateException {
         // 1. Prepare
         TaskRun taskRunFailed = prepareTaskRunAndTaskAttempt(TaskRunStatus.RUNNING);
         mockExecutorOnSubmit();
 
-        // 2. Process
-        boolean rerunSuccessfully = taskRunService.rerunTaskRun(taskRunFailed.getId());
+        // 2. Validate
+        expectedEx.expect(IllegalStateException.class);
+        expectedEx.expectMessage("taskRun status must be finished");
 
-        // 3. Validate
-        assertFalse(rerunSuccessfully);
+        // 3. Process
+        taskRunService.rerunTaskRun(taskRunFailed.getId());
+
     }
 
     @Test

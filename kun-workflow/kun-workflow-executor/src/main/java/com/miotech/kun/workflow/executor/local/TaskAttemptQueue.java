@@ -1,15 +1,9 @@
 package com.miotech.kun.workflow.executor.local;
 
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.core.model.taskrun.TaskPriorityComparator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.NoSuchElementException;
-import java.util.Queue;
-
-import com.miotech.kun.workflow.core.model.taskrun.TaskPriorityComparator;
 
 import java.util.*;
 
@@ -23,6 +17,8 @@ public class TaskAttemptQueue {
     private String name;
     private static Logger logger = LoggerFactory.getLogger(TaskAttemptQueue.class);
 
+    private Set<Long> dispatchedTaskAttempt = new HashSet<>();
+
     public Integer getCapacity() {
         return capacity;
     }
@@ -31,7 +27,7 @@ public class TaskAttemptQueue {
         return name;
     }
 
-    public Integer getSize(){
+    public Integer getSize() {
         return queue.size();
     }
 
@@ -51,6 +47,7 @@ public class TaskAttemptQueue {
         }
         remainCapacity--;
         TaskAttempt taskAttempt = queue.poll();
+        dispatchedTaskAttempt.add(taskAttempt.getId());
         logger.debug("taskAttemptId = {} acquire worker token from queue : {}, current size = {}, max size = {}", taskAttempt.getId(), name, remainCapacity, capacity);
         return taskAttempt;
 
@@ -77,8 +74,12 @@ public class TaskAttemptQueue {
         return false;
     }
 
-    public synchronized void release() {
+    public synchronized void release(Long taskAttemptId) {
         if (remainCapacity < capacity) {
+            if (!dispatchedTaskAttempt.contains(taskAttemptId)) {
+                throw new IllegalStateException("token with taskAttemptId = " + taskAttemptId + "has been released");
+            }
+            dispatchedTaskAttempt.remove(taskAttemptId);
             remainCapacity++;
             logger.debug("release worker token from queue : {}, current size = {},max size = {}", name, remainCapacity, capacity);
 
@@ -87,9 +88,12 @@ public class TaskAttemptQueue {
         }
     }
 
-    public synchronized void acquire() {
+    public synchronized void acquire(Long taskAttemptId) {
         if (remainCapacity <= 0) {
             throw new IllegalStateException("there are no resources left in queue : " + name);
+        }
+        if (!dispatchedTaskAttempt.add(taskAttemptId)) {
+            throw new IllegalStateException("taskAttemptId = " + taskAttemptId + "already get the token");
         }
         remainCapacity--;
         logger.debug("acquire worker token from queue : {}, current size = {},max size = {}", name, remainCapacity, capacity);
@@ -98,11 +102,12 @@ public class TaskAttemptQueue {
     public synchronized void reset() {
         queue.clear();
         remainCapacity = capacity;
+        dispatchedTaskAttempt.clear();
     }
 
-    public synchronized void changePriority(long attemptId ,int priority){
+    public synchronized void changePriority(long attemptId, int priority) {
         TaskAttempt queued = getTaskAttemptById(attemptId);
-        if(queued == null){
+        if (queued == null) {
             throw new IllegalStateException("taskAttempt = " + attemptId +
                     " to change priority is not in queue");
         }
@@ -112,11 +117,11 @@ public class TaskAttemptQueue {
 
     }
 
-    public boolean containsAttempt(TaskAttempt taskAttempt){
+    public boolean containsAttempt(TaskAttempt taskAttempt) {
         return getTaskAttemptById(taskAttempt.getId()) != null;
     }
 
-    public TaskAttempt getTaskAttemptById(Long attemptId){
+    public TaskAttempt getTaskAttemptById(Long attemptId) {
         Iterator<TaskAttempt> iterator = queue.iterator();
         while (iterator.hasNext()) {
             TaskAttempt queued = iterator.next();
