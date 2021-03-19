@@ -79,7 +79,7 @@ public class TaskDefinitionService extends BaseSecurityService {
     public TaskDefinition find(Long taskDefId) {
         return taskDefinitionDao.fetchById(taskDefId)
                 .<IllegalArgumentException>orElseThrow(() -> {
-                    throw new IllegalArgumentException(String.format("Task definition not found: \"%s\"", taskDefId));
+                    throw new NoSuchElementException(String.format("Task definition not found: \"%s\"", taskDefId));
                 });
     }
 
