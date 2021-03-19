@@ -12,6 +12,8 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.NoSuchElementException;
+
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -29,7 +31,7 @@ public class TaskCommitServiceTest extends AppTestBase {
         try {
             taskCommitService.commit(1L, null);
         } catch (Throwable e) {
-            assertTrue(IllegalArgumentException.class.isAssignableFrom(e.getClass()));
+            assertTrue(NoSuchElementException.class.isAssignableFrom(e.getClass()));
             assertThat(e.getMessage(), Matchers.is("Task definition not found: \"1\""));
         }
     }
