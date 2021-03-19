@@ -4,15 +4,12 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
-import com.miotech.kun.dataplatform.common.deploy.vo.DeployRequest;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeployVO;
 import com.miotech.kun.dataplatform.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.*;
-import com.miotech.kun.dataplatform.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.common.taskdefview.service.TaskDefinitionViewService;
 import com.miotech.kun.dataplatform.common.taskdefview.vo.TaskDefinitionViewVO;
 import com.miotech.kun.dataplatform.model.deploy.Deploy;
-import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskTry;
 import com.miotech.kun.workflow.client.model.PaginationResult;
@@ -23,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -108,12 +104,8 @@ public class TaskDefinitionController {
     @DeleteMapping("/task-definitions/{id}")
     @ApiOperation("Delete TaskDefinition")
     public RequestResult<Object> deleteTaskDefinitionDetail(@PathVariable Long id) {
-        try{
-            taskDefinitionService.delete(id);
-            return RequestResult.success();
-        }catch (RuntimeException e){
-            return RequestResult.error(e.getMessage());
-        }
+        taskDefinitionService.delete(id);
+        return RequestResult.success();
     }
 
     /*--------- actions ----------*/
@@ -130,12 +122,8 @@ public class TaskDefinitionController {
     @ApiOperation("Commit and Deploy a TaskDefinition")
     public RequestResult<DeployVO> deployTaskDefinitionDirectly(@PathVariable Long id,
                                                                 @RequestBody(required = false) CommitRequest request) {
-        try{
-            Deploy deploy = deployService.deployFast(id, request);
-            return RequestResult.success(deployService.convertVO(deploy));
-        }catch (RuntimeException e){
-            return RequestResult.error(e.getMessage());
-        }
+        Deploy deploy = deployService.deployFast(id, request);
+        return RequestResult.success(deployService.convertVO(deploy));
     }
 
     @PostMapping("/task-definitions/{id}/_run")
@@ -179,11 +167,7 @@ public class TaskDefinitionController {
     @GetMapping("/task-definitions/{taskDefId}/task-def-views")
     @ApiOperation("Fetch all task definition views that contain target task definition")
     public RequestResult<List<TaskDefinitionViewVO>> getTaskDefinitionViewsContainingTaskDefinition(@PathVariable Long taskDefId) {
-        try {
-            taskDefinitionService.find(taskDefId);   // throws exception if not found
-        } catch (IllegalArgumentException e) {
-            return RequestResult.error(404, e.getMessage());
-        }
+        taskDefinitionService.find(taskDefId);   // throws NoSuchElementException if not found
         List<TaskDefinitionViewVO> viewVOList = taskDefinitionViewService.fetchAllByTaskDefinitionId(taskDefId);
         return RequestResult.success(viewVOList);
     }
