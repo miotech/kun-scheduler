@@ -8,12 +8,14 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.ReflectUtils;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
+import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
+import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
@@ -148,6 +150,7 @@ public class LocalExecutorTest extends CommonTestBase {
         bind(WorkflowExecutorFacade.class, LocalExecutorFacadeImpl.class);
         bind(Props.class, props);
         bind(Executor.class, LocalExecutor.class);
+        bind(Scheduler.class, LocalScheduler.class);
     }
 
     @Before
@@ -963,10 +966,10 @@ public class LocalExecutorTest extends CommonTestBase {
     }
 
     @Test
-    public void resourceIsolationTest(){
+    public void resourceIsolationTest() {
         //prepare queue
         QueueManage queueManage = prepareQueueManage();
-        Reflect.on(executor).set("queueManage",queueManage);
+        Reflect.on(executor).set("queueManage", queueManage);
 
         //prepare TaskAttempt
         TaskAttempt defaultAttempt = prepareAttempt(TestOperator6.class);
@@ -975,7 +978,7 @@ public class LocalExecutorTest extends CommonTestBase {
         Task task = MockTaskFactory.createTask().cloneBuilder().withQueueName("user").build();
         TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
         TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
-        TaskAttempt userAttempt = prepareAttempt(TestOperator6.class,taskAttempt);
+        TaskAttempt userAttempt = prepareAttempt(TestOperator6.class, taskAttempt);
         // submit user attempt
         executor.submit(userAttempt);
         awaitUntilAttemptDone(userAttempt.getId());
@@ -1016,22 +1019,22 @@ public class LocalExecutorTest extends CommonTestBase {
     }
 
     @Test
-    public void runTaskWithPriority(){
+    public void runTaskWithPriority() {
         //prepare queue
         QueueManage queueManage = prepareQueueManage();
-        Reflect.on(executor).set("queueManage",queueManage);
+        Reflect.on(executor).set("queueManage", queueManage);
         Task task1 = MockTaskFactory.createTask().cloneBuilder().withQueueName("user").
                 withPriority(TaskPriority.MEDIUM.getPriority()).build();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
-        TaskAttempt taskAttempt1 = prepareAttempt(TestOperator1.class,MockTaskAttemptFactory.createTaskAttempt(taskRun1));
+        TaskAttempt taskAttempt1 = prepareAttempt(TestOperator1.class, MockTaskAttemptFactory.createTaskAttempt(taskRun1));
         Task task2 = MockTaskFactory.createTask().cloneBuilder().withQueueName("user").
                 withPriority(TaskPriority.HIGH.getPriority()).build();
         TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
-        TaskAttempt taskAttempt2 = prepareAttempt(TestOperator1.class,MockTaskAttemptFactory.createTaskAttempt(taskRun2));
+        TaskAttempt taskAttempt2 = prepareAttempt(TestOperator1.class, MockTaskAttemptFactory.createTaskAttempt(taskRun2));
         Task task3 = MockTaskFactory.createTask().cloneBuilder().withQueueName("user").
                 withPriority(TaskPriority.LOW.getPriority()).build();
         TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task3);
-        TaskAttempt taskAttempt3 = prepareAttempt(TestOperator1.class,MockTaskAttemptFactory.createTaskAttempt(taskRun3));
+        TaskAttempt taskAttempt3 = prepareAttempt(TestOperator1.class, MockTaskAttemptFactory.createTaskAttempt(taskRun3));
         executor.submit(taskAttempt1);
         executor.submit(taskAttempt2);
         executor.submit(taskAttempt3);
@@ -1057,11 +1060,63 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(attemptProps3.getLogPath(), is(notNullValue()));
         assertThat(attemptProps3.getStartAt(), is(notNullValue()));
         assertThat(attemptProps3.getEndAt(), is(notNullValue()));
-        assertThat(attemptProps3.getStartAt(),greaterThan(attemptProps2.getStartAt()));
-        assertThat(attemptProps1.getStartAt(),lessThan(attemptProps3.getStartAt()));
+        assertThat(attemptProps3.getStartAt(), greaterThan(attemptProps2.getStartAt()));
+        assertThat(attemptProps1.getStartAt(), lessThan(attemptProps3.getStartAt()));
 
     }
 
+    @Test
+    public void repeatStatusUpdateTest() {
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+
+        //submit running task
+        Worker runningWorker = new TestWorker2(localExecutorFacade);
+        doReturn(runningWorker).when(spyFactory).createWorker();
+        TaskRun runningTaskRun = MockTaskRunFactory.createTaskRun();
+        TaskAttempt runningAttempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(runningTaskRun, TaskRunStatus.CREATED);
+        prepareAttempt(TestOperator1.class, runningAttempt);
+        executor.submit(runningAttempt);
+        awaitUntilRunning(runningAttempt.getId());
+
+        //submit task send repetition success message
+        Worker testWorker = new TestWorker4(localExecutorFacade);
+        TaskRun mockTaskRun = MockTaskRunFactory.createTaskRun();
+        TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(mockTaskRun, TaskRunStatus.CREATED);
+        prepareAttempt(TestOperator1.class, attempt);
+        doReturn(testWorker).when(spyFactory).createWorker();
+        executor.submit(attempt);
+
+        // wait until finish
+        awaitUntilAttemptDone(attempt.getId());
+
+        // verify
+        TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
+        assertThat(attemptProps.getAttempt(), is(1));
+        assertThat(attemptProps.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(attemptProps.getLogPath(), is(notNullValue()));
+        assertThat(attemptProps.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps.getEndAt(), is(notNullValue()));
+
+        TaskRun taskRun = taskRunDao.fetchLatestTaskRun(attempt.getTaskRun().getTask().getId());
+        assertThat(taskRun.getStatus(), is(attemptProps.getStatus()));
+        assertThat(taskRun.getStartAt(), is(attemptProps.getStartAt()));
+        assertThat(taskRun.getEndAt(), is(attemptProps.getEndAt()));
+
+        // events
+        assertStatusProgress(attempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.INITIALIZING,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.SUCCESS);
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        int capacity = taskAttemptQueue.getCapacity();
+        int exceptRemain = capacity - 1;
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(exceptRemain));
+
+        //kill running task
+        runningWorker.killTask(false);
+    }
 
 
     private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass) {
@@ -1123,11 +1178,11 @@ public class LocalExecutorTest extends CommonTestBase {
         return attempt;
     }
 
-    private QueueManage prepareQueueManage(){
+    private QueueManage prepareQueueManage() {
         Props props = new Props();
-        props.put("executor.queue","default,user");
-        props.put("executor.queue.default.capacity",0);
-        props.put("executor.queue.user.capacity",1);
+        props.put("executor.queue", "default,user");
+        props.put("executor.queue.default.capacity", 0);
+        props.put("executor.queue.user.capacity", 1);
         return new QueueManage(props);
     }
 
