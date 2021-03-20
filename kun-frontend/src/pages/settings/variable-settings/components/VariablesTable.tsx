@@ -155,6 +155,7 @@ export const VariablesTable: React.FC<Props> = memo(function VariablesTable(
       columns={columns}
       dataSource={variableList}
       bordered
+      tableLayout="fixed"
       rowKey="key"
       pagination={{
         size: 'small',
