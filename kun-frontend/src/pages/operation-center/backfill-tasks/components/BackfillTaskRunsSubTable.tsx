@@ -125,7 +125,16 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(
           key: 'duration',
           width: 240,
           render: (txt, record) => {
-            if (record.startAt == null || record.endAt == null) {
+            if (
+              record.startAt == null ||
+              record.endAt == null ||
+              dayjs(record.endAt)
+                .toDate()
+                .getTime() <
+                dayjs(record.startAt)
+                  .toDate()
+                  .getTime()
+            ) {
               return '-';
             }
             // else
