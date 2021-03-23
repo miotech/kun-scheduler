@@ -18,6 +18,9 @@ public class DatabaseModule extends AbstractModule {
         config.setUsername(props.get("datasource.username"));
         config.setPassword(props.get("datasource.password"));
         config.setDriverClassName(props.get("datasource.driverClassName"));
-        return new HikariDataSource(config);
+        DataSource dataSource = new HikariDataSource(config);
+        DatabaseSetup databaseSetup = new DatabaseSetup(dataSource,props);
+        databaseSetup.start();
+        return dataSource;
     }
 }
