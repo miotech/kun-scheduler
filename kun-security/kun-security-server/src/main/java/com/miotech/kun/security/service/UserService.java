@@ -1,15 +1,14 @@
 package com.miotech.kun.security.service;
 
-import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.security.common.UserStatus;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.persistence.UserRepository;
-import com.miotech.kun.security.utils.PasswordUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,6 +17,7 @@ import java.util.List;
  * @created: 2020/7/1
  */
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class UserService extends BaseSecurityService {
 
     @Autowired
@@ -27,9 +27,9 @@ public class UserService extends BaseSecurityService {
     PasswordEncoder passwordEncoder;
 
     public User addUser(UserInfo userInfo) {
-        userInfo.setCreateUser(getCurrentUsername());
+        userInfo.setCreateUser(getCurrentUser().getId());
         userInfo.setCreateTime(System.currentTimeMillis());
-        userInfo.setUpdateUser(getCurrentUsername());
+        userInfo.setUpdateUser(getCurrentUser().getId());
         userInfo.setUpdateTime(System.currentTimeMillis());
         if (StringUtils.isNotBlank(userInfo.getPassword())) {
             userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
@@ -37,8 +37,8 @@ public class UserService extends BaseSecurityService {
         return userRepository.addUser(userInfo);
     }
 
-    public Long removeUser(Long id) {
-        return userRepository.removeUser(id);
+    public Long updateUserStatus(Long id, UserStatus userStatus) {
+        return userRepository.updateUserStatus(id, userStatus);
     }
 
     public User getUser(Long id) {

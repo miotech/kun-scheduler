@@ -28,8 +28,8 @@ export default memo(function Header() {
   const dropdownMenu = useMemo(
     () => (
       <Menu>
-        <Menu.Item>
-          <span onClick={handleClickLogout}>{t('header.logout')}</span>
+        <Menu.Item onClick={handleClickLogout}>
+          <span>{t('header.logout')}</span>
         </Menu.Item>
       </Menu>
     ),

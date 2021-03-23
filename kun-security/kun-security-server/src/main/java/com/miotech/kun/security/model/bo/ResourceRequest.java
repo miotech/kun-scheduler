@@ -13,11 +13,13 @@ public class ResourceRequest {
 
     Long belongToResourceId;
 
-    String createUser;
+    Boolean isRoot;
+
+    Long createUser;
 
     Long createTime;
 
-    String updateUser;
+    Long updateUser;
 
     Long updateTime;
 }
