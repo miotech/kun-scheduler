@@ -1,33 +1,27 @@
 package com.miotech.kun.security.model.entity;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author: Jie Chen
- * @created: 2020/6/29
+ * @created: 2021/2/24
  */
 @Data
-public class User {
+public class UserGroup {
 
     @JsonSerialize(using= ToStringSerializer.class)
     private Long id;
 
-    @JsonProperty("username")
-    private String name;
+    String name;
 
-    @JsonProperty(value = "password", required = true, access = JsonProperty.Access.WRITE_ONLY)
-    String password;
+    @JsonSerialize(using= ToStringSerializer.class)
+    List<Long> userIds;
 
-    String authOrigin;
-
-    String firstName;
-
-    String lastName;
-
-    String email;
+    Permissions permissions;
 
     String createUser;
 

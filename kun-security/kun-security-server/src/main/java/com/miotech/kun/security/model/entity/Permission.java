@@ -2,8 +2,11 @@ package com.miotech.kun.security.model.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.security.model.constant.EntityType;
 import com.miotech.kun.security.model.constant.PermissionType;
 import lombok.Data;
+
+import java.util.StringJoiner;
 
 /**
  * @author: Jie Chen
@@ -15,7 +18,9 @@ public class Permission {
     @JsonSerialize(using= ToStringSerializer.class)
     Long id;
 
-    String resourceName;
+    String objectName;
+
+    EntityType objectType;
 
     PermissionType type;
 
@@ -28,6 +33,11 @@ public class Permission {
     Long updateTime;
 
     public String toPermissionString() {
-        return resourceName + "_" + type.name();
+        StringJoiner stringJoiner = new StringJoiner("_");
+        stringJoiner
+                .add(objectName.toUpperCase())
+                .add(objectType.name())
+                .add(type.name());
+        return stringJoiner.toString();
     }
 }

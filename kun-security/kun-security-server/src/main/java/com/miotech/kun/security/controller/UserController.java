@@ -2,6 +2,7 @@ package com.miotech.kun.security.controller;
 
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
+import com.miotech.kun.security.common.UserStatus;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.model.vo.UserListVO;
@@ -28,10 +29,10 @@ public class UserController {
         return RequestResult.success(userService.addUser(userInfo));
     }
 
-    @PostMapping("/remove/{id}")
-    public RequestResult<IdVO> removeUser(@PathVariable("id") Long id) {
+    @PostMapping("/disable/{id}")
+    public RequestResult<IdVO> disableUser(@PathVariable("id") Long id) {
         IdVO idVO = new IdVO();
-        idVO.setId(userService.removeUser(id));
+        idVO.setId(userService.updateUserStatus(id, UserStatus.DISABLE));
         return RequestResult.success(idVO);
     }
 

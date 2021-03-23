@@ -12,9 +12,6 @@
     limitations under the License.
 -->
 <changelog xmlns="http://www.liquigraph.org/schema/1.0/liquigraph.xsd">
-    <changeset id="init-root-resource" author="jiechen">
-        <query>CREATE (n:RESOURCE {id: 0, name:'ROOT_RESOURCE'}) RETURN n</query>
-    </changeset>
     <changeset id="create-constraint-on-resource-id" author="jiechen">
         <query>CREATE CONSTRAINT ON (res:RESOURCE) ASSERT res.id IS UNIQUE</query>
     </changeset>
@@ -29,5 +26,14 @@
     </changeset>
     <changeset id="create-constraint-on-permission-id" author="jiechen">
         <query>CREATE CONSTRAINT ON (p:HAS_PERMISSION) ASSERT p.id IS UNIQUE</query>
+    </changeset>
+    <changeset id="create-constraint-on-belong-to-id" author="jiechen">
+        <query>CREATE CONSTRAINT ON (bt:BELONG_TO) ASSERT bt.id IS UNIQUE</query>
+    </changeset>
+    <changeset id="create-constraint-on-user-group-id" author="jiechen">
+        <query>CREATE CONSTRAINT ON (ug:USER_GROUP) ASSERT ug.id IS UNIQUE</query>
+    </changeset>
+    <changeset id="create-constraint-on-user-group-name" author="jiechen">
+        <query>CREATE CONSTRAINT ON (ug:USER_GROUP) ASSERT ug.groupName IS UNIQUE</query>
     </changeset>
 </changelog>
