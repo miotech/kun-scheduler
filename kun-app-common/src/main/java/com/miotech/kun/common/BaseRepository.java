@@ -1,6 +1,7 @@
 package com.miotech.kun.common;
 
 import com.miotech.kun.common.utils.DateUtils;
+import com.miotech.kun.common.utils.JSONUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.ObjectUtils;
@@ -11,6 +12,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author: Jie Chen
@@ -108,4 +110,9 @@ public abstract class BaseRepository {
     public LocalDateTime millisToTimestamp(Long millis) {
         return ObjectUtils.defaultIfNull(DateUtils.millisToLocalDateTime(millis), null);
     }
+
+    public List<Map> convertQueryListToQueryMaps(List<?> list) {
+        return list.stream().map(JSONUtils::toJsonObject).collect(Collectors.toList());
+    }
+
 }
