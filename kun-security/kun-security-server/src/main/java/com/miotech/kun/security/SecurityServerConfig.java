@@ -82,12 +82,9 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
 
     private final Saml2AuthorityAttributeLookup saml2AuthorityAttributeLookup;
 
-    private final Saml2RelyingPartyProperties saml2RelyingPartyProperties;
-
     private final OAuth2ClientProperties oAuth2ClientProperties;
 
     public SecurityServerConfig(Saml2AuthorityAttributeLookup lookup,
-                                Saml2RelyingPartyProperties saml2RelyingPartyProperties,
                                 OAuth2ClientProperties oAuth2ClientProperties) {
         this.saml2AuthorityAttributeLookup = lookup;
         this.saml2RelyingPartyProperties = saml2RelyingPartyProperties;
@@ -143,9 +140,6 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
                     saml2.authenticationManager(new ProviderManager(authenticationProvider));
                     saml2.defaultSuccessUrl(frontendUrl);
                 });
-
-        Saml2RelyingPartyProperties.Registration registration = saml2RelyingPartyProperties.getRegistration().get("okta");
-        registration.getAcs().setLocation(frontendUrl + "/api/login/saml2/sso/okta");
     }
 
     @Override
