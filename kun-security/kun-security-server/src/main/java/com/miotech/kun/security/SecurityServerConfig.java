@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
-import org.springframework.boot.autoconfigure.security.saml2.Saml2RelyingPartyProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -87,7 +86,6 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
     public SecurityServerConfig(Saml2AuthorityAttributeLookup lookup,
                                 OAuth2ClientProperties oAuth2ClientProperties) {
         this.saml2AuthorityAttributeLookup = lookup;
-        this.saml2RelyingPartyProperties = saml2RelyingPartyProperties;
         this.oAuth2ClientProperties = oAuth2ClientProperties;
     }
 
