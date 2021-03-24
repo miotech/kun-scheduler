@@ -117,8 +117,8 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
                 userInfo.setUserGroupId(getDefaultUserGroupId());
             }
             savedUserInfo = saveUser(userInfo);
-            SecurityContextHolder.setUserInfo(savedUserInfo);
         }
+        SecurityContextHolder.setUserInfo(savedUserInfo);
         return savedUserInfo;
     }
 
