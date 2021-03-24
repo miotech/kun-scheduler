@@ -49,6 +49,8 @@ spring:
             email: Email
         registration:
           okta:
+            acs:
+              location: http://localhost:8079/api/login/saml2/sso/okta
             entity-id: http://localhost.miotech.com/saml2/service-provider-metadata/{registrationId}
             identityprovider:
               metadata-uri: https://dev-7959592.okta.com/app/exkb49nl6sfYtNTwV5d6/sso/saml/metadata
