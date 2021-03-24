@@ -79,4 +79,4 @@ springdoc:
   use-fqn: true
 
 frontend:
-  url: ${KUN_ROOT_URL}
+  url: ${KUN_ROOT_URL:http://localhost:8079}
