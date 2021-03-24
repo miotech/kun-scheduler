@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
-import org.springframework.boot.autoconfigure.security.saml2.Saml2RelyingPartyProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -82,15 +81,11 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
 
     private final Saml2AuthorityAttributeLookup saml2AuthorityAttributeLookup;
 
-    private final Saml2RelyingPartyProperties saml2RelyingPartyProperties;
-
     private final OAuth2ClientProperties oAuth2ClientProperties;
 
     public SecurityServerConfig(Saml2AuthorityAttributeLookup lookup,
-                                Saml2RelyingPartyProperties saml2RelyingPartyProperties,
                                 OAuth2ClientProperties oAuth2ClientProperties) {
         this.saml2AuthorityAttributeLookup = lookup;
-        this.saml2RelyingPartyProperties = saml2RelyingPartyProperties;
         this.oAuth2ClientProperties = oAuth2ClientProperties;
     }
 
@@ -143,9 +138,6 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
                     saml2.authenticationManager(new ProviderManager(authenticationProvider));
                     saml2.defaultSuccessUrl(frontendUrl);
                 });
-
-        Saml2RelyingPartyProperties.Registration registration = saml2RelyingPartyProperties.getRegistration().get("okta");
-        registration.getAcs().setLocation(frontendUrl + "/api/login/saml2/sso/okta");
     }
 
     @Override
