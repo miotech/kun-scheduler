@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -23,7 +24,7 @@ public class UserInfo implements Serializable {
 
     private Set<String> permissions;
 
-    String authOrigin;
+    private AuthenticationOriginInfo authOriginInfo;
 
     String firstName;
 

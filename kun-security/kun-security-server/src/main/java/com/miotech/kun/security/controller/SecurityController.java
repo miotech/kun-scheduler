@@ -30,6 +30,8 @@ public class SecurityController {
     @GetMapping("/whoami")
     public RequestResult<UserInfo> whoami() {
         UserInfo userInfo = SecurityContextHolder.getUserInfo();
+        UserInfo authUserInfo = (UserInfo) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getDetails();
+        userInfo.setAuthOriginInfo(authUserInfo.getAuthOriginInfo());
         HasPermissionRequest permissionRequest = HasPermissionRequest.builder()
                 .subjectId(userInfo.getId())
                 .subjectType(EntityType.USER)

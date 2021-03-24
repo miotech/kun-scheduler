@@ -111,7 +111,7 @@ public class UserRepository {
                 userInfo.getEmail(),
                 userInfo.getFirstName(),
                 userInfo.getLastName(),
-                userInfo.getAuthOrigin(),
+                userInfo.getAuthOriginInfo().getAuthType(),
                 userInfo.getPassword(),
                 id,
                 userInfo.getCreateTime(),
