@@ -39,6 +39,8 @@ dependencies {
     implementation "com.h2database:h2"
     implementation 'commons-fileupload:commons-fileupload'
     implementation 'redis.clients:jedis'
+    implementation 'io.fabric8:kubernetes-client'
+
 
 
     runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16'
