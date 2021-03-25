@@ -32,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.sql.ResultSet;
@@ -594,6 +595,31 @@ public class TaskRunDao {
                 .getSQL();
 
         return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(TASK_ATTEMPT_MODEL_NAME), taskRunId);
+    }
+
+    /**
+     * Returns a list of value object
+     *
+     * @param taskRunIds
+     * @return
+     */
+    public List<TaskAttemptProps> fetchAttemptsPropByTaskRunIds(List<Long> taskRunIds) {
+        if (CollectionUtils.isEmpty(taskRunIds)) {
+            return Lists.newArrayList();
+        }
+
+        String idsFieldsPlaceholder = "(" + taskRunIds.stream().map(id -> "?")
+                .collect(Collectors.joining(", ")) + ")";
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_ATTEMPT_MODEL_NAME, taskAttemptCols);
+        String sql = DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .from(TASK_ATTEMPT_TABLE_NAME, TASK_ATTEMPT_MODEL_NAME)
+                .autoAliasColumns()
+                .where(TASK_ATTEMPT_MODEL_NAME + ".task_run_id IN " + idsFieldsPlaceholder)
+                .getSQL();
+
+        return dbOperator.fetchAll(sql, new TaskAttemptPropsMapper(TASK_ATTEMPT_MODEL_NAME), taskRunIds.toArray());
     }
 
     /**
