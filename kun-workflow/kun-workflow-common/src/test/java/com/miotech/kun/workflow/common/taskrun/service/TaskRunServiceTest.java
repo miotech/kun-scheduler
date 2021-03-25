@@ -478,7 +478,13 @@ public class TaskRunServiceTest extends CommonTestBase {
         });
         int successCount = 0;
         for (int i = 0; i < 5; ++i) {
-            Boolean rerunSuccessFlag = (Boolean) futures.get(i).get();
+            Boolean rerunSuccessFlag = false;
+            try {
+                rerunSuccessFlag = (Boolean) futures.get(i).get();
+            } catch (Exception e) {
+                // do nothing
+            }
+
             if (rerunSuccessFlag) {
                 successCount += 1;
             }
