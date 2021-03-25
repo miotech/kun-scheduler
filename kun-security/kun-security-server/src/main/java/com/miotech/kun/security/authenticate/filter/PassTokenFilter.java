@@ -21,20 +21,19 @@ public class PassTokenFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null) {
-            if (!authentication.isAuthenticated() && isEqualToPassToken((HttpServletRequest) req, passToken)) {
-                authentication = new PassToken();
+            if (isEqualToPassToken((HttpServletRequest) req, passToken)) {
+                Authentication authentication = new PassToken();
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-            if (PassToken.class.isAssignableFrom(authentication.getClass())) {
-                UserInfo userInfo = getPassTokenUserInfo();
-                com.miotech.kun.security.SecurityContextHolder.setUserInfo(userInfo);
+                setUserInfoInContextHolder();
             }
 
-        }
+            chain.doFilter(req, res);
 
-        chain.doFilter(req, res);
+    }
+
+    private void setUserInfoInContextHolder() {
+        UserInfo userInfo = getPassTokenUserInfo();
+        com.miotech.kun.security.SecurityContextHolder.setUserInfo(userInfo);
     }
 
     private boolean isEqualToPassToken(HttpServletRequest httpServletRequest,
