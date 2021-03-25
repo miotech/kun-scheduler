@@ -10,7 +10,7 @@ import java.util.Map;
 
 public class PodEventMonitor{
     private KubernetesClient kubernetesClient;
-    private Map<String, EventHandler> registerHandlers;
+    private Map<Long, EventHandler> registerHandlers;
     public void start(){
 
     }
@@ -39,7 +39,11 @@ public class PodEventMonitor{
     class pollingPodsStatus implements Runnable{
         @Override
         public void run() {
-            PodList podList = kubernetesClient.pods().withLabel("").list();
+            PodList podList = kubernetesClient.pods().withLabel("kun-workflow").list();
+            for (Pod pod : podList.getItems()){
+                Long taskAttemptId = Long.parseLong(pod.getMetadata().getLabels().get("taskAttemptId"));
+                EventHandler eventHandler = registerHandlers.get(taskAttemptId);
+            }
         }
     }
 
