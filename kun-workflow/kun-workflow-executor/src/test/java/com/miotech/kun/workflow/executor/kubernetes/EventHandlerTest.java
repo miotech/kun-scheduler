@@ -1,9 +1,11 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
-import com.miotech.kun.workflow.core.model.common.WorkerInstance;
-import com.miotech.kun.workflow.core.model.common.WorkerSnapshot;
+import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
+import com.miotech.kun.workflow.core.model.worker.WorkerInstanceEnv;
+import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.executor.CommonTestBase;
@@ -24,6 +26,8 @@ import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 
@@ -39,15 +43,15 @@ public class EventHandlerTest extends CommonTestBase {
     private TaskRunDao taskRunDao;
 
     @Before
-    public void init(){
+    public void init() {
         client = mock(KubernetesClient.class);
     }
 
     @Test
-    public void pollingEventTest(){
+    public void pollingEventTest() {
         //prepare
         TaskAttempt taskAttempt = prepareTaskAttempt();
-        Pod createdPod = MockPodFactory.create(taskAttempt.getId(),"Pending");
+        Pod createdPod = MockPodFactory.create(taskAttempt.getId(), "Pending");
         PodList podList = new PodList();
         List<Pod> items = new ArrayList<>();
         items.add(createdPod);
@@ -56,10 +60,14 @@ public class EventHandlerTest extends CommonTestBase {
         doReturn(mockMixedOperation).when(client).pods();
         FilterWatchListDeletable mockFilter = mock(FilterWatchListDeletable.class);
         doReturn(mockFilter).when(mockMixedOperation).withLabel(any());
+        doReturn(mockFilter).when(mockMixedOperation).withLabel(any(),any());
+        doReturn(mockFilter).when(mockFilter).withLabel(any());
         doReturn(podList).when(mockFilter).list();
+        doReturn(null).when(mockFilter).watch(any());
         podEventMonitor = new PodEventMonitor(client);
         podEventMonitor.start();
-        WorkerInstance instance = new WorkerInstance(taskAttempt.getId(),"kubernetes-"+taskAttempt.getId());
+        WorkerInstance instance = new WorkerInstance(taskAttempt.getId(),
+                "kubernetes-" + taskAttempt.getId(), WorkerInstanceEnv.KUBERNETES);
         EventHandler testHandler = new EventHandler() {
             @Override
             public void onReceiveSnapshot(WorkerSnapshot workerSnapshot) {
@@ -67,14 +75,17 @@ public class EventHandlerTest extends CommonTestBase {
 
             @Override
             public void onReceivePollingSnapShot(WorkerSnapshot workerSnapshot) {
-                taskRunDao.updateTaskAttemptStatus(workerSnapshot.getIns().getTaskAttemptId(),workerSnapshot.getStatus());
+                taskRunDao.updateTaskAttemptStatus(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
             }
         };
-        podEventMonitor.register(instance,testHandler);
+        podEventMonitor.register(instance, testHandler);
         awaitUntilAttemptInit(taskAttempt.getId());
+        TaskAttemptProps taskAttemptProps = taskRunDao.fetchLatestTaskAttempt(taskAttempt.getTaskRun().getId());
+        assertThat(taskAttemptProps.getId(),is(taskAttempt.getId()));
+        assertThat(taskAttemptProps.getStatus(),is(TaskRunStatus.INITIALIZING));
     }
 
-    private TaskAttempt prepareTaskAttempt(){
+    private TaskAttempt prepareTaskAttempt() {
         TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt();
         taskDao.create(taskAttempt.getTaskRun().getTask());
         taskRunDao.createTaskRun(taskAttempt.getTaskRun());

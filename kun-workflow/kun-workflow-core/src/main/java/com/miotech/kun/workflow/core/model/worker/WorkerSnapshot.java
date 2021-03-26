@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.core.model.common;
+package com.miotech.kun.workflow.core.model.worker;
 
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
