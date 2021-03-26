@@ -1,6 +1,6 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
-import com.miotech.kun.workflow.core.model.common.WorkerInstance;
+import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.executor.EventHandler;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;

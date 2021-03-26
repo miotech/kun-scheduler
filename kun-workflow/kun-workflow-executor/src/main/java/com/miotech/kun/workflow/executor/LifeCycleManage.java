@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.executor;
 
-import com.miotech.kun.workflow.core.model.common.WorkerInstance;
-import com.miotech.kun.workflow.core.model.common.WorkerSnapshot;
+import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
+import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 
 import java.util.List;
