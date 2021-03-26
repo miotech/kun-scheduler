@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.workerInstance.dao;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.workerInstance.WorkerInstanceDao;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
+import com.miotech.kun.workflow.core.model.worker.WorkerInstanceEnv;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Test;
 
@@ -24,6 +25,7 @@ public class WorkerInstanceDaoTest extends CommonTestBase {
                 .newBuilder()
                 .withTaskAttemptId(taskAttemptId)
                 .withWorkerId("kubernetes_" + taskAttemptId)
+                .withEnv(WorkerInstanceEnv.KUBERNETES)
                 .build();
         workerInstanceDao.createWorkerInstance(instance);
         WorkerInstance savedInstance = workerInstanceDao.getWorkerInstanceByAttempt(taskAttemptId);
@@ -40,6 +42,7 @@ public class WorkerInstanceDaoTest extends CommonTestBase {
                 .newBuilder()
                 .withTaskAttemptId(taskAttemptId)
                 .withWorkerId("old_worker_" + taskAttemptId)
+                .withEnv(WorkerInstanceEnv.KUBERNETES)
                 .build();
         workerInstanceDao.createWorkerInstance(instance);
         WorkerInstance newInstance = instance.cloneBuilder()
@@ -63,13 +66,24 @@ public class WorkerInstanceDaoTest extends CommonTestBase {
 
     }
 
-    @Test
+    @Test(expected = RuntimeException.class)
     public void insert_taskAttempt_with_diff_worker_id_should_throws_exception() {
-
+        long taskRunId = WorkflowIdGenerator.nextTaskRunId();
+        long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId, 1);
+        WorkerInstance instance1 = WorkerInstance
+                .newBuilder()
+                .withTaskAttemptId(taskAttemptId)
+                .withWorkerId("first_" + taskAttemptId)
+                .withEnv(WorkerInstanceEnv.KUBERNETES)
+                .build();
+        workerInstanceDao.createWorkerInstance(instance1);
+        WorkerInstance instance2 = WorkerInstance
+                .newBuilder()
+                .withTaskAttemptId(taskAttemptId)
+                .withWorkerId("second_" + taskAttemptId)
+                .withEnv(WorkerInstanceEnv.KUBERNETES)
+                .build();
+        workerInstanceDao.createWorkerInstance(instance2);
     }
 
-    @Test
-    public void create_taskAttempt_with_diff_worker_id_should_throws_exception() {
-
-    }
 }
