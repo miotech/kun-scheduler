@@ -11,11 +11,9 @@ import com.miotech.kun.security.model.entity.Permissions;
 import com.miotech.kun.security.service.PermissionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.stream.Collectors;
 
@@ -36,6 +34,8 @@ public class SecurityController {
         if (userInfo == null) {
             throw new AuthenticationCredentialsNotFoundException("UserInfo is null");
         }
+        UserInfo authUserInfo = (UserInfo) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getDetails();
+        userInfo.setAuthOriginInfo(authUserInfo.getAuthOriginInfo());
         HasPermissionRequest permissionRequest = HasPermissionRequest.builder()
                 .subjectId(userInfo.getId())
                 .subjectType(EntityType.USER)
