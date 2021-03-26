@@ -1,6 +1,8 @@
 package com.miotech.kun.workflow.common.taskrun.service;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
@@ -170,7 +172,7 @@ public class TaskRunService {
         return PaginationVO.<TaskRunVO>newBuilder()
                 .withPageNumber(filter.getPageNum())
                 .withPageSize(filter.getPageSize())
-                .withRecords(runsPage.getRecords().stream().map(this::convertToVO).collect(Collectors.toList()))
+                .withRecords(convertToVO(runsPage.getRecords()))
                 .withTotalCount(runsPage.getTotalCount())
                 .build();
     }
@@ -189,6 +191,15 @@ public class TaskRunService {
         return taskRunDao.fetchTotalCountByDay(filter, offsetHours);
     }
 
+    public List<TaskRunVO> convertToVO(List<TaskRun> taskRuns) {
+        List<Long> taskRunIds = taskRuns.stream().map(TaskRun::getId).collect(Collectors.toList());
+        List<TaskAttemptProps> taskAttemptProps = taskRunDao.fetchAttemptsPropByTaskRunIds(taskRunIds);
+        Map<Long, List<TaskAttemptProps>> taskAttemptPropsMap = groupByTaskRunId(taskAttemptProps);
+
+        return taskRuns.stream().map(taskRun ->
+                buildTaskRunVO(taskRun, taskAttemptPropsMap.get(taskRun.getId()))).collect(Collectors.toList());
+    }
+
     public TaskRunVO convertToVO(TaskRun taskRun) {
         List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRun.getId())
                 .stream()
@@ -199,22 +210,7 @@ public class TaskRunService {
                         .withTaskName(taskRun.getTask().getName())
                         .build())
                 .collect(Collectors.toList());
-
-        TaskRunVO vo = new TaskRunVO();
-        vo.setTask(taskRun.getTask());
-        vo.setId(taskRun.getId());
-        vo.setScheduledTick(taskRun.getScheduledTick());
-        vo.setStatus(taskRun.getStatus());
-        vo.setInlets(taskRun.getInlets());
-        vo.setOutlets(taskRun.getOutlets());
-        vo.setDependentTaskRunIds(taskRun.getDependentTaskRunIds());
-        vo.setStartAt(taskRun.getStartAt());
-        vo.setEndAt(taskRun.getEndAt());
-        vo.setCreatedAt(taskRun.getCreatedAt());
-        vo.setUpdatedAt(taskRun.getUpdatedAt());
-        vo.setConfig(taskRun.getConfig());
-        vo.setAttempts(attempts);
-        return vo;
+        return buildTaskRunVO(taskRun, attempts);
     }
 
     /**
@@ -280,4 +276,37 @@ public class TaskRunService {
                 cloneBuilder().withPriority(priority).build());
         return true;
     }
+
+    private Map<Long, List<TaskAttemptProps>> groupByTaskRunId(List<TaskAttemptProps> taskAttemptProps) {
+        Map<Long, List<TaskAttemptProps>> taskAttemptPropsMap = Maps.newHashMap();
+        for (TaskAttemptProps taskAttemptProp : taskAttemptProps) {
+            if (taskAttemptPropsMap.containsKey(taskAttemptProp.getTaskRunId())) {
+                taskAttemptPropsMap.get(taskAttemptProp.getTaskRunId()).add(taskAttemptProp);
+                continue;
+            }
+
+            List<TaskAttemptProps> taskAttemptPropsList = Lists.newArrayList(taskAttemptProp);
+            taskAttemptPropsMap.put(taskAttemptProp.getTaskRunId(), taskAttemptPropsList);
+        }
+        return taskAttemptPropsMap;
+    }
+
+    private TaskRunVO buildTaskRunVO(TaskRun taskRun, List<TaskAttemptProps> attempts) {
+        TaskRunVO vo = new TaskRunVO();
+        vo.setTask(taskRun.getTask());
+        vo.setId(taskRun.getId());
+        vo.setScheduledTick(taskRun.getScheduledTick());
+        vo.setStatus(taskRun.getStatus());
+        vo.setInlets(taskRun.getInlets());
+        vo.setOutlets(taskRun.getOutlets());
+        vo.setDependentTaskRunIds(taskRun.getDependentTaskRunIds());
+        vo.setStartAt(taskRun.getStartAt());
+        vo.setEndAt(taskRun.getEndAt());
+        vo.setCreatedAt(taskRun.getCreatedAt());
+        vo.setUpdatedAt(taskRun.getUpdatedAt());
+        vo.setConfig(taskRun.getConfig());
+        vo.setAttempts(attempts);
+        return vo;
+    }
+
 }
