@@ -2,7 +2,21 @@ package com.miotech.kun.workflow.core.model.common;
 
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
+import java.util.Date;
+
 public abstract class WorkerSnapshot {
-    private WorkerInstance ins;
+    private final WorkerInstance ins;
+    private final Date createdTime;
     public abstract TaskRunStatus getStatus();
+
+    public WorkerSnapshot(WorkerInstance ins,Date createdTime) {
+        this.ins = ins;
+        this.createdTime = createdTime;
+    }
+
+    public WorkerInstance getIns() {
+        return ins;
+    }
+
+
 }
