@@ -1,5 +1,6 @@
 package com.miotech.kun.security.saml2;
 
+import com.miotech.kun.security.model.AuthenticationOriginInfo;
 import com.miotech.kun.security.model.UserInfo;
 import org.opensaml.saml.saml2.core.Assertion;
 import org.springframework.core.convert.converter.Converter;
@@ -40,11 +41,14 @@ public class ResponseToAuthenticationConverter implements
                 responseToken.getToken().getSaml2Response(),
                 assertionAuthorities);
         UserInfo userInfo = new UserInfo();
-        userInfo.setAuthOrigin(registrationId);
+        AuthenticationOriginInfo authOriginInfo = new AuthenticationOriginInfo();
         userInfo.setUsername(principal.getName());
         userInfo.setFirstName((String) attributes.get("FirstName").stream().findFirst().orElse(null));
         userInfo.setLastName((String) attributes.get("LastName").stream().findFirst().orElse(null));
         userInfo.setEmail((String) attributes.get("Email").stream().findFirst().orElse(null));
+        authOriginInfo.setGroups(attributes.get("Groups").stream().map(group -> (String) group).collect(Collectors.toList()));
+        authOriginInfo.setAuthType(registrationId);
+        userInfo.setAuthOriginInfo(authOriginInfo);
         saml2Authentication.setDetails(userInfo);
         return saml2Authentication;
     }
