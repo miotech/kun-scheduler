@@ -21,10 +21,15 @@ import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.K
 public class PodEventMonitor {
 
     private final Logger logger = LoggerFactory.getLogger(PodEventMonitor.class);
-    @Inject
     private KubernetesClient kubernetesClient;
     private Map<Long, EventHandler> registerHandlers = new ConcurrentHashMap<>();
     private final long POLLING_PERIOD = 30 * 1000;
+
+
+    @Inject
+    public PodEventMonitor(KubernetesClient kubernetesClient){
+        this.kubernetesClient = kubernetesClient;
+    }
 
     public void start() {
         ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
