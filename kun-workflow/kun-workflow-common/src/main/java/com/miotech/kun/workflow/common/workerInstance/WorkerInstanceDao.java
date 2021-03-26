@@ -1,6 +1,8 @@
 package com.miotech.kun.workflow.common.workerInstance;
 
 import com.google.common.collect.ImmutableList;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
@@ -13,16 +15,17 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+@Singleton
 public class WorkerInstanceDao {
 
     protected static final String WORKER_INSTANCE_TABLE = "kun_wf_worker_instance";
-    protected static final String WORKER_INSTANCE_MODEL = "workerinstance";
 
     private static final List<String> workerInstanceCols = ImmutableList.of("task_attempt_id", "worker_id", "env", "created_at", "updated_at");
 
     private final DatabaseOperator dbOperator;
     private final WorkerInstanceMapper workerInstanceMapper = new WorkerInstanceMapper();
 
+    @Inject
     public WorkerInstanceDao(DatabaseOperator dbOperator) {
         this.dbOperator = dbOperator;
     }
@@ -37,7 +40,7 @@ public class WorkerInstanceDao {
         dbOperator.update(sql,
                 workerInstance.getTaskAttemptId(),
                 workerInstance.getWorkerId(),
-                workerInstance.getEnv(),
+                workerInstance.getEnv().name(),
                 now,
                 now);
         return workerInstance;
@@ -73,11 +76,12 @@ public class WorkerInstanceDao {
     public WorkerInstance getWorkerInstanceByAttempt(Long taskAttemptId) {
         String sql = new DefaultSQLBuilder()
                 .select(workerInstanceCols.toArray(new String[0]))
-                .from(WORKER_INSTANCE_TABLE, WORKER_INSTANCE_MODEL)
+                .from(WORKER_INSTANCE_TABLE)
                 .where("task_attempt_id=?")
                 .orderBy("updated_at desc")
                 .limit()
                 .autoAliasColumns()
+                .asPrepared()
                 .getSQL();
         List<WorkerInstance> workerInstances = dbOperator.fetchAll(sql, workerInstanceMapper, taskAttemptId, 1);
         if (workerInstances.size() == 0) {
@@ -90,7 +94,7 @@ public class WorkerInstanceDao {
     public List<WorkerInstance> getActiveWorkerInstance(WorkerInstanceEnv env) {
         String sql = new DefaultSQLBuilder()
                 .select(workerInstanceCols.toArray(new String[0]))
-                .from(WORKER_INSTANCE_TABLE, WORKER_INSTANCE_MODEL)
+                .from(WORKER_INSTANCE_TABLE)
                 .where("env = ?")
                 .getSQL();
         return dbOperator.fetchAll(sql, workerInstanceMapper, env.name());
@@ -101,9 +105,9 @@ public class WorkerInstanceDao {
         @Override
         public WorkerInstance map(ResultSet rs) throws SQLException {
             return WorkerInstance.newBuilder()
-                    .withTaskAttemptId(rs.getLong(WORKER_INSTANCE_MODEL + "_task_attempt_id"))
-                    .withEnv(WorkerInstanceEnv.valueOf(rs.getString(WORKER_INSTANCE_MODEL + "_env")))
-                    .withWorkerId(rs.getString(WORKER_INSTANCE_MODEL + "_worker_id"))
+                    .withTaskAttemptId(rs.getLong("task_attempt_id"))
+                    .withEnv(WorkerInstanceEnv.valueOf(rs.getString("env")))
+                    .withWorkerId(rs.getString("worker_id"))
                     .build();
         }
     }
