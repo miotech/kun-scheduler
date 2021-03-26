@@ -6,6 +6,7 @@ import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.security.SecurityContextHolder;
 import com.miotech.kun.security.common.ConfigKey;
 import com.miotech.kun.security.common.Constants;
+import com.miotech.kun.security.model.AuthenticationOriginInfo;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.model.bo.*;
 import com.miotech.kun.security.model.constant.EntityType;
@@ -157,7 +158,9 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
             userInfo.setFirstName(user.getFirstName());
             userInfo.setLastName(user.getLastName());
             userInfo.setEmail(user.getEmail());
-            userInfo.setAuthOrigin(user.getAuthOrigin());
+            AuthenticationOriginInfo info = new AuthenticationOriginInfo();
+            info.setAuthType(user.getAuthOrigin());
+            userInfo.setAuthOriginInfo(info);
             return userInfo;
         }
         return null;
