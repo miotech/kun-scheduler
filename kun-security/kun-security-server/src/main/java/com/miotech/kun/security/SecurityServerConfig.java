@@ -70,6 +70,9 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
     @Value("${spring.security.oauth2.client.enable:false}")
     private Boolean oauth2ClientEnable;
 
+    @Value("${spring.security.saml2.enable:false}")
+    private Boolean saml2Enable;
+
     @Value("${frontend.url}")
     private String frontendUrl;
 
@@ -124,7 +127,9 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
             http.oauth2Login();
         }
 
-        saml2Configure(http);
+        if (saml2Enable) {
+            saml2Configure(http);
+        }
 
         http.authorizeRequests().anyRequest().permitAll();
     }
