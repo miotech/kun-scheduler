@@ -59,7 +59,6 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
         UserInfo userInfo = new UserInfo();
         userInfo.setUsername(adminUsername);
         userInfo.setPassword(adminPassword);
-        SecurityContextHolder.setUserInfo(userInfo);
         userInfo = getOrSave(userInfo);
 
         //init root resource
