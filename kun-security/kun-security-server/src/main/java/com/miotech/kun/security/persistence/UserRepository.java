@@ -113,9 +113,9 @@ public class UserRepository {
                 userInfo.getLastName(),
                 userInfo.getAuthOrigin(),
                 userInfo.getPassword(),
-                id,
+                userInfo.getCreateUser() == null ? id : userInfo.getCreateUser(),
                 userInfo.getCreateTime(),
-                id,
+                userInfo.getUpdateUser() == null ? id : userInfo.getUpdateUser(),
                 userInfo.getUpdateTime());
     }
 
