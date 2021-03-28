@@ -39,6 +39,7 @@ spring:
             user-info-uri: https://dev-7959592.okta.com/oauth2/v1/userinfo
             jwk-set-uri: https://dev-7959592.okta.com/oauth2/v1/keys
     saml2:
+      enable: true
       relyingparty:
         authorityMapping:
           okta: Groups
