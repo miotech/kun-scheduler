@@ -8,3 +8,5 @@ CREATE TABLE kun_wf_worker_instance (
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (task_attempt_id, worker_id)
 );
+CREATE UNIQUE INDEX idx_worker_instance_UNQ ON kun_wf_worker_instance(task_attempt_id,env)
+

@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.core.model.worker;
 
+import java.util.Objects;
+
 public class WorkerInstance{
     private final long taskAttemptId;
     private final String workerId;
@@ -34,6 +36,20 @@ public class WorkerInstance{
         return new WorkerInstanceBuilder();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof WorkerInstance)) return false;
+        WorkerInstance instance = (WorkerInstance) o;
+        return getTaskAttemptId() == instance.getTaskAttemptId() &&
+                getWorkerId().equals(instance.getWorkerId()) &&
+                getEnv() == instance.getEnv();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getTaskAttemptId(), getWorkerId(), getEnv());
+    }
 
     public static final class WorkerInstanceBuilder {
         private long taskAttemptId;
