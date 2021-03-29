@@ -15,6 +15,7 @@ import com.miotech.kun.workflow.executor.local.MiscService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 
@@ -24,7 +25,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     private final TaskRunDao taskRunDao;
     private final WorkerInstanceDao workerInstanceDao;
     private final WorkerMonitor workerMonitor;
-    private final Props props;
+    protected final Props props;
     private final WorkerInstanceEnv env;
     private final MiscService miscService;
 
@@ -65,10 +66,12 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         if (isFinish(workerSnapshot)) {
             throw new IllegalStateException("unable to stop a finish worker");
         }
-        WorkerSnapshot stoppedSnapshot = stopWorker(workerSnapshot);
-        changeTaskRunStatus(stoppedSnapshot);
-        cleanupWorker(stoppedSnapshot.getIns());
-        return stoppedSnapshot.getIns();
+        if (!stopWorker(workerSnapshot.getIns())) {
+            throw new IllegalStateException("stop worker failed");
+        }
+        abortTaskAttempt(taskAttempt.getId());
+        cleanupWorker(workerSnapshot.getIns());
+        return workerSnapshot.getIns();
     }
 
     @Override
@@ -81,19 +84,24 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     public abstract WorkerSnapshot startWorker(TaskAttempt taskAttempt);
 
-    public abstract WorkerSnapshot stopWorker(WorkerSnapshot workerSnapshot);
+    public abstract Boolean stopWorker(WorkerInstance workerInstance);
 
     public abstract WorkerSnapshot getWorker(TaskAttempt taskAttempt);
-
-    public abstract void checkPollingWorker(List<WorkerSnapshot> workerSnapshots);
 
 
     /* ----------- private methods ------------ */
 
     private void changeTaskRunStatus(WorkerSnapshot workerSnapshot) {
         TaskRunStatus taskRunStatus = workerSnapshot.getStatus();
+        OffsetDateTime startAt = taskRunStatus.isRunning() ? workerSnapshot.getCreatedTime() : null;
+        OffsetDateTime endAt = taskRunStatus.isFinished() ? workerSnapshot.getCreatedTime() : null;
         miscService.changeTaskAttemptStatus(workerSnapshot.getIns().getTaskAttemptId(),
-                taskRunStatus, null, workerSnapshot.getCreatedTime());
+                taskRunStatus, startAt, endAt);
+    }
+
+    private void abortTaskAttempt(Long taskAttemptId) {
+        miscService.changeTaskAttemptStatus(taskAttemptId,
+                TaskRunStatus.ABORTED, null, OffsetDateTime.now());
     }
 
     private void cleanupWorker(WorkerInstance workerInstance) {
