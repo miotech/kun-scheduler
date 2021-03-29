@@ -6,7 +6,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 
 import java.util.List;
 
-public interface LifeCycleManage {
+public interface LifeCycleManager {
     public WorkerInstance start(TaskAttempt taskAttempt);
     public WorkerInstance stop(TaskAttempt taskAttempt);
     public WorkerSnapshot get(TaskAttempt taskAttempt);
