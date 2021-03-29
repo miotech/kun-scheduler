@@ -6,6 +6,8 @@ executor:
     pdf:
       capacity: 0
       policy: FIFO
+  env:
+    local
 
 
 server:

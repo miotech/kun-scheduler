@@ -1,15 +1,15 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstanceEnv;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodStatus;
 
-import java.util.Date;
+import java.time.OffsetDateTime;
 
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_TASK_ATTEMPT_ID;
 
@@ -20,7 +20,7 @@ public class PodStatusSnapShot extends WorkerSnapshot {
 
 
     public PodStatusSnapShot(WorkerInstance ins, PodStatus podStatus, PodSpec podSpec, ObjectMeta meta) {
-        super(ins, new Date());
+        super(ins, OffsetDateTime.now());
         this.podStatus = podStatus;
         this.podSpec = podSpec;
         this.meta = meta;
