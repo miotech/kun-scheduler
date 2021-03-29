@@ -8,8 +8,10 @@ import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Test;
 
 import javax.inject.Inject;
+import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.is;
 
 public class WorkerInstanceDaoTest extends CommonTestBase {
@@ -58,11 +60,44 @@ public class WorkerInstanceDaoTest extends CommonTestBase {
 
     @Test
     public void getActiveWorkerInstance() {
+        long taskRunId1 = WorkflowIdGenerator.nextTaskRunId();
+        long taskAttemptId1 = WorkflowIdGenerator.nextTaskAttemptId(taskRunId1, 1);
+        WorkerInstance instance1 = WorkerInstance
+                .newBuilder()
+                .withTaskAttemptId(taskAttemptId1)
+                .withWorkerId("worker1_" + taskAttemptId1)
+                .withEnv(WorkerInstanceEnv.KUBERNETES)
+                .build();
+        workerInstanceDao.createWorkerInstance(instance1);
+        long taskRunId2 = WorkflowIdGenerator.nextTaskRunId();
+        long taskAttemptId2 = WorkflowIdGenerator.nextTaskAttemptId(taskRunId2, 1);
+        WorkerInstance instance2 = WorkerInstance
+                .newBuilder()
+                .withTaskAttemptId(taskAttemptId2)
+                .withWorkerId("worker2_" + taskAttemptId2)
+                .withEnv(WorkerInstanceEnv.KUBERNETES)
+                .build();
+        workerInstanceDao.createWorkerInstance(instance2);
+        List<WorkerInstance> instanceList = workerInstanceDao.getActiveWorkerInstance(WorkerInstanceEnv.KUBERNETES);
+        assertThat(instanceList.size(), is(2));
+        assertThat(instanceList, containsInAnyOrder(instance1, instance2));
 
     }
 
     @Test
     public void deleteWorkerInstance() {
+        long taskRunId = WorkflowIdGenerator.nextTaskRunId();
+        long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId, 1);
+        WorkerInstance instance = WorkerInstance
+                .newBuilder()
+                .withTaskAttemptId(taskAttemptId)
+                .withWorkerId("worker1_" + taskAttemptId)
+                .withEnv(WorkerInstanceEnv.KUBERNETES)
+                .build();
+        workerInstanceDao.createWorkerInstance(instance);
+        workerInstanceDao.deleteWorkerInstance(taskAttemptId,WorkerInstanceEnv.KUBERNETES);
+        List<WorkerInstance> instanceList = workerInstanceDao.getActiveWorkerInstance(WorkerInstanceEnv.KUBERNETES);
+        assertThat(instanceList.size(), is(0));
 
     }
 
