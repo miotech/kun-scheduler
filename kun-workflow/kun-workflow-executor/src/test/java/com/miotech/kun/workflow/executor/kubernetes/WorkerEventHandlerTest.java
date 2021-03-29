@@ -9,7 +9,7 @@ import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.executor.CommonTestBase;
-import com.miotech.kun.workflow.executor.EventHandler;
+import com.miotech.kun.workflow.executor.WorkerEventHandler;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.PodList;
@@ -31,7 +31,7 @@ import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 
-public class EventHandlerTest extends CommonTestBase {
+public class WorkerEventHandlerTest extends CommonTestBase {
 
     private PodEventMonitor podEventMonitor;
 
@@ -68,7 +68,7 @@ public class EventHandlerTest extends CommonTestBase {
         podEventMonitor.start();
         WorkerInstance instance = new WorkerInstance(taskAttempt.getId(),
                 "kubernetes-" + taskAttempt.getId(), WorkerInstanceEnv.KUBERNETES);
-        EventHandler testHandler = new EventHandler() {
+        WorkerEventHandler testHandler = new WorkerEventHandler() {
             @Override
             public void onReceiveSnapshot(WorkerSnapshot workerSnapshot) {
             }
