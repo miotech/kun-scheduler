@@ -62,4 +62,7 @@ public enum TaskRunStatus {
     public boolean isTermState() {
         return this == SUCCESS || this == FAILED || this == ABORTED || this == UPSTREAM_FAILED;
     }
+    public boolean isRunning(){
+        return this == RUNNING;
+    }
 }
