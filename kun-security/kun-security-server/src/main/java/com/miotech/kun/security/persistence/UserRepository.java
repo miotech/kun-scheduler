@@ -5,6 +5,7 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.security.common.ConfigKey;
 import com.miotech.kun.security.common.UserStatus;
 import com.miotech.kun.security.model.UserInfo;
+import com.miotech.kun.security.model.bo.UserRequest;
 import com.miotech.kun.security.model.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -95,7 +96,7 @@ public class UserRepository {
         });
     }
 
-    public User addUser(UserInfo userInfo) {
+    public User addUser(UserRequest userRequest) {
         String query = "CREATE (u:USER {id: ?, name: ?, email: ?, firstName: ?, lastName: ?, authOrigin: ?,  password: ?, createUser: ?, createTime: ?, updateUser: ?, updateTime: ?}) RETURN u";
 
         Long id = IdGenerator.getInstance().nextId();
@@ -107,16 +108,16 @@ public class UserRepository {
                     return user;
                 },
                 id,
-                userInfo.getUsername(),
-                userInfo.getEmail(),
-                userInfo.getFirstName(),
-                userInfo.getLastName(),
-                userInfo.getAuthOriginInfo() == null ? null : userInfo.getAuthOriginInfo().getAuthType(),
-                userInfo.getPassword(),
-                userInfo.getCreateUser() == null ? id : userInfo.getCreateUser(),
-                userInfo.getCreateTime(),
-                userInfo.getUpdateUser() == null ? id : userInfo.getUpdateUser(),
-                userInfo.getUpdateTime());
+                userRequest.getUsername(),
+                userRequest.getEmail(),
+                userRequest.getFirstName(),
+                userRequest.getLastName(),
+                userRequest.getAuthOriginInfo() == null ? null : userRequest.getAuthOriginInfo().getAuthType(),
+                userRequest.getPassword(),
+                userRequest.getCreateUser() == null ? id : userRequest.getCreateUser(),
+                userRequest.getCreateTime(),
+                userRequest.getUpdateUser() == null ? id : userRequest.getUpdateUser(),
+                userRequest.getUpdateTime());
     }
 
     public Long updateUserStatus(Long id, UserStatus userStatus) {

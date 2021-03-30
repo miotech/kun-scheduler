@@ -35,7 +35,9 @@ public class SecurityController {
             throw new AuthenticationCredentialsNotFoundException("UserInfo is null");
         }
         UserInfo authUserInfo = (UserInfo) org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication().getDetails();
-        userInfo.setAuthOriginInfo(authUserInfo.getAuthOriginInfo());
+        if (authUserInfo != null) {
+            userInfo.setAuthOriginInfo(authUserInfo.getAuthOriginInfo());
+        }
         HasPermissionRequest permissionRequest = HasPermissionRequest.builder()
                 .subjectId(userInfo.getId())
                 .subjectType(EntityType.USER)
