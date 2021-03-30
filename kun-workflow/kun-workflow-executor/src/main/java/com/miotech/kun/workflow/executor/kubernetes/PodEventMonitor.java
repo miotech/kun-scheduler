@@ -45,8 +45,8 @@ public class PodEventMonitor implements WorkerMonitor {
     public boolean register(WorkerInstance workerInstance, WorkerEventHandler handler) {//为pod注册一个watcher监控pod的状态变更
         registerHandlers.put(workerInstance.getTaskAttemptId(), handler);
         kubernetesClient.pods()
-                .withLabel(KUN_TASK_ATTEMPT_ID, String.valueOf(workerInstance.getTaskAttemptId()))
                 .withLabel(KUN_WORKFLOW)
+                .withLabel(KUN_TASK_ATTEMPT_ID, String.valueOf(workerInstance.getTaskAttemptId()))
                 .watch(new PodStatusWatcher());
         return true;
     }
