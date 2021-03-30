@@ -8,6 +8,7 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 import org.junit.Before;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -85,7 +86,7 @@ public abstract class GuiceTestBase {
                 } else if (isInterfaceToInstance(key, val)) {
                     bind((Class) key).toInstance(val);
                 } else {
-                    throw new  UnsupportedOperationException("Not supported yet. Please implement it yourself.");
+                    throw new UnsupportedOperationException("Not supported yet. Please implement it yourself.");
                 }
             }
         }
