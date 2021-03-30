@@ -4,6 +4,7 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.security.common.UserStatus;
 import com.miotech.kun.security.model.UserInfo;
+import com.miotech.kun.security.model.bo.UserRequest;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.model.vo.UserListVO;
 import com.miotech.kun.security.service.UserService;
@@ -25,8 +26,8 @@ public class UserController {
     UserService userService;
 
     @PostMapping("/add")
-    public RequestResult<User> addUser(@RequestBody UserInfo userInfo) {
-        return RequestResult.success(userService.addUser(userInfo));
+    public RequestResult<User> addUser(@RequestBody UserRequest userRequest) {
+        return RequestResult.success(userService.addUser(userRequest));
     }
 
     @PostMapping("/disable/{id}")

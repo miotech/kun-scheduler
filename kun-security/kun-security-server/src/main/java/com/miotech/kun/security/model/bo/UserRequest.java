@@ -1,16 +1,19 @@
-package com.miotech.kun.security.model;
+package com.miotech.kun.security.model.bo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.security.model.AuthenticationOriginInfo;
+import lombok.Builder;
 import lombok.Data;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.Set;
-
+/**
+ * @author: Jie Chen
+ * @created: 2021/3/30
+ */
 @Data
-public class UserInfo implements Serializable {
+@Builder
+public class UserRequest {
 
     @JsonSerialize(using= ToStringSerializer.class)
     private Long id;
@@ -21,16 +24,19 @@ public class UserInfo implements Serializable {
     @JsonProperty(required = true, access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    private Set<String> permissions;
-
     private AuthenticationOriginInfo authOriginInfo;
 
-    private String firstName;
+    String firstName;
 
-    private String lastName;
+    String lastName;
 
-    private String email;
+    String email;
 
-    private Long userGroupId;
+    Long createUser;
 
+    Long createTime;
+
+    Long updateUser;
+
+    Long updateTime;
 }
