@@ -1,8 +1,8 @@
 package com.miotech.kun.workflow.core.publish;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.EventReceiver;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -38,14 +38,17 @@ public class RedisEventSubscriber implements EventSubscriber {
 
         @Override
         public void onMessage(String channel, String message) {
-            Event event = null;
             try {
-                event = EventMapper.toEvent(message);
-            } catch (JsonProcessingException e) {
-                logger.warn("parse subscribed message failed", e);
-                logger.warn(message);
+                Event event = EventMapper.toEvent(message);
+
+                try {
+                    eventReceiver.onReceive(event);
+                } catch (Throwable e) {
+                    logger.error("Failed to process event: {}", JSONUtils.toJsonString(event) , e);
+                }
+            } catch (Throwable e) {
+                logger.error("Failed to process message: {}", message, e);
             }
-            eventReceiver.onReceive(event);
         }
     }
 
