@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_TASK_ATTEMPT_ID;
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_WORKFLOW;
 
+//todo:set taskAttempt log path
 public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     private final KubernetesClient kubernetesClient;
