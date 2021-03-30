@@ -7,6 +7,7 @@ import com.miotech.kun.security.SecurityContextHolder;
 import com.miotech.kun.security.common.ConfigKey;
 import com.miotech.kun.security.common.Constants;
 import com.miotech.kun.security.model.AuthenticationOriginInfo;
+import com.miotech.kun.security.model.ModelConverter;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.model.bo.*;
 import com.miotech.kun.security.model.constant.EntityType;
@@ -48,6 +49,9 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
     @Autowired
     ResourceService resourceService;
 
+    @Autowired
+    ModelConverter modelConverter;
+
     @Value("${security.admin.username:admin}")
     private String adminUsername;
 
@@ -84,7 +88,8 @@ public class DefaultSecurityService implements ApplicationListener<ContextRefres
     }
 
     public UserInfo saveUser(UserInfo userInfo) {
-        User user = userService.addUser(userInfo);
+        UserRequest userRequest = modelConverter.convert2UserRequest(userInfo);
+        User user = userService.addUser(userRequest);
         userInfo.setId(user.getId());
         if (IdUtils.isNotEmpty(userInfo.getUserGroupId())) {
             saveUserPermission(user.getId(), userInfo.getUserGroupId());
