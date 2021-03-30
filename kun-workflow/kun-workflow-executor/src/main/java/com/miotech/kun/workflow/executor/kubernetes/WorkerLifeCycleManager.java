@@ -54,6 +54,10 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     @Override
     public WorkerInstance start(TaskAttempt taskAttempt) {
+        WorkerSnapshot existWorkerSnapShot = get(taskAttempt);
+        if (existWorkerSnapShot != null) {
+            throw new IllegalStateException("taskAttemptId = " + taskAttempt.getId() + " is running");
+        }
         WorkerSnapshot workerSnapshot = startWorker(taskAttempt);
         changeTaskRunStatus(workerSnapshot);
         workerMonitor.register(workerSnapshot.getIns(), new PodEventHandler());
