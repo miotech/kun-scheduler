@@ -2,6 +2,7 @@ package com.miotech.kun.security.service;
 
 import com.miotech.kun.security.common.UserStatus;
 import com.miotech.kun.security.model.UserInfo;
+import com.miotech.kun.security.model.bo.UserRequest;
 import com.miotech.kun.security.model.entity.User;
 import com.miotech.kun.security.persistence.UserRepository;
 import org.apache.commons.lang3.StringUtils;
@@ -26,15 +27,15 @@ public class UserService extends BaseSecurityService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    public User addUser(UserInfo userInfo) {
-        userInfo.setCreateUser(getCurrentUser().getId());
-        userInfo.setCreateTime(System.currentTimeMillis());
-        userInfo.setUpdateUser(getCurrentUser().getId());
-        userInfo.setUpdateTime(System.currentTimeMillis());
-        if (StringUtils.isNotBlank(userInfo.getPassword())) {
-            userInfo.setPassword(passwordEncoder.encode(userInfo.getPassword()));
+    public User addUser(UserRequest userRequest) {
+        userRequest.setCreateUser(getCurrentUser().getId());
+        userRequest.setCreateTime(System.currentTimeMillis());
+        userRequest.setUpdateUser(getCurrentUser().getId());
+        userRequest.setUpdateTime(System.currentTimeMillis());
+        if (StringUtils.isNotBlank(userRequest.getPassword())) {
+            userRequest.setPassword(passwordEncoder.encode(userRequest.getPassword()));
         }
-        return userRepository.addUser(userInfo);
+        return userRepository.addUser(userRequest);
     }
 
     public Long updateUserStatus(Long id, UserStatus userStatus) {
