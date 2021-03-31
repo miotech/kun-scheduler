@@ -68,7 +68,7 @@ public class WorkerEventHandlerTest extends CommonTestBase {
         podEventMonitor = new PodEventMonitor(client);
         podEventMonitor.start();
         WorkerInstance instance = new WorkerInstance(taskAttempt.getId(),
-                "kubernetes-" + taskAttempt.getId(), WorkerInstanceEnv.KUBERNETES);
+                "kubernetes-" + taskAttempt.getId(), taskAttempt.getQueueName(), WorkerInstanceEnv.KUBERNETES);
         WorkerEventHandler testHandler = new WorkerEventHandler() {
             @Override
             public void onReceiveSnapshot(WorkerSnapshot workerSnapshot) {

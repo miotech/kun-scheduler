@@ -6,7 +6,6 @@ import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.workerInstance.WorkerInstanceDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.executor.local.MiscService;
@@ -38,21 +37,25 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     @Override
     public WorkerSnapshot startWorker(TaskAttempt taskAttempt) {
-        Pod pod = kubernetesClient.pods().create(buildPod(taskAttempt));
+        Pod pod = kubernetesClient.pods()
+                .inNamespace(taskAttempt.getQueueName())
+                .create(buildPod(taskAttempt));
         return PodStatusSnapShot.fromPod(pod);
     }
 
     @Override
-    public Boolean stopWorker(WorkerInstance workerInstance) {
+    public Boolean stopWorker(TaskAttempt taskAttempt) {
         return kubernetesClient.pods()
+                .inNamespace(taskAttempt.getQueueName())
                 .withLabel(KUN_WORKFLOW)
-                .withLabel(KUN_TASK_ATTEMPT_ID, String.valueOf(workerInstance.getTaskAttemptId()))
+                .withLabel(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttempt.getId()))
                 .delete();
     }
 
     @Override
     public WorkerSnapshot getWorker(TaskAttempt taskAttempt) {
         PodList podList = kubernetesClient.pods()
+                .inNamespace(taskAttempt.getQueueName())
                 .withLabel(KUN_WORKFLOW)
                 .withLabel(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttempt.getId()))
                 .list();
@@ -72,6 +75,8 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         pod.setApiVersion(props.get("executor.env.version"));
         pod.setKind("Job");
         ObjectMeta objectMeta = new ObjectMeta();
+        objectMeta.setName(KUN_WORKFLOW + "_" + taskAttempt.getId());
+        objectMeta.setNamespace(taskAttempt.getQueueName());
         Map<String, String> labels = new HashMap<>();
         labels.put(KUN_WORKFLOW, null);
         labels.put(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttempt.getId()));
