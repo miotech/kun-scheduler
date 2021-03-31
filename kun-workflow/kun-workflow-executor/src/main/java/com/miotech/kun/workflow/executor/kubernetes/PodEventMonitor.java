@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -29,12 +30,13 @@ public class PodEventMonitor implements WorkerMonitor {
     private KubernetesClient kubernetesClient;
     private Map<Long, WorkerEventHandler> registerHandlers = new ConcurrentHashMap<>();
     private Map<Long, Integer> unHealthWorker = new ConcurrentHashMap<>();
-    private final long POLLING_PERIOD = 30 * 1000;
+    private final long POLLING_PERIOD = 5 * 1000;
 
 
     @Inject
     public PodEventMonitor(KubernetesClient kubernetesClient) {
         this.kubernetesClient = kubernetesClient;
+        start();
     }
 
     public void start() {
@@ -45,8 +47,8 @@ public class PodEventMonitor implements WorkerMonitor {
     public boolean register(WorkerInstance workerInstance, WorkerEventHandler handler) {//为pod注册一个watcher监控pod的状态变更
         registerHandlers.put(workerInstance.getTaskAttemptId(), handler);
         kubernetesClient.pods()
-                .withLabel(KUN_WORKFLOW)
-                .withLabel(KUN_TASK_ATTEMPT_ID, String.valueOf(workerInstance.getTaskAttemptId()))
+                .inNamespace(workerInstance.getNameSpace())
+                .withName(workerInstance.getWorkerId())
                 .watch(new PodStatusWatcher());
         return true;
     }
@@ -79,8 +81,9 @@ public class PodEventMonitor implements WorkerMonitor {
         @Override
         public void run() {
             PodList podList = kubernetesClient.pods()
+                    .inAnyNamespace()
                     .withLabel(KUN_WORKFLOW).list();
-            Set<Long> expectTaskAttempt = registerHandlers.keySet();
+            Set<Long> expectTaskAttempt = new HashSet<>(registerHandlers.keySet());
             for (Pod pod : podList.getItems()) {
                 Long taskAttemptId = Long.parseLong(pod.getMetadata().getLabels().get(KUN_TASK_ATTEMPT_ID));
                 expectTaskAttempt.remove(taskAttemptId);

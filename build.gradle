@@ -120,6 +120,7 @@ subprojects {
                 testImplementation 'com.icegreen:greenmail:1.6.2'
                 testImplementation 'com.icegreen:greenmail-junit4:1.6.2'
                 testImplementation 'com.icegreen:greenmail-spring:1.6.2'
+                testImplementation 'io.fabric8:kubernetes-server-mock:5.1.0'
             }
 
             implementation "com.google.inject:guice"

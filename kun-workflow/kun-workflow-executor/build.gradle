@@ -27,6 +27,7 @@ dependencies {
     testImplementation project(":kun-workflow:kun-workflow-scheduler")
     testImplementation "org.testcontainers:testcontainers"
     testImplementation 'uk.org.lidalia:slf4j-test:1.2.0'
+    testImplementation 'io.fabric8:kubernetes-server-mock'
     testRuntimeOnly "com.h2database:h2"
     testImplementation "net.bytebuddy:byte-buddy"
 }

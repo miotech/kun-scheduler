@@ -40,7 +40,7 @@ public class PodStatusSnapShot extends WorkerSnapshot {
 
     public static PodStatusSnapShot fromPod(Pod pod) {
         WorkerInstance workerInstance = new WorkerInstance(Long.parseLong(pod.getMetadata().getLabels().get(KUN_TASK_ATTEMPT_ID)),
-                pod.getMetadata().getName(), WorkerInstanceEnv.KUBERNETES);
+                pod.getMetadata().getName(), pod.getMetadata().getNamespace(), WorkerInstanceEnv.KUBERNETES);
         return new PodStatusSnapShot(workerInstance, pod.getStatus(), pod.getSpec(), pod.getMetadata());
     }
 

@@ -30,14 +30,19 @@ public class MockPodFactory {
         return create(taskAttemptId, "Pending");
     }
 
-    public static Pod create(long taskAttemptId, String status) {
-        String workerId = "kubernetes-" + taskAttemptId;
+    public static Pod create(long taskAttemptId, String nameSpace) {
+        return create(taskAttemptId, nameSpace, null);
+    }
+
+    public static Pod create(long taskAttemptId, String nameSpace, String status) {
+        String workerId = KUN_WORKFLOW + "_" + taskAttemptId;
         ObjectMeta meta = new ObjectMeta();
         Map<String, String> labels = new HashMap<>();
         labels.put(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttemptId));
         labels.put(KUN_WORKFLOW, null);
         meta.setLabels(labels);
         meta.setName(workerId);
+        meta.setNamespace(nameSpace);
         Pod pod = new Pod();
         pod.setMetadata(meta);
         PodStatus podStatus = new PodStatus();
@@ -46,7 +51,7 @@ public class MockPodFactory {
         return pod;
     }
 
-    public static MixedOperation<Pod, PodList, PodResource<Pod>> mockMixedOperation(){
+    public static MixedOperation<Pod, PodList, PodResource<Pod>> mockMixedOperation() {
         MixedOperation<Pod, PodList, PodResource<Pod>> mixedOperation = new MixedOperation<Pod, PodList, PodResource<Pod>>() {
 
 

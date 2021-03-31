@@ -70,7 +70,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         if (isFinish(workerSnapshot)) {
             throw new IllegalStateException("unable to stop a finish worker");
         }
-        if (!stopWorker(workerSnapshot.getIns())) {
+        if (!stopWorker(taskAttempt)) {
             throw new IllegalStateException("stop worker failed");
         }
         abortTaskAttempt(taskAttempt.getId());
@@ -88,7 +88,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     public abstract WorkerSnapshot startWorker(TaskAttempt taskAttempt);
 
-    public abstract Boolean stopWorker(WorkerInstance workerInstance);
+    public abstract Boolean stopWorker(TaskAttempt taskAttempt);
 
     public abstract WorkerSnapshot getWorker(TaskAttempt taskAttempt);
 
