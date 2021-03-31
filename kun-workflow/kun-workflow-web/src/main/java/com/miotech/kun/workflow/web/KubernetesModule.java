@@ -17,7 +17,7 @@ public class KubernetesModule extends AbstractModule {
 
     @Provides
     public KubernetesClient getKubernetesClient(){
-        Config config = new ConfigBuilder().withMasterUrl("http://localhost").build();
+        Config config = new ConfigBuilder().withMasterUrl(props.get("executor.env.host")).build();
         KubernetesClient client = new DefaultKubernetesClient(config);
         return client;
     }
