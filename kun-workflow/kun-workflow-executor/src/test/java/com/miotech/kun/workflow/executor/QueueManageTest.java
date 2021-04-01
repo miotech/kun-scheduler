@@ -63,6 +63,36 @@ public class QueueManageTest extends GuiceTestBase {
     }
 
     @Test
+    public void testSamePriorityShouldFIFO() {
+        QueueManage queueManage = prepareQueueManage(3);
+        Task task1 = MockTaskFactory.createTask();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskAttempt taskAttempt1 = createTaskAttempt(taskRun1);
+        Task task2 = MockTaskFactory.createTask();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
+        TaskAttempt taskAttempt2 = createTaskAttempt(taskRun2);
+        Task task3 = MockTaskFactory.createTask();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task3);
+        TaskAttempt taskAttempt3 = createTaskAttempt(taskRun3);
+        queueManage.submit(taskAttempt1);
+        queueManage.submit(taskAttempt2);
+        queueManage.submit(taskAttempt3);
+
+        //verify
+        TaskAttemptQueue attemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(attemptQueue.take().getId(), is(taskAttempt1.getId()));
+        queueManage.release("default", taskAttempt1.getId());
+        Task task4 = MockTaskFactory.createTask();
+        TaskRun taskRun4 = MockTaskRunFactory.createTaskRun(task4);
+        TaskAttempt taskAttempt4 = createTaskAttempt(taskRun4);
+        queueManage.submit(taskAttempt4);
+        assertThat(attemptQueue.take().getId(), is(taskAttempt2.getId()));
+        assertThat(attemptQueue.take().getId(), is(taskAttempt3.getId()));
+        assertThat(attemptQueue.take().getId(), is(taskAttempt4.getId()));
+
+    }
+
+    @Test
     public void repeatReleaseTest() {
         //prepare
         QueueManage queueManage = prepareQueueManage(8);
