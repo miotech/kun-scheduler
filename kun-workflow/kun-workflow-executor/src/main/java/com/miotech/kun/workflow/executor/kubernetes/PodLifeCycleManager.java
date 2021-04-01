@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
-import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.common.taskrun.service.TaskRunService;
 import com.miotech.kun.workflow.common.workerInstance.WorkerInstanceDao;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -22,17 +22,16 @@ import static com.google.common.base.Preconditions.checkState;
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_TASK_ATTEMPT_ID;
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_WORKFLOW;
 
-//todo:set taskAttempt log path
 public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     private final KubernetesClient kubernetesClient;
     private final OperatorDao operatorDao;
 
     @Inject
-    public PodLifeCycleManager(TaskRunDao taskRunDao, WorkerInstanceDao workerInstanceDao,
+    public PodLifeCycleManager(TaskRunService taskRunService, WorkerInstanceDao workerInstanceDao,
                                WorkerMonitor workerMonitor, Props props, MiscService miscService,
                                KubernetesClient kubernetesClient, OperatorDao operatorDao) {
-        super(taskRunDao, workerInstanceDao, workerMonitor, props, miscService);
+        super(taskRunService, workerInstanceDao, workerMonitor, props, miscService);
         this.kubernetesClient = kubernetesClient;
         this.operatorDao = operatorDao;
     }
@@ -168,7 +167,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         command.addAll(buildJVMArgs(taskAttemptId));
         command.add("-classpath");
         command.add(buildClassPath());
-        command.add("com.miotech.kun.workflow.worker.kubernetes.OperatorLauncher");
+        command.add("com.miotech.kun.workflow.worker.kubernetes.KubernetesOperatorLauncher");
         return command;
     }
 
