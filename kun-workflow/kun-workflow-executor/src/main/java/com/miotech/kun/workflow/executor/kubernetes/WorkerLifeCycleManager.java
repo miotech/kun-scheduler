@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.common.taskrun.service.TaskRunService;
 import com.miotech.kun.workflow.common.workerInstance.WorkerInstanceDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -22,16 +22,16 @@ import java.util.List;
 public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     private final Logger logger = LoggerFactory.getLogger(WorkerLifeCycleManager.class);
-    private final TaskRunDao taskRunDao;
+    private final TaskRunService taskRunService;
     private final WorkerInstanceDao workerInstanceDao;
     private final WorkerMonitor workerMonitor;
     protected final Props props;
     private final WorkerInstanceEnv env;
     private final MiscService miscService;
 
-    public WorkerLifeCycleManager(TaskRunDao taskRunDao, WorkerInstanceDao workerInstanceDao,
+    public WorkerLifeCycleManager(TaskRunService taskRunService, WorkerInstanceDao workerInstanceDao,
                                   WorkerMonitor workerMonitor, Props props, MiscService miscService) {
-        this.taskRunDao = taskRunDao;
+        this.taskRunService = taskRunService;
         this.props = props;
         this.env = WorkerInstanceEnv.valueOf(props.getString("executor.env"));
         this.workerInstanceDao = workerInstanceDao;
@@ -58,6 +58,10 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         if (existWorkerSnapShot != null) {
             throw new IllegalStateException("taskAttemptId = " + taskAttempt.getId() + " is running");
         }
+        String logPath = taskRunService.logPathOfTaskAttempt(taskAttempt.getId());
+        logger.debug("Update logPath to TaskAttempt. attemptId={}, path={}", taskAttempt.getId(), logPath);
+        taskRunService.updateTaskAttemptLogPath(taskAttempt.getId(), logPath);
+
         WorkerSnapshot workerSnapshot = startWorker(taskAttempt);
         changeTaskRunStatus(workerSnapshot);
         workerMonitor.register(workerSnapshot.getIns(), new PodEventHandler());
