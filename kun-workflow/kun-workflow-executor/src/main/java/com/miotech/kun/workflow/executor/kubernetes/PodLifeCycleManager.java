@@ -2,9 +2,11 @@ package com.miotech.kun.workflow.executor.kubernetes;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.workerInstance.WorkerInstanceDao;
+import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
@@ -72,10 +74,8 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     private Pod buildPod(TaskAttempt taskAttempt) {
         Pod pod = new Pod();
-        pod.setApiVersion(props.get("executor.env.version"));
-        pod.setKind("Job");
         ObjectMeta objectMeta = new ObjectMeta();
-        objectMeta.setName(KUN_WORKFLOW + "_" + taskAttempt.getId());
+        objectMeta.setName(KUN_WORKFLOW + taskAttempt.getId());
         objectMeta.setNamespace(taskAttempt.getQueueName());
         Map<String, String> labels = new HashMap<>();
         labels.put(KUN_WORKFLOW, null);
@@ -97,6 +97,9 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     private Container buildContainer(TaskAttempt taskAttempt) {
         Long operatorId = taskAttempt.getTaskRun().getTask().getOperatorId();
         Container container = new Container();
+        String containerName = getContainerFromOperator(operatorId);
+        //todo:set container name
+        container.setName("kun" + containerName);
         container.setImage(getContainerFromOperator(operatorId));
         container.setCommand(buildCommand(taskAttempt.getId()));
         List<VolumeMount> mounts = new ArrayList<>();
@@ -110,10 +113,10 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     }
 
     private List<EnvVar> buildEnv(TaskAttempt taskAttempt) {
+        Operator operatorDetail = operatorDao.fetchById(taskAttempt.getTaskRun().getTask().getOperatorId())
+                .orElseThrow(EntityNotFoundException::new);
         List<EnvVar> envVarList = new ArrayList<>();
-        EnvVar logVar = new EnvVar();
-        logVar.setName("logPath");
-        logVar.setValue(taskAttempt.getLogPath());
+        //add config
         Map<String, Object> configMap = taskAttempt.getTaskRun().getConfig().getValues();
         for (Map.Entry<String, Object> entry : configMap.entrySet()) {
             String value = entry.getValue().toString();
@@ -126,7 +129,21 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
             envVar.setValue(value);
             envVarList.add(envVar);
         }
+        String configKey = envVarList.stream().map(EnvVar::getName).collect(Collectors.joining(","));
+        addVar(envVarList, "configKey", configKey);
+        addVar(envVarList, "logPath", taskAttempt.getLogPath());
+        addVar(envVarList, "taskAttemptId", taskAttempt.getId().toString());
+        addVar(envVarList, "taskRunId", taskAttempt.getTaskRun().getId().toString());
+        addVar(envVarList, "className", operatorDetail.getClassName());
+        addVar(envVarList, "jarPath", operatorDetail.getPackagePath());
         return envVarList;
+    }
+
+    private void addVar(List<EnvVar> envVarList, String name, String value) {
+        EnvVar envVar = new EnvVar();
+        envVar.setName(name);
+        envVar.setValue(value);
+        envVarList.add(envVar);
     }
 
     private <T> List<T> coverObjectToList(Object obj, Class<T> clazz) {

@@ -1,7 +1,6 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
 import com.google.common.eventbus.EventBus;
-import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -22,21 +21,15 @@ import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.Pod;
-import io.fabric8.kubernetes.api.model.PodList;
-import io.fabric8.kubernetes.api.model.PodStatus;
+import io.fabric8.kubernetes.client.Config;
+import io.fabric8.kubernetes.client.ConfigBuilder;
+import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.Watcher;
-import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
-import io.fabric8.kubernetes.client.dsl.MixedOperation;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -44,13 +37,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
-import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_TASK_ATTEMPT_ID;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doReturn;
 
 public class PodLifeCycleManagerTest extends CommonTestBase {
 
@@ -73,22 +63,17 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
 
     private EventCollector eventCollector;
 
-    private FilterWatchListDeletable mockFilter;
-
-    private MixedOperation mockMixedOperation;
-
-
-    private KubernetesClient client;
 
     @Override
     protected void configuration() {
-        client = mock(KubernetesClient.class);
         Props props = new Props();
         props.put("executor.env", "KUBERNETES");
         props.put("executor.env.version", "1.15");
         props.put("executor.env.logPath", "/server/lib/logs");
-        bind(Props.class, props);
+        Config config = new ConfigBuilder().withMasterUrl("http://localhost:9880").build();
+        KubernetesClient client = new DefaultKubernetesClient(config);
         bind(KubernetesClient.class, client);
+        bind(Props.class, props);
         bind(WorkerMonitor.class, PodEventMonitor.class);
         bind(EventPublisher.class, new NopEventPublisher());
         bind(EventBus.class, new EventBus());
@@ -96,71 +81,65 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
         super.configuration();
     }
 
-    private void prepareKubernetes() {
-        mockMixedOperation = mock(MixedOperation.class);
-        doReturn(mockMixedOperation).when(client).pods();
-        mockFilter = mock(FilterWatchListDeletable.class);
-        doReturn(mockFilter).when(mockMixedOperation).withLabel(any());
-        doReturn(mockFilter).when(mockMixedOperation).withLabel(any(), any());
-        doReturn(mockFilter).when(mockFilter).withLabel(any());
-        doReturn(mockFilter).when(mockFilter).withLabel(any(), any());
-    }
-
-    private void mockWatcher(MockPod mockPod) {
-        Mockito.doAnswer(invocation -> {
-            Watcher<Pod> watcher = invocation.getArgument(0);
-            mockPod.addWatcher(watcher);
-            return null;
-        }).when(mockFilter).watch(any());
-    }
-
-    private void mockCreate() {
-        Mockito.doAnswer(invocation -> {
-            Pod pod = invocation.getArgument(0);
-            ObjectMeta objectMeta = pod.getMetadata();
-            objectMeta.setName("kubernetes-" + objectMeta.getLabels().get(KUN_TASK_ATTEMPT_ID));
-            pod.setMetadata(objectMeta);
-            PodStatus podStatus = new PodStatus();
-            podStatus.setPhase("Pending");
-            pod.setStatus(podStatus);
-            return pod;
-        }).when(mockMixedOperation).create(any(Pod.class));
-    }
-
-    private void mockGet(Pod pod) {
-        PodList podList = new PodList();
-        List<Pod> items = new ArrayList<>();
-        if (pod != null) {
-            items.add(pod);
-        }
-        podList.setItems(items);
-        Mockito.doReturn(podList).when(mockFilter).list();
-    }
-
-    private void mockStop(MockPod mockPod) {
-        Mockito.doAnswer(invocation -> {
-            mockPod.cancel();
-            return true;
-        }).when(mockFilter).delete();
-    }
+//    private void prepareKubernetes() {
+//        mockMixedOperation = mock(MixedOperation.class);
+//        doReturn(mockMixedOperation).when(client).pods();
+//        mockFilter = mock(FilterWatchListDeletable.class);
+//        doReturn(mockFilter).when(mockMixedOperation).withLabel(any());
+//        doReturn(mockFilter).when(mockMixedOperation).withLabel(any(), any());
+//        doReturn(mockFilter).when(mockFilter).withLabel(any());
+//        doReturn(mockFilter).when(mockFilter).withLabel(any(), any());
+//    }
+//
+//    private void mockWatcher(MockPod mockPod) {
+//        Mockito.doAnswer(invocation -> {
+//            Watcher<Pod> watcher = invocation.getArgument(0);
+//            mockPod.addWatcher(watcher);
+//            return null;
+//        }).when(mockFilter).watch(any());
+//    }
+//
+//    private void mockCreate() {
+//        Mockito.doAnswer(invocation -> {
+//            Pod pod = invocation.getArgument(0);
+//            ObjectMeta objectMeta = pod.getMetadata();
+//            objectMeta.setName("kubernetes-" + objectMeta.getLabels().get(KUN_TASK_ATTEMPT_ID));
+//            pod.setMetadata(objectMeta);
+//            PodStatus podStatus = new PodStatus();
+//            podStatus.setPhase("Pending");
+//            pod.setStatus(podStatus);
+//            return pod;
+//        }).when(mockMixedOperation).create(any(Pod.class));
+//    }
+//
+//    private void mockGet(Pod pod) {
+//        PodList podList = new PodList();
+//        List<Pod> items = new ArrayList<>();
+//        if (pod != null) {
+//            items.add(pod);
+//        }
+//        podList.setItems(items);
+//        Mockito.doReturn(podList).when(mockFilter).list();
+//    }
+//
+//    private void mockStop(MockPod mockPod) {
+//        Mockito.doAnswer(invocation -> {
+//            mockPod.cancel();
+//            return true;
+//        }).when(mockFilter).delete();
+//    }
 
     @Before
     public void init() {
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
-        prepareKubernetes();
-        mockCreate();
+//        prepareKubernetes();
+//        mockCreate();
     }
 
     @Test
     public void startTaskAttemptShouldSuccess() {
-        List<String> podStatusList = Arrays.asList("running", "succeeded");
         TaskAttempt taskAttempt = prepareAttempt();
-        mockGet(null);
-        MockPod mockPod = new MockPod(podStatusList, taskAttempt.getId());
-        mockWatcher(mockPod);
-        Thread thread = new Thread(mockPod);
-        thread.start();
         podLifeCycleManager.start(taskAttempt);
         awaitUntilAttemptDone(taskAttempt.getId());
 
@@ -187,9 +166,6 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
     public void startTaskAttemptHasRunningShouldThrowException() {
         List<String> podStatusList = Arrays.asList("running", "succeeded");
         TaskAttempt taskAttempt = prepareAttempt();
-        MockPod mockPod = new MockPod(podStatusList, taskAttempt.getId());
-        mockWatcher(mockPod);
-        mockGet(MockPodFactory.create(taskAttempt.getId(), "Running"));
         podLifeCycleManager.start(taskAttempt);
 
     }
@@ -199,16 +175,8 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
     public void stopTaskAttempt() {
         List<String> podStatusList = Arrays.asList("running", "succeeded");
         TaskAttempt taskAttempt = prepareAttempt();
-        mockGet(null);
-        MockPod mockPod = new MockPod(podStatusList, taskAttempt.getId());
-        mockWatcher(mockPod);
-        Thread thread = new Thread(mockPod);
-        thread.start();
         podLifeCycleManager.start(taskAttempt);
         awaitUntilRunning(taskAttempt.getId());
-        Pod runningPod = MockPodFactory.create(taskAttempt.getId(), mockPod.getStatus());
-        mockGet(runningPod);
-        mockStop(mockPod);
         podLifeCycleManager.stop(taskAttempt);
         awaitUntilAttemptDone(taskAttempt.getId());
 
@@ -236,11 +204,6 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
     public void stopFinishedTaskAttemptShouldThrowException() {
         List<String> podStatusList = Arrays.asList("running", "succeeded");
         TaskAttempt taskAttempt = prepareAttempt();
-        mockGet(null);
-        MockPod mockPod = new MockPod(podStatusList, taskAttempt.getId());
-        mockWatcher(mockPod);
-        Thread thread = new Thread(mockPod);
-        thread.start();
         podLifeCycleManager.start(taskAttempt);
         awaitUntilAttemptDone(taskAttempt.getId());
 
@@ -262,8 +225,6 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
                 TaskRunStatus.SUCCESS);
 
         //stop pod
-        Pod finishedPod = MockPodFactory.create(taskAttempt.getId(), mockPod.getStatus());
-        mockGet(finishedPod);
         podLifeCycleManager.stop(taskAttempt);
 
 
@@ -274,15 +235,8 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
     public void testGetSnapshot() {
         List<String> podStatusList = Arrays.asList("running", "succeeded");
         TaskAttempt taskAttempt = prepareAttempt();
-        mockGet(null);
-        MockPod mockPod = new MockPod(podStatusList, taskAttempt.getId());
-        mockWatcher(mockPod);
-        Thread thread = new Thread(mockPod);
-        thread.start();
         WorkerInstance workerInstance = podLifeCycleManager.start(taskAttempt);
         awaitUntilRunning(taskAttempt.getId());
-        Pod runningPod = MockPodFactory.create(taskAttempt.getId(), mockPod.getStatus());
-        mockGet(runningPod);
         WorkerSnapshot workerSnapshot = podLifeCycleManager.get(taskAttempt);
 
         //verify
@@ -316,7 +270,9 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
         Operator op = MockOperatorFactory.createOperator()
                 .cloneBuilder()
                 .withId(operatorId)
-                .withName("Operator_" + operatorId)
+                .withName("NopOperator")
+                .withClassName("NopOperator")
+                .withPackagePath("/tmp/" + operatorId +"NopOperator.jar")
                 .build();
         operatorDao.createWithId(op, operatorId);
         taskDao.create(attempt.getTaskRun().getTask());
@@ -338,50 +294,6 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
                     TaskAttempt attempt = taskRunDao.fetchAttemptById(attemptId).get();
                     return attempt.getStatus().equals(TaskRunStatus.RUNNING);
                 });
-    }
-
-    class MockPod implements Runnable {
-        private Watcher<Pod> watcher;
-
-        private final List<String> podStatusList;
-
-        private final Long taskAttemptId;
-
-        private String status = "Pending";
-
-        private boolean cancel = false;
-
-        public MockPod(List<String> podStatusList, Long taskAttemptId) {
-            this.podStatusList = podStatusList;
-            this.taskAttemptId = taskAttemptId;
-        }
-
-        public void addWatcher(Watcher<Pod> watcher) {
-            this.watcher = watcher;
-        }
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void cancel() {
-            cancel = true;
-        }
-
-        @Override
-        public void run() {
-            for (int i = 0; i < podStatusList.size(); i++) {
-                Uninterruptibles.sleepUninterruptibly(5, TimeUnit.SECONDS);
-                if (cancel) {
-                    break;
-                }
-                status = podStatusList.get(0);
-                Pod pod = MockPodFactory.create(taskAttemptId, podStatusList.get(i));
-                if (watcher != null) {
-                    watcher.eventReceived(null, pod);
-                }
-            }
-        }
     }
 
     private static class NopEventPublisher implements EventPublisher {
