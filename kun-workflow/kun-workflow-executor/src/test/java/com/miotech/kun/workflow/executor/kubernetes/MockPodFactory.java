@@ -35,7 +35,7 @@ public class MockPodFactory {
     }
 
     public static Pod create(long taskAttemptId, String nameSpace, String status) {
-        String workerId = KUN_WORKFLOW + "_" + taskAttemptId;
+        String workerId = KUN_WORKFLOW + taskAttemptId;
         ObjectMeta meta = new ObjectMeta();
         Map<String, String> labels = new HashMap<>();
         labels.put(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttemptId));
