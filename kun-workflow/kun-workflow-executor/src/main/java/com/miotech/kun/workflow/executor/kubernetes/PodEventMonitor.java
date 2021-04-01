@@ -42,14 +42,13 @@ public class PodEventMonitor implements WorkerMonitor {
     public void start() {
         ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
         timer.scheduleAtFixedRate(new PollingPodsStatus(), 10, POLLING_PERIOD, TimeUnit.MILLISECONDS);
+        kubernetesClient.pods()
+                .withLabel(KUN_WORKFLOW)
+                .watch(new PodStatusWatcher());
     }
 
     public boolean register(WorkerInstance workerInstance, WorkerEventHandler handler) {//为pod注册一个watcher监控pod的状态变更
         registerHandlers.put(workerInstance.getTaskAttemptId(), handler);
-        kubernetesClient.pods()
-                .inNamespace(workerInstance.getNameSpace())
-                .withName(workerInstance.getWorkerId())
-                .watch(new PodStatusWatcher());
         return true;
     }
 
