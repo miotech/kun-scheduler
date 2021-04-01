@@ -9,6 +9,9 @@ public class TaskPriorityComparator implements Comparator<TaskAttempt> {
     public int compare(TaskAttempt o1, TaskAttempt o2) {
         Integer priority1 = o1.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : o1.getPriority();
         Integer priority2 = o2.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : o2.getPriority();
+        if (priority1 == priority2) {
+            return o1.getId().compareTo(o2.getId());
+        }
         return priority2 - priority1;
     }
 }
