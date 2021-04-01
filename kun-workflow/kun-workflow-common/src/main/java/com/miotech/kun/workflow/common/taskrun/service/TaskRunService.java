@@ -324,6 +324,10 @@ public class TaskRunService {
         return String.format("file:%s/%s/%s", logDir, date, taskAttemptId);
     }
 
+    public boolean updateTaskAttemptLogPath(Long taskAttemptId,String logPath){
+        return taskRunDao.updateTaskAttemptLogPath(taskAttemptId,logPath);
+    }
+
     public Map<Long, List<TaskRunVO>> fetchLatestTaskRuns(List<Long> taskIds, int limit) {
         Preconditions.checkNotNull(taskIds);
         Preconditions.checkArgument(limit > 0);
