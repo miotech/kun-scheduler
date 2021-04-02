@@ -8,5 +8,4 @@ COPY dockerize-alpine-linux-amd64-v0.6.1.tar.gz /server/target/dockerize-alpine-
 RUN tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-v0.6.1.tar.gz \
     && rm dockerize-alpine-linux-amd64-v0.6.1.tar.gz
 
-COPY build/libs/kubernetesOperatorLauncher.jar /server/target/kubernetesOperatorLauncher.jar
-COPY src/resources/NopOperator.jar /server/libs/NopOperator.jar
+COPY build/libs/kunWorker.jar /server/target/kubernetesOperatorLauncher.jar

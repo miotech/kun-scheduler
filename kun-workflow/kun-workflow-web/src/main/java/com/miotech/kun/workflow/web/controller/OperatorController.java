@@ -36,7 +36,7 @@ public class OperatorController {
         this.operatorService = operatorService;
     }
 
-    @RouteMapping(url= "/operators", method = "GET")
+    @RouteMapping(url = "/operators", method = "GET")
     public Object getOperators(@QueryParameter(defaultValue = "1") int pageNum,
                                @QueryParameter(defaultValue = "100") int pageSize,
                                @QueryParameter String name) {
@@ -49,14 +49,14 @@ public class OperatorController {
         return operatorService.fetchOperatorsWithFilter(filter);
     }
 
-    @RouteMapping(url= "/operators", method = "POST")
+    @RouteMapping(url = "/operators", method = "POST")
     public Object createOperator(@RequestBody OperatorPropsVO operatorPropsVO) {
         Preconditions.checkNotNull(operatorPropsVO, "Received invalid operator properties: null");
         logger.debug("operatorPropsVO = {}", operatorPropsVO);
         return operatorService.convertOperatorToOperatorVO(operatorService.createOperator(operatorPropsVO));
     }
 
-    @RouteMapping(url= "/operators/{id}/_upload", method = "POST")
+    @RouteMapping(url = "/operators/{id}/_upload", method = "POST")
     public AcknowledgementVO uploadResource(@RouteVariable Long id,
                                             HttpServletRequest httpRequest) {
         try {
@@ -67,33 +67,34 @@ public class OperatorController {
             List<FileItem> files = upload.parseRequest(httpRequest);
             operatorService.uploadOperatorJar(id, files);
             return new AcknowledgementVO("package uploaded");
-        } catch ( FileUploadException e) {
+        } catch (FileUploadException e) {
             logger.error("Failed to upload:", e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
     }
 
-    @RouteMapping(url= "/operators/{operatorId}", method = "DELETE")
+    @RouteMapping(url = "/operators/{operatorId}", method = "DELETE")
     public Object deleteOperator(@RouteVariable Long operatorId) {
         operatorService.deleteOperatorById(operatorId);
         return new AcknowledgementVO("Delete success");
     }
 
-    @RouteMapping(url= "/operators/{operatorId}", method = "GET")
+    @RouteMapping(url = "/operators/{operatorId}", method = "GET")
     public Object getOperator(@RouteVariable Long operatorId) {
         Preconditions.checkNotNull(operatorId, "Received invalid operator ID in path parameter.");
         return operatorService.convertOperatorToOperatorVO(operatorService.findOperator(operatorId));
     }
 
-    @RouteMapping(url= "/operators/{operatorId}", method = "PUT")
+    @RouteMapping(url = "/operators/{operatorId}", method = "PUT")
     public Object updateOperator(@RouteVariable Long operatorId, @RequestBody OperatorPropsVO operatorPropsVO) {
         Preconditions.checkNotNull(operatorId, "Received invalid operator ID in path parameter.");
         return operatorService.convertOperatorToOperatorVO(operatorService.fullUpdateOperator(operatorId, operatorPropsVO));
     }
 
-    @RouteMapping(url= "/operators/{operatorId}", method = "PATCH")
+    @RouteMapping(url = "/operators/{operatorId}", method = "PATCH")
     public Object patchOperator(@RouteVariable Long operatorId, @RequestBody OperatorPropsVO operatorPropsVO) {
         Preconditions.checkNotNull(operatorId, "Received invalid operator ID in path parameter.");
         return operatorService.convertOperatorToOperatorVO(operatorService.partialUpdateOperator(operatorId, operatorPropsVO));
     }
+
 }

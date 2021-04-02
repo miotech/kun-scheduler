@@ -25,15 +25,15 @@ public class QueueManage {
 
     public QueueManage(Props props) {
         queueMap = new ConcurrentHashMap<>();
-        List<String> queueNames = props.getStringList("executor.queue");
+        List<String> queueNames = props.getStringList("executor.env.resourceQueues");
         logger.info("init queueManage , size = {}", queueNames.size());
         if (queueNames.size() == 0) {
             TaskAttemptQueue queue = new TaskAttemptQueue(DEFAULT_QUEUE, DEFAULT_WORKER_TOKEN_SIZE);
             queueMap.put(queue.getName(), queue);
         }
         for (String queueName : queueNames) {
-            String prefix = "executor.queue." + queueName;
-            Integer capacity = props.getInt(prefix + ".capacity", 0);
+            String prefix = "executor.env.resourceQueues." + queueName;
+            Integer capacity = props.getInt(prefix + "quota.workerNumbers", 0);
             TaskAttemptQueue queue = new TaskAttemptQueue(queueName, capacity);
             logger.info("init queue name = {}, capacity = {}", queueName, capacity);
             queueMap.put(queueName, queue);

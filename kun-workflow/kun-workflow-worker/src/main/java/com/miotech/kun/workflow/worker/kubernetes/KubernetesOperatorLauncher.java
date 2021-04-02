@@ -18,13 +18,16 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class KubernetesOperatorLauncher {
     private static final Logger logger = LoggerFactory.getLogger(KubernetesOperatorLauncher.class);
     private volatile boolean cancelled = false;
     private volatile KunOperator operator;
     private static Props props;
+    private volatile boolean finished = false;
 
 
     public static void main(String args[]) {
@@ -33,13 +36,14 @@ public class KubernetesOperatorLauncher {
         // 初始化logger
         initLogger(command.getLogPath());
         KubernetesOperatorLauncher operatorLauncher = new KubernetesOperatorLauncher();
-        Thread printingHook = new Thread(() -> operatorLauncher.cancel());
-        Runtime.getRuntime().addShutdownHook(printingHook);
+        Thread exitHook = new Thread(() -> operatorLauncher.cancel());
+        Runtime.getRuntime().addShutdownHook(exitHook);
         operatorLauncher.start(command);
     }
 
     private void start(ExecCommand command) {
         int exitCode = launchOperator(command) ? 0 : 1;
+        finished = true;
         System.exit(exitCode);
     }
 
@@ -77,6 +81,9 @@ public class KubernetesOperatorLauncher {
 
 
     public synchronized void cancel() {
+        if (finished) {
+            return;
+        }
         logger.info("Trying to cancel current operator.");
         if (cancelled) {
             logger.warn("Operator is already cancelled.");
@@ -168,10 +175,11 @@ public class KubernetesOperatorLauncher {
     private static Config coverEnvToConfig() {
         Config.Builder configBuilder = Config.newBuilder();
         String configKey = props.getString("configKey");
-        if(Strings.isNullOrEmpty(configKey)){
+        if (Strings.isNullOrEmpty(configKey)) {
             return configBuilder.build();
         }
-        Set<String> exceptKey = new HashSet<>(Arrays.asList(configKey));
+        List<String> configKeyList = Arrays.stream(configKey.split(",")).collect(Collectors.toList());
+        Set<String> exceptKey = new HashSet<>(configKeyList);
         for (String key : exceptKey) {
             configBuilder.addConfig(key, props.getString(key));
         }
