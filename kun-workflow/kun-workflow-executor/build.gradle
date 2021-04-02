@@ -25,6 +25,7 @@ dependencies {
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")
     testImplementation project(":kun-workflow:kun-workflow-scheduler")
+    testImplementation "com.github.stefanbirkner:system-rules:1.19.0"
     testImplementation "org.testcontainers:testcontainers"
     testImplementation 'uk.org.lidalia:slf4j-test:1.2.0'
     testImplementation 'io.fabric8:kubernetes-server-mock'

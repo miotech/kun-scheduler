@@ -31,6 +31,10 @@ public class WorkerInstanceDao {
     }
 
     public WorkerInstance createWorkerInstance(WorkerInstance workerInstance) {
+        WorkerInstance existInstance = getWorkerInstanceByAttempt(workerInstance.getTaskAttemptId());
+        if (existInstance != null) {
+            return existInstance;
+        }
         String sql = DefaultSQLBuilder.newBuilder()
                 .insert(workerInstanceCols.toArray(new String[0]))
                 .into(WORKER_INSTANCE_TABLE)

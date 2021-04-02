@@ -25,8 +25,17 @@ public enum TaskPriority {
         return priority;
     }
 
-    public static int getPriorityByName(String name){
+    public static int getPriorityByName(String name) {
         return priorityMaps.get(name).priority;
+    }
+
+    public static TaskPriority resolvePriority(int priority) {
+        for (TaskPriority taskPriority : priorityMaps.values()) {
+            if (priority > taskPriority.getPriority()) {
+                return taskPriority;
+            }
+        }
+        return LOWEST;
     }
 
 }

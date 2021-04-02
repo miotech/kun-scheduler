@@ -29,7 +29,7 @@ dependencies {
 }
 
 shadowJar {
-    baseName = 'kubernetesOperatorLauncher'
+    baseName = 'kunWorker'
     classifier = null
     manifest {
         attributes(
