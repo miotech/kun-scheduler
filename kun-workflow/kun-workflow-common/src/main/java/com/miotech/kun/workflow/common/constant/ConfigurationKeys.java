@@ -10,4 +10,6 @@ public class ConfigurationKeys {
 
     public static final String PROP_RESOURCE_LIBDIRECTORY = "resource.libDirectory";
 
+    public static final String DOCKER_HUB_LOGIN = "docker.login";
+
 }

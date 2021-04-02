@@ -20,6 +20,7 @@ import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.annotation.Internal;
+import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -56,7 +57,7 @@ public class TaskRunService {
     private final Set<Long> rerunningTaskRunIds = new ConcurrentHashSet<>();
 
     @Inject
-    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor,Scheduler scheduler) {
+    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor, Scheduler scheduler) {
         this.taskRunDao = taskRunDao;
         this.resourceLoader = resourceLoader;
         this.executor = executor;
@@ -289,6 +290,7 @@ public class TaskRunService {
 
     /**
      * Re-run a taskrun instance. Any currently unfinished task attempts shall be aborted.
+     *
      * @param taskRunId id of target taskrun
      * @return <code>true</code> if success, <code>false</code> if failed to rerun.
      * @throws IllegalStateException when cannot find latest task attempt corresponding to task run
@@ -324,8 +326,8 @@ public class TaskRunService {
         return String.format("file:%s/%s/%s", logDir, date, taskAttemptId);
     }
 
-    public boolean updateTaskAttemptLogPath(Long taskAttemptId,String logPath){
-        return taskRunDao.updateTaskAttemptLogPath(taskAttemptId,logPath);
+    public boolean updateTaskAttemptLogPath(Long taskAttemptId, String logPath) {
+        return taskRunDao.updateTaskAttemptLogPath(taskAttemptId, logPath);
     }
 
     public Map<Long, List<TaskRunVO>> fetchLatestTaskRuns(List<Long> taskIds, int limit) {
@@ -352,7 +354,7 @@ public class TaskRunService {
         if (Objects.isNull(attempt)) {
             throw new IllegalArgumentException("Attempt is not found for taskRunId: " + taskRunId);
         }
-        executor.changePriority(attempt.getQueueName(), attempt.getId(), priority);
+        executor.changePriority(attempt.getId(), attempt.getQueueName(), TaskPriority.resolvePriority(priority));
         taskRunDao.updateTaskRun(taskRunOptional.get().
                 cloneBuilder().withPriority(priority).build());
         return true;

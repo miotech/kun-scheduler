@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
-import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
+import com.miotech.kun.commons.utils.InitializingBean;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.executor.WorkerEventHandler;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import io.fabric8.kubernetes.api.model.Pod;
@@ -24,38 +25,50 @@ import java.util.concurrent.TimeUnit;
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_TASK_ATTEMPT_ID;
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_WORKFLOW;
 
-public class PodEventMonitor implements WorkerMonitor {
+public class PodEventMonitor implements WorkerMonitor, InitializingBean {
 
     private final Logger logger = LoggerFactory.getLogger(PodEventMonitor.class);
     private KubernetesClient kubernetesClient;
     private Map<Long, WorkerEventHandler> registerHandlers = new ConcurrentHashMap<>();
     private Map<Long, Integer> unHealthWorker = new ConcurrentHashMap<>();
     private final long POLLING_PERIOD = 5 * 1000;
+    private final Props props;
 
 
     @Inject
-    public PodEventMonitor(KubernetesClient kubernetesClient) {
+    public PodEventMonitor(KubernetesClient kubernetesClient, Props props) {
         this.kubernetesClient = kubernetesClient;
-        start();
+        this.props = props;
     }
 
     public void start() {
         ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
         timer.scheduleAtFixedRate(new PollingPodsStatus(), 10, POLLING_PERIOD, TimeUnit.MILLISECONDS);
         kubernetesClient.pods()
+                .inNamespace(props.getString("executor.env.namespace"))
                 .withLabel(KUN_WORKFLOW)
                 .watch(new PodStatusWatcher());
     }
 
-    public boolean register(WorkerInstance workerInstance, WorkerEventHandler handler) {//为pod注册一个watcher监控pod的状态变更
-        registerHandlers.put(workerInstance.getTaskAttemptId(), handler);
+    public boolean register(Long taskAttemptId, WorkerEventHandler handler) {//为pod注册一个watcher监控pod的状态变更
+        registerHandlers.put(taskAttemptId, handler);
         return true;
     }
 
-    public boolean unRegister(long taskAttemptId) {
+    public boolean unRegister(Long taskAttemptId) {
         registerHandlers.remove(taskAttemptId);
         unHealthWorker.remove(taskAttemptId);
         return true;
+    }
+
+    @Override
+    public void unRegisterAll() {
+        registerHandlers.clear();
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        start();
     }
 
 
@@ -66,7 +79,9 @@ public class PodEventMonitor implements WorkerMonitor {
         public void eventReceived(Action action, Pod pod) {
             Long taskAttemptId = Long.parseLong(pod.getMetadata().getLabels().get(KUN_TASK_ATTEMPT_ID));
             WorkerEventHandler workerEventHandler = registerHandlers.get(taskAttemptId);
-            workerEventHandler.onReceiveSnapshot(PodStatusSnapShot.fromPod(pod));
+            if (workerEventHandler != null) {
+                workerEventHandler.onReceiveSnapshot(PodStatusSnapShot.fromPod(pod));
+            }
         }
 
         @Override
@@ -80,7 +95,7 @@ public class PodEventMonitor implements WorkerMonitor {
         @Override
         public void run() {
             PodList podList = kubernetesClient.pods()
-                    .inAnyNamespace()
+                    .inNamespace(props.getString("executor.env.namespace"))
                     .withLabel(KUN_WORKFLOW).list();
             Set<Long> expectTaskAttempt = new HashSet<>(registerHandlers.keySet());
             for (Pod pod : podList.getItems()) {
@@ -96,7 +111,7 @@ public class PodEventMonitor implements WorkerMonitor {
                 //todo:send unHealth message
                 if (expectTaskAttempt.contains(entry.getKey())) {
                     unHealthWorker.put(entry.getKey(), (entry.getValue() + 1));
-                }else {
+                } else {
                     iterator.remove();
                 }
             }

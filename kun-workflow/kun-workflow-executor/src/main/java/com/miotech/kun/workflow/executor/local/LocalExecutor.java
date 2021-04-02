@@ -20,9 +20,12 @@ import com.miotech.kun.workflow.core.execution.HeartBeatMessage;
 import com.miotech.kun.workflow.core.execution.OperatorReport;
 import com.miotech.kun.workflow.core.execution.TaskAttemptMsg;
 import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
+import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.executor.ExecutorBackEnd;
 import com.miotech.kun.workflow.executor.WorkerFactory;
 import com.miotech.kun.workflow.executor.local.thread.TaskAttemptSiftingAppender;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -41,7 +44,7 @@ import java.util.Optional;
 import java.util.concurrent.*;
 
 @Singleton
-public class LocalExecutor implements Executor {
+public class LocalExecutor implements Executor, ExecutorBackEnd {
     private static final Logger logger = LoggerFactory.getLogger(LocalExecutor.class);
 
     private final Injector injector;
@@ -268,8 +271,8 @@ public class LocalExecutor implements Executor {
     }
 
     @Override
-    public void changePriority(String queueName, long attemptId, int priority) {
-        queueManage.changePriority(queueName, attemptId, priority);
+    public void changePriority(long taskAttemptId, String queueName, TaskPriority priority) {
+        queueManage.changePriority(queueName, taskAttemptId, priority.getPriority());
     }
 
     @Override
@@ -326,6 +329,17 @@ public class LocalExecutor implements Executor {
         message.setTaskRunStatus(taskAttempt.getStatus());
         message.setInitTime(DateTimeUtils.now().plusSeconds(WAIT_WORKER_INIT_SECOND));//初始化1分钟
         return message;
+    }
+
+
+    @Override
+    public ResourceQueue createResourceQueue(ResourceQueue resourceQueue) {
+        return null;
+    }
+
+    @Override
+    public ResourceQueue updateResourceQueue(ResourceQueue resourceQueue) {
+        return null;
     }
 
     class TaskAttemptConsumer implements Runnable {
