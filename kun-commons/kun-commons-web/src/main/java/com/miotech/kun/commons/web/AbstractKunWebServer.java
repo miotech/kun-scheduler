@@ -18,19 +18,25 @@ public abstract class AbstractKunWebServer implements WebServer {
     private final Server server;
     private final DispatchServlet dispatchServlet;
     private final Props props;
-    private final Initializer initializer;
+    private final Injector injector;
 
     public AbstractKunWebServer(Injector injector) {
+        this.injector = injector;
         this.server = injector.getInstance(Server.class);
         this.dispatchServlet = injector.getInstance(DispatchServlet.class);
         this.props = injector.getInstance(Props.class);
-        this.initializer = injector.getInstance(Initializer.class);
     }
 
     @Override
     public final void start() {
-        initializer.initialize();
+        init(injector);
         startWebServer();
+    }
+
+    @Override
+    public final void init(Injector injector) {
+        Initializer initializer = injector.getInstance(Initializer.class);
+        initializer.initialize();
     }
 
     @Override

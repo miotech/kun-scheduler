@@ -96,7 +96,7 @@ subprojects {
                 implementation 'org.jooq:joor-java-8:0.9.13'
                 implementation "com.amazonaws:aws-java-sdk-s3:1.11.792"
                 implementation 'org.apache.hadoop:hadoop-aws:2.8.5'
-                implementation 'io.fabric8:kubernetes-client:5.1.0'
+                implementation 'io.fabric8:kubernetes-client:5.2.1'
 
 
                 testImplementation "junit:junit:4.12"

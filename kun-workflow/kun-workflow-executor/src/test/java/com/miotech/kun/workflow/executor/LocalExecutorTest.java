@@ -149,6 +149,7 @@ public class LocalExecutorTest extends CommonTestBase {
         bind(EventPublisher.class, new NopEventPublisher());
         bind(WorkflowExecutorFacade.class, LocalExecutorFacadeImpl.class);
         bind(Props.class, props);
+        bind(ExecutorBackEnd.class,LocalExecutor.class);
         bind(Executor.class, LocalExecutor.class);
         bind(Scheduler.class, LocalScheduler.class);
     }
@@ -436,7 +437,7 @@ public class LocalExecutorTest extends CommonTestBase {
         HeartBeatMessage heartBeatMessage = prepareHeartBeat(attempt);
         TaskAttemptMsg msg = prepareTaskAttemptMsg(attempt, heartBeatMessage);
         msg.setTaskRunStatus(TaskRunStatus.RUNNING);
-        executor.statusUpdate(msg);
+        localExecutor.statusUpdate(msg);
         // task_run and task_attempt
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
         assertThat(attemptProps.getStatus(), is(TaskRunStatus.RUNNING));
@@ -789,7 +790,7 @@ public class LocalExecutorTest extends CommonTestBase {
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
         TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
         assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
-        executor.cancel(attempt);
+        executor.cancel(attempt.getId());
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
@@ -835,7 +836,7 @@ public class LocalExecutorTest extends CommonTestBase {
         // process
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
-        executor.cancel(attempt);
+        executor.cancel(attempt.getId());
 
         // wait until aborted
         awaitUntilAttemptAbort(attempt.getId());
@@ -933,7 +934,7 @@ public class LocalExecutorTest extends CommonTestBase {
         // process
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
-        executor.cancel(attempt);
+        executor.cancel(attempt.getId());
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());

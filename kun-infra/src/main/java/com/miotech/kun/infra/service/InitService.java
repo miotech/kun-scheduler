@@ -63,10 +63,6 @@ public class InitService implements InitializingBean {
         publishRpcServices();
     }
 
-    private void configureDB() {
-        DatabaseSetup setup = new DatabaseSetup(dataSource, props);
-        setup.start();
-    }
 
     private void initDataBuilder() {
         // Verify whether the operator & task exists
@@ -148,5 +144,10 @@ public class InitService implements InitializingBean {
 
     private void setProp(String key, String value) {
         props.put(key, value);
+    }
+
+    private void configureDB() {
+        DatabaseSetup setup = new DatabaseSetup(dataSource, props);
+        setup.start();
     }
 }
