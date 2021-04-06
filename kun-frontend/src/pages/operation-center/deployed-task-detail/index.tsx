@@ -57,15 +57,17 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
     taskRunId: StringParam,
   });
 
-  useMount(() => {
+  useMount(async () => {
     // highlight corresponding aside menu item
     dispatch.route.updateCurrentPath('/operation-center/scheduled-tasks/:id');
     dispatch.route.updateCurrentParams({
       id: match.params.id,
     });
     dispatch.deployedTaskDetail.setDeployedTaskId(match.params.id);
-    dispatch.deployedTaskDetail.loadDeployedTaskDetailById(match.params.id);
-    dispatch.deployedTaskDetail.loadTaskRuns({
+    await dispatch.deployedTaskDetail.loadDeployedTaskDetailById(
+      match.params.id,
+    );
+    await dispatch.deployedTaskDetail.loadTaskRuns({
       id: match.params.id,
       ...filters,
     });
@@ -77,7 +79,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
 
   useMount(() => {
     // highlight corresponding aside menu item
-    dispatch.route.updateCurrentPath('/operation-center/scheduled-tasks');
+    dispatch.route.updateCurrentPath('/operation-center/scheduled-tasks/:id');
   });
 
   useEffect(() => {
