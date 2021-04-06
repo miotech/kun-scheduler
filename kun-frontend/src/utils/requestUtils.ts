@@ -53,52 +53,55 @@ export interface RequestOptions extends GetRequestOptions {
 }
 
 export interface GenericRequestOptions extends RequestOptions {
-  method?: Method,
+  method?: Method;
 }
 
 // Add a response interceptor
-axiosInstance.interceptors.response.use((response) => {
-  // Any status code that lie within the range of 2xx cause this function to trigger
-  // Do something with response data
-  const { data } = response;
-  if (`${data?.code}` !== '0') {
-    notification.error({
-      message: formatMessage({
-        id: `common.webMessage.${response.status}`,
-        defaultMessage: formatMessage({ id: 'common.webMessage.unknown' }),
-      }),
-      description: data?.note ?? '',
-    });
-    return Promise.reject(data);
-  }
-  // if success
-  if (response.data?.result) {
-    return response.data.result;
-  }
-  // if `result` property not exists, reject
-  return Promise.resolve(null);
-}, (error) => {
-  if (error.response && error.response.status) {
-    // if credential info required
-    if (error.response.status === 401) {
-      if (window.location.pathname !== '/login') {
-        history.push('/login');
-      }
-    } else if (error.response.status >= 400) {
+axiosInstance.interceptors.response.use(
+  response => {
+    // Any status code that lie within the range of 2xx cause this function to trigger
+    // Do something with response data
+    const { data } = response;
+    if (`${data?.code}` !== '0') {
       notification.error({
         message: formatMessage({
-          id: `common.webMessage.${error.response.status}`,
+          id: `common.webMessage.${response.status}`,
           defaultMessage: formatMessage({ id: 'common.webMessage.unknown' }),
         }),
-        description: '',
+        description: data?.note ?? '',
       });
+      return Promise.reject(data);
     }
-  }
-  logger.error('[Request Error]: %o', error);
-  // Any status codes that falls outside the range of 2xx cause this function to trigger
-  // Do something with response error
-  return Promise.reject(error);
-});
+    // if success
+    if (response.data?.result) {
+      return response.data.result;
+    }
+    // if `result` property not exists, reject
+    return Promise.resolve(null);
+  },
+  error => {
+    if (error.response && error.response.status) {
+      // if credential info required
+      if (error.response.status === 401) {
+        if (window.location.pathname !== '/login') {
+          history.push('/login');
+        }
+      } else if (error.response.status >= 400) {
+        notification.error({
+          message: formatMessage({
+            id: `common.webMessage.${error.response.status}`,
+            defaultMessage: formatMessage({ id: 'common.webMessage.unknown' }),
+          }),
+          description: error.response?.data?.note || undefined,
+        });
+      }
+    }
+    logger.error('[Request Error]: %o', error);
+    // Any status codes that falls outside the range of 2xx cause this function to trigger
+    // Do something with response error
+    return Promise.reject(error);
+  },
+);
 
 export function request<T>(urlTemplate: string, options: GenericRequestOptions = {}): Promise<T> {
   // 检查 mockCode 是否匹配 use-mock.config.yaml 中的 pattern，如果匹配则使用 mock API
@@ -129,7 +132,7 @@ export function request<T>(urlTemplate: string, options: GenericRequestOptions =
     baseURL: options.prefix || DEFAULT_API_PREFIX,
     data: options.data,
     // by default, we send credentials
-    withCredentials: (typeof options.withCredentials === 'boolean') ? options.withCredentials : true,
+    withCredentials: typeof options.withCredentials === 'boolean' ? options.withCredentials : true,
     method: options.method,
     headers: options.headers,
     cancelToken: options.cancelToken,

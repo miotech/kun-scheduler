@@ -18,13 +18,20 @@ import java.util.Objects;
 public class ControllerExceptionHandler {
     @ExceptionHandler(value
             = { IllegalArgumentException.class,
-            IllegalStateException.class,
             WorkflowApiException.class})
-    protected ResponseEntity<Object> handleConflict(
+    protected ResponseEntity<Object> handleBadRequest(
             RuntimeException ex, WebRequest request) {
         log.error("[HTTP 400] Bad request exception found when request = {}; params = {}.", request, request.getParameterMap(), ex);
         return ResponseEntity.badRequest()
                 .body(RequestResult.error(400, ex.getMessage()));
+    }
+
+    // The HTTP 409 Conflict response status code indicates a request conflict with current state of the target resource.
+    // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/409
+    @ExceptionHandler(value = { IllegalStateException.class })
+    protected ResponseEntity<Object> handleConflict(RuntimeException ex, WebRequest request) {
+        log.error("[HTTP 409] Illegal/Conflict state exception found when request = {}; params = {}.", request, request.getParameterMap(), ex);
+        return ResponseEntity.status(409).body(RequestResult.error(409, ex.getMessage()));
     }
 
     @ExceptionHandler(value = { NoSuchElementException.class })

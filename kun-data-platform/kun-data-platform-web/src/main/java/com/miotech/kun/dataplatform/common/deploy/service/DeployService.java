@@ -159,8 +159,8 @@ public class DeployService extends BaseSecurityService {
             Set<Long> currentDeployDefIds = deployPackage.keySet();
             dependentDefIds.removeAll(deployedDefIds);
             dependentDefIds.removeAll(currentDeployDefIds);
-            if(!dependentDefIds.isEmpty()){
-                throw new RuntimeException("upstream not deployed yet, should deploy the upstream tasks first");
+            if (!dependentDefIds.isEmpty()) {
+                throw new IllegalStateException("At least one of upstream tasks hasn't been deployed yet. Please deploy upstream tasks first.");
             }
         }
 

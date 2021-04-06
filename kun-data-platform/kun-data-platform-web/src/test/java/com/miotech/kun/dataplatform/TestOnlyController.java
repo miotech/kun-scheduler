@@ -21,6 +21,11 @@ public class TestOnlyController {
         throw new IllegalArgumentException("This is an example illegal argument failure");
     }
 
+    @GetMapping("/illegal-state")
+    public RequestResult<String> illegalStateExample() {
+        throw new IllegalStateException("This is an example illegal state failure");
+    }
+
     @GetMapping("/not-found")
     public RequestResult<String> notFoundExample() {
         throw new NoSuchElementException("This is an example not-found failure");

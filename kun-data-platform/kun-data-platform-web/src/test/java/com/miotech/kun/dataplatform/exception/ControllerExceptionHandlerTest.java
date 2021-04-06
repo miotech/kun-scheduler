@@ -37,6 +37,13 @@ public class ControllerExceptionHandlerTest extends AppTestBase {
     }
 
     @Test
+    public void controllerExceptionHandler_shouldResponse409_whenIllegalStateExceptionThrown() throws Exception {
+        mockMvc.perform(get("/test-only/illegal-state")).andDo(print())
+                .andExpect(status().is(409))
+                .andExpect(content().string("{\"code\":409,\"note\":\"This is an example illegal state failure\"}"));
+    }
+
+    @Test
     public void controllerExceptionHandler_shouldResponse400_whenUserDefinedNPEThrown() throws Exception {
         mockMvc.perform(get("/test-only/npe-user-defined")).andDo(print())
                 .andExpect(status().isBadRequest())
