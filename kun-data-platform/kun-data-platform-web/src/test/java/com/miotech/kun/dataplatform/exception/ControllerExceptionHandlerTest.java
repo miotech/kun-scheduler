@@ -37,10 +37,10 @@ public class ControllerExceptionHandlerTest extends AppTestBase {
     }
 
     @Test
-    public void controllerExceptionHandler_shouldResponse409_whenIllegalStateExceptionThrown() throws Exception {
+    public void controllerExceptionHandler_shouldResponse500_whenIllegalStateExceptionThrown() throws Exception {
         mockMvc.perform(get("/test-only/illegal-state")).andDo(print())
-                .andExpect(status().is(409))
-                .andExpect(content().string("{\"code\":409,\"note\":\"This is an example illegal state failure\"}"));
+                .andExpect(status().is(500))
+                .andExpect(content().string("{\"code\":500,\"note\":\"This is an example illegal state failure\"}"));
     }
 
     @Test
@@ -62,5 +62,12 @@ public class ControllerExceptionHandlerTest extends AppTestBase {
         mockMvc.perform(get("/test-only/undefined-exception")).andDo(print())
                 .andExpect(status().isInternalServerError())
                 .andExpect(content().string("{\"code\":500,\"note\":\"This is an example unknown exception\"}"));
+    }
+
+    @Test
+    public void controllerExceptionHandler_shouldResponseDefinedStatusCode_whenDataPlatformExceptionThrown() throws Exception {
+        mockMvc.perform(get("/test-only/custom-data-platform-exception")).andDo(print())
+                .andExpect(status().is(409))
+                .andExpect(content().string("{\"code\":409,\"note\":\"This is a custom exception with status code 409\"}"));
     }
 }

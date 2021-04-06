@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform;
 
 import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
+import com.miotech.kun.dataplatform.exception.DataPlatformBaseException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,6 +52,21 @@ public class TestOnlyController {
         @Override
         public String getMessage() {
             return "This is an example unknown exception";
+        }
+    }
+
+    @GetMapping("/custom-data-platform-exception")
+    public RequestResult<String> customExceptionExample() {
+        throw new CustomizedException();
+    }
+
+    public static class CustomizedException extends DataPlatformBaseException {
+        CustomizedException() {
+            super(409);
+        }
+
+        public String getMessage() {
+            return "This is a custom exception with status code 409";
         }
     }
 }

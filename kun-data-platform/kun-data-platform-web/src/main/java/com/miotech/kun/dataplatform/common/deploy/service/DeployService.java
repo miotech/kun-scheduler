@@ -10,6 +10,7 @@ import com.miotech.kun.dataplatform.common.deploy.vo.DeployVO;
 import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfigService;
 import com.miotech.kun.dataplatform.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
+import com.miotech.kun.dataplatform.exception.UpstreamTaskNotPublishedException;
 import com.miotech.kun.dataplatform.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.model.deploy.DeployCommit;
@@ -160,7 +161,7 @@ public class DeployService extends BaseSecurityService {
             dependentDefIds.removeAll(deployedDefIds);
             dependentDefIds.removeAll(currentDeployDefIds);
             if (!dependentDefIds.isEmpty()) {
-                throw new IllegalStateException("At least one of upstream tasks hasn't been deployed yet. Please deploy upstream tasks first.");
+                throw new UpstreamTaskNotPublishedException("At least one of upstream tasks hasn't been deployed yet. Please deploy upstream tasks first.");
             }
         }
 

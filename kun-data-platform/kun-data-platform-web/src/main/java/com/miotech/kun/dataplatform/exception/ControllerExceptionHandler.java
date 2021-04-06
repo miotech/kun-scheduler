@@ -26,12 +26,11 @@ public class ControllerExceptionHandler {
                 .body(RequestResult.error(400, ex.getMessage()));
     }
 
-    // The HTTP 409 Conflict response status code indicates a request conflict with current state of the target resource.
-    // See: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/409
-    @ExceptionHandler(value = { IllegalStateException.class })
-    protected ResponseEntity<Object> handleConflict(RuntimeException ex, WebRequest request) {
-        log.error("[HTTP 409] Illegal/Conflict state exception found when request = {}; params = {}.", request, request.getParameterMap(), ex);
-        return ResponseEntity.status(409).body(RequestResult.error(409, ex.getMessage()));
+    @ExceptionHandler(value = { DataPlatformBaseException.class })
+    protected ResponseEntity<Object> handleDefinedDataPlatformExceptions(RuntimeException ex, WebRequest request) {
+        int statusCode = ((DataPlatformBaseException) ex).getStatusCode();
+        log.error("[HTTP {}] Data platform defined exception occurs when request = {}; params = {}.", statusCode, request, request.getParameterMap(), ex);
+        return ResponseEntity.status(statusCode).body(RequestResult.error(statusCode, ex.getMessage()));
     }
 
     @ExceptionHandler(value = { NoSuchElementException.class })
@@ -55,6 +54,12 @@ public class ControllerExceptionHandler {
                     .status(500)
                     .body(RequestResult.error(500, ex.getMessage()));
         }
+    }
+
+    @ExceptionHandler(value = { IllegalStateException.class })
+    protected ResponseEntity<Object> handleIllegalState(RuntimeException ex, WebRequest request) {
+        log.error("[HTTP 500] Illegal state exception found when request = {}; params = {}.", request, request.getParameterMap(), ex);
+        return ResponseEntity.status(500).body(RequestResult.error(500, ex.getMessage()));
     }
 
     private boolean nullPtrExceptionComesFromPreconditionCheck(RuntimeException ex) {
