@@ -136,6 +136,9 @@ export async function getTaskDefinitionIdByWorkflowTaskId(
 export async function getTaskDefinitionIdByWorkflowIds(
   workflowTaskIds: string[],
 ): Promise<Record<string, string | null>> {
+  if (!workflowTaskIds || !workflowTaskIds.length) {
+    return {};
+  }
   return get<PaginationRespBody<DeployedTask>>('/deployed-tasks', {
     query: {
       workflowTaskIds: [...workflowTaskIds],
@@ -154,7 +157,6 @@ export async function getTaskDefinitionIdByWorkflowIds(
         ret[workflowTaskId] = null;
       }
     });
-    // else
     return ret;
   });
 }

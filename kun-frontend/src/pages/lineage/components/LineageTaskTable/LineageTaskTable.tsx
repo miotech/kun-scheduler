@@ -46,16 +46,16 @@ export default memo(function LineageTaskTable({
     async function fetchMap(workflowTaskIds: string[]) {
       setTaskIdToDefIdMapIsLoading(true);
       try {
-        if (workflowTaskIds && workflowTaskIds.length > 0) {
-          const defMap = await getTaskDefinitionIdByWorkflowIds(workflowTaskIds);
+        const defMap = await getTaskDefinitionIdByWorkflowIds(workflowTaskIds);
+        if (Object.keys(defMap).length > 0) {
           setTaskIdToDefIdMap(defMap);
         }
       } finally {
         setTaskIdToDefIdMapIsLoading(false);
       }
     }
-    if (data) {
-      fetchMap(data.map(dt => dt.taskId));
+    if (data && data.length) {
+      fetchMap(data.map(dt => `${dt.taskId}`));
     }
   }, [data]);
 
@@ -93,7 +93,8 @@ export default memo(function LineageTaskTable({
         title: t('dataDetail.lineage.table.lastExecutedTime'),
         className: styles.nameColumn,
         width: 120,
-        render: (txt: string) => txt != null ? dayjs(txt).format('YYYY-MM-DD HH:mm:ss') : '-',
+        render: (txt: string) =>
+          txt != null ? dayjs(txt).format('YYYY-MM-DD HH:mm:ss') : '-',
       },
       {
         key: 'historyList',
