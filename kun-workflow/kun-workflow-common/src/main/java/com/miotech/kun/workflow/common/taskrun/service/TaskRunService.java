@@ -18,16 +18,16 @@ import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
+import com.miotech.kun.workflow.core.annotation.Internal;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import org.apache.commons.lang3.tuple.Triple;
 import org.apache.dubbo.common.utils.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -78,17 +78,34 @@ public class TaskRunService {
         return TaskRunStateVOFactory.create(taskRun.getStatus());
     }
 
+    /**
+     * Fetch output log of a task run attempt instance.
+     * @param taskRunId id of target task run
+     * @param attempt attempt number of that task run
+     * @param startLineIndex the starting line number to read.
+     *                  When set to null will automatically set to 0.
+     *                  When set to negative long value, will use negative indexes of lines.
+     *                  For instance, a file with 7 lines:
+     *                                     [L1, L2, L3, L4, L5, L6, L7]
+     *                           indexes:  [ 0,  1,  2,  3,  4,  5,  6]
+     *                  negative indexes:  [-7, -6, -5, -4, -3, -2, -1]
+     *                  A usage example is that, if you want to read the last 5000 lines of log,
+     *                  then set startLine = -5000 and endLine = null.
+     * @param endLineIndex The final line that stops *before*. (For instance, startLine = 2, endLine = 5
+     *                    will read line with index 2, 3, 4 (line 0, 1 and the lines after L4 will be ignored)
+     *                When set to null, will goes to the end of file automatically.
+     *                When set to negative, will use negative indexes like startLine does.
+     * @return task run log value object
+     */
     public TaskRunLogVO getTaskRunLog(final Long taskRunId,
                                       final int attempt,
-                                      final long startLine,
-                                      final long endLine) {
-        Preconditions.checkArgument(startLine >= 0, "startLine should larger or equal to 0");
-        Preconditions.checkArgument(endLine >= startLine, "endLine should not smaller than startLine");
-
+                                      final Integer startLineIndex,
+                                      final Integer endLineIndex) {
         List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId);
         Preconditions.checkArgument(!attempts.isEmpty(), "No valid task attempt found for TaskRun \"%s\"", taskRunId);
 
         TaskAttemptProps taskAttempt;
+
         if (attempt > 0) {
             taskAttempt = attempts.stream()
                     .filter(x -> x.getAttempt() == attempt)
@@ -99,27 +116,54 @@ public class TaskRunService {
             taskAttempt = attempts.get(0);
         }
         if (taskAttempt == null) {
-            List<String> logs = new ArrayList<>();
-            return TaskRunLogVOFactory.create(taskRunId, 0, startLine, startLine, logs);
+            return TaskRunLogVOFactory.create(taskRunId, 0, 0, 0, Collections.emptyList());
         }
 
         Resource resource = resourceLoader.getResource(taskAttempt.getLogPath());
+        int lineCount = getLineCountOfFile(resource);
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
-
-            String line = "";
-            List<String> logs = new ArrayList<>();
-            long i = 0;
-            for (; i <= endLine && (line = reader.readLine()) != null; i++) {
-                if (i >= startLine) {
-                    logs.add(line);
-                }
-            }
-            return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLine, i - 1, logs);
+            Triple<List<String>, Integer, Integer> result = readLinesFromLogFile(reader, lineCount, startLineIndex, endLineIndex);
+            return TaskRunLogVOFactory.create(taskRunId, attempt, result.getMiddle(), result.getRight(), result.getLeft());
         } catch (IOException e) {
             logger.error("Failed to get task attempt log: {}", taskAttempt.getLogPath(), e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
+    }
+
+    public Triple<List<String>, Integer, Integer> readLinesFromLogFile(BufferedReader reader, int totalLineCount, Integer startLineIndex, Integer endLineIndex) throws IOException {
+        int startLineActual = (startLineIndex == null) ? 0 : ((startLineIndex >= 0) ? startLineIndex : totalLineCount + startLineIndex);
+        int endLineActual = (endLineIndex == null) ? Integer.MAX_VALUE : ((endLineIndex >= 0) ? endLineIndex : totalLineCount + endLineIndex);
+
+        String line;
+        List<String> logs = new ArrayList<>();
+
+        int i = 0;
+        for (; (i < endLineActual) && (line = reader.readLine()) != null; i++) {
+            if (i >= startLineActual) {
+                logs.add(line);
+            }
+        }
+        // Triple of (logs, actual start line index, actual end line index)
+        return Triple.of(logs, startLineActual, startLineActual + logs.size() - 1);
+    }
+
+    /**
+     * Get line count of a file resource
+     * @param fileResource file resource instance
+     * @return An non-negative integer of total file line count.
+     */
+    @Internal
+    private int getLineCountOfFile(Resource fileResource) {
+        int lineCount;
+        try (LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(fileResource.getLocation()))) {
+            while (null != lineNumberReader.readLine()) ;  // loop until EOF
+            lineCount = lineNumberReader.getLineNumber();
+        } catch (IOException e) {
+            logger.error("Failed to create line number reader for resource: {}", fileResource.getLocation());
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
+        return lineCount;
     }
 
     public TaskRunDAGVO getNeighbors(Long taskRunId, int upstreamLevel, int downstreamLevel) {

@@ -8,7 +8,7 @@ public class TaskRunLogVOFactory {
     private TaskRunLogVOFactory() {
     }
 
-    public static TaskRunLogVO create(long taskRunId, int attempt, long startLine, long endLine, List<String> logs) {
+    public static TaskRunLogVO create(long taskRunId, int attempt, int startLine, int endLine, List<String> logs) {
         TaskRunLogVO taskRunLogVO = new TaskRunLogVO();
         taskRunLogVO.setTaskRunId(taskRunId);
         taskRunLogVO.setAttempt(attempt);

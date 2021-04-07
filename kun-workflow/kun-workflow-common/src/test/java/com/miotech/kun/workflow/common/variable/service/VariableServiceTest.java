@@ -126,8 +126,8 @@ public class VariableServiceTest extends DatabaseTestBase {
         variableDao.create(MockVariableFactory.createVariable()
                 .cloneBuilder()
                 .withNamespace("test-name")
-                .withKey("test")
-                .withValue("test")
+                .withKey("testcase")
+                .withValue("testcase")
                 .build());
 
         // with single key
@@ -151,7 +151,7 @@ public class VariableServiceTest extends DatabaseTestBase {
         variableDao.create(MockVariableFactory.createVariable()
                 .cloneBuilder()
                 .withNamespace("test-name")
-                .withKey("test")
+                .withKey("testcase")
                 .withValue("testValue")
                 .build());
 

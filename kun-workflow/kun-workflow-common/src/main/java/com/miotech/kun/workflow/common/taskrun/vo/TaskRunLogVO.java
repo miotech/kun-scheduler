@@ -8,9 +8,9 @@ public class TaskRunLogVO {
 
     private int attempt;
 
-    private long startLine;
+    private int startLine;
 
-    private long endLine;
+    private int endLine;
 
     private List<String> logs;
 
@@ -30,19 +30,19 @@ public class TaskRunLogVO {
         this.attempt = attempt;
     }
 
-    public long getStartLine() {
+    public int getStartLine() {
         return startLine;
     }
 
-    public void setStartLine(long startLine) {
+    public void setStartLine(int startLine) {
         this.startLine = startLine;
     }
 
-    public long getEndLine() {
+    public int getEndLine() {
         return endLine;
     }
 
-    public void setEndLine(long endLine) {
+    public void setEndLine(int endLine) {
         this.endLine = endLine;
     }
 
