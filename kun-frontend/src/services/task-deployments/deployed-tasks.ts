@@ -1,18 +1,10 @@
 import { get, post, put } from '@/utils/requestUtils';
 import { API_DATA_PLATFORM_PREFIX } from '@/constants/api-prefixes';
 
-import {
-  PaginationReqBody,
-  PaginationRespBody,
-  ServiceRespPromise,
-} from '@/definitions/common-types';
+import { PaginationReqBody, PaginationRespBody, ServiceRespPromise } from '@/definitions/common-types';
 import { TaskRun, TaskRunDAG, TaskRunLog } from '@/definitions/TaskRun.type';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
-import {
-  DeployedTask,
-  DeployedTaskDAG,
-  DeployedTaskDetail,
-} from '@/definitions/DeployedTask.type';
+import { DeployedTask, DeployedTaskDAG, DeployedTaskDetail } from '@/definitions/DeployedTask.type';
 import axios from 'axios';
 import SafeUrlAssembler from 'safe-url-assembler';
 
@@ -21,8 +13,7 @@ import SafeUrlAssembler from 'safe-url-assembler';
  * Search scheduled taskruns
  */
 
-export interface FetchScheduledTaskRunsReqParams
-  extends Partial<PaginationReqBody> {
+export interface FetchScheduledTaskRunsReqParams extends Partial<PaginationReqBody> {
   name?: string;
   definitionsIds?: string[];
   ownerId?: (number | string)[];
@@ -45,9 +36,7 @@ export async function fetchScheduledTaskRuns(
  * Get detail of scheduled taskrun
  */
 
-export async function fetchDetailedScheduledTaskRun(
-  taskRunId: string,
-): ServiceRespPromise<TaskRun> {
+export async function fetchDetailedScheduledTaskRun(taskRunId: string): ServiceRespPromise<TaskRun> {
   return get('/deployed-taskruns/:id', {
     pathParams: { id: taskRunId },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -59,9 +48,7 @@ export async function fetchDetailedScheduledTaskRun(
  * Get log of scheduled taskrun
  */
 
-export async function fetchScheduledTaskRunLog(
-  taskRunId: string,
-): ServiceRespPromise<TaskRunLog> {
+export async function fetchScheduledTaskRunLog(taskRunId: string): ServiceRespPromise<TaskRunLog> {
   return get('/deployed-taskruns/:id/log', {
     pathParams: { id: taskRunId },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -70,6 +57,7 @@ export async function fetchScheduledTaskRunLog(
 
 export async function fetchScheduledTaskRunLogWithoutErrorNotification(
   taskRunId: string,
+  startLineIndex: number | undefined = -5000,
 ): ServiceRespPromise<TaskRunLog> {
   const axiosInstance = axios.create();
   return axiosInstance
@@ -79,6 +67,7 @@ export async function fetchScheduledTaskRunLogWithoutErrorNotification(
         .prefix(API_DATA_PLATFORM_PREFIX)
         .param({
           id: taskRunId,
+          start: startLineIndex,
         })
         .toString(),
     )
@@ -90,8 +79,7 @@ export async function fetchScheduledTaskRunLogWithoutErrorNotification(
  * Search deployed tasks
  */
 
-export interface FetchDeployedTasksReqParams
-  extends Partial<PaginationReqBody> {
+export interface FetchDeployedTasksReqParams extends Partial<PaginationReqBody> {
   name?: string;
   definitionIds?: string[];
   ownerId?: (number | string)[];
@@ -106,18 +94,14 @@ export async function fetchDeployedTasks(
   return get('/deployed-tasks', {
     query: {
       ...reqParams,
-      definitionIds: reqParams?.definitionIds?.length
-        ? reqParams.definitionIds?.join(',')
-        : reqParams.definitionIds,
+      definitionIds: reqParams?.definitionIds?.length ? reqParams.definitionIds?.join(',') : reqParams.definitionIds,
     },
     prefix: API_DATA_PLATFORM_PREFIX,
     mockCode: 'deployed-tasks.search',
   });
 }
 
-export async function getTaskDefinitionIdByWorkflowTaskId(
-  workflowTaskId: string,
-): Promise<string | null> {
+export async function getTaskDefinitionIdByWorkflowTaskId(workflowTaskId: string): Promise<string | null> {
   return get<PaginationRespBody<DeployedTask>>('/deployed-tasks', {
     query: {
       workflowTaskIds: [workflowTaskId],
@@ -148,9 +132,7 @@ export async function getTaskDefinitionIdByWorkflowIds(
   }).then(data => {
     const ret: Record<string, string | null> = {};
     workflowTaskIds.forEach(workflowTaskId => {
-      const item = data.records.find(
-        record => record.workflowTaskId === workflowTaskId,
-      );
+      const item = data.records.find(record => record.workflowTaskId === workflowTaskId);
       if (item) {
         ret[workflowTaskId] = item.taskDefinitionId;
       } else {
@@ -166,9 +148,7 @@ export async function getTaskDefinitionIdByWorkflowIds(
  * Get deployed task
  */
 
-export async function fetchDeployedTaskDetail(
-  deployedTaskId: string,
-): ServiceRespPromise<DeployedTaskDetail> {
+export async function fetchDeployedTaskDetail(deployedTaskId: string): ServiceRespPromise<DeployedTaskDetail> {
   return get('/deployed-tasks/:id', {
     pathParams: { id: deployedTaskId },
     prefix: API_DATA_PLATFORM_PREFIX,
@@ -205,8 +185,7 @@ export async function fetchDeployedTaskDAG(
  * Search task runs of deployed task
  */
 
-export interface FetchTaskRunsOfDeployedTaskReqParams
-  extends Partial<PaginationReqBody> {
+export interface FetchTaskRunsOfDeployedTaskReqParams extends Partial<PaginationReqBody> {
   id: string;
   startTime?: string;
   endTime?: string;

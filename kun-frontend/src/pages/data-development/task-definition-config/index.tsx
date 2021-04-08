@@ -46,22 +46,14 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
 
   useMount(() => {
     if (match.params.taskDefId) {
-      dispatch.dataDevelopment.fetchEditingTaskDefinition(
-        match.params.taskDefId,
-      );
+      dispatch.dataDevelopment.fetchEditingTaskDefinition(match.params.taskDefId);
     }
   });
 
-  const [taskTemplate, taskTemplateIsLoading] = useTaskTemplateByName(
-    initTaskDefinition?.taskTemplateName,
-  );
+  const [taskTemplate, taskTemplateIsLoading] = useTaskTemplateByName(initTaskDefinition?.taskTemplateName);
 
   useEffect(() => {
-    setDraftTaskDef(
-      initTaskDefinition
-        ? normalizeTaskDefinition(initTaskDefinition, taskTemplate || null)
-        : null,
-    );
+    setDraftTaskDef(initTaskDefinition ? normalizeTaskDefinition(initTaskDefinition, taskTemplate || null) : null);
   }, [initTaskDefinition, taskTemplate]);
 
   useUnmount(() => {
@@ -71,10 +63,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
 
   const handleCommitDryRun = () => {
     const id = match.params.taskDefId;
-    const runParameters = transformFormTaskConfig(
-      form.getFieldValue(['taskPayload', 'taskConfig']),
-      taskTemplate,
-    );
+    const runParameters = transformFormTaskConfig(form.getFieldValue(['taskPayload', 'taskConfig']), taskTemplate);
     dryRunTaskDefinitionWithoutErrorNotification({
       taskDefId: id,
       parameters: runParameters,
@@ -99,16 +88,12 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
     if (!taskTryId) {
       return Promise.resolve(null);
     }
-    return fetchTaskTryLog(taskTryId || '');
+    return fetchTaskTryLog(taskTryId || '', { start: -5000 });
   }, [taskTryId]);
 
   const bodyContent = draftTaskDef ? (
     <div className={styles.EditBody}>
-      {alertMessage != null ? (
-        <Alert message={alertMessage} type="error" closable />
-      ) : (
-        <></>
-      )}
+      {alertMessage != null ? <Alert message={alertMessage} type="error" closable /> : <></>}
       <Header
         draftTaskDef={draftTaskDef}
         setDraftTaskDef={setDraftTaskDef}
@@ -123,20 +108,12 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
             return <KunSpin asBlock tip={t('common.loading')} />;
           }
           if (!taskTemplate) {
-            return (
-              <Card>
-                Cannot load task template information. Please retry later
-              </Card>
-            );
+            return <Card>Cannot load task template information. Please retry later</Card>;
           }
           // else
           return (
             <div>
-              <BodyForm
-                initTaskDefinition={draftTaskDef || undefined}
-                taskTemplate={taskTemplate}
-                form={form}
-              />
+              <BodyForm initTaskDefinition={draftTaskDef || undefined} taskTemplate={taskTemplate} form={form} />
             </div>
           );
         })()}
@@ -151,11 +128,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
   return (
     <div className={c(styles.TaskDefinitionConfigView)}>
       {bodyContent}
-      <BottomLayout
-        visible={taskTryId !== null}
-        title="Dry run logs"
-        onClose={handleCloseDryRunLog}
-      >
+      <BottomLayout visible={taskTryId !== null} title="Dry run logs" onClose={handleCloseDryRunLog}>
         <PollingLogViewer
           startPolling={taskTryId !== null}
           pollInterval={5000} // poll log every 5 seconds

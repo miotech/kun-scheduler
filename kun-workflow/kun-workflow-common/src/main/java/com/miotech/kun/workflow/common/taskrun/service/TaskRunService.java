@@ -101,26 +101,22 @@ public class TaskRunService {
                                       final int attempt,
                                       final Integer startLineIndex,
                                       final Integer endLineIndex) {
-        List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId);
-        Preconditions.checkArgument(!attempts.isEmpty(), "No valid task attempt found for TaskRun \"%s\"", taskRunId);
-
-        TaskAttemptProps taskAttempt;
-
-        if (attempt > 0) {
-            taskAttempt = attempts.stream()
-                    .filter(x -> x.getAttempt() == attempt)
-                    .findFirst()
-                    .orElseThrow(() -> new EntityNotFoundException("Cannot find log for attempt " + attempt));
-        } else {
-            attempts.sort((o1, o2) -> o1.getAttempt() < o2.getAttempt() ? 1 : -1);
-            taskAttempt = attempts.get(0);
-        }
-        if (taskAttempt == null) {
-            return TaskRunLogVOFactory.create(taskRunId, 0, 0, 0, Collections.emptyList());
+        Optional<TaskAttemptProps> taskAttemptPropsOptional = findTaskAttemptProps(taskRunId, attempt);
+        if (!taskAttemptPropsOptional.isPresent()) {
+            logger.warn("Cannot find task attempt {} of task run with id = {}.", attempt, taskRunId);
+            throw new EntityNotFoundException(String.format("Cannot find task attempt %s of task run with id = %s.", attempt, taskRunId));
         }
 
-        Resource resource = resourceLoader.getResource(taskAttempt.getLogPath());
-        int lineCount = getLineCountOfFile(resource);
+        TaskAttemptProps taskAttempt = taskAttemptPropsOptional.get();
+        Resource resource;
+        int lineCount;
+        try {
+            resource = resourceLoader.getResource(taskAttempt.getLogPath());
+            lineCount = getLineCountOfFile(resource);
+        } catch (RuntimeException e) {
+            logger.warn("Cannot find or open log path for existing task attempt: {}", taskAttempt.getLogPath());
+            return TaskRunLogVOFactory.createLogNotFound(taskRunId, attempt);
+        }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
             Triple<List<String>, Integer, Integer> result = readLinesFromLogFile(reader, lineCount, startLineIndex, endLineIndex);
@@ -131,6 +127,36 @@ public class TaskRunService {
         }
     }
 
+    private Optional<TaskAttemptProps> findTaskAttemptProps(long taskRunId, int attempt) {
+        List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId);
+        TaskAttemptProps taskAttempt;
+        if (attempts.isEmpty()) {
+            return Optional.empty();
+        }
+        attempts.sort((o1, o2) -> o1.getAttempt() < o2.getAttempt() ? 1 : -1);
+
+        if (attempt > 0) {
+            taskAttempt = attempts.stream()
+                    .filter(x -> x.getAttempt() == attempt)
+                    .findFirst()
+                    .orElse(null);
+        } else {
+            taskAttempt = attempts.get(0);
+        }
+
+        return Optional.ofNullable(taskAttempt);
+    }
+
+    /**
+     * Read lines of a log file in specific range.
+     * @param reader buffered reader instance
+     * @param totalLineCount total line count of that log file
+     * @param startLineIndex Index of start line. Allows negative indexes.
+     * @param endLineIndex Index of stop line. Allows negative indexes.
+     * @return Triple of (log lines, actual start line index, actual end line index)
+     * @throws IOException if log file not found, or other IO exception cases
+     */
+    @Internal
     public Triple<List<String>, Integer, Integer> readLinesFromLogFile(BufferedReader reader, int totalLineCount, Integer startLineIndex, Integer endLineIndex) throws IOException {
         int startLineActual = (startLineIndex == null) ? 0 : ((startLineIndex >= 0) ? startLineIndex : totalLineCount + startLineIndex);
         int endLineActual = (endLineIndex == null) ? Integer.MAX_VALUE : ((endLineIndex >= 0) ? endLineIndex : totalLineCount + endLineIndex);
@@ -149,18 +175,18 @@ public class TaskRunService {
     }
 
     /**
-     * Get line count of a file resource
-     * @param fileResource file resource instance
+     * Get line count of a resource
+     * @param fileResource resource instance
      * @return An non-negative integer of total file line count.
      */
     @Internal
     private int getLineCountOfFile(Resource fileResource) {
         int lineCount;
-        try (LineNumberReader lineNumberReader = new LineNumberReader(new FileReader(fileResource.getLocation()))) {
+        try (LineNumberReader lineNumberReader = new LineNumberReader(new InputStreamReader(fileResource.getInputStream()))) {
             while (null != lineNumberReader.readLine()) ;  // loop until EOF
             lineCount = lineNumberReader.getLineNumber();
         } catch (IOException e) {
-            logger.error("Failed to create line number reader for resource: {}", fileResource.getLocation());
+            logger.error("Failed to create line number reader for resource: {}", fileResource);
             throw ExceptionUtils.wrapIfChecked(e);
         }
         return lineCount;

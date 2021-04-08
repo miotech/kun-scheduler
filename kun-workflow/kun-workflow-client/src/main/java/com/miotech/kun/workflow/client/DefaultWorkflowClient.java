@@ -6,7 +6,6 @@ import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
-import com.miotech.kun.workflow.core.model.variable.Variable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -208,6 +207,17 @@ public class DefaultWorkflowClient implements WorkflowClient {
     public TaskRunLog getLatestRunLog(Long taskRunId) {
         TaskRunLogRequest request = TaskRunLogRequest.newBuilder()
                 .withTaskRunId(taskRunId)
+                .withAttempt(-1)
+                .build();
+        return wfApi.getTaskRunLog(request);
+    }
+
+    @Override
+    public TaskRunLog getLatestRunLog(Long taskRunId, Integer start, Integer end) {
+        TaskRunLogRequest request = TaskRunLogRequest.newBuilder()
+                .withTaskRunId(taskRunId)
+                .withStartLine(start)
+                .withEndLine(end)
                 .withAttempt(-1)
                 .build();
         return wfApi.getTaskRunLog(request);

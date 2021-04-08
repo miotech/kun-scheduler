@@ -12,6 +12,7 @@ public class TaskRunLogVO {
 
     private int endLine;
 
+    // When logs == null, the task attempt exists but log file cannot be found
     private List<String> logs;
 
     public long getTaskRunId() {
@@ -53,5 +54,4 @@ public class TaskRunLogVO {
     public void setLogs(List<String> logs) {
         this.logs = logs;
     }
-
 }

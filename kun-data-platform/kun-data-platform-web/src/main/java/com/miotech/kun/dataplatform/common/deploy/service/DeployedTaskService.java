@@ -339,6 +339,22 @@ public class DeployedTaskService extends BaseSecurityService{
         );
     }
 
+    public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId, Integer start, Integer end) {
+        Preconditions.checkNotNull(taskRunId, TASK_RUN_ID_NOT_NULL);
+        TaskRunLog log = workflowClient.getLatestRunLog(taskRunId, start, end);
+        TaskRunStatus status = workflowClient.getTaskRunState(taskRunId)
+                .getStatus();
+        return new TaskRunLogVO(
+                log.getTaskRunId(),
+                log.getAttempt(),
+                log.getStartLine(),
+                log.getEndLine(),
+                log.getLogs(),
+                status.isFinished(),
+                status
+        );
+    }
+
     public DeployedTaskVO convertVO(DeployedTask deployedTask) {
         return new DeployedTaskVO(
                 deployedTask.getDefinitionId(),

@@ -149,6 +149,15 @@ public interface WorkflowClient {
     TaskRunLog getLatestRunLog(Long taskRunId);
 
     /**
+     * Fetch log of target task run's latest attempt
+     * @param taskRunId
+     * @param start
+     * @param end
+     * @return
+     */
+    TaskRunLog getLatestRunLog(Long taskRunId, Integer start, Integer end);
+
+    /**
      * get task run DAG
      * @param taskRunId: centered taskrun id
      * @param upstreamLevel: downstream levels

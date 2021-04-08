@@ -14,7 +14,7 @@ export interface TaskRun {
   outlets: DataStore[];
   scheduledTick: Tick;
   startAt: string; // ISO Date
-  endAt: string;   // ISO Date
+  endAt: string; // ISO Date
   status: RunStatusEnum;
   tags: Tag[];
   variable: TaskVariable[];
@@ -24,7 +24,8 @@ export interface TaskRun {
 export interface TaskRunLog {
   attempt: number;
   endLine: number;
-  logs: string[];
+  /* When logs == null, the task attempt exists but log file cannot be found */
+  logs: string[] | null;
   startLine: number;
   taskRunId: string | number;
   isTerminated: boolean;
