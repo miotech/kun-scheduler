@@ -1,11 +1,4 @@
-import React, {
-  FunctionComponent,
-  RefObject,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import React, { FunctionComponent, RefObject, useCallback, useEffect, useRef, useState } from 'react';
 import { useMount, useSize, useUnmount, useUpdateEffect } from 'ahooks';
 import { useRouteMatch } from 'umi';
 import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
@@ -16,10 +9,7 @@ import TaskRunsFilterBar from '@/pages/operation-center/deployed-task-detail/com
 import TaskRunsTable from '@/pages/operation-center/deployed-task-detail/components/TaskRunsTable';
 import { KunSpin } from '@/components/KunSpin';
 import { RightPanel } from '@/pages/operation-center/scheduled-tasks/components/RightPanel';
-import {
-  abortTaskRunInstance,
-  restartTaskRunInstance,
-} from '@/services/task-deployments/deployed-tasks';
+import { abortTaskRunInstance, restartTaskRunInstance } from '@/services/task-deployments/deployed-tasks';
 
 import { TaskRun } from '@/definitions/TaskRun.type';
 
@@ -34,20 +24,13 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
   const rightPanelRef = useRef() as RefObject<any>;
 
   const {
-    selector: {
-      filters,
-      taskRunsData,
-      taskRunsCount,
-      taskDetailIsLoading,
-      taskRunsIsLoading,
-    },
+    selector: { filters, taskRunsData, taskRunsCount, taskDetailIsLoading, taskRunsIsLoading },
     dispatch,
   } = useRedux(s => ({
     filters: s.deployedTaskDetail.filters,
     taskRunsData: s.deployedTaskDetail.taskRuns,
     taskRunsCount: s.deployedTaskDetail.taskRunsCount,
-    taskDetailIsLoading:
-      s.loading.effects.deployedTaskDetail.loadDeployedTaskDetailById,
+    taskDetailIsLoading: s.loading.effects.deployedTaskDetail.loadDeployedTaskDetailById,
     taskRunsIsLoading: s.loading.effects.deployedTaskDetail.loadTaskRuns,
   }));
 
@@ -64,18 +47,14 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
       id: match.params.id,
     });
     dispatch.deployedTaskDetail.setDeployedTaskId(match.params.id);
-    await dispatch.deployedTaskDetail.loadDeployedTaskDetailById(
-      match.params.id,
-    );
+    await dispatch.deployedTaskDetail.loadDeployedTaskDetailById(match.params.id);
     await dispatch.deployedTaskDetail.loadTaskRuns({
       id: match.params.id,
       ...filters,
     });
   });
 
-  const [selectedTaskInitialized, setSelectedTaskInitialized] = useState<
-    boolean
-  >(false);
+  const [selectedTaskInitialized, setSelectedTaskInitialized] = useState<boolean>(false);
 
   useMount(() => {
     // highlight corresponding aside menu item
@@ -84,9 +63,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
 
   useEffect(() => {
     if (query.taskRunId && query.taskRunId.length && !selectedTaskInitialized) {
-      const matchedTaskRunRecord = (taskRunsData || []).find(
-        record => record.id === query.taskRunId,
-      );
+      const matchedTaskRunRecord = (taskRunsData || []).find(record => record.id === query.taskRunId);
       if (matchedTaskRunRecord != null) {
         setSelectedTaskRun(matchedTaskRunRecord);
         setSelectedTaskInitialized(true);
@@ -118,14 +95,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
       .finally(() => {
         setSelectedTaskInitialized(true);
       });
-  }, [
-    match.params.id,
-    filters.status,
-    filters.pageNum,
-    filters.pageSize,
-    filters.startTime,
-    filters.endTime,
-  ]);
+  }, [match.params.id, filters.status, filters.pageNum, filters.pageSize, filters.startTime, filters.endTime]);
 
   const doRefresh = useCallback(() => {
     dispatch.deployedTaskDetail.loadTaskRuns({
@@ -182,12 +152,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
 
   return (
     <main id="deployed-task-detail-view" className={styles.View}>
-      <TaskRunsFilterBar
-        filter={filters}
-        dispatch={dispatch}
-        onClickRefresh={doRefresh}
-        taskDefId={match.params.id}
-      />
+      <TaskRunsFilterBar filter={filters} dispatch={dispatch} onClickRefresh={doRefresh} taskDefId={match.params.id} />
       <ReflexContainer
         // id="deployed-task-detail-main-content"
         className={styles.ContentContainer}
