@@ -16,8 +16,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class V5_1__Add_notify_config_property_to_taskdef_payload extends BaseJavaMigration {
-    private static final Logger logger = LoggerFactory.getLogger(V5_1__Add_notify_config_property_to_taskdef_payload.class);
+public class V6_1__Add_notify_config_property_to_taskdef_payload extends BaseJavaMigration {
+    private static final Logger logger = LoggerFactory.getLogger(V6_1__Add_notify_config_property_to_taskdef_payload.class);
 
     private static final TaskDefNotifyConfig NOTIFY_CONFIG_DEFAULT_VALUE = new TaskDefNotifyConfig(
             TaskStatusNotifyTrigger.SYSTEM_DEFAULT,
