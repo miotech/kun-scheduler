@@ -4,11 +4,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.miotech.kun.dataplatform.constant.NotifierTypeNameConstants;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "notifierType")
 @JsonSubTypes({
-        @JsonSubTypes.Type(name = "WECOM", value = WeComNotifierUserConfig.class),
-        @JsonSubTypes.Type(name = "EMAIL", value = EmailNotifierUserConfig.class)
+        @JsonSubTypes.Type(name = NotifierTypeNameConstants.WECOM, value = WeComNotifierUserConfig.class),
+        @JsonSubTypes.Type(name = NotifierTypeNameConstants.EMAIL, value = EmailNotifierUserConfig.class)
 })
 @JsonSerialize
 public abstract class NotifierUserConfig {

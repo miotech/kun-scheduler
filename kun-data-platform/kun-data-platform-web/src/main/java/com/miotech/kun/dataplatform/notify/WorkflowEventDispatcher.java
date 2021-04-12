@@ -1,6 +1,7 @@
 package com.miotech.kun.dataplatform.notify;
 
 import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfigService;
+import com.miotech.kun.dataplatform.constant.NotifierTypeNameConstants;
 import com.miotech.kun.dataplatform.model.notify.NotifyConfig;
 import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
 import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
@@ -100,11 +101,11 @@ public class WorkflowEventDispatcher {
         List<MessageNotifier> notifiers = new ArrayList<>(userConfigs.size());
         for (NotifierUserConfig userConfig : userConfigs) {
             switch (userConfig.getNotifierType()) {
-                case "EMAIL":
+                case NotifierTypeNameConstants.EMAIL:
                     EmailNotifier emailNotifier = new EmailNotifier(emailService, (EmailNotifierUserConfig) userConfig);
                     notifiers.add(emailNotifier);
                     break;
-                case "WECOM":
+                case NotifierTypeNameConstants.WECOM:
                     WeComNotifier weComNotifier = new WeComNotifier(weComService, (WeComNotifierUserConfig) userConfig);
                     notifiers.add(weComNotifier);
                     break;

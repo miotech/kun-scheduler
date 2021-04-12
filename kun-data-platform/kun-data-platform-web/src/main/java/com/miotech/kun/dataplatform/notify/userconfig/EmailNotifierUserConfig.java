@@ -3,10 +3,11 @@ package com.miotech.kun.dataplatform.notify.userconfig;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.miotech.kun.dataplatform.constant.NotifierTypeNameConstants;
 
 import java.util.List;
 
-@JsonTypeName("EMAIL")
+@JsonTypeName(NotifierTypeNameConstants.EMAIL)
 public class EmailNotifierUserConfig extends NotifierUserConfig {
     private final List<String> emailList;
 
@@ -25,7 +26,7 @@ public class EmailNotifierUserConfig extends NotifierUserConfig {
             @JsonProperty("emailList") List<String> emailList,
             @JsonProperty("userIdList") List<Long> userIdList
     ) {
-        super("EMAIL");
+        super(NotifierTypeNameConstants.EMAIL);
         this.emailList = emailList;
         this.userIdList = userIdList;
     }
