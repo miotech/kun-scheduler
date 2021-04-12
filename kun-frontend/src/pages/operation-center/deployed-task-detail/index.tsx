@@ -16,7 +16,10 @@ import TaskRunsFilterBar from '@/pages/operation-center/deployed-task-detail/com
 import TaskRunsTable from '@/pages/operation-center/deployed-task-detail/components/TaskRunsTable';
 import { KunSpin } from '@/components/KunSpin';
 import { RightPanel } from '@/pages/operation-center/scheduled-tasks/components/RightPanel';
-import { abortTaskRunInstance, restartTaskRunInstance } from '@/services/task-deployments/deployed-tasks';
+import {
+  abortTaskRunInstance,
+  restartTaskRunInstance,
+} from '@/services/task-deployments/deployed-tasks';
 
 import { TaskRun } from '@/definitions/TaskRun.type';
 
@@ -104,10 +107,15 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
   });
 
   useUpdateEffect(() => {
-    dispatch.deployedTaskDetail.loadTaskRuns({
-      id: match.params.id,
-      ...filters,
-    });
+    setSelectedTaskInitialized(false);
+    dispatch.deployedTaskDetail
+      .loadTaskRuns({
+        id: match.params.id,
+        ...filters,
+      })
+      .finally(() => {
+        setSelectedTaskInitialized(true);
+      });
   }, [
     match.params.id,
     filters.status,
