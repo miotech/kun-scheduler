@@ -89,7 +89,7 @@ dependencies {
     testImplementation 'com.icegreen:greenmail'
     testImplementation 'com.icegreen:greenmail-junit4'
     testImplementation 'com.icegreen:greenmail-spring'
-
+    testImplementation 'org.jooq:joor-java-8'
 }
 
 jacocoTestReport {

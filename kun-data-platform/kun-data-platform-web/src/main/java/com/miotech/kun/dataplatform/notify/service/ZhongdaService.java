@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.miotech.kun.dataplatform.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
-import com.miotech.kun.dataplatform.notify.NotifyLinkConfigContext;
+import com.miotech.kun.dataplatform.config.NotifyLinkConfig;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.operator.spark.clients.HttpApiClient;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class ZhongdaService extends HttpApiClient {
     /**
      * 通知中的链接相关配置上下文
      */
-    private NotifyLinkConfigContext notifyLinkConfigContext;
+    private NotifyLinkConfig notifyLinkConfig;
 
     @Autowired
     private DeployedTaskService deployedTaskService;
@@ -42,11 +42,11 @@ public class ZhongdaService extends HttpApiClient {
     @Autowired
     private BackfillService backfillService;
 
-    public ZhongdaService(String host, String token, String group, NotifyLinkConfigContext notifyLinkConfigContext) {
+    public ZhongdaService(String host, String token, String group, NotifyLinkConfig notifyLinkConfig) {
         this.host = host;
         this.token = token;
         this.group = group;
-        this.notifyLinkConfigContext = notifyLinkConfigContext;
+        this.notifyLinkConfig = notifyLinkConfig;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class ZhongdaService extends HttpApiClient {
     }
 
     private String buildMessage(TaskAttemptStatusChangeEvent event) {
-        if (notifyLinkConfigContext.isEnabled()) {
+        if (notifyLinkConfig.isEnabled()) {
             long taskRunId = event.getTaskRunId();
             Optional<Long> derivingBackfillId = this.backfillService.findDerivedFromBackfill(taskRunId);
             Optional<Long> taskDefinitionId = deployedTaskService.findByWorkflowTaskId(event.getTaskId()).map(deployedTask -> deployedTask.getDefinitionId());
@@ -104,6 +104,6 @@ public class ZhongdaService extends HttpApiClient {
     }
 
     private String generateLinkUrl(long taskDefinitionId, long taskRunId) {
-       return notifyLinkConfigContext.getPrefix() + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", taskDefinitionId, taskRunId);
+       return notifyLinkConfig.getPrefix() + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", taskDefinitionId, taskRunId);
     }
 }

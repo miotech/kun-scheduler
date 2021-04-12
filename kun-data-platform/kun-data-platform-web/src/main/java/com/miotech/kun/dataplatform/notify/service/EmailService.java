@@ -1,11 +1,10 @@
 package com.miotech.kun.dataplatform.notify.service;
 
-import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.dataplatform.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
-import com.miotech.kun.dataplatform.notify.NotifyLinkConfigContext;
+import com.miotech.kun.dataplatform.config.NotifyLinkConfig;
 import com.miotech.kun.dataplatform.notify.userconfig.EmailNotifierUserConfig;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
@@ -15,15 +14,17 @@ import org.apache.commons.mail.Email;
 import org.apache.commons.mail.EmailException;
 import org.apache.commons.mail.SimpleEmail;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
+@Service
 public class EmailService {
     private static final String SECURITY_TYPE_AUTO = "auto";
 
@@ -61,42 +62,32 @@ public class EmailService {
     @Autowired
     private BackfillService backfillService;
 
-    private final boolean enabled;
+    @Autowired
+    private NotifyLinkConfig notifyLinkConfig;
 
-    private final String smtpHost;
+    @Value("${notify.email.enabled:false}")
+    private Boolean enabled;
 
-    private final Integer smtpPort;
+    @Value("${notify.email.smtpHost}")
+    private String smtpHost;
 
-    private final String smtpUserName;
+    @Value("${notify.email.smtpPort:25}")
+    private Integer smtpPort;
 
-    private final String smtpPassword;
+    @Value("${notify.email.smtpUsername}")
+    private String smtpUsername;
 
-    private final String emailFrom;
+    @Value("${notify.email.smtpPassword}")
+    private String smtpPassword;
 
-    private final String emailFromName;
+    @Value("${notify.email.emailFrom}")
+    private String emailFrom;
 
-    /**
-     * Security protocol to be applied. Available options: "auto", "starttls", "ssl_tls", "none"
-     */
-    private final String securityProtocol;
+    @Value("${notify.email.emailFromName:Kun Notification}")
+    private String emailFromName;
 
-    private final NotifyLinkConfigContext notifyLinkConfigContext;
-
-    private EmailService(EmailServiceBuilder builder) {
-        this.enabled = builder.enabled;
-        this.smtpHost = builder.smtpHost;
-        this.smtpPort = builder.smtpPort;
-        this.smtpUserName = builder.smtpUsername;
-        this.smtpPassword = builder.smtpPassword;
-        this.emailFrom = builder.emailFrom;
-        this.emailFromName = builder.emailFromName;
-        this.securityProtocol = (builder.securityProtocol == null) ? SECURITY_TYPE_AUTO : builder.securityProtocol;
-        this.notifyLinkConfigContext = builder.notifyLinkConfigContext;
-    }
-
-    public static EmailServiceBuilder newBuilder() {
-        return new EmailServiceBuilder();
-    }
+    @Value("${notify.email.smtpSecurity:auto}")
+    private String smtpSecurityProtocol;
 
     public void sendEmailByEventAndUserConfig(Event event, EmailNotifierUserConfig userConfig) {
         if (!enabled) {
@@ -135,7 +126,7 @@ public class EmailService {
         Email email = new SimpleEmail();
         email.setHostName(this.smtpHost);
         email.setSmtpPort(this.smtpPort);
-        email.setAuthenticator(new DefaultAuthenticator(this.smtpUserName, this.smtpPassword));
+        email.setAuthenticator(new DefaultAuthenticator(this.smtpUsername, this.smtpPassword));
         setupEmailSecurityProtocolConfigurations(email);
 
         try {
@@ -151,7 +142,7 @@ public class EmailService {
     }
 
     private void setupEmailSecurityProtocolConfigurations(Email email) {
-        switch (securityProtocol) {
+        switch (smtpSecurityProtocol) {
             case SECURITY_TYPE_AUTO:
                 // SSL/TLS port 465
                 if (this.smtpPort == 465) {
@@ -231,7 +222,7 @@ public class EmailService {
     }
 
     private String generateLinkUrl(long taskDefinitionId, long taskRunId) {
-        return notifyLinkConfigContext.getPrefix() + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", taskDefinitionId, taskRunId);
+        return notifyLinkConfig.getPrefix() + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", taskDefinitionId, taskRunId);
     }
 
     public static class EmailContent {
@@ -249,80 +240,6 @@ public class EmailService {
 
         public String getContent() {
             return content;
-        }
-    }
-
-    public static final class EmailServiceBuilder {
-        private boolean enabled;
-        private String smtpHost;
-        private Integer smtpPort;
-        private String smtpUsername;
-        private String smtpPassword;
-        private String emailFrom;
-        private String emailFromName;
-        private String securityProtocol;
-        private NotifyLinkConfigContext notifyLinkConfigContext;
-
-        private EmailServiceBuilder() {
-        }
-
-        public EmailServiceBuilder withEnabled(boolean enabled) {
-            this.enabled = enabled;
-            return this;
-        }
-
-        public EmailServiceBuilder withSmtpHost(String smtpHost) {
-            this.smtpHost = smtpHost;
-            return this;
-        }
-
-        public EmailServiceBuilder withSmtpPort(Integer smtpPort) {
-            this.smtpPort = smtpPort;
-            return this;
-        }
-
-        public EmailServiceBuilder withSmtpUserName(String smtpUserName) {
-            this.smtpUsername = smtpUserName;
-            return this;
-        }
-
-        public EmailServiceBuilder withSmtpPassword(String smtpPassword) {
-            this.smtpPassword = smtpPassword;
-            return this;
-        }
-
-        public EmailServiceBuilder withEmailFrom(String emailFrom) {
-            this.emailFrom = emailFrom;
-            return this;
-        }
-
-        public EmailServiceBuilder withEmailFromName(String emailFromName) {
-            this.emailFromName = emailFromName;
-            return this;
-        }
-
-        public EmailServiceBuilder withNotifyUrlLink(NotifyLinkConfigContext notifyLinkConfigContext) {
-            this.notifyLinkConfigContext = notifyLinkConfigContext;
-            return this;
-        }
-
-        public EmailServiceBuilder withSecurityProtocol(String securityProtocol) {
-            Preconditions.checkNotNull(securityProtocol);
-            Preconditions.checkArgument(checkSecurityProtocol(securityProtocol.toLowerCase()),
-                    "Illegal SMTP security protocol type: \"{}\". Expected to be one of following options: \"auto\", \"starttls\", \"ssl_tls\", \"none\"");
-            this.securityProtocol = securityProtocol.toLowerCase();
-            return this;
-        }
-
-        private static boolean checkSecurityProtocol(String securityProtocolString) {
-            return Objects.equals(securityProtocolString, SECURITY_TYPE_AUTO) ||
-                    Objects.equals(securityProtocolString, SECURITY_TYPE_NONE) ||
-                    Objects.equals(securityProtocolString, SECURITY_TYPE_STARTTLS) ||
-                    Objects.equals(securityProtocolString, SECURITY_TYPE_SSL_TLS);
-        }
-
-        public EmailService build() {
-            return new EmailService(this);
         }
     }
 }

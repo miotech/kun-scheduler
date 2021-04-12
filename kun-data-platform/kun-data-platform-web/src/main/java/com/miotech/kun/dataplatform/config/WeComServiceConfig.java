@@ -1,8 +1,8 @@
 package com.miotech.kun.dataplatform.config;
 
-import com.miotech.kun.dataplatform.notify.NotifyLinkConfigContext;
 import com.miotech.kun.dataplatform.notify.service.WeComService;
 import com.miotech.kun.dataplatform.notify.service.ZhongdaService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -27,9 +27,12 @@ public class WeComServiceConfig {
     @Value("${notify.urlLink.prefix}")
     private String notifyUrlLinkPrefix;
 
+    @Autowired
+    private NotifyLinkConfig notifyLinkConfig;
+
     @Bean
     public ZhongdaService createZhongdaService() {
-        return new ZhongdaService(host, token, group, new NotifyLinkConfigContext(notifyUrlLinkEnabled, notifyUrlLinkPrefix));
+        return new ZhongdaService(host, token, group, notifyLinkConfig);
     }
 
     @Bean
