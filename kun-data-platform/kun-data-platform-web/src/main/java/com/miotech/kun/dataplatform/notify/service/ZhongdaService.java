@@ -59,7 +59,7 @@ public class ZhongdaService extends HttpApiClient {
      * @param event status change event object
      */
     public void sendMessage(TaskAttemptStatusChangeEvent event) {
-        if (event.getToStatus().isFailure() && !Objects.equals(event.getTaskName(), "mse-task")){
+        if (!Objects.equals(event.getTaskName(), "mse-task")){
             String msg = buildMessage(event);
             List<String> users = deployedTaskService.getUserByTaskId(event.getTaskId());
             doMessagePost(msg, users);
