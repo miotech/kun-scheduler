@@ -115,12 +115,12 @@ public class TaskRunService {
             lineCount = getLineCountOfFile(resource);
         } catch (RuntimeException e) {
             logger.warn("Cannot find or open log path for existing task attempt: {}", taskAttempt.getLogPath());
-            return TaskRunLogVOFactory.createLogNotFound(taskRunId, attempt);
+            return TaskRunLogVOFactory.createLogNotFound(taskRunId, taskAttempt.getAttempt());
         }
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
             Triple<List<String>, Integer, Integer> result = readLinesFromLogFile(reader, lineCount, startLineIndex, endLineIndex);
-            return TaskRunLogVOFactory.create(taskRunId, attempt, result.getMiddle(), result.getRight(), result.getLeft());
+            return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), result.getMiddle(), result.getRight(), result.getLeft());
         } catch (IOException e) {
             logger.error("Failed to get task attempt log: {}", taskAttempt.getLogPath(), e);
             throw ExceptionUtils.wrapIfChecked(e);

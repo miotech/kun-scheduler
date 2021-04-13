@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.CommonTestBase;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
@@ -206,38 +207,48 @@ public class TaskRunServiceTest extends CommonTestBase {
         TaskRunLogVO taskRunLogVO;
 
         taskRunLogVO = taskRunService.getTaskRunLog(taskRunId, 1, 0, 1);
-        assertEquals(2, taskRunLogVO.getLogs().size());
+        // should return line with index 0 (line 1)
+        assertEquals(1, taskRunLogVO.getLogs().size());
 
+        // should return line with index 0, 1, 2, 3 (line 1, 2, 3, 4)
         taskRunLogVO = taskRunService.getTaskRunLog(taskRunId, 1, 0, 4);
         assertEquals(3, taskRunLogVO.getLogs().size());
     }
 
     @Test
-    public void getTaskRunLog_withIllegalArg() throws IOException {
+    public void getTaskRunLog_withNotExistingTaskRun_shouldThrowException() throws IOException {
         Long taskRunId = 1L;
-
-        try {
-            taskRunService.getTaskRunLog(taskRunId,-1, -1, 0);
-        } catch (Exception e) {
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("startLine should larger or equal to 0", e.getMessage());
-        }
-
-        try {
-            taskRunService.getTaskRunLog(taskRunId,-1, 1, 0);
-        } catch (Exception e) {
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("endLine should not smaller than startLine", e.getMessage());
-        }
 
         Mockito.when(taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId))
                 .thenReturn(Collections.emptyList());
         try {
             taskRunService.getTaskRunLog(taskRunId,-1, 1, 2);
         } catch (Exception e) {
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("No valid task attempt found for TaskRun \"1\"", e.getMessage());
+            assertEquals(EntityNotFoundException.class, e.getClass());
+            assertEquals("Cannot find task attempt -1 of task run with id = 1.", e.getMessage());
         }
+    }
+
+    @Test
+    public void getTaskRunLog_shouldAllowSearchByNegativeIndex() throws IOException {
+        // Prepare
+        Long taskRunId = 1L;
+        String testStr = "line 1\nline 2\nline 3\nline 4\n";
+        Resource resource = creatResource("xyz", testStr, 1);
+        TaskAttemptProps attemptProps = TaskAttemptProps.newBuilder()
+                .withAttempt(1)
+                .withLogPath(resource.getLocation())
+                .build();
+
+        Mockito.when(taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId))
+                .thenReturn(Collections.singletonList(attemptProps));
+
+        TaskRunLogVO vo = taskRunService.getTaskRunLog(taskRunId,-1, -3, null);
+        assertThat(vo.getLogs().size(), is(3));
+        assertThat(vo.getLogs().get(0), is("line 2"));
+        assertThat(vo.getAttempt(), is(1));
+        assertThat(vo.getStartLine(), is(1));
+        assertThat(vo.getEndLine(), is(3));
     }
 
     @Test
@@ -575,7 +586,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(result.getLeft().get(0), is("This is line 2."));
         assertThat(result.getLeft().get(27), is("This is line 29."));
         assertThat(result.getMiddle(), is(1));
-        assertThat(result.getRight(), is(29));
+        assertThat(result.getRight(), is(28));
     }
 
     @Test
