@@ -28,7 +28,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -87,15 +90,15 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
     @Autowired
     private TaskNotifyConfigService taskNotifyConfigService;
 
-    private volatile int emailServiceNotifyInvokeCount = 0;
+    private final AtomicInteger emailServiceNotifyInvokeCount = new AtomicInteger(0);
 
-    private volatile int weComServiceNotifyInvokeCount = 0;
+    private final AtomicInteger weComServiceNotifyInvokeCount = new AtomicInteger(0);
 
     @Before
     public void initMocks() {
         // Mock email service behaviors
         Mockito.doAnswer(invocation -> {
-            emailServiceNotifyInvokeCount += 1;
+            emailServiceNotifyInvokeCount.incrementAndGet();
             return null;
         })
                 .when(mockEmailService)
@@ -103,7 +106,7 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
 
         // Mock WeCom service behaviors
         Mockito.doAnswer(invocation -> {
-            weComServiceNotifyInvokeCount += 1;
+            weComServiceNotifyInvokeCount.incrementAndGet();
             return null;
         })
                 .when(mockWeComService)
@@ -119,64 +122,201 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
     public void workflowEventSubscriber_shouldNotResponseToUnrelatedEvents() {
         // 1. Prepare
         Event nonRelatedEvent = new RandomMockEvent();
-        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount;
-        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount;
+        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount.get();
 
         // 2. Process
         eventPubSubListener.mockReceiveEventFromWorkflow(nonRelatedEvent);
 
         // 3. Validate
-        int emailNotifyInvokeCountAfterEventArrive = this.emailServiceNotifyInvokeCount;
-        int weComNotifyInvokeCountAfterEventArrive = this.weComServiceNotifyInvokeCount;
+        int emailNotifyInvokeCountAfterEventArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventArrive = this.weComServiceNotifyInvokeCount.get();
 
         assertThat(emailNotifyInvokeCountAfterEventArrive, is(emailNotifyInvokeCountBeforeEventArrive));
         assertThat(weComNotifyInvokeCountAfterEventArrive, is(weComNotifyInvokeCountBeforeEventArrive));
     }
 
     @Test
-    public void workflowEventSubscriber_shouldResponseToMatchedEvent() {
+    public void workflowEventSubscriber_shouldNotifyFailedEventCorrectly() {
         // 1. Prepare
-        Long attemptId = 1234L;
+        Long attemptId = 1L;
         Long taskId = 1230L;
 
-        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount;
-        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount;
+        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount.get();
 
-        // Should only trigger WeCom notifier, do not trigger email notifier
-        taskNotifyConfigService.upsertTaskNotifyConfig(TaskNotifyConfig.newBuilder()
-                .withWorkflowTaskId(taskId)
-                .withTriggerType(TaskStatusNotifyTrigger.ON_FAIL)
-                .withNotifierConfigs(Lists.newArrayList(
-                        new WeComNotifierUserConfig()
-                ))
-                .build());
-        TaskAttemptStatusChangeEvent event = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
+        // Expect to trigger both notifiers on failed event
+        prepareTaskNotifyConfig(taskId, TaskStatusNotifyTrigger.ON_FAIL);
+        TaskAttemptStatusChangeEvent eventSuccess = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "my-task-name", taskId);
+        TaskAttemptStatusChangeEvent eventFailed = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
 
         // 2. Process
-        mockReceiveEventFromWorkflow(event);
+        mockReceiveEventFromWorkflow(eventSuccess);
+        int emailNotifyInvokeCountAfterEventSuccessArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventSuccessArrive = this.weComServiceNotifyInvokeCount.get();
+
+        mockReceiveEventFromWorkflow(eventFailed);
+        int emailNotifyInvokeCountAfterEventFailedArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventFailedArrive = this.weComServiceNotifyInvokeCount.get();
 
         // 3. Validate
-        int emailNotifyInvokeCountAfterEventArrive = this.emailServiceNotifyInvokeCount;
-        int weComNotifyInvokeCountAfterEventArrive = this.weComServiceNotifyInvokeCount;
-
-        assertThat(emailNotifyInvokeCountAfterEventArrive, is(emailNotifyInvokeCountBeforeEventArrive));
-        assertThat(weComNotifyInvokeCountAfterEventArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
+        assertThat(emailNotifyInvokeCountAfterEventSuccessArrive, is(emailNotifyInvokeCountBeforeEventArrive));
+        assertThat(weComNotifyInvokeCountAfterEventSuccessArrive, is(weComNotifyInvokeCountBeforeEventArrive));
+        assertThat(emailNotifyInvokeCountAfterEventFailedArrive, is(emailNotifyInvokeCountBeforeEventArrive + 1));
+        assertThat(weComNotifyInvokeCountAfterEventFailedArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
     }
 
+    @Test
+    public void workflowEventSubscriber_shouldNotifySuccessEventCorrectly() {
+        // 1. Prepare
+        Long attemptId = 2L;
+        Long taskId = 1231L;
+
+        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount.get();
+
+        // Expect to trigger both notifiers on success event
+        prepareTaskNotifyConfig(taskId, TaskStatusNotifyTrigger.ON_SUCCESS);
+        TaskAttemptStatusChangeEvent eventSuccess = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "my-task-name", taskId);
+        TaskAttemptStatusChangeEvent eventFailed = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
+
+        // 2. Process
+        mockReceiveEventFromWorkflow(eventSuccess);
+        int emailNotifyInvokeCountAfterEventSuccessArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventSuccessArrive = this.weComServiceNotifyInvokeCount.get();
+
+        mockReceiveEventFromWorkflow(eventFailed);
+        int emailNotifyInvokeCountAfterEventFailedArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventFailedArrive = this.weComServiceNotifyInvokeCount.get();
+
+        // 3. Validate
+        assertThat(emailNotifyInvokeCountAfterEventSuccessArrive, is(emailNotifyInvokeCountBeforeEventArrive + 1));
+        assertThat(weComNotifyInvokeCountAfterEventSuccessArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
+        // should not do notification on failed event
+        assertThat(emailNotifyInvokeCountAfterEventFailedArrive, is(emailNotifyInvokeCountAfterEventSuccessArrive));
+        assertThat(weComNotifyInvokeCountAfterEventFailedArrive, is(weComNotifyInvokeCountAfterEventSuccessArrive));
+    }
+
+    @Test
+    public void workflowEventSubscriber_shouldNotifyFinishEventCorrectly() {
+        // 1. Prepare
+        Long attemptId = 3L;
+        Long taskId = 1232L;
+
+        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount.get();
+
+        // Expect to trigger both notifiers on success/failed event
+        prepareTaskNotifyConfig(taskId, TaskStatusNotifyTrigger.ON_FINISH);
+        TaskAttemptStatusChangeEvent eventSuccess = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "my-task-name", taskId);
+        TaskAttemptStatusChangeEvent eventFailed = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
+
+        // 2. Process
+        mockReceiveEventFromWorkflow(eventSuccess);
+        int emailNotifyInvokeCountAfterEventSuccessArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventSuccessArrive = this.weComServiceNotifyInvokeCount.get();
+
+        mockReceiveEventFromWorkflow(eventFailed);
+        int emailNotifyInvokeCountAfterEventFailedArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventFailedArrive = this.weComServiceNotifyInvokeCount.get();
+
+        // 3. Validate
+        assertThat(emailNotifyInvokeCountAfterEventSuccessArrive, is(emailNotifyInvokeCountBeforeEventArrive + 1));
+        assertThat(weComNotifyInvokeCountAfterEventSuccessArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
+        assertThat(emailNotifyInvokeCountAfterEventFailedArrive, is(emailNotifyInvokeCountBeforeEventArrive + 2));
+        assertThat(weComNotifyInvokeCountAfterEventFailedArrive, is(weComNotifyInvokeCountBeforeEventArrive + 2));
+    }
+
+    @Test
+    public void workflowEventSubscriber_shouldNotNotifyEvent_whenTriggerTypeIsNever() {
+        // 1. Prepare
+        Long attemptId = 3L;
+        Long taskId = 1232L;
+
+        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount.get();
+
+        // Expect not to trigger any notifier
+        prepareTaskNotifyConfig(taskId, TaskStatusNotifyTrigger.NEVER);
+        TaskAttemptStatusChangeEvent eventSuccess = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "my-task-name", taskId);
+        TaskAttemptStatusChangeEvent eventFailed = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
+
+        // 2. Process
+        mockReceiveEventFromWorkflow(eventSuccess);
+        int emailNotifyInvokeCountAfterEventSuccessArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventSuccessArrive = this.weComServiceNotifyInvokeCount.get();
+
+        mockReceiveEventFromWorkflow(eventFailed);
+        int emailNotifyInvokeCountAfterEventFailedArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventFailedArrive = this.weComServiceNotifyInvokeCount.get();
+
+        // 3. Validate
+        assertThat(emailNotifyInvokeCountAfterEventSuccessArrive, is(emailNotifyInvokeCountBeforeEventArrive));
+        assertThat(weComNotifyInvokeCountAfterEventSuccessArrive, is(weComNotifyInvokeCountBeforeEventArrive));
+        assertThat(emailNotifyInvokeCountAfterEventFailedArrive, is(emailNotifyInvokeCountBeforeEventArrive));
+        assertThat(weComNotifyInvokeCountAfterEventFailedArrive, is(weComNotifyInvokeCountBeforeEventArrive));
+    }
 
     private void mockReceiveEventFromWorkflow(Event event) {
         eventPubSubListener.mockReceiveEventFromWorkflow(event);
     }
 
+    private void prepareTaskNotifyConfig(Long taskId, TaskStatusNotifyTrigger triggerType) {
+        taskNotifyConfigService.upsertTaskNotifyConfig(TaskNotifyConfig.newBuilder()
+                .withWorkflowTaskId(taskId)
+                .withTriggerType(triggerType)
+                .withNotifierConfigs(Lists.newArrayList(
+                        new WeComNotifierUserConfig(),
+                        new EmailNotifierUserConfig(Collections.EMPTY_LIST, Collections.EMPTY_LIST)
+                ))
+                .build());
+    }
+
+    public void workflowEventDispatcher_shouldOnlyDispatchWecomNotifier_whenOnlyWeComNotifierEnabled() {
+        // 1. Prepare
+        Long attemptId = 2L;
+        Long taskId = 1233L;
+
+        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount.get();
+
+        // Should only trigger only WeCom notifier, do not trigger email notifier
+        taskNotifyConfigService.upsertTaskNotifyConfig(TaskNotifyConfig.newBuilder()
+                .withWorkflowTaskId(taskId)
+                .withTriggerType(TaskStatusNotifyTrigger.ON_FINISH)
+                .withNotifierConfigs(Lists.newArrayList(
+                        new WeComNotifierUserConfig()
+                ))
+                .build());
+        TaskAttemptStatusChangeEvent eventSuccess = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "my-task-name", taskId);
+        TaskAttemptStatusChangeEvent eventFailed = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
+
+        // 2. Process
+        mockReceiveEventFromWorkflow(eventSuccess);
+        int emailNotifyInvokeCountAfterEventSuccessArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventSuccessArrive = this.weComServiceNotifyInvokeCount.get();
+
+        mockReceiveEventFromWorkflow(eventFailed);
+        int emailNotifyInvokeCountAfterEventFailedArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventFailedArrive = this.weComServiceNotifyInvokeCount.get();
+
+        // 3. Validate
+        assertThat(emailNotifyInvokeCountAfterEventSuccessArrive, is(emailNotifyInvokeCountBeforeEventArrive));
+        assertThat(weComNotifyInvokeCountAfterEventSuccessArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
+        assertThat(emailNotifyInvokeCountAfterEventFailedArrive, is(emailNotifyInvokeCountBeforeEventArrive));
+        assertThat(weComNotifyInvokeCountAfterEventFailedArrive, is(weComNotifyInvokeCountBeforeEventArrive + 2));
+    }
+
     @Test
-    public void workflowEventDispatcher_shouldUseSystemDefaultConfigProperly() {
+    public void workflowEventDispatcher_shouldUseSystemDefaultConfig_whenTaskIdExplicitlyRegistered() {
         // 1. Prepare
         Long attemptId = 1234L;
         Long taskId = 1230L;
 
-        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount;
-        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount;
+        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount.get();
 
+        // Register with system default trigger
         taskNotifyConfigService.upsertTaskNotifyConfig(TaskNotifyConfig.newBuilder()
                 .withWorkflowTaskId(taskId)
                 // Should goes as system default config
@@ -185,19 +325,54 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
                 .withNotifierConfigs(Lists.newArrayList())
                 .build());
 
-        TaskAttemptStatusChangeEvent event = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
-        TaskAttemptStatusChangeEvent event2 = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "my-task-name-2", taskId);
+        TaskAttemptStatusChangeEvent eventFailed = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
+        TaskAttemptStatusChangeEvent eventSuccess = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "my-task-name-2", taskId);
 
         // 2. Process
-        mockReceiveEventFromWorkflow(event);
-        mockReceiveEventFromWorkflow(event2);
+        mockReceiveEventFromWorkflow(eventFailed);
+        int emailNotifyInvokeCountAfterEventFailedArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventFailedArrive = this.weComServiceNotifyInvokeCount.get();
+
+        mockReceiveEventFromWorkflow(eventSuccess);
+        int emailNotifyInvokeCountAfterEventSuccessArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventSuccessArrive = this.weComServiceNotifyInvokeCount.get();
 
         // 3. Validate
-        int emailNotifyInvokeCountAfterEventArrive = this.emailServiceNotifyInvokeCount;
-        int weComNotifyInvokeCountAfterEventArrive = this.weComServiceNotifyInvokeCount;
+        assertThat(emailNotifyInvokeCountAfterEventFailedArrive, is(emailNotifyInvokeCountBeforeEventArrive));
+        assertThat(weComNotifyInvokeCountAfterEventFailedArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
+        assertThat(emailNotifyInvokeCountAfterEventSuccessArrive, is(emailNotifyInvokeCountBeforeEventArrive));
+        assertThat(weComNotifyInvokeCountAfterEventSuccessArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
+    }
 
-        assertThat(emailNotifyInvokeCountAfterEventArrive, is(emailNotifyInvokeCountBeforeEventArrive));
-        assertThat(weComNotifyInvokeCountAfterEventArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
+    @Test
+    public void workflowEventDispatcher_shouldUseSystemDefaultConfig_whenTaskIdIsNotRegistered() {
+        // 1. Prepare
+        Long attemptId = 1234L;
+        Long taskId = 1236L;
+
+        int emailNotifyInvokeCountBeforeEventArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountBeforeEventArrive = this.weComServiceNotifyInvokeCount.get();
+
+        // Here we do not register notify configurations explicitly
+        // But event dispatcher is still expected to notify by system default configuration
+
+        TaskAttemptStatusChangeEvent eventFailed = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
+        TaskAttemptStatusChangeEvent eventSuccess = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "my-task-name-2", taskId);
+
+        // 2. Process
+        mockReceiveEventFromWorkflow(eventFailed);
+        int emailNotifyInvokeCountAfterEventFailedArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventFailedArrive = this.weComServiceNotifyInvokeCount.get();
+
+        mockReceiveEventFromWorkflow(eventSuccess);
+        int emailNotifyInvokeCountAfterEventSuccessArrive = this.emailServiceNotifyInvokeCount.get();
+        int weComNotifyInvokeCountAfterEventSuccessArrive = this.weComServiceNotifyInvokeCount.get();
+
+        // 3. Validate
+        assertThat(emailNotifyInvokeCountAfterEventFailedArrive, is(emailNotifyInvokeCountBeforeEventArrive));
+        assertThat(weComNotifyInvokeCountAfterEventFailedArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
+        assertThat(emailNotifyInvokeCountAfterEventSuccessArrive, is(emailNotifyInvokeCountBeforeEventArrive));
+        assertThat(weComNotifyInvokeCountAfterEventSuccessArrive, is(weComNotifyInvokeCountBeforeEventArrive + 1));
     }
 
     /**
