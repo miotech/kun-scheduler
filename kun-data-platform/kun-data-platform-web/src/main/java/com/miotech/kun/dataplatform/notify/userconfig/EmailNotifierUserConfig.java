@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.miotech.kun.dataplatform.constant.NotifierTypeNameConstants;
 
 import java.util.List;
+import java.util.Objects;
 
 @JsonTypeName(NotifierTypeNameConstants.EMAIL)
 public class EmailNotifierUserConfig extends NotifierUserConfig {
@@ -29,5 +30,18 @@ public class EmailNotifierUserConfig extends NotifierUserConfig {
         super(NotifierTypeNameConstants.EMAIL);
         this.emailList = emailList;
         this.userIdList = userIdList;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        EmailNotifierUserConfig that = (EmailNotifierUserConfig) o;
+        return Objects.equals(emailList, that.emailList) && Objects.equals(userIdList, that.userIdList);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(emailList, userIdList);
     }
 }
