@@ -95,15 +95,11 @@ public class ZhongdaService extends HttpApiClient {
                 return String.format("Deployed task: '%s' in state: %s%n%nSee link: %s",
                         event.getTaskName(),
                         event.getToStatus().name(),
-                        generateLinkUrl(taskDefinitionId.get(), taskRunId)
+                        notifyLinkConfig.getScheduledTaskLinkURL(taskDefinitionId.get(), taskRunId)
                 );
             }
             // TODO: @joshoy generate a link for backfill webpage. Should be supported by frontend UI first.
         }
         return String.format("Task: '%s' in state: %s", event.getTaskName(), event.getToStatus().name());
-    }
-
-    private String generateLinkUrl(long taskDefinitionId, long taskRunId) {
-       return notifyLinkConfig.getPrefix() + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", taskDefinitionId, taskRunId);
     }
 }

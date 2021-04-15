@@ -1,9 +1,7 @@
 package com.miotech.kun.dataplatform.config;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 
 @Configuration
 public class NotifyLinkConfig {
@@ -19,5 +17,9 @@ public class NotifyLinkConfig {
 
     public String getPrefix() {
         return prefix;
+    }
+
+    public String getScheduledTaskLinkURL(Long taskDefinitionId, Long taskRunId) {
+        return this.getPrefix() + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", taskDefinitionId, taskRunId);
     }
 }

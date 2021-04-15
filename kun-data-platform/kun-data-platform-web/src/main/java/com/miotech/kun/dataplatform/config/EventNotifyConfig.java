@@ -3,7 +3,6 @@ package com.miotech.kun.dataplatform.config;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
 import com.miotech.kun.dataplatform.notify.SystemDefaultNotifierConfig;
-import com.miotech.kun.dataplatform.notify.WorkflowEventDispatcher;
 import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
 import com.miotech.kun.workflow.core.publish.EventSubscriber;
 import com.miotech.kun.workflow.core.publish.RedisEventSubscriber;
@@ -32,11 +31,6 @@ public class EventNotifyConfig {
 
     @Value("${notify.systemDefault.userConfigJson:[{\"notifierType\":\"WECOM\"}]}")
     private String systemDefaultNotifierConfigJson;
-
-    @Bean
-    public WorkflowEventDispatcher createWorkflowEventDispatcher() {
-        return new WorkflowEventDispatcher();
-    }
 
     @Bean
     public EventSubscriber getRedisSubscriber() {

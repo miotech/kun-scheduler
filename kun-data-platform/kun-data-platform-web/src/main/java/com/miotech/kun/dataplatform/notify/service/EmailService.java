@@ -200,7 +200,7 @@ public class EmailService {
                         e.getTaskRunId(),
                         e.getAttemptId(),
                         DateTimeUtils.fromTimestamp(e.getTimestamp()),
-                        generateLinkUrl(taskDefinitionId.get(), taskRunId)
+                        notifyLinkConfig.getScheduledTaskLinkURL(taskDefinitionId.get(), taskRunId)
                 );
             } else {
                 // TODO: @joshoy generate a link for backfill webpage. Should be supported by frontend UI first.
@@ -219,10 +219,6 @@ public class EmailService {
         }
         // else
         throw new IllegalStateException(String.format("Unknown event type: \"%s\" for email service to handle", event.getClass().getName()));
-    }
-
-    private String generateLinkUrl(long taskDefinitionId, long taskRunId) {
-        return notifyLinkConfig.getPrefix() + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", taskDefinitionId, taskRunId);
     }
 
     public static class EmailContent {

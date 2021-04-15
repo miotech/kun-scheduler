@@ -16,11 +16,13 @@ import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.publish.EventSubscriber;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.*;
 
 @Slf4j
+@Component
 public class WorkflowEventDispatcher {
     @Autowired
     private EventSubscriber workflowEventSubscriber;
