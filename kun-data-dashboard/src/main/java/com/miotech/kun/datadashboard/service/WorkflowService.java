@@ -41,7 +41,7 @@ public class WorkflowService {
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long successCount = workflowClient.countTaskRun(successRequest);
+        Integer successCount = workflowClient.countTaskRun(successRequest);
 
         TaskRunSearchRequest failedRequest = TaskRunSearchRequest.newBuilder().
                 withDateFrom(DateTimeUtils.now().minusDays(1))
@@ -49,27 +49,27 @@ public class WorkflowService {
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long failedCount = workflowClient.countTaskRun(failedRequest);
+        Integer failedCount = workflowClient.countTaskRun(failedRequest);
 
         TaskRunSearchRequest runningRequest = TaskRunSearchRequest.newBuilder()
                 .withStatus(Sets.newHashSet(TaskRunStatus.RUNNING))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long runningCount = workflowClient.countTaskRun(runningRequest);
+        Integer runningCount = workflowClient.countTaskRun(runningRequest);
 
         TaskRunSearchRequest startedRequest = TaskRunSearchRequest.newBuilder()
                 .withIncludeStartedOnly(true)
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long startedCount = workflowClient.countTaskRun(startedRequest);
+        Integer startedCount = workflowClient.countTaskRun(startedRequest);
 
         TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
                 .build();
-        long totalCount = workflowClient.countTaskRun(totalRequest);
+        Integer totalCount = workflowClient.countTaskRun(totalRequest);
 
         DataDevelopmentMetrics metrics = new DataDevelopmentMetrics();
         metrics.setSuccessTaskCount(successCount);
@@ -105,7 +105,7 @@ public class WorkflowService {
                     .withTags(DATA_PLATFORM_FILTER_TAGS)
                     .withPageSize(0)
                     .build();
-            long totalCount = workflowClient.countTaskRun(totalRequest);
+            Integer totalCount = workflowClient.countTaskRun(totalRequest);
             DateTimeTaskCount taskCount = new DateTimeTaskCount();
             taskCount.setTaskCount(totalCount);
             taskCount.setTime(DateUtils.dateTimeToMillis(endTime));

@@ -50,7 +50,7 @@ public class DeployDaoTest extends AppTestBase {
                 Optional.empty(),
                 Optional.empty());
         result = deployDao.search(request);
-        assertThat(result.getTotalCount(), Matchers.is((long) deployList.size()));
+        assertThat(result.getTotalCount(), Matchers.is(deployList.size()));
         assertThat(result.getPageSize(), Matchers.is(10));
         assertThat(result.getPageNum(), Matchers.is(1));
 
