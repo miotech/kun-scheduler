@@ -10,7 +10,6 @@ import { RootDispatch } from '@/rematch/store';
 import { Store } from 'antd/lib/form/interface';
 
 import kunLogo from '@/assets/images/kun-logo.png';
-import { getState, getAuthorizeUri } from '@/utils/ssoUtils';
 
 import css from './index.less';
 
@@ -51,14 +50,6 @@ export default function Login() {
     [handleClickLogin],
   );
 
-  const handleClickOAuthLogin = useCallback(() => {
-    const state = getState();
-    sessionStorage.setItem('visitUri', window.location.href);
-    sessionStorage.setItem('state', state);
-    const redirectUrl = getAuthorizeUri(state);
-    window.location.replace(redirectUrl);
-  }, []);
-
   const formContent = useMemo(
     () => (
       <div className={css.inputArea}>
@@ -97,13 +88,9 @@ export default function Login() {
             </Button>
           </Form.Item>
         </Form>
-
-        <Button onClick={handleClickOAuthLogin}>OAuth Login</Button>
-
-        <a href="http://localhost:9801/saml2/authenticate/okta">okta link</a>
       </div>
     ),
-    [handleClickOAuthLogin, onFinish, t],
+    [onFinish, t],
   );
 
   return (
