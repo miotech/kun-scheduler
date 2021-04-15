@@ -159,9 +159,9 @@ public class DeployedTaskDao {
                 params.toArray());
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(getSelectSQL(whereClause.toString()))
-                .orderBy(DEPLOYED_TASK_MODEL_NAME + ".id")
+                .orderBy(DEPLOYED_TASK_MODEL_NAME + ".id DESC")
                 .limit(searchRequest.getPageSize())
-                .offset(searchRequest.getPageSize() * (searchRequest.getPageNum()-1))
+                .offset(searchRequest.getPageSize() * (searchRequest.getPageNum() - 1))
                 .getSQL();
         // list
         List<DeployedTask> tasks = jdbcTemplate.query(sql, DeployedTaskMapper.INSTANCE, params.toArray());
