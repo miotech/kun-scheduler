@@ -137,9 +137,9 @@ public class LineageController {
                 return RequestResult.success(lineageTasks);
             }
             List<Long> taskIds = Lists.newArrayList(taskIdMap.keySet());
-            Map<Long, List<TaskRun>> lastestTaskRunsMap = workflowClient.getLatestTaskRuns(taskIds, LATEST_TASK_LIMIT);
+            Map<Long, List<TaskRun>> latestTaskRunsMap = workflowClient.getLatestTaskRuns(taskIds, LATEST_TASK_LIMIT);
 
-            lastestTaskRunsMap.forEach((taskId, taskRuns) -> {
+            latestTaskRunsMap.forEach((taskId, taskRuns) -> {
                 LineageTask lineageTask = new LineageTask();
                 lineageTask.setTaskId(taskId);
                 lineageTask.setTaskName(taskIdMap.get(taskId).getName());
@@ -159,14 +159,14 @@ public class LineageController {
             return lineageTask;
         }).collect(Collectors.toMap(LineageTask::getTaskId, lineageTask -> lineageTask));
         if (CollectionUtils.isNotEmpty(lineageTaskMap.keySet())) {
-            Map<Long, List<TaskRun>> lastestTaskRunsMap = workflowClient.getLatestTaskRuns(new ArrayList<>(lineageTaskMap.keySet()), LATEST_TASK_LIMIT);
+            Map<Long, List<TaskRun>> latestTaskRunsMap = workflowClient.getLatestTaskRuns(new ArrayList<>(lineageTaskMap.keySet()), LATEST_TASK_LIMIT);
             lineageTaskMap.forEach((taskId, task) -> {
-                List<TaskRun> latestTaskRuns = lastestTaskRunsMap.get(taskId);
+                List<TaskRun> latestTaskRuns = latestTaskRunsMap.get(taskId);
                 if (CollectionUtils.isNotEmpty(latestTaskRuns)) {
                     task.setLastExecutedTime(DateUtils.dateTimeToMillis(latestTaskRuns.get(0).getStartAt()));
                 }
-                List<String> lastestStatus = WorkflowUtils.resolveTaskHistory(lastestTaskRunsMap.get(taskId));
-                task.setHistoryList(lastestStatus);
+                List<String> latestStatus = WorkflowUtils.resolveTaskHistory(latestTaskRunsMap.get(taskId));
+                task.setHistoryList(latestStatus);
             });
         }
         LineageTasks lineageTasks = new LineageTasks();
