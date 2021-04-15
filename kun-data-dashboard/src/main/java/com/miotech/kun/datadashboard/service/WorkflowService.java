@@ -1,5 +1,6 @@
 package com.miotech.kun.datadashboard.service;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.datadashboard.model.bo.DataDevelopmentTasksRequest;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,7 +28,10 @@ import java.util.concurrent.ConcurrentMap;
 public class WorkflowService {
 
     private static final List<Tag> DATA_PLATFORM_FILTER_TAGS =
-            Collections.singletonList(new Tag(Constants.DATA_PLATFORM_TAG_PROJECT_NAME, Constants.DATA_PLATFORM_TAG_PROJECT_VALUE));
+            Lists.newArrayList(
+                    new Tag(Constants.DATA_PLATFORM_TAG_PROJECT_NAME, Constants.DATA_PLATFORM_TAG_PROJECT_VALUE),
+                    new Tag(Constants.DATA_PLATFORM_TAG_KEY_TYPE, Constants.DATA_PLATFORM_TAG_VALUE_SCHEDULED)
+            );
     private final ConcurrentMap<OffsetDateTime, DateTimeTaskCount> dateTimeTaskCountMap = new ConcurrentHashMap<>();
 
     @Autowired
