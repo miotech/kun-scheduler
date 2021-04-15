@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -59,11 +58,9 @@ public class ZhongdaService extends HttpApiClient {
      * @param event status change event object
      */
     public void sendMessage(TaskAttemptStatusChangeEvent event) {
-        if (!Objects.equals(event.getTaskName(), "mse-task")){
-            String msg = buildMessage(event);
-            List<String> users = deployedTaskService.getUserByTaskId(event.getTaskId());
-            doMessagePost(msg, users);
-        }
+        String msg = buildMessage(event);
+        List<String> users = deployedTaskService.getUserByTaskId(event.getTaskId());
+        doMessagePost(msg, users);
     }
 
     private void doMessagePost(String content, List<String> users) {
