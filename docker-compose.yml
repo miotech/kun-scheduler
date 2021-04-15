@@ -3,6 +3,7 @@ services:
   kun-postgres:
     image: "postgres:11.5"
     environment:
+      TZ:
       POSTGRES_USER:
       POSTGRES_PASSWORD:
       POSTGRES_DB:
@@ -22,6 +23,7 @@ services:
   kun-neo4j:
     image: "neo4j:3.5.22"
     environment:
+      TZ:
       NEO4J_AUTH: none
     restart: always
     volumes:
@@ -31,6 +33,7 @@ services:
   kun-security:
     image: "${IMAGE_REMOTE_ORG}kun-security:master"
     environment:
+      TZ:
       APP_CONFIG_ENV:
       SECURITY_PORT:
       DB_PG_IP:
@@ -48,6 +51,7 @@ services:
   kun-workflow:
     image: "${IMAGE_REMOTE_ORG}kun-workflow:master"
     environment:
+      TZ:
       APP_CONFIG_ENV:
       WORKFLOW_PORT:
       DB_PG_IP:
@@ -72,6 +76,7 @@ services:
   kun-metadata:
     image: "${IMAGE_REMOTE_ORG}kun-metadata:master"
     environment:
+      TZ:
       APP_CONFIG_ENV:
       METADATA_PORT:
       DB_PG_IP:
@@ -99,6 +104,7 @@ services:
   kun-data-dashboard:
     image: "${IMAGE_REMOTE_ORG}kun-data-dashboard:master"
     environment:
+      TZ:
       APP_CONFIG_ENV:
       DATA_DASHBOARD_PORT:
       DB_PG_IP:
@@ -120,6 +126,7 @@ services:
   kun-data-discovery:
     image: "${IMAGE_REMOTE_ORG}kun-data-discovery:master"
     environment:
+      TZ:
       APP_CONFIG_ENV:
       DATA_DISCOVERY_PORT:
       DB_PG_IP:
@@ -142,6 +149,7 @@ services:
   kun-data-platform:
     image: "${IMAGE_REMOTE_ORG}kun-data-platform:master"
     environment:
+      TZ:
       APP_CONFIG_ENV:
       DATA_PLATFORM_PORT:
       DB_PG_IP:
@@ -164,6 +172,7 @@ services:
   kun-frontend:
     image: "${IMAGE_REMOTE_ORG}kun-frontend:master"
     environment:
+      TZ:
       SECURITY_HOST:
       SECURITY_PORT:
       DATA_DISCOVERY_HOST:
