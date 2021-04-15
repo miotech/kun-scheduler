@@ -10,23 +10,6 @@ export interface LoginServiceReqBody {
   password: string;
 }
 
-export async function getSSOToken(code: string, registrationId: string) {
-  try {
-    const resp = await get('/oauth2/token', {
-      prefix: SECURITY_API_PRIFIX,
-      query: {
-        code,
-        registrationId,
-      },
-    });
-    return resp;
-  } catch (e) {
-    // eslint-disable-next-line
-    console.log('e: ', e);
-  }
-  return null;
-}
-
 export async function loginService(reqBody: LoginServiceReqBody) {
   const logger = LogUtils.getLoggers('loginService');
   try {
