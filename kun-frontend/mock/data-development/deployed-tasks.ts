@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import fs from 'fs';
-import _ from 'lodash';
+import find from 'lodash/find';
 import path from 'path';
 import yaml from 'js-yaml';
 import { DeployedTask } from '@/definitions/DeployedTask.type';
@@ -26,7 +26,7 @@ export function mockSearchDeployedTasks(req: Request, res: Response) {
  * mockCode: 'deployed-tasks.get-detail'
  */
 export function mockFetchDeployedTaskDetail(req: Request, res: Response) {
-  const task = _.find(mockDeployedTasks, t => `${t.id}` === req.params?.id);
+  const task = find(mockDeployedTasks, t => `${t.id}` === req.params?.id);
   if (!task) {
     return res.status(404)
       .json(wrapResponseError(new Error(`Cannot find task detail with id: ${req.params?.id}`), 404));
