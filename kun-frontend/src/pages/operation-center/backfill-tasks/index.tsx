@@ -11,9 +11,9 @@ import { BackfillModelState } from '@/rematch/models/operationCenter/backfillTas
 import { BackfillDetail } from '@/definitions/Backfill.type';
 
 import {
-  abortTaskRunInstance,
+  abortBackfillTaskRunInstance,
   rerunBackfillInstance,
-  restartTaskRunInstance,
+  restartBackfillTaskRunInstance,
   stopBackfillInstance,
 } from '@/services/data-backfill/backfill.services';
 import css from './index.less';
@@ -123,7 +123,7 @@ export const BackfillTaskView: React.FC<Props> = memo(
     const handleRestartTaskRun = useCallback(
       async function handleRestartTaskRun(taskRunId: string) {
         try {
-          await restartTaskRunInstance(taskRunId);
+          await restartBackfillTaskRunInstance(taskRunId);
         } finally {
           fetchData();
         }
@@ -134,7 +134,7 @@ export const BackfillTaskView: React.FC<Props> = memo(
     const handleAbortTaskRun = useCallback(
       async function handleAbortTaskRun(taskRunId: string) {
         try {
-          await abortTaskRunInstance(taskRunId);
+          await abortBackfillTaskRunInstance(taskRunId);
         } finally {
           fetchData();
         }
