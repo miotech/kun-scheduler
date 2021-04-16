@@ -1,11 +1,4 @@
-import React, {
-  RefObject,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { RefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dagre from 'dagre';
 import isNil from 'lodash/isNil';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
@@ -36,14 +29,7 @@ const DEFAULT_WIDTH = 150;
 const DEFAULT_HEIGHT = 40;
 
 export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
-  const {
-    nodes,
-    relations,
-    width = 1024,
-    height = 768,
-    showMiniMap,
-    centerTaskId,
-  } = props;
+  const { nodes, relations, width = 1024, height = 768, showMiniMap, centerTaskId } = props;
 
   /* Here offsetX and offsetY are applied to centering DAG position */
   const [offsetX, setOffsetX] = useState<number>(0);
@@ -52,15 +38,12 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
 
   const graphWrapperRef = useRef() as RefObject<SVGGElement>;
   const requestAnimationRef = React.useRef<number>();
-  const graphContainerRef: React.MutableRefObject<
-    SVGGElement | undefined
-  > = React.useRef();
+  const graphContainerRef: React.MutableRefObject<SVGGElement | undefined> = React.useRef();
 
   const logger = useMemo(() => LogUtils.getLoggers('DAGTaskGraph'), []);
 
   const animate = () => {
-    const nextZoomStr =
-      zoomRef.current?.toString() || 'matrix(1, 0, 0, 1, 0, 0)';
+    const nextZoomStr = zoomRef.current?.toString() || 'matrix(1, 0, 0, 1, 0, 0)';
     // setZoomStr(nextZoomStr);
     if (graphContainerRef.current) {
       graphContainerRef.current.setAttribute('transform', nextZoomStr);
@@ -103,7 +86,12 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
       });
     });
     relations.forEach(relation => {
-      g.setEdge(relation.upstreamTaskId, relation.downstreamTaskId);
+      if (
+        nodes.findIndex(n => n.id === relation.downstreamTaskId) >= 0 &&
+        nodes.findIndex(n => n.id === relation.upstreamTaskId) >= 0
+      ) {
+        g.setEdge(relation.upstreamTaskId, relation.downstreamTaskId);
+      }
     });
     // compute dagre layout
     logger.trace('g = %o', g);
@@ -157,12 +145,8 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
   /* Update position offset after reference changes */
   useEffect(() => {
     if (graphWrapperRef.current) {
-      setOffsetX(
-        graphWrapperRef.current.children[0].getBoundingClientRect().width / 2,
-      );
-      setOffsetY(
-        graphWrapperRef.current.children[0].getBoundingClientRect().height / 2,
-      );
+      setOffsetX(graphWrapperRef.current.children[0].getBoundingClientRect().width / 2);
+      setOffsetY(graphWrapperRef.current.children[0].getBoundingClientRect().height / 2);
     } else {
       setOffsetX(0);
       setOffsetY(0);
@@ -194,39 +178,30 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
   }
 
   // customized zoom in/out event on mouse wheel scroll
-  const wheelDeltaEventCallback = useCallback(
-    (ev: React.WheelEvent | WheelEvent) => {
-      const deltaBase = {
-        translateX: 0,
-        translateY: 0,
-        skewX: 0,
-        skewY: 0,
-      };
-      if (ev.deltaY < 0) {
-        return {
-          ...deltaBase,
-          scaleX: 1.025,
-          scaleY: 1.025,
-        };
-      }
-      // else
+  const wheelDeltaEventCallback = useCallback((ev: React.WheelEvent | WheelEvent) => {
+    const deltaBase = {
+      translateX: 0,
+      translateY: 0,
+      skewX: 0,
+      skewY: 0,
+    };
+    if (ev.deltaY < 0) {
       return {
         ...deltaBase,
-        scaleX: 0.9756097560975611, // 1 / 1.025
-        scaleY: 0.9756097560975611,
+        scaleX: 1.025,
+        scaleY: 1.025,
       };
-    },
-    [],
-  );
+    }
+    // else
+    return {
+      ...deltaBase,
+      scaleX: 0.9756097560975611, // 1 / 1.025
+      scaleY: 0.9756097560975611,
+    };
+  }, []);
 
   const graphDOM = useMemo(() => {
-    return (
-      <Graph
-        graph={vxGraphData}
-        linkComponent={DAGTaskEdge as any}
-        nodeComponent={DAGTaskNode as any}
-      />
-    );
+    return <Graph graph={vxGraphData} linkComponent={DAGTaskEdge as any} nodeComponent={DAGTaskNode as any} />;
   }, [vxGraphData, DAGTaskEdge, DAGTaskNode]);
 
   const renderDragMaskRect = useCallback(
@@ -283,12 +258,7 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
           <MinusOutlined />
         </button>
       </div>
-      <Zoom
-        ref={zoomRef}
-        width={width || 1024}
-        height={height || 768}
-        wheelDelta={wheelDeltaEventCallback}
-      >
+      <Zoom ref={zoomRef} width={width || 1024} height={height || 768} wheelDelta={wheelDeltaEventCallback}>
         {zoom => {
           return (
             <svg
@@ -318,11 +288,7 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
               {/* When not dragging, place drag mask behind */}
               {!zoom.isDragging ? renderDragMaskRect(zoom) : null}
 
-              <g
-                transform={`matrix(1,0,0,1,${width * 0.5 - offsetX},${height *
-                  0.5 -
-                  offsetY})`}
-              >
+              <g transform={`matrix(1,0,0,1,${width * 0.5 - offsetX},${height * 0.5 - offsetY})`}>
                 <g
                   // @ts-ignore
                   ref={graphContainerRef}
@@ -348,21 +314,12 @@ export const DAGTaskGraph: React.FC<DAGTaskGraphProps> = props => {
                   clipPath="url(#zoom-clip)"
                   transform={`
                     scale(0.25)
-                    translate(${width * 4 - width - 60}, ${height * 4 -
-                    height -
-                    60})
+                    translate(${width * 4 - width - 60}, ${height * 4 - height - 60})
                   `}
                 >
                   <rect width={width} height={height} fill="#eee" />
-                  <g
-                    transform={`matrix(1,0,0,1,${width * 0.5 -
-                      offsetX},${height * 0.5 - offsetY})`}
-                  >
-                    <Graph
-                      graph={vxGraphData}
-                      linkComponent={DAGTaskEdge as any}
-                      nodeComponent={DAGTaskNode as any}
-                    />
+                  <g transform={`matrix(1,0,0,1,${width * 0.5 - offsetX},${height * 0.5 - offsetY})`}>
+                    <Graph graph={vxGraphData} linkComponent={DAGTaskEdge as any} nodeComponent={DAGTaskNode as any} />
                   </g>
                   <rect
                     width={width}
