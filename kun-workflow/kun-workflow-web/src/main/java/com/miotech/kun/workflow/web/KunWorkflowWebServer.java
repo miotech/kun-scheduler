@@ -4,77 +4,35 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.miotech.kun.commons.db.DatabaseSetup;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
-import com.miotech.kun.commons.web.KunWebServer;
-import com.miotech.kun.commons.web.module.CommonModule;
-import com.miotech.kun.commons.web.module.KunWebServerModule;
-import com.miotech.kun.workflow.SchedulerManager;
-import com.miotech.kun.workflow.SchedulerModule;
-import com.miotech.kun.workflow.web.service.InitService;
+import com.miotech.kun.commons.web.AbstractKunWebServer;
+import com.miotech.kun.commons.web.WebServer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.sql.DataSource;
-
 @Singleton
-public class KunWorkflowWebServer {
+public class KunWorkflowWebServer extends AbstractKunWebServer {
     private static final Logger logger = LoggerFactory.getLogger(KunWorkflowWebServer.class);
 
     @Inject
-    private KunWebServer server;
-    @Inject
-    private Props props;
-    private DataSource dataSource;
-    @Inject
-    private SchedulerManager schedulerManager;
-    @Inject
-    private InitService initService;
-
-    public static void configureDB(Injector injector, Props props) {
-        DataSource dataSource = injector.getInstance(DataSource.class);
-        DatabaseSetup setup = new DatabaseSetup(dataSource, props);
-        setup.start();
-    }
-
-    public void start() {
-        if(props.containsKey("rpc.registry")){
-            initService.publishRpcServices();
-        }
-        schedulerManager.start();
-        this.server.start();
-    }
-
-    public void shutdown() {
-        this.server.shutdown();
-    }
-
-    public boolean isReady() {
-        return this.server.isServerRunning();
+    public KunWorkflowWebServer(Injector injector) {
+        super(injector);
     }
 
     public static void main(final String[] args) {
-        // Redirect all std out and err messages into log4j
-
         logger.info("Starting Jetty Kun Web Server...");
 
-        /* Initialize Guice Injector */
+        /* Load Props */
         Props props = PropsUtils.loadAppProps();
+        // Redirect all std out and err messages into log4j
         org.eclipse.jetty.util.log.Log.setLog(new JettyLog());
-        final Injector injector = Guice.createInjector(
-                new KunWebServerModule(props),
-                new KunWorkflowServerModule(props),
-                new CommonModule(props),
-                new RedisModule(props),
-                new SchedulerModule()
-        );
-        configureDB(injector, props);
-        launch(injector.getInstance(KunWorkflowWebServer.class));
-    }
 
-    private static void launch(final KunWorkflowWebServer webServer) {
-        /* This creates the Web Server instance */
+        /* Initialize Guice Injector */
+        final Injector injector = Guice.createInjector(new KunWorkflowServerModule(props));
+        WebServer webServer = injector.getInstance(KunWorkflowWebServer.class);
+        // Start
         webServer.start();
     }
+
 }

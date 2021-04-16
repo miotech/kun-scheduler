@@ -5,6 +5,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.commons.utils.EventConsumer;
 import com.miotech.kun.commons.utils.EventLoop;
+import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -35,7 +36,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
 @Singleton
-public class TaskSpawner {
+public class TaskSpawner implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(TaskSpawner.class);
 
     private final TaskManager taskManager;
@@ -73,7 +74,6 @@ public class TaskSpawner {
         this.eventBus.register(this.eventLoop);
         this.tickDao = tickDao;
         this.eventLoop.start();
-        init();
     }
 
     /* ----------- public methods ------------ */
@@ -266,5 +266,10 @@ public class TaskSpawner {
         public void onReceive(TickEvent event) {
             post(1L, event);
         }
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        init();
     }
 }
