@@ -2,7 +2,7 @@ package com.miotech.kun.dataplatform.common.commit.dao;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.common.utils.JSONUtils;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.dataplatform.common.commit.vo.CommitSearchRequest;
 import com.miotech.kun.dataplatform.common.deploy.dao.DeployDao;
@@ -234,7 +234,7 @@ public class TaskCommitDao {
                     .withDefinitionId(rs.getLong(TASK_COMMIT_MODEL_NAME + "_task_def_id"))
                     .withVersion(VersionUtil.getVersion(rs.getInt(TASK_COMMIT_MODEL_NAME + "_version")))
                     .withMessage(rs.getString(TASK_COMMIT_MODEL_NAME + "_message"))
-                    .withSnapshot(JSONUtils.toJavaObject(rs.getString(TASK_COMMIT_MODEL_NAME + "_snapshot"), TaskSnapshot.class))
+                    .withSnapshot(JSONUtils.jsonToObject(rs.getString(TASK_COMMIT_MODEL_NAME + "_snapshot"), TaskSnapshot.class))
                     .withCommitter(rs.getLong(TASK_COMMIT_MODEL_NAME + "_committer"))
                     .withCommittedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_COMMIT_MODEL_NAME + "_committed_at")))
                     .withCommitType(CommitType.resolve(rs.getString(TASK_COMMIT_MODEL_NAME + "_commit_type")))
