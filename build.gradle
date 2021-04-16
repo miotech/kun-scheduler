@@ -47,6 +47,7 @@ subprojects {
                 implementation "commons-dbutils:commons-dbutils:1.7"
                 implementation 'org.apache.commons:commons-lang3:3.10'
                 implementation 'org.apache.commons:commons-collections4:4.4'
+                implementation 'org.apache.commons:commons-email:1.5'
                 implementation 'commons-io:commons-io:2.8.0'
                 implementation "com.zaxxer:HikariCP:3.4.5"
                 implementation 'ch.qos.logback:logback-classic:1.2.3'
@@ -114,6 +115,9 @@ subprojects {
                 testImplementation "org.mock-server:mockserver-client-java:3.10.8"
                 testImplementation 'org.apache.dubbo:dubbo-registry-default:2.7.8'
                 testImplementation 'uk.org.lidalia:slf4j-test:1.2.0'
+                testImplementation 'com.icegreen:greenmail:1.6.2'
+                testImplementation 'com.icegreen:greenmail-junit4:1.6.2'
+                testImplementation 'com.icegreen:greenmail-spring:1.6.2'
             }
 
             implementation "com.google.inject:guice"

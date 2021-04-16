@@ -19,4 +19,13 @@ public class DateTimeUtils {
                 Instant.ofEpochMilli(timestamp.getTime()),
                 ZoneId.systemDefault());
     }
+
+    /**
+     * Convert a long epoch timestamp to {OffsetDateTime}
+     * @param longEpochTimeVar timestamp in unix epoch 64-bit integer format
+     * @return converted offset datetime
+     */
+    public static OffsetDateTime fromTimestamp(long longEpochTimeVar) {
+        return fromTimestamp(new Timestamp(longEpochTimeVar));
+    }
 }

@@ -48,6 +48,7 @@ public class MockTaskDefinitionFactory {
                                     .withOutputDatasets(outputDatasets)
                                     .withType(ScheduleType.SCHEDULED.toString())
                                     .build())
+                    .withNotifyConfig(TaskDefNotifyConfig.DEFAULT_TASK_NOTIFY_CONFIG)
                     .build();
             tasksDefs.add(TaskDefinition.newBuilder()
                     .withId(taskId)

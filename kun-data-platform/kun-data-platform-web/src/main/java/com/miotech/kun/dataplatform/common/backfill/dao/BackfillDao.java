@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Repository
 public class BackfillDao {
@@ -47,6 +46,8 @@ public class BackfillDao {
     private static final String UPDATE_BACKFILL_TABLE_SQL_STMT = "UPDATE " + BACKFILL_TABLE_NAME + " SET id = ?, name = ?, creator = ?, create_time = ?, update_time = ? WHERE id = ?";
 
     private static final String DELETE_BACKFILL_RELATION_SQL_STMT = "DELETE FROM " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + " WHERE backfill_id = ?";
+
+    private static final String FETCH_BACKFILL_ID_BY_TASKRUN_ID_SQL_STMT = "SELECT backfill_id FROM " + BACKFILL_TASK_RUN_RELATION_TABLE_NAME + " WHERE task_run_id = ?";
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -197,6 +198,10 @@ public class BackfillDao {
         }
         // else
         return persistedBackfill.get();
+    }
+
+    public Optional<Long> fetchBackfillIdByTaskRunId(Long taskRunId) {
+        return jdbcTemplate.query(FETCH_BACKFILL_ID_BY_TASKRUN_ID_SQL_STMT, (rs, rowIndex) -> rs.getLong(1), taskRunId).stream().findAny();
     }
 
     @Transactional
