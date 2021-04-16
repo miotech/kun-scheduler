@@ -59,6 +59,11 @@ public class DeployedTaskService extends BaseSecurityService{
                 });
     }
 
+    public Optional<DeployedTask> findOptional(Long taskDefinitionId) {
+        Preconditions.checkNotNull(taskDefinitionId);
+        return deployedTaskDao.fetchById(taskDefinitionId);
+    }
+
     public List<DeployedTask> findByDefIds(List<Long> defIds){
         return deployedTaskDao.fetchByIds(defIds);
     }
@@ -392,5 +397,9 @@ public class DeployedTaskService extends BaseSecurityService{
                 userList.add(userInfo.getUsername());
         }
         return userList;
+    }
+
+    public Optional<DeployedTask> findByWorkflowTaskId(Long workflowTaskId) {
+        return deployedTaskDao.fetchByWorkflowTaskId(workflowTaskId);
     }
 }

@@ -144,4 +144,13 @@ public class BackfillService extends BaseSecurityService {
 
         workflowClient.stopTaskRuns(backfill.getTaskRunIds());
     }
+
+    /**
+     * Check if a task run is initialized by a backfill. If true, return id of that backfill
+     * @param taskRunId id of the task run
+     * @return Wrapped optional ID object if found. Else returns empty optional.
+     */
+    public Optional<Long> findDerivedFromBackfill(Long taskRunId) {
+        return backfillDao.fetchBackfillIdByTaskRunId(taskRunId);
+    }
 }

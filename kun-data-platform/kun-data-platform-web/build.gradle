@@ -81,10 +81,15 @@ dependencies {
     implementation 'com.googlecode.json-simple:json-simple'
     implementation "com.h2database:h2"
     implementation 'redis.clients:jedis'
+    implementation "org.flywaydb:flyway-core"
+    implementation 'org.apache.commons:commons-email'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"
-
+    testImplementation 'com.icegreen:greenmail'
+    testImplementation 'com.icegreen:greenmail-junit4'
+    testImplementation 'com.icegreen:greenmail-spring'
+    testImplementation 'org.jooq:joor-java-8'
 }
 
 jacocoTestReport {
