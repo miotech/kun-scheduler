@@ -97,9 +97,6 @@ public class LocalExecutor implements Executor {
         this.lineageService = lineageService;
         queueManage = new QueueManage(props);
         init();
-        if (props.getBoolean("executor.enableRecover", true)) {
-            recover();
-        }
     }
 
     private void init() {

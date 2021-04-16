@@ -71,4 +71,8 @@ public class KunWebServer {
         return this.server.isStarted();
     }
 
+    public String getState() {
+        return this.server.getState();
+    }
+
 }

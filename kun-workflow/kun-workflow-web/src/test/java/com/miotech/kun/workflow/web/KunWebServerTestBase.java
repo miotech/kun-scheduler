@@ -1,23 +1,19 @@
 package com.miotech.kun.workflow.web;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.miotech.kun.commons.db.DatabaseModule;
-import com.miotech.kun.commons.db.GraphDatabaseModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Initializer;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
-import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
-import com.miotech.kun.workflow.core.event.Event;
-import com.miotech.kun.workflow.core.publish.EventPublisher;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,26 +40,13 @@ public class KunWebServerTestBase extends GuiceTestBase {
     protected void configuration() {
         super.configuration();
         Props props = PropsUtils.loadAppProps("application-test.yaml");
-        addModules(new KunWorkflowServerModule(props),
-                new DatabaseModule(),
-                new SchedulerModule(),
-                new GraphDatabaseModule(
-                        neo4jContainer.getBoltUrl(),
-                        "neo4j",
-                        neo4jContainer.getAdminPassword())
-        );
-        bind(EventPublisher.class, new NopEventPublisher());
+        fill(props);
+        addModules(new KunWorkflowServerModule(props));
     }
 
-    @Override
-    protected void beforeInject(Injector injector) {
-        // initialize database
-        setUp(injector);
-    }
-
-    public void setUp(Injector injector) {
-        props = injector.getInstance(Props.class);
-        KunWorkflowWebServer.configureDB(injector,props);
+    @Before
+    public void setUp() {
+        injector.getInstance(Initializer.class).initialize();
         webServer = injector.getInstance(KunWorkflowWebServer.class);
         new Thread(() -> webServer.start()).start();
         while(!webServer.isReady()) {
@@ -133,10 +116,10 @@ public class KunWebServerTestBase extends GuiceTestBase {
         }
     }
 
-    private static class NopEventPublisher implements EventPublisher {
-        @Override
-        public void publish(Event event) {
-            // nop
-        }
+    private void fill(Props props) {
+        props.put("neo4j.uri", neo4jContainer.getBoltUrl());
+        props.put("neo4j.username", "neo4j");
+        props.put("neo4j.password", "Mi0tech2020");
     }
+
 }
