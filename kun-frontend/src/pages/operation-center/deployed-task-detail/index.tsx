@@ -7,18 +7,20 @@ import React, {
   useState,
 } from 'react';
 import { useMount, useSize, useUnmount, useUpdateEffect } from 'ahooks';
-import useRedux from '@/hooks/useRedux';
 import { useRouteMatch } from 'umi';
 import { ReflexContainer, ReflexElement, ReflexSplitter } from 'react-reflex';
+import { StringParam, useQueryParams } from 'use-query-params';
 
+import useRedux from '@/hooks/useRedux';
 import TaskRunsFilterBar from '@/pages/operation-center/deployed-task-detail/components/TaskRunsFilterBar';
 import TaskRunsTable from '@/pages/operation-center/deployed-task-detail/components/TaskRunsTable';
 import { KunSpin } from '@/components/KunSpin';
 import { RightPanel } from '@/pages/operation-center/scheduled-tasks/components/RightPanel';
+import { abortTaskRunInstance, restartTaskRunInstance } from '@/services/task-deployments/deployed-tasks';
+
 import { TaskRun } from '@/definitions/TaskRun.type';
 
 import 'react-reflex/styles.css';
-import { StringParam, useQueryParams } from 'use-query-params';
 import styles from './index.less';
 
 interface DeployedTaskDetailViewProps {}
@@ -115,7 +117,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
     filters.endTime,
   ]);
 
-  const handleClickRefreshBtn = useCallback(() => {
+  const doRefresh = useCallback(() => {
     dispatch.deployedTaskDetail.loadTaskRuns({
       id: match.params.id,
       ...filters,
@@ -130,6 +132,32 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
       });
     },
     [dispatch],
+  );
+
+  const handleRestartTaskRun = useCallback(
+    async function handleRestartTaskRun(taskRun: TaskRun | null) {
+      if (taskRun) {
+        try {
+          await restartTaskRunInstance(taskRun.id);
+        } finally {
+          doRefresh();
+        }
+      }
+    },
+    [doRefresh],
+  );
+
+  const handleAbortTaskRun = useCallback(
+    async function handleAbortTaskRun(taskRun: TaskRun | null) {
+      if (taskRun) {
+        try {
+          await abortTaskRunInstance(taskRun.id);
+        } finally {
+          doRefresh();
+        }
+      }
+    },
+    [doRefresh],
   );
 
   const dagContainerSize = useSize(rightPanelRef.current);
@@ -147,7 +175,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
       <TaskRunsFilterBar
         filter={filters}
         dispatch={dispatch}
-        onClickRefresh={handleClickRefreshBtn}
+        onClickRefresh={doRefresh}
         taskDefId={match.params.id}
       />
       <ReflexContainer
@@ -165,6 +193,8 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
               onChangePagination={handleChangePagination}
               selectedTaskRun={selectedTaskRun}
               setSelectedTaskRun={setSelectedTaskRun}
+              onClickRerunTaskRun={handleRestartTaskRun}
+              onClickStopTaskRun={handleAbortTaskRun}
             />
           </KunSpin>
         </ReflexElement>

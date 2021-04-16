@@ -1,4 +1,4 @@
-import { get } from '@/utils/requestUtils';
+import { get, post, put } from '@/utils/requestUtils';
 import { API_DATA_PLATFORM_PREFIX } from '@/constants/api-prefixes';
 
 import {
@@ -244,5 +244,35 @@ export async function fetchTaskRunDAG(
     },
     prefix: API_DATA_PLATFORM_PREFIX,
     mockCode: 'deployed-tasks.get-taskrun-dag',
+  });
+}
+
+/**
+ * Restart a deployed task run instance
+ * @param taskRunId
+ */
+export async function restartTaskRunInstance(
+  taskRunId: string,
+): ServiceRespPromise<TaskRun> {
+  return post('/deployed-taskruns/:taskRunId/_restart', {
+    pathParams: {
+      taskRunId,
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
+  });
+}
+
+/**
+ * Abort a deployed task run instance
+ * @param taskRunId
+ */
+export async function abortTaskRunInstance(
+  taskRunId: string,
+): ServiceRespPromise<TaskRun> {
+  return put('/deployed-taskruns/:taskRunId/_abort', {
+    pathParams: {
+      taskRunId,
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
   });
 }
