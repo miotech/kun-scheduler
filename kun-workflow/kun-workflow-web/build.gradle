@@ -17,6 +17,7 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-facade')
     implementation project(':kun-workflow:kun-workflow-executor')
     implementation project(':kun-metadata:kun-metadata-core')
+    implementation project(':kun-metadata:kun-metadata-service-facade')
     implementation project(':kun-commons:kun-commons-db')
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-commons:kun-commons-testing')
