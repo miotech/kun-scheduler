@@ -1,9 +1,14 @@
 import React, { FunctionComponent, useEffect, useMemo } from 'react';
 import uniqueId from 'lodash/uniqueId';
+import get from 'lodash/get';
 import { useRequest } from 'ahooks';
 import { DAGTaskGraph } from '@/components/DAGGraph';
 import { KunSpin } from '@/components/KunSpin';
-import { fetchTaskRunDAG } from '@/services/task-deployments/deployed-tasks';
+import {
+  fetchTaskRunDAG,
+  FetchTaskRunDAGOptionParams,
+  getTaskDefinitionIdByWorkflowIds,
+} from '@/services/task-deployments/deployed-tasks';
 
 import { TaskRun } from '@/definitions/TaskRun.type';
 import { TaskNode, TaskRelation } from '@/components/DAGGraph/typings';
@@ -20,7 +25,16 @@ export const TaskRunDAG: FunctionComponent<Props> = props => {
   const { taskRun, width, height } = props;
 
   const { data: dagData, loading, run: fetchDAGFromRemote } = useRequest(
-    fetchTaskRunDAG,
+    async (taskRunId: string, optionParams: FetchTaskRunDAGOptionParams = {}) => {
+      const data = await fetchTaskRunDAG(taskRunId, optionParams);
+      if (data) {
+        const workflowTaskIdToTaskDefIdMap = await getTaskDefinitionIdByWorkflowIds(
+          data.nodes.map(n => `${n.task.id}` || '') || [],
+        );
+        data.nodes = data.nodes.map(n => ({ ...n, taskDefinitionId: workflowTaskIdToTaskDefIdMap[n.task.id] }));
+      }
+      return data;
+    },
     {
       manual: true,
     },
@@ -44,6 +58,15 @@ export const TaskRunDAG: FunctionComponent<Props> = props => {
         return {
           id: taskrun.id,
           name: taskrun.task?.name || '',
+          data: {
+            renderAsTaskRunDAG: true,
+            id: taskrun.id,
+            status: taskrun?.status,
+            startTime: taskrun.startAt,
+            endTime: taskrun.endAt,
+            taskRunId: taskrun.id,
+            taskDefinitionId: get(taskrun, 'taskDefinitionId', null),
+          } as any,
         };
       });
       const edges: TaskRelation[] = dagData.edges.map(edge => ({
@@ -63,7 +86,7 @@ export const TaskRunDAG: FunctionComponent<Props> = props => {
     }
     // else
     return <></>;
-  }, [loading, dagData, width, height]);
+  }, [loading, dagData, width, height, taskRun?.id]);
 
   return <div data-tid="deployed-task-dag">{DAGDom}</div>;
 };
