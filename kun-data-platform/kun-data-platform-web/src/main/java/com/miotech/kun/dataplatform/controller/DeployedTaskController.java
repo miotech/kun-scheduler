@@ -1,10 +1,12 @@
 package com.miotech.kun.dataplatform.controller;
 
+import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.common.deploy.vo.*;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskRunLogVO;
 import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
+import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunDAG;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -29,6 +32,9 @@ public class DeployedTaskController {
 
     @Autowired
     private DeployedTaskService deployedTaskService;
+
+    @Autowired
+    private WorkflowClient workflowClient;
 
     @GetMapping("/deployed-tasks/{id}")
     @ApiOperation("Get DeployedTask")
@@ -149,5 +155,21 @@ public class DeployedTaskController {
                                                            @RequestParam(defaultValue =  "1") int downstreamLevel
                                                            ) {
         return RequestResult.success(deployedTaskService.getWorkFlowTaskRunDag(id, upstreamLevel, downstreamLevel));
+    }
+
+    @PostMapping("/deployed-taskruns/{taskRunId}/_restart")
+    @ApiOperation("Rerun a single taskrun instance immediately")
+    public RequestResult<TaskRun> restartTaskRunInstance(@PathVariable Long taskRunId) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
+        TaskRun taskRun = workflowClient.restartTaskRun(taskRunId);
+        return RequestResult.success(taskRun);
+    }
+
+    @PostMapping("/deployed-taskruns/{taskRunId}/_abort")
+    @ApiOperation("Rerun a single taskrun instance immediately")
+    public RequestResult<TaskRun> stopTaskRunInstance(@PathVariable Long taskRunId) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
+        TaskRun taskRun = workflowClient.stopTaskRun(taskRunId);
+        return RequestResult.success(taskRun);
     }
 }
