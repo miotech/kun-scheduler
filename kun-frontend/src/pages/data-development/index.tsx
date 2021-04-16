@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { ReflexContainer, ReflexSplitter, ReflexElement } from 'react-reflex';
-import { useUnmount } from 'ahooks';
+import { useEventEmitter, useUnmount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
 import uniq from 'lodash/uniq';
@@ -42,13 +42,7 @@ import styles from './index.less';
 
 const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   const {
-    selector: {
-      filters,
-      displayType,
-      taskDefViewsList,
-      loadingViews,
-      selectedView,
-    },
+    selector: { filters, displayType, taskDefViewsList, loadingViews, selectedView },
     dispatch,
   } = useRedux<{
     filters: DataDevelopmentModelFilter;
@@ -71,39 +65,23 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   const [query, setQuery] = useQueryParams({
     view: StringParam,
   });
-  const [taskDefViewSearchKeyword, setTaskDefViewSearchKeyword] = useState<
-    string
-  >('');
-  const [createViewModalVisible, setCreateViewModalVisible] = useState<boolean>(
-    false,
-  );
+  const [taskDefViewSearchKeyword, setTaskDefViewSearchKeyword] = useState<string>('');
+  const [createViewModalVisible, setCreateViewModalVisible] = useState<boolean>(false);
   const [editView, setEditView] = useState<TaskDefinitionViewVO | null>(null);
-  const [transferModalVisible, setTransferModalVisible] = useState<boolean>(
-    false,
-  );
-  const [addToOtherViewModalVisible, setAddToOtherViewModalVisible] = useState<
-    boolean
-  >(false);
+  const [transferModalVisible, setTransferModalVisible] = useState<boolean>(false);
+  const [addToOtherViewModalVisible, setAddToOtherViewModalVisible] = useState<boolean>(false);
   const [selectedTaskDefIds, setSelectedTaskDefIds] = useState<string[]>([]);
 
   const [updateTime, setUpdateTime] = useState<number>(Date.now());
 
-  const [viewIdFromQueryInitialized, setViewIdFromQueryInitialized] = useState<
-    boolean
-  >(false);
+  const [viewIdFromQueryInitialized, setViewIdFromQueryInitialized] = useState<boolean>(false);
 
-  const [
-    confirmBackfillCreateModalVisible,
-    setConfirmBackfillCreateModalVisible,
-  ] = useState<boolean>(false);
+  const currentViewChangeEvent = useEventEmitter<void>();
+
+  const [confirmBackfillCreateModalVisible, setConfirmBackfillCreateModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
-    if (
-      !viewIdFromQueryInitialized &&
-      taskDefViewsList &&
-      taskDefViewsList.length &&
-      query.view
-    ) {
+    if (!viewIdFromQueryInitialized && taskDefViewsList && taskDefViewsList.length && query.view) {
       const targetView = taskDefViewsList.find(view => view.id === query.view);
       if (targetView) {
         dispatch.dataDevelopment.setSelectedTaskDefinitionView(targetView);
@@ -198,20 +176,14 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   );
 
   const handleTaskDefinitionCreate = useCallback(
-    async (
-      taskTemplateName: string,
-      name: string,
-      createInCurrentView: boolean,
-    ) => {
+    async (taskTemplateName: string, name: string, createInCurrentView: boolean) => {
       try {
         const createdTaskDefinition = await createTaskDefinition({
           name,
           taskTemplateName,
         });
         if (createInCurrentView && selectedView && createdTaskDefinition) {
-          await putTaskDefinitionsIntoView(selectedView.id, [
-            createdTaskDefinition.id as string,
-          ]);
+          await putTaskDefinitionsIntoView(selectedView.id, [createdTaskDefinition.id as string]);
         }
       } finally {
         searchTaskDefViews();
@@ -242,14 +214,10 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
           definitionIds: taskDefIds,
         });
         const relatedWorkflowIds = uniq(
-          (relatedDeployedTasks?.records || []).map(
-            deployedTask => deployedTask.workflowTaskId,
-          ),
+          (relatedDeployedTasks?.records || []).map(deployedTask => deployedTask.workflowTaskId),
         );
         if (relatedWorkflowIds.length !== taskDefIds.length) {
-          message.error(
-            t('dataDevelopment.runBackfillTaskDefNotPublishedMessage'),
-          );
+          message.error(t('dataDevelopment.runBackfillTaskDefNotPublishedMessage'));
           return;
         }
         await createAndRunBackfill({
@@ -301,6 +269,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
             onClickRunBackfill={() => {
               setConfirmBackfillCreateModalVisible(true);
             }}
+            currentViewChangeEvent={currentViewChangeEvent}
           />
         </div>
       );
@@ -320,9 +289,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
 
   return (
     <main className={styles.Page}>
-      <TaskTemplateCreateDropMenu
-        onCreateTaskDefinition={handleTaskDefinitionCreate}
-      />
+      <TaskTemplateCreateDropMenu onCreateTaskDefinition={handleTaskDefinitionCreate} />
       {/* Layout */}
       <ReflexContainer orientation="vertical">
         {/* Task types select left aside */}
@@ -338,6 +305,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
             }}
             onSelectItem={viewItem => {
               dispatch.dataDevelopment.setSelectedTaskDefinitionView(viewItem);
+              currentViewChangeEvent.emit();
               setQuery({
                 view: viewItem?.id || '',
               });
@@ -385,10 +353,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
         onOk={async selectedTaskDefinitionIds => {
           try {
             if (selectedView) {
-              await overwriteIncludingTaskDefinitionsOfView(
-                selectedView.id,
-                selectedTaskDefinitionIds,
-              );
+              await overwriteIncludingTaskDefinitionsOfView(selectedView.id, selectedTaskDefinitionIds);
             }
             setTransferModalVisible(false);
           } finally {
