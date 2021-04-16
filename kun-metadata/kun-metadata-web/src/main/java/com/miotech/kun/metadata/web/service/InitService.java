@@ -2,11 +2,14 @@ package com.miotech.kun.metadata.web.service;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.db.DatabaseSetup;
 import com.miotech.kun.commons.rpc.RpcPublisher;
+import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.TaskParam;
+import com.miotech.kun.metadata.web.kafka.MetadataConsumerStarter;
 import com.miotech.kun.metadata.web.model.vo.DataSource;
 import com.miotech.kun.metadata.web.util.DataDiscoveryApi;
 import com.miotech.kun.metadata.web.util.RequestParameterBuilder;
@@ -23,7 +26,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
-public class InitService {
+public class InitService implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(InitService.class);
 
     @Inject
@@ -33,16 +36,36 @@ public class InitService {
     private Props props;
 
     @Inject
+    private javax.sql.DataSource dataSource;
+
+    @Inject
     private RpcPublisher rpcPublisher;
 
     @Inject
     private MetadataServiceFacade metadataServiceFacade;
 
-    public void publishRpcServices() {
-        rpcPublisher.exportService(MetadataServiceFacade.class, "1.0", metadataServiceFacade);
+    @Inject
+    private MetadataConsumerStarter metadataConsumerStarter;
+
+    @Override
+    public Order getOrder() {
+        return Order.NORMAL;
     }
 
-    public void initDataBuilder() {
+    @Override
+    public void afterPropertiesSet() {
+        configureDB();
+        initDataBuilder();
+        publishRpcServices();
+        startConsumer();
+    }
+
+    private void configureDB() {
+        DatabaseSetup setup = new DatabaseSetup(dataSource, props);
+        setup.start();
+    }
+
+    private void initDataBuilder() {
         // Verify whether the operator & task exists
         try {
             String dataDiscoveryUrl = props.getString("data-discovery.baseUrl");
@@ -74,6 +97,14 @@ public class InitService {
         } catch (Exception e) {
             logger.error("Init DataBuilder Task error: ", e);
         }
+    }
+
+    private void publishRpcServices() {
+        rpcPublisher.exportService(MetadataServiceFacade.class, "1.0", metadataServiceFacade);
+    }
+
+    private void startConsumer() {
+        metadataConsumerStarter.start();
     }
 
     private Optional<Operator> findOperatorByName(String operatorName) {

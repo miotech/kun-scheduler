@@ -1,17 +1,9 @@
 package com.miotech.kun.workflow.client.mock;
 
-import com.google.inject.Injector;
-import com.miotech.kun.commons.db.DatabaseModule;
-import com.miotech.kun.commons.db.GraphDatabaseModule;
-import com.miotech.kun.commons.rpc.RpcModule;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
-import com.miotech.kun.workflow.SchedulerModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
-import com.miotech.kun.workflow.core.event.Event;
-import com.miotech.kun.workflow.core.publish.EventPublisher;
-import com.miotech.kun.workflow.core.publish.RedisEventPublisher;
 import com.miotech.kun.workflow.web.KunWorkflowServerModule;
 import com.miotech.kun.workflow.web.KunWorkflowWebServer;
 import okhttp3.Call;
@@ -19,9 +11,8 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import org.junit.After;
+import org.junit.Before;
 import org.junit.ClassRule;
-import org.neo4j.ogm.config.Configuration;
-import org.neo4j.ogm.session.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -56,54 +47,29 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
             .withAdminPassword("Mi0tech2020");
 
     private KunWorkflowWebServer webServer;
-
     private Props props;
 
     @Override
     protected void configuration() {
         super.configuration();
         Props props = PropsUtils.loadAppProps("application-test.yaml");
+        fill(props);
+
         int port = 18080 + (new Random()).nextInt(100);
-        String redisIp = redis.getHost();
-        logger.info("redisIp:" + redisIp);
-        props.put("rpc.registry", "redis://" + redisIp + ":" + redis.getMappedPort(6379));
-        props.put("rpc.port", 9001);
         logger.info("Start test workflow server in : localhost:{}", port);
         props.put(ConfigurationKeys.PROP_SERVER_PORT, Integer.toString(port));
-        addModules(
-                new KunWorkflowServerModule(props),
-                new DatabaseModule(),
-                new SchedulerModule(),
-                new RpcModule(props)
-        );
-        // create Neo4j session factory since we do not include GraphDatabaseModule here
-        bind(SessionFactory.class, initNeo4jSessionFactory());
-        bind(EventPublisher.class, new NopEventPublisher());
+        addModules(new KunWorkflowServerModule(props));
     }
 
-    public SessionFactory initNeo4jSessionFactory() {
-        Configuration config = new Configuration.Builder()
-                .uri(neo4jContainer.getBoltUrl())
-                .connectionPoolSize(50)
-                .credentials("neo4j", "Mi0tech2020")
-                .build();
-        return new SessionFactory(config, GraphDatabaseModule.DEFAULT_NEO4J_DOMAIN_CLASSES);
-    }
-
-    @Override
-    protected void beforeInject(Injector injector) {
-        // initialize database
-        setUp(injector);
-    }
-
-    public void setUp(Injector injector) {
+    @Before
+    public void setUp() {
         props = injector.getInstance(Props.class);
-        KunWorkflowWebServer.configureDB(injector,props);
         webServer = injector.getInstance(KunWorkflowWebServer.class);
         new Thread(() -> {
             webServer.start();
             logger.info("Webserver exited");
         }).start();
+
         await().atMost(60, TimeUnit.SECONDS)
                 .until(() -> {
                     logger.info("Webserver is {} at {}", webServer.isReady() ? "running" : "stopped", getBaseUrl());
@@ -111,14 +77,14 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
                 });
     }
 
-    public String getBaseUrl() {
-        String port = props.getString(ConfigurationKeys.PROP_SERVER_PORT, "8088");
-        return "http://localhost:" + port;
-    }
-
     @After
     public void tearDown() {
         webServer.shutdown();
+    }
+
+    public String getBaseUrl() {
+        String port = props.getString(ConfigurationKeys.PROP_SERVER_PORT, "8088");
+        return "http://localhost:" + port;
     }
 
     private boolean isAvailable() {
@@ -132,10 +98,15 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         }
     }
 
-    private static class NopEventPublisher implements EventPublisher {
-        @Override
-        public void publish(Event event) {
-            // nop
-        }
+    private void fill(Props props) {
+        props.put("neo4j.uri", neo4jContainer.getBoltUrl());
+        props.put("neo4j.username", "neo4j");
+        props.put("neo4j.password", "Mi0tech2020");
+
+        String redisIp = redis.getHost();
+        logger.info("redisIp:" + redisIp);
+        props.put("rpc.registry", "redis://" + redisIp + ":" + redis.getMappedPort(6379));
+        props.put("rpc.port", 9001);
     }
+
 }
