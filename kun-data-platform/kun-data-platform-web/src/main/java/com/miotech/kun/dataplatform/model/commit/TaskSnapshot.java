@@ -1,6 +1,7 @@
 package com.miotech.kun.dataplatform.model.commit;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
 
 @JsonDeserialize(builder = TaskSnapshot.Builder.class)
@@ -42,6 +43,7 @@ public class TaskSnapshot {
 
     public static Builder newBuilder() { return new Builder(); }
 
+    @JsonPOJOBuilder
     public static final class Builder {
         private String name;
         private String taskTemplateName;

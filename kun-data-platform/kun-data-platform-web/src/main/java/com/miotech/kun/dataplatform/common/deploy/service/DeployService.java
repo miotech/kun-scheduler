@@ -7,6 +7,7 @@ import com.miotech.kun.dataplatform.common.deploy.dao.DeployDao;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeployRequest;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeploySearchRequest;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeployVO;
+import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfigService;
 import com.miotech.kun.dataplatform.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.model.commit.TaskCommit;
@@ -14,6 +15,7 @@ import com.miotech.kun.dataplatform.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.model.deploy.DeployCommit;
 import com.miotech.kun.dataplatform.model.deploy.DeployStatus;
 import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -41,6 +43,9 @@ public class DeployService extends BaseSecurityService {
 
     @Autowired
     private TaskDefinitionService taskDefinitionService;
+
+    @Autowired
+    private TaskNotifyConfigService taskNotifyConfigService;
 
     public Deploy find(Long deployId) {
         return deployDao.fetchById(deployId)
@@ -109,6 +114,10 @@ public class DeployService extends BaseSecurityService {
         Preconditions.checkArgument(!commits.isEmpty(), "Deploy commits should not be empty list");
         // do deploy
         reorderAndDeploy(commits);
+        // update notification config
+        for (TaskCommit taskCommit : commits) {
+            updateNotifyConfig(taskCommit.getDefinitionId());
+        }
         // update status
         DeployStatus success = DeployStatus.SUCCESS;
         List<DeployCommit> updatedCommits = deploy.getCommits()
@@ -180,6 +189,7 @@ public class DeployService extends BaseSecurityService {
         } while(!workingQueue.isEmpty());
     }
 
+    @Transactional
     public Deploy deployFast(Long definitionId, CommitRequest request) {
         // commit first
         TaskCommit commit = commitService.commit(definitionId, request.getMessage());
@@ -189,6 +199,20 @@ public class DeployService extends BaseSecurityService {
         // create a deploy and publish
         Deploy deploy = create(deployRequest);
         return publish(deploy.getId());
+    }
+
+    /**
+     * Update notify configurations by binding deployed workflow task ids with notification config in task definition
+     * @param definitionId id of task definition
+     */
+    private void updateNotifyConfig(Long definitionId) {
+        // Update deployed task notification configuration if presented
+        TaskDefinition taskDefinition = taskDefinitionService.find(definitionId);
+        Optional<DeployedTask> deployedTaskOptional = deployedTaskService.findOptional(definitionId);
+        deployedTaskOptional.ifPresent(deployedTask -> taskNotifyConfigService.updateRelatedTaskNotificationConfig(
+                deployedTask.getWorkflowTaskId(),
+                taskDefinition.getTaskPayload().getNotifyConfig()
+        ));
     }
 
     public PaginationResult<Deploy> search(DeploySearchRequest request) {
