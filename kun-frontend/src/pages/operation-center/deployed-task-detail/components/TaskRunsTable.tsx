@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useMemo } from 'react';
-import { Table } from 'antd';
+import { Button, Popconfirm, Space, Table } from 'antd';
 import moment from 'moment-timezone';
 import momentDurationFormatSetup from 'moment-duration-format';
 import { ColumnProps } from 'antd/es/table';
@@ -7,6 +7,8 @@ import { TaskRun } from '@/definitions/TaskRun.type';
 import useI18n from '@/hooks/useI18n';
 import getLatestAttempt from '@/utils/getLatestAttempt';
 import { StatusText } from '@/components/StatusText';
+import { PauseOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { RunStatusEnum } from "@/definitions/StatEnums.type";
 
 import styles from './TaskRunsTable.less';
 
@@ -18,10 +20,20 @@ interface TaskRunsTableProps {
   onChangePagination?: (nextPageNum: number, pageSize?: number) => void;
   selectedTaskRun?: TaskRun | null;
   setSelectedTaskRun?: (taskRun: TaskRun | null) => any;
+  onClickStopTaskRun?: (taskRun: TaskRun | null) => any;
+  onClickRerunTaskRun?: (taskRun: TaskRun | null) => any;
 }
 
 // @ts-ignore
 momentDurationFormatSetup(moment);
+
+function taskRunAlreadyComplete(status: RunStatusEnum): boolean {
+  return  status === 'SUCCESS' ||
+    status === 'SKIPPED' ||
+    status === 'FAILED' ||
+    status === 'ABORTED' ||
+    status === 'ABORTING';
+}
 
 const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = (props) => {
   const t = useI18n();
@@ -34,12 +46,14 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = (props) => {
     onChangePagination,
     selectedTaskRun,
     setSelectedTaskRun,
+    onClickRerunTaskRun = () => {},
+    onClickStopTaskRun = () => {},
   } = props;
 
   const columns: ColumnProps<TaskRun>[] = useMemo(() => [
     {
       dataIndex: 'id',
-      title: 'Instance ID',
+      title: t('taskRun.property.id'),
       key: 'id',
     },
     {
@@ -102,7 +116,56 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = (props) => {
 
       },
     },
-  ], []);
+    {
+      title: '',
+      key: 'operations',
+      width: 180,
+      render: (txt, taskRun) => {
+        const stopDisabled = taskRunAlreadyComplete(taskRun.status);
+        return (
+          <span>
+              <Space size="small">
+                <Popconfirm
+                  title={t('taskRun.abort.alert')}
+                  disabled={stopDisabled}
+                  onConfirm={(ev) => {
+                    ev?.stopPropagation();
+                    onClickStopTaskRun(taskRun);
+                  }}
+                >
+                  <Button
+                    icon={<PauseOutlined />}
+                    size="small"
+                    danger
+                    disabled={stopDisabled}
+                    onClick={(ev) => { ev.stopPropagation(); }}
+                  >
+                    {/* 中止 */}
+                    {t('taskRun.abort')}
+                  </Button>
+                </Popconfirm>
+                <Popconfirm
+                  title={t('taskRun.rerun.alert')}
+                  onConfirm={(ev) => {
+                    ev?.stopPropagation();
+                    onClickRerunTaskRun(taskRun);
+                  }}
+                >
+                  <Button
+                    icon={<PlayCircleOutlined />}
+                    size="small"
+                    onClick={(ev) => { ev.stopPropagation(); }}
+                  >
+                    {/* 重新运行 */}
+                    {t('taskRun.rerun')}
+                  </Button>
+                </Popconfirm>
+              </Space>
+            </span>
+        );
+      },
+    },
+  ], [t]);
 
   const handleRowEvents = useCallback((record: TaskRun) => {
     return {

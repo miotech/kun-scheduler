@@ -82,7 +82,7 @@ export async function rerunBackfillInstance(
   });
 }
 
-export async function restartTaskRunInstance(
+export async function restartBackfillTaskRunInstance(
   taskRunId: string,
 ): ServiceRespPromise<TaskRun> {
   return post('/backfills/taskruns/:taskRunId/_restart', {
@@ -93,7 +93,7 @@ export async function restartTaskRunInstance(
   });
 }
 
-export async function abortTaskRunInstance(
+export async function abortBackfillTaskRunInstance(
   taskRunId: string,
 ): ServiceRespPromise<TaskRun> {
   return put('/backfills/taskruns/:taskRunId/_abort', {
