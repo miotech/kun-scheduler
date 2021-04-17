@@ -165,7 +165,7 @@ public class DeployedTaskController {
         return RequestResult.success(taskRun);
     }
 
-    @PostMapping("/deployed-taskruns/{taskRunId}/_abort")
+    @PutMapping("/deployed-taskruns/{taskRunId}/_abort")
     @ApiOperation("Rerun a single taskrun instance immediately")
     public RequestResult<TaskRun> stopTaskRunInstance(@PathVariable Long taskRunId) {
         Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
