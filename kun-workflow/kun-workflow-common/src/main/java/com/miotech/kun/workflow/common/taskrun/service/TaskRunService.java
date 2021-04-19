@@ -254,10 +254,12 @@ public class TaskRunService {
         Preconditions.checkArgument(limit > 0);
         Preconditions.checkArgument(limit <= 100);
 
+        Map<Long, List<TaskRun>> taskIdToLatestTaskRunsMap = taskRunDao.fetchLatestTaskRunsByBatch(taskIds, limit);
+
         Map<Long, List<TaskRunVO>> mappings = new HashMap<>();
-        for (Long taskId : taskIds) {
-            List<TaskRun> latestTaskRuns = taskRunDao.fetchLatestTaskRuns(taskId, limit);
-            mappings.put(taskId, latestTaskRuns.stream().map(this::convertToVO).collect(Collectors.toList()));
+        for (Map.Entry<Long, List<TaskRun>> entry : taskIdToLatestTaskRunsMap.entrySet()) {
+            List<TaskRun> runs = entry.getValue();
+            mappings.put(entry.getKey(), runs.stream().map(this::convertToVO).collect(Collectors.toList()));
         }
         return mappings;
     }
