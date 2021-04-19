@@ -3,6 +3,7 @@ package com.miotech.kun.dataplatform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateLoader;
+import com.miotech.kun.dataplatform.notify.WorkflowEventDispatcher;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -11,6 +12,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -38,6 +40,9 @@ public class AppTestBase {
 
     @Autowired
     private TaskTemplateLoader taskTemplateLoader;
+
+    @MockBean
+    private WorkflowEventDispatcher workflowEventDispatcher;
 
     @Before
     public void init() {

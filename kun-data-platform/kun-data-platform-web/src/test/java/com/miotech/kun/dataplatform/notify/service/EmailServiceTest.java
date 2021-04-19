@@ -6,7 +6,6 @@ import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
-import com.miotech.kun.dataplatform.notify.WorkflowEventDispatcher;
 import com.miotech.kun.dataplatform.notify.userconfig.EmailNotifierUserConfig;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -41,9 +40,6 @@ public class EmailServiceTest extends AppTestBase {
 
     @MockBean
     private BackfillService backfillService;
-
-    @MockBean
-    private WorkflowEventDispatcher workflowEventDispatcher;
 
     @Autowired
     private EmailService emailService;

@@ -85,7 +85,7 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 Collections.emptyList()
         );
         taskDefPage = taskDefinitionDao.search(request);
-        assertThat(taskDefPage.getTotalCount(), is((long) taskDefinitions.size()));
+        assertThat(taskDefPage.getTotalCount(), is(taskDefinitions.size()));
         assertThat(taskDefPage.getPageSize(), is(10));
         assertThat(taskDefPage.getPageNum(), is(1));
 
@@ -128,7 +128,7 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 Collections.emptyList()
         );
         taskDefPage = taskDefinitionDao.search(request);
-        assertThat(taskDefPage.getTotalCount(), is((long) taskDefinitions.size()));
+        assertThat(taskDefPage.getTotalCount(), is(taskDefinitions.size()));
         assertThat(taskDefPage.getPageSize(), is(10));
         assertThat(taskDefPage.getPageNum(), is(1));
 
@@ -142,7 +142,7 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 Collections.emptyList()
         );
         taskDefPage = taskDefinitionDao.search(request);
-        assertThat(taskDefPage.getTotalCount(), is((long) taskDefinitions.size()));
+        assertThat(taskDefPage.getTotalCount(), is(taskDefinitions.size()));
         assertThat(taskDefPage.getPageSize(), is(10));
         assertThat(taskDefPage.getPageNum(), is(1));
         assertThat(taskDefPage.getRecords().get(0), sameBeanAs(taskDefinition));
@@ -157,7 +157,7 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 Collections.emptyList()
         );
         taskDefPage = taskDefinitionDao.search(request);
-        assertThat(taskDefPage.getTotalCount(), is(1L));
+        assertThat(taskDefPage.getTotalCount(), is(1));
         assertThat(taskDefPage.getPageSize(), is(10));
         assertThat(taskDefPage.getPageNum(), is(1));
         assertThat(taskDefPage.getRecords().get(0), sameBeanAs(taskDefinition));
@@ -172,7 +172,7 @@ public class TaskDefinitionDaoTest extends AppTestBase {
                 Collections.emptyList()
         );
         taskDefPage = taskDefinitionDao.search(request);
-        assertThat(taskDefPage.getTotalCount(), is(1L));
+        assertThat(taskDefPage.getTotalCount(), is(1));
         assertThat(taskDefPage.getRecords().get(0), sameBeanAs(taskDefinition));
     }
 
