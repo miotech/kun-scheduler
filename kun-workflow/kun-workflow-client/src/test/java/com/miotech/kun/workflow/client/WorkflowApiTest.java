@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.junit.Test;
 
@@ -230,6 +231,10 @@ public class WorkflowApiTest extends MockServerTestBase {
         mockPost("/tasks", JSONUtils.toJsonString(task),  JSONUtils.toJsonString(task));
 
         TaskRun taskRun = mockTaskRun();
+        // Adjust precision to prevent potential failure
+        taskRun.setStartAt(DateTimeUtils.atMillisecondPrecision(taskRun.getStartAt()));
+        taskRun.setEndAt(DateTimeUtils.atMillisecondPrecision(taskRun.getEndAt()));
+
         List<TaskRun> taskRuns = Collections.singletonList(taskRun);
         Map<Long, List<TaskRun>> mockResult = new HashMap<>();
         mockResult.put(task.getId(), taskRuns);
