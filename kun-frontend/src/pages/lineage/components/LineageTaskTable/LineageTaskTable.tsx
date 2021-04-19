@@ -46,8 +46,10 @@ export default memo(function LineageTaskTable({
     async function fetchMap(workflowTaskIds: string[]) {
       setTaskIdToDefIdMapIsLoading(true);
       try {
-        const defMap = await getTaskDefinitionIdByWorkflowIds(workflowTaskIds);
-        setTaskIdToDefIdMap(defMap);
+        if (workflowTaskIds && workflowTaskIds.length > 0) {
+          const defMap = await getTaskDefinitionIdByWorkflowIds(workflowTaskIds);
+          setTaskIdToDefIdMap(defMap);
+        }
       } finally {
         setTaskIdToDefIdMapIsLoading(false);
       }
