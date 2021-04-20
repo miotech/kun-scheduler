@@ -103,7 +103,7 @@ public class LocalExecutor implements Executor {
         workerPool = new ConcurrentHashMap<>();
         attachSiftingAppender();
         logger.info("local executor start at :{}", DateTimeUtils.now());
-        Thread consumer = new Thread(new TaskAttemptConsumer());
+        Thread consumer = new Thread(new TaskAttemptConsumer(),"TaskAttemptConsumer");
         consumer.start();
         ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
         timer.scheduleAtFixedRate(new HeartBeatCheckTask(), 10, 1000, TimeUnit.MILLISECONDS);
@@ -325,7 +325,7 @@ public class LocalExecutor implements Executor {
                         return;
                     }
                     workerStarterThreadPool.submit(new WorkerStartRunner(taskAttempt));
-                } catch (InterruptedException e) {
+                } catch (Throwable e) {
                     logger.error("failed to take taskAttempt from queue", e);
                 }
 
