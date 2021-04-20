@@ -322,7 +322,7 @@ public class LocalExecutor implements Executor {
                     TaskAttempt taskAttempt = queueManage.take();
                     if (workerPool.containsKey(taskAttempt.getId())) {
                         logger.warn("taskAttemptId = {},exist in workerPool", taskAttempt.getId());
-                        return;
+                        continue;
                     }
                     workerStarterThreadPool.submit(new WorkerStartRunner(taskAttempt));
                 } catch (Throwable e) {
