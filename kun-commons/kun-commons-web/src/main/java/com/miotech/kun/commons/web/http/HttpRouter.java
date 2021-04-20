@@ -41,7 +41,9 @@ public class HttpRouter {
         final ClassLoader loader = Thread.currentThread()
                 .getContextClassLoader();
         try {
+            logger.info("get classPath from loader");
             ClassPath classPath = ClassPath.from(loader);
+            logger.info("start to scan package");
             for (ClassPath.ClassInfo classInfo: classPath.getTopLevelClassesRecursive(packageName)) {
                 this.addRouter(Class.forName(classInfo.getName()));
             }

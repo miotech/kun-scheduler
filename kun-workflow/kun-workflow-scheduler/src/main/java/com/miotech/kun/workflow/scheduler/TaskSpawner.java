@@ -5,7 +5,6 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.commons.utils.EventConsumer;
 import com.miotech.kun.commons.utils.EventLoop;
-import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -36,7 +35,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
 @Singleton
-public class TaskSpawner implements InitializingBean {
+public class TaskSpawner {
     private static final Logger logger = LoggerFactory.getLogger(TaskSpawner.class);
 
     private final TaskManager taskManager;
@@ -83,13 +82,6 @@ public class TaskSpawner implements InitializingBean {
         graphs.add(graph);
     }
 
-    public void init() {
-        List<TaskRun> unStartedTaskRunList = taskRunDao.fetchUnStartedTaskRunList();
-        if (unStartedTaskRunList.size() > 0) {
-            submit(unStartedTaskRunList);
-        }
-        logger.info("submit unStartedTaskRun = {}", unStartedTaskRunList);
-    }
 
     public List<TaskRun> run(TaskGraph graph) {
         return run(graph, TaskRunEnv.EMPTY);
@@ -109,7 +101,7 @@ public class TaskSpawner implements InitializingBean {
         return spawn(Lists.newArrayList(graph), current, env);
     }
 
-    public boolean rerun(TaskRun taskRun){
+    public boolean rerun(TaskRun taskRun) {
         return taskManager.retry(taskRun);
     }
 
@@ -268,8 +260,4 @@ public class TaskSpawner implements InitializingBean {
         }
     }
 
-    @Override
-    public void afterPropertiesSet() {
-        init();
-    }
 }
