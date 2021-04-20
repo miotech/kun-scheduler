@@ -15,7 +15,6 @@ import { OutputDatasetField } from '@/components/OutputDatasetField';
 
 import LogUtils from '@/utils/logUtils';
 import { getTaskDefinitionsFromFlattenedProps } from '@/utils/transformDataset';
-import { validateQuartzCron } from '@/utils/cronUtils';
 import { OneshotDatePicker } from '@/pages/data-development/task-definition-config/components/OneshotDatePicker';
 
 import styles from './BodyForm.less';
@@ -135,18 +134,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
         <Form.Item
           label={t('dataDevelopment.definition.scheduleConfig.cronExpression')}
           name={['taskPayload', 'scheduleConfig', 'cronExpr']}
-          rules={[
-            { required: true },
-            {
-              validator(rule, value) {
-                if (validateQuartzCron(value)) {
-                  return Promise.resolve();
-                }
-                // else
-                return Promise.reject(t('common.cronstrue.invalidCronExp'));
-              },
-            },
-          ]}
+          rules={[{ required: true }]}
           initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.cronExpr}
         >
           <CronExpressionInput hideErrorAlert />
