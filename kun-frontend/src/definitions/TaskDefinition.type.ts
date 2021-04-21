@@ -2,9 +2,10 @@ import * as T from 'runtypes';
 
 import { TaskDatasetProperty } from '@/definitions/DatasetTaskDefSummary.type';
 import { DeployStatusEnum, RunStatusEnum } from '@/definitions/StatEnums.type';
+import { NotifyWhen, UserNotifyConfigItem } from '@/definitions/NotifyConfig.type';
 
 export interface TaskDefinitionModel {
-  id: number | string;  // do not use this as identifier, use definitionId instead
+  id: number | string; // do not use this as identifier, use definitionId instead
   name: string;
   definitionId: number | string;
   taskTemplateName: string;
@@ -50,6 +51,7 @@ export const TaskDefinitionType = T.Record({
 export interface TaskPayload {
   scheduleConfig: ScheduleConfig;
   taskConfig: Record<string, any>;
+  notifyConfig: NotifyConfig;
 }
 
 export interface ScheduleConfig {
@@ -72,10 +74,15 @@ export interface TaskTryVO {
 
 export interface DeployVO {
   creator: number;
-  deployedAt: string;  // Datetime
+  deployedAt: string; // Datetime
   deployer: number;
   id: string | number;
   name: string;
   status: DeployStatusEnum;
-  submittedAt: string;  // Datetime
+  submittedAt: string; // Datetime
+}
+
+export interface NotifyConfig {
+  notifyWhen: NotifyWhen;
+  notifierConfig: UserNotifyConfigItem[];
 }

@@ -1,14 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import moment from 'moment';
-import {
-  Space,
-  Button,
-  Descriptions,
-  Modal,
-  message,
-  Tooltip,
-  Tag,
-} from 'antd';
+import { Button, Descriptions, message, Modal, Space, Tag, Tooltip } from 'antd';
 import { FormInstance } from 'antd/es/form';
 import { history, Link } from 'umi';
 import isArray from 'lodash/isArray';
@@ -34,6 +26,7 @@ import { transformFormTaskConfig } from '@/pages/data-development/task-definitio
 
 import SafeUrlAssembler from 'safe-url-assembler';
 import { ArrowRightOutlined } from '@ant-design/icons';
+import { NotifyWhen } from '@/definitions/NotifyConfig.type';
 import styles from './Header.less';
 
 export interface Props {
@@ -48,13 +41,7 @@ export interface Props {
 const logger = LogUtils.getLoggers('Header');
 
 export const Header: React.FC<Props> = props => {
-  const {
-    draftTaskDef,
-    setDraftTaskDef,
-    form,
-    taskDefId,
-    handleCommitDryRun,
-  } = props;
+  const { draftTaskDef, setDraftTaskDef, form, taskDefId, handleCommitDryRun } = props;
 
   const [commitModalVisible, setCommitModalVisible] = useState<boolean>(false);
 
@@ -107,24 +94,17 @@ export const Header: React.FC<Props> = props => {
             ...form.getFieldValue(['taskPayload', 'scheduleConfig']),
             // convert dataset related fields to conform API required shape
             inputDatasets: getFlattenedTaskDefinition(
-              form.getFieldValue([
-                'taskPayload',
-                'scheduleConfig',
-                'inputDatasets',
-              ]) || [],
+              form.getFieldValue(['taskPayload', 'scheduleConfig', 'inputDatasets']) || [],
             ),
-            inputNodes: (
-              form.getFieldValue([
-                'taskPayload',
-                'scheduleConfig',
-                'inputNodes',
-              ]) || []
-            ).map((valueObj: { value: string | number }) => valueObj.value),
+            inputNodes: (form.getFieldValue(['taskPayload', 'scheduleConfig', 'inputNodes']) || []).map(
+              (valueObj: { value: string | number }) => valueObj.value,
+            ),
           },
-          taskConfig: transformFormTaskConfig(
-            form.getFieldValue(['taskPayload', 'taskConfig']),
-            props.taskTemplate,
-          ),
+          taskConfig: transformFormTaskConfig(form.getFieldValue(['taskPayload', 'taskConfig']), props.taskTemplate),
+          notifyConfig: {
+            notifyWhen: form.getFieldValue(['taskPayload', 'notifyConfig', 'notifyWhen']) || NotifyWhen.SYSTEM_DEFAULT,
+            notifierConfig: form.getFieldValue(['taskPayload', 'notifyConfig', 'notifierConfig']) || [],
+          },
         },
       });
       message.success(t('common.operateSuccess'));
@@ -133,27 +113,15 @@ export const Header: React.FC<Props> = props => {
       logger.warn(e);
       // hint each form error
       if (e && e.errorFields && isArray(e.errorFields)) {
-        e.errorFields.forEach((fieldErr: { errors: string[] }) =>
-          message.error(fieldErr.errors[0]),
-        );
+        e.errorFields.forEach((fieldErr: { errors: string[] }) => message.error(fieldErr.errors[0]));
       }
     }
-  }, [
-    form,
-    taskDefId,
-    draftTaskDef?.name,
-    draftTaskDef?.owner,
-    props.taskTemplate,
-    t,
-    dispatch.dataDevelopment,
-  ]);
+  }, [form, taskDefId, draftTaskDef?.name, draftTaskDef?.owner, props.taskTemplate, t, dispatch.dataDevelopment]);
 
   const renderCommitBtn = () => {
     if (definitionFormDirty) {
       return (
-        <Tooltip
-          title={t('dataDevelopement.definition.commitBtnDisabledTooltip')}
-        >
+        <Tooltip title={t('dataDevelopement.definition.commitBtnDisabledTooltip')}>
           <Button type="primary" disabled>
             {t('common.button.commit')}
           </Button>
@@ -206,9 +174,7 @@ export const Header: React.FC<Props> = props => {
                   })
                   .toString()}
               >
-                <Button icon={<ArrowRightOutlined />}>
-                  {t('dataDevelopment.goToScheduledTasks')}
-                </Button>
+                <Button icon={<ArrowRightOutlined />}>{t('dataDevelopment.goToScheduledTasks')}</Button>
               </Link>
             ) : (
               <Button icon={<ArrowRightOutlined />} disabled>
@@ -216,17 +182,11 @@ export const Header: React.FC<Props> = props => {
               </Button>
             )}
             {/* Delete */}
-            <Button onClick={handleDeleteBtnClick}>
-              {t('common.button.delete')}
-            </Button>
+            <Button onClick={handleDeleteBtnClick}>{t('common.button.delete')}</Button>
             {/* Dry run */}
-            <Button onClick={handleCommitDryRun}>
-              {t('common.button.dryrun')}
-            </Button>
+            <Button onClick={handleCommitDryRun}>{t('common.button.dryrun')}</Button>
             {/* Save */}
-            <Button onClick={handleSaveBtnClick}>
-              {t('common.button.save')}
-            </Button>
+            <Button onClick={handleSaveBtnClick}>{t('common.button.save')}</Button>
             {/* Commit */}
             {renderCommitBtn()}
           </Space>
@@ -234,13 +194,26 @@ export const Header: React.FC<Props> = props => {
       </div>
       <div className={styles.TaskDefMetas}>
         <Descriptions column={2}>
+          {/* Task template type */}
+          <Descriptions.Item label={t('dataDevelopment.definition.property.taskTemplateName')}>
+            {props.taskTemplate?.name || '-'}
+          </Descriptions.Item>
+          {/* Status */}
+          <Descriptions.Item label={t('dataDevelopment.definition.property.currentState')}>
+            {draftTaskDef?.isDeployed && (
+              <Tag color="processing">{t('dataDevelopment.definition.property.isDeployed')}</Tag>
+            )}
+            {draftTaskDef?.isArchived && <Tag color="error">{t('dataDevelopment.definition.property.isArchived')}</Tag>}
+            {!draftTaskDef?.isDeployed && !draftTaskDef?.isArchived && (
+              <Tag color="default">{t('dataDevelopment.definition.property.draft')}</Tag>
+            )}
+          </Descriptions.Item>
           {/* Owner */}
-          <Descriptions.Item
-            label={t('dataDevelopment.definition.property.owner')}
-          >
+          <Descriptions.Item label={t('dataDevelopment.definition.property.owner')}>
             {draftTaskDef?.owner ? (
               <UserSelect
                 style={{ width: '200px' }}
+                size="small"
                 value={`${draftTaskDef.owner}`}
                 onChange={(nextUserValue: string | string[]) => {
                   if (typeof nextUserValue !== 'string') {
@@ -257,52 +230,16 @@ export const Header: React.FC<Props> = props => {
             )}
           </Descriptions.Item>
           {/* Last modifier */}
-          <Descriptions.Item
-            label={t('dataDevelopment.definition.property.updater')}
-          >
-            {draftTaskDef?.lastModifier ? (
-              <UsernameText userId={draftTaskDef?.lastModifier} />
-            ) : (
-              '...'
-            )}
+          <Descriptions.Item label={t('dataDevelopment.definition.property.updater')}>
+            {draftTaskDef?.lastModifier ? <UsernameText userId={draftTaskDef?.lastModifier} /> : '...'}
           </Descriptions.Item>
           {/* Create time */}
-          <Descriptions.Item
-            label={t('dataDevelopment.definition.property.createTime')}
-          >
-            {draftTaskDef?.createTime
-              ? moment(draftTaskDef.createTime).format('YYYY-MM-DD HH:mm:ss')
-              : '...'}
+          <Descriptions.Item label={t('dataDevelopment.definition.property.createTime')}>
+            {draftTaskDef?.createTime ? moment(draftTaskDef.createTime).format('YYYY-MM-DD HH:mm:ss') : '...'}
           </Descriptions.Item>
           {/* Last update time */}
-          <Descriptions.Item
-            label={t('dataDevelopment.definition.property.lastUpdateTime')}
-          >
-            {draftTaskDef?.lastUpdateTime
-              ? moment(draftTaskDef.lastUpdateTime).format(
-                  'YYYY-MM-DD HH:mm:ss',
-                )
-              : '...'}
-          </Descriptions.Item>
-          {/* Status */}
-          <Descriptions.Item
-            label={t('dataDevelopment.definition.property.currentState')}
-          >
-            {draftTaskDef?.isDeployed && (
-              <Tag color="processing">
-                {t('dataDevelopment.definition.property.isDeployed')}
-              </Tag>
-            )}
-            {draftTaskDef?.isArchived && (
-              <Tag color="error">
-                {t('dataDevelopment.definition.property.isArchived')}
-              </Tag>
-            )}
-            {!draftTaskDef?.isDeployed && !draftTaskDef?.isArchived && (
-              <Tag color="default">
-                {t('dataDevelopment.definition.property.draft')}
-              </Tag>
-            )}
+          <Descriptions.Item label={t('dataDevelopment.definition.property.lastUpdateTime')}>
+            {draftTaskDef?.lastUpdateTime ? moment(draftTaskDef.lastUpdateTime).format('YYYY-MM-DD HH:mm:ss') : '...'}
           </Descriptions.Item>
         </Descriptions>
       </div>
@@ -313,10 +250,7 @@ export const Header: React.FC<Props> = props => {
           setCommitModalVisible(false);
         }}
         onConfirm={async (commitMsg: string) => {
-          const respData = await commitAndDeployTaskDefinition(
-            taskDefId,
-            commitMsg,
-          );
+          const respData = await commitAndDeployTaskDefinition(taskDefId, commitMsg);
           if (respData) {
             message.success('Commit success.');
             setCommitModalVisible(false);

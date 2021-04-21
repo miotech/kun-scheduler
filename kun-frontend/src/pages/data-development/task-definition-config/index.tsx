@@ -3,7 +3,7 @@ import c from 'clsx';
 import { useRouteMatch } from 'umi';
 import { Alert, Card, Form } from 'antd';
 import { KunSpin } from '@/components/KunSpin';
-import { useMount, useUnmount } from 'ahooks';
+import { useMount, useTitle, useUnmount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import useI18n from '@/hooks/useI18n';
 import { useTaskTemplateByName } from '@/hooks/useTaskTemplateByName';
@@ -37,6 +37,12 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
   } = useRedux(s => ({
     initTaskDefinition: s.dataDevelopment.editingTaskDefinition,
   }));
+
+  useTitle(
+    initTaskDefinition != null
+      ? `${t('common.pageTitle.taskDefinition')} - ${initTaskDefinition.name}`
+      : t('common.pageTitle.taskDefinition'),
+  );
 
   useMount(() => {
     if (match.params.taskDefId) {
