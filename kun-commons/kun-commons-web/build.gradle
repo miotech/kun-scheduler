@@ -22,6 +22,7 @@ dependencies {
     implementation "org.yaml:snakeyaml"
     implementation 'org.apache.httpcomponents:httpclient'
     implementation 'org.apache.httpcomponents:httpmime'
+    implementation 'io.github.classgraph:classgraph:4.8.104'
 
     testImplementation project(":kun-commons:kun-commons-testing")
 }
