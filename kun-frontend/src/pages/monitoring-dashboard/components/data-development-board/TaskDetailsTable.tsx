@@ -10,6 +10,7 @@ import { DevTaskDetail } from '@/services/monitoring-dashboard';
 import { TableOnChangeCallback } from '@/definitions/common-types';
 import getUniqId from '@/utils/getUniqId';
 import { getTaskDefinitionIdByWorkflowIds } from '@/services/task-deployments/deployed-tasks';
+import { StatusText } from '@/components/StatusText';
 
 interface OwnProps {
   pageNum: number;
@@ -102,6 +103,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         dataIndex: 'taskStatus',
         key: 'taskStatus',
         title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.taskStatus'),
+        render: txt => <StatusText status={txt} />,
       },
       {
         dataIndex: 'errorMessage',
@@ -186,6 +188,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
       <Table<DevTaskDetail>
         loading={loading || definitionIdsLoading}
         dataSource={data}
+        tableLayout="fixed"
         size="small"
         columns={columns}
         onChange={onChange}
