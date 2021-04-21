@@ -1,5 +1,6 @@
 package com.miotech.kun.datadashboard.service;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.utils.DateUtils;
@@ -68,6 +69,15 @@ public class WorkflowService {
                 .build();
         Integer startedCount = workflowClient.countTaskRun(startedRequest);
 
+        TaskRunSearchRequest pendingRequest = TaskRunSearchRequest.newBuilder()
+                .withDateFrom(DateTimeUtils.now().minusDays(1))
+                .withIncludeStartedOnly(false)
+                .withStatus(ImmutableSet.of(TaskRunStatus.CREATED, TaskRunStatus.INITIALIZING, TaskRunStatus.QUEUED))
+                .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withPageSize(0)
+                .build();
+        Integer pendingCount = workflowClient.countTaskRun(pendingRequest);
+
         TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withPageSize(0)
@@ -79,7 +89,7 @@ public class WorkflowService {
         metrics.setFailedTaskCount(failedCount);
         metrics.setRunningTaskCount(runningCount);
         metrics.setStartedTaskCount(startedCount);
-        metrics.setPendingTaskCount(totalCount - startedCount);
+        metrics.setPendingTaskCount(pendingCount);
         metrics.setTotalTaskCount(totalCount);
 
         return metrics;

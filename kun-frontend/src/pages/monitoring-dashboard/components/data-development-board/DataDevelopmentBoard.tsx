@@ -10,14 +10,16 @@ import { DevTaskDetail } from '@/services/monitoring-dashboard';
 import { useUpdateEffect } from 'ahooks';
 import { DataDevelopmentBoardFilterCardType } from '@/rematch/models/monitoringDashboard/model-state';
 
-function computeFilterTypeToRequestParam(selectedFilterCardType: DataDevelopmentBoardFilterCardType): string | undefined {
+function computeFilterTypeToRequestParam(
+  selectedFilterCardType: DataDevelopmentBoardFilterCardType,
+): string | undefined {
   switch (selectedFilterCardType) {
     case 'SUCCESS':
       return 'SUCCESS';
     case 'FAILED':
       return 'FAILED,ERROR,ABORTED';
     case 'PENDING':
-      return 'QUEUED,CREATED';
+      return 'QUEUED,CREATED,INITIALIZING';
     case 'RUNNING':
       return 'RUNNING';
     default:
@@ -51,33 +53,28 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
     dataDevelopmentMetricsLoading,
   } = dataDevelopmentBoardData;
 
-  const setSelectedFilterCardType = useCallback((payload: DataDevelopmentBoardFilterCardType) => {
-    dispatch.monitoringDashboard.setTaskDetailsSelectedFilter(payload);
-    dispatch.monitoringDashboard.setTaskDetails({
-      ...taskDetails,
-      pageNum: 1,
-    });
-  }, [
-    dispatch,
-    taskDetails,
-  ]);
+  const setSelectedFilterCardType = useCallback(
+    (payload: DataDevelopmentBoardFilterCardType) => {
+      dispatch.monitoringDashboard.setTaskDetailsSelectedFilter(payload);
+      dispatch.monitoringDashboard.setTaskDetails({
+        ...taskDetails,
+        pageNum: 1,
+      });
+    },
+    [dispatch, taskDetails],
+  );
 
   /* Reload table after pagination change */
   useUpdateEffect(() => {
     dispatch.monitoringDashboard.reloadTaskDetails({
       pageNumber: taskDetails.pageNum,
       pageSize: taskDetails.pageSize,
-      taskRunStatus: (selectedFilterCardType != null) ? computeFilterTypeToRequestParam(selectedFilterCardType) : undefined,
-      includeStartedOnly: (selectedFilterCardType !== 'PENDING') ? taskDetailsDisplayStartedOnly : false,
+      taskRunStatus:
+        selectedFilterCardType != null ? computeFilterTypeToRequestParam(selectedFilterCardType) : undefined,
+      includeStartedOnly: selectedFilterCardType !== 'PENDING' ? taskDetailsDisplayStartedOnly : false,
       last24HoursOnly: taskDetailsDisplayLast24HoursOnly,
     });
-  }, [
-    taskDetails.pageNum,
-    taskDetails.pageSize,
-    selectedFilterCardType,
-    taskDetailsDisplayStartedOnly,
-    taskDetailsDisplayLast24HoursOnly,
-  ]);
+  }, [taskDetails.pageNum, taskDetails.pageSize, selectedFilterCardType, taskDetailsDisplayStartedOnly, taskDetailsDisplayLast24HoursOnly]);
 
   const topMetricsRow = useMemo(() => {
     return (
@@ -171,14 +168,15 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
     setSelectedFilterCardType,
   ]);
 
-  const taskDetailsTableChangeHandler: TableOnChangeCallback<DevTaskDetail> = useCallback((pagination) => {
-    dispatch.monitoringDashboard.updateTaskDetails({
-      pageNum: pagination.current,
-      pageSize: pagination.pageSize,
-    });
-  }, [
-    dispatch,
-  ]);
+  const taskDetailsTableChangeHandler: TableOnChangeCallback<DevTaskDetail> = useCallback(
+    pagination => {
+      dispatch.monitoringDashboard.updateTaskDetails({
+        pageNum: pagination.current,
+        pageSize: pagination.pageSize,
+      });
+    },
+    [dispatch],
+  );
 
   return (
     <div id="data-development-board">
@@ -187,10 +185,7 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
       {/* Daily task finish count chart */}
       <Row gutter={[8, 8]}>
         <Col span={24}>
-          <DailyTaskFinishCountChart
-            data={dailyTaskFinish.data}
-            loading={dailyTaskFinish.loading}
-          />
+          <DailyTaskFinishCountChart data={dailyTaskFinish.data} loading={dailyTaskFinish.loading} />
         </Col>
       </Row>
       {/* Task details table */}
@@ -205,11 +200,11 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
             onChange={taskDetailsTableChangeHandler}
             displayStartedOnly={taskDetailsDisplayStartedOnly}
             displayLast24HoursOnly={taskDetailsDisplayLast24HoursOnly}
-            displayStartedOnlyDisabled={(selectedFilterCardType === 'PENDING')}
-            onChangeDisplayStartedOnly={(nextCheckState) => {
+            displayStartedOnlyDisabled={selectedFilterCardType === 'PENDING'}
+            onChangeDisplayStartedOnly={nextCheckState => {
               dispatch.monitoringDashboard.setTaskDetailsDisplayStartedOnly(nextCheckState);
             }}
-            onChangeDisplayLast24HoursOnly={(nextCheckState) => {
+            onChangeDisplayLast24HoursOnly={nextCheckState => {
               dispatch.monitoringDashboard.setTaskDetailsDisplayLast24HoursOnly(nextCheckState);
             }}
           />

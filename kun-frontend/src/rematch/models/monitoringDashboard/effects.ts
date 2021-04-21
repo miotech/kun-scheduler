@@ -1,8 +1,6 @@
 import { RootDispatch } from '@/rematch/store';
 import * as services from '@/services/monitoring-dashboard';
-import {
-  MonitoringDashboardModelState as ModelState
-} from '@/rematch/models/monitoringDashboard/model-state';
+import { MonitoringDashboardModelState as ModelState } from '@/rematch/models/monitoringDashboard/model-state';
 import {
   DataDevelopmentMetrics,
   DatasetColumnMetricsInfo,
@@ -77,10 +75,7 @@ const loadTopDatasetsMaxRowCountChange = (dispatch: RootDispatch) => {
 };
 
 // Data discovery board: fetch failed test cases
-const loadFailedTestCases = (
-  params: PaginationReqBody & Partial<SortReqBody>,
-  dispatch: RootDispatch,
-) => {
+const loadFailedTestCases = (params: PaginationReqBody & Partial<SortReqBody>, dispatch: RootDispatch) => {
   dispatch.monitoringDashboard.updateFailedTestCases({
     loading: true,
   });
@@ -117,10 +112,7 @@ const loadFailedTestCases = (
 };
 
 // Data discovery board: fetch datasets column metrics
-const loadDatasetMetrics = (
-  params: PaginationReqBody,
-  dispatch: RootDispatch,
-) => {
+const loadDatasetMetrics = (params: PaginationReqBody, dispatch: RootDispatch) => {
   dispatch.monitoringDashboard.updateDatasetMetrics({
     loading: true,
   });
@@ -251,12 +243,9 @@ const loadTaskDetails = (params: LoadTaskDetailsParams, dispatch: RootDispatch) 
  */
 export const effects = (dispatch: RootDispatch) => ({
   async reloadAll(modelState: ModelState) {
-    const {
-      failedTestCases,
-      datasetMetrics,
-    } = modelState.dataDiscoveryBoardData;
+    const { failedTestCases, datasetMetrics } = modelState.dataDiscoveryBoardData;
 
-    const { taskDetails } = modelState.dataDevelopmentBoardData;
+    const { taskDetails, taskDetailsDisplayLast24HoursOnly } = modelState.dataDevelopmentBoardData;
 
     dispatch.monitoringDashboard.setAllSettled(false);
     Promise.allSettled([
@@ -284,6 +273,7 @@ export const effects = (dispatch: RootDispatch) => ({
         {
           pageNumber: taskDetails.pageNum,
           pageSize: taskDetails.pageSize,
+          last24HoursOnly: taskDetailsDisplayLast24HoursOnly,
         },
         dispatch,
       ),
@@ -297,9 +287,7 @@ export const effects = (dispatch: RootDispatch) => ({
   async reloadDatasetsWithMaxRowCountChange() {
     await loadTopDatasetsMaxRowCountChange(dispatch);
   },
-  async reloadFailedTestCases(
-    params: PaginationReqBody & Partial<SortReqBody>,
-  ) {
+  async reloadFailedTestCases(params: PaginationReqBody & Partial<SortReqBody>) {
     await loadFailedTestCases(params, dispatch);
   },
   async reloadDatasetMetrics(params: PaginationReqBody) {

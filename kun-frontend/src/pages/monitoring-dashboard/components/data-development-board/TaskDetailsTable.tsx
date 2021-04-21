@@ -27,11 +27,7 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-function getComputedLinkHref(
-  taskDefIdsMap: Record<string, string | null>,
-  taskId: string,
-  taskRunId: string,
-): string {
+function getComputedLinkHref(taskDefIdsMap: Record<string, string | null>, taskId: string, taskRunId: string): string {
   if (!taskDefIdsMap[taskId]) {
     return '#';
   }
@@ -47,18 +43,13 @@ function getComputedLinkHref(
     .toString();
 }
 
-export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
-  props,
-) {
+export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(props) {
   const { data, pageNum, pageSize, total, onChange, loading } = props;
 
-  const [definitionIdsLoading, setDefinitionIdsLoading] = useState<boolean>(
-    false,
+  const [definitionIdsLoading, setDefinitionIdsLoading] = useState<boolean>(false);
+  const [workflowIdToTaskDefinitionIdMap, setWorkflowIdToTaskDefinitionIdMap] = useState<Record<string, string | null>>(
+    {},
   );
-  const [
-    workflowIdToTaskDefinitionIdMap,
-    setWorkflowIdToTaskDefinitionIdMap,
-  ] = useState<Record<string, string | null>>({});
 
   const t = useI18n();
 
@@ -71,9 +62,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
     const effectAsync = async () => {
       try {
         if (workflowIds.length) {
-          const workflowIdToTaskDefIdMapPayload = await getTaskDefinitionIdByWorkflowIds(
-            workflowIds,
-          );
+          const workflowIdToTaskDefIdMapPayload = await getTaskDefinitionIdByWorkflowIds(workflowIds);
           setWorkflowIdToTaskDefinitionIdMap(workflowIdToTaskDefIdMapPayload);
         }
       } finally {
@@ -89,22 +78,15 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         key: 'ordinal',
         title: '#',
         width: 60,
-        render: (txt: any, record: DevTaskDetail, index: number) => (
-          <span>{(pageNum - 1) * pageSize + index + 1}</span>
-        ),
+        render: (txt: any, record: DevTaskDetail, index: number) => <span>{(pageNum - 1) * pageSize + index + 1}</span>,
       },
       {
         dataIndex: 'taskName',
         key: 'taskName',
-        title: t(
-          'monitoringDashboard.dataDevelopment.taskDetailsTable.taskName',
-        ),
+        width: 280,
+        title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.taskName'),
         render: (txt, record) => {
-          const linkHref = getComputedLinkHref(
-            workflowIdToTaskDefinitionIdMap,
-            record.taskId,
-            record.taskRunId,
-          );
+          const linkHref = getComputedLinkHref(workflowIdToTaskDefinitionIdMap, record.taskId, record.taskRunId);
           if (linkHref === '#') {
             return <span>{record.taskName}</span>;
           }
@@ -119,23 +101,17 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
       {
         dataIndex: 'taskStatus',
         key: 'taskStatus',
-        title: t(
-          'monitoringDashboard.dataDevelopment.taskDetailsTable.taskStatus',
-        ),
+        title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.taskStatus'),
       },
       {
         dataIndex: 'errorMessage',
         key: 'errorMessage',
-        title: t(
-          'monitoringDashboard.dataDevelopment.taskDetailsTable.errorMessage',
-        ),
+        title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.errorMessage'),
       },
       {
         dataIndex: 'createTime',
         key: 'createTime',
-        title: t(
-          'monitoringDashboard.dataDevelopment.taskDetailsTable.createTime',
-        ),
+        title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.createTime'),
         render: (txt: any, record: DevTaskDetail) => (
           <span>
             {!isNil(record.createTime) && dayjs(record.createTime).isValid()
@@ -147,9 +123,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
       {
         dataIndex: 'startTime',
         key: 'startTime',
-        title: t(
-          'monitoringDashboard.dataDevelopment.taskDetailsTable.startTime',
-        ),
+        title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.startTime'),
         render: (txt: any, record: DevTaskDetail) => (
           <span>
             {!isNil(record.startTime) && dayjs(record.startTime).isValid()
@@ -161,9 +135,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
       {
         dataIndex: 'endTime',
         key: 'endTime',
-        title: t(
-          'monitoringDashboard.dataDevelopment.taskDetailsTable.endTime',
-        ),
+        title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.endTime'),
         render: (txt: any, record: DevTaskDetail) => (
           <span>
             {!isNil(record.endTime) && dayjs(record.endTime).isValid()
@@ -186,11 +158,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
             {/* Radio button: display started tasks only */}
             <Checkbox
               disabled={props.displayStartedOnlyDisabled || false}
-              checked={
-                !props.displayStartedOnlyDisabled
-                  ? props.displayStartedOnly || false
-                  : false
-              }
+              checked={!props.displayStartedOnlyDisabled ? props.displayStartedOnly || false : false}
               onChange={e => {
                 const { checked } = e.target;
                 if (props.onChangeDisplayStartedOnly) {
@@ -198,9 +166,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
                 }
               }}
             >
-              {t(
-                'monitoringDashboard.dataDevelopment.taskDetailsTable.displayStartedOnly',
-              )}
+              {t('monitoringDashboard.dataDevelopment.taskDetailsTable.displayStartedOnly')}
             </Checkbox>
             {/* Radio button: display tasks in 24 hours only */}
             <Checkbox
@@ -212,9 +178,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
                 }
               }}
             >
-              {t(
-                'monitoringDashboard.dataDevelopment.taskDetailsTable.display24HoursOnly',
-              )}
+              {t('monitoringDashboard.dataDevelopment.taskDetailsTable.display24HoursOnly')}
             </Checkbox>
           </Space>
         </span>
@@ -225,11 +189,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         size="small"
         columns={columns}
         onChange={onChange}
-        rowKey={r =>
-          `${getUniqId()}-${r.taskName}-${r.taskStatus}-${r.duration}-${
-            r.startTime
-          }-${r.endTime}`
-        }
+        rowKey={r => `${getUniqId()}-${r.taskName}-${r.taskStatus}-${r.duration}-${r.startTime}-${r.endTime}`}
         pagination={{
           current: pageNum,
           pageSize,
