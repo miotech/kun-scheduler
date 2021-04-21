@@ -362,6 +362,7 @@ export default {
   "scheduledTasks.DAG": "DAG",
   "taskRun.property.id": "Run Instance ID",
   "taskRun.property.status": "Status",
+  "taskRun.property.scheduledAt": "Scheduled At",
   "taskRun.property.startAt": "Start Time",
   "taskRun.property.endAt": "End Time",
   "taskRun.property.duration": "Duration",

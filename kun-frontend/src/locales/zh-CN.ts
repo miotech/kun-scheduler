@@ -362,6 +362,7 @@ export default {
   "scheduledTasks.DAG": "DAG",
   "taskRun.property.id": "运行实例 ID",
   "taskRun.property.status": "状态",
+  "taskRun.property.scheduledAt": "计划于",
   "taskRun.property.startAt": "开始时间",
   "taskRun.property.endAt": "结束时间",
   "taskRun.property.duration": "耗时",
