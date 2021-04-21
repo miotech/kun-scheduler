@@ -13,6 +13,7 @@ import { ParamConfig } from '@/pages/data-development/task-definition-config/com
 import { SchedulingConfig } from '@/pages/data-development/task-definition-config/components/ScheduingConfig';
 import useRedux from '@/hooks/useRedux';
 
+import { NotificationConfig } from '@/pages/data-development/task-definition-config/components/NotificationConfig';
 import styles from './BodyForm.less';
 
 interface BodyFormProps extends React.ComponentProps<'div'> {
@@ -26,15 +27,11 @@ const formLayout = {
   wrapperCol: { span: 18 },
 };
 
-export const BodyForm: React.FC<BodyFormProps> = props => {
+export const BodyForm: React.FC<BodyFormProps> = function TaskDefinitionBodyForm(props) {
   const t = useI18n();
   const { dispatch } = useRedux(() => ({}));
 
-  const {
-    initTaskDefinition,
-    taskTemplate,
-    form,
-  } = props;
+  const { initTaskDefinition, taskTemplate, form } = props;
 
   return (
     <Form
@@ -63,25 +60,20 @@ export const BodyForm: React.FC<BodyFormProps> = props => {
       {...formLayout}
     >
       <Tabs>
-        <Tabs.TabPane
-          tab={t('dataDevelopment.definition.paramConfig')}
-          key="paramConfig"
-          forceRender
-        >
-          <ParamConfig
-            form={form}
-            taskTemplate={taskTemplate}
-            initTaskDefinition={initTaskDefinition}
-          />
+        {/* Task execution parameters */}
+        <Tabs.TabPane tab={t('dataDevelopment.definition.paramConfig')} key="paramConfig" forceRender>
+          <ParamConfig form={form} taskTemplate={taskTemplate} initTaskDefinition={initTaskDefinition} />
         </Tabs.TabPane>
-        <Tabs.TabPane
-          tab={t('dataDevelopment.definition.scheduleConfig')}
-          key="scheduleConfig"
-          forceRender
-        >
-          <SchedulingConfig
+        {/* Schedule config */}
+        <Tabs.TabPane tab={t('dataDevelopment.definition.scheduleConfig')} key="scheduleConfig" forceRender>
+          <SchedulingConfig form={form} initTaskDefinition={initTaskDefinition} />
+        </Tabs.TabPane>
+        {/* Notification rules config */}
+        <Tabs.TabPane tab={t('dataDevelopment.definition.notificationConfig')} key="notificationConfig" forceRender>
+          <NotificationConfig
             form={form}
-            initTaskDefinition={initTaskDefinition}
+            initNotificationWhen={initTaskDefinition?.taskPayload?.notifyConfig?.notifyWhen || null}
+            initUserNotificationConfigItems={initTaskDefinition?.taskPayload?.notifyConfig?.notifierConfig || null}
           />
         </Tabs.TabPane>
       </Tabs>

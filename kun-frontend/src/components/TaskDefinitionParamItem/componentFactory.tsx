@@ -13,33 +13,15 @@ import { KeyValueTable } from '@/components/KeyValueTable/KeyValueTable';
 export function formComponentFactory(type: ParameterDisplayType | string, props: any) {
   switch (type) {
     case 'sql':
-      return (
-        <SQLEditor
-          {...props}
-        />
-      );
+      return <SQLEditor {...props} />;
     case 'string':
-      return (
-        <Input
-          {...props}
-        />
-      );
+      return <Input {...props} />;
     case 'text':
-      return (
-        <Input.TextArea
-          {...props}
-        />
-      );
+      return <Input.TextArea style={{ minHeight: '140px' }} {...props} />;
     case 'datasource':
-      return (
-        <DataSourceSingleSelect
-          {...props}
-        />
-      );
+      return <DataSourceSingleSelect {...props} />;
     case 'keyvalue':
-      return <KeyValueTable
-        {...props}
-      />;
+      return <KeyValueTable {...props} />;
     default:
       return null;
   }
