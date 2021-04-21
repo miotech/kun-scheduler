@@ -24,15 +24,8 @@ interface PollingLogViewerProps {
   saveFileName?: string;
 }
 
-const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(
-  props,
-) {
-  const {
-    pollInterval = 3000,
-    queryFn = () => Promise.resolve(null),
-    startPolling = false,
-    saveFileName,
-  } = props;
+const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(props) {
+  const { pollInterval = 3000, queryFn = () => Promise.resolve(null), startPolling = false, saveFileName } = props;
 
   const t = useI18n();
 
@@ -41,9 +34,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(
   const [terminated, setTerminated] = React.useState<boolean>(false);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [copied, setCopied] = React.useState<boolean>(false);
-  const [lastRequestReturned, setLastRequestReturned] = React.useState<boolean>(
-    true,
-  );
+  const [lastRequestReturned, setLastRequestReturned] = React.useState<boolean>(true);
 
   /* When startPolling or query function changed, reset terminate flag */
   useEffect(() => {
@@ -96,11 +87,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(
       <KunSpin spinning={loading} className="lazylog-spin-container">
         <div className="lazylog-button-group">
           <Tooltip
-            title={
-              copied
-                ? t('common.reactlazylog.copyToClipboardSuccess')
-                : t('common.reactlazylog.copyToClipboard')
-            }
+            title={copied ? t('common.reactlazylog.copyToClipboardSuccess') : t('common.reactlazylog.copyToClipboard')}
             onVisibleChange={() => {
               setCopied(false);
             }}
@@ -132,7 +119,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(
           startFollowing
           render={({ onScroll, follow }) => (
             <LazyLog
-              extraLines={0}
+              extraLines={1}
               enableSearch
               selectableLines
               text={text}
