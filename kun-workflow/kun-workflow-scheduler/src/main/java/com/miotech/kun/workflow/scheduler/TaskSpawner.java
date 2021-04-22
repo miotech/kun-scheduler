@@ -50,8 +50,6 @@ public class TaskSpawner {
 
     private final TickDao tickDao;
 
-    private final long SCHEDULE_INTERVAL = 60000l;
-
     private final Deque<TaskGraph> graphs;
     private final InnerEventLoop eventLoop;
 

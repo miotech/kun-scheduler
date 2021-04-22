@@ -49,12 +49,14 @@ public class TaskAttemptQueue {
         TaskAttempt taskAttempt = queue.poll();
         dispatchedTaskAttempt.add(taskAttempt.getId());
         logger.debug("taskAttemptId = {} acquire worker token from queue : {}, current size = {}, max size = {}", taskAttempt.getId(), name, remainCapacity, capacity);
+        logger.debug("queue = {} has {} taskAttempt in queue", getName(), getSize());
         return taskAttempt;
 
     }
 
     public synchronized void add(TaskAttempt taskAttempt) {
         queue.add(taskAttempt);
+        logger.debug("queue = {} has {} taskAttempt in queue", getName(), getSize());
     }
 
     public synchronized boolean remove(TaskAttempt taskAttempt) {
@@ -67,6 +69,7 @@ public class TaskAttemptQueue {
             if (queued.getId().equals(taskAttempt.getId())) {
                 iterator.remove();
                 logger.info("remove taskAttempt from queue , attemptId = {},queueName = {}", taskAttempt.getId(), taskAttempt.getQueueName());
+                logger.debug("queue = {} has {} taskAttempt in queue", getName(), getSize());
                 return true;
             }
         }
