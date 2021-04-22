@@ -27,7 +27,6 @@ export const TaskAttemptDetail: React.FC<Props> = memo(function TaskAttemptDetai
   const handleChangeAttempt = (nextAttempt: number) => {
     if (setSelectedAttemptMap && taskRun) {
       setSelectedAttemptMap((currentState: Record<string, number>) => {
-        console.log('currentState =', currentState);
         return {
           ...currentState,
           [taskRun.id]: nextAttempt,
