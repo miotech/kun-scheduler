@@ -57,6 +57,7 @@ export async function fetchScheduledTaskRunLog(taskRunId: string): ServiceRespPr
 
 export async function fetchScheduledTaskRunLogWithoutErrorNotification(
   taskRunId: string,
+  attempt: number = -1,
   startLineIndex: number | undefined = -5000,
 ): ServiceRespPromise<TaskRunLog> {
   const axiosInstance = axios.create();
@@ -68,6 +69,7 @@ export async function fetchScheduledTaskRunLogWithoutErrorNotification(
         .param({
           id: taskRunId,
           start: startLineIndex,
+          ...(attempt > 0 ? { attempt } : {}),
         })
         .toString(),
     )
@@ -232,9 +234,7 @@ export async function fetchTaskRunDAG(
  * Restart a deployed task run instance
  * @param taskRunId
  */
-export async function restartTaskRunInstance(
-  taskRunId: string,
-): ServiceRespPromise<TaskRun> {
+export async function restartTaskRunInstance(taskRunId: string): ServiceRespPromise<TaskRun> {
   return post('/deployed-taskruns/:taskRunId/_restart', {
     pathParams: {
       taskRunId,
@@ -247,9 +247,7 @@ export async function restartTaskRunInstance(
  * Abort a deployed task run instance
  * @param taskRunId
  */
-export async function abortTaskRunInstance(
-  taskRunId: string,
-): ServiceRespPromise<TaskRun> {
+export async function abortTaskRunInstance(taskRunId: string): ServiceRespPromise<TaskRun> {
   return put('/deployed-taskruns/:taskRunId/_abort', {
     pathParams: {
       taskRunId,

@@ -35,6 +35,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
   }));
 
   const [selectedTaskRun, setSelectedTaskRun] = useState<TaskRun | null>(null);
+  const [selectedAttemptMap, setSelectedAttemptMap] = useState<Record<string, number>>({});
 
   const [query, setQuery] = useQueryParams({
     taskRunId: StringParam,
@@ -59,6 +60,10 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
   useMount(() => {
     // highlight corresponding aside menu item
     dispatch.route.updateCurrentPath('/operation-center/scheduled-tasks/:id');
+  });
+
+  useUnmount(() => {
+    setSelectedAttemptMap({});
   });
 
   useEffect(() => {
@@ -161,6 +166,8 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
         <ReflexElement className={styles.LeftPanel} flex={5} minSize={192}>
           <KunSpin spinning={taskRunsIsLoading}>
             <TaskRunsTable
+              selectedAttemptMap={selectedAttemptMap}
+              setSelectedAttemptMap={setSelectedAttemptMap}
               tableData={taskRunsData || []}
               pageNum={filters.pageNum}
               pageSize={filters.pageSize}
@@ -178,6 +185,8 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
           <RightPanel
             rightPanelRef={rightPanelRef}
             selectedTaskRun={selectedTaskRun}
+            selectedAttemptMap={selectedAttemptMap}
+            setSelectedAttemptMap={setSelectedAttemptMap}
             dagContainerSize={dagContainerSize}
           />
         </ReflexElement>

@@ -1,25 +1,21 @@
 import React, { memo, useCallback, useState } from 'react';
-import { Tabs } from 'antd';
-import useI18n from '@/hooks/useI18n';
-import { FileSearchOutlined, ForkOutlined } from '@ant-design/icons';
-import { TaskRunDAG } from '@/pages/operation-center/deployed-task-detail/components/TaskRunDAG';
-import { TaskRunLogViewer } from '@/pages/operation-center/deployed-task-detail/components/TaskRunLogViewer';
 import { TaskRun } from '@/definitions/TaskRun.type';
 
 import styles from '@/pages/operation-center/deployed-task-detail/index.less';
+import { TaskAttemptDetail } from '@/pages/operation-center/deployed-task-detail/components/TaskAttemptDetail';
 
 interface OwnProps {
   rightPanelRef?: any;
   selectedTaskRun: TaskRun | null;
   dagContainerSize: { width?: number; height?: number };
+  selectedAttemptMap: Record<string, number>;
+  setSelectedAttemptMap: (nextState: Record<string, number>) => any;
 }
 
 type Props = OwnProps;
 
 export const RightPanel: React.FC<Props> = memo(function RightPanel(props) {
-  const { rightPanelRef, selectedTaskRun, dagContainerSize } = props;
-
-  const t = useI18n();
+  const { rightPanelRef, selectedTaskRun, dagContainerSize, selectedAttemptMap, setSelectedAttemptMap } = props;
 
   const [currentTab, setCurrentTab] = useState<string>('logs');
 
@@ -29,42 +25,17 @@ export const RightPanel: React.FC<Props> = memo(function RightPanel(props) {
 
   return (
     <div className={styles.RightPanel} ref={rightPanelRef}>
-      <Tabs
-        type="card"
-        defaultActiveKey="logs"
-        activeKey={currentTab}
-        onChange={handleTabChange}
-        className={styles.RightPanelTabsContainer}
-      >
-        <Tabs.TabPane
-          tab={
-            <span>
-              <FileSearchOutlined />
-              <span>{t('scheduledTasks.logs')}</span>
-            </span>
-          }
-          key="logs"
-        >
-          <TaskRunLogViewer taskRun={selectedTaskRun} />
-        </Tabs.TabPane>
-        <Tabs.TabPane
-          tab={
-            <span>
-              <ForkOutlined />
-              <span>{t('scheduledTasks.DAG')}</span>
-            </span>
-          }
-          key="dag"
-        >
-          <div id="taskrun-dag-container" className={styles.DAGContainer}>
-            <TaskRunDAG
-              taskRun={selectedTaskRun}
-              width={dagContainerSize.width ?? 0}
-              height={(dagContainerSize.height ?? 20) - 20}
-            />
-          </div>
-        </Tabs.TabPane>
-      </Tabs>
+      <TaskAttemptDetail
+        currentTab={currentTab}
+        onTabChange={handleTabChange}
+        taskRun={selectedTaskRun}
+        width={dagContainerSize?.width}
+        height={dagContainerSize?.height}
+        attempt={
+          selectedTaskRun && selectedAttemptMap[selectedTaskRun.id] ? selectedAttemptMap[selectedTaskRun.id] : undefined
+        }
+        setSelectedAttemptMap={setSelectedAttemptMap}
+      />
     </div>
   );
 });

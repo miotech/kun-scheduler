@@ -1,7 +1,7 @@
 import React, { FC, useCallback, useEffect } from 'react';
 import c from 'clsx';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
-import { Button, message, Tooltip } from 'antd';
+import { Button, message, Pagination, Tooltip } from 'antd';
 import { CopyOutlined, DownloadOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 import { useInterval } from 'ahooks';
@@ -25,6 +25,9 @@ interface PollingLogViewerProps {
   saveFileName?: string;
   presetLineLimit?: number;
   onDownload?: () => Promise<string[]>;
+  totalAttempts?: number;
+  selectedAttempt?: number;
+  onChangeAttempt?: (nextAttempt: number) => any;
 }
 
 const logger = LogUtils.getLoggers('PollingLogViewer');
@@ -37,6 +40,9 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(pr
     saveFileName,
     presetLineLimit,
     onDownload,
+    totalAttempts,
+    selectedAttempt,
+    onChangeAttempt,
   } = props;
 
   const t = useI18n();
@@ -53,7 +59,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(pr
 
   /* When startPolling or query function changed, reset terminate flag */
   useEffect(() => {
-    if ((queryFn != null) && startPolling) {
+    if (queryFn != null && startPolling) {
       setTerminated(false);
       setLastRequestReturned(true);
       setLoading(true);
@@ -143,6 +149,20 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(pr
           <></>
         )}
         <div className="lazylog-button-group">
+          {totalAttempts != null ? (
+            <span className="lazylog-attempt-pagination-wrapper">
+              <Pagination
+                simple
+                current={selectedAttempt}
+                total={totalAttempts}
+                pageSize={1}
+                size="small"
+                onChange={onChangeAttempt}
+              />
+            </span>
+          ) : (
+            <></>
+          )}
           <Tooltip
             title={copied ? t('common.reactlazylog.copyToClipboardSuccess') : t('common.reactlazylog.copyToClipboard')}
             onVisibleChange={() => {

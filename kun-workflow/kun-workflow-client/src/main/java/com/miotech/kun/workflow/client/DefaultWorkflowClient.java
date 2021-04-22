@@ -205,20 +205,30 @@ public class DefaultWorkflowClient implements WorkflowClient {
 
     @Override
     public TaskRunLog getLatestRunLog(Long taskRunId) {
+        return getLatestRunLog(taskRunId, -1);
+    }
+
+    @Override
+    public TaskRunLog getLatestRunLog(Long taskRunId, Integer attempt) {
         TaskRunLogRequest request = TaskRunLogRequest.newBuilder()
                 .withTaskRunId(taskRunId)
-                .withAttempt(-1)
+                .withAttempt(attempt)
                 .build();
         return wfApi.getTaskRunLog(request);
     }
 
     @Override
     public TaskRunLog getLatestRunLog(Long taskRunId, Integer start, Integer end) {
+        return getLatestRunLog(taskRunId, start, end, -1);
+    }
+
+    @Override
+    public TaskRunLog getLatestRunLog(Long taskRunId, Integer start, Integer end, Integer attempt) {
         TaskRunLogRequest request = TaskRunLogRequest.newBuilder()
                 .withTaskRunId(taskRunId)
                 .withStartLine(start)
                 .withEndLine(end)
-                .withAttempt(-1)
+                .withAttempt(attempt)
                 .build();
         return wfApi.getTaskRunLog(request);
     }

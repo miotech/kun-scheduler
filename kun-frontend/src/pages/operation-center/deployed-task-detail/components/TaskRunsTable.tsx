@@ -1,5 +1,5 @@
 import React, { FunctionComponent, useCallback, useMemo } from 'react';
-import { Button, Popconfirm, Space, Table } from 'antd';
+import { Button, InputNumber, Popconfirm, Space, Table, Tooltip } from 'antd';
 import moment from 'moment-timezone';
 import momentDurationFormatSetup from 'moment-duration-format';
 import { ColumnProps } from 'antd/es/table';
@@ -8,11 +8,12 @@ import useI18n from '@/hooks/useI18n';
 import getLatestAttempt from '@/utils/getLatestAttempt';
 import { StatusText } from '@/components/StatusText';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
-import Icon from '@ant-design/icons';
+import Icon, { StepForwardOutlined } from '@ant-design/icons';
 import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
 
 import dayjs from 'dayjs';
+import { TaskAttempt } from '@/definitions/TaskAttempt.type';
 import styles from './TaskRunsTable.less';
 
 interface TaskRunsTableProps {
@@ -25,6 +26,8 @@ interface TaskRunsTableProps {
   setSelectedTaskRun?: (taskRun: TaskRun | null) => any;
   onClickStopTaskRun?: (taskRun: TaskRun | null) => any;
   onClickRerunTaskRun?: (taskRun: TaskRun | null) => any;
+  selectedAttemptMap: Record<string, number>;
+  setSelectedAttemptMap: (nextState: Record<string, number>) => any;
 }
 
 // @ts-ignore
@@ -62,7 +65,20 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
     setSelectedTaskRun,
     onClickRerunTaskRun = () => {},
     onClickStopTaskRun = () => {},
+    selectedAttemptMap,
+    setSelectedAttemptMap,
   } = props;
+
+  const getCorrespondingAttempt = useCallback(
+    (record: TaskRun) => {
+      if (!selectedAttemptMap[record.id]) {
+        return getLatestAttempt(record);
+      }
+      // else
+      return record.attempts.find(i => i.attempt === selectedAttemptMap[record.id]) as TaskAttempt;
+    },
+    [selectedAttemptMap],
+  );
 
   const columns: ColumnProps<TaskRun>[] = useMemo(
     () => [
@@ -72,10 +88,56 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
         key: 'id',
       },
       {
+        key: 'attempt',
+        title: t('taskRun.property.attempt'),
+        width: 86,
+        render: (txt: unknown, record: TaskRun) => {
+          const maxAttempt = Math.max(...record.attempts.map(i => i.attempt));
+          return (
+            <span>
+              <InputNumber
+                size="small"
+                style={{ width: '45px' }}
+                min={1}
+                max={maxAttempt}
+                step={1}
+                value={getCorrespondingAttempt(record)?.attempt || maxAttempt}
+                onChange={nextAttempt => {
+                  if (Number(nextAttempt)) {
+                    setSelectedAttemptMap({
+                      ...selectedAttemptMap,
+                      [record.id]: Number(nextAttempt),
+                    });
+                  }
+                }}
+              />
+              {(getCorrespondingAttempt(record)?.attempt || maxAttempt) < maxAttempt ? (
+                <Tooltip title={t('taskRun.property.attempt.jumpToLatest')}>
+                  <Button
+                    type="link"
+                    size="small"
+                    icon={<StepForwardOutlined />}
+                    onClick={() => {
+                      // @ts-ignore
+                      setSelectedAttemptMap({
+                        ...selectedAttemptMap,
+                        [record.id]: null,
+                      });
+                    }}
+                  />
+                </Tooltip>
+              ) : (
+                <></>
+              )}
+            </span>
+          );
+        },
+      },
+      {
         key: 'status',
         title: t('taskRun.property.status'),
         render: (txt: any, record: TaskRun) => {
-          const latestAttempt = getLatestAttempt(record);
+          const latestAttempt = getCorrespondingAttempt(record);
           if (!latestAttempt) {
             return '-';
           }
@@ -101,7 +163,7 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
         key: 'startAt',
         title: t('taskRun.property.startAt'),
         render: (txt: any, record: TaskRun) => {
-          const latestAttempt = getLatestAttempt(record);
+          const latestAttempt = getCorrespondingAttempt(record);
           if (!latestAttempt) {
             return '-';
           }
@@ -115,7 +177,7 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
         key: 'endAt',
         title: t('taskRun.property.endAt'),
         render: (txt: any, record: TaskRun) => {
-          const latestAttempt = getLatestAttempt(record);
+          const latestAttempt = getCorrespondingAttempt(record);
           if (!latestAttempt) {
             return '-';
           }
@@ -128,7 +190,7 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
         key: 'duration',
         title: t('taskRun.property.duration'),
         render: (txt: any, record: TaskRun) => {
-          const latestAttempt = getLatestAttempt(record);
+          const latestAttempt = getCorrespondingAttempt(record);
           if (!latestAttempt) {
             return '-';
           }
@@ -201,7 +263,7 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
         },
       },
     ],
-    [t],
+    [getCorrespondingAttempt, onClickRerunTaskRun, onClickStopTaskRun, selectedAttemptMap, setSelectedAttemptMap, t],
   );
 
   const handleRowEvents = useCallback(
@@ -233,6 +295,7 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
       rowSelection={{
         selectedRowKeys: selectedTaskRun ? [selectedTaskRun.id] : [],
         type: 'radio',
+        columnWidth: 30,
         onSelect: record => {
           if (setSelectedTaskRun) {
             setSelectedTaskRun(record);
