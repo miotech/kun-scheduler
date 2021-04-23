@@ -337,6 +337,8 @@ export default {
   "dataDevelopment.definition.notificationConfig.EMAIL.emailList": "邮件列表",
   "dataDevelopment.definition.notificationConfig.EMAIL.emailList.validationError": "请输入合法的 Email 地址",
   "dataDevelopment.dryRunResult": "试运行结果",
+  "dataDevelopment.dryRunLog": "试运行日志",
+  "dataDevelopment.stopDryRun": "停止",
   "dataDevelopment.definition.creationTitle": "创建任务",
   "dataDevelopement.definition.deleteAlert.title": "确认删除该任务吗？",
   "dataDevelopement.definition.deleteAlert.content": "请注意，该操作无法撤销",

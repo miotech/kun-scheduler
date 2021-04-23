@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import c from 'clsx';
 import { useRouteMatch } from 'umi';
-import { Alert, Card, Form } from 'antd';
+import { Alert, Button, Card, Form } from 'antd';
 import { KunSpin } from '@/components/KunSpin';
 import { useMount, useTitle, useUnmount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
@@ -15,10 +15,13 @@ import { BottomLayout } from '@/pages/data-development/task-definition-config/co
 import {
   dryRunTaskDefinitionWithoutErrorNotification,
   fetchTaskTryLog,
+  stopTaskTry,
 } from '@/services/data-development/task-definitions';
 
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 
+import { RunStatusEnum } from '@/definitions/StatEnums.type';
+import { StatusText } from '@/components/StatusText';
 import { normalizeTaskDefinition, transformFormTaskConfig } from './helpers';
 
 import styles from './TaskDefinitionConfigView.less';
@@ -29,6 +32,8 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
   const [form] = Form.useForm();
   const [draftTaskDef, setDraftTaskDef] = useState<TaskDefinition | null>(null);
   const [taskTryId, setTaskTryId] = useState<string | null>(null);
+  const [taskTryStatus, setTaskTryStatus] = useState<RunStatusEnum>('CREATED');
+  const [taskTryStopped, setTaskTryStopped] = useState<boolean>(true);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const {
@@ -84,11 +89,40 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
     setTaskTryId(null);
   }, [setTaskTryId]);
 
-  const logQueryFn = useCallback(() => {
+  const logQueryFn = useCallback(async () => {
     if (!taskTryId) {
       return Promise.resolve(null);
     }
-    return fetchTaskTryLog(taskTryId || '', { start: -5000 });
+    try {
+      const response = await fetchTaskTryLog(taskTryId || '', { start: -5000 });
+      if (response?.isTerminated) {
+        setTaskTryStopped(true);
+      }
+      if (response?.status) {
+        setTaskTryStatus(status => {
+          if (
+            status === 'ABORTING' &&
+            response.status !== 'ABORTED' &&
+            response.status !== 'SUCCESS' &&
+            response.status !== 'FAILED'
+          ) {
+            return status;
+          }
+          // else
+          return response.status;
+        });
+      }
+      return response;
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }, [taskTryId]);
+
+  useEffect(() => {
+    if (taskTryId != null) {
+      setTaskTryStatus('CREATED');
+      setTaskTryStopped(false);
+    }
   }, [taskTryId]);
 
   const bodyContent = draftTaskDef ? (
@@ -125,10 +159,37 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
     </div>
   );
 
+  const bottomLayoutTitle = useMemo(() => {
+    return (
+      <span style={{ fontSize: '14px' }}>
+        <span>{t('dataDevelopment.dryRunLog')}</span>
+        <span style={{ marginLeft: '8px' }}>
+          <StatusText status={taskTryStatus} />
+        </span>
+        {/* Stop Button */}
+        <Button
+          size="small"
+          type="link"
+          style={{ marginLeft: '16px' }}
+          onClick={() => {
+            if (taskTryId != null) {
+              setTaskTryStatus('ABORTING');
+              setTaskTryStopped(true);
+              stopTaskTry(taskTryId);
+            }
+          }}
+          disabled={taskTryStopped}
+        >
+          {t('dataDevelopment.stopDryRun')}
+        </Button>
+      </span>
+    );
+  }, [t, taskTryId, taskTryStatus, taskTryStopped]);
+
   return (
     <div className={c(styles.TaskDefinitionConfigView)}>
       {bodyContent}
-      <BottomLayout visible={taskTryId !== null} title="Dry run logs" onClose={handleCloseDryRunLog}>
+      <BottomLayout visible={taskTryId !== null} title={bottomLayoutTitle} onClose={handleCloseDryRunLog}>
         <PollingLogViewer
           startPolling={taskTryId !== null}
           pollInterval={5000} // poll log every 5 seconds

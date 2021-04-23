@@ -337,6 +337,8 @@ export default {
   "dataDevelopment.definition.notificationConfig.EMAIL.emailList": "Email List",
   "dataDevelopment.definition.notificationConfig.EMAIL.emailList.validationError": "Please input valid email address",
   "dataDevelopment.dryRunResult": "Dry Run Result",
+  "dataDevelopment.dryRunLog": "Dry Run Log",
+  "dataDevelopment.stopDryRun": "Stop",
   "dataDevelopment.definition.creationTitle": "Create Task",
   "dataDevelopement.definition.deleteAlert.title": "Are you sure you want to delete this task?",
   "dataDevelopement.definition.deleteAlert.content": "This task will be removed permanently.",
