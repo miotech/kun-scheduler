@@ -10,9 +10,9 @@
   },
   "defaultValues": {
     "livyHost": "${ dataplatform.livy.host }",
-    "dataStoreUrl": "s3://com.miotech.data.prd/Database/DM",
     "variables": "{}",
-    "sparkConf": "{}"
+    "jars": "${ dataplatform.lineage.analysis.jar }",
+    "sparkConf": "{\"spark.sql.queryExecutionListeners\":\"za.co.absa.spline.harvester.listener.SplineQueryExecutionListener\"}"
   },
   "displayParameters": [{
     "name": "sparkSQL",
@@ -24,5 +24,6 @@
       "type": "keyvalue",
       "required": false,
       "displayName": "Extra Spark Configuration"
-    }]
+    }],
+  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkConfigTaskTemplateRender"
 }

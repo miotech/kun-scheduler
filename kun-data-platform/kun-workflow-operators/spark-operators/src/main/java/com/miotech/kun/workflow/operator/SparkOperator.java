@@ -28,10 +28,6 @@ import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 public class SparkOperator extends LivyBaseSparkOperator {
     private static final Logger logger = LoggerFactory.getLogger(SparkOperator.class);
     private final YarnLoggerParser loggerParser = new YarnLoggerParser();
-    private final String SPLINE_QUERY_LISTENER = "za.co.absa.spline.harvester.listener.SplineQueryExecutionListener";
-    private final String SPARK_QUERY_LISTENER = "spark.sql.queryExecutionListeners";
-    private final String SPLINE_QUERY_LISTENER_PATH = "s3://com.miotech.data.prd/spline/spark-2.4-spline-agent-bundle_2.11-0.6.0-SNAPSHOT.jar";
-    private final String HDFS_ROOT = "s3a://com.miotech.data.prd";
     private final Integer LIVY_TIMEOUT_LIMIT = 3;
 
 
@@ -61,7 +57,6 @@ public class SparkOperator extends LivyBaseSparkOperator {
         if (!Strings.isNullOrEmpty(sessionName)) {
             job.setName(sessionName);
         }
-        jars = jars + "," + SPLINE_QUERY_LISTENER_PATH;
         if (!Strings.isNullOrEmpty(jars)) {
             job.setJars(Arrays.asList(jars.split(",")));
         }
@@ -75,7 +70,6 @@ public class SparkOperator extends LivyBaseSparkOperator {
         if (!Strings.isNullOrEmpty(sparkConf)) {
             job.setConf(JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
         }
-        job.addConf(SPARK_QUERY_LISTENER, SPLINE_QUERY_LISTENER);
         job.addConf("spark.hadoop.taskRunId", taskRunId.toString());
         if (!job.getConf().containsKey("spark.driver.memory")) {
             job.addConf("spark.driver.memory", "2g");
@@ -154,7 +148,8 @@ public class SparkOperator extends LivyBaseSparkOperator {
             //wait spline send execPlan
             waitForSeconds(15);
             //解析spark 任务上下游
-            lineageAnalysis(context.getConfig(), taskRunId);
+            TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), taskRunId);
+            report(taskAttemptReport);
             return true;
         } else {
             return false;
@@ -196,31 +191,6 @@ public class SparkOperator extends LivyBaseSparkOperator {
     public Resolver getResolver() {
         // TODO: implement this
         return new NopResolver();
-    }
-
-    public void lineageAnalysis(Config config, Long taskRunId) {
-        try {
-            String sparkConf = config.getString(SparkConfiguration.CONF_LIVY_BATCH_CONF);
-            logger.debug("spark conf = {}", sparkConf);
-            Configuration conf = new Configuration();
-            String configS3AccessKey = "fs.s3a.access.key";
-            String configS3SecretKey = "fs.s3a.secret.key";
-            conf.set(configS3AccessKey, "AKIAVKWKHNJW3VFEZ5XJ");
-            conf.set(configS3SecretKey, "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");
-            conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
-            conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
-            HdfsFileSystem hdfsFileSystem = new HdfsFileSystem(HDFS_ROOT, conf);
-            SparkOperatorResolver resolver = new SparkOperatorResolver(hdfsFileSystem, taskRunId);
-            List<DataStore> inputs = resolver.resolveUpstreamDataStore(config);
-            List<DataStore> outputs = resolver.resolveDownstreamDataStore(config);
-            TaskAttemptReport taskAttemptReport = TaskAttemptReport.newBuilder()
-                    .withInlets(inputs)
-                    .withOutlets(outputs)
-                    .build();
-            report(taskAttemptReport);
-        } catch (Throwable e) {
-            logger.error("create hdfs file system failed", e);
-        }
     }
 
 }

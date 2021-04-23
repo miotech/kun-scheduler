@@ -40,10 +40,10 @@
     }
   ],
   "defaultValues": {
-    "jars": "",
+    "jars": "${ dataplatform.lineage.analysis.jar }",
     "files": "",
     "livyHost": "${ dataplatform.livy.host }",
-    "sparkConf": "{}",
+    "sparkConf": "{\"spark.sql.queryExecutionListeners\":\"za.co.absa.spline.harvester.listener.SplineQueryExecutionListener\"}",
     "variables": "{}",
     "application": ""
   },
