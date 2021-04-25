@@ -32,7 +32,7 @@
     "jars": "${ dataplatform.lineage.analysis.jar }",
     "files": "${ dataplatform.etl.jar }",
     "livyHost": "${ dataplatform.livy.host }",
-    "sparkConf": "{\"kun.dataplatform.environment\": \"dev\", \"spark.sql.queryExecutionListeners\":\"za.co.absa.spline.harvester.listener.SplineQueryExecutionListener\"}",
+    "sparkConf": "{\"kun.dataplatform.environment\": \"dev\", \"spark.sql.queryExecutionListeners\":\"za.co.absa.spline.harvester.listener.SplineQueryExecutionListener\", \"spark.hadoop.spline.hdfs_dispatcher.address\":\"s3a://com.miotech.data.prd\", \"spark.fs.s3a.access.key\":\"AKIAVKWKHNJW3VFEZ5XJ\", \"spark.fs.s3a.secret.key\":\"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\"}",
     "variables": "{}",
     "application": "com.miotech.etl.knowledge_graph.app.Application"
   },

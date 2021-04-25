@@ -3,9 +3,7 @@ package com.miotech.kun.workflow.operator;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.*;
-import com.miotech.kun.workflow.operator.resolver.SparkOperatorResolver;
 import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
 import com.miotech.kun.workflow.operator.spark.models.AppInfo;
 import com.miotech.kun.workflow.operator.spark.models.SparkApp;
@@ -14,7 +12,6 @@ import com.miotech.kun.workflow.operator.spark.models.StateInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -148,7 +145,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
             //wait spline send execPlan
             waitForSeconds(15);
             //解析spark 任务上下游
-            TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), taskRunId);
+            TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), taskRunId, JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
             report(taskAttemptReport);
             return true;
         } else {

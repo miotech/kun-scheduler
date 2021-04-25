@@ -9,23 +9,32 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
+
 
 public class SparkQueryPlanLineageAnalyzer {
     private static final Logger logger = LoggerFactory.getLogger(SparkQueryPlanLineageAnalyzer.class);
-    private static final String HDFS_ROOT = "s3a://com.miotech.data.prd";
 
-    public static TaskAttemptReport lineageAnalysis(Config config, Long taskRunId) {
+    public static TaskAttemptReport lineageAnalysis(Config config, Long taskRunId, Map<String, String> sparkConf) {
         TaskAttemptReport.Builder taskAttemptReport = TaskAttemptReport.newBuilder();
         try {
             logger.info("start lineage analysis for task {}", taskRunId);
             Configuration conf = new Configuration();
-            String configS3AccessKey = "fs.s3a.access.key";
-            String configS3SecretKey = "fs.s3a.secret.key";
-            conf.set(configS3AccessKey, "AKIAVKWKHNJW3VFEZ5XJ");
-            conf.set(configS3SecretKey, "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");
+
+            if(sparkConf.containsKey("spark.fs.s3a.access.key")){
+                String configS3AccessKey = sparkConf.get("spark.fs.s3a.access.key");
+                conf.set("fs.s3a.access.key", configS3AccessKey);
+            }
+            if(sparkConf.containsKey("spark.fs.s3a.secret.key")){
+                String configS3SecretKey = sparkConf.get("spark.fs.s3a.secret.key");
+                conf.set("fs.s3a.secret.key", configS3SecretKey);
+            }
+
             conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
             conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
-            HdfsFileSystem hdfsFileSystem = new HdfsFileSystem(HDFS_ROOT, conf);
+
+            String hdfsRoot = sparkConf.get("spark.hadoop.spline.hdfs_dispatcher.address");
+            HdfsFileSystem hdfsFileSystem = new HdfsFileSystem(hdfsRoot, conf);
             SparkOperatorResolver resolver = new SparkOperatorResolver(hdfsFileSystem, taskRunId);
             List<DataStore> inputs = resolver.resolveUpstreamDataStore(config);
             List<DataStore> outputs = resolver.resolveDownstreamDataStore(config);
@@ -33,7 +42,7 @@ public class SparkQueryPlanLineageAnalyzer {
                     .withInlets(inputs)
                     .withOutlets(outputs);
         } catch (Throwable e) {
-            logger.error("create lineage file failed", e);
+            logger.error("lineage analysis failed", e);
         }
         return taskAttemptReport.build();
     }

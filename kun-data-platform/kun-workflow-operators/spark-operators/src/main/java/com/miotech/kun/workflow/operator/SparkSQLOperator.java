@@ -1,27 +1,19 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.*;
-import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
-import com.miotech.kun.workflow.operator.resolver.SparkSqlResolver;
 import com.miotech.kun.workflow.operator.spark.models.SparkApp;
 import com.miotech.kun.workflow.operator.spark.models.SparkJob;
 import com.miotech.kun.workflow.operator.spark.models.StateInfo;
 import com.miotech.kun.workflow.operator.spark.models.Statement;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -166,7 +158,7 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
         }
 
         try {
-            TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), context.getTaskRunId());
+            TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), context.getTaskRunId(), JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
             report(taskAttemptReport);
         } catch (Exception e) {
             logger.error("Failed to parse lineage: {}", e);
