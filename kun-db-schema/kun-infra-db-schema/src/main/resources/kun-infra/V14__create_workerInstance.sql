@@ -3,6 +3,7 @@ DROP TABLE IF EXISTS kun_wf_worker_instance;
 CREATE TABLE kun_wf_worker_instance (
     task_attempt_id BIGINT  NOT NULL,
     worker_id VARCHAR(256)  NOT NULL,
+    namespace VARCHAR(256)  NOT NULL,
     env VARCHAR(64) NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

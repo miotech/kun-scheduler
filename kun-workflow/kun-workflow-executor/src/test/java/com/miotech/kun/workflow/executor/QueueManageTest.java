@@ -183,9 +183,9 @@ public class QueueManageTest extends GuiceTestBase {
 
     private QueueManage prepareQueueManage(int defaultCapacity) {
         Props props = new Props();
-        props.put("executor.queue", "default,user");
-        props.put("executor.queue.default.capacity", defaultCapacity);
-        props.put("executor.queue.user.capacity", 0);
+        props.put("executor.env.resourceQueues", "default,user");
+        props.put("executor.env.resourceQueues.default.quota.workerNumbers", defaultCapacity);
+        props.put("executor.env.resourceQueues.user.quota.workerNumbers", 0);
         return new QueueManage(props);
     }
 
