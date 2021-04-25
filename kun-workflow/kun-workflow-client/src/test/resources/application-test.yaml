@@ -1,6 +1,17 @@
 server:
   port: 18088
 
+executor:
+  env:
+    name: local
+    resourceQueues:
+      default:
+        quota:
+          workerNumbers: 4
+      test:
+        quota:
+          workerNumbers: 2
+
 datasource:
   jdbcUrl: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
   username: sa

@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Singleton;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
@@ -25,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_TASK_ATTEMPT_ID;
 import static com.miotech.kun.workflow.executor.kubernetes.KubernetesConstants.KUN_WORKFLOW;
 
+@Singleton
 public class PodEventMonitor implements WorkerMonitor, InitializingBean {
 
     private final Logger logger = LoggerFactory.getLogger(PodEventMonitor.class);
@@ -42,6 +44,7 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
     }
 
     public void start() {
+        logger.info("start pod monitor...");
         ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
         timer.scheduleAtFixedRate(new PollingPodsStatus(), 10, POLLING_PERIOD, TimeUnit.MILLISECONDS);
         kubernetesClient.pods()
@@ -78,6 +81,7 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
         @Override
         public void eventReceived(Action action, Pod pod) {
             Long taskAttemptId = Long.parseLong(pod.getMetadata().getLabels().get(KUN_TASK_ATTEMPT_ID));
+            logger.debug("receive pod event taskAttemptId = {}", taskAttemptId);
             WorkerEventHandler workerEventHandler = registerHandlers.get(taskAttemptId);
             if (workerEventHandler != null) {
                 workerEventHandler.onReceiveSnapshot(PodStatusSnapShot.fromPod(pod));

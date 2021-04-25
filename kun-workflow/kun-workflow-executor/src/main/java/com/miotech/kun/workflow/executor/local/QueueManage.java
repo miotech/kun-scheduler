@@ -33,7 +33,7 @@ public class QueueManage {
         }
         for (String queueName : queueNames) {
             String prefix = "executor.env.resourceQueues." + queueName;
-            Integer capacity = props.getInt(prefix + "quota.workerNumbers", 0);
+            Integer capacity = props.getInt(prefix + ".quota.workerNumbers", 0);
             TaskAttemptQueue queue = new TaskAttemptQueue(queueName, capacity);
             logger.info("init queue name = {}, capacity = {}", queueName, capacity);
             queueMap.put(queueName, queue);
