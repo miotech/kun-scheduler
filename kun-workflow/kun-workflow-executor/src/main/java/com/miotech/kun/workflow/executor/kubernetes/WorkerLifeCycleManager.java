@@ -43,16 +43,14 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     /* ----------- public methods ------------ */
 
-    //todo:recover after construct
     public void recover() {
         List<WorkerInstance> instanceList = getRunningWorker();
-        logger.info("recover watch pods size={}", instanceList.size());
+        logger.info("recover watch pods size = {}", instanceList.size());
         for (WorkerInstance workerInstance : instanceList) {
             workerMonitor.register(workerInstance.getTaskAttemptId(), new PodEventHandler());
         }
     }
 
-    //
     public void reset() {
         workerMonitor.unRegisterAll();
     }

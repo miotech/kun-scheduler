@@ -20,7 +20,7 @@ public class WorkerInstanceDao {
 
     protected static final String WORKER_INSTANCE_TABLE = "kun_wf_worker_instance";
 
-    private static final List<String> workerInstanceCols = ImmutableList.of("task_attempt_id", "worker_id", "env", "created_at", "updated_at");
+    private static final List<String> workerInstanceCols = ImmutableList.of("task_attempt_id", "worker_id", "env", "namespace", "created_at", "updated_at");
 
     private final DatabaseOperator dbOperator;
     private final WorkerInstanceMapper workerInstanceMapper = new WorkerInstanceMapper();
@@ -45,6 +45,7 @@ public class WorkerInstanceDao {
                 workerInstance.getTaskAttemptId(),
                 workerInstance.getWorkerId(),
                 workerInstance.getEnv().name(),
+                workerInstance.getNameSpace(),
                 now,
                 now);
         return workerInstance;
@@ -109,6 +110,7 @@ public class WorkerInstanceDao {
         @Override
         public WorkerInstance map(ResultSet rs) throws SQLException {
             return WorkerInstance.newBuilder()
+                    .withNameSpace(rs.getString("namespace"))
                     .withTaskAttemptId(rs.getLong("task_attempt_id"))
                     .withEnv(WorkerInstanceEnv.valueOf(rs.getString("env")))
                     .withWorkerId(rs.getString("worker_id"))
