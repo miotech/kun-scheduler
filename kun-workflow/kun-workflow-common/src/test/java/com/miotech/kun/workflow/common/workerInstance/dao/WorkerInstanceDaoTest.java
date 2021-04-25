@@ -101,12 +101,13 @@ public class WorkerInstanceDaoTest extends CommonTestBase {
 
     }
 
-    @Test(expected = RuntimeException.class)
-    public void insert_taskAttempt_with_diff_worker_id_should_throws_exception() {
+    @Test
+    public void insert_taskAttempt_with_diff_worker_id_should_return_existOne() {
         long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId, 1);
         WorkerInstance instance1 = WorkerInstance
                 .newBuilder()
+                .withNameSpace("default")
                 .withTaskAttemptId(taskAttemptId)
                 .withWorkerId("first_" + taskAttemptId)
                 .withEnv(WorkerInstanceEnv.KUBERNETES)
@@ -114,11 +115,13 @@ public class WorkerInstanceDaoTest extends CommonTestBase {
         workerInstanceDao.createWorkerInstance(instance1);
         WorkerInstance instance2 = WorkerInstance
                 .newBuilder()
+                .withNameSpace("default")
                 .withTaskAttemptId(taskAttemptId)
                 .withWorkerId("second_" + taskAttemptId)
                 .withEnv(WorkerInstanceEnv.KUBERNETES)
                 .build();
-        workerInstanceDao.createWorkerInstance(instance2);
+        WorkerInstance exist =workerInstanceDao.createWorkerInstance(instance2);
+        assertThat(exist,is(instance1));
     }
 
 }
