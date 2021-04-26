@@ -1,8 +1,10 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback } from 'react';
+import { history } from 'umi';
 import { TaskRun } from '@/definitions/TaskRun.type';
 
 import styles from '@/pages/operation-center/deployed-task-detail/index.less';
 import { TaskAttemptDetail } from '@/pages/operation-center/deployed-task-detail/components/TaskAttemptDetail';
+import SafeUrlAssembler from 'safe-url-assembler';
 
 interface OwnProps {
   rightPanelRef?: any;
@@ -10,18 +12,40 @@ interface OwnProps {
   dagContainerSize: { width?: number; height?: number };
   selectedAttemptMap: Record<string, number>;
   setSelectedAttemptMap: (nextState: Record<string, number>) => any;
+  currentTab?: string;
+  setCurrentTab?: (nextActiveTab: string) => any;
 }
 
 type Props = OwnProps;
 
 export const RightPanel: React.FC<Props> = memo(function RightPanel(props) {
-  const { rightPanelRef, selectedTaskRun, dagContainerSize, selectedAttemptMap, setSelectedAttemptMap } = props;
+  const {
+    rightPanelRef,
+    selectedTaskRun,
+    dagContainerSize,
+    selectedAttemptMap,
+    setSelectedAttemptMap,
+    currentTab = 'logs',
+    setCurrentTab,
+  } = props;
 
-  const [currentTab, setCurrentTab] = useState<string>('logs');
-
-  const handleTabChange = useCallback((activeKey: string) => {
-    setCurrentTab(activeKey);
-  }, []);
+  const handleTabChange = useCallback(
+    (activeKey: string) => {
+      if (setCurrentTab) {
+        setCurrentTab(activeKey);
+      }
+      history.push(
+        SafeUrlAssembler()
+          .template(window.location.pathname)
+          .query({
+            taskRunId: selectedTaskRun?.id,
+            tab: activeKey,
+          })
+          .toString(),
+      );
+    },
+    [selectedTaskRun?.id, setCurrentTab],
+  );
 
   return (
     <div className={styles.RightPanel} ref={rightPanelRef}>

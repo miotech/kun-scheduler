@@ -23,7 +23,7 @@ export const TaskRunLogViewer: FunctionComponent<Props> = memo(function TaskRunL
       return Promise.resolve(null);
     }
     // else
-    return fetchScheduledTaskRunLogWithoutErrorNotification(taskRun.id, attempt).catch(e => {
+    return fetchScheduledTaskRunLogWithoutErrorNotification(taskRun.id, attempt).catch((e: any) => {
       return {
         logs: [e.response?.data?.note],
       } as TaskRunLog;

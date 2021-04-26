@@ -9,7 +9,11 @@ import TaskRunsFilterBar from '@/pages/operation-center/deployed-task-detail/com
 import TaskRunsTable from '@/pages/operation-center/deployed-task-detail/components/TaskRunsTable';
 import { KunSpin } from '@/components/KunSpin';
 import { RightPanel } from '@/pages/operation-center/scheduled-tasks/components/RightPanel';
-import { abortTaskRunInstance, restartTaskRunInstance } from '@/services/task-deployments/deployed-tasks';
+import {
+  abortTaskRunInstance,
+  fetchDeployedTaskDetail,
+  restartTaskRunInstance,
+} from '@/services/task-deployments/deployed-tasks';
 
 import { TaskRun } from '@/definitions/TaskRun.type';
 
@@ -23,6 +27,11 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
 
   const rightPanelRef = useRef() as RefObject<any>;
 
+  const [query, setQuery] = useQueryParams({
+    taskRunId: StringParam,
+    tab: StringParam,
+  });
+
   const {
     selector: { filters, taskRunsData, taskRunsCount, taskDetailIsLoading, taskRunsIsLoading },
     dispatch,
@@ -35,11 +44,8 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
   }));
 
   const [selectedTaskRun, setSelectedTaskRun] = useState<TaskRun | null>(null);
+  const [currentTab, setCurrentTab] = useState<string>(query.tab || 'logs');
   const [selectedAttemptMap, setSelectedAttemptMap] = useState<Record<string, number>>({});
-
-  const [query, setQuery] = useQueryParams({
-    taskRunId: StringParam,
-  });
 
   useMount(async () => {
     // highlight corresponding aside menu item
@@ -57,10 +63,16 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
 
   const [selectedTaskInitialized, setSelectedTaskInitialized] = useState<boolean>(false);
 
-  useMount(() => {
+  useEffect(() => {
     // highlight corresponding aside menu item
     dispatch.route.updateCurrentPath('/operation-center/scheduled-tasks/:id');
-  });
+    if (match.params.id) {
+      fetchDeployedTaskDetail(match.params.id).then(taskDetail => {
+        dispatch.deployedTaskDetail.setDeployedTask(taskDetail);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query?.taskRunId]);
 
   useUnmount(() => {
     setSelectedAttemptMap({});
@@ -188,6 +200,8 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
             selectedAttemptMap={selectedAttemptMap}
             setSelectedAttemptMap={setSelectedAttemptMap}
             dagContainerSize={dagContainerSize}
+            currentTab={currentTab}
+            setCurrentTab={setCurrentTab}
           />
         </ReflexElement>
       </ReflexContainer>

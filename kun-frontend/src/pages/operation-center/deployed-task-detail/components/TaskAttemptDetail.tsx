@@ -21,7 +21,7 @@ interface OwnProps {
 type Props = OwnProps;
 
 export const TaskAttemptDetail: React.FC<Props> = memo(function TaskAttemptDetail(props) {
-  const { currentTab, onTabChange, taskRun, width, height, attempt = -1, setSelectedAttemptMap } = props;
+  const { currentTab = 'logs', onTabChange, taskRun, width, height, attempt = -1, setSelectedAttemptMap } = props;
   const t = useI18n();
 
   const handleChangeAttempt = (nextAttempt: number) => {
@@ -36,13 +36,7 @@ export const TaskAttemptDetail: React.FC<Props> = memo(function TaskAttemptDetai
   };
 
   return (
-    <Tabs
-      type="card"
-      defaultActiveKey="logs"
-      activeKey={currentTab}
-      onChange={onTabChange}
-      className={styles.RightPanelTabsContainer}
-    >
+    <Tabs type="card" activeKey={currentTab} onChange={onTabChange} className={styles.RightPanelTabsContainer}>
       <Tabs.TabPane
         tab={
           <span>
