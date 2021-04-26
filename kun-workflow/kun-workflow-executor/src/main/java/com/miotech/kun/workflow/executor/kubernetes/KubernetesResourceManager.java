@@ -3,9 +3,9 @@ package com.miotech.kun.workflow.executor.kubernetes;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.workflow.core.ResourceManager;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.task.TaskPriority;
-import com.miotech.kun.workflow.core.ResourceManager;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
@@ -78,7 +78,8 @@ public class KubernetesResourceManager implements ResourceManager {
             throw new IllegalStateException("can not find pod with taskAttemptId = {}" + taskAttemptId);
         }
         if (!pod.getStatus().getPhase().toLowerCase().equals("pending")) {
-
+            logger.warn("pod with taskAttemptId = {} is not in pending", taskAttemptId);
+            return;
         }
         Pod newPod = new PodBuilder()
                 .withMetadata(pod.getMetadata())
@@ -93,26 +94,6 @@ public class KubernetesResourceManager implements ResourceManager {
     @Override
     public ResourceQueue createResourceQueue(ResourceQueue resourceQueue) {
         createNameSpaceIfNotExist(resourceQueue.getQueueName());
-
-        //config limit range
-        LimitRange limitRange = new LimitRangeBuilder()
-                .withNewMetadata()
-                .withName(resourceQueue.getQueueName() + "limitrange")
-                .withNamespace(resourceQueue.getQueueName())
-                .endMetadata()
-                .withNewSpec()
-                .addToLimits(new LimitRangeItemBuilder()
-                        .withType("Container")
-                        .addToDefault("cpu",new Quantity(CPU_DEFAULT))
-                        .addToDefaultRequest("cpu",new Quantity(CPU_REQUEST))
-                        .addToDefault("memory",new Quantity(MEMORY_DEFAULT,"Mi"))
-                        .addToDefaultRequest("memory",new Quantity(MEMORY_REQUEST,"Mi"))
-                        .build())
-                .endSpec()
-                .build();
-        client.limitRanges()
-                .inNamespace(resourceQueue.getQueueName())
-                .createOrReplace(limitRange);
 
         //config quota
         ResourceQuota resourceQuota = new ResourceQuotaBuilder()
@@ -148,6 +129,29 @@ public class KubernetesResourceManager implements ResourceManager {
         client.resourceQuotas().inNamespace(resourceQueue.getQueueName()).createOrReplace(resourceQuota);
         return resourceQueue;
     }
+
+    private void configLimitRange() {
+        //config limit range
+        LimitRange limitRange = new LimitRangeBuilder()
+                .withNewMetadata()
+                .withName("podlimitrange")
+                .withNamespace(props.getString("executor.env.namespace"))
+                .endMetadata()
+                .withNewSpec()
+                .addToLimits(new LimitRangeItemBuilder()
+                        .withType("Container")
+                        .addToDefault("cpu", new Quantity(CPU_DEFAULT))
+                        .addToDefaultRequest("cpu", new Quantity(CPU_REQUEST))
+                        .addToDefault("memory", new Quantity(MEMORY_DEFAULT, "Mi"))
+                        .addToDefaultRequest("memory", new Quantity(MEMORY_REQUEST, "Mi"))
+                        .build())
+                .endSpec()
+                .build();
+        client.limitRanges()
+                .inNamespace(props.getString("executor.env.namespace"))
+                .createOrReplace(limitRange);
+    }
+
 
     /**
      * @param name

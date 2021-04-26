@@ -59,6 +59,16 @@ public class WorkerInstance{
         return Objects.hash(getTaskAttemptId(), getWorkerId(), getNameSpace(), getEnv());
     }
 
+    @Override
+    public String toString() {
+        return "WorkerInstance{" +
+                "taskAttemptId=" + taskAttemptId +
+                ", workerId='" + workerId + '\'' +
+                ", nameSpace='" + nameSpace + '\'' +
+                ", env=" + env +
+                '}';
+    }
+
     public static final class WorkerInstanceBuilder {
         private long taskAttemptId;
         private String workerId;;

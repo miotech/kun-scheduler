@@ -13,7 +13,8 @@ executor:
   env:
     name: kubernetes
     version: 1.15
-    logPath: server/config/logs
+    jarDirectory: ${JAR_DIRECTORY}
+    logPath: server/logs
     url: ${KUBERNETES_MASTER}
     oauthToken: ${KUBERNETES_TOKEN}
     caCertFile: ${CA_CERT_FILE}
@@ -23,9 +24,6 @@ executor:
 #    use private hub
     privateHub :
       url: hub.miotech.com/library
-#      userName : name
-#      password: password123
-#      secert: regcred
     resourceQueues:
       default:
         quota:
