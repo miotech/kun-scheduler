@@ -8,8 +8,6 @@ import com.google.inject.Module;
 import com.google.inject.util.Modules;
 import org.junit.Before;
 import org.mockito.Mockito;
-import org.mockito.stubbing.Answer;
-
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;

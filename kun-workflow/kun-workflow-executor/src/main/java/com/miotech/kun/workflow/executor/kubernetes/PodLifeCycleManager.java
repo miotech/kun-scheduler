@@ -6,9 +6,9 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
-import com.miotech.kun.workflow.common.workerInstance.WorkerInstanceDao;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.executor.local.MiscService;
@@ -29,13 +29,12 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     private final KubernetesClient kubernetesClient;
     private final OperatorDao operatorDao;
     private final String POD_WORK_DIR = "/server/target";
-    private final String POD_JAR_LIB = "/server/libs";
+    private final String POD_JAR_LIB = "/server/lib";
 
     @Inject
-    public PodLifeCycleManager(TaskRunDao taskRunDao, WorkerInstanceDao workerInstanceDao,
-                               WorkerMonitor workerMonitor, Props props, MiscService miscService,
+    public PodLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props, MiscService miscService,
                                KubernetesClient kubernetesClient, OperatorDao operatorDao) {
-        super(workerInstanceDao, taskRunDao, workerMonitor, props, miscService);
+        super(taskRunDao, workerMonitor, props, miscService);
         this.kubernetesClient = kubernetesClient;
         this.operatorDao = operatorDao;
     }
@@ -75,6 +74,17 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         }
         return PodStatusSnapShot.fromPod(podList.getItems().get(0));
 
+    }
+
+
+    @Override
+    public List<WorkerInstance> getRunningWorker() {
+        PodList podList = kubernetesClient.pods()
+                .inNamespace(props.getString("executor.env.namespace"))
+                .withLabel(KUN_WORKFLOW)
+                .list();
+        return podList.getItems().stream().map(x->
+                PodStatusSnapShot.fromPod(x).getIns()).collect(Collectors.toList());
     }
 
 
@@ -141,7 +151,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         VolumeMount jarMount = new VolumeMount();
         jarMount.setMountPath(POD_JAR_LIB);
         jarMount.setName(props.getString("executor.env.nfsName"));
-        jarMount.setSubPath(props.getString("resource.libDirectory"));
+        jarMount.setSubPath(props.getString("executor.env.jarDirectory"));
         mounts.add(jarMount);
         container.setVolumeMounts(mounts);
         container.setEnv(buildEnv(taskAttempt));
@@ -172,7 +182,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         addVar(envVarList, "taskAttemptId", taskAttempt.getId().toString());
         addVar(envVarList, "taskRunId", taskAttempt.getTaskRun().getId().toString());
         addVar(envVarList, "className", operatorDetail.getClassName());
-        addVar(envVarList, "jarPath", "file:///server/libs/" + operatorDetail.getId() + "/" + operatorDetail.getName() + ".jar");
+        addVar(envVarList, "jarPath", "file://" + POD_JAR_LIB + "/" + operatorDetail.getId() + "/" + operatorDetail.getName() + ".jar");
         return envVarList;
     }
 

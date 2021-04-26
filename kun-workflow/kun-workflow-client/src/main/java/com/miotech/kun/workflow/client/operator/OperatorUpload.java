@@ -134,9 +134,5 @@ public class OperatorUpload {
         return operator;
     }
 
-    private void cleanFile(){
-
-    }
-
 
 }
