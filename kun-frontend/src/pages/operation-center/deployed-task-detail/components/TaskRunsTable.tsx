@@ -182,8 +182,12 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
             return '-';
           }
           // else
-          const m = moment(latestAttempt.endAt);
-          return m.isValid() ? m.format('YYYY-MM-DD HH:mm:ss') : '-';
+          const startMoment = moment(latestAttempt.startAt);
+          const endMoment = moment(latestAttempt.endAt);
+          return endMoment.isValid() &&
+            (!startMoment.isValid() || endMoment.toDate().getTime() - startMoment.toDate().getTime() >= 0)
+            ? endMoment.format('YYYY-MM-DD HH:mm:ss')
+            : '-';
         },
       },
       {

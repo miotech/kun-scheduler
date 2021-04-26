@@ -44,6 +44,19 @@ function getComputedLinkHref(taskDefIdsMap: Record<string, string | null>, taskI
     .toString();
 }
 
+function shouldDisplayEndTime(record: DevTaskDetail): boolean {
+  if (record.endTime != null && dayjs(record.endTime).isValid()) {
+    const endMoment = dayjs(record.endTime);
+    if (record.startTime != null && dayjs(record.startTime).isValid()) {
+      const startMoment = dayjs(record.endTime);
+      return endMoment.toDate().getTime() - startMoment.toDate().getTime() >= 0;
+    }
+    // else
+    return true;
+  }
+  return false;
+}
+
 export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(props) {
   const { data, pageNum, pageSize, total, onChange, loading } = props;
 
@@ -140,9 +153,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.endTime'),
         render: (txt: any, record: DevTaskDetail) => (
           <span>
-            {!isNil(record.endTime) && dayjs(record.endTime).isValid()
-              ? dayjs(record.endTime).format('YYYY-MM-DD HH:mm')
-              : '-'}
+            {shouldDisplayEndTime(record) ? dayjs(record!.endTime as number).format('YYYY-MM-DD HH:mm') : '-'}
           </span>
         ),
       },
