@@ -7,9 +7,10 @@ import java.time.OffsetDateTime;
 public abstract class WorkerSnapshot {
     private final WorkerInstance ins;
     private final OffsetDateTime createdTime;
+
     public abstract TaskRunStatus getStatus();
 
-    public WorkerSnapshot(WorkerInstance ins,OffsetDateTime createdTime) {
+    public WorkerSnapshot(WorkerInstance ins, OffsetDateTime createdTime) {
         this.ins = ins;
         this.createdTime = createdTime;
     }
@@ -22,5 +23,12 @@ public abstract class WorkerSnapshot {
         return createdTime;
     }
 
-
+    @Override
+    public String toString() {
+        return "WorkerSnapshot{" +
+                "ins=" + ins +
+                ", createdTime=" + createdTime +
+                ", status =" + getStatus() +
+                '}';
+    }
 }
