@@ -1229,9 +1229,9 @@ public class LocalExecutorTest extends CommonTestBase {
 
     private QueueManage prepareQueueManage() {
         Props props = new Props();
-        props.put("executor.queue", "default,user");
-        props.put("executor.queue.default.capacity", 0);
-        props.put("executor.queue.user.capacity", 1);
+        props.put("executor.env.resourceQueues", "default,user");
+        props.put("executor.env.resourceQueues.default.quota.workerNumbers", 0);
+        props.put("executor.env.resourceQueues.user.quota.workerNumbers", 1);
         return new QueueManage(props);
     }
 

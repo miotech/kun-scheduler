@@ -53,12 +53,14 @@ public class PodStatusSnapShot extends WorkerSnapshot {
         }
         String status = podStatus.getPhase().toLowerCase();
         switch (status) {
+            case "ContainerCreating":
             case "pending":
                 taskRunStatus = TaskRunStatus.QUEUED;
                 break;
             case "running":
                 taskRunStatus = TaskRunStatus.RUNNING;
                 break;
+            case "error":
             case "failed":
                 taskRunStatus = TaskRunStatus.FAILED;
                 break;
@@ -68,8 +70,6 @@ public class PodStatusSnapShot extends WorkerSnapshot {
             case "terminating":
                 taskRunStatus = TaskRunStatus.ABORTED;
                 break;
-            case "error":
-                taskRunStatus = TaskRunStatus.FAILED;
             default:
                 throw new IllegalStateException("UnExpect pod status " + status);
 

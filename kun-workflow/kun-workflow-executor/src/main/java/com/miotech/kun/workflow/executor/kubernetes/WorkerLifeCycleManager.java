@@ -2,11 +2,9 @@ package com.miotech.kun.workflow.executor.kubernetes;
 
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
-import com.miotech.kun.workflow.common.workerInstance.WorkerInstanceDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
-import com.miotech.kun.workflow.core.model.worker.WorkerInstanceEnv;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.LifeCycleManager;
 import com.miotech.kun.workflow.executor.WorkerEventHandler;
@@ -24,19 +22,15 @@ import java.util.List;
 public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     private final Logger logger = LoggerFactory.getLogger(WorkerLifeCycleManager.class);
-    private final WorkerInstanceDao workerInstanceDao;
     private final WorkerMonitor workerMonitor;
     protected final Props props;
-    private final WorkerInstanceEnv env;
     private final MiscService miscService;
     private final TaskRunDao taskRunDao;
 
-    public WorkerLifeCycleManager(WorkerInstanceDao workerInstanceDao, TaskRunDao taskRunDao,
+    public WorkerLifeCycleManager( TaskRunDao taskRunDao,
                                   WorkerMonitor workerMonitor, Props props, MiscService miscService) {
         this.props = props;
         this.taskRunDao = taskRunDao;
-        this.env = WorkerInstanceEnv.valueOf(props.getString("executor.env.name").toUpperCase());
-        this.workerInstanceDao = workerInstanceDao;
         this.workerMonitor = workerMonitor;
         this.miscService = miscService;
     }
@@ -55,9 +49,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         workerMonitor.unRegisterAll();
     }
 
-    public List<WorkerInstance> getRunningWorker() {
-        return workerInstanceDao.getActiveWorkerInstance(env);
-    }
 
     @Override
     public WorkerInstance start(TaskAttempt taskAttempt) {
@@ -69,7 +60,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         logger.debug("Update logPath to TaskAttempt. attemptId={}, path={}", taskAttempt.getId(), logPath);
         taskRunDao.updateTaskAttemptLogPath(taskAttempt.getId(), logPath);
 
-        logger.info("register pod event handler,taskAttemptId = {}", taskAttempt.getId());
         workerMonitor.register(taskAttempt.getId(), new PodEventHandler());
         WorkerSnapshot workerSnapshot = startWorker(taskAttempt
                 .cloneBuilder()
@@ -85,10 +75,17 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     @Override
     public WorkerInstance stop(Long taskAttemptId) {
-
+        logger.info("going to stop worker taskAttemptId = {}", taskAttemptId);
         WorkerSnapshot workerSnapshot = getWorker(taskAttemptId);
-        if (isFinish(workerSnapshot)) {
-            throw new IllegalStateException("unable to stop a finish worker");
+        if (workerSnapshot == null) {
+            TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
+            if (taskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
+                abortTaskAttempt(taskAttemptId);
+                return null;
+            }
+            if(taskAttempt.getStatus().isFinished()){
+                throw new IllegalStateException("unable to stop a finish worker");
+            }
         }
         if (!stopWorker(taskAttemptId)) {
             throw new IllegalStateException("stop worker failed");
@@ -119,7 +116,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         TaskRunStatus taskRunStatus = workerSnapshot.getStatus();
         OffsetDateTime startAt = taskRunStatus.isRunning() ? workerSnapshot.getCreatedTime() : null;
         OffsetDateTime endAt = taskRunStatus.isFinished() ? workerSnapshot.getCreatedTime() : null;
-        workerInstanceDao.createWorkerInstance(workerSnapshot.getIns());
         miscService.changeTaskAttemptStatus(workerSnapshot.getIns().getTaskAttemptId(),
                 taskRunStatus, startAt, endAt);
     }
@@ -132,7 +128,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     private void cleanupWorker(WorkerInstance workerInstance) {
         logger.info("unRegister worker,taskAttemptId = {}", workerInstance.getTaskAttemptId());
         workerMonitor.unRegister(workerInstance.getTaskAttemptId());
-        workerInstanceDao.deleteWorkerInstance(workerInstance.getTaskAttemptId(), env);
         stopWorker(workerInstance.getTaskAttemptId());
 
     }
@@ -145,13 +140,14 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         private TaskRunStatus preStatus;
 
         public void onReceiveSnapshot(WorkerSnapshot workerSnapshot) {//处理pod状态变更
-            if (isFinish(workerSnapshot)) {
-                logger.info("taskAttemptId = {},going to clean worker", workerSnapshot.getIns().getTaskAttemptId());
-                cleanupWorker(workerSnapshot.getIns());
-            }
+            logger.debug("receive worker snapshot:{}", workerSnapshot);
             if (preStatus == null || !preStatus.equals(workerSnapshot.getStatus())) {
                 changeTaskRunStatus(workerSnapshot);
                 preStatus = workerSnapshot.getStatus();
+            }
+            if (isFinish(workerSnapshot)) {
+                logger.info("taskAttemptId = {},going to clean worker", workerSnapshot.getIns().getTaskAttemptId());
+                cleanupWorker(workerSnapshot.getIns());
             }
         }
 

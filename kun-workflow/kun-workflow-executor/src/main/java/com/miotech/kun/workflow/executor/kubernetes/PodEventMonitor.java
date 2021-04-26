@@ -14,10 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -32,7 +29,6 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
     private final Logger logger = LoggerFactory.getLogger(PodEventMonitor.class);
     private KubernetesClient kubernetesClient;
     private Map<Long, WorkerEventHandler> registerHandlers = new ConcurrentHashMap<>();
-    private Map<Long, Integer> unHealthWorker = new ConcurrentHashMap<>();
     private final long POLLING_PERIOD = 5 * 1000;
     private final Props props;
 
@@ -54,13 +50,13 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
     }
 
     public boolean register(Long taskAttemptId, WorkerEventHandler handler) {//为pod注册一个watcher监控pod的状态变更
+        logger.info("register pod event handler,taskAttemptId = {}", taskAttemptId);
         registerHandlers.put(taskAttemptId, handler);
         return true;
     }
 
     public boolean unRegister(Long taskAttemptId) {
         registerHandlers.remove(taskAttemptId);
-        unHealthWorker.remove(taskAttemptId);
         return true;
     }
 
@@ -101,23 +97,11 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
             PodList podList = kubernetesClient.pods()
                     .inNamespace(props.getString("executor.env.namespace"))
                     .withLabel(KUN_WORKFLOW).list();
-            Set<Long> expectTaskAttempt = new HashSet<>(registerHandlers.keySet());
+            logger.debug("fetch pod list from kubernetes size = {}, register size = {}", podList.getItems().size(), registerHandlers.size());
             for (Pod pod : podList.getItems()) {
                 Long taskAttemptId = Long.parseLong(pod.getMetadata().getLabels().get(KUN_TASK_ATTEMPT_ID));
-                expectTaskAttempt.remove(taskAttemptId);
-                unHealthWorker.remove(taskAttemptId);
                 WorkerEventHandler workerEventHandler = registerHandlers.get(taskAttemptId);
                 workerEventHandler.onReceivePollingSnapShot(PodStatusSnapShot.fromPod(pod));
-            }
-            Iterator<Map.Entry<Long, Integer>> iterator = unHealthWorker.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<Long, Integer> entry = iterator.next();
-                //todo:send unHealth message
-                if (expectTaskAttempt.contains(entry.getKey())) {
-                    unHealthWorker.put(entry.getKey(), (entry.getValue() + 1));
-                } else {
-                    iterator.remove();
-                }
             }
         }
     }
