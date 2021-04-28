@@ -18,13 +18,19 @@ import java.util.Objects;
 public class ControllerExceptionHandler {
     @ExceptionHandler(value
             = { IllegalArgumentException.class,
-            IllegalStateException.class,
             WorkflowApiException.class})
-    protected ResponseEntity<Object> handleConflict(
+    protected ResponseEntity<Object> handleBadRequest(
             RuntimeException ex, WebRequest request) {
         log.error("[HTTP 400] Bad request exception found when request = {}; params = {}.", request, request.getParameterMap(), ex);
         return ResponseEntity.badRequest()
                 .body(RequestResult.error(400, ex.getMessage()));
+    }
+
+    @ExceptionHandler(value = { DataPlatformBaseException.class })
+    protected ResponseEntity<Object> handleDefinedDataPlatformExceptions(RuntimeException ex, WebRequest request) {
+        int statusCode = ((DataPlatformBaseException) ex).getStatusCode();
+        log.error("[HTTP {}] Data platform defined exception occurs when request = {}; params = {}.", statusCode, request, request.getParameterMap(), ex);
+        return ResponseEntity.status(statusCode).body(RequestResult.error(statusCode, ex.getMessage()));
     }
 
     @ExceptionHandler(value = { NoSuchElementException.class })
@@ -48,6 +54,12 @@ public class ControllerExceptionHandler {
                     .status(500)
                     .body(RequestResult.error(500, ex.getMessage()));
         }
+    }
+
+    @ExceptionHandler(value = { IllegalStateException.class })
+    protected ResponseEntity<Object> handleIllegalState(RuntimeException ex, WebRequest request) {
+        log.error("[HTTP 500] Illegal state exception found when request = {}; params = {}.", request, request.getParameterMap(), ex);
+        return ResponseEntity.status(500).body(RequestResult.error(500, ex.getMessage()));
     }
 
     private boolean nullPtrExceptionComesFromPreconditionCheck(RuntimeException ex) {

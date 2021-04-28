@@ -127,12 +127,12 @@ public class VariableServiceTest extends DatabaseTestBase {
                 .cloneBuilder()
                 .withNamespace("test-name")
                 .withKey("test")
-                .withValue("test")
+                .withValue("hello_test")
                 .build());
 
         // with single key
         String result = variableService.resolveVariable("hello_${test-name.test}");
-        assertThat(result, is("hello_test"));
+        assertThat(result, is("hello_hello_test"));
 
         // with multiple key
         variableDao.create(MockVariableFactory.createVariable()
@@ -143,7 +143,7 @@ public class VariableServiceTest extends DatabaseTestBase {
                 .build());
 
         result = variableService.resolveVariable("hello_${test-name.test}_${ test-name.test2}");
-        assertThat(result, is("hello_test_test2"));
+        assertThat(result, is("hello_hello_test_test2"));
     }
 
     @Test

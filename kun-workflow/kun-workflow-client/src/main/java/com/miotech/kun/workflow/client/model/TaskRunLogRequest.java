@@ -6,9 +6,9 @@ public class TaskRunLogRequest {
 
     private final int attempt;
 
-    private final long startLine;
+    private final Integer startLine;
 
-    private final long endLine;
+    private final Integer endLine;
 
     private TaskRunLogRequest(Builder builder) {
         this.taskRunId = builder.taskRunId;
@@ -25,11 +25,11 @@ public class TaskRunLogRequest {
         return attempt;
     }
 
-    public long getStartLine() {
+    public Integer getStartLine() {
         return startLine;
     }
 
-    public long getEndLine() {
+    public Integer getEndLine() {
         return endLine;
     }
 
@@ -40,8 +40,8 @@ public class TaskRunLogRequest {
     public static final class Builder {
         private long taskRunId;
         private int attempt;
-        private long startLine;
-        private long endLine;
+        private Integer startLine;
+        private Integer endLine;
 
         private Builder() {
         }
@@ -60,12 +60,12 @@ public class TaskRunLogRequest {
             return this;
         }
 
-        public Builder withStartLine(long startLine) {
+        public Builder withStartLine(Integer startLine) {
             this.startLine = startLine;
             return this;
         }
 
-        public Builder withEndLine(long endLine) {
+        public Builder withEndLine(Integer endLine) {
             this.endLine = endLine;
             return this;
         }

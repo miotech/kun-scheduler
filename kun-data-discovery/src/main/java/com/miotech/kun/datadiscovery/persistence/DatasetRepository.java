@@ -177,7 +177,7 @@ public class DatasetRepository extends BaseRepository {
         sql += groupClause;
 
         String countSql = "select count(1) as total_count from (" + sql + ") as result";
-        Long totalCount = jdbcTemplate.queryForObject(countSql, Long.class, pstmtArgs.toArray());
+        Integer totalCount = jdbcTemplate.queryForObject(countSql, Integer.class, pstmtArgs.toArray());
 
         sql += orderByClause;
         sql += limitSql;

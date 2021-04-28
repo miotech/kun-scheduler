@@ -1,9 +1,11 @@
 import {
-  ColumnMetrics, DailyTaskCount,
-  DataDevelopmentMetrics, DevTaskDetail,
+  ColumnMetrics,
+  DailyTaskCount,
+  DataDevelopmentMetrics,
+  DevTaskDetail,
   FailedTestCase,
   MetadataMetrics,
-  RowCountChange
+  RowCountChange,
 } from '@/services/monitoring-dashboard';
 
 export type DataDevelopmentBoardFilterCardType = 'SUCCESS' | 'FAILED' | 'RUNNING' | 'PENDING' | null;
@@ -113,7 +115,7 @@ export const initState: MonitoringDashboardModelState = {
     },
     taskDetailsSelectedFilter: null,
     taskDetailsDisplayStartedOnly: false,
-    taskDetailsDisplayLast24HoursOnly: false,
+    taskDetailsDisplayLast24HoursOnly: true,
     taskDetails: {
       data: [],
       loading: false,

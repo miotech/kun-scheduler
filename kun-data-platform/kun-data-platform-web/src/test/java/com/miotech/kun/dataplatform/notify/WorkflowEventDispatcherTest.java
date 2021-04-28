@@ -80,6 +80,12 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
         public EventSubscriber createMockEventSubscriber() {
             return new MockEventPubSub();
         }
+
+        @Bean
+        @Primary
+        public WorkflowEventDispatcher createWorkflowEventDispatcher() {
+            return new WorkflowEventDispatcher();
+        }
     }
 
     @Autowired

@@ -151,8 +151,8 @@ public class TaskDefinitionController {
     @GetMapping("/task-tries/{id}/log")
     @ApiOperation("Get TaskTry log")
     public RequestResult<TaskRunLogVO> getTaskTryLog(@PathVariable Long id,
-                                                   @RequestParam(required = false) Optional<Long> start,
-                                                   @RequestParam(required = false) Optional<Long> end
+                                                   @RequestParam(required = false) Optional<Integer> start,
+                                                   @RequestParam(required = false) Optional<Integer> end
                                                    ) {
         TaskTry taskTry = taskDefinitionService.findTaskTry(id);
         TaskRunLogRequest.Builder request = TaskRunLogRequest.newBuilder()

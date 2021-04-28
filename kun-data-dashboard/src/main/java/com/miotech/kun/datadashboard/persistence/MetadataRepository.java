@@ -5,8 +5,10 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.datadashboard.model.bo.ColumnMetricsRequest;
 import com.miotech.kun.datadashboard.model.bo.RowCountChangeRequest;
-import com.miotech.kun.datadashboard.model.entity.*;
-import org.apache.commons.lang3.StringUtils;
+import com.miotech.kun.datadashboard.model.entity.ColumnMetrics;
+import com.miotech.kun.datadashboard.model.entity.ColumnMetricsList;
+import com.miotech.kun.datadashboard.model.entity.DatasetRowCountChange;
+import com.miotech.kun.datadashboard.model.entity.DatasetRowCountChanges;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -115,7 +117,7 @@ public class MetadataRepository extends BaseRepository {
                 .getSQL();
 
         ColumnMetricsList columnMetricsList = new ColumnMetricsList();
-        Long totalCount = jdbcTemplate.queryForObject(countSql, Long.class);
+        Integer totalCount = jdbcTemplate.queryForObject(countSql, Integer.class);
         columnMetricsList.setPageNumber(columnMetricsRequest.getPageNumber());
         columnMetricsList.setPageSize(columnMetricsRequest.getPageSize());
         columnMetricsList.setTotalCount(totalCount);
