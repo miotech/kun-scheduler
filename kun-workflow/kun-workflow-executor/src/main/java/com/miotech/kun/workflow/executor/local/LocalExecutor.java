@@ -41,8 +41,6 @@ import java.util.concurrent.*;
 public class LocalExecutor implements Executor {
     private static final Logger logger = LoggerFactory.getLogger(LocalExecutor.class);
 
-    private static final int QUEUE_SIZE = 20000;
-
     private final Injector injector;
 
     private final TaskRunService taskRunService;
