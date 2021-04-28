@@ -10,6 +10,8 @@ import com.miotech.kun.dataplatform.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.common.backfill.vo.BackfillCreateInfo;
 import com.miotech.kun.dataplatform.common.backfill.vo.BackfillDetailVO;
 import com.miotech.kun.dataplatform.common.backfill.vo.BackfillSearchParams;
+import com.miotech.kun.dataplatform.constant.BackfillConstants;
+import com.miotech.kun.dataplatform.exception.BackfillTooManyTasksException;
 import com.miotech.kun.dataplatform.model.backfill.Backfill;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
@@ -41,6 +43,9 @@ public class BackfillController {
     @ApiOperation("Create and run data backfill")
     public RequestResult<Backfill> createAndRunBackfill(@RequestBody BackfillCreateInfo createInfo) {
         Preconditions.checkArgument(createInfo != null, "parameter `createInfo` should not be null");
+        if (createInfo.getWorkflowTaskIds().size() > BackfillConstants.MAX_BACKFILL_TASKS) {
+            throw new BackfillTooManyTasksException();
+        }
         Backfill payload = backfillService.createAndRun(createInfo);
         return RequestResult.success(payload);
     }
