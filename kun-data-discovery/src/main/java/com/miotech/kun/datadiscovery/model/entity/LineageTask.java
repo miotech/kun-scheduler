@@ -2,6 +2,8 @@ package com.miotech.kun.datadiscovery.model.entity;
 
 import lombok.Data;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import java.util.List;
 
 /**
@@ -10,7 +12,7 @@ import java.util.List;
  */
 @Data
 public class LineageTask {
-
+    @JsonSerialize(using = ToStringSerializer.class)
     Long taskId;
 
     String taskName;

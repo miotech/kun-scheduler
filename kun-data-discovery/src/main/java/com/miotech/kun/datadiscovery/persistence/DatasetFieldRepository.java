@@ -69,7 +69,7 @@ public class DatasetFieldRepository extends BaseRepository {
         sqlBuilder.append(whereClause);
 
         String totalCountSql = "select count(*) as total_count from kun_mt_dataset_field kmdf " + whereClause;
-        Long totalCount = jdbcTemplate.query(totalCountSql, (rs, rowIndex) -> rs.getLong("total_count"), preparedStmtArgs.toArray())
+        Integer totalCount = jdbcTemplate.query(totalCountSql, (rs, rowIndex) -> rs.getInt("total_count"), preparedStmtArgs.toArray())
                 .stream().findFirst().orElseThrow(IllegalStateException::new);
 
         String orderByClause = "order by kmdf.name asc, kmdf.id desc, stats.stats_date desc\n";

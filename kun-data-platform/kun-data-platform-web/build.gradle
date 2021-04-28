@@ -83,6 +83,7 @@ dependencies {
     implementation 'redis.clients:jedis'
     implementation "org.flywaydb:flyway-core"
     implementation 'org.apache.commons:commons-email'
+    implementation "com.cronutils:cron-utils"
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"

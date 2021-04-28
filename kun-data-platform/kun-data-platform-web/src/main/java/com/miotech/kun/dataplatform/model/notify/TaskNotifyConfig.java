@@ -1,5 +1,7 @@
 package com.miotech.kun.dataplatform.model.notify;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
 import com.miotech.kun.workflow.core.event.Event;
@@ -8,6 +10,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.util.List;
 
+@JsonDeserialize(builder = TaskNotifyConfig.TaskNotifyConfigBuilder.class)
 public class TaskNotifyConfig extends NotifyConfig {
 
     private final Long id;
@@ -65,6 +68,7 @@ public class TaskNotifyConfig extends NotifyConfig {
         return builder;
     }
 
+    @JsonPOJOBuilder
     public static final class TaskNotifyConfigBuilder {
         private Long id;
         private Long workflowTaskId;

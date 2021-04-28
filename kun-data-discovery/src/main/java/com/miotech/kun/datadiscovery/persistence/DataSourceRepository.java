@@ -79,7 +79,7 @@ public class DataSourceRepository extends BaseRepository {
         String groupByClause = "group by kmd.id, kmda.datasource_id\n";
         sql += groupByClause;
         String countSql = "select count(1) as total_count from (" + sql + ") as result";
-        Long totalCount = jdbcTemplate.queryForObject(countSql, pstmtArgs.toArray(), Long.class);
+        Integer totalCount = jdbcTemplate.queryForObject(countSql, pstmtArgs.toArray(), Integer.class);
         String orderByClause = "order by kmda.name\n";
         String limitSql = toLimitSql(datasourceSearchRequest.getPageNumber(), datasourceSearchRequest.getPageSize());
 

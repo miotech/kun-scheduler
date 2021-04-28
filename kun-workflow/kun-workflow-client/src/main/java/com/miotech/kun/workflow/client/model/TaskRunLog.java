@@ -53,5 +53,4 @@ public class TaskRunLog {
     public void setLogs(List<String> logs) {
         this.logs = logs;
     }
-
 }

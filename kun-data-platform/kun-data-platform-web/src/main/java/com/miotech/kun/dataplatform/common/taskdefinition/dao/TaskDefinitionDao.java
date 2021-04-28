@@ -120,9 +120,9 @@ public class TaskDefinitionDao {
                 .from(TASK_DEF_TABLE_NAME, TASK_DEF_MODEL_NAME)
                 .where(whereClause.toString())
                 .getSQL();
-        Long totalCount = jdbcTemplate.query(
+        Integer totalCount = jdbcTemplate.query(
                 countSql,
-                (rse) -> rse.next() ? rse.getLong(1): 0,
+                (rse) -> rse.next() ? rse.getInt(1): 0,
                 params.toArray());
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(getSelectSQL(whereClause.toString()))

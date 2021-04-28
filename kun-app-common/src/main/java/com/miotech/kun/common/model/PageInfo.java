@@ -13,5 +13,5 @@ public class PageInfo {
 
     private Integer pageSize = 25;
 
-    private Long totalCount;
+    private Integer totalCount;
 }

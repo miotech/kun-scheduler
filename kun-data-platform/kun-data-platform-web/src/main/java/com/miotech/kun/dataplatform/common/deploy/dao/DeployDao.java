@@ -142,9 +142,9 @@ public class DeployDao {
                 .where(whereClause.toString())
                 .getSQL();
         // count
-        Long totalCount = jdbcTemplate.query(
+        Integer totalCount = jdbcTemplate.query(
                 countSql,
-                (rse) -> rse.next() ? rse.getLong(1): 0,
+                (rse) -> rse.next() ? rse.getInt(1): 0,
                 params.toArray());
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(getSelectSQL(whereClause.toString()))
