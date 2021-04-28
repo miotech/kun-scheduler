@@ -2,6 +2,8 @@ package com.miotech.kun.dataplatform.model.tasktemplate;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
+import java.util.List;
+
 @JsonDeserialize(builder = ParameterDefinition.Builder.class)
 public class ParameterDefinition {
 
@@ -13,11 +15,14 @@ public class ParameterDefinition {
 
     final String displayName;
 
-    public ParameterDefinition(String name, String type, boolean required, String displayName) {
+    final List<Option> items;
+
+    public ParameterDefinition(String name, String type, boolean required, String displayName, List<Option> items) {
         this.name = name;
         this.type = type;
         this.required = required;
         this.displayName = displayName;
+        this.items = items;
     }
 
     public String getName() {
@@ -36,6 +41,10 @@ public class ParameterDefinition {
         return displayName;
     }
 
+    public List<Option> getItems() {
+        return items;
+    }
+
     public static Builder newBuilder() { return new Builder(); }
 
     public static final class Builder {
@@ -43,6 +52,7 @@ public class ParameterDefinition {
         String type;
         boolean required;
         String displayName;
+        List<Option> items;
 
         private Builder() {
         }
@@ -67,8 +77,13 @@ public class ParameterDefinition {
             return this;
         }
 
+        public Builder withItems(List<Option> items) {
+            this.items = items;
+            return this;
+        }
+
         public ParameterDefinition build() {
-            return new ParameterDefinition(name, type, required, displayName);
+            return new ParameterDefinition(name, type, required, displayName, items);
         }
     }
 }
