@@ -25,7 +25,6 @@ import com.miotech.kun.workflow.facade.WorkflowExecutorFacade;
 import com.miotech.kun.workflow.facade.WorkflowWorkerFacade;
 import com.miotech.kun.workflow.web.service.InitService;
 import com.miotech.kun.workflow.web.service.RecoverService;
-import com.miotech.kun.workflow.web.service.SchedulerService;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
@@ -49,7 +48,6 @@ public class KunWorkflowServerModule extends KunWebServerModule {
         bind(TaskGraph.class).to(DatabaseTaskGraph.class);
         bind(InitService.class);
         bind(RecoverService.class);
-        bind(SchedulerService.class);
     }
 
     @Provides
