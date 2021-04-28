@@ -11,5 +11,5 @@ public class DateTimeTaskCount {
 
     Long time;
 
-    Long taskCount;
+    Integer taskCount;
 }

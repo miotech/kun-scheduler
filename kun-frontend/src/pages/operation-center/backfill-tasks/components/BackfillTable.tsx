@@ -4,7 +4,9 @@ import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 
 import { Badge, Button, Popconfirm, Space, Table } from 'antd';
-import { PauseOutlined, PlayCircleOutlined } from '@ant-design/icons';
+import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
+import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
+import Icon from '@ant-design/icons';
 import { UsernameText } from '@/components/UsernameText';
 
 import { BackfillDetail } from '@/definitions/Backfill.type';
@@ -48,19 +50,10 @@ function renderByTaskRunListStatus(status: RunStatusEnum[]) {
 }
 
 function backfillIsAlreadyComplete(status: RunStatusEnum[]): boolean {
-  return status.every(
-    s =>
-      s === 'SUCCESS' ||
-      s === 'SKIPPED' ||
-      s === 'FAILED' ||
-      s === 'ABORTED' ||
-      s === 'ABORTING',
-  );
+  return status.every(s => s === 'SUCCESS' || s === 'SKIPPED' || s === 'FAILED' || s === 'ABORTED' || s === 'ABORTING');
 }
 
-export const BackfillTable: React.FC<Props> = memo(function BackfillTable(
-  props,
-) {
+export const BackfillTable: React.FC<Props> = memo(function BackfillTable(props) {
   const {
     pageNum,
     pageSize,
@@ -75,9 +68,7 @@ export const BackfillTable: React.FC<Props> = memo(function BackfillTable(
 
   const { dispatch } = useRedux(() => {});
 
-  const [viewingLogTaskTryId, setViewingLogTaskTryId] = useState<string | null>(
-    null,
-  );
+  const [viewingLogTaskTryId, setViewingLogTaskTryId] = useState<string | null>(null);
 
   const t = useI18n();
 
@@ -115,18 +106,14 @@ export const BackfillTable: React.FC<Props> = memo(function BackfillTable(
         title: t('operationCenter.backfill.property.status'),
         key: 'status',
         render: (txt: any, record: BackfillDetail) => {
-          return renderByTaskRunListStatus(
-            record.taskRunList.map(r => r.status),
-          );
+          return renderByTaskRunListStatus(record.taskRunList.map(r => r.status));
         },
       },
       {
         title: t('operationCenter.backfill.property.tasksCount'),
         width: 120,
         key: 'flowTasksCount',
-        render: (txt, record) => (
-          <span>{(record.taskRunIds || []).length}</span>
-        ),
+        render: (txt, record) => <span>{(record.taskRunIds || []).length}</span>,
       },
       {
         title: t('operationCenter.backfill.property.creator'),
@@ -145,11 +132,7 @@ export const BackfillTable: React.FC<Props> = memo(function BackfillTable(
         key: 'createTime',
         width: 240,
         render: (txt, record) => {
-          return (
-            <span>
-              {dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss')}
-            </span>
-          );
+          return <span>{dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss')}</span>;
         },
       },
       {
@@ -157,40 +140,36 @@ export const BackfillTable: React.FC<Props> = memo(function BackfillTable(
         key: 'operations',
         width: 280,
         render: (txt, record) => {
-          const stopDisabled = backfillIsAlreadyComplete(
-            record.taskRunList.map(taskRun => taskRun.status),
-          );
+          const stopDisabled = backfillIsAlreadyComplete(record.taskRunList.map(taskRun => taskRun.status));
           return (
             <span>
               <Space size="small">
-                <Popconfirm
-                  title={t('operationCenter.backfill.operation.stopAll.alert')}
-                  disabled={stopDisabled}
-                  onConfirm={() => {
-                    onClickStopBackfill(record);
-                  }}
-                >
-                  <Button
-                    icon={<PauseOutlined />}
-                    size="small"
-                    danger
-                    disabled={stopDisabled}
+                {stopDisabled ? (
+                  <Popconfirm
+                    title={t('operationCenter.backfill.operation.rerun.alert')}
+                    onConfirm={() => {
+                      onClickRerunBackfill(record);
+                    }}
                   >
-                    {/* 停止所有任务 */}
-                    {t('operationCenter.backfill.operation.stopAll')}
-                  </Button>
-                </Popconfirm>
-                <Popconfirm
-                  title={t('operationCenter.backfill.operation.rerun.alert')}
-                  onConfirm={() => {
-                    onClickRerunBackfill(record);
-                  }}
-                >
-                  <Button icon={<PlayCircleOutlined />} size="small">
-                    {/* 重新运行 */}
-                    {t('operationCenter.backfill.operation.rerun')}
-                  </Button>
-                </Popconfirm>
+                    <Button icon={<Icon component={RerunIcon} />} size="small">
+                      {/* 重新运行 */}
+                      {t('operationCenter.backfill.operation.rerun')}
+                    </Button>
+                  </Popconfirm>
+                ) : (
+                  <Popconfirm
+                    title={t('operationCenter.backfill.operation.stopAll.alert')}
+                    disabled={stopDisabled}
+                    onConfirm={() => {
+                      onClickStopBackfill(record);
+                    }}
+                  >
+                    <Button icon={<Icon component={StopIcon} />} size="small" danger disabled={stopDisabled}>
+                      {/* 停止所有任务 */}
+                      {t('operationCenter.backfill.operation.stopAll')}
+                    </Button>
+                  </Popconfirm>
+                )}
               </Space>
             </span>
           );
@@ -226,8 +205,7 @@ export const BackfillTable: React.FC<Props> = memo(function BackfillTable(
           pageSize,
           total,
           onChange: handleChangePagination,
-          showTotal: (_total: number) =>
-            t('common.pagination.showTotal', { total: _total }),
+          showTotal: (_total: number) => t('common.pagination.showTotal', { total: _total }),
         }}
       />
       <BackfillInstanceLogViewer

@@ -15,7 +15,6 @@ import { OutputDatasetField } from '@/components/OutputDatasetField';
 
 import LogUtils from '@/utils/logUtils';
 import { getTaskDefinitionsFromFlattenedProps } from '@/utils/transformDataset';
-import { validateQuartzCron } from '@/utils/cronUtils';
 import { OneshotDatePicker } from '@/pages/data-development/task-definition-config/components/OneshotDatePicker';
 
 import styles from './BodyForm.less';
@@ -57,15 +56,13 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
       },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    initTaskDefinition,
-  ]);
+  }, [initTaskDefinition]);
 
-  const [ upstreamType, setUpstreamType ] = useState<'inputDataset' | 'searchTaskDef'>(
-    (
-      (initTaskDefinition?.taskPayload?.scheduleConfig?.inputDatasets?.length === 0) &&
-      (initTaskDefinition?.taskPayload?.scheduleConfig?.inputNodes?.length > 0)
-    ) ? 'searchTaskDef' : 'inputDataset'
+  const [upstreamType, setUpstreamType] = useState<'inputDataset' | 'searchTaskDef'>(
+    initTaskDefinition?.taskPayload?.scheduleConfig?.inputDatasets?.length === 0 &&
+      initTaskDefinition?.taskPayload?.scheduleConfig?.inputNodes?.length > 0
+      ? 'searchTaskDef'
+      : 'inputDataset',
   );
 
   const renderOutputDatasetFields = (fields: FormListFieldData[], { add, remove }: FormListOperation) => {
@@ -76,7 +73,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
           return (
             <Form.Item
               {...(idx === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
-              label={(idx === 0) ? t('dataDevelopment.definition.scheduleConfig.output.outputDataset') : ''}
+              label={idx === 0 ? t('dataDevelopment.definition.scheduleConfig.output.outputDataset') : ''}
               required={false}
               key={field.key}
             >
@@ -85,14 +82,21 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
                   <Form.Item
                     {...field}
                     // name={['taskPayload', 'scheduleConfig', 'outputDatasets', field.name]}
-                    initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.outputDatasets?.[field.key] ?? undefined}
+                    initialValue={
+                      initTaskDefinition?.taskPayload?.scheduleConfig?.outputDatasets?.[field.key] ?? undefined
+                    }
                     noStyle
                   >
                     <OutputDatasetField />
                   </Form.Item>
                 </Col>
                 <Col flex="0 0 60px">
-                  <Button type="link" onClick={() => { remove(field.name); }}>
+                  <Button
+                    type="link"
+                    onClick={() => {
+                      remove(field.name);
+                    }}
+                  >
                     <CloseOutlined />
                   </Button>
                 </Col>
@@ -102,12 +106,14 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
         })}
         {/* Add button */}
         <Form.Item
-          label={((fields.length === 0) ? t('dataDevelopment.definition.scheduleConfig.output.outputDataset') : '')}
-          {...((fields.length === 0) ? formItemLayout : formItemLayoutWithOutLabel)}
+          label={fields.length === 0 ? t('dataDevelopment.definition.scheduleConfig.output.outputDataset') : ''}
+          {...(fields.length === 0 ? formItemLayout : formItemLayoutWithOutLabel)}
         >
           <Button
             type="dashed"
-            onClick={() => { add(); }}
+            onClick={() => {
+              add();
+            }}
             style={{ width: 'calc(100% - 60px)' }}
           >
             <PlusOutlined />
@@ -119,7 +125,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
   };
 
   const scheduleInputRenderer = (formInstance: FormInstance<any>) => {
-    const {getFieldValue} = formInstance;
+    const { getFieldValue } = formInstance;
     const selectedScheduleType = getFieldValue(['taskPayload', 'scheduleConfig', 'type']);
 
     // case scheduled:
@@ -128,21 +134,10 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
         <Form.Item
           label={t('dataDevelopment.definition.scheduleConfig.cronExpression')}
           name={['taskPayload', 'scheduleConfig', 'cronExpr']}
-          rules={[
-            {required: true},
-            {
-              validator(rule, value) {
-                if (validateQuartzCron(value)) {
-                  return Promise.resolve();
-                }
-                // else
-                return Promise.reject(t('common.cronstrue.invalidCronExp'));
-              }
-            }
-          ]}
+          rules={[{ required: true }]}
           initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.cronExpr}
         >
-          <CronExpressionInput hideErrorAlert/>
+          <CronExpressionInput hideErrorAlert />
         </Form.Item>
       );
     }
@@ -161,6 +156,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
         </Form.Item>
       );
     }
+    // case NONE: render nothing
     // else
     return null;
   };
@@ -186,20 +182,26 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
               >
                 <Radio.Group>
                   <Radio value="ONESHOT">
-                    <span className={styles.RadioBtn}>One-shot</span>
+                    <span className={styles.RadioBtn}>
+                      {t('dataDevelopment.definition.scheduleConfig.scheduleType.oneShot')}
+                    </span>
                   </Radio>
                   <Radio value="SCHEDULED">
-                    <span className={styles.RadioBtn}>Scheduled</span>
+                    <span className={styles.RadioBtn}>
+                      {t('dataDevelopment.definition.scheduleConfig.scheduleType.scheduled')}
+                    </span>
+                  </Radio>
+                  <Radio value="NONE">
+                    <span className={styles.RadioBtn}>
+                      {t('dataDevelopment.definition.scheduleConfig.scheduleType.manual')}
+                    </span>
                   </Radio>
                 </Radio.Group>
               </Form.Item>
             </Row>
             <Row>
               {/* Cron Expression */}
-              <Form.Item
-                noStyle
-                shouldUpdate={() => true}
-              >
+              <Form.Item noStyle shouldUpdate={() => true}>
                 {scheduleInputRenderer}
               </Form.Item>
             </Row>
@@ -218,13 +220,12 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
           <Col flex="1 1">
             <Row>
               {/* Upstream type */}
-              <Form.Item
-                label={t('dataDevelopment.definition.scheduleConfig.upstream.type')}
-                required
-              >
+              <Form.Item label={t('dataDevelopment.definition.scheduleConfig.upstream.type')} required>
                 <Radio.Group
                   value={upstreamType}
-                  onChange={(ev) => { setUpstreamType(ev.target.value); }}
+                  onChange={ev => {
+                    setUpstreamType(ev.target.value);
+                  }}
                 >
                   <Radio value="inputDataset">
                     <span className={styles.RadioBtn}>
@@ -256,15 +257,18 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
                     </Form.Item>
                   );
                 }
-                  return (
-                    <Form.Item
-                      name={['taskPayload', 'scheduleConfig', 'inputNodes']}
-                      label={t('dataDevelopment.definition.scheduleConfig.upstream.type.search')}
-                      initialValue={(initTaskDefinition?.upstreamTaskDefinitions || []).map(taskDef => ({ value: taskDef.id, label: taskDef.name }))}
-                    >
-                      <TaskSearchSelector />
-                    </Form.Item>
-                  );
+                return (
+                  <Form.Item
+                    name={['taskPayload', 'scheduleConfig', 'inputNodes']}
+                    label={t('dataDevelopment.definition.scheduleConfig.upstream.type.search')}
+                    initialValue={(initTaskDefinition?.upstreamTaskDefinitions || []).map(taskDef => ({
+                      value: taskDef.id,
+                      label: taskDef.name,
+                    }))}
+                  >
+                    <TaskSearchSelector />
+                  </Form.Item>
+                );
               })()}
             </Row>
           </Col>
@@ -282,9 +286,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
           </Col>
           <Col flex="1 1">
             {/* List of output dataset fields */}
-            <Form.List
-              name={['taskPayload', 'scheduleConfig', 'outputDatasets']}
-            >
+            <Form.List name={['taskPayload', 'scheduleConfig', 'outputDatasets']}>
               {renderOutputDatasetFields}
             </Form.List>
           </Col>

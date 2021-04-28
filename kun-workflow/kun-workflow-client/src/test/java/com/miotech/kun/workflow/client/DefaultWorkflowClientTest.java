@@ -208,7 +208,7 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         assertThat(taskRuns.getPageNum(),is(0));
         assertThat(taskRuns.getPageSize(),is(10));
         assertThat(taskRuns.getRecords(),hasSize(2));
-        assertThat(taskRuns.getTotalCount(),is(2l));
+        assertThat(taskRuns.getTotalCount(),is(2));
 
         TaskRunSearchRequest request2 = TaskRunSearchRequest
                 .newBuilder()
@@ -220,7 +220,7 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         assertThat(taskRuns2.getPageNum(),is(0));
         assertThat(taskRuns2.getPageSize(),is(10));
         assertThat(taskRuns2.getRecords(),hasSize(0));
-        assertThat(taskRuns2.getTotalCount(),is(0l));
+        assertThat(taskRuns2.getTotalCount(),is(0));
 
         // cleanup
         client.deleteTask(created1.getId());

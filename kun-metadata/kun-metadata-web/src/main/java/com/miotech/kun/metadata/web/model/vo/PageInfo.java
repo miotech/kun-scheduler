@@ -6,7 +6,7 @@ public class PageInfo {
 
     private Integer pageSize = 25;
 
-    private Long totalCount;
+    private Integer totalCount;
 
     public Integer getPageNumber() {
         return pageNumber;
@@ -24,11 +24,11 @@ public class PageInfo {
         this.pageSize = pageSize;
     }
 
-    public Long getTotalCount() {
+    public Integer getTotalCount() {
         return totalCount;
     }
 
-    public void setTotalCount(Long totalCount) {
+    public void setTotalCount(Integer totalCount) {
         this.totalCount = totalCount;
     }
 }

@@ -324,8 +324,34 @@ public class DeployedTaskService extends BaseSecurityService{
     }
 
     public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId) {
+        return getWorkFlowTaskRunLog(taskRunId, -1);
+    }
+
+    public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId, Integer attempt) {
         Preconditions.checkNotNull(taskRunId, TASK_RUN_ID_NOT_NULL);
-        TaskRunLog log = workflowClient.getLatestRunLog(taskRunId);
+        Preconditions.checkNotNull(attempt, "attempt cannot be null");
+        TaskRunLog log = workflowClient.getLatestRunLog(taskRunId, attempt);
+        TaskRunStatus status = workflowClient.getTaskRunState(taskRunId)
+                .getStatus();
+        return new TaskRunLogVO(
+                log.getTaskRunId(),
+                log.getAttempt(),
+                log.getStartLine(),
+                log.getEndLine(),
+                log.getLogs(),
+                status.isFinished(),
+                status
+        );
+    }
+
+    public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId, Integer start, Integer end) {
+        return getWorkFlowTaskRunLog(taskRunId, start, end, -1);
+    }
+
+    public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId, Integer start, Integer end, Integer attempt) {
+        Preconditions.checkNotNull(taskRunId, TASK_RUN_ID_NOT_NULL);
+        Preconditions.checkNotNull(attempt, "attempt cannot be null");
+        TaskRunLog log = workflowClient.getLatestRunLog(taskRunId, start, end, attempt);
         TaskRunStatus status = workflowClient.getTaskRunState(taskRunId)
                 .getStatus();
         return new TaskRunLogVO(

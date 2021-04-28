@@ -505,7 +505,7 @@ public class DataQualityRepository extends BaseRepository {
                 .select("count(1) as total_count")
                 .from("(" + getSqlBuilder.getSQL() + ") temp")
                 .getSQL();
-        Long totalCount = jdbcTemplate.queryForObject(countSql, Long.class, request.getGid());
+        Integer totalCount = jdbcTemplate.queryForObject(countSql, Integer.class, request.getGid());
 
         getSqlBuilder
                 .orderBy("kdc.create_time desc")

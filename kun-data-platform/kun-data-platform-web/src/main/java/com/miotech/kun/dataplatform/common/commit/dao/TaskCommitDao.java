@@ -148,9 +148,9 @@ public class TaskCommitDao {
                 .from(TASK_COMMIT_TABLE_NAME, TASK_COMMIT_MODEL_NAME)
                 .where(whereClause.toString())
                 .getSQL();
-        Long totalCount = jdbcTemplate.query(
+        Integer totalCount = jdbcTemplate.query(
                 countSql,
-                (rse) -> rse.next() ? rse.getLong(1): 0,
+                (rse) -> rse.next() ? rse.getInt(1): 0,
                 params.toArray());
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(getSelectSQL(whereClause.toString()))

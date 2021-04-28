@@ -153,15 +153,15 @@ public class DeployedTaskDao {
                 .where(whereClause.toString())
                 .getSQL();
         // count
-        Long totalCount = jdbcTemplate.query(
+        Integer totalCount = jdbcTemplate.query(
                 countSql,
-                (rse) -> rse.next() ? rse.getLong(1): 0,
+                (rse) -> rse.next() ? rse.getInt(1): 0,
                 params.toArray());
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(getSelectSQL(whereClause.toString()))
-                .orderBy(DEPLOYED_TASK_MODEL_NAME + ".id")
+                .orderBy(DEPLOYED_TASK_MODEL_NAME + ".id DESC")
                 .limit(searchRequest.getPageSize())
-                .offset(searchRequest.getPageSize() * (searchRequest.getPageNum()-1))
+                .offset(searchRequest.getPageSize() * (searchRequest.getPageNum() - 1))
                 .getSQL();
         // list
         List<DeployedTask> tasks = jdbcTemplate.query(sql, DeployedTaskMapper.INSTANCE, params.toArray());

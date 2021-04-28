@@ -6,6 +6,7 @@ import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.common.utils.WorkflowUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.datadiscovery.constant.Constants;
 import com.miotech.kun.datadiscovery.model.bo.LineageGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
@@ -14,6 +15,7 @@ import com.miotech.kun.workflow.client.LineageQueryDirection;
 import com.miotech.kun.workflow.client.WorkflowApiException;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
@@ -114,7 +116,10 @@ public class LineageController {
                 try {
                     DatasetLineageInfo datasetLineageInfo = workflowClient.getLineageNeighbors(request.getDatasetGid(), LineageQueryDirection.UPSTREAM, 1);
                     List<Task> tasks = datasetLineageInfo.getSourceNode().getUpstreamTasks();
-                    taskIdMap.putAll(tasks.stream().collect(Collectors.toMap(Task::getId, task -> task)));
+                    taskIdMap.putAll(tasks.stream().filter(task -> {
+                        List<Tag> tags = task.getTags();
+                        return tags == null || !tags.contains(Constants.TAG_TYPE_MANUAL_RUN);
+                    }).collect(Collectors.toMap(Task::getId, task -> task)));
                 } catch (WorkflowApiException e) {
                     log.error(e.getMessage());
                 }
@@ -124,7 +129,10 @@ public class LineageController {
                 try {
                     DatasetLineageInfo datasetLineageInfo = workflowClient.getLineageNeighbors(request.getDatasetGid(), LineageQueryDirection.DOWNSTREAM, 1);
                     List<Task> tasks = datasetLineageInfo.getSourceNode().getDownstreamTasks();
-                    taskIdMap.putAll(tasks.stream().collect(Collectors.toMap(Task::getId, task -> task)));
+                    taskIdMap.putAll(tasks.stream().filter(task -> {
+                        List<Tag> tags = task.getTags();
+                        return tags == null || !tags.contains(Constants.TAG_TYPE_MANUAL_RUN);
+                    }).collect(Collectors.toMap(Task::getId, task -> task)));
                 } catch (WorkflowApiException e) {
                     log.error(e.getMessage());
                 }
@@ -137,9 +145,9 @@ public class LineageController {
                 return RequestResult.success(lineageTasks);
             }
             List<Long> taskIds = Lists.newArrayList(taskIdMap.keySet());
-            Map<Long, List<TaskRun>> lastestTaskRunsMap = workflowClient.getLatestTaskRuns(taskIds, LATEST_TASK_LIMIT);
+            Map<Long, List<TaskRun>> latestTaskRunsMap = workflowClient.getLatestTaskRuns(taskIds, LATEST_TASK_LIMIT);
 
-            lastestTaskRunsMap.forEach((taskId, taskRuns) -> {
+            latestTaskRunsMap.forEach((taskId, taskRuns) -> {
                 LineageTask lineageTask = new LineageTask();
                 lineageTask.setTaskId(taskId);
                 lineageTask.setTaskName(taskIdMap.get(taskId).getName());
@@ -159,14 +167,14 @@ public class LineageController {
             return lineageTask;
         }).collect(Collectors.toMap(LineageTask::getTaskId, lineageTask -> lineageTask));
         if (CollectionUtils.isNotEmpty(lineageTaskMap.keySet())) {
-            Map<Long, List<TaskRun>> lastestTaskRunsMap = workflowClient.getLatestTaskRuns(new ArrayList<>(lineageTaskMap.keySet()), LATEST_TASK_LIMIT);
+            Map<Long, List<TaskRun>> latestTaskRunsMap = workflowClient.getLatestTaskRuns(new ArrayList<>(lineageTaskMap.keySet()), LATEST_TASK_LIMIT);
             lineageTaskMap.forEach((taskId, task) -> {
-                List<TaskRun> latestTaskRuns = lastestTaskRunsMap.get(taskId);
+                List<TaskRun> latestTaskRuns = latestTaskRunsMap.get(taskId);
                 if (CollectionUtils.isNotEmpty(latestTaskRuns)) {
                     task.setLastExecutedTime(DateUtils.dateTimeToMillis(latestTaskRuns.get(0).getStartAt()));
                 }
-                List<String> lastestStatus = WorkflowUtils.resolveTaskHistory(lastestTaskRunsMap.get(taskId));
-                task.setHistoryList(lastestStatus);
+                List<String> latestStatus = WorkflowUtils.resolveTaskHistory(latestTaskRunsMap.get(taskId));
+                task.setHistoryList(latestStatus);
             });
         }
         LineageTasks lineageTasks = new LineageTasks();
