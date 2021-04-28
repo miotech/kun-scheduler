@@ -2,11 +2,8 @@ package com.miotech.kun.dataplatform.model.taskdefinition;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
 
-import java.util.Collections;
 import java.util.Map;
-
 
 @JsonDeserialize(builder = TaskPayload.Builder.class)
 public class TaskPayload {
