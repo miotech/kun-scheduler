@@ -71,7 +71,9 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
                 .define(CONF_SPARK_DEFAULT_DB, ConfigDef.Type.STRING, CONF_SPARK_DEFAULT_DB_DEFAULT,true, "Default database name for a sql execution", CONF_SPARK_DEFAULT_DB)
                 .define(CONF_LIVY_BATCH_CONF, ConfigDef.Type.STRING, "{}", true, "Extra spark configuration , in the format `{\"key\": \"value\"}`", CONF_LIVY_BATCH_CONF)
                 .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}", true, "SQL variables, use like `select ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
-                ;
+                .define(CONF_LINEAGE_OUTPUT_PATH, ConfigDef.Type.STRING, true, "file system address to store lineage analysis report, in the format `s3a://BUCKET/path` or `hdfs://host:port/path`", CONF_LINEAGE_OUTPUT_PATH)
+                .define(CONF_S3_ACCESS_KEY, ConfigDef.Type.STRING, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_ACCESS_KEY)
+                .define(CONF_S3_SECRET_KEY, ConfigDef.Type.STRING, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_SECRET_KEY);
     }
 
     @Override
@@ -88,6 +90,10 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
         String sessionName = SparkConfiguration.getString(context, CONF_LIVY_SHARED_SESSION_NAME);
         Long taskRunId = context.getTaskRunId();
 
+        String configLineageOutputPath = SparkConfiguration.getString(context, CONF_LINEAGE_OUTPUT_PATH);
+        String configS3AccessKey = SparkConfiguration.getString(context, CONF_S3_ACCESS_KEY);
+        String configS3SecretKey = SparkConfiguration.getString(context, CONF_S3_SECRET_KEY);
+
         if (Strings.isNullOrEmpty(sessionName)) {
             sessionName = "Spark Job: " + IdGenerator.getInstance().nextId();
         } else {
@@ -101,6 +107,15 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
         }
         if (!Strings.isNullOrEmpty(sparkConf)) {
             job.setConf(JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
+        }
+        // lineage config
+        job.addConf("spark.sql.queryExecutionListeners","za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
+        job.addConf("spark.hadoop.spline.hdfs_dispatcher.address", configLineageOutputPath);
+        if(!Strings.isNullOrEmpty(configS3AccessKey)){
+            job.addConf("fs.s3a.access.key", configS3AccessKey);
+        }
+        if(!Strings.isNullOrEmpty(configS3SecretKey)){
+            job.addConf("fs.s3a.secret.key", configS3SecretKey);
         }
         job.addConf("spark.hadoop.taskRunId", taskRunId.toString());
         if (!job.getConf().containsKey("spark.driver.memory")) {
@@ -158,7 +173,7 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
         }
 
         try {
-            TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), context.getTaskRunId(), JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
+            TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), context.getTaskRunId());
             report(taskAttemptReport);
         } catch (Exception e) {
             logger.error("Failed to parse lineage: {}", e);

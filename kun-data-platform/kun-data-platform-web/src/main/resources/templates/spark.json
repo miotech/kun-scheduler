@@ -43,7 +43,10 @@
     "jars": "${ dataplatform.lineage.analysis.jar }",
     "files": "",
     "livyHost": "${ dataplatform.livy.host }",
-    "sparkConf": "{\"spark.sql.queryExecutionListeners\":\"za.co.absa.spline.harvester.listener.SplineQueryExecutionListener\", \"spark.hadoop.spline.hdfs_dispatcher.address\":${dataplatform.lineage.output.path}, \"spark.fs.s3a.access.key\":${dataplatform.s3.access.key}, \"spark.fs.s3a.secret.key\":${dataplatform.s3.secret.key}}",
+    "lineageOutputPath":"${ dataplatform.lineage.output.path }",
+    "s3AccessKey":"${ dataplatform.s3.access.key }",
+    "s3SecretKey":"${ dataplatform.s3.secret.key }",
+    "sparkConf": "{}",
     "variables": "{}",
     "application": ""
   },

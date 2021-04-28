@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.operator;
 
+import com.google.common.base.Strings;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
@@ -9,31 +10,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Map;
+import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
 
 public class SparkQueryPlanLineageAnalyzer {
     private static final Logger logger = LoggerFactory.getLogger(SparkQueryPlanLineageAnalyzer.class);
 
-    public static TaskAttemptReport lineageAnalysis(Config config, Long taskRunId, Map<String, String> sparkConf) {
+    public static TaskAttemptReport lineageAnalysis(Config config, Long taskRunId) {
         TaskAttemptReport.Builder taskAttemptReport = TaskAttemptReport.newBuilder();
         try {
             logger.info("start lineage analysis for task {}", taskRunId);
             Configuration conf = new Configuration();
 
-            if(sparkConf.containsKey("spark.fs.s3a.access.key")){
-                String configS3AccessKey = sparkConf.get("spark.fs.s3a.access.key");
+            String configS3AccessKey = config.getString(CONF_S3_ACCESS_KEY);
+            if(!Strings.isNullOrEmpty(configS3AccessKey)){
                 conf.set("fs.s3a.access.key", configS3AccessKey);
             }
-            if(sparkConf.containsKey("spark.fs.s3a.secret.key")){
-                String configS3SecretKey = sparkConf.get("spark.fs.s3a.secret.key");
+            String configS3SecretKey = config.getString(CONF_S3_SECRET_KEY);
+            if(!Strings.isNullOrEmpty(configS3SecretKey)){
                 conf.set("fs.s3a.secret.key", configS3SecretKey);
             }
 
             conf.set("fs.hdfs.impl", org.apache.hadoop.hdfs.DistributedFileSystem.class.getName());
             conf.set("fs.file.impl", org.apache.hadoop.fs.LocalFileSystem.class.getName());
 
-            String hdfsRoot = sparkConf.get("spark.hadoop.spline.hdfs_dispatcher.address");
+            String hdfsRoot = config.getString(CONF_LINEAGE_OUTPUT_PATH);
             HdfsFileSystem hdfsFileSystem = new HdfsFileSystem(hdfsRoot, conf);
             SparkOperatorResolver resolver = new SparkOperatorResolver(hdfsFileSystem, taskRunId);
             List<DataStore> inputs = resolver.resolveUpstreamDataStore(config);
