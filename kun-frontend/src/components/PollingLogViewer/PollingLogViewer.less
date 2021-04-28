@@ -12,16 +12,49 @@
   }
 }
 
+.lazylog-line-limit-hint {
+  position: absolute;
+  top: 8px;
+  left: 16px;
+  z-index: 1;
+  color: #ddd;
+}
+
 .lazylog-button-group {
   position: absolute;
   top: 8px;
   right: 335px;
-  z-index: 1;
+  z-index: 100;
+
+  .lazylog-attempt-pagination-wrapper {
+    display: inline-block;
+    position: absolute;
+    right: 50px;
+    width: 135px;
+    top: 0;
+  }
+
+  .ant-pagination {
+    display: inline-block;
+  }
+
+  .ant-pagination-next.ant-pagination-disabled button {
+    color: #444;
+  }
+
+  .ant-pagination-simple .ant-pagination-simple-pager input {
+    height: 20px;
+    border: none;
+    border-radius: 0;
+    background-color: #464646;
+    color: #d6d6d6;
+  }
 
   .tool-btn {
     color: #7c7c7c;
 
-    &:hover,&:focus {
+    &:hover,
+    &:focus {
       color: lighten(#7c7c7c, 20%);
     }
     &:active {

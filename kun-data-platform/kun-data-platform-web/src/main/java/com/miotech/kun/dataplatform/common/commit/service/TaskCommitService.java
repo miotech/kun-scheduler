@@ -8,10 +8,13 @@ import com.miotech.kun.dataplatform.common.commit.vo.TaskCommitVO;
 import com.miotech.kun.dataplatform.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.common.utils.VersionUtil;
+import com.miotech.kun.dataplatform.exception.CannotGenerateNextTickException;
+import com.miotech.kun.dataplatform.exception.InvalidCronExpressionException;
 import com.miotech.kun.dataplatform.model.commit.CommitStatus;
 import com.miotech.kun.dataplatform.model.commit.CommitType;
 import com.miotech.kun.dataplatform.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.model.commit.TaskSnapshot;
+import com.miotech.kun.dataplatform.model.taskdefinition.ScheduleConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.model.PaginationResult;
@@ -21,12 +24,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static com.miotech.kun.workflow.utils.CronUtils.*;
 
 @Service
 @Slf4j
@@ -96,6 +98,7 @@ public class TaskCommitService extends BaseSecurityService {
                 .withTaskPayload(taskDefinition.getTaskPayload())
                 .withOwner(taskDefinition.getOwner())
                 .build();
+        validateSnapshotCronExpression(snapshot);
         TaskCommit commit = TaskCommit.newBuilder()
                 .withId(DataPlatformIdGenerator.nextCommitId())
                 .withDefinitionId(taskDefinitionId)
@@ -111,6 +114,32 @@ public class TaskCommitService extends BaseSecurityService {
         // update previous commit and create new commit
         versionProps.ifPresent(props -> taskCommitDao.updateCommitLatestFlag(props.getId(), false));
         return taskCommitDao.create(commit);
+    }
+
+    /**
+     * Validate Cron expression in snapshot. Throws exception if cron expression cannot generate next tick.
+     */
+    private void validateSnapshotCronExpression(TaskSnapshot snapshot) {
+        Preconditions.checkNotNull(snapshot.getTaskPayload(), "Task payload of generated snapshot cannot be null");
+        Preconditions.checkNotNull(snapshot.getTaskPayload().getScheduleConfig(), "Schedule config of generated snapshot cannot be null");
+        ScheduleConfig scheduleConfig = snapshot.getTaskPayload().getScheduleConfig();
+
+        String type = scheduleConfig.getType();
+        // The validation shall pass when
+        if (!Objects.equals(type, "NONE")) {
+            String cronExpression = scheduleConfig.getCronExpr();
+            Preconditions.checkNotNull(cronExpression, "Cron expression cannot be null when schedule type is not \"manual\".");
+            try {
+                validateCron(convertStringToCron(cronExpression));
+            } catch (IllegalArgumentException e) {
+                throw new InvalidCronExpressionException(cronExpression);
+            }
+            Optional<OffsetDateTime> nextTickTime = getNextExecutionTimeFromNow(convertStringToCron(cronExpression));
+            // If next tick cannot be computed
+            if (!nextTickTime.isPresent()) {
+                throw new CannotGenerateNextTickException(cronExpression);
+            }
+        }
     }
 
     public TaskCommitVO convertVO(TaskCommit commit) {

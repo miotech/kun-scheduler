@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.CommonTestBase;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
@@ -22,6 +23,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
+import org.apache.commons.lang3.tuple.Triple;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -29,10 +31,7 @@ import org.junit.rules.ExpectedException;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.Writer;
+import java.io.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -208,38 +207,48 @@ public class TaskRunServiceTest extends CommonTestBase {
         TaskRunLogVO taskRunLogVO;
 
         taskRunLogVO = taskRunService.getTaskRunLog(taskRunId, 1, 0, 1);
-        assertEquals(2, taskRunLogVO.getLogs().size());
+        // should return line with index 0 (line 1)
+        assertEquals(1, taskRunLogVO.getLogs().size());
 
+        // should return line with index 0, 1, 2, 3 (line 1, 2, 3, 4)
         taskRunLogVO = taskRunService.getTaskRunLog(taskRunId, 1, 0, 4);
         assertEquals(3, taskRunLogVO.getLogs().size());
     }
 
     @Test
-    public void getTaskRunLog_withIllegalArg() throws IOException {
+    public void getTaskRunLog_withNotExistingTaskRun_shouldThrowException() throws IOException {
         Long taskRunId = 1L;
-
-        try {
-            taskRunService.getTaskRunLog(taskRunId,-1, -1, 0);
-        } catch (Exception e) {
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("startLine should larger or equal to 0", e.getMessage());
-        }
-
-        try {
-            taskRunService.getTaskRunLog(taskRunId,-1, 1, 0);
-        } catch (Exception e) {
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("endLine should not smaller than startLine", e.getMessage());
-        }
 
         Mockito.when(taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId))
                 .thenReturn(Collections.emptyList());
         try {
             taskRunService.getTaskRunLog(taskRunId,-1, 1, 2);
         } catch (Exception e) {
-            assertEquals(IllegalArgumentException.class, e.getClass());
-            assertEquals("No valid task attempt found for TaskRun \"1\"", e.getMessage());
+            assertEquals(EntityNotFoundException.class, e.getClass());
+            assertEquals("Cannot find task attempt -1 of task run with id = 1.", e.getMessage());
         }
+    }
+
+    @Test
+    public void getTaskRunLog_shouldAllowSearchByNegativeIndex() throws IOException {
+        // Prepare
+        Long taskRunId = 1L;
+        String testStr = "line 1\nline 2\nline 3\nline 4\n";
+        Resource resource = creatResource("xyz", testStr, 1);
+        TaskAttemptProps attemptProps = TaskAttemptProps.newBuilder()
+                .withAttempt(1)
+                .withLogPath(resource.getLocation())
+                .build();
+
+        Mockito.when(taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId))
+                .thenReturn(Collections.singletonList(attemptProps));
+
+        TaskRunLogVO vo = taskRunService.getTaskRunLog(taskRunId,-1, -3, null);
+        assertThat(vo.getLogs().size(), is(3));
+        assertThat(vo.getLogs().get(0), is("line 2"));
+        assertThat(vo.getAttempt(), is(1));
+        assertThat(vo.getStartLine(), is(1));
+        assertThat(vo.getEndLine(), is(3));
     }
 
     @Test
@@ -538,5 +547,58 @@ public class TaskRunServiceTest extends CommonTestBase {
             TaskAttemptProps persistedLatestAttempt = taskRunDao.fetchLatestTaskAttempt(attemptArgument.getTaskRun().getId());
             return persistedLatestAttempt.getId().equals(attemptArgument.getId());
         }).when(executor).submit(Mockito.isA(TaskAttempt.class));
+    }
+
+    @Test
+    public void getLineCountOfFile_shouldBeAbleToReadEntireLogFile() throws IOException {
+        InputStream mockLogResourceStream = getClass().getResourceAsStream("/testcase/example.log");
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(mockLogResourceStream));
+        Triple<List<String>, Integer, Integer> result = taskRunService.readLinesFromLogFile(reader, 30, 0, null);
+        assertThat(result.getLeft().size(), is(30));
+        assertThat(result.getLeft().get(0), is("This is line 1."));
+        assertThat(result.getLeft().get(29), is("This is line 30."));
+        assertThat(result.getMiddle(), is(0));
+        assertThat(result.getRight(), is(29));
+    }
+
+    @Test
+    public void getLineCountOfFile_withRange_shouldBeAbleToRead() throws IOException {
+        InputStream mockLogResourceStream = getClass().getResourceAsStream("/testcase/example.log");
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(mockLogResourceStream));
+        Triple<List<String>, Integer, Integer> result = taskRunService.readLinesFromLogFile(reader, 30, 1, 4);
+        // Should read line 2, line 3, line 4
+        assertThat(result.getLeft().size(), is(3));
+        assertThat(result.getLeft().get(0), is("This is line 2."));
+        assertThat(result.getLeft().get(2), is("This is line 4."));
+        assertThat(result.getMiddle(), is(1));
+        assertThat(result.getRight(), is(3));
+    }
+
+    @Test
+    public void getLineCountOfFile_withNegativeIndexes_shouldBeAbleToRead() throws IOException {
+        InputStream mockLogResourceStream = getClass().getResourceAsStream("/testcase/example.log");
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(mockLogResourceStream));
+        Triple<List<String>, Integer, Integer> result = taskRunService.readLinesFromLogFile(reader, 30, 1, -1);
+        assertThat(result.getLeft().size(), is(28));
+        assertThat(result.getLeft().get(0), is("This is line 2."));
+        assertThat(result.getLeft().get(27), is("This is line 29."));
+        assertThat(result.getMiddle(), is(1));
+        assertThat(result.getRight(), is(28));
+    }
+
+    @Test
+    public void getLineCountOfFile_withNegativeIndexes_shouldBeAbleToReadLast5Lines() throws IOException {
+        InputStream mockLogResourceStream = getClass().getResourceAsStream("/testcase/example.log");
+
+        BufferedReader reader = new BufferedReader(new InputStreamReader(mockLogResourceStream));
+        Triple<List<String>, Integer, Integer> result = taskRunService.readLinesFromLogFile(reader, 30, -5, null);
+        assertThat(result.getLeft().size(), is(5));
+        assertThat(result.getLeft().get(0), is("This is line 26."));
+        assertThat(result.getLeft().get(4), is("This is line 30."));
+        assertThat(result.getMiddle(), is(25));
+        assertThat(result.getRight(), is(29));
     }
 }

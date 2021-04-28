@@ -2,7 +2,7 @@ package com.miotech.kun.commons.web.annotation;
 
 public class VALUE_DEFAULT {
 
-    public static final String MAX_LINES = "9223372036854775807";
+    public static final String MAX_LINES = "2147483647";
 
     /**
      * Default none value. To differ from null or "" string value.

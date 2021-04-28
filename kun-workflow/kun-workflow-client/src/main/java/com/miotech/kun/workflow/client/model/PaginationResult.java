@@ -7,14 +7,14 @@ public class PaginationResult<T> {
 
     private int pageNum;
 
-    private long totalCount;
+    private int totalCount;
 
     private List<T> records;
 
     public PaginationResult() {
     }
 
-    public PaginationResult(int pageSize, int pageNum, long totalCount, List<T> records) {
+    public PaginationResult(int pageSize, int pageNum, int totalCount, List<T> records) {
         this.pageSize = pageSize;
         this.pageNum = pageNum;
         this.totalCount = totalCount;
@@ -29,7 +29,7 @@ public class PaginationResult<T> {
         return pageNum;
     }
 
-    public long getTotalCount() {
+    public int getTotalCount() {
         return totalCount;
     }
 

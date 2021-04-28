@@ -48,6 +48,8 @@ import static com.miotech.kun.dataplatform.model.taskdefinition.TaskDefNotifyCon
 @Slf4j
 public class TaskDefinitionService extends BaseSecurityService {
 
+   private static final List<ScheduleType> VALID_SCHEDULE_TYPE = ImmutableList.of(ScheduleType.SCHEDULED, ScheduleType.ONESHOT, ScheduleType.NONE);
+
     @Autowired
     private TaskDefinitionDao taskDefinitionDao;
 
@@ -234,17 +236,16 @@ public class TaskDefinitionService extends BaseSecurityService {
                 .getScheduleConfig();
 
         // check schedule is valid
-        List<ScheduleType> validScheduleType = new ArrayList<>();
-        validScheduleType.add(ScheduleType.SCHEDULED);
-        validScheduleType.add(ScheduleType.ONESHOT);
         Preconditions.checkNotNull(scheduleConfig.getType(), "Schedule type should not be null");
         ScheduleType scheduleType = ScheduleType.valueOf(scheduleConfig.getType());
-        Preconditions.checkArgument(validScheduleType.contains(scheduleType),
-                "ScheduleType should not be in " + validScheduleType.stream()
+        Preconditions.checkArgument(VALID_SCHEDULE_TYPE.contains(scheduleType),
+                "Schedule type should be one of the followings: " + VALID_SCHEDULE_TYPE.stream()
                         .map(ScheduleType::name)
                         .collect(Collectors.joining(",")));
-        Preconditions.checkArgument(StringUtils.isNoneBlank(scheduleConfig.getCronExpr()),
-                "Cron Expression should not be blank");
+        if (!Objects.equals(scheduleType, ScheduleType.NONE)) {
+            Preconditions.checkArgument(StringUtils.isNoneBlank(scheduleConfig.getCronExpr()),
+                    "Cron Expression should not be blank");
+        }
         // check dependency is valid
         List<Long> dependencyNodes = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
         List<Long> taskDefinitionIds = taskDefinitionDao.fetchByIds(dependencyNodes)

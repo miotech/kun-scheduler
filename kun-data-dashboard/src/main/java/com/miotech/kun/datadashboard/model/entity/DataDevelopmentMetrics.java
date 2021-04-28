@@ -9,15 +9,15 @@ import lombok.Data;
 @Data
 public class DataDevelopmentMetrics {
 
-    Long successTaskCount;
+    Integer successTaskCount;
 
-    Long failedTaskCount;
+    Integer failedTaskCount;
 
-    Long runningTaskCount;
+    Integer runningTaskCount;
 
-    Long startedTaskCount;
+    Integer startedTaskCount;
 
-    Long pendingTaskCount;
+    Integer pendingTaskCount;
 
-    Long totalTaskCount;
+    Integer totalTaskCount;
 }

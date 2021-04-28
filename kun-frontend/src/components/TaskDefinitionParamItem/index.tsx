@@ -13,7 +13,6 @@ interface TaskDefinitionParamItemProps {
   style?: React.CSSProperties;
 }
 
-
 export const TaskDefinitionParamItem: React.FC<TaskDefinitionParamItemProps> = props => {
   const { parameter, wrapFormItem, ...restProps } = props;
 
@@ -21,13 +20,13 @@ export const TaskDefinitionParamItem: React.FC<TaskDefinitionParamItemProps> = p
     return <></>;
   }
 
-  const matchedFormComponent = formComponentFactory(parameter.type, restProps);
+  const matchedFormComponent = formComponentFactory(parameter, restProps);
 
   if (!wrapFormItem) {
     return matchedFormComponent;
   }
 
-  const formItemProps = (typeof wrapFormItem === 'boolean') ? {} : wrapFormItem;
+  const formItemProps = typeof wrapFormItem === 'boolean' ? {} : wrapFormItem;
   // else
   return (
     <Form.Item

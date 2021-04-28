@@ -144,8 +144,18 @@ public class DeployedTaskController {
 
     @GetMapping("/deployed-taskruns/{id}/log")
     @ApiOperation("Get log of scheduled taskrun")
-    public RequestResult<TaskRunLogVO> getWorkflowTaskRunLog(@PathVariable Long id) {
-        return RequestResult.success(deployedTaskService.getWorkFlowTaskRunLog(id));
+    public RequestResult<TaskRunLogVO> getWorkflowTaskRunLog(
+            @PathVariable Long id,
+            @RequestParam(required = false) Integer start,
+            @RequestParam(required = false) Integer end,
+            @RequestParam(required = false) Integer attempt
+    ) {
+        int attemptNum = Objects.nonNull(attempt) ? attempt : -1;
+        if (start == null && end == null) {
+            return RequestResult.success(deployedTaskService.getWorkFlowTaskRunLog(id, attemptNum));
+        }
+        // else
+        return RequestResult.success(deployedTaskService.getWorkFlowTaskRunLog(id, start, end, attemptNum));
     }
 
     @GetMapping("/deployed-taskruns/{id}/dag")

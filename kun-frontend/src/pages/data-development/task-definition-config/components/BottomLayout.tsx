@@ -1,12 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import c from 'clsx';
-import {
-  CloseOutlined,
-  ShrinkOutlined,
-  ArrowsAltOutlined,
-  DownOutlined,
-  UpOutlined,
-} from '@ant-design/icons';
+import { CloseOutlined, ShrinkOutlined, ArrowsAltOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
 import { Button } from 'antd';
 
 import styles from './BottomLayout.less';
@@ -49,11 +43,7 @@ export const BottomLayout: React.FC<BottomLayoutProps> = props => {
             icon={fullscreen ? <ShrinkOutlined /> : <ArrowsAltOutlined />}
             onClick={handleClickFullscreenButton}
           />
-          <Button
-            type="link"
-            icon={shrink ? <UpOutlined /> : <DownOutlined />}
-            onClick={handleClickShrinkButton}
-          />
+          <Button type="link" icon={shrink ? <UpOutlined /> : <DownOutlined />} onClick={handleClickShrinkButton} />
           {/* Close button */}
           <Button type="link" icon={<CloseOutlined />} onClick={onClose} />
         </div>
