@@ -1,16 +1,18 @@
 package com.miotech.kun.commons.web.http;
 
-import com.google.common.reflect.ClassPath;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
+import io.github.classgraph.ClassGraph;
+import io.github.classgraph.ClassInfo;
+import io.github.classgraph.ClassInfoList;
+import io.github.classgraph.ScanResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -38,17 +40,19 @@ public class HttpRouter {
      * @param packageName
      */
     public void scanPackage(String packageName) {
-        final ClassLoader loader = Thread.currentThread()
-                .getContextClassLoader();
-        try {
-            ClassPath classPath = ClassPath.from(loader);
-            for (ClassPath.ClassInfo classInfo: classPath.getTopLevelClassesRecursive(packageName)) {
+        logger.info("start to scan package");
+        try (ScanResult result = new ClassGraph().enableClassInfo().enableAnnotationInfo()
+                .acceptPackages(packageName).scan()) {
+            ClassInfoList classInfos = result.getAllClasses();
+            logger.info("scan package finish");
+            for (ClassInfo classInfo: classInfos) {
                 this.addRouter(Class.forName(classInfo.getName()));
             }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
             logger.error("Failed to add router in package {}", packageName, e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
+
     }
 
     /**

@@ -1072,14 +1072,14 @@ public class TaskRunDao {
         return fetchDependentTaskRunsById(srcTaskRunId, distance, DependencyDirection.DOWNSTREAM, includeSelf);
     }
 
-    public List<TaskRun> fetchUnStartedTaskRunList() {
-        String whereCase = "(" + TASK_RUN_MODEL_NAME + ".status is NULL or " + TASK_RUN_MODEL_NAME + ".status = ? ) " +
+    public List<TaskRun> fetchTaskRunListWithoutAttempt() {
+        String whereCase = TASK_RUN_MODEL_NAME + ".status is NULL " +
                 "and " + TASK_RUN_MODEL_NAME + ".created_at > ?";
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where(whereCase)
                 .getSQL();
         OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-1);
-        List<TaskRun> taskRunList = dbOperator.fetchAll(sql, taskRunMapperInstance, toNullableString(TaskRunStatus.CREATED), recoverLimit);
+        List<TaskRun> taskRunList = dbOperator.fetchAll(sql, taskRunMapperInstance, recoverLimit);
         Map<Long, List<Long>> taskRunRelations = fetchAllRelationsFromDownstreamTaskRunIds(taskRunList.stream().map(TaskRun::getId).collect(Collectors.toList()));
         return taskRunList.stream().map(taskRun -> taskRun.cloneBuilder()
                 .withDependentTaskRunIds(taskRunRelations.get(taskRun.getId()))
