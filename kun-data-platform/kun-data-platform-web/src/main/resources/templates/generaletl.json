@@ -29,10 +29,13 @@
   ],
   "defaultValues": {
     "args": "-e dev -m TASK_CENTER -s GENERAL_ETL_STEP",
-    "jars": "",
+    "jars": "${ dataplatform.lineage.analysis.jar }",
     "files": "${ dataplatform.etl.jar }",
     "livyHost": "${ dataplatform.livy.host }",
-    "sparkConf": "{\"kun.dataplatform.environment\": \"dev\"}",
+    "lineageOutputPath":"${ dataplatform.lineage.output.path }",
+    "s3AccessKey":"${ dataplatform.s3.access.key }",
+    "s3SecretKey":"${ dataplatform.s3.secret.key }",
+    "sparkConf": "{}",
     "variables": "{}",
     "application": "com.miotech.etl.knowledge_graph.app.Application"
   },
