@@ -51,8 +51,6 @@ public class TaskSpawner implements InitializingBean {
 
     private final TickDao tickDao;
 
-    private final long SCHEDULE_INTERVAL = 60000l;
-
     private final Deque<TaskGraph> graphs;
     private final InnerEventLoop eventLoop;
 
@@ -84,11 +82,11 @@ public class TaskSpawner implements InitializingBean {
     }
 
     public void init() {
-        List<TaskRun> unStartedTaskRunList = taskRunDao.fetchUnStartedTaskRunList();
-        if (unStartedTaskRunList.size() > 0) {
-            submit(unStartedTaskRunList);
+        List<TaskRun> recoverTaskRunList = taskRunDao.fetchTaskRunListWithoutAttempt();
+        logger.info("submit unStartedTaskRun = {}", recoverTaskRunList);
+        if (recoverTaskRunList.size() > 0) {
+            submit(recoverTaskRunList);
         }
-        logger.info("submit unStartedTaskRun = {}", unStartedTaskRunList);
     }
 
     public List<TaskRun> run(TaskGraph graph) {
@@ -109,7 +107,7 @@ public class TaskSpawner implements InitializingBean {
         return spawn(Lists.newArrayList(graph), current, env);
     }
 
-    public boolean rerun(TaskRun taskRun){
+    public boolean rerun(TaskRun taskRun) {
         return taskManager.retry(taskRun);
     }
 

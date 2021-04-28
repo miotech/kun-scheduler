@@ -36,8 +36,8 @@ public class LatestTaskRunDependencyFunction implements DependencyFunction {
         }
 
         TaskRun upstreamTaskRun = taskRunDao.fetchLatestTaskRunToday(upstreamTaskId);
-        if(upstreamTaskRun == null){
-            logger.error("upstreamTask never start, task = {}",self);
+        if (upstreamTaskRun == null) {
+            logger.error("upstreamTask never start, taskId = {},upstream taskId = {}", self.getId(), upstreamTaskId);
             return Lists.newArrayList();
         }
         return Lists.newArrayList(upstreamTaskRun.getId());

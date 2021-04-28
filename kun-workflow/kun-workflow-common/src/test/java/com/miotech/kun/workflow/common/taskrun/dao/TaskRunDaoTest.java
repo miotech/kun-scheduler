@@ -718,12 +718,11 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
     @Test
     public void fetchUnStartedTaskRunList() {
-        Tick tick = new Tick(DateTimeUtils.now());
         Task task = MockTaskFactory.createTask();
         taskDao.create(task);
-        TaskRun taskRun = MockTaskRunFactory.createTaskRunWithTick(task, tick);
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
         taskRunDao.createTaskRuns(Arrays.asList(taskRun));
-        List<Long> taskRunIdList = taskRunDao.fetchUnStartedTaskRunList()
+        List<Long> taskRunIdList = taskRunDao.fetchTaskRunListWithoutAttempt()
                 .stream().map(TaskRun::getId).collect(Collectors.toList());
         assertEquals(taskRun.getId(), taskRunIdList.get(0));
 
@@ -752,7 +751,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
             taskDao.create(task);
         }
         taskRunDao.createTaskRuns(taskRunList);
-        List<TaskRun> recoverTaskRunList = taskRunDao.fetchUnStartedTaskRunList();
+        List<TaskRun> recoverTaskRunList = taskRunDao.fetchTaskRunListWithoutAttempt();
         TaskRun taskRun1 = recoverTaskRunList.get(0);
         TaskRun taskRun2 = recoverTaskRunList.get(1);
         assertThat(taskRun1.getDependentTaskRunIds(), Matchers.hasSize(0));
