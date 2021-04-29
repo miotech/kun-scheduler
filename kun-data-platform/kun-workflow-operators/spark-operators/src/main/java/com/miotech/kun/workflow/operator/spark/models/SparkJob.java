@@ -1,7 +1,6 @@
 package com.miotech.kun.workflow.operator.spark.models;
 
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -176,5 +175,5 @@ public class SparkJob {
      * Spark configuration properties
      * spark 配置文件
      */
-    private Map<String, String> conf = new HashMap<>();
+    private Map<String, String> conf;
 }
