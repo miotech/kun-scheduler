@@ -40,12 +40,9 @@
     }
   ],
   "defaultValues": {
-    "jars": "${ dataplatform.lineage.analysis.jar }",
+    "jars": "",
     "files": "",
     "livyHost": "${ dataplatform.livy.host }",
-    "lineageOutputPath":"${ dataplatform.lineage.output.path }",
-    "s3AccessKey":"${ dataplatform.s3.access.key }",
-    "s3SecretKey":"${ dataplatform.s3.secret.key }",
     "sparkConf": "{}",
     "variables": "{}",
     "application": ""
