@@ -22,6 +22,8 @@ import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.miotech.kun.dataplatform.constant.BackfillConstants.MAX_BACKFILL_TASKS;
+
 @Service
 @Slf4j
 public class BackfillService extends BaseSecurityService {
@@ -49,15 +51,33 @@ public class BackfillService extends BaseSecurityService {
 
     /** 创建一个 backfill 并立即执行 */
     public Backfill createAndRun(BackfillCreateInfo createInfo) {
+        // 单次 backfill 不允许每次执行超过 MAX_BACKFILL_TASKS (目前为 100) 个 task。原因：
+        // (1) 查询 taskRuns 需要多次请求 workflow API，效率低
+        // (2) 过于大批量的执行任务不适用于 Backfill 的场景，容易造成资源紧张
+        // (3) 防止恶意调用
+        Preconditions.checkArgument(
+                createInfo.getWorkflowTaskIds().size() <= MAX_BACKFILL_TASKS,
+                String.format("Cannot run more than %d tasks in a single backfill batch at once", MAX_BACKFILL_TASKS)
+        );
+
         UserInfo userInfo = getCurrentUser();
         if (Objects.isNull(userInfo)) {
             throw new IllegalStateException("Cannot get information of current user.");
         }
         OffsetDateTime now = DateTimeUtils.now();
         List<Long> workflowTaskIds = createInfo.getWorkflowTaskIds();
+        // Submit run request to workflow module by invoking API
         Map<Long, TaskRun> taskIdToTaskRunMap = runWorkflowTasks(createInfo.getWorkflowTaskIds());
+        // Get created task runs
         List<Long> taskRunIds = workflowTaskIds.stream()
-                .map(taskId -> taskIdToTaskRunMap.get(taskId).getId())
+                .map(taskId -> {
+                    TaskRun taskRun = taskIdToTaskRunMap.get(taskId);
+                    if (taskRun == null) {
+                        throw new IllegalStateException(String.format("Cannot get corresponding task run entity of task id: %s", taskId));
+                    }
+                    // else
+                    return taskRun.getId();
+                })
                 .collect(Collectors.toList());
 
         Backfill backfillToCreate = Backfill.newBuilder()
@@ -95,7 +115,11 @@ public class BackfillService extends BaseSecurityService {
         // update task run ids
         List<Long> updatedTaskRunIds = new ArrayList<>();
         for (Long taskId : backfill.getWorkflowTaskIds()) {
-            updatedTaskRunIds.add(taskIdToUpdatedTaskRuns.get(taskId).getId());
+            TaskRun taskRun = taskIdToUpdatedTaskRuns.get(taskId);
+            if (taskRun == null) {
+                throw new IllegalStateException(String.format("Cannot get corresponding task run entity of task id: %s", taskId));
+            }
+            updatedTaskRunIds.add(taskRun.getId());
         }
         Backfill updatedBackfill = backfill.cloneBuilder()
                 .withTaskRunIds(updatedTaskRunIds)
