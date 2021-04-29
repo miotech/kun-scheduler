@@ -10,11 +10,8 @@
   },
   "defaultValues": {
     "livyHost": "${ dataplatform.livy.host }",
+    "dataStoreUrl": "s3://com.miotech.data.prd/Database/DM",
     "variables": "{}",
-    "jars": "${ dataplatform.lineage.analysis.jar }",
-    "lineageOutputPath":"${ dataplatform.lineage.output.path }",
-    "s3AccessKey":"${ dataplatform.s3.access.key }",
-    "s3SecretKey":"${ dataplatform.s3.secret.key }",
     "sparkConf": "{}"
   },
   "displayParameters": [{
@@ -27,6 +24,5 @@
       "type": "keyvalue",
       "required": false,
       "displayName": "Extra Spark Configuration"
-    }],
-  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkConfigTaskTemplateRender"
+    }]
 }
