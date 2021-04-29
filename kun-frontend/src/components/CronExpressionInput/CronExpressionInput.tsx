@@ -19,6 +19,18 @@ export interface CronExpressionInputProps {
   hideErrorAlert?: boolean;
 }
 
+function normalizeProvidedCronExpressionValue(value?: string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  // else
+  return value
+    .trim()
+    .split(' ')
+    .filter(part => part.length > 0)
+    .join(' ');
+}
+
 export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, CronExpressionInputProps>(
   function CronExpressionInput(props) {
     const { value, onChange, className, hideErrorAlert = false } = props;
@@ -27,10 +39,10 @@ export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, C
 
     const [uncontrolledValue, setUncontrolledValue] = useState<string>('');
 
-    const appliedValue = value ?? uncontrolledValue;
+    const appliedValue = normalizeProvidedCronExpressionValue(value) ?? uncontrolledValue;
 
     const semanticTip = useMemo(() => {
-      if (!appliedValue || `${appliedValue}`.trim().length === 0) {
+      if (!appliedValue) {
         return <></>;
       }
       let hasError: boolean;
