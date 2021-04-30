@@ -42,7 +42,7 @@ public class LocalWorker implements Worker {
     public void killTask(Boolean abort) {
         RpcContext.getContext().set("port", port);
         boolean result = workerFacade.killTask(abort);
-        logger.info("kill task result = {}", result);
+        logger.info("kill taskAttemptId = {}, result = {}", taskAttemptId, result);
     }
 
     @Override
