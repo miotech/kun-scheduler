@@ -30,11 +30,7 @@ export const appRoutes = [
             component: 'monitoring-dashboard/index',
             exact: true,
             breadcrumbLink: true,
-            wrappers: [
-              '@/wrappers/path',
-              '@/wrappers/isLogin',
-              '@/wrappers/permission',
-            ],
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
           },
         ],
       },
@@ -52,11 +48,7 @@ export const appRoutes = [
             component: 'data-discovery/index',
             exact: true,
             breadcrumbLink: true,
-            wrappers: [
-              '@/wrappers/path',
-              '@/wrappers/isLogin',
-              '@/wrappers/permission',
-            ],
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
           },
           {
             title: 'common.pageTitle.datasets',
@@ -72,11 +64,7 @@ export const appRoutes = [
                 component: 'dataset/index',
                 breadcrumbLink: true,
                 exact: true,
-                wrappers: [
-                  '@/wrappers/path',
-                  '@/wrappers/isLogin',
-                  '@/wrappers/permission',
-                ],
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
               },
               {
                 title: 'common.pageTitle.datasetDetail',
@@ -90,11 +78,7 @@ export const appRoutes = [
                     component: 'dataset/dataset-detail/index',
                     breadcrumbLink: true,
                     exact: true,
-                    wrappers: [
-                      '@/wrappers/path',
-                      '@/wrappers/isLogin',
-                      '@/wrappers/permission',
-                    ],
+                    wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
                   },
                   {
                     title: 'common.pageTitle.lineage',
@@ -102,11 +86,7 @@ export const appRoutes = [
                     component: 'lineage/index',
                     breadcrumbLink: true,
                     exact: true,
-                    wrappers: [
-                      '@/wrappers/path',
-                      '@/wrappers/isLogin',
-                      '@/wrappers/permission',
-                    ],
+                    wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
                   },
                 ],
               },
@@ -129,11 +109,7 @@ export const appRoutes = [
                 component: 'glossary/index',
                 breadcrumbLink: true,
                 exact: true,
-                wrappers: [
-                  '@/wrappers/path',
-                  '@/wrappers/isLogin',
-                  '@/wrappers/permission',
-                ],
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
               },
               {
                 title: 'common.pageTitle.glossaryCreate',
@@ -141,11 +117,7 @@ export const appRoutes = [
                 component: 'glossary/glossary-detail/index',
                 breadcrumbLink: true,
                 exact: true,
-                wrappers: [
-                  '@/wrappers/path',
-                  '@/wrappers/isLogin',
-                  '@/wrappers/permission',
-                ],
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
               },
               {
                 title: 'common.pageTitle.glossaryDetail',
@@ -153,11 +125,7 @@ export const appRoutes = [
                 component: 'glossary/glossary-detail/index',
                 breadcrumbLink: true,
                 exact: true,
-                wrappers: [
-                  '@/wrappers/path',
-                  '@/wrappers/isLogin',
-                  '@/wrappers/permission',
-                ],
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
               },
               {
                 component: 'error-page/Error404/index',
@@ -174,29 +142,22 @@ export const appRoutes = [
         path: '/data-development',
         icon: 'DataDevelopment',
         menuDisplay: true,
+        breadcrumbLink: true,
         routes: [
           {
             title: 'common.pageTitle.dataDevelopment',
             path: '.',
             exact: true,
+            breadcrumbLink: true,
             component: '@/pages/data-development/index',
-            wrappers: [
-              '@/wrappers/path',
-              '@/wrappers/isLogin',
-              '@/wrappers/withDnDContext',
-              '@/wrappers/permission',
-            ],
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/withDnDContext', '@/wrappers/permission'],
           },
           {
             title: 'common.pageTitle.taskDefinition',
             path: '/data-development/task-definition/:taskDefId',
             component: 'data-development/task-definition-config',
             exact: true,
-            wrappers: [
-              '@/wrappers/path',
-              '@/wrappers/isLogin',
-              '@/wrappers/permission',
-            ],
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
           },
           {
             component: 'error-page/Error404/index',
@@ -214,6 +175,7 @@ export const appRoutes = [
             title: 'common.pageTitle.operationCenter.scheduledTasks',
             path: './scheduled-tasks',
             menuDisplay: true,
+            breadcrumbLink: true,
             icon: 'TaskScheduled',
             routes: [
               {
@@ -221,11 +183,7 @@ export const appRoutes = [
                 path: '.',
                 exact: true,
                 component: '@/pages/operation-center/scheduled-tasks',
-                wrappers: [
-                  '@/wrappers/path',
-                  '@/wrappers/isLogin',
-                  '@/wrappers/permission',
-                ],
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
               },
               {
                 title: 'common.pageTitle.operationCenter.scheduledTasks',
@@ -233,11 +191,7 @@ export const appRoutes = [
                 path: './:id',
                 component: '@/pages/operation-center/deployed-task-detail',
                 exact: true,
-                wrappers: [
-                  '@/wrappers/path',
-                  '@/wrappers/isLogin',
-                  '@/wrappers/permission',
-                ],
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
               },
               {
                 component: 'error-page/Error404/index',
@@ -248,6 +202,7 @@ export const appRoutes = [
             title: 'common.pageTitle.operationCenter.backfillTasks',
             path: './backfill-tasks',
             menuDisplay: true,
+            breadcrumbLink: true,
             icon: 'TaskInstant',
             routes: [
               {
@@ -255,11 +210,14 @@ export const appRoutes = [
                 path: '.',
                 exact: true,
                 component: '@/pages/operation-center/backfill-tasks',
-                wrappers: [
-                  '@/wrappers/path',
-                  '@/wrappers/isLogin',
-                  '@/wrappers/permission',
-                ],
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+              },
+              {
+                title: 'common.pageTitle.operationCenter.backfillTasks',
+                path: './:id',
+                exact: true,
+                component: '@/pages/operation-center/backfill-tasks/backfill-tasks-detail',
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
               },
             ],
           },
@@ -280,11 +238,7 @@ export const appRoutes = [
             component: 'data-settings/index',
             breadcrumbLink: true,
             exact: true,
-            wrappers: [
-              '@/wrappers/path',
-              '@/wrappers/isLogin',
-              '@/wrappers/permission',
-            ],
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
           },
           {
             title: 'common.pageTitle.variableSettings',
@@ -294,11 +248,7 @@ export const appRoutes = [
             component: '@/pages/settings/variable-settings/index',
             breadcrumbLink: true,
             exact: true,
-            wrappers: [
-              '@/wrappers/path',
-              '@/wrappers/isLogin',
-              '@/wrappers/permission',
-            ],
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
           },
         ],
       },

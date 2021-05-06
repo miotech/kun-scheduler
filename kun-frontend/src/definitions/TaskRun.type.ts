@@ -2,9 +2,8 @@ import { DataStore } from '@/definitions/DataStore.type';
 import { Tick } from '@/definitions/Tick.type';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { Tag } from '@/definitions/Tag.type';
-import { TaskVariable } from '@/definitions/Task.type';
+import { Task, TaskVariable } from '@/definitions/Task.type';
 import { TaskAttempt } from '@/definitions/TaskAttempt.type';
-import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 
 export interface TaskRun {
   id: string;
@@ -18,7 +17,7 @@ export interface TaskRun {
   status: RunStatusEnum;
   tags: Tag[];
   variable: TaskVariable[];
-  task: TaskDefinition;
+  task: Task;
 }
 
 export interface TaskRunLog {

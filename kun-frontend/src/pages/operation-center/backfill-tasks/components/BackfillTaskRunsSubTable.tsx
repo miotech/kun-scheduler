@@ -16,7 +16,7 @@ dayjs.extend(Duration);
 
 interface OwnProps {
   data: TaskRun[];
-  taskDefinitionIds: string[];
+  loading?: boolean;
   onClickViewLog: (taskTryId: string | null) => any;
   onClickStopTaskRun: (taskRunId: string) => any;
   onClickRerunTaskRun: (taskRunId: string) => any;
@@ -48,6 +48,17 @@ function isStoppedStatus(status: RunStatusEnum): boolean {
   );
 }
 
+function getTaskDefinitionIdByTaskRun(taskRun: TaskRun) {
+  // `taskRun.task.description` formats like: "Deployed Data Platform Task : 177969871865253888"
+  // We can extract task definition id from this field as an ad-hoc solution
+  const parts = (taskRun.task.description || '').split(':');
+  if (parts.length >= 2 && parts[1].trim().match(/[0-9]+/)) {
+    return parts[1].trim();
+  }
+  // else
+  return null;
+}
+
 export const BackfillTaskRunsSubTable: React.FC<Props> = memo(function BackfillTaskRunsSubTable(props) {
   const t = useI18n();
 
@@ -75,9 +86,12 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(function BackfillT
       {
         title: t('operationCenter.backfill.taskrun.taskName'),
         key: 'taskName',
-        render: (txt: any, record: TaskRun, index: number) => {
-          return (
-            <Link to={`/data-development/task-definition/${props.taskDefinitionIds[index]}`}>{record.task.name}</Link>
+        render: (txt: any, record: TaskRun) => {
+          const definitionId = getTaskDefinitionIdByTaskRun(record);
+          return definitionId != null ? (
+            <Link to={`/data-development/task-definition/${definitionId}`}>{record.task.name}</Link>
+          ) : (
+            record.task.name
           );
         },
       },
@@ -167,8 +181,18 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(function BackfillT
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [props.taskDefinitionIds, props.onClickRerunTaskRun, props.onClickStopTaskRun, t],
+    [props.onClickRerunTaskRun, props.onClickStopTaskRun, t],
   );
 
-  return <Table columns={columns} dataSource={props.data} size="small" pagination={false} bordered rowKey="id" />;
+  return (
+    <Table
+      loading={props.loading}
+      columns={columns}
+      dataSource={props.data}
+      size="small"
+      pagination={false}
+      bordered
+      rowKey="id"
+    />
+  );
 });
