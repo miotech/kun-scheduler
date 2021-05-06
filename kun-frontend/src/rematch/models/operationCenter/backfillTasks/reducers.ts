@@ -1,4 +1,4 @@
-import { BackfillDetail } from '@/definitions/Backfill.type';
+import { Backfill, BackfillDetail } from '@/definitions/Backfill.type';
 import { initState, BackfillModelState as ModelState } from './model-state';
 
 export const reducers = {
@@ -40,21 +40,54 @@ export const reducers = {
       tableIsLoading: payload,
     } as ModelState;
   },
-  setTableData: (state: ModelState, payload: BackfillDetail[]): ModelState => {
+  setTableData: (state: ModelState, payload: Backfill[]): ModelState => {
     return {
       ...state,
       tableData: payload,
     } as ModelState;
   },
-  updateFilter: (
-    state: ModelState,
-    payload: Partial<ModelState['filters']>,
-  ): ModelState => {
+  updateFilter: (state: ModelState, payload: Partial<ModelState['filters']>): ModelState => {
     return {
       ...state,
       filters: {
         ...state.filters,
         ...payload,
+      },
+    };
+  },
+  setBackfillDetailIsLoading: (state: ModelState, payload: boolean): ModelState => {
+    return {
+      ...state,
+      backfillDetail: {
+        ...state.backfillDetail,
+        isLoading: payload,
+      },
+    };
+  },
+  setBackfillDetailTableIsReloading: (state: ModelState, payload: boolean): ModelState => {
+    return {
+      ...state,
+      backfillDetail: {
+        ...state.backfillDetail,
+        tableIsReloading: payload,
+      },
+    };
+  },
+  setBackfillDetailData: (state: ModelState, payload: BackfillDetail | null): ModelState => {
+    return {
+      ...state,
+      backfillDetail: {
+        ...state.backfillDetail,
+        data: payload,
+      },
+    };
+  },
+  setBackfillDetailPageError: (state: ModelState, payload: Error | null): ModelState => {
+    return {
+      ...state,
+      backfillDetail: {
+        ...state.backfillDetail,
+        pageError: payload || null,
       },
     };
   },

@@ -1,4 +1,4 @@
-import { BackfillDetail } from '@/definitions/Backfill.type';
+import { Backfill, BackfillDetail } from '@/definitions/Backfill.type';
 import { Moment } from 'moment';
 
 export interface BackfillModelState {
@@ -10,9 +10,15 @@ export interface BackfillModelState {
     startTimeRng: Moment | null;
     endTimeRng: Moment | null;
   };
-  tableData: BackfillDetail[];
+  tableData: Backfill[];
   tableIsLoading: boolean;
   total: number;
+  backfillDetail: {
+    isLoading: boolean;
+    tableIsReloading: boolean;
+    data: BackfillDetail | null;
+    pageError: Error | null;
+  };
 }
 
 export const initState: BackfillModelState = {
@@ -27,4 +33,10 @@ export const initState: BackfillModelState = {
   tableData: [],
   tableIsLoading: false,
   total: 0,
+  backfillDetail: {
+    isLoading: false,
+    tableIsReloading: false,
+    data: null,
+    pageError: null,
+  },
 };
