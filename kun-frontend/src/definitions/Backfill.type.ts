@@ -12,5 +12,6 @@ export type Backfill = {
 };
 
 export type BackfillDetail = Backfill & {
+  listFetched?: boolean;
   taskRunList: TaskRun[];
 };
