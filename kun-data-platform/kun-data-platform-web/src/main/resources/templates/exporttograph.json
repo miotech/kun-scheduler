@@ -55,6 +55,12 @@
       "type": "string",
       "required": true,
       "displayName": "Envrionment"
+    },
+    {
+      "name": "sparkConf",
+      "type": "keyvalue",
+      "required": false,
+      "displayName": "spark configuration"
     }
   ],
   "defaultValues": {
@@ -62,7 +68,7 @@
     "jars": "",
     "files": "${ dataplatform.etl.jar }",
     "livyHost": "${ dataplatform.livy.host }",
-    "sparkConf": "{\"kun.dataplatform.operationType\":\"insert\"}",
+    "sparkConf": "{\"kun.dataplatform.operationType\":\"insert\", \"spark.dynamicAllocation.maxExecutors\":\"15\"}",
     "variables": "{}",
     "application": "com.miotech.etl.knowledge_graph.app.Application"
   },
