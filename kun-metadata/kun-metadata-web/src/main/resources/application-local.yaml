@@ -10,7 +10,7 @@ datasource:
   driverClassName: org.postgresql.Driver
 
 flyway:
-  locations: sql/
+  locations: metadata-sql/
   table: flyway_kun_mt_schema_history
   baselineOnMigrate: true
   baselineVersion: 0

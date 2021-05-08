@@ -16,7 +16,7 @@ spring:
   flyway:
     enabled: true
     clean-disabled: true
-    locations: classpath:sql
+    locations: classpath:data-platform-sql
     table: flyway_kun_app_schema_history
     schemas: public
 
