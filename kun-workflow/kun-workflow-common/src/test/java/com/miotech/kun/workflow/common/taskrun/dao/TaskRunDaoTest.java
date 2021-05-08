@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.common.taskrun.dao;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
@@ -13,6 +12,7 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.testing.WorkflowDatabaseTestBase;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
@@ -34,7 +34,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-public class TaskRunDaoTest extends DatabaseTestBase {
+public class TaskRunDaoTest extends WorkflowDatabaseTestBase {
     @Inject
     private TaskRunDao taskRunDao;
 

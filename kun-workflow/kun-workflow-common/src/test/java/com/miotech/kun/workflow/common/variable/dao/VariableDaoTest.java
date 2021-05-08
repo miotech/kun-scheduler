@@ -1,8 +1,8 @@
 package com.miotech.kun.workflow.common.variable.dao;
 
 import com.google.inject.Inject;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.core.model.variable.Variable;
+import com.miotech.kun.workflow.testing.WorkflowDatabaseTestBase;
 import com.miotech.kun.workflow.testing.factory.MockVariableFactory;
 import org.junit.Test;
 
@@ -11,7 +11,7 @@ import java.util.List;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-public class VariableDaoTest extends DatabaseTestBase {
+public class VariableDaoTest extends WorkflowDatabaseTestBase {
 
     @Inject
     private VariableDao variableDao;

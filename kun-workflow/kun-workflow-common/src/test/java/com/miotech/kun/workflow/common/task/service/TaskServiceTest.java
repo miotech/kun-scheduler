@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
-import com.miotech.kun.workflow.common.CommonTestBase;
+import com.miotech.kun.workflow.testing.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.lineage.node.DatasetNode;

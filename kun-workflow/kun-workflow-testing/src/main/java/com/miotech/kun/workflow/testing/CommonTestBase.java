@@ -1,7 +1,6 @@
-package com.miotech.kun.workflow.common;
+package com.miotech.kun.workflow.testing;
 
 import com.miotech.kun.commons.db.GraphDatabaseModule;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import org.junit.After;
 import org.junit.ClassRule;
 import org.neo4j.ogm.config.Configuration;
@@ -13,7 +12,7 @@ import org.testcontainers.containers.Neo4jContainer;
 
 import java.util.HashMap;
 
-public class CommonTestBase extends DatabaseTestBase {
+public class CommonTestBase extends WorkflowDatabaseTestBase {
     private static final Logger logger = LoggerFactory.getLogger(CommonTestBase.class);
 
     @ClassRule

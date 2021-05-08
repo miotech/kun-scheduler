@@ -41,6 +41,7 @@ dependencies {
     testImplementation "org.testcontainers:postgresql"
     testImplementation "org.testcontainers:elasticsearch"
     testImplementation "com.github.goodforgod:arangodb-testcontainer"
+    testImplementation project(":kun-metadata:kun-metadata-testing")
 }
 
 shadowJar {

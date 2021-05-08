@@ -12,4 +12,5 @@ dependencies {
     testRuntimeOnly "com.h2database:h2"
     testImplementation "org.testcontainers:elasticsearch"
     testImplementation project(":kun-commons:kun-commons-testing")
+    testImplementation project(":kun-metadata:kun-metadata-testing")
 }

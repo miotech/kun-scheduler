@@ -1,8 +1,8 @@
 package com.miotech.kun.workflow.common.operator.dao;
 
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.testing.WorkflowDatabaseTestBase;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Test;
@@ -15,7 +15,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
-public class OperatorDaoTest extends DatabaseTestBase {
+public class OperatorDaoTest extends WorkflowDatabaseTestBase {
     @Inject
     OperatorDao operatorDao;
 

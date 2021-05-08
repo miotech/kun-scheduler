@@ -1,8 +1,8 @@
 package com.miotech.kun.commons.db;
 
 import com.google.inject.Inject;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.metadata.testing.MetadataDataBaseTestBase;
 import org.apache.http.HttpHost;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
@@ -22,9 +22,10 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 
-public class DualWriteOperatorTest extends DatabaseTestBase {
+public class DualWriteOperatorTest extends MetadataDataBaseTestBase {
 
     private static final String ELASTICSEARCH_IMAGE = "docker.elastic.co/elasticsearch/elasticsearch:6.8.12";
     private static final String INDEX = "test_index";

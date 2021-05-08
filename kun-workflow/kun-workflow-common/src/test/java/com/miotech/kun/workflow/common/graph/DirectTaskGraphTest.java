@@ -1,11 +1,11 @@
 package com.miotech.kun.workflow.common.graph;
 
 import com.google.inject.Inject;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.testing.WorkflowDatabaseTestBase;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.junit.Test;
@@ -15,7 +15,7 @@ import java.util.List;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-public class DirectTaskGraphTest extends DatabaseTestBase {
+public class DirectTaskGraphTest extends WorkflowDatabaseTestBase {
 
     @Inject
     private TaskDao taskDao;

@@ -2,14 +2,14 @@ package com.miotech.kun.workflow.common.task.dao;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
-import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.*;
-import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.workflow.testing.WorkflowDatabaseTestBase;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -32,7 +32,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 
-public class TaskDaoTest extends DatabaseTestBase {
+public class TaskDaoTest extends WorkflowDatabaseTestBase {
     @Inject
     DatabaseOperator dbOperator;
 

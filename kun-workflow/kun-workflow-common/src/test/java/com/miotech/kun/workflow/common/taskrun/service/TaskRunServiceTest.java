@@ -3,7 +3,7 @@ package com.miotech.kun.workflow.common.taskrun.service;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.workflow.LocalScheduler;
-import com.miotech.kun.workflow.common.CommonTestBase;
+import com.miotech.kun.workflow.testing.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;

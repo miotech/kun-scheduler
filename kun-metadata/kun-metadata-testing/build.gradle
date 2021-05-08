@@ -2,10 +2,6 @@ dependencies {
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-commons:kun-commons-db')
     implementation project(':kun-commons:kun-commons-testing')
-    implementation project(':kun-workflow:kun-workflow-core')
-    implementation project(':kun-workflow:kun-workflow-common')
-    implementation project(':kun-workflow:kun-workflow-utils')
-    implementation project(':kun-metadata:kun-metadata-core')
     implementation "junit:junit:4.12"
     implementation "org.mockito:mockito-core:3.3.3"
     implementation "com.h2database:h2"

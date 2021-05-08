@@ -26,7 +26,7 @@ import java.util.List;
 public abstract class DatabaseTestBase extends GuiceTestBase {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseTestBase.class);
 
-    private DataSource dataSource;
+    protected DataSource dataSource;
 
     private List<String> userTables;
 

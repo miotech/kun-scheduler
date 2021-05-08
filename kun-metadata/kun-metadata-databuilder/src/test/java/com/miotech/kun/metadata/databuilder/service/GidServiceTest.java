@@ -2,15 +2,15 @@ package com.miotech.kun.metadata.databuilder.service;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.databuilder.service.gid.GidService;
+import com.miotech.kun.metadata.testing.MetadataDataBaseTestBase;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class GidServiceTest extends DatabaseTestBase {
+public class GidServiceTest extends MetadataDataBaseTestBase {
 
     @Inject
     private DatabaseOperator operator;

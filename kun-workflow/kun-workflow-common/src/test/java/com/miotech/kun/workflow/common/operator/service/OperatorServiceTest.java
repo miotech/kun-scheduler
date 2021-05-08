@@ -1,7 +1,6 @@
 package com.miotech.kun.workflow.common.operator.service;
 
 import com.google.inject.Inject;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.exception.RuleOperatorInUseException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -10,6 +9,7 @@ import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.testing.WorkflowDatabaseTestBase;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.operator.NopOperator;
@@ -27,7 +27,7 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.samePropertyValuesAs;
 import static org.junit.Assert.*;
 
-public class OperatorServiceTest extends DatabaseTestBase {
+public class OperatorServiceTest extends WorkflowDatabaseTestBase {
     @Inject
     private OperatorService operatorService;
 

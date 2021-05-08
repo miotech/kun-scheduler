@@ -3,7 +3,6 @@ package com.miotech.kun.workflow.common.graph;
 import com.cronutils.model.Cron;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.common.Tick;
@@ -11,6 +10,7 @@ import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
+import com.miotech.kun.workflow.testing.WorkflowDatabaseTestBase;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -33,7 +33,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
 @RunWith(MockitoJUnitRunner.class)
-public class DatabaseTaskGraphTest extends DatabaseTestBase {
+public class DatabaseTaskGraphTest extends WorkflowDatabaseTestBase {
 
     @Inject
     private TaskDao taskDao;

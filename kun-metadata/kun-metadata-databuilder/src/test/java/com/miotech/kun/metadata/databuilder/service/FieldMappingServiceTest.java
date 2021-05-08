@@ -2,9 +2,9 @@ package com.miotech.kun.metadata.databuilder.service;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.core.model.DatasetFieldType;
 import com.miotech.kun.metadata.databuilder.service.fieldmapping.FieldMappingService;
+import com.miotech.kun.metadata.testing.MetadataDataBaseTestBase;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -12,7 +12,7 @@ import org.junit.Test;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 
-public class FieldMappingServiceTest extends DatabaseTestBase {
+public class FieldMappingServiceTest extends MetadataDataBaseTestBase {
 
     @Inject
     private DatabaseOperator operator;

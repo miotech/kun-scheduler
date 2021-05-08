@@ -2,11 +2,11 @@ package com.miotech.kun.workflow.common.variable.service;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.variable.dao.VariableDao;
 import com.miotech.kun.workflow.common.variable.vo.VariableVO;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.variable.Variable;
+import com.miotech.kun.workflow.testing.WorkflowDatabaseTestBase;
 import com.miotech.kun.workflow.testing.factory.MockVariableFactory;
 import org.junit.Test;
 
@@ -14,7 +14,7 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
-public class VariableServiceTest extends DatabaseTestBase {
+public class VariableServiceTest extends WorkflowDatabaseTestBase {
 
     @Inject
     private VariableService variableService;

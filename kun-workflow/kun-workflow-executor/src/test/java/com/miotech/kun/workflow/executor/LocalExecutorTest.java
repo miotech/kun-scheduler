@@ -39,6 +39,7 @@ import com.miotech.kun.workflow.executor.rpc.LocalExecutorFacadeImpl;
 import com.miotech.kun.workflow.executor.rpc.WorkerClusterConsumer;
 import com.miotech.kun.workflow.facade.WorkflowExecutorFacade;
 import com.miotech.kun.workflow.facade.WorkflowWorkerFacade;
+import com.miotech.kun.workflow.testing.CommonTestBase;
 import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;

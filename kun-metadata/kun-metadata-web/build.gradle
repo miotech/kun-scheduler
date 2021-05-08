@@ -46,6 +46,7 @@ dependencies {
 
     testImplementation "junit:junit"
     testRuntimeOnly "org.mockito:mockito-core"
+    testImplementation project(":kun-metadata:kun-metadata-testing")
 }
 
 jacocoTestReport {

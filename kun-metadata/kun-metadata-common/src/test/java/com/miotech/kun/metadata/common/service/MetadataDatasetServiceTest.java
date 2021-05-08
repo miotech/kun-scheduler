@@ -1,8 +1,8 @@
 package com.miotech.kun.metadata.common.service;
 
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
+import com.miotech.kun.metadata.testing.MetadataDataBaseTestBase;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -13,7 +13,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.anyLong;
 
-public class MetadataDatasetServiceTest extends DatabaseTestBase {
+public class MetadataDatasetServiceTest extends MetadataDataBaseTestBase {
     private MetadataDatasetDao metadataDatasetDao = Mockito.mock(MetadataDatasetDao.class);
 
     private MetadataDatasetService metadataDatasetService = new MetadataDatasetService(metadataDatasetDao);

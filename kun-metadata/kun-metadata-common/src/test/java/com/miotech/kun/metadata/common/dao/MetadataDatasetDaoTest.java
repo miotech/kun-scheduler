@@ -2,9 +2,9 @@ package com.miotech.kun.metadata.common.dao;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.testing.MetadataDataBaseTestBase;
 import com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore;
 import org.junit.Test;
 
@@ -17,7 +17,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 
-public class MetadataDatasetDaoTest extends DatabaseTestBase {
+public class MetadataDatasetDaoTest extends MetadataDataBaseTestBase {
     @Inject
     private MetadataDatasetDao metadataDatasetDao;
 

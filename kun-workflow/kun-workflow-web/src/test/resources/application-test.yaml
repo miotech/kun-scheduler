@@ -14,7 +14,7 @@ resource:
   libDirectory: /tmp
 
 flyway:
-  locations: sql/
+  locations: workflow-sql/
   table: flyway_kun_wf_schema_history
   initSql: CREATE DOMAIN IF NOT EXISTS "JSONB" AS TEXT
   baselineOnMigrate: true
