@@ -24,38 +24,38 @@ public abstract class TaskTemplateRenderer {
                 .collect(Collectors.toList());
 
         Map<String, Object> defaultValues = taskTemplate.getDefaultValues();
-        if(taskConfig == null){
+        if (taskConfig == null) {
             configMap.putAll(defaultValues);
-        }else{
-            for (String key: paramKeys){
+        } else {
+            for (String key : paramKeys) {
                 Object mergedValue = mergeDefaultAndUserDefinedConfig(defaultValues, taskConfig, key);
-                configMap.put(key, mergedValue);
+                if (mergedValue != null)
+                    configMap.put(key, mergedValue);
             }
         }
 
         return configMap;
     }
 
-    public Object mergeDefaultAndUserDefinedConfig(Map<String, Object> defaultValues, Map<String, Object> userDefinedConfig, String key){
+    public Object mergeDefaultAndUserDefinedConfig(Map<String, Object> defaultValues, Map<String, Object> userDefinedConfig, String key) {
 
         Object userDefinedValue = userDefinedConfig.get(key);
-        if(userDefinedValue == null){
+        if (userDefinedValue == null) {
             return defaultValues.get(key);
         }
-        if(userDefinedValue instanceof Map){
+        if (userDefinedValue instanceof Map) {
             Object defaultValue = defaultValues.get(key);
             Map<String, String> defaultKV = null;
-            if(defaultValue instanceof String){
+            if (defaultValue instanceof String) {
                 defaultKV = JSONUtils.jsonStringToStringMap((String) defaultValue);
-            }else if(defaultValue instanceof Map){
+            } else if (defaultValue instanceof Map) {
                 defaultKV = (Map<String, String>) defaultValue;
-            }else{
+            } else {
                 throw new IllegalStateException(String.format("unexpected param type for key: %s", key));
             }
-            defaultKV.putAll((Map<String, String>)userDefinedValue);
+            defaultKV.putAll((Map<String, String>) userDefinedValue);
             return JSONUtils.toJsonString(defaultKV);
-        }
-        else{
+        } else {
             return userDefinedValue;
         }
     }
