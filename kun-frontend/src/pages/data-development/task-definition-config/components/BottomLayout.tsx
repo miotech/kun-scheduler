@@ -1,8 +1,10 @@
 import React, { useCallback, useState } from 'react';
 import c from 'clsx';
-import { CloseOutlined, ShrinkOutlined, ArrowsAltOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
-import { Button } from 'antd';
+import Icon, { CloseOutlined, ShrinkOutlined, ArrowsAltOutlined, DownOutlined, UpOutlined } from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
+import useI18n from '@/hooks/useI18n';
 
+import { ReactComponent as StopIcon } from '@/assets/icons/stop-rect.svg';
 import styles from './BottomLayout.less';
 
 export interface BottomLayoutProps {
@@ -10,10 +12,13 @@ export interface BottomLayoutProps {
   children?: React.ReactNode;
   title?: React.ReactNode;
   onClose?: () => any;
+  onStop?: () => any;
+  stopBtnDisabled?: boolean;
 }
 
 export const BottomLayout: React.FC<BottomLayoutProps> = props => {
-  const { visible, children, title = '', onClose } = props;
+  const { visible, children, title = '', onStop, stopBtnDisabled, onClose } = props;
+  const t = useI18n();
 
   const [fullscreen, setFullScreen] = useState<boolean>(false);
   const [shrink, setShrink] = useState<boolean>(false);
@@ -37,6 +42,17 @@ export const BottomLayout: React.FC<BottomLayoutProps> = props => {
       <nav className={styles.BottomLayoutNav}>
         <h3 className={styles.BottomLayoutNavTitle}>{title}</h3>
         <div className={styles.BottomLayoutNavButtonGroup}>
+          {/* Stop Button */}
+          <Tooltip title={t('dataDevelopment.stopDryRun')}>
+            <Button
+              size="small"
+              type="link"
+              style={{ marginLeft: '16px' }}
+              onClick={onStop}
+              disabled={Boolean(stopBtnDisabled)}
+              icon={<Icon component={StopIcon} />}
+            />
+          </Tooltip>
           {/* fullscreen button */}
           <Button
             type="link"
