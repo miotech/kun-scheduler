@@ -40,11 +40,16 @@ public abstract class TaskTemplateRenderer {
     public Object mergeDefaultAndUserDefinedConfig(Map<String, Object> defaultValues, Map<String, Object> userDefinedConfig, String key) {
 
         Object userDefinedValue = userDefinedConfig.get(key);
-        if (userDefinedValue == null) {
-            return defaultValues.get(key);
-        }
+        Object defaultValue = defaultValues.get(key);
+
+        if(userDefinedValue == null && defaultValue == null)
+            return null;
+        if (userDefinedValue == null)
+            return defaultValue;
+        if (defaultValue == null)
+            return userDefinedValue;
+
         if (userDefinedValue instanceof Map) {
-            Object defaultValue = defaultValues.get(key);
             Map<String, String> defaultKV = null;
             if (defaultValue instanceof String) {
                 defaultKV = JSONUtils.jsonStringToStringMap((String) defaultValue);
