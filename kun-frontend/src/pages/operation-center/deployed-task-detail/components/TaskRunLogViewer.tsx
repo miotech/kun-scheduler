@@ -34,7 +34,7 @@ export const TaskRunLogViewer: FunctionComponent<Props> = memo(function TaskRunL
     if (!taskRun) {
       return Promise.resolve([]);
     }
-    const payload = await fetchScheduledTaskRunLogWithoutErrorNotification(taskRun.id, 0, attempt);
+    const payload = await fetchScheduledTaskRunLogWithoutErrorNotification(taskRun.id, attempt, 0);
     return payload?.logs || [];
   }, [taskRun, attempt]);
 
