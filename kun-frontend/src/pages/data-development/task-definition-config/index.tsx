@@ -38,10 +38,11 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
 
   const {
-    selector: { initTaskDefinition },
+    selector: { initTaskDefinition, formIsDirty },
     dispatch,
   } = useRedux(s => ({
     initTaskDefinition: s.dataDevelopment.editingTaskDefinition,
+    formIsDirty: s.dataDevelopment.definitionFormDirty,
   }));
 
   useTitle(
@@ -127,6 +128,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
   }, [taskTryId]);
 
   usePrompt(taskTryId != null && !taskTryStopped, t('dataDevelopment.dryRunIsStillRunningPromptText'));
+  usePrompt(formIsDirty);
 
   const bodyContent = draftTaskDef ? (
     <div className={styles.EditBody}>
