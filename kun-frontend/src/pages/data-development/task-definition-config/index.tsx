@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import c from 'clsx';
 import { useRouteMatch } from 'umi';
-import { Alert, Button, Card, Form } from 'antd';
+import { Alert, Card, Form } from 'antd';
 import { KunSpin } from '@/components/KunSpin';
 import { useMount, useTitle, useUnmount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
@@ -22,6 +22,7 @@ import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { StatusText } from '@/components/StatusText';
+import { usePrompt } from '@/hooks/usePrompt';
 import { normalizeTaskDefinition, transformFormTaskConfig } from './helpers';
 
 import styles from './TaskDefinitionConfigView.less';
@@ -125,6 +126,8 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
     }
   }, [taskTryId]);
 
+  usePrompt(taskTryId != null && !taskTryStopped, t('dataDevelopment.dryRunIsStillRunningPromptText'));
+
   const bodyContent = draftTaskDef ? (
     <div className={styles.EditBody}>
       {alertMessage != null ? <Alert message={alertMessage} type="error" closable /> : <></>}
@@ -166,30 +169,31 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
         <span style={{ marginLeft: '8px' }}>
           <StatusText status={taskTryStatus} />
         </span>
-        {/* Stop Button */}
-        <Button
-          size="small"
-          type="link"
-          style={{ marginLeft: '16px' }}
-          onClick={() => {
-            if (taskTryId != null) {
-              setTaskTryStatus('ABORTING');
-              setTaskTryStopped(true);
-              stopTaskTry(taskTryId);
-            }
-          }}
-          disabled={taskTryStopped}
-        >
-          {t('dataDevelopment.stopDryRun')}
-        </Button>
       </span>
     );
   }, [t, taskTryId, taskTryStatus, taskTryStopped]);
 
+  const handleStopDryRun = useCallback(
+    function handleStopDryRun() {
+      if (taskTryId != null) {
+        setTaskTryStatus('ABORTING');
+        setTaskTryStopped(true);
+        stopTaskTry(taskTryId);
+      }
+    },
+    [taskTryId],
+  );
+
   return (
     <div className={c(styles.TaskDefinitionConfigView)}>
       {bodyContent}
-      <BottomLayout visible={taskTryId !== null} title={bottomLayoutTitle} onClose={handleCloseDryRunLog}>
+      <BottomLayout
+        visible={taskTryId !== null}
+        title={bottomLayoutTitle}
+        onStop={handleStopDryRun}
+        onClose={handleCloseDryRunLog}
+        stopBtnDisabled={taskTryStopped}
+      >
         <PollingLogViewer
           startPolling={taskTryId !== null}
           pollInterval={5000} // poll log every 5 seconds
