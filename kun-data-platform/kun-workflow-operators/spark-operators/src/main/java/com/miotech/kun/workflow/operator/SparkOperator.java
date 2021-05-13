@@ -33,6 +33,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
     private final String SPLINE_QUERY_LISTENER_PATH = "s3://com.miotech.data.prd/spline/spark-2.4-spline-agent-bundle_2.11-0.6.0-SNAPSHOT.jar";
     private final String HDFS_ROOT = "s3a://com.miotech.data.prd";
     private final Integer LIVY_TIMEOUT_LIMIT = 3;
+    private volatile boolean cancelled = false;
 
 
     private SparkApp app;
@@ -146,7 +147,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
                 throw new IllegalStateException("Cannot find state for job: " + app.getId());
             }
             waitForSeconds(3);
-        } while (!jobState.isFinished());
+        } while (!cancelled && !jobState.isFinished());
 
         tailingYarnLog(appInfo);
         logger.info("spark job \"{}\", batch id: {}", jobState, jobId);
@@ -174,6 +175,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
     @Override
     public void abort() {
         logger.info("Delete spark batch job, id: {}", app.getId());
+        cancelled = true;
         livyClient.deleteBatch(app.getId());
     }
 

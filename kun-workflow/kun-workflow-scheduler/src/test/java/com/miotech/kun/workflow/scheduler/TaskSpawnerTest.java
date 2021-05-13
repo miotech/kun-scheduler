@@ -53,6 +53,10 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
     private static <T> CustomisableMatcher<T> safeSameBeanAs(T expected) {
         return sameBeanAs(expected)
+                .ignoring("createdAt")
+                .ignoring("updatedAt")
+                .ignoring("startAt")
+                .ignoring("endAt")
                 .ignoring(TaskDao.class)
                 .ignoring(TaskRunDao.class)
                 .ignoring(TaskRunDao.TaskRunMapper.class)
