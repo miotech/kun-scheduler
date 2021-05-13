@@ -4,7 +4,7 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.datadiscovery.model.bo.*;
 import com.miotech.kun.datadiscovery.model.entity.*;
-import com.miotech.kun.datadiscovery.model.vo.PullDataVO;
+import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
 import com.miotech.kun.datadiscovery.service.DataSourceService;
 import com.miotech.kun.datadiscovery.service.DatasetFieldService;
 import com.miotech.kun.datadiscovery.service.DatasetService;
@@ -72,8 +72,8 @@ public class DataSourceController {
     }
 
     @PostMapping("/metadata/datasource/{id}/pull")
-    public RequestResult<PullDataVO> pullDataSource(@PathVariable Long id) {
-        metadataService.pullDataSource(id);
+    public RequestResult<PullProcessVO> pullDataSource(@PathVariable Long id) {
+        PullProcessVO pullProcessVO = metadataService.pullDataSource(id);
         return RequestResult.success();
     }
 
@@ -111,7 +111,7 @@ public class DataSourceController {
     }
 
     @PostMapping("/metadata/dataset/{id}/pull")
-    public RequestResult<PullDataVO> pullDataset(@PathVariable Long id) {
+    public RequestResult<PullProcessVO> pullDataset(@PathVariable Long id) {
         metadataService.pullDataset(id);
         return RequestResult.success();
     }

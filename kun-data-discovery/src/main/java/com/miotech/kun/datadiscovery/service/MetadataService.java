@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.service;
 
+import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,9 +25,11 @@ public class MetadataService {
         restTemplate.postForEntity(url + "/datasets/{id}/_pull", null, Object.class, datasetId);
     }
 
-    public void pullDataSource(Long datasourceId) {
+    public PullProcessVO pullDataSource(Long datasourceId) {
         String fullUrl = url + "/datasources/{id}/_pull";
         log.info("Request url : " + fullUrl);
-        restTemplate.postForEntity(fullUrl, null, Object.class, datasourceId);
+        return restTemplate
+                .postForEntity(fullUrl, null, PullProcessVO.class, datasourceId)
+                .getBody();
     }
 }
