@@ -85,21 +85,22 @@ public class TaskRunService {
 
     /**
      * Fetch output log of a task run attempt instance.
-     * @param taskRunId id of target task run
-     * @param attempt attempt number of that task run
+     *
+     * @param taskRunId      id of target task run
+     * @param attempt        attempt number of that task run
      * @param startLineIndex the starting line number to read.
-     *                  When set to null will automatically set to 0.
-     *                  When set to negative long value, will use negative indexes of lines.
-     *                  For instance, a file with 7 lines:
-     *                                     [L1, L2, L3, L4, L5, L6, L7]
-     *                           indexes:  [ 0,  1,  2,  3,  4,  5,  6]
-     *                  negative indexes:  [-7, -6, -5, -4, -3, -2, -1]
-     *                  A usage example is that, if you want to read the last 5000 lines of log,
-     *                  then set startLine = -5000 and endLine = null.
-     * @param endLineIndex The final line that stops *before*. (For instance, startLine = 2, endLine = 5
-     *                    will read line with index 2, 3, 4 (line 0, 1 and the lines after L4 will be ignored)
-     *                When set to null, will goes to the end of file automatically.
-     *                When set to negative, will use negative indexes like startLine does.
+     *                       When set to null will automatically set to 0.
+     *                       When set to negative long value, will use negative indexes of lines.
+     *                       For instance, a file with 7 lines:
+     *                       [L1, L2, L3, L4, L5, L6, L7]
+     *                       indexes:  [ 0,  1,  2,  3,  4,  5,  6]
+     *                       negative indexes:  [-7, -6, -5, -4, -3, -2, -1]
+     *                       A usage example is that, if you want to read the last 5000 lines of log,
+     *                       then set startLine = -5000 and endLine = null.
+     * @param endLineIndex   The final line that stops *before*. (For instance, startLine = 2, endLine = 5
+     *                       will read line with index 2, 3, 4 (line 0, 1 and the lines after L4 will be ignored)
+     *                       When set to null, will goes to the end of file automatically.
+     *                       When set to negative, will use negative indexes like startLine does.
      * @return task run log value object
      */
     public TaskRunLogVO getTaskRunLog(final Long taskRunId,
@@ -114,22 +115,38 @@ public class TaskRunService {
 
         TaskAttemptProps taskAttempt = taskAttemptPropsOptional.get();
         Resource resource;
-        int lineCount;
+        int lineCount = 0;
+        if (endLineIndex == Integer.MAX_VALUE) {
+            try {
+                logger.debug("trying to get worker log from executor");
+                String logs = executor.workerLog(taskAttempt.getId(),0 - startLineIndex);
+                List<String> logList = coverLogsToList(logs);
+                logger.debug("get logs from executor success,line count = {}", lineCount);
+                return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLineIndex, endLineIndex, logList);
+            } catch (RuntimeException e) {
+                logger.warn("get taskAttemptId = {} from executor failed", taskAttempt.getId(), e);
+            }
+        }
         try {
             resource = resourceLoader.getResource(taskAttempt.getLogPath());
             lineCount = getLineCountOfFile(resource);
+
         } catch (RuntimeException e) {
             logger.warn("Cannot find or open log path for existing task attempt: {}", taskAttempt.getLogPath());
             return TaskRunLogVOFactory.createLogNotFound(taskRunId, taskAttempt.getAttempt());
         }
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
-            Triple<List<String>, Integer, Integer> result = readLinesFromLogFile(reader, lineCount, startLineIndex, endLineIndex);
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(resource.getInputStream()))) {
+            Triple<List<String>, Integer, Integer> result = readLinesFromLogFile(bufferedReader, lineCount, startLineIndex, endLineIndex);
             return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), result.getMiddle(), result.getRight(), result.getLeft());
         } catch (IOException e) {
             logger.error("Failed to get task attempt log: {}", taskAttempt.getLogPath(), e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
+    }
+
+    private List<String> coverLogsToList(String logs) {
+        return Arrays.stream(logs.split("\n")).collect(Collectors.toList());
     }
 
     private Optional<TaskAttemptProps> findTaskAttemptProps(long taskRunId, int attempt) {
@@ -154,10 +171,11 @@ public class TaskRunService {
 
     /**
      * Read lines of a log file in specific range.
-     * @param reader buffered reader instance
+     *
+     * @param reader         buffered reader instance
      * @param totalLineCount total line count of that log file
      * @param startLineIndex Index of start line. Allows negative indexes.
-     * @param endLineIndex Index of stop line. Allows negative indexes.
+     * @param endLineIndex   Index of stop line. Allows negative indexes.
      * @return Triple of (log lines, actual start line index, actual end line index)
      * @throws IOException if log file not found, or other IO exception cases
      */
@@ -181,6 +199,7 @@ public class TaskRunService {
 
     /**
      * Get line count of a resource
+     *
      * @param fileResource resource instance
      * @return An non-negative integer of total file line count.
      */
