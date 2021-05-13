@@ -76,15 +76,42 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     }
 
+    @Override
+    public String getWorkerLog(Long taskAttemptId,Integer tailLines) {
+        WorkerSnapshot workerSnapshot = getWorker(taskAttemptId);
+        if (workerSnapshot != null && !workerSnapshot.getStatus().isFinished()) {
+            return kubernetesClient.pods()
+                    .inNamespace(props.getString("executor.env.namespace"))
+                    .withName(KUN_WORKFLOW + taskAttemptId)
+                    .tailingLines(tailLines)
+                    .getLog();
+        }
+        logger.debug("pod with taskAttemptId = {} is not running", taskAttemptId);
+        return null;
+    }
+
 
     @Override
     public List<WorkerInstance> getRunningWorker() {
+        List<PodStatusSnapShot> podList = getExistPodList();
+        List<WorkerInstance> runningWorkers = new ArrayList<>();
+        podList.forEach(x -> {
+            if (x.getStatus().isFinished()) {
+                stopWorker(x.getIns().getTaskAttemptId());
+            } else {
+                runningWorkers.add(x.getIns());
+            }
+        });
+        return runningWorkers;
+    }
+
+    public List<PodStatusSnapShot> getExistPodList() {
         PodList podList = kubernetesClient.pods()
                 .inNamespace(props.getString("executor.env.namespace"))
                 .withLabel(KUN_WORKFLOW)
                 .list();
-        return podList.getItems().stream().map(x->
-                PodStatusSnapShot.fromPod(x).getIns()).collect(Collectors.toList());
+        return podList.getItems().stream().map(x ->
+                PodStatusSnapShot.fromPod(x)).collect(Collectors.toList());
     }
 
 

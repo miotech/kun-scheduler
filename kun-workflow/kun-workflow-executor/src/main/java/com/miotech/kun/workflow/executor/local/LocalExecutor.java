@@ -320,6 +320,11 @@ public class LocalExecutor implements Executor, ExecutorBackEnd {
         return true;
     }
 
+    @Override
+    public String workerLog(Long taskAttemptId, Integer tailLines) {
+        return null;
+    }
+
     private HeartBeatMessage initHeartBeatByTaskAttempt(TaskAttempt taskAttempt) {
         HeartBeatMessage message = new HeartBeatMessage();
         message.setQueueName(taskAttempt.getQueueName());

@@ -27,7 +27,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     private final MiscService miscService;
     private final TaskRunDao taskRunDao;
 
-    public WorkerLifeCycleManager( TaskRunDao taskRunDao,
+    public WorkerLifeCycleManager(TaskRunDao taskRunDao,
                                   WorkerMonitor workerMonitor, Props props, MiscService miscService) {
         this.props = props;
         this.taskRunDao = taskRunDao;
@@ -83,7 +83,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                 abortTaskAttempt(taskAttemptId);
                 return null;
             }
-            if(taskAttempt.getStatus().isFinished()){
+            if (taskAttempt.getStatus().isFinished()) {
                 throw new IllegalStateException("unable to stop a finish worker");
             }
         }
@@ -101,6 +101,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     }
 
 
+
     /* ----------- abstract methods ------------ */
 
     public abstract WorkerSnapshot startWorker(TaskAttempt taskAttempt);
@@ -108,6 +109,8 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     public abstract Boolean stopWorker(Long taskAttemptId);
 
     public abstract WorkerSnapshot getWorker(Long taskAttemptId);
+
+    public abstract String getWorkerLog(Long taskAttemptId, Integer tailLines);
 
 
     /* ----------- private methods ------------ */
