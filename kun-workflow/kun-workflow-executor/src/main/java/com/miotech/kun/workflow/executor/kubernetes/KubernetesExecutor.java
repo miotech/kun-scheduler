@@ -10,6 +10,8 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
+
 @Singleton
 public class KubernetesExecutor implements Executor {
 
@@ -42,6 +44,11 @@ public class KubernetesExecutor implements Executor {
         logger.info("kubernetes going to recover");
         podLifeCycleManager.recover();
         return true;
+    }
+
+    @Override
+    public String workerLog(Long taskAttemptId, Integer tailLines) {
+        return podLifeCycleManager.getWorkerLog(taskAttemptId, tailLines);
     }
 
     @Override
