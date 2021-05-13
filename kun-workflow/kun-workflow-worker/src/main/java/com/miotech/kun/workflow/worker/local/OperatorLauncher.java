@@ -122,11 +122,14 @@ public class OperatorLauncher {
         cancelled = true;
 
         if (operator != null) {
-            try {
-                operator.abort();
-            } catch (Exception e) {
-                logger.error("Unexpected exception occurred during aborting operator.", e);
-            }
+            new Thread(() -> {
+                try {
+                    logger.info("operator going to abort.");
+                    operator.abort();
+                } catch (Exception e) {
+                    logger.error("Unexpected exception occurred during aborting operator.", e);
+                }
+            }, "abort-thread").start();
         }
     }
 
@@ -239,7 +242,7 @@ public class OperatorLauncher {
     }
 
     private OperatorContext initContext(ExecCommand command) {
-        return new OperatorContextImpl(command.getConfig(),command.getTaskRunId());
+        return new OperatorContextImpl(command.getConfig(), command.getTaskRunId());
     }
 
     private static void initLogger(String logPath) {
@@ -334,7 +337,7 @@ public class OperatorLauncher {
 
         @Override
         public void run() {
-            try{
+            try {
                 logger.debug("wait first heart beat send");
                 firstHeartBeat.await();
             } catch (InterruptedException e) {

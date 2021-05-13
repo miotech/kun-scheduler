@@ -842,7 +842,7 @@ public class LocalExecutorTest extends CommonTestBase {
         verify(appender, atLeast(0)).doAppend(logCaptor.capture());
         List<String> logList = logCaptor.getAllValues().stream().map(log -> log.getMessage()).collect(Collectors.toList());
         assertThat(logList.get(0), is("Start to run command: {}"));
-        assertThat(logList.get(1), is("kill task result = {}"));
+        assertThat(logList.get(1), is("kill taskAttemptId = {}, result = {}"));
         assertThat(logList.get(2), is("worker going to shutdown, taskAttemptId = {}"));
 
 
@@ -874,6 +874,52 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.ABORTED);
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
         TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+    }
+
+    @Test
+    public void testAbort_attempt_cost_time() throws IOException{
+        // prepare
+        TaskAttempt attempt = prepareAttempt(TestOperator7.class);
+
+        // process
+        executor.submit(attempt);
+        awaitUntilRunning(attempt.getId());
+        QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
+        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
+        executor.cancel(attempt);
+
+        // wait until aborted
+        awaitUntilAttemptDone(attempt.getId());
+
+        // verify
+        TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
+        assertThat(attemptProps.getAttempt(), is(1));
+        assertThat(attemptProps.getStatus(), is(TaskRunStatus.ABORTED));
+        assertThat(attemptProps.getLogPath(), is(notNullValue()));
+        assertThat(attemptProps.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps.getEndAt(), is(notNullValue()));
+
+        TaskRun taskRun = taskRunDao.fetchLatestTaskRun(attempt.getTaskRun().getTask().getId());
+        assertThat(taskRun.getStatus(), is(attemptProps.getStatus()));
+        assertThat(taskRun.getStartAt(), is(attemptProps.getStartAt()));
+        assertThat(taskRun.getEndAt(), is(attemptProps.getEndAt()));
+
+        // logs
+        Resource log = resourceLoader.getResource(attemptProps.getLogPath());
+        String content = ResourceUtils.content(log.getInputStream());
+        assertThat(content, containsString("TestOperator7 is aborting"));
+
+        // events
+        assertStatusProgress(attempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.INITIALIZING,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.ABORTED);
+        queueManage = Reflect.on(executor).field("queueManage").get();
+        taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
         assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
     }
 
