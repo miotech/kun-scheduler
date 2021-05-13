@@ -146,6 +146,8 @@ public class TaskRun {
                 .withEndAt(endAt)
                 .withInlets(inlets)
                 .withOutlets(outlets)
+                .withCreatedAt(createdAt)
+                .withUpdatedAt(updatedAt)
                 .withDependentTaskRunIds(dependentTaskRunIds)
                 .withScheduleType(scheduledType)
                 .withQueueName(queueName)
