@@ -21,7 +21,7 @@ public class DatasetPullController {
     public Object pull(@RouteVariable Long gid) {
         logger.debug("DatasetPullController pull received gid: {}", gid);
         Preconditions.checkNotNull(gid, "Invalid parameter `gid`: found null object");
-        return new PullProcessVO(processService.submit(gid, DataBuilderDeployMode.DATASET));
+        return processService.submitPull(gid, DataBuilderDeployMode.DATASET);
     }
 
 }

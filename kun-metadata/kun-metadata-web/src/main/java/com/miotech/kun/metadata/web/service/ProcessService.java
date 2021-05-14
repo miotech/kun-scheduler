@@ -8,9 +8,11 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.common.dao.PullProcessDao;
 import com.miotech.kun.metadata.core.model.process.PullDataSourceProcess;
 import com.miotech.kun.metadata.core.model.process.PullDatasetProcess;
+import com.miotech.kun.metadata.core.model.process.PullProcess;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;
+import com.miotech.kun.metadata.web.model.vo.PullProcessVO;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -40,9 +42,12 @@ public class ProcessService {
     @Inject
     private Props props;
 
-    public TaskRun submit(Long id, DataBuilderDeployMode deployMode) {
+    public PullProcessVO submitPull(Long id, DataBuilderDeployMode deployMode) {
         // For each data entity, we only allow atomic operations on creating new pull task run
-        Lock pullLock = pullLocks.putIfAbsent(id, new ReentrantLock());
+        if (!pullLocks.containsKey(id)) {
+            pullLocks.put(id, new ReentrantLock());
+        }
+        Lock pullLock = pullLocks.get(id);
         Preconditions.checkState(pullLock != null, "Unexpected state: pull lock for specific id: {} is null", id);
         // Lock that id to prevent multiple MCE task runs created for the same data entity at same time
         pullLock.lock();
@@ -53,7 +58,9 @@ public class ProcessService {
                 case DATASET:
                     return submitPullDatasetTaskIfLastOneFinished(id, deployMode);
                 default:
-                    return createPullTaskRunInstanceOnWorkflow(id, deployMode);
+                    // Currently, this API only support pulling operation on data source and dataset.
+                    // "PULL" and "ALL" mode should be invoked with transferring messages by Kafka
+                    throw new UnsupportedOperationException(String.format("Deploy mode \"%s\" not supported yet.", deployMode.name()));
             }
         } catch (Exception e) {
             logger.error("Failed to submit task to workflow for datasource with id: {}.", id);
@@ -64,7 +71,7 @@ public class ProcessService {
         }
     }
 
-    private TaskRun submitPullDatasourceTaskIfLastOneFinished(Long datasourceId, DataBuilderDeployMode deployMode) {
+    private PullProcessVO submitPullDatasourceTaskIfLastOneFinished(Long datasourceId, DataBuilderDeployMode deployMode) {
         Optional<PullDataSourceProcess> latestProcess =
                 pullProcessDao.findLatestPullDataSourceProcessByDataSourceId(datasourceId.toString());
         // 1. If last pulling process has not finished yet, do not submit a new MCE task run.
@@ -72,22 +79,34 @@ public class ProcessService {
             TaskRun latestMCETaskRun = workflowClient.getTaskRun(latestProcess.get().getMceTaskRunId());
             if (!latestMCETaskRun.getStatus().isFinished()) {
                 // Instead we return the existing running task run instance.
-                return latestMCETaskRun;
+                return new PullProcessVO(
+                        latestProcess.get().getProcessId(),
+                        latestProcess.get().getProcessType(),
+                        latestProcess.get().getCreatedAt(),
+                        latestMCETaskRun,
+                        null
+                );
             }
         }
         // 2. If not, create a new MCE task
         TaskRun mceTaskRun = createPullTaskRunInstanceOnWorkflow(datasourceId, deployMode);
         // ...and record that MCE task run id into a new process record
-        pullProcessDao.create(PullDataSourceProcess.newBuilder()
+        PullProcess createdProcess = pullProcessDao.create(PullDataSourceProcess.newBuilder()
                 .withDataSourceId(datasourceId.toString())
                 .withCreatedAt(DateTimeUtils.now())
                 .withMceTaskRunId(mceTaskRun.getId())
                 .build()
         );
-        return mceTaskRun;
+        return new PullProcessVO(
+                createdProcess.getProcessId(),
+                createdProcess.getProcessType(),
+                createdProcess.getCreatedAt(),
+                mceTaskRun,
+                null
+        );
     }
 
-    private TaskRun submitPullDatasetTaskIfLastOneFinished(Long datasetId, DataBuilderDeployMode deployMode) {
+    private PullProcessVO submitPullDatasetTaskIfLastOneFinished(Long datasetId, DataBuilderDeployMode deployMode) {
         Optional<PullDatasetProcess> latestProcess =
                 pullProcessDao.findLatestPullDatasetProcessByDataSetId(datasetId.toString());
         // 1. If last pulling process has not finished yet, do not submit a new MCE task run.
@@ -95,13 +114,19 @@ public class ProcessService {
             TaskRun latestMCETaskRun = workflowClient.getTaskRun(latestProcess.get().getMceTaskRunId());
             if (!latestMCETaskRun.getStatus().isFinished()) {
                 // Instead we return the existing running task run instance.
-                return latestMCETaskRun;
+                return new PullProcessVO(
+                        latestProcess.get().getProcessId(),
+                        latestProcess.get().getProcessType(),
+                        latestProcess.get().getCreatedAt(),
+                        latestMCETaskRun,
+                        null
+                );
             }
         }
         // 2. If not, create a new MCE task
         TaskRun mceTaskRun = createPullTaskRunInstanceOnWorkflow(datasetId, deployMode);
         // ...and record that MCE task run id into a new process record
-        pullProcessDao.create(PullDatasetProcess.newBuilder()
+        PullProcess createdProcess = pullProcessDao.create(PullDatasetProcess.newBuilder()
                 .withDatasetId(datasetId.toString())
                 .withCreatedAt(DateTimeUtils.now())
                 .withMceTaskRunId(mceTaskRun.getId())
@@ -109,7 +134,13 @@ public class ProcessService {
                 .withMseTaskRunId(null)
                 .build()
         );
-        return mceTaskRun;
+        return new PullProcessVO(
+                createdProcess.getProcessId(),
+                createdProcess.getProcessType(),
+                createdProcess.getCreatedAt(),
+                mceTaskRun,
+                null
+        );
     }
 
     /**
