@@ -17,20 +17,16 @@ public abstract class PullProcess {
     protected Long processId;
 
     /**
-     * process type
-     */
-    protected static PullProcessType processType;
-
-    /**
      * Create time of this process
      */
     protected OffsetDateTime createdAt;
 
     public Long getProcessId() { return processId; }
 
-    public PullProcessType getProcessType() {
-        return processType;
-    }
+    /**
+     * Get pull process type
+     */
+    public abstract PullProcessType getProcessType();
 
     public OffsetDateTime getCreatedAt() {
         return this.createdAt;

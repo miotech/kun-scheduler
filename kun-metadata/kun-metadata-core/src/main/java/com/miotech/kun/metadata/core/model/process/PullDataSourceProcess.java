@@ -6,8 +6,6 @@ import java.time.OffsetDateTime;
  * Data model that represents a metadata process which pulls schema information on a datasource
  */
 public class PullDataSourceProcess extends PullProcess {
-    private static final PullProcessType processType = PullProcessType.DATASOURCE;
-
     /**
      * Id of the corresponding workflow task run id.
      */
@@ -23,6 +21,11 @@ public class PullDataSourceProcess extends PullProcess {
         this.mceTaskRunId = builder.mceTaskRunId;
         this.createdAt = builder.createdAt;
         this.dataSourceId = builder.dataSourceId;
+    }
+
+    @Override
+    public PullProcessType getProcessType() {
+        return PullProcessType.DATASOURCE;
     }
 
     public Long getMceTaskRunId() {

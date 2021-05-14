@@ -6,8 +6,6 @@ import java.time.OffsetDateTime;
  *
  */
 public class PullDatasetProcess extends PullProcess {
-    private static final PullProcessType processType = PullProcessType.DATASET;
-
     /**
      * Dataset id
      */
@@ -35,6 +33,11 @@ public class PullDatasetProcess extends PullProcess {
         return mseTaskRunId;
     }
 
+    @Override
+    public PullProcessType getProcessType() {
+        return PullProcessType.DATASET;
+    }
+
     public static PullDatasetProcessBuilder newBuilder() {
         return new PullDatasetProcessBuilder();
     }
@@ -56,7 +59,6 @@ public class PullDatasetProcess extends PullProcess {
 
         private PullDatasetProcessBuilder() {
         }
-
 
         public PullDatasetProcessBuilder withDatasetId(String datasetId) {
             this.datasetId = datasetId;
