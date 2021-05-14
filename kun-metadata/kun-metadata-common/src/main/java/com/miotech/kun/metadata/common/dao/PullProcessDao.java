@@ -7,6 +7,7 @@ import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.core.model.process.PullDataSourceProcess;
 import com.miotech.kun.metadata.core.model.process.PullDatasetProcess;
 import com.miotech.kun.metadata.core.model.process.PullProcess;
@@ -74,39 +75,47 @@ public class PullProcessDao {
         );
     }
 
-    public boolean create(PullProcess pullProcess) {
+    public PullProcess create(PullProcess pullProcess) {
+        Long id = (pullProcess.getProcessId() == null) ? IdGenerator.getInstance().nextId() : pullProcess.getProcessId();
         String sql;
-        int affectedRows;
+        Optional<PullProcess> createdPullProcess;
         switch (pullProcess.getProcessType()) {
             case DATASOURCE:
                 PullDataSourceProcess processDataSource = (PullDataSourceProcess) pullProcess;
                 logger.info("Creating pull process for datasource id = {}, mce task run id = {}", processDataSource.getDataSourceId(), processDataSource.getMceTaskRunId());
                 sql = "INSERT INTO " + PULL_PROCESS_TABLE_NAME + " (process_id, process_type, datasource_id, mce_task_run_id, created_at) VALUES (?, ?, ?, ?, ?)";
-                affectedRows = dbOperator.update(sql,
-                        processDataSource.getProcessId(),
+                dbOperator.update(sql,
+                        id,
                         PullProcessType.DATASOURCE.toString(),
                         processDataSource.getDataSourceId(),
                         processDataSource.getMceTaskRunId(),
                         processDataSource.getCreatedAt()
                 );
+                // fetch created instance
+                createdPullProcess = findById(id);
                 break;
             case DATASET:
                 PullDatasetProcess processDataset = (PullDatasetProcess) pullProcess;
                 logger.info("Creating pull process for dataset id = {}, mce task run id = {}", processDataset.getDatasetId(), processDataset.getMceTaskRunId());
                 sql = "INSERT INTO " + PULL_PROCESS_TABLE_NAME + " (process_id, process_type, dataset_id, mce_task_run_id, mse_task_run_id, created_at) VALUES (?, ?, ?, ?, ?, ?)";
-                affectedRows = dbOperator.update(sql,
-                        processDataset.getProcessId(),
+                dbOperator.update(sql,
+                        id,
                         PullProcessType.DATASET.toString(),
                         processDataset.getDatasetId(),
                         processDataset.getMceTaskRunId(),
                         processDataset.getMseTaskRunId(),
                         processDataset.getCreatedAt()
                 );
+                // fetch created instance
+                createdPullProcess = findById(id);
                 break;
             default:
                 throw new IllegalStateException();
         }
-        return affectedRows > 0;
+        if (!createdPullProcess.isPresent()) {
+            throw new IllegalStateException(String.format("Cannot find created pulling process of id = %s", id));
+        }
+        return createdPullProcess.get();
     }
 
     public static class PullProcessResultMapper implements ResultSetMapper<PullProcess> {
