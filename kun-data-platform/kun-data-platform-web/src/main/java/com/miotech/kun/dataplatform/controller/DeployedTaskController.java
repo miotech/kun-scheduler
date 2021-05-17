@@ -91,7 +91,8 @@ public class DeployedTaskController {
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startTime,
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime,
+            @RequestParam(required = false) List<String> scheduleTypes
     ) {
         ScheduledTaskRunSearchRequest deploySearchRequest = new ScheduledTaskRunSearchRequest(
                 pageSize,
@@ -102,13 +103,14 @@ public class DeployedTaskController {
                 null,
                 TaskRunStatus.resolve(status),
                 startTime,
-                endTime
+                endTime,
+                scheduleTypes
         );
         return RequestResult.success(deployedTaskService.searchTaskRun(deploySearchRequest));
     }
 
     @GetMapping("/deployed-taskruns")
-    @ApiOperation("Search scheduled taskruns")
+    @ApiOperation("Search taskruns of at deployed task")
     public RequestResult<PaginationResult<TaskRun>> searchDeploys(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "100") int pageSize,
@@ -120,7 +122,8 @@ public class DeployedTaskController {
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startTime,
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime,
+            @RequestParam(required = false) List<String> scheduleTypes
     ) {
         ScheduledTaskRunSearchRequest deploySearchRequest = new ScheduledTaskRunSearchRequest(
                 pageSize,
@@ -131,7 +134,8 @@ public class DeployedTaskController {
                 name,
                 TaskRunStatus.resolve(status),
                 startTime,
-                endTime
+                endTime,
+                scheduleTypes
         );
         return RequestResult.success(deployedTaskService.searchTaskRun(deploySearchRequest));
     }
