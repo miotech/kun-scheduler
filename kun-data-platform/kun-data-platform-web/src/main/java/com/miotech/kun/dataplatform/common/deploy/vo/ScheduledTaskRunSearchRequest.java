@@ -28,6 +28,8 @@ public class ScheduledTaskRunSearchRequest extends PageRequest {
 
     private OffsetDateTime endTime;
 
+    private List<String> scheduleTypes;
+
     public ScheduledTaskRunSearchRequest(Integer pageSize,
                                          Integer pageNum,
                                          Optional<Long> ownerId,
@@ -36,7 +38,8 @@ public class ScheduledTaskRunSearchRequest extends PageRequest {
                                          String name,
                                          TaskRunStatus status,
                                          OffsetDateTime startTime,
-                                         OffsetDateTime endTime) {
+                                         OffsetDateTime endTime,
+                                         List<String> scheduleTypes) {
         super(pageSize, pageNum);
         this.ownerId = ownerId;
         this.definitionIds = definitionIds != null ? definitionIds : ImmutableList.of();
@@ -45,5 +48,6 @@ public class ScheduledTaskRunSearchRequest extends PageRequest {
         this.status = status;
         this.startTime = startTime;
         this.endTime = endTime;
+        this.scheduleTypes = scheduleTypes;
     }
 }

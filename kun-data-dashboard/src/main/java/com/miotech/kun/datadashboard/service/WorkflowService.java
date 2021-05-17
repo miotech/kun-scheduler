@@ -35,6 +35,8 @@ public class WorkflowService {
             );
     private final ConcurrentMap<OffsetDateTime, DateTimeTaskCount> dateTimeTaskCountMap = new ConcurrentHashMap<>();
 
+    private static final List<String> SCHEDULE_TYPE_FILTER = Lists.newArrayList("SCHEDULED");
+
     @Autowired
     WorkflowClient workflowClient;
 
@@ -43,6 +45,7 @@ public class WorkflowService {
                 withDateFrom(DateTimeUtils.now().minusDays(1))
                 .withStatus(Sets.newHashSet(TaskRunStatus.SUCCESS))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
         Integer successCount = workflowClient.countTaskRun(successRequest);
@@ -51,6 +54,7 @@ public class WorkflowService {
                 withDateFrom(DateTimeUtils.now().minusDays(1))
                 .withStatus(Sets.newHashSet(TaskRunStatus.FAILED, TaskRunStatus.ERROR))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
         Integer failedCount = workflowClient.countTaskRun(failedRequest);
@@ -58,6 +62,7 @@ public class WorkflowService {
         TaskRunSearchRequest runningRequest = TaskRunSearchRequest.newBuilder()
                 .withStatus(Sets.newHashSet(TaskRunStatus.RUNNING))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
         Integer runningCount = workflowClient.countTaskRun(runningRequest);
@@ -65,6 +70,7 @@ public class WorkflowService {
         TaskRunSearchRequest startedRequest = TaskRunSearchRequest.newBuilder()
                 .withIncludeStartedOnly(true)
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
         Integer startedCount = workflowClient.countTaskRun(startedRequest);
@@ -74,12 +80,14 @@ public class WorkflowService {
                 .withIncludeStartedOnly(false)
                 .withStatus(ImmutableSet.of(TaskRunStatus.CREATED, TaskRunStatus.INITIALIZING, TaskRunStatus.QUEUED))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
         Integer pendingCount = workflowClient.countTaskRun(pendingRequest);
 
         TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
         Integer totalCount = workflowClient.countTaskRun(totalRequest);
@@ -116,6 +124,7 @@ public class WorkflowService {
                     .withDateFrom(startTime)
                     .withDateTo(endTime)
                     .withTags(DATA_PLATFORM_FILTER_TAGS)
+                    .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                     .withPageSize(0)
                     .build();
             Integer totalCount = workflowClient.countTaskRun(totalRequest);
@@ -139,6 +148,7 @@ public class WorkflowService {
                 .withDateFrom(Objects.equals(tasksRequest.getLast24HoursOnly(), true) ? DateTimeUtils.now().minusHours(24) : null)
                 .withSortKey("createdAt")
                 .withSortOrder("DESC")
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .build();
 
         DataDevelopmentTasks dataDevelopmentTasks = new DataDevelopmentTasks();
