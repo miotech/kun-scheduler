@@ -48,6 +48,16 @@ public class SparkConfiguration {
     // variables
     public static final String CONF_VARIABLES = "variables";
 
+    //lineage
+    public static final String CONF_LINEAGE_OUTPUT_PATH = "lineageOutputPath";
+    public static final String CONF_S3_ACCESS_KEY = "s3AccessKey";
+    public static final String CONF_S3_SECRET_KEY = "s3SecretKey";
+
+    public static final String CONF_LINEAGE_OUTPUT_PATH_VALUE_DEFAULT = "${ dataplatform.lineage.output.path }";
+    public static final String CONF_S3_ACCESS_KEY_VALUE_DEFAULT = "${ dataplatform.s3.access.key }";
+    public static final String CONF_S3_SECRET_KEY_VALUE_DEFAULT = "${ dataplatform.s3.secret.key }";
+
+
     private SparkConfiguration() {
     }
 
