@@ -213,6 +213,7 @@ public class DeployedTaskServiceTest extends AppTestBase {
                 null,
                 TaskRunStatus.CREATED,
                 null,
+                null,
                 null
         );
 

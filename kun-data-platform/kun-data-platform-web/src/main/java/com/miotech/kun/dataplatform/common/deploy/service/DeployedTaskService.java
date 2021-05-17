@@ -295,6 +295,9 @@ public class DeployedTaskService extends BaseSecurityService{
         if (request.getStatus() != null) {
             searchRequestBuilder.withStatus(Sets.newHashSet(request.getStatus()));
         }
+        if ((request.getScheduleTypes() != null) && (!request.getScheduleTypes().isEmpty())) {
+            searchRequestBuilder.withScheduleTypes(request.getScheduleTypes());
+        }
 
         List<Tag> filterTags = TagUtils.buildScheduleSearchTags();
         // filter TaskTemplateName by tag, if using workflow ids might match many

@@ -187,11 +187,14 @@ export async function fetchDeployedTaskDAG(
  * Search task runs of deployed task
  */
 
+export type ScheduleTypeEnum = 'SCHEDULED' | 'NONE' | 'MANUAL';
+
 export interface FetchTaskRunsOfDeployedTaskReqParams extends Partial<PaginationReqBody> {
   id: string;
   startTime?: string;
   endTime?: string;
   status?: RunStatusEnum;
+  scheduleTypes?: ScheduleTypeEnum[];
 }
 
 export async function fetchTaskRunsOfDeployedTask(
