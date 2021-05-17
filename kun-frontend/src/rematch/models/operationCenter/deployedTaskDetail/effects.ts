@@ -2,6 +2,7 @@ import { RootDispatch } from '@/rematch/store';
 import {
   fetchDeployedTaskDetail,
   fetchTaskRunsOfDeployedTask,
+  ScheduleTypeEnum,
 } from '@/services/task-deployments/deployed-tasks';
 import { TaskRunListFilter } from '@/rematch/models/operationCenter/deployedTaskDetail/model-state';
 import moment from 'moment';
@@ -17,7 +18,7 @@ export const effects = (dispatch: RootDispatch) => ({
       dispatch.deployedTaskDetail.setDeployedTask(null);
     }
   },
-  async loadTaskRuns(payload: { id: string } & TaskRunListFilter) {
+  async loadTaskRuns(payload: { id: string; scheduleTypes?: ScheduleTypeEnum[] } & TaskRunListFilter) {
     try {
       const respData = await fetchTaskRunsOfDeployedTask({
         id: payload.id,
@@ -25,12 +26,9 @@ export const effects = (dispatch: RootDispatch) => ({
         // @ts-ignore
         pageNum: payload.pageNum || 1,
         status: payload.status || undefined,
-        startTime: payload.startTime
-          ? moment(payload.startTime).toISOString()
-          : undefined,
-        endTime: payload.endTime
-          ? moment(payload.endTime).toISOString()
-          : undefined,
+        startTime: payload.startTime ? moment(payload.startTime).toISOString() : undefined,
+        endTime: payload.endTime ? moment(payload.endTime).toISOString() : undefined,
+        scheduleTypes: payload.scheduleTypes,
       });
       if (respData && respData.records) {
         dispatch.deployedTaskDetail.setTaskRunsCount(respData.totalCount);
