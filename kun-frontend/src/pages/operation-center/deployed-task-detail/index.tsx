@@ -57,6 +57,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
     await dispatch.deployedTaskDetail.loadDeployedTaskDetailById(match.params.id);
     await dispatch.deployedTaskDetail.loadTaskRuns({
       id: match.params.id,
+      scheduleTypes: ['SCHEDULED'],
       ...filters,
     });
   });
@@ -107,6 +108,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
     dispatch.deployedTaskDetail
       .loadTaskRuns({
         id: match.params.id,
+        scheduleTypes: ['SCHEDULED'],
         ...filters,
       })
       .finally(() => {
@@ -117,6 +119,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
   const doRefresh = useCallback(() => {
     dispatch.deployedTaskDetail.loadTaskRuns({
       id: match.params.id,
+      scheduleTypes: ['SCHEDULED'],
       ...filters,
     });
   }, [dispatch, match.params.id, filters]);
