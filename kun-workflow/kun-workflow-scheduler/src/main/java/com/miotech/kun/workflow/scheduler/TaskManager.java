@@ -79,6 +79,7 @@ public class TaskManager {
             TaskAttempt taskAttempt = createTaskAttempt(taskRun);
             logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
             save(Arrays.asList(taskAttempt));
+            updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED);
             submitSatisfyTaskAttemptToExecutor();
             return true;
         } catch (Exception e) {
@@ -141,7 +142,11 @@ public class TaskManager {
                 TaskAttemptStatusChangeEvent taskAttemptStatusChangeEvent = (TaskAttemptStatusChangeEvent) event;
                 TaskRunStatus currentStatus = taskAttemptStatusChangeEvent.getToStatus();
                 if (currentStatus.isFinished()) {
-                    submitSatisfyTaskAttemptToExecutor();
+                    if (currentStatus.isSuccess()) {
+                        submitSatisfyTaskAttemptToExecutor();
+                    } else if (currentStatus.isFailure()) {
+                        updateDownStreamStatus(taskAttemptStatusChangeEvent.getTaskRunId(), TaskRunStatus.UPSTREAM_FAILED);
+                    }
                 }
             }
         }
@@ -153,6 +158,11 @@ public class TaskManager {
         for (TaskAttempt taskAttempt : taskAttemptList) {
             executor.submit(taskAttempt);
         }
+    }
+
+    private void updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
+        List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIds(taskRunId);
+        taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus);
     }
 
 }
