@@ -40,7 +40,7 @@ public enum TaskRunStatus {
     }
 
     public boolean isFailure() {
-        return this == FAILED || this == ABORTED || this == UPSTREAM_FAILED;
+        return this == FAILED || this == ABORTED;
     }
 
     public boolean isFinished() {

@@ -161,7 +161,7 @@ public class TaskManager {
     }
 
     private void updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
-        List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIds(taskRunId);
+        List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId);
         taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus);
     }
 

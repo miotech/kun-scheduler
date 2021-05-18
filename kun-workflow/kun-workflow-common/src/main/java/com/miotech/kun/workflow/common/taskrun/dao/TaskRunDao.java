@@ -497,6 +497,9 @@ public class TaskRunDao {
     }
 
     public void updateAttemptStatusByTaskRunIds(List<Long> taskRunIds, TaskRunStatus taskRunStatus) {
+        if (taskRunIds.size() == 0) {
+            return;
+        }
         String filterTaskRunId = taskRunIds.stream().map(x -> "?").collect(Collectors.joining(","));
         String taskRunSql = DefaultSQLBuilder.newBuilder()
                 .update(TASK_RUN_TABLE_NAME)
@@ -509,8 +512,14 @@ public class TaskRunDao {
                 .where("task_run_id in " + "(" + filterTaskRunId + ")")
                 .getSQL();
         dbOperator.transaction(() -> {
-            dbOperator.update(taskRunSql, taskRunStatus.name(), taskRunIds.toArray());
-            dbOperator.update(taskAttemptSql, taskRunStatus.name(), taskRunIds.toArray());
+            List<Object> taskRunParams = new ArrayList<>();
+            taskRunParams.add(taskRunStatus.name());
+            taskRunParams.addAll(taskRunIds);
+            dbOperator.update(taskRunSql, taskRunParams.toArray());
+            List<Object> taskAttemptParams = new ArrayList<>();
+            taskAttemptParams.add(taskRunStatus.name());
+            taskAttemptParams.addAll(taskRunIds);
+            dbOperator.update(taskAttemptSql, taskAttemptParams.toArray());
             DependencyStatus dependencyStatus = DependencyStatus.fromUpstreamStatus(taskRunStatus);
             updateTaskRunDependencyByTaskRunIds(taskRunIds, dependencyStatus);
             return null;
@@ -526,7 +535,7 @@ public class TaskRunDao {
     public List<Long> fetchDownStreamTaskRunIdsRecursive(Long taskRunId) {
         Set<Long> downStreamTaskRunIds = new HashSet<>();
         Queue<Long> childTaskRunIdQueue = new LinkedList<>();
-        childTaskRunIdQueue.add(taskRunId);
+        childTaskRunIdQueue.addAll(fetchDownStreamTaskRunIds(taskRunId));
         while (!childTaskRunIdQueue.isEmpty()) {
             Long nextTaskRunId = childTaskRunIdQueue.poll();
             if (downStreamTaskRunIds.add(nextTaskRunId)) {
@@ -1257,10 +1266,13 @@ public class TaskRunDao {
         String sql = DefaultSQLBuilder.newBuilder()
                 .update(RELATION_TABLE_NAME)
                 .set("dependency_status")
-                .where("upstream_task_run_id in " + "(" + filterTaskRunId + ")")
+                .where("downstream_task_run_id in " + "(" + filterTaskRunId + ")")
                 .asPrepared()
                 .getSQL();
-        dbOperator.update(sql, status.name(), taskRunIds.toArray());
+        List<Object> params = new ArrayList<>();
+        params.add(status.name());
+        params.addAll(taskRunIds);
+        dbOperator.update(sql, params.toArray());
     }
 
     public List<Long> fetchAllSatisfyTaskRunId() {
