@@ -30,6 +30,8 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     private final OperatorDao operatorDao;
     private final String POD_WORK_DIR = "/server/target";
     private final String POD_JAR_LIB = "/server/lib";
+    private final String KUN_QUEUE = "kun-queue";
+    private final String NODE_PREFIX = "kun-workflow-";
 
     @Inject
     public PodLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props, MiscService miscService,
@@ -43,7 +45,6 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     public WorkerSnapshot startWorker(TaskAttempt taskAttempt) {
         logger.info("going to start pod taskAttemptId = {}", taskAttempt.getId());
         Pod pod = kubernetesClient.pods()
-                //todo :support different namespace
                 .inNamespace(props.getString("executor.env.namespace"))
                 .create(buildPod(taskAttempt));
         return PodStatusSnapShot.fromPod(pod);
@@ -77,7 +78,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     }
 
     @Override
-    public String getWorkerLog(Long taskAttemptId,Integer tailLines) {
+    public String getWorkerLog(Long taskAttemptId, Integer tailLines) {
         WorkerSnapshot workerSnapshot = getWorker(taskAttemptId);
         if (workerSnapshot != null && !workerSnapshot.getStatus().isFinished()) {
             return kubernetesClient.pods()
@@ -153,6 +154,9 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         List<Volume> volumeList = new ArrayList<>();
         volumeList.add(nfsVolume);
         podSpec.setVolumes(volumeList);
+        Map<String, String> nodeSelector = new HashMap<>();
+        nodeSelector.put(KUN_QUEUE, NODE_PREFIX + taskAttempt.getQueueName());
+        podSpec.setNodeSelector(nodeSelector);
         return podSpec;
     }
 
