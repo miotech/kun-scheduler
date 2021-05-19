@@ -68,7 +68,7 @@ public class DeployedTaskController {
                 deploys.getPageSize(),
                 deploys.getPageNum(),
                 deploys.getTotalCount(),
-                deployedTaskService.convertToListVOs(deploys.getRecords())
+                deployedTaskService.convertToListVOs(deploys.getRecords(), true)
         );
         return RequestResult.success(result);
     }
