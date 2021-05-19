@@ -7,6 +7,7 @@ export const effects = (dispatch: RootDispatch) => ({
     const responseData = await deployedTaskServices.fetchDeployedTasks({
       name: payload.searchName || undefined,
       ownerId: payload.ownerIds?.length ? payload.ownerIds : undefined,
+      scheduledTaskRunsOnly: true,
       // @ts-ignore
       pageNum: payload.pageNum ?? 1,
       pageSize: payload.pageSize ?? 25,
