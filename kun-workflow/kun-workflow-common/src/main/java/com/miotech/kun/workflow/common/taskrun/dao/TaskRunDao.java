@@ -528,24 +528,53 @@ public class TaskRunDao {
 
     /**
      * Recursively fetch all downstream taskRunIds with the given taskRunId
+     * only support postgres
      *
      * @param taskRunId
      * @return
      */
     public List<Long> fetchDownStreamTaskRunIdsRecursive(Long taskRunId) {
+        String recursiveResult = "fetch_downstream";
+        String unRecursiveSql = DefaultSQLBuilder.newBuilder()
+                .select("downstream_task_run_id")
+                .from(RELATION_TABLE_NAME)
+                .where("upstream_task_run_id=?")
+                .getSQL();
+        String dependencySQL = DefaultSQLBuilder.newBuilder()
+                .select(RELATION_MODEL_NAME + ".downstream_task_run_id")
+                .from(RELATION_TABLE_NAME, RELATION_MODEL_NAME)
+                .join("inner", recursiveResult, "fd")
+                .on("fd.downstream_task_run_id=" + RELATION_MODEL_NAME + ".upstream_task_run_id")
+                .getSQL();
+        String finalSql = DefaultSQLBuilder.newBuilder()
+                .select("downstream_task_run_id")
+                .from(recursiveResult)
+                .getSQL();
+        StringBuilder recursiveSqlBuilder = new StringBuilder();
+        String recursiveSql = recursiveSqlBuilder.append("WITH RECURSIVE fetch_downstream AS (\n")
+                .append(unRecursiveSql + "\n")
+                .append("UNION\n")
+                .append(dependencySQL + "\n")
+                .append(") " + finalSql)
+                .toString();
+        return dbOperator.fetchAll(recursiveSql, rs -> rs.getLong(1), taskRunId);
+    }
+
+    public List<Long> fetchDownStreamTaskRunIdsRecursive(Long taskRunId, boolean postgres) {
+        if (postgres) {
+            return fetchDownStreamTaskRunIdsRecursive(taskRunId);
+        }
         Set<Long> downStreamTaskRunIds = new HashSet<>();
-        Queue<Long> childTaskRunIdQueue = new LinkedList<>();
-        childTaskRunIdQueue.addAll(fetchDownStreamTaskRunIds(taskRunId));
-        while (!childTaskRunIdQueue.isEmpty()) {
-            Long nextTaskRunId = childTaskRunIdQueue.poll();
-            if (downStreamTaskRunIds.add(nextTaskRunId)) {
-                List<Long> childTaskRunIdList = fetchDownStreamTaskRunIds(nextTaskRunId);
-                childTaskRunIdList.forEach(x -> {
-                    if (!downStreamTaskRunIds.contains(x)) {
-                        childTaskRunIdQueue.add(x);
-                    }
-                });
-            }
+        List<Long> taskRunIds = Arrays.asList(taskRunId);
+        while (taskRunIds.size() != 0) {
+            List<Long> downStream = fetchDownStreamTaskRunIds(taskRunIds);
+            List<Long> nextTaskRunIds = new ArrayList<>();
+            downStream.forEach(x -> {
+                if (downStreamTaskRunIds.add(x)) {
+                    nextTaskRunIds.add(x);
+                }
+            });
+            taskRunIds = nextTaskRunIds;
         }
         return downStreamTaskRunIds.stream().collect(Collectors.toList());
     }
@@ -553,16 +582,17 @@ public class TaskRunDao {
     /**
      * Fetch downstream taskRunIds with the given taskRunId
      *
-     * @param taskRunId
+     * @param taskRunIds
      * @return
      */
-    public List<Long> fetchDownStreamTaskRunIds(Long taskRunId) {
+    public List<Long> fetchDownStreamTaskRunIds(List<Long> taskRunIds) {
+        String filterTaskRunId = taskRunIds.stream().map(x -> "?").collect(Collectors.joining(","));
         String dependencySQL = DefaultSQLBuilder.newBuilder()
                 .select("downstream_task_run_id")
                 .from(RELATION_TABLE_NAME)
-                .where("upstream_task_run_id = ?")
+                .where("upstream_task_run_id in (" + filterTaskRunId + ")")
                 .getSQL();
-        return dbOperator.fetchAll(dependencySQL, rs -> rs.getLong(1), taskRunId);
+        return dbOperator.fetchAll(dependencySQL, rs -> rs.getLong(1), taskRunIds.toArray());
     }
 
 

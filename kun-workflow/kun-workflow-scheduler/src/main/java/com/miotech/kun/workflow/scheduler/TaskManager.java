@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.commons.utils.EventConsumer;
 import com.miotech.kun.commons.utils.EventLoop;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
@@ -18,7 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -35,15 +38,18 @@ public class TaskManager {
 
     private final EventBus eventBus;
 
+    private final Props props;
+
     private InnerEventLoop eventLoop;
 
     private final Map<Long, Boolean> rerunningTaskRunIds = new ConcurrentHashMap<>();
 
 
     @Inject
-    public TaskManager(Executor executor, TaskRunDao taskRunDao, EventBus eventBus) {
+    public TaskManager(Executor executor, TaskRunDao taskRunDao, EventBus eventBus, Props props) {
         this.executor = executor;
         this.taskRunDao = taskRunDao;
+        this.props = props;
 
         this.eventLoop = new InnerEventLoop();
         eventLoop.start();
@@ -161,7 +167,9 @@ public class TaskManager {
     }
 
     private void updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
-        List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId);
+        boolean usePostgres = props.getBoolean("postgres.enable", false);
+        List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId, usePostgres);
+        logger.debug("fetch downStream taskRunIds = {},taskRunId = {}", downStreamTaskRunIds, taskRunId);
         taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus);
     }
 
