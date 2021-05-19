@@ -1,8 +1,8 @@
 package com.miotech.kun.workflow.core.model.worker;
 
-public enum WorkerInstanceEnv {
+public enum WorkerInstanceKind {
     LOCAL_PROCESS,
     KUBERNETES,
-    YAML
+    YARN
 
 }

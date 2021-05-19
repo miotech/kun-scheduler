@@ -159,7 +159,7 @@ public class TaskService {
                 .withDependencies(vo.getDependencies() == null ? task.getDependencies() : parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags() == null ? task.getTags() : vo.getTags())
                 .withQueueName(vo.getQueueName() == null ? task.getQueueName() : vo.getQueueName())
-                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.getPriorityByName(vo.getPriority()))
+                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
                 .build();
 
         // 4. perform update
@@ -182,7 +182,7 @@ public class TaskService {
                 .withOperatorId(vo.getOperatorId())
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
                 .withTags(vo.getTags())
-                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.getPriorityByName(vo.getPriority()))
+                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
                 .build();
         return fullUpdateTask(task);
     }
@@ -361,7 +361,7 @@ public class TaskService {
                 .withDependencies(parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags())
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
-                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.getPriorityByName(vo.getPriority()))
+                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
                 .build();
     }
 
