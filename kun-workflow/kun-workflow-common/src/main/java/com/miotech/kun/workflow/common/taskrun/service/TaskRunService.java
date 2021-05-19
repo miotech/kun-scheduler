@@ -364,7 +364,7 @@ public class TaskRunService {
         return mappings;
     }
 
-    public boolean changeTaskAttemptPriority(long taskRunId, int priority) {
+    public boolean changeTaskAttemptPriority(long taskRunId, String priority) {
         Optional<TaskRun> taskRunOptional = taskRunDao.fetchTaskRunById(taskRunId);
         if (!taskRunOptional.isPresent()) {
             throw new IllegalArgumentException("taskRun is not found for taskRunId: " + taskRunId);
@@ -373,9 +373,10 @@ public class TaskRunService {
         if (Objects.isNull(attempt)) {
             throw new IllegalArgumentException("Attempt is not found for taskRunId: " + taskRunId);
         }
-        executor.changePriority(attempt.getId(), attempt.getQueueName(), TaskPriority.resolvePriority(priority));
-        taskRunDao.updateTaskRun(taskRunOptional.get().
-                cloneBuilder().withPriority(priority).build());
+        executor.changePriority(attempt.getId(), attempt.getQueueName(), TaskPriority.valueOf(priority));
+        taskRunDao.updateTaskRun(taskRunOptional.get()
+                .cloneBuilder()
+                .withPriority(TaskPriority.valueOf(priority).getPriority()).build());
         return true;
     }
 

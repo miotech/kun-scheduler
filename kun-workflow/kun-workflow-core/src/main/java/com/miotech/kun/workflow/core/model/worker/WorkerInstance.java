@@ -6,13 +6,13 @@ public class WorkerInstance{
     private final long taskAttemptId;
     private final String workerId;
     private final String nameSpace;
-    private final WorkerInstanceEnv env;
+    private final WorkerInstanceKind kind;
 
-    public WorkerInstance(long taskAttemptId, String workerId, String nameSpace, WorkerInstanceEnv env) {
+    public WorkerInstance(long taskAttemptId, String workerId, String nameSpace, WorkerInstanceKind kind) {
         this.taskAttemptId = taskAttemptId;
         this.workerId = workerId;
         this.nameSpace = nameSpace;
-        this.env = env;
+        this.kind = kind;
     }
 
     public long getTaskAttemptId() {
@@ -32,11 +32,11 @@ public class WorkerInstance{
                 .withWorkerId(workerId)
                 .withTaskAttemptId(taskAttemptId)
                 .withNameSpace(nameSpace)
-                .withEnv(env);
+                .withKind(kind);
     }
 
-    public WorkerInstanceEnv getEnv() {
-        return env;
+    public WorkerInstanceKind getKind() {
+        return kind;
     }
 
     public static WorkerInstanceBuilder newBuilder(){
@@ -51,12 +51,12 @@ public class WorkerInstance{
         return getTaskAttemptId() == that.getTaskAttemptId() &&
                 Objects.equals(getWorkerId(), that.getWorkerId()) &&
                 getNameSpace().equals(that.getNameSpace()) &&
-                getEnv() == that.getEnv();
+                getKind() == that.getKind();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTaskAttemptId(), getWorkerId(), getNameSpace(), getEnv());
+        return Objects.hash(getTaskAttemptId(), getWorkerId(), getNameSpace(), getKind());
     }
 
     @Override
@@ -65,7 +65,7 @@ public class WorkerInstance{
                 "taskAttemptId=" + taskAttemptId +
                 ", workerId='" + workerId + '\'' +
                 ", nameSpace='" + nameSpace + '\'' +
-                ", env=" + env +
+                ", kind=" + kind +
                 '}';
     }
 
@@ -73,7 +73,7 @@ public class WorkerInstance{
         private long taskAttemptId;
         private String workerId;;
         private String nameSpace;
-        private WorkerInstanceEnv env;
+        private WorkerInstanceKind kind;
 
         private WorkerInstanceBuilder() {
         }
@@ -92,8 +92,8 @@ public class WorkerInstance{
             return this;
         }
 
-        public WorkerInstanceBuilder withEnv(WorkerInstanceEnv env) {
-            this.env = env;
+        public WorkerInstanceBuilder withKind(WorkerInstanceKind kind) {
+            this.kind = kind;
             return this;
         }
         public WorkerInstanceBuilder withNameSpace(String nameSpace){
@@ -102,7 +102,7 @@ public class WorkerInstance{
         }
 
         public WorkerInstance build() {
-            return new WorkerInstance(taskAttemptId, workerId, nameSpace, env);
+            return new WorkerInstance(taskAttemptId, workerId, nameSpace, kind);
         }
     }
 }

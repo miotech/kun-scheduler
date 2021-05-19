@@ -322,7 +322,7 @@ public class LocalExecutor implements Executor, ExecutorBackEnd {
 
     @Override
     public String workerLog(Long taskAttemptId, Integer tailLines) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     private HeartBeatMessage initHeartBeatByTaskAttempt(TaskAttempt taskAttempt) {

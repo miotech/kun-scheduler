@@ -132,7 +132,6 @@ public class KubernetesOperatorLauncher {
             if (cancelled) {
                 logger.info("Operator is cancelled, abort execution.");
                 return false;
-                //todo abort
             } else if (success) {
                 return true;
             } else {
