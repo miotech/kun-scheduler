@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.common.dao;
 
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
@@ -8,6 +9,7 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.metadata.core.model.process.PullDataSourceProcess;
 import com.miotech.kun.metadata.core.model.process.PullDatasetProcess;
 import com.miotech.kun.metadata.core.model.process.PullProcess;
@@ -17,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * DAO layer of metadata pull process entities.
@@ -60,6 +62,35 @@ public class PullProcessDao {
         );
     }
 
+    public Map<String, PullDataSourceProcess> findLatestPullDataSourceProcessesByDataSourceIds(Collection<String> dataSourceIds) {
+        Preconditions.checkNotNull(dataSourceIds, "Argument `dataSourceIds` cannot be null.");
+        if (dataSourceIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        final String sql = String.format("SELECT * FROM (\n" +
+                "SELECT %s, (rank() OVER (PARTITION BY datasource_id ORDER BY created_at DESC)) AS rnk\n" +
+                "FROM %s\n" +
+                "WHERE datasource_id IN (%s) AND process_type = 'DATASOURCE'\n" +
+                "ORDER BY rnk, created_at DESC\n" +
+                ") t WHERE t.rnk = 1",
+                String.join(", ", TABLE_COLUMNS),
+                PULL_PROCESS_TABLE_NAME,
+                StringUtils.repeatJoin("?", ", ", dataSourceIds.size())
+        );
+        List<Object> params = new ArrayList<>(dataSourceIds.size());
+        params.addAll(dataSourceIds);
+        List<PullProcess> fetchedRows = dbOperator.fetchAll(sql, PullProcessResultMapper.INSTANCE, params.toArray());
+        Map<String, PullDataSourceProcess> results = new HashMap<>();
+        for (PullProcess row : fetchedRows) {
+            PullDataSourceProcess r = (PullDataSourceProcess) row;
+            String dataSourceId = r.getDataSourceId();
+            Preconditions.checkState(dataSourceId != null, "Unexpected pull process id = {} where data source id = null.", row.getProcessId());
+            results.put(dataSourceId, r);
+        }
+
+        return results;
+    }
+
     public Optional<PullDatasetProcess> findLatestPullDatasetProcessByDataSetId(String datasetId) {
         SQLBuilder sqlBuilder = new DefaultSQLBuilder();
         String sql = sqlBuilder.select(TABLE_COLUMNS)
@@ -82,6 +113,7 @@ public class PullProcessDao {
         switch (pullProcess.getProcessType()) {
             case DATASOURCE:
                 PullDataSourceProcess processDataSource = (PullDataSourceProcess) pullProcess;
+                Preconditions.checkArgument(processDataSource.getDataSourceId() != null, "Cannot save a pull datasource process model without datasource id.");
                 logger.info("Creating pull process for datasource id = {}, mce task run id = {}", processDataSource.getDataSourceId(), processDataSource.getMceTaskRunId());
                 sql = "INSERT INTO " + PULL_PROCESS_TABLE_NAME + " (process_id, process_type, datasource_id, mce_task_run_id, created_at) VALUES (?, ?, ?, ?, ?)";
                 dbOperator.update(sql,
@@ -96,6 +128,7 @@ public class PullProcessDao {
                 break;
             case DATASET:
                 PullDatasetProcess processDataset = (PullDatasetProcess) pullProcess;
+                Preconditions.checkArgument(processDataset.getDatasetId() != null, "Cannot save a pull dataset process model without dataset id.");
                 logger.info("Creating pull process for dataset id = {}, mce task run id = {}", processDataset.getDatasetId(), processDataset.getMceTaskRunId());
                 sql = "INSERT INTO " + PULL_PROCESS_TABLE_NAME + " (process_id, process_type, dataset_id, mce_task_run_id, mse_task_run_id, created_at) VALUES (?, ?, ?, ?, ?, ?)";
                 dbOperator.update(sql,
