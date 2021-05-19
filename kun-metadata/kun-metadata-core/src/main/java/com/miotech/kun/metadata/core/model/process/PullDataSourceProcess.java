@@ -14,7 +14,7 @@ public class PullDataSourceProcess extends PullProcess {
     /**
      * Id of target datasource to pull.
      */
-    private final String dataSourceId;
+    private final Long dataSourceId;
 
     private PullDataSourceProcess(PullDataSourceProcessBuilder builder) {
         this.processId = builder.processId;
@@ -32,7 +32,7 @@ public class PullDataSourceProcess extends PullProcess {
         return mceTaskRunId;
     }
 
-    public String getDataSourceId() {
+    public Long getDataSourceId() {
         return dataSourceId;
     }
 
@@ -51,7 +51,7 @@ public class PullDataSourceProcess extends PullProcess {
     public static final class PullDataSourceProcessBuilder {
         private Long processId;
         private Long mceTaskRunId;
-        private String dataSourceId;
+        private Long dataSourceId;
         private OffsetDateTime createdAt;
 
         private PullDataSourceProcessBuilder() {
@@ -71,7 +71,7 @@ public class PullDataSourceProcess extends PullProcess {
             return this;
         }
 
-        public PullDataSourceProcessBuilder withDataSourceId(String dataSourceId) {
+        public PullDataSourceProcessBuilder withDataSourceId(Long dataSourceId) {
             this.dataSourceId = dataSourceId;
             return this;
         }

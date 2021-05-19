@@ -34,13 +34,13 @@ public class PullProcessDaoTest extends DatabaseTestBase {
         PullProcess pullDataSourceProcessToCreate = PullDataSourceProcess.newBuilder()
                 .withProcessId(1234L)
                 .withCreatedAt(now)
-                .withDataSourceId("123")
+                .withDataSourceId(123L)
                 .withMceTaskRunId(5678L)
                 .build();
         PullProcess pullDatasetProcessToCreate = PullDatasetProcess.newBuilder()
                 .withProcessId(null)
                 .withCreatedAt(now)
-                .withDatasetId("234")
+                .withDatasetId(234L)
                 .withMceTaskRunId(7890L)
                 .withMseTaskRunId(null)
                 .build();
@@ -95,7 +95,7 @@ public class PullProcessDaoTest extends DatabaseTestBase {
         OffsetDateTime time1 = DateTimeUtils.fromTimestamp(Timestamp.from(Instant.ofEpochMilli(1621394162308L)));
         OffsetDateTime time2 = DateTimeUtils.fromTimestamp(Timestamp.from(Instant.ofEpochMilli(1621394197304L)));
         OffsetDateTime time3 = DateTimeUtils.fromTimestamp(Timestamp.from(Instant.ofEpochMilli(1621394212846L)));
-        final String dataSourceId = "123";
+        final Long dataSourceId = 123L;
 
         PullProcess pullDataSourceProcess1 = newPullDataSourceProcess(dataSourceId, time1);
         PullProcess pullDataSourceProcess2 = newPullDataSourceProcess(dataSourceId, time2);
@@ -117,7 +117,7 @@ public class PullProcessDaoTest extends DatabaseTestBase {
     public void findLatestDataSourcePullProcess_withNoInstance_shouldReturnNullOptional() {
         // 1. Process
         // Try to fetch process of a data source that never pulled
-        Optional<PullDataSourceProcess> processLatest = pullProcessDao.findLatestPullDataSourceProcessByDataSourceId("1231243");
+        Optional<PullDataSourceProcess> processLatest = pullProcessDao.findLatestPullDataSourceProcessByDataSourceId(1231243L);
 
         // 2. Validate
         assertFalse(processLatest.isPresent());
@@ -130,7 +130,7 @@ public class PullProcessDaoTest extends DatabaseTestBase {
         OffsetDateTime time1 = DateTimeUtils.fromTimestamp(Timestamp.from(Instant.ofEpochMilli(1621394162308L)));
         OffsetDateTime time2 = DateTimeUtils.fromTimestamp(Timestamp.from(Instant.ofEpochMilli(1621394197304L)));
         OffsetDateTime time3 = DateTimeUtils.fromTimestamp(Timestamp.from(Instant.ofEpochMilli(1621394212846L)));
-        final String datasetId = "456";
+        final Long datasetId = 456L;
 
         PullProcess pullDatasetProcess1 = newPullDatasetProcess(datasetId, time1);
         PullProcess pullDatasetProcess2 = newPullDatasetProcess(datasetId, time2);
@@ -152,7 +152,7 @@ public class PullProcessDaoTest extends DatabaseTestBase {
     public void findLatestDatasetPullProcess_withNoInstance_shouldReturnNullOptional() {
         // 1. Process
         // Try to fetch process of a data source that never pulled
-        Optional<PullDatasetProcess> processLatest = pullProcessDao.findLatestPullDatasetProcessByDataSetId("1231243");
+        Optional<PullDatasetProcess> processLatest = pullProcessDao.findLatestPullDatasetProcessByDataSetId(1231243L);
 
         // 2. Validate
         assertFalse(processLatest.isPresent());
@@ -168,10 +168,10 @@ public class PullProcessDaoTest extends DatabaseTestBase {
         OffsetDateTime time4 = DateTimeUtils.fromTimestamp(Timestamp.from(Instant.ofEpochMilli(1621394212946L)));
         OffsetDateTime time5 = DateTimeUtils.fromTimestamp(Timestamp.from(Instant.ofEpochMilli(1621394213046L)));
 
-        final String dataSource1Id = "1001";
-        final String dataSource2Id = "1002";
-        final String dataSource3Id = "1003";
-        final String dataSource4Id = "1004";
+        final Long dataSource1Id = 1001L;
+        final Long dataSource2Id = 1002L;
+        final Long dataSource3Id = 1003L;
+        final Long dataSource4Id = 1004L;
 
         // data source 1 has 3 pull processes
         PullProcess process1_1 = newPullDataSourceProcess(dataSource1Id, time1);
@@ -190,7 +190,7 @@ public class PullProcessDaoTest extends DatabaseTestBase {
         for (PullProcess process : processesToCreate) {
             pullProcessDao.create(process);
         }
-        Map<String, PullDataSourceProcess> latestProcessMaps =
+        Map<Long, PullDataSourceProcess> latestProcessMaps =
                 pullProcessDao.findLatestPullDataSourceProcessesByDataSourceIds(Lists.newArrayList(dataSource1Id, dataSource2Id, dataSource3Id, dataSource4Id));
 
         // Validate
@@ -206,7 +206,7 @@ public class PullProcessDaoTest extends DatabaseTestBase {
         assertThat(latestProcessMaps.get(dataSource3Id), sameBeanAs(process3_1));
     }
 
-    private PullDataSourceProcess newPullDataSourceProcess(String dataSourceId, OffsetDateTime createdAt) {
+    private PullDataSourceProcess newPullDataSourceProcess(Long dataSourceId, OffsetDateTime createdAt) {
         return PullDataSourceProcess.newBuilder()
                 .withProcessId(IdGenerator.getInstance().nextId())
                 .withCreatedAt(createdAt)
@@ -215,7 +215,7 @@ public class PullProcessDaoTest extends DatabaseTestBase {
                 .build();
     }
 
-    private PullDatasetProcess newPullDatasetProcess(String datasetId, OffsetDateTime createdAt) {
+    private PullDatasetProcess newPullDatasetProcess(Long datasetId, OffsetDateTime createdAt) {
         return PullDatasetProcess.newBuilder()
                 .withProcessId(IdGenerator.getInstance().nextId())
                 .withCreatedAt(createdAt)

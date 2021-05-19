@@ -73,7 +73,7 @@ public class ProcessService {
 
     private PullProcessVO submitPullDatasourceTaskIfLastOneFinished(Long datasourceId, DataBuilderDeployMode deployMode) {
         Optional<PullDataSourceProcess> latestProcess =
-                pullProcessDao.findLatestPullDataSourceProcessByDataSourceId(datasourceId.toString());
+                pullProcessDao.findLatestPullDataSourceProcessByDataSourceId(datasourceId);
         // 1. If last pulling process has not finished yet, do not submit a new MCE task run.
         if (latestProcess.isPresent() && (latestProcess.get().getMceTaskRunId() != null)) {
             TaskRun latestMCETaskRun = workflowClient.getTaskRun(latestProcess.get().getMceTaskRunId());
@@ -92,7 +92,7 @@ public class ProcessService {
         TaskRun mceTaskRun = createPullTaskRunInstanceOnWorkflow(datasourceId, deployMode);
         // ...and record that MCE task run id into a new process record
         PullProcess createdProcess = pullProcessDao.create(PullDataSourceProcess.newBuilder()
-                .withDataSourceId(datasourceId.toString())
+                .withDataSourceId(datasourceId)
                 .withCreatedAt(DateTimeUtils.now())
                 .withMceTaskRunId(mceTaskRun.getId())
                 .build()
@@ -108,7 +108,7 @@ public class ProcessService {
 
     private PullProcessVO submitPullDatasetTaskIfLastOneFinished(Long datasetId, DataBuilderDeployMode deployMode) {
         Optional<PullDatasetProcess> latestProcess =
-                pullProcessDao.findLatestPullDatasetProcessByDataSetId(datasetId.toString());
+                pullProcessDao.findLatestPullDatasetProcessByDataSetId(datasetId);
         // 1. If last pulling process has not finished yet, do not submit a new MCE task run.
         if (latestProcess.isPresent() && (latestProcess.get().getMceTaskRunId() != null)) {
             TaskRun latestMCETaskRun = workflowClient.getTaskRun(latestProcess.get().getMceTaskRunId());
@@ -127,7 +127,7 @@ public class ProcessService {
         TaskRun mceTaskRun = createPullTaskRunInstanceOnWorkflow(datasetId, deployMode);
         // ...and record that MCE task run id into a new process record
         PullProcess createdProcess = pullProcessDao.create(PullDatasetProcess.newBuilder()
-                .withDatasetId(datasetId.toString())
+                .withDatasetId(datasetId)
                 .withCreatedAt(DateTimeUtils.now())
                 .withMceTaskRunId(mceTaskRun.getId())
                 // TODO: figure out how to fetch MSE task run id which created asynchronously.

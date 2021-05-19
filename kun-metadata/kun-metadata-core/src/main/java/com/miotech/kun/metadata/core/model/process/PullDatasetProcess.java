@@ -9,7 +9,7 @@ public class PullDatasetProcess extends PullProcess {
     /**
      * Dataset id
      */
-    private final String datasetId;
+    private final Long datasetId;
 
     /**
      * Id of the corresponding MCE workflow task run id.
@@ -21,7 +21,7 @@ public class PullDatasetProcess extends PullProcess {
      */
     private final Long mseTaskRunId;
 
-    public String getDatasetId() {
+    public Long getDatasetId() {
         return datasetId;
     }
 
@@ -53,14 +53,14 @@ public class PullDatasetProcess extends PullProcess {
     public static final class PullDatasetProcessBuilder {
         protected Long processId;
         protected OffsetDateTime createdAt;
-        private String datasetId;
+        private Long datasetId;
         private Long mceTaskRunId;
         private Long mseTaskRunId;
 
         private PullDatasetProcessBuilder() {
         }
 
-        public PullDatasetProcessBuilder withDatasetId(String datasetId) {
+        public PullDatasetProcessBuilder withDatasetId(Long datasetId) {
             this.datasetId = datasetId;
             return this;
         }

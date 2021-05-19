@@ -47,7 +47,7 @@ public class PullProcessDao {
         return Optional.ofNullable(dbOperator.fetchOne(sql, PullProcessResultMapper.INSTANCE, processId));
     }
 
-    public Optional<PullDataSourceProcess> findLatestPullDataSourceProcessByDataSourceId(String dataSourceId) {
+    public Optional<PullDataSourceProcess> findLatestPullDataSourceProcessByDataSourceId(Long dataSourceId) {
         SQLBuilder sqlBuilder = new DefaultSQLBuilder();
         String sql = sqlBuilder.select(TABLE_COLUMNS)
                 .from(PULL_PROCESS_TABLE_NAME)
@@ -62,7 +62,7 @@ public class PullProcessDao {
         );
     }
 
-    public Map<String, PullDataSourceProcess> findLatestPullDataSourceProcessesByDataSourceIds(Collection<String> dataSourceIds) {
+    public Map<Long, PullDataSourceProcess> findLatestPullDataSourceProcessesByDataSourceIds(Collection<Long> dataSourceIds) {
         Preconditions.checkNotNull(dataSourceIds, "Argument `dataSourceIds` cannot be null.");
         if (dataSourceIds.isEmpty()) {
             return new HashMap<>();
@@ -80,10 +80,10 @@ public class PullProcessDao {
         List<Object> params = new ArrayList<>(dataSourceIds.size());
         params.addAll(dataSourceIds);
         List<PullProcess> fetchedRows = dbOperator.fetchAll(sql, PullProcessResultMapper.INSTANCE, params.toArray());
-        Map<String, PullDataSourceProcess> results = new HashMap<>();
+        Map<Long, PullDataSourceProcess> results = new HashMap<>();
         for (PullProcess row : fetchedRows) {
             PullDataSourceProcess r = (PullDataSourceProcess) row;
-            String dataSourceId = r.getDataSourceId();
+            Long dataSourceId = r.getDataSourceId();
             Preconditions.checkState(dataSourceId != null, "Unexpected pull process id = {} where data source id = null.", row.getProcessId());
             results.put(dataSourceId, r);
         }
@@ -91,7 +91,7 @@ public class PullProcessDao {
         return results;
     }
 
-    public Optional<PullDatasetProcess> findLatestPullDatasetProcessByDataSetId(String datasetId) {
+    public Optional<PullDatasetProcess> findLatestPullDatasetProcessByDataSetId(Long datasetId) {
         SQLBuilder sqlBuilder = new DefaultSQLBuilder();
         String sql = sqlBuilder.select(TABLE_COLUMNS)
                 .from(PULL_PROCESS_TABLE_NAME)
@@ -163,7 +163,7 @@ public class PullProcessDao {
                             .withProcessId(rs.getLong("process_id"))
                             .withMceTaskRunId(rs.getLong("mce_task_run_id"))
                             .withCreatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("created_at")))
-                            .withDataSourceId(rs.getString("datasource_id"))
+                            .withDataSourceId(rs.getLong("datasource_id"))
                             .build();
                 case DATASET:
                     return PullDatasetProcess.newBuilder()
@@ -171,7 +171,7 @@ public class PullProcessDao {
                             .withMceTaskRunId(rs.getLong("mce_task_run_id"))
                             .withMseTaskRunId(rs.getLong("mse_task_run_id"))
                             .withCreatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("created_at")))
-                            .withDatasetId(rs.getString("dataset_id"))
+                            .withDatasetId(rs.getLong("dataset_id"))
                             .build();
                 default:
                     throw new IllegalStateException(String.format("Cannot map pull process row with undefined process type = \"%s\"", processType));
