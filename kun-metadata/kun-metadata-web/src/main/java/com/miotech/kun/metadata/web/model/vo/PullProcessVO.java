@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.metadata.core.model.process.PullProcessType;
+import com.miotech.kun.workflow.client.CustomDateTimeDeserializer;
+import com.miotech.kun.workflow.client.CustomDateTimeSerializer;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 
@@ -16,6 +18,8 @@ public class PullProcessVO {
 
     private PullProcessType processType;
 
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime createdAt;
 
     private TaskRun latestMCETaskRun;

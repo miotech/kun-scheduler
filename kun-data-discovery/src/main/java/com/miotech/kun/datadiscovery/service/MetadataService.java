@@ -21,8 +21,12 @@ public class MetadataService {
     @Autowired
     RestTemplate restTemplate;
 
-    public void pullDataset(Long datasetId) {
-        restTemplate.postForEntity(url + "/datasets/{id}/_pull", null, Object.class, datasetId);
+    public PullProcessVO pullDataset(Long datasetId) {
+        String fullUrl = url + "/datasets/{id}/_pull";
+        log.info("Request url : " + fullUrl);
+        return restTemplate
+                .postForEntity(fullUrl, null, PullProcessVO.class, datasetId)
+                .getBody();
     }
 
     public PullProcessVO pullDataSource(Long datasourceId) {

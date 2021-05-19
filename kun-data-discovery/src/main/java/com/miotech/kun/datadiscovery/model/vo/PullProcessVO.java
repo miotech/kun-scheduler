@@ -1,19 +1,29 @@
 package com.miotech.kun.datadiscovery.model.vo;
 
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.workflow.client.CustomDateTimeDeserializer;
+import com.miotech.kun.workflow.client.CustomDateTimeSerializer;
+import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
 
-/**
- * @author: Jie Chen
- * @created: 2020/7/1
- */
 @Data
 public class PullProcessVO {
-    String processId;
-    TaskRunStatus status;
-    String pullCreator;
-    OffsetDateTime pullStartAt;
-    OffsetDateTime pullEndAt;
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
+    Long processId;
+
+    String processType;
+
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    OffsetDateTime createdAt;
+
+    TaskRun latestMCETaskRun;
+
+    TaskRun latestMSETaskRun;
 }

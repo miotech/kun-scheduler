@@ -73,8 +73,8 @@ public class DataSourceController {
 
     @PostMapping("/metadata/datasource/{id}/pull")
     public RequestResult<PullProcessVO> pullDataSource(@PathVariable Long id) {
-        PullProcessVO pullProcessVO = metadataService.pullDataSource(id);
-        return RequestResult.success();
+        PullProcessVO vo = metadataService.pullDataSource(id);
+        return RequestResult.success(vo);
     }
 
     @GetMapping("/metadata/datasource/types")
@@ -112,8 +112,8 @@ public class DataSourceController {
 
     @PostMapping("/metadata/dataset/{id}/pull")
     public RequestResult<PullProcessVO> pullDataset(@PathVariable Long id) {
-        metadataService.pullDataset(id);
-        return RequestResult.success();
+        PullProcessVO vo = metadataService.pullDataset(id);
+        return RequestResult.success(vo);
     }
 
     @GetMapping("/metadata/dataset/{id}/columns")
