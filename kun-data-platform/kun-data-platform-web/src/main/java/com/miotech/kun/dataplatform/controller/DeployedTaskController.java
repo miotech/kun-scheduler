@@ -52,8 +52,10 @@ public class DeployedTaskController {
             @RequestParam(required = false) List<Long> definitionIds,
             @RequestParam(required = false) List<Long> workflowTaskIds,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String taskTemplateName
+            @RequestParam(required = false) String taskTemplateName,
+            @RequestParam(required = false) String scheduledTaskRunsOnly
     ) {
+        boolean includeScheduledTaskRunsOnly = Boolean.valueOf(scheduledTaskRunsOnly);
         DeployedTaskSearchRequest deploySearchRequest = new DeployedTaskSearchRequest(
                 pageSize,
                 pageNum,
@@ -68,7 +70,7 @@ public class DeployedTaskController {
                 deploys.getPageSize(),
                 deploys.getPageNum(),
                 deploys.getTotalCount(),
-                deployedTaskService.convertToListVOs(deploys.getRecords())
+                deployedTaskService.convertToListVOs(deploys.getRecords(), includeScheduledTaskRunsOnly)
         );
         return RequestResult.success(result);
     }
