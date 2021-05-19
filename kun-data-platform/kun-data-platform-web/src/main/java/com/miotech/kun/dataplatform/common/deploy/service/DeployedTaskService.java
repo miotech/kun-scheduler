@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.common.deploy.service;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.dataplatform.common.deploy.dao.DeployedTaskDao;
 import com.miotech.kun.dataplatform.common.deploy.vo.*;
@@ -38,6 +39,8 @@ import static com.miotech.kun.dataplatform.common.utils.TagUtils.TAG_TASK_DEFINI
 public class DeployedTaskService extends BaseSecurityService{
 
     private static final String TASK_RUN_ID_NOT_NULL = "`taskRunId` should not be null";
+
+    private static final List<String> SCHEDULE_TYPE_FILTER = Lists.newArrayList("SCHEDULED");
 
     @Autowired
     private DeployedTaskDao deployedTaskDao;
@@ -381,11 +384,12 @@ public class DeployedTaskService extends BaseSecurityService{
         );
     }
 
-    public List<DeployedTaskWithRunVO> convertToListVOs(List<DeployedTask> deployedTasks) {
+    public List<DeployedTaskWithRunVO> convertToListVOs(List<DeployedTask> deployedTasks, boolean scheduledOnly) {
         TaskRunSearchRequest searchRequest = TaskRunSearchRequest.newBuilder()
                 .withTaskIds(deployedTasks.stream().map(DeployedTask::getWorkflowTaskId).collect(Collectors.toList()))
                 .withPageNum(1)
                 .withPageSize(deployedTasks.size() * 4)
+                .withScheduleTypes(scheduledOnly ? SCHEDULE_TYPE_FILTER : null)
                 .build();
 
         // Fetch corresponding task runs by batch querying workflow API
