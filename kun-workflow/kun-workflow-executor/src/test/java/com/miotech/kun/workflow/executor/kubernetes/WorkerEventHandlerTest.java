@@ -7,7 +7,7 @@ import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
-import com.miotech.kun.workflow.core.model.worker.WorkerInstanceEnv;
+import com.miotech.kun.workflow.core.model.worker.WorkerInstanceKind;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.CommonTestBase;
 import com.miotech.kun.workflow.executor.WorkerEventHandler;
@@ -74,7 +74,7 @@ public class WorkerEventHandlerTest extends CommonTestBase {
         podEventMonitor = new PodEventMonitor(client,props);
         podEventMonitor.start();
         WorkerInstance instance = new WorkerInstance(taskAttempt.getId(),
-                "kubernetes-" + taskAttempt.getId(), taskAttempt.getQueueName(), WorkerInstanceEnv.KUBERNETES);
+                "kubernetes-" + taskAttempt.getId(), taskAttempt.getQueueName(), WorkerInstanceKind.KUBERNETES);
         WorkerEventHandler testHandler = new WorkerEventHandler() {
             @Override
             public void onReceiveSnapshot(WorkerSnapshot workerSnapshot) {

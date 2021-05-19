@@ -260,16 +260,6 @@ public class Props {
         }
     }
 
-    /**
-     * Returns the integer representation of the value. If the value is null, then return null.
-     */
-    public Integer getInteger(final String name) {
-        if (containsKey(name)) {
-            return Integer.parseInt(get(name).trim());
-        } else {
-            return null;
-        }
-    }
 
     /**
      * Returns the int representation of the value. If the value is null, then a

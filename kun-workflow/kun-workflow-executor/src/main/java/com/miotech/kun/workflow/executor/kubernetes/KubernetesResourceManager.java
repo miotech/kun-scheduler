@@ -42,9 +42,9 @@ public class KubernetesResourceManager implements ResourceManager {
         List<ResourceQueue> queueList = new ArrayList<>();
         for (String queueName : queueNames) {
             String prefix = "executor.env.resourceQueues." + queueName;
-            Integer cores = props.getInteger(prefix + ".quota.cores");
-            Integer memory = props.getInteger(prefix + ".quota.memory");
-            Integer workerNumbers = props.getInteger(prefix + ".quota.workerNumbers");
+            Integer cores = props.getInt(prefix + ".quota.cores", 0);
+            Integer memory = props.getInt(prefix + ".quota.memory", 0);
+            Integer workerNumbers = props.getInt(prefix + ".quota.workerNumbers", 0);
             ResourceQueue resourceQueue = ResourceQueue.newBuilder()
                     .withQueueName(queueName)
                     .withCores(cores)
@@ -70,7 +70,6 @@ public class KubernetesResourceManager implements ResourceManager {
     public void changePriority(long taskAttemptId, String queueName, TaskPriority taskPriority) {
         Pod pod = client
                 .pods()
-                //todo: support queueName
                 .inNamespace(props.getString("executor.env.namespace"))
                 .withName(KUN_WORKFLOW + taskAttemptId)
                 .get();
@@ -87,7 +86,6 @@ public class KubernetesResourceManager implements ResourceManager {
                 .withNewPriorityClassName(taskPriority.name().toLowerCase())
                 .endSpec()
                 .build();
-        //todo: support queueName
         client.pods().inNamespace(props.getString("executor.env.namespace")).createOrReplace(newPod);
     }
 

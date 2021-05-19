@@ -420,6 +420,10 @@ public class OperatorService {
         }
     }
 
+    private String packagePathForOperator(String libDirectory, Operator operator) {
+        return String.join("/", libDirectory, operator.getId().toString(), operator.getName() + ".jar");
+    }
+
     private void refreshOperatorCache(Long operatorId) {
         operatorCache.refresh(operatorId);
     }
