@@ -17,8 +17,8 @@ public class SparkQueryPlanLineageAnalyzer {
     private static final Logger logger = LoggerFactory.getLogger(SparkQueryPlanLineageAnalyzer.class);
 
     public static TaskAttemptReport lineageAnalysis(Config config, Long taskRunId) {
-        TaskAttemptReport.Builder taskAttemptReport = TaskAttemptReport.newBuilder();
         try {
+            TaskAttemptReport.Builder taskAttemptReport = TaskAttemptReport.newBuilder();
             logger.info("start lineage analysis for task {}", taskRunId);
             Configuration conf = new Configuration();
 
@@ -42,10 +42,11 @@ public class SparkQueryPlanLineageAnalyzer {
             taskAttemptReport
                     .withInlets(inputs)
                     .withOutlets(outputs);
+            return taskAttemptReport.build();
         } catch (Throwable e) {
-            logger.error("lineage analysis failed", e);
+            logger.warn("lineage analysis failed", e);
         }
-        return taskAttemptReport.build();
+        return null;
     }
 
 }

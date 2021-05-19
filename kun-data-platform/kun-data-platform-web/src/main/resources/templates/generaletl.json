@@ -29,7 +29,7 @@
   ],
   "defaultValues": {
     "args": "-e dev -m TASK_CENTER -s GENERAL_ETL_STEP",
-    "jars": "${ dataplatform.lineage.analysis.jar }",
+    "jars": "",
     "files": "${ dataplatform.etl.jar }",
     "livyHost": "${ dataplatform.livy.host }",
     "sparkConf": "{\"kun.dataplatform.environment\": \"dev\"}",

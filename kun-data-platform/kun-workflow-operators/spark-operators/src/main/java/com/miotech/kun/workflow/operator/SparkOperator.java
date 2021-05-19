@@ -44,6 +44,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
         Long taskRunId = context.getTaskRunId();
 
         String configLineageOutputPath = SparkConfiguration.getString(context, CONF_LINEAGE_OUTPUT_PATH);
+        String configLineageJarPath = SparkConfiguration.getString(context, CONF_LINEAGE_JAR_PATH);
         String configS3AccessKey = SparkConfiguration.getString(context, CONF_S3_ACCESS_KEY);
         String configS3SecretKey = SparkConfiguration.getString(context, CONF_S3_SECRET_KEY);
 
@@ -59,9 +60,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
         if (!Strings.isNullOrEmpty(sessionName)) {
             job.setName(sessionName);
         }
-        if (!Strings.isNullOrEmpty(jars)) {
-            job.setJars(Arrays.asList(jars.split(",")));
-        }
+
         List<String> jobFiles = new ArrayList<>();
         if (!Strings.isNullOrEmpty(files)) {
             jobFiles = Arrays.stream(files.split(","))
@@ -73,9 +72,20 @@ public class SparkOperator extends LivyBaseSparkOperator {
             job.setConf(JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
         }
 
+        List<String> allJars = new ArrayList<>();
+        if (!Strings.isNullOrEmpty(jars)) {
+            allJars.addAll(Arrays.asList(jars.split(",")));
+        }
+        if(!Strings.isNullOrEmpty(configLineageJarPath)){
+            allJars.add(configLineageJarPath);
+            job.addConf("spark.sql.queryExecutionListeners","za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
+        }
+        job.setJars(allJars);
+
         // lineage config
-        job.addConf("spark.sql.queryExecutionListeners","za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
-        job.addConf("spark.hadoop.spline.hdfs_dispatcher.address", configLineageOutputPath);
+        if(!Strings.isNullOrEmpty(configLineageOutputPath)){
+            job.addConf("spark.hadoop.spline.hdfs_dispatcher.address", configLineageOutputPath);
+        }
         if(!Strings.isNullOrEmpty(configS3AccessKey)){
             job.addConf("spark.fs.s3a.access.key", configS3AccessKey);
         }
@@ -162,7 +172,8 @@ public class SparkOperator extends LivyBaseSparkOperator {
             waitForSeconds(15);
             //解析spark 任务上下游
             TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), taskRunId);
-            report(taskAttemptReport);
+            if(taskAttemptReport != null)
+                report(taskAttemptReport);
             return true;
         } else {
             return false;
@@ -200,6 +211,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
                 .define(CONF_LIVY_BATCH_CONF, ConfigDef.Type.STRING, "{}", true, "Extra spark configuration , in the format `{\"key\": \"value\"}`", CONF_LIVY_BATCH_CONF)
                 .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}", true, "Spark arguments and configuration variables, use like `--param1 ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
                 .define(CONF_LINEAGE_OUTPUT_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_OUTPUT_PATH_VALUE_DEFAULT, true, "file system address to store lineage analysis report, in the format `s3a://BUCKET/path` or `hdfs://host:port/path`", CONF_LINEAGE_OUTPUT_PATH)
+                .define(CONF_LINEAGE_JAR_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT, true, "the jar used for lineage analysis, in the format `s3a://BUCKET/xxx/xxx.jar` or `hdfs://host:port/xxx/xxx.jar`", CONF_LINEAGE_JAR_PATH)
                 .define(CONF_S3_ACCESS_KEY, ConfigDef.Type.STRING, CONF_S3_ACCESS_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_ACCESS_KEY)
                 .define(CONF_S3_SECRET_KEY, ConfigDef.Type.STRING, CONF_S3_SECRET_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_SECRET_KEY);
     }

@@ -40,7 +40,7 @@
     }
   ],
   "defaultValues": {
-    "jars": "${ dataplatform.lineage.analysis.jar }",
+    "jars": "",
     "files": "",
     "livyHost": "${ dataplatform.livy.host }",
     "sparkConf": "{}",
