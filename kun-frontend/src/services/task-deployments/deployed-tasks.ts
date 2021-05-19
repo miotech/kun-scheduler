@@ -88,6 +88,7 @@ export interface FetchDeployedTasksReqParams extends Partial<PaginationReqBody> 
   status?: RunStatusEnum;
   taskTemplateName?: string;
   workflowTaskIds?: string[];
+  scheduledTaskRunsOnly?: boolean;
 }
 
 export async function fetchDeployedTasks(
