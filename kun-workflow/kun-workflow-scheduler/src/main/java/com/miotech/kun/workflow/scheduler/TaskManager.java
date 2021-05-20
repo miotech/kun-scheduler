@@ -167,10 +167,15 @@ public class TaskManager {
     }
 
     private void updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
-        boolean usePostgres = props.getBoolean("postgres.enable", false);
+        boolean usePostgres = postgresEnable();
         List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId, usePostgres);
         logger.debug("fetch downStream taskRunIds = {},taskRunId = {}", downStreamTaskRunIds, taskRunId);
         taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus);
+    }
+
+    private boolean postgresEnable(){
+        String datasourceUrl = props.getString("datasource.jdbcUrl","");
+        return datasourceUrl.contains("postgres");
     }
 
 }
