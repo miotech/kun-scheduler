@@ -80,11 +80,9 @@ public class DatabaseOperator {
         Connection conn = connInTrans.get();
         try {
             if (conn == null) {
-                int result = queryRunner.update(statement, params);
-                return result;
+                return queryRunner.update(statement, params);
             } else {
-                int result = queryRunner.update(conn, statement, params);
-                return result;
+                return queryRunner.update(conn, statement, params);
             }
         } catch (Exception ex) {
             logger.error("Update failed. statement={}, params={}", statement, params, ex);

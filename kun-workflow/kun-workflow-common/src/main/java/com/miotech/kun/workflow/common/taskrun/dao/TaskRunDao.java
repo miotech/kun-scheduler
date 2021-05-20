@@ -520,7 +520,7 @@ public class TaskRunDao {
             taskAttemptParams.add(taskRunStatus.name());
             taskAttemptParams.addAll(taskRunIds);
             dbOperator.update(taskAttemptSql, taskAttemptParams.toArray());
-            DependencyStatus dependencyStatus = DependencyStatus.fromUpstreamStatus(taskRunStatus);
+            DependencyStatus dependencyStatus = fromUpstreamStatus(taskRunStatus);
             updateTaskRunDependencyByTaskRunIds(taskRunIds, dependencyStatus);
             return null;
         });
@@ -978,6 +978,16 @@ public class TaskRunDao {
                 .where("task_run_id = ?")
                 .getSQL();
         return dbOperator.update(dependencySQL, taskRunId) >= 0;
+    }
+
+    private DependencyStatus fromUpstreamStatus(TaskRunStatus taskRunStatus){
+        if(taskRunStatus.isSuccess()){
+            return DependencyStatus.SUCCESS;
+        }
+        if(taskRunStatus.isFailure()){
+            return DependencyStatus.FAILED;
+        }
+        return DependencyStatus.CREATED;
     }
 
     private List<Long> fetchTaskRunDependencies(Long taskRunId) {

@@ -15,8 +15,8 @@ public enum TaskRunStatus {
     SKIPPED,
     ABORTING,
     ABORTED,
-    ERROR,
-    UPSTREAM_FAILED;//系统错误
+    ERROR,//系统错误
+    UPSTREAM_FAILED;
 
     private static final Map<String, TaskRunStatus> mappings = new HashMap<>(16);
 
