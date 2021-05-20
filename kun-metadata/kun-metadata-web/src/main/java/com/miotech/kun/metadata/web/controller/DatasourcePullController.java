@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.web.controller;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.web.annotation.QueryParameter;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
 import com.miotech.kun.commons.web.annotation.RouteVariable;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
@@ -31,7 +32,7 @@ public class DatasourcePullController {
     }
 
     @RouteMapping(url = "/datasources/_pull/latest", method = "GET")
-    public Map<String, PullProcessVO> getDataSourcesPullProcesses(@RouteVariable List<Long> dataSourceIds) {
+    public Map<String, PullProcessVO> getDataSourcesPullProcesses(@QueryParameter List<Long> dataSourceIds) {
         logger.debug("Fetching pull progress for each datasource...");
         Map<Long, PullProcessVO> latestProcesses = processService.fetchLatestProcessByDataSourceIds(dataSourceIds);
         Map<String, PullProcessVO> result = new HashMap<>();
