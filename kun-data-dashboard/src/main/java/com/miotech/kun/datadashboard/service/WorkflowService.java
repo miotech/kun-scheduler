@@ -78,7 +78,7 @@ public class WorkflowService {
         TaskRunSearchRequest pendingRequest = TaskRunSearchRequest.newBuilder()
                 .withDateFrom(DateTimeUtils.now().minusDays(1))
                 .withIncludeStartedOnly(false)
-                .withStatus(ImmutableSet.of(TaskRunStatus.CREATED, TaskRunStatus.INITIALIZING, TaskRunStatus.QUEUED))
+                .withStatus(ImmutableSet.of(TaskRunStatus.CREATED, TaskRunStatus.INITIALIZING, TaskRunStatus.QUEUED, TaskRunStatus.UPSTREAM_FAILED))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
