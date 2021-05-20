@@ -4,6 +4,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -32,6 +34,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -101,7 +104,7 @@ public class LocalExecutor implements Executor {
         workerPool = new ConcurrentHashMap<>();
         attachSiftingAppender();
         logger.info("local executor start at :{}", DateTimeUtils.now());
-        Thread consumer = new Thread(new TaskAttemptConsumer(),"TaskAttemptConsumer");
+        Thread consumer = new Thread(new TaskAttemptConsumer(), "TaskAttemptConsumer");
         consumer.start();
         ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
         timer.scheduleAtFixedRate(new HeartBeatCheckTask(), 10, 1000, TimeUnit.MILLISECONDS);
@@ -152,10 +155,10 @@ public class LocalExecutor implements Executor {
             queueManage.release(attemptMsg.getQueueName(), attemptMsg.getTaskAttemptId());
             workerPool.remove(attemptMsg.getTaskAttemptId());
             logger.debug("remove taskAttemptId = {} from worker pool", attemptMsg.getTaskAttemptId());
+            if (taskRunStatus.isSuccess()) {
+                processReport(attemptMsg.getTaskRunId(), attemptMsg.getOperatorReport());
+            }
             notifyFinished(attemptMsg.getTaskAttemptId(), taskRunStatus, attemptMsg.getOperatorReport());
-        }
-        if (taskRunStatus.isSuccess()) {
-            processReport(attemptMsg.getTaskRunId(), attemptMsg.getOperatorReport());
         }
         miscService.changeTaskAttemptStatus(attemptMsg.getTaskAttemptId(),
                 taskRunStatus, attemptMsg.getStartAt(), attemptMsg.getEndAt());
@@ -178,11 +181,29 @@ public class LocalExecutor implements Executor {
     }
 
     private void notifyFinished(Long attemptId, TaskRunStatus status, OperatorReport report) {
+        List<Long> inDataSetIds = new ArrayList<>();
+        List<Long> outDataSetIds = new ArrayList<>();
+        for (DataStore dataStore : report.getOutlets()) {
+            Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(dataStore);
+            if (datasetOptional.isPresent()) {
+                outDataSetIds.add(datasetOptional.get().getGid());
+            }
+
+        }
+        for (DataStore dataStore : report.getInlets()) {
+            Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(dataStore);
+            if (datasetOptional.isPresent()) {
+                inDataSetIds.add(datasetOptional.get().getGid());
+            }
+
+        }
         TaskAttemptFinishedEvent event = new TaskAttemptFinishedEvent(
                 attemptId,
                 status,
                 report.getInlets(),
-                report.getOutlets()
+                report.getOutlets(),
+                inDataSetIds,
+                outDataSetIds
         );
         logger.info("Post taskAttemptFinishedEvent. attemptId={}, event={}", attemptId, event);
         eventBus.post(event);
@@ -366,7 +387,7 @@ public class LocalExecutor implements Executor {
             logger.info("recover taskAttempt,id = {} , queueName = {}", taskAttempt.getId(), taskAttempt.getQueueName());
             //避免由于同时运行多个docker导致RUNNING的taskRun超过限制引起状态监控混乱
             try {
-                queueManage.recover(taskAttempt.getQueueName(),taskAttempt.getId());
+                queueManage.recover(taskAttempt.getQueueName(), taskAttempt.getId());
             } catch (IllegalStateException e) {
                 logger.error("recover taskAttemptId = {} failed", e);
                 logger.info("recover taskAttemptId = {} to queue", taskAttempt.getId());
