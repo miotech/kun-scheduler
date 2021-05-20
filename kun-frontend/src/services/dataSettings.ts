@@ -1,13 +1,9 @@
-import {
-  DataSource,
-  DatasourceInfo,
-  UpdateDatasourceInfo,
-  DatabaseTypeList,
-} from '@/rematch/models/dataSettings';
+import { DataSource, DatasourceInfo, UpdateDatasourceInfo, DatabaseTypeList } from '@/rematch/models/dataSettings';
 import { Pagination, Sort } from '@/definitions/common-types';
 
 import { delet, get, post } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
+import { RunStatusEnum } from '@/definitions/StatEnums.type';
 
 export interface SearchDataBasesRespBody extends Pagination, Sort {
   datasources: DataSource[];
@@ -17,10 +13,7 @@ export async function fetchDatabaseTypesService() {
   return get<DatabaseTypeList>('/metadata/datasource/types');
 }
 
-export async function searchDataBasesService(
-  search: string,
-  pagination: Pagination,
-) {
+export async function searchDataBasesService(search: string, pagination: Pagination) {
   const { pageSize, pageNumber } = pagination;
 
   const params = {
@@ -59,6 +52,30 @@ export interface PullDatasetsFromDatabaseResp {
 export async function pullDatasetsFromDatabaseService(id: string) {
   return post<PullDatasetsFromDatabaseResp>('/metadata/datasource/:id/pull', {
     pathParams: { id },
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+export type DataSourcePullProcessVO = {
+  processId: string;
+  processType: 'DATASOURCE';
+  createdAt: string;
+  latestMCETaskRun: PullTaskRunInfo | null;
+  latestMSETaskRun: PullTaskRunInfo | null;
+};
+
+export type PullTaskRunInfo = {
+  id: string;
+  status: RunStatusEnum;
+  startAt: string;
+  endAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function fetchLatestPullProcessesOfDataSources(dataSourceIds: string[]) {
+  return get<Record<string, DataSourcePullProcessVO>>('/metadata/datasource/processes/latest', {
+    query: { dataSourceIds: dataSourceIds.join(',') },
     prefix: DEFAULT_API_PREFIX,
   });
 }
