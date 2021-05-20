@@ -19,10 +19,6 @@ public class PullProcessTaskRunVO {
     @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private Long id;
 
-    private Task task;
-
-    private Config config;
-
     private TaskRunStatus status;
 
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
@@ -41,31 +37,12 @@ public class PullProcessTaskRunVO {
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime updatedAt;
 
-    @JsonSerialize(contentUsing = ToStringSerializer.class)
-    private List<Long> dependentTaskRunIds;
-
     public Long getId() {
         return id;
     }
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Task getTask() {
-        return task;
-    }
-
-    public void setTask(Task task) {
-        this.task = task;
-    }
-
-    public Config getConfig() {
-        return config;
-    }
-
-    public void setConfig(Config config) {
-        this.config = config;
     }
 
     public TaskRunStatus getStatus() {
@@ -108,24 +85,14 @@ public class PullProcessTaskRunVO {
         this.updatedAt = updatedAt;
     }
 
-    public List<Long> getDependentTaskRunIds() {
-        return dependentTaskRunIds;
-    }
-
-    public void setDependentTaskRunIds(List<Long> dependentTaskRunIds) {
-        this.dependentTaskRunIds = dependentTaskRunIds;
-    }
-
     public static PullProcessTaskRunVO fromTaskRun(TaskRun taskRun) {
         PullProcessTaskRunVO vo = new PullProcessTaskRunVO();
         vo.setId(taskRun.getId());
-        vo.setConfig(taskRun.getConfig());
-        vo.setTask(taskRun.getTask());
         vo.setStartAt(taskRun.getStartAt());
         vo.setEndAt(taskRun.getEndAt());
-        vo.setDependentTaskRunIds(taskRun.getDependencyTaskRunIds());
         vo.setCreatedAt(taskRun.getCreatedAt());
         vo.setUpdatedAt(taskRun.getUpdatedAt());
+        vo.setStatus(taskRun.getStatus());
         return vo;
     }
 }
