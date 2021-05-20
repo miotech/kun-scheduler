@@ -31,7 +31,7 @@ public class DatasourcePullController {
         return pullProcessVO;
     }
 
-    @RouteMapping(url = "/datasources/_pull/latest}", method = "GET")
+    @RouteMapping(url = "/datasources/_pull/latest", method = "GET")
     public Map<String, PullProcessVO> getDataSourcesPullProcesses(@RouteVariable List<Long> dataSourceIds) {
         logger.debug("Fetching pull progress for each datasource...");
         Map<Long, PullProcessVO> latestProcesses = processService.fetchLatestProcessByDataSourceIds(dataSourceIds);
