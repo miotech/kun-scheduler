@@ -18,7 +18,7 @@ import java.util.Map;
 @Singleton
 public class DatasourcePullController {
 
-    private static Logger logger = LoggerFactory.getLogger(DatasetPullController.class);
+    private static final Logger logger = LoggerFactory.getLogger(DatasourcePullController.class);
 
     @Inject
     private ProcessService processService;
@@ -27,8 +27,7 @@ public class DatasourcePullController {
     public Object pull(@RouteVariable Long id) {
         logger.debug("DatasetPullController pull received id: {}", id);
         Preconditions.checkNotNull(id, "Invalid parameter `id`: found null object");
-        PullProcessVO pullProcessVO = processService.submitPull(id, DataBuilderDeployMode.DATASOURCE);
-        return pullProcessVO;
+        return processService.submitPull(id, DataBuilderDeployMode.DATASOURCE);
     }
 
     @RouteMapping(url = "/datasources/_pull/latest", method = "GET")
@@ -36,8 +35,8 @@ public class DatasourcePullController {
         logger.debug("Fetching pull progress for each datasource...");
         Map<Long, PullProcessVO> latestProcesses = processService.fetchLatestProcessByDataSourceIds(dataSourceIds);
         Map<String, PullProcessVO> result = new HashMap<>();
-        for (Map.Entry entry : latestProcesses.entrySet()) {
-            result.put(entry.getKey().toString(), (PullProcessVO) entry.getValue());
+        for (Map.Entry<Long, PullProcessVO> entry : latestProcesses.entrySet()) {
+            result.put(entry.getKey().toString(), entry.getValue());
         }
         return result;
     }
