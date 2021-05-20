@@ -77,6 +77,12 @@ public class DataSourceController {
         return RequestResult.success(vo);
     }
 
+    @GetMapping("/metadata/datasource/processes/latest")
+    public RequestResult<Map<String, PullProcessVO>> pullDataset(@RequestParam List<Long> dataSourceIds) {
+        Map<String, PullProcessVO> map = metadataService.fetchLatestPullProcess(dataSourceIds);
+        return RequestResult.success(map);
+    }
+
     @GetMapping("/metadata/datasource/types")
     public RequestResult<List<DataSourceType>> getDataSourceTypes() {
         return RequestResult.success(dataSourceService.getAllTypes());

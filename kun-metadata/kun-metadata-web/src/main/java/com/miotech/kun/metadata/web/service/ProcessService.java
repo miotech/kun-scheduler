@@ -19,6 +19,8 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,6 +71,24 @@ public class ProcessService {
             // always release the lock
             pullLock.unlock();
         }
+    }
+
+    public Map<Long, PullProcessVO> fetchLatestProcessByDataSourceIds(Collection<Long> dataSourceIds) {
+        Map<Long, PullDataSourceProcess> latestProcessesMap = pullProcessDao.findLatestPullDataSourceProcessesByDataSourceIds(dataSourceIds);
+        Map<Long, PullProcessVO> result = new HashMap<>();
+        for (Map.Entry<Long, PullDataSourceProcess> entry : latestProcessesMap.entrySet()) {
+            PullDataSourceProcess process = entry.getValue();
+            TaskRun latestTaskRun = workflowClient.getTaskRun(process.getMceTaskRunId());
+            PullProcessVO processVO = new PullProcessVO(
+                    process.getProcessId(),
+                    process.getProcessType(),
+                    process.getCreatedAt(),
+                    latestTaskRun,
+                    null
+            );
+            result.put(entry.getKey(), processVO);
+        }
+        return result;
     }
 
     private PullProcessVO submitPullDatasourceTaskIfLastOneFinished(Long datasourceId, DataBuilderDeployMode deployMode) {

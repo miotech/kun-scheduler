@@ -22,11 +22,11 @@ public class PullProcessVO {
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime createdAt;
 
-    private TaskRun latestMCETaskRun;
+    private PullProcessTaskRunVO latestMCETaskRun;
 
     // Currently should be null
     // TODO: Figure out how to get this task run instance for dataset pulling tasks
-    private TaskRun latestMSETaskRun;
+    private PullProcessTaskRunVO latestMSETaskRun;
 
     public PullProcessVO() {
     }
@@ -35,8 +35,8 @@ public class PullProcessVO {
         this.processId = processId;
         this.processType = processType;
         this.createdAt = createdAt;
-        this.latestMCETaskRun = latestMCETaskRun;
-        this.latestMSETaskRun = latestMSETaskRun;
+        this.latestMCETaskRun = latestMCETaskRun != null ? PullProcessTaskRunVO.fromTaskRun(latestMCETaskRun) : null;
+        this.latestMSETaskRun = latestMSETaskRun != null ? PullProcessTaskRunVO.fromTaskRun(latestMSETaskRun) : null;
     }
 
     public Long getProcessId() {
@@ -63,19 +63,19 @@ public class PullProcessVO {
         this.createdAt = createdAt;
     }
 
-    public TaskRun getLatestMCETaskRun() {
+    public PullProcessTaskRunVO getLatestMCETaskRun() {
         return latestMCETaskRun;
     }
 
-    public void setLatestMCETaskRun(TaskRun latestMCETaskRun) {
+    public void setLatestMCETaskRun(PullProcessTaskRunVO latestMCETaskRun) {
         this.latestMCETaskRun = latestMCETaskRun;
     }
 
-    public TaskRun getLatestMSETaskRun() {
+    public PullProcessTaskRunVO getLatestMSETaskRun() {
         return latestMSETaskRun;
     }
 
-    public void setLatestMSETaskRun(TaskRun latestMSETaskRun) {
+    public void setLatestMSETaskRun(PullProcessTaskRunVO latestMSETaskRun) {
         this.latestMSETaskRun = latestMSETaskRun;
     }
 }

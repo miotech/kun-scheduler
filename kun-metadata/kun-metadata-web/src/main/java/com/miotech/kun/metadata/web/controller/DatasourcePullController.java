@@ -11,6 +11,10 @@ import com.miotech.kun.metadata.web.service.ProcessService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Singleton
 public class DatasourcePullController {
 
@@ -25,5 +29,16 @@ public class DatasourcePullController {
         Preconditions.checkNotNull(id, "Invalid parameter `id`: found null object");
         PullProcessVO pullProcessVO = processService.submitPull(id, DataBuilderDeployMode.DATASOURCE);
         return pullProcessVO;
+    }
+
+    @RouteMapping(url = "/datasources/_pull/latest}", method = "GET")
+    public Map<String, PullProcessVO> getDataSourcesPullProcesses(@RouteVariable List<Long> dataSourceIds) {
+        logger.debug("Fetching pull progress for each datasource...");
+        Map<Long, PullProcessVO> latestProcesses = processService.fetchLatestProcessByDataSourceIds(dataSourceIds);
+        Map<String, PullProcessVO> result = new HashMap<>();
+        for (Map.Entry entry : latestProcesses.entrySet()) {
+            result.put(entry.getKey().toString(), (PullProcessVO) entry.getValue());
+        }
+        return result;
     }
 }

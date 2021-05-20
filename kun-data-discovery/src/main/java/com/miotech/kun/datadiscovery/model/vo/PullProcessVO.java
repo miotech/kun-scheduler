@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.workflow.client.CustomDateTimeDeserializer;
 import com.miotech.kun.workflow.client.CustomDateTimeSerializer;
-import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
 import lombok.Data;
 
@@ -23,7 +22,7 @@ public class PullProcessVO {
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     OffsetDateTime createdAt;
 
-    TaskRun latestMCETaskRun;
+    PullProcessTaskRunVO latestMCETaskRun;
 
-    TaskRun latestMSETaskRun;
+    PullProcessTaskRunVO latestMSETaskRun;
 }
