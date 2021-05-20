@@ -3,6 +3,8 @@ package com.miotech.kun.datadiscovery.model.vo;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.workflow.client.CustomDateTimeDeserializer;
+import com.miotech.kun.workflow.client.CustomDateTimeSerializer;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.execution.Config;
@@ -23,12 +25,20 @@ public class PullProcessTaskRunVO {
 
     private TaskRunStatus status;
 
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime startAt;
 
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime endAt;
 
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime createdAt;
 
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime updatedAt;
 
     @JsonSerialize(contentUsing = ToStringSerializer.class)
