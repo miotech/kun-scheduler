@@ -7,10 +7,7 @@ export type RunStatusEnum =
   | 'RETRY'
   | 'RUNNING'
   | 'SKIPPED'
-  | 'SUCCESS';
-
-export type DeployStatusEnum =
-  | 'CREATED'
-  | 'FAILED'
   | 'SUCCESS'
-  | 'WORKING';
+  | 'UPSTREAM_FAILED';
+
+export type DeployStatusEnum = 'CREATED' | 'FAILED' | 'SUCCESS' | 'WORKING';
