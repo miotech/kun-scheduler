@@ -15,6 +15,7 @@ import com.miotech.kun.metadata.core.model.event.MetadataStatisticsEvent;
 import com.miotech.kun.metadata.databuilder.client.GlueClient;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.databuilder.constant.DatasetLifecycleStatus;
+import com.miotech.kun.metadata.databuilder.extract.filter.HiveTableSchemaExtractFilter;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractorFactory;
 import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
@@ -136,6 +137,12 @@ public class MCEBuilder {
             if (table == null) {
                 return;
             }
+
+            if (!HiveTableSchemaExtractFilter.filter(table.getTableType())) {
+                logger.warn("Extract task terminated, table type: {} not concerned", table.getTableType());
+                return;
+            }
+
             dataStore = new HiveTableStore(table.getStorageDescriptor().getLocation(), mce.getDatabaseName(), mce.getTableName());
         }
 
