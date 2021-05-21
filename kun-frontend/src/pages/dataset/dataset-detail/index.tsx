@@ -38,13 +38,13 @@ interface Props extends RouteComponentProps<MatchParams> {}
 const { Option } = Select;
 
 function isPullingStatus(pullProcess: DatasetPullProcessVO | null) {
-  if (pullProcess == null || pullProcess?.latestMSETaskRun?.status == null) {
+  if (pullProcess == null || pullProcess?.latestMCETaskRun?.status == null) {
     return false;
   }
   // else
-  if (pullProcess.latestMSETaskRun.status === 'SUCCESS' ||
-    pullProcess.latestMSETaskRun.status === 'FAILED' ||
-    pullProcess.latestMSETaskRun.status === 'ABORTED') {
+  if (pullProcess.latestMCETaskRun.status === 'SUCCESS' ||
+    pullProcess.latestMCETaskRun.status === 'FAILED' ||
+    pullProcess.latestMCETaskRun.status === 'ABORTED') {
     return false;
   }
   // else
@@ -76,7 +76,7 @@ export default function DatasetDetail({ match }: Props) {
   const [fetchColumnsLoading, setFetchColumnsLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  const [forceReFetchInfoFlag, /* setForceReFetchInfoFlag */] = useState(1);
+  const [forceReFetchInfoFlag, setForceReFetchInfoFlag ] = useState(1);
   const [forceUpdateAllTagListFlag, setForceUpdateAllTagListFlag] = useState(1);
   const [
     forceReFetchDataQualityFlag,
@@ -125,8 +125,15 @@ export default function DatasetDetail({ match }: Props) {
     forceReFetchInfoFlag,
   ]);
 
-  useInterval(function pollPullingProcess() {
-    dispatch.datasetDetail.fetchDatasetLatestPullProcess(currentId);
+  /* If this dataset is still pulling, poll status of the latest process  */
+  useInterval(async function pollPullingProcess() {
+    const process = await dispatch.datasetDetail.fetchDatasetLatestPullProcess(currentId);
+    if (process?.latestMCETaskRun?.status === 'SUCCESS') {
+      message.success(t('dataDetail.msg.pullSuccess'));
+      setForceReFetchInfoFlag(v => v + 1);
+    } else if (process?.latestMCETaskRun?.status === 'FAILED' || process?.latestMCETaskRun?.status === 'ABORTED') {
+      message.error(t('dataDetail.msg.pullFailed'));
+    }
   }, isPullingStatus(latestPullProcess) ? 3000 : null, { immediate: false });
 
   useEffect(() => {
@@ -407,7 +414,9 @@ export default function DatasetDetail({ match }: Props) {
                 loading={isPullingStatus(latestPullProcess)}
               >
                 {isPullingStatus(latestPullProcess) ?
-                  t('dataDetail.baseItem.title.pulling') :
+                  t('dataDetail.baseItem.title.pulling', {
+                    status: latestPullProcess?.latestMCETaskRun?.status || 'UNKNOWN'
+                  }) :
                   t('dataDetail.button.pull')}
               </Button>
             </div>
