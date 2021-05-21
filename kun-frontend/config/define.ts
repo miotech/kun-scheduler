@@ -4,7 +4,7 @@ import yaml from 'js-yaml';
 
 const root = (fn: string) => path.resolve(__dirname, '../', fn);
 
-const { USE_MOCK_PROFILE, NODE_ENV, NO_MOCK } = process.env;
+const { USE_MOCK_PROFILE, NODE_ENV, NO_MOCK, RELEASE_VERSION = '' } = process.env;
 
 let mockServiceCodeConfig: any = {};
 const isProduction = (NODE_ENV || '').toLowerCase() === 'production';
@@ -40,4 +40,5 @@ export const define = {
   USE_MOCK_CONFIG: JSON.stringify(mockServiceCodeConfig),
   DISABLE_MOCK: !!NO_MOCK,
   PRODUCTION_MODE: isProduction,
+  RELEASE_VERSION: RELEASE_VERSION,
 };
