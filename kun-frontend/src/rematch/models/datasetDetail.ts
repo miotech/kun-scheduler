@@ -389,10 +389,11 @@ export const datasetDetail = {
       },
       async pullDataset(id: string) {
         try {
-          const resp = await pullDatasetService(id);
-          if (resp) {
-            return resp;
-          }
+          const process = await pullDatasetService(id);
+          dispatch.datasetDetail.updateState({
+            key: 'datasetLatestPullProcess',
+            value: process || null,
+          });
         } catch (e) {
           // do nothing
         }
@@ -471,8 +472,9 @@ export const datasetDetail = {
             key: 'datasetLatestPullProcess',
             value: process || null,
           });
+          return process;
         } catch (e) {
-          // do nothing
+          return null;
         } finally {
           dispatch.datasetDetail.updateState({
             key: 'datasetLatestPullProcessIsLoading',
