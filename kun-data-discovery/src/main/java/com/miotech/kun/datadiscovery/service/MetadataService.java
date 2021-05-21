@@ -63,7 +63,7 @@ public class MetadataService {
     }
 
     public Optional<PullProcessVO> fetchLatestPullProcessForDataset(Long datasetId) {
-        String fullUrl = url + "/dataset/{gid}/_pull/latest";
+        String fullUrl = url + "/datasets/{datasetId}/_pull/latest";
         log.info("Request url : " + fullUrl);
         return Optional.ofNullable(restTemplate.getForObject(fullUrl, PullProcessVO.class, datasetId));
     }
