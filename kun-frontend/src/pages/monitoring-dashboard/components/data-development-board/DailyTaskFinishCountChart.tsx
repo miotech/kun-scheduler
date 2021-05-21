@@ -6,7 +6,7 @@ import { Card } from 'antd';
 import { useSize } from 'ahooks';
 import useI18n from '@/hooks/useI18n';
 import { KunSpin } from '@/components/KunSpin';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 
 interface OwnProps {
   data: DailyTaskFinishCount[];

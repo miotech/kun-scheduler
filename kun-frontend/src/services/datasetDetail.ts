@@ -2,6 +2,7 @@ import { DatasetDetail, Column } from '@/rematch/models/datasetDetail';
 import { Pagination } from '@/definitions/common-types';
 import { get, post } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
+import { RunStatusEnum } from '@/definitions/StatEnums.type';
 
 export interface FetchDatasetDetailRespBody extends DatasetDetail {}
 
@@ -41,8 +42,36 @@ export interface PullDatasetRespBody {
   duration: number;
 }
 
+export type DatasetPullProcessVO = {
+  processId: string;
+  processType: 'DATASET';
+  createdAt: string;
+  latestMCETaskRun: PullTaskRunInfo | null;
+  latestMSETaskRun: PullTaskRunInfo | null;
+};
+
+export type PullTaskRunInfo = {
+  id: string;
+  status: RunStatusEnum;
+  startAt: string;
+  endAt: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+
 export async function pullDatasetService(datasetId: string) {
-  return post<PullDatasetRespBody>('/metadata/dataset/:datasetId/pull', {
+  return post<DatasetPullProcessVO>('/metadata/dataset/:datasetId/pull', {
+    pathParams: { datasetId },
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
+/**
+ * Fetch information of latest pull process for target dataset
+ */
+export async function fetchLatestDatasetPullProcess(datasetId: string) {
+  return get<DatasetPullProcessVO>('/metadata/dataset/:datasetId/pull/latest', {
     pathParams: { datasetId },
     prefix: DEFAULT_API_PREFIX,
   });

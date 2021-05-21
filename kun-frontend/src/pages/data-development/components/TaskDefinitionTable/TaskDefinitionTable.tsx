@@ -5,7 +5,7 @@ import { Link } from 'umi';
 import { searchTaskDefinition } from '@/services/data-development/task-definitions';
 import useI18n from '@/hooks/useI18n';
 import { UsernameText } from '@/components/UsernameText';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import SafeUrlAssembler from 'safe-url-assembler';
 import LogUtils from '@/utils/logUtils';
 import { generateAsyncAntdTableRowSelectionProps } from '@/utils/antdTableRowSelectionPropsFactory';

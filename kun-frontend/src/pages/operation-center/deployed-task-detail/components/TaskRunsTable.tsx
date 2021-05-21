@@ -12,7 +12,7 @@ import Icon, { StepForwardOutlined } from '@ant-design/icons';
 import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
 
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import { TaskAttempt } from '@/definitions/TaskAttempt.type';
 import styles from './TaskRunsTable.less';
 

@@ -2,7 +2,7 @@ import { Link } from 'umi';
 import React, { memo, useEffect, useMemo, useState } from 'react';
 import useI18n from '@/hooks/useI18n';
 import { CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 
 import { Table } from 'antd';
 import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
