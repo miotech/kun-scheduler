@@ -5,7 +5,7 @@ import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { Badge, Popover, Tooltip } from 'antd';
 import SafeUrlAssembler from 'safe-url-assembler';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import useI18n from '@/hooks/useI18n';
 import moment from 'moment-timezone';
 

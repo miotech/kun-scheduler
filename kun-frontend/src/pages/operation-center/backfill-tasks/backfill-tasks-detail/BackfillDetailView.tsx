@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { useRouteMatch, Link } from 'umi';
 import { Badge, Button, Card, Descriptions, Popconfirm, Skeleton, Space } from 'antd';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import { useUnmount } from 'ahooks';
 
 import useRedux from '@/hooks/useRedux';

@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import SafeUrlAssembler from 'safe-url-assembler';
 
 import { Button, Drawer, Row, Descriptions } from 'antd';

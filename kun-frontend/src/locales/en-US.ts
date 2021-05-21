@@ -238,6 +238,7 @@ export default {
   "dataSettings.databaseItem.pulling": "Pulling in Progress",
   "dataSettings.databaseItem.pullingIntoProgress": "Added to the pulling queue.",
   "dataSettings.databaseItem.confirmDelete": "Are you sure you want to delete the database? (The operation cannot be undone)",
+  "dataSettings.databaseItem.pullProcessCreatedTimeAndStatus": "Last pulling created on {time}, status is",
   "dataSettings.field.host": "Host",
   "dataSettings.field.port": "Port",
   "dataSettings.field.username": "Username",

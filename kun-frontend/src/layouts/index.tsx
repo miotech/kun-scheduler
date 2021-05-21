@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useLayoutEffect } from 'react';
 import { IRouteComponentProps, IRoute, Route } from 'umi';
 import { Spin } from 'antd';
 import { Provider } from 'react-redux';
@@ -21,17 +21,14 @@ function initializeKunSpinIndicator() {
   }
 }
 
-export default function Layout({
-  children,
-  location,
-  route,
-}: IRouteComponentProps) {
+export default function Layout({ children, location, route }: IRouteComponentProps) {
   const t = useI18n();
 
   initializeKunSpinIndicator();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     window.t = t;
+    document.documentElement.setAttribute('lang', t('common.lang'));
   }, [t]);
 
   if (location.pathname === '/login') {

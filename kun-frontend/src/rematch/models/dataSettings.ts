@@ -5,6 +5,8 @@ import {
   pullDatasetsFromDatabaseService,
   deleteDatabaseService,
   fetchDatabaseTypesService,
+  DataSourcePullProcessVO,
+  fetchLatestPullProcessesOfDataSources,
 } from '@/services/dataSettings';
 import { Pagination } from '@/definitions/common-types';
 import { DbType } from '@/definitions/Database.type';
@@ -76,6 +78,8 @@ export interface DataSettingsState {
   currentDatabase: DataSource | null;
   databaseTypeFieldMapList: DatabaseTypeList;
   fetchDatabaseTypeLoading: boolean;
+  pullProcesses: Record<string, DataSourcePullProcessVO>;
+  pullProcessesIsLoading: boolean;
 }
 
 export const dataSettings = {
@@ -91,12 +95,11 @@ export const dataSettings = {
     currentDatabase: null,
     fetchDatabaseTypeLoading: false,
     databaseTypeFieldMapList: [],
+    pullProcesses: {},
+    pullProcessesIsLoading: false,
   } as DataSettingsState,
   reducers: {
-    updateFilter: (
-      state: DataSettingsState,
-      payload: { key: keyof DataSettingsState; value: any },
-    ) => ({
+    updateFilter: (state: DataSettingsState, payload: { key: keyof DataSettingsState; value: any }) => ({
       ...state,
       [payload.key]: payload.value,
       pagination: {
@@ -104,20 +107,26 @@ export const dataSettings = {
         pageNumber: 1,
       },
     }),
-    updateState: (
-      state: DataSettingsState,
-      payload: { key: keyof DataSettingsState; value: any },
-    ) => ({
+    updateState: (state: DataSettingsState, payload: { key: keyof DataSettingsState; value: any }) => ({
       ...state,
       [payload.key]: payload.value,
     }),
-    batchUpdateState: (
-      state: DataSettingsState,
-      payload: Partial<DataSettingsState>,
-    ) => ({
+    batchUpdateState: (state: DataSettingsState, payload: Partial<DataSettingsState>) => ({
       ...state,
       ...payload,
     }),
+    setPullProcesses: (state: DataSettingsState, payload: Record<string, DataSourcePullProcessVO>) => {
+      return {
+        ...state,
+        pullProcesses: payload,
+      };
+    },
+    setPullProcessesIsLoading: (state: DataSettingsState, payload: boolean) => {
+      return {
+        ...state,
+        pullProcessesIsLoading: payload,
+      };
+    },
   },
   effects: (dispatch: RootDispatch) => {
     let searchDataBasesFlag = 0;
@@ -169,6 +178,7 @@ export const dataSettings = {
                   totalCount,
                 },
               });
+              dispatch.dataSettings.fetchLatestPullProcesses((datasources || []).map(ds => ds.id));
             }
           }
         } catch (e) {
@@ -222,6 +232,20 @@ export const dataSettings = {
           // do nothing
         }
         return null;
+      },
+
+      async fetchLatestPullProcesses(dataSourceIds: string[]) {
+        dispatch.dataSettings.setPullProcessesIsLoading(true);
+        try {
+          const response = await fetchLatestPullProcessesOfDataSources(dataSourceIds);
+          if (response) {
+            dispatch.dataSettings.setPullProcesses(response);
+          }
+        } catch (e) {
+          // Do nothing
+        } finally {
+          dispatch.dataSettings.setPullProcessesIsLoading(false);
+        }
       },
     };
   },
