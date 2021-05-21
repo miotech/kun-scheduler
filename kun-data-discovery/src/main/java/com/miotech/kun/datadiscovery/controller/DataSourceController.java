@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author: Melo
@@ -80,7 +81,7 @@ public class DataSourceController {
 
     @GetMapping("/metadata/datasource/processes/latest")
     public RequestResult<Map<String, PullProcessVO>> pullDataset(@RequestParam List<Long> dataSourceIds) {
-        Map<String, PullProcessVO> map = metadataService.fetchLatestPullProcess(dataSourceIds);
+        Map<String, PullProcessVO> map = metadataService.fetchLatestPullProcessByDataSourceIds(dataSourceIds);
         return RequestResult.success(map);
     }
 
@@ -121,6 +122,12 @@ public class DataSourceController {
     public RequestResult<PullProcessVO> pullDataset(@PathVariable Long id) {
         PullProcessVO vo = metadataService.pullDataset(id);
         return RequestResult.success(vo);
+    }
+
+    @GetMapping("/metadata/dataset/{id}/pull/latest")
+    public RequestResult<PullProcessVO> getDatasetLatestPullProcess(@PathVariable Long id) {
+        Optional<PullProcessVO> voOptional = metadataService.fetchLatestPullProcessForDataset(id);
+        return RequestResult.success(voOptional.orElse(null));
     }
 
     @GetMapping("/metadata/dataset/{id}/columns")

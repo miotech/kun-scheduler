@@ -91,6 +91,25 @@ public class ProcessService {
         return result;
     }
 
+    public Optional<PullProcessVO> fetchLatestProcessByDatasetId(Long datasetId) {
+        Optional<PullDatasetProcess> pullDatasetProcessOptional = pullProcessDao.findLatestPullDatasetProcessByDataSetId(datasetId);
+        if (!pullDatasetProcessOptional.isPresent()) {
+            return Optional.empty();
+        }
+        // else
+        PullDatasetProcess process = pullDatasetProcessOptional.get();
+        TaskRun latestTaskRun = workflowClient.getTaskRun(process.getMceTaskRunId());
+        PullProcessVO vo = new PullProcessVO(
+                process.getProcessId(),
+                process.getProcessType(),
+                process.getCreatedAt(),
+                latestTaskRun,
+                // TODO: figure out how to obtain MSE task runs
+                null
+        );
+        return Optional.of(vo);
+    }
+
     private PullProcessVO submitPullDatasourceTaskIfLastOneFinished(Long datasourceId, DataBuilderDeployMode deployMode) {
         Optional<PullDataSourceProcess> latestProcess =
                 pullProcessDao.findLatestPullDataSourceProcessByDataSourceId(datasourceId);

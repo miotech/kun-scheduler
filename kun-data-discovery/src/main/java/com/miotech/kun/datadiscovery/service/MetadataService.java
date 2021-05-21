@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -45,7 +46,7 @@ public class MetadataService {
                 .getBody();
     }
 
-    public Map<String, PullProcessVO> fetchLatestPullProcess(List<Long> datasourceIds) {
+    public Map<String, PullProcessVO> fetchLatestPullProcessByDataSourceIds(List<Long> datasourceIds) {
         String fullUrl = url + String.format("/datasources/_pull/latest?dataSourceIds=%s",
                 StringUtils.join(datasourceIds.stream().map(Object::toString).collect(Collectors.toList()), ","));
         log.info("Request url : " + fullUrl);
@@ -59,5 +60,11 @@ public class MetadataService {
             throw ExceptionUtils.wrapIfChecked(e);
         }
         return result;
+    }
+
+    public Optional<PullProcessVO> fetchLatestPullProcessForDataset(Long datasetId) {
+        String fullUrl = url + "/dataset/{gid}/_pull/latest";
+        log.info("Request url : " + fullUrl);
+        return Optional.ofNullable(restTemplate.getForObject(fullUrl, PullProcessVO.class, datasetId));
     }
 }
