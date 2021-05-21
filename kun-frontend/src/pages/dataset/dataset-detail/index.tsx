@@ -19,7 +19,8 @@ import { Watermark } from '@/definitions/Dataset.type';
 import { Column } from '@/rematch/models/datasetDetail';
 import { LineageDirection } from '@/services/lineage';
 
-import { StatusText } from '@/components/StatusText';
+import { DatasetPullProcessVO } from '@/services/datasetDetail';
+import { useInterval } from 'ahooks';
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnDescInput from './components/ColumnDescInput/ColumnDescInput';
 import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
@@ -35,6 +36,20 @@ interface MatchParams {
 interface Props extends RouteComponentProps<MatchParams> {}
 
 const { Option } = Select;
+
+function isPullingStatus(pullProcess: DatasetPullProcessVO | null) {
+  if (pullProcess == null || pullProcess?.latestMSETaskRun?.status == null) {
+    return false;
+  }
+  // else
+  if (pullProcess.latestMSETaskRun.status === 'SUCCESS' ||
+    pullProcess.latestMSETaskRun.status === 'FAILED' ||
+    pullProcess.latestMSETaskRun.status === 'ABORTED') {
+    return false;
+  }
+  // else
+  return true;
+}
 
 export default function DatasetDetail({ match }: Props) {
   const [query] = useQueryParams({
@@ -61,7 +76,7 @@ export default function DatasetDetail({ match }: Props) {
   const [fetchColumnsLoading, setFetchColumnsLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  const [forceReFetchInfoFlag, setForceReFetchInfoFlag] = useState(1);
+  const [forceReFetchInfoFlag, /* setForceReFetchInfoFlag */] = useState(1);
   const [forceUpdateAllTagListFlag, setForceUpdateAllTagListFlag] = useState(1);
   const [
     forceReFetchDataQualityFlag,
@@ -110,6 +125,10 @@ export default function DatasetDetail({ match }: Props) {
     forceReFetchInfoFlag,
   ]);
 
+  useInterval(function pollPullingProcess() {
+    dispatch.datasetDetail.fetchDatasetLatestPullProcess(currentId);
+  }, isPullingStatus(latestPullProcess) ? 3000 : null, { immediate: false });
+
   useEffect(() => {
     dispatch.dataDiscovery.fetchAllOwnerList();
   }, [dispatch.dataDiscovery]);
@@ -143,14 +162,8 @@ export default function DatasetDetail({ match }: Props) {
   ]);
 
   const handleClickPull = useCallback(() => {
-    const diss = message.loading(t('dataDetail.button.pullLoading'), 0);
-    dispatch.datasetDetail.pullDataset(currentId).then(resp => {
-      diss();
-      if (resp) {
-        setForceReFetchInfoFlag(v => v + 1);
-      }
-    });
-  }, [currentId, dispatch.datasetDetail, t]);
+    dispatch.datasetDetail.pullDataset(currentId);
+  }, [currentId, dispatch.datasetDetail]);
 
   const handleChangeDescription = useCallback(
     value => {
@@ -388,18 +401,14 @@ export default function DatasetDetail({ match }: Props) {
             <div className={styles.headingButtonGroup}>
               <Button
                 size="large"
-                onClick={() => {
-                  setForceReFetchInfoFlag(v => v + 1);
-                }}
-              >
-                {t('common.refresh')}
-              </Button>
-              <Button
-                size="large"
                 type="primary"
                 onClick={handleClickPull}
+                disabled={latestPullProcessIsLoading || isPullingStatus(latestPullProcess)}
+                loading={isPullingStatus(latestPullProcess)}
               >
-                {t('dataDetail.button.pull')}
+                {isPullingStatus(latestPullProcess) ?
+                  t('dataDetail.baseItem.title.pulling') :
+                  t('dataDetail.button.pull')}
               </Button>
             </div>
           </div>
@@ -456,22 +465,6 @@ export default function DatasetDetail({ match }: Props) {
                       <span className={styles.watermark}>
                         {watermarkFormatter(selector.highWatermark?.time)}
                       </span>
-                    )}
-                  </div>
-                </div>
-                {/* Status of latest pull process for current dataset */}
-                <div className={styles.infoBlock}>
-                  <div
-                    className={styles.baseContent}
-                    style={{ marginBottom: 8 }}
-                  >
-                    {t('dataDetail.baseItem.title.latestPullStatus')}
-                  </div>
-                  <div className={styles.importantContent}>
-                    {/* eslint-disable-next-line no-nested-ternary */}
-                    {latestPullProcessIsLoading ? '...' : (
-                      // TODO: status text should also track MSE task runs
-                      (latestPullProcess != null) ? <StatusText status={latestPullProcess.latestMCETaskRun!.status} /> : ''
                     )}
                   </div>
                 </div>

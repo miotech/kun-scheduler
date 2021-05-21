@@ -158,6 +158,7 @@ export default {
   "dataDetail.baseItem.title.lifecycle": "Lifecycle",
   "dataDetail.baseItem.title.rowCount": "Row Count",
   "dataDetail.baseItem.title.lastUpdate": "Last Updated Time",
+  "dataDetail.baseItem.title.pulling": "Pulling...",
   "dataDetail.baseItem.title.latestPullStatus": "Latest Pull Status",
   "dataDetail.baseItem.title.datasource": "Datasource",
   "dataDetail.baseItem.title.clolumns": "Columns",

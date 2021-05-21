@@ -158,6 +158,7 @@ export default {
   "dataDetail.baseItem.title.lifecycle": "生命周期",
   "dataDetail.baseItem.title.rowCount": "行数",
   "dataDetail.baseItem.title.lastUpdate": "上次更新时间",
+  "dataDetail.baseItem.title.pulling": "正在拉取...",
   "dataDetail.baseItem.title.latestPullStatus": "最新拉取状态",
   "dataDetail.baseItem.title.datasource": "数据源",
   "dataDetail.baseItem.title.clolumns": "列信息",
