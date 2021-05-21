@@ -3,8 +3,7 @@ import { Select } from 'antd';
 import { SelectProps } from 'antd/es/select';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 
-export interface StatusFilterSelectProps extends SelectProps<RunStatusEnum> {
-}
+export interface StatusFilterSelectProps extends SelectProps<RunStatusEnum> {}
 
 const runStatusList: RunStatusEnum[] = [
   'ABORTED',
@@ -16,9 +15,10 @@ const runStatusList: RunStatusEnum[] = [
   'RUNNING',
   'SKIPPED',
   'SUCCESS',
+  'UPSTREAM_FAILED',
 ];
 
-export const StatusFilterSelect: FunctionComponent<StatusFilterSelectProps> = (props) => {
+export const StatusFilterSelect: FunctionComponent<StatusFilterSelectProps> = props => {
   const { children, ...restProps } = props;
 
   return (
@@ -31,4 +31,3 @@ export const StatusFilterSelect: FunctionComponent<StatusFilterSelectProps> = (p
     </Select>
   );
 };
-

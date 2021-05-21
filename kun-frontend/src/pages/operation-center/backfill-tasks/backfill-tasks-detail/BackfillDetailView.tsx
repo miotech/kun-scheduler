@@ -44,7 +44,7 @@ function renderByTaskRunListStatus(status: RunStatusEnum[]) {
   if (status.every(s => s === 'SUCCESS' || s === 'SKIPPED')) {
     return <Badge status="success" text="SUCCESS" />;
   }
-  if (status.some(s => s === 'CREATED' || s === 'QUEUED')) {
+  if (status.some(s => s === 'CREATED' || s === 'QUEUED' || s === 'UPSTREAM_FAILED')) {
     return <Badge status="warning" text="PENDING" />;
   }
   // else

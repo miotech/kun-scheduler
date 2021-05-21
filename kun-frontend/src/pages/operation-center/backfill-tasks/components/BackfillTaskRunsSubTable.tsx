@@ -30,6 +30,7 @@ function renderStatus(status: RunStatusEnum) {
       return <Badge status="processing" text={status} />;
     case 'CREATED':
     case 'QUEUED':
+    case 'UPSTREAM_FAILED':
       return <Badge status="warning" text={status} />;
     case 'ABORTED':
     case 'ABORTING':
