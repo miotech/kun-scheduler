@@ -7,7 +7,7 @@ import { localPoint } from '@visx/event';
 import { Line, LinePath } from '@visx/shape';
 import { useTooltip, useTooltipInPortal } from '@visx/tooltip';
 import LogUtils from '@/utils/logUtils';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 
 import { bisectCenter } from './helpers/bisect';
 

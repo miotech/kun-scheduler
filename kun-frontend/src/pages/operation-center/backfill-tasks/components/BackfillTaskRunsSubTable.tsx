@@ -5,14 +5,11 @@ import { ColumnsType } from 'antd/es/table';
 import useI18n from '@/hooks/useI18n';
 import { Link } from 'umi';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 
-import Duration from 'dayjs/plugin/duration';
 import Icon, { FileSearchOutlined } from '@ant-design/icons';
 import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
-
-dayjs.extend(Duration);
 
 interface OwnProps {
   data: TaskRun[];

@@ -2,7 +2,7 @@ import React, { memo, useMemo } from 'react';
 import { ColumnProps } from 'antd/es/table';
 import { FailedTestCase } from '@/services/monitoring-dashboard';
 import { Card, Table, Tooltip } from 'antd';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import useI18n from '@/hooks/useI18n';
 import { TableOnChangeCallback } from '@/definitions/common-types';
 import { Link } from 'umi';

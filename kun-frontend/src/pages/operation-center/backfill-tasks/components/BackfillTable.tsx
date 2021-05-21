@@ -1,5 +1,5 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 import { Link } from 'umi';

@@ -1,6 +1,6 @@
 import React, { memo, useEffect, useMemo, useState } from 'react';
 import { Table, Card, Checkbox, Space } from 'antd';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import isNil from 'lodash/isNil';
 import useI18n from '@/hooks/useI18n';
 import SafeUrlAssembler from 'safe-url-assembler';
