@@ -8,6 +8,7 @@ import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
+import com.miotech.kun.metadata.databuilder.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 import com.miotech.kun.metadata.databuilder.model.PostgresDataSource;
 
@@ -38,8 +39,8 @@ public class PostgreSQLSchemaExtractor extends PostgreSQLExistenceExtractor impl
         ResultSet resultSet = null;
 
         try {
-            connection = JDBCClient.getConnection(postgresDataSource.getUrl(), postgresDataSource.getUsername(),
-                    postgresDataSource.getPassword(), DatabaseType.POSTGRES);
+            connection = JDBCClient.getConnection(UseDatabaseUtil.useDatabase(postgresDataSource.getUrl(), "postgres"),
+                    postgresDataSource.getUsername(), postgresDataSource.getPassword(), DatabaseType.POSTGRES);
             String showDatabases = "SELECT datname FROM pg_database WHERE datistemplate = FALSE";
             statement = connection.prepareStatement(showDatabases);
             resultSet = statement.executeQuery();
