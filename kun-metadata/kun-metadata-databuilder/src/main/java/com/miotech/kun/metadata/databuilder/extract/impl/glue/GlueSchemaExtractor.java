@@ -4,6 +4,7 @@ import com.amazonaws.services.glue.model.Table;
 import com.miotech.kun.metadata.core.model.Dataset;
 import com.miotech.kun.metadata.core.model.DatasetField;
 import com.miotech.kun.metadata.databuilder.client.GlueClient;
+import com.miotech.kun.metadata.databuilder.extract.filter.HiveTableSchemaExtractFilter;
 import com.miotech.kun.metadata.databuilder.extract.iterator.GlueTableIterator;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
@@ -32,7 +33,9 @@ public class GlueSchemaExtractor extends GlueExistenceExtractor implements Datas
         AWSDataSource awsDataSource = (AWSDataSource) dataSource;
         GlueTableIterator glueTableIterator = new GlueTableIterator(awsDataSource.getGlueAccessKey(),
                 awsDataSource.getGlueSecretKey(), awsDataSource.getGlueRegion());
-        return Iterators.concat(Streams.stream(glueTableIterator).map(table -> new GlueTableSchemaExtractor(awsDataSource, table).extract()).iterator());
+        return Iterators.concat(Streams.stream(glueTableIterator)
+                .filter(table -> HiveTableSchemaExtractFilter.filter(table.getTableType()))
+                .map(table -> new GlueTableSchemaExtractor(awsDataSource, table).extract()).iterator());
     }
 
 }
