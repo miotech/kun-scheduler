@@ -74,6 +74,9 @@ export type PullTaskRunInfo = {
 };
 
 export async function fetchLatestPullProcessesOfDataSources(dataSourceIds: string[]) {
+  if (!dataSourceIds?.length) {
+    return {};
+  }
   return get<Record<string, DataSourcePullProcessVO>>('/metadata/datasource/processes/latest', {
     query: { dataSourceIds: dataSourceIds.join(',') },
     prefix: DEFAULT_API_PREFIX,

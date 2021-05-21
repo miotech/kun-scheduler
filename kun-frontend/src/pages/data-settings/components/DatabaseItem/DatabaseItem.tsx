@@ -31,6 +31,9 @@ export default memo(function DatabaseItem({ database, onClickDelete, onClickUpda
   const handleClickPull = useCallback(() => {
     setPullLoading(true);
     dispatch.dataSettings.pullDatasetsFromDatabase(database.id).then(resp => {
+      dispatch.dataSettings.searchDataBases();
+      return resp;
+    }).then(resp => {
       if (resp) {
         message.success(t('dataSettings.databaseItem.pullingIntoProgress'));
       }
