@@ -1,6 +1,6 @@
 import { cronix, CronixMode } from 'cronix';
 import isNaN from 'lodash/isNaN';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import LogUtils from '@/utils/logUtils';
 
 const logger = LogUtils.getLoggers('cronUtils');
