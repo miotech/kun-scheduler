@@ -174,7 +174,7 @@ export default function DataSettings() {
               size="large"
               onClick={doRefresh}
             >
-              刷新
+              {t('common.refresh')}
             </Button>
             <Button
               size="large"

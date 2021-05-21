@@ -1,12 +1,10 @@
-import { message } from 'antd';
-import { formatMessage } from 'umi';
 import {
   fetchDatasetDetailService,
   fetchDatasetColumnsService,
   pullDatasetService,
   UpdateDatasetReqBody,
   updateDatasetService,
-  updateColumnService,
+  updateColumnService, DatasetPullProcessVO, fetchLatestDatasetPullProcess,
 } from '@/services/datasetDetail';
 import { Pagination } from '@/definitions/common-types';
 import { Watermark, GlossaryItem } from '@/definitions/Dataset.type';
@@ -100,6 +98,9 @@ export interface DatasetDetailState extends DatasetDetail {
 
   upstreamLineageTaskListPagination: Pagination;
   downstreamLineageTaskListPagination: Pagination;
+
+  datasetLatestPullProcess: DatasetPullProcessVO | null;
+  datasetLatestPullProcessIsLoading: boolean;
 }
 
 export const datasetDetail = {
@@ -152,6 +153,9 @@ export const datasetDetail = {
 
     fetchUpstreamLineageTaskListLoading: false,
     fetchDownstreamLineageTaskListLoading: false,
+
+    datasetLatestPullProcess: null,
+    datasetLatestPullProcessIsLoading: false,
   } as DatasetDetailState,
 
   reducers: {
@@ -387,14 +391,6 @@ export const datasetDetail = {
         try {
           const resp = await pullDatasetService(id);
           if (resp) {
-            message.success(
-              formatMessage(
-                {
-                  id: `dataDetail.button.pullDuration`,
-                },
-                { time: resp.duration },
-              ),
-            );
             return resp;
           }
         } catch (e) {
@@ -462,6 +458,27 @@ export const datasetDetail = {
           // do nothing
         }
         return null;
+      },
+
+      async fetchDatasetLatestPullProcess(datasetId: string) {
+        try {
+          dispatch.datasetDetail.updateState({
+            key: 'datasetLatestPullProcessIsLoading',
+            value: true,
+          });
+          const process = await fetchLatestDatasetPullProcess(datasetId);
+          dispatch.datasetDetail.updateState({
+            key: 'datasetLatestPullProcess',
+            value: process || null,
+          });
+        } catch (e) {
+          // do nothing
+        } finally {
+          dispatch.datasetDetail.updateState({
+            key: 'datasetLatestPullProcessIsLoading',
+            value: false,
+          });
+        }
       },
     };
   },

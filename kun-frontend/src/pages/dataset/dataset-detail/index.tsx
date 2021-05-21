@@ -19,6 +19,7 @@ import { Watermark } from '@/definitions/Dataset.type';
 import { Column } from '@/rematch/models/datasetDetail';
 import { LineageDirection } from '@/services/lineage';
 
+import { StatusText } from '@/components/StatusText';
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnDescInput from './components/ColumnDescInput/ColumnDescInput';
 import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
@@ -44,10 +45,12 @@ export default function DatasetDetail({ match }: Props) {
 
   const { selector, dispatch } = useRedux(state => state.datasetDetail);
   const {
-    selector: { allOwnerList, allTagList },
+    selector: { allOwnerList, allTagList, latestPullProcess, latestPullProcessIsLoading },
   } = useRedux(state => ({
     allOwnerList: state.dataDiscovery.allOwnerList,
     allTagList: state.dataDiscovery.allTagList,
+    latestPullProcess: state.datasetDetail.datasetLatestPullProcess,
+    latestPullProcessIsLoading: state.datasetDetail.datasetLatestPullProcessIsLoading,
   }));
 
   const debounceColumnKeyword = useDebounce(selector.columnsKeyword, 500);
@@ -80,18 +83,24 @@ export default function DatasetDetail({ match }: Props) {
   }, [dispatch.datasetDetail, debounceColumnKeyword, forceReFetchInfoFlag]);
 
   useEffect(() => {
-    setFetchColumnsLoading(true);
-    const params = {
-      id: currentId,
-      keyword: debounceColumnKeyword,
-      pagination: {
-        pageNumber: selector.columnsPagination.pageNumber,
-        pageSize: selector.columnsPagination.pageSize,
-      },
-    };
-    dispatch.datasetDetail.fetchDatasetColumns(params).then(() => {
-      setFetchColumnsLoading(false);
-    });
+    async function fetchDatasetData() {
+      setFetchColumnsLoading(true);
+      try {
+        const params = {
+          id: currentId,
+          keyword: debounceColumnKeyword,
+          pagination: {
+            pageNumber: selector.columnsPagination.pageNumber,
+            pageSize: selector.columnsPagination.pageSize,
+          },
+        };
+        await dispatch.datasetDetail.fetchDatasetColumns(params);
+        await dispatch.datasetDetail.fetchDatasetLatestPullProcess(currentId);
+      } finally {
+        setFetchColumnsLoading(false);
+      }
+    }
+    fetchDatasetData();
   }, [
     currentId,
     debounceColumnKeyword,
@@ -376,13 +385,23 @@ export default function DatasetDetail({ match }: Props) {
               <span className={styles.title}>{selector.name}</span>
             </span>
 
-            <Button
-              size="large"
-              className={styles.pullButton}
-              onClick={handleClickPull}
-            >
-              {t('dataDetail.button.pull')}
-            </Button>
+            <div className={styles.headingButtonGroup}>
+              <Button
+                size="large"
+                onClick={() => {
+                  setForceReFetchInfoFlag(v => v + 1);
+                }}
+              >
+                {t('common.refresh')}
+              </Button>
+              <Button
+                size="large"
+                type="primary"
+                onClick={handleClickPull}
+              >
+                {t('dataDetail.button.pull')}
+              </Button>
+            </div>
           </div>
 
           <div className={styles.detailInfoArea}>
@@ -422,7 +441,7 @@ export default function DatasetDetail({ match }: Props) {
                     {t('dataDetail.baseItem.title.rowCount')}
                   </div>
                   <div className={styles.importantContent}>
-                    {selector.rowCount}
+                    {numeral(selector.rowCount).format('0,0')}
                   </div>
                 </div>
                 <div className={styles.infoBlock}>
@@ -437,6 +456,22 @@ export default function DatasetDetail({ match }: Props) {
                       <span className={styles.watermark}>
                         {watermarkFormatter(selector.highWatermark?.time)}
                       </span>
+                    )}
+                  </div>
+                </div>
+                {/* Status of latest pull process for current dataset */}
+                <div className={styles.infoBlock}>
+                  <div
+                    className={styles.baseContent}
+                    style={{ marginBottom: 8 }}
+                  >
+                    {t('dataDetail.baseItem.title.latestPullStatus')}
+                  </div>
+                  <div className={styles.importantContent}>
+                    {/* eslint-disable-next-line no-nested-ternary */}
+                    {latestPullProcessIsLoading ? '...' : (
+                      // TODO: status text should also track MSE task runs
+                      (latestPullProcess != null) ? <StatusText status={latestPullProcess.latestMCETaskRun!.status} /> : ''
                     )}
                   </div>
                 </div>
