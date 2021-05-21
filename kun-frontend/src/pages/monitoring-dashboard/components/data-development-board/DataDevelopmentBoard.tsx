@@ -19,7 +19,7 @@ function computeFilterTypeToRequestParam(
     case 'FAILED':
       return 'FAILED,ERROR,ABORTED';
     case 'PENDING':
-      return 'QUEUED,CREATED,INITIALIZING';
+      return 'QUEUED,CREATED,INITIALIZING,UPSTREAM_FAILED';
     case 'RUNNING':
       return 'RUNNING';
     default:
