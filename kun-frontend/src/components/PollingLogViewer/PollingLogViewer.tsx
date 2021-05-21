@@ -5,7 +5,7 @@ import { Button, message, Pagination, Tooltip } from 'antd';
 import { CopyOutlined, DownloadOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 import { useInterval } from 'ahooks';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import { KunSpin } from '@/components/KunSpin';
 
 import { writeText } from 'clipboard-polyfill/text';

@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from 'react';
 import c from 'clsx';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 import { Link } from 'umi';
 import numeral from 'numeral';
 import isNumber from 'lodash/isNumber';
