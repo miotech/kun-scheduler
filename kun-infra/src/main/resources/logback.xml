@@ -1,0 +1,63 @@
+<configuration>
+
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%date [%level] from %logger in %thread - %message%n%xException{10}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="STDOUT" />
+    </appender>
+
+    <appender name="APPLOG"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${user.dir}/kun-workflow-logs/application.log</file>
+        <encoder>
+            <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
+        </encoder>
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${user.dir}/kun-workflow-logs/application-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <!-- each file should be at most 64MB, keep 30 days worth of history, but at most 10GB -->
+            <maxFileSize>64MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+    </appender>
+
+    <appender name="APPERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${user.dir}/kun-workflow-logs/error.log</file>
+        <encoder>
+            <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
+        </encoder>
+        <rollingPolicy
+                class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <!-- rollover daily -->
+            <fileNamePattern>${user.dir}/kun-workflow-logs/error-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <!-- each file should be at most 64MB, keep 30 days worth of history, but at most 10GB -->
+            <maxFileSize>64MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+
+    <appender name="ASYNCAPPLOG" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="APPLOG" />
+    </appender>
+
+    <logger name="com.zaxxer.hikari"  level="ERROR" />
+
+    <logger name="com.miotech" level="DEBUG" />
+
+    <root level="DEBUG">
+        <appender-ref ref="ASYNCAPPLOG" />
+        <appender-ref ref="APPERROR" />
+        <appender-ref ref="ASYNCSTDOUT" />
+    </root>
+
+</configuration>
