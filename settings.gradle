@@ -36,4 +36,4 @@ include ':kun-security:kun-security-server'
 include ':kun-security:kun-security-common'
 include ':kun-data-dashboard'
 include ':kun-app'
-
+include ':kun-infra'
