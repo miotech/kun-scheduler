@@ -3,11 +3,9 @@ package com.miotech.kun.workflow.web;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.miotech.kun.commons.rpc.RpcConsumer;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.annotation.BasePackageScan;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
-import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.core.Executor;
@@ -78,12 +76,6 @@ public class KunWorkflowServerModule extends KunWebServerModule {
         }
 
         return new NopEventPublisher();
-    }
-
-    @Singleton
-    @Provides
-    public MetadataServiceFacade metadataService(RpcConsumer rpcConsumer) {
-        return rpcConsumer.getService("default", MetadataServiceFacade.class, "1.0");
     }
 
 }
