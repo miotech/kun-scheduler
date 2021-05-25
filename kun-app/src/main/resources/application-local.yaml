@@ -1,24 +1,31 @@
 server:
-  port: ${DATA_PLATFORM_PORT:8081}
+  port: ${WEBAPP_PORT:8081}
 
 workflow:
   enabled: true
-  baseUrl: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
-  variableNamespace: dataplatform
+  base-url: http://${WORKFLOW_HOST:127.0.0.1}:${WORKFLOW_PORT:8078}
+  variable-namespace: dataplatform
 
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun?stringtype=unspecified
+    url: jdbc:postgresql://${DB_PG_IP:127.0.0.1}:${DB_PG_PORT:5432}/${DB_PG_NAME:kun}?stringtype=unspecified
     username: ${DB_PG_USERNAME}
     password: ${DB_PG_PASSWORD}
 
   flyway:
     enabled: true
     clean-disabled: true
-    locations: classpath:sql
-    table: flyway_kun_dp_schema_history
+    locations: classpath:webapp_sql
+    table: flyway_kun_webapp_schema_history
     schemas: public
+    baselineOnMigrate: ${BASELINE_ON_MIGRATION:false}
+
+  session:
+    jdbc:
+      initialize-schema: never
+      table-name: kun_user_session
+    timeout: 30d
 
 security:
   base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
@@ -28,6 +35,10 @@ redis:
   notify-channel: kun-notify
 
 management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
   health:
     elasticsearch:
       enabled: false
@@ -70,3 +81,6 @@ notify:
     host: http://zhongda.miotech.com:8000
     token: ZXGfFpQs7ubLBPJYCZVHn
     notify-group: ${NOTIFY_ZHONGDA_GROUP:kun}
+
+data-dashboard:
+  long-existing-threshold: 30
