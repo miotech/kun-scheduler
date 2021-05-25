@@ -37,19 +37,19 @@ public class HttpRouter {
 
     /**
      * scan for all routesMapping under a package
-     * @param packageName
+     * @param packageNames
      */
-    public void scanPackage(String packageName) {
+    public void scanPackage(String... packageNames) {
         logger.info("start to scan package");
         try (ScanResult result = new ClassGraph().enableClassInfo().enableAnnotationInfo()
-                .acceptPackages(packageName).scan()) {
+                .acceptPackages(packageNames).scan()) {
             ClassInfoList classInfos = result.getAllClasses();
             logger.info("scan package finish");
-            for (ClassInfo classInfo: classInfos) {
+            for (ClassInfo classInfo : classInfos) {
                 this.addRouter(Class.forName(classInfo.getName()));
             }
         } catch (ClassNotFoundException e) {
-            logger.error("Failed to add router in package {}", packageName, e);
+            logger.error("Failed to add router in package {}", packageNames, e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
 
@@ -103,7 +103,7 @@ public class HttpRouter {
         if (requestUrl.endsWith("/")) {
             requestUrl = requestUrl.replaceAll("/$", "");
         }
-        for (HttpRoute route: routeMappings.keySet()) {
+        for (HttpRoute route : routeMappings.keySet()) {
 
             Matcher requestMatcher = route.getUrlPattern().matcher(requestUrl);
             if (requestMatcher.find()
@@ -111,7 +111,7 @@ public class HttpRouter {
 
                 Map<String, String> pathVariables = new HashMap<>();
                 for (int i = 1; i <= requestMatcher.groupCount(); i++) {
-                    String pathVariableName = route.getPathVariablePlaceHolder().get(i-1);
+                    String pathVariableName = route.getPathVariablePlaceHolder().get(i - 1);
                     pathVariables.put(pathVariableName, requestMatcher.group(i));
                 }
 
