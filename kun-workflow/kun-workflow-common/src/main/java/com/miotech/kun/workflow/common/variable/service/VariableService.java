@@ -33,10 +33,7 @@ public class VariableService {
     }
 
     public Variable find(String key) {
-        return variableDao.fetchByKey(key)
-                .<IllegalArgumentException>orElseThrow(() -> {
-                    throw new IllegalArgumentException(String.format("Cannot find variable with key: \"%s\"", key));
-                });
+        return variableDao.fetchByKey(key).orElse(null);
     }
 
     public boolean removeByKey(String key) {
@@ -44,7 +41,8 @@ public class VariableService {
     }
 
     public String get(String key) {
-        return find(key).getValue();
+        Variable variable = find(key);
+        return variable == null ? "" : find(key).getValue();
     }
 
     public Map<String, String> getVariables(String prefix) {

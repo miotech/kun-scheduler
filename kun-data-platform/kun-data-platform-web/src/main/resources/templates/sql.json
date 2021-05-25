@@ -10,7 +10,6 @@
   },
   "defaultValues": {
     "livyHost": "${ dataplatform.livy.host }",
-    "dataStoreUrl": "s3://com.miotech.data.prd/Database/DM",
     "variables": "{}",
     "sparkConf": "{}"
   },
@@ -24,5 +23,6 @@
       "type": "keyvalue",
       "required": false,
       "displayName": "Extra Spark Configuration"
-    }]
+    }],
+  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkConfigTaskTemplateRender"
 }
