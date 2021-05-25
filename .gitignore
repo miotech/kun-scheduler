@@ -33,6 +33,7 @@
 **/kun-metadata-databuilder-logs
 **/kun-security-logs
 **/kun-data-dashboard-logs
+**/kun-app-logs
 
 # Compiled jars
 kun-data-discovery/src/main/resources/*.jar
