@@ -37,6 +37,8 @@
 # Compiled jars
 kun-data-discovery/src/main/resources/*.jar
 kun-data-platform/**/*.jar
+kun-infra/src/main/resources/*.jar
+kun-metadata/kun-metadata-web/src/main/resources/*.jar
 
 #docker
 /data
