@@ -1,7 +1,0 @@
-operators:
-  - name: mce-operator
-    className: com.miotech.kun.metadata.databuilder.operator.MCEOperator
-    description: MetadataChangeEvent Operator
-  - name: mse-operator
-    className: com.miotech.kun.metadata.databuilder.operator.MSEOperator
-    description: MetadataStatEvent Operator

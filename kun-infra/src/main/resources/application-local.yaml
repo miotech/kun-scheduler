@@ -22,7 +22,7 @@ resource:
   libDirectory: /tmp
 
 flyway:
-  locations: sql/
+  locations: classpath:workflow-sql,classpath:metadata-sql
   table: flyway_kun_wf_schema_history
   baselineOnMigrate: true
   baselineVersion: 0
@@ -32,6 +32,7 @@ flyway:
 
 rpc:
   registry: redis://${DB_REDIS_IP}:6379/
+  #todo:rpc port 是否需要区分
   port: ${WORKFLOW_RPC_SERVICE_PORT}
 
 neo4j:
@@ -42,4 +43,19 @@ neo4j:
 redis:
   host: ${DB_REDIS_IP}
   notify-channel: kun-notify
+
+env: local
+
+workflow:
+  url: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
+  cronExpr: 0 0 12 * * ?
+
+
+kafka:
+  bootstrapServers: 127.0.0.1:9092
+  mceTopicName: kun-metadata-mce
+  mseTopicName: kun-metadata-mse-dev
+  mceGroupId: 87f367957a9b49c48ce708fae38a158c
+  mseGroupId: 18bf66dc2c4249baa45618c43fae51b5
+  pushMode: off
 
