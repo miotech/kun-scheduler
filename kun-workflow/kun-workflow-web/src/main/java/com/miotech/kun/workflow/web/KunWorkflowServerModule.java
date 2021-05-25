@@ -4,8 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.commons.web.annotation.BasePackageScan;
-import com.miotech.kun.commons.web.module.KunWebServerModule;
+import com.miotech.kun.commons.web.module.AppModule;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.core.Executor;
@@ -26,7 +25,7 @@ import com.miotech.kun.workflow.web.service.RecoverService;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
-public class KunWorkflowServerModule extends KunWebServerModule {
+public class KunWorkflowServerModule extends AppModule {
 
     private final Props props;
 
@@ -48,12 +47,6 @@ public class KunWorkflowServerModule extends KunWebServerModule {
         bind(RecoverService.class);
     }
 
-    @Provides
-    @Singleton
-    @BasePackageScan
-    public String getPackageScan() {
-        return this.getClass().getPackage().getName();
-    }
 
     @Singleton
     @Provides
