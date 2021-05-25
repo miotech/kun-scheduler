@@ -19,14 +19,14 @@
 
     <appender name="APPLOG"
               class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.dir}/kun-data-dashboard-logs/application.log</file>
+        <file>${user.dir}/kun-app-logs/application.log</file>
         <encoder>
             <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
         </encoder>
         <rollingPolicy
                 class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <fileNamePattern>${user.dir}/kun-data-dashboard-logs/application-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${user.dir}/kun-app-logs/application-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <!-- each file should be at most 64MB, keep 30 days worth of history, but at most 10GB -->
             <maxFileSize>64MB</maxFileSize>
             <maxHistory>30</maxHistory>
@@ -35,14 +35,14 @@
     </appender>
 
     <appender name="APPERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${user.dir}/kun-data-dashboard-logs/error.log</file>
+        <file>${user.dir}/kun-app-logs/error.log</file>
         <encoder>
             <pattern>%date [%level] from %logger in %thread - %message%n%xException</pattern>
         </encoder>
         <rollingPolicy
                 class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <!-- rollover daily -->
-            <fileNamePattern>${user.dir}/kun-data-dashboard-logs/error-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${user.dir}/kun-app-logs/error-%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <!-- each file should be at most 64MB, keep 30 days worth of history, but at most 10GB -->
             <maxFileSize>64MB</maxFileSize>
             <maxHistory>30</maxHistory>
