@@ -1,22 +1,20 @@
 package com.miotech.kun.workflow.operator;
 
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.google.common.base.Strings;
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.execution.*;
-import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
-import com.miotech.kun.workflow.operator.resolver.SparkSqlResolver;
 import com.miotech.kun.workflow.operator.spark.models.SparkApp;
 import com.miotech.kun.workflow.operator.spark.models.SparkJob;
 import com.miotech.kun.workflow.operator.spark.models.StateInfo;
 import com.miotech.kun.workflow.operator.spark.models.Statement;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -29,7 +27,6 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
     private AtomicInteger currentActiveSessionId = new AtomicInteger(-1);
     private boolean isSharedSession;
     private String currentActiveStatementId;
-    private String dataStoreUrl;
 
     /**
      * init a livy rest client for later api calls
@@ -38,11 +35,6 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
     public void init() {
         OperatorContext context = getContext();
         super.init();
-        dataStoreUrl = SparkConfiguration.getString(context, SparkConfiguration.CONF_SPARK_DATASTORE_URL);
-        if (StringUtils.isBlank(dataStoreUrl)) {
-            throw new IllegalArgumentException("dataStoreUrl should not be empty");
-        }
-
         isSharedSession = SparkConfiguration.getBoolean(context, SparkConfiguration.CONF_LIVY_SHARED_SESSION);
         logger.info("Initialize livy rest client using shared mode: {}", isSharedSession);
     }
@@ -72,23 +64,76 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
                 .define(CONF_LIVY_HOST, ConfigDef.Type.STRING, true, "Livy host to submit application, in the format `ip:port`", CONF_LIVY_HOST)
                 .define(CONF_LIVY_YARN_QUEUE, ConfigDef.Type.STRING, CONF_LIVY_YARN_QUEUE_DEFAULT, true, "yarn queue name, default is `default`", CONF_LIVY_YARN_QUEUE)
                 .define(CONF_LIVY_PROXY_USER, ConfigDef.Type.STRING, CONF_LIVY_PROXY_DEFAULT, true, "proxy use for livy", CONF_LIVY_PROXY_USER)
-                .define(CONF_SPARK_DATASTORE_URL, ConfigDef.Type.STRING, true, "datastore url for warehouse", CONF_SPARK_DATASTORE_URL)
+                .define(CONF_LIVY_BATCH_JARS, ConfigDef.Type.STRING, "", true, "Java application jar files", CONF_LIVY_BATCH_JARS)
+                .define(CONF_LIVY_BATCH_FILES, ConfigDef.Type.STRING, "", true, "files to use, seperated with `,`, the first file would be used as main entry", CONF_LIVY_BATCH_FILES)
                 .define(CONF_LIVY_SHARED_SESSION, ConfigDef.Type.BOOLEAN, false,true, "whether to use shared session in spark", CONF_LIVY_SHARED_SESSION)
                 .define(CONF_LIVY_SHARED_SESSION_NAME, ConfigDef.Type.STRING, "",true, " shared session name if shared session enabled", CONF_LIVY_SHARED_SESSION_NAME)
                 .define(CONF_SPARK_SQL, ConfigDef.Type.STRING, true, "SQL script", CONF_SPARK_SQL)
                 .define(CONF_SPARK_DEFAULT_DB, ConfigDef.Type.STRING, CONF_SPARK_DEFAULT_DB_DEFAULT,true, "Default database name for a sql execution", CONF_SPARK_DEFAULT_DB)
+                .define(CONF_LIVY_BATCH_CONF, ConfigDef.Type.STRING, "{}", true, "Extra spark configuration , in the format `{\"key\": \"value\"}`", CONF_LIVY_BATCH_CONF)
                 .define(CONF_VARIABLES, ConfigDef.Type.STRING, "{}", true, "SQL variables, use like `select ${a}`, supply with {\"a\": \"b\"}", CONF_VARIABLES)
-                ;
+                .define(CONF_LINEAGE_OUTPUT_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_OUTPUT_PATH_VALUE_DEFAULT, true, "file system address to store lineage analysis report, in the format `s3a://BUCKET/path` or `hdfs://host:port/path`", CONF_LINEAGE_OUTPUT_PATH)
+                .define(CONF_LINEAGE_JAR_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT, true, "the jar used for lineage analysis, in the format `s3a://BUCKET/xxx/xxx.jar` or `hdfs://host:port/xxx/xxx.jar`", CONF_LINEAGE_JAR_PATH)
+                .define(CONF_S3_ACCESS_KEY, ConfigDef.Type.STRING, CONF_S3_ACCESS_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_ACCESS_KEY)
+                .define(CONF_S3_SECRET_KEY, ConfigDef.Type.STRING, CONF_S3_SECRET_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_SECRET_KEY);
     }
 
     @Override
     public Resolver getResolver() {
-        return new SparkSqlResolver();
+        return new NopResolver();
     }
 
     public boolean execute() {
 
         SparkJob job = new SparkJob();
+        OperatorContext context = getContext();
+        String jars = SparkConfiguration.getString(context, CONF_LIVY_BATCH_JARS);
+        String sparkConf = SparkConfiguration.getString(context, CONF_LIVY_BATCH_CONF);
+        String sessionName = SparkConfiguration.getString(context, CONF_LIVY_SHARED_SESSION_NAME);
+        Long taskRunId = context.getTaskRunId();
+
+        String configLineageOutputPath = SparkConfiguration.getString(context, CONF_LINEAGE_OUTPUT_PATH);
+        String configLineageJarPath = SparkConfiguration.getString(context, CONF_LINEAGE_JAR_PATH);
+        String configS3AccessKey = SparkConfiguration.getString(context, CONF_S3_ACCESS_KEY);
+        String configS3SecretKey = SparkConfiguration.getString(context, CONF_S3_SECRET_KEY);
+
+        if (Strings.isNullOrEmpty(sessionName)) {
+            sessionName = "Spark Job: " + IdGenerator.getInstance().nextId();
+        } else {
+            sessionName = sessionName + " - " + IdGenerator.getInstance().nextId();
+        }
+        if (!Strings.isNullOrEmpty(sessionName)) {
+            job.setName(sessionName);
+        }
+
+        if (!Strings.isNullOrEmpty(sparkConf)) {
+            job.setConf(JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
+        }
+
+        List<String> allJars = new ArrayList<>();
+        if (!Strings.isNullOrEmpty(jars)) {
+            allJars.addAll(Arrays.asList(jars.split(",")));
+        }
+        if(!Strings.isNullOrEmpty(configLineageJarPath)){
+            allJars.add(configLineageJarPath);
+            job.addConf("spark.sql.queryExecutionListeners","za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
+        }
+        job.setJars(allJars);
+
+        // lineage config
+        if(!Strings.isNullOrEmpty(configLineageOutputPath)){
+            job.addConf("spark.hadoop.spline.hdfs_dispatcher.address", configLineageOutputPath);
+        }
+        if(!Strings.isNullOrEmpty(configS3AccessKey)){
+            job.addConf("spark.fs.s3a.access.key", configS3AccessKey);
+        }
+        if(!Strings.isNullOrEmpty(configS3SecretKey)){
+            job.addConf("spark.fs.s3a.secret.key", configS3SecretKey);
+        }
+        job.addConf("spark.hadoop.taskRunId", taskRunId.toString());
+        if (!job.getConf().containsKey("spark.driver.memory")) {
+            job.addConf("spark.driver.memory", "2g");
+        }
         logger.info("Submit spark session: {}", JSONUtils.toJsonString(job));
         SparkApp app = livyClient.runSparkSession(job);
         Integer sessionId = app.getId();
@@ -109,7 +154,7 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
         } while (!sessionState.isAvailable());
 
         // launch sql
-        String sql = SparkConfiguration.getString(getContext(), SparkConfiguration.CONF_SPARK_SQL);
+        String sql = SparkConfiguration.getString(context, SparkConfiguration.CONF_SPARK_SQL);
         sql = replaceWithVariable(sql);
         logger.info("submit user provided sql: {}", sql);
         List<String> statements = Arrays.asList(sql.split(";"))
@@ -141,7 +186,9 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
         }
 
         try {
-            postRun(sql);
+            TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), context.getTaskRunId());
+            if(taskAttemptReport != null)
+                report(taskAttemptReport);
         } catch (Exception e) {
             logger.error("Failed to parse lineage: {}", e);
         }
@@ -176,35 +223,4 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
         return sessionId + "-" + statementId;
     }
 
-    private void postRun(String sql) {
-        String defaultDatabase = SparkConfiguration.getString(getContext(),  SparkConfiguration.CONF_SPARK_DEFAULT_DB);
-        SQLLineageAnalyzer analyzer = new SQLLineageAnalyzer("HIVE", defaultDatabase);
-        List<Pair<Set<String>, Set<String>>> lineage = analyzer.parseSQL(sql);
-
-        List<DataStore> inputs = lineage.stream()
-                .flatMap(x -> x.getLeft().stream())
-                .map(this::toDataStore)
-                .collect(Collectors.toList());
-        List<DataStore> outputs = lineage.stream()
-                .flatMap(x -> x.getRight().stream())
-                .map(this::toDataStore)
-                .collect(Collectors.toList());
-        TaskAttemptReport taskAttemptReport = TaskAttemptReport.newBuilder()
-                .withInlets(inputs)
-                .withOutlets(outputs)
-                .build();
-        report(taskAttemptReport);
-    }
-
-    private DataStore toDataStore(String dbAndTableName) {
-        String[] names = dbAndTableName.split("\\.");
-        String dbName = names[0];
-        String tableName = names[1];
-        String targetDataStoreUrl = dataStoreUrl + "/" + dbName + "/" + tableName;
-        return new HiveTableStore(
-                targetDataStoreUrl,
-                dbName,
-                tableName
-        );
-    }
 }
