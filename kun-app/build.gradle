@@ -18,9 +18,11 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-client')
     implementation project(':kun-workflow:kun-workflow-utils')
-    implementation project(':kun-data-platform:kun-data-platform-web')
     implementation project(':kun-data-platform:kun-workflow-operators:spark-operators')
     implementation project(':kun-security:kun-security-common')
+
+    implementation project(':kun-data-platform:kun-data-platform-web')
+    implementation project(':kun-data-dashboard')
 
     implementation 'com.fasterxml.jackson.core:jackson-core'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
