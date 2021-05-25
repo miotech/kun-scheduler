@@ -1,3 +1,5 @@
+package com.miotech.kun.infra;
+
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -30,7 +32,8 @@ public class KunInfraWebServer extends AbstractKunWebServer {
         org.eclipse.jetty.util.log.Log.setLog(new JettyLog());
 
         /* Initialize Guice Injector */
-        final Injector injector = Guice.createInjector(new KunWorkflowServerModule(props),new KunMetadataModule(props));
+        final Injector injector = Guice.createInjector(new KunWorkflowServerModule(props),new KunMetadataModule(props),
+                new KunInfraWebModule(props));
 
         WebServer webServer = injector.getInstance(KunInfraWebServer.class);
         // Start

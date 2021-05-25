@@ -1,31 +1,21 @@
-package com.miotech.kun.metadata.web.service;
+package com.miotech.kun.infra.service;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.miotech.kun.commons.db.DatabaseOperator;
-import com.miotech.kun.commons.db.DatabaseSetup;
-import com.miotech.kun.commons.rpc.RpcPublisher;
-import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.kafka.MetadataConsumerStarter;
 import com.miotech.kun.metadata.web.util.RequestParameterBuilder;
-import com.miotech.kun.workflow.client.WorkflowClient;
-import com.miotech.kun.workflow.client.model.Operator;
-import com.miotech.kun.workflow.client.model.Task;
-import com.miotech.kun.workflow.client.operator.OperatorUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sun.tools.jstat.Operator;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Singleton
-public class InitService implements InitializingBean {
-    private static final Logger logger = LoggerFactory.getLogger(InitService.class);
+public class InitService {
+    private static final Logger logger = LoggerFactory.getLogger(com.miotech.kun.metadata.web.service.InitService.class);
 
     @Inject
     private WorkflowClient workflowClient;
@@ -148,5 +138,4 @@ public class InitService implements InitializingBean {
     private void setProp(String key, String value) {
         props.put(key, value);
     }
-
 }
