@@ -2,8 +2,8 @@ package com.miotech.kun.commons.web.handler;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.commons.web.annotation.BasePackageScan;
 import com.miotech.kun.commons.web.http.*;
+import com.miotech.kun.commons.web.modle.BasePackages;
 import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import org.eclipse.jetty.http.HttpStatus;
 import org.slf4j.Logger;
@@ -36,13 +36,12 @@ public class DispatchServlet extends HttpServlet {
     private JsonSerializer jsonSerializer;
 
     @Inject
-    @BasePackageScan
-    private String basePackageName;
+    private BasePackages basePackages;
 
     @Override
     public void init() {
-        router.scanPackage(basePackageName);
-        exceptionHandler.scanPackage(basePackageName);
+        router.scanPackage(basePackages.getBasePackages().stream().toArray(String[]::new));
+        exceptionHandler.scanPackage(basePackages.getBasePackages().stream().toArray(String[]::new));
     }
 
     @Override
@@ -66,7 +65,7 @@ public class DispatchServlet extends HttpServlet {
                 // Invoke method with args
                 List<Object> args = new ArrayList<>();
                 HttpAction action = handler.getAction();
-                for (Parameter parameter: action.getMethod().getParameters()) {
+                for (Parameter parameter : action.getMethod().getParameters()) {
                     args.add(parameterResolver.resolveRequestParameter(
                             parameter,
                             handler.getHttpRequest(),
