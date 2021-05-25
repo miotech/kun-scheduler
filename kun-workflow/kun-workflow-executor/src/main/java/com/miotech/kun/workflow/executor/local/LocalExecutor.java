@@ -101,7 +101,7 @@ public class LocalExecutor implements Executor {
         workerPool = new ConcurrentHashMap<>();
         attachSiftingAppender();
         logger.info("local executor start at :{}", DateTimeUtils.now());
-        Thread consumer = new Thread(new TaskAttemptConsumer(),"TaskAttemptConsumer");
+        Thread consumer = new Thread(new TaskAttemptConsumer(), "TaskAttemptConsumer");
         consumer.start();
         ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
         timer.scheduleAtFixedRate(new HeartBeatCheckTask(), 10, 1000, TimeUnit.MILLISECONDS);
@@ -366,7 +366,7 @@ public class LocalExecutor implements Executor {
             logger.info("recover taskAttempt,id = {} , queueName = {}", taskAttempt.getId(), taskAttempt.getQueueName());
             //避免由于同时运行多个docker导致RUNNING的taskRun超过限制引起状态监控混乱
             try {
-                queueManage.recover(taskAttempt.getQueueName(),taskAttempt.getId());
+                queueManage.recover(taskAttempt.getQueueName(), taskAttempt.getId());
             } catch (IllegalStateException e) {
                 logger.error("recover taskAttemptId = {} failed", e);
                 logger.info("recover taskAttemptId = {} to queue", taskAttempt.getId());
@@ -387,28 +387,31 @@ public class LocalExecutor implements Executor {
 
         @Override
         public void run() {
-            OffsetDateTime currentTime = DateTimeUtils.now();
-            for (Map.Entry<Long, HeartBeatMessage> entry : workerPool.entrySet()) {
-                HeartBeatMessage heartBeatMessage = entry.getValue();
-                Long taskAttemptId = entry.getKey();
-                int timeoutTimes = heartBeatMessage.getTimeoutTimes();
-                OffsetDateTime lastHearBeat = heartBeatMessage.getLastHeartBeatTime() != null ?
-                        heartBeatMessage.getLastHeartBeatTime() : heartBeatMessage.getInitTime();
-                OffsetDateTime nextHeartbeat = lastHearBeat.
-                        plus(HEARTBEAT_INTERVAL * (timeoutTimes + 1), ChronoUnit.MILLIS);
-                if (currentTime.isAfter(nextHeartbeat)) {
-                    timeoutTimes++;
-                    if (timeoutTimes >= TIMEOUT_LIMIT) {
-                        logger.error("heart beat from worker timeout ,taskAttemptId = {} ,remove worker", taskAttemptId);
-                        handleTimeoutAttempt(taskAttemptId);
-                    } else {
-                        heartBeatMessage.setTimeoutTimes(timeoutTimes);
-                        logger.info("put taskAttemptId = {} to worker pool", taskAttemptId);
-                        workerPool.put(taskAttemptId, heartBeatMessage);
+            try {
+                OffsetDateTime currentTime = DateTimeUtils.now();
+                for (Map.Entry<Long, HeartBeatMessage> entry : workerPool.entrySet()) {
+                    HeartBeatMessage heartBeatMessage = entry.getValue();
+                    Long taskAttemptId = entry.getKey();
+                    int timeoutTimes = heartBeatMessage.getTimeoutTimes();
+                    OffsetDateTime lastHearBeat = heartBeatMessage.getLastHeartBeatTime() != null ?
+                            heartBeatMessage.getLastHeartBeatTime() : heartBeatMessage.getInitTime();
+                    OffsetDateTime nextHeartbeat = lastHearBeat.
+                            plus(HEARTBEAT_INTERVAL * (timeoutTimes + 1), ChronoUnit.MILLIS);
+                    if (currentTime.isAfter(nextHeartbeat)) {
+                        timeoutTimes++;
+                        if (timeoutTimes >= TIMEOUT_LIMIT) {
+                            logger.error("heart beat from worker timeout ,taskAttemptId = {} ,remove worker", taskAttemptId);
+                            handleTimeoutAttempt(taskAttemptId);
+                        } else {
+                            heartBeatMessage.setTimeoutTimes(timeoutTimes);
+                            logger.info("put taskAttemptId = {} to worker pool", taskAttemptId);
+                            workerPool.put(taskAttemptId, heartBeatMessage);
+                        }
                     }
+
                 }
-
-
+            } catch (Throwable e) {
+                logger.error("health check failed", e);
             }
         }
     }

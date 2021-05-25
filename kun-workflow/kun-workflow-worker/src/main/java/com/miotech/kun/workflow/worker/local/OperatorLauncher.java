@@ -269,7 +269,7 @@ public class OperatorLauncher {
         workerLogger.detachAndStopAllAppenders();
         rootLogger.detachAndStopAllAppenders();
 
-        rootLogger.addAppender(appender);
+        workerLogger.addAppender(appender);
     }
 
     private KunOperator loadOperator(String jarPath, String mainClass) {
