@@ -37,11 +37,8 @@ public class Subscriber {
     }
 
     private void handleTaskAttemptStatusChangeEvent(TaskAttemptFinishedEvent statusChangeEvent) {
-        //get datasets
-        List<Long> datasetIds = new ArrayList<>();
-        //get dq cases tasks associated with the datasets
+        List<Long> datasetIds = statusChangeEvent.getOutDataSetIds();
         List<Long> caseIds = dataQualityRepository.getWorkflowTasksByDatasetIds(datasetIds);
-        //call wf to execute
         workflowService.executeTasks(caseIds);
     }
 }
