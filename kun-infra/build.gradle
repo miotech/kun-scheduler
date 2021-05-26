@@ -16,9 +16,11 @@ dependencies {
     implementation project(":kun-commons:kun-commons-rpc")
     implementation project(':kun-commons:kun-commons-db')
     implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-db:kun-infra-db")
 
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-web')
+    implementation project(':kun-workflow:kun-workflow-common')
     implementation project(':kun-workflow:kun-workflow-facade')
     implementation project(':kun-metadata:kun-metadata-web')
     implementation project(':kun-metadata:kun-metadata-service-facade')
@@ -33,6 +35,38 @@ dependencies {
     implementation "org.yaml:snakeyaml"
     implementation 'redis.clients:jedis'
 }
+
+task buildOperator (type:Exec){
+    workingDir "../"
+    commandLine "./gradlew",":kun-metadata:kun-metadata-databuilder:shadowJar"
+}
+
+task copyMCEOperator(type: Copy){
+    from "../kun-metadata/kun-metadata-databuilder/build/libs/databuilder-operator-1.0.jar"
+    rename {
+        "mce-operator.jar"
+    }
+    into "src/main/resources"
+    dependsOn(buildOperator)
+}
+
+task copyMSEOperator(type: Copy){
+    from "../kun-metadata/kun-metadata-databuilder/build/libs/databuilder-operator-1.0.jar"
+    rename {
+        "mse-operator.jar"
+    }
+    into "src/main/resources"
+    dependsOn(buildOperator)
+}
+
+compileJava.dependsOn(copyMCEOperator, copyMSEOperator)
+
+task deleteLocalJar(type: Delete){
+    delete "src/main/resources/mce-operator.jar"
+    delete "src/main/resources/mse-operator.jar"
+}
+
+shadowJar.dependsOn(deleteLocalJar)
 
 shadowJar {
     baseName = 'kun-infra'
