@@ -1,3 +1,0 @@
-spring=org.apache.dubbo.container.spring.SpringContainer
-log4j=org.apache.dubbo.container.log4j.Log4jContainer
-logback=org.apache.dubbo.container.logback.LogbackContainer

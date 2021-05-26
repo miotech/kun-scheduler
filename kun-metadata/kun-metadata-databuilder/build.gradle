@@ -36,6 +36,7 @@ dependencies {
     testImplementation "junit:junit"
     testRuntimeOnly "com.h2database:h2"
     testRuntimeOnly "org.mockito:mockito-core"
+    testImplementation project(":kun-db:kun-infra-db")
     testImplementation "org.testcontainers:testcontainers"
     testImplementation "org.testcontainers:mongodb"
     testImplementation "org.testcontainers:postgresql"
