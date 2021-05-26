@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author: Jie Chen
@@ -81,6 +82,12 @@ public class WorkflowService {
         log.info("Execute task " + taskId + " taskRun " + taskRun.getId());
 
         return taskId;
+    }
+
+    public void executeTasks(List<Long> caseIds){
+        for(Long id: caseIds){
+            executeTask(id);
+        }
     }
 
     public void deleteTaskByCase(Long caseId) {
