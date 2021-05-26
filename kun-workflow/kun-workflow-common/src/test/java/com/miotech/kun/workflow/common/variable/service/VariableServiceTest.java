@@ -10,7 +10,6 @@ import com.miotech.kun.workflow.core.model.variable.Variable;
 import com.miotech.kun.workflow.testing.factory.MockVariableFactory;
 import org.junit.Test;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
 
@@ -213,12 +212,7 @@ public class VariableServiceTest extends DatabaseTestBase {
 
         // 3. Validate
         assertTrue(removeSuccess);
-        try {
-            variableService.find(variable.getFullKey());
-            fail();
-        } catch (Exception e) {
-            assertThat(e, instanceOf(IllegalArgumentException.class));
-        }
+        assertNull(variableService.find(variable.getFullKey()));
     }
 
     @Test
