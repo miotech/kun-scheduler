@@ -19,9 +19,10 @@ import com.miotech.kun.workflow.executor.local.LocalWorkerFactory;
 import com.miotech.kun.workflow.executor.rpc.LocalExecutorFacadeImpl;
 import com.miotech.kun.workflow.executor.rpc.WorkerClusterConsumer;
 import com.miotech.kun.workflow.facade.WorkflowExecutorFacade;
+import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
 import com.miotech.kun.workflow.facade.WorkflowWorkerFacade;
-import com.miotech.kun.workflow.web.service.InitService;
 import com.miotech.kun.workflow.web.service.RecoverService;
+import com.miotech.kun.workflow.web.service.WorkflowServiceFacadeImpl;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
@@ -43,8 +44,8 @@ public class KunWorkflowServerModule extends AppModule {
         bind(EventBus.class).toInstance(new EventBus());
         bind(Scheduler.class).to(LocalScheduler.class);
         bind(TaskGraph.class).to(DatabaseTaskGraph.class);
-        bind(InitService.class);
         bind(RecoverService.class);
+        bind(WorkflowServiceFacade.class).to(WorkflowServiceFacadeImpl.class);
     }
 
 
@@ -57,7 +58,7 @@ public class KunWorkflowServerModule extends AppModule {
 
     @Singleton
     @Provides
-    public WorkflowWorkerFacade workerFacade(WorkerClusterConsumer workerClusterConsumer){
+    public WorkflowWorkerFacade workerFacade(WorkerClusterConsumer workerClusterConsumer) {
         return workerClusterConsumer.getService("default", WorkflowWorkerFacade.class, "1.0");
     }
 

@@ -8,7 +8,7 @@ import com.miotech.kun.metadata.core.model.event.MetadataChangeEvent;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;
-import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -25,12 +25,12 @@ public class MetadataChangeEventsProcessor extends EventProcessor {
     private static final Logger logger = LoggerFactory.getLogger(MetadataChangeEventsProcessor.class);
 
     private Props props;
-    private WorkflowClient workflowClient;
+    private WorkflowServiceFacade workflowServiceFacade;
 
     @Inject
-    public MetadataChangeEventsProcessor(Props props, WorkflowClient workflowClient) {
+    public MetadataChangeEventsProcessor(Props props, WorkflowServiceFacade workflowServiceFacade) {
         this.props = props;
-        this.workflowClient = workflowClient;
+        this.workflowServiceFacade = workflowServiceFacade;
     }
 
     @Override
@@ -54,7 +54,7 @@ public class MetadataChangeEventsProcessor extends EventProcessor {
                 try {
                     MetadataChangeEvent mce = JSONUtils.jsonToObject(record.value(), MetadataChangeEvent.class);
 
-                    workflowClient.executeTask(props.getLong(TaskParam.MCE_TASK.getName()), buildVariablesForTaskRun(mce));
+                    workflowServiceFacade.executeTask(props.getLong(TaskParam.MCE_TASK.getName()), buildVariablesForTaskRun(mce));
                 } catch (Exception e) {
                     logger.error("MCE Processor Error", e);
                     logger.error("Message: {}", record);

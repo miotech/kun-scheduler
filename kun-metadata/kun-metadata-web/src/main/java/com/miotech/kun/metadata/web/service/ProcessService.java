@@ -13,11 +13,11 @@ import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.model.vo.PullProcessVO;
-import com.miotech.kun.workflow.client.WorkflowClient;
-import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -39,7 +39,7 @@ public class ProcessService {
     private PullProcessDao pullProcessDao;
 
     @Inject
-    private WorkflowClient workflowClient;
+    private WorkflowServiceFacade workflowServiceFacade;
 
     @Inject
     private Props props;
@@ -78,7 +78,7 @@ public class ProcessService {
         Map<Long, PullProcessVO> result = new HashMap<>();
         for (Map.Entry<Long, PullDataSourceProcess> entry : latestProcessesMap.entrySet()) {
             PullDataSourceProcess process = entry.getValue();
-            TaskRun latestTaskRun = workflowClient.getTaskRun(process.getMceTaskRunId());
+            TaskRun latestTaskRun = workflowServiceFacade.getTaskRun(process.getMceTaskRunId());
             PullProcessVO processVO = new PullProcessVO(
                     process.getProcessId(),
                     process.getProcessType(),
@@ -98,7 +98,7 @@ public class ProcessService {
         }
         // else
         PullDatasetProcess process = pullDatasetProcessOptional.get();
-        TaskRun latestTaskRun = workflowClient.getTaskRun(process.getMceTaskRunId());
+        TaskRun latestTaskRun = workflowServiceFacade.getTaskRun(process.getMceTaskRunId());
         PullProcessVO vo = new PullProcessVO(
                 process.getProcessId(),
                 process.getProcessType(),
@@ -115,7 +115,7 @@ public class ProcessService {
                 pullProcessDao.findLatestPullDataSourceProcessByDataSourceId(datasourceId);
         // 1. If last pulling process has not finished yet, do not submit a new MCE task run.
         if (latestProcess.isPresent() && (latestProcess.get().getMceTaskRunId() != null)) {
-            TaskRun latestMCETaskRun = workflowClient.getTaskRun(latestProcess.get().getMceTaskRunId());
+            TaskRun latestMCETaskRun = workflowServiceFacade.getTaskRun(latestProcess.get().getMceTaskRunId());
             if (!latestMCETaskRun.getStatus().isFinished()) {
                 // Instead we return the existing running task run instance.
                 return new PullProcessVO(
@@ -150,7 +150,7 @@ public class ProcessService {
                 pullProcessDao.findLatestPullDatasetProcessByDataSetId(datasetId);
         // 1. If last pulling process has not finished yet, do not submit a new MCE task run.
         if (latestProcess.isPresent() && (latestProcess.get().getMceTaskRunId() != null)) {
-            TaskRun latestMCETaskRun = workflowClient.getTaskRun(latestProcess.get().getMceTaskRunId());
+            TaskRun latestMCETaskRun = workflowServiceFacade.getTaskRun(latestProcess.get().getMceTaskRunId());
             if (!latestMCETaskRun.getStatus().isFinished()) {
                 // Instead we return the existing running task run instance.
                 return new PullProcessVO(
@@ -189,7 +189,7 @@ public class ProcessService {
      * @return created task run instance on workflow
      */
     private TaskRun createPullTaskRunInstanceOnWorkflow(Long id, DataBuilderDeployMode deployMode) {
-        TaskRun taskRun = workflowClient.executeTask(props.getLong(TaskParam.MCE_TASK.getName()),
+        TaskRun taskRun = workflowServiceFacade.executeTask(props.getLong(TaskParam.MCE_TASK.getName()),
                 buildVariablesForTaskRun(deployMode, id.toString()));
         if (taskRun == null) {
             throw new IllegalStateException("Workflow returns a null task run instance.");
@@ -199,7 +199,7 @@ public class ProcessService {
 
     public TaskRun fetchStatus(String id) {
         Preconditions.checkNotNull(id, "Invalid id: null");
-        return workflowClient.getTaskRun(Long.parseLong(id));
+        return workflowServiceFacade.getTaskRun(Long.parseLong(id));
     }
 
     private Map<String, Object> buildVariablesForTaskRun(DataBuilderDeployMode deployMode, String id) {
