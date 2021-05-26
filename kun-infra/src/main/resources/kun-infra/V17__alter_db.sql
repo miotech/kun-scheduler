@@ -1,2 +1,0 @@
-ALTER TABLE kun_mt_dataset_field ADD COLUMN IF NOT EXISTS "is_primary_key" BOOLEAN DEFAULT FALSE;
-ALTER TABLE kun_mt_dataset_field ADD COLUMN IF NOT EXISTS "is_nullable" BOOLEAN DEFAULT TRUE;
