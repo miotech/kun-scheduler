@@ -3,9 +3,11 @@ package com.miotech.kun.workflow.client.mock;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
+import com.miotech.kun.infra.KunInfraWebModule;
+import com.miotech.kun.infra.KunInfraWebServer;
+import com.miotech.kun.metadata.web.KunMetadataModule;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
 import com.miotech.kun.workflow.web.KunWorkflowServerModule;
-import com.miotech.kun.workflow.web.KunWorkflowWebServer;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -35,7 +37,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
 
     public static GenericContainer redis = getRedis();
 
-    public static GenericContainer getRedis(){
+    public static GenericContainer getRedis() {
         GenericContainer redis = new GenericContainer(REDIS_IMAGE)
                 .withExposedPorts(6379);
         redis.start();
@@ -46,7 +48,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
     public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
             .withAdminPassword("Mi0tech2020");
 
-    private KunWorkflowWebServer webServer;
+    private KunInfraWebServer webServer;
     private Props props;
 
     @Override
@@ -58,13 +60,14 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         int port = 18080 + (new Random()).nextInt(100);
         logger.info("Start test workflow server in : localhost:{}", port);
         props.put(ConfigurationKeys.PROP_SERVER_PORT, Integer.toString(port));
-        addModules(new KunWorkflowServerModule(props));
+        addModules(new KunWorkflowServerModule(props)
+                , new KunInfraWebModule(props), new KunMetadataModule(props));
     }
 
     @Before
     public void setUp() {
         props = injector.getInstance(Props.class);
-        webServer = injector.getInstance(KunWorkflowWebServer.class);
+        webServer = injector.getInstance(KunInfraWebServer.class);
         new Thread(() -> {
             webServer.start();
             logger.info("Webserver exited");

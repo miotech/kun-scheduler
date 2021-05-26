@@ -46,6 +46,7 @@ dependencies {
 
     testImplementation "junit:junit"
     testRuntimeOnly "org.mockito:mockito-core"
+    testImplementation project(":kun-workflow:kun-workflow-testing")
 }
 
 jacocoTestReport {
