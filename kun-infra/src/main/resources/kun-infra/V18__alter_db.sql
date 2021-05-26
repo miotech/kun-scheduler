@@ -1,0 +1,1 @@
+ALTER TABLE kun_mt_dataset_stats ADD COLUMN IF NOT EXISTS "total_byte_size" BIGINT;

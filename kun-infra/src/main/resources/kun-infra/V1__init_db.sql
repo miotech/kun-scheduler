@@ -4,7 +4,7 @@ DROP TABLE IF EXISTS kun_wf_task;
 
 DROP TABLE IF EXISTS kun_wf_tick_task_mapping;
 
-DROP TABLE IF EXISTS kun_wf_task_relations_downstream_task_id_idx;
+DROP TABLE IF EXISTS kun_wf_task_relations;
 
 DROP TABLE IF EXISTS kun_wf_task_run;
 
