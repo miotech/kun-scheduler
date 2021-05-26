@@ -429,7 +429,7 @@ public class TaskManagerTest extends SchedulerTestBase {
 
     @Test
     public void updateDownstreamShouldNotEffectOthersDependencies(){
-        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>2;1>>2");
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2");
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>2");
         for (Task task : taskList) {
             taskDao.create(task);
@@ -487,7 +487,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps2.getStartAt(), is(nullValue()));
         assertThat(attemptProps2.getEndAt(), is(nullValue()));
 
-        TaskAttemptProps attemptProps3 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
+        TaskAttemptProps attemptProps3 = taskRunDao.fetchLatestTaskAttempt(taskRun3.getId());
         assertThat(attemptProps3.getAttempt(), is(1));
         assertThat(attemptProps3.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
         assertThat(attemptProps3.getLogPath(), is(nullValue()));
@@ -500,8 +500,8 @@ public class TaskManagerTest extends SchedulerTestBase {
         // verify invoke downStream
         awaitUntilAttemptDone(taskRun3.getId() + 1);
 
-        attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
-        assertThat(attemptProps3.getId(), is(attemptProps2.getId()));
+        attemptProps3 = taskRunDao.fetchLatestTaskAttempt(taskRun3.getId());
+        assertThat(attemptProps3.getId(), is(attemptProps3.getId()));
         assertThat(attemptProps3.getAttempt(), is(1));
         assertThat(attemptProps3.getStatus(), is(TaskRunStatus.SUCCESS));
         assertThat(attemptProps3.getLogPath(), is(nullValue()));
