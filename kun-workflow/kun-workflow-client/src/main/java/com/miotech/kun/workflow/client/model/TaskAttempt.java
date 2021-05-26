@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.client.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.miotech.kun.workflow.client.CustomDateTimeDeserializer;
+import com.miotech.kun.commons.utils.CustomDateTimeDeserializer;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.time.OffsetDateTime;
