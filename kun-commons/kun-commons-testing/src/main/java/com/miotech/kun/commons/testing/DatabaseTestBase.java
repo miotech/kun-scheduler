@@ -42,7 +42,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         dataSource = injector.getInstance(DataSource.class);
         Props props = new Props();
         props.put("flyway.initSql", "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT");
-        DatabaseSetup setup = new DatabaseSetup(dataSource, props, "sql/");
+        DatabaseSetup setup = new DatabaseSetup(dataSource, props, "kun-infra/");
         setup.start();
     }
 
