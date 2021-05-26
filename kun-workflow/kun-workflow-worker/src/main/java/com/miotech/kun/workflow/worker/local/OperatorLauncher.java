@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.worker.local;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -268,8 +269,9 @@ public class OperatorLauncher {
                 = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("com.miotech.kun.workflow");
         workerLogger.detachAndStopAllAppenders();
         rootLogger.detachAndStopAllAppenders();
+        rootLogger.setLevel(Level.DEBUG);
 
-        workerLogger.addAppender(appender);
+        rootLogger.addAppender(appender);
     }
 
     private KunOperator loadOperator(String jarPath, String mainClass) {
