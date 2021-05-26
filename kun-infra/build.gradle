@@ -13,10 +13,16 @@ plugins {
 
 dependencies {
     implementation project(':kun-commons:kun-commons-web')
+    implementation project(":kun-commons:kun-commons-rpc")
+    implementation project(':kun-commons:kun-commons-db')
     implementation project(":kun-commons:kun-commons-utils")
 
+    implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-web')
+    implementation project(':kun-workflow:kun-workflow-facade')
     implementation project(':kun-metadata:kun-metadata-web')
+    implementation project(':kun-metadata:kun-metadata-service-facade')
+    implementation project(":kun-metadata:kun-metadata-databuilder")
 
     implementation "com.google.inject:guice"
     implementation "com.google.guava:guava"
@@ -24,6 +30,7 @@ dependencies {
     implementation "org.eclipse.jetty:jetty-servlet"
     implementation "org.eclipse.jetty:jetty-util"
     implementation "org.eclipse.jetty:jetty-webapp"
+    implementation "org.yaml:snakeyaml"
     implementation 'redis.clients:jedis'
 }
 

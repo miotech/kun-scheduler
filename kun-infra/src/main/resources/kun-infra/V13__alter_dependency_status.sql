@@ -1,0 +1,1 @@
+update kun_wf_task_run_relations set dependency_status = 'CREATED' where dependency_status = 'CREATE';
