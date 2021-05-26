@@ -17,6 +17,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
         "com.miotech.kun.dataplatform",
         // kun-data-dashboard
         "com.miotech.kun.datadashboard",
+        // kun-data-discovery
+        "com.miotech.kun.dataquality",
+        "com.miotech.kun.datadiscovery"
 })
 public class WebApplicationMain {
     public static void main(String[] args) {
