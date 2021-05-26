@@ -1,3 +1,0 @@
-spring=org.apache.dubbo.config.spring.extension.SpringExtensionFactory
-adaptive=org.apache.dubbo.common.extension.factory.AdaptiveExtensionFactory
-spi=org.apache.dubbo.common.extension.factory.SpiExtensionFactory

@@ -18,6 +18,8 @@ dependencies {
     testImplementation project(':kun-workflow:kun-workflow-scheduler')
     testImplementation project(':kun-workflow:kun-workflow-testing')
     testImplementation project(':kun-workflow:kun-workflow-web')
+    testImplementation project(':kun-metadata:kun-metadata-web')
+    testImplementation project(':kun-infra')
     testImplementation "junit:junit"
     testImplementation 'com.shazam:shazamcrest'
     testImplementation 'org.testcontainers:neo4j'

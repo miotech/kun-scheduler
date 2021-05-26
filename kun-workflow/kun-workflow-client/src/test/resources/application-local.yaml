@@ -10,11 +10,14 @@ datasource:
   driverClassName: org.postgresql.Driver
 
 flyway:
-  locations: sql/
+  locations: kun-infra/
   table: flyway_kun_mt_schema_history
   baselineOnMigrate: true
   baselineVersion: 0
 
 workflow:
-  url: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
+  url: http://${KUN_INFRA_HOST}:${KUN_INFRA_PORT}
   cronExpr: 0 0 12 * * ?
+
+metadata:
+  enable: false
