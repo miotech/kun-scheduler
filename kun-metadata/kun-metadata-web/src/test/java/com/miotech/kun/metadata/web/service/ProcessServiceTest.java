@@ -61,7 +61,7 @@ public class ProcessServiceTest {
         Long id = random.nextLong();
 
         Mockito.when(workflowClient.getTaskRun(id)).thenReturn(TaskRun.newBuilder().withId(id).build());
-        TaskRun taskRun = processService.fetchStatus(id.toString());
+        com.miotech.kun.workflow.core.model.taskrun.TaskRun taskRun = processService.fetchStatus(id.toString());
 
         assertThat(taskRun.getId(), is(id));
     }

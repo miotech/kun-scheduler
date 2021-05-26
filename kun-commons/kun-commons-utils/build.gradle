@@ -1,3 +1,5 @@
 dependencies {
     implementation "org.yaml:snakeyaml:1.26"
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
 }

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.ArgumentCheckUtils;
-import com.miotech.kun.workflow.client.CustomDateTimeSerializer;
+import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
