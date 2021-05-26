@@ -522,8 +522,6 @@ public class TaskRunDao {
             taskAttemptParams.add(taskRunStatus.name());
             taskAttemptParams.addAll(taskAttemptIds);
             dbOperator.update(taskAttemptSql, taskAttemptParams.toArray());
-            DependencyStatus dependencyStatus = fromUpstreamStatus(taskRunStatus);
-            updateTaskRunDependencyByTaskRunIds(taskRunIds, dependencyStatus);
             return null;
         });
     }
