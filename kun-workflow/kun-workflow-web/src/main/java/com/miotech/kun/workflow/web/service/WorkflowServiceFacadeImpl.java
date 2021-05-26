@@ -44,7 +44,13 @@ public class WorkflowServiceFacadeImpl implements WorkflowServiceFacade {
         if (operatorService.fetchOperatorByName(name).isPresent()) {
             throw new IllegalArgumentException(String.format("Cannot create operator with duplicated name: \"%s\"", name));
         }
-        return operatorService.saveOperator(operator);
+        OperatorPropsVO operatorPropsVO = OperatorPropsVO
+                .newBuilder()
+                .withName(operator.getName())
+                .withClassName(operator.getClassName())
+                .withDescription(operator.getDescription())
+                .build();
+        return operatorService.createOperator(operatorPropsVO);
     }
 
     @Override
@@ -76,7 +82,10 @@ public class WorkflowServiceFacadeImpl implements WorkflowServiceFacade {
     @Override
     public Optional<Task> getTask(String taskName) {
         TaskSearchFilter filter = TaskSearchFilter.newBuilder()
-                .withName(taskName).build();
+                .withName(taskName)
+                .withPageNum(1)
+                .withPageSize(1)
+                .build();
         PaginationVO<Task> paginationVO = taskService.fetchTasksByFilters(filter);
         return paginationVO.getRecords().stream().filter(x -> x.getName().equals(taskName)).findAny();
     }
@@ -106,7 +115,7 @@ public class WorkflowServiceFacadeImpl implements WorkflowServiceFacade {
 
     private FileItem createFileItem(File file, String fieldName) {
         FileItemFactory factory = new DiskFileItemFactory(16, null);
-        FileItem item = factory.createItem(fieldName, "text/plain", true, file.getName());
+        FileItem item = factory.createItem(fieldName, "text/plain", false, file.getName());
         int bytesRead = 0;
         byte[] buffer = new byte[8192];
         try {

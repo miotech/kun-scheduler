@@ -7,7 +7,6 @@ import com.miotech.kun.commons.rpc.RpcPublisher;
 import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.infra.util.RequestParameterBuilder;
-import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.kafka.MetadataConsumerStarter;
@@ -22,7 +21,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class InitService implements InitializingBean{
+public class InitService implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(com.miotech.kun.infra.service.InitService.class);
 
     @Inject
@@ -36,9 +35,6 @@ public class InitService implements InitializingBean{
 
     @Inject
     private RpcPublisher rpcPublisher;
-
-    @Inject
-    private MetadataServiceFacade metadataServiceFacade;
 
     @Inject
     private MetadataConsumerStarter metadataConsumerStarter;
@@ -60,9 +56,11 @@ public class InitService implements InitializingBean{
     @Override
     public void afterPropertiesSet() {
         configureDB();
-        initDataBuilder();
+        if (props.getBoolean("metadata.enable", true)) {
+            initDataBuilder();
+            startConsumer();
+        }
         publishRpcServices();
-        startConsumer();
     }
 
     private void configureDB() {
@@ -97,7 +95,6 @@ public class InitService implements InitializingBean{
     }
 
     private void publishRpcServices() {
-        rpcPublisher.exportService(MetadataServiceFacade.class, "1.0", metadataServiceFacade);
         rpcPublisher.exportService(WorkflowExecutorFacade.class, "1.0", executorFacade);
 
     }

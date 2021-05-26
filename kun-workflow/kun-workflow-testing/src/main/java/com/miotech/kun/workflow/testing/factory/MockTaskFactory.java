@@ -27,7 +27,7 @@ public class MockTaskFactory {
                 .withDescription("task_description_" + mockId)
                 .withOperatorId(operatorId)
                 .withConfig(Config.EMPTY)
-                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 0 0 * * ?"))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .withQueueName("default")

@@ -21,6 +21,7 @@ public class KunInfraWebModule extends KunWebServerModule {
         List<String> scanList = new ArrayList<>();
         scanList.add("com.miotech.kun.metadata.web.controller");
         scanList.add("com.miotech.kun.workflow.web.controller");
+        scanList.add("com.miotech.kun.infra");
         return new BasePackages(scanList);
     }
 

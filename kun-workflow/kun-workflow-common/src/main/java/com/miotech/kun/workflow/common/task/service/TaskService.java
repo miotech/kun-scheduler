@@ -20,11 +20,7 @@ import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.model.operator.Operator;
-import com.miotech.kun.workflow.core.model.task.DependencyLevel;
-import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskDependency;
-import com.miotech.kun.workflow.core.model.task.TaskPriority;
-import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
+import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -119,7 +115,10 @@ public class TaskService {
         ConfigDef configDef = operatorService.getOperatorConfigDef(vo.getOperatorId());
         // populate default values
         Config config = new Config(configDef, vo.getConfig().getValues());
-        checkConfig(configDef,config);
+        if (vo.getScheduleConf().getType().equals(ScheduleType.NONE)) {
+            return config;
+        }
+        checkConfig(configDef, config);
         return config;
     }
 

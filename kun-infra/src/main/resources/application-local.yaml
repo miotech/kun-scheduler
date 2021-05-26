@@ -9,7 +9,7 @@ executor:
 
 
 server:
-  port: ${WORKFLOW_PORT}
+  port: ${KUN_INFRA_PORT}
   dumpStdErr: false
 
 datasource:
@@ -32,7 +32,6 @@ flyway:
 
 rpc:
   registry: redis://${DB_REDIS_IP}:6379/
-  #todo:rpc port 是否需要区分
   port: ${WORKFLOW_RPC_SERVICE_PORT}
 
 neo4j:
@@ -47,7 +46,7 @@ redis:
 env: local
 
 workflow:
-  url: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
+  url: http://${KUN_INFRA_PORT}:${KUN_INFRA_PORT}
   cronExpr: 0 0 12 * * ?
 
 

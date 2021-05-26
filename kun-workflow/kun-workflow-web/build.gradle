@@ -44,6 +44,8 @@ dependencies {
     runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16'
 
     testImplementation project(':kun-workflow:kun-workflow-testing')
+    testImplementation project(':kun-infra')
+    testImplementation project(':kun-commons:kun-commons-web')
     testImplementation 'org.apache.httpcomponents:httpclient'
     testImplementation "org.hamcrest:hamcrest"
     testImplementation 'com.squareup.okhttp3:okhttp'
