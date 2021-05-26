@@ -21,7 +21,7 @@ dependencies {
     implementation project(":kun-metadata:kun-metadata-service-facade")
     implementation project(":kun-workflow:kun-workflow-core")
     implementation project(":kun-workflow:kun-workflow-utils")
-    implementation project(':kun-workflow:kun-workflow-client')
+    implementation project(':kun-workflow:kun-workflow-facade')
 
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
