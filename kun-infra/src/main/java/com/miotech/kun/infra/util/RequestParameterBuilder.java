@@ -1,15 +1,15 @@
-package com.miotech.kun.metadata.web.util;
+package com.miotech.kun.infra.util;
 
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.PropKey;
-import com.miotech.kun.workflow.client.model.Operator;
-import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
+import com.miotech.kun.workflow.core.model.task.Task;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.regex.Matcher;
@@ -31,7 +31,7 @@ public class RequestParameterBuilder {
     }
 
     public static Task buildTaskForCreate(String taskName, Long operatorId, Props props) {
-        Task.Builder taskBuilder = Task.newBuilder()
+        Task.TaskBuilder taskBuilder =  Task.newBuilder()
                 .withName(taskName)
                 .withDescription(StringUtils.EMPTY)
                 .withOperatorId(operatorId)
@@ -41,7 +41,7 @@ public class RequestParameterBuilder {
         return taskBuilder.build();
     }
 
-    private static void fillConfig(Task.Builder taskBuilder, String taskName, Props props) {
+    private static void fillConfig(Task.TaskBuilder taskBuilder, String taskName, Props props) {
         Config config = buildConfigForCreate(taskName, props);
         taskBuilder.withConfig(config);
         if (isScheduleTask(taskName)) {

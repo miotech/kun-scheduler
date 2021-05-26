@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.modle.BasePackages;
 import com.miotech.kun.commons.web.module.KunWebServerModule;
+import com.miotech.kun.infra.service.InitService;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,5 +22,11 @@ public class KunInfraWebModule extends KunWebServerModule {
         scanList.add("com.miotech.kun.metadata.web.controller");
         scanList.add("com.miotech.kun.workflow.web.controller");
         return new BasePackages(scanList);
+    }
+
+    @Override
+    protected void configure() {
+        super.configure();
+        bind(InitService.class);
     }
 }
