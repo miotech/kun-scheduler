@@ -6,7 +6,7 @@ spring:
     exclude: org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration
   datasource:
     driver-class-name: org.neo4j.jdbc.bolt.BoltDriver
-    url: jdbc:neo4j:bolt://${DB_NEO4J_IP}:7687
+    url: jdbc:neo4j:bolt://${DB_NEO4J_IP}:${DB_NEO4J_PORT}
     username: ${DB_NEO4J_USERNAME}
     password: ${DB_NEO4J_PASSWORD}
 

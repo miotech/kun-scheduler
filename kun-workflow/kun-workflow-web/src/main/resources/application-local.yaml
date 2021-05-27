@@ -19,7 +19,8 @@ datasource:
   driverClassName: org.postgresql.Driver
 
 resource:
-  libDirectory: /tmp
+  libDirectory: /data/operators
+  logDirectory: /data/logs
 
 flyway:
   locations: sql/
@@ -31,11 +32,11 @@ flyway:
   outOfOrder: true
 
 rpc:
-  registry: redis://${DB_REDIS_IP}:6379/
+  registry: redis://${DB_REDIS_IP}:${DB_REDIS_PORT}/
   port: ${WORKFLOW_RPC_SERVICE_PORT}
 
 neo4j:
-  uri: bolt://${DB_NEO4J_IP}:7687/
+  uri: bolt://${DB_NEO4J_IP}:${DB_NEO4J_PORT}/
   username: ${DB_NEO4J_USERNAME}
   password: ${DB_NEO4J_PASSWORD}
 
