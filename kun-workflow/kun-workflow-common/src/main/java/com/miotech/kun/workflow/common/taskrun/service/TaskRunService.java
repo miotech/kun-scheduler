@@ -6,6 +6,7 @@ import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
@@ -48,6 +49,9 @@ public class TaskRunService {
 
     @Inject
     private Scheduler scheduler;
+
+    @Inject
+    private Props props;
 
     private final Set<Long> rerunningTaskRunIds = new ConcurrentHashSet<>();
 
@@ -315,8 +319,9 @@ public class TaskRunService {
     }
 
     public String logPathOfTaskAttempt(Long taskAttemptId) {
+        String logDir = props.getString("resource.logDirectory", "logs");
         String date = DateTimeUtils.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        return String.format("file:logs/%s/%s", date, taskAttemptId);
+        return String.format("file:%s/%s/%s", logDir, date, taskAttemptId);
     }
 
     public Map<Long, List<TaskRunVO>> fetchLatestTaskRuns(List<Long> taskIds, int limit) {
