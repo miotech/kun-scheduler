@@ -95,13 +95,6 @@ public class WorkflowService {
                 .build();
         Integer upstreamFailedTaskCount = workflowClient.countTaskRun(upstreamFailedRequest);
 
-        TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
-                .withTags(DATA_PLATFORM_FILTER_TAGS)
-                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
-                .withPageSize(0)
-                .build();
-        Integer totalCount = workflowClient.countTaskRun(totalRequest);
-
         DataDevelopmentMetrics metrics = new DataDevelopmentMetrics();
         metrics.setSuccessTaskCount(successCount);
         metrics.setFailedTaskCount(failedCount);
@@ -109,7 +102,6 @@ public class WorkflowService {
         metrics.setStartedTaskCount(startedCount);
         metrics.setPendingTaskCount(pendingCount);
         metrics.setUpstreamFailedTaskCount(upstreamFailedTaskCount);
-        metrics.setTotalTaskCount(totalCount);
 
         return metrics;
     }

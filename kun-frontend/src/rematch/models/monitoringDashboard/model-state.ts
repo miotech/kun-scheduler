@@ -103,9 +103,9 @@ export const initState: MonitoringDashboardModelState = {
       successTaskCount: 0,
       failedTaskCount: 0,
       runningTaskCount: 0,
-      totalTaskCount: 0,
       pendingTaskCount: 0,
       startedTaskCount: 0,
+      upstreamFailedTaskCount: 0,
     },
     dataDevelopmentMetricsLoading: false,
     dailyTaskFinish: {

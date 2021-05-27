@@ -129,7 +129,6 @@ export interface DataDevelopmentMetrics {
   runningTaskCount: number;
   pendingTaskCount: number;
   startedTaskCount: number;
-  totalTaskCount: number;
   upstreamFailedTaskCount: number;
 }
 
