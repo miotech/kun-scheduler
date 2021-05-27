@@ -71,7 +71,8 @@ create table if not exists kun_mt_glossary
     create_user varchar(256)  not null,
     create_time timestamp     not null,
     update_user varchar(256)  not null,
-    update_time timestamp     not null
+    update_time timestamp     not null,
+    prev_id bigint
 );
 
 create table if not exists kun_mt_glossary_to_dataset_ref
@@ -121,7 +122,7 @@ create table if not exists kun_dq_case
     create_user      varchar(1024)  not null,
     create_time      timestamp      not null,
     update_user      varchar(1024)  not null,
-    update_time      timestamp      not null,
+    update_time      timestamp      not null
 );
 
 create table if not exists kun_dq_case_associated_dataset
@@ -182,15 +183,15 @@ create unique index if not exists kun_dq_case_task_history_task_run_id_uindex on
 
 create table if not exists kun_dq_case_metrics
 (
-    dq_case_id               bigint primary key,
+    id                       bigint primary key,
     error_reason             text,
     continuous_failing_count bigint default 0 not null,
-    update_time              timestamp not null
+    update_time              timestamp not null,
+    rule_records             jsonb default null,
+    case_id                  bigint default -1 not null
 );
 
 -- V10__add_glossary_order.sql
-
-alter table kun_mt_glossary add prev_id bigint;
 
 update kun_mt_glossary kmg
 set prev_id = kmg_next.next_id from (select id,
@@ -202,17 +203,11 @@ where kmg.id = kmg_next.id and (kmg.parent_id = kmg_next.next_parent_id or kmg.p
 
 -- V11__add_dq_case_types.sql
 
-alter table kun_dq_case add types text;
-
 -- V12__add_dq_case_primary_dataset.sql
 
 -- alter table kun_dq_case add types text;
 
 -- V13__enhance_dp
-
-alter table kun_dq_case_metrics add rule_records jsonb;
-
-update kun_dq_case_metrics set error_reason = null;
 
 -- V14__drop_useless_security_table.sql
 
@@ -223,10 +218,3 @@ drop table if exists kun_user_session_attributes;
 drop table if exists kun_user_session;
 
 -- V15__enhance_dq_case_metrics.sql
-
-alter table kun_dq_case_metrics rename column dq_case_id to id;
-
-alter table kun_dq_case_metrics
-    add case_id bigint default -1 not null;
-
-update kun_dq_case_metrics set case_id = id;
