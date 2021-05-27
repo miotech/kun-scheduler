@@ -420,7 +420,7 @@ export default {
   "monitoringDashboard.dataDevelopment.failedLastDay": "Failed (Last 24 hours)",
   "monitoringDashboard.dataDevelopment.running": "Running",
   "monitoringDashboard.dataDevelopment.pending": "Pending (Last 24 hours)",
-  "monitoringDashboard.dataDevelopment.blocked": "Blocked (Last 24 hours)",
+  "monitoringDashboard.dataDevelopment.blocked": "Upstream Failed (Last 24 hours)",
   "monitoringDashboard.dataDevelopment.totalTaskCount": "Total Task Count",
   "monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title": "Daily Task Finish Count",
   "monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.count": "{count} tasks",
