@@ -8,7 +8,7 @@ import {
   RowCountChange,
 } from '@/services/monitoring-dashboard';
 
-export type DataDevelopmentBoardFilterCardType = 'SUCCESS' | 'FAILED' | 'RUNNING' | 'PENDING' | null;
+export type DataDevelopmentBoardFilterCardType = 'SUCCESS' | 'FAILED' | 'RUNNING' | 'PENDING' | 'BLOCKED' | null;
 
 export interface DataDiscoveryBoardData {
   metadataMetrics: MetadataMetrics | null;

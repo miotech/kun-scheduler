@@ -130,6 +130,7 @@ export interface DataDevelopmentMetrics {
   pendingTaskCount: number;
   startedTaskCount: number;
   totalTaskCount: number;
+  upstreamFailedTaskCount: number;
 }
 
 export function fetchDataDevelopmentMetrics() {

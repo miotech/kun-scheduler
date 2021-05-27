@@ -420,6 +420,7 @@ export default {
   "monitoringDashboard.dataDevelopment.failedLastDay": "失败（24 小时内）",
   "monitoringDashboard.dataDevelopment.running": "运行中",
   "monitoringDashboard.dataDevelopment.pending": "未开始（24 小时内）",
+  "monitoringDashboard.dataDevelopment.blocked": "已阻塞（24 小时内）",
   "monitoringDashboard.dataDevelopment.totalTaskCount": "总任务数",
   "monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title": "日任务完成数",
   "monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.count": "{count} 个任务",
