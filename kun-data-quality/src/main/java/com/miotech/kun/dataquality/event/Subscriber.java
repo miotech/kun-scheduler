@@ -8,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -31,14 +30,19 @@ public class Subscriber {
     private void doSubscribe() {
         workflowEventSubscriber.subscribe(event -> {
             if (event instanceof TaskAttemptFinishedEvent) {
-                handleTaskAttemptStatusChangeEvent((TaskAttemptFinishedEvent) event);
+                handleTaskAttemptFinishedEvent((TaskAttemptFinishedEvent) event);
             }
         });
     }
 
-    private void handleTaskAttemptStatusChangeEvent(TaskAttemptFinishedEvent statusChangeEvent) {
-        List<Long> datasetIds = statusChangeEvent.getOutDataSetIds();
-        List<Long> caseIds = dataQualityRepository.getWorkflowTasksByDatasetIds(datasetIds);
-        workflowService.executeTasks(caseIds);
+    private void handleTaskAttemptFinishedEvent(TaskAttemptFinishedEvent taskAttemptFinishedEvent) {
+        if(taskAttemptFinishedEvent.getFinalStatus().isSuccess()) {
+            List<Long> datasetIds = taskAttemptFinishedEvent.getOutDataSetIds();
+            if(datasetIds.isEmpty())
+                return;
+            List<Long> caseIds = dataQualityRepository.getWorkflowTasksByDatasetIds(datasetIds);
+            if(!caseIds.isEmpty())
+                workflowService.executeTasks(caseIds);
+        }
     }
 }
