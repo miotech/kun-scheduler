@@ -151,6 +151,7 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
             value={metrics.upstreamFailedTaskCount}
             textTheme="blocked"
             loading={dataDevelopmentMetricsLoading}
+            selectedAsFilter={selectedFilterCardType === 'BLOCKED'}
             onClick={() => {
               if (selectedFilterCardType !== 'BLOCKED') {
                 setSelectedFilterCardType('BLOCKED');
