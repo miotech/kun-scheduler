@@ -84,3 +84,23 @@ notify:
 
 data-dashboard:
   long-existing-threshold: 30
+
+# Data-discovery config
+
+metadata:
+  base-url: http://${METADATA_HOST}:${METADATA_PORT}
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun
+    username: ${DB_PG_USERNAME}
+    password: ${DB_PG_PASSWORD}
+
+data-quality:
+  workflow:
+    task:
+      cron: 0 0 0 * * ?
+
+springdoc:
+  swagger-ui:
+    operationsSorter: method
+  use-fqn: true

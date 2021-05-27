@@ -2,9 +2,7 @@ package com.miotech.kun.datadashboard;
 
 import com.miotech.kun.commons.utils.PropertyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
 import org.springframework.core.env.Environment;
-import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.PostConstruct;
 
@@ -12,7 +10,7 @@ import javax.annotation.PostConstruct;
  * @author: Jie Chen
  * @created: 2020/7/19
  */
-@org.springframework.context.annotation.Configuration
+@org.springframework.context.annotation.Configuration("DataDashboardConfiguration")
 public class Configuration {
 
     @Autowired
