@@ -19,7 +19,9 @@ function computeFilterTypeToRequestParam(
     case 'FAILED':
       return 'FAILED,ERROR,ABORTED';
     case 'PENDING':
-      return 'QUEUED,CREATED,INITIALIZING,UPSTREAM_FAILED';
+      return 'QUEUED,CREATED,INITIALIZING';
+    case 'BLOCKED':
+      return 'UPSTREAM_FAILED';
     case 'RUNNING':
       return 'RUNNING';
     default:
@@ -145,12 +147,17 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
         </Col>
         <Col flex="1 1">
           <StatisticCard
-            title={t('monitoringDashboard.dataDevelopment.totalTaskCount')}
-            value={metrics.totalTaskCount}
-            textTheme="default"
+            title={t('monitoringDashboard.dataDevelopment.blocked')}
+            value={metrics.upstreamFailedTaskCount}
+            textTheme="blocked"
             loading={dataDevelopmentMetricsLoading}
+            selectedAsFilter={selectedFilterCardType === 'BLOCKED'}
             onClick={() => {
-              setSelectedFilterCardType(null);
+              if (selectedFilterCardType !== 'BLOCKED') {
+                setSelectedFilterCardType('BLOCKED');
+              } else {
+                setSelectedFilterCardType(null);
+              }
             }}
           />
         </Col>
@@ -162,7 +169,7 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
     metrics.failedTaskCount,
     metrics.runningTaskCount,
     metrics.pendingTaskCount,
-    metrics.totalTaskCount,
+    metrics.upstreamFailedTaskCount,
     dataDevelopmentMetricsLoading,
     selectedFilterCardType,
     setSelectedFilterCardType,
