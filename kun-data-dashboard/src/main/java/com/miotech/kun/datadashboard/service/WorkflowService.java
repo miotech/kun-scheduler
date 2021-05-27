@@ -78,12 +78,22 @@ public class WorkflowService {
         TaskRunSearchRequest pendingRequest = TaskRunSearchRequest.newBuilder()
                 .withDateFrom(DateTimeUtils.now().minusDays(1))
                 .withIncludeStartedOnly(false)
-                .withStatus(ImmutableSet.of(TaskRunStatus.CREATED, TaskRunStatus.INITIALIZING, TaskRunStatus.QUEUED, TaskRunStatus.UPSTREAM_FAILED))
+                .withStatus(ImmutableSet.of(TaskRunStatus.CREATED, TaskRunStatus.INITIALIZING, TaskRunStatus.QUEUED))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
         Integer pendingCount = workflowClient.countTaskRun(pendingRequest);
+
+        TaskRunSearchRequest upstreamFailedRequest = TaskRunSearchRequest.newBuilder()
+                .withDateFrom(DateTimeUtils.now().minusDays(1))
+                .withIncludeStartedOnly(false)
+                .withStatus(ImmutableSet.of(TaskRunStatus.UPSTREAM_FAILED))
+                .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
+                .withPageSize(0)
+                .build();
+        Integer upstreamFailedTaskCount = workflowClient.countTaskRun(upstreamFailedRequest);
 
         TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
@@ -98,6 +108,7 @@ public class WorkflowService {
         metrics.setRunningTaskCount(runningCount);
         metrics.setStartedTaskCount(startedCount);
         metrics.setPendingTaskCount(pendingCount);
+        metrics.setUpstreamFailedTaskCount(upstreamFailedTaskCount);
         metrics.setTotalTaskCount(totalCount);
 
         return metrics;
