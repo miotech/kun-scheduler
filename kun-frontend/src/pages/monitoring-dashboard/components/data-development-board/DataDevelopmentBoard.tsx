@@ -170,6 +170,7 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
     metrics.runningTaskCount,
     metrics.pendingTaskCount,
     metrics.totalTaskCount,
+    metrics.upstreamFailedTaskCount,
     dataDevelopmentMetricsLoading,
     selectedFilterCardType,
     setSelectedFilterCardType,
