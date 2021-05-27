@@ -19,6 +19,8 @@ import { Watermark } from '@/definitions/Dataset.type';
 import { Column } from '@/rematch/models/datasetDetail';
 import { LineageDirection } from '@/services/lineage';
 
+import { DatasetPullProcessVO } from '@/services/datasetDetail';
+import { useInterval } from 'ahooks';
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnDescInput from './components/ColumnDescInput/ColumnDescInput';
 import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
@@ -35,6 +37,20 @@ interface Props extends RouteComponentProps<MatchParams> {}
 
 const { Option } = Select;
 
+function isPullingStatus(pullProcess: DatasetPullProcessVO | null) {
+  if (pullProcess == null || pullProcess?.latestMCETaskRun?.status == null) {
+    return false;
+  }
+  // else
+  if (pullProcess.latestMCETaskRun.status === 'SUCCESS' ||
+    pullProcess.latestMCETaskRun.status === 'FAILED' ||
+    pullProcess.latestMCETaskRun.status === 'ABORTED') {
+    return false;
+  }
+  // else
+  return true;
+}
+
 export default function DatasetDetail({ match }: Props) {
   const [query] = useQueryParams({
     caseId: StringParam,
@@ -44,10 +60,12 @@ export default function DatasetDetail({ match }: Props) {
 
   const { selector, dispatch } = useRedux(state => state.datasetDetail);
   const {
-    selector: { allOwnerList, allTagList },
+    selector: { allOwnerList, allTagList, latestPullProcess, latestPullProcessIsLoading },
   } = useRedux(state => ({
     allOwnerList: state.dataDiscovery.allOwnerList,
     allTagList: state.dataDiscovery.allTagList,
+    latestPullProcess: state.datasetDetail.datasetLatestPullProcess,
+    latestPullProcessIsLoading: state.datasetDetail.datasetLatestPullProcessIsLoading,
   }));
 
   const debounceColumnKeyword = useDebounce(selector.columnsKeyword, 500);
@@ -58,7 +76,7 @@ export default function DatasetDetail({ match }: Props) {
   const [fetchColumnsLoading, setFetchColumnsLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  const [forceReFetchInfoFlag, setForceReFetchInfoFlag] = useState(1);
+  const [forceReFetchInfoFlag, setForceReFetchInfoFlag ] = useState(1);
   const [forceUpdateAllTagListFlag, setForceUpdateAllTagListFlag] = useState(1);
   const [
     forceReFetchDataQualityFlag,
@@ -80,18 +98,24 @@ export default function DatasetDetail({ match }: Props) {
   }, [dispatch.datasetDetail, debounceColumnKeyword, forceReFetchInfoFlag]);
 
   useEffect(() => {
-    setFetchColumnsLoading(true);
-    const params = {
-      id: currentId,
-      keyword: debounceColumnKeyword,
-      pagination: {
-        pageNumber: selector.columnsPagination.pageNumber,
-        pageSize: selector.columnsPagination.pageSize,
-      },
-    };
-    dispatch.datasetDetail.fetchDatasetColumns(params).then(() => {
-      setFetchColumnsLoading(false);
-    });
+    async function fetchDatasetData() {
+      setFetchColumnsLoading(true);
+      try {
+        const params = {
+          id: currentId,
+          keyword: debounceColumnKeyword,
+          pagination: {
+            pageNumber: selector.columnsPagination.pageNumber,
+            pageSize: selector.columnsPagination.pageSize,
+          },
+        };
+        await dispatch.datasetDetail.fetchDatasetColumns(params);
+        await dispatch.datasetDetail.fetchDatasetLatestPullProcess(currentId);
+      } finally {
+        setFetchColumnsLoading(false);
+      }
+    }
+    fetchDatasetData();
   }, [
     currentId,
     debounceColumnKeyword,
@@ -100,6 +124,17 @@ export default function DatasetDetail({ match }: Props) {
     selector.columnsPagination.pageSize,
     forceReFetchInfoFlag,
   ]);
+
+  /* If this dataset is still pulling, poll status of the latest process  */
+  useInterval(async function pollPullingProcess() {
+    const process = await dispatch.datasetDetail.fetchDatasetLatestPullProcess(currentId);
+    if (process?.latestMCETaskRun?.status === 'SUCCESS') {
+      message.success(t('dataDetail.msg.pullSuccess'));
+      setForceReFetchInfoFlag(v => v + 1);
+    } else if (process?.latestMCETaskRun?.status === 'FAILED' || process?.latestMCETaskRun?.status === 'ABORTED') {
+      message.error(t('dataDetail.msg.pullFailed'));
+    }
+  }, isPullingStatus(latestPullProcess) ? 3000 : null, { immediate: false });
 
   useEffect(() => {
     dispatch.dataDiscovery.fetchAllOwnerList();
@@ -134,14 +169,8 @@ export default function DatasetDetail({ match }: Props) {
   ]);
 
   const handleClickPull = useCallback(() => {
-    const diss = message.loading(t('dataDetail.button.pullLoading'), 0);
-    dispatch.datasetDetail.pullDataset(currentId).then(resp => {
-      diss();
-      if (resp) {
-        setForceReFetchInfoFlag(v => v + 1);
-      }
-    });
-  }, [currentId, dispatch.datasetDetail, t]);
+    dispatch.datasetDetail.pullDataset(currentId);
+  }, [currentId, dispatch.datasetDetail]);
 
   const handleChangeDescription = useCallback(
     value => {
@@ -376,13 +405,21 @@ export default function DatasetDetail({ match }: Props) {
               <span className={styles.title}>{selector.name}</span>
             </span>
 
-            <Button
-              size="large"
-              className={styles.pullButton}
-              onClick={handleClickPull}
-            >
-              {t('dataDetail.button.pull')}
-            </Button>
+            <div className={styles.headingButtonGroup}>
+              <Button
+                size="large"
+                type="primary"
+                onClick={handleClickPull}
+                disabled={latestPullProcessIsLoading || isPullingStatus(latestPullProcess)}
+                loading={isPullingStatus(latestPullProcess)}
+              >
+                {isPullingStatus(latestPullProcess) ?
+                  t('dataDetail.baseItem.title.pulling', {
+                    status: latestPullProcess?.latestMCETaskRun?.status || 'UNKNOWN'
+                  }) :
+                  t('dataDetail.button.pull')}
+              </Button>
+            </div>
           </div>
 
           <div className={styles.detailInfoArea}>
@@ -422,7 +459,7 @@ export default function DatasetDetail({ match }: Props) {
                     {t('dataDetail.baseItem.title.rowCount')}
                   </div>
                   <div className={styles.importantContent}>
-                    {selector.rowCount}
+                    {numeral(selector.rowCount).format('0,0')}
                   </div>
                 </div>
                 <div className={styles.infoBlock}>

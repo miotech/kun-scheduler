@@ -95,15 +95,16 @@ body {
 }
 
 .color-positive {
-  color: #9BC655;
+  color: #9bc655;
 }
 
 .reflex-splitter {
   /* hack for css priority */
   &&&&& {
     background-color: rgba(darken(@background, 20%), 10%);
-    transition: background-color .2s ease-in;
-    &:hover, &:focus {
+    transition: background-color 0.2s ease-in;
+    &:hover,
+    &:focus {
       background-color: rgba(darken(@background, 20%), 20%);
       &:after {
         opacity: 1;
@@ -114,12 +115,16 @@ body {
       content: '||';
       opacity: 1;
       font-size: 12px;
-      transition: opacity .2s ease-in;
-      transform: translate(-50%,-50%) scale(0.25);
+      transition: opacity 0.2s ease-in;
+      transform: translate(-50%, -50%) scale(0.25);
       position: relative;
       top: 50%;
       left: 25%;
       text-align: center;
     }
   }
+}
+
+.taskrun-dag-node-popover.taskrun-dag-node-popover.taskrun-dag-node-popover {
+  max-width: 360px;
 }

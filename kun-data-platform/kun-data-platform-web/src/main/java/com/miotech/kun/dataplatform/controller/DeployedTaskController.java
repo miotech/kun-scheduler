@@ -1,10 +1,12 @@
 package com.miotech.kun.dataplatform.controller;
 
+import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.common.deploy.vo.*;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskRunLogVO;
 import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
+import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunDAG;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -29,6 +32,9 @@ public class DeployedTaskController {
 
     @Autowired
     private DeployedTaskService deployedTaskService;
+
+    @Autowired
+    private WorkflowClient workflowClient;
 
     @GetMapping("/deployed-tasks/{id}")
     @ApiOperation("Get DeployedTask")
@@ -46,8 +52,10 @@ public class DeployedTaskController {
             @RequestParam(required = false) List<Long> definitionIds,
             @RequestParam(required = false) List<Long> workflowTaskIds,
             @RequestParam(required = false) String name,
-            @RequestParam(required = false) String taskTemplateName
+            @RequestParam(required = false) String taskTemplateName,
+            @RequestParam(required = false) String scheduledTaskRunsOnly
     ) {
+        boolean includeScheduledTaskRunsOnly = Boolean.valueOf(scheduledTaskRunsOnly);
         DeployedTaskSearchRequest deploySearchRequest = new DeployedTaskSearchRequest(
                 pageSize,
                 pageNum,
@@ -62,7 +70,7 @@ public class DeployedTaskController {
                 deploys.getPageSize(),
                 deploys.getPageNum(),
                 deploys.getTotalCount(),
-                deployedTaskService.convertToListVOs(deploys.getRecords())
+                deployedTaskService.convertToListVOs(deploys.getRecords(), includeScheduledTaskRunsOnly)
         );
         return RequestResult.success(result);
     }
@@ -85,7 +93,8 @@ public class DeployedTaskController {
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startTime,
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime,
+            @RequestParam(required = false) List<String> scheduleTypes
     ) {
         ScheduledTaskRunSearchRequest deploySearchRequest = new ScheduledTaskRunSearchRequest(
                 pageSize,
@@ -96,13 +105,14 @@ public class DeployedTaskController {
                 null,
                 TaskRunStatus.resolve(status),
                 startTime,
-                endTime
+                endTime,
+                scheduleTypes
         );
         return RequestResult.success(deployedTaskService.searchTaskRun(deploySearchRequest));
     }
 
     @GetMapping("/deployed-taskruns")
-    @ApiOperation("Search scheduled taskruns")
+    @ApiOperation("Search taskruns of at deployed task")
     public RequestResult<PaginationResult<TaskRun>> searchDeploys(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "100") int pageSize,
@@ -114,7 +124,8 @@ public class DeployedTaskController {
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startTime,
             @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime,
+            @RequestParam(required = false) List<String> scheduleTypes
     ) {
         ScheduledTaskRunSearchRequest deploySearchRequest = new ScheduledTaskRunSearchRequest(
                 pageSize,
@@ -125,7 +136,8 @@ public class DeployedTaskController {
                 name,
                 TaskRunStatus.resolve(status),
                 startTime,
-                endTime
+                endTime,
+                scheduleTypes
         );
         return RequestResult.success(deployedTaskService.searchTaskRun(deploySearchRequest));
     }
@@ -138,8 +150,18 @@ public class DeployedTaskController {
 
     @GetMapping("/deployed-taskruns/{id}/log")
     @ApiOperation("Get log of scheduled taskrun")
-    public RequestResult<TaskRunLogVO> getWorkflowTaskRunLog(@PathVariable Long id) {
-        return RequestResult.success(deployedTaskService.getWorkFlowTaskRunLog(id));
+    public RequestResult<TaskRunLogVO> getWorkflowTaskRunLog(
+            @PathVariable Long id,
+            @RequestParam(required = false) Integer start,
+            @RequestParam(required = false) Integer end,
+            @RequestParam(required = false) Integer attempt
+    ) {
+        int attemptNum = Objects.nonNull(attempt) ? attempt : -1;
+        if (start == null && end == null) {
+            return RequestResult.success(deployedTaskService.getWorkFlowTaskRunLog(id, attemptNum));
+        }
+        // else
+        return RequestResult.success(deployedTaskService.getWorkFlowTaskRunLog(id, start, end, attemptNum));
     }
 
     @GetMapping("/deployed-taskruns/{id}/dag")
@@ -149,5 +171,21 @@ public class DeployedTaskController {
                                                            @RequestParam(defaultValue =  "1") int downstreamLevel
                                                            ) {
         return RequestResult.success(deployedTaskService.getWorkFlowTaskRunDag(id, upstreamLevel, downstreamLevel));
+    }
+
+    @PostMapping("/deployed-taskruns/{taskRunId}/_restart")
+    @ApiOperation("Rerun a single taskrun instance immediately")
+    public RequestResult<TaskRun> restartTaskRunInstance(@PathVariable Long taskRunId) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
+        TaskRun taskRun = workflowClient.restartTaskRun(taskRunId);
+        return RequestResult.success(taskRun);
+    }
+
+    @PutMapping("/deployed-taskruns/{taskRunId}/_abort")
+    @ApiOperation("Rerun a single taskrun instance immediately")
+    public RequestResult<TaskRun> stopTaskRunInstance(@PathVariable Long taskRunId) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
+        TaskRun taskRun = workflowClient.stopTaskRun(taskRunId);
+        return RequestResult.success(taskRun);
     }
 }

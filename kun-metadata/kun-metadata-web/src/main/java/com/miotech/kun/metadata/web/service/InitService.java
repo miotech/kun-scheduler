@@ -2,19 +2,20 @@ package com.miotech.kun.metadata.web.service;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.db.DatabaseSetup;
 import com.miotech.kun.commons.rpc.RpcPublisher;
+import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.TaskParam;
-import com.miotech.kun.metadata.web.model.vo.DataSource;
-import com.miotech.kun.metadata.web.util.DataDiscoveryApi;
+import com.miotech.kun.metadata.web.kafka.MetadataConsumerStarter;
 import com.miotech.kun.metadata.web.util.RequestParameterBuilder;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.operator.OperatorUpload;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Singleton
-public class InitService {
+public class InitService implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(InitService.class);
 
     @Inject
@@ -33,23 +34,41 @@ public class InitService {
     private Props props;
 
     @Inject
+    private javax.sql.DataSource dataSource;
+
+    @Inject
     private RpcPublisher rpcPublisher;
 
     @Inject
     private MetadataServiceFacade metadataServiceFacade;
 
-    public void publishRpcServices() {
-        rpcPublisher.exportService(MetadataServiceFacade.class, "1.0", metadataServiceFacade);
+    @Inject
+    private MetadataConsumerStarter metadataConsumerStarter;
+
+    @Inject
+    private DatabaseOperator dbOperator;
+
+    @Override
+    public Order getOrder() {
+        return Order.NORMAL;
     }
 
-    public void initDataBuilder() {
+    @Override
+    public void afterPropertiesSet() {
+        configureDB();
+        initDataBuilder();
+        publishRpcServices();
+        startConsumer();
+    }
+
+    private void configureDB() {
+        DatabaseSetup setup = new DatabaseSetup(dataSource, props);
+        setup.start();
+    }
+
+    private void initDataBuilder() {
         // Verify whether the operator & task exists
         try {
-            String dataDiscoveryUrl = props.getString("data-discovery.baseUrl");
-            if (StringUtils.isBlank(dataDiscoveryUrl)) {
-                return;
-            }
-
             checkOperator(OperatorParam.MCE.getName(), OperatorParam.MSE.getName());
             String workflowUrl = props.getString("workflow.url");
             OperatorUpload operatorUpload = new OperatorUpload(workflowUrl);
@@ -58,9 +77,8 @@ public class InitService {
             for (OperatorParam value : OperatorParam.values()) {
                 switch (value) {
                     case MCE:
-                        DataDiscoveryApi dataDiscoveryApi = new DataDiscoveryApi(dataDiscoveryUrl);
-                        List<DataSource> dataSources = dataDiscoveryApi.searchDataSources().getResult().getDatasources();
-                        List<String> taskNames = dataSources.stream().map(dataSource -> "mce-task-auto:" + dataSource.getId()).collect(Collectors.toList());
+                        List<Long> ids = dbOperator.fetchAll("select id from kun_mt_datasource", rs -> rs.getLong("id"));
+                        List<String> taskNames = ids.stream().map(id -> "mce-task-auto:" + id).collect(Collectors.toList());
                         checkTask(props.getLong(OperatorParam.MCE.getName()), taskNames.toArray(new String[taskNames.size()]));
                         checkTask(props.getLong(OperatorParam.MCE.getName()), TaskParam.MCE_TASK.getName());
                         break;
@@ -74,6 +92,14 @@ public class InitService {
         } catch (Exception e) {
             logger.error("Init DataBuilder Task error: ", e);
         }
+    }
+
+    private void publishRpcServices() {
+        rpcPublisher.exportService(MetadataServiceFacade.class, "1.0", metadataServiceFacade);
+    }
+
+    private void startConsumer() {
+        metadataConsumerStarter.start();
     }
 
     private Optional<Operator> findOperatorByName(String operatorName) {

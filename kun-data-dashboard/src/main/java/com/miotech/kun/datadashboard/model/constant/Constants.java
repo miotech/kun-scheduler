@@ -8,4 +8,7 @@ public class Constants {
 
     public static final String DATA_PLATFORM_TAG_PROJECT_NAME = "project";
     public static final String DATA_PLATFORM_TAG_PROJECT_VALUE = "KUN_DATA_PLATFORM";
+
+    public static final String DATA_PLATFORM_TAG_KEY_TYPE = "type";
+    public static final String DATA_PLATFORM_TAG_VALUE_SCHEDULED = "scheduled";
 }

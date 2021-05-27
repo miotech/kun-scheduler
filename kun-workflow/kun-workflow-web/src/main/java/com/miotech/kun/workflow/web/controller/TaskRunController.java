@@ -51,8 +51,8 @@ public class TaskRunController {
     @RouteMapping(url = "/taskruns/{taskRunId}/logs", method = "GET")
     public TaskRunLogVO getTaskRunLog(@RouteVariable long taskRunId,
                                       @QueryParameter(defaultValue = "-1") int attempt,
-                                      @QueryParameter(defaultValue = "0") long startLine,
-                                      @QueryParameter(defaultValue = VALUE_DEFAULT.MAX_LINES) long endLine) {
+                                      @QueryParameter(defaultValue = "0") int startLine,
+                                      @QueryParameter(defaultValue = VALUE_DEFAULT.MAX_LINES) int endLine) {
         return taskRunService.getTaskRunLog(taskRunId, attempt, startLine, endLine);
     }
 

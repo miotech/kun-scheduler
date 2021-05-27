@@ -5,6 +5,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.commons.utils.EventConsumer;
 import com.miotech.kun.commons.utils.EventLoop;
+import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -35,7 +36,7 @@ import static com.google.common.base.Preconditions.checkState;
 import static java.lang.String.format;
 
 @Singleton
-public class TaskSpawner {
+public class TaskSpawner implements InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(TaskSpawner.class);
 
     private final TaskManager taskManager;
@@ -49,8 +50,6 @@ public class TaskSpawner {
     private final EventBus eventBus;
 
     private final TickDao tickDao;
-
-    private final long SCHEDULE_INTERVAL = 60000l;
 
     private final Deque<TaskGraph> graphs;
     private final InnerEventLoop eventLoop;
@@ -73,7 +72,6 @@ public class TaskSpawner {
         this.eventBus.register(this.eventLoop);
         this.tickDao = tickDao;
         this.eventLoop.start();
-        init();
     }
 
     /* ----------- public methods ------------ */
@@ -84,11 +82,11 @@ public class TaskSpawner {
     }
 
     public void init() {
-        List<TaskRun> unStartedTaskRunList = taskRunDao.fetchUnStartedTaskRunList();
-        if (unStartedTaskRunList.size() > 0) {
-            submit(unStartedTaskRunList);
+        List<TaskRun> recoverTaskRunList = taskRunDao.fetchTaskRunListWithoutAttempt();
+        logger.info("submit unStartedTaskRun = {}", recoverTaskRunList);
+        if (recoverTaskRunList.size() > 0) {
+            submit(recoverTaskRunList);
         }
-        logger.info("submit unStartedTaskRun = {}", unStartedTaskRunList);
     }
 
     public List<TaskRun> run(TaskGraph graph) {
@@ -109,7 +107,7 @@ public class TaskSpawner {
         return spawn(Lists.newArrayList(graph), current, env);
     }
 
-    public boolean rerun(TaskRun taskRun){
+    public boolean rerun(TaskRun taskRun) {
         return taskManager.retry(taskRun);
     }
 
@@ -266,5 +264,10 @@ public class TaskSpawner {
         public void onReceive(TickEvent event) {
             post(1L, event);
         }
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        init();
     }
 }

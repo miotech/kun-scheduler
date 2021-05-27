@@ -24,7 +24,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 
+import static com.miotech.kun.dataplatform.constant.BackfillConstants.MAX_BACKFILL_TASKS;
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -102,6 +105,27 @@ public class BackfillServiceTest extends AppTestBase {
 
         // 3. Validate
         assertThat(persistedBackfill.getTaskRunIds(), is(Lists.newArrayList(predefinedContext.getMockTaskRun().getId())));
+    }
+
+    @Test
+    public void createAndRunBackfill_withTooManyTasks_shouldThrowIllegalArgumentException() {
+        // 1. Prepare mock behaviors
+        mockWorkflowClientBehavior();
+        List<Long> bunchOfWorkflowTaskIds = LongStream.range(101L, 101L + MAX_BACKFILL_TASKS + 1).boxed().collect(Collectors.toList());
+        List<Long> bunchOfTaskDefinitionIds = LongStream.range(1L, 1L + MAX_BACKFILL_TASKS + 1).boxed().collect(Collectors.toList());
+
+        // 2. Process
+        BackfillCreateInfo createInfo = new BackfillCreateInfo(
+                "test-service-backfill",
+                Lists.newArrayList(bunchOfWorkflowTaskIds),   // workflow task id
+                Lists.newArrayList(bunchOfTaskDefinitionIds)  // definition id
+        );
+        try {
+            backfillService.createAndRun(createInfo);
+            fail();
+        } catch (Exception e) {
+            assertThat(e, instanceOf(IllegalArgumentException.class));
+        }
     }
 
     private MockDefinedContext mockWorkflowClientBehavior() {

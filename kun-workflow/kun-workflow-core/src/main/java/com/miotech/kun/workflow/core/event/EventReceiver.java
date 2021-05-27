@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.core.event;
 
+@FunctionalInterface
 public interface EventReceiver<E extends Event> {
     /**
      * 向EventReceiver投递消息。

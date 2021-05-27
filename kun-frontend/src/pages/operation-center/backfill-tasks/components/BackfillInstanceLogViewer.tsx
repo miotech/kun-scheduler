@@ -15,46 +15,52 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export const BackfillInstanceLogViewer: React.FC<Props> = memo(
-  function BackfillInstanceLogViewer(props) {
-    const { visible = false, onClose, taskRunId = null } = props;
+export const BackfillInstanceLogViewer: React.FC<Props> = memo(function BackfillInstanceLogViewer(props) {
+  const { visible = false, onClose, taskRunId = null } = props;
 
-    const t = useI18n();
+  const t = useI18n();
 
-    const onQuery = useCallback(() => {
-      if (!taskRunId) {
-        return Promise.resolve(null);
-      }
-      // else
-      return fetchScheduledTaskRunLogWithoutErrorNotification(taskRunId).catch(
-        e => {
-          return {
-            logs: [e.response?.data?.note],
-          } as TaskRunLog;
-        },
-      );
-    }, [taskRunId]);
+  const onQuery = useCallback(() => {
+    if (!taskRunId) {
+      return Promise.resolve(null);
+    }
+    // else
+    return fetchScheduledTaskRunLogWithoutErrorNotification(taskRunId).catch(e => {
+      return {
+        logs: [e.response?.data?.note],
+      } as TaskRunLog;
+    });
+  }, [taskRunId]);
 
-    return (
-      <Modal
-        title={t('operationCenter.backfill.taskrun.operation.logs')}
-        visible={visible}
-        width={1200}
-        destroyOnClose
-        footer={null}
-        onCancel={onClose}
-        maskClosable={false}
-      >
-        <div className={css.LogViewerWrapper}>
-          <PollingLogViewer
-            className={css.LogViewer}
-            startPolling={taskRunId != null}
-            queryFn={onQuery}
-            pollInterval={2000}
-            saveFileName={taskRunId ?? undefined}
-          />
-        </div>
-      </Modal>
-    );
-  },
-);
+  const onDownload = useCallback(async () => {
+    if (!taskRunId) {
+      return Promise.resolve([]);
+    }
+    const payload = await fetchScheduledTaskRunLogWithoutErrorNotification(taskRunId, 0);
+    return payload?.logs || [];
+  }, [taskRunId]);
+
+  return (
+    <Modal
+      title={t('operationCenter.backfill.taskrun.operation.logs')}
+      visible={visible}
+      width={1200}
+      destroyOnClose
+      footer={null}
+      onCancel={onClose}
+      maskClosable={false}
+    >
+      <div className={css.LogViewerWrapper}>
+        <PollingLogViewer
+          className={css.LogViewer}
+          startPolling={taskRunId != null}
+          queryFn={onQuery}
+          pollInterval={3000}
+          presetLineLimit={5000}
+          onDownload={onDownload}
+          saveFileName={taskRunId ?? undefined}
+        />
+      </div>
+    </Modal>
+  );
+});

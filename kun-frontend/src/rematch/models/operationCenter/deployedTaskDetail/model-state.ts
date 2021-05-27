@@ -19,7 +19,6 @@ export interface DeployedTaskDetailModelState {
   filters: TaskRunListFilter;
 }
 
-
 export const initState: DeployedTaskDetailModelState = {
   filters: {
     pageNum: 1,

@@ -1,22 +1,13 @@
 import React, { memo, useMemo, useCallback } from 'react';
 import { Table, Popconfirm, Tag, Tooltip } from 'antd';
 import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
-import {
-  DeleteOutlined,
-  CheckCircleFilled,
-  CloseCircleFilled,
-  CheckOutlined,
-} from '@ant-design/icons';
+import { DeleteOutlined, CheckCircleFilled, CloseCircleFilled, CheckOutlined } from '@ant-design/icons';
 import uniqueId from 'lodash/uniqueId';
 import { DataQualityItem } from '@/rematch/models/datasetDetail';
-import {
-  DataQualityType,
-  DataQualityHistoryStatus,
-  DataQualityHistory,
-} from '@/rematch/models/dataQuality';
+import { DataQualityType, DataQualityHistoryStatus, DataQualityHistory } from '@/rematch/models/dataQuality';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
-import { dateFormatter } from '@/utils/dateFormatter';
+import { dateFormatter } from '@/utils/datetime-utils';
 import TestCaseRuleTable from '@/pages/monitoring-dashboard/components/data-discovery-board/TestCaseRuleTable';
 
 import styles from './DataQualityTable.less';
@@ -41,11 +32,7 @@ const colorMap = {
   stop: '#526079',
 };
 
-export default memo(function DataQualityTable({
-  data,
-  onDelete,
-  onClick,
-}: Props) {
+export default memo(function DataQualityTable({ data, onDelete, onClick }: Props) {
   const t = useI18n();
 
   const { selector, dispatch } = useRedux(state => state.datasetDetail);
@@ -97,10 +84,7 @@ export default memo(function DataQualityTable({
         className: styles.nameColumn,
         width: 280,
         render: (name: string, record) => (
-          <span
-            className={styles.pointerLabel}
-            onClick={() => onClick(record.id)}
-          >
+          <span className={styles.pointerLabel} onClick={() => onClick(record.id)}>
             {name}
           </span>
         ),

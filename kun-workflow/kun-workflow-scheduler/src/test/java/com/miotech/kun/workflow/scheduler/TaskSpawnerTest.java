@@ -53,6 +53,10 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
     private static <T> CustomisableMatcher<T> safeSameBeanAs(T expected) {
         return sameBeanAs(expected)
+                .ignoring("createdAt")
+                .ignoring("updatedAt")
+                .ignoring("startAt")
+                .ignoring("endAt")
                 .ignoring(TaskDao.class)
                 .ignoring(TaskRunDao.class)
                 .ignoring(TaskRunDao.TaskRunMapper.class)
@@ -301,7 +305,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         DatabaseTaskGraph graph = new DatabaseTaskGraph(taskDao);
         List<TaskRun> taskRunList = taskSpawner.run(graph, tick);
         assertThat(taskRunList.size(), is(0));
-        List<Long> unStartedTaskRunIdList = taskRunDao.fetchUnStartedTaskRunList()
+        List<Long> unStartedTaskRunIdList = taskRunDao.fetchTaskRunListWithoutAttempt()
                 .stream().map(TaskRun::getId).collect(Collectors.toList());
         assertThat(unStartedTaskRunIdList, containsInAnyOrder(taskRun.getId()));
     }

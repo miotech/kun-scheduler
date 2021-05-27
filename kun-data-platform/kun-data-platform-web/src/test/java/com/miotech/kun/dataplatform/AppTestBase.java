@@ -3,8 +3,7 @@ package com.miotech.kun.dataplatform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateLoader;
-import com.miotech.kun.dataplatform.config.EventNotifyConfig;
-import com.miotech.kun.dataplatform.config.ZhongdaNotifierConfig;
+import com.miotech.kun.dataplatform.notify.WorkflowEventDispatcher;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -42,13 +41,8 @@ public class AppTestBase {
     @Autowired
     private TaskTemplateLoader taskTemplateLoader;
 
-    // Temporarily use mocked beans for zhongda notifier configuration
     @MockBean
-    private ZhongdaNotifierConfig zhongdaNotifierConfig;
-
-    // Temporarily use mocked beans for event notifier configuration
-    @MockBean
-    private EventNotifyConfig eventNotifyConfig;
+    private WorkflowEventDispatcher workflowEventDispatcher;
 
     @Before
     public void init() {

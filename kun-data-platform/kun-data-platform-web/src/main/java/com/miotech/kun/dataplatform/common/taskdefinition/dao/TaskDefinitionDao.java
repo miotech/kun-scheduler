@@ -2,13 +2,13 @@ package com.miotech.kun.dataplatform.common.taskdefinition.dao;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLUtils;
 import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskDefinitionSearchRequest;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskPayload;
 import com.miotech.kun.workflow.client.model.PaginationResult;
-import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
-import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -120,9 +120,9 @@ public class TaskDefinitionDao {
                 .from(TASK_DEF_TABLE_NAME, TASK_DEF_MODEL_NAME)
                 .where(whereClause.toString())
                 .getSQL();
-        Long totalCount = jdbcTemplate.query(
+        Integer totalCount = jdbcTemplate.query(
                 countSql,
-                (rse) -> rse.next() ? rse.getLong(1): 0,
+                (rse) -> rse.next() ? rse.getInt(1): 0,
                 params.toArray());
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(getSelectSQL(whereClause.toString()))

@@ -51,7 +51,7 @@ public class TaskCommitDaoTest extends AppTestBase {
                 Collections.emptyList(),
                 Optional.of(true));
         PaginationResult<TaskCommit> taskCommitPage = taskCommitDao.search(request);
-        assertThat(taskCommitPage.getTotalCount(), Matchers.is(1L));
+        assertThat(taskCommitPage.getTotalCount(), Matchers.is(1));
         assertThat(taskCommitPage.getPageSize(), Matchers.is(10));
         assertThat(taskCommitPage.getPageNum(), Matchers.is(1));
     }

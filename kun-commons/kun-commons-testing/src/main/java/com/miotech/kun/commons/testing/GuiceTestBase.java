@@ -31,7 +31,6 @@ public abstract class GuiceTestBase {
 
         Module[] mods = modules.toArray(new Module[0]);
         injector = Guice.createInjector(Modules.override(mods).with(new InjectMockModule()));
-        beforeInject(injector);
         injector.injectMembers(this);
 
         Unsafe.setInjector(injector);
@@ -41,17 +40,26 @@ public abstract class GuiceTestBase {
         modules.addAll(Arrays.asList(mods));
     }
 
+    /**
+     * Create a mock bean that injected everywhere
+     * @param clazz
+     * @param <T>
+     * @return
+     */
     protected <T> T mock(Class<T> clazz) {
         T mockObj = Mockito.mock(clazz);
         mocks.put(clazz, mockObj);
         return mockObj;
     }
 
-    protected void beforeInject(Injector injector){
-
-    }
-
+    /**
+     * Create a spy bean that injected everywhere
+     * @param target
+     * @param <T>
+     * @return
+     */
     protected <T> T spy(T target) {
+        // FIXME: spy() isn't a plain proxy
         return Mockito.spy(target);
     }
 

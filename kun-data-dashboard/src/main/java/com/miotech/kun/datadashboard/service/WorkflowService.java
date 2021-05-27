@@ -1,5 +1,7 @@
 package com.miotech.kun.datadashboard.service;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.datadashboard.model.bo.DataDevelopmentTasksRequest;
@@ -18,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalTime;
 import java.time.OffsetDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -28,8 +29,13 @@ import java.util.concurrent.ConcurrentMap;
 public class WorkflowService {
 
     private static final List<Tag> DATA_PLATFORM_FILTER_TAGS =
-            Collections.singletonList(new Tag(Constants.DATA_PLATFORM_TAG_PROJECT_NAME, Constants.DATA_PLATFORM_TAG_PROJECT_VALUE));
+            Lists.newArrayList(
+                    new Tag(Constants.DATA_PLATFORM_TAG_PROJECT_NAME, Constants.DATA_PLATFORM_TAG_PROJECT_VALUE),
+                    new Tag(Constants.DATA_PLATFORM_TAG_KEY_TYPE, Constants.DATA_PLATFORM_TAG_VALUE_SCHEDULED)
+            );
     private final ConcurrentMap<OffsetDateTime, DateTimeTaskCount> dateTimeTaskCountMap = new ConcurrentHashMap<>();
+
+    private static final List<String> SCHEDULE_TYPE_FILTER = Lists.newArrayList("SCHEDULED");
 
     @Autowired
     WorkflowClient workflowClient;
@@ -39,45 +45,63 @@ public class WorkflowService {
                 withDateFrom(DateTimeUtils.now().minusDays(1))
                 .withStatus(Sets.newHashSet(TaskRunStatus.SUCCESS))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
-        long successCount = workflowClient.countTaskRun(successRequest);
+        Integer successCount = workflowClient.countTaskRun(successRequest);
 
         TaskRunSearchRequest failedRequest = TaskRunSearchRequest.newBuilder().
                 withDateFrom(DateTimeUtils.now().minusDays(1))
                 .withStatus(Sets.newHashSet(TaskRunStatus.FAILED, TaskRunStatus.ERROR))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
-        long failedCount = workflowClient.countTaskRun(failedRequest);
+        Integer failedCount = workflowClient.countTaskRun(failedRequest);
 
         TaskRunSearchRequest runningRequest = TaskRunSearchRequest.newBuilder()
                 .withStatus(Sets.newHashSet(TaskRunStatus.RUNNING))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
-        long runningCount = workflowClient.countTaskRun(runningRequest);
+        Integer runningCount = workflowClient.countTaskRun(runningRequest);
 
         TaskRunSearchRequest startedRequest = TaskRunSearchRequest.newBuilder()
                 .withIncludeStartedOnly(true)
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
-        long startedCount = workflowClient.countTaskRun(startedRequest);
+        Integer startedCount = workflowClient.countTaskRun(startedRequest);
 
-        TaskRunSearchRequest totalRequest = TaskRunSearchRequest.newBuilder()
+        TaskRunSearchRequest pendingRequest = TaskRunSearchRequest.newBuilder()
+                .withDateFrom(DateTimeUtils.now().minusDays(1))
+                .withIncludeStartedOnly(false)
+                .withStatus(ImmutableSet.of(TaskRunStatus.CREATED, TaskRunStatus.INITIALIZING, TaskRunStatus.QUEUED))
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageSize(0)
                 .build();
-        long totalCount = workflowClient.countTaskRun(totalRequest);
+        Integer pendingCount = workflowClient.countTaskRun(pendingRequest);
+
+        TaskRunSearchRequest upstreamFailedRequest = TaskRunSearchRequest.newBuilder()
+                .withDateFrom(DateTimeUtils.now().minusDays(1))
+                .withIncludeStartedOnly(false)
+                .withStatus(ImmutableSet.of(TaskRunStatus.UPSTREAM_FAILED))
+                .withTags(DATA_PLATFORM_FILTER_TAGS)
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
+                .withPageSize(0)
+                .build();
+        Integer upstreamFailedTaskCount = workflowClient.countTaskRun(upstreamFailedRequest);
 
         DataDevelopmentMetrics metrics = new DataDevelopmentMetrics();
         metrics.setSuccessTaskCount(successCount);
         metrics.setFailedTaskCount(failedCount);
         metrics.setRunningTaskCount(runningCount);
         metrics.setStartedTaskCount(startedCount);
-        metrics.setPendingTaskCount(totalCount - startedCount);
-        metrics.setTotalTaskCount(totalCount);
+        metrics.setPendingTaskCount(pendingCount);
+        metrics.setUpstreamFailedTaskCount(upstreamFailedTaskCount);
 
         return metrics;
     }
@@ -103,9 +127,10 @@ public class WorkflowService {
                     .withDateFrom(startTime)
                     .withDateTo(endTime)
                     .withTags(DATA_PLATFORM_FILTER_TAGS)
+                    .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                     .withPageSize(0)
                     .build();
-            long totalCount = workflowClient.countTaskRun(totalRequest);
+            Integer totalCount = workflowClient.countTaskRun(totalRequest);
             DateTimeTaskCount taskCount = new DateTimeTaskCount();
             taskCount.setTaskCount(totalCount);
             taskCount.setTime(DateUtils.dateTimeToMillis(endTime));
@@ -126,6 +151,7 @@ public class WorkflowService {
                 .withDateFrom(Objects.equals(tasksRequest.getLast24HoursOnly(), true) ? DateTimeUtils.now().minusHours(24) : null)
                 .withSortKey("createdAt")
                 .withSortOrder("DESC")
+                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .build();
 
         DataDevelopmentTasks dataDevelopmentTasks = new DataDevelopmentTasks();

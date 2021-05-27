@@ -23,15 +23,22 @@ export default function DataSettings() {
   const t = useI18n();
   const { selector, dispatch } = useRedux(state => state.dataSettings);
 
-  useEffect(() => {
+  const doRefresh = useCallback(() => {
     dispatch.dataSettings.fetchDatabaseTypeList();
-  }, [dispatch.dataSettings]);
+    dispatch.dataSettings.searchDataBases();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    doRefresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const {
     searchContent,
     pagination,
     currentDatabase,
-    searchLoading,
+    // searchLoading,
     fetchDatabaseTypeLoading,
   } = selector;
 
@@ -161,17 +168,26 @@ export default function DataSettings() {
               })
             }
           />
-          <Button
-            size="large"
-            className={styles.addDatabaseButton}
-            onClick={() => setAddDatabaseModalVisible(true)}
-          >
-            {t('dataSettings.addDatasource')}
-          </Button>
+          <div className={styles.ButtonsGroupRight}>
+            <Button
+              type="default"
+              size="large"
+              onClick={doRefresh}
+            >
+              {t('common.refresh')}
+            </Button>
+            <Button
+              size="large"
+              type="primary"
+              onClick={() => setAddDatabaseModalVisible(true)}
+            >
+              {t('dataSettings.addDatasource')}
+            </Button>
+          </div>
         </div>
 
         <div className={styles.databasesArea}>
-          <Spin spinning={searchLoading || fetchDatabaseTypeLoading}>
+          <Spin spinning={fetchDatabaseTypeLoading}>
             <div className={styles.databasesCount}>
               {t('dataSettings.datasourceCount', {
                 count: selector.dataSourceList?.length ?? 0,

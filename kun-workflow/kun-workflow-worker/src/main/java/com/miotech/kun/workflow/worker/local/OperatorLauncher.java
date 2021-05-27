@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.worker.local;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -122,11 +123,14 @@ public class OperatorLauncher {
         cancelled = true;
 
         if (operator != null) {
-            try {
-                operator.abort();
-            } catch (Exception e) {
-                logger.error("Unexpected exception occurred during aborting operator.", e);
-            }
+            new Thread(() -> {
+                try {
+                    logger.info("operator going to abort.");
+                    operator.abort();
+                } catch (Exception e) {
+                    logger.error("Unexpected exception occurred during aborting operator.", e);
+                }
+            }, "abort-thread").start();
         }
     }
 
@@ -239,7 +243,7 @@ public class OperatorLauncher {
     }
 
     private OperatorContext initContext(ExecCommand command) {
-        return new OperatorContextImpl(command.getConfig(),command.getTaskRunId());
+        return new OperatorContextImpl(command.getConfig(), command.getTaskRunId());
     }
 
     private static void initLogger(String logPath) {
@@ -265,6 +269,7 @@ public class OperatorLauncher {
                 = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("com.miotech.kun.workflow");
         workerLogger.detachAndStopAllAppenders();
         rootLogger.detachAndStopAllAppenders();
+        rootLogger.setLevel(Level.DEBUG);
 
         rootLogger.addAppender(appender);
     }
@@ -334,7 +339,7 @@ public class OperatorLauncher {
 
         @Override
         public void run() {
-            try{
+            try {
                 logger.debug("wait first heart beat send");
                 firstHeartBeat.await();
             } catch (InterruptedException e) {

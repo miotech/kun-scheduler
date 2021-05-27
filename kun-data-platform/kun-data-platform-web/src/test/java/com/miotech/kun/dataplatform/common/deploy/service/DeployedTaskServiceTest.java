@@ -213,10 +213,11 @@ public class DeployedTaskServiceTest extends AppTestBase {
                 null,
                 TaskRunStatus.CREATED,
                 null,
+                null,
                 null
         );
 
         PaginationResult<TaskRun> taskruns = deployedTaskService.searchTaskRun(searchRequest);
-        assertThat(taskruns.getTotalCount(), is(0L));
+        assertThat(taskruns.getTotalCount(), is(0));
     }
 }

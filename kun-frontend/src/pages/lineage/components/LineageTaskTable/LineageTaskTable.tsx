@@ -2,7 +2,7 @@ import { Link } from 'umi';
 import React, { memo, useEffect, useMemo, useState } from 'react';
 import useI18n from '@/hooks/useI18n';
 import { CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import { dayjs } from '@/utils/datetime-utils';
 
 import { Table } from 'antd';
 import { ColumnsType, TablePaginationConfig } from 'antd/lib/table';
@@ -47,13 +47,15 @@ export default memo(function LineageTaskTable({
       setTaskIdToDefIdMapIsLoading(true);
       try {
         const defMap = await getTaskDefinitionIdByWorkflowIds(workflowTaskIds);
-        setTaskIdToDefIdMap(defMap);
+        if (Object.keys(defMap).length > 0) {
+          setTaskIdToDefIdMap(defMap);
+        }
       } finally {
         setTaskIdToDefIdMapIsLoading(false);
       }
     }
-    if (data) {
-      fetchMap(data.map(dt => dt.taskId));
+    if (data && data.length) {
+      fetchMap(data.map(dt => `${dt.taskId}`));
     }
   }, [data]);
 
@@ -91,7 +93,8 @@ export default memo(function LineageTaskTable({
         title: t('dataDetail.lineage.table.lastExecutedTime'),
         className: styles.nameColumn,
         width: 120,
-        render: (txt: string) => txt != null ? dayjs(txt).format('YYYY-MM-DD HH:mm:ss') : '-',
+        render: (txt: string) =>
+          txt != null ? dayjs(txt).format('YYYY-MM-DD HH:mm:ss') : '-',
       },
       {
         key: 'historyList',

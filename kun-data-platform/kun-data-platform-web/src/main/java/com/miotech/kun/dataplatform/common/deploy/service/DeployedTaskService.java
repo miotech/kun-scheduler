@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.common.deploy.service;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.dataplatform.common.deploy.dao.DeployedTaskDao;
 import com.miotech.kun.dataplatform.common.deploy.vo.*;
@@ -39,6 +40,8 @@ public class DeployedTaskService extends BaseSecurityService{
 
     private static final String TASK_RUN_ID_NOT_NULL = "`taskRunId` should not be null";
 
+    private static final List<String> SCHEDULE_TYPE_FILTER = Lists.newArrayList("SCHEDULED");
+
     @Autowired
     private DeployedTaskDao deployedTaskDao;
 
@@ -57,6 +60,11 @@ public class DeployedTaskService extends BaseSecurityService{
                 .<IllegalArgumentException>orElseThrow(() -> {
                     throw new IllegalArgumentException(String.format("Deployed Task not found: \"%s\"", definitionId));
                 });
+    }
+
+    public Optional<DeployedTask> findOptional(Long taskDefinitionId) {
+        Preconditions.checkNotNull(taskDefinitionId);
+        return deployedTaskDao.fetchById(taskDefinitionId);
     }
 
     public List<DeployedTask> findByDefIds(List<Long> defIds){
@@ -290,6 +298,9 @@ public class DeployedTaskService extends BaseSecurityService{
         if (request.getStatus() != null) {
             searchRequestBuilder.withStatus(Sets.newHashSet(request.getStatus()));
         }
+        if ((request.getScheduleTypes() != null) && (!request.getScheduleTypes().isEmpty())) {
+            searchRequestBuilder.withScheduleTypes(request.getScheduleTypes());
+        }
 
         List<Tag> filterTags = TagUtils.buildScheduleSearchTags();
         // filter TaskTemplateName by tag, if using workflow ids might match many
@@ -319,8 +330,34 @@ public class DeployedTaskService extends BaseSecurityService{
     }
 
     public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId) {
+        return getWorkFlowTaskRunLog(taskRunId, -1);
+    }
+
+    public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId, Integer attempt) {
         Preconditions.checkNotNull(taskRunId, TASK_RUN_ID_NOT_NULL);
-        TaskRunLog log = workflowClient.getLatestRunLog(taskRunId);
+        Preconditions.checkNotNull(attempt, "attempt cannot be null");
+        TaskRunLog log = workflowClient.getLatestRunLog(taskRunId, attempt);
+        TaskRunStatus status = workflowClient.getTaskRunState(taskRunId)
+                .getStatus();
+        return new TaskRunLogVO(
+                log.getTaskRunId(),
+                log.getAttempt(),
+                log.getStartLine(),
+                log.getEndLine(),
+                log.getLogs(),
+                status.isFinished(),
+                status
+        );
+    }
+
+    public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId, Integer start, Integer end) {
+        return getWorkFlowTaskRunLog(taskRunId, start, end, -1);
+    }
+
+    public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId, Integer start, Integer end, Integer attempt) {
+        Preconditions.checkNotNull(taskRunId, TASK_RUN_ID_NOT_NULL);
+        Preconditions.checkNotNull(attempt, "attempt cannot be null");
+        TaskRunLog log = workflowClient.getLatestRunLog(taskRunId, start, end, attempt);
         TaskRunStatus status = workflowClient.getTaskRunState(taskRunId)
                 .getStatus();
         return new TaskRunLogVO(
@@ -347,11 +384,12 @@ public class DeployedTaskService extends BaseSecurityService{
         );
     }
 
-    public List<DeployedTaskWithRunVO> convertToListVOs(List<DeployedTask> deployedTasks) {
+    public List<DeployedTaskWithRunVO> convertToListVOs(List<DeployedTask> deployedTasks, boolean scheduledOnly) {
         TaskRunSearchRequest searchRequest = TaskRunSearchRequest.newBuilder()
                 .withTaskIds(deployedTasks.stream().map(DeployedTask::getWorkflowTaskId).collect(Collectors.toList()))
                 .withPageNum(1)
                 .withPageSize(deployedTasks.size() * 4)
+                .withScheduleTypes(scheduledOnly ? SCHEDULE_TYPE_FILTER : null)
                 .build();
 
         // Fetch corresponding task runs by batch querying workflow API
@@ -392,5 +430,9 @@ public class DeployedTaskService extends BaseSecurityService{
                 userList.add(userInfo.getUsername());
         }
         return userList;
+    }
+
+    public Optional<DeployedTask> findByWorkflowTaskId(Long workflowTaskId) {
+        return deployedTaskDao.fetchByWorkflowTaskId(workflowTaskId);
     }
 }

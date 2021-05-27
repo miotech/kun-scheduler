@@ -313,10 +313,10 @@ public class WorkflowApi {
         if (logRequest.getAttempt() > 0) {
             urlBuilder.addQueryParameter("attempt", "" + logRequest.getAttempt());
         }
-        if (logRequest.getStartLine() >= 0) {
+        if (logRequest.getStartLine() != null) {
             urlBuilder.addQueryParameter("startLine", "" + logRequest.getStartLine());
         }
-        if (logRequest.getEndLine() > 0) {
+        if (logRequest.getEndLine() != null) {
             urlBuilder.addQueryParameter("endLine", "" + logRequest.getEndLine());
         }
         HttpUrl url = urlBuilder.build();

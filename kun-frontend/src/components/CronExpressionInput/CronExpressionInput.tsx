@@ -1,11 +1,16 @@
-import React, { MutableRefObject, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import c from 'clsx';
 import cronstrue from 'cronstrue/i18n';
 import { Alert, Input } from 'antd';
 import useI18n from '@/hooks/useI18n';
+import { CronLocalization, ReQuartzCron } from '@sbzen/re-cron';
 
+import ReCronZhCNLocalization from './i18n/recron.zh-cn';
 import './CronExpressionInput.less';
-import { validateQuartzCron } from '@/utils/cronUtils';
+
+const LOCALIZATION: Record<string, CronLocalization> = {
+  'zh-CN': ReCronZhCNLocalization,
+};
 
 export interface CronExpressionInputProps {
   value?: string;
@@ -14,76 +19,82 @@ export interface CronExpressionInputProps {
   hideErrorAlert?: boolean;
 }
 
-export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, CronExpressionInputProps>(function CronExpressionInput(props, ref) {
-  const {
-    value,
-    onChange,
-    className,
-    hideErrorAlert = false,
-  } = props;
+function normalizeProvidedCronExpressionValue(value?: string): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  // else
+  return value
+    .trim()
+    .split(' ')
+    .filter(part => part.length > 0)
+    .join(' ');
+}
 
-  const t = useI18n();
+export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, CronExpressionInputProps>(
+  function CronExpressionInput(props) {
+    const { value, onChange, className, hideErrorAlert = false } = props;
 
-  const inputRef = useRef() as MutableRefObject<Input>;
+    const t = useI18n();
 
-  useImperativeHandle(ref, () => ({
-    focus: () => {
-      inputRef.current.focus();
-    },
-  }));
+    const [uncontrolledValue, setUncontrolledValue] = useState<string>('');
 
-  const [ uncontrolledValue, setUncontrolledValue ] = useState<string>('');
+    const appliedValue = normalizeProvidedCronExpressionValue(value) ?? uncontrolledValue;
 
-  const appliedValue = value ?? uncontrolledValue;
+    const semanticTip = useMemo(() => {
+      if (!appliedValue) {
+        return <></>;
+      }
+      let hasError: boolean;
+      let semanticStr: string;
+      try {
+        semanticStr = cronstrue.toString(appliedValue, {
+          throwExceptionOnParseError: true,
+          locale: t('common.cronstrue.lang'),
+        });
+        hasError = false;
+      } catch (e) {
+        semanticStr = '';
+        hasError = true;
+      }
+      if (hasError && hideErrorAlert) {
+        return <></>;
+      }
+      if (hasError) {
+        return <Alert showIcon type="error" message={t('common.cronstrue.invalidCronExp')} />;
+      }
+      // else
+      return <Alert showIcon type="success" message={semanticStr} />;
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [appliedValue, hideErrorAlert, t]);
 
-  const semanticTip = useMemo(() => {
-    if ((!appliedValue) || `${appliedValue}`.trim().length === 0) {
-      return <></>;
-    }
-    let hasError: boolean;
-    let semanticStr: string;
-    try {
-      semanticStr = cronstrue.toString(appliedValue, {
-        throwExceptionOnParseError: true,
-        locale: t('common.cronstrue.lang'),
-      });
-      hasError = (typeof value === 'string') ? (!validateQuartzCron(value)) : false;
-    } catch (e) {
-      semanticStr = '';
-      hasError = true;
-    }
-    if (hasError && hideErrorAlert) {
-      return <></>;
-    }
-    if (hasError) {
-      return <Alert showIcon type="error" message={t('common.cronstrue.invalidCronExp')} />
-    }
-    // else
-    return <Alert showIcon type="success" message={semanticStr} />
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    appliedValue,
-    hideErrorAlert,
-    t,
-  ]);
-
-  return (
-    <div className="cron-expression-input-wrapper">
-      <Input
-        ref={inputRef}
-        className={c('cron-expression-input', className)}
-        value={appliedValue}
-        onChange={(ev) => {
-          if (onChange) {
-            onChange(ev.target.value);
-          } else {
-            setUncontrolledValue(ev.target.value);
-          }
-        }}
-      />
-      <div className="cron-expression-input__semantic-wrapper">
-        {semanticTip}
+    return (
+      <div className="cron-expression-input-wrapper">
+        <Input
+          value={appliedValue}
+          onChange={ev => {
+            if (onChange) {
+              onChange(ev.target.value);
+            } else {
+              setUncontrolledValue(ev.target.value);
+            }
+          }}
+        />
+        <div className="cron-expression-input__semantic-wrapper">{semanticTip}</div>
+        <div className={c('cron-expression-input', className)}>
+          <ReQuartzCron
+            value={appliedValue}
+            onChange={(v: string) => {
+              if (onChange) {
+                onChange(v);
+              } else {
+                setUncontrolledValue(v);
+              }
+            }}
+            localization={LOCALIZATION[t('common.lang')] || undefined}
+          />
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);

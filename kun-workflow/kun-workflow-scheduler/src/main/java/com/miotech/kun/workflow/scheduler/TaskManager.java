@@ -4,6 +4,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.commons.utils.EventConsumer;
 import com.miotech.kun.commons.utils.EventLoop;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
@@ -18,7 +19,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -35,15 +38,18 @@ public class TaskManager {
 
     private final EventBus eventBus;
 
+    private final Props props;
+
     private InnerEventLoop eventLoop;
 
     private final Map<Long, Boolean> rerunningTaskRunIds = new ConcurrentHashMap<>();
 
 
     @Inject
-    public TaskManager(Executor executor, TaskRunDao taskRunDao, EventBus eventBus) {
+    public TaskManager(Executor executor, TaskRunDao taskRunDao, EventBus eventBus, Props props) {
         this.executor = executor;
         this.taskRunDao = taskRunDao;
+        this.props = props;
 
         this.eventLoop = new InnerEventLoop();
         eventLoop.start();
@@ -79,6 +85,7 @@ public class TaskManager {
             TaskAttempt taskAttempt = createTaskAttempt(taskRun);
             logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
             save(Arrays.asList(taskAttempt));
+            updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED);
             submitSatisfyTaskAttemptToExecutor();
             return true;
         } catch (Exception e) {
@@ -141,7 +148,11 @@ public class TaskManager {
                 TaskAttemptStatusChangeEvent taskAttemptStatusChangeEvent = (TaskAttemptStatusChangeEvent) event;
                 TaskRunStatus currentStatus = taskAttemptStatusChangeEvent.getToStatus();
                 if (currentStatus.isFinished()) {
-                    submitSatisfyTaskAttemptToExecutor();
+                    if (currentStatus.isSuccess()) {
+                        submitSatisfyTaskAttemptToExecutor();
+                    } else if (currentStatus.isFailure()) {
+                        updateDownStreamStatus(taskAttemptStatusChangeEvent.getTaskRunId(), TaskRunStatus.UPSTREAM_FAILED);
+                    }
                 }
             }
         }
@@ -153,6 +164,18 @@ public class TaskManager {
         for (TaskAttempt taskAttempt : taskAttemptList) {
             executor.submit(taskAttempt);
         }
+    }
+
+    private void updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
+        boolean usePostgres = postgresEnable();
+        List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId, usePostgres);
+        logger.debug("fetch downStream taskRunIds = {},taskRunId = {}", downStreamTaskRunIds, taskRunId);
+        taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus);
+    }
+
+    private boolean postgresEnable(){
+        String datasourceUrl = props.getString("datasource.jdbcUrl","");
+        return datasourceUrl.contains("postgres");
     }
 
 }

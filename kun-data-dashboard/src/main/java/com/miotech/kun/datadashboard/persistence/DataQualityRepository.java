@@ -112,7 +112,7 @@ public class DataQualityRepository extends BaseRepository {
                 + "limit " + testCasesRequest.getPageSize();
 
         DataQualityCases dataQualityCases = new DataQualityCases();
-        Long totalCount = jdbcTemplate.queryForObject(countSql, Long.class);
+        Integer totalCount = jdbcTemplate.queryForObject(countSql, Integer.class);
         dataQualityCases.setPageNumber(testCasesRequest.getPageNumber());
         dataQualityCases.setPageSize(testCasesRequest.getPageSize());
         dataQualityCases.setTotalCount(totalCount);

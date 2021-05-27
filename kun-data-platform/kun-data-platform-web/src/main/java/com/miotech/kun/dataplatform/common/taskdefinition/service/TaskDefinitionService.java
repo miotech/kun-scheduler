@@ -7,6 +7,7 @@ import com.miotech.kun.dataplatform.common.datastore.service.DatasetService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeployRequest;
+import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfigService;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskRelationDao;
 import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskTryDao;
@@ -41,9 +42,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.miotech.kun.dataplatform.model.taskdefinition.TaskDefNotifyConfig.DEFAULT_TASK_NOTIFY_CONFIG;
+
 @Service
 @Slf4j
 public class TaskDefinitionService extends BaseSecurityService {
+
+   private static final List<ScheduleType> VALID_SCHEDULE_TYPE = ImmutableList.of(ScheduleType.SCHEDULED, ScheduleType.ONESHOT, ScheduleType.NONE);
 
     @Autowired
     private TaskDefinitionDao taskDefinitionDao;
@@ -71,6 +76,9 @@ public class TaskDefinitionService extends BaseSecurityService {
 
     @Autowired
     private DeployService deployService;
+
+    @Autowired
+    private TaskNotifyConfigService taskNotifyConfigService;
 
     @Autowired
     @Lazy
@@ -112,6 +120,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                         .withInputDatasets(ImmutableList.of())
                         .withOutputDatasets(ImmutableList.of())
                         .build())
+                .withNotifyConfig(DEFAULT_TASK_NOTIFY_CONFIG)
                 .withTaskConfig(new HashMap<>())
                 .build();
         TaskDefinition taskDefinition = TaskDefinition.newBuilder()
@@ -177,8 +186,17 @@ public class TaskDefinitionService extends BaseSecurityService {
             taskRelationDao.create(taskRelations);
         }
 
+        // Update deployed task notification configuration if presented
+        Optional<DeployedTask> deployedTaskOptional = deployedTaskService.findOptional(taskDefinition.getDefinitionId());
+        deployedTaskOptional.ifPresent(deployedTask -> taskNotifyConfigService.updateRelatedTaskNotificationConfig(
+                deployedTask.getWorkflowTaskId(),
+                taskDefinition.getTaskPayload().getNotifyConfig()
+        ));
+
         return updated;
     }
+
+
 
     public void checkRule(TaskDefinition taskDefinition) {
         Preconditions.checkNotNull(taskDefinition.getTaskPayload(), "taskPayload should not be `null`");
@@ -218,17 +236,16 @@ public class TaskDefinitionService extends BaseSecurityService {
                 .getScheduleConfig();
 
         // check schedule is valid
-        List<ScheduleType> validScheduleType = new ArrayList<>();
-        validScheduleType.add(ScheduleType.SCHEDULED);
-        validScheduleType.add(ScheduleType.ONESHOT);
         Preconditions.checkNotNull(scheduleConfig.getType(), "Schedule type should not be null");
         ScheduleType scheduleType = ScheduleType.valueOf(scheduleConfig.getType());
-        Preconditions.checkArgument(validScheduleType.contains(scheduleType),
-                "ScheduleType should not be in " + validScheduleType.stream()
+        Preconditions.checkArgument(VALID_SCHEDULE_TYPE.contains(scheduleType),
+                "Schedule type should be one of the followings: " + VALID_SCHEDULE_TYPE.stream()
                         .map(ScheduleType::name)
                         .collect(Collectors.joining(",")));
-        Preconditions.checkArgument(StringUtils.isNoneBlank(scheduleConfig.getCronExpr()),
-                "Cron Expression should not be blank");
+        if (!Objects.equals(scheduleType, ScheduleType.NONE)) {
+            Preconditions.checkArgument(StringUtils.isNoneBlank(scheduleConfig.getCronExpr()),
+                    "Cron Expression should not be blank");
+        }
         // check dependency is valid
         List<Long> dependencyNodes = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
         List<Long> taskDefinitionIds = taskDefinitionDao.fetchByIds(dependencyNodes)
