@@ -41,7 +41,7 @@ public class WorkflowService {
     @Value("${data-quality.workflow.task.cron:0 0 0 * * ?}")
     String cronExpression;
 
-    @Value("${workflow.enable:true}")
+    @Value("${workflow.enabled:true}")
     Boolean workflowEnable;
 
     @Autowired
