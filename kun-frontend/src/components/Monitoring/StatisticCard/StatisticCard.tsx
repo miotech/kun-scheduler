@@ -11,7 +11,7 @@ interface OwnProps {
   /** statistic value shown at the bottom of card */
   value?: number;
   /** theme color for statistic value */
-  textTheme?: 'default' | 'success' | 'failed' | 'running' | 'pending';
+  textTheme?: 'default' | 'success' | 'failed' | 'running' | 'blocked' | 'pending';
   /** Loading state */
   loading?: boolean;
   /** click event */

@@ -19,5 +19,7 @@ public class DataDevelopmentMetrics {
 
     Integer pendingTaskCount;
 
+    Integer upstreamFailedTaskCount;
+
     Integer totalTaskCount;
 }
