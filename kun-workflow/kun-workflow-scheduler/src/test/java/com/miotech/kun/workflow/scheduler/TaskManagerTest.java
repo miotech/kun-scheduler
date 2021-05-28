@@ -391,7 +391,6 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps1.getLogPath(), is(nullValue()));
         assertThat(attemptProps1.getStartAt(), is(nullValue()));
         assertThat(attemptProps1.getEndAt(), is(nullValue()));
-        assertThat(taskRunDao.getTermAtOfTaskRun(taskRun1.getId()), is(nullValue()));
 
         TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
         assertThat(attemptProps2.getAttempt(), is(1));
@@ -399,7 +398,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps2.getLogPath(), is(nullValue()));
         assertThat(attemptProps2.getStartAt(), is(nullValue()));
         assertThat(attemptProps2.getEndAt(), is(nullValue()));
-        assertThat(taskRunDao.getTermAtOfTaskRun(taskRun2.getId()), is(nullValue()));
+        assertThat(taskRunDao.getTermAtOfTaskRun(taskRun2.getId()), is(notNullValue()));
 
         doAnswer(new Answer() {
             @Override
@@ -427,6 +426,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps2.getLogPath(), is(nullValue()));
         assertThat(attemptProps2.getStartAt(), is(nullValue()));
         assertThat(attemptProps2.getEndAt(), is(nullValue()));
+        assertThat(taskRunDao.getTermAtOfTaskRun(taskRun2.getId()), is(notNullValue()));
 
     }
 
