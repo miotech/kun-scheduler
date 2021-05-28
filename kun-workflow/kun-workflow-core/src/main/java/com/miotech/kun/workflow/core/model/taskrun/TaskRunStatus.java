@@ -58,4 +58,8 @@ public enum TaskRunStatus {
     public boolean isSkipped() {
         return this == SKIPPED;
     }
+
+    public boolean isTermState() {
+        return this == SUCCESS || this == FAILED || this == ABORTED || this == UPSTREAM_FAILED;
+    }
 }

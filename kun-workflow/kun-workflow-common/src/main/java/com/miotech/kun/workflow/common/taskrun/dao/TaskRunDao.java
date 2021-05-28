@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.common.taskrun.dao;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -367,6 +368,18 @@ public class TaskRunDao {
         return taskRun;
     }
 
+    /**
+     * 'termAt' is a column of TaskRun and TaskAttempt for internal use only. So we refrain from providing a public
+     * accessible way.
+     * @param taskRunId
+     * @return
+     */
+    @VisibleForTesting
+    public OffsetDateTime getTermAtOfTaskRun(Long taskRunId) {
+        return dbOperator.fetchOne("SELECT term_at FROM " + TASK_RUN_TABLE_NAME + " WHERE id = ?",
+                rs -> DateTimeUtils.fromTimestamp(rs.getTimestamp("term_at")), taskRunId);
+    }
+
     public List<TaskRun> createTaskRuns(List<TaskRun> taskRuns) {
         return taskRuns.stream().map(this::createTaskRun).collect(Collectors.toList());
     }
@@ -497,31 +510,51 @@ public class TaskRunDao {
     }
 
     public void updateAttemptStatusByTaskRunIds(List<Long> taskRunIds, TaskRunStatus taskRunStatus) {
+        updateAttemptStatusByTaskRunIds(taskRunIds, taskRunStatus, null);
+    }
+
+    public void updateAttemptStatusByTaskRunIds(List<Long> taskRunIds, TaskRunStatus taskRunStatus, @Nullable OffsetDateTime termAt) {
         if (taskRunIds.size() == 0) {
             return;
         }
+
         String filterTaskRunId = taskRunIds.stream().map(x -> "?").collect(Collectors.joining(","));
-        String taskRunSql = DefaultSQLBuilder.newBuilder()
+        SQLBuilder updateTaskRun = DefaultSQLBuilder.newBuilder()
                 .update(TASK_RUN_TABLE_NAME)
-                .set("status=?")
-                .where("id in " + "(" + filterTaskRunId + ")")
-                .getSQL();
+                .set("status=?");
+        if (termAt != null) {
+            updateTaskRun.set("term_at=?");
+        }
+        updateTaskRun.where("id in " + "(" + filterTaskRunId + ")");
+
         List<Long> taskAttemptIds = fetchAllLatestTaskAttemptIds(taskRunIds);
+
         String filterTaskAttemptIds = taskAttemptIds.stream().map(x -> "?").collect(Collectors.joining(","));
-        String taskAttemptSql = DefaultSQLBuilder.newBuilder()
+        SQLBuilder updateTaskAttempt = DefaultSQLBuilder.newBuilder()
                 .update(TASK_ATTEMPT_TABLE_NAME)
-                .set("status=?")
-                .where("id in " + "(" + filterTaskAttemptIds + ")")
-                .getSQL();
+                .set("status=?");
+        if (termAt != null) {
+            updateTaskAttempt.set("term_at=?");
+        }
+        updateTaskAttempt.where("id in " + "(" + filterTaskAttemptIds + ")");
+
         dbOperator.transaction(() -> {
             List<Object> taskRunParams = new ArrayList<>();
             taskRunParams.add(taskRunStatus.name());
+            if (termAt != null) {
+                taskRunParams.add(termAt);
+            }
             taskRunParams.addAll(taskRunIds);
-            dbOperator.update(taskRunSql, taskRunParams.toArray());
+            dbOperator.update(updateTaskRun.getSQL(), taskRunParams.toArray());
+
             List<Object> taskAttemptParams = new ArrayList<>();
             taskAttemptParams.add(taskRunStatus.name());
+            if (termAt != null) {
+                taskAttemptParams.add(termAt);
+            }
             taskAttemptParams.addAll(taskAttemptIds);
-            dbOperator.update(taskAttemptSql, taskAttemptParams.toArray());
+            dbOperator.update(updateTaskAttempt.getSQL(), taskAttemptParams.toArray());
+
             return null;
         });
     }
@@ -814,11 +847,16 @@ public class TaskRunDao {
     }
 
     public Optional<TaskRunStatus> updateTaskAttemptStatus(Long taskAttemptId, TaskRunStatus status) {
-        return updateTaskAttemptStatus(taskAttemptId, status, null, null);
+        return updateTaskAttemptStatus(taskAttemptId, status, null, null, null);
     }
 
     public Optional<TaskRunStatus> updateTaskAttemptStatus(Long taskAttemptId, TaskRunStatus status,
                                                            @Nullable OffsetDateTime startAt, @Nullable OffsetDateTime endAt) {
+        return updateTaskAttemptStatus(taskAttemptId, status, startAt, endAt, null);
+    }
+
+    public Optional<TaskRunStatus> updateTaskAttemptStatus(Long taskAttemptId, TaskRunStatus status,
+                                                           @Nullable OffsetDateTime startAt, @Nullable OffsetDateTime endAt, @Nullable OffsetDateTime termAt) {
         checkNotNull(taskAttemptId, "taskAttemptId should not be null.");
         checkNotNull(status, "status should not be null.");
 
@@ -850,6 +888,13 @@ public class TaskRunDao {
             pmTa.add(endAt);
             sbTr.set("end_at");
             pmTr.add(endAt);
+        }
+
+        if (termAt != null) {
+            sbTa.set("term_at");
+            pmTa.add(termAt);
+            sbTr.set("term_at");
+            pmTr.add(termAt);
         }
 
         pmTa.add(taskAttemptId);
