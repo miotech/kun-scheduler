@@ -13,12 +13,14 @@ import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -170,7 +172,12 @@ public class TaskManager {
         boolean usePostgres = postgresEnable();
         List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId, usePostgres);
         logger.debug("fetch downStream taskRunIds = {},taskRunId = {}", downStreamTaskRunIds, taskRunId);
-        taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus);
+        if (taskRunStatus.isTermState()) {
+            OffsetDateTime termAt = DateTimeUtils.now();
+            taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus, termAt);
+        } else {
+            taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus);
+        }
     }
 
     private boolean postgresEnable(){
