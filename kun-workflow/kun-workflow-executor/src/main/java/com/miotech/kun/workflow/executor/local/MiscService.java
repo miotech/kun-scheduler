@@ -7,10 +7,10 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
-import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.publish.EventPublisher;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +49,14 @@ public class MiscService {
 
     public void changeTaskAttemptStatus(long attemptId, TaskRunStatus status,
                                         @Nullable OffsetDateTime startAt, @Nullable OffsetDateTime endAt) {
-        logger.info("Try to change TaskAttempt's status. attemptId={}, status={}, startAt={}, endAt={}", attemptId, status, startAt, endAt);
-        TaskRunStatus prevStatus = taskRunDao.updateTaskAttemptStatus(attemptId, status, startAt, endAt)
+        // termAt is equal to endAt or current time
+        OffsetDateTime termAt = null;
+        if (status.isTermState()) {
+            termAt = endAt != null ? endAt : DateTimeUtils.now();
+        }
+
+        logger.info("Try to change TaskAttempt's status. attemptId={}, status={}, startAt={}, endAt={}, termAt={}", attemptId, status, startAt, endAt, termAt);
+        TaskRunStatus prevStatus = taskRunDao.updateTaskAttemptStatus(attemptId, status, startAt, endAt, termAt)
                 .orElseThrow(() -> new IllegalArgumentException(String.format("TaskAttempt with id %s not found.", attemptId)));
 
         TaskAttempt attempt = null;
