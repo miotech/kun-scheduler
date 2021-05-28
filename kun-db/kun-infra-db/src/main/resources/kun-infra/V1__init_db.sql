@@ -87,11 +87,16 @@ CREATE TABLE IF NOT EXISTS kun_mt_dataset_stats (
     "total_byte_size" int8
 );
 
+CREATE TABLE IF NOT EXISTS kun_mt_pull_process (
+    process_id BIGSERIAL PRIMARY KEY,
+    process_type VARCHAR(64) NOT NULL,   -- 'DATASOURCE' / 'DATASET'
+    datasource_id BIGINT,    -- not null when process_type = 'DATASOURCE'
+    dataset_id BIGINT,       -- not null when process_type = 'DATASET'
+    mce_task_run_id BIGINT,  -- not null when process_type = 'DATASOURCE' OR 'DATASET'
+    mse_task_run_id BIGINT,  -- preserved column
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
 
--- This script only contains the table creation statements and does not fully represent the table in the database. It's still missing: indices, triggers. Do not use it as a backup.
-
--- Sequence and defined type
-CREATE SEQUENCE IF NOT EXISTS kun_wf_checkpoint_id_seq;
 
 -- Table Definition
 CREATE TABLE IF NOT EXISTS kun_wf_checkpoint (
@@ -271,4 +276,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS kun_wf_tick_task_mapping_pkey ON kun_wf_tick_t
 CREATE UNIQUE INDEX IF NOT EXISTS kun_wf_variable_key_uidx ON kun_wf_variable (key);
 
 CREATE UNIQUE INDEX IF NOT EXISTS kun_wf_variable_pkey ON kun_wf_variable (key);
+
+CREATE INDEX kun_mt_pull_process__datasource__idx ON kun_mt_pull_process (datasource_id);
+
+CREATE INDEX kun_mt_pull_process__dataset_id__idx ON kun_mt_pull_process (dataset_id);
 
