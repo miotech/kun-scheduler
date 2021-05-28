@@ -3,7 +3,7 @@ server:
 
 workflow:
   enabled: true
-  base-url: http://${WORKFLOW_HOST:127.0.0.1}:${WORKFLOW_PORT:8078}
+  base-url: http://${INFRA_HOST:127.0.0.1}:${INFRA_PORT:8078}
   variable-namespace: dataplatform
 
 spring:
@@ -88,7 +88,7 @@ data-dashboard:
 # Data-discovery config
 
 metadata:
-  base-url: http://${METADATA_HOST}:${METADATA_PORT}
+  base-url: http://${INFRA_HOST:127.0.0.1}:${INFRA_PORT:8078}
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun
