@@ -3,7 +3,7 @@ server:
 
 workflow:
   enabled: true
-  baseUrl: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
+  baseUrl: http://${INFRA_HOST}:${INFRA_PORT}
   variableNamespace: dataplatform
 
 spring:
