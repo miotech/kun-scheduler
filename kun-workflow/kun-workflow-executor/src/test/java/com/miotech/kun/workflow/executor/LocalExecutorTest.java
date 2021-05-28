@@ -227,7 +227,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, not(containsString("AppClassLoader")));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -278,7 +278,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, not(containsString("AppClassLoader")));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -335,7 +335,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, not(containsString("AppClassLoader")));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -368,7 +368,7 @@ public class LocalExecutorTest extends CommonTestBase {
         boolean result = executor.submit(newTaskAttempt);
         assertThat(result, is(false));
         //events
-        assertStatusProgress(queuedTaskAttempt.getId(),
+        assertStatusHistory(queuedTaskAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED);
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
@@ -394,7 +394,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(submitCreated, is(false));
         assertThat(submitQueued, is(false));
         // events
-        assertStatusProgress(runningTaskAttempt.getId(),
+        assertStatusHistory(runningTaskAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -417,7 +417,7 @@ public class LocalExecutorTest extends CommonTestBase {
         boolean result = executor.submit(newTaskAttempt);
         assertThat(result, is(false));
         // events
-        assertStatusProgress(finishTaskAttempt.getId(),
+        assertStatusHistory(finishTaskAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -486,7 +486,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, not(containsString("AppClassLoader")));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -532,6 +532,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(taskRun.getStatus(), is(attemptProps.getStatus()));
         assertThat(taskRun.getStartAt(), is(attemptProps.getStartAt()));
         assertThat(taskRun.getEndAt(), is(attemptProps.getEndAt()));
+        assertThat(taskRunDao.getTermAtOfTaskRun(taskRun.getId()), is(taskRun.getEndAt()));
 
         // logs
         Resource log = resourceLoader.getResource(attemptProps.getLogPath());
@@ -541,7 +542,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, not(containsString("AppClassLoader")));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -624,7 +625,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(attemptProps.getEndAt(), is(notNullValue()));
 
         // events
-        assertStatusProgress(attempt1.getId(),
+        assertStatusHistory(attempt1.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -637,7 +638,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
 
-        assertStatusProgress(attempt2.getId(),
+        assertStatusHistory(attempt2.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -677,6 +678,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(taskRun.getStatus(), is(attemptProps.getStatus()));
         assertThat(taskRun.getStartAt(), is(attemptProps.getStartAt()));
         assertThat(taskRun.getEndAt(), is(attemptProps.getEndAt()));
+        assertThat(taskRunDao.getTermAtOfTaskRun(taskRun.getId()), is(taskRun.getEndAt()));
 
         // logs
         Resource log = resourceLoader.getResource(attemptProps.getLogPath());
@@ -684,7 +686,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, containsString("Execution Failed"));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -725,7 +727,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, containsString("Unexpected exception occurred"));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -766,7 +768,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, containsString("Failed to load jar"));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -811,7 +813,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, containsString("TestOperator4 is aborting"));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -866,7 +868,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(taskRun.getEndAt(), is(attemptProps.getEndAt()));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -912,7 +914,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, containsString("TestOperator7 is aborting"));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -955,7 +957,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(content, containsString("Unexpected exception occurred during aborting operator."));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -985,7 +987,7 @@ public class LocalExecutorTest extends CommonTestBase {
         executor.cancel(taskAttempt.getId());
         awaitUntilAttemptAbort(taskAttempt.getId());
         // events
-        assertStatusProgress(taskAttempt.getId(),
+        assertStatusHistory(taskAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.ABORTED);
@@ -1005,7 +1007,7 @@ public class LocalExecutorTest extends CommonTestBase {
         executor.cancel(taskAttempt.getId());
         awaitUntilAttemptAbort(taskAttempt.getId());
         // events
-        assertStatusProgress(taskAttempt.getId(),
+        assertStatusHistory(taskAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.ABORTED);
 
@@ -1033,7 +1035,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(defaultAttemptProps.getAttempt(), is(1));
         assertThat(defaultAttemptProps.getStatus(), is(TaskRunStatus.QUEUED));
         // verify events
-        assertStatusProgress(defaultAttempt.getId(),
+        assertStatusHistory(defaultAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED);
 
@@ -1046,7 +1048,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(userAttemptProps.getEndAt(), is(notNullValue()));
 
         // events
-        assertStatusProgress(userAttempt.getId(),
+        assertStatusHistory(userAttempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -1149,7 +1151,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(taskRun.getEndAt(), is(attemptProps.getEndAt()));
 
         // events
-        assertStatusProgress(attempt.getId(),
+        assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.INITIALIZING,
@@ -1236,7 +1238,7 @@ public class LocalExecutorTest extends CommonTestBase {
         return OperatorCompiler.compileJar(operatorClass, operatorClassName);
     }
 
-    private void assertStatusProgress(Long attemptId, TaskRunStatus... asserts) {
+    private void assertStatusHistory(Long attemptId, TaskRunStatus... asserts) {
         checkArgument(asserts.length > 1);
 
         List<Event> events = eventCollector.getEvents();
