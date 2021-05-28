@@ -9,7 +9,7 @@ workflow:
 spring:
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/dataplatform?stringtype=unspecified
+    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun?stringtype=unspecified
     username: ${DB_PG_USERNAME}
     password: ${DB_PG_PASSWORD}
 
@@ -17,7 +17,7 @@ spring:
     enabled: true
     clean-disabled: true
     locations: classpath:sql
-    table: flyway_kun_app_schema_history
+    table: flyway_kun_dp_schema_history
     schemas: public
 
 security:
