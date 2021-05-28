@@ -277,7 +277,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS kun_wf_variable_key_uidx ON kun_wf_variable (k
 
 CREATE UNIQUE INDEX IF NOT EXISTS kun_wf_variable_pkey ON kun_wf_variable (key);
 
-CREATE INDEX kun_mt_pull_process__datasource__idx ON kun_mt_pull_process (datasource_id);
+CREATE INDEX IF NOT EXISTS kun_mt_pull_process__datasource__idx ON kun_mt_pull_process (datasource_id);
 
-CREATE INDEX kun_mt_pull_process__dataset_id__idx ON kun_mt_pull_process (dataset_id);
+CREATE INDEX IF NOT EXISTS kun_mt_pull_process__dataset_id__idx ON kun_mt_pull_process (dataset_id);
 
