@@ -49,13 +49,13 @@ services:
     depends_on:
       - kun-postgres
       - kun-neo4j
-  kun-workflow:
-    image: "${IMAGE_REMOTE_ORG}kun-workflow:master"
+  kun-infra:
+    image: "${IMAGE_REMOTE_ORG}kun-infra:master"
     environment:
       TZ:
       APP_CONFIG_ENV:
       SPRING_PROFILES_ACTIVE:
-      WORKFLOW_PORT:
+      INFRA_PORT:
       DB_PG_IP:
       DB_PG_PORT:
       DB_PG_USERNAME:
@@ -67,41 +67,12 @@ services:
       DB_REDIS_PORT:
     restart: always
     volumes:
-      - ./data/kun-workflow/data:/data
-      - ./logs/kun-workflow:/server/target/kun-workflow-logs/:z
+      - ./data/kun-infra/data:/data
+      - ./logs/kun-infra:/server/target/kun-infra-logs/:z
     ports:
-      - ${WORKFLOW_PORT}:${WORKFLOW_PORT}
+      - ${INFRA_PORT}:${INFRA_PORT}
     depends_on:
       - kun-postgres
-      - kun-neo4j
-      - kun-redis
-  kun-metadata:
-    image: "${IMAGE_REMOTE_ORG}kun-metadata:master"
-    environment:
-      TZ:
-      APP_CONFIG_ENV:
-      SPRING_PROFILES_ACTIVE:
-      METADATA_PORT:
-      DB_PG_IP:
-      DB_PG_PORT:
-      DB_PG_USERNAME:
-      DB_PG_PASSWORD:
-      WORKFLOW_HOST:
-      WORKFLOW_PORT:
-      DATA_DISCOVERY_HOST:
-      DATA_DISCOVERY_PORT:
-      METADATA_RPC_SERVICE_PORT:
-      DB_NEO4J_IP:
-      DB_NEO4J_PORT:
-      DB_REDIS_IP:
-      DB_REDIS_PORT:
-    restart: always
-    volumes:
-      - ./logs/kun-metadata:/server/target/kun-metadata-logs/:z
-    ports:
-      - ${METADATA_PORT}:${METADATA_PORT}
-    depends_on:
-      - kun-workflow
       - kun-neo4j
       - kun-redis
   kun-data-dashboard:
@@ -117,16 +88,16 @@ services:
       DB_PG_PASSWORD:
       SECURITY_HOST:
       SECURITY_PORT:
-      WORKFLOW_HOST:
-      WORKFLOW_PORT:
+      INFRA_HOST:
+      INFRA_PORT:
     restart: always
     volumes:
       - ./logs/kun-data-dashboard:/server/target/kun-data-dashboard-logs/:z
     ports:
       - ${DATA_DASHBOARD_PORT}:${DATA_DASHBOARD_PORT}
     depends_on:
-      - kun-workflow
-      - kun-metadata
+      - kun-infra
+      - kun-infra
   kun-data-discovery:
     image: "${IMAGE_REMOTE_ORG}kun-data-discovery:master"
     environment:
@@ -140,17 +111,15 @@ services:
       DB_PG_PASSWORD:
       SECURITY_HOST:
       SECURITY_PORT:
-      WORKFLOW_HOST:
-      WORKFLOW_PORT:
-      METADATA_HOST:
-      METADATA_PORT:
+      INFRA_HOST:
+      INFRA_PORT:
     restart: always
     volumes:
       - ./logs/kun-data-discovery:/server/target/kun-data-discovery-logs/:z
     ports:
       - ${DATA_DISCOVERY_PORT}:${DATA_DISCOVERY_PORT}
     depends_on:
-      - kun-metadata
+      - kun-infra
   kun-data-platform:
     image: "${IMAGE_REMOTE_ORG}kun-data-platform:master"
     environment:
@@ -166,15 +135,15 @@ services:
       DB_REDIS_PORT:
       SECURITY_HOST:
       SECURITY_PORT:
-      WORKFLOW_HOST:
-      WORKFLOW_PORT:
+      INFRA_HOST:
+      INFRA_PORT:
     restart: always
     volumes:
       - ./logs/kun-data-platform:/server/target/kun-data-platform-logs/:z
     ports:
       - ${DATA_PLATFORM_PORT}:${DATA_PLATFORM_PORT}
     depends_on:
-      - kun-workflow
+      - kun-infra
   kun-frontend:
     image: "${IMAGE_REMOTE_ORG}kun-frontend:master"
     environment:
@@ -183,8 +152,8 @@ services:
       SECURITY_PORT:
       DATA_DISCOVERY_HOST:
       DATA_DISCOVERY_PORT:
-      WORKFLOW_HOST:
-      WORKFLOW_PORT:
+      INFRA_HOST:
+      INFRA_PORT:
       DATA_PLATFORM_HOST:
       DATA_PLATFORM_PORT:
       DATA_DASHBOARD_HOST:

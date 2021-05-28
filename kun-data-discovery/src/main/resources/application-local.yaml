@@ -30,7 +30,7 @@ security:
   base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
 
 metadata:
-  base-url: http://${METADATA_HOST}:${METADATA_PORT}
+  base-url: http://${INFRA_HOST}:${INFRA_PORT}
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun
@@ -39,7 +39,7 @@ metadata:
 
 workflow:
   enable: ${WORKFLOW_ENABLE:true}
-  base-url: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
+  base-url: http://${INFRA_HOST}:${INFRA_PORT}
 
 data-quality:
   workflow:
