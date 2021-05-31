@@ -46,7 +46,6 @@ redis:
 env: local
 
 workflow:
-  url: http://${INFRA_PORT}:${INFRA_PORT}
   cronExpr: 0 0 12 * * ?
 
 

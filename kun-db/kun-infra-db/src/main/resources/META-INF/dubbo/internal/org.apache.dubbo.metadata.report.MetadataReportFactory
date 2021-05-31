@@ -1,0 +1,11 @@
+file = org.apache.dubbo.metadata.report.support.file.FileSystemMetadataReportFactory
+zookeeper=org.apache.dubbo.metadata.store.zookeeper.ZookeeperMetadataReportFactory
+
+redis=org.apache.dubbo.metadata.store.redis.RedisMetadataReportFactory
+
+consul=org.apache.dubbo.metadata.store.consul.ConsulMetadataReportFactory
+
+etcd=org.apache.dubbo.metadata.store.etcd.EtcdMetadataReportFactory
+
+nacos=org.apache.dubbo.metadata.store.nacos.NacosMetadataReportFactory
+
