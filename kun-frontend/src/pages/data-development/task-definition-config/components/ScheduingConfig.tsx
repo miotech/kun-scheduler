@@ -16,6 +16,7 @@ import { OutputDatasetField } from '@/components/OutputDatasetField';
 import LogUtils from '@/utils/logUtils';
 import { getTaskDefinitionsFromFlattenedProps } from '@/utils/transformDataset';
 import { OneshotDatePicker } from '@/pages/data-development/task-definition-config/components/OneshotDatePicker';
+import { parse } from '@joshoy/quartz-cron-parser';
 
 import styles from './BodyForm.less';
 
@@ -134,8 +135,29 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
         <Form.Item
           label={t('dataDevelopment.definition.scheduleConfig.cronExpression')}
           name={['taskPayload', 'scheduleConfig', 'cronExpr']}
-          rules={[{ required: true }]}
-          initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.cronExpr}
+          rules={[
+            { required: true },
+            () => ({
+              validator(_, quartzCronValue) {
+                // when expression is empty, `required` rule will be triggered.
+                if (!`${quartzCronValue}`.trim()) {
+                  return Promise.resolve();
+                }
+                // for other cases
+                const expr = parse(quartzCronValue as string);
+                if (expr.error) {
+                  let reason = expr.error.message;
+                  if (reason.match(/Syntax error at/g) || reason.match(/Cannot read property/g)) {
+                    reason = 'Invalid cron expression. See: https://www.freeformatter.com/cron-expression-generator-quartz.html for help.';
+                  }
+                  return Promise.reject(reason);
+                }
+                // else
+                return Promise.resolve();
+              }
+            }),
+          ]}
+          initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.cronExpr || '0 0 0 * * ? *'}
         >
           <CronExpressionInput hideErrorAlert />
         </Form.Item>

@@ -4,6 +4,7 @@ import cronstrue from 'cronstrue/i18n';
 import { Alert, Input } from 'antd';
 import useI18n from '@/hooks/useI18n';
 import { CronLocalization, ReQuartzCron } from '@sbzen/re-cron';
+import { validate } from '@joshoy/quartz-cron-parser';
 
 import ReCronZhCNLocalization from './i18n/recron.zh-cn';
 import './CronExpressionInput.less';
@@ -41,6 +42,8 @@ export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, C
 
     const appliedValue = normalizeProvidedCronExpressionValue(value) ?? uncontrolledValue;
 
+    const isValidCronExpressionFlag = validate(`${appliedValue}`);
+
     const semanticTip = useMemo(() => {
       if (!appliedValue) {
         return <></>;
@@ -71,7 +74,7 @@ export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, C
     return (
       <div className="cron-expression-input-wrapper">
         <Input
-          value={appliedValue}
+          value={value}
           onChange={ev => {
             if (onChange) {
               onChange(ev.target.value);
@@ -80,21 +83,27 @@ export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, C
             }
           }}
         />
-        <div className="cron-expression-input__semantic-wrapper">{semanticTip}</div>
-        <div className={c('cron-expression-input', className)}>
-          <ReQuartzCron
-            value={appliedValue}
-            onChange={(v: string) => {
-              if (onChange) {
-                onChange(v);
-              } else {
-                setUncontrolledValue(v);
-              }
-            }}
-            localization={LOCALIZATION[t('common.lang')] || undefined}
-          />
-        </div>
+        <div className="cron-expression-input__selector-component-wrapper" />
+          {isValidCronExpressionFlag ?
+            <>
+              {semanticTip}
+              <div className={c('cron-expression-input', className)}>
+                <ReQuartzCron
+                  value={appliedValue}
+                  onChange={(v: string) => {
+                    if (onChange) {
+                      onChange(v);
+                    } else {
+                      setUncontrolledValue(v);
+                    }
+                  }}
+                  localization={LOCALIZATION[t('common.lang')] || undefined}
+                />
+              </div>
+            </> :
+            <></>
+          }
       </div>
     );
-  },
+  }
 );
