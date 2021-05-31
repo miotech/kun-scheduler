@@ -49,6 +49,7 @@
   "dependencies": {
     "@ant-design/icons": "^4.1.0",
     "@dbeining/react-atom": "^4.1.9",
+    "@joshoy/quartz-cron-parser": "^0.1.0",
     "@react-aria/focus": "^3.2.3",
     "@react-aria/switch": "^3.1.1",
     "@react-aria/visually-hidden": "^3.2.1",
