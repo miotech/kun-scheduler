@@ -2861,6 +2861,11 @@
     "@types/yargs" "^15.0.0"
     chalk "^4.0.0"
 
+"@joshoy/quartz-cron-parser@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@joshoy/quartz-cron-parser/-/quartz-cron-parser-0.1.0.tgz#98a71ff4195bae648f6856e619b27724aa139074"
+  integrity sha512-GiAMugTj7dkxoPLPOUoAMYFBA7SlHSO6RaWci8avJuuBE5K8/1poWZujQH77mLqFuuLOc7Ng9i/DdcONjsNqRQ==
+
 "@libre/atom@^1.3.2":
   version "1.3.3"
   resolved "https://registry.yarnpkg.com/@libre/atom/-/atom-1.3.3.tgz#b14e5fdac836e281d7206d19255c798a50046816"
