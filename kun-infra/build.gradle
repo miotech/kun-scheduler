@@ -75,11 +75,7 @@ shadowJar {
     version = 0.1
     manifest {
         attributes(
-<<<<<<< HEAD
-                'Main-Class': 'com.miotech.kun.workflow.web.KunInfraWebServer'
-=======
                 'Main-Class': 'com.miotech.kun.infra.KunInfraWebServer'
->>>>>>> c11a8ec778e5e6123f526d453aaf768bfb8f6619
         )
     }
     zip64 true
