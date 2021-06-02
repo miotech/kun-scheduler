@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -50,12 +52,13 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
     }
 
     public boolean register(Long taskAttemptId, WorkerEventHandler handler) {//为pod注册一个watcher监控pod的状态变更
-        logger.info("register pod event handler,taskAttemptId = {}", taskAttemptId);
+        logger.debug("register pod event handler,taskAttemptId = {}", taskAttemptId);
         registerHandlers.put(taskAttemptId, handler);
         return true;
     }
 
     public boolean unRegister(Long taskAttemptId) {
+        logger.debug("unRegister worker,taskAttemptId = {}", taskAttemptId);
         registerHandlers.remove(taskAttemptId);
         return true;
     }
@@ -79,9 +82,11 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
             Long taskAttemptId = Long.parseLong(pod.getMetadata().getLabels().get(KUN_TASK_ATTEMPT_ID));
             logger.debug("receive pod event taskAttemptId = {}", taskAttemptId);
             WorkerEventHandler workerEventHandler = registerHandlers.get(taskAttemptId);
-            if (workerEventHandler != null) {
-                workerEventHandler.onReceiveSnapshot(PodStatusSnapShot.fromPod(pod));
+            if (workerEventHandler == null) {
+                logger.warn("pod with taskAttemptId = {} count not found event handler", taskAttemptId);
+                return;
             }
+            workerEventHandler.onReceiveSnapshot(PodStatusSnapShot.fromPod(pod));
         }
 
         @Override
@@ -94,15 +99,29 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
     class PollingPodsStatus implements Runnable {
         @Override
         public void run() {
-            PodList podList = kubernetesClient.pods()
-                    .inNamespace(props.getString("executor.env.namespace"))
-                    .withLabel(KUN_WORKFLOW).list();
-            logger.debug("fetch pod list from kubernetes size = {}, register size = {}", podList.getItems().size(), registerHandlers.size());
-            for (Pod pod : podList.getItems()) {
-                Long taskAttemptId = Long.parseLong(pod.getMetadata().getLabels().get(KUN_TASK_ATTEMPT_ID));
-                WorkerEventHandler workerEventHandler = registerHandlers.get(taskAttemptId);
-                workerEventHandler.onReceivePollingSnapShot(PodStatusSnapShot.fromPod(pod));
+            try {
+                PodList podList = kubernetesClient.pods()
+                        .inNamespace(props.getString("executor.env.namespace"))
+                        .withLabel(KUN_WORKFLOW).list();
+                logger.debug("fetch pod list from kubernetes size = {}, register size = {}", podList.getItems().size(), registerHandlers.size());
+                Set<Long> registerSet = new HashSet<>(registerHandlers.keySet());
+                for (Pod pod : podList.getItems()) {
+                    Long taskAttemptId = Long.parseLong(pod.getMetadata().getLabels().get(KUN_TASK_ATTEMPT_ID));
+                    WorkerEventHandler workerEventHandler = registerHandlers.get(taskAttemptId);
+                    if (workerEventHandler == null) {
+                        logger.warn("pod with taskAttemptId = {} count not found event handler", taskAttemptId);
+                        continue;
+                    }
+                    workerEventHandler.onReceivePollingSnapShot(PodStatusSnapShot.fromPod(pod));
+                    registerSet.remove(taskAttemptId);
+                }
+                for (Long unFoundAttempt : registerSet) {
+                    logger.warn("count not found pod for register handler, taskAttemptId = {}", unFoundAttempt);
+                }
+            } catch (Throwable e) {
+                logger.error("polling pods status from kubernetes failed", e);
             }
+
         }
     }
 
