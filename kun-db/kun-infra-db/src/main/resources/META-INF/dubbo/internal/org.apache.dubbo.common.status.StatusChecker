@@ -1,7 +1,0 @@
-spring=org.apache.dubbo.config.spring.status.SpringStatusChecker
-datasource=org.apache.dubbo.config.spring.status.DataSourceStatusChecker
-memory=org.apache.dubbo.common.status.support.MemoryStatusChecker
-load=org.apache.dubbo.common.status.support.LoadStatusChecker
-server=org.apache.dubbo.rpc.protocol.dubbo.status.ServerStatusChecker
-threadpool=org.apache.dubbo.rpc.protocol.dubbo.status.ThreadPoolStatusChecker
-registry=org.apache.dubbo.registry.status.RegistryStatusChecker
