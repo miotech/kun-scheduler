@@ -1,3 +1,3 @@
-import { SparkSQLEditor as _SparkSQLEditor } from './SparkSQLEditor/SparkSQLEditor';
+import { SparkSQLEditor as _SparkSQLEditor } from './SparkSQLEditor';
 
 export const SparkSQLEditor = _SparkSQLEditor;

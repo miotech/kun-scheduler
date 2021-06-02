@@ -5,8 +5,8 @@ import React from 'react';
  * @param defaultValue the default value to be provided if key not persisted in local storage
  * @param key the key to persist that state in local storage
  */
-export function useStickyState<T = any>(defaultValue: T, key: string) {
-  const [value, setValue] = React.useState(() => {
+export function useStickyState<T = any>(defaultValue: T, key: string): [T, React.Dispatch<React.SetStateAction<T>>] {
+  const [value, setValue] = React.useState<T>(() => {
     const stickyValue = window.localStorage.getItem(key);
     return stickyValue !== null
       ? JSON.parse(stickyValue)
