@@ -1,0 +1,13 @@
+service-discovery-registry=org.apache.dubbo.registry.client.ServiceDiscoveryRegistryFactory
+wrapper=org.apache.dubbo.registry.RegistryFactoryWrapper
+dubbo=org.apache.dubbo.registry.dubbo.DubboRegistryFactory
+multicast=org.apache.dubbo.registry.multicast.MulticastRegistryFactory
+zookeeper=org.apache.dubbo.registry.zookeeper.ZookeeperRegistryFactory
+redis=org.apache.dubbo.registry.redis.RedisRegistryFactory
+consul=org.apache.dubbo.registry.consul.ConsulRegistryFactory
+
+etcd3=org.apache.dubbo.registry.etcd.EtcdRegistryFactory
+nacos=org.apache.dubbo.registry.nacos.NacosRegistryFactory
+sofa=org.apache.dubbo.registry.sofa.SofaRegistryFactory
+multiple=org.apache.dubbo.registry.multiple.MultipleRegistryFactory
+
