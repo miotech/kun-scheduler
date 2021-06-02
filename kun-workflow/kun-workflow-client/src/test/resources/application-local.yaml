@@ -1,7 +1,7 @@
 env: local
 
 server:
-  port: ${METADATA_PORT}
+  port: ${KUN_INFRA_PORT}
 
 datasource:
   jdbcUrl: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun

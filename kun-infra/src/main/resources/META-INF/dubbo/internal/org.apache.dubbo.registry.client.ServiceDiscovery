@@ -1,0 +1,7 @@
+file=org.apache.dubbo.registry.client.FileSystemServiceDiscovery
+zookeeper=org.apache.dubbo.registry.zookeeper.ZookeeperServiceDiscovery
+consul=org.apache.dubbo.registry.consul.ConsulServiceDiscovery
+etcd3=org.apache.dubbo.registry.etcd.EtcdServiceDiscovery
+
+eureka=org.apache.dubbo.registry.eureka.EurekaServiceDiscovery
+nacos=org.apache.dubbo.registry.nacos.NacosServiceDiscovery
