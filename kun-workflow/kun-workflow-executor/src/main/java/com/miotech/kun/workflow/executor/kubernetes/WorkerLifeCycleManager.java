@@ -129,7 +129,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     }
 
     private void cleanupWorker(WorkerInstance workerInstance) {
-        logger.info("unRegister worker,taskAttemptId = {}", workerInstance.getTaskAttemptId());
         workerMonitor.unRegister(workerInstance.getTaskAttemptId());
         stopWorker(workerInstance.getTaskAttemptId());
 
