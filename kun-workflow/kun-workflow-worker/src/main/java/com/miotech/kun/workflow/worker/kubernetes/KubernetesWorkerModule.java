@@ -4,8 +4,8 @@ import com.miotech.kun.commons.db.DatabaseModule;
 import com.miotech.kun.commons.db.GraphDatabaseModule;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.module.AppModule;
+import com.miotech.kun.metadata.common.rpc.MetadataServiceFacadeImpl;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
-import com.miotech.kun.metadata.web.rpc.MetadataServiceFacadeImpl;
 
 public class KubernetesWorkerModule extends AppModule {
 
