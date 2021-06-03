@@ -1,5 +1,5 @@
 server:
-  port: ${DATA_DASHBOARD_PORT}
+  port: ${KUN_APP_PORT}
 
 spring:
   datasource:
