@@ -2,8 +2,7 @@
 import React, { memo, useLayoutEffect } from 'react';
 import { DefaultMonacoEditor } from '@/components/CodeEditor/DefaultMonacoEditor';
 import { useMonaco } from '@monaco-editor/react';
-import { format as sqlFormat } from 'sql-formatter';
-import { message } from 'antd';
+import { initSQLLanguageSupport } from '@/components/CodeEditor/language/sql';
 
 interface OwnProps {
   value?: string;
@@ -14,17 +13,6 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-function doSQLFormat(sql: string): Promise<string> {
-  try {
-    const formattedSQL = sqlFormat(sql, {
-      language: 'spark',
-    });
-    return Promise.resolve(formattedSQL);
-  } catch (e) {
-    return Promise.reject(e.message);
-  }
-};
-
 export const SparkSQLEditor: React.FC<Props> = memo(function SparkSQLEditor(props) {
   const { defaultValue, value, theme, onChange } = props;
 
@@ -32,28 +20,7 @@ export const SparkSQLEditor: React.FC<Props> = memo(function SparkSQLEditor(prop
 
   useLayoutEffect(() => {
     if (monaco) {
-      monaco.languages.registerDocumentFormattingEditProvider('sql', {
-        async provideDocumentFormattingEdits(model) {
-          const preFormatCode = model.getValue();
-          try {
-            const formatted = await doSQLFormat(preFormatCode);
-            return [
-              {
-                range: model.getFullModelRange(),
-                text: formatted,
-              },
-            ];
-          } catch (e) {
-            message.error('Failed to format code.');
-            return [
-              {
-                range: model.getFullModelRange(),
-                text: preFormatCode,
-              },
-            ];
-          }
-        }
-      });
+      initSQLLanguageSupport(monaco);
     }
   }, [monaco]);
 

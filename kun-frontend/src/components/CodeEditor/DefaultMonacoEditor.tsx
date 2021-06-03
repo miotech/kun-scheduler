@@ -64,7 +64,7 @@ export const DefaultMonacoEditor: React.FC<Props> = memo(function DefaultMonacoE
     <div className="monaco-editor-wrapper">
       <nav className="monaco-editor-wrapper__toolbar">
         <div className="monaco-editor-wrapper__toolbar__left">
-          Content left
+          {/* TODO: toolbar content left side */}
         </div>
         <div className="monaco-editor-wrapper__toolbar__right">
           {/* Auto format */}
