@@ -44,6 +44,7 @@ public class Subscriber {
             if (datasetIds.isEmpty()) {
                 return;
             }
+            log.info("get dq cases for datasetIds: " + taskAttemptFinishedEvent.getOutDataSetIds());
             List<Long> caseIds = dataQualityRepository.getWorkflowTasksByDatasetIds(datasetIds);
             if (!caseIds.isEmpty()) {
                 log.info("run dq test case: " + caseIds);
