@@ -166,7 +166,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         Container container = new Container();
         container.setImagePullPolicy(IMAGE_PULL_POLICY);
         String containerName = getContainerFromOperator(operatorId);
-        String imageName = "kunoperator";
+        String imageName = POD_IMAGE_NAME;
         if (props.containsKey("executor.env.privateHub")) {
             imageName = props.getString("executor.env.privateHub.url") + "/" + imageName;
         }
