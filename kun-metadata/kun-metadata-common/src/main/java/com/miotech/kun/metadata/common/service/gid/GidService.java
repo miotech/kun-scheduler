@@ -1,11 +1,11 @@
-package com.miotech.kun.metadata.databuilder.service.gid;
+package com.miotech.kun.metadata.common.service.gid;
 
+import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.DSI;
 import com.miotech.kun.metadata.core.model.DataStore;
-import io.prestosql.jdbc.$internal.guava.base.Preconditions;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
