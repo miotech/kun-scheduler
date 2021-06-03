@@ -5,11 +5,14 @@ import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
 import com.google.common.base.Strings;
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.execution.ExecCommand;
-import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.common.lineage.service.LineageService;
+import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.core.execution.*;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.worker.OperatorContextImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,6 +31,10 @@ public class KubernetesOperatorLauncher {
     private volatile KunOperator operator;
     private static Props props;
     private volatile boolean finished = false;
+    @Inject
+    private TaskRunDao taskRunDao;
+    @Inject
+    private LineageService lineageService;
 
 
     public static void main(String args[]) {
@@ -35,7 +42,10 @@ public class KubernetesOperatorLauncher {
         ExecCommand command = readExecCommand();
         // 初始化logger
         initLogger(command.getLogPath());
-        KubernetesOperatorLauncher operatorLauncher = new KubernetesOperatorLauncher();
+        Injector injector = Guice.createInjector(
+                new KubernetesWorkerModule(props)
+        );
+        KubernetesOperatorLauncher operatorLauncher = injector.getInstance(KubernetesOperatorLauncher.class);
         Thread exitHook = new Thread(() -> operatorLauncher.cancel());
         Runtime.getRuntime().addShutdownHook(exitHook);
         operatorLauncher.start(command);
@@ -133,6 +143,16 @@ public class KubernetesOperatorLauncher {
                 logger.info("Operator is cancelled, abort execution.");
                 return false;
             } else if (success) {
+                if (operator.getReport().isPresent()) {
+                    //process report
+                    try {
+                        OperatorReport operatorReport = new OperatorReport();
+                        operatorReport.copyFromReport(operator.getReport().get());
+                        processReport(command.getTaskRunId(), operatorReport);
+                    }catch (Throwable e){
+                        logger.error("process operator report failed",e);
+                    }
+                }
                 return true;
             } else {
                 return false;
@@ -184,4 +204,15 @@ public class KubernetesOperatorLauncher {
         }
         return configBuilder.build();
     }
+
+    private void processReport(Long taskRunId, OperatorReport report) {
+        logger.debug("Update task's inlets/outlets. taskRunId={}, inlets={}, outlets={}",
+                taskRunId, report.getInlets(), report.getOutlets());
+        taskRunDao.updateTaskRunInletsOutlets(taskRunId,
+                report.getInlets(), report.getOutlets());
+        TaskRun taskRun = taskRunDao.fetchTaskRunById(taskRunId).get();
+        lineageService.updateTaskLineage(taskRun.getTask(), report.getInlets(), report.getOutlets());
+
+    }
+
 }
