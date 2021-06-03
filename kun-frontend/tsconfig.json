@@ -24,7 +24,8 @@
     "config/**/*",
     ".umirc.ts",
     "typings.d.ts",
-    "src/definitions/index.d.ts"
+    "src/definitions/index.d.ts",
+    "node_modules/monaco-editor/monaco.d.ts"
   ],
   "exclude": ["src/.umi/**/*"]
 }
