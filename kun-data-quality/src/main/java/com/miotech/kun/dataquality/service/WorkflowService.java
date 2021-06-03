@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author: Jie Chen
@@ -83,6 +84,12 @@ public class WorkflowService {
         return taskId;
     }
 
+    public void executeTasks(List<Long> caseIds){
+        for(Long id: caseIds){
+            executeTask(id);
+        }
+    }
+
     public void deleteTaskByCase(Long caseId) {
         Long taskId = dataQualityService.getLatestTaskId(caseId);
         try {
@@ -110,7 +117,7 @@ public class WorkflowService {
                 .withName(DataQualityConfiguration.WORKFLOW_TASK_NAME_PREFIX + caseId + "_" + caseName)
                 .withDescription("")
                 .withConfig(workflowUtils.getTaskConfig(caseId))
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, cronExpression))
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .withOperatorId(savedOperator.getId())

@@ -674,4 +674,20 @@ public class DataQualityRepository extends BaseRepository {
         }, caseId);
     }
 
+    public List<Long> getWorkflowTasksByDatasetIds(List<Long> datasetIds){
+        if(datasetIds.isEmpty())
+            return new ArrayList<>();
+
+        String sql = "select id from kun_dq_case where primary_dataset_id in " + toColumnSql(datasetIds.size());
+
+        return jdbcTemplate.query(sql, rs -> {
+            List<Long> caseIds = new ArrayList<>();
+            while (rs.next()) {
+                Long caseId = rs.getLong("id");
+                caseIds.add(caseId);
+            }
+            return caseIds;
+        }, datasetIds.toArray());
+    }
+
 }
