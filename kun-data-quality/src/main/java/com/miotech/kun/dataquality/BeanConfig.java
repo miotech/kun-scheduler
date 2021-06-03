@@ -5,10 +5,14 @@ import com.miotech.kun.workflow.client.DefaultWorkflowClient;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.operator.OperatorUpload;
+import com.miotech.kun.workflow.core.publish.EventSubscriber;
+import com.miotech.kun.workflow.core.publish.RedisEventSubscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 /**
  * @author: Jie Chen
@@ -19,6 +23,12 @@ public class BeanConfig {
 
     @Value("${workflow.base-url:http://kun-workflow:8088}")
     String workflowUrl;
+
+    @Value("${redis.host}")
+    private String redisHost = null;
+
+    @Value("${redis.notify-channel:kun-notify}")
+    private String channel;
 
     @Autowired
     WorkflowUtils workflowUtils;
@@ -40,5 +50,11 @@ public class BeanConfig {
                 .withDescription("Data Quality Operator")
                 .withClassName("com.miotech.kun.workflow.operator.DataQualityOperator")
                 .build();
+    }
+
+    @Bean
+    public EventSubscriber getRedisSubscriber() {
+        JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), redisHost);
+        return new RedisEventSubscriber(channel, jedisPool);
     }
 }
