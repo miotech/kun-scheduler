@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
-public class TaskAttemptStatusChangeEvent extends Event {
+public class TaskAttemptStatusChangeEvent extends PublicEvent {
     private final long attemptId;
     private final TaskRunStatus from;
     private final TaskRunStatus to;
