@@ -1,27 +1,27 @@
 executor:
-# use local process
-#  env:
-#    name: local
-#    resourceQueues:
-#      default:
-#        quota:
-#          workerNumbers: 4
-#      test:
-#        quota:
-#          workerNumbers: 2
+  # use local process
+  #  env:
+  #    name: local
+  #    resourceQueues:
+  #      default:
+  #        quota:
+  #          workerNumbers: 4
+  #      test:
+  #        quota:
+  #          workerNumbers: 2
 
   env:
     name: kubernetes
     version: 1.15
     jarDirectory: ${JAR_DIRECTORY}
-    logPath: server/logs
+    logPath: ${WORKER_LOG_DIRECTORY}
     url: ${KUBERNETES_MASTER}
     oauthToken: ${KUBERNETES_TOKEN}
     caCertFile: ${CA_CERT_FILE}
-    nfsName: pvc-nfs
-    nfsClaimName: nfs
-    namespace: workflow-dev
-#    use private hub
+    nfsName: efs
+    nfsClaimName: kun-efs
+    namespace: ${KUBERNETES_NAMESPACE}
+    #    use private hub
     privateHub :
       url: hub.miotech.com/library
     resourceQueues:
@@ -48,8 +48,8 @@ datasource:
   driverClassName: org.postgresql.Driver
 
 resource:
-  libDirectory: /data/operators
-  logDirectory: /data/log
+  libDirectory: ${LIB_DIRECTORY:/server/lib}
+  logDirectory: logs
 
 flyway:
   locations: classpath:kun-infra

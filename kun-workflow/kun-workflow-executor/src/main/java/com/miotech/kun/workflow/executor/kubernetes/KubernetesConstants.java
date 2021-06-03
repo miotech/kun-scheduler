@@ -8,7 +8,7 @@ public class KubernetesConstants {
     public static final String MEMORY_DEFAULT = "512";
     public static final String CPU_REQUEST = "0.5";
     public static final String MEMORY_REQUEST = "256";
-    public static final String IMAGE_PULL_POLICY = "IfNotPresent";
+    public static final String IMAGE_PULL_POLICY = "Always";
     public static final String POD_IMAGE_NAME = "kunoperator";
 
 }
