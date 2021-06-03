@@ -55,7 +55,7 @@ services:
       TZ:
       APP_CONFIG_ENV:
       SPRING_PROFILES_ACTIVE:
-      INFRA_PORT:
+      KUN_INFRA_PORT:
       DB_PG_IP:
       DB_PG_PORT:
       DB_PG_USERNAME:
@@ -70,63 +70,18 @@ services:
       - ./data/kun-infra/data:/data
       - ./logs/kun-infra:/server/target/kun-infra-logs/:z
     ports:
-      - ${INFRA_PORT}:${INFRA_PORT}
+      - ${KUN_INFRA_PORT}:${KUN_INFRA_PORT}
     depends_on:
       - kun-postgres
       - kun-neo4j
       - kun-redis
-  kun-data-dashboard:
-    image: "${IMAGE_REMOTE_ORG}kun-data-dashboard:master"
+  kun-app:
+    image: "${IMAGE_REMOTE_ORG}kun-app:master"
     environment:
       TZ:
       APP_CONFIG_ENV:
       SPRING_PROFILES_ACTIVE:
-      DATA_DASHBOARD_PORT:
-      DB_PG_IP:
-      DB_PG_PORT:
-      DB_PG_USERNAME:
-      DB_PG_PASSWORD:
-      SECURITY_HOST:
-      SECURITY_PORT:
-      INFRA_HOST:
-      INFRA_PORT:
-    restart: always
-    volumes:
-      - ./logs/kun-data-dashboard:/server/target/kun-data-dashboard-logs/:z
-    ports:
-      - ${DATA_DASHBOARD_PORT}:${DATA_DASHBOARD_PORT}
-    depends_on:
-      - kun-infra
-      - kun-infra
-  kun-data-discovery:
-    image: "${IMAGE_REMOTE_ORG}kun-data-discovery:master"
-    environment:
-      TZ:
-      APP_CONFIG_ENV:
-      SPRING_PROFILES_ACTIVE:
-      DATA_DISCOVERY_PORT:
-      DB_PG_IP:
-      DB_PG_PORT:
-      DB_PG_USERNAME:
-      DB_PG_PASSWORD:
-      SECURITY_HOST:
-      SECURITY_PORT:
-      INFRA_HOST:
-      INFRA_PORT:
-    restart: always
-    volumes:
-      - ./logs/kun-data-discovery:/server/target/kun-data-discovery-logs/:z
-    ports:
-      - ${DATA_DISCOVERY_PORT}:${DATA_DISCOVERY_PORT}
-    depends_on:
-      - kun-infra
-  kun-data-platform:
-    image: "${IMAGE_REMOTE_ORG}kun-data-platform:master"
-    environment:
-      TZ:
-      APP_CONFIG_ENV:
-      SPRING_PROFILES_ACTIVE:
-      DATA_PLATFORM_PORT:
+      KUN_APP_PORT:
       DB_PG_IP:
       DB_PG_PORT:
       DB_PG_USERNAME:
@@ -135,13 +90,13 @@ services:
       DB_REDIS_PORT:
       SECURITY_HOST:
       SECURITY_PORT:
-      INFRA_HOST:
-      INFRA_PORT:
+      KUN_INFRA_HOST:
+      KUN_INFRA_PORT:
     restart: always
     volumes:
-      - ./logs/kun-data-platform:/server/target/kun-data-platform-logs/:z
+      - ./logs/kun-app:/server/target/kun-app-logs/:z
     ports:
-      - ${DATA_PLATFORM_PORT}:${DATA_PLATFORM_PORT}
+      - ${KUN_APP_PORT}:${KUN_APP_PORT}
     depends_on:
       - kun-infra
   kun-frontend:
@@ -150,16 +105,12 @@ services:
       TZ:
       SECURITY_HOST:
       SECURITY_PORT:
-      DATA_DISCOVERY_HOST:
-      DATA_DISCOVERY_PORT:
-      INFRA_HOST:
-      INFRA_PORT:
-      DATA_PLATFORM_HOST:
-      DATA_PLATFORM_PORT:
-      DATA_DASHBOARD_HOST:
-      DATA_DASHBOARD_PORT:
+      KUN_INFRA_HOST:
+      KUN_INFRA_PORT:
+      KUN_APP_HOST:
+      KUN_APP_PORT:
     restart: always
     ports:
       - 8080:80
     depends_on:
-      - kun-data-discovery
+      - kun-app

@@ -1,5 +1,5 @@
 server:
-  port: ${WEBAPP_PORT:8081}
+  port: ${KUN_APP_PORT:8082}
 
 workflow:
   enabled: true
