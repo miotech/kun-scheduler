@@ -31,6 +31,10 @@ task deleteLocalJar(type: Delete){
 }
 bootJar.dependsOn(deleteLocalJar)
 
+jar {
+	enabled = true
+}
+
 dependencies {
 	implementation project(':kun-workflow:kun-workflow-client')
 	implementation project(':kun-workflow:kun-workflow-core')
