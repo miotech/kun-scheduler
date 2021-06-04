@@ -2,7 +2,7 @@ dependencies {
     implementation project(':kun-commons:kun-commons-db')
     implementation project(':kun-commons:kun-commons-utils')
     implementation project(':kun-commons:kun-commons-rpc')
-    implementation project(':kun-db:kun-infra-db')
+    implementation project(':kun-db-schema:kun-infra-db-schema')
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-metadata:kun-metadata-core')
