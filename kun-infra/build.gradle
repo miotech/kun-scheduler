@@ -36,41 +36,12 @@ dependencies {
     implementation 'redis.clients:jedis'
 }
 
-task buildOperator (type:Exec){
-    workingDir "../"
-    commandLine "./gradlew",":kun-metadata:kun-metadata-databuilder:shadowJar"
-}
 
-task copyMCEOperator(type: Copy){
-    from "../kun-metadata/kun-metadata-databuilder/build/libs/databuilder-operator-1.0.jar"
-    rename {
-        "mce-operator.jar"
-    }
-    into "src/main/resources"
-    dependsOn(buildOperator)
-}
 
-task copyMSEOperator(type: Copy){
-    from "../kun-metadata/kun-metadata-databuilder/build/libs/databuilder-operator-1.0.jar"
-    rename {
-        "mse-operator.jar"
-    }
-    into "src/main/resources"
-    dependsOn(buildOperator)
-}
-
-compileJava.dependsOn(copyMCEOperator, copyMSEOperator)
-
-task deleteLocalJar(type: Delete){
-    delete "src/main/resources/mce-operator.jar"
-    delete "src/main/resources/mse-operator.jar"
-}
-
-shadowJar.dependsOn(deleteLocalJar)
 
 shadowJar {
-    baseName = 'kun-infra'
-    classifier = null
+    archiveBaseName = 'kun-infra'
+    archiveClassifier = null
 
     version = 0.1
     manifest {
