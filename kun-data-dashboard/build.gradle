@@ -31,6 +31,10 @@ test {
     useJUnitPlatform()
 }
 
+jar {
+    enabled = true
+}
+
 apply plugin: "org.sonarqube"
 sonarqube {
     properties {
