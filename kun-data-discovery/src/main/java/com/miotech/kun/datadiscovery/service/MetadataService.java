@@ -5,12 +5,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
+import com.miotech.kun.metadata.core.model.DatasetColumnHintRequest;
+import com.miotech.kun.metadata.core.model.DatasetColumnHintResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -66,5 +71,26 @@ public class MetadataService {
         String fullUrl = url + "/datasets/{datasetId}/_pull/latest";
         log.info("Request url : " + fullUrl);
         return Optional.ofNullable(restTemplate.getForObject(fullUrl, PullProcessVO.class, datasetId));
+    }
+
+    public List<String> hintDatabase(String prefix) {
+        String hintDatabaseUrl = url + "/dataset/database/_hint";
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(prefix)) {
+            hintDatabaseUrl = hintDatabaseUrl + "?prefix=" + prefix;
+        }
+        return Arrays.asList(restTemplate.getForEntity(hintDatabaseUrl, String[].class).getBody());
+    }
+
+    public List<String> hintTable(String databaseName, String prefix) {
+        String hintTableUrl = url + "/dataset/table/_hint?databaseName=" + databaseName;
+        if (org.apache.commons.lang3.StringUtils.isNotBlank(prefix)) {
+            hintTableUrl = hintTableUrl + "&prefix=" + prefix;
+        }
+        return Arrays.asList(restTemplate.getForEntity(hintTableUrl, String[].class).getBody());
+    }
+
+    public List<DatasetColumnHintResponse> hintColumn(List<DatasetColumnHintRequest> columnHintRequests) {
+        String hintColumnUrl = url + "/dataset/column/_hint";
+        return Arrays.asList(restTemplate.exchange(hintColumnUrl, HttpMethod.POST, new HttpEntity<>(columnHintRequests), DatasetColumnHintResponse[].class).getBody());
     }
 }

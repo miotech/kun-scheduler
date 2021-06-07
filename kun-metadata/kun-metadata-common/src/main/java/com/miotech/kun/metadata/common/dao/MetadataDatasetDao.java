@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.common.dao;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
@@ -7,10 +8,9 @@ import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
-import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.DatasetField;
-import com.miotech.kun.metadata.core.model.DatasetFieldType;
+import com.miotech.kun.metadata.core.model.*;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,17 +23,21 @@ import java.util.Optional;
 public class MetadataDatasetDao {
     private static final Logger logger = LoggerFactory.getLogger(MetadataDatasetDao.class);
 
-    private static final String[] DATASET_COLUMNS = { "gid", "name", "datasource_id", "schema", "data_store", "database_name", "deleted" };
-    private static final String[] DATASET_FIELD_COLUMNS = { "name", "type", "description", "raw_type, is_primary_key, is_nullable" };
+    private static final String[] DATASET_COLUMNS = {"gid", "name", "datasource_id", "schema", "data_store", "database_name", "deleted"};
+    private static final String[] DATASET_FIELD_COLUMNS = {"name", "type", "description", "raw_type, is_primary_key, is_nullable"};
 
     private static final String DATASET_TABLE_NAME = "kun_mt_dataset";
     private static final String DATASET_FIELD_TABLE_NAME = "kun_mt_dataset_field";
+
+    public static final String DATASET_MODEL_NAME = "dataset";
+    public static final String DATASET_FIELD_MODEL_NAME = "dataset_field";
 
     @Inject
     DatabaseOperator dbOperator;
 
     /**
      * Fetch dataset by its global id and returns an optional object.
+     *
      * @param gid global id
      * @return dataset wrapped by optional object
      */
@@ -63,6 +67,82 @@ public class MetadataDatasetDao {
                 .withFields(fields).build();
 
         return Optional.ofNullable(dataset);
+    }
+
+    public List<String> hintDatabase(Long dataSourceId, String prefix) {
+        logger.debug("Hint database by dataSourceId: {}, prefix: {}", dataSourceId, prefix);
+        Pair<String, List<Object>> whereClause = generateWhereClauseForHintDatabase(dataSourceId, prefix);
+
+        String fetchDatabaseNameSQL = DefaultSQLBuilder.newBuilder()
+                .select("distinct(database_name)")
+                .from(DATASET_TABLE_NAME)
+                .where(whereClause.getLeft())
+                .orderBy("database_name asc")
+                .getSQL();
+        return dbOperator.fetchAll(fetchDatabaseNameSQL, rs -> rs.getString(1), whereClause.getRight().toArray());
+    }
+
+    private Pair<String, List<Object>> generateWhereClauseForHintDatabase(Long dataSourceId, String prefix) {
+        String result = "datasource_id = ? and deleted = false ";
+        List<Object> params = Lists.newArrayList(dataSourceId);
+        if (StringUtils.isBlank(prefix)) {
+            return Pair.of(result, params);
+        }
+
+        params.add(prefix);
+        return Pair.of(result + "and database_name like concat(cast(? as text), '%')", params);
+    }
+
+    public List<String> hintTable(Long dataSourceId, String databaseName, String prefix) {
+        logger.debug("Hint table, dataSourceId: {}, databaseName: {}, prefix: {}", dataSourceId, databaseName, prefix);
+        Pair<String, List<Object>> whereClause = generateWhereClauseForHintTable(dataSourceId, databaseName, prefix);
+
+        String fetchTableNameSQL = DefaultSQLBuilder.newBuilder()
+                .select("name")
+                .from(DATASET_TABLE_NAME)
+                .where(whereClause.getLeft())
+                .orderBy("name asc")
+                .getSQL();
+        return dbOperator.fetchAll(fetchTableNameSQL, rs -> rs.getString(1), whereClause.getRight().toArray());
+    }
+
+    private Pair<String, List<Object>> generateWhereClauseForHintTable(Long dataSourceId, String databaseName, String prefix) {
+        String sql = "datasource_id = ? and database_name = ? and deleted = false ";
+        List<Object> params = Lists.newArrayList(dataSourceId, databaseName);
+        if (StringUtils.isBlank(prefix)) {
+            return Pair.of(sql, params);
+        }
+
+        params.add(prefix);
+        return Pair.of(sql + "and name like concat(cast(? as text), '%')", params);
+    }
+
+    public List<String> hintColumn(Long dataSourceId, DatasetColumnHintRequest request) {
+        Pair<String, List<Object>> whereClause = generateWhereClauseForHintColumn(dataSourceId, request);
+
+        String fetchColumnSQL = DefaultSQLBuilder.newBuilder()
+                .select(DATASET_FIELD_MODEL_NAME + ".name")
+                .from(DATASET_TABLE_NAME, DATASET_MODEL_NAME)
+                .join("INNER", DATASET_FIELD_TABLE_NAME, DATASET_FIELD_MODEL_NAME)
+                .on(DATASET_MODEL_NAME + ".gid = " + DATASET_FIELD_MODEL_NAME + ".dataset_gid")
+                .where(whereClause.getLeft())
+                .orderBy(DATASET_FIELD_MODEL_NAME + ".name asc")
+                .getSQL();
+        return dbOperator.fetchAll(fetchColumnSQL, rs -> rs.getString(1), whereClause.getRight().toArray());
+    }
+
+    private Pair<String, List<Object>> generateWhereClauseForHintColumn(Long dataSourceId, DatasetColumnHintRequest request) {
+        String result = DATASET_MODEL_NAME + ".datasource_id = ? and "
+                + DATASET_MODEL_NAME + ".database_name = ? and "
+                + DATASET_MODEL_NAME + ".name = ? and "
+                + DATASET_MODEL_NAME + ".deleted = false ";
+        List<Object> params = Lists.newArrayList(dataSourceId, request.getDatabaseName(), request.getTableName());
+        if (StringUtils.isBlank(request.getPrefix())) {
+            return Pair.of(result, params);
+        }
+
+        params.add(request.getPrefix());
+        return Pair.of(result + "and " + DATASET_FIELD_MODEL_NAME + ".name like concat(cast(? as text), '%')", params);
     }
 
     /**
