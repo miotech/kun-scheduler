@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
-import { wrapResponseData } from '../../mock-commons/utils/wrap-response';
 import Mock, { Random } from 'mockjs';
+import { wrapResponseData } from '../../mock-commons/utils/wrap-response';
+// @ts-ignore
 
 function generateData() {
   const rawData = Mock.mock({

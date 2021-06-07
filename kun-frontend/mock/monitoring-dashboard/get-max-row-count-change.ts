@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+// @ts-ignore
 import Mock from 'mockjs';
 import { wrapResponseData } from '../../mock-commons/utils/wrap-response';
 

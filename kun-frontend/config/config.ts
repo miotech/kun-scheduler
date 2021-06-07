@@ -94,6 +94,7 @@ export default defineConfig({
   favicon: '/favicon.ico',
   title: 'common.app.name',
   routes: appRoutes,
+  workerLoader: {},
   devServer: {
     host: HTTPS ? 'dev.localhost.com' : undefined,
     port: PORT ? parseInt(PORT, 10) : 8000,

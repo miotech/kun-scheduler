@@ -1,3 +1,4 @@
+// @ts-ignore
 import { LineageEdge, LineageNode } from '@/definitions/Lineage.type';
 
 export const initialNodes: LineageNode[] = [
