@@ -20,6 +20,7 @@ interface OwnProps {
   defaultValue?: string;
   theme?: string;
   language?: string;
+  onDidChangeModelContent?: (e: any, editor: editor.IStandaloneCodeEditor) => any;
 }
 
 type Props = OwnProps;
@@ -32,7 +33,7 @@ export const DefaultMonacoEditor: React.FC<Props> = memo(function DefaultMonacoE
   const monaco = useMonaco();
   const editorRef = useRef<editor.IStandaloneCodeEditor>(null);
 
-  const { defaultValue, value, theme: propsTheme, onChange, language } = props;
+  const { defaultValue, value, theme: propsTheme, onChange, language, onDidChangeModelContent } = props;
   const [ themeStored, setTheme ] = useStickyState<string>('light', MONACO_EDITOR_THEME_LOCALSTORAGE_KEY);
   const theme = propsTheme || themeStored;
 
@@ -52,7 +53,10 @@ export const DefaultMonacoEditor: React.FC<Props> = memo(function DefaultMonacoE
   const handleEditorDidMount = useCallback(function handleEditorDidMount(editorInstance) {
     // @ts-ignore
     editorRef.current = editorInstance;
-  }, []);
+    if (onDidChangeModelContent) {
+      editorInstance.onDidChangeModelContent((e: any) => onDidChangeModelContent(e, editorInstance));
+    }
+  }, [onDidChangeModelContent]);
 
   const handleAutoFormat = useCallback(function handleAutoFormat() {
     if (editorRef.current != null) {

@@ -128,14 +128,6 @@ export function initSQLLanguageSupport(monaco: Monaco, sqlLanguageWorker: Worker
       }
     });
 
-
-    if (sqlLanguageWorker != null && sqlLanguageWorker.onmessage == null) {
-      // eslint-disable-next-line
-      sqlLanguageWorker.onmessage = function sqlLanguageWorkerOnMessage(ev) {
-        console.log('ev tokens =', ev);
-      };
-    }
-
     monaco.languages.registerCompletionItemProvider('sql', {
       provideCompletionItems(
         model: editor.ITextModel,
@@ -144,20 +136,53 @@ export function initSQLLanguageSupport(monaco: Monaco, sqlLanguageWorker: Worker
         // token: CancellationToken,
       ): languages.ProviderResult<languages.CompletionList> {
         const word = model.getWordUntilPosition(position);
-        if (sqlLanguageWorker != null) {
-          sqlLanguageWorker.postMessage({
-            sql: model.getValue(),
-          });
-        }
         const range = {
           startLineNumber: position.lineNumber,
           endLineNumber: position.lineNumber,
           startColumn: word.startColumn,
           endColumn: word.endColumn
         } as IRange;
-        return Promise.resolve({
-          suggestions: getKeywordsAndFunctionsList(range),
+
+        return new Promise((resolve, reject) => {
+          if (sqlLanguageWorker != null) {
+            // eslint-disable-next-line
+            sqlLanguageWorker.onmessage = function sqlLanguageWorkerOnMessage(ev) {
+              if (ev.data.suggestions) {
+                resolve({
+                  suggestions: [
+                    ...ev.data.suggestions,
+                    ...getKeywordsAndFunctionsList(range),
+                  ],
+                });
+              } else if (ev.data.error) {
+                reject(ev.data.error);
+              }
+              // finally: remove this listener
+              sqlLanguageWorker.removeEventListener('message', sqlLanguageWorkerOnMessage);
+            };
+            // Do message posting
+            sqlLanguageWorker.postMessage({
+              sql: model.getValue(),
+              textBeforeCursor: model.getValueInRange({
+                startLineNumber: 0,
+                endLineNumber: position.lineNumber,
+                startColumn: 0,
+                endColumn: position.column,
+              }),
+              lastWord: model.getWordUntilPosition(position).word,
+              position,
+              range,
+            });
+          } else {
+            return resolve({
+              suggestions: getKeywordsAndFunctionsList(range),
+            });
+          }
+          return null;
         });
+        // return Promise.resolve({
+        //   suggestions: [...getKeywordsAndFunctionsList(range)],
+        // });
       },
     });
   }
