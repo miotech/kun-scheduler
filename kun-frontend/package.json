@@ -205,7 +205,8 @@
     "ts-jest": "^26.2.0",
     "typescript": "3.8.3",
     "utility-types": "^3.10.0",
-    "webpack-chain": "^6.5.0"
+    "webpack-chain": "^6.5.0",
+    "worker-plugin": "^5.0.1"
   },
   "optionalDependencies": {
     "cypress": "^4.9.0",

@@ -1,5 +1,4 @@
 /* eslint-disable no-underscore-dangle */
-
 import { Monaco } from '@monaco-editor/react';
 // eslint-disable-next-line import/no-unresolved
 import { editor, IRange, languages, Position } from 'monaco-editor';
@@ -100,7 +99,7 @@ function getKeywordsAndFunctionsList(range: IRange): languages.CompletionItem[] 
   return [...keywords, ...keywordsLowerCase, ...operators, ...operatorsLowerCase, ...builtInFunctions];
 }
 
-export function initSQLLanguageSupport(monaco: Monaco) {
+export function initSQLLanguageSupport(monaco: Monaco, sqlLanguageWorker: Worker | null = null) {
   // @ts-ignore
   if (!window.__MONACO_EDITOR_SQL_SYNTAX_REGISTERED__) {
     // @ts-ignore
@@ -129,6 +128,14 @@ export function initSQLLanguageSupport(monaco: Monaco) {
       }
     });
 
+
+    if (sqlLanguageWorker != null && sqlLanguageWorker.onmessage == null) {
+      // eslint-disable-next-line
+      sqlLanguageWorker.onmessage = function sqlLanguageWorkerOnMessage(ev) {
+        console.log('ev tokens =', ev);
+      };
+    }
+
     monaco.languages.registerCompletionItemProvider('sql', {
       provideCompletionItems(
         model: editor.ITextModel,
@@ -137,6 +144,11 @@ export function initSQLLanguageSupport(monaco: Monaco) {
         // token: CancellationToken,
       ): languages.ProviderResult<languages.CompletionList> {
         const word = model.getWordUntilPosition(position);
+        if (sqlLanguageWorker != null) {
+          sqlLanguageWorker.postMessage({
+            sql: model.getValue(),
+          });
+        }
         const range = {
           startLineNumber: position.lineNumber,
           endLineNumber: position.lineNumber,

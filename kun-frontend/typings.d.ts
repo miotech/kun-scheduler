@@ -18,6 +18,14 @@ interface Window {
   opr: any;
 }
 
+declare module '*.worker.ts' {
+  class WebpackWorker extends Worker {
+    constructor();
+  }
+
+  export default WebpackWorker;
+}
+
 /* Usage Reference: https://www.npmjs.com/package/safe-url-assembler */
 declare module 'safe-url-assembler' {
   export interface ParamReplacementMethodFn {
