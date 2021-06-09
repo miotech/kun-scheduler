@@ -169,7 +169,7 @@ create table if not exists kun_dq_case_task_history
 
 -- V5__add_pg_trgm_ddl.sql
 
-create extension if not exists pg_trgm;
+-- create extension if not exists pg_trgm;
 
 -- V6__add_test_case_id_unique_constraint.sql
 
@@ -193,13 +193,13 @@ create table if not exists kun_dq_case_metrics
 
 -- V10__add_glossary_order.sql
 
-update kun_mt_glossary kmg
-set prev_id = kmg_next.next_id from (select id,
-             lead(id) over (order by parent_id, create_time)        as next_id,
-             lead(parent_id) over (order by parent_id, create_time) as next_parent_id
-      from kun_mt_glossary
-      order by parent_id, create_time) kmg_next
-where kmg.id = kmg_next.id and (kmg.parent_id = kmg_next.next_parent_id or kmg.parent_id is null);
+-- update kun_mt_glossary kmg
+-- set prev_id = kmg_next.next_id from (select id,
+--              lead(id) over (order by parent_id, create_time)        as next_id,
+--              lead(parent_id) over (order by parent_id, create_time) as next_parent_id
+--       from kun_mt_glossary
+--       order by parent_id, create_time) kmg_next
+-- where kmg.id = kmg_next.id and (kmg.parent_id = kmg_next.next_parent_id or kmg.parent_id is null);
 
 -- V11__add_dq_case_types.sql
 
