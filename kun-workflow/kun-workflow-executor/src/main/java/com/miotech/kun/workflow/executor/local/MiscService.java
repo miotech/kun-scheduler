@@ -6,6 +6,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.core.event.PublicEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -73,13 +74,13 @@ public class MiscService {
 
     @Inject
     public void init() {
-        TaskAttemptStatusChangeEventListener listener = new TaskAttemptStatusChangeEventListener();
+        PublicEventListener listener = new PublicEventListener();
         eventBus.register(listener);
     }
 
-    private class TaskAttemptStatusChangeEventListener {
+    private class PublicEventListener {
         @Subscribe
-        public void taskAttemptStatusChangeEvent(TaskAttemptStatusChangeEvent event) {
+        public void publicEvent(PublicEvent event) {
             publisher.publish(event);
         }
     }
