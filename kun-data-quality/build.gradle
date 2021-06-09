@@ -32,6 +32,7 @@ dependencies {
     implementation 'com.google.code.gson:gson'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     implementation 'com.alibaba:druid'
+    implementation 'redis.clients:jedis'
 }
 
 test {

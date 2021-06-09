@@ -4,11 +4,11 @@ import {
   DisplayParameterWithSelectType,
   ParameterDisplayType,
 } from '@/definitions/TaskTemplate.type';
-import { SQLEditor } from '@/components/SQLEditor';
 import { Input, Select } from 'antd';
 import { DataSourceSingleSelect } from '@/components/DataSourceSelect';
 import { KeyValueTable } from '@/components/KeyValueTable/KeyValueTable';
 import StringListInput from '@/components/StringListInput';
+import { SparkSQLEditor } from '@/components/CodeEditor';
 
 /**
  * Generate form component by given parameter display type
@@ -19,7 +19,7 @@ export function formComponentFactory(parameter: DisplayParameter, props: any) {
   const type: ParameterDisplayType | string = parameter.type || '';
   switch (type) {
     case 'sql':
-      return <SQLEditor {...props} />;
+      return <SparkSQLEditor {...props} />;
     case 'string':
       return <Input {...props} />;
     case 'text':

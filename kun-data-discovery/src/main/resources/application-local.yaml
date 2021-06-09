@@ -61,3 +61,7 @@ springdoc:
   swagger-ui:
     operationsSorter: method
   use-fqn: true
+
+redis:
+  host: ${DB_REDIS_IP}
+  notify-channel: kun-notify
