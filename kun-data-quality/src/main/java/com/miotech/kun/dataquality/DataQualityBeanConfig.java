@@ -6,6 +6,7 @@ import com.miotech.kun.workflow.core.publish.EventSubscriber;
 import com.miotech.kun.workflow.core.publish.RedisEventSubscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.JedisPool;
@@ -40,6 +41,7 @@ public class DataQualityBeanConfig {
     }
 
     @Bean
+    @ConditionalOnMissingBean(EventSubscriber.class)
     public EventSubscriber getRedisSubscriber() {
         JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), redisHost);
         return new RedisEventSubscriber(channel, jedisPool);
