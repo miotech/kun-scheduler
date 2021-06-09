@@ -1,0 +1,27 @@
+.monaco-editor-wrapper {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+
+  &__toolbar {
+    display: flex;
+    justify-content: space-between;
+    background: #F3F3F3;
+    flex: 0 0 40px;
+  }
+
+  &__toolbar__left {
+
+  }
+
+  &__toolbar__right {
+    .ant-select {
+      width: 200px;
+      margin: 4px;
+    }
+  }
+
+  &__editor {
+    flex: 1 1;
+  }
+}
