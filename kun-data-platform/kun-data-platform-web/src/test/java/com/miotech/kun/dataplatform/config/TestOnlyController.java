@@ -1,4 +1,4 @@
-package com.miotech.kun.dataplatform;
+package com.miotech.kun.dataplatform.config;
 
 import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
