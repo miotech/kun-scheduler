@@ -17,7 +17,7 @@ function doSQLFormat(sql: string): Promise<string> {
 }
 
 const KEYWORD_LIST = [
-  'SELECT', 'AS', 'FROM', 'WHERE', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'OUTER JOIN',
+  'SELECT', 'AS', 'FROM', 'WHERE', 'INNER JOIN', 'LEFT JOIN', 'RIGHT JOIN', 'OUTER JOIN', 'CROSS JOIN',
   'ON', 'WITH', 'AGGREGATE', 'ORDER BY', 'ASC', 'DESC', 'CREATE', 'INSERT', 'INTO', 'UPDATE', 'VALUES', 'RECURSIVE'
 ];
 
@@ -129,6 +129,7 @@ export function initSQLLanguageSupport(monaco: Monaco, sqlLanguageWorker: Worker
     });
 
     monaco.languages.registerCompletionItemProvider('sql', {
+      // triggerCharacters: [' ', '.'],
       provideCompletionItems(
         model: editor.ITextModel,
         position: Position,
@@ -149,10 +150,7 @@ export function initSQLLanguageSupport(monaco: Monaco, sqlLanguageWorker: Worker
             sqlLanguageWorker.onmessage = function sqlLanguageWorkerOnMessage(ev) {
               if (ev.data.suggestions) {
                 resolve({
-                  suggestions: [
-                    ...ev.data.suggestions,
-                    ...getKeywordsAndFunctionsList(range),
-                  ],
+                  suggestions: (ev.data.suggestions.length > 0) ? [...ev.data.suggestions] : [...getKeywordsAndFunctionsList(range)],
                 });
               } else if (ev.data.error) {
                 reject(ev.data.error);

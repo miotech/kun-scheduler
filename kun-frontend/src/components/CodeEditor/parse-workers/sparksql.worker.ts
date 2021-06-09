@@ -1,9 +1,10 @@
 import { tokenize } from '@/components/CodeEditor/language/sparksql-tokenizer';
+import { fetchSQLHintForDatabases, fetchSQLHintForTables } from '@/services/code-hint/sql-hint';
 
 // eslint-disable-next-line no-restricted-globals
 const ctx: Worker = self as any;
 
-enum CompletionItemKind {
+export enum CompletionItemKind {
   Method = 0,
   Function = 1,
   Constructor = 2,
@@ -34,33 +35,38 @@ enum CompletionItemKind {
   Snippet = 27
 }
 
-const PATTERN_FROM = /from(\s)+(\S)*$/i;
+const PATTERN_FROM = /from(\s+)(?:\s*\S+\s*(?:\s+(?:as\s+)?\S+\s*)?,\s*)*([^\s.]*)$/i;
+
+const PATTERN_FROM_WITH_SCHEMA = /from(\s+)(?:\s*\S+\s*(?:\s+(?:as\s+)?\S+\s*)?,\s*)*(\S+)\.(\S*)$/i;
 
 const PATTERN_SELECT = /select(\s)+(\S)*$/i;
 
-async function provideTableNames(prefix: string = '') {
-  if (!prefix) {
-    return [
-      'kun_dp_deploy',
-      'kun_dp_backfill',
-      'kun_wf_tasks',
-      'kun_wf_taskruns',
-    ];
+async function provideDatabaseNames(prefix: string = '') {
+  try {
+    if (prefix?.length) {
+      return await fetchSQLHintForDatabases(prefix);
+    }
+    return await fetchSQLHintForDatabases();
+  } catch (e) {
+    return [];
   }
-  // else
-  return [];
 }
 
-async function provideColumnNames(prefix = '') {
-  if (!prefix) {
-    return [
-      'id',
-      'name',
-      'create_at',
-      'update_at',
-    ];
+async function provideTableNames(databaseName: string, prefix: string = '') {
+  try {
+    if (prefix?.length) {
+      return await fetchSQLHintForTables(databaseName, prefix);
+    }
+      return await fetchSQLHintForTables(databaseName);
+
+  } catch (e) {
+    return [];
   }
-  // else
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function provideColumnNames(prefix = ''): Promise<string[]> {
+  // TODO: figure out how to provide column names
   return [];
 }
 
@@ -69,11 +75,25 @@ async function suggestion(textBeforeCursor: string, fullText: string, range: any
     return [];
   }
   try {
-    if (textBeforeCursor.match(PATTERN_FROM)) {
-      const tableNames = await provideTableNames();
+    const patternFromMatchResult = textBeforeCursor.match(PATTERN_FROM);
+    if (patternFromMatchResult) {
+      const dbNamePrefix = patternFromMatchResult[2];
+      const dbNames = await provideDatabaseNames(dbNamePrefix || '');
+      return dbNames.map(token => ({
+        label: { name: token.toLowerCase(), type: 'Dataset' },
+        kind: CompletionItemKind.Folder,
+        insertText: token.toLowerCase(),
+        range,
+      }));
+    }
+    const patternFromWithSchemaMatchResult = textBeforeCursor.match(PATTERN_FROM_WITH_SCHEMA);
+    if (patternFromWithSchemaMatchResult) {
+      const dbName = patternFromWithSchemaMatchResult[2];
+      const prefix = patternFromWithSchemaMatchResult[3];
+      const tableNames = await provideTableNames(dbName || '', prefix || '');
       return tableNames.map(token => ({
-        label: token.toLowerCase(),
-        kind: CompletionItemKind.File,
+        label: { name: token.toLowerCase(), type: 'Table' },
+        kind: CompletionItemKind.Struct,
         insertText: token.toLowerCase(),
         range,
       }));
@@ -81,8 +101,8 @@ async function suggestion(textBeforeCursor: string, fullText: string, range: any
     if (textBeforeCursor.match(PATTERN_SELECT)) {
       const columnNames = await provideColumnNames();
       return columnNames.map(token => ({
-        label: token.toLowerCase(),
-        kind: CompletionItemKind.Property,
+        label: { name: token.toLowerCase(), type: 'Column' },
+        kind: CompletionItemKind.Field,
         insertText: token.toLowerCase(),
         range,
       }));
@@ -102,7 +122,7 @@ ctx.addEventListener('message', async (event) => {
   try {
     const suggestions = await suggestion(textBeforeCursor, sql, range);
     const tokens = tokenize(sql);
-    console.log('tokens =', tokens);
+    // console.log('tokens =', tokens);
     ctx.postMessage({
       tokens: tokens.filter(t => (t.text != null) && (t.text.trim().length > 0)).map(t => t.text),
       textBeforeCursor,
