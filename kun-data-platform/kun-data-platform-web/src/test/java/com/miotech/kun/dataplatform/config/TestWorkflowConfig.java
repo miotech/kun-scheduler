@@ -1,4 +1,4 @@
-package com.miotech.kun.dataplatform;
+package com.miotech.kun.dataplatform.config;
 
 import com.google.common.collect.Lists;
 import com.miotech.kun.workflow.client.WorkflowClient;

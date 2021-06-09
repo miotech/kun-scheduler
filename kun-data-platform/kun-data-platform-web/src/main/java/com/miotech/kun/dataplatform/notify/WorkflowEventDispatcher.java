@@ -27,10 +27,10 @@ public class WorkflowEventDispatcher {
     @Autowired
     private EventSubscriber workflowEventSubscriber;
 
-    @Autowired
+    @Autowired(required = false)
     private WeComService weComService;
 
-    @Autowired
+    @Autowired(required = false)
     private EmailService emailService;
 
     @Autowired
