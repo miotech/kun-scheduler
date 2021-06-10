@@ -20,6 +20,7 @@ import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.resource.Resource;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.fileupload.FileItem;
@@ -32,7 +33,10 @@ import javax.inject.Singleton;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -155,10 +159,8 @@ public class OperatorService {
         Preconditions.checkArgument(uploadFiles.size() == 1, "Currently only one file supported");
         Operator operator = findOperator(operatorId);
         try {
-            // generate package path using operator id
             FileItem uploadFie =  uploadFiles.get(0);
-            String libDirectory = "file:" + props.get(PROP_RESOURCE_LIBDIRECTORY);
-            String packagePath = String.join("/", libDirectory, operator.getId().toString(), uploadFie.getName());
+            String packagePath = generateOperatorPath(operator);
             Resource resource = resourceService.createResource(packagePath, uploadFie.getInputStream());
             operatorDao.updateById(operatorId, operator
                     .cloneBuilder()
@@ -409,6 +411,18 @@ public class OperatorService {
 
     private void refreshOperatorCache(Long operatorId) {
         operatorCache.refresh(operatorId);
+    }
+
+    /**
+     * URLClassLoader caches jar file with url path by default
+     * and not clear the cache after the connection is closed
+     * add dataTime at the end of jar path to avoid use cache
+     * @param operator
+     * @return
+     */
+    private String generateOperatorPath(Operator operator){
+        String libDirectory = "file:" + props.get(PROP_RESOURCE_LIBDIRECTORY);
+        return String.join("/", libDirectory, operator.getId().toString(), operator.getName() + "_" + DateTimeUtils.now());
     }
 
     public OperatorVO convertOperatorToOperatorVO(Operator operator) {
