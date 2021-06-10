@@ -213,7 +213,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         addVar(envVarList, "taskAttemptId", taskAttempt.getId().toString());
         addVar(envVarList, "taskRunId", taskAttempt.getTaskRun().getId().toString());
         addVar(envVarList, "className", operatorDetail.getClassName());
-        addVar(envVarList, "jarPath", "file://" + POD_JAR_LIB + "/" + operatorDetail.getId() + "/" + operatorDetail.getName() + ".jar");
+        addVar(envVarList, "jarPath", operatorDetail.getPackagePath());
         configDBEnv(envVarList);
         return envVarList;
     }
@@ -223,9 +223,9 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         addVar(envVarList, "datasource.username", props.get("datasource.username"));
         addVar(envVarList, "datasource.password", props.get("datasource.password"));
         addVar(envVarList, "datasource.driverClassName", props.get("datasource.driverClassName"));
-        addVar(envVarList,"neo4j.uri",props.get("neo4j.uri"));
-        addVar(envVarList,"neo4j.username",props.get("neo4j.username"));
-        addVar(envVarList,"neo4j.password",props.get("neo4j.password"));
+        addVar(envVarList, "neo4j.uri", props.get("neo4j.uri"));
+        addVar(envVarList, "neo4j.username", props.get("neo4j.username"));
+        addVar(envVarList, "neo4j.password", props.get("neo4j.password"));
     }
 
     private void addVar(List<EnvVar> envVarList, String name, String value) {
