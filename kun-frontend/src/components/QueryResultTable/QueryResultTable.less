@@ -1,0 +1,48 @@
+.query-result-table {
+  position: relative;
+}
+
+.query-result-table__datasheet.query-result-table__datasheet.query-result-table__datasheet {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.query-result-table__datasheet.query-result-table__datasheet.query-result-table__datasheet td {
+  position: relative;
+  min-height: 30px;
+
+  &:before {
+    content: '&nbsp;';
+    visibility: hidden;
+  }
+
+  .value-viewer {
+    position: absolute;
+    top: -4px;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+}
+
+.query-result-table__pagination-wrapper {
+  text-align: right;
+}
+
+.value-viewer {
+  &&&&& {
+    padding: 4px;
+  }
+}
+
+.data-grid-container .data-grid .cell.read-only.read-only {
+  background: transparent;
+  color: @primary;
+}
+
+.cell-null {
+  font-style: italic;
+  color: @lightGray;
+}
