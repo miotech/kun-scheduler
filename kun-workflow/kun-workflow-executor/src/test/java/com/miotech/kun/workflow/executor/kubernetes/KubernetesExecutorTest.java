@@ -91,6 +91,12 @@ public class KubernetesExecutorTest extends CommonTestBase {
 
 
     @Override
+    protected String getFlywayLocation() {
+        return "workflow/";
+    }
+
+
+    @Override
     protected void configuration() {
         Props props = new Props();
         props.put("executor.env.name", "KUBERNETES");

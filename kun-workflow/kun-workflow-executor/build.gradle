@@ -15,6 +15,7 @@ dependencies {
     implementation project(":kun-workflow:kun-workflow-utils")
     implementation project(':kun-workflow:kun-workflow-facade')
     implementation project(':kun-metadata:kun-metadata-core')
+    implementation project(':kun-metadata:kun-metadata-service-facade')
     implementation project(':kun-workflow:kun-workflow-worker')
     implementation 'io.fabric8:kubernetes-client'
     implementation 'org.apache.dubbo:dubbo'
@@ -25,6 +26,8 @@ dependencies {
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")
     testImplementation project(":kun-workflow:kun-workflow-scheduler")
+    testImplementation "org.testcontainers:neo4j"
+    testImplementation "org.neo4j:neo4j-ogm-core"
     testImplementation "com.github.stefanbirkner:system-rules:1.19.0"
     testImplementation "org.testcontainers:testcontainers"
     testImplementation 'uk.org.lidalia:slf4j-test:1.2.0'
