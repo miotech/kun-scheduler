@@ -41,6 +41,12 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     @Inject
     private TaskDao taskDao;
 
+
+    @Override
+    protected String getFlywayLocation() {
+        return "workflow/";
+    }
+
     private Clock getMockClock() {
         return Clock.fixed(Instant.parse("2020-01-01T00:00:00.00Z"), ZoneId.systemDefault());
     }

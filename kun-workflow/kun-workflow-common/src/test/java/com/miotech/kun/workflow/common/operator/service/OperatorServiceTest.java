@@ -37,6 +37,12 @@ public class OperatorServiceTest extends DatabaseTestBase {
     @Inject
     private TaskDao taskDao;
 
+
+    @Override
+    protected String getFlywayLocation() {
+        return "workflow/";
+    }
+
     @Test
     public void testLoadOperator_success() {
         // prepare

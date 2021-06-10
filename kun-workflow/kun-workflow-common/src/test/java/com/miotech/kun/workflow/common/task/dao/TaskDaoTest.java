@@ -46,6 +46,12 @@ public class TaskDaoTest extends DatabaseTestBase {
         return Clock.fixed(Instant.parse("2020-01-01T00:00:00.00Z"), ZoneId.of("UTC"));
     }
 
+
+    @Override
+    protected String getFlywayLocation() {
+        return "workflow/";
+    }
+
     @After
     public void resetClock() {
         // reset global clock after each test

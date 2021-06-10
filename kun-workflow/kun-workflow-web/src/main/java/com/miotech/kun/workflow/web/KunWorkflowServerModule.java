@@ -47,7 +47,7 @@ public class KunWorkflowServerModule extends AppModule {
     @Override
     protected void configure() {
         super.configure();
-        String env = props.getString("executor.env.name");
+        String env = props.getString("executor.env.name","local");
         if (env.equals("local")) {
             bind(Executor.class).to(LocalExecutor.class);
             bind(ExecutorBackEnd.class).to(LocalExecutor.class);
