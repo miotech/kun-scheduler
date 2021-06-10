@@ -16,6 +16,12 @@ public class VariableDaoTest extends DatabaseTestBase {
     @Inject
     private VariableDao variableDao;
 
+
+    @Override
+    protected String getFlywayLocation() {
+        return "workflow/";
+    }
+
     @Test
     public void fetchByKey() {
         Variable variable = MockVariableFactory.createVariable();

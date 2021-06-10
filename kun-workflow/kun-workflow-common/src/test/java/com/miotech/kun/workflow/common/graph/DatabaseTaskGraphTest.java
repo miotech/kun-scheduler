@@ -55,6 +55,12 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
     }
 
 
+    @Override
+    protected String getFlywayLocation() {
+        return "workflow/";
+    }
+
+
     @Test
     public void taskTopoSortInSameTick() {
         String cronExpression = "0 0 10 * * ?";

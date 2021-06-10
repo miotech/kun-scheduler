@@ -14,7 +14,7 @@ resource:
   libDirectory: /tmp
 
 flyway:
-  locations: sql/
+  locations: workflow/
   table: flyway_kun_wf_schema_history
   baselineOnMigrate: true
   baselineVersion: 0
