@@ -116,10 +116,10 @@ public class TaskRunService {
         TaskAttemptProps taskAttempt = taskAttemptPropsOptional.get();
         Resource resource;
         int lineCount = 0;
-        if (endLineIndex == Integer.MAX_VALUE) {
+        if (endLineIndex != null && endLineIndex == Integer.MAX_VALUE) {
             try {
                 logger.debug("trying to get worker log from executor");
-                String logs = executor.workerLog(taskAttempt.getId(),0 - startLineIndex);
+                String logs = executor.workerLog(taskAttempt.getId(), 0 - startLineIndex);
                 List<String> logList = coverLogsToList(logs);
                 logger.debug("get logs from executor success,line count = {}", lineCount);
                 return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLineIndex, endLineIndex, logList);

@@ -44,6 +44,11 @@ public class CommonTestBase extends DatabaseTestBase {
         clearGraph();
     }
 
+    @Override
+    protected String getFlywayLocation() {
+        return "workflow/";
+    }
+
     private void clearGraph() {
         Session session = neo4jSessionFactory.openSession();
         // delete all nodes with relationships

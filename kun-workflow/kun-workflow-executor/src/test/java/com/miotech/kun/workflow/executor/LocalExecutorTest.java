@@ -108,8 +108,6 @@ public class LocalExecutorTest extends CommonTestBase {
 
     private WorkerFactory spyFactory;
 
-    private static final MetadataServiceFacade mockMetadataFacade = Mockito.mock(MetadataServiceFacade.class);
-
     private final Logger logger = LoggerFactory.getLogger(LocalExecutorTest.class);
 
     private ch.qos.logback.core.Appender<ch.qos.logback.classic.spi.ILoggingEvent> appender;
@@ -891,7 +889,7 @@ public class LocalExecutorTest extends CommonTestBase {
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
         TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
         assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
-        executor.cancel(attempt);
+        executor.cancel(attempt.getId());
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());

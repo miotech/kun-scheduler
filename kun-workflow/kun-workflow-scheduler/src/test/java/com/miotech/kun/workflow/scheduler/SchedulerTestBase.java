@@ -11,6 +11,12 @@ public class SchedulerTestBase extends DatabaseTestBase {
     public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
             .withAdminPassword("Mi0tech2020");
 
+
+    @Override
+    protected String getFlywayLocation() {
+        return "workflow/";
+    }
+
     @Override
     protected void configuration() {
         super.configuration();
