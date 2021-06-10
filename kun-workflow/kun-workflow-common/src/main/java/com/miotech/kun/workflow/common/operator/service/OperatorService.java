@@ -159,10 +159,8 @@ public class OperatorService {
         Preconditions.checkArgument(uploadFiles.size() == 1, "Currently only one file supported");
         Operator operator = findOperator(operatorId);
         try {
-            // generate package path using operator id
             FileItem uploadFie =  uploadFiles.get(0);
-            String libDirectory = "file:" + props.get(PROP_RESOURCE_LIBDIRECTORY);
-            String packagePath = String.join("/", libDirectory, operator.getId().toString(), operator.getName() + "_" + DateTimeUtils.now());
+            String packagePath = generateOperatorPath(operator);
             Resource resource = resourceService.createResource(packagePath, uploadFie.getInputStream());
             operatorDao.updateById(operatorId, operator
                     .cloneBuilder()
@@ -413,6 +411,18 @@ public class OperatorService {
 
     private void refreshOperatorCache(Long operatorId) {
         operatorCache.refresh(operatorId);
+    }
+
+    /**
+     * URLClassLoader caches jar file with url path by default
+     * and not clear the cache after the connection is closed
+     * add dataTime at the end of jar path to avoid use cache
+     * @param operator
+     * @return
+     */
+    private String generateOperatorPath(Operator operator){
+        String libDirectory = "file:" + props.get(PROP_RESOURCE_LIBDIRECTORY);
+        return String.join("/", libDirectory, operator.getId().toString(), operator.getName() + "_" + DateTimeUtils.now());
     }
 
     public OperatorVO convertOperatorToOperatorVO(Operator operator) {
