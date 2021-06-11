@@ -6,4 +6,4 @@
 /i18n-updater
 /src/components/ReactPDF
 **/*.stories.tsx
-
+src/lib/**/*

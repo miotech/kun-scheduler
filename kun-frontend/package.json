@@ -5,6 +5,7 @@
     "start:pure-mock": "NO_PROXY=1 USE_MOCK=true umi dev",
     "start": "FORK_TS_CHECKER=1 USE_MOCK=true umi dev",
     "start:mock-only": "FORK_TS_CHECKER=1 NO_PROXY=1 USE_MOCK=true umi dev",
+    "antlr4ts": "antlr4ts -visitor src/lib/grammar/*.g4",
     "build": "RELEASE_VERSION=stable cross-env NODE_ENV=production umi build",
     "analyze": "cross-env NODE_ENV=production ANALYZE=1 umi build",
     "postinstall": "umi generate tmp",
@@ -78,6 +79,8 @@
     "@wry/equality": "^0.1.11",
     "ahooks": "^2.3.0",
     "antd": "^4.8.2",
+    "antlr4ts": "^0.5.0-alpha.4",
+    "antlr4-c3": "^1.1.16",
     "axios": "^0.19.2",
     "clipboard-polyfill": "^3.0.1",
     "clsx": "^1.1.1",
@@ -91,6 +94,7 @@
     "debug": "^4.1.1",
     "dt-sql-parser": "^4.0.0-beta.2",
     "file-saver": "^2.0.5",
+    "fuzzysort": "^1.1.4",
     "immer": "^6.0.5",
     "kld-affine": "^2.1.1",
     "kld-intersections": "^0.7.0",
@@ -209,6 +213,7 @@
     "worker-plugin": "^5.0.1"
   },
   "optionalDependencies": {
+    "antlr4ts-cli": "^0.5.0-alpha.4",
     "cypress": "^4.9.0",
     "kndb": "^0.1.0",
     "lorem-ipsum": "^2.0.3"

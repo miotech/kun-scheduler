@@ -31,6 +31,7 @@
     "src/.umi/**/*",
     "mock/**/*",
     "src/**/*.stories.tsx",
-    "src/**/mock-data.ts"
+    "src/**/mock-data.ts",
+    "src/lib/**/*"
   ]
 }
