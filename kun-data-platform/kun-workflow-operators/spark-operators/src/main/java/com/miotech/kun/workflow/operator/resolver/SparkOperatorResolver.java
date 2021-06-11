@@ -90,7 +90,10 @@ public class SparkOperatorResolver implements Resolver {
             List<SplineSource> inputSources = execPlan.getInputSources();
             if (inputSources != null) {
                 for (SplineSource splineSource : inputSources) {
-                    upstream.put(splineSource.getSourceName(), splineSource);
+                    //若执行计划的上游数据源是其他执行计划的下游，则将该数据源从任务下游数据源中删除
+                    if (!downStream.containsKey(splineSource.getSourceName())) {
+                        upstream.put(splineSource.getSourceName(), splineSource);
+                    }
                 }
             }
             SplineSource outputSource = execPlan.getOutputSource();
