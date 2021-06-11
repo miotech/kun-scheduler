@@ -22,7 +22,7 @@ public class TagRepository extends BaseRepository {
     JdbcTemplate jdbcTemplate;
 
     public List<String> search(String keyword) {
-        String sql = "select tag from kun_mt_tag where ? is null or upper(tag) like ?";
+        String sql = "select tag from kun_mt_tag where cast(? as varchar) is null or upper(tag) like ?";
         return jdbcTemplate.query(sql, ps -> {
             ps.setString(1, keyword);
             ps.setString(2, toLikeSql(keyword.toUpperCase()));
