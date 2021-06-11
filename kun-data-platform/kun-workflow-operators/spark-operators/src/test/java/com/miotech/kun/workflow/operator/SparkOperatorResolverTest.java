@@ -137,6 +137,59 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
     }
 
     @Test
+    public void resolveHiveWithIntermediateTable() throws IOException {
+        SplineSource execPlan1_down = SplineSource.newBuilder()
+                .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src")
+                .withSourceType("hive")
+                .build();
+        ExecPlan execPlan1 = ExecPlan.newBuilder()
+                .withTaskName("hive example1")
+                .withOutputSource(execPlan1_down)
+                .withInputSources(Arrays.asList())
+                .build();
+
+        doReturn(getFilesInDir("/tmp/hive example1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
+        doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
+        writeExecPlanToFile("/tmp/hive example1/1/1.execPlan.txt", execPlan1);
+
+        SplineSource execPlan2_up = SplineSource.newBuilder()
+                .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src")
+                .withSourceType("hive")
+                .build();
+        SplineSource execPlan2_down = SplineSource.newBuilder()
+                .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test")
+                .withSourceType("hive")
+                .build();
+        ExecPlan execPlan2 = ExecPlan.newBuilder()
+                .withTaskName("hive example1")
+                .withOutputSource(execPlan2_down)
+                .withInputSources(Arrays.asList(execPlan2_up))
+                .build();
+
+        //write execPlan2
+        writeExecPlanToFile("/tmp/hive example1/1/2.execPlan.txt", execPlan2);
+        doReturn(getFilesInDir("/tmp/hive example1/1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
+        doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
+
+        Config config = Config.newBuilder()
+                .addConfig(SparkConfiguration.CONF_LIVY_BATCH_NAME, "hive example1")
+                .addConfig(SparkConfiguration.CONF_LIVY_BATCH_CONF, HDFS_CONF)
+                .build();
+        List<DataStore> upstreamDataList = sparkOperatorResolver.resolveUpstreamDataStore(config);
+        List<DataStore> downstreamDataList = sparkOperatorResolver.resolveDownstreamDataStore(config);
+        assertThat(upstreamDataList, hasSize(0));
+        assertThat(downstreamDataList, hasSize(2));
+        HiveTableStore downStore1 = (HiveTableStore) downstreamDataList.get(0);
+        HiveTableStore downStore2 = (HiveTableStore) downstreamDataList.get(1);
+        assertThat(downStore1.getDatabase(), is("sparktest.db"));
+        assertThat(downStore1.getTable(),is("src"));
+        assertThat(downStore1.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src"));
+        assertThat(downStore2.getDatabase(), is("sparktest.db"));
+        assertThat(downStore2.getTable(), is("hive_test"));
+        assertThat(downStore2.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test"));
+    }
+
+    @Test
     public void resolveHiveJdbc() throws IOException {
 
         SplineSource up = SplineSource.newBuilder()
