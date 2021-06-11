@@ -113,16 +113,15 @@ create table if not exists kun_dq_case
     id               bigserial      primary key,
     name             varchar(128)   not null,
     description      varchar(10000) not null,
---     dataset_id       bigint         not null,  -- dropped later
     task_id          bigint,
---     dataset_field_id bigint,  -- dropped later
     template_id      bigint,
     execution_string varchar(10000),
     types            text,
     create_user      varchar(1024)  not null,
     create_time      timestamp      not null,
     update_user      varchar(1024)  not null,
-    update_time      timestamp      not null
+    update_time      timestamp      not null,
+    primary_dataset_id bigint
 );
 
 create table if not exists kun_dq_case_associated_dataset
