@@ -3,28 +3,35 @@
 }
 
 .query-result-table__datasheet.query-result-table__datasheet.query-result-table__datasheet {
-  table-layout: fixed;
-  width: 100%;
+  table-layout: auto;
+
+  th {
+    padding: 0 24px;
+  }
+
+  td {
+    max-width: 350px;
+  }
 }
 
 .query-result-table__datasheet.query-result-table__datasheet.query-result-table__datasheet td {
   position: relative;
-  min-height: 30px;
+  min-height: 24px;
 
-  &:before {
-    content: '&nbsp;';
-    visibility: hidden;
-  }
-
-  .value-viewer {
-    position: absolute;
-    top: -4px;
-    left: 0;
-    right: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
+  //&:before {
+  //  content: '&nbsp;';
+  //  visibility: hidden;
+  //}
+  //
+  //.value-viewer {
+  //  position: absolute;
+  //  top: -4px;
+  //  left: 0;
+  //  right: 0;
+  //  overflow: hidden;
+  //  white-space: nowrap;
+  //  text-overflow: ellipsis;
+  //}
 }
 
 .query-result-table__pagination-wrapper {
@@ -43,6 +50,12 @@
 }
 
 .cell-null {
+  &:before {
+    content: '(null)';
+    font-style: italic;
+    color: @lightGray;
+  }
+
   font-style: italic;
   color: @lightGray;
 }
