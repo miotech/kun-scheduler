@@ -1,0 +1,41 @@
+.SqlDryRunBottomLayout {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  min-height: 300px;
+  background: @background;
+  z-index: 100;
+  border-top: 1px solid @borderColor;
+
+  :global {
+    // override default css
+    .ant-tabs-top > .ant-tabs-nav, .ant-tabs-bottom > .ant-tabs-nav, .ant-tabs-top > div > .ant-tabs-nav, .ant-tabs-bottom > div > .ant-tabs-nav {
+      margin: 0;
+    }
+  }
+}
+
+.QueryTabContent {
+  position: relative;
+  max-width: 100%;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.ErrorMsg {
+  margin: 16px 8px 0 8px;
+  color: @warning;
+}
+
+.QueryResultFunctionBar {
+  position: sticky;
+  background: @lightGray;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 30px;
+  line-height: 30px;
+  border-bottom: 1px solid @borderColor;
+}

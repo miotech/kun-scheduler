@@ -8,3 +8,11 @@ export type SQLQueryResult = {
 };
 
 export type SQLQueryRow = (string | null)[];
+
+export type SQLQueryTab = {
+  id: string;
+  ordinal: number;
+  sql: string;
+  response: SQLQueryResult | null;
+  done: boolean;
+}

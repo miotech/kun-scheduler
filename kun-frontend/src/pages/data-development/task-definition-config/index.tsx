@@ -23,9 +23,15 @@ import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { StatusText } from '@/components/StatusText';
 import { usePrompt } from '@/hooks/usePrompt';
+import LogUtils from '@/utils/logUtils';
+import { doSQLExecute } from '@/services/code-hint/sql-dry-run';
+import { SQLQueryTab } from '@/definitions/QueryResult.type';
+import { SqlDryRunBottomLayout } from '@/pages/data-development/task-definition-config/components/SqlDryRunBottomLayout';
 import { normalizeTaskDefinition, transformFormTaskConfig } from './helpers';
 
 import styles from './TaskDefinitionConfigView.less';
+
+const logger = LogUtils.getLoggers('TaskDefinitionConfigView');
 
 export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionConfigView() {
   const match = useRouteMatch<{ taskDefId: string }>();
@@ -36,6 +42,8 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
   const [taskTryStatus, setTaskTryStatus] = useState<RunStatusEnum>('CREATED');
   const [taskTryStopped, setTaskTryStopped] = useState<boolean>(true);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [sqlDryRunTabs, setSqlDryRunTabs] = useState<SQLQueryTab[] | null>(null);
+  const [sqlDryRunOrdinal, setSqlDryRunOrdinal] = useState<number>(1);
 
   const {
     selector: { initTaskDefinition, formIsDirty },
@@ -44,6 +52,18 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
     initTaskDefinition: s.dataDevelopment.editingTaskDefinition,
     formIsDirty: s.dataDevelopment.definitionFormDirty,
   }));
+
+  /* Is it a SQL task? If true, then dry run should display table of SQL query results instead of run logs */
+  const isSQLTask: boolean = useMemo(() => {
+    // TODO: remove this line of hard code
+    if (initTaskDefinition?.taskTemplateName === 'SparkSQL') {
+      return true;
+    }
+    // else
+    return false;
+  }, [
+    initTaskDefinition,
+  ]);
 
   useTitle(
     initTaskDefinition != null
@@ -85,6 +105,54 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
       .catch(e => {
         setAlertMessage(e?.response?.data?.note || 'Unknown error occurred.');
       });
+  };
+
+  const handleCommitSQLDryRun = function handleCommitSQLDryRun() {
+    try {
+      const monacoModels = window.monaco.editor.getModels();
+      if (monacoModels.length > 0) {
+        // TODO: handle multiple editor model cases
+        const monacoModel = monacoModels[0];
+        // logger.debug('Model = ', monacoModel);
+        // logger.debug('Value = ', monacoModel.getValue());
+        const sqlValue: string = monacoModel.getValue();
+        if (sqlValue && sqlValue.length) {
+          const nextSqlDrayRunTabs = (sqlDryRunTabs == null) ? [] : [...sqlDryRunTabs];
+          const id = `${Date.now()}`;
+          doSQLExecute({
+            sql: sqlValue,
+            pageNum: 1,
+            pageSize: 100,
+          }).then(data => {
+            setSqlDryRunTabs(lastState => {
+              const newState = [...(lastState || [])];
+              const targetTabIdx = newState.findIndex(tab => tab.id === id);
+              newState[targetTabIdx].response = data;
+              newState[targetTabIdx].done = true;
+              return newState;
+            });
+          }).catch(() => {
+            setSqlDryRunTabs(lastState => {
+              const newState = [...(lastState || [])];
+              const targetTabIdx = newState.findIndex(tab => tab.id === id);
+              newState[targetTabIdx].done = true;
+              return newState;
+            });
+          });
+          nextSqlDrayRunTabs.push({
+            response: null,
+            id,
+            done: false,
+            ordinal: sqlDryRunOrdinal,
+            sql: sqlValue,
+          });
+          setSqlDryRunTabs(nextSqlDrayRunTabs);
+          setSqlDryRunOrdinal(sqlDryRunOrdinal + 1);
+        }
+      }
+    } catch (e) {
+      logger.error('Cannot find monaco editor instance');
+    }
   };
 
   const handleCloseDryRunLog = useCallback(() => {
@@ -138,7 +206,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
         setDraftTaskDef={setDraftTaskDef}
         form={form}
         taskDefId={match.params.taskDefId}
-        handleCommitDryRun={handleCommitDryRun}
+        handleCommitDryRun={isSQLTask ? handleCommitSQLDryRun : handleCommitDryRun}
         taskTemplate={taskTemplate}
       />
       <main>
@@ -173,7 +241,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
         </span>
       </span>
     );
-  }, [t, taskTryId, taskTryStatus, taskTryStopped]);
+  }, [t, taskTryStatus]);
 
   const handleStopDryRun = useCallback(
     function handleStopDryRun() {
@@ -189,20 +257,24 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
   return (
     <div className={c(styles.TaskDefinitionConfigView)}>
       {bodyContent}
-      <BottomLayout
-        visible={taskTryId !== null}
-        title={bottomLayoutTitle}
-        onStop={handleStopDryRun}
-        onClose={handleCloseDryRunLog}
-        stopBtnDisabled={taskTryStopped}
-      >
-        <PollingLogViewer
-          startPolling={taskTryId !== null}
-          pollInterval={5000} // poll log every 5 seconds
-          queryFn={logQueryFn}
-          saveFileName={taskTryId ?? undefined}
-        />
-      </BottomLayout>
+      {isSQLTask ? <></> : (
+        <BottomLayout
+          visible={taskTryId !== null}
+          title={bottomLayoutTitle}
+          onStop={handleStopDryRun}
+          onClose={handleCloseDryRunLog}
+          stopBtnDisabled={taskTryStopped}
+        >
+          <PollingLogViewer
+            startPolling={taskTryId !== null}
+            pollInterval={5000} // poll log every 5 seconds
+            queryFn={logQueryFn}
+            saveFileName={taskTryId ?? undefined}
+          />
+        </BottomLayout>
+      )}
+      {(isSQLTask && sqlDryRunTabs?.length) ?
+        <SqlDryRunBottomLayout tabs={sqlDryRunTabs} setTabs={setSqlDryRunTabs} /> : <></>}
     </div>
   );
 };
