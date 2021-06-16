@@ -41,8 +41,8 @@ public class ExceptionHandler {
     private Injector injector;
 
     public Throwable handleException(HttpServletRequest request,
-                                HttpServletResponse response,
-                                Throwable e) {
+                                     HttpServletResponse response,
+                                     Throwable e) {
         Class<?> exceptionClz = e.getClass();
         Method method = exceptionHandlers.get(exceptionClz);
         if (method != null) {
@@ -53,7 +53,7 @@ public class ExceptionHandler {
                     Arrays.stream(parameters).map(x -> x.getType() + x.getName())
                             .collect(Collectors.joining(",")), e);
             List<Object> args = new ArrayList<>();
-            for (Parameter parameter: parameters) {
+            for (Parameter parameter : parameters) {
                 if (Throwable.class.isAssignableFrom(parameter.getType())) {
                     args.add(e);
                 }
@@ -85,11 +85,11 @@ public class ExceptionHandler {
 
     public void scanPackage(String... packageNames) {
 
-        logger.info("start to scan exceptions");
+        logger.info("start to scan package");
         try (ScanResult result = new ClassGraph().enableClassInfo().enableAnnotationInfo()
                 .acceptPackages(packageNames).scan()) {
             ClassInfoList classInfos = result.getAllClasses();
-            logger.info("scan exceptions finish");
+            logger.info("scan package finish");
             for (ClassInfo classInfo : classInfos) {
                 this.scanHandler(Class.forName(classInfo.getName()));
             }
@@ -101,21 +101,21 @@ public class ExceptionHandler {
 
     private Map<Class<?>, Method> scanHandler(Class<?> clz) {
         Method[] methods = clz.getDeclaredMethods();
-        for (Method method: methods) {
-           Annotation exceptionAnnotation = method.getAnnotation(ResponseException.class);
-           if (exceptionAnnotation != null) {
-               Class<?> exceptionClz = ((ResponseException) exceptionAnnotation).value();
-               logger.info("Found exception handler method {} for exception: {}", method.getName(), exceptionClz.getName());
+        for (Method method : methods) {
+            Annotation exceptionAnnotation = method.getAnnotation(ResponseException.class);
+            if (exceptionAnnotation != null) {
+                Class<?> exceptionClz = ((ResponseException) exceptionAnnotation).value();
+                logger.info("Found exception handler method {} for exception: {}", method.getName(), exceptionClz.getName());
 
-               for (Parameter param: method.getParameters()) {
-                   if (param.getType() != HttpServletRequest.class
-                           || param.getType() != HttpServletResponse.class
-                           || Throwable.class.isAssignableFrom(param.getType())) {
-                       logger.error("Cannot resolve parameter type for {} in method {}", param.getType(), method.getName());
-                   }
-               }
-               exceptionHandlers.put(exceptionClz, method);
-           }
+                for (Parameter param : method.getParameters()) {
+                    if (param.getType() != HttpServletRequest.class
+                            || param.getType() != HttpServletResponse.class
+                            || Throwable.class.isAssignableFrom(param.getType())) {
+                        logger.error("Cannot resolve parameter type for {} in method {}", param.getType(), method.getName());
+                    }
+                }
+                exceptionHandlers.put(exceptionClz, method);
+            }
         }
         return exceptionHandlers;
     }

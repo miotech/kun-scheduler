@@ -4,8 +4,11 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.model.vo.PullProcessVO;
-import com.miotech.kun.workflow.client.WorkflowClient;
-import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
+import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
+import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -23,17 +26,17 @@ public class ProcessServiceTest {
 
     private ProcessService processService = new ProcessService();
 
-    private WorkflowClient workflowClient;
+    private WorkflowServiceFacade workflowServiceFacade;
     private Props props;
     private Random random;
 
     @Before
     public void setUp() {
-        this.workflowClient = Mockito.mock(WorkflowClient.class);
+        this.workflowServiceFacade = Mockito.mock(WorkflowServiceFacade.class);
         this.props = initProperties();
         this.random = new Random();
 
-        Reflect.on(processService).set("workflowClient", workflowClient);
+        Reflect.on(processService).set("workflowServiceFacade", workflowServiceFacade);
         Reflect.on(processService).set("props", props);
     }
 
@@ -48,9 +51,10 @@ public class ProcessServiceTest {
     @Ignore
     public void testSubmit() {
         Long taskRunId = random.nextLong();
+        Task task = MockTaskFactory.createTask();
 
-        Mockito.when(workflowClient.executeTask(eq(props.getLong(TaskParam.MCE_TASK.getName())), anyMap()))
-                .thenReturn(TaskRun.newBuilder().withId(taskRunId).build());
+        Mockito.when(workflowServiceFacade.executeTask(eq(props.getLong(TaskParam.MCE_TASK.getName())), anyMap()))
+                .thenReturn(MockTaskRunFactory.createTaskRun(taskRunId, task));
         PullProcessVO pullProcessVO = processService.submitPull(taskRunId, DataBuilderDeployMode.DATASOURCE);
 
         assertThat(pullProcessVO.getLatestMCETaskRun().getId(), is(taskRunId.toString()));
@@ -59,8 +63,8 @@ public class ProcessServiceTest {
     @Test
     public void testFetchStatus() {
         Long id = random.nextLong();
-
-        Mockito.when(workflowClient.getTaskRun(id)).thenReturn(TaskRun.newBuilder().withId(id).build());
+        Task task = MockTaskFactory.createTask();
+        Mockito.when(workflowServiceFacade.getTaskRun(id)).thenReturn(MockTaskRunFactory.createTaskRun(id, task));
         TaskRun taskRun = processService.fetchStatus(id.toString());
 
         assertThat(taskRun.getId(), is(id));

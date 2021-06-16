@@ -12,7 +12,6 @@ public class PropKey {
     public static final String DEPLOY_MODE = "deployMode";
     public static final String DATASOURCE_ID = "datasourceId";
     public static final String GID = "gid";
-    public static final String WORKFLOW_URL = "workflow.url";
     public static final String CRON_EXPR = "workflow.cronExpr";
     public static final String MCE = "mce";
     public static final String BROKERS = "brokers";

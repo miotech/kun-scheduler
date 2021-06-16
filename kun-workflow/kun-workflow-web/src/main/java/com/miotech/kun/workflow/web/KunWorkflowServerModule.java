@@ -3,11 +3,8 @@ package com.miotech.kun.workflow.web;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.miotech.kun.commons.rpc.RpcConsumer;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.commons.web.annotation.BasePackageScan;
-import com.miotech.kun.commons.web.module.KunWebServerModule;
-import com.miotech.kun.metadata.facade.MetadataServiceFacade;
+import com.miotech.kun.commons.web.module.AppModule;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.core.Executor;
@@ -22,13 +19,14 @@ import com.miotech.kun.workflow.executor.local.LocalWorkerFactory;
 import com.miotech.kun.workflow.executor.rpc.LocalExecutorFacadeImpl;
 import com.miotech.kun.workflow.executor.rpc.WorkerClusterConsumer;
 import com.miotech.kun.workflow.facade.WorkflowExecutorFacade;
+import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
 import com.miotech.kun.workflow.facade.WorkflowWorkerFacade;
-import com.miotech.kun.workflow.web.service.InitService;
 import com.miotech.kun.workflow.web.service.RecoverService;
+import com.miotech.kun.workflow.web.service.WorkflowServiceFacadeImpl;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
-public class KunWorkflowServerModule extends KunWebServerModule {
+public class KunWorkflowServerModule extends AppModule {
 
     private final Props props;
 
@@ -46,16 +44,10 @@ public class KunWorkflowServerModule extends KunWebServerModule {
         bind(EventBus.class).toInstance(new EventBus());
         bind(Scheduler.class).to(LocalScheduler.class);
         bind(TaskGraph.class).to(DatabaseTaskGraph.class);
-        bind(InitService.class);
         bind(RecoverService.class);
+        bind(WorkflowServiceFacade.class).to(WorkflowServiceFacadeImpl.class);
     }
 
-    @Provides
-    @Singleton
-    @BasePackageScan
-    public String getPackageScan() {
-        return this.getClass().getPackage().getName();
-    }
 
     @Singleton
     @Provides
@@ -66,7 +58,7 @@ public class KunWorkflowServerModule extends KunWebServerModule {
 
     @Singleton
     @Provides
-    public WorkflowWorkerFacade workerFacade(WorkerClusterConsumer workerClusterConsumer){
+    public WorkflowWorkerFacade workerFacade(WorkerClusterConsumer workerClusterConsumer) {
         return workerClusterConsumer.getService("default", WorkflowWorkerFacade.class, "1.0");
     }
 
@@ -78,12 +70,6 @@ public class KunWorkflowServerModule extends KunWebServerModule {
         }
 
         return new NopEventPublisher();
-    }
-
-    @Singleton
-    @Provides
-    public MetadataServiceFacade metadataService(RpcConsumer rpcConsumer) {
-        return rpcConsumer.getService("default", MetadataServiceFacade.class, "1.0");
     }
 
 }

@@ -212,6 +212,10 @@ public class OperatorService {
         }
     }
 
+    public Optional<Operator> fetchOperatorByName(String operatorName){
+        return  operatorDao.fetchByName(operatorName);
+    }
+
     public Operator fullUpdateOperator(Long operatorId, OperatorPropsVO vo) {
         // 1. Check integrity of operator properties VO and id
         validateIdNotNull(operatorId);

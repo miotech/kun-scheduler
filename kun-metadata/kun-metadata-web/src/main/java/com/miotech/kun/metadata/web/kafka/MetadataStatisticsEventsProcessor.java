@@ -8,7 +8,7 @@ import com.miotech.kun.metadata.core.model.event.MetadataStatisticsEvent;
 import com.miotech.kun.metadata.databuilder.constant.OperatorKey;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;
-import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -25,12 +25,12 @@ public class MetadataStatisticsEventsProcessor extends EventProcessor {
     private static final Logger logger = LoggerFactory.getLogger(MetadataStatisticsEventsProcessor.class);
 
     private Props props;
-    private WorkflowClient workflowClient;
+    private WorkflowServiceFacade workflowServiceFacade;
 
     @Inject
-    public MetadataStatisticsEventsProcessor(Props props, WorkflowClient workflowClient) {
+    public MetadataStatisticsEventsProcessor(Props props, WorkflowServiceFacade workflowServiceFacade) {
         this.props = props;
-        this.workflowClient = workflowClient;
+        this.workflowServiceFacade = workflowServiceFacade;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class MetadataStatisticsEventsProcessor extends EventProcessor {
                 try {
                     MetadataStatisticsEvent mse = JSONUtils.jsonToObject(record.value(), MetadataStatisticsEvent.class);
 
-                    workflowClient.executeTask(props.getLong(TaskParam.MSE_TASK.getName()), buildVariablesForTaskRun(mse.getGid(), mse.getSnapshotId(), mse.getEventType()));
+                    workflowServiceFacade.executeTask(props.getLong(TaskParam.MSE_TASK.getName()), buildVariablesForTaskRun(mse.getGid(), mse.getSnapshotId(), mse.getEventType()));
                 } catch (Exception e) {
                     logger.error("MSE Processor Error", e);
                     logger.error("Message: {}", record);
