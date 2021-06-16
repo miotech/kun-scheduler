@@ -15,10 +15,6 @@ dependencies {
     implementation project(':kun-data-platform:kun-data-platform-web')
 }
 
-bootJar {
-    mainClassName 'com.miotech.kun.dataplatform.DataPlatformApplication'
-}
-
 jacocoTestReport {
 
     afterEvaluate {

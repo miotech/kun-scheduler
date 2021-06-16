@@ -1,0 +1,63 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+}
+
+plugins {
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'java'
+    id "org.sonarqube" version "2.7"
+    id "com.gorylenko.gradle-git-properties" version "2.2.3"
+}
+
+dependencies {
+    implementation project(':kun-commons:kun-commons-web')
+    implementation project(":kun-commons:kun-commons-rpc")
+    implementation project(':kun-commons:kun-commons-db')
+    implementation project(":kun-commons:kun-commons-utils")
+    implementation project(":kun-db-schema:kun-infra-db-schema")
+
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-web')
+    implementation project(':kun-workflow:kun-workflow-common')
+    implementation project(':kun-workflow:kun-workflow-facade')
+    implementation project(':kun-metadata:kun-metadata-web')
+    implementation project(':kun-metadata:kun-metadata-service-facade')
+    implementation project(":kun-metadata:kun-metadata-databuilder")
+
+    implementation "com.google.inject:guice"
+    implementation "com.google.guava:guava"
+    implementation "org.eclipse.jetty:jetty-server"
+    implementation "org.eclipse.jetty:jetty-servlet"
+    implementation "org.eclipse.jetty:jetty-util"
+    implementation "org.eclipse.jetty:jetty-webapp"
+    implementation "org.yaml:snakeyaml"
+    implementation 'redis.clients:jedis'
+}
+
+
+
+
+shadowJar {
+    archiveBaseName = 'kun-infra'
+    archiveClassifier = null
+
+    version = 0.1
+    manifest {
+        attributes(
+                'Main-Class': 'com.miotech.kun.infra.KunInfraWebServer'
+        )
+    }
+    zip64 true
+}
+
+
+apply plugin: "org.sonarqube"
+sonarqube {
+    properties {
+        property "sonar.sourceEncoding", "src/main"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.java.binaries", "build"
+    }
+}

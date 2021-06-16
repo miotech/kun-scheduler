@@ -1,2 +1,0 @@
-create unique index kun_dq_case_task_history_task_run_id_uindex
-	on kun_dq_case_task_history (task_run_id);

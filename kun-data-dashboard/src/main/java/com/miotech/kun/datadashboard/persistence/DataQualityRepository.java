@@ -24,7 +24,7 @@ import java.util.Map;
  * @author: Jie Chen
  * @created: 2020/9/15
  */
-@Repository
+@Repository("DashboardDataQualityRepository")
 public class DataQualityRepository extends BaseRepository {
 
     @Autowired

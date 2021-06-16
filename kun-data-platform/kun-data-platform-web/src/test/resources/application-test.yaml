@@ -26,12 +26,13 @@ spring:
       table-name: kun_user_session
 
   flyway:
-    # 启用或禁用 flyway
     enabled: true
     clean-disabled: true
-    locations: classpath:sql
-    table: flyway_kun_dp_schema_history
+    locations: classpath:webapp_sql
+    table: flyway_kun_webapp_schema_history
     schemas: public
+    baselineOnMigrate: true
+    baselineVersion: 0
 
 security:
   datasource:

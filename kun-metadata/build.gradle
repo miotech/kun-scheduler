@@ -18,49 +18,6 @@ dependencies {
     implementation project(':kun-metadata:kun-metadata-service-facade')
 }
 
-shadowJar {
-    archiveBaseName = 'kun-metadata-web'
-    archiveClassifier = null
-    version = 1.0
-    manifest {
-        attributes(
-                'Main-Class': 'com.miotech.kun.metadata.web.Application'
-        )
-    }
-    zip64 true
-}
-
-task buildOperator (type:Exec){
-    workingDir "../"
-    commandLine "./gradlew",":kun-metadata:kun-metadata-databuilder:shadowJar"
-}
-
-task copyMCEOperator(type: Copy){
-    from "kun-metadata-databuilder/build/libs/databuilder-operator-1.0.jar"
-    rename {
-        "mce-operator.jar"
-    }
-    into "kun-metadata-web/src/main/resources"
-    dependsOn(buildOperator)
-}
-
-task copyMSEOperator(type: Copy){
-    from "kun-metadata-databuilder/build/libs/databuilder-operator-1.0.jar"
-    rename {
-        "mse-operator.jar"
-    }
-    into "kun-metadata-web/src/main/resources"
-    dependsOn(buildOperator)
-}
-
-compileJava.dependsOn(copyMCEOperator, copyMSEOperator)
-
-task deleteLocalJar(type: Delete){
-    delete "kun-metadata-web/src/main/resources/mce-operator.jar"
-    delete "kun-metadata-web/src/main/resources/mse-operator.jar"
-}
-shadowJar.dependsOn(deleteLocalJar)
-
 apply plugin: "org.sonarqube"
 sonarqube {
     properties {

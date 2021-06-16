@@ -15,7 +15,7 @@ import java.util.List;
  * @author: Jie Chen
  * @created: 6/12/20
  */
-@Service
+@Service("DataDiscoveryDatasetService")
 public class DatasetService {
 
     @Autowired
