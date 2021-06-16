@@ -1,0 +1,60 @@
+executor:
+  queue:
+    default:
+      capacity: 8
+      policy: FIFO
+    pdf:
+      capacity: 0
+      policy: FIFO
+
+
+server:
+  port: ${KUN_INFRA_PORT}
+  dumpStdErr: false
+
+datasource:
+  jdbcUrl: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun?stringtype=unspecified
+  username: ${DB_PG_USERNAME}
+  password: ${DB_PG_PASSWORD}
+  driverClassName: org.postgresql.Driver
+
+resource:
+  libDirectory: /tmp
+
+flyway:
+  locations: classpath:kun-infra
+  table: flyway_kun_infra_schema_history
+  baselineOnMigrate: true
+  baselineVersion: 0
+  # Ref: https://flywaydb.org/documentation/configuration/parameters/outOfOrder
+  # If you already have versions 1.0 and 3.0 applied, and now a version 2.0 is found, it will be applied too instead of being ignored.
+  outOfOrder: true
+
+rpc:
+  registry: redis://${DB_REDIS_IP}:6379/
+  port: ${WORKFLOW_RPC_SERVICE_PORT}
+
+neo4j:
+  uri: bolt://${DB_NEO4J_IP}:7687/
+  username: ${DB_NEO4J_USERNAME}
+  password: ${DB_NEO4J_PASSWORD}
+
+redis:
+  host: ${DB_REDIS_IP}
+  notify-channel: kun-notify
+
+env: local
+
+workflow:
+  url: http://${KUN_INFRA_PORT}:${KUN_INFRA_PORT}
+  cronExpr: 0 0 12 * * ?
+
+
+kafka:
+  bootstrapServers: 127.0.0.1:9092
+  mceTopicName: kun-metadata-mce
+  mseTopicName: kun-metadata-mse-dev
+  mceGroupId: 87f367957a9b49c48ce708fae38a158c
+  mseGroupId: 18bf66dc2c4249baa45618c43fae51b5
+  pushMode: off
+

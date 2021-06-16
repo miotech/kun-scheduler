@@ -3,16 +3,18 @@ package com.miotech.kun.dataplatform;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateLoader;
-import com.miotech.kun.dataplatform.notify.WorkflowEventDispatcher;
+import com.miotech.kun.dataplatform.config.TestOnlyController;
+import com.miotech.kun.dataplatform.config.TestWorkflowConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -24,11 +26,11 @@ import java.sql.SQLException;
 import java.util.List;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = {DataPlatformApplication.class, TestWorkflowConfig.class, TestOnlyController.class})
+@SpringBootTest(classes = AppTestBase.Configuration.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Slf4j
-public class AppTestBase {
+public abstract class AppTestBase {
 
     private List<String> userTables;
 
@@ -40,9 +42,6 @@ public class AppTestBase {
 
     @Autowired
     private TaskTemplateLoader taskTemplateLoader;
-
-    @MockBean
-    private WorkflowEventDispatcher workflowEventDispatcher;
 
     @Before
     public void init() {
@@ -83,9 +82,15 @@ public class AppTestBase {
         }
     }
 
-    @Test
-    public void defaultTest(){
-        // DO NOT REMOVE THIS TEST CASE
-        // AppTestBase requires at least one test case to bootstrap
+    @org.springframework.context.annotation.Configuration
+    @EnableAutoConfiguration
+    @ComponentScan(basePackages = {
+            "com.miotech.kun.common",
+            "com.miotech.kun.security",
+            "com.miotech.kun.dataplatform",
+    })
+    @Import({TestWorkflowConfig.class, TestOnlyController.class})
+    public static class Configuration {
+
     }
 }

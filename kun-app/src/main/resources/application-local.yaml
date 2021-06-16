@@ -1,0 +1,107 @@
+server:
+  port: ${KUN_APP_PORT}
+
+workflow:
+  enabled: true
+  base-url: http://${KUN_INFRA_HOST}:${KUN_INFRA_PORT}
+  variable-namespace: dataplatform
+
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun?stringtype=unspecified
+    username: ${DB_PG_USERNAME}
+    password: ${DB_PG_PASSWORD}
+
+  flyway:
+    enabled: true
+    clean-disabled: true
+    locations: classpath:webapp_sql
+    table: flyway_kun_webapp_schema_history
+    schemas: public
+    baselineOnMigrate: true
+    baselineVersion: 0
+
+  session:
+    jdbc:
+      initialize-schema: never
+      table-name: kun_user_session
+    timeout: 30d
+
+security:
+  base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
+
+redis:
+  host: ${DB_REDIS_IP}
+  notify-channel: kun-notify
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  health:
+    elasticsearch:
+      enabled: false
+    ldap:
+      enabled: false
+
+# Notification configurations items
+notify:
+  # System default configurations to be applied for default task definitions.
+  systemDefault:
+    # Allowed trigger types: ON_SUCCESS, ON_FAIL, ON_FINISH, NEVER
+    triggerType: ON_FAIL
+    userConfigJson: '[{"notifierType": "WECOM"}]'
+  # Email notifier settings
+  email:
+    # For developers, usually, we do not spend extra time on configuring these SMTP connection settings
+    enabled: ${EMAIL_NOTIFIER_ENABLED:false}
+    # Host of SMTP server to connect
+    smtpHost: ${SMTP_HOST:}
+    # Port of SMTP server to connect
+    smtpPort: ${SMTP_PORT:465}
+    # Username of SMTP server to connect
+    smtpUsername: ${SMTP_USERNAME:}
+    # Password of SMTP server to connect
+    smtpPassword: ${SMTP_PASSWORD:}
+    # Connection transmission security protocol. Available options: auto (default), ssl_tls, starttls, none.
+    # When set to "auto", the application will automatically determine which security protocol to use by smtp port number.
+    smtpSecurity: ${SMTP_SECURITY_PROTOCOL:auto}
+    # Displayed email address of sending from
+    emailFrom: ${EMAIL_FROM:noreply@miotech.com}
+    # Displayed name of sending from
+    emailFromName: ${EMAIL_FROM_NAME:kun-robot}
+  # Decide whether notification content contains issue link URL, if possible
+  urlLink:
+    enabled: ${NOTIFY_URL_LINK_ENABLED:true}
+    # Your web link host url prefix in format of {PROTOCOL}://{HOST}[:PORT]. For instance, "https://kun.miotech.com", "http://127.0.0.1:12345", etc.
+    prefix: ${NOTIFY_URL_LINK_PREFIX:http://localhost:9801}
+
+  zhongda:
+    host: http://zhongda.miotech.com:8000
+    token: ZXGfFpQs7ubLBPJYCZVHn
+    notify-group: ${NOTIFY_ZHONGDA_GROUP:kun}
+
+data-dashboard:
+  long-existing-threshold: 30
+
+# Data-discovery config
+
+metadata:
+  base-url: http://${KUN_INFRA_HOST}:${KUN_INFRA_PORT}
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun
+    username: ${DB_PG_USERNAME}
+    password: ${DB_PG_PASSWORD}
+
+data-quality:
+  workflow:
+    task:
+      cron: 0 0 0 * * ?
+
+springdoc:
+  swagger-ui:
+    operationsSorter: method
+  use-fqn: true

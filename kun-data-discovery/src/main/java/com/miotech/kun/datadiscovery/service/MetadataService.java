@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * @author: Jie Chen
  * @created: 2020/8/27
  */
-@Service
+@Service("DataDiscoveryMetadataService")
 @Slf4j
 public class MetadataService {
 

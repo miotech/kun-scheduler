@@ -1,0 +1,67 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '2.2.2.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.9.RELEASE'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id 'io.freefair.lombok' version '5.1.0'
+    id 'org.sonarqube' version '2.7'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':kun-app-common')
+    implementation project(':kun-commons:kun-commons-db')
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-client')
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation project(':kun-data-platform:kun-workflow-operators:spark-operators')
+    implementation project(':kun-security:kun-security-common')
+
+    implementation project(':kun-data-platform:kun-data-platform-web')
+    implementation project(':kun-data-dashboard')
+    implementation project(':kun-data-discovery')
+    implementation project(':kun-db-schema:kun-app-db-schema')
+
+    implementation 'com.fasterxml.jackson.core:jackson-core'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'com.squareup.okhttp3:okhttp'
+    implementation 'org.postgresql:postgresql'
+    implementation 'io.springfox:springfox-boot-starter:3.0.0'
+    implementation 'com.googlecode.json-simple:json-simple'
+    implementation 'com.h2database:h2'
+    implementation 'redis.clients:jedis'
+    implementation 'org.flywaydb:flyway-core'
+    implementation 'org.apache.commons:commons-email'
+    implementation "com.cronutils:cron-utils"
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation "org.testcontainers:testcontainers"
+    testImplementation 'com.icegreen:greenmail'
+    testImplementation 'com.icegreen:greenmail-junit4'
+    testImplementation 'com.icegreen:greenmail-spring'
+    testImplementation 'org.jooq:joor-java-8'
+}
+
+bootJar {
+    mainClassName 'com.miotech.kun.webapp.WebApplicationMain'
+}
+
+jacocoTestReport {
+
+    afterEvaluate {
+        getClassDirectories().setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: ['**/**operator.jar'])
+        }))
+    }
+}
+
+test {
+    useJUnitPlatform()
+}

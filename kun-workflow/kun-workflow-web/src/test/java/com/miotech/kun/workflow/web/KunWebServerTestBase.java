@@ -6,6 +6,9 @@ import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Initializer;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
+import com.miotech.kun.infra.KunInfraWebModule;
+import com.miotech.kun.infra.KunInfraWebServer;
+import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.*;
@@ -31,7 +34,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
             .withAdminPassword("Mi0tech2020");
 
     @Inject
-    private KunWorkflowWebServer webServer;
+    private KunInfraWebServer webServer;
 
     @Inject
     private Props props;
@@ -41,15 +44,16 @@ public class KunWebServerTestBase extends GuiceTestBase {
         super.configuration();
         Props props = PropsUtils.loadAppProps("application-test.yaml");
         fill(props);
-        addModules(new KunWorkflowServerModule(props));
+        bind(MetadataServiceFacade.class, mock(MetadataServiceFacade.class));
+        addModules(new KunWorkflowServerModule(props), new KunInfraWebModule(props));
     }
 
     @Before
     public void setUp() {
         injector.getInstance(Initializer.class).initialize();
-        webServer = injector.getInstance(KunWorkflowWebServer.class);
+        webServer = injector.getInstance(KunInfraWebServer.class);
         new Thread(() -> webServer.start()).start();
-        while(!webServer.isReady()) {
+        while (!webServer.isReady()) {
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
@@ -63,7 +67,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
         webServer.shutdown();
     }
 
-    protected String post(String url, String message){
+    protected String post(String url, String message) {
         HttpPost postRequest = new HttpPost(buildUrl(url));
         try {
             postRequest.setEntity(new StringEntity(message));
@@ -73,7 +77,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
         }
     }
 
-    protected String put(String url, String message){
+    protected String put(String url, String message) {
         HttpPut putRequest = new HttpPut(buildUrl(url));
         try {
             putRequest.setEntity(new StringEntity(message));
@@ -105,9 +109,9 @@ public class KunWebServerTestBase extends GuiceTestBase {
             String response = EntityUtils.toString(responseEntity.getEntity());
             int statusCode = responseEntity.getStatusLine().getStatusCode();
 
-            if ( statusCode < 200 ||
-                    statusCode >= 400 ) {
-                logger.error("Http ERROR: " +  response);
+            if (statusCode < 200 ||
+                    statusCode >= 400) {
+                logger.error("Http ERROR: " + response);
             }
             return response;
         } catch (IOException e) {

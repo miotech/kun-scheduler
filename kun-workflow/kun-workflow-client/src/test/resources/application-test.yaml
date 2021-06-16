@@ -11,8 +11,11 @@ resource:
   libDirectory: /tmp
 
 flyway:
-  locations: sql/
+  locations: kun-infra/
   table: flyway_kun_wf_schema_history
   initSql: CREATE DOMAIN IF NOT EXISTS "JSONB" AS TEXT
   baselineOnMigrate: true
   baselineVersion: 0
+
+metadata:
+  enable: false
