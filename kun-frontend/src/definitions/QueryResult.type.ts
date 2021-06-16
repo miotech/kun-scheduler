@@ -15,4 +15,6 @@ export type SQLQueryTab = {
   sql: string;
   response: SQLQueryResult | null;
   done: boolean;
+  pageNum: number;
+  pageSize: number;
 }
