@@ -64,9 +64,6 @@ export const QueryResultTableDemo = () => {
     >
       <QueryResultTable
         columnNames={COLUMN_NAMES_DEMO}
-        pageNum={1}
-        pageSize={5}
-        total={10}
         data={DEMO_RECORDS}
       />
     </DndProvider>
