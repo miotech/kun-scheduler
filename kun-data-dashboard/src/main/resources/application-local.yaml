@@ -1,5 +1,5 @@
 server:
-  port: ${DATA_DASHBOARD_PORT}
+  port: ${KUN_APP_PORT}
 
 spring:
   datasource:
@@ -21,7 +21,7 @@ security:
   base-url: http://${SECURITY_HOST}:${SECURITY_PORT}/kun/api/v1
 
 workflow:
-  base-url: http://${WORKFLOW_HOST}:${WORKFLOW_PORT}
+  base-url: http://${KUN_INFRA_HOST}:${KUN_INFRA_PORT}
 
 data-dashboard:
   long-existing-threshold: 30

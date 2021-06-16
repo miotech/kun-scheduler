@@ -25,7 +25,7 @@ import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-@Service
+@Service("DashboardWorkflowService")
 public class WorkflowService {
 
     private static final List<Tag> DATA_PLATFORM_FILTER_TAGS =
