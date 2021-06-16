@@ -107,6 +107,14 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
       });
   };
 
+  const doSqlExecuteAndFetchPage = useCallback(async (sql: string, pageNum: number, pageSize: number) => {
+    return doSQLExecute({
+      sql,
+      pageNum,
+      pageSize,
+    });
+  }, []);
+
   const handleCommitSQLDryRun = function handleCommitSQLDryRun() {
     try {
       const monacoModels = window.monaco.editor.getModels();
@@ -145,6 +153,8 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
             done: false,
             ordinal: sqlDryRunOrdinal,
             sql: sqlValue,
+            pageNum: 1,
+            pageSize: 100,
           });
           setSqlDryRunTabs(nextSqlDrayRunTabs);
           setSqlDryRunOrdinal(sqlDryRunOrdinal + 1);
@@ -274,7 +284,11 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
         </BottomLayout>
       )}
       {(isSQLTask && sqlDryRunTabs?.length) ?
-        <SqlDryRunBottomLayout tabs={sqlDryRunTabs} setTabs={setSqlDryRunTabs} /> : <></>}
+        <SqlDryRunBottomLayout
+          tabs={sqlDryRunTabs}
+          setTabs={setSqlDryRunTabs}
+          doSqlExecuteAndFetchPage={doSqlExecuteAndFetchPage}
+        /> : <></>}
     </div>
   );
 };
