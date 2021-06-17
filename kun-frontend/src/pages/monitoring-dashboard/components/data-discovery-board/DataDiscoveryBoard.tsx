@@ -119,7 +119,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
         {/* Pass Ratio (Last 24 hours) */}
         <Col span={8}>
           <RatioCard
-            title={t('monitoringDashboard.dataDiscovery.passRatioLastDay')}
+            title={t('monitoringDashboard.dataDiscovery.passRatio')}
             numerator={dataQualityPassCount}
             denominator={totalCaseCount}
             status="healthy"
