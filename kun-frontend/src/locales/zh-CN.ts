@@ -393,7 +393,7 @@ export default {
   "monitoringDashboard.dataDiscovery.title": "数据发现",
   "monitoringDashboard.dataDiscovery.coveredRatio": "覆盖率",
   "monitoringDashboard.dataDiscovery.longExistingFailedCaseCount": "长期存在失败用例数",
-  "monitoringDashboard.dataDiscovery.passRatioLastDay": "通过率（24 小时内）",
+  "monitoringDashboard.dataDiscovery.passRatio": "通过率",
   "monitoringDashboard.dataDiscovery.maxRowCountChangeTable.title": "最大行数变更数据集（前 10 名）",
   "monitoringDashboard.dataDiscovery.maxRowCountChangeTable.datasetName": "数据集名称",
   "monitoringDashboard.dataDiscovery.maxRowCountChangeTable.database": "数据库",
