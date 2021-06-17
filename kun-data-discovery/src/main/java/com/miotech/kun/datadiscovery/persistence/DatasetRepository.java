@@ -5,6 +5,7 @@ import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.commons.utils.NumberUtils;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatabaseRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetRequest;
@@ -246,8 +247,7 @@ public class DatasetRepository extends BaseRepository {
             if (rs.next()) {
                 setDatasetBasicField(dataset, rs);
                 Watermark lowWatermark = new Watermark();
-                Long watermarkMilliseconds = timestampToMillis(rs, "low_watermark");
-                lowWatermark.setTime((watermarkMilliseconds != null) ? Double.valueOf(watermarkMilliseconds) : null);
+                lowWatermark.setTime(NumberUtils.toDouble(timestampToMillis(rs, "low_watermark")));
                 dataset.setLowWatermark(lowWatermark);
                 dataset.setRowCount(getLatestStats(gid).getRowCount());
                 dataset.setGlossaries(glossaryRepository.getGlossariesByDataset(gid));
@@ -272,8 +272,7 @@ public class DatasetRepository extends BaseRepository {
             if (rs.next()) {
                 datasetStats.setRowCount(rs.getLong("row_count"));
                 Watermark highWatermark = new Watermark();
-                Long watermarkMilliseconds = timestampToMillis(rs, "last_updated_time");
-                highWatermark.setTime((watermarkMilliseconds != null) ? Double.valueOf(watermarkMilliseconds) : null);
+                highWatermark.setTime(NumberUtils.toDouble(timestampToMillis(rs, "last_updated_time")));
                 datasetStats.setHighWatermark(highWatermark);
             }
             return datasetStats;
@@ -320,8 +319,7 @@ public class DatasetRepository extends BaseRepository {
         datasetBasic.setOwners(sqlToList(rs.getString("owners")));
         datasetBasic.setTags(sqlToList(rs.getString("tags")));
         Watermark highWatermark = new Watermark();
-        Long watermarkMilliseconds = timestampToMillis(rs, "high_watermark");
-        highWatermark.setTime((watermarkMilliseconds != null) ? Double.valueOf(watermarkMilliseconds) : null);
+        highWatermark.setTime(NumberUtils.toDouble(timestampToMillis(rs, "high_watermark")));
         datasetBasic.setHighWatermark(highWatermark);
     }
 

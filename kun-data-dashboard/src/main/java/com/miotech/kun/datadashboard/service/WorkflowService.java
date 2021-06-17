@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.miotech.kun.common.utils.DateUtils;
+import com.miotech.kun.commons.utils.NumberUtils;
 import com.miotech.kun.datadashboard.model.bo.DataDevelopmentTasksRequest;
 import com.miotech.kun.datadashboard.model.bo.DateTimeMetricsRequest;
 import com.miotech.kun.datadashboard.model.constant.Constants;
@@ -133,8 +134,7 @@ public class WorkflowService {
             Integer totalCount = workflowClient.countTaskRun(totalRequest);
             DateTimeTaskCount taskCount = new DateTimeTaskCount();
             taskCount.setTaskCount(totalCount);
-            Long time = DateUtils.dateTimeToMillis(endTime);
-            taskCount.setTime((time != null) ? Double.valueOf(time) : null);
+            taskCount.setTime(NumberUtils.toDouble(DateUtils.dateTimeToMillis(endTime)));
             dateTimeMetrics.add(taskCount);
             dateTimeTaskCountMap.put(startTime, taskCount);
         }
