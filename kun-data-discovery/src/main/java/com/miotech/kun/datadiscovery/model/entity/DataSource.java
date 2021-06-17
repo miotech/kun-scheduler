@@ -3,10 +3,12 @@ package com.miotech.kun.datadiscovery.model.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.json.simple.JSONObject;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -33,13 +35,15 @@ public class DataSource {
     private String createUser;
 
     @JsonProperty("create_time")
-    private Long createTime;
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    private OffsetDateTime createTime;
 
     @JsonProperty("update_user")
     private String updateUser;
 
     @JsonProperty("update_time")
-    private Long updateTime;
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    private OffsetDateTime updateTime;
 
     private List<String> tags;
 }

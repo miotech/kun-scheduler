@@ -2,8 +2,10 @@ package com.miotech.kun.datadiscovery.model.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
 import lombok.Data;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -24,11 +26,13 @@ public class Glossary {
 
     String createUser;
 
-    Long createTime;
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    OffsetDateTime createTime;
 
     String updateUser;
 
-    Long updateTime;
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    OffsetDateTime updateTime;
 
     List<Asset> assets;
 }

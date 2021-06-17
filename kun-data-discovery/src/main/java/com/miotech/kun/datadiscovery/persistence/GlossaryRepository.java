@@ -130,9 +130,9 @@ public class GlossaryRepository extends BaseRepository {
                     glossary.setParent(find(rs.getLong(COLUMN_PARENT_ID), recursionTimes - 1, false));
                 }
                 glossary.setCreateUser(rs.getString("create_user"));
-                glossary.setCreateTime(timestampToMillis(rs, "create_time"));
+                glossary.setCreateTime(timestampToOffsetDateTime(rs, "create_time"));
                 glossary.setUpdateUser(rs.getString("update_user"));
-                glossary.setUpdateTime(timestampToMillis(rs, "update_time"));
+                glossary.setUpdateTime(timestampToOffsetDateTime(rs, "update_time"));
                 if (needRelation) {
                     List<Asset> assets = new ArrayList<>();
                     if (rs.getLong("dataset_id") != 0) {

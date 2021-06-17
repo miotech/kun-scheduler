@@ -107,6 +107,10 @@ public abstract class BaseRepository {
         return DateUtils.dateTimeToMillis(rs.getObject(columnLabel, OffsetDateTime.class));
     }
 
+    public OffsetDateTime timestampToOffsetDateTime(ResultSet rs, String columnLabel) throws SQLException {
+        return DateUtils.millisToOffsetDateTime(DateUtils.dateTimeToMillis(rs.getObject(columnLabel, OffsetDateTime.class)));
+    }
+
     public LocalDateTime millisToTimestamp(Long millis) {
         return ObjectUtils.defaultIfNull(DateUtils.millisToLocalDateTime(millis), null);
     }
