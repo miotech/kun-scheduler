@@ -9,7 +9,8 @@ import lombok.Data;
 @Data
 public class DateTimeTaskCount {
 
-    Long time;
+    /* Epoch Unix timestamp in milliseconds */
+    Double time;
 
     Integer taskCount;
 }

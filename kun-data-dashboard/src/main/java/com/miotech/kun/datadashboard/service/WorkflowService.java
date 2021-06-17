@@ -133,7 +133,7 @@ public class WorkflowService {
             Integer totalCount = workflowClient.countTaskRun(totalRequest);
             DateTimeTaskCount taskCount = new DateTimeTaskCount();
             taskCount.setTaskCount(totalCount);
-            taskCount.setTime(DateUtils.dateTimeToMillis(endTime));
+            taskCount.setTime((double) DateUtils.dateTimeToMillis(endTime));
             dateTimeMetrics.add(taskCount);
             dateTimeTaskCountMap.put(startTime, taskCount);
         }
@@ -162,10 +162,10 @@ public class WorkflowService {
             task.setTaskRunId(taskRun.getId());
             task.setTaskName(taskRun.getTask().getName());
             task.setTaskStatus(taskRun.getStatus().name());
-            task.setStartTime(DateUtils.dateTimeToMillis(taskRun.getStartAt()));
-            task.setEndTime(DateUtils.dateTimeToMillis(taskRun.getEndAt()));
-            task.setCreateTime(DateUtils.dateTimeToMillis(taskRun.getCreatedAt()));
-            task.setUpdateTime(DateUtils.dateTimeToMillis(taskRun.getUpdatedAt()));
+            task.setStartTime(taskRun.getStartAt());
+            task.setEndTime(taskRun.getEndAt());
+            task.setCreateTime(taskRun.getCreatedAt());
+            task.setUpdateTime(taskRun.getUpdatedAt());
             dataDevelopmentTasks.add(task);
         }
         dataDevelopmentTasks.setPageNumber(taskRunResult.getPageNum());
