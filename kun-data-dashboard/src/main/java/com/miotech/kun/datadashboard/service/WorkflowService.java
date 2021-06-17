@@ -133,7 +133,8 @@ public class WorkflowService {
             Integer totalCount = workflowClient.countTaskRun(totalRequest);
             DateTimeTaskCount taskCount = new DateTimeTaskCount();
             taskCount.setTaskCount(totalCount);
-            taskCount.setTime((double) DateUtils.dateTimeToMillis(endTime));
+            Long time = DateUtils.dateTimeToMillis(endTime);
+            taskCount.setTime((time != null) ? Double.valueOf(time) : null);
             dateTimeMetrics.add(taskCount);
             dateTimeTaskCountMap.put(startTime, taskCount);
         }
