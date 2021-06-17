@@ -3,6 +3,7 @@ package com.miotech.kun.dataquality.persistence;
 import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
 import com.miotech.kun.common.BaseRepository;
+import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
@@ -68,7 +69,7 @@ public class DataQualityRepository extends BaseRepository {
                     history.setStatus(DataQualityStatus.FAILED.name());
                 }
                 history.setContinuousFailingCount(rs.getLong("continuous_failing_count"));
-                history.setUpdateTime(timestampToMillis(rs, "update_time"));
+                history.setUpdateTime(timestampToOffsetDateTime(rs, "update_time"));
                 history.setErrorReason(rs.getString("error_reason"));
                 Type type = new TypeToken<List<DataQualityRule>>() {
                 }.getType();
@@ -520,8 +521,8 @@ public class DataQualityRepository extends BaseRepository {
                 caseBasic.setUpdater(rs.getString("case_update_user"));
                 caseBasic.setTypes(resolveDqCaseTypes(rs.getString("case_types")));
                 caseBasic.setTaskId(rs.getLong("case_task_id"));
-                caseBasic.setCreateTime(timestampToMillis(rs, "create_time"));
-                caseBasic.setUpdateTime(timestampToMillis(rs, "update_time"));
+                caseBasic.setCreateTime(timestampToOffsetDateTime(rs, "create_time"));
+                caseBasic.setUpdateTime(timestampToOffsetDateTime(rs, "update_time"));
                 Long primaryDatasetId = rs.getLong("primary_dataset_id");
                 caseBasic.setIsPrimary(request.getGid().equals(primaryDatasetId));
                 caseBasics.add(caseBasic);
