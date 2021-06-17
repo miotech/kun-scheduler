@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -152,7 +153,7 @@ public class LineageController {
                 lineageTask.setTaskId(taskId);
                 lineageTask.setTaskName(taskIdMap.get(taskId).getName());
                 if (CollectionUtils.isNotEmpty(taskRuns)) {
-                    lineageTask.setLastExecutedTime(DateUtils.dateTimeToMillis(taskRuns.get(0).getStartAt()));
+                    lineageTask.setLastExecutedTime(taskRuns.get(0).getStartAt());
                 }
                 lineageTask.setHistoryList(WorkflowUtils.resolveTaskHistory(taskRuns));
                 lineageTasks.add(lineageTask);
@@ -171,7 +172,7 @@ public class LineageController {
             lineageTaskMap.forEach((taskId, task) -> {
                 List<TaskRun> latestTaskRuns = latestTaskRunsMap.get(taskId);
                 if (CollectionUtils.isNotEmpty(latestTaskRuns)) {
-                    task.setLastExecutedTime(DateUtils.dateTimeToMillis(latestTaskRuns.get(0).getStartAt()));
+                    task.setLastExecutedTime(latestTaskRuns.get(0).getStartAt());
                 }
                 List<String> latestStatus = WorkflowUtils.resolveTaskHistory(latestTaskRunsMap.get(taskId));
                 task.setHistoryList(latestStatus);
