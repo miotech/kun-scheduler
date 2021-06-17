@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class Watermark {
-
-    Long time;
+    /* Epoch Unix timestamp in milliseconds */
+    Double time;
 }

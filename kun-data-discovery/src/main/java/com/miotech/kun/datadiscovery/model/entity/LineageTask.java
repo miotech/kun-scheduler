@@ -1,9 +1,12 @@
 package com.miotech.kun.datadiscovery.model.entity;
 
+import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
 import lombok.Data;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -17,7 +20,8 @@ public class LineageTask {
 
     String taskName;
 
-    Long lastExecutedTime;
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    OffsetDateTime lastExecutedTime;
 
     List<String> historyList;
 }
