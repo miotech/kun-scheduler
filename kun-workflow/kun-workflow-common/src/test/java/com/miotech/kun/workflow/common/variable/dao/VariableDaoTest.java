@@ -17,10 +17,6 @@ public class VariableDaoTest extends DatabaseTestBase {
     private VariableDao variableDao;
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
     @Test
     public void fetchByKey() {

@@ -31,10 +31,6 @@ public class KubernetesResourceManageTest extends CommonTestBase {
     private KubernetesClient client;
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
     @Override
     protected void configuration() {

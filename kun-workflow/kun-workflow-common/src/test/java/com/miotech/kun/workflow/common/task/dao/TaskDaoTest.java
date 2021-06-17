@@ -47,10 +47,6 @@ public class TaskDaoTest extends DatabaseTestBase {
     }
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
     @After
     public void resetClock() {

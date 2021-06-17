@@ -24,10 +24,6 @@ public class DirectTaskGraphTest extends DatabaseTestBase {
     private TaskRunDao taskRunDao;
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
     @Test
     public void testTopoSort(){

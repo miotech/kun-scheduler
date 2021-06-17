@@ -22,10 +22,6 @@ public class VariableServiceTest extends DatabaseTestBase {
     private VariableDao variableDao;
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
     @Test
     public void find_variable_by_key() {
