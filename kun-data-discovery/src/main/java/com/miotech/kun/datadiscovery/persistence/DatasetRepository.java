@@ -248,7 +248,7 @@ public class DatasetRepository extends BaseRepository {
             if (rs.next()) {
                 setDatasetBasicField(dataset, rs);
                 Watermark lowWatermark = new Watermark();
-                lowWatermark.setTime(timestampToMillis(rs, "low_watermark"));
+                lowWatermark.setTime((double) timestampToMillis(rs, "low_watermark"));
                 dataset.setLowWatermark(lowWatermark);
                 dataset.setRowCount(getLatestStats(gid).getRowCount());
                 dataset.setGlossaries(glossaryRepository.getGlossariesByDataset(gid));
@@ -273,7 +273,7 @@ public class DatasetRepository extends BaseRepository {
             if (rs.next()) {
                 datasetStats.setRowCount(rs.getLong("row_count"));
                 Watermark highWatermark = new Watermark();
-                highWatermark.setTime(timestampToMillis(rs, "last_updated_time"));
+                highWatermark.setTime((double) timestampToMillis(rs, "last_updated_time"));
                 datasetStats.setHighWatermark(highWatermark);
             }
             return datasetStats;
@@ -320,7 +320,7 @@ public class DatasetRepository extends BaseRepository {
         datasetBasic.setOwners(sqlToList(rs.getString("owners")));
         datasetBasic.setTags(sqlToList(rs.getString("tags")));
         Watermark highWatermark = new Watermark();
-        highWatermark.setTime(timestampToMillis(rs, "high_watermark"));
+        highWatermark.setTime((double) timestampToMillis(rs, "high_watermark"));
         datasetBasic.setHighWatermark(highWatermark);
     }
 
