@@ -2,7 +2,10 @@ package com.miotech.kun.datadashboard.model.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
 import lombok.Data;
+
+import java.time.OffsetDateTime;
 
 /**
  * @author: Jie Chen
@@ -23,13 +26,17 @@ public class DataDevelopmentTask {
 
     String errorMessage;
 
-    Long startTime;
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    OffsetDateTime startTime;
 
-    Long endTime;
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    OffsetDateTime endTime;
 
-    Long createTime;
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    OffsetDateTime createTime;
 
-    Long updateTime;
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    OffsetDateTime updateTime;
 
     Long duration;
 }
