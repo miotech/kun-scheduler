@@ -121,7 +121,7 @@ public class DataQualityRepository extends BaseRepository {
                 DataQualityCase dataQualityCase = new DataQualityCase();
                 dataQualityCase.setStatus(TestCaseStatus.FAILED.name());
                 dataQualityCase.setErrorReason(rs.getString("error_reason"));
-                dataQualityCase.setUpdateTime(timestampToMillis(rs, "last_update_time"));
+                dataQualityCase.setUpdateTime(timestampToOffsetDateTime(rs, "last_update_time"));
                 dataQualityCase.setContinuousFailingCount(rs.getLong("continuous_failing_count"));
                 dataQualityCase.setCaseId(rs.getLong("case_id"));
                 dataQualityCase.setCaseOwner(rs.getString("case_owner"));

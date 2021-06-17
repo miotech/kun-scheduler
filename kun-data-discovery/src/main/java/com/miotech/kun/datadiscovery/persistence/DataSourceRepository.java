@@ -156,9 +156,9 @@ public class DataSourceRepository extends BaseRepository {
             datasource.setConnectInfo(JSONUtils.toJsonObject(rs.getString("connection_info")));
         }
         datasource.setCreateUser(rs.getString("create_user"));
-        datasource.setCreateTime(timestampToMillis(rs, "create_time"));
+        datasource.setCreateTime(timestampToOffsetDateTime(rs, "create_time"));
         datasource.setUpdateUser(rs.getString("update_user"));
-        datasource.setUpdateTime(timestampToMillis(rs, "update_time"));
+        datasource.setUpdateTime(timestampToOffsetDateTime(rs, "update_time"));
         datasource.setTags(sqlToList(rs.getString("tags")));
     }
 
