@@ -84,7 +84,7 @@ public class WorkflowServiceFacadeImpl implements WorkflowServiceFacade {
         TaskSearchFilter filter = TaskSearchFilter.newBuilder()
                 .withName(taskName)
                 .withPageNum(1)
-                .withPageSize(1)
+                .withPageSize(100)
                 .build();
         PaginationVO<Task> paginationVO = taskService.fetchTasksByFilters(filter);
         return paginationVO.getRecords().stream().filter(x -> x.getName().equals(taskName)).findAny();
