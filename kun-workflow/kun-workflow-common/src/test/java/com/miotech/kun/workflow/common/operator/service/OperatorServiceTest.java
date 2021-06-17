@@ -38,10 +38,6 @@ public class OperatorServiceTest extends DatabaseTestBase {
     private TaskDao taskDao;
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
     @Test
     public void testLoadOperator_success() {

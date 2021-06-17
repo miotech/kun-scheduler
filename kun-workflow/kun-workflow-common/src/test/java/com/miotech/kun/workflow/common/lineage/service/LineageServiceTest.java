@@ -40,10 +40,6 @@ public class LineageServiceTest extends CommonTestBase {
     }
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
     /**
      * Generate following DAG graph.

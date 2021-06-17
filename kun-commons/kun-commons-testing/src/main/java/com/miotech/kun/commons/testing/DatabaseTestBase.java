@@ -46,10 +46,6 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         setup.start();
     }
 
-    protected String getFlywayLocation(){
-        return "sql/";
-    }
-
     @After
     public void tearDown() {
         truncateAllTables();
