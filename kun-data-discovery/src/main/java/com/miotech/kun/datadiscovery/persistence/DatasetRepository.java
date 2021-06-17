@@ -1,11 +1,11 @@
 package com.miotech.kun.datadiscovery.persistence;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.commons.utils.NumberUtils;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatabaseRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetRequest;
@@ -25,7 +25,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author: Jie Chen
@@ -248,7 +247,7 @@ public class DatasetRepository extends BaseRepository {
             if (rs.next()) {
                 setDatasetBasicField(dataset, rs);
                 Watermark lowWatermark = new Watermark();
-                lowWatermark.setTime((double) timestampToMillis(rs, "low_watermark"));
+                lowWatermark.setTime(NumberUtils.toDouble(timestampToMillis(rs, "low_watermark")));
                 dataset.setLowWatermark(lowWatermark);
                 dataset.setRowCount(getLatestStats(gid).getRowCount());
                 dataset.setGlossaries(glossaryRepository.getGlossariesByDataset(gid));
@@ -273,7 +272,7 @@ public class DatasetRepository extends BaseRepository {
             if (rs.next()) {
                 datasetStats.setRowCount(rs.getLong("row_count"));
                 Watermark highWatermark = new Watermark();
-                highWatermark.setTime((double) timestampToMillis(rs, "last_updated_time"));
+                highWatermark.setTime(NumberUtils.toDouble(timestampToMillis(rs, "last_updated_time")));
                 datasetStats.setHighWatermark(highWatermark);
             }
             return datasetStats;
@@ -320,7 +319,7 @@ public class DatasetRepository extends BaseRepository {
         datasetBasic.setOwners(sqlToList(rs.getString("owners")));
         datasetBasic.setTags(sqlToList(rs.getString("tags")));
         Watermark highWatermark = new Watermark();
-        highWatermark.setTime((double) timestampToMillis(rs, "high_watermark"));
+        highWatermark.setTime(NumberUtils.toDouble(timestampToMillis(rs, "high_watermark")));
         datasetBasic.setHighWatermark(highWatermark);
     }
 
