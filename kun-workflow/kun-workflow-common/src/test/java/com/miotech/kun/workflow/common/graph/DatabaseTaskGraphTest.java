@@ -55,10 +55,6 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
     }
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
 
     @Test

@@ -90,10 +90,6 @@ public class KubernetesExecutorTest extends CommonTestBase {
             = new EnvironmentVariables();
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
 
     @Override
