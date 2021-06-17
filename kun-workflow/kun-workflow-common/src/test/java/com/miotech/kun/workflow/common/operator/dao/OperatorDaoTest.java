@@ -20,10 +20,6 @@ public class OperatorDaoTest extends DatabaseTestBase {
     OperatorDao operatorDao;
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
     private List<Operator> insertSampleData() {
         List<Operator> operators = MockOperatorFactory.createOperators(5);

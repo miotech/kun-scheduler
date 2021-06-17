@@ -12,10 +12,6 @@ public class SchedulerTestBase extends DatabaseTestBase {
             .withAdminPassword("Mi0tech2020");
 
 
-    @Override
-    protected String getFlywayLocation() {
-        return "workflow/";
-    }
 
     @Override
     protected void configuration() {
