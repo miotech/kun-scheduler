@@ -393,7 +393,7 @@ export default {
   "monitoringDashboard.dataDiscovery.title": "Data Discovery",
   "monitoringDashboard.dataDiscovery.coveredRatio": "Coverage",
   "monitoringDashboard.dataDiscovery.longExistingFailedCaseCount": "Count of Long-existing Failed Cases",
-  "monitoringDashboard.dataDiscovery.passRatioLastDay": "Pass Ratio (Last 24 hours)",
+  "monitoringDashboard.dataDiscovery.passRatio": "Pass Ratio",
   "monitoringDashboard.dataDiscovery.maxRowCountChangeTable.title": "Top 10 Datasets with Max Row Count Change",
   "monitoringDashboard.dataDiscovery.maxRowCountChangeTable.datasetName": "Dataset Name",
   "monitoringDashboard.dataDiscovery.maxRowCountChangeTable.database": "Database",
