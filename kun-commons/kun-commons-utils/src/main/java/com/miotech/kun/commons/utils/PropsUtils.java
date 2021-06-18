@@ -50,10 +50,19 @@ public class PropsUtils {
         String result = rawText;
         while (matcher.find()) {
             for (int i = 1; i <= matcher.groupCount(); i++) {
-                String envKey = matcher.group(i);
+                String value = matcher.group(i);
+                String defaultValue = null;
+                String envKey = value;
+                int index = value.indexOf(":");
+                if (index > 0) {
+                    defaultValue = value.substring(index + 1);
+                    envKey = value.substring(0, index);
+                }
                 String envValue = System.getenv(envKey);
                 if (envValue != null) {
-                    result = result.replace(String.format("${%s}", envKey), envValue);
+                    result = result.replace(String.format("${%s}", value), envValue);
+                } else if (defaultValue != null) {
+                    result = result.replace(String.format("${%s}", value), defaultValue);
                 }
             }
         }

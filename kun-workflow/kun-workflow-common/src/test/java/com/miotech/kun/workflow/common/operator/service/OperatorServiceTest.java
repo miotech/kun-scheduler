@@ -37,6 +37,8 @@ public class OperatorServiceTest extends DatabaseTestBase {
     @Inject
     private TaskDao taskDao;
 
+
+
     @Test
     public void testLoadOperator_success() {
         // prepare

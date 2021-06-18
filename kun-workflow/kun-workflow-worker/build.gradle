@@ -1,6 +1,12 @@
+plugins {
+    id 'com.github.johnrengelman.shadow'
+    id 'java'
+    id "org.sonarqube"
+}
+
 jar {
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    from { (configurations.runtime).collect { it.isDirectory() ? it : zipTree(it) } } {
+        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
     }
 }
 
@@ -8,10 +14,15 @@ dependencies {
     implementation project(":kun-commons:kun-commons-rpc")
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-commons:kun-commons-web")
+    implementation project(":kun-commons:kun-commons-db")
+    implementation project(":kun-metadata:kun-metadata-core")
+    implementation project(":kun-metadata:kun-metadata-common")
+    implementation project(":kun-metadata:kun-metadata-service-facade")
     implementation project(":kun-workflow:kun-workflow-core")
     implementation project(":kun-workflow:kun-workflow-common")
     implementation project(':kun-workflow:kun-workflow-facade')
     implementation project(":kun-workflow:kun-workflow-utils")
+    implementation "org.postgresql:postgresql"
     implementation 'org.apache.dubbo:dubbo'
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
@@ -20,4 +31,15 @@ dependencies {
     testImplementation project(":kun-workflow:kun-workflow-testing")
     testRuntimeOnly "com.h2database:h2"
     testImplementation "net.bytebuddy:byte-buddy"
+}
+
+shadowJar {
+    baseName = 'kunWorker'
+    classifier = null
+    manifest {
+        attributes(
+                'Main-Class': 'com.miotech.kun.workflow.worker.kubernetes.KubernetesOperatorLauncher'
+        )
+    }
+    zip64 true
 }

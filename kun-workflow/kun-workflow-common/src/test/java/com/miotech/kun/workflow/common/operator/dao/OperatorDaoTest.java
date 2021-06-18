@@ -19,6 +19,8 @@ public class OperatorDaoTest extends DatabaseTestBase {
     @Inject
     OperatorDao operatorDao;
 
+
+
     private List<Operator> insertSampleData() {
         List<Operator> operators = MockOperatorFactory.createOperators(5);
 
