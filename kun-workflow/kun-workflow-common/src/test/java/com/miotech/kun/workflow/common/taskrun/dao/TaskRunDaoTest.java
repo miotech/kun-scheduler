@@ -376,7 +376,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskRun runRec = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
         TaskAttemptProps attemptRec = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
 
-        assertThat(runRec.getStatus(), is(nullValue()));
+        assertThat(runRec.getStatus(), is(TaskRunStatus.CREATED));
         assertThat(runRec.getStartAt(), is(nullValue()));
         assertThat(runRec.getEndAt(), is(nullValue()));
 
@@ -408,7 +408,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskRun runRec = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
         TaskAttemptProps attemptRec = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
 
-        assertThat(runRec.getStatus(), is(nullValue()));
+        assertThat(runRec.getStatus(), is(TaskRunStatus.CREATED));
         assertThat(runRec.getStartAt(), is(nullValue()));
         assertThat(runRec.getEndAt(), is(nullValue()));
 
@@ -727,19 +727,6 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 .stream().map(TaskRun::getId).collect(Collectors.toList());
         assertEquals(taskRun.getId(), taskRunIdList.get(0));
 
-    }
-
-    @Test
-    public void fetchOldSatisfyTaskRunId() {
-        Tick tick = new Tick(DateTimeUtils.now());
-        Task task = MockTaskFactory.createTask();
-        taskDao.create(task);
-        TaskRun newTaskRun = MockTaskRunFactory.createTaskRunWithTick(task, tick);
-        TaskRun oldTaskRun = MockTaskRunFactory.createTaskRun();
-        taskRunDao.createTaskRuns(Arrays.asList(newTaskRun, oldTaskRun));
-        List<Long> taskRunIds = taskRunDao.fetchAllSatisfyTaskRunId();
-        assertThat(taskRunIds, hasSize(1));
-        assertThat(taskRunIds.get(0), is(newTaskRun.getId()));
     }
 
     @Test

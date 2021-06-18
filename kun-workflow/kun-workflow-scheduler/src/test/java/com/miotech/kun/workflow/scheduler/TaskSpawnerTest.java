@@ -18,6 +18,7 @@ import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
@@ -877,6 +878,51 @@ public class TaskSpawnerTest extends SchedulerTestBase {
             taskRunIdSet.add(submitted.getId());
         }
         assertThat(taskRunIdSet, hasSize(5));
+    }
+
+    @Test
+    public void testScheduleTaskRunUpstreamIsFailed() {
+        // prepare
+        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1");
+
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE)).build();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
+                .cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun1);
+
+        DatabaseTaskGraph graph = injector.getInstance(DatabaseTaskGraph.class);
+        taskSpawner.schedule(graph);
+
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+
+        // process
+        Tick tick = new Tick(next);
+        eventBus.post(new TickEvent(tick));
+
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        // task2
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getId(), is(notNullValue()));
+        assertThat(submitted.getTask().getId(), is(tasks.get(1).getId()));
+        assertThat(submitted.getScheduledTick(), is(tick));
+        assertThat(submitted.getStartAt(), is(nullValue()));
+        assertThat(submitted.getEndAt(), is(nullValue()));
+        assertThat(submitted.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+
+
+        assertThat(submitted.getDependentTaskRunIds(), hasSize(1));
+        assertThat(submitted.getDependentTaskRunIds(), contains(taskRun1.getId()));
     }
 
     private TaskRunEnv buildEnv(Long taskId, Map<String, Object> config) {
