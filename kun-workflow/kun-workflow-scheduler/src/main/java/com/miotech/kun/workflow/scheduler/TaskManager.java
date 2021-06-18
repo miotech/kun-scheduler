@@ -129,7 +129,7 @@ public class TaskManager {
                 .withId(WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), attempt))
                 .withTaskRun(taskRun)
                 .withAttempt(attempt)
-                .withStatus(TaskRunStatus.CREATED)
+                .withStatus(attempt == 1 ? taskRun.getStatus() : TaskRunStatus.CREATED)
                 .withQueueName(taskRun.getQueueName())
                 .withPriority(taskRun.getPriority())
                 .build();
@@ -141,7 +141,7 @@ public class TaskManager {
     private void save(List<TaskAttempt> taskAttempts) {
         for (TaskAttempt ta : taskAttempts) {
             taskRunDao.createAttempt(ta);
-            taskRunDao.updateTaskAttemptStatus(ta.getId(), TaskRunStatus.CREATED);
+            taskRunDao.updateTaskAttemptStatus(ta.getId(), ta.getStatus());
         }
     }
 
@@ -231,6 +231,7 @@ public class TaskManager {
                     List<TaskRunReadyCheckEvent> eventList = new ArrayList<>();
                     taskRunReadyCheckEventQueue.take();
                     taskRunReadyCheckEventQueue.drainTo(eventList);
+                    submitSatisfyTaskAttemptToExecutor();
                 } catch (Throwable e) {
                     logger.warn("take taskRun ready check event from queue failed");
                 }
