@@ -1,6 +1,6 @@
 jar {
-    from {
-        configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+    from { (configurations.runtime).collect { it.isDirectory() ? it : zipTree(it) } } {
+        exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
     }
     zip64=true
 
@@ -15,7 +15,9 @@ dependencies {
     implementation project(":kun-workflow:kun-workflow-utils")
     implementation project(':kun-workflow:kun-workflow-facade')
     implementation project(':kun-metadata:kun-metadata-core')
+    implementation project(':kun-metadata:kun-metadata-service-facade')
     implementation project(':kun-workflow:kun-workflow-worker')
+    implementation 'io.fabric8:kubernetes-client'
     implementation 'org.apache.dubbo:dubbo'
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
@@ -24,8 +26,12 @@ dependencies {
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")
     testImplementation project(":kun-workflow:kun-workflow-scheduler")
+    testImplementation "org.testcontainers:neo4j"
+    testImplementation "org.neo4j:neo4j-ogm-core"
+    testImplementation "com.github.stefanbirkner:system-rules:1.19.0"
     testImplementation "org.testcontainers:testcontainers"
     testImplementation 'uk.org.lidalia:slf4j-test:1.2.0'
+    testImplementation 'io.fabric8:kubernetes-server-mock'
     testRuntimeOnly "com.h2database:h2"
     testImplementation "net.bytebuddy:byte-buddy"
 }

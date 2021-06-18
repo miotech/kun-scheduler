@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An operator simulating a task with 20 seconds execution duration
+ * An operator simulating a task with 60 seconds execution duration
  * When executing timeout, it will be trapped into infinite loop
  */
 public class TestOperator5 extends KunOperator {

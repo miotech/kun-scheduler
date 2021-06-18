@@ -24,7 +24,7 @@ import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 import com.miotech.kun.metadata.databuilder.model.LoadSchemaResult;
-import com.miotech.kun.metadata.databuilder.service.gid.GidService;
+import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import org.slf4j.Logger;

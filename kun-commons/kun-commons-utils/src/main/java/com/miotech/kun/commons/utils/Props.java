@@ -260,6 +260,7 @@ public class Props {
         }
     }
 
+
     /**
      * Returns the int representation of the value. If the value is null, then a
      * UndefinedPropertyException will be thrown. If the value isn't a int, then a parse exception

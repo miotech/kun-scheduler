@@ -73,6 +73,7 @@ public class OperatorService {
 
     /**
      * 加载一个Operator
+     *
      * @param operatorId
      * @return
      */
@@ -82,6 +83,7 @@ public class OperatorService {
 
     /**
      * 加载一个Operator
+     *
      * @param operatorId
      * @return
      */
@@ -100,6 +102,7 @@ public class OperatorService {
 
     /**
      * 加载一个Operator（不使用缓存）
+     *
      * @param operatorId
      * @return
      */
@@ -111,6 +114,7 @@ public class OperatorService {
 
     /**
      * 获取Operator的配置项定义
+     *
      * @param operatorId
      * @return
      */
@@ -153,7 +157,7 @@ public class OperatorService {
     public Resource uploadOperatorJar(Long operatorId, List<FileItem> fileItems) {
         Preconditions.checkNotNull(operatorId, "Operator Id should not be null");
         List<FileItem> uploadFiles = fileItems
-                 .stream()
+                .stream()
                 .filter(x -> !x.isFormField())
                 .collect(Collectors.toList());
         Preconditions.checkArgument(uploadFiles.size() == 1, "Currently only one file supported");
@@ -177,6 +181,7 @@ public class OperatorService {
     /**
      * Persist an newly created operator object, or update an existing operator.
      * If `id` of `operator` object is not initialized, a generated id will be automatically assigned.
+     *
      * @param operator
      * @return
      */
@@ -284,6 +289,7 @@ public class OperatorService {
     /**
      * Delete an operator.
      * Note that if there is any usage from task, a RuleOperatorInUseException will be thrown.
+     *
      * @param operator operator to be deleted
      */
     public void deleteOperator(Operator operator) {
@@ -298,6 +304,7 @@ public class OperatorService {
      * Delete an operator by id.
      * Note that if there is any usage from task, a RuleOperatorInUseException will be thrown.
      * If `id` not exists, a EntityNotFoundException will be thrown.
+     *
      * @param id id of the operator to be deleted
      */
     public void deleteOperatorById(Long id) {
@@ -411,6 +418,10 @@ public class OperatorService {
         } catch (Exception e) {
             throw new IllegalStateException("Failed to load jar. jarPath=" + jarPath, e);
         }
+    }
+
+    private String packagePathForOperator(String libDirectory, Operator operator) {
+        return String.join("/", libDirectory, operator.getId().toString(), operator.getName() + ".jar");
     }
 
     private void refreshOperatorCache(Long operatorId) {
