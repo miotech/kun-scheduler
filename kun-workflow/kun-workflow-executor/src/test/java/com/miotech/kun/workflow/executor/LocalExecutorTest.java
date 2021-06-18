@@ -108,8 +108,6 @@ public class LocalExecutorTest extends CommonTestBase {
 
     private WorkerFactory spyFactory;
 
-    private static final MetadataServiceFacade mockMetadataFacade = Mockito.mock(MetadataServiceFacade.class);
-
     private final Logger logger = LoggerFactory.getLogger(LocalExecutorTest.class);
 
     private ch.qos.logback.core.Appender<ch.qos.logback.classic.spi.ILoggingEvent> appender;
@@ -149,6 +147,7 @@ public class LocalExecutorTest extends CommonTestBase {
         bind(EventPublisher.class, new NopEventPublisher());
         bind(WorkflowExecutorFacade.class, LocalExecutorFacadeImpl.class);
         bind(Props.class, props);
+        bind(ExecutorBackEnd.class,LocalExecutor.class);
         bind(Executor.class, LocalExecutor.class);
         bind(Scheduler.class, LocalScheduler.class);
     }
@@ -436,7 +435,7 @@ public class LocalExecutorTest extends CommonTestBase {
         HeartBeatMessage heartBeatMessage = prepareHeartBeat(attempt);
         TaskAttemptMsg msg = prepareTaskAttemptMsg(attempt, heartBeatMessage);
         msg.setTaskRunStatus(TaskRunStatus.RUNNING);
-        executor.statusUpdate(msg);
+        localExecutor.statusUpdate(msg);
         // task_run and task_attempt
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
         assertThat(attemptProps.getStatus(), is(TaskRunStatus.RUNNING));
@@ -789,7 +788,7 @@ public class LocalExecutorTest extends CommonTestBase {
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
         TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
         assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
-        executor.cancel(attempt);
+        executor.cancel(attempt.getId());
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
@@ -835,7 +834,7 @@ public class LocalExecutorTest extends CommonTestBase {
         // process
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
-        executor.cancel(attempt);
+        executor.cancel(attempt.getId());
 
         // wait until aborted
         awaitUntilAttemptAbort(attempt.getId());
@@ -890,7 +889,7 @@ public class LocalExecutorTest extends CommonTestBase {
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
         TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
         assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
-        executor.cancel(attempt);
+        executor.cancel(attempt.getId());
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
@@ -933,7 +932,7 @@ public class LocalExecutorTest extends CommonTestBase {
         // process
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
-        executor.cancel(attempt);
+        executor.cancel(attempt.getId());
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
@@ -1228,9 +1227,9 @@ public class LocalExecutorTest extends CommonTestBase {
 
     private QueueManage prepareQueueManage() {
         Props props = new Props();
-        props.put("executor.queue", "default,user");
-        props.put("executor.queue.default.capacity", 0);
-        props.put("executor.queue.user.capacity", 1);
+        props.put("executor.env.resourceQueues", "default,user");
+        props.put("executor.env.resourceQueues.default.quota.workerNumbers", 0);
+        props.put("executor.env.resourceQueues.user.quota.workerNumbers", 1);
         return new QueueManage(props);
     }
 

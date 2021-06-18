@@ -11,7 +11,7 @@ import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldInformation;
 import com.miotech.kun.metadata.databuilder.model.DatasetLifecycleSnapshot;
 import com.miotech.kun.metadata.databuilder.model.LoadSchemaResult;
-import com.miotech.kun.metadata.databuilder.service.gid.GidService;
+import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;

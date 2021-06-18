@@ -23,6 +23,8 @@ public class DirectTaskGraphTest extends DatabaseTestBase {
     @Inject
     private TaskRunDao taskRunDao;
 
+
+
     @Test
     public void testTopoSort(){
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3,"2>>1;1>>0");
