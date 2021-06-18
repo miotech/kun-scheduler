@@ -1,12 +1,11 @@
-package com.miotech.kun.metadata.web.rpc;
+package com.miotech.kun.metadata.common.rpc;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.service.MetadataDatasetService;
-import com.miotech.kun.metadata.core.model.DSI;
 import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.databuilder.service.gid.GidService;
+import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

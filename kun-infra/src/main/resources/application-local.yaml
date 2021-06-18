@@ -1,11 +1,40 @@
 executor:
-  queue:
-    default:
-      capacity: 8
-      policy: FIFO
-    pdf:
-      capacity: 0
-      policy: FIFO
+  # use local process
+  #  env:
+  #    name: local
+  #    resourceQueues:
+  #      default:
+  #        quota:
+  #          workerNumbers: 4
+  #      test:
+  #        quota:
+  #          workerNumbers: 2
+
+  env:
+    name: kubernetes
+    version: 1.15
+    jarDirectory: ${JAR_DIRECTORY}
+    logPath: ${WORKER_LOG_DIRECTORY}
+    url: ${KUBERNETES_MASTER}
+    oauthToken: ${KUBERNETES_TOKEN}
+    caCertFile: ${CA_CERT_FILE}
+    nfsName: efs
+    nfsClaimName: kun-efs
+    namespace: ${KUBERNETES_NAMESPACE}
+    #    use private hub
+    privateHub :
+      url: hub.miotech.com/library
+    resourceQueues:
+      default:
+        quota:
+          cores: 2
+          memory: 4
+          workerNumbers: 4
+      test:
+        quota:
+          cores: 1
+          memory: 2
+          workerNumbers: 2
 
 
 server:
@@ -19,7 +48,8 @@ datasource:
   driverClassName: org.postgresql.Driver
 
 resource:
-  libDirectory: /tmp
+  libDirectory: ${LIB_DIRECTORY:/server/lib}
+  logDirectory: logs
 
 flyway:
   locations: classpath:kun-infra

@@ -16,6 +16,8 @@ public class VariableDaoTest extends DatabaseTestBase {
     @Inject
     private VariableDao variableDao;
 
+
+
     @Test
     public void fetchByKey() {
         Variable variable = MockVariableFactory.createVariable();
