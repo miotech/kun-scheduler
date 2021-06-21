@@ -143,6 +143,7 @@ export default {
   "dataDiscovery.datasetsTable.header.tags": "Tags",
   "dataDiscovery.datasetsTable.resultCount": "{count} results",
   "dataDetail.back": "Back",
+  "dataDetail.deleted": "Deleted",
   "dataDetail.button.pull": "Pull",
   "dataDetail.button.pullDuration": "Pull in {time} milliseconds",
   "dataDetail.button.pullLoading": "Pulling...",
