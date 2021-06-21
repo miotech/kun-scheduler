@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import c from 'clsx';
 import { Link } from 'umi';
 import { useQueryParams, StringParam } from 'use-query-params';
 import { RouteComponentProps } from 'react-router';
@@ -60,12 +61,14 @@ export default function DatasetDetail({ match }: Props) {
 
   const { selector, dispatch } = useRedux(state => state.datasetDetail);
   const {
-    selector: { allOwnerList, allTagList, latestPullProcess, latestPullProcessIsLoading },
+    selector: { allOwnerList, allTagList, latestPullProcess, latestPullProcessIsLoading, deleted },
   } = useRedux(state => ({
     allOwnerList: state.dataDiscovery.allOwnerList,
     allTagList: state.dataDiscovery.allTagList,
     latestPullProcess: state.datasetDetail.datasetLatestPullProcess,
     latestPullProcessIsLoading: state.datasetDetail.datasetLatestPullProcessIsLoading,
+    /** Is this dataset deleted? */
+    deleted: state.datasetDetail.deleted,
   }));
 
   const debounceColumnKeyword = useDebounce(selector.columnsKeyword, 500);
@@ -399,10 +402,15 @@ export default function DatasetDetail({ match }: Props) {
       <BackButton defaultUrl="/data-discovery/dataset" />
 
       <Spin spinning={fetchDetailLoading}>
-        <Card className={styles.pageContent}>
+        <Card className={c(styles.pageContent, {
+          [styles.deleted]: deleted,
+        })}>
           <div className={styles.titleRow}>
             <span className={styles.titleAndWatermark}>
-              <span className={styles.title}>{selector.name}</span>
+              <span className={styles.title}>
+                {selector.name}
+                {deleted ? ` (${t('dataDetail.deleted')})` : ''}
+              </span>
             </span>
 
             <div className={styles.headingButtonGroup}>

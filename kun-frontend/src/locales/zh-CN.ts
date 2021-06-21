@@ -143,6 +143,7 @@ export default {
   "dataDiscovery.datasetsTable.header.tags": "标签",
   "dataDiscovery.datasetsTable.resultCount": "共{count}结果",
   "dataDetail.back": "返回",
+  "dataDetail.deleted": "已删除",
   "dataDetail.button.pull": "拉取",
   "dataDetail.button.pullDuration": "拉取耗时{time}毫秒",
   "dataDetail.button.pullLoading": "拉取中...",
