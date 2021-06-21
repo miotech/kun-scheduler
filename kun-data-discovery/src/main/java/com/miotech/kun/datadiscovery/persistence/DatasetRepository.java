@@ -231,7 +231,7 @@ public class DatasetRepository extends BaseRepository {
                 "string_agg(distinct(kmdo.owner), ',') as owners, " +
                 "string_agg(distinct(kmdt.tag), ',') as tags, " +
                 "watermark.high_watermark as high_watermark, " +
-                "watermark.low_watermark as low_watermark\n" +
+                "watermark.low_watermark as low_watermark," +
                 "kmd.deleted as deleted\n" +
                 "from kun_mt_dataset kmd\n" +
                 "         inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
