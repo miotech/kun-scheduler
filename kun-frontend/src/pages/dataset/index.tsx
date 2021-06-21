@@ -46,7 +46,15 @@ const tableOrderMap = {
 const getOrder = (order: keyof typeof tableOrderMap | null) =>
   order ? tableOrderMap[order] : undefined;
 
-export default function DataDisvocery() {
+function computeRowClassname(record: Dataset): string {
+  if (record.deleted) {
+    return styles.datasetDeleted;
+  }
+  // else
+  return '';
+}
+
+export default function DataDiscoveryListView() {
   const t = useI18n();
 
   const { getBackPath } = useBackPath();
@@ -629,6 +637,7 @@ export default function DataDisvocery() {
                 scroll={scroll}
                 pagination={tablePagination}
                 onChange={handleChangeTable}
+                rowClassName={computeRowClassname}
                 onRow={record => ({
                   onClick: () => {
                     const url = encodeURIComponent(
