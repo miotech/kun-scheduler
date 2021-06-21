@@ -74,7 +74,8 @@ public class DatasetRepository extends BaseRepository {
         String sql = "select kmd.gid, " +
                 "kmd.name as dataset_name, " +
                 "kmd.database_name as database_name, " +
-                "kmdsrca.name as datasource_name " +
+                "kmdsrca.name as datasource_name, " +
+                "kmd.deleted as deleted" +
                 "from kun_mt_dataset kmd\n" +
                 "inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
                 "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n";
@@ -96,6 +97,7 @@ public class DatasetRepository extends BaseRepository {
                 basic.setName(rs.getString("dataset_name"));
                 basic.setDatabase(rs.getString("database_name"));
                 basic.setDatasource(rs.getString("datasource_name"));
+                basic.setDeleted(rs.getBoolean("deleted"));
                 page.add(basic);
             }
             return page;
@@ -230,6 +232,7 @@ public class DatasetRepository extends BaseRepository {
                 "string_agg(distinct(kmdt.tag), ',') as tags, " +
                 "watermark.high_watermark as high_watermark, " +
                 "watermark.low_watermark as low_watermark\n" +
+                "kmd.deleted as deleted\n" +
                 "from kun_mt_dataset kmd\n" +
                 "         inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
                 "         inner join kun_mt_datasource_type kmdsrct on kmdsrct.id = kmdsrc.type_id\n" +
@@ -251,6 +254,7 @@ public class DatasetRepository extends BaseRepository {
                 dataset.setLowWatermark(lowWatermark);
                 dataset.setRowCount(getLatestStats(gid).getRowCount());
                 dataset.setGlossaries(glossaryRepository.getGlossariesByDataset(gid));
+                dataset.setDeleted(rs.getBoolean("deleted"));
                 return dataset;
             }
             return dataset;
@@ -318,6 +322,7 @@ public class DatasetRepository extends BaseRepository {
         datasetBasic.setDatabase(rs.getString("database_name"));
         datasetBasic.setOwners(sqlToList(rs.getString("owners")));
         datasetBasic.setTags(sqlToList(rs.getString("tags")));
+        datasetBasic.setDeleted(rs.getBoolean("deleted"));
         Watermark highWatermark = new Watermark();
         highWatermark.setTime(NumberUtils.toDouble(timestampToMillis(rs, "high_watermark")));
         datasetBasic.setHighWatermark(highWatermark);
@@ -331,7 +336,8 @@ public class DatasetRepository extends BaseRepository {
                 .select("kmd.gid as dataset_id",
                         "kmd.name as dataset_name",
                         "kmdsrca.name as datasource_name",
-                        "kmdsrct.name as datasource_type")
+                        "kmdsrct.name as datasource_type",
+                        "kmd.deleted as deleted")
                 .from("kun_mt_dataset kmd")
                 .join("inner", "kun_mt_datasource", "kmdsrc").on("kmd.datasource_id = kmdsrc.id")
                 .join("inner", "kun_mt_datasource_type", "kmdsrct").on("kmdsrct.id = kmdsrc.type_id")
@@ -346,6 +352,7 @@ public class DatasetRepository extends BaseRepository {
                 datasetBasic.setName(rs.getString("dataset_name"));
                 datasetBasic.setDatasource(rs.getString("datasource_name"));
                 datasetBasic.setType(rs.getString("datasource_type"));
+                datasetBasic.setDeleted(rs.getBoolean("deleted"));
                 DatasetStats datasetStats = getLatestStats(datasetBasic.getGid());
                 datasetBasic.setRowCount(datasetStats.getRowCount());
                 datasetBasic.setHighWatermark(datasetStats.getHighWatermark());
