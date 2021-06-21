@@ -80,6 +80,7 @@ export interface DatasetDetail {
 
   dataQualities: DataQualityItem[] | null;
   glossaries: GlossaryItem[] | null;
+  deleted: boolean;
 }
 
 export interface DatasetDetailState extends DatasetDetail {
@@ -156,6 +157,7 @@ export const datasetDetail = {
 
     datasetLatestPullProcess: null,
     datasetLatestPullProcessIsLoading: false,
+    deleted: false,
   } as DatasetDetailState,
 
   reducers: {
