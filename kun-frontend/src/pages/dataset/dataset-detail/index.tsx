@@ -414,19 +414,24 @@ export default function DatasetDetail({ match }: Props) {
             </span>
 
             <div className={styles.headingButtonGroup}>
-              <Button
-                size="large"
-                type="primary"
-                onClick={handleClickPull}
-                disabled={latestPullProcessIsLoading || isPullingStatus(latestPullProcess)}
-                loading={isPullingStatus(latestPullProcess)}
-              >
-                {isPullingStatus(latestPullProcess) ?
-                  t('dataDetail.baseItem.title.pulling', {
-                    status: latestPullProcess?.latestMCETaskRun?.status || 'UNKNOWN'
-                  }) :
-                  t('dataDetail.button.pull')}
-              </Button>
+              {
+                /* If current dataset has been deleted, it shall not display "PULL" button in the heading */
+                (!deleted) ? (
+                  <Button
+                    size="large"
+                    type="primary"
+                    onClick={handleClickPull}
+                    disabled={latestPullProcessIsLoading || isPullingStatus(latestPullProcess)}
+                    loading={isPullingStatus(latestPullProcess)}
+                  >
+                    {isPullingStatus(latestPullProcess) ?
+                      t('dataDetail.baseItem.title.pulling', {
+                        status: latestPullProcess?.latestMCETaskRun?.status || 'UNKNOWN'
+                      }) :
+                      t('dataDetail.button.pull')}
+                  </Button>
+                ) : <></>
+              }
             </div>
           </div>
 
