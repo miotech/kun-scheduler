@@ -148,6 +148,9 @@ public class DatasetRepository extends BaseRepository {
             whereClause.append("and high_watermark <= ?").append("\n");
             pstmtArgs.add(millisToTimestamp(datasetSearchRequest.getWatermarkEnd()));
         }
+        if ((datasetSearchRequest.getDisplayDeleted() == null) || (!datasetSearchRequest.getDisplayDeleted())) {
+            whereClause.append("and NOT kmd.deleted").append("\n");
+        }
 
         String orderByClause = "order by name\n";
         if (StringUtils.isNotEmpty(datasetSearchRequest.getSortKey())

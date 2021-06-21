@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { useHistory, Link } from 'umi';
-import { Input, Select, Table, Tag, Spin } from 'antd';
+import { Input, Select, Table, Tag, Spin, Checkbox } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { PaginationProps } from 'antd/es/pagination';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
@@ -11,7 +11,7 @@ import {
   NumberParam,
   ArrayParam,
   ObjectParam,
-  withDefault,
+  withDefault, BooleanParam,
 } from 'use-query-params';
 import { CopyOutlined } from '@ant-design/icons';
 import { RootDispatch, RootState } from '@/rematch/store';
@@ -79,6 +79,7 @@ export default function DataDiscoveryListView() {
 
     pageNumber: withDefault(NumberParam, 1),
     pageSize: withDefault(NumberParam, 15),
+    displayDeleted: BooleanParam,
   });
 
   const {
@@ -98,6 +99,7 @@ export default function DataDiscoveryListView() {
     sortOrder,
     pageNumber,
     pageSize,
+    displayDeleted,
   } = query as QueryObj;
 
   const dispatch = useDispatch<RootDispatch>();
@@ -145,6 +147,7 @@ export default function DataDiscoveryListView() {
       watermarkMode,
       watermarkAbsoluteValue,
       watermarkQuickeValue,
+      displayDeleted,
       sortKey,
       sortOrder,
       pagination: {
@@ -168,6 +171,7 @@ export default function DataDiscoveryListView() {
     sortOrder,
     pageSize,
     pageNumber,
+    displayDeleted,
   ]);
 
   useMount(() => {
@@ -617,6 +621,20 @@ export default function DataDiscoveryListView() {
                     </Option>
                   ))}
                 </Select>
+              </div>
+            </div>
+
+            <div className={styles.filterItem}>
+              <div className={styles.filterItemTitle}>{/* Placeholder */}</div>
+              <div className={styles.filterItemSelect}>
+                <Checkbox
+                  checked={displayDeleted}
+                  onChange={() => {
+                    setFilterQuery({ displayDeleted: !displayDeleted });
+                  }}
+                >
+                  Show deleted datasets
+                </Checkbox>
               </div>
             </div>
           </div>
