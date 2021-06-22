@@ -97,7 +97,7 @@ subprojects {
                 implementation "com.amazonaws:aws-java-sdk-s3:1.11.792"
                 implementation 'org.apache.hadoop:hadoop-aws:2.8.5'
                 implementation 'io.fabric8:kubernetes-client:5.2.1'
-
+                implementation 'org.spark-project.hive:hive-jdbc:1.2.1.spark2'
 
                 testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
