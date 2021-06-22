@@ -1,12 +1,11 @@
 import React, { FC, useCallback, useEffect } from 'react';
 import c from 'clsx';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
-import { Button, message, Pagination, Tooltip } from 'antd';
+import { Button, message, Pagination, Spin, Tooltip } from 'antd';
 import { CopyOutlined, DownloadOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 import { useInterval } from 'ahooks';
 import { dayjs } from '@/utils/datetime-utils';
-import { KunSpin } from '@/components/KunSpin';
 
 import { writeText } from 'clipboard-polyfill/text';
 import FileSaver from 'file-saver';
@@ -136,7 +135,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(pr
 
   return (
     <div className={c('polling-lazylog-wrapper', props.className)}>
-      <KunSpin
+      <Spin
         spinning={loading || logNotFound}
         tip={logNotFound ? t('common.reactlazylog.logNotFoundTip') : undefined}
         className="lazylog-spin-container"
@@ -197,7 +196,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(pr
           startFollowing
           render={({ onScroll, follow }) => (
             <LazyLog
-              extraLines={1}
+              extraLines={2}
               enableSearch
               selectableLines
               text={text}
@@ -207,7 +206,7 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(pr
             />
           )}
         />
-      </KunSpin>
+      </Spin>
     </div>
   );
 };
