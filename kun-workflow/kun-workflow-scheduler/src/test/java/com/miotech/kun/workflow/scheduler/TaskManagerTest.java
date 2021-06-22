@@ -29,16 +29,13 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import javax.inject.Inject;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 public class TaskManagerTest extends SchedulerTestBase {
     @Inject
@@ -431,7 +428,7 @@ public class TaskManagerTest extends SchedulerTestBase {
     }
 
     @Test
-    public void updateDownstreamShouldNotEffectOthersDependencies(){
+    public void updateDownstreamShouldNotEffectOthersDependencies() {
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2");
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>2");
         for (Task task : taskList) {
@@ -464,16 +461,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskManager.submit(taskRunList);
 
 
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
-                return null;
-            }
-        }).when(executor).submit(ArgumentMatchers.any());
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
 
         // verify update downStream
         TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun1.getId());
@@ -497,6 +485,17 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps3.getStartAt(), is(nullValue()));
         assertThat(attemptProps3.getEndAt(), is(nullValue()));
 
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                return null;
+            }
+        }).when(executor).submit(ArgumentMatchers.any());
+
         //retry taskRun1
         taskManager.retry(taskRunDao.fetchTaskRunById(taskRun1.getId()).get());
 
@@ -512,6 +511,51 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps3.getEndAt(), is(nullValue()));
 
     }
+
+    @Test
+    public void multiThreadSubmitShouldNotDuplicate() {
+        Set<Long> submittedTaskRun = new HashSet<>();
+        List<TaskRun> readyTaskRuns = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            Task task = MockTaskFactory.createTask();
+            taskDao.create(task);
+            TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+            taskRunDao.createTaskRun(taskRun);
+            readyTaskRuns.add(taskRun);
+        }
+        ArgumentCaptor<TaskAttempt> captor = ArgumentCaptor.forClass(TaskAttempt.class);
+        taskManager.submit(readyTaskRuns);
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                Thread.sleep(1000);
+                TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+                if (!submittedTaskRun.add(taskAttempt.getTaskRun().getId())) {
+                    throw new IllegalStateException("taskAttemptId = " + taskAttempt.getId() + "is running");
+                }
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                return null;
+            }
+        }).when(executor).submit(ArgumentMatchers.any());
+        for (int i = 0; i < 3; i++) {
+            Thread thread = new Thread(() -> {
+                    Task task = MockTaskFactory.createTask();
+                    taskDao.create(task);
+                    TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+                    taskRunDao.createTaskRun(taskRun);
+                    taskManager.submit(Arrays.asList(taskRun));
+            });
+            thread.start();
+        }
+        await().atMost(60, TimeUnit.SECONDS).until(() ->
+            submittedTaskRun.size() == 8
+        );
+        verify(executor, times(8)).submit(captor.capture());
+
+    }
+
 
     private TaskAttemptStatusChangeEvent prepareEvent(long taskAttemptId, String taskName, long taskId, TaskRunStatus from, TaskRunStatus to) {
         return new TaskAttemptStatusChangeEvent(taskAttemptId, from, to, taskName, taskId);
