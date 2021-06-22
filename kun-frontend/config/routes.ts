@@ -157,7 +157,7 @@ export const appRoutes = [
             path: '/data-development/task-definition/:taskDefId',
             component: 'data-development/task-definition-config',
             exact: true,
-            wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+            wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/withDnDContext', '@/wrappers/permission'],
           },
           {
             component: 'error-page/Error404/index',
