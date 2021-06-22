@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from 'react';
 import { useHistory, Link } from 'umi';
-import { Input, Select, Table, Tag, Spin } from 'antd';
+import { Input, Select, Table, Tag, Spin, Checkbox } from 'antd';
 import { ColumnProps } from 'antd/es/table';
 import { PaginationProps } from 'antd/es/pagination';
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
@@ -11,7 +11,7 @@ import {
   NumberParam,
   ArrayParam,
   ObjectParam,
-  withDefault,
+  withDefault, BooleanParam,
 } from 'use-query-params';
 import { CopyOutlined } from '@ant-design/icons';
 import { RootDispatch, RootState } from '@/rematch/store';
@@ -46,7 +46,15 @@ const tableOrderMap = {
 const getOrder = (order: keyof typeof tableOrderMap | null) =>
   order ? tableOrderMap[order] : undefined;
 
-export default function DataDisvocery() {
+function computeRowClassname(record: Dataset): string {
+  if (record.deleted) {
+    return styles.datasetDeleted;
+  }
+  // else
+  return '';
+}
+
+export default function DataDiscoveryListView() {
   const t = useI18n();
 
   const { getBackPath } = useBackPath();
@@ -71,6 +79,7 @@ export default function DataDisvocery() {
 
     pageNumber: withDefault(NumberParam, 1),
     pageSize: withDefault(NumberParam, 15),
+    displayDeleted: BooleanParam,
   });
 
   const {
@@ -90,6 +99,7 @@ export default function DataDisvocery() {
     sortOrder,
     pageNumber,
     pageSize,
+    displayDeleted,
   } = query as QueryObj;
 
   const dispatch = useDispatch<RootDispatch>();
@@ -137,6 +147,7 @@ export default function DataDisvocery() {
       watermarkMode,
       watermarkAbsoluteValue,
       watermarkQuickeValue,
+      displayDeleted,
       sortKey,
       sortOrder,
       pagination: {
@@ -160,6 +171,7 @@ export default function DataDisvocery() {
     sortOrder,
     pageSize,
     pageNumber,
+    displayDeleted,
   ]);
 
   useMount(() => {
@@ -611,6 +623,20 @@ export default function DataDisvocery() {
                 </Select>
               </div>
             </div>
+
+            <div className={styles.filterItem}>
+              <div className={styles.filterItemTitle}>{/* Placeholder */}</div>
+              <div className={styles.filterItemCheckbox}>
+                <Checkbox
+                  checked={displayDeleted}
+                  onChange={() => {
+                    setFilterQuery({ displayDeleted: !displayDeleted });
+                  }}
+                >
+                  {t('dataDiscovery.datasetsTable.header.showDeleted')}
+                </Checkbox>
+              </div>
+            </div>
           </div>
 
           <div className={styles.resultRow}>
@@ -629,6 +655,7 @@ export default function DataDisvocery() {
                 scroll={scroll}
                 pagination={tablePagination}
                 onChange={handleChangeTable}
+                rowClassName={computeRowClassname}
                 onRow={record => ({
                   onClick: () => {
                     const url = encodeURIComponent(
