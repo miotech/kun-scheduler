@@ -38,4 +38,6 @@ public class DatasetSearchRequest extends PageInfo {
     private String sortKey;
 
     private String sortOrder;
+
+    private Boolean displayDeleted;
 }

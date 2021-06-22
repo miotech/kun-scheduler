@@ -10,6 +10,7 @@ export interface Dataset {
   owners: string[];
   tags: string[];
   glossaries: GlossaryItem[];
+  deleted: boolean;
 }
 
 export interface Watermark {
