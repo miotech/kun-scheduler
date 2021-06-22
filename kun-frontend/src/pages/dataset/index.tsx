@@ -626,14 +626,14 @@ export default function DataDiscoveryListView() {
 
             <div className={styles.filterItem}>
               <div className={styles.filterItemTitle}>{/* Placeholder */}</div>
-              <div className={styles.filterItemSelect}>
+              <div className={styles.filterItemCheckbox}>
                 <Checkbox
                   checked={displayDeleted}
                   onChange={() => {
                     setFilterQuery({ displayDeleted: !displayDeleted });
                   }}
                 >
-                  Show deleted datasets
+                  {t('dataDiscovery.datasetsTable.header.showDeleted')}
                 </Checkbox>
               </div>
             </div>

@@ -141,6 +141,7 @@ export default {
   "dataDiscovery.datasetsTable.header.databaseReference": "数据源参考",
   "dataDiscovery.datasetsTable.header.dbtype": "类型",
   "dataDiscovery.datasetsTable.header.tags": "标签",
+  "dataDiscovery.datasetsTable.header.showDeleted": "显示已删除数据集",
   "dataDiscovery.datasetsTable.resultCount": "共{count}结果",
   "dataDetail.back": "返回",
   "dataDetail.deleted": "已删除",
