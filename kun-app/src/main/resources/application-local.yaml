@@ -105,3 +105,10 @@ springdoc:
   swagger-ui:
     operationsSorter: method
   use-fqn: true
+
+spark:
+  thrift-server:
+    enabled: false
+    url:
+    username:
+    password:
