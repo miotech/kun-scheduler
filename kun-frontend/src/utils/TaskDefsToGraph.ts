@@ -1,5 +1,5 @@
 import uniqueId from 'lodash/uniqueId';
-import isArray from 'lodash';
+import isArray from 'lodash/isArray';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { TaskNode, TaskRelation } from '@/components/DAGGraph/typings';
 import LogUtils from '@/utils/logUtils';
