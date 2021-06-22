@@ -46,7 +46,9 @@ export const TaskAttemptDetail: React.FC<Props> = memo(function TaskAttemptDetai
         }
         key="logs"
       >
-        <TaskRunLogViewer taskRun={taskRun || null} attempt={attempt} onChangeAttempt={handleChangeAttempt} />
+        <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+          <TaskRunLogViewer taskRun={taskRun || null} attempt={attempt} onChangeAttempt={handleChangeAttempt} />
+        </div>
       </Tabs.TabPane>
       <Tabs.TabPane
         tab={

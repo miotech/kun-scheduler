@@ -1,5 +1,6 @@
 import React, { FunctionComponent, useCallback, useMemo } from 'react';
-import { Button, InputNumber, Popconfirm, Space, Table, Tooltip } from 'antd';
+import { Button, Popconfirm, Select, Space, Table, Tooltip } from 'antd';
+import range from 'lodash/range';
 import moment from 'moment-timezone';
 import momentDurationFormatSetup from 'moment-duration-format';
 import { ColumnProps } from 'antd/es/table';
@@ -93,14 +94,16 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
         width: 86,
         render: (txt: unknown, record: TaskRun) => {
           const maxAttempt = Math.max(...record.attempts.map(i => i.attempt));
+          const options = range(1, maxAttempt + 1).map(attempt => (
+            <Select.Option value={attempt} key={`${record.id}-attempt-${attempt}`}>
+              {attempt}
+            </Select.Option>
+          ));
           return (
             <span>
-              <InputNumber
-                size="small"
+              <Select
                 style={{ width: '45px' }}
-                min={1}
-                max={maxAttempt}
-                step={1}
+                size="small"
                 value={getCorrespondingAttempt(record)?.attempt || maxAttempt}
                 onChange={nextAttempt => {
                   if (Number(nextAttempt)) {
@@ -110,7 +113,9 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
                     });
                   }
                 }}
-              />
+              >
+                {options}
+              </Select>
               {(getCorrespondingAttempt(record)?.attempt || maxAttempt) < maxAttempt ? (
                 <Tooltip title={t('taskRun.property.attempt.jumpToLatest')}>
                   <Button
