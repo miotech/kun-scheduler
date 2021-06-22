@@ -3,27 +3,26 @@ package com.miotech.kun.workflow.executor.kubernetes;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.core.Executor;
-import com.miotech.kun.workflow.core.ResourceManager;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.InputStream;
 
 @Singleton
 public class KubernetesExecutor implements Executor {
 
     private final Logger logger = LoggerFactory.getLogger(KubernetesExecutor.class);
     private final WorkerLifeCycleManager podLifeCycleManager;//pod生命周期管理
-    private final ResourceManager kubernetesResourceManager;//管理kubernetes资源配额
+    private final AbstractQueueManager kubernetesResourceManager;//管理kubernetes资源配额
 
     @Inject
-    public KubernetesExecutor(PodLifeCycleManager podLifeCycleManager, KubernetesResourceManager kubernetesResourceManager) {
+    public KubernetesExecutor(WorkerLifeCycleManager podLifeCycleManager, KubernetesResourceManager kubernetesResourceManager) {
         this.podLifeCycleManager = podLifeCycleManager;
         this.kubernetesResourceManager = kubernetesResourceManager;
     }
+
 
     public boolean submit(TaskAttempt taskAttempt) {
         logger.info("submit taskAttemptId = {} to executor", taskAttempt.getId());
@@ -70,4 +69,5 @@ public class KubernetesExecutor implements Executor {
     public ResourceQueue updateResourceQueue(ResourceQueue resourceQueue) {
         return kubernetesResourceManager.updateResourceQueue(resourceQueue);
     }
+
 }
