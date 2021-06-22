@@ -141,6 +141,7 @@ export default {
   "dataDiscovery.datasetsTable.header.databaseReference": "Datasource Reference",
   "dataDiscovery.datasetsTable.header.dbtype": "Type",
   "dataDiscovery.datasetsTable.header.tags": "Tags",
+  "dataDiscovery.datasetsTable.header.showDeleted": "Show deleted datasets",
   "dataDiscovery.datasetsTable.resultCount": "{count} results",
   "dataDetail.back": "Back",
   "dataDetail.deleted": "Deleted",
