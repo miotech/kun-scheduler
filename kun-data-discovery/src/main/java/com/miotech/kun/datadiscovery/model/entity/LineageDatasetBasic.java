@@ -23,4 +23,6 @@ public class LineageDatasetBasic {
     Long rowCount;
 
     Watermark highWatermark;
+
+    Boolean deleted;
 }
