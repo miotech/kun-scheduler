@@ -10,8 +10,6 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.InputStream;
-
 @Singleton
 public class KubernetesExecutor implements Executor {
 

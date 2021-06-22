@@ -9,6 +9,7 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.workflow.core.event.TaskAttemptCreatedEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -73,7 +74,6 @@ public class TaskManager {
         } catch (Throwable e) {
             logger.warn("Something went wrong", e);
         }
-
     }
 
     /**
@@ -151,6 +151,11 @@ public class TaskManager {
         public void onReceive(TaskAttemptStatusChangeEvent event) {
             post(event.getAttemptId(), event);
         }
+
+        @Subscribe
+        public void onReceive(TaskAttemptCreatedEvent event) {
+            post(event.getTimestamp(), event);
+        }
     }
 
     private class StatusChangeEventConsumer extends EventConsumer<Long, Event> {
@@ -166,6 +171,9 @@ public class TaskManager {
                         updateDownStreamStatus(taskAttemptStatusChangeEvent.getTaskRunId(), TaskRunStatus.UPSTREAM_FAILED);
                     }
                 }
+            }
+            if (event instanceof TaskAttemptCreatedEvent) {
+                submitSatisfyTaskAttemptToExecutor();
             }
         }
     }
@@ -190,8 +198,8 @@ public class TaskManager {
         }
     }
 
-    private boolean postgresEnable(){
-        String datasourceUrl = props.getString("datasource.jdbcUrl","");
+    private boolean postgresEnable() {
+        String datasourceUrl = props.getString("datasource.jdbcUrl", "");
         return datasourceUrl.contains("postgres");
     }
 
