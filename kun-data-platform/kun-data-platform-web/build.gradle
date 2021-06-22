@@ -85,6 +85,9 @@ dependencies {
     implementation "org.flywaydb:flyway-core"
     implementation 'org.apache.commons:commons-email'
     implementation "com.cronutils:cron-utils"
+    implementation ('org.spark-project.hive:hive-jdbc') {
+        exclude group: 'org.eclipse.jetty.aggregate', module: 'jetty-all'
+    }
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"
