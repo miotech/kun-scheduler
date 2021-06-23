@@ -39,6 +39,7 @@ public class KubernetesOperatorLauncher {
 
     public static void main(String args[]) {
         props = new Props(System.getenv());
+        logger.info("props={}", props);
         ExecCommand command = readExecCommand();
         // 初始化logger
         initLogger(command.getLogPath());
@@ -149,8 +150,8 @@ public class KubernetesOperatorLauncher {
                         OperatorReport operatorReport = new OperatorReport();
                         operatorReport.copyFromReport(operator.getReport().get());
                         processReport(command.getTaskRunId(), operatorReport);
-                    }catch (Throwable e){
-                        logger.error("process operator report failed",e);
+                    } catch (Throwable e) {
+                        logger.error("process operator report failed", e);
                     }
                 }
                 return true;
