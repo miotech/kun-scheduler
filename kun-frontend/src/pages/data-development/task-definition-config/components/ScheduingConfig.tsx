@@ -152,6 +152,10 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
                   }
                   return Promise.reject(reason);
                 }
+                if (expr.result[0].mode !== 'specific' || expr.result[0].value !== 0) {
+                  // eslint-disable-next-line prefer-promise-reject-errors
+                  return Promise.reject(t('dataDevelopment.definition.scheduleConfig.cronExpression.alertSecondsBeZero'));
+                }
                 // else
                 return Promise.resolve();
               }
