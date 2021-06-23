@@ -3,7 +3,7 @@ import c from 'clsx';
 import cronstrue from 'cronstrue/i18n';
 import { Alert, Input } from 'antd';
 import useI18n from '@/hooks/useI18n';
-import { CronLocalization, ReQuartzCron } from '@sbzen/re-cron';
+import { CronLocalization, ReQuartzCron, Tab } from '@sbzen/re-cron';
 import { validate } from '@joshoy/quartz-cron-parser';
 
 import ReCronZhCNLocalization from './i18n/recron.zh-cn';
@@ -90,6 +90,7 @@ export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, C
               <div className={c('cron-expression-input', className)}>
                 <ReQuartzCron
                   value={appliedValue}
+                  tabs={[Tab.MINUTES, Tab.HOURS, Tab.DAY, Tab.MONTH, Tab.YEAR]}
                   onChange={(v: string) => {
                     if (onChange) {
                       onChange(v);
