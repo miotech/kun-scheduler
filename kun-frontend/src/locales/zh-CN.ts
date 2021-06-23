@@ -340,6 +340,7 @@ export default {
   "dataDevelopment.definition.scheduleConfig.upstream.type.inputDataset": "输入数据集",
   "dataDevelopment.definition.scheduleConfig.upstream.type.search": "上游搜索",
   "dataDevelopment.definition.scheduleConfig.output.outputDataset": "输出数据集",
+  "dataDevelopment.definition.scheduleConfig.cronExpression.alertSecondsBeZero": "目前 Cron 表达式只支持秒字段为 '0'",
   "dataDevelopment.definition.notificationConfig": "通知规则",
   "dataDevelopment.definition.notificationConfig.notifyWhen": "通知触发规则",
   "dataDevelopment.definition.notificationConfig.notifyWhen.systemDefault": "系统默认",
