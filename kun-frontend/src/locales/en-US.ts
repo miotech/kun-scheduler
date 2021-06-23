@@ -340,6 +340,7 @@ export default {
   "dataDevelopment.definition.scheduleConfig.upstream.type.inputDataset": "Input Dataset",
   "dataDevelopment.definition.scheduleConfig.upstream.type.search": "Search Upstream",
   "dataDevelopment.definition.scheduleConfig.output.outputDataset": "Output Dataset",
+  "dataDevelopment.definition.scheduleConfig.cronExpression.alertSecondsBeZero": "Currently cron expression only support seconds field to be '0'",
   "dataDevelopment.definition.notificationConfig": "Notification Config",
   "dataDevelopment.definition.notificationConfig.notifyWhen": "Notify When",
   "dataDevelopment.definition.notificationConfig.notifyWhen.systemDefault": "System Default",
