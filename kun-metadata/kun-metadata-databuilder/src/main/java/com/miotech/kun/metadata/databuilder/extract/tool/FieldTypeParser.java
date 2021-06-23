@@ -2,8 +2,8 @@ package com.miotech.kun.metadata.databuilder.extract.tool;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.miotech.kun.metadata.core.model.DatasetField;
-import com.miotech.kun.metadata.core.model.DatasetFieldType;
+import com.miotech.kun.metadata.core.model.dataset.DatasetField;
+import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
 
 import java.util.ArrayList;
 import java.util.Iterator;

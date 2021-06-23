@@ -7,10 +7,10 @@ import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
-import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.DatasetField;
-import com.miotech.kun.metadata.core.model.DatasetFieldType;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.DatasetField;
+import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

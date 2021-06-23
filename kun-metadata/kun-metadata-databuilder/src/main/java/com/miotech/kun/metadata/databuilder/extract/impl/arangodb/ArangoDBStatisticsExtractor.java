@@ -1,8 +1,8 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.arangodb;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.FieldStatistics;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.FieldStatistics;
 import com.miotech.kun.metadata.databuilder.client.ArangoClient;
 import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatisticsExtractor;
 import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;

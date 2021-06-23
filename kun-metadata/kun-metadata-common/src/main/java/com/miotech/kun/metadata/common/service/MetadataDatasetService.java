@@ -3,7 +3,7 @@ package com.miotech.kun.metadata.common.service;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
-import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 
 import java.util.Optional;
 

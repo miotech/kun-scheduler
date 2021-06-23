@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.arangodb;
 
 import com.google.common.collect.Iterators;
-import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.databuilder.client.ArangoClient;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
 import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;

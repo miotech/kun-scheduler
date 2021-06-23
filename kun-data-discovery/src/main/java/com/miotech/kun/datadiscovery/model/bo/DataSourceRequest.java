@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.model.bo;
 
+import com.miotech.kun.workflow.utils.JSONUtils;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.json.simple.JSONObject;
@@ -30,4 +31,16 @@ public class DataSourceRequest {
     private String updateUser;
 
     private Long updateTime;
+
+    public com.miotech.kun.metadata.core.model.datasource.DataSourceRequest convert() {
+        return com.miotech.kun.metadata.core.model.datasource.DataSourceRequest.newBuilder()
+                .withTypeId(typeId)
+                .withName(name)
+                .withConnectionInfo(JSONUtils.jsonStringToMap(JSONUtils.toJsonString(information)))
+                .withTags(tags)
+                .withCreateUser(createUser)
+                .withUpdateUser(updateUser)
+                .build();
+    }
+
 }

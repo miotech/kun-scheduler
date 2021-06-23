@@ -1,8 +1,8 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.glue;
 
 import com.amazonaws.services.glue.model.Table;
-import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.DatasetField;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.databuilder.client.GlueClient;
 import com.miotech.kun.metadata.databuilder.extract.filter.HiveTableSchemaExtractFilter;
 import com.miotech.kun.metadata.databuilder.extract.iterator.GlueTableIterator;

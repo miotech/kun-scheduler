@@ -2,7 +2,7 @@ package sql;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import org.apache.commons.lang3.tuple.Pair;
 import org.flywaydb.core.api.migration.BaseJavaMigration;
 import org.flywaydb.core.api.migration.Context;

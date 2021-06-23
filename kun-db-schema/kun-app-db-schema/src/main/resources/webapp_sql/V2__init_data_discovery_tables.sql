@@ -19,49 +19,6 @@ create table if not exists kun_mt_dataset_tags
     constraint kun_mt_dataset_tags_dataset_gid_tag_key unique (dataset_gid, tag)
 );
 
-create table if not exists kun_mt_tag (
-    tag varchar(256) primary key
-);
-
-create table if not exists kun_mt_datasource_type (
-    id   bigserial primary key,
-    name varchar(128) not null
-);
-
-create table if not exists kun_mt_datasource (
-    id              bigserial primary key,
-    connection_info jsonb,
-    type_id         bigint
-);
-
-create table if not exists kun_mt_datasource_attrs
-(
-    datasource_id  bigint        primary key,
-    name           varchar(1024) not null,
-    create_user    varchar(256)  not null,
-    create_time    timestamp     not null,
-    update_user    varchar(256)  not null,
-    update_time    timestamp     not null
-);
-
-create table if not exists kun_mt_datasource_tags
-(
-    id            bigserial primary key,
-    datasource_id bigint    not null,
-    tag           varchar(256) not null,
-    constraint kun_mt_datasource_tags_datasource_id_tag_key unique (datasource_id, tag)
-);
-
-create table if not exists kun_mt_datasource_type_fields
-(
-    id             bigserial             primary key,
-    type_id        bigserial             not null,
-    name           varchar(128)          not null,
-    sequence_order integer default 0     not null,
-    format         varchar(32)           not null,
-    require        boolean default false not null
-);
-
 create table if not exists kun_mt_glossary
 (
     id          bigserial     primary key,

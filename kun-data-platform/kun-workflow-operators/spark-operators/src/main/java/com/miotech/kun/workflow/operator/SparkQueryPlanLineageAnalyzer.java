@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Strings;
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
 import com.miotech.kun.workflow.operator.resolver.SparkOperatorResolver;
@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
 

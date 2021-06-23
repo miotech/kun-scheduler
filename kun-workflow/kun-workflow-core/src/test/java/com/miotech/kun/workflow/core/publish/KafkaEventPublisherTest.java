@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.core.publish;
 
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.LineageEvent;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;

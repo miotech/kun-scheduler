@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.common.lineage.node;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import org.neo4j.ogm.annotation.Id;
 import org.neo4j.ogm.annotation.NodeEntity;
 import org.neo4j.ogm.annotation.Property;

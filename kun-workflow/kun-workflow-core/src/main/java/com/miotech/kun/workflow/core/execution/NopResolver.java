@@ -1,6 +1,6 @@
 package com.miotech.kun.workflow.core.execution;
 
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.annotation.Internal;
 
 import java.util.LinkedList;

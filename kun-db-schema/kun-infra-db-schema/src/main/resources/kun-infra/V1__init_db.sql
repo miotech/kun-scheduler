@@ -224,44 +224,43 @@ CREATE TABLE IF NOT EXISTS kun_wf_variable (
 );
 
 -- tables of datasource
+CREATE TABLE IF NOT EXISTS kun_mt_tag (
+    tag varchar(256) primary key
+);
 
-create table if not exists kun_mt_datasource_type (
-    id   bigserial primary key,
+CREATE TABLE IF NOT EXISTS kun_mt_datasource_type (
+    id bigserial primary key,
     name varchar(128) not null
 );
 
-create table if not exists kun_mt_datasource (
-    id              bigserial primary key,
-    connection_info jsonb,
-    type_id         bigint
+CREATE TABLE IF NOT EXISTS kun_mt_datasource (
+    id bigint primary key,
+    connection_info jsonb not null,
+    type_id bigint not null
 );
 
-create table if not exists kun_mt_datasource_attrs
-(
-    datasource_id  bigint        primary key,
-    name           varchar(1024) not null,
-    create_user    varchar(256)  not null,
-    create_time    timestamp     not null,
-    update_user    varchar(256)  not null,
-    update_time    timestamp     not null
+CREATE TABLE IF NOT EXISTS kun_mt_datasource_attrs (
+    datasource_id bigint primary key,
+    name varchar(1024) not null,
+    create_user varchar(256) not null,
+    create_time timestamp not null,
+    update_user varchar(256) not null,
+    update_time timestamp not null
 );
 
-create table if not exists kun_mt_datasource_tags
-(
-    id            bigserial primary key,
-    datasource_id bigint    not null,
-    tag           varchar(256) not null,
-    constraint kun_mt_datasource_tags_datasource_id_tag_key unique (datasource_id, tag)
+CREATE TABLE IF NOT EXISTS kun_mt_datasource_tags (
+    id bigserial primary key,
+    datasource_id bigint not null,
+    tag varchar(256) not null
 );
 
-create table if not exists kun_mt_datasource_type_fields
-(
-    id             bigserial             primary key,
-    type_id        bigserial             not null,
-    name           varchar(128)          not null,
-    sequence_order integer default 0     not null,
-    format         varchar(32)           not null,
-    require        boolean default false not null
+CREATE TABLE IF NOT EXISTS kun_mt_datasource_type_fields (
+    id bigserial primary key,
+    type_id bigint not null,
+    name varchar(128) not null,
+    sequence_order integer default 0 not null,
+    format varchar(32) not null,
+    require boolean default false not null
 );
 
 -- indices
@@ -324,3 +323,36 @@ CREATE INDEX IF NOT EXISTS kun_mt_pull_process__datasource__idx ON kun_mt_pull_p
 
 CREATE INDEX IF NOT EXISTS kun_mt_pull_process__dataset_id__idx ON kun_mt_pull_process (dataset_id);
 
+--insert data
+INSERT INTO kun_mt_datasource_type (id, name)
+VALUES (1, 'AWS'),
+       (2, 'MongoDB'),
+       (3, 'PostgreSQL'),
+       (4, 'Elasticsearch'),
+       (5, 'Arango')
+;
+
+INSERT INTO kun_mt_datasource_type_fields (id, type_id, name, sequence_order, format, require)
+VALUES (1, 2, 'host', 1, 'INPUT', true),
+       (2, 2, 'port', 2, 'NUMBER_INPUT', true),
+       (3, 2, 'username', 3, 'INPUT', false),
+       (4, 2, 'password', 4, 'PASSWORD', false),
+       (5, 3, 'host', 1, 'INPUT', true),
+       (6, 3, 'port', 2, 'NUMBER_INPUT', true),
+       (7, 3, 'username', 3, 'INPUT', false),
+       (8, 3, 'password', 4, 'PASSWORD', false),
+       (9, 4, 'host', 1, 'INPUT', true),
+       (10, 4, 'port', 2, 'NUMBER_INPUT', true),
+       (11, 4, 'username', 3, 'INPUT', false),
+       (12, 4, 'password', 4, 'PASSWORD', false),
+       (13, 5, 'host', 1, 'INPUT', true),
+       (14, 5, 'port', 2, 'NUMBER_INPUT', true),
+       (15, 5, 'username', 3, 'INPUT', false),
+       (16, 5, 'password', 4, 'PASSWORD', false),
+       (17, 1, 'glueAccessKey', 1, 'INPUT', false),
+       (18, 1, 'glueSecretKey', 2, 'INPUT', false),
+       (19, 1, 'glueRegion', 3, 'INPUT', false),
+       (20, 1, 'athenaUrl', 4, 'INPUT', false),
+       (21, 1, 'athenaUsername', 5, 'INPUT', false),
+       (22, 1, 'athenaPassword', 6, 'PASSWORD', false)
+;

@@ -2,9 +2,9 @@ package com.miotech.kun.workflow.client.model;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.miotech.kun.metadata.core.model.DataStore;
 import com.miotech.kun.commons.utils.CustomDateTimeDeserializer;
 import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
