@@ -117,6 +117,7 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
                 }
                 for (Long unFoundAttempt : registerSet) {
                     logger.warn("count not found pod for register handler, taskAttemptId = {}", unFoundAttempt);
+                    registerHandlers.remove(unFoundAttempt);
                 }
             } catch (Throwable e) {
                 logger.error("polling pods status from kubernetes failed", e);
