@@ -25,7 +25,7 @@ export default memo(function ErrorPageContainer({ children }: Props) {
         <div />
         <img className={styles.mioLogo} src={miotechLogo} alt="" />
         <span className={styles.footerContent}>
-          ©2016-2020 MioTech Techonlogy. All rights reserved.
+          ©2016-2021 MioTech Techonlogy. All rights reserved.
         </span>
       </div>
     </div>
