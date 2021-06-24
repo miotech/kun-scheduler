@@ -10,7 +10,7 @@ export const LoginFooter: React.FC<{}> = memo(() => {
         <img className={styles.MiotechLogo} src={MiotechLogo} alt="miotech" />
       </span>
       <span aria-label="copyright">
-        ©2016-2020 MioTech Technology. All rights reserved.
+        ©2016-2021 MioTech Technology. All rights reserved.
       </span>
     </footer>
   );
