@@ -461,16 +461,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         taskManager.submit(taskRunList);
 
 
-        doAnswer(new Answer() {
-            @Override
-            public Object answer(InvocationOnMock invocation) throws Throwable {
-                TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
-                eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
-                return null;
-            }
-        }).when(executor).submit(ArgumentMatchers.any());
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
 
         // verify update downStream
         TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun1.getId());
@@ -493,6 +484,17 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps3.getLogPath(), is(nullValue()));
         assertThat(attemptProps3.getStartAt(), is(nullValue()));
         assertThat(attemptProps3.getEndAt(), is(nullValue()));
+
+        doAnswer(new Answer() {
+            @Override
+            public Object answer(InvocationOnMock invocation) throws Throwable {
+                TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                return null;
+            }
+        }).when(executor).submit(ArgumentMatchers.any());
 
         //retry taskRun1
         taskManager.retry(taskRunDao.fetchTaskRunById(taskRun1.getId()).get());

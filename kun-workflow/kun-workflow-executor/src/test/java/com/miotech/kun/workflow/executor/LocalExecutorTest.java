@@ -33,7 +33,7 @@ import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.executor.local.LocalExecutor;
 import com.miotech.kun.workflow.executor.local.LocalWorkerFactory;
 import com.miotech.kun.workflow.executor.local.QueueManage;
-import com.miotech.kun.workflow.executor.local.TaskAttemptQueue;
+import com.miotech.kun.workflow.executor.local.LocalTaskAttemptQueue;
 import com.miotech.kun.workflow.executor.mock.*;
 import com.miotech.kun.workflow.executor.rpc.LocalExecutorFacadeImpl;
 import com.miotech.kun.workflow.executor.rpc.WorkerClusterConsumer;
@@ -238,8 +238,8 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
 
     }
 
@@ -290,8 +290,8 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
 
     }
 
@@ -351,8 +351,8 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
 
     }
 
@@ -371,8 +371,8 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED);
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -399,8 +399,8 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING);
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity() - 1));
     }
 
     @Test
@@ -423,8 +423,8 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
 
@@ -457,8 +457,8 @@ public class LocalExecutorTest extends CommonTestBase {
         Thread.sleep(waitTime * 1000);
 
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity() - 1));
 
         //worker正常启动，发送心跳
         doReturn(localWorker).when(spyFactory).createWorker();
@@ -501,8 +501,8 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
         queueManage = Reflect.on(executor).field("queueManage").get();
-        taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
 
@@ -560,8 +560,8 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), sameBeanAs(inlets));
         assertThat(finishedEvent.getOutlets(), sameBeanAs(outlets));
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -590,8 +590,8 @@ public class LocalExecutorTest extends CommonTestBase {
         content = ResourceUtils.content(log.getInputStream());
         assertThat(content, containsString("Hello, world2!"));
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -650,8 +650,8 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(0));
         assertThat(finishedEvent.getOutlets(), hasSize(0));
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -692,8 +692,8 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -733,8 +733,8 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.FAILED);
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -773,8 +773,8 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.FAILED);
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -786,8 +786,8 @@ public class LocalExecutorTest extends CommonTestBase {
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity() - 1));
         executor.cancel(attempt.getId());
 
         // wait until aborted
@@ -819,8 +819,8 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
         queueManage = Reflect.on(executor).field("queueManage").get();
-        taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -874,8 +874,8 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -887,8 +887,8 @@ public class LocalExecutorTest extends CommonTestBase {
         executor.submit(attempt);
         awaitUntilRunning(attempt.getId());
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity() - 1));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity() - 1));
         executor.cancel(attempt.getId());
 
         // wait until aborted
@@ -920,8 +920,8 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
         queueManage = Reflect.on(executor).field("queueManage").get();
-        taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
@@ -963,15 +963,15 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.ABORTED);
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(taskAttemptQueue.getCapacity()));
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(localTaskAttemptQueue.getCapacity()));
     }
 
     @Test
     public void abortTaskAttemptInQueue() {
         QueueManage queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        Reflect.on(taskAttemptQueue).set("remainCapacity", 0);
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        Reflect.on(localTaskAttemptQueue).set("remainCapacity", 0);
         //prepare
         TaskAttempt taskAttempt = prepareAttempt(TestOperator1.class);
 
@@ -981,8 +981,8 @@ public class LocalExecutorTest extends CommonTestBase {
         TaskAttempt saved = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
         assertThat(saved.getStatus(), is(TaskRunStatus.QUEUED));
         queueManage = Reflect.on(executor).field("queueManage").get();
-        taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getSize(), is(1));
+        localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getSize(), is(1));
         executor.cancel(taskAttempt.getId());
         awaitUntilAttemptAbort(taskAttempt.getId());
         // events
@@ -990,8 +990,8 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.ABORTED);
-        taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        assertThat(taskAttemptQueue.getSize(), is(0));
+        localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        assertThat(localTaskAttemptQueue.getSize(), is(0));
 
 
     }
@@ -1056,10 +1056,10 @@ public class LocalExecutorTest extends CommonTestBase {
 
         //verity resource
         queueManage = Reflect.on(executor).field("queueManage").get();
-        TaskAttemptQueue defaultAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        LocalTaskAttemptQueue defaultAttemptQueue = queueManage.getTaskAttemptQueue("default");
         assertThat(defaultAttemptQueue.getRemainCapacity(), is(0));
         assertThat(defaultAttemptQueue.getSize(), is(1));
-        TaskAttemptQueue userAttemptQueue = queueManage.getTaskAttemptQueue("user");
+        LocalTaskAttemptQueue userAttemptQueue = queueManage.getTaskAttemptQueue("user");
         assertThat(userAttemptQueue.getRemainCapacity(), is(1));
         assertThat(userAttemptQueue.getSize(), is(0));
 
@@ -1156,10 +1156,10 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.INITIALIZING,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.SUCCESS);
-        TaskAttemptQueue taskAttemptQueue = queueManage.getTaskAttemptQueue("default");
-        int capacity = taskAttemptQueue.getCapacity();
+        LocalTaskAttemptQueue localTaskAttemptQueue = queueManage.getTaskAttemptQueue("default");
+        int capacity = localTaskAttemptQueue.getCapacity();
         int exceptRemain = capacity - 1;
-        assertThat(taskAttemptQueue.getRemainCapacity(), is(exceptRemain));
+        assertThat(localTaskAttemptQueue.getRemainCapacity(), is(exceptRemain));
 
         //kill running task
         runningWorker.killTask(false);

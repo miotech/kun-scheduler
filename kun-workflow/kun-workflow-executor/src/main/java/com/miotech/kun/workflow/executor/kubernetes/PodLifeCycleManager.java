@@ -126,6 +126,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         Map<String, String> labels = new HashMap<>();
         labels.put(KUN_WORKFLOW, null);
         labels.put(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttempt.getId()));
+        labels.put(TASK_QUEUE,taskAttempt.getQueueName());
         objectMeta.setLabels(labels);
         pod.setMetadata(objectMeta);
         pod.setSpec(buildSpec(taskAttempt));
