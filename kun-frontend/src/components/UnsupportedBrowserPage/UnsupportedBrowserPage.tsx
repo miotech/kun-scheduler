@@ -3,6 +3,7 @@ import logo from '@/assets/images/kun-logo.png';
 import useI18n from '@/hooks/useI18n';
 import chrome from '@/assets/images/chrome.png';
 import edge from '@/assets/images/edge.png';
+import firefox from '@/assets/images/firefox.png';
 import miotechLogo from '@/assets/images/miotech_horizontal.png';
 import styles from './UnsupportedBrowserPage.less';
 
@@ -29,7 +30,10 @@ export default memo(function UnsupportedBrowserPage() {
             <img className={styles.logoImg} src={chrome} alt="" />
             <span className={styles.logoTitle}>Chrome</span>
           </div>
-
+          <div className={styles.browserItem} style={{ marginRight: 54 }}>
+            <img className={styles.logoImg} src={firefox} alt="" />
+            <span className={styles.logoTitle}>Firefox</span>
+          </div>
           <div className={styles.browserItem}>
             <img className={styles.logoImg} src={edge} alt="" />
             <span className={styles.logoTitle}>Edge</span>
@@ -41,7 +45,7 @@ export default memo(function UnsupportedBrowserPage() {
         <div />
         <img className={styles.mioLogo} src={miotechLogo} alt="" />
         <span className={styles.footerContent}>
-          ©2016-2020 MioTech Techonlogy. All rights reserved.
+          ©2016-2021 MioTech Techonlogy. All rights reserved.
         </span>
       </div>
     </div>

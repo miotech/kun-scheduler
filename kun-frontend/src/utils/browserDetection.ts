@@ -1,5 +1,6 @@
 export enum SupportedBrowsers {
   CHROME = 'CHROME',
+  FIREFOX = 'FIREFOX',
   IE11 = 'IE11',
   EDGE = 'EDGE',
   HEADLESS = 'HEADLESS',
@@ -33,6 +34,7 @@ export function detectIE() {
 
 export const supportedBrowsers: SupportedBrowsers[] = [
   SupportedBrowsers.CHROME,
+  SupportedBrowsers.FIREFOX,
   SupportedBrowsers.EDGE,
   SupportedBrowsers.HEADLESS,
 ];
@@ -57,15 +59,21 @@ export function isChrome() {
   return (isChromium || isIOSChrome) && isOpera === false && isEdge() === false;
 }
 
+export function isFirefox() {
+  return Boolean(window.navigator.userAgent.match(/Firefox/)) && (!window.navigator.userAgent.match(/Seamonkey/));
+}
+
 export function isBrowserSupported(browserKey: SupportedBrowsers) {
   switch (browserKey) {
-    case 'CHROME':
+    case SupportedBrowsers.CHROME:
       return isChrome();
-    case 'IE11':
+    case SupportedBrowsers.FIREFOX:
+      return isFirefox();
+    case SupportedBrowsers.IE11:
       return isIE11();
-    case 'EDGE':
+    case SupportedBrowsers.EDGE:
       return isEdge();
-    case 'HEADLESS':
+    case SupportedBrowsers.HEADLESS:
       return isHeadless();
     default:
       return false;
