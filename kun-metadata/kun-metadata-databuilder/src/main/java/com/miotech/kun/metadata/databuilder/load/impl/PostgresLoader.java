@@ -3,7 +3,7 @@ package com.miotech.kun.metadata.databuilder.load.impl;
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.commons.db.DatabaseOperator;
-import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.*;
 import com.miotech.kun.metadata.databuilder.constant.DatasetLifecycleStatus;
@@ -11,7 +11,6 @@ import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldInformation;
 import com.miotech.kun.metadata.databuilder.model.DatasetLifecycleSnapshot;
 import com.miotech.kun.metadata.databuilder.model.LoadSchemaResult;
-import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -127,8 +126,8 @@ public class PostgresLoader implements Loader {
         DatasetLifecycleSnapshot datasetLifecycleSnapshot = computeDifferent(fields, latestFields);
 
         SchemaSnapshot schemaSnapshot = SchemaSnapshot.newBuilder().withFields(fields.stream().map(field -> field.convert()).collect(Collectors.toList())).build();
-        long snapshotId = dbOperator.create("INSERT INTO kun_mt_dataset_snapshot(id, dataset_gid, schema_snapshot, schema_at) VALUES(?, ?, CAST(? AS JSONB), ?)",
-                IdGenerator.getInstance().nextId(), gid, JSONUtils.toJsonString(schemaSnapshot), LocalDateTime.now());
+        long snapshotId = dbOperator.create("INSERT INTO kun_mt_dataset_snapshot(dataset_gid, schema_snapshot, schema_at) VALUES(?, CAST(? AS JSONB), ?)",
+                gid, JSONUtils.toJsonString(schemaSnapshot), LocalDateTime.now());
 
         if (datasetLifecycleSnapshot.isChanged()) {
             dbOperator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, changed, fields, status, create_at) VALUES(?, CAST(? AS JSONB), CAST(? AS JSONB), ?, ?)",
