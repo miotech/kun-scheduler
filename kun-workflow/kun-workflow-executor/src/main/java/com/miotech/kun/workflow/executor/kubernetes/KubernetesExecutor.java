@@ -1,6 +1,5 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
-import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.core.Executor;
@@ -10,8 +9,6 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class KubernetesExecutor implements Executor {
@@ -24,18 +21,12 @@ public class KubernetesExecutor implements Executor {
     public KubernetesExecutor(PodLifeCycleManager podLifeCycleManager, KubernetesResourceManager kubernetesResourceManager) {
         this.podLifeCycleManager = podLifeCycleManager;
         this.kubernetesResourceManager = kubernetesResourceManager;
-        init();
     }
 
-    private void init() {
-        Thread consumer = new Thread(new TaskAttemptConsumer(), "TaskAttemptConsumer");
-        kubernetesResourceManager.init();
-        consumer.start();
-    }
 
     public boolean submit(TaskAttempt taskAttempt) {
         logger.info("submit taskAttemptId = {} to executor", taskAttempt.getId());
-        kubernetesResourceManager.submit(taskAttempt);
+        podLifeCycleManager.start(taskAttempt);
         return true;
     }
 
@@ -79,24 +70,4 @@ public class KubernetesExecutor implements Executor {
         return kubernetesResourceManager.updateResourceQueue(resourceQueue);
     }
 
-    class TaskAttemptConsumer implements Runnable {
-        @Override
-        public void run() {
-            while (true) {
-                try {
-                    TaskAttempt taskAttempt = kubernetesResourceManager.take();
-                    if (taskAttempt == null) {
-                        Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
-                        continue;
-                    }
-                    logger.debug("take taskAttempt = {} from queue = {}", taskAttempt.getId(), taskAttempt.getQueueName());
-                    podLifeCycleManager.startWorker(taskAttempt);
-
-                } catch (Throwable e) {
-                    logger.error("failed to take taskAttempt from queue", e);
-                }
-
-            }
-        }
-    }
 }

@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.executor;
 
 import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.workflow.core.ResourceManager;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -20,7 +19,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 
-public abstract class AbstractQueueManager implements ResourceManager {
+public abstract class AbstractQueueManager {
 
     private Logger logger = LoggerFactory.getLogger(AbstractQueueManager.class);
 
@@ -120,7 +119,6 @@ public abstract class AbstractQueueManager implements ResourceManager {
         return null;
     }
 
-    @Override
     public void changePriority(long taskAttemptId, String queueName, TaskPriority priority) {
         lock.lock();
         try {
@@ -135,6 +133,10 @@ public abstract class AbstractQueueManager implements ResourceManager {
     }
 
     public abstract boolean hasCapacity(TaskAttemptQueue taskAttemptQueue);
+
+    public abstract ResourceQueue createResourceQueue(ResourceQueue resourceQueue);
+
+    public abstract ResourceQueue updateResourceQueue(ResourceQueue resourceQueue);
 
 }
 

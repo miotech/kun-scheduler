@@ -10,6 +10,7 @@ import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
+import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.executor.local.MiscService;
 import io.fabric8.kubernetes.api.model.*;
@@ -37,8 +38,8 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     @Inject
     public PodLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props, MiscService miscService,
-                               KubernetesClient kubernetesClient, OperatorDao operatorDao) {
-        super(taskRunDao, workerMonitor, props, miscService);
+                               KubernetesClient kubernetesClient, OperatorDao operatorDao, AbstractQueueManager queueManager) {
+        super(taskRunDao, workerMonitor, props, miscService,queueManager);
         this.kubernetesClient = kubernetesClient;
         this.operatorDao = operatorDao;
     }
