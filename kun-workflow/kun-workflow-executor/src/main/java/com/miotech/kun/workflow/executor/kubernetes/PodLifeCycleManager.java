@@ -32,6 +32,8 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     private final String POD_JAR_LIB = "/server/lib";
     private final String KUN_QUEUE = "kun-queue";
     private final String NODE_PREFIX = "kun-workflow-";
+    private final Integer DB_MAX_POOL = 1;
+    private final Integer MINI_MUM_IDLE = 0;
 
     @Inject
     public PodLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props, MiscService miscService,
@@ -223,6 +225,8 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         addVar(envVarList, "datasource.username", props.get("datasource.username"));
         addVar(envVarList, "datasource.password", props.get("datasource.password"));
         addVar(envVarList, "datasource.driverClassName", props.get("datasource.driverClassName"));
+        addVar(envVarList, "datasource.maxPoolSize", DB_MAX_POOL.toString());
+        addVar(envVarList, "datasource.minimumIdle", MINI_MUM_IDLE.toString());
         addVar(envVarList, "neo4j.uri", props.get("neo4j.uri"));
         addVar(envVarList, "neo4j.username", props.get("neo4j.username"));
         addVar(envVarList, "neo4j.password", props.get("neo4j.password"));
