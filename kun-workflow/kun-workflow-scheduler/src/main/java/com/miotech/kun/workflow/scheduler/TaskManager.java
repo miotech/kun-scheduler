@@ -179,7 +179,11 @@ public class TaskManager {
         List<TaskAttempt> taskAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
         logger.debug("fetch satisfy taskAttempt size = {}", taskAttemptList.size());
         for (TaskAttempt taskAttempt : taskAttemptList) {
-            executor.submit(taskAttempt);
+            try {
+                executor.submit(taskAttempt);
+            } catch (Exception e) {
+                logger.warn("submit taskAttempt to executor failed", e);
+            }
         }
     }
 
