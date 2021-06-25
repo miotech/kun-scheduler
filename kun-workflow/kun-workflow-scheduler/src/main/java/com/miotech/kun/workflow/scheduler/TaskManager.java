@@ -68,7 +68,12 @@ public class TaskManager {
                 .map(this::createTaskAttempt).collect(Collectors.toList());
         logger.debug("TaskAttempts saved. total={}", taskAttempts.size());
         save(taskAttempts);
-        submitSatisfyTaskAttemptToExecutor();
+        try {
+            submitSatisfyTaskAttemptToExecutor();
+        } catch (Throwable e) {
+            logger.warn("Something went wrong", e);
+        }
+
     }
 
     /**
@@ -88,7 +93,12 @@ public class TaskManager {
             logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
             save(Arrays.asList(taskAttempt));
             updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED);
-            submitSatisfyTaskAttemptToExecutor();
+            try {
+                submitSatisfyTaskAttemptToExecutor();
+            } catch (Throwable e) {
+                logger.warn("Something went wrong", e);
+            }
+
             return true;
         } catch (Exception e) {
             logger.error("Failed to re-run taskrun with id = {} due to exceptions.", taskRun.getId());
