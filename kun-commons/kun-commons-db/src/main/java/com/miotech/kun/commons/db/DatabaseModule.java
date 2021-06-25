@@ -14,6 +14,8 @@ public class DatabaseModule extends AbstractModule {
     @Provides
     public DataSource createDataSource(Props props) {
         HikariConfig config = new HikariConfig();
+        config.setMinimumIdle(props.getInt("datasource.minimumIdle", 10));
+        config.setMaximumPoolSize(props.getInt("datasource.maxPoolSize", 10));
         config.setJdbcUrl(props.get("datasource.jdbcUrl"));
         config.setUsername(props.get("datasource.username"));
         config.setPassword(props.get("datasource.password"));
