@@ -18,7 +18,7 @@ public class KubernetesExecutor implements Executor {
     private final AbstractQueueManager kubernetesResourceManager;//管理kubernetes资源配额
 
     @Inject
-    public KubernetesExecutor(PodLifeCycleManager podLifeCycleManager, KubernetesResourceManager kubernetesResourceManager) {
+    public KubernetesExecutor(WorkerLifeCycleManager podLifeCycleManager, KubernetesResourceManager kubernetesResourceManager) {
         this.podLifeCycleManager = podLifeCycleManager;
         this.kubernetesResourceManager = kubernetesResourceManager;
     }

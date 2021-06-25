@@ -192,6 +192,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                     TaskAttempt taskAttempt = queueManager.take();
                     if (taskAttempt == null) {
                         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
+                        continue;
                     }
                     logger.debug("take taskAttempt = {} from queue = {}", taskAttempt.getId(), taskAttempt.getQueueName());
                     executeTaskAttempt(taskAttempt);
