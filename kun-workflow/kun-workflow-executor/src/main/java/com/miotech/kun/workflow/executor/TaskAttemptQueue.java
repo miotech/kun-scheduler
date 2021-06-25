@@ -11,7 +11,8 @@ import java.util.*;
 
 public class TaskAttemptQueue {
     private Queue<TaskAttempt> queue;
-    private final ResourceQueue resourceQueue;;//队列资源容量
+    private final ResourceQueue resourceQueue;
+    ;//队列资源容量
     private String name;
     private static Logger logger = LoggerFactory.getLogger(LocalTaskAttemptQueue.class);
 
@@ -47,7 +48,10 @@ public class TaskAttemptQueue {
 
     }
 
-    public synchronized void add(TaskAttempt taskAttempt) {
+    public synchronized void add(TaskAttempt taskAttempt) throws IllegalStateException {
+        if (containsAttempt(taskAttempt)) {
+            throw new IllegalStateException("taskAttemptId = " + taskAttempt.getId() + "has been submit to queue = " + taskAttempt.getQueueName());
+        }
         queue.add(taskAttempt);
         logger.debug("queue = {} has {} taskAttempt in queue", getName(), getSize());
     }

@@ -132,6 +132,10 @@ public abstract class AbstractQueueManager {
         }
     }
 
+    public Integer getQueuedNum(String queueName){
+        return queueMap.get(queueName).getSize();
+    }
+
     public abstract boolean hasCapacity(TaskAttemptQueue taskAttemptQueue);
 
     public abstract ResourceQueue createResourceQueue(ResourceQueue resourceQueue);

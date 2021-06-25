@@ -63,7 +63,7 @@ public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
 
     @Override
     public List<WorkerInstance> getRunningWorker() {
-        return null;
+        return workerMonitor.allRegister();
     }
 
     public void markDone(Long taskAttemptId) {
