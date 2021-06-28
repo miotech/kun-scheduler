@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS kun_mt_dataset_lifecycle (
 
 -- Table Definition
 CREATE TABLE IF NOT EXISTS kun_mt_dataset_snapshot (
-    id bigint PRIMARY KEY,
+    id bigserial PRIMARY KEY,
     "dataset_gid" int8 NOT NULL,
     "schema_snapshot" jsonb,
     "statistics_snapshot" jsonb,
@@ -269,8 +269,6 @@ create table if not exists kun_mt_datasource_type_fields
 CREATE INDEX IF NOT EXISTS index_snapshot_dataset_gid_schema_at ON kun_mt_dataset_snapshot (dataset_gid, schema_at);
 
 CREATE INDEX IF NOT EXISTS index_snapshot_dataset_gid_statistics_at ON kun_mt_dataset_snapshot (dataset_gid, statistics_at);
-
-CREATE UNIQUE INDEX IF NOT EXISTS kun_mt_dataset_snapshot_pkey ON kun_mt_dataset_snapshot (id);
 
 CREATE UNIQUE INDEX IF NOT EXISTS kun_mt_dataset_bak_pkey ON kun_mt_dataset (gid);
 
