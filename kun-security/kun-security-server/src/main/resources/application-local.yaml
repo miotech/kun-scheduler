@@ -29,8 +29,8 @@ spring:
         enable: ${SECURITY_OAUTH2_CLIENT_ENABLE:false}
         registration:
           okta:
-            client-id: ***REMOVED***
-            client-secret: ***REMOVED***
+            client-id: ${SECURITY_OAUTH2_CLIENT_ID}
+            client-secret: ${SECURITY_OAUTH2_CLIENT_SECRET}
             redirect-uri: http://localhost:9801/sso
         provider:
           okta:
