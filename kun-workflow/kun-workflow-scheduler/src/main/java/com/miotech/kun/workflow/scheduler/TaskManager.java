@@ -143,10 +143,6 @@ public class TaskManager {
             post(event.getAttemptId(), event);
         }
 
-        @Subscribe
-        public void onReceive(TaskAttemptCreatedEvent event) {
-            post(event.getTimestamp(), event);
-        }
     }
 
     private class StatusChangeEventConsumer extends EventConsumer<Long, Event> {
