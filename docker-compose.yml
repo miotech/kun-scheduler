@@ -12,14 +12,14 @@ services:
       - ./data/postgres/data:/var/lib/postgresql/data
       - ./docker_init_db.sql:/docker-entrypoint-initdb.d/docker_init_db.sql
     ports:
-      - 15432:${DB_PG_PORT}
+      - ${DB_PG_PORT}
   kun-redis:
     image: "redis:6.0.8"
     restart: always
     volumes:
       - ./data/redis/data:/data
     ports:
-      - 16379:${DB_REDIS_PORT}
+      - ${DB_REDIS_PORT}
   kun-neo4j:
     image: "neo4j:3.5.22"
     environment:
@@ -29,9 +29,9 @@ services:
     volumes:
       - ./data/neo4j/data:/data
     ports:
-      - 17687:${DB_NEO4J_PORT}
+      - ${DB_NEO4J_PORT}
   kun-security:
-    image: "${IMAGE_REMOTE_ORG}kun-security:master"
+    image: "${IMAGE_REMOTE_ORG}kun-security:${KUN_VERSION}"
     environment:
       TZ:
       APP_CONFIG_ENV:
@@ -45,12 +45,12 @@ services:
     volumes:
       - ./logs/kun-security:/server/target/kun-security-logs/:z
     ports:
-      - ${SECURITY_PORT}:${SECURITY_PORT}
+      - ${SECURITY_PORT}
     depends_on:
       - kun-postgres
       - kun-neo4j
   kun-infra:
-    image: "${IMAGE_REMOTE_ORG}kun-infra:master"
+    image: "${IMAGE_REMOTE_ORG}kun-infra:${KUN_VERSION}"
     environment:
       TZ:
       APP_CONFIG_ENV:
@@ -70,13 +70,13 @@ services:
       - ./data/kun-infra/data:/data
       - ./logs/kun-infra:/server/target/kun-infra-logs/:z
     ports:
-      - ${KUN_INFRA_PORT}:${KUN_INFRA_PORT}
+      - ${KUN_INFRA_PORT}
     depends_on:
       - kun-postgres
       - kun-neo4j
       - kun-redis
   kun-app:
-    image: "${IMAGE_REMOTE_ORG}kun-app:master"
+    image: "${IMAGE_REMOTE_ORG}kun-app:${KUN_VERSION}"
     environment:
       TZ:
       APP_CONFIG_ENV:
@@ -96,11 +96,11 @@ services:
     volumes:
       - ./logs/kun-app:/server/target/kun-app-logs/:z
     ports:
-      - ${KUN_APP_PORT}:${KUN_APP_PORT}
+      - ${KUN_APP_PORT}
     depends_on:
       - kun-infra
   kun-frontend:
-    image: "${IMAGE_REMOTE_ORG}kun-frontend:master"
+    image: "${IMAGE_REMOTE_ORG}kun-frontend:${KUN_VERSION}"
     environment:
       TZ:
       SECURITY_HOST:
@@ -111,6 +111,6 @@ services:
       KUN_APP_PORT:
     restart: always
     ports:
-      - 8080:80
+      - ${LISTEN_PORT-8080}:80
     depends_on:
       - kun-app
