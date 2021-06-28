@@ -55,12 +55,16 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
 
   /* Is it a SQL task? If true, then dry run should display table of SQL query results instead of run logs */
   const isSQLTask: boolean = useMemo(() => {
-    // TODO: remove this line of hard code
+    // TODO: reconsider how to implement this after we figure out how to run SQL code line-by-line with thrift server.
+    return false;
+    /*
     if (initTaskDefinition?.taskTemplateName === 'SparkSQL') {
       return true;
     }
     // else
     return false;
+    */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     initTaskDefinition,
   ]);
