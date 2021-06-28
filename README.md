@@ -1,9 +1,9 @@
 <p align="center">
-    <img style="transform: scale(0.8)" src="https://raw.githubusercontent.com/miotech/KUN/master/docs/static/img/github_bg.png">
+    <img style="transform: scale(0.8)" src="docs/static/img/github_bg.png">
 </p>
 
 <div align="center">
-    <p>(If you are Chinese user, please read <a href="https://github.com/miotech/KUN/blob/master/README_zh_cn.md">中文文档</a>)</p>
+    <p>(If you are Chinese user, please read <a href="README_zh_cn.md">中文文档</a>)</p>
 </div>
 
 # Intro
