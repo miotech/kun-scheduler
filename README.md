@@ -1,110 +1,55 @@
-# KUN
+<p align="center">
+    <img style="transform: scale(0.8)" src="https://raw.githubusercontent.com/miotech/KUN/master/docs/static/img/github_bg.png">
+</p>
 
-### Build a single source of trust with a simple and powerful data governance platform.
+<div align="center">
+    <p>(If you are Chinese user, please read <a href="https://github.com/miotech/KUN/blob/master/README_zh_cn.md">中文文档</a>)</p>
+</div>
 
-Kun is a open source data governance platform.
+# Intro
 
-## Quick Start
-The easiest way to set up KUN is use docker-compose.
-1. Enter project directory.
-``` bash
-cd KUN
+*Kun-scheduler* is a task scheduler specific to data engineering which takes care of both data and metadata. It can collect, organize, analyze and monitor various metadata (including storage, table, schema, data lineage, data usage, etc) for you, and unleash the full power of your Cloud-Native Data Lake.
+
+*Kun-scheduler* aims as follows:
+
+- Schedule and execute complex data pipelines and DAGs.
+- Collect various datasource's metadata, including table name, column name, schema, last updated timestamp, row count, non-null ratio, etc.
+- Generate data lineage by inspecting data tasks and pipelines.
+- Event-driven data sanity check.
+- Monitor task status and alert on task failure.
+- Support data backfilling.
+
+# Get Started
+## Running kun-scheduler in Docker
+
+The fastest way to start *kun-scheduler* is using Docker Compose. Make sure you have Docker and Docker Compose installed, and they meet the minimum required version.
+
+```
+Docer >= v17.03
+Docker Compose >= v1.27.0
 ```
 
-2. If you want to use docker image from dockerhub, change `.env` file setting:
+Then you can start *kun-scheduler* with following commands
+
 ```
-IMAGE_REMOTE_ORG=miotechoss/ 
-```
-or you can build image from local Dockerfile in each module:
- - kun-data-discovery
-```bash
-./gradlew kun-data-discovery:bootJar
-cd kun-data-discovery
-docker build -t kun-data-discovery:master -f Dockerfile .
-cd -
-```
- - kun-data-dashboard
-```bash
-./gradlew kun-data-dashboard:bootJar
-cd kun-data-dashboard
-docker build -t kun-data-dashboard:master -f Dockerfile .
-cd -
-```
- - kun-data-platform
-```bash
-./gradlew kun-data-platform:kun-data-platform-web:bootJar
-cd kun-data-platform
-docker build -t kun-data-platform:master -f Dockerfile .
-cd -
-```
- - kun-frontend
-```bash
-./gradlew kun-frontend:yarnBuild
-cd kun-data-discovery
-docker build -t kun-frontend:master -f Dockerfile .
-cd -
-```
- - kun-metadata
-```bash
-./gradlew kun-metadata:shadowJar
-cd kun-data-metadata
-docker build -t kun-metadata:master -f Dockerfile .
-cd -
-```
- - kun-workflow
-```bash
-./gradlew kun-workflow:shadowJar
-cd kun-workflow
-docker build -t kun-workflow:master -f Dockerfile .
-cd -
-```
- - kun-security
-```bash
-./gradlew kun-security:kun-security-server:bootJar
-cd kun-security
-docker build -t kun-security:master -f Dockerfile .
-cd -
-```
-3. Use docker-compose command to set up KUN, including all the modules above.
-```
+curl -LfO 'https://raw.githubusercontent.com/miotech/kun-scheduler/master/dist/kun-scheduler-0.7.0-rc1.tar.gz'
+tar xf kun-scheduler-0.7.0-rc1.tar.gz
+cd kun-scheduler
 docker-compose up
 ```
-4. Visit http://localhost:9801  
- - username: admin
- - password: admin
 
-## Usage
-1. Config Data storage and computation engine
-2. Setup User Access Management
-3. Setup Data discovery
-4. Setup Data Quality
-5. Write a Hello World Pipeline
-5. Good to go!
+The bootstrap of *kun-scheduler* is a bit slow so please wait some minutes patiently. You should see below message when the bootstrap is complete.
 
-## Contributing
-We open source Kun because it solve our own data management problem. We hope the other organizations can benefit from the project as well. We are thankful for any contributions from the community.
+```
+kun-app_1 ... c.miotech.kun.webapp.WebApplicationMain  : Started WebApplicationMain in 28.392 seconds
+```
 
-### [Code of Conduct](CODE_OF_CONDUCT.md)
+Now you can access *kun-scheduler* web console via the url `http://localhost:8080/`. You may use the default username `admin` and password `admin` to login.
 
-We are very serious about the code of conduct. Please read the full text so that you can understand what actions will and will not be tolerated.
+### Trouble Shooting
 
-# Contact
+If you found a mysterious error message `Killed` in bootstrap, it is caused by the memory limit of docker, you need to change the configuration. Please refer to [this post](https://stackoverflow.com/questions/44417159/docker-process-killed-with-cryptic-killed-message).
 
-We have a few channels for contact:
-* Wechat Group
-* Wechat Account
-* Twitter
-* Facebook Page
+# Tutorial
 
-
-# Contributors
-This project exists thanks to all the people who contribute.
-
-# Sponsors
-
-## Miotech
-## ...
-## ...
-
-## License
-[Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0)
+Coming soon...
