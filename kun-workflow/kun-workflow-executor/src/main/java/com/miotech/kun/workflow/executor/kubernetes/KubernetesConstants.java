@@ -10,5 +10,6 @@ public class KubernetesConstants {
     public static final String MEMORY_REQUEST = "256";
     public static final String IMAGE_PULL_POLICY = "Always";
     public static final String POD_IMAGE_NAME = "kunoperator";
+    public static final String TASK_QUEUE = "task_queue";
 
 }

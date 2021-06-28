@@ -7,7 +7,7 @@ import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.executor.local.QueueManage;
-import com.miotech.kun.workflow.executor.local.TaskAttemptQueue;
+import com.miotech.kun.workflow.executor.local.LocalTaskAttemptQueue;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import org.joor.Reflect;
@@ -49,7 +49,7 @@ public class QueueManageTest extends GuiceTestBase {
         queueManage.submit(taskAttempt1);
         queueManage.submit(taskAttempt2);
         queueManage.submit(taskAttempt3);
-        TaskAttemptQueue attemptQueue = queueManage.getTaskAttemptQueue("default");
+        LocalTaskAttemptQueue attemptQueue = queueManage.getTaskAttemptQueue("default");
         Queue queue = Reflect.on(attemptQueue).field("queue").get();
         Object[] attempts = queue.toArray();
         assertThat(((TaskAttempt) attempts[0]).getId(), is(taskAttempt2.getId()));
@@ -79,7 +79,7 @@ public class QueueManageTest extends GuiceTestBase {
         queueManage.submit(taskAttempt3);
 
         //verify
-        TaskAttemptQueue attemptQueue = queueManage.getTaskAttemptQueue("default");
+        LocalTaskAttemptQueue attemptQueue = queueManage.getTaskAttemptQueue("default");
         assertThat(attemptQueue.take().getId(), is(taskAttempt1.getId()));
         queueManage.release("default", taskAttempt1.getId());
         Task task4 = MockTaskFactory.createTask();
