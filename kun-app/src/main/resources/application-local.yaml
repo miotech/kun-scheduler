@@ -80,7 +80,7 @@ notify:
 
   zhongda:
     host: http://zhongda.miotech.com:8000
-    token: ***REMOVED***
+    token: ${NOTIFY_ZHONGDA_TOKEN:}
     notify-group: ${NOTIFY_ZHONGDA_GROUP:kun}
 
 data-dashboard:
