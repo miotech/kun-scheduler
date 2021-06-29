@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.testing.factory;
 
+import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -30,5 +31,11 @@ public class MockTaskAttemptFactory {
                 .withQueueName(taskRun.getQueueName())
                 .withPriority(taskRun.getPriority())
                 .build();
+    }
+
+    public static TaskAttempt createTaskAttemptWithQueueName(String queueName){
+        Task task = MockTaskFactory.createTask(queueName);
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        return createTaskAttempt(taskRun);
     }
 }
