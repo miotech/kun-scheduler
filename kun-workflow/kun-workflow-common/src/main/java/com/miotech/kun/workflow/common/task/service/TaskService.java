@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.common.task.service;
 
+import com.cronutils.model.Cron;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,12 +23,14 @@ import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -352,6 +355,7 @@ public class TaskService {
 
     private Task convertTaskPropsVoToTask(TaskPropsVO vo) {
         Config config = parseConfig(vo);
+        validateScheduleConf(vo.getScheduleConf());
         return Task.newBuilder()
                 .withName(vo.getName())
                 .withDescription(vo.getDescription())
@@ -363,6 +367,20 @@ public class TaskService {
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
                 .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
                 .build();
+    }
+
+    private void validateScheduleConf(ScheduleConf conf) {
+        if (!conf.getType().equals(ScheduleType.NONE)) {
+            Cron cron = CronUtils.convertStringToCron(conf.getCronExpr());
+            CronUtils.validateCron(cron);
+            Optional<OffsetDateTime> nextExecutionTimeFromNow = CronUtils.getNextExecutionTimeFromNow(cron);
+            if (!nextExecutionTimeFromNow.isPresent()) {
+                throw new IllegalArgumentException("");
+            }
+            if (nextExecutionTimeFromNow.get().getSecond() != 0) {
+                throw new IllegalArgumentException("kun not support second-scheduler currently");
+            }
+        }
     }
 
     private void validateTaskIntegrity(Task task) {
