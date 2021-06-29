@@ -90,7 +90,7 @@
     "dayjs": "^1.8.36",
     "debug": "^4.1.1",
     "file-saver": "^2.0.5",
-    "immer": "^6.0.5",
+    "immer": "^8.0.1",
     "kld-affine": "^2.1.1",
     "kld-intersections": "^0.7.0",
     "lint-staged": "^10.0.7",
