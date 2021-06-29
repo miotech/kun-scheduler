@@ -78,7 +78,7 @@
     "@wry/equality": "^0.1.11",
     "ahooks": "^2.3.0",
     "antd": "^4.8.2",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "clipboard-polyfill": "^3.0.1",
     "clsx": "^1.1.1",
     "codemirror": "^5.55.0",
