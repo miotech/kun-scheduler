@@ -90,8 +90,10 @@ public class KubernetesQueueManagerTest extends DatabaseTestBase {
 
     @Test
     public void testSubmit_under_limit_run_immediately() {
-        TaskAttempt taskAttempt1 = prepareAttempt();
-        TaskAttempt taskAttempt2 = prepareAttempt();
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt();
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt();
+        saveAttempt(taskAttempt1);
+        saveAttempt(taskAttempt2);
         executor.submit(taskAttempt1);
         executor.submit(taskAttempt2);
 
@@ -118,9 +120,12 @@ public class KubernetesQueueManagerTest extends DatabaseTestBase {
 
     @Test
     public void testSubmit_over_limit() {
-        TaskAttempt taskAttempt1 = prepareAttempt();
-        TaskAttempt taskAttempt2 = prepareAttempt();
-        TaskAttempt taskAttempt3 = prepareAttempt();
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt();
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt();
+        TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt();
+        saveAttempt(taskAttempt1);
+        saveAttempt(taskAttempt2);
+        saveAttempt(taskAttempt3);
         executor.submit(taskAttempt1);
         executor.submit(taskAttempt2);
         executor.submit(taskAttempt3);
@@ -131,7 +136,7 @@ public class KubernetesQueueManagerTest extends DatabaseTestBase {
 
         assertTaskQueueing(taskAttempt3);
 
-        assertThat(workerLifeCycleManager.getRunningWorker().size(),is(2));
+        assertThat(workerLifeCycleManager.getRunningWorker().size(), is(2));
         workerLifeCycleManager.markDone(taskAttempt1.getId());
 
         //wait attempt3 start
@@ -139,7 +144,7 @@ public class KubernetesQueueManagerTest extends DatabaseTestBase {
         workerLifeCycleManager.markDone(taskAttempt3.getId());
         //verify
         TaskAttempt savedAttempt3 = taskRunDao.fetchAttemptById(taskAttempt3.getId()).get();
-        assertThat(savedAttempt3.getStatus(),is(TaskRunStatus.SUCCESS));
+        assertThat(savedAttempt3.getStatus(), is(TaskRunStatus.SUCCESS));
 
     }
 
@@ -150,13 +155,15 @@ public class KubernetesQueueManagerTest extends DatabaseTestBase {
         Uninterruptibles.sleepUninterruptibly(1, TimeUnit.SECONDS);
         //still in queue
         TaskAttempt saved = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
-        assertThat(saved.getStatus(),is(TaskRunStatus.QUEUED));
+        assertThat(saved.getStatus(), is(TaskRunStatus.QUEUED));
     }
 
     @Test
     public void testSubmit_multiple_queues() {
-        TaskAttempt taskAttempt1 = prepareAttempt();
-        TaskAttempt taskAttempt2 = prepareAttempt("test");
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt();
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttemptWithQueueName("test");
+        saveAttempt(taskAttempt1);
+        saveAttempt(taskAttempt2);
         executor.submit(taskAttempt1);
         executor.submit(taskAttempt2);
 
@@ -185,9 +192,12 @@ public class KubernetesQueueManagerTest extends DatabaseTestBase {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    TaskAttempt taskAttempt1 = prepareAttempt();
-                    TaskAttempt taskAttempt2 = prepareAttempt();
-                    TaskAttempt taskAttempt3 = prepareAttempt();
+                    TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt();
+                    TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt();
+                    TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt();
+                    saveAttempt(taskAttempt1);
+                    saveAttempt(taskAttempt2);
+                    saveAttempt(taskAttempt3);
                     executor.submit(taskAttempt1);
                     executor.submit(taskAttempt2);
                     executor.submit(taskAttempt3);
@@ -294,18 +304,10 @@ public class KubernetesQueueManagerTest extends DatabaseTestBase {
     }
 
 
-    private TaskAttempt prepareAttempt() {
-        return prepareAttempt("default");
-    }
-
-    private TaskAttempt prepareAttempt(String queueName) {
-        Task task = MockTaskFactory.createTask().cloneBuilder().withQueueName(queueName).build();
-        taskDao.create(task);
-        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
-        taskRunDao.createTaskRun(taskRun);
-        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+    private void saveAttempt(TaskAttempt taskAttempt) {
+        taskDao.create(taskAttempt.getTaskRun().getTask());
+        taskRunDao.createTaskRun(taskAttempt.getTaskRun());
         taskRunDao.createAttempt(taskAttempt);
-        return taskAttempt;
     }
 
 
