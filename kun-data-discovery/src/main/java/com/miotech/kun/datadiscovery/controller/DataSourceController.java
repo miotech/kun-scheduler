@@ -2,8 +2,13 @@ package com.miotech.kun.datadiscovery.controller;
 
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
-import com.miotech.kun.datadiscovery.model.bo.*;
-import com.miotech.kun.datadiscovery.model.entity.*;
+import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
+import com.miotech.kun.datadiscovery.model.bo.DataSourceRequest;
+import com.miotech.kun.datadiscovery.model.bo.DataSourceSearchRequest;
+import com.miotech.kun.datadiscovery.model.entity.DataSource;
+import com.miotech.kun.datadiscovery.model.entity.DataSourceBasicPage;
+import com.miotech.kun.datadiscovery.model.entity.DataSourcePage;
+import com.miotech.kun.datadiscovery.model.entity.DataSourceType;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
 import com.miotech.kun.datadiscovery.service.DataSourceService;
 import com.miotech.kun.datadiscovery.service.DatasetFieldService;
@@ -17,7 +22,6 @@ import org.springframework.web.bind.annotation.*;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 /**
  * @author: Melo
@@ -88,58 +92,6 @@ public class DataSourceController {
     @GetMapping("/metadata/datasource/types")
     public RequestResult<List<DataSourceType>> getDataSourceTypes() {
         return RequestResult.success(dataSourceService.getAllTypes());
-    }
-
-    @GetMapping("/metadata/databases")
-    public RequestResult<List<Database>> getDatabases(DatabaseRequest request) {
-        return RequestResult.success(datasetService.getDatabases(request));
-    }
-
-    @GetMapping("/metadata/datasets/search")
-    public RequestResult<DatasetBasicPage> searchDatasets(BasicSearchRequest basicSearchRequest) {
-        return RequestResult.success(datasetService.search(basicSearchRequest));
-    }
-
-    @GetMapping("/metadata/datasets")
-    public RequestResult<DatasetBasicPage> getDatasets(DatasetSearchRequest searchRequests) {
-        return RequestResult.success(datasetService.search(searchRequests));
-    }
-
-    @GetMapping("/metadata/dataset/{id}")
-    public RequestResult<Dataset> getDatasetDetail(@PathVariable Long id) {
-        Dataset dataset = datasetService.find(id);
-        return RequestResult.success(dataset);
-    }
-
-    @PostMapping("/metadata/dataset/{id}/update")
-    public RequestResult<Dataset> updateDataset(@PathVariable Long id,
-                                                @RequestBody DatasetRequest datasetRequest) {
-        Dataset dataset = datasetService.update(id, datasetRequest);
-        return RequestResult.success(dataset);
-    }
-
-    @PostMapping("/metadata/dataset/{id}/pull")
-    public RequestResult<PullProcessVO> pullDataset(@PathVariable Long id) {
-        PullProcessVO vo = metadataService.pullDataset(id);
-        return RequestResult.success(vo);
-    }
-
-    @GetMapping("/metadata/dataset/{id}/pull/latest")
-    public RequestResult<PullProcessVO> getDatasetLatestPullProcess(@PathVariable Long id) {
-        Optional<PullProcessVO> voOptional = metadataService.fetchLatestPullProcessForDataset(id);
-        return RequestResult.success(voOptional.orElse(null));
-    }
-
-    @GetMapping("/metadata/dataset/{id}/columns")
-    public RequestResult<DatasetFieldPage> getDatasetColumns(@PathVariable Long id,
-                                                             DatasetFieldSearchRequest searchRequest) {
-        return RequestResult.success(datasetFieldService.find(id, searchRequest));
-    }
-
-    @PostMapping("/metadata/column/{id}/update")
-    public RequestResult<DatasetField> updateDatasetColumn(@PathVariable Long id,
-                                                           @RequestBody DatasetFieldRequest datasetFieldRequest) {
-        return RequestResult.success(datasetFieldService.update(id, datasetFieldRequest));
     }
 
 }
