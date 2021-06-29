@@ -30,7 +30,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -373,13 +372,6 @@ public class TaskService {
         if (!conf.getType().equals(ScheduleType.NONE)) {
             Cron cron = CronUtils.convertStringToCron(conf.getCronExpr());
             CronUtils.validateCron(cron);
-            Optional<OffsetDateTime> nextExecutionTimeFromNow = CronUtils.getNextExecutionTimeFromNow(cron);
-            if (!nextExecutionTimeFromNow.isPresent()) {
-                throw new IllegalArgumentException("");
-            }
-            if (nextExecutionTimeFromNow.get().getSecond() != 0) {
-                throw new IllegalArgumentException("kun not support second-scheduler currently");
-            }
         }
     }
 
