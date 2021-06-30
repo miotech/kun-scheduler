@@ -23,13 +23,13 @@ public class MockQueueManager extends AbstractQueueManager {
     }
 
     @Override
-    public boolean hasCapacity(TaskAttemptQueue taskAttemptQueue) {
+    public Integer getCapacity(TaskAttemptQueue taskAttemptQueue) {
         ResourceQueue limitResource = taskAttemptQueue.getResourceQueue();
         if(!map.containsKey(taskAttemptQueue.getName())){
             map.put(taskAttemptQueue.getName(),0);
-            return false;
+            return 0;
         }
-        return map.get(taskAttemptQueue.getName()) < limitResource.getWorkerNumbers();
+        return limitResource.getWorkerNumbers() - map.get(taskAttemptQueue.getName());
     }
 
     @Override
