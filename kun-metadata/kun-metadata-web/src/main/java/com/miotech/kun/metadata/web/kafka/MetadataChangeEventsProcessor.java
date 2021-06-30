@@ -50,7 +50,7 @@ public class MetadataChangeEventsProcessor extends EventProcessor {
         while (true) {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
             records.forEach(record -> {
-                logger.debug("topic = {}, value = {}", record.topic(), record.value());
+                logger.debug("topic = {}, value = {}, offset = {}", record.topic(), record.value(), record.offset());
                 try {
                     MetadataChangeEvent mce = JSONUtils.jsonToObject(record.value(), MetadataChangeEvent.class);
 
