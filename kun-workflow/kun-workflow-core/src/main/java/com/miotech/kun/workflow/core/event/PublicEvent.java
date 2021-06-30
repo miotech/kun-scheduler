@@ -1,12 +1,14 @@
 package com.miotech.kun.workflow.core.event;
 
-public class PublicEvent extends Event{
-
-    public PublicEvent(long timestamp){
+/**
+ * A public event should be delivered to external systems.
+ */
+public class PublicEvent extends Event {
+    public PublicEvent(long timestamp) {
         super(timestamp);
     }
 
-    public PublicEvent(){
+    public PublicEvent() {
         super();
     }
 }
