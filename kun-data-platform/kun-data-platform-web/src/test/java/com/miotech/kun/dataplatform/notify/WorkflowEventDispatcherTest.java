@@ -12,6 +12,7 @@ import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
 import com.miotech.kun.dataplatform.notify.userconfig.WeComNotifierUserConfig;
 import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.EventReceiver;
+import com.miotech.kun.workflow.core.event.PrivateEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.publish.EventSubscriber;
@@ -116,7 +117,7 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
     /**
      * A dummy mock event type to test response of listener (expect to take no effect)
      */
-    private static class RandomMockEvent extends Event {
+    private static class RandomMockEvent extends PrivateEvent {
     }
 
     private void prepareTaskNotifyConfig(Long taskId, TaskStatusNotifyTrigger triggerType) {
