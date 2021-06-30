@@ -679,12 +679,12 @@ public class DataQualityRepository extends BaseRepository {
         if(datasetIds.isEmpty())
             return new ArrayList<>();
 
-        String sql = "select id from kun_dq_case where primary_dataset_id in " + toColumnSql(datasetIds.size());
+        String sql = "select distinct(case_id) from kun_dq_case_associated_dataset where dataset_id in " + toColumnSql(datasetIds.size());
 
         return jdbcTemplate.query(sql, rs -> {
             List<Long> caseIds = new ArrayList<>();
             while (rs.next()) {
-                Long caseId = rs.getLong("id");
+                Long caseId = rs.getLong("case_id");
                 caseIds.add(caseId);
             }
             return caseIds;
