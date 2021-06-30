@@ -45,7 +45,7 @@ public class MetadataStatisticsEventsProcessor extends EventProcessor {
         while (true) {
             ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(1000));
             records.forEach(record -> {
-                logger.debug("topic = {}, value = {}", record.topic(), record.value());
+                logger.debug("topic = {}, value = {}, offset = {}", record.topic(), record.value(), record.offset());
                 try {
                     MetadataStatisticsEvent mse = JSONUtils.jsonToObject(record.value(), MetadataStatisticsEvent.class);
 
