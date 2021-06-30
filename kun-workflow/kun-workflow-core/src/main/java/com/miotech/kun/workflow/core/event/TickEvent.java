@@ -2,7 +2,7 @@ package com.miotech.kun.workflow.core.event;
 
 import com.miotech.kun.workflow.core.model.common.Tick;
 
-public class TickEvent extends Event {
+public class TickEvent extends PrivateEvent {
     private final Tick tick;
 
     public TickEvent(Tick tick) {
