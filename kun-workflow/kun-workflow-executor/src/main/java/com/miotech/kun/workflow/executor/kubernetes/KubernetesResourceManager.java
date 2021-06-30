@@ -29,21 +29,21 @@ public class KubernetesResourceManager extends AbstractQueueManager {
     }
 
     @Override
-    public boolean hasCapacity(TaskAttemptQueue taskAttemptQueue) {
+    public Integer getCapacity(TaskAttemptQueue taskAttemptQueue) {
         ResourceQueue limitResource = taskAttemptQueue.getResourceQueue();
         ResourceQueue usedResource = getUsedResource(taskAttemptQueue.getName());
         logger.debug("queue = {},has {} running pod ,limit = {}", taskAttemptQueue.getName(), usedResource.getWorkerNumbers(), limitResource.getWorkerNumbers());
-        return usedResource.getWorkerNumbers() < limitResource.getWorkerNumbers();
+        return limitResource.getWorkerNumbers() - usedResource.getWorkerNumbers() ;
     }
 
     @Override
     public ResourceQueue createResourceQueue(ResourceQueue resourceQueue) {
-        throw new IllegalStateException("kubernetes executor not support create resource queue currently");
+        throw new UnsupportedOperationException("kubernetes executor not support create resource queue currently");
     }
 
     @Override
     public ResourceQueue updateResourceQueue(ResourceQueue resourceQueue) {
-        throw new IllegalStateException("kubernetes executor not support update resource queue currently");
+        throw new UnsupportedOperationException("kubernetes executor not support update resource queue currently");
     }
 
     private ResourceQueue getUsedResource(String queueName) {

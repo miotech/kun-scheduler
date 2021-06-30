@@ -109,14 +109,17 @@ public abstract class AbstractQueueManager {
         }
     }
 
-    public TaskAttempt take() {
+    public List<TaskAttempt> drain() {
+        List<TaskAttempt> readyTaskAttemptList = new ArrayList<>();
         for (Map.Entry<String, TaskAttemptQueue> entry : queueMap.entrySet()) {
             TaskAttemptQueue queue = entry.getValue();
-            if (!queue.isEmpty() && hasCapacity(queue)) {
-                return queue.take();
+            Integer capacity = getCapacity(queue);
+            while (capacity > 0 && !queue.isEmpty()) {
+                readyTaskAttemptList.add(queue.take());
+                capacity--;
             }
         }
-        return null;
+        return readyTaskAttemptList;
     }
 
     public void changePriority(long taskAttemptId, String queueName, TaskPriority priority) {
@@ -132,11 +135,11 @@ public abstract class AbstractQueueManager {
         }
     }
 
-    public Integer getQueuedNum(String queueName){
+    public Integer getQueuedNum(String queueName) {
         return queueMap.get(queueName).getSize();
     }
 
-    public abstract boolean hasCapacity(TaskAttemptQueue taskAttemptQueue);
+    public abstract Integer getCapacity(TaskAttemptQueue taskAttemptQueue);
 
     public abstract ResourceQueue createResourceQueue(ResourceQueue resourceQueue);
 

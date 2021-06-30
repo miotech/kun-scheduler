@@ -8,7 +8,7 @@ import java.util.List;
 
 public interface LifeCycleManager {
     public void start(TaskAttempt taskAttempt);
-    public WorkerInstance stop(Long taskAttemptId);
+    public void stop(Long taskAttemptId);
     public WorkerSnapshot get(Long taskAttemptId);
     public List<WorkerInstance> getRunningWorker();
 }
