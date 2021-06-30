@@ -229,6 +229,7 @@ public class TaskManager {
             while (true) {
                 try {
                     List<TaskRunReadyCheckEvent> eventList = new ArrayList<>();
+                    taskRunReadyCheckEventQueue.take();
                     taskRunReadyCheckEventQueue.drainTo(eventList);
                     if (eventList.size() > 0) {
                         submitSatisfyTaskAttemptToExecutor();
