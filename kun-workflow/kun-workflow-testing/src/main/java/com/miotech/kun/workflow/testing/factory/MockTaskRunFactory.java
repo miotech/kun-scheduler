@@ -80,7 +80,7 @@ public class MockTaskRunFactory {
                     .withDependentTaskRunIds(selectItems(ids, edges.get(i)))
                     .withInlets(Collections.emptyList())
                     .withOutlets(Collections.emptyList())
-                    .withStatus(null)
+                    .withStatus(TaskRunStatus.CREATED)
                     .withScheduledTick(tick)
                     .withStartAt(null)
                     .withEndAt(null)

@@ -19,6 +19,7 @@ import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.slf4j.Logger;
@@ -150,18 +151,18 @@ public class TaskSpawner implements InitializingBean {
     private List<TaskRun> createTaskRuns(List<Task> tasks, Tick tick, TaskRunEnv env) {
         List<TaskRun> results = new ArrayList<>(tasks.size());
         for (Task task : tasks) {
-            List<Long> upstreamTaskRunIds = resolveDependencies(task, tick, results);
-            if (task.getDependencies().size() > upstreamTaskRunIds.size()) {
+            List<TaskRun> upstreamTaskRun = resolveDependencies(task, tick, results);
+            if (task.getDependencies().size() > upstreamTaskRun.size()) {
                 logger.error("dependency not satisfy, taskId = {}", task.getId());
                 continue;
             }
             try {
                 if (tick == SpecialTick.NULL) {
-                    results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRunIds));
+                    results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun));
                 } else {
                     TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
                     if (taskRun == null) {
-                        results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRunIds));
+                        results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun));
                     } else {
                         results.add(taskRun);
                     }
@@ -175,7 +176,7 @@ public class TaskSpawner implements InitializingBean {
     }
 
 
-    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<Long> upstreamTaskRunIds) {
+    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> upstreamTaskRuns) {
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         Config config = prepareConfig(task, task.getConfig(), runtimeConfig);
         ScheduleType scheduleType = task.getScheduleConf().getType();
@@ -183,6 +184,8 @@ public class TaskSpawner implements InitializingBean {
             tick = SpecialTick.NULL.toTick();
             scheduleType = ScheduleType.NONE;
         }
+
+        List<Long> upstreamTaskRunIds = upstreamTaskRuns.stream().map(TaskRun::getId).collect(Collectors.toList());
         TaskRun taskRun = TaskRun.newBuilder()
                 .withId(taskRunId)
                 .withTask(task)
@@ -192,12 +195,23 @@ public class TaskSpawner implements InitializingBean {
                 .withQueueName(task.getQueueName())
                 .withPriority(task.getPriority())
                 .withDependentTaskRunIds(upstreamTaskRunIds)
+                .withStatus(resolveTaskRunUpstreamStatus(upstreamTaskRuns))
                 .build();
         logger.debug("TaskRun is created successfully TaskRun={}, Task={}, Tick={}.", taskRun, task, tick);
         return taskRun;
     }
 
-    private List<Long> resolveDependencies(Task task, Tick tick, List<TaskRun> others) {
+    private TaskRunStatus resolveTaskRunUpstreamStatus(List<TaskRun> upstreamTaskRuns) {
+        for (TaskRun upstreamTaskRun : upstreamTaskRuns) {
+            if (upstreamTaskRun.getStatus().isFailure()
+                    || upstreamTaskRun.getStatus().equals(TaskRunStatus.UPSTREAM_FAILED)) {
+                return TaskRunStatus.UPSTREAM_FAILED;
+            }
+        }
+        return TaskRunStatus.CREATED;
+    }
+
+    private List<TaskRun> resolveDependencies(Task task, Tick tick, List<TaskRun> others) {
         return task.getDependencies().stream()
                 .flatMap(dependency -> {
                     DependencyFunction depFunc = dependency.getDependencyFunction();

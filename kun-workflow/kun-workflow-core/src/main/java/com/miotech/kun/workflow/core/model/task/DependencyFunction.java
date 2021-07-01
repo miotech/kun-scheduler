@@ -6,7 +6,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import java.util.List;
 
 public interface DependencyFunction {
-    public List<Long> resolveDependency(Task self, Long upstreamTaskId, Tick tick, List<TaskRun> others);
+    public List<TaskRun> resolveDependency(Task self, Long upstreamTaskId, Tick tick, List<TaskRun> others);
 
     public String toFunctionType();
 }
