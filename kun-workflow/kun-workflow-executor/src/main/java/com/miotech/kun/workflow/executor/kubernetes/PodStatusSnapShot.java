@@ -55,8 +55,6 @@ public class PodStatusSnapShot extends WorkerSnapshot {
         switch (status) {
             case "ContainerCreating":
             case "pending":
-                taskRunStatus = TaskRunStatus.QUEUED;
-                break;
             case "running":
                 taskRunStatus = TaskRunStatus.RUNNING;
                 break;

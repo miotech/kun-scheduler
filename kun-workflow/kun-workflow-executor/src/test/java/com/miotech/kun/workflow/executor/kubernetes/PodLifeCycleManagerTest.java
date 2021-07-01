@@ -13,7 +13,6 @@ import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.core.publish.EventPublisher;
 import com.miotech.kun.workflow.executor.CommonTestBase;
@@ -184,12 +183,11 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
     @Test
     public void testGetSnapshot() {
         TaskAttempt taskAttempt = prepareAttempt();
-        WorkerInstance workerInstance = podLifeCycleManager.start(taskAttempt);
+        podLifeCycleManager.start(taskAttempt);
         awaitUntilRunning(taskAttempt.getId());
         WorkerSnapshot workerSnapshot = podLifeCycleManager.get(taskAttempt.getId());
 
         //verify
-        assertThat(workerSnapshot.getIns(), is(workerInstance));
         assertThat(workerSnapshot.getStatus(), is(TaskRunStatus.RUNNING));
     }
 

@@ -25,6 +25,7 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Triple;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -467,6 +468,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         }
     }
 
+    @Ignore
     @Test
     public void rerunTaskRun_whenConcurrentlyInvoked_shouldOnlyTakeOneEffect() throws Exception {
         // 1. Prepare

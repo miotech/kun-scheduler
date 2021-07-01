@@ -21,10 +21,13 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -46,6 +49,10 @@ public class TaskManager {
 
     private final Map<Long, Boolean> rerunningTaskRunIds = new ConcurrentHashMap<>();
 
+    private final Integer EVENT_QUEUE_SIZE = 10000;
+
+    private BlockingQueue<TaskRunReadyCheckEvent> taskRunReadyCheckEventQueue = new LinkedBlockingQueue<>(EVENT_QUEUE_SIZE);
+
 
     @Inject
     public TaskManager(Executor executor, TaskRunDao taskRunDao, EventBus eventBus, Props props) {
@@ -58,6 +65,8 @@ public class TaskManager {
 
         this.eventBus = eventBus;
         this.eventBus.register(this.eventLoop);
+        init();
+
     }
 
     /* ----------- public methods ------------ */
@@ -68,12 +77,7 @@ public class TaskManager {
                 .map(this::createTaskAttempt).collect(Collectors.toList());
         logger.debug("TaskAttempts saved. total={}", taskAttempts.size());
         save(taskAttempts);
-        try {
-            submitSatisfyTaskAttemptToExecutor();
-        } catch (Throwable e) {
-            logger.warn("Something went wrong", e);
-        }
-
+        triggerTaskRunReadyCheck();
     }
 
     /**
@@ -93,12 +97,7 @@ public class TaskManager {
             logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
             save(Arrays.asList(taskAttempt));
             updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED);
-            try {
-                submitSatisfyTaskAttemptToExecutor();
-            } catch (Throwable e) {
-                logger.warn("Something went wrong", e);
-            }
-
+            triggerTaskRunReadyCheck();
             return true;
         } catch (Exception e) {
             logger.error("Failed to re-run taskrun with id = {} due to exceptions.", taskRun.getId());
@@ -110,6 +109,11 @@ public class TaskManager {
     }
 
     /* ----------- private methods ------------ */
+
+    private void init() {
+        Thread readyEventConsumer = new Thread(new TaskReadyEventConsumer());
+        readyEventConsumer.start();
+    }
 
     private TaskAttempt createTaskAttempt(TaskRun taskRun) {
         checkNotNull(taskRun, "taskRun should not be null.");
@@ -151,6 +155,7 @@ public class TaskManager {
         public void onReceive(TaskAttemptStatusChangeEvent event) {
             post(event.getAttemptId(), event);
         }
+
     }
 
     private class StatusChangeEventConsumer extends EventConsumer<Long, Event> {
@@ -161,7 +166,7 @@ public class TaskManager {
                 TaskRunStatus currentStatus = taskAttemptStatusChangeEvent.getToStatus();
                 if (currentStatus.isFinished()) {
                     if (currentStatus.isSuccess()) {
-                        submitSatisfyTaskAttemptToExecutor();
+                        triggerTaskRunReadyCheck();
                     } else if (currentStatus.isFailure()) {
                         updateDownStreamStatus(taskAttemptStatusChangeEvent.getTaskRunId(), TaskRunStatus.UPSTREAM_FAILED);
                     }
@@ -170,11 +175,21 @@ public class TaskManager {
         }
     }
 
+    private void triggerTaskRunReadyCheck() {
+        TaskRunReadyCheckEvent event = new TaskRunReadyCheckEvent(System.currentTimeMillis());
+        taskRunReadyCheckEventQueue.offer(event);
+
+    }
+
     private void submitSatisfyTaskAttemptToExecutor() {
         List<TaskAttempt> taskAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
         logger.debug("fetch satisfy taskAttempt size = {}", taskAttemptList.size());
         for (TaskAttempt taskAttempt : taskAttemptList) {
-            executor.submit(taskAttempt);
+            try {
+                executor.submit(taskAttempt);
+            } catch (Exception e) {
+                logger.warn("submit taskAttempt = {} to executor failed", taskAttempt.getId(), e);
+            }
         }
     }
 
@@ -190,9 +205,37 @@ public class TaskManager {
         }
     }
 
-    private boolean postgresEnable(){
-        String datasourceUrl = props.getString("datasource.jdbcUrl","");
+    private boolean postgresEnable() {
+        String datasourceUrl = props.getString("datasource.jdbcUrl", "");
         return datasourceUrl.contains("postgres");
+    }
+
+    private class TaskRunReadyCheckEvent {
+
+        private final long timestamp;
+
+        TaskRunReadyCheckEvent(long timestamp) {
+            this.timestamp = timestamp;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+    }
+
+    private class TaskReadyEventConsumer implements Runnable {
+        @Override
+        public void run() {
+            while (true) {
+                try {
+                    List<TaskRunReadyCheckEvent> eventList = new ArrayList<>();
+                    taskRunReadyCheckEventQueue.take();
+                    taskRunReadyCheckEventQueue.drainTo(eventList);
+                } catch (Throwable e) {
+                    logger.warn("take taskRun ready check event from queue failed");
+                }
+            }
+        }
     }
 
 }

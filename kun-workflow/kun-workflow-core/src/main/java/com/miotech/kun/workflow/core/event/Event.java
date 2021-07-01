@@ -5,6 +5,9 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.PROPERTY;
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.CLASS;
 
+/**
+ * General event base class.
+ */
 @JsonTypeInfo(use = CLASS, include = PROPERTY, property = "@class")
 public abstract class Event {
     private final long timestamp;
