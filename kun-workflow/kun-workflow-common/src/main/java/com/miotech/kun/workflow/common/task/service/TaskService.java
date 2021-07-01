@@ -117,11 +117,11 @@ public class TaskService {
     /**
      * @param task
      */
-    private void checkCycleDependencies(Task task) {
-        List<Long> cycleDependencies = taskDao.getCycleDependencies(task.getId(), task.getDependencies().
+    private void checkCircularDependency(Task task) {
+        List<Long> circularDependency = taskDao.getCycleDependencies(task.getId(), task.getDependencies().
                 stream().map(TaskDependency::getDownstreamTaskId).collect(Collectors.toList()));
-        if (cycleDependencies.size() != 0) {
-            throw new IllegalArgumentException("create task:" + task.getId() + ",has cycle dependencies:" + cycleDependencies);
+        if (circularDependency.size() != 0) {
+            throw new IllegalArgumentException("create task:" + task.getId() + ", taskName:" + task.getName() + ",has cycle dependencies:" + circularDependency);
         }
     }
 
@@ -200,7 +200,7 @@ public class TaskService {
                 .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
                 .build();
         // check dependency
-        checkCycleDependencies(task);
+        checkCircularDependency(task);
 
         return fullUpdateTask(task);
     }
@@ -219,7 +219,7 @@ public class TaskService {
         }
 
         // 3. check dependency
-        checkCycleDependencies(task);
+        checkCircularDependency(task);
 
         // 4. Update target task. If there is no task affected (task not exists), throw exception
         boolean taskUpdated = taskDao.update(task);
