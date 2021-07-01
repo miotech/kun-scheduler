@@ -59,12 +59,12 @@ public class MSEOperator extends KunOperator {
     @Override
     public ConfigDef config() {
         ConfigDef configDef = new ConfigDef();
-        configDef.define(DATASOURCE_JDBC_URL, ConfigDef.Type.STRING, true, "jdbcUrl", "jdbcUrl")
-                .define(DATASOURCE_USERNAME, ConfigDef.Type.STRING, true, "username", "username")
-                .define(DATASOURCE_PASSWORD, ConfigDef.Type.STRING, true, "password", "password")
-                .define(DATASOURCE_DRIVER_CLASS_NAME, ConfigDef.Type.STRING, true, "driverClassName", "driverClassName")
-                .define(GID, ConfigDef.Type.STRING, true, GID, GID)
-                .define(SNAPSHOT_ID, ConfigDef.Type.STRING, true, SNAPSHOT_ID, SNAPSHOT_ID)
+        configDef.define(DATASOURCE_JDBC_URL, ConfigDef.Type.STRING, "", true, "jdbcUrl", "jdbcUrl")
+                .define(DATASOURCE_USERNAME, ConfigDef.Type.STRING, "", true, "username", "username")
+                .define(DATASOURCE_PASSWORD, ConfigDef.Type.STRING, "", true, "password", "password")
+                .define(DATASOURCE_DRIVER_CLASS_NAME, ConfigDef.Type.STRING, "", true, "driverClassName", "driverClassName")
+                .define(GID, ConfigDef.Type.STRING, "", true, GID, GID)
+                .define(SNAPSHOT_ID, ConfigDef.Type.STRING, "", true, SNAPSHOT_ID, SNAPSHOT_ID)
                 .define(STATISTICS_MODE, ConfigDef.Type.STRING, StatisticsMode.TABLE.name(), true, STATISTICS_MODE, STATISTICS_MODE);
         return configDef;
     }

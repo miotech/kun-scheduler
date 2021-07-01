@@ -7,7 +7,7 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.databuilder.client.GlueClient;
-import com.miotech.kun.metadata.databuilder.client.HiveMetaStoreClient;
+import com.miotech.kun.metadata.databuilder.extract.tool.MetaStoreParseUtil;
 import com.miotech.kun.metadata.databuilder.client.S3Client;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
@@ -45,7 +45,7 @@ public class GlueStatisticsExtractor extends StatisticsExtractorTemplate {
         AmazonS3 s3Client = null;
         try {
             AWSDataSource awsDataSource = (AWSDataSource) dataSource;
-            String location = HiveMetaStoreClient.parseLocation(HiveMetaStoreClient.Type.GLUE, dataSource, dataset.getDatabaseName(), dataset.getName());
+            String location = MetaStoreParseUtil.parseLocation(MetaStoreParseUtil.Type.GLUE, dataSource, dataset.getDatabaseName(), dataset.getName());
 
             long totalByteSize = 0L;
             s3Client = S3Client.getAmazonS3Client(awsDataSource.getGlueAccessKey(), awsDataSource.getGlueSecretKey(), awsDataSource.getGlueRegion());
@@ -67,8 +67,8 @@ public class GlueStatisticsExtractor extends StatisticsExtractorTemplate {
     public Long getRowCount(Dataset dataset, DataSource dataSource) {
         AWSDataSource awsDataSource = (AWSDataSource) dataSource;
 
-        String outputFormat = HiveMetaStoreClient.parseOutputFormat(HiveMetaStoreClient.Type.GLUE, dataSource, dataset.getDatabaseName(), dataset.getName());
-        String location = HiveMetaStoreClient.parseLocation(HiveMetaStoreClient.Type.GLUE, dataSource, dataset.getDatabaseName(), dataset.getName());
+        String outputFormat = MetaStoreParseUtil.parseOutputFormat(MetaStoreParseUtil.Type.GLUE, dataSource, dataset.getDatabaseName(), dataset.getName());
+        String location = MetaStoreParseUtil.parseLocation(MetaStoreParseUtil.Type.GLUE, dataSource, dataset.getDatabaseName(), dataset.getName());
 
         if ("org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat".equals(outputFormat)) {
             if (logger.isDebugEnabled()) {

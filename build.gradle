@@ -65,7 +65,7 @@ subprojects {
                 implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.6.1'
                 implementation 'org.apache.commons:commons-lang3:3.9'
                 implementation 'org.postgresql:postgresql:42.2.5'
-                implementation 'org.apache.hive:hive-jdbc:2.3.4'
+                implementation 'org.apache.hive:hive-jdbc:1.2.2'
                 implementation 'mysql:mysql-connector-java:5.1.46'
                 implementation "org.flywaydb:flyway-core:6.4.2"
                 implementation "org.apache.curator:curator-recipes:4.2.0"
@@ -96,8 +96,11 @@ subprojects {
                 implementation 'org.jooq:joor-java-8:0.9.13'
                 implementation "com.amazonaws:aws-java-sdk-s3:1.11.792"
                 implementation 'org.apache.hadoop:hadoop-aws:2.8.5'
+                implementation 'org.apache.parquet:parquet-hadoop:1.8.3'
+                implementation 'org.apache.hadoop:hadoop-hdfs:2.8.5'
                 implementation 'io.fabric8:kubernetes-client:5.2.1'
                 implementation 'org.spark-project.hive:hive-jdbc:1.2.1.spark2'
+                implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.8.5'
 
                 testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
