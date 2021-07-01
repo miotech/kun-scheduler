@@ -201,10 +201,10 @@ public class TaskSpawner implements InitializingBean {
         return taskRun;
     }
 
-    private TaskRunStatus resolveTaskRunUpstreamStatus(List<TaskRun> upstreamTaskRuns){
-        for(TaskRun upstreamTaskRun : upstreamTaskRuns){
-            if(upstreamTaskRun.getStatus().isFailure()
-                    || upstreamTaskRun.getStatus().equals(TaskRunStatus.UPSTREAM_FAILED)){
+    private TaskRunStatus resolveTaskRunUpstreamStatus(List<TaskRun> upstreamTaskRuns) {
+        for (TaskRun upstreamTaskRun : upstreamTaskRuns) {
+            if (upstreamTaskRun.getStatus().isFailure()
+                    || upstreamTaskRun.getStatus().equals(TaskRunStatus.UPSTREAM_FAILED)) {
                 return TaskRunStatus.UPSTREAM_FAILED;
             }
         }
@@ -213,9 +213,10 @@ public class TaskSpawner implements InitializingBean {
 
     private List<TaskRun> resolveDependencies(Task task, Tick tick, List<TaskRun> others) {
         return task.getDependencies().stream()
-                .map(dependency -> {
+                .flatMap(dependency -> {
                     DependencyFunction depFunc = dependency.getDependencyFunction();
-                    return depFunc.resolveDependency(task, dependency.getUpstreamTaskId(), tick, others);
+                    return depFunc.resolveDependency(task, dependency.getUpstreamTaskId(), tick, others)
+                            .stream();
                 }).collect(Collectors.toList());
     }
 
