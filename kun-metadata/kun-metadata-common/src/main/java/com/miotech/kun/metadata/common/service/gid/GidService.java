@@ -4,8 +4,8 @@ import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
-import com.miotech.kun.metadata.core.model.DSI;
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DSI;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

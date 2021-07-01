@@ -3,8 +3,8 @@ package com.miotech.kun.metadata.common.dao;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.workflow.core.model.lineage.ArangoCollectionStore;
 import org.junit.Test;
 

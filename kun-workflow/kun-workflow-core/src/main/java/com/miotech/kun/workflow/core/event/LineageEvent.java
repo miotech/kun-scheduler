@@ -2,7 +2,7 @@ package com.miotech.kun.workflow.core.event;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 
 import java.util.List;
 

@@ -2,14 +2,21 @@ package com.miotech.kun.datadiscovery.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.miotech.kun.common.model.AcknowledgementVO;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
-import com.miotech.kun.metadata.core.model.DatasetColumnSuggestRequest;
-import com.miotech.kun.metadata.core.model.DatasetColumnSuggestResponse;
+import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
+import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
+import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.core.model.datasource.DataSourceType;
+import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
+import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
+import com.miotech.kun.metadata.core.model.vo.PaginationVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -49,6 +56,44 @@ public class MetadataService {
         return restTemplate
                 .postForEntity(fullUrl, null, PullProcessVO.class, datasourceId)
                 .getBody();
+    }
+
+    public PaginationVO<DataSource> search(String name, int pageNum, int pageSize) {
+        String searchUrl = url + "/datasources/_search";
+        ParameterizedTypeReference<PaginationVO<DataSource>> typeRef = new ParameterizedTypeReference<PaginationVO<DataSource>>() {};
+        HttpEntity httpEntity = new HttpEntity(DataSourceSearchFilter.newBuilder()
+                .withName(name)
+                .withPageNum(pageNum)
+                .withPageSize(pageSize)
+                .build());
+        return restTemplate.exchange(searchUrl, HttpMethod.POST, httpEntity, typeRef).getBody();
+    }
+
+    public DataSource create(DataSourceRequest request) {
+        String createUrl = url + "/datasource";
+        return restTemplate
+                .exchange(createUrl, HttpMethod.POST, new HttpEntity(request), DataSource.class)
+                .getBody();
+    }
+
+    public DataSource update(Long id, DataSourceRequest request) {
+        String updateUrl = url + "/datasource/{id}";
+        return restTemplate
+                .exchange(updateUrl, HttpMethod.PUT, new HttpEntity(request), DataSource.class, id)
+                .getBody();
+    }
+
+    public AcknowledgementVO delete(Long id) {
+        String createUrl = url + "/datasource/{id}";
+        return restTemplate
+                .exchange(createUrl, HttpMethod.DELETE, null, AcknowledgementVO.class, id)
+                .getBody();
+    }
+
+    public List<DataSourceType> getTypes() {
+        String createUrl = url + "/datasource/types";
+        return restTemplate.exchange(createUrl, HttpMethod.GET, null,
+                new ParameterizedTypeReference<List<DataSourceType>>() {}).getBody();
     }
 
     public Map<String, PullProcessVO> fetchLatestPullProcessByDataSourceIds(List<Long> datasourceIds) {
