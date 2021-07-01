@@ -1,9 +1,9 @@
 package com.miotech.kun.metadata.databuilder.extract.template;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.core.model.DatasetField;
-import com.miotech.kun.metadata.core.model.DatasetFieldType;
-import com.miotech.kun.metadata.core.model.FieldStatistics;
+import com.miotech.kun.metadata.core.model.dataset.DatasetField;
+import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
+import com.miotech.kun.metadata.core.model.dataset.FieldStatistics;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.tool.DatabaseIdentifierProcessor;

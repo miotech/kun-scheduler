@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.glue;
 
 import com.amazonaws.services.glue.model.Table;
-import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.databuilder.client.GlueClient;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetExistenceExtractor;

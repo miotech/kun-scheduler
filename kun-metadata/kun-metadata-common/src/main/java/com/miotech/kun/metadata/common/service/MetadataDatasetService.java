@@ -4,10 +4,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
-import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.DatasetColumnSuggestRequest;
-import com.miotech.kun.metadata.core.model.DatasetColumnSuggestResponse;
+import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
+import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
 import org.apache.commons.collections4.CollectionUtils;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 
 import java.util.List;
 import java.util.Optional;

@@ -6,7 +6,7 @@ import com.miotech.kun.commons.rpc.RpcModule;
 import com.miotech.kun.commons.rpc.RpcPublisher;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.ReflectUtils;
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;

@@ -9,7 +9,6 @@ sourceSets {
 }
 
 dependencies {
-    implementation project(':kun-app-common')
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-commons:kun-commons-testing")
     implementation project(":kun-commons:kun-commons-utils")

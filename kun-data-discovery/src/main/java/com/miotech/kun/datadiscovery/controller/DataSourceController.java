@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 
@@ -59,13 +58,13 @@ public class DataSourceController {
     }
 
     @PostMapping("/metadata/datasource/add")
-    public RequestResult<DataSource> addDataSource(@RequestBody DataSourceRequest dataSourceRequest) throws SQLException {
+    public RequestResult<DataSource> addDataSource(@RequestBody DataSourceRequest dataSourceRequest) {
         return RequestResult.success(dataSourceService.add(dataSourceRequest));
     }
 
     @PostMapping("/metadata/datasource/{id}/update")
     public RequestResult<DataSource> updateDataSource(@PathVariable Long id,
-                                                      @RequestBody DataSourceRequest dataSourceRequest) throws SQLException {
+                                                      @RequestBody DataSourceRequest dataSourceRequest) {
         return RequestResult.success(dataSourceService.update(id, dataSourceRequest));
     }
 

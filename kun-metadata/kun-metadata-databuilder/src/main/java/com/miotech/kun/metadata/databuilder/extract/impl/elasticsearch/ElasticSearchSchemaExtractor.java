@@ -2,8 +2,8 @@ package com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch;
 
 import com.google.common.collect.Iterators;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.DatasetField;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.databuilder.client.ElasticSearchClient;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.model.DataSource;

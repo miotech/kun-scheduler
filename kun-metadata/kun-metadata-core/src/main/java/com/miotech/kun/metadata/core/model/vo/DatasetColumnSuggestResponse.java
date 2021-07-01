@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.core.model;
+package com.miotech.kun.metadata.core.model.vo;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;

@@ -1,18 +1,17 @@
-package com.miotech.kun.metadata.core.model;
+package com.miotech.kun.metadata.core.model.datasource;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Map;
 
 @JsonDeserialize(builder = DataSource.Builder.class)
 public class DataSource {
 
     private final Long id;
     private final String name;
-    private final Map<String, Object> connectionInfo;
+    private final ConnectionInfo connectionInfo;
     private final Long typeId;
     private final List<String> tags;
     private final String createUser;
@@ -20,7 +19,7 @@ public class DataSource {
     private final String updateUser;
     private final OffsetDateTime updateTime;
 
-    public DataSource(Long id, String name, Map<String, Object> connectionInfo, Long typeId, List<String> tags, String createUser,
+    public DataSource(Long id, String name, ConnectionInfo connectionInfo, Long typeId, List<String> tags, String createUser,
                       OffsetDateTime createTime, String updateUser, OffsetDateTime updateTime) {
         this.id = id;
         this.name = name;
@@ -41,7 +40,7 @@ public class DataSource {
         return name;
     }
 
-    public Map<String, Object> getConnectionInfo() {
+    public ConnectionInfo getConnectionInfo() {
         return connectionInfo;
     }
 
@@ -91,7 +90,7 @@ public class DataSource {
     public static final class Builder {
         private Long id;
         private String name;
-        private Map<String, Object> connectionInfo;
+        private ConnectionInfo connectionInfo;
         private Long typeId;
         private List<String> tags;
         private String createUser;
@@ -112,7 +111,7 @@ public class DataSource {
             return this;
         }
 
-        public Builder withConnectionInfo(Map<String, Object> connectionInfo) {
+        public Builder withConnectionInfo(ConnectionInfo connectionInfo) {
             this.connectionInfo = connectionInfo;
             return this;
         }
@@ -152,4 +151,3 @@ public class DataSource {
         }
     }
 }
-

@@ -3,7 +3,7 @@ package com.miotech.kun.metadata.common.dao;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.metadata.core.model.DatasetFieldMapping;
+import com.miotech.kun.metadata.core.model.dataset.DatasetFieldMapping;
 import org.junit.Test;
 
 import java.util.List;

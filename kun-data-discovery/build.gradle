@@ -50,7 +50,7 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
 	implementation 'org.postgresql:postgresql'
-	implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+	implementation 'com.googlecode.json-simple:json-simple'
 	implementation 'org.apache.commons:commons-lang3'
 	implementation 'com.google.code.gson:gson'
 	implementation 'org.flywaydb:flyway-core'

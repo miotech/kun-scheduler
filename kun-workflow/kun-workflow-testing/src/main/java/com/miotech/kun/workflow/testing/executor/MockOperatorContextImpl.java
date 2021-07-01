@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.testing.executor;
 
 import com.google.common.collect.ImmutableMap;
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;

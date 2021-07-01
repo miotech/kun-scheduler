@@ -5,7 +5,7 @@ import com.google.common.collect.Maps;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
-import com.miotech.kun.metadata.core.model.*;
+import com.miotech.kun.metadata.core.model.dataset.*;
 import com.miotech.kun.metadata.databuilder.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldInformation;
@@ -206,7 +206,7 @@ public class PostgresLoader implements Loader {
                 JSONUtils.jsonToObject(rs.getString("schema_snapshot"), SchemaSnapshot.class).getFields().stream()
                         .map(field -> field.convert()).collect(Collectors.toList()), gid);
 
-        if (!CollectionUtils.isEmpty(fields)) {
+        if (CollectionUtils.isNotEmpty(fields)) {
             return fields;
         }
 

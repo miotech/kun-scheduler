@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.fileparser;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.core.model.TableStatistics;
+import com.miotech.kun.metadata.core.model.dataset.TableStatistics;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.LocatedFileStatus;
