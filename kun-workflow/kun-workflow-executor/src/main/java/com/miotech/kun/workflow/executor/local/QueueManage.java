@@ -15,7 +15,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class QueueManage {
-    private Map<String, TaskAttemptQueue> queueMap;
+    private Map<String, LocalTaskAttemptQueue> queueMap;
     private Lock lock = new ReentrantLock();
     private Condition hasElement = lock.newCondition();
     private static Logger logger = LoggerFactory.getLogger(QueueManage.class);
@@ -28,13 +28,13 @@ public class QueueManage {
         List<String> queueNames = props.getStringList("executor.env.resourceQueues");
         logger.info("init queueManage , size = {}", queueNames.size());
         if (queueNames.size() == 0) {
-            TaskAttemptQueue queue = new TaskAttemptQueue(DEFAULT_QUEUE, DEFAULT_WORKER_TOKEN_SIZE);
+            LocalTaskAttemptQueue queue = new LocalTaskAttemptQueue(DEFAULT_QUEUE, DEFAULT_WORKER_TOKEN_SIZE);
             queueMap.put(queue.getName(), queue);
         }
         for (String queueName : queueNames) {
             String prefix = "executor.env.resourceQueues." + queueName;
             Integer capacity = props.getInt(prefix + ".quota.workerNumbers", 0);
-            TaskAttemptQueue queue = new TaskAttemptQueue(queueName, capacity);
+            LocalTaskAttemptQueue queue = new LocalTaskAttemptQueue(queueName, capacity);
             logger.info("init queue name = {}, capacity = {}", queueName, capacity);
             queueMap.put(queueName, queue);
         }
@@ -45,7 +45,7 @@ public class QueueManage {
         lock.lock();
         try {
             Preconditions.checkNotNull(taskAttempt.getQueueName(), "Invalid argument `queueName`: null");
-            TaskAttemptQueue queue = queueMap.get(taskAttempt.getQueueName());
+            LocalTaskAttemptQueue queue = queueMap.get(taskAttempt.getQueueName());
             if (queue == null) {
                 throw new NoSuchElementException("no such queue,name = " + taskAttempt.getQueueName());
             }
@@ -60,7 +60,7 @@ public class QueueManage {
 
     }
 
-    public TaskAttemptQueue getTaskAttemptQueue(String queueName) {
+    public LocalTaskAttemptQueue getTaskAttemptQueue(String queueName) {
         return queueMap.get(queueName);
     }
 
@@ -70,7 +70,7 @@ public class QueueManage {
         logger.info("going to remove taskAttempt from queue , attemptId = {},queueName = {}", taskAttempt.getId(), taskAttempt.getQueueName());
         try {
             String queueName = taskAttempt.getQueueName();
-            TaskAttemptQueue queue = queueMap.get(queueName);
+            LocalTaskAttemptQueue queue = queueMap.get(queueName);
             if (queue == null) {
                 throw new NoSuchElementException("no such queue,name = " + queueName);
             }
@@ -96,7 +96,7 @@ public class QueueManage {
     public void changePriority(String queueName, long attemptId, int priority) {
         lock.lock();
         try {
-            TaskAttemptQueue queue = queueMap.get(queueName);
+            LocalTaskAttemptQueue queue = queueMap.get(queueName);
             if (queue == null) {
                 throw new NoSuchElementException("no such queue,name = " + queueName);
             }
@@ -107,8 +107,8 @@ public class QueueManage {
     }
 
     public boolean isEmpty() {
-        for (Map.Entry<String, TaskAttemptQueue> entry : queueMap.entrySet()) {
-            TaskAttemptQueue queue = entry.getValue();
+        for (Map.Entry<String, LocalTaskAttemptQueue> entry : queueMap.entrySet()) {
+            LocalTaskAttemptQueue queue = entry.getValue();
             if (!queue.isEmpty()) {
                 return false;
             }
@@ -117,8 +117,8 @@ public class QueueManage {
     }
 
     public boolean hasElementToTake() {
-        for (Map.Entry<String, TaskAttemptQueue> entry : queueMap.entrySet()) {
-            TaskAttemptQueue queue = entry.getValue();
+        for (Map.Entry<String, LocalTaskAttemptQueue> entry : queueMap.entrySet()) {
+            LocalTaskAttemptQueue queue = entry.getValue();
             if (!queue.isEmpty() && queue.hasCapacity()) {
                 return true;
             }
@@ -129,7 +129,7 @@ public class QueueManage {
     public void release(String queueName, Long taskAttemptId) {
         lock.lock();
         try {
-            TaskAttemptQueue queue = queueMap.get(queueName);
+            LocalTaskAttemptQueue queue = queueMap.get(queueName);
             if (queue == null) {
                 throw new NoSuchElementException("no such queue,name = " + queueName);
             }
@@ -147,8 +147,8 @@ public class QueueManage {
     public void reset() {
         lock.lock();
         try {
-            for (Map.Entry<String, TaskAttemptQueue> entry : queueMap.entrySet()) {
-                TaskAttemptQueue queue = entry.getValue();
+            for (Map.Entry<String, LocalTaskAttemptQueue> entry : queueMap.entrySet()) {
+                LocalTaskAttemptQueue queue = entry.getValue();
                 queue.reset();
             }
         } finally {
@@ -159,7 +159,7 @@ public class QueueManage {
     public void recover(String queueName, Long taskAttemptId) {
         lock.lock();
         try {
-            TaskAttemptQueue queue = queueMap.get(queueName);
+            LocalTaskAttemptQueue queue = queueMap.get(queueName);
             if (queue == null) {
                 throw new NoSuchElementException("no such queue,name = " + queueName);
             }
@@ -172,8 +172,8 @@ public class QueueManage {
     }
 
     private TaskAttempt dequeue() {
-        for (Map.Entry<String, TaskAttemptQueue> entry : queueMap.entrySet()) {
-            TaskAttemptQueue queue = entry.getValue();
+        for (Map.Entry<String, LocalTaskAttemptQueue> entry : queueMap.entrySet()) {
+            LocalTaskAttemptQueue queue = entry.getValue();
             if (!queue.isEmpty() && queue.hasCapacity()) {
                 return queue.take();
             }

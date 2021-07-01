@@ -36,12 +36,12 @@ public class MockTaskFactory {
     }
 
 
-        public static Task createTaskWithUpstreams(List<Long> upIds,ScheduleConf conf){
+    public static Task createTaskWithUpstreams(List<Long> upIds, ScheduleConf conf) {
         long taskId = WorkflowIdGenerator.nextTaskId();
         TaskDependencyFunctionProvider depFuncProvider =
                 Unsafe.getInjector().getInstance(TaskDependencyFunctionProvider.class);
         List<TaskDependency> dependencies = upIds.stream().map(
-                upId-> new TaskDependency(upId,taskId,depFuncProvider.
+                upId -> new TaskDependency(upId, taskId, depFuncProvider.
                         from("latestTaskRun"))).collect(Collectors.toList());
         return Task.newBuilder()
                 .withId(taskId)
@@ -61,15 +61,23 @@ public class MockTaskFactory {
         return createTasks(1).get(0);
     }
 
+    public static Task createTask(String queueName) {
+        return createTasks(1, WorkflowIdGenerator.nextOperatorId(), queueName).get(0);
+    }
+
     public static Task createTask(Long operatorId) {
-        return createTasks(1, operatorId).get(0);
+        return createTasks(1, operatorId, "default").get(0);
     }
 
     public static List<Task> createTasks(int num) {
-        return createTasks(num, WorkflowIdGenerator.nextOperatorId());
+        return createTasks(num, WorkflowIdGenerator.nextOperatorId(), "default");
     }
 
     public static List<Task> createTasks(int num, Long operatorId) {
+        return createTasks(num, operatorId, "default");
+    }
+
+    public static List<Task> createTasks(int num, Long operatorId, String queueName) {
         List<Task> tasks = new ArrayList<>();
 
         for (int i = 0; i < num; i++) {
@@ -83,7 +91,7 @@ public class MockTaskFactory {
                     .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
                     .withDependencies(new ArrayList<>())
                     .withTags(new ArrayList<>())
-                    .withQueueName("default")
+                    .withQueueName(queueName)
                     .withPriority(TaskPriority.MEDIUM.getPriority())
                     .build());
         }
@@ -92,6 +100,7 @@ public class MockTaskFactory {
 
     /**
      * 创建n个相互依赖的任务。例如"0>>1"表示创建的第1个任务依赖第0个任务（即0是上游，1是下游）。支持"0>>1;2>>1;"表示多个依赖。
+     *
      * @param num
      * @param relations
      * @return
@@ -102,6 +111,7 @@ public class MockTaskFactory {
 
     /**
      * 创建n个相互依赖的任务。例如"0>>1"表示创建的第1个任务依赖第0个任务（即0是上游，1是下游）。支持"0>>1;2>>1;"表示多个依赖。
+     *
      * @param num
      * @param operatorId
      * @param relations
@@ -109,10 +119,10 @@ public class MockTaskFactory {
      */
     public static List<Task> createTasksWithRelations(int num, Long operatorId, String relations) {
         ScheduleConf scheduleConf = new ScheduleConf(ScheduleType.NONE, null);
-        return createTasksWithRelations(num,operatorId,relations,scheduleConf);
+        return createTasksWithRelations(num, operatorId, relations, scheduleConf);
     }
 
-    public static List<Task> createTasksWithRelations(int num,Long operatorId,String relations,ScheduleConf scheduleConf){
+    public static List<Task> createTasksWithRelations(int num, Long operatorId, String relations, ScheduleConf scheduleConf) {
         Map<Integer, List<Integer>> parsed = MockFactoryUtils.parseRelations(relations);
 
         List<Long> ids = new ArrayList<>();

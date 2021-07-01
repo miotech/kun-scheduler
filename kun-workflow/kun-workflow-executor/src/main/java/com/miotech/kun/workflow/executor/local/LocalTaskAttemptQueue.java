@@ -10,12 +10,12 @@ import java.util.*;
 /**
  * this queue is not thread safe
  */
-public class TaskAttemptQueue {
+public class LocalTaskAttemptQueue {
     private Queue<TaskAttempt> queue;
     private final Integer capacity;//队列资源容量
     private Integer remainCapacity;
     private String name;
-    private static Logger logger = LoggerFactory.getLogger(TaskAttemptQueue.class);
+    private static Logger logger = LoggerFactory.getLogger(LocalTaskAttemptQueue.class);
 
     private Set<Long> dispatchedTaskAttempt = new HashSet<>();
 
@@ -31,7 +31,7 @@ public class TaskAttemptQueue {
         return queue.size();
     }
 
-    public TaskAttemptQueue(String name, Integer capacity) {
+    public LocalTaskAttemptQueue(String name, Integer capacity) {
         queue = new PriorityQueue<>(new TaskPriorityComparator());
         this.name = name;
         this.capacity = capacity;
