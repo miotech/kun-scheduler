@@ -1,9 +1,9 @@
 package com.miotech.kun.workflow.testing.factory;
 
 import com.google.common.collect.Lists;
-import com.miotech.kun.metadata.core.model.DSI;
-import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.metadata.core.model.DataStoreType;
+import com.miotech.kun.metadata.core.model.dataset.DSI;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
 
 import java.util.List;
 

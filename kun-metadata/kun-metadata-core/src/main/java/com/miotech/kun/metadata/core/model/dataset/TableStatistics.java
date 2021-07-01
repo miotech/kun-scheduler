@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.core.model;
+package com.miotech.kun.metadata.core.model.dataset;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;

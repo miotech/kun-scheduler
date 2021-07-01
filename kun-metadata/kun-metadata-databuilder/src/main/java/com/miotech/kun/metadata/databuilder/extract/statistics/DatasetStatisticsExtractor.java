@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.statistics;
 
-import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.TableStatistics;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.TableStatistics;
 import com.miotech.kun.metadata.databuilder.constant.StatisticsMode;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetExistenceExtractor;
 import com.miotech.kun.metadata.databuilder.model.DataSource;

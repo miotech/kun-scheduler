@@ -2,8 +2,8 @@ package com.miotech.kun.metadata.databuilder.extract.impl.mongodb;
 
 import com.beust.jcommander.internal.Lists;
 import com.google.common.collect.Iterators;
-import com.miotech.kun.metadata.core.model.Dataset;
-import com.miotech.kun.metadata.core.model.DatasetField;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 import com.miotech.kun.metadata.databuilder.model.MongoDataSource;

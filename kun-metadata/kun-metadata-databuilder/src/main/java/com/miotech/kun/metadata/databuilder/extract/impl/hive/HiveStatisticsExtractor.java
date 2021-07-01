@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.hive;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;

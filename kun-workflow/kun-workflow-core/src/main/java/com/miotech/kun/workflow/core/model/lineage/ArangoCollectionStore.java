@@ -2,10 +2,10 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.metadata.core.model.DSI;
-import com.miotech.kun.metadata.core.model.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DSI;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 
-import static com.miotech.kun.metadata.core.model.DataStoreType.ARANGO_COLLECTION;
+import static com.miotech.kun.metadata.core.model.dataset.DataStoreType.ARANGO_COLLECTION;
 
 public class ArangoCollectionStore extends DataStore {
 

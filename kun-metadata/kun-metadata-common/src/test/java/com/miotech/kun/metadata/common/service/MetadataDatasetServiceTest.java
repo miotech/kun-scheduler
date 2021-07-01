@@ -1,14 +1,22 @@
 package com.miotech.kun.metadata.common.service;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.metadata.common.dao.DataSourceDao;
 import com.miotech.kun.metadata.common.factory.MockDataSourceFactory;
 import com.miotech.kun.metadata.common.factory.MockDatasetFactory;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
-import com.miotech.kun.metadata.core.model.*;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.DatasetField;
+import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
+import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
+import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
 import org.apache.commons.collections4.CollectionUtils;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
@@ -25,13 +33,25 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
     private DatabaseOperator dbOperator;
 
     @Inject
+    private DataSourceDao dataSourceDao;
+
+    @Inject
     private MetadataDatasetService metadataDatasetService;
+
+    @Before
+    public void clearThenInit() {
+        // Clear kun_mt_datasource_type, because flyway initializes some data
+        dbOperator.update("TRUNCATE TABLE kun_mt_datasource_type");
+        // Init test data
+        dbOperator.update("INSERT INTO kun_mt_datasource_type(id, name) VALUES(?, ?)",
+                1L, "AWS");
+    }
 
     @Test
     public void fetchDatasetByGid_shouldInvokeMetadataDatasetDao() {
         // Prepare
-        Dataset datasetOfFoo = MockDatasetFactory.createDataset(1L);
-        insertDataset(dbOperator, datasetOfFoo);
+        Dataset dataset = MockDatasetFactory.createDataset(1L);
+        insertDataset(dbOperator, dataset);
 
         // Process
         Long queryGid = 1L;
@@ -39,8 +59,8 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
 
         // Validate
         assertTrue(datasetOpt.isPresent());
-        Dataset dataset = datasetOpt.get();
-        assertThat(dataset.getGid(), is(queryGid));
+        Dataset datasetOfFetch = datasetOpt.get();
+        assertThat(datasetOfFetch.getGid(), is(queryGid));
     }
 
     @Test
@@ -55,8 +75,8 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         Dataset datasetOfBook = MockDatasetFactory.createDataset("book", 1L, "dw", null, "Hive");
         insertDataset(dbOperator, datasetOfBook);
 
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", null, 1L, null, null, null);
-        insertDataSource(dbOperator, dataSource, "AWS");
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", Maps.newHashMap(), 1L, null);
+        dataSourceDao.create(dataSource);
 
         // Execute
         String prefix = "d";
@@ -93,8 +113,8 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         Dataset datasetOfBook = MockDatasetFactory.createDataset("book", 1L, "dw", null, "Hive");
         insertDataset(dbOperator, datasetOfBook);
 
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", null, 1L, null, null, null);
-        insertDataSource(dbOperator, dataSource, "AWS");
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", Maps.newHashMap(), 1L, null);
+        dataSourceDao.create(dataSource);
 
         // Execute
         List<String> suggestTables = metadataDatasetService.suggestTable("dw", "b");
@@ -132,8 +152,8 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         Dataset datasetOfBook = MockDatasetFactory.createDataset("book", 1L, "dw", null, "Hive");
         insertDataset(dbOperator, datasetOfBook);
 
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", null, 1L, null, null, null);
-        insertDataSource(dbOperator, dataSource, "AWS");
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", Maps.newHashMap(), 1L, null);
+        dataSourceDao.create(dataSource);
 
         // Execute
         List<DatasetColumnSuggestRequest> columnSuggestRequests = Lists.newArrayList(new DatasetColumnSuggestRequest("dm", "foo", "n"));
@@ -176,13 +196,6 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
                 dbOperator.update("INSERT INTO kun_mt_dataset_field(dataset_gid, name, type) VALUES(?, ?, ?)", dataset.getGid(), field.getName(), field.getFieldType().getType().toValue());
             }
         }
-    }
-
-    private void insertDataSource(DatabaseOperator dbOperator, DataSource dataSource, String dataSourceTypeName) {
-        dbOperator.update("INSERT INTO kun_mt_datasource(id, type_id) VALUES(?, ?)",
-                dataSource.getId(), dataSource.getTypeId());
-        dbOperator.update("INSERT INTO kun_mt_datasource_type(id, name) VALUES(?, ?)",
-                dataSource.getTypeId(), dataSourceTypeName);
     }
 
 }

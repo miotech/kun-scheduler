@@ -1,9 +1,9 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.glue;
 
 import com.amazonaws.services.glue.model.Table;
-import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.metadata.core.model.DatasetField;
-import com.miotech.kun.metadata.core.model.DatasetFieldType;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DatasetField;
+import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
 import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
 import com.miotech.kun.metadata.databuilder.extract.schema.SchemaExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;

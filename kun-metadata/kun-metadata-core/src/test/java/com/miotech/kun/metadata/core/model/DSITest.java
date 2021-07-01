@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.core.model;
 
+import com.miotech.kun.metadata.core.model.dataset.DSI;
 import org.junit.Test;
 
 import java.util.Map;
