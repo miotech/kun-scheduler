@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
-import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
@@ -119,7 +118,7 @@ public class TaskService {
      */
     private void checkCircularDependency(Task task) {
         List<Long> circularDependency = taskDao.getCycleDependencies(task.getId(), task.getDependencies().
-                stream().map(TaskDependency::getDownstreamTaskId).collect(Collectors.toList()));
+                stream().map(TaskDependency::getUpstreamTaskId).collect(Collectors.toList()));
         if (circularDependency.size() != 0) {
             throw new IllegalArgumentException("create task:" + task.getId() + ", taskName:" + task.getName() + ",has cycle dependencies:" + circularDependency);
         }

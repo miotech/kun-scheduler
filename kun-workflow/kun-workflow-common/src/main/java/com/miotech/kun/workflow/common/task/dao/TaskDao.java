@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.sql.Array;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -915,26 +916,36 @@ public class TaskDao {
 
 
     /**
-     *
      * @param taskId
      * @param taskIds upstream taskIds
      * @return
      */
     public List<Long> getCycleDependencies(Long taskId, List<Long> taskIds) {
+        if (taskIds.size() == 0) {
+            return Lists.newArrayList();
+        }
         String filterTaskId = taskIds.stream().map(x -> "?").collect(Collectors.joining(","));
 
         String sql = "WITH RECURSIVE checkcycle(task_id,path,cycle) as \n" +
                 "(SELECT upstream_task_id,ARRAY[downstream_task_id,upstream_task_id],FALSE from kun_wf_task_relations \n" +
-                "WHERE downstream_task_id in " + filterTaskId + " \n" +
+                "WHERE downstream_task_id in (" + filterTaskId + ") \n" +
                 "UNION \n" +
-                "SELECT kw.upstream_task_id,path || kw.upstream_task_id,kw.upstream_task_id != ? FROM checkcycle as c \n" +
+                "SELECT kw.upstream_task_id,path || kw.upstream_task_id,kw.upstream_task_id = ? FROM checkcycle as c \n" +
                 "INNER JOIN kun_wf_task_relations as kw \n" +
                 "ON c.task_id = kw.downstream_task_id\n" +
                 "WHERE NOT c.cycle\n" +
-                ") SELECT task_id,path,cycle FROM checkcycle WHERE cycle = TRUE;";
+                ") SELECT path FROM checkcycle WHERE not cycle;";
         taskIds.add(taskId);
-        List<Object> result = dbOperator.fetchAll(sql, rs -> rs.getArray(1), taskIds);
-        return result.stream().map(x -> Long.valueOf(x.toString())).collect(Collectors.toList());
+        List<Array> result = dbOperator.fetchAll(sql, rs -> rs.getArray(1), taskIds.toArray());
+        if (result.size() > 0) {
+            try {
+                Long[] taskIdArray = (Long[]) result.get(0).getArray();
+                return Lists.newArrayList(taskIdArray);
+            } catch (SQLException e) {
+                ExceptionUtils.wrapIfChecked(e);
+            }
+        }
+        return Lists.newArrayList();
     }
 
     public static class TaskMapper implements ResultSetMapper<Task> {
