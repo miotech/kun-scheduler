@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.postgresql;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;

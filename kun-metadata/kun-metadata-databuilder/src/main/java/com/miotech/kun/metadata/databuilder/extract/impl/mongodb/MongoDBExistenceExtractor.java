@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.mongodb;
 
-import com.beust.jcommander.internal.Lists;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.google.common.collect.Lists;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetExistenceExtractor;
 import com.miotech.kun.metadata.databuilder.model.DataSource;

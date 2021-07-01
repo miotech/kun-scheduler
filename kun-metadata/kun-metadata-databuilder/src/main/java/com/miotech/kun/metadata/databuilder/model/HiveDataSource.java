@@ -2,60 +2,50 @@ package com.miotech.kun.metadata.databuilder.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
+import com.miotech.kun.metadata.databuilder.extract.tool.ConnectUrlUtil;
 
 public class HiveDataSource extends DataSource {
 
-    private final String metastoreUrl;
+    private final String metaStoreUris;
 
-    private final String metastoreUsername;
+    private final String dataStoreHost;
 
-    private final String metastorePassword;
+    private final int dataStorePort;
 
-    private final String datastoreUrl;
+    private final String dataStoreUsername;
 
-    private final String datastoreUsername;
-
-    private final String datastorePassword;
+    private final String dataStorePassword;
 
     @JsonCreator
     public HiveDataSource(@JsonProperty("id") long id,
-                          @JsonProperty("metastoreUrl") String metastoreUrl,
-                          @JsonProperty("metastoreUsername") String metastoreUsername,
-                          @JsonProperty("metastorePassword") String metastorePassword,
-                          @JsonProperty("datastoreUrl") String datastoreUrl,
-                          @JsonProperty("datastoreUsername") String datastoreUsername,
-                          @JsonProperty("datastorePassword") String datastorePassword) {
+                          @JsonProperty("metaStoreUris") String metaStoreUris,
+                          @JsonProperty("dataStoreHost") String dataStoreHost,
+                          @JsonProperty("dataStorePort") int dataStorePort,
+                          @JsonProperty("dataStoreUsername") String dataStoreUsername,
+                          @JsonProperty("dataStorePassword") String dataStorePassword) {
         super(id, Type.HIVE);
-        this.metastoreUrl = metastoreUrl;
-        this.metastoreUsername = metastoreUsername;
-        this.metastorePassword = metastorePassword;
-        this.datastoreUrl = datastoreUrl;
-        this.datastoreUsername = datastoreUsername;
-        this.datastorePassword = datastorePassword;
+        this.metaStoreUris = metaStoreUris;
+        this.dataStoreHost = dataStoreHost;
+        this.dataStorePort = dataStorePort;
+        this.dataStoreUsername = dataStoreUsername;
+        this.dataStorePassword = dataStorePassword;
     }
 
-    public String getMetastoreUrl() {
-        return metastoreUrl;
+    public String getMetaStoreUris() {
+        return metaStoreUris;
     }
 
-    public String getMetastoreUsername() {
-        return metastoreUsername;
+    public String getDataStoreUsername() {
+        return dataStoreUsername;
     }
 
-    public String getMetastorePassword() {
-        return metastorePassword;
+    public String getDataStorePassword() {
+        return dataStorePassword;
     }
 
-    public String getDatastoreUrl() {
-        return datastoreUrl;
-    }
-
-    public String getDatastoreUsername() {
-        return datastoreUsername;
-    }
-
-    public String getDatastorePassword() {
-        return datastorePassword;
+    public String getDataStoreUrl() {
+        return ConnectUrlUtil.convertToConnectUrl(dataStoreHost, dataStorePort, dataStoreUsername, dataStorePassword, DatabaseType.HIVE);
     }
 
     public static Builder newBuilder() {
@@ -63,53 +53,52 @@ public class HiveDataSource extends DataSource {
     }
 
     public Builder cloneBuilder() {
-        return new Builder().withMetastoreUrl(metastoreUrl)
-                .withMetastoreUsername(metastoreUsername)
-                .withMetastorePassword(metastorePassword)
-                .withDatastoreUrl(datastoreUrl)
-                .withDatastoreUsername(datastoreUsername)
-                .withDatastorePassword(datastorePassword);
+        return new Builder()
+                .withMetaStoreUris(metaStoreUris)
+                .withDataStoreHost(dataStoreHost)
+                .withDataStorePort(dataStorePort)
+                .withDataStoreUsername(dataStoreUsername)
+                .withDataStorePassword(dataStorePassword);
     }
 
+
     public static final class Builder {
-        private String metastoreUrl;
-        private String metastoreUsername;
-        private String metastorePassword;
-        private String datastoreUrl;
-        private String datastoreUsername;
-        private String datastorePassword;
+        private String metaStoreUris;
+        private String dataStoreHost;
+        private int dataStorePort;
+        private String dataStoreUsername;
+        private String dataStorePassword;
         private long id;
 
         private Builder() {
         }
 
-        public Builder withMetastoreUrl(String metastoreUrl) {
-            this.metastoreUrl = metastoreUrl;
+        public static Builder newBuilder() {
+            return new Builder();
+        }
+
+        public Builder withMetaStoreUris(String metaStoreUris) {
+            this.metaStoreUris = metaStoreUris;
             return this;
         }
 
-        public Builder withMetastoreUsername(String metastoreUsername) {
-            this.metastoreUsername = metastoreUsername;
+        public Builder withDataStoreHost(String dataStoreHost) {
+            this.dataStoreHost = dataStoreHost;
             return this;
         }
 
-        public Builder withMetastorePassword(String metastorePassword) {
-            this.metastorePassword = metastorePassword;
+        public Builder withDataStorePort(int dataStorePort) {
+            this.dataStorePort = dataStorePort;
             return this;
         }
 
-        public Builder withDatastoreUrl(String datastoreUrl) {
-            this.datastoreUrl = datastoreUrl;
+        public Builder withDataStoreUsername(String dataStoreUsername) {
+            this.dataStoreUsername = dataStoreUsername;
             return this;
         }
 
-        public Builder withDatastoreUsername(String datastoreUsername) {
-            this.datastoreUsername = datastoreUsername;
-            return this;
-        }
-
-        public Builder withDatastorePassword(String datastorePassword) {
-            this.datastorePassword = datastorePassword;
+        public Builder withDataStorePassword(String dataStorePassword) {
+            this.dataStorePassword = dataStorePassword;
             return this;
         }
 
@@ -119,7 +108,7 @@ public class HiveDataSource extends DataSource {
         }
 
         public HiveDataSource build() {
-            return new HiveDataSource(id, metastoreUrl, metastoreUsername, metastorePassword, datastoreUrl, datastoreUsername, datastorePassword);
+            return new HiveDataSource(id, metaStoreUris, dataStoreHost, dataStorePort, dataStoreUsername, dataStorePassword);
         }
     }
 }

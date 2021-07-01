@@ -327,7 +327,8 @@ VALUES (1, 'AWS'),
        (2, 'MongoDB'),
        (3, 'PostgreSQL'),
        (4, 'Elasticsearch'),
-       (5, 'Arango')
+       (5, 'Arango'),
+       (6, 'Hive')
 ;
 
 INSERT INTO kun_mt_datasource_type_fields (id, type_id, name, sequence_order, format, require)
@@ -352,5 +353,10 @@ VALUES (1, 2, 'host', 1, 'INPUT', true),
        (19, 1, 'glueRegion', 3, 'INPUT', false),
        (20, 1, 'athenaUrl', 4, 'INPUT', false),
        (21, 1, 'athenaUsername', 5, 'INPUT', false),
-       (22, 1, 'athenaPassword', 6, 'PASSWORD', false)
+       (22, 1, 'athenaPassword', 6, 'PASSWORD', false),
+       (23, 6, 'metaStoreUris', 1, 'INPUT', true),
+       (24, 6, 'dataStoreHost', 2, 'INPUT', true),
+       (25, 6, 'dataStorePort', 3, 'NUMBER_INPUT', true),
+       (26, 6, 'dataStoreUsername', 4, 'INPUT', false),
+       (27, 6, 'dataStorePassword', 5, 'PASSWORD', false)
 ;

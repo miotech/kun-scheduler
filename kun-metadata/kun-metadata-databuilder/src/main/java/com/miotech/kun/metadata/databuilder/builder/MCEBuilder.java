@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
+import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
@@ -20,11 +21,11 @@ import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtracto
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractorFactory;
 import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
 import com.miotech.kun.metadata.databuilder.extract.tool.KafkaUtil;
+import com.miotech.kun.metadata.databuilder.extract.tool.MetaStoreParseUtil;
 import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 import com.miotech.kun.metadata.databuilder.model.LoadSchemaResult;
-import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static com.miotech.kun.metadata.databuilder.constant.OperatorKey.BROKERS;
@@ -80,14 +82,18 @@ public class MCEBuilder {
 
         Iterator<Dataset> datasetIterator = extractor.extract(dataSource);
         while (datasetIterator.hasNext()) {
-            LoadSchemaResult loadSchemaResult = loader.loadSchema(datasetIterator.next());
-            if (loadSchemaResult.getGid() < 0) {
-                continue;
-            }
+            try {
+                LoadSchemaResult loadSchemaResult = loader.loadSchema(datasetIterator.next());
+                if (loadSchemaResult.getGid() < 0) {
+                    continue;
+                }
 
-            // 发送消息
-            /*MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.TABLE, loadSchemaResult.getGid(), loadSchemaResult.getSnapshotId());
-            KafkaUtil.send(props.getString(BROKERS), props.getString(MSE_TOPIC), JSONUtils.toJsonString(mse));*/
+                // 发送消息
+                /*MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.TABLE, loadSchemaResult.getGid(), loadSchemaResult.getSnapshotId());
+                KafkaUtil.send(props.getString(BROKERS), props.getString(MSE_TOPIC), JSONUtils.toJsonString(mse));*/
+            } catch (Exception e) {
+                logger.error("Load schema error: ", e);
+            }
         }
     }
 
@@ -128,23 +134,7 @@ public class MCEBuilder {
 
         String connectionInfo = operator.fetchOne("SELECT connection_info FROM kun_mt_datasource WHERE id = ?",
                 rs -> rs.getString("connection_info"), mce.getDataSourceId());
-
-        DataStore dataStore = operator.fetchOne("SELECT data_store FROM kun_mt_dataset WHERE datasource_id = ? AND database_name = ? AND name = ?",
-                rs -> DataStoreJsonUtil.toDataStore(rs.getString("data_store")), mce.getDataSourceId(), mce.getDatabaseName(), mce.getTableName());
-        if (dataStore == null) {
-            AWSDataSource awsDataSource = JSONUtils.jsonToObject(connectionInfo, AWSDataSource.class);
-            Table table = GlueClient.searchTable(awsDataSource, mce.getDatabaseName(), mce.getTableName());
-            if (table == null) {
-                return;
-            }
-
-            if (!HiveTableSchemaExtractFilter.filter(table.getTableType())) {
-                logger.warn("Extract task terminated, table type: {} not concerned", table.getTableType());
-                return;
-            }
-
-            dataStore = new HiveTableStore(table.getStorageDescriptor().getLocation(), mce.getDatabaseName(), mce.getTableName());
-        }
+        DataStore dataStore = generateDataStore(mce, connectionInfo);
 
         // 生成gid
         long gid = gidService.generate(dataStore);
@@ -166,6 +156,34 @@ public class MCEBuilder {
         }
 
         extractSchemaOfDataset(gid);
+    }
+
+    private DataStore generateDataStore(MetadataChangeEvent mce, String connectionInfo) {
+        DataStore dataStore = operator.fetchOne("SELECT data_store FROM kun_mt_dataset WHERE datasource_id = ? AND database_name = ? AND name = ?",
+                rs -> DataStoreJsonUtil.toDataStore(rs.getString("data_store")), mce.getDataSourceId(), mce.getDatabaseName(), mce.getTableName());
+        if (dataStore != null) {
+            return dataStore;
+        }
+
+        if (mce.getDataSourceType().equals(MetadataChangeEvent.DataSourceType.GLUE)) {
+            AWSDataSource awsDataSource = JSONUtils.jsonToObject(connectionInfo, AWSDataSource.class);
+            Table table = GlueClient.searchTable(awsDataSource, mce.getDatabaseName(), mce.getTableName());
+            if (table == null) {
+                throw new NoSuchElementException(String.format("Extract task terminated, table: %s does not existed", mce.getTableName()));
+            }
+
+            if (!HiveTableSchemaExtractFilter.filter(table.getTableType())) {
+                throw new UnsupportedOperationException(String.format("Extract task terminated, table type: %s not support", table.getTableType()));
+            }
+
+            return new HiveTableStore(table.getStorageDescriptor().getLocation(), mce.getDatabaseName(), mce.getTableName());
+        } else if (mce.getDataSourceType().equals(MetadataChangeEvent.DataSourceType.HIVE)) {
+            String location = MetaStoreParseUtil.parseLocation(MetaStoreParseUtil.Type.META_STORE_CLIENT, dataSourceBuilder.fetchById(mce.getDataSourceId()),
+                    mce.getDatabaseName(), mce.getTableName());
+            return new HiveTableStore(location, mce.getDatabaseName(), mce.getTableName());
+        } else {
+            throw new UnsupportedOperationException("Unsupported dataSourceType: " + mce.getDataSourceType().name());
+        }
     }
 
     private boolean judgeDatasetExistence(long gid, DataSource dataSource, DatasetSchemaExtractor extractor, DatasetExistenceJudgeMode judgeMode) {
