@@ -16,6 +16,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.PostgreSQLContainer;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -30,12 +31,16 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     private List<String> userTables;
 
-    private Boolean usePostgres = false;
+    private static final String POSTGRES_IMAGE = "postgres:12.3";
+
+    protected boolean usePostgres() {
+        return false;
+    }
 
     @Override
     protected void configuration() {
         super.configuration();
-        addModules(new TestDatabaseModule());
+        addModules(new TestDatabaseModule(usePostgres()));
     }
 
     @Before
@@ -43,7 +48,9 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         // initialize database
         dataSource = injector.getInstance(DataSource.class);
         Props props = new Props();
-        props.put("flyway.initSql", "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT");
+        if (!usePostgres()) {
+            props.put("flyway.initSql", "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT");
+        }
         DatabaseSetup setup = new DatabaseSetup(dataSource, props, "kun-infra/");
         setup.start();
     }
@@ -93,14 +100,36 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
             }
         }
 
+        private Boolean usePostgres;
+
+        TestDatabaseModule(Boolean usePostgres) {
+            this.usePostgres = usePostgres;
+        }
+
         @Provides
         @Singleton
         public DataSource createDataSource() {
+            if (usePostgres) {
+                PostgreSQLContainer postgres = startPostgres();
+                HikariConfig config = new HikariConfig();
+                config.setUsername(postgres.getUsername());
+                config.setPassword(postgres.getPassword());
+                config.setJdbcUrl(postgres.getJdbcUrl() + "&stringtype=unspecified");
+                config.setDriverClassName("org.postgresql.Driver");
+                return new HikariDataSource(config);
+
+            }
             HikariConfig config = new HikariConfig();
             config.setJdbcUrl("jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE");
             config.setUsername("sa");
             config.setDriverClassName("org.h2.Driver");
             return new HikariDataSource(config);
+        }
+
+        private PostgreSQLContainer startPostgres() {
+            PostgreSQLContainer postgres = new PostgreSQLContainer<>(POSTGRES_IMAGE);
+            postgres.start();
+            return postgres;
         }
     }
 }
