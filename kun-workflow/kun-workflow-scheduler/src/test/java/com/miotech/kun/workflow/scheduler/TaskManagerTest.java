@@ -557,6 +557,19 @@ public class TaskManagerTest extends SchedulerTestBase {
     }
 
 
+    @Test
+    public void testCreateAttemptWhenTaskRunUpstreamFailedShouldUpstreamFailed(){
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.
+                createTaskRun(task).cloneBuilder().withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                .build();
+        taskManager.submit(Arrays.asList(taskRun));
+
+        //verify create attempt
+        TaskAttemptProps created = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+        assertThat(created.getStatus(),is(TaskRunStatus.UPSTREAM_FAILED));
+    }
+
     private TaskAttemptStatusChangeEvent prepareEvent(long taskAttemptId, String taskName, long taskId, TaskRunStatus from, TaskRunStatus to) {
         return new TaskAttemptStatusChangeEvent(taskAttemptId, from, to, taskName, taskId);
     }

@@ -28,10 +28,10 @@ public class LatestTaskRunDependencyFunction implements DependencyFunction {
     }
 
     @Override
-    public List<Long> resolveDependency(Task self, Long upstreamTaskId, Tick tick, List<TaskRun> others) {
+    public List<TaskRun> resolveDependency(Task self, Long upstreamTaskId, Tick tick, List<TaskRun> others) {
         for (TaskRun otherTaskRun : others) {
             if (otherTaskRun.getTask().getId().equals(upstreamTaskId)) {
-                return Lists.newArrayList(otherTaskRun.getId());
+                return Lists.newArrayList(otherTaskRun);
             }
         }
 
@@ -40,7 +40,7 @@ public class LatestTaskRunDependencyFunction implements DependencyFunction {
             logger.error("upstreamTask never start, taskId = {},upstream taskId = {}", self.getId(), upstreamTaskId);
             return Lists.newArrayList();
         }
-        return Lists.newArrayList(upstreamTaskRun.getId());
+        return Lists.newArrayList(upstreamTaskRun);
     }
 
     @Override

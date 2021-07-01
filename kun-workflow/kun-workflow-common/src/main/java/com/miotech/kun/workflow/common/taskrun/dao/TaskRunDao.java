@@ -371,6 +371,7 @@ public class TaskRunDao {
     /**
      * 'termAt' is a column of TaskRun and TaskAttempt for internal use only. So we refrain from providing a public
      * accessible way.
+     *
      * @param taskRunId
      * @return
      */
@@ -1233,13 +1234,13 @@ public class TaskRunDao {
     }
 
     public List<TaskRun> fetchTaskRunListWithoutAttempt() {
-        String whereCase = TASK_RUN_MODEL_NAME + ".status is NULL " +
+        String whereCase = TASK_RUN_MODEL_NAME + ".status = ? " +
                 "and " + TASK_RUN_MODEL_NAME + ".created_at > ?";
         String sql = getTaskRunSQLBuilderWithDefaultConfig()
                 .where(whereCase)
                 .getSQL();
         OffsetDateTime recoverLimit = DateTimeUtils.now().plusDays(-1);
-        List<TaskRun> taskRunList = dbOperator.fetchAll(sql, taskRunMapperInstance, recoverLimit);
+        List<TaskRun> taskRunList = dbOperator.fetchAll(sql, taskRunMapperInstance, TaskRunStatus.CREATED.name(), recoverLimit);
         Map<Long, List<Long>> taskRunRelations = fetchAllRelationsFromDownstreamTaskRunIds(taskRunList.stream().map(TaskRun::getId).collect(Collectors.toList()));
         return taskRunList.stream().map(taskRun -> taskRun.cloneBuilder()
                 .withDependentTaskRunIds(taskRunRelations.get(taskRun.getId()))
