@@ -55,6 +55,11 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         for (WorkerInstance workerInstance : instanceList) {
             workerMonitor.register(workerInstance.getTaskAttemptId(), new InnerEventHandler());
         }
+        List<TaskAttempt> taskAttemptList = taskRunDao.fetchUnStartedTaskAttemptList();
+        logger.info("recover queued attempt size = {}", taskAttemptList.size());
+        for (TaskAttempt taskAttempt : taskAttemptList) {
+            queueManager.submit(taskAttempt);
+        }
     }
 
     public void reset() {
