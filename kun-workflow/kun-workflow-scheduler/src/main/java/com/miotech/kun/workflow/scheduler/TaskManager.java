@@ -231,9 +231,6 @@ public class TaskManager {
                     List<TaskRunReadyCheckEvent> eventList = new ArrayList<>();
                     taskRunReadyCheckEventQueue.take();
                     taskRunReadyCheckEventQueue.drainTo(eventList);
-                    if (eventList.size() > 0) {
-                        submitSatisfyTaskAttemptToExecutor();
-                    }
                 } catch (Throwable e) {
                     logger.warn("take taskRun ready check event from queue failed");
                 }
