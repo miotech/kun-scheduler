@@ -321,7 +321,7 @@ public class TaskDao {
         if (sortTasks.size() != size) {
             List<Long> cycleDependTasks = plainTasks.stream().map(Task::getId).collect(Collectors.toList());
             logger.error("tasks:{},has cycle dependencies", cycleDependTasks);
-            throw ExceptionUtils.wrapIfChecked(new Exception("has cycle in task dependencies"));
+            throw ExceptionUtils.wrapIfChecked(new IllegalStateException("has cycle in task dependencies"));
         }
         return sortTasks;
     }

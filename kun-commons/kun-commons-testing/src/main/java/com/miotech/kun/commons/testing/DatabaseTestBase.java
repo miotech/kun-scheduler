@@ -30,6 +30,8 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     private List<String> userTables;
 
+    private Boolean usePostgres = false;
+
     @Override
     protected void configuration() {
         super.configuration();
