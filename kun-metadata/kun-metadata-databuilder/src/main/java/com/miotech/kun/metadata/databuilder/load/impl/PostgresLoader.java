@@ -1,6 +1,6 @@
 package com.miotech.kun.metadata.databuilder.load.impl;
 
-import com.beust.jcommander.internal.Lists;
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.metadata.common.service.gid.GidService;

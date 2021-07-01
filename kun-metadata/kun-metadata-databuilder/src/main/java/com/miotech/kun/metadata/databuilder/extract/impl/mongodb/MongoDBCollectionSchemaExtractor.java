@@ -1,12 +1,12 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.mongodb;
 
-import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
+import com.google.common.collect.Lists;
 import com.miotech.kun.metadata.databuilder.extract.schema.SchemaExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.extract.tool.FieldTypeParser;
 import com.miotech.kun.metadata.databuilder.model.MongoDataSource;

@@ -77,7 +77,7 @@ public class JDBCClient {
                 return getConnection(awsDataSource.getAthenaUrl(), awsDataSource.getAthenaUsername(), awsDataSource.getAthenaPassword(), DatabaseType.ATHENA);
             case HIVE:
                 HiveDataSource hiveDataSource = (HiveDataSource) dataSource;
-                return getConnection(hiveDataSource.getDatastoreUrl(), hiveDataSource.getDatastoreUsername(), hiveDataSource.getDatastorePassword(), DatabaseType.HIVE);
+                return getConnection(UseDatabaseUtil.useDatabase(hiveDataSource.getDataStoreUrl(), dbName), hiveDataSource.getDataStoreUsername(), hiveDataSource.getDataStorePassword(), DatabaseType.HIVE);
             case POSTGRESQL:
                 PostgresDataSource postgresDataSource = (PostgresDataSource) dataSource;
                 return getConnection(UseDatabaseUtil.useSchema(postgresDataSource.getUrl(), dbName, schemaName), postgresDataSource.getUsername(), postgresDataSource.getPassword(), DatabaseType.POSTGRES);

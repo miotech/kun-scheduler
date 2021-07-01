@@ -74,11 +74,11 @@ public class MCEOperator extends KunOperator {
     @Override
     public ConfigDef config() {
         ConfigDef configDef = new ConfigDef();
-        configDef.define(DATASOURCE_JDBC_URL, ConfigDef.Type.STRING, true, "jdbcUrl", "jdbcUrl")
-                .define(DATASOURCE_USERNAME, ConfigDef.Type.STRING, true, "username", "username")
-                .define(DATASOURCE_PASSWORD, ConfigDef.Type.STRING, true, "password", "password")
-                .define(DATASOURCE_DRIVER_CLASS_NAME, ConfigDef.Type.STRING, true, "driverClassName", "driverClassName")
-                .define(DEPLOY_MODE, ConfigDef.Type.STRING, true, DEPLOY_MODE, DEPLOY_MODE)
+        configDef.define(DATASOURCE_JDBC_URL, ConfigDef.Type.STRING, "", true, "jdbcUrl", "jdbcUrl")
+                .define(DATASOURCE_USERNAME, ConfigDef.Type.STRING, "", true, "username", "username")
+                .define(DATASOURCE_PASSWORD, ConfigDef.Type.STRING, "", true, "password", "password")
+                .define(DATASOURCE_DRIVER_CLASS_NAME, ConfigDef.Type.STRING, "", true, "driverClassName", "driverClassName")
+                .define(DEPLOY_MODE, ConfigDef.Type.STRING, "", true, DEPLOY_MODE, DEPLOY_MODE)
                 .define(DATASOURCE_ID, ConfigDef.Type.STRING, "", true, DATASOURCE_ID, DATASOURCE_ID)
                 .define(BROKERS, ConfigDef.Type.STRING, "", true, BROKERS, BROKERS)
                 .define(MSE_TOPIC, ConfigDef.Type.STRING, "", true, MSE_TOPIC, MSE_TOPIC)
