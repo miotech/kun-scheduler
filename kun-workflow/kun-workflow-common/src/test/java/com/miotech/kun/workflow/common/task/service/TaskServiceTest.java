@@ -3,7 +3,7 @@ package com.miotech.kun.workflow.common.task.service;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;

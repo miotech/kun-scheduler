@@ -2,8 +2,8 @@ package com.miotech.kun.metadata.databuilder.extract.impl.arangodb;
 
 import com.beust.jcommander.internal.Lists;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.metadata.core.model.DatasetField;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.databuilder.client.ArangoClient;
 import com.miotech.kun.metadata.databuilder.extract.schema.SchemaExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.extract.tool.FieldTypeParser;

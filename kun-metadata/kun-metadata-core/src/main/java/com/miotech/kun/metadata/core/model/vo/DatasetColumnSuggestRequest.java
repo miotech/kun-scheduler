@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.core.model;
+package com.miotech.kun.metadata.core.model.vo;
 
 public class DatasetColumnSuggestRequest {
 

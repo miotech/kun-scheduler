@@ -3,7 +3,7 @@ package com.miotech.kun.metadata.databuilder.builder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
-import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.databuilder.constant.StatisticsMode;
 import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatisticsExtractor;

@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.facade;
 
-import com.miotech.kun.metadata.core.model.DataStore;
-import com.miotech.kun.metadata.core.model.Dataset;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
 
 /**
  * Exposed RPC service interface of metadata service module.

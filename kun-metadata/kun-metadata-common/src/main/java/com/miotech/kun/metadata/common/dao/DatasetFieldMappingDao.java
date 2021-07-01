@@ -6,7 +6,7 @@ import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
-import com.miotech.kun.metadata.core.model.DatasetFieldMapping;
+import com.miotech.kun.metadata.core.model.dataset.DatasetFieldMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
