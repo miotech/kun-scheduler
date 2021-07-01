@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.common.task.dependency;
 
+import com.google.common.collect.Lists;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.DependencyFunction;
@@ -27,19 +28,19 @@ public class LatestTaskRunDependencyFunction implements DependencyFunction {
     }
 
     @Override
-    public TaskRun resolveDependency(Task self, Long upstreamTaskId, Tick tick, List<TaskRun> others) {
+    public List<TaskRun> resolveDependency(Task self, Long upstreamTaskId, Tick tick, List<TaskRun> others) {
         for (TaskRun otherTaskRun : others) {
             if (otherTaskRun.getTask().getId().equals(upstreamTaskId)) {
-                return otherTaskRun;
+                return Lists.newArrayList(otherTaskRun);
             }
         }
 
         TaskRun upstreamTaskRun = taskRunDao.fetchLatestTaskRunToday(upstreamTaskId);
         if (upstreamTaskRun == null) {
             logger.error("upstreamTask never start, taskId = {},upstream taskId = {}", self.getId(), upstreamTaskId);
-            return null;
+            return Lists.newArrayList();
         }
-        return upstreamTaskRun;
+        return Lists.newArrayList(upstreamTaskRun);
     }
 
     @Override
