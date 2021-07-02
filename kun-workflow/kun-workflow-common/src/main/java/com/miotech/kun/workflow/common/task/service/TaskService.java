@@ -198,8 +198,6 @@ public class TaskService {
                 .withTags(vo.getTags())
                 .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
                 .build();
-        // check dependency
-        checkCircularDependency(task);
 
         return fullUpdateTask(task);
     }
