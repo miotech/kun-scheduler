@@ -45,7 +45,7 @@ public class CircularDependencyTest extends CommonTestBase {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testUpdateTaskWithCircularDependencyShouldThrowsException(){
+    public void testFullUpdateTaskWithCircularDependencyShouldThrowsException(){
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3,"0>>1;1>>2");
         Task task1 = taskList.get(0);
         Task task2 = taskList.get(1);
@@ -71,5 +71,34 @@ public class CircularDependencyTest extends CommonTestBase {
                 .build();
         operatorDao.createWithId(op, operatorId);
         taskService.fullUpdateTaskById(task1.getId(),updateTask1);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testPartialUpdateTaskWithCircularDependencyShouldThrowsException(){
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3,"0>>1;1>>2");
+        Task task1 = taskList.get(0);
+        Task task2 = taskList.get(1);
+        Task task3 = taskList.get(2);
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskDao.create(task3);
+        TaskDependencyVO updateDependency = TaskDependencyVO
+                .newBuilder()
+                .withDependencyFunc("latestTaskRun")
+                .withUpstreamTaskId(task3.getId())
+                .build();
+        TaskPropsVO updateTask1 = TaskPropsVO.from(task1)
+                .cloneBuilder().withDependencies(Arrays.asList(updateDependency))
+                .build();
+        long operatorId = task1.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        taskService.partialUpdateTask(task1.getId(),updateTask1);
     }
 }
