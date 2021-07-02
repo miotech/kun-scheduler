@@ -116,7 +116,6 @@ public class PodEventMonitor implements WorkerMonitor, InitializingBean {
                     registerSet.remove(taskAttemptId);
                 }
                 for (Long unFoundAttempt : registerSet) {
-                    unRegister(unFoundAttempt);
                     logger.warn("count not found pod for register handler, taskAttemptId = {}", unFoundAttempt);
                 }
             } catch (Throwable e) {
