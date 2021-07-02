@@ -55,7 +55,7 @@ public class CronUtils {
         CronField cronField = cron.retrieve(CronFieldName.SECOND);
         FieldExpression fieldExpression = cronField.getExpression();
         if(!fieldExpression.asString().equals("0")){
-            throw new IllegalArgumentException("kun not support second-scheduler currently");
+            throw new IllegalArgumentException("config seconds in cron is not supported yet");
         }
     }
 

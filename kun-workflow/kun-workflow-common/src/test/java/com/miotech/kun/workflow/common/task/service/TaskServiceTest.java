@@ -24,16 +24,17 @@ import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.operator.Operator;
-import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskGraph;
-import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
+import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
+import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -76,6 +77,9 @@ public class TaskServiceTest extends CommonTestBase {
 
     @Inject
     private TaskService taskService;
+
+    @Rule
+    public ExpectedException expectedEx = ExpectedException.none();
 
     @Before
     public void beforeEach() {
@@ -272,7 +276,7 @@ public class TaskServiceTest extends CommonTestBase {
         // 4. Fetch updated task
         Task updatedTask = taskService.fetchById(createdTask.getId());
         // 5. and `name` property should be updated
-        assertThat(updatedTask, samePropertyValuesAs(createdTask,"config", "name"));
+        assertThat(updatedTask, samePropertyValuesAs(createdTask, "config", "name"));
         assertThat(updatedTask.getConfig().size(), is(createdTask.getConfig().size()));
         // 6. and `name` property should be updated
         assertThat(updatedTask.getName(), is("Updated Task Name"));
@@ -297,7 +301,7 @@ public class TaskServiceTest extends CommonTestBase {
         }
 
         // Case 2: should throw exception when update with non-exist operator id
-        TaskPropsVO voWithNonExistOperatorId =TaskPropsVO.newBuilder()
+        TaskPropsVO voWithNonExistOperatorId = TaskPropsVO.newBuilder()
                 .withOperatorId(1234L)
                 .build();
         try {
@@ -557,5 +561,85 @@ public class TaskServiceTest extends CommonTestBase {
 
         // Validate
         assertFalse(taskNodeOptionalAfterDelete.isPresent());
+    }
+
+
+    @Test
+    public void testCreateTaskWithSecondsConfigInCron_shouldThrowException() {
+        ScheduleConf conf = ScheduleConf.newBuilder()
+                .withCronExpr("*/2 0 0 * * ?")
+                .withType(ScheduleType.SCHEDULED)
+                .build();
+        TaskPropsVO taskPropsVO = MockTaskFactory
+                .createTaskPropsVO()
+                .cloneBuilder()
+                .withScheduleConf(conf)
+                .build();
+        long operatorId = taskPropsVO.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        //verify
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("config seconds in cron is not supported yet");
+        taskService.createTask(taskPropsVO);
+    }
+
+    @Test
+    public void testFullUpdateTaskWithSecondsConfigInCron_shouldThrowException() {
+        ScheduleConf conf = ScheduleConf.newBuilder()
+                .withCronExpr("*/2 0 0 * * ?")
+                .withType(ScheduleType.SCHEDULED)
+                .build();
+        TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO();
+        long operatorId = taskPropsVO.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        //verify
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("config seconds in cron is not supported yet");
+        Task saved = taskService.createTask(taskPropsVO);
+
+        TaskPropsVO newVo = taskPropsVO.cloneBuilder()
+                .withScheduleConf(conf)
+                .build();
+        taskService.fullUpdateTaskById(saved.getId(), newVo);
+    }
+
+    @Test
+    public void testPartialUpdateTaskWithSecondsConfigInCron_shouldThrowException() {
+        ScheduleConf conf = ScheduleConf.newBuilder()
+                .withCronExpr("*/2 0 0 * * ?")
+                .withType(ScheduleType.SCHEDULED)
+                .build();
+        TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO();
+        long operatorId = taskPropsVO.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        Task saved = taskService.createTask(taskPropsVO);
+        TaskPropsVO newVo = taskPropsVO.cloneBuilder()
+                .withScheduleConf(conf)
+                .build();
+        //verify
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("config seconds in cron is not supported yet");
+        taskService.partialUpdateTask(saved.getId(), newVo);
     }
 }
