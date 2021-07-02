@@ -606,14 +606,13 @@ public class TaskServiceTest extends CommonTestBase {
                 .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
                 .build();
         operatorDao.createWithId(op, operatorId);
-        //verify
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("config seconds in cron is not supported yet");
         Task saved = taskService.createTask(taskPropsVO);
-
         TaskPropsVO newVo = taskPropsVO.cloneBuilder()
                 .withScheduleConf(conf)
                 .build();
+        //verify
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("config seconds in cron is not supported yet");
         taskService.fullUpdateTaskById(saved.getId(), newVo);
     }
 

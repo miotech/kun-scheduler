@@ -193,21 +193,25 @@ public class TaskService {
         // 1. Validate task object integrity
         validateTaskIntegrity(task);
 
-        // 2. Binding operator should exists. If not, throw exception.
+        // 2. validate schedule configuration
+        validateScheduleConf(task.getScheduleConf());
+
+
+        // 3. Binding operator should exists. If not, throw exception.
         if (!operatorDao.fetchById(task.getOperatorId()).isPresent()) {
             throw new EntityNotFoundException(String.format("Cannot create task with operator id: %d, target operator not found.", task.getOperatorId()));
         }
 
-        // 3. Update target task. If there is no task affected (task not exists), throw exception
+        // 4. Update target task. If there is no task affected (task not exists), throw exception
         boolean taskUpdated = taskDao.update(task);
         if (!taskUpdated) {
             throw new EntityNotFoundException(String.format("Cannot perform update on non-exist task with id: %d", task.getId()));
         }
 
-        // 4. Fetch updated task
+        // 5. Fetch updated task
         Task updatedTask = taskDao.fetchById(task.getId()).orElseThrow(IllegalStateException::new);
 
-        // 5. Update lineage graph
+        // 6. Update lineage graph
         updateLineageGraphOnTaskUpdate(updatedTask);
 
         return updatedTask;
