@@ -17,7 +17,7 @@ public class CronUtilsTest {
 
         //verify
         expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("kun not support second-scheduler currently");
+        expectedEx.expectMessage("config seconds in cron is not supported yet");
 
         CronUtils.validateCron(cron);
 
