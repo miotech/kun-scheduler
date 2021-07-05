@@ -1,5 +1,5 @@
 <p align="center">
-    <img style="transform: scale(0.8)" src="docs/static/img/github_bg.png">
+    <img src="docs/static/img/github_bg.png">
 </p>
 
 # 介绍
