@@ -12,7 +12,7 @@ public abstract class EventProcessor {
         properties.put("auto.commit.interval.ms", "1000");
         properties.put("auto.offset.reset", "latest");
         properties.put("max.poll.records", "5");
-        properties.put("max.poll.interval.ms", "600");
+        properties.put("max.poll.interval.ms", "600000");
 
         return properties;
     }
