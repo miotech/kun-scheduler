@@ -89,6 +89,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
             }
             if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
                 queueManager.remove(taskAttempt);
+                abortTaskAttempt(taskAttemptId);
                 return;
             }
             if (taskAttempt.getStatus().isFinished()) {
@@ -134,10 +135,14 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         taskRunDao.updateTaskAttemptLogPath(taskAttempt.getId(), logPath);
 
         workerMonitor.register(taskAttempt.getId(), new InnerEventHandler());
-        startWorker(taskAttempt
-                .cloneBuilder()
-                .withLogPath(logPath)
-                .build());
+        try {
+            startWorker(taskAttempt
+                    .cloneBuilder()
+                    .withLogPath(logPath)
+                    .build());
+        } catch (Exception e) {
+            logger.warn("execute worker with taskAttemptId = {} failed", taskAttempt.getId(), e);
+        }
     }
 
     private void changeTaskRunStatus(WorkerSnapshot workerSnapshot) {
@@ -174,6 +179,11 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
             }
             if (isFinish(workerSnapshot)) {
                 logger.info("taskAttemptId = {},going to clean worker", workerSnapshot.getIns().getTaskAttemptId());
+                try {
+                    miscService.notifyFinished(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
+                } catch (Exception e) {
+                    logger.warn("notify finished event with taskAttemptId = {} failed", workerSnapshot.getIns().getTaskAttemptId(), e);
+                }
                 cleanupWorker(workerSnapshot.getIns());
             }
         }
@@ -185,6 +195,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
             }
             onReceiveSnapshot(workerSnapshot);
         }
+
 
     }
 
