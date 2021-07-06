@@ -2,8 +2,8 @@ package com.miotech.kun.workflow.executor.kubernetes;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Inject;
-import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.publish.EventPublisher;
 import com.miotech.kun.workflow.core.publish.NopEventPublisher;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
+import com.miotech.kun.workflow.executor.CommonTestBase;
 import com.miotech.kun.workflow.executor.TaskAttemptQueue;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockQueueManager;
@@ -35,7 +36,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.doAnswer;
 
-public class KubernetesQueueManagerTest extends DatabaseTestBase {
+public class KubernetesQueueManagerTest extends CommonTestBase {
 
     private KubernetesResourceManager kubernetesResourceManager;
 
@@ -72,6 +73,8 @@ public class KubernetesQueueManagerTest extends DatabaseTestBase {
         mockProps.put("executor.env.resourceQueues", "default,test");
         mockProps.put("executor.env.resourceQueues.default.quota.workerNumbers", 2);
         mockProps.put("executor.env.resourceQueues.test.quota.workerNumbers", 2);
+        MetadataServiceFacade mockMetadataServiceFacade= mock(MetadataServiceFacade.class);
+        bind(MetadataServiceFacade.class,mockMetadataServiceFacade);
         bind(Props.class, mockProps);
         super.configuration();
         bind(KubernetesClient.class, mock(KubernetesClient.class));
