@@ -10,10 +10,15 @@ import com.cronutils.model.field.expression.FieldExpression;
 import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
 import com.google.common.base.Preconditions;
+import com.miotech.kun.commons.utils.TimeZoneEnum;
+import sun.util.resources.cldr.en.TimeZoneNames_en_AU;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Optional;
+import java.util.TimeZone;
 
 public class CronUtils {
 
@@ -79,12 +84,45 @@ public class CronUtils {
      * @return an optional ZonedDateTime that represents the time for next execution
      */
     public static Optional<OffsetDateTime> getNextExecutionTime(Cron cron, OffsetDateTime timebase) {
+        return getNextUTCExecutionTime(cron,timebase,TimeZoneEnum.UTC);
+    }
+
+    /**
+     * Get a OffsetDateTime object (optional) that represents the time for next execution by given cron expression,timebase and timeZone
+     * @param cronExpr cron object
+     * @param timebase datetime pivot
+     * @param timeZoneEnum timezone
+     * @return an optional ZonedDateTime that represents the time for next execution
+     */
+    public static Optional<OffsetDateTime> getNextUTCExecutionTimeByExpr(String cronExpr,OffsetDateTime timebase, TimeZoneEnum timeZoneEnum) {
+        return getNextUTCExecutionTime(convertStringToCron(cronExpr),timebase,timeZoneEnum);
+    }
+
+    /**
+     * Get a OffsetDateTime object (optional) that represents the time for next execution by given cron ,timebase and timeZone
+     * @param cron cron object
+     * @param timebase datetime pivot
+     * @return an optional ZonedDateTime that represents the time for next execution
+     */
+    public static Optional<OffsetDateTime> getNextUTCExecutionTime(Cron cron, OffsetDateTime timebase, TimeZoneEnum timeZoneEnum) {
         Preconditions.checkNotNull(timebase, "Invalid argument `cron`: null");
         Preconditions.checkNotNull(timebase, "Invalid argument `timebase`: null");
 
         ExecutionTime executionTime = ExecutionTime.forCron(cron);
-        Optional<ZonedDateTime> zonedDateTimeOptional = executionTime.nextExecution(timebase.toZonedDateTime());
-        return zonedDateTimeOptional.map(ZonedDateTime::toOffsetDateTime);
+        ZonedDateTime zonedDateTime = timebase.atZoneSameInstant(ZoneId.of(timeZoneEnum.getZoneId()));
+        Optional<ZonedDateTime> zonedDateTimeOptional = executionTime.nextExecution(zonedDateTime);
+        return zonedDateTimeOptional.map(zonedTime -> zonedTime.withZoneSameInstant(ZoneId.of("UTC")).toOffsetDateTime());
+    }
+
+    /**
+     * Get a OffsetDateTime object (optional) that represents the time for next execution by given cron  and timeZone
+     * from now
+     * @param cron cron object
+     * @param timeZoneEnum timezone
+     * @return an optional ZonedDateTime that represents the time for next execution
+     */
+    public static Optional<OffsetDateTime> getNextUTCExecutionTimeFromNow(Cron cron, TimeZoneEnum timeZoneEnum) {
+        return getNextUTCExecutionTime(cron,DateTimeUtils.now(),timeZoneEnum);
     }
 
     /**

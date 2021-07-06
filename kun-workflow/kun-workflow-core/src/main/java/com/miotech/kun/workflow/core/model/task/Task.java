@@ -132,7 +132,7 @@ public class Task {
                         shouldSchedule = true;
                         break;
                     }
-                    Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextExecutionTimeByCronExpr(cronExpression, scheduleTime);
+                    Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextUTCExecutionTimeByExpr(cronExpression, scheduleTime,scheduleConf.getTimeZone());
                     if (nextExecutionTimeOptional.isPresent()) {
                         scheduleTime = nextExecutionTimeOptional.get();
                     } else {

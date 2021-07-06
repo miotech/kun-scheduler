@@ -9,6 +9,7 @@ import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.common.task.vo.TagVO;
@@ -764,9 +765,10 @@ public class TaskDao {
                     break;
                 case SCHEDULED:
                     String cronExpression = scheduleConf.getCronExpr();
+                    TimeZoneEnum timeZoneEnum = scheduleConf.getTimeZone();
                     Cron cron = CronUtils.convertStringToCron(cronExpression);
-                    Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextExecutionTime(cron,
-                            currentTick.toOffsetDateTime());
+                    Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextUTCExecutionTime(cron,
+                            currentTick.toOffsetDateTime(),timeZoneEnum);
 
                     if (nextExecutionTimeOptional.isPresent()) {
                         Tick nextTick = new Tick(nextExecutionTimeOptional.get());

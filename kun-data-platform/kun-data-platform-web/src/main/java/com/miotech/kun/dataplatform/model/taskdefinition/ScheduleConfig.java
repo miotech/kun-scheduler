@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.model.taskdefinition;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.ImmutableList;
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 
 import java.util.List;
 
@@ -18,16 +19,20 @@ public class ScheduleConfig {
 
     private final List<TaskDatasetProps> outputDatasets;
 
+    private final TimeZoneEnum timeZoneEnum;
+
     private ScheduleConfig(String type,
-                          String cronExpr,
-                          List<Long> inputNodes,
-                          List<TaskDatasetProps> inputDatasets,
-                          List<TaskDatasetProps> outputDatasets) {
+                           String cronExpr,
+                           List<Long> inputNodes,
+                           List<TaskDatasetProps> inputDatasets,
+                           List<TaskDatasetProps> outputDatasets,
+                           TimeZoneEnum timeZoneEnum) {
         this.type = type;
         this.cronExpr = cronExpr;
         this.inputNodes = inputNodes == null ? ImmutableList.of() : inputNodes;
         this.inputDatasets = inputDatasets == null ? ImmutableList.of() : inputDatasets;
         this.outputDatasets = outputDatasets == null ? ImmutableList.of() : outputDatasets;
+        this.timeZoneEnum = timeZoneEnum;
     }
 
     public String getType() {
@@ -50,6 +55,10 @@ public class ScheduleConfig {
         return outputDatasets;
     }
 
+    public TimeZoneEnum getTimeZoneEnum() {
+        return timeZoneEnum;
+    }
+
     public static Builder newBuilder() { return new Builder(); }
 
     public static final class Builder {
@@ -58,6 +67,7 @@ public class ScheduleConfig {
         private List<Long> inputNodes;
         private List<TaskDatasetProps> inputDatasets;
         private List<TaskDatasetProps> outputDatasets;
+        private TimeZoneEnum timeZoneEnum;
 
         private Builder() {
         }
@@ -87,8 +97,13 @@ public class ScheduleConfig {
             return this;
         }
 
+        public Builder withTimeZoneEnum(TimeZoneEnum timeZoneEnum){
+            this.timeZoneEnum = timeZoneEnum;
+            return this;
+        }
+
         public ScheduleConfig build() {
-            return new ScheduleConfig(type, cronExpr, inputNodes, inputDatasets, outputDatasets);
+            return new ScheduleConfig(type, cronExpr, inputNodes, inputDatasets, outputDatasets,timeZoneEnum);
         }
     }
 }
