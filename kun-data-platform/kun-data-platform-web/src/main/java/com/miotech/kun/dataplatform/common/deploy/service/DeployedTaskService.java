@@ -173,7 +173,8 @@ public class DeployedTaskService extends BaseSecurityService{
         ScheduleConfig scheduleConfig = taskPayload.getScheduleConfig();
         ScheduleConf scheduleConf = new ScheduleConf(
                 ScheduleType.valueOf(scheduleConfig.getType()),
-                scheduleConfig.getCronExpr());
+                scheduleConfig.getCronExpr(),
+                scheduleConfig.getTimeZoneEnum());
         // prepare dependencies
         List<Long> deployedTaskIds = new ArrayList<>();
         List<Long> inputNodes = taskPayload.getScheduleConfig().getInputNodes();

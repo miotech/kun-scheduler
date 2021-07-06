@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.task.dao;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Tag;
@@ -67,7 +68,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withName("example1")
                 .withDescription("example1_desc")
                 .withConfig(config)
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?"))
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?", TimeZoneEnum.UTC))
                 .withOperatorId(1L)
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
@@ -465,7 +466,7 @@ public class TaskDaoTest extends DatabaseTestBase {
         // Process
         // 2. We update the task to execute on 11:00 instead of 10:15 everyday
         Task taskToUpdate = tasksToExecuteOn1015.get(0).cloneBuilder().withScheduleConf(
-                new ScheduleConf(ScheduleType.SCHEDULED, "0 0 11 * * ?")
+                new ScheduleConf(ScheduleType.SCHEDULED, "0 0 11 * * ?",TimeZoneEnum.UTC)
         ).build();
         taskDao.update(taskToUpdate);
 

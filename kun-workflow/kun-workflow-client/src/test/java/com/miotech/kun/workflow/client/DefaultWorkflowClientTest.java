@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.client;
 
 import com.google.common.collect.ImmutableMap;
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.workflow.client.mock.MockKunWebServerTestBase;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.execution.Config;
@@ -246,7 +247,7 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
                 .withName("SparkTest")
                 .withDescription("spark lineage test")
                 .withConfig(config)
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 1 * ?"))
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 1 * ?",TimeZoneEnum.UTC))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .withOperatorId(76671693556285440L)
