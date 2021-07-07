@@ -1,11 +1,14 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.publish.EventPublisher;
@@ -18,6 +21,7 @@ import com.miotech.kun.workflow.executor.kubernetes.mock.MockQueueManager;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockWorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockWorkerMonitor;
 import com.miotech.kun.workflow.executor.local.MiscService;
+import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.junit.Before;
@@ -28,9 +32,12 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -64,8 +71,13 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
     @Inject
     private MockQueueManager mockQueueManager;
 
+    @Inject
+    private EventBus eventBus;
+
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
+
+    private EventCollector eventCollector;
 
     @Override
     protected void configuration() {
@@ -73,10 +85,11 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
         mockProps.put("executor.env.resourceQueues", "default,test");
         mockProps.put("executor.env.resourceQueues.default.quota.workerNumbers", 2);
         mockProps.put("executor.env.resourceQueues.test.quota.workerNumbers", 2);
+        super.configuration();
         MetadataServiceFacade mockMetadataServiceFacade= mock(MetadataServiceFacade.class);
         bind(MetadataServiceFacade.class,mockMetadataServiceFacade);
         bind(Props.class, mockProps);
-        super.configuration();
+        bind(EventBus.class, new EventBus());
         bind(KubernetesClient.class, mock(KubernetesClient.class));
         bind(EventPublisher.class, new NopEventPublisher());
         bind(WorkerLifeCycleManager.class, MockWorkerLifeCycleManager.class);
@@ -210,8 +223,42 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
 
     }
 
+    @Test
+    public void abortTaskAttemptInQUEUE(){
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt();
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt();
+        TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt();
+        saveAttempt(taskAttempt1);
+        saveAttempt(taskAttempt2);
+        saveAttempt(taskAttempt3);
+        executor.submit(taskAttempt1);
+        executor.submit(taskAttempt2);
+        executor.submit(taskAttempt3);
+
+        awaitUntilAttemptQueued(taskAttempt3.getId());
+
+        //abort taskAttempt
+        executor.cancel(taskAttempt3.getId());
+
+        awaitUntilAttemptDone(taskAttempt3.getId());
+
+        // verify
+        TaskAttempt savedAttempt3 = taskRunDao.fetchAttemptById(taskAttempt3.getId()).get();
+        assertThat(savedAttempt3.getAttempt(), is(1));
+        assertThat(savedAttempt3.getStatus(), is(TaskRunStatus.ABORTED));
+
+        // events
+        assertStatusHistory(savedAttempt3.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.ABORTED);
+
+    }
+
     @Before
     public void init() {
+        eventCollector = new EventCollector();
+        eventBus.register(eventCollector);
         kubernetesResourceManager = prepareQueueManage();
         spyManager = spy(kubernetesResourceManager);
         doAnswer(new Answer() {
@@ -258,6 +305,24 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
         await().atMost(10, TimeUnit.SECONDS).until(() -> {
             return workerLifeCycleManager.hasRegister(attemptId);
         });
+    }
+
+    private void assertStatusHistory(Long attemptId, TaskRunStatus... asserts) {
+        checkArgument(asserts.length > 1);
+
+        List<Event> events = eventCollector.getEvents();
+
+        List<Event> eventsOfAttempt = events.stream()
+                .filter(e -> e instanceof TaskAttemptStatusChangeEvent &&
+                        ((TaskAttemptStatusChangeEvent) e).getAttemptId() == attemptId)
+                .collect(Collectors.toList());
+
+        for (int i = 0; i < asserts.length - 1; i++) {
+            TaskAttemptStatusChangeEvent event = (TaskAttemptStatusChangeEvent) eventsOfAttempt.get(i);
+            assertThat(event.getAttemptId(), is(attemptId));
+            assertThat(event.getFromStatus(), is(asserts[i]));
+            assertThat(event.getToStatus(), is(asserts[i + 1]));
+        }
     }
 
 
