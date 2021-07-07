@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.testing.factory;
 
 import com.miotech.kun.commons.testing.Unsafe;
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.execution.Config;
@@ -27,7 +28,7 @@ public class MockTaskFactory {
                 .withDescription("task_description_" + mockId)
                 .withOperatorId(operatorId)
                 .withConfig(Config.EMPTY)
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 0 0 * * ?"))
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 0 0 * * ?", TimeZoneEnum.UTC))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .withQueueName("default")

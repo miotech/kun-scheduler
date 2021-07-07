@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.client.mock;
 
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
@@ -41,7 +42,7 @@ public class MockingFactory {
                 .withName("test" + WorkflowIdGenerator.nextTaskId())
                 .withDescription("")
                 .withConfig(Config.EMPTY)
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?"))
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?", TimeZoneEnum.UTC))
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .withQueueName("default")

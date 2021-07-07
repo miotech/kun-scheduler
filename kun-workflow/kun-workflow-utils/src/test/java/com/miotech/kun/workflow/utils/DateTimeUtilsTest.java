@@ -29,14 +29,15 @@ public class DateTimeUtilsTest {
 
     @Test
     public void fromTimestamp_withValidTimestampObject_shouldConvertAtNanosecondsPrecision() {
-        Timestamp timestamp = Timestamp.valueOf("2020-09-02 21:41:17.903664124");
+        Timestamp timestamp = new Timestamp(1625114072000l);
+        timestamp.setNanos(903664124);
         OffsetDateTime convertedDatetime = DateTimeUtils.fromTimestamp(timestamp);
-        assertThat(convertedDatetime.getYear(), is(2020));
-        assertThat(convertedDatetime.getMonthValue(), is(9));
-        assertThat(convertedDatetime.getDayOfMonth(), is(2));
-        assertThat(convertedDatetime.getHour(), is(21));
-        assertThat(convertedDatetime.getMinute(), is(41));
-        assertThat(convertedDatetime.getSecond(), is(17));
+        assertThat(convertedDatetime.getYear(), is(2021));
+        assertThat(convertedDatetime.getMonthValue(), is(7));
+        assertThat(convertedDatetime.getDayOfMonth(), is(1));
+        assertThat(convertedDatetime.getHour(), is(4));
+        assertThat(convertedDatetime.getMinute(), is(34));
+        assertThat(convertedDatetime.getSecond(), is(32));
         assertThat(convertedDatetime.getNano(), is(903664124));
     }
 }

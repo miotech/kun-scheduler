@@ -1,5 +1,6 @@
 package com.miotech.kun.dataplatform.mocking;
 
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.model.taskdefinition.*;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
@@ -47,6 +48,7 @@ public class MockTaskDefinitionFactory {
                                     .withInputNodes(dependencies)
                                     .withOutputDatasets(outputDatasets)
                                     .withType(ScheduleType.SCHEDULED.toString())
+                                    .withTimeZoneEnum(TimeZoneEnum.UTC)
                                     .build())
                     .withNotifyConfig(TaskDefNotifyConfig.DEFAULT_TASK_NOTIFY_CONFIG)
                     .build();

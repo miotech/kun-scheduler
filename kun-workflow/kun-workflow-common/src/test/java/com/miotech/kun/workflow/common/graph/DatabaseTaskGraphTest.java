@@ -4,6 +4,7 @@ import com.cronutils.model.Cron;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.common.Tick;
@@ -63,7 +64,7 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
         Cron cron = CronUtils.convertStringToCron(cronExpression);
         Optional<OffsetDateTime> scheduleTime = CronUtils.getNextExecutionTimeFromNow(cron);
         Tick tick = new Tick(scheduleTime.get());
-        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression);
+        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression,TimeZoneEnum.UTC);
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, WorkflowIdGenerator.nextOperatorId(), "1>>2;0>>1", conf);
         saveTaskList(taskList);
         List<Long> expectTaskIds = taskList.stream().sorted(Comparator.comparing(Task::getId)).map(Task::getId).collect(Collectors.toList());
@@ -77,12 +78,12 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
     public void taskTopoSortInDiffTick() {
         String upStreamTaskCron = "0 0 9 * * ?";
         Cron upStreamCron = CronUtils.convertStringToCron(upStreamTaskCron);
-        Task upTask = MockTaskFactory.createTaskWithUpstreams(new ArrayList<>(),new ScheduleConf(ScheduleType.SCHEDULED, upStreamTaskCron) );
+        Task upTask = MockTaskFactory.createTaskWithUpstreams(new ArrayList<>(),new ScheduleConf(ScheduleType.SCHEDULED, upStreamTaskCron, TimeZoneEnum.UTC) );
         String cronExpression = "0 0 10 * * ?";
         Cron cron = CronUtils.convertStringToCron(cronExpression);
         Optional<OffsetDateTime> preScheduleTime = CronUtils.getNextExecutionTimeFromNow(upStreamCron);
         Optional<OffsetDateTime> scheduleTime = CronUtils.getNextExecutionTimeFromNow(cron);
-        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression);
+        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression,TimeZoneEnum.UTC);
         Task tickHead = MockTaskFactory.createTaskWithUpstreams(Lists.newArrayList(upTask.getId()), conf);
         List<Task> tickMid = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
@@ -116,7 +117,7 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
         Cron cron = CronUtils.convertStringToCron(cronExpression);
         Optional<OffsetDateTime> scheduleTime = CronUtils.getNextExecutionTimeFromNow(cron);
         Tick tick = new Tick(scheduleTime.get());
-        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression);
+        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression,TimeZoneEnum.UTC);
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, WorkflowIdGenerator.nextOperatorId(), "1>>2;0>>1;2>>0", conf);
         saveTaskList(taskList);
         thrown.expectMessage("has cycle in task dependencies");
@@ -131,7 +132,7 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
         Cron cron = CronUtils.convertStringToCron(cronExpression);
         Optional<OffsetDateTime> scheduleTime = CronUtils.getNextExecutionTimeFromNow(cron);
         Tick tick = new Tick(scheduleTime.get());
-        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression);
+        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression,TimeZoneEnum.UTC);
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(6, WorkflowIdGenerator.nextOperatorId(), "2>>1;2>>3;2>>4;1>>5;1>>0", conf);
         saveTaskList(taskList);
         List<Long> createTaskIds = taskList.stream().map(Task::getId).collect(Collectors.toList());

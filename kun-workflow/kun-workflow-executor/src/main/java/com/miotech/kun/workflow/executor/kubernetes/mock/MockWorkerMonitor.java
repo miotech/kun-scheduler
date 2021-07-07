@@ -5,8 +5,8 @@ import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.WorkerEventHandler;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +36,7 @@ public class MockWorkerMonitor implements WorkerMonitor {
     public void makeDone(Long taskAttemptId) {
         WorkerInstance instance = WorkerInstance.newBuilder()
                 .withTaskAttemptId(taskAttemptId).build();
-        WorkerSnapshot workerSnapshot = new WorkerSnapshot(instance, OffsetDateTime.now()) {
+        WorkerSnapshot workerSnapshot = new WorkerSnapshot(instance, DateTimeUtils.now()) {
             @Override
             public TaskRunStatus getStatus() {
                 return TaskRunStatus.SUCCESS;
@@ -48,7 +48,7 @@ public class MockWorkerMonitor implements WorkerMonitor {
     public void makeRunning(Long taskAttemptId) {
         WorkerInstance instance = WorkerInstance.newBuilder()
                 .withTaskAttemptId(taskAttemptId).build();
-        WorkerSnapshot workerSnapshot = new WorkerSnapshot(instance, OffsetDateTime.now()) {
+        WorkerSnapshot workerSnapshot = new WorkerSnapshot(instance, DateTimeUtils.now()) {
             @Override
             public TaskRunStatus getStatus() {
                 return TaskRunStatus.RUNNING;
