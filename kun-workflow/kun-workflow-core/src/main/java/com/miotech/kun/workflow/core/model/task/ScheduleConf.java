@@ -29,7 +29,11 @@ public class ScheduleConf {
                         @JsonProperty("timeZone") @Nullable TimeZoneEnum timeZone) {
         this.type = type;
         this.cronExpr = cronExpr;
-        this.timeZone = timeZone;
+        if (!type.equals(ScheduleType.NONE) && Objects.isNull(timeZone)) {
+            this.timeZone = TimeZoneEnum.UTC;
+        } else {
+            this.timeZone = timeZone;
+        }
     }
 
     public ScheduleType getType() {

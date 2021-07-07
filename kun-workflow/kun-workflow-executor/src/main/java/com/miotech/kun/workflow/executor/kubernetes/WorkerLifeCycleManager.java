@@ -150,7 +150,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     private void abortTaskAttempt(Long taskAttemptId) {
         miscService.changeTaskAttemptStatus(taskAttemptId,
-                TaskRunStatus.ABORTED, null, OffsetDateTime.now());
+                TaskRunStatus.ABORTED, null, DateTimeUtils.now());
     }
 
     private void cleanupWorker(WorkerInstance workerInstance) {
