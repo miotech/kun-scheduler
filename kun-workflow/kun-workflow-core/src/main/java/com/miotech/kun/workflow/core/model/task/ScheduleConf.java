@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 
 import javax.annotation.Nullable;
 import java.util.Objects;
@@ -15,20 +16,39 @@ public class ScheduleConf {
     @Nullable
     private final String cronExpr;
 
+    private final TimeZoneEnum timeZone;
+
+
+    public ScheduleConf(ScheduleType type, String cronExpr) {
+        this(type, cronExpr, null);
+    }
+
     @JsonCreator
     public ScheduleConf(@JsonProperty("type") ScheduleType type,
-                        @JsonProperty("cronExpr") @Nullable String cronExpr) {
+                        @JsonProperty("cronExpr") @Nullable String cronExpr,
+                        @JsonProperty("timeZone") @Nullable TimeZoneEnum timeZone) {
         this.type = type;
         this.cronExpr = cronExpr;
+        if (!type.equals(ScheduleType.NONE) && Objects.isNull(timeZone)) {
+            this.timeZone = TimeZoneEnum.UTC;
+        } else {
+            this.timeZone = timeZone;
+        }
     }
 
     public ScheduleType getType() {
         return type;
     }
 
+
     @Nullable
     public String getCronExpr() {
         return cronExpr;
+    }
+
+    @Nullable
+    public TimeZoneEnum getTimeZone() {
+        return timeZone;
     }
 
     @Override
@@ -53,6 +73,7 @@ public class ScheduleConf {
     public static final class ScheduleConfBuilder {
         private ScheduleType type;
         private String cronExpr;
+        private TimeZoneEnum timeZone;
 
         private ScheduleConfBuilder() {
         }
@@ -67,8 +88,13 @@ public class ScheduleConf {
             return this;
         }
 
+        public ScheduleConfBuilder withTimeZone(TimeZoneEnum timeZone) {
+            this.timeZone = timeZone;
+            return this;
+        }
+
         public ScheduleConf build() {
-            return new ScheduleConf(type, cronExpr);
+            return new ScheduleConf(type, cronExpr, timeZone);
         }
     }
 }

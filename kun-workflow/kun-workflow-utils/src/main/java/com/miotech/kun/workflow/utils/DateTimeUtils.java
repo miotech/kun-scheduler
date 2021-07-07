@@ -6,10 +6,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 public class DateTimeUtils {
-    private static final ZoneOffset ZONE_OFFSET = OffsetDateTime.now().getOffset();
+    private static final ZoneOffset ZONE_OFFSET = ZoneOffset.UTC;
     private static final DateTimeFormatter MINUTE_PRECISION_DATETIME_PATTERN = DateTimeFormatter.ofPattern("yyyyMMddHHmm");
 
-    private static Clock globalClock = Clock.systemDefaultZone();
+    private static Clock globalClock = Clock.systemUTC();
 
     private DateTimeUtils() {}
 
@@ -26,7 +26,7 @@ public class DateTimeUtils {
     }
 
     public static void resetClock() {
-        globalClock = Clock.systemDefaultZone();
+        globalClock = Clock.systemUTC();
     }
 
     /**
@@ -35,7 +35,7 @@ public class DateTimeUtils {
      */
     public static OffsetDateTime freeze() {
         OffsetDateTime now = OffsetDateTime.now();
-        Clock fixed = Clock.fixed(now.toInstant(), ZoneId.systemDefault());
+        Clock fixed = Clock.fixed(now.toInstant(), ZoneId.of("UTC"));
         setClock(fixed);
         return now;
     }
@@ -47,7 +47,7 @@ public class DateTimeUtils {
      */
     public static OffsetDateTime freezeAt(String dateTimeString) {
         OffsetDateTime dt = LocalDateTime.parse(dateTimeString, MINUTE_PRECISION_DATETIME_PATTERN).atOffset(ZONE_OFFSET);
-        Clock fixed = Clock.fixed(dt.toInstant(), ZoneId.systemDefault());
+        Clock fixed = Clock.fixed(dt.toInstant(), ZoneId.of("UTC"));
         setClock(fixed);
         return dt;
     }
@@ -66,12 +66,12 @@ public class DateTimeUtils {
         if (timestamp == null) return null;
         OffsetDateTime parsedOffsetDatetime = OffsetDateTime.ofInstant(
                 Instant.ofEpochMilli(timestamp.getTime()),
-                ZoneId.systemDefault());
+                ZoneId.of("UTC"));
         /**
-        * Fix: OffsetDatetime object from <code>Instant.ofEpochMilli(timestamp.getTime())</code>
-        * can only provide millisecond precision transformation. The following line fixes this issue and provides
-        * nanoseconds precision conversion.
-        */
+         * Fix: OffsetDatetime object from <code>Instant.ofEpochMilli(timestamp.getTime())</code>
+         * can only provide millisecond precision transformation. The following line fixes this issue and provides
+         * nanoseconds precision conversion.
+         */
         return parsedOffsetDatetime
                 .minusNanos(parsedOffsetDatetime.getNano())
                 .plusNanos(timestamp.getNanos());

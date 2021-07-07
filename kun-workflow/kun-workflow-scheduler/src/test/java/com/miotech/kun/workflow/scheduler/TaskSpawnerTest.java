@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -269,7 +270,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     }
 
     private Task prepareTask() {
-        ScheduleConf scheduleConf = new ScheduleConf(ScheduleType.SCHEDULED, "0 */1 * * * ?");
+        ScheduleConf scheduleConf = new ScheduleConf(ScheduleType.SCHEDULED, "0 */1 * * * ?", TimeZoneEnum.UTC);
         return MockTaskFactory.createTask(operatorId).cloneBuilder()
                 .withConfig(Config.EMPTY)
                 .withRecoverTimes(1)
@@ -378,8 +379,8 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         Tick nextTick = new Tick(tick.toOffsetDateTime().plusMinutes(1));
         List<TaskRun> taskRunList = taskSpawner.run(graph, nextTick);
         assertThat(taskRunList.size(), is(1));
-        Optional<OffsetDateTime> expectNextScheduleTimeOptional = CronUtils.getNextExecutionTimeByCronExpr(task.getScheduleConf().getCronExpr(),
-                nextTick.toOffsetDateTime());
+        Optional<OffsetDateTime> expectNextScheduleTimeOptional = CronUtils.getNextUTCExecutionTimeByExpr(task.getScheduleConf().getCronExpr(),
+                nextTick.toOffsetDateTime(),TimeZoneEnum.UTC);
         Optional<Tick> nextTickOptional = taskDao.fetchNextExecutionTickByTaskId(task.getId());
         assertEquals(expectNextScheduleTimeOptional.get(), nextTickOptional.get().toOffsetDateTime());
     }
@@ -593,7 +594,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         taskSpawner.schedule(graph1);
         taskSpawner.schedule(graph2);
 
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         eventBus.post(new TickEvent(new Tick(next)));
 
         // verify
@@ -609,9 +610,9 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testCreateTaskRuns_single_task() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         Task task = MockTaskFactory.createTask(operatorId).cloneBuilder()
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE))
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE,TimeZoneEnum.UTC))
                 .build();
         taskDao.create(task);
 
@@ -649,7 +650,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         DateTimeUtils.freeze();
         // prepare
         Task task = MockTaskFactory.createTask(operatorId).cloneBuilder()
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_THREE_MINUTE))
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_THREE_MINUTE,TimeZoneEnum.UTC))
                 .build();
         taskDao.create(task);
 
@@ -683,10 +684,10 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testCreateTaskRuns_multiple_tasks() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         List<Task> tasks = MockTaskFactory.createTasks(2, operatorId).stream().map(t -> {
             Task t2 = t.cloneBuilder()
-                    .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE))
+                    .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE,TimeZoneEnum.UTC))
                     .build();
             taskDao.create(t2);
             return t2;
@@ -736,14 +737,14 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testCreateTaskRuns_task_has_upstreams() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1");
 
         Task task1 = tasks.get(0);
         Task task2 = tasks.get(1);
 
         task2 = task2.cloneBuilder()
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE))
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE,TimeZoneEnum.UTC))
                 .build();
 
         taskDao.create(task1);
@@ -788,11 +789,11 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testCreateTaskRuns_task_depend_on_task_in_same_tick() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1")
                 .stream().map(t -> {
                     Task t2 = t.cloneBuilder()
-                            .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE))
+                            .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE,TimeZoneEnum.UTC))
                             .build();
                     taskDao.create(t2);
                     return t2;
@@ -883,12 +884,12 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testScheduleTaskRunUpstreamIsFailed() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1");
 
         Task task1 = tasks.get(0);
         Task task2 = tasks.get(1).cloneBuilder()
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE)).build();
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE,TimeZoneEnum.UTC)).build();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
                 .cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
         taskDao.create(task1);
