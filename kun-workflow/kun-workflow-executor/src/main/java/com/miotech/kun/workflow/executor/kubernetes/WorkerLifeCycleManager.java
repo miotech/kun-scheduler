@@ -142,7 +142,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                     .build());
         } catch (Exception e) {
             logger.warn("Failed to execute worker, taskAttemptId = {}", taskAttempt.getId(), e);
-            queueManager.submit(taskAttempt);
+            miscService.changeTaskAttemptStatus(taskAttempt.getId(),TaskRunStatus.ERROR,null,DateTimeUtils.now());
         }
     }
 
