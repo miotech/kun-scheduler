@@ -329,7 +329,7 @@ public class KubernetesOperator extends KunOperator {
             // fetch log from last footprint
             String podName = pod.getMetadata().getName();
             int from = logMap.getOrDefault(podName, 0L).intValue();
-            PodResource<Pod, DoneablePod> podResource = k8sClient
+            PodResource<Pod> podResource = k8sClient
                     .pods()
                     .inNamespace(pod.getMetadata().getNamespace())
                     .withName(podName);
