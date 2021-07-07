@@ -23,16 +23,16 @@ public class ScheduleConfig {
 
     private ScheduleConfig(String type,
                            String cronExpr,
+                           TimeZoneEnum timeZoneEnum,
                            List<Long> inputNodes,
                            List<TaskDatasetProps> inputDatasets,
-                           List<TaskDatasetProps> outputDatasets,
-                           TimeZoneEnum timeZoneEnum) {
+                           List<TaskDatasetProps> outputDatasets) {
         this.type = type;
         this.cronExpr = cronExpr;
+        this.timeZoneEnum = timeZoneEnum;
         this.inputNodes = inputNodes == null ? ImmutableList.of() : inputNodes;
         this.inputDatasets = inputDatasets == null ? ImmutableList.of() : inputDatasets;
         this.outputDatasets = outputDatasets == null ? ImmutableList.of() : outputDatasets;
-        this.timeZoneEnum = timeZoneEnum;
     }
 
     public String getType() {
@@ -59,7 +59,9 @@ public class ScheduleConfig {
         return timeZoneEnum;
     }
 
-    public static Builder newBuilder() { return new Builder(); }
+    public static Builder newBuilder() {
+        return new Builder();
+    }
 
     public static final class Builder {
         private String type;
@@ -97,13 +99,13 @@ public class ScheduleConfig {
             return this;
         }
 
-        public Builder withTimeZoneEnum(TimeZoneEnum timeZoneEnum){
+        public Builder withTimeZoneEnum(TimeZoneEnum timeZoneEnum) {
             this.timeZoneEnum = timeZoneEnum;
             return this;
         }
 
         public ScheduleConfig build() {
-            return new ScheduleConfig(type, cronExpr, inputNodes, inputDatasets, outputDatasets,timeZoneEnum);
+            return new ScheduleConfig(type, cronExpr, timeZoneEnum, inputNodes, inputDatasets, outputDatasets);
         }
     }
 }
