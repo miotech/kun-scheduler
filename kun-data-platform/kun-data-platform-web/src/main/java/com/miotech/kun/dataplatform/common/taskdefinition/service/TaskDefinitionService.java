@@ -1,5 +1,6 @@
 package com.miotech.kun.dataplatform.common.taskdefinition.service;
 
+import com.cronutils.model.Cron;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.dataplatform.common.commit.service.TaskCommitService;
@@ -29,6 +30,7 @@ import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -48,7 +50,7 @@ import static com.miotech.kun.dataplatform.model.taskdefinition.TaskDefNotifyCon
 @Slf4j
 public class TaskDefinitionService extends BaseSecurityService {
 
-   private static final List<ScheduleType> VALID_SCHEDULE_TYPE = ImmutableList.of(ScheduleType.SCHEDULED, ScheduleType.ONESHOT, ScheduleType.NONE);
+    private static final List<ScheduleType> VALID_SCHEDULE_TYPE = ImmutableList.of(ScheduleType.SCHEDULED, ScheduleType.ONESHOT, ScheduleType.NONE);
 
     @Autowired
     private TaskDefinitionDao taskDefinitionDao;
@@ -92,7 +94,6 @@ public class TaskDefinitionService extends BaseSecurityService {
     }
 
     /**
-     *
      * @return
      */
     public List<TaskDefinition> findAll() {
@@ -156,6 +157,9 @@ public class TaskDefinitionService extends BaseSecurityService {
         Preconditions.checkNotNull(request.getTaskPayload(), "taskPayload should not be `null`");
 
         TaskDefinition taskDefinition = find(definitionId);
+        TaskPayload taskPayload = request.getTaskPayload();
+        validateSchedule(taskPayload.getScheduleConfig());
+        //validate payload
         TaskDefinition updated = taskDefinition.cloneBuilder()
                 .withTaskPayload(request.getTaskPayload())
                 .withName(request.getName())
@@ -180,7 +184,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                 .collect(Collectors.toList())
         );
 
-        if(!upstream.isEmpty()){
+        if (!upstream.isEmpty()) {
             taskRelationDao.delete(definitionId);
             List<TaskRelation> taskRelations = upstream.stream().map(x -> new TaskRelation(x, definitionId, DateTimeUtils.now(), DateTimeUtils.now())).collect(Collectors.toList());
             taskRelationDao.create(taskRelations);
@@ -195,7 +199,6 @@ public class TaskDefinitionService extends BaseSecurityService {
 
         return updated;
     }
-
 
 
     public void checkRule(TaskDefinition taskDefinition) {
@@ -217,7 +220,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                 .map(ParameterDefinition::getName)
                 .collect(Collectors.toList());
         if (!requiredParameterNames.isEmpty()) {
-            for (String key: requiredParameterNames) {
+            for (String key : requiredParameterNames) {
                 Object value = taskConfig.get(key);
                 if (Objects.isNull(value)) {
                     throw new IllegalArgumentException(
@@ -266,11 +269,11 @@ public class TaskDefinitionService extends BaseSecurityService {
         }
 
         List<TaskRelation> downStreamTaskDefIds = taskRelationDao.fetchByUpstreamId(taskDefId);
-        if(!downStreamTaskDefIds.isEmpty()){
+        if (!downStreamTaskDefIds.isEmpty()) {
             throw new RuntimeException(String.format("Task definition has downStream dependencies, please update downStream task definition first, \"%s\"", taskDefId));
         }
         List<Long> downStreamWorkflowTaskIds = deployedTaskService.getDownStreamWorkflowTasks(taskDefId);
-        if(!downStreamWorkflowTaskIds.isEmpty()){
+        if (!downStreamWorkflowTaskIds.isEmpty()) {
             throw new RuntimeException(String.format("Task definition \"%s\" has deployed downStream dependencies, please update downStream task and deploy first", taskDefId));
         }
 
@@ -279,7 +282,7 @@ public class TaskDefinitionService extends BaseSecurityService {
 
         //offline deployed task
         TaskCommit commit = taskCommitService.commit(taskDefId, "OFFLINE");
-        try{
+        try {
             DeployedTask deployedTask = deployedTaskService.find(taskDefId);
             List<Long> commitIds = new ArrayList<>();
             commitIds.add(commit.getId());
@@ -287,7 +290,7 @@ public class TaskDefinitionService extends BaseSecurityService {
             request.setCommitIds(commitIds);
             Deploy deploy = deployService.create(request);
             deployService.publish(deploy.getId());
-        }catch (IllegalArgumentException e){
+        } catch (IllegalArgumentException e) {
             log.debug("task definition \"{}\" not deployed yet, no need to offline", taskDefId);
         }
 
@@ -302,11 +305,11 @@ public class TaskDefinitionService extends BaseSecurityService {
         }
         List<Long> allUpstreamIds = new ArrayList<>();
         List<Long> inputNodes = taskPayload.getScheduleConfig().getInputNodes();
-        allUpstreamIds.addAll( inputNodes == null ? ImmutableList.of(): inputNodes);
+        allUpstreamIds.addAll(inputNodes == null ? ImmutableList.of() : inputNodes);
 
         List<Long> inputDatasets = Optional.ofNullable(taskPayload.getScheduleConfig()
                 .getInputDatasets())
-                .map( x -> x.stream()
+                .map(x -> x.stream()
                         .map(TaskDatasetProps::getDefinitionId)
                         .collect(Collectors.toList()))
                 .orElseGet(ImmutableList::of);
@@ -339,7 +342,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, ""))
                 .build();
 
-        TaskRun taskRun = workflowClient.executeTask(task,  taskRunRequest.getVariables());
+        TaskRun taskRun = workflowClient.executeTask(task, taskRunRequest.getVariables());
         JSONObject userInputTaskConfig = new JSONObject();
         userInputTaskConfig.put("parameters", taskRunRequest.getParameters());
         userInputTaskConfig.put("variables", taskRunRequest.getVariables());
@@ -357,7 +360,7 @@ public class TaskDefinitionService extends BaseSecurityService {
     }
 
     public TaskTry findTaskTry(Long taskTryId) {
-        return  taskTryDao.fetchById(taskTryId)
+        return taskTryDao.fetchById(taskTryId)
                 .<IllegalArgumentException>orElseThrow(() -> {
                     throw new IllegalArgumentException(String.format("Task try not found: \"%s\"", taskTryId));
                 });
@@ -369,7 +372,7 @@ public class TaskDefinitionService extends BaseSecurityService {
         return taskTry;
     }
 
-    public TaskRunLogVO runLog(TaskRunLogRequest  request) {
+    public TaskRunLogVO runLog(TaskRunLogRequest request) {
         TaskRunLog log = workflowClient.getTaskRunLog(request);
         TaskRunStatus status = workflowClient.getTaskRunState(request.getTaskRunId())
                 .getStatus();
@@ -408,7 +411,7 @@ public class TaskDefinitionService extends BaseSecurityService {
 
     private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, List<TaskDefinition> taskDefinitions, boolean withTaskPayload) {
         List<TaskDefinitionProps> taskDefinitionProps;
-        if (CollectionUtils.isEmpty(taskDefinitions)){
+        if (CollectionUtils.isEmpty(taskDefinitions)) {
             List<Long> upstreamDefinitionIds = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
             taskDefinitionProps = upstreamDefinitionIds.stream()
                     .map(x -> new TaskDefinitionProps(x, ""))
@@ -423,7 +426,7 @@ public class TaskDefinitionService extends BaseSecurityService {
                 taskDefinition.getDefinitionId(),
                 taskDefinition.getName(),
                 taskDefinition.getTaskTemplateName(),
-                withTaskPayload ? taskDefinition.getTaskPayload(): null,
+                withTaskPayload ? taskDefinition.getTaskPayload() : null,
                 taskDefinition.getCreator(),
                 taskDefinition.isArchived(),
                 commitStatus.get(taskDefinition.getDefinitionId()),
@@ -446,5 +449,12 @@ public class TaskDefinitionService extends BaseSecurityService {
                 taskRun.getStatus(),
                 taskTry.getTaskConfig()
         );
+    }
+
+    private void validateSchedule(ScheduleConfig conf) {
+        if (!conf.getType().equals("NONE")) {
+            Cron cron = CronUtils.convertStringToCron(conf.getCronExpr());
+            CronUtils.validateCron(cron);
+        }
     }
 }

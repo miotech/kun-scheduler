@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.common.task.service;
 
+import com.cronutils.model.Cron;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -22,6 +23,7 @@ import com.miotech.kun.workflow.core.execution.Resolver;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.StringUtils;
@@ -191,21 +193,25 @@ public class TaskService {
         // 1. Validate task object integrity
         validateTaskIntegrity(task);
 
-        // 2. Binding operator should exists. If not, throw exception.
+        // 2. validate schedule configuration
+        validateScheduleConf(task.getScheduleConf());
+
+
+        // 3. Binding operator should exists. If not, throw exception.
         if (!operatorDao.fetchById(task.getOperatorId()).isPresent()) {
             throw new EntityNotFoundException(String.format("Cannot create task with operator id: %d, target operator not found.", task.getOperatorId()));
         }
 
-        // 3. Update target task. If there is no task affected (task not exists), throw exception
+        // 4. Update target task. If there is no task affected (task not exists), throw exception
         boolean taskUpdated = taskDao.update(task);
         if (!taskUpdated) {
             throw new EntityNotFoundException(String.format("Cannot perform update on non-exist task with id: %d", task.getId()));
         }
 
-        // 4. Fetch updated task
+        // 5. Fetch updated task
         Task updatedTask = taskDao.fetchById(task.getId()).orElseThrow(IllegalStateException::new);
 
-        // 5. Update lineage graph
+        // 6. Update lineage graph
         updateLineageGraphOnTaskUpdate(updatedTask);
 
         return updatedTask;
@@ -352,6 +358,7 @@ public class TaskService {
 
     private Task convertTaskPropsVoToTask(TaskPropsVO vo) {
         Config config = parseConfig(vo);
+        validateScheduleConf(vo.getScheduleConf());
         return Task.newBuilder()
                 .withName(vo.getName())
                 .withDescription(vo.getDescription())
@@ -363,6 +370,13 @@ public class TaskService {
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
                 .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
                 .build();
+    }
+
+    private void validateScheduleConf(ScheduleConf conf) {
+        if (!conf.getType().equals(ScheduleType.NONE)) {
+            Cron cron = CronUtils.convertStringToCron(conf.getCronExpr());
+            CronUtils.validateCron(cron);
+        }
     }
 
     private void validateTaskIntegrity(Task task) {

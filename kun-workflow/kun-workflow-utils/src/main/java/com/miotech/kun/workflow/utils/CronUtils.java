@@ -4,6 +4,9 @@ import com.cronutils.model.Cron;
 import com.cronutils.model.CronType;
 import com.cronutils.model.definition.CronDefinition;
 import com.cronutils.model.definition.CronDefinitionBuilder;
+import com.cronutils.model.field.CronField;
+import com.cronutils.model.field.CronFieldName;
+import com.cronutils.model.field.expression.FieldExpression;
 import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
 import com.google.common.base.Preconditions;
@@ -49,6 +52,11 @@ public class CronUtils {
      */
     public static void validateCron(Cron cron) {
         cron.validate();
+        CronField cronField = cron.retrieve(CronFieldName.SECOND);
+        FieldExpression fieldExpression = cronField.getExpression();
+        if(!fieldExpression.asString().equals("0")){
+            throw new IllegalArgumentException("config seconds in cron is not supported yet");
+        }
     }
 
     /**
