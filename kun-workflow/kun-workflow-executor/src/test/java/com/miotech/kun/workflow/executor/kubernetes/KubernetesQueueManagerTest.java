@@ -86,8 +86,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
         mockProps.put("executor.env.resourceQueues.default.quota.workerNumbers", 2);
         mockProps.put("executor.env.resourceQueues.test.quota.workerNumbers", 2);
         super.configuration();
-        MetadataServiceFacade mockMetadataServiceFacade= mock(MetadataServiceFacade.class);
-        bind(MetadataServiceFacade.class,mockMetadataServiceFacade);
+        bind(MetadataServiceFacade.class,mock(MetadataServiceFacade.class));
         bind(Props.class, mockProps);
         bind(EventBus.class, new EventBus());
         bind(KubernetesClient.class, mock(KubernetesClient.class));

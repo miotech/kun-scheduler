@@ -84,12 +84,12 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         if (workerSnapshot == null) {
             TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
             if (taskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
-                abortTaskAttempt(taskAttemptId);
+                updateTaskAttemptAborted(taskAttemptId);
                 return;
             }
             if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
                 queueManager.remove(taskAttempt);
-                abortTaskAttempt(taskAttemptId);
+                updateTaskAttemptAborted(taskAttemptId);
                 return;
             }
             if (taskAttempt.getStatus().isFinished()) {
@@ -99,7 +99,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         if (!stopWorker(taskAttemptId)) {
             throw new IllegalStateException("stop worker failed");
         }
-        abortTaskAttempt(taskAttemptId);
+        updateTaskAttemptAborted(taskAttemptId);
         cleanupWorker(workerSnapshot.getIns());
     }
 
@@ -141,8 +141,8 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                     .withLogPath(logPath)
                     .build());
         } catch (Exception e) {
-            logger.warn("execute worker with taskAttemptId = {} failed", taskAttempt.getId(), e);
-            start(taskAttempt);
+            logger.warn("Failed to execute worker, taskAttemptId = {}", taskAttempt.getId(), e);
+            queueManager.submit(taskAttempt);
         }
     }
 
@@ -154,7 +154,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                 taskRunStatus, startAt, endAt);
     }
 
-    private void abortTaskAttempt(Long taskAttemptId) {
+    private void updateTaskAttemptAborted(Long taskAttemptId) {
         miscService.changeTaskAttemptStatus(taskAttemptId,
                 TaskRunStatus.ABORTED, null, OffsetDateTime.now());
     }
