@@ -84,11 +84,12 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         if (workerSnapshot == null) {
             TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
             if (taskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
-                abortTaskAttempt(taskAttemptId);
+                updateTaskAttemptAborted(taskAttemptId);
                 return;
             }
             if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
                 queueManager.remove(taskAttempt);
+                updateTaskAttemptAborted(taskAttemptId);
                 return;
             }
             if (taskAttempt.getStatus().isFinished()) {
@@ -98,7 +99,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         if (!stopWorker(taskAttemptId)) {
             throw new IllegalStateException("stop worker failed");
         }
-        abortTaskAttempt(taskAttemptId);
+        updateTaskAttemptAborted(taskAttemptId);
         cleanupWorker(workerSnapshot.getIns());
     }
 
@@ -134,10 +135,15 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         taskRunDao.updateTaskAttemptLogPath(taskAttempt.getId(), logPath);
 
         workerMonitor.register(taskAttempt.getId(), new InnerEventHandler());
-        startWorker(taskAttempt
-                .cloneBuilder()
-                .withLogPath(logPath)
-                .build());
+        try {
+            startWorker(taskAttempt
+                    .cloneBuilder()
+                    .withLogPath(logPath)
+                    .build());
+        } catch (Exception e) {
+            logger.warn("Failed to execute worker, taskAttemptId = {}", taskAttempt.getId(), e);
+            miscService.changeTaskAttemptStatus(taskAttempt.getId(),TaskRunStatus.ERROR);
+        }
     }
 
     private void changeTaskRunStatus(WorkerSnapshot workerSnapshot) {
@@ -148,7 +154,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                 taskRunStatus, startAt, endAt);
     }
 
-    private void abortTaskAttempt(Long taskAttemptId) {
+    private void updateTaskAttemptAborted(Long taskAttemptId) {
         miscService.changeTaskAttemptStatus(taskAttemptId,
                 TaskRunStatus.ABORTED, null, OffsetDateTime.now());
     }
@@ -174,6 +180,11 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
             }
             if (isFinish(workerSnapshot)) {
                 logger.info("taskAttemptId = {},going to clean worker", workerSnapshot.getIns().getTaskAttemptId());
+                try {
+                    miscService.notifyFinished(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
+                } catch (Exception e) {
+                    logger.warn("notify finished event with taskAttemptId = {} failed", workerSnapshot.getIns().getTaskAttemptId(), e);
+                }
                 cleanupWorker(workerSnapshot.getIns());
             }
         }
@@ -185,6 +196,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
             }
             onReceiveSnapshot(workerSnapshot);
         }
+
 
     }
 
