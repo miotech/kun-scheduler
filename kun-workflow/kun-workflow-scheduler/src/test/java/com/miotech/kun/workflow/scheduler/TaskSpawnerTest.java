@@ -594,7 +594,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         taskSpawner.schedule(graph1);
         taskSpawner.schedule(graph2);
 
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         eventBus.post(new TickEvent(new Tick(next)));
 
         // verify
@@ -610,7 +610,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testCreateTaskRuns_single_task() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         Task task = MockTaskFactory.createTask(operatorId).cloneBuilder()
                 .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE,TimeZoneEnum.UTC))
                 .build();
@@ -684,7 +684,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testCreateTaskRuns_multiple_tasks() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         List<Task> tasks = MockTaskFactory.createTasks(2, operatorId).stream().map(t -> {
             Task t2 = t.cloneBuilder()
                     .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE,TimeZoneEnum.UTC))
@@ -737,7 +737,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testCreateTaskRuns_task_has_upstreams() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1");
 
         Task task1 = tasks.get(0);
@@ -789,7 +789,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testCreateTaskRuns_task_depend_on_task_in_same_tick() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1")
                 .stream().map(t -> {
                     Task t2 = t.cloneBuilder()
@@ -884,7 +884,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Test
     public void testScheduleTaskRunUpstreamIsFailed() {
         // prepare
-        OffsetDateTime next = OffsetDateTime.now().plusSeconds(120);
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
         List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1");
 
         Task task1 = tasks.get(0);
