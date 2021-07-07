@@ -25,7 +25,7 @@ import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 public class SparkOperator extends LivyBaseSparkOperator {
     private static final Logger logger = LoggerFactory.getLogger(SparkOperator.class);
     private final YarnLoggerParser loggerParser = new YarnLoggerParser();
-    private final Integer LIVY_TIMEOUT_LIMIT = 3;
+    private final Integer LIVY_TIMEOUT_LIMIT = 20;
     private volatile boolean cancelled = false;
 
 
@@ -162,7 +162,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
             if (jobState == null) {
                 throw new IllegalStateException("Cannot find state for job: " + app.getId());
             }
-            waitForSeconds(3);
+            waitForSeconds(5);
         } while (!cancelled && !jobState.isFinished());
 
         tailingYarnLog(appInfo);
