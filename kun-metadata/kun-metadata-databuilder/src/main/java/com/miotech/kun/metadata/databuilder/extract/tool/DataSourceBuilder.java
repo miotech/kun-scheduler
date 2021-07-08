@@ -32,6 +32,9 @@ public class DataSourceBuilder {
         if (type.equals(DataSource.Type.AWS)) {
             AWSDataSource awsConnection = JSONUtils.jsonToObject(connStr, AWSDataSource.class);
             return AWSDataSource.clone(awsConnection).withId(id).build();
+        } else if (type.equals(DataSource.Type.HIVE)) {
+            HiveDataSource hiveDataSource = JSONUtils.jsonToObject(connStr, HiveDataSource.class);
+            return hiveDataSource.cloneBuilder().withId(id).build();
         }
 
         JDBCConnection jdbcConnection = JSONUtils.jsonToObject(connStr, JDBCConnection.class);

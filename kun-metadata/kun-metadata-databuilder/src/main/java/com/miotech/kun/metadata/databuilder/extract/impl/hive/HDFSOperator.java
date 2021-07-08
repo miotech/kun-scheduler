@@ -26,6 +26,7 @@ public class HDFSOperator {
         try {
             Configuration configuration = new Configuration();
             configuration.set("user", user);
+            configuration.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem");
             return create(url, configuration);
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
