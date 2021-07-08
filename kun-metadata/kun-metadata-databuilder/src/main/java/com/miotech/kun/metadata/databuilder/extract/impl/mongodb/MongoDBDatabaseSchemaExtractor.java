@@ -1,9 +1,9 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.mongodb;
 
-import com.beust.jcommander.internal.Lists;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.google.common.collect.Lists;
 import com.miotech.kun.metadata.databuilder.extract.Extractor;
 import com.miotech.kun.metadata.databuilder.model.MongoDataSource;
 import com.mongodb.MongoClient;

@@ -10,6 +10,8 @@ public class ConnectUrlUtil {
     private static final String MONGO_CONN_URL = "mongodb://%s:%s@%s:%d";
     private static final String MONGO_SIMPLE_CONN_URL = "mongodb://%s:%d";
     public static final String POSTGRESQL_PREFIX = "postgresql";
+    public static final String HIVE_PREFIX = "hive2";
+    public static final String MYSQL_PREFIX = "mysql";
     public static final String COLON = ":";
 
     private ConnectUrlUtil() {
@@ -20,6 +22,10 @@ public class ConnectUrlUtil {
         switch (dbType) {
             case POSTGRES:
                 return String.format(JDBC_CONN_URL, POSTGRESQL_PREFIX, host, port);
+            case HIVE:
+                return String.format(JDBC_CONN_URL, HIVE_PREFIX, host, port);
+            case MYSQL:
+                return String.format(JDBC_CONN_URL, MYSQL_PREFIX, host, port);
             case ELASTICSEARCH:
             case ARANGO:
                 return host + COLON + port;
