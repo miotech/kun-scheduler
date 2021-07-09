@@ -56,6 +56,7 @@ export interface TaskPayload {
 
 export interface ScheduleConfig {
   cronExpr: string;
+  timeZoneEnum: String;
   inputNodes: number[];
   type: string;
   inputDatasets: TaskDatasetProperty[];
