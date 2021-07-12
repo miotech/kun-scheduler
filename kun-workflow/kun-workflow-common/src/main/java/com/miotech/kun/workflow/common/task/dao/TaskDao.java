@@ -106,7 +106,7 @@ public class TaskDao {
                     .asPrepared()
                     .getSQL();
 
-            Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextExecutionTimeFromNow(cron);
+            Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextUTCExecutionTimeFromNow(cron,scheduleConf.getTimeZone());
             String formattedScheduleTick;
             if (nextExecutionTimeOptional.isPresent()) {
                 OffsetDateTime nextExecutionTime = nextExecutionTimeOptional.get();

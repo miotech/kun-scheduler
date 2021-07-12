@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.task.service;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.CommonTestBase;
@@ -23,6 +24,7 @@ import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
@@ -640,5 +642,105 @@ public class TaskServiceTest extends CommonTestBase {
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("config seconds in cron is not supported yet");
         taskService.partialUpdateTask(saved.getId(), newVo);
+    }
+
+    @Test
+    public void testCreateTaskWithTimeZone_nextTickShouldBeUTC(){
+        ScheduleConf conf = ScheduleConf.newBuilder()
+                .withType(ScheduleType.SCHEDULED)
+                .withCronExpr("0 0 8 * * ?")
+                .withTimeZone(TimeZoneEnum.CTT)
+                .build();
+        TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO().cloneBuilder()
+                .withScheduleConf(conf)
+                .build();
+        long operatorId = taskPropsVO.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        Task saved = taskService.createTask(taskPropsVO);
+        Optional<Tick> tick = taskDao.fetchNextExecutionTickByTaskId(saved.getId());
+        assertThat(tick.get().getTime().substring(8),is("0000"));
+    }
+
+    @Test
+    public void testUpdateTaskWithTimeZone_nextTickShouldBeUTC(){
+        ScheduleConf conf = ScheduleConf.newBuilder()
+                .withType(ScheduleType.SCHEDULED)
+                .withCronExpr("0 0 8 * * ?")
+                .withTimeZone(TimeZoneEnum.CTT)
+                .build();
+        Task task = MockTaskFactory.createTask().cloneBuilder()
+                .withScheduleConf(conf)
+                .build();
+        taskDao.create(task);
+        long operatorId = task.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        Task updated = taskService.fullUpdateTask(task);
+        Optional<Tick> tick = taskDao.fetchNextExecutionTickByTaskId(updated.getId());
+        assertThat(tick.get().getTime().substring(8),is("0000"));
+    }
+
+    @Test
+    public void testCreateScheduleTaskWithoutTimeZone_nextTickShouldBeUTC(){
+        ScheduleConf conf = ScheduleConf.newBuilder()
+                .withType(ScheduleType.SCHEDULED)
+                .withCronExpr("0 0 8 * * ?")
+                .build();
+        TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO().cloneBuilder()
+                .withScheduleConf(conf)
+                .build();
+        long operatorId = taskPropsVO.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        Task created = taskService.createTask(taskPropsVO);
+        Optional<Tick> tick = taskDao.fetchNextExecutionTickByTaskId(created.getId());
+        assertThat(tick.get().getTime().substring(8),is("0800"));
+
+    }
+
+
+    @Test
+    public void testUpdateScheduleTaskWithoutTimeZone_nextTickShouldBeUTC(){
+        ScheduleConf conf = ScheduleConf.newBuilder()
+                .withType(ScheduleType.SCHEDULED)
+                .withCronExpr("0 0 8 * * ?")
+                .build();
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+        task = task.cloneBuilder()
+                .withScheduleConf(conf)
+                .build();
+        long operatorId = task.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        Task updated = taskService.fullUpdateTask(task);
+        Optional<Tick> tick = taskDao.fetchNextExecutionTickByTaskId(updated.getId());
+        assertThat(tick.get().getTime().substring(8),is("0800"));
+
     }
 }
