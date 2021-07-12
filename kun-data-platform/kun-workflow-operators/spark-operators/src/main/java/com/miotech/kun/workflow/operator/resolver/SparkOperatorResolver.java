@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class SparkOperatorResolver implements Resolver {
 
@@ -102,12 +101,22 @@ public class SparkOperatorResolver implements Resolver {
             }
             downStream.put(outputSource.getSourceName(), outputSource);
         }
-        List<DataStore> upstreamDataStore = upstream.values().stream()
-                .map(x -> dataSourcesToDataStore(x.getSourceName(), x.getSourceType()))
-                .collect(Collectors.toList());
-        List<DataStore> downStreamDataStore = downStream.values().stream()
-                .map(x -> dataSourcesToDataStore(x.getSourceName(), x.getSourceType()))
-                .collect(Collectors.toList());
+        List<DataStore> upstreamDataStore = new ArrayList<>();
+        for (SplineSource splineSource : upstream.values()) {
+            try {
+                upstreamDataStore.add(dataSourcesToDataStore(splineSource.getSourceName(), splineSource.getSourceType()));
+            } catch (IllegalStateException e) {
+                logger.warn("could not cast dataSource = {} to dataStore", splineSource);
+            }
+        }
+        List<DataStore> downStreamDataStore = new ArrayList<>();
+        for (SplineSource splineSource : downStream.values()) {
+            try {
+                downStreamDataStore.add(dataSourcesToDataStore(splineSource.getSourceName(), splineSource.getSourceType()));
+            } catch (IllegalStateException e) {
+                logger.warn("could not cast dataSource = {} to dataStore", splineSource);
+            }
+        }
         //缓存解析结果
         Pair<List<DataStore>, List<DataStore>> result = Pair.of(upstreamDataStore, downStreamDataStore);
         resolvedTask.put(taskRunId, result);
