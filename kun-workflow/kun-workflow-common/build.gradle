@@ -23,7 +23,6 @@ dependencies {
     implementation 'org.apache.commons:commons-pool2'
     implementation 'com.alibaba:druid'
 
-
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-common")
     testImplementation project(":kun-workflow:kun-workflow-scheduler")

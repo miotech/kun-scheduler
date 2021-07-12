@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
-import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.lineage.node.TaskNode;
@@ -114,6 +113,18 @@ public class TaskService {
         return task;
     }
 
+    /**
+     * @param task
+     */
+    private void checkCircularDependency(Task task) {
+        List<Long> circularDependency = taskDao.getCycleDependencies(task.getId(), task.getDependencies().
+                stream().map(TaskDependency::getUpstreamTaskId).collect(Collectors.toList()));
+        if (circularDependency.size() != 0) {
+            throw new IllegalArgumentException("create task:" + task.getId() + ", taskName:" + task.getName() + ",has cycle dependencies:" + circularDependency);
+        }
+    }
+
+
     private Config parseConfig(TaskPropsVO vo) {
         ConfigDef configDef = operatorService.getOperatorConfigDef(vo.getOperatorId());
         // populate default values
@@ -187,6 +198,7 @@ public class TaskService {
                 .withTags(vo.getTags())
                 .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
                 .build();
+
         return fullUpdateTask(task);
     }
 
@@ -202,6 +214,9 @@ public class TaskService {
         if (!operatorDao.fetchById(task.getOperatorId()).isPresent()) {
             throw new EntityNotFoundException(String.format("Cannot create task with operator id: %d, target operator not found.", task.getOperatorId()));
         }
+
+        // 3. check dependency
+        checkCircularDependency(task);
 
         // 4. Update target task. If there is no task affected (task not exists), throw exception
         boolean taskUpdated = taskDao.update(task);
