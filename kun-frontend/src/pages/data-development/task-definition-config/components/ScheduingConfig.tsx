@@ -171,6 +171,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
             style={{ display: 'inline-block', width: 180, marginRight: 20 }}
             name={['taskPayload', 'scheduleConfig', 'timeZoneEnum']}
             rules={[{ required: true, message: t('dataDevelopment.definition.scheduleConfig.timeZone') }]}
+            initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.timeZoneEnum || 'UTC'}
           >
             <Select
               placeholder={t('dataDevelopment.definition.scheduleConfig.timeZone')}
