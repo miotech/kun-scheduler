@@ -83,25 +83,8 @@ public class CircularDependencyTest extends CommonTestBase {
         operatorDao.createWithId(op, operatorId);
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("create task:" + task.getId() + ", taskName:" + task.getName()  + ",with circular dependencies:" +
-                task.getId());
+                Arrays.asList(task.getId()));
         taskService.fullUpdateTaskById(task.getId(),updateTask1);
-    }
-
-
-    @Test
-    public void testUpdateTaskWithSelfCircularDependencyShouldThrowsException(){
-        Task task1 = MockTaskFactory.createTask();
-        taskDao.create(task1);
-
-        //set circular dependency
-        TaskPropsVO updateTask1 = updateForAddingDeps(task1,Arrays.asList(task1.getId()));
-        long operatorId = task1.getOperatorId();
-        Operator op = MockOperatorFactory.createOperatorWithId(operatorId);
-        operatorDao.createWithId(op, operatorId);
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("create task:" + task1.getId() + ", taskName:" + task1.getName()  + ",with circular dependencies:" +
-                task1.getId());
-        taskService.partialUpdateTask(task1.getId(),updateTask1);
     }
 
     @Test
