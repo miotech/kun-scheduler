@@ -106,7 +106,7 @@ public class TaskDao {
                     .asPrepared()
                     .getSQL();
 
-            Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextUTCExecutionTimeFromNow(cron,scheduleConf.getTimeZone());
+            Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextUTCExecutionTimeFromNow(cron, scheduleConf.getTimeZone());
             String formattedScheduleTick;
             if (nextExecutionTimeOptional.isPresent()) {
                 OffsetDateTime nextExecutionTime = nextExecutionTimeOptional.get();
@@ -771,7 +771,7 @@ public class TaskDao {
                     TimeZoneEnum timeZoneEnum = scheduleConf.getTimeZone();
                     Cron cron = CronUtils.convertStringToCron(cronExpression);
                     Optional<OffsetDateTime> nextExecutionTimeOptional = CronUtils.getNextUTCExecutionTime(cron,
-                            currentTick.toOffsetDateTime(),timeZoneEnum);
+                            currentTick.toOffsetDateTime(), timeZoneEnum);
 
                     if (nextExecutionTimeOptional.isPresent()) {
                         Tick nextTick = new Tick(nextExecutionTimeOptional.get());
@@ -920,21 +920,25 @@ public class TaskDao {
      * @param taskIds upstream taskIds
      * @return
      */
-    public List<Long> getCycleDependencies(Long taskId, List<Long> taskIds) {
+    public List<Long> getCircularDependencies(Long taskId, List<Long> taskIds) {
         if (taskIds.size() == 0) {
             return Lists.newArrayList();
+        }
+        if (taskIds.contains(taskId)) {
+            return Arrays.asList(taskId);
         }
         String filterTaskId = taskIds.stream().map(x -> "?").collect(Collectors.joining(","));
 
         String sql = "WITH RECURSIVE checkcycle(task_id,path,cycle) as \n" +
-                "(SELECT upstream_task_id,ARRAY[downstream_task_id,upstream_task_id],FALSE from kun_wf_task_relations \n" +
+                "(SELECT upstream_task_id,ARRAY[downstream_task_id,upstream_task_id],upstream_task_id = ? from kun_wf_task_relations \n" +
                 "WHERE downstream_task_id in (" + filterTaskId + ") \n" +
                 "UNION \n" +
                 "SELECT kw.upstream_task_id,path || kw.upstream_task_id,kw.upstream_task_id = ? FROM checkcycle as c \n" +
                 "INNER JOIN kun_wf_task_relations as kw \n" +
                 "ON c.task_id = kw.downstream_task_id\n" +
                 "WHERE NOT c.cycle\n" +
-                ") SELECT path FROM checkcycle WHERE not cycle;";
+                ") SELECT path FROM checkcycle WHERE cycle limit 1;";
+        taskIds.add(0, taskId);
         taskIds.add(taskId);
         List<Array> result = dbOperator.fetchAll(sql, rs -> rs.getArray(1), taskIds.toArray());
         if (result.size() > 0) {

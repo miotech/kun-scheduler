@@ -16,6 +16,16 @@ public class MockOperatorFactory {
         return createOperators(1).get(0);
     }
 
+    public static Operator createOperatorWithId(long operatorId){
+        return Operator.newBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withDescription("Operator" + operatorId + "_description")
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+    }
+
     public static OperatorPropsVO createOperatorPropsVO() {
         Long id = WorkflowIdGenerator.nextOperatorId();
         return OperatorPropsVO.newBuilder()
