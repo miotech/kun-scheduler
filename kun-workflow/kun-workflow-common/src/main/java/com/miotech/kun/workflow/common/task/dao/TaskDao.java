@@ -920,7 +920,7 @@ public class TaskDao {
      * @param taskIds upstream taskIds
      * @return
      */
-    public List<Long> getCycleDependencies(Long taskId, List<Long> taskIds) {
+    public List<Long> getCircularDependencies(Long taskId, List<Long> taskIds) {
         if (taskIds.size() == 0) {
             return Lists.newArrayList();
         }
@@ -934,7 +934,7 @@ public class TaskDao {
                 "INNER JOIN kun_wf_task_relations as kw \n" +
                 "ON c.task_id = kw.downstream_task_id\n" +
                 "WHERE NOT c.cycle\n" +
-                ") SELECT path FROM checkcycle WHERE not cycle;";
+                ") SELECT path FROM checkcycle WHERE cycle;";
         taskIds.add(taskId);
         List<Array> result = dbOperator.fetchAll(sql, rs -> rs.getArray(1), taskIds.toArray());
         if (result.size() > 0) {

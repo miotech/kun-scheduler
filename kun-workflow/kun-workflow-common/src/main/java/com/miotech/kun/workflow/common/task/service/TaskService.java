@@ -117,10 +117,10 @@ public class TaskService {
      * @param task
      */
     private void checkCircularDependency(Task task) {
-        List<Long> circularDependency = taskDao.getCycleDependencies(task.getId(), task.getDependencies().
+        List<Long> circularDependency = taskDao.getCircularDependencies(task.getId(), task.getDependencies().
                 stream().map(TaskDependency::getUpstreamTaskId).collect(Collectors.toList()));
         if (circularDependency.size() != 0) {
-            throw new IllegalArgumentException("create task:" + task.getId() + ", taskName:" + task.getName() + ",has cycle dependencies:" + circularDependency);
+            throw new IllegalArgumentException("create task:" + task.getId() + ", taskName:" + task.getName() + ",with circular dependencies:" + circularDependency);
         }
     }
 
