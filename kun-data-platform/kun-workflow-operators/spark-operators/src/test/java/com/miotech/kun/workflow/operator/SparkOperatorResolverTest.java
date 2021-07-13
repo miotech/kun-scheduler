@@ -139,38 +139,48 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
 
     @Test
     public void testLineageHasUnSupportTypeShouldSkip() throws IOException {
-        SplineSource execPlan1_down = SplineSource.newBuilder()
+
+        SplineSource upSupport_down1 = SplineSource.newBuilder()
                 .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test")
-                .withSourceType("hive")
+                .withSourceType("mysql")
                 .build();
-        ExecPlan execPlan1 = ExecPlan.newBuilder()
+        ExecPlan upSupport1 = ExecPlan.newBuilder()
                 .withTaskName("hive example1")
-                .withOutputSource(execPlan1_down)
+                .withOutputSource(upSupport_down1)
+                .withInputSources(Arrays.asList())
+                .build();
+        SplineSource upSupport_down2 = SplineSource.newBuilder()
+                .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test")
+                .withSourceType("csv")
+                .build();
+        ExecPlan upSupport2 = ExecPlan.newBuilder()
+                .withTaskName("hive example1")
+                .withOutputSource(upSupport_down2)
                 .withInputSources(Arrays.asList())
                 .build();
 
+        writeExecPlanToFile("/tmp/hive example1/1.execPlan.txt", upSupport1);
+        writeExecPlanToFile("/tmp/hive example1/2.execPlan.txt", upSupport2);
+
         doReturn(getFilesInDir("/tmp/hive example1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
         doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
-        writeExecPlanToFile("/tmp/hive example1/1/1.execPlan.txt", execPlan1);
 
-        SplineSource execPlan2_up = SplineSource.newBuilder()
+        SplineSource execPlan_up = SplineSource.newBuilder()
                 .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src")
                 .withSourceType("hive")
                 .build();
-        SplineSource execPlan2_down = SplineSource.newBuilder()
+        SplineSource execPlan_down = SplineSource.newBuilder()
                 .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test")
                 .withSourceType("hive")
                 .build();
-        ExecPlan execPlan2 = ExecPlan.newBuilder()
+        ExecPlan execPlan = ExecPlan.newBuilder()
                 .withTaskName("hive example1")
-                .withOutputSource(execPlan2_down)
-                .withInputSources(Arrays.asList(execPlan2_up))
+                .withOutputSource(execPlan_down)
+                .withInputSources(Arrays.asList(execPlan_up))
                 .build();
 
         //write execPlan2
-        writeExecPlanToFile("/tmp/hive example1/1/2.execPlan.txt", execPlan2);
-        doReturn(getFilesInDir("/tmp/hive example1/1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
-        doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
+        writeExecPlanToFile("/tmp/hive example1/3.execPlan.txt", execPlan);
 
         Config config = Config.newBuilder()
                 .addConfig(SparkConfiguration.CONF_LIVY_BATCH_NAME, "hive example1")
