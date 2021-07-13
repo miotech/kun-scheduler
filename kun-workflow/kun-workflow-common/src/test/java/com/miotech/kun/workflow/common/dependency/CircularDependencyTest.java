@@ -13,12 +13,11 @@ import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
-import com.miotech.kun.workflow.testing.operator.NopOperator;
-import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -62,22 +61,9 @@ public class CircularDependencyTest extends CommonTestBase {
         taskDao.create(task3);
 
         //set circular dependency
-        TaskDependencyVO updateDependency = TaskDependencyVO
-                .newBuilder()
-                .withDependencyFunc("latestTaskRun")
-                .withUpstreamTaskId(task3.getId())
-                .build();
-        TaskPropsVO updateTask1 = TaskPropsVO.from(task1)
-                .cloneBuilder().withDependencies(Arrays.asList(updateDependency))
-                .build();
+        TaskPropsVO updateTask1 = updateForAddingDeps(task1,Arrays.asList(task3.getId()));
         long operatorId = task1.getOperatorId();
-        Operator op = MockOperatorFactory.createOperator()
-                .cloneBuilder()
-                .withId(operatorId)
-                .withName("Operator_" + operatorId)
-                .withClassName("NopOperator")
-                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
-                .build();
+        Operator op = MockOperatorFactory.createOperatorWithId(operatorId);
         operatorDao.createWithId(op, operatorId);
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("create task:" + task1.getId() + ", taskName:" + task1.getName()  + ",with circular dependencies:" +
@@ -96,22 +82,9 @@ public class CircularDependencyTest extends CommonTestBase {
         taskDao.create(task3);
 
         //set circular dependency
-        TaskDependencyVO updateDependency = TaskDependencyVO
-                .newBuilder()
-                .withDependencyFunc("latestTaskRun")
-                .withUpstreamTaskId(task3.getId())
-                .build();
-        TaskPropsVO updateTask1 = TaskPropsVO.from(task1)
-                .cloneBuilder().withDependencies(Arrays.asList(updateDependency))
-                .build();
+        TaskPropsVO updateTask1 = updateForAddingDeps(task1,Arrays.asList(task3.getId()));
         long operatorId = task1.getOperatorId();
-        Operator op = MockOperatorFactory.createOperator()
-                .cloneBuilder()
-                .withId(operatorId)
-                .withName("Operator_" + operatorId)
-                .withClassName("NopOperator")
-                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
-                .build();
+        Operator op = MockOperatorFactory.createOperatorWithId(operatorId);
         operatorDao.createWithId(op, operatorId);
         expectedEx.expect(IllegalArgumentException.class);
         expectedEx.expectMessage("create task:" + task1.getId() + ", taskName:" + task1.getName()  + ",with circular dependencies:" +
@@ -130,22 +103,9 @@ public class CircularDependencyTest extends CommonTestBase {
         taskDao.create(task2);
         taskDao.create(task3);
         taskDao.create(task4);
-        TaskDependencyVO updateDependency = TaskDependencyVO
-                .newBuilder()
-                .withDependencyFunc("latestTaskRun")
-                .withUpstreamTaskId(task4.getId())
-                .build();
-        TaskPropsVO updateTask3 = TaskPropsVO.from(task3)
-                .cloneBuilder().withDependencies(Arrays.asList(updateDependency))
-                .build();
+        TaskPropsVO updateTask3 = updateForAddingDeps(task3,Arrays.asList(task4.getId()));
         long operatorId = task3.getOperatorId();
-        Operator op = MockOperatorFactory.createOperator()
-                .cloneBuilder()
-                .withId(operatorId)
-                .withName("Operator_" + operatorId)
-                .withClassName("NopOperator")
-                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
-                .build();
+        Operator op = MockOperatorFactory.createOperatorWithId(operatorId);
         operatorDao.createWithId(op, operatorId);
         taskService.fullUpdateTaskById(task3.getId(),updateTask3);
     }
@@ -161,23 +121,26 @@ public class CircularDependencyTest extends CommonTestBase {
         taskDao.create(task2);
         taskDao.create(task3);
         taskDao.create(task4);
-        TaskDependencyVO updateDependency = TaskDependencyVO
-                .newBuilder()
-                .withDependencyFunc("latestTaskRun")
-                .withUpstreamTaskId(task4.getId())
-                .build();
-        TaskPropsVO updateTask3 = TaskPropsVO.from(task3)
-                .cloneBuilder().withDependencies(Arrays.asList(updateDependency))
-                .build();
+        TaskPropsVO updateTask3 = updateForAddingDeps(task3,Arrays.asList(task4.getId()));
         long operatorId = task3.getOperatorId();
-        Operator op = MockOperatorFactory.createOperator()
-                .cloneBuilder()
-                .withId(operatorId)
-                .withName("Operator_" + operatorId)
-                .withClassName("NopOperator")
-                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
-                .build();
+        Operator op = MockOperatorFactory.createOperatorWithId(operatorId);
         operatorDao.createWithId(op, operatorId);
         taskService.partialUpdateTask(task3.getId(),updateTask3);
+    }
+
+    private TaskPropsVO updateForAddingDeps(Task toUpdate,List<Long> dependTaskIds){
+        List<TaskDependencyVO> dependencyList = new ArrayList<>();
+        for(Long dependTaskId : dependTaskIds){
+            TaskDependencyVO updateDependency = TaskDependencyVO
+                    .newBuilder()
+                    .withDependencyFunc("latestTaskRun")
+                    .withUpstreamTaskId(dependTaskId)
+                    .build();
+            dependencyList.add(updateDependency);
+        }
+        return TaskPropsVO.from(toUpdate)
+                .cloneBuilder().withDependencies(dependencyList)
+                .build();
+
     }
 }
