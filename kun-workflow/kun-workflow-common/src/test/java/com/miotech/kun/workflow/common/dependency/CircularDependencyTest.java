@@ -72,6 +72,58 @@ public class CircularDependencyTest extends CommonTestBase {
     }
 
     @Test
+    public void testFullUpdateTaskWithSelfDependencyShouldThrowsException(){
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+
+        //set circular dependency
+        TaskPropsVO updateTask1 = updateForAddingDeps(task,Arrays.asList(task.getId()));
+        long operatorId = task.getOperatorId();
+        Operator op = MockOperatorFactory.createOperatorWithId(operatorId);
+        operatorDao.createWithId(op, operatorId);
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("create task:" + task.getId() + ", taskName:" + task.getName()  + ",with circular dependencies:" +
+                task.getId());
+        taskService.fullUpdateTaskById(task.getId(),updateTask1);
+    }
+
+
+    @Test
+    public void testUpdateTaskWithSelfCircularDependencyShouldThrowsException(){
+        Task task1 = MockTaskFactory.createTask();
+        taskDao.create(task1);
+
+        //set circular dependency
+        TaskPropsVO updateTask1 = updateForAddingDeps(task1,Arrays.asList(task1.getId()));
+        long operatorId = task1.getOperatorId();
+        Operator op = MockOperatorFactory.createOperatorWithId(operatorId);
+        operatorDao.createWithId(op, operatorId);
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("create task:" + task1.getId() + ", taskName:" + task1.getName()  + ",with circular dependencies:" +
+                task1.getId());
+        taskService.partialUpdateTask(task1.getId(),updateTask1);
+    }
+
+    @Test
+    public void testUpdateTaskWithCircularDependencyShouldThrowsException(){
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2,"0>>1");
+        Task task1 = taskList.get(0);
+        Task task2 = taskList.get(1);
+        taskDao.create(task1);
+        taskDao.create(task2);
+
+        //set circular dependency
+        TaskPropsVO updateTask1 = updateForAddingDeps(task1,Arrays.asList(task2.getId()));
+        long operatorId = task1.getOperatorId();
+        Operator op = MockOperatorFactory.createOperatorWithId(operatorId);
+        operatorDao.createWithId(op, operatorId);
+        expectedEx.expect(IllegalArgumentException.class);
+        expectedEx.expectMessage("create task:" + task1.getId() + ", taskName:" + task1.getName()  + ",with circular dependencies:" +
+                taskList.stream().map(Task::getId).sorted(Comparator.reverseOrder()).collect(Collectors.toList()));
+        taskService.partialUpdateTask(task1.getId(),updateTask1);
+    }
+
+    @Test
     public void testPartialUpdateTaskWithCircularDependencyShouldThrowsException(){
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3,"0>>1;1>>2");
         Task task1 = taskList.get(0);
@@ -93,7 +145,7 @@ public class CircularDependencyTest extends CommonTestBase {
     }
 
     @Test
-    public void testFullUpdateTaskWithCircularDependencyShouldSuccess(){
+    public void testFullUpdateTaskWithoutCircularDependencyShouldSuccess(){
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(4,"0>>1;1>>2;1>>3");
         Task task1 = taskList.get(0);
         Task task2 = taskList.get(1);
@@ -111,7 +163,7 @@ public class CircularDependencyTest extends CommonTestBase {
     }
 
     @Test
-    public void testPartialUpdateTaskWithCircularDependencyShouldSuccess(){
+    public void testPartialUpdateTaskWithoutCircularDependencyShouldSuccess(){
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(4,"0>>1;1>>2;1>>3");
         Task task1 = taskList.get(0);
         Task task2 = taskList.get(1);

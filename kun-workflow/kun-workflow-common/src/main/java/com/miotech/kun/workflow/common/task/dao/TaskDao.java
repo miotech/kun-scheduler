@@ -927,14 +927,15 @@ public class TaskDao {
         String filterTaskId = taskIds.stream().map(x -> "?").collect(Collectors.joining(","));
 
         String sql = "WITH RECURSIVE checkcycle(task_id,path,cycle) as \n" +
-                "(SELECT upstream_task_id,ARRAY[downstream_task_id,upstream_task_id],FALSE from kun_wf_task_relations \n" +
+                "(SELECT upstream_task_id,ARRAY[downstream_task_id,upstream_task_id],upstream_task_id = ? from kun_wf_task_relations \n" +
                 "WHERE downstream_task_id in (" + filterTaskId + ") \n" +
                 "UNION \n" +
                 "SELECT kw.upstream_task_id,path || kw.upstream_task_id,kw.upstream_task_id = ? FROM checkcycle as c \n" +
                 "INNER JOIN kun_wf_task_relations as kw \n" +
                 "ON c.task_id = kw.downstream_task_id\n" +
                 "WHERE NOT c.cycle\n" +
-                ") SELECT path FROM checkcycle WHERE cycle;";
+                ") SELECT path FROM checkcycle WHERE cycle limit 1;";
+        taskIds.add(0,taskId);
         taskIds.add(taskId);
         List<Array> result = dbOperator.fetchAll(sql, rs -> rs.getArray(1), taskIds.toArray());
         if (result.size() > 0) {
