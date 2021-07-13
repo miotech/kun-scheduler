@@ -145,7 +145,7 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
                 .withSourceType("mysql")
                 .build();
         ExecPlan upSupport1 = ExecPlan.newBuilder()
-                .withTaskName("hive example1")
+                .withTaskName("upSupport example1")
                 .withOutputSource(upSupport_down1)
                 .withInputSources(Arrays.asList())
                 .build();
@@ -154,15 +154,15 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
                 .withSourceType("csv")
                 .build();
         ExecPlan upSupport2 = ExecPlan.newBuilder()
-                .withTaskName("hive example1")
+                .withTaskName("upSupport example1")
                 .withOutputSource(upSupport_down2)
                 .withInputSources(Arrays.asList())
                 .build();
 
-        writeExecPlanToFile("/tmp/hive example1/1.execPlan.txt", upSupport1);
-        writeExecPlanToFile("/tmp/hive example1/2.execPlan.txt", upSupport2);
+        writeExecPlanToFile("/tmp/upSupport example1/1.execPlan.txt", upSupport1);
+        writeExecPlanToFile("/tmp/upSupport example1/2.execPlan.txt", upSupport2);
 
-        doReturn(getFilesInDir("/tmp/hive example1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
+        doReturn(getFilesInDir("/tmp/upSupport example1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
         doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
 
         SplineSource execPlan_up = SplineSource.newBuilder()
@@ -174,16 +174,16 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
                 .withSourceType("hive")
                 .build();
         ExecPlan execPlan = ExecPlan.newBuilder()
-                .withTaskName("hive example1")
+                .withTaskName("upSupport example1")
                 .withOutputSource(execPlan_down)
                 .withInputSources(Arrays.asList(execPlan_up))
                 .build();
 
         //write execPlan2
-        writeExecPlanToFile("/tmp/hive example1/3.execPlan.txt", execPlan);
+        writeExecPlanToFile("/tmp/upSupport example1/3.execPlan.txt", execPlan);
 
         Config config = Config.newBuilder()
-                .addConfig(SparkConfiguration.CONF_LIVY_BATCH_NAME, "hive example1")
+                .addConfig(SparkConfiguration.CONF_LIVY_BATCH_NAME, "upSupport example1")
                 .addConfig(SparkConfiguration.CONF_LIVY_BATCH_CONF, HDFS_CONF)
                 .build();
         List<DataStore> upstreamDataList = sparkOperatorResolver.resolveUpstreamDataStore(config);
