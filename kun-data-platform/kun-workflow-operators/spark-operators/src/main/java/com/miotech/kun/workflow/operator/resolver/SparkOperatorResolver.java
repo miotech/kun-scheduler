@@ -104,7 +104,7 @@ public class SparkOperatorResolver implements Resolver {
         List<DataStore> upstreamDataStore = new ArrayList<>();
         for (SplineSource splineSource : upstream.values()) {
             try {
-                upstreamDataStore.add(dataSourcesToDataStore(splineSource.getSourceName(), splineSource.getSourceType()));
+                upstreamDataStore.add(dataSourcesToDataStore(splineSource));
             } catch (IllegalStateException e) {
                 logger.warn("could not cast dataSource = {} to dataStore", splineSource);
             }
@@ -112,7 +112,7 @@ public class SparkOperatorResolver implements Resolver {
         List<DataStore> downStreamDataStore = new ArrayList<>();
         for (SplineSource splineSource : downStream.values()) {
             try {
-                downStreamDataStore.add(dataSourcesToDataStore(splineSource.getSourceName(), splineSource.getSourceType()));
+                downStreamDataStore.add(dataSourcesToDataStore(splineSource));
             } catch (IllegalStateException e) {
                 logger.warn("could not cast dataSource = {} to dataStore", splineSource);
             }
@@ -140,22 +140,22 @@ public class SparkOperatorResolver implements Resolver {
 
 
     //将datasource转换成对应的DataStore
-    private DataStore dataSourcesToDataStore(String datasource, String type) {
+    private DataStore dataSourcesToDataStore(SplineSource splineSource) {
         DataStore dataStore;
-        switch (type) {
+        switch (splineSource.getSourceType()) {
             case "hive":
             case "parquet":
-                dataStore = toHive(datasource);
+                dataStore = toHive(splineSource.getSourceName());
                 break;
             case "mongodb":
-                dataStore = toMongo(datasource);
+                dataStore = toMongo(splineSource.getSourceName());
                 break;
             case "elasticsearch":
-                dataStore = toES(datasource);
+                dataStore = toES(splineSource.getSourceName());
                 break;
             case "jdbc":
                 Pattern pattern = Pattern.compile(JDBC_FORMAT);
-                Matcher matcher = pattern.matcher(datasource);
+                Matcher matcher = pattern.matcher(splineSource.getSourceName());
                 if (matcher.matches()) {
                     String dataType = matcher.group(1);
                     switch (dataType) {
@@ -173,13 +173,13 @@ public class SparkOperatorResolver implements Resolver {
                             throw new IllegalStateException("Invalid datasource type : " + dataType);
                     }
                 } else {
-                    logger.error("unknown datasource type {}", type);
-                    throw new IllegalStateException("Invalid datasource type : " + type);
+                    logger.error("unknown datasource type {}", splineSource.getSourceType());
+                    throw new IllegalStateException("Invalid datasource type : " + splineSource.getSourceType());
                 }
                 break;
             default:
-                logger.error("unknown datasource type {}", type);
-                throw new IllegalStateException("Invalid datasource type : " + type);
+                logger.error("unknown datasource type {}", splineSource.getSourceType());
+                throw new IllegalStateException("Invalid datasource type : " + splineSource.getSourceType());
 
         }
         return dataStore;
