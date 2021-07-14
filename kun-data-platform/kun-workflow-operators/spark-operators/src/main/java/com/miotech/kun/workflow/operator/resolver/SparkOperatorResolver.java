@@ -142,20 +142,22 @@ public class SparkOperatorResolver implements Resolver {
     //将datasource转换成对应的DataStore
     private DataStore dataSourcesToDataStore(SplineSource splineSource) {
         DataStore dataStore;
-        switch (splineSource.getSourceType()) {
+        String type = splineSource.getSourceType();
+        String sourceName = splineSource.getSourceName();
+        switch (type) {
             case "hive":
             case "parquet":
-                dataStore = toHive(splineSource.getSourceName());
+                dataStore = toHive(sourceName);
                 break;
             case "mongodb":
-                dataStore = toMongo(splineSource.getSourceName());
+                dataStore = toMongo(sourceName);
                 break;
             case "elasticsearch":
-                dataStore = toES(splineSource.getSourceName());
+                dataStore = toES(sourceName);
                 break;
             case "jdbc":
                 Pattern pattern = Pattern.compile(JDBC_FORMAT);
-                Matcher matcher = pattern.matcher(splineSource.getSourceName());
+                Matcher matcher = pattern.matcher(sourceName);
                 if (matcher.matches()) {
                     String dataType = matcher.group(1);
                     switch (dataType) {
@@ -173,13 +175,13 @@ public class SparkOperatorResolver implements Resolver {
                             throw new IllegalStateException("Invalid datasource type : " + dataType);
                     }
                 } else {
-                    logger.error("unknown datasource type {}", splineSource.getSourceType());
-                    throw new IllegalStateException("Invalid datasource type : " + splineSource.getSourceType());
+                    logger.error("unknown datasource type {}", type);
+                    throw new IllegalStateException("Invalid datasource type : " + type);
                 }
                 break;
             default:
-                logger.error("unknown datasource type {}", splineSource.getSourceType());
-                throw new IllegalStateException("Invalid datasource type : " + splineSource.getSourceType());
+                logger.error("unknown datasource type {}", type);
+                throw new IllegalStateException("Invalid datasource type : " + type);
 
         }
         return dataStore;
