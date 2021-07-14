@@ -16,7 +16,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public class SparkOperatorResolver implements Resolver {
 
@@ -102,18 +101,28 @@ public class SparkOperatorResolver implements Resolver {
             }
             downStream.put(outputSource.getSourceName(), outputSource);
         }
-        List<DataStore> upstreamDataStore = upstream.values().stream()
-                .map(x -> dataSourcesToDataStore(x.getSourceName(), x.getSourceType()))
-                .collect(Collectors.toList());
-        List<DataStore> downStreamDataStore = downStream.values().stream()
-                .map(x -> dataSourcesToDataStore(x.getSourceName(), x.getSourceType()))
-                .collect(Collectors.toList());
+        List<DataStore> upstreamDataStore = new ArrayList<>();
+        for (SplineSource splineSource : upstream.values()) {
+            tryAddDataSourceToDataStores(upstreamDataStore, splineSource);
+        }
+        List<DataStore> downStreamDataStore = new ArrayList<>();
+        for (SplineSource splineSource : downStream.values()) {
+            tryAddDataSourceToDataStores(downStreamDataStore, splineSource);
+        }
         //缓存解析结果
         Pair<List<DataStore>, List<DataStore>> result = Pair.of(upstreamDataStore, downStreamDataStore);
         resolvedTask.put(taskRunId, result);
         return result;
 
 
+    }
+
+    private void tryAddDataSourceToDataStores(List<DataStore> dataStores, SplineSource splineSource) {
+        try {
+            dataStores.add(dataSourcesToDataStore(splineSource));
+        } catch (IllegalStateException e) {
+            logger.warn("could not cast dataSource = {} to dataStore", splineSource);
+        }
     }
 
     private List<ExecPlan> filesToExecPlan(List<String> files) {
@@ -131,22 +140,24 @@ public class SparkOperatorResolver implements Resolver {
 
 
     //将datasource转换成对应的DataStore
-    private DataStore dataSourcesToDataStore(String datasource, String type) {
+    private DataStore dataSourcesToDataStore(SplineSource splineSource) {
         DataStore dataStore;
+        String type = splineSource.getSourceType();
+        String sourceName = splineSource.getSourceName();
         switch (type) {
             case "hive":
             case "parquet":
-                dataStore = toHive(datasource);
+                dataStore = toHive(sourceName);
                 break;
             case "mongodb":
-                dataStore = toMongo(datasource);
+                dataStore = toMongo(sourceName);
                 break;
             case "elasticsearch":
-                dataStore = toES(datasource);
+                dataStore = toES(sourceName);
                 break;
             case "jdbc":
                 Pattern pattern = Pattern.compile(JDBC_FORMAT);
-                Matcher matcher = pattern.matcher(datasource);
+                Matcher matcher = pattern.matcher(sourceName);
                 if (matcher.matches()) {
                     String dataType = matcher.group(1);
                     switch (dataType) {
