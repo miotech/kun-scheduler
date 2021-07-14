@@ -138,7 +138,7 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
 
 
     @Test
-    public void testLineageHasUnSupportTypeShouldSkip() throws IOException {
+    public void analyzeTaskExecPlan_unSupportTypeShouldSkip() throws IOException {
 
         SplineSource upSupport_down1 = SplineSource.newBuilder()
                 .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test")

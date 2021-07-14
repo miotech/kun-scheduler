@@ -103,19 +103,11 @@ public class SparkOperatorResolver implements Resolver {
         }
         List<DataStore> upstreamDataStore = new ArrayList<>();
         for (SplineSource splineSource : upstream.values()) {
-            try {
-                upstreamDataStore.add(dataSourcesToDataStore(splineSource));
-            } catch (IllegalStateException e) {
-                logger.warn("could not cast dataSource = {} to dataStore", splineSource);
-            }
+            tryAddDataSourceToDataStores(upstreamDataStore, splineSource);
         }
         List<DataStore> downStreamDataStore = new ArrayList<>();
         for (SplineSource splineSource : downStream.values()) {
-            try {
-                downStreamDataStore.add(dataSourcesToDataStore(splineSource));
-            } catch (IllegalStateException e) {
-                logger.warn("could not cast dataSource = {} to dataStore", splineSource);
-            }
+            tryAddDataSourceToDataStores(downStreamDataStore, splineSource);
         }
         //缓存解析结果
         Pair<List<DataStore>, List<DataStore>> result = Pair.of(upstreamDataStore, downStreamDataStore);
@@ -123,6 +115,14 @@ public class SparkOperatorResolver implements Resolver {
         return result;
 
 
+    }
+
+    private void tryAddDataSourceToDataStores(List<DataStore> dataStores, SplineSource splineSource) {
+        try {
+            dataStores.add(dataSourcesToDataStore(splineSource));
+        } catch (IllegalStateException e) {
+            logger.warn("could not cast dataSource = {} to dataStore", splineSource);
+        }
     }
 
     private List<ExecPlan> filesToExecPlan(List<String> files) {
