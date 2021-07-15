@@ -46,7 +46,6 @@ public class HiveTableStore extends DataStore {
     @Override
     public DSI getDSI() {
         return DSI.newBuilder().withStoreType("hive")
-                .putProperty("location", location)
                 .putProperty("database", database)
                 .putProperty("table", table)
                 .build();
