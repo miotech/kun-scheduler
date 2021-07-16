@@ -1103,15 +1103,6 @@ public class TaskRunDao {
         return latestRunInList.get(0);
     }
 
-    public TaskRun fetchLatestTaskRunToday(Long taskId) {
-        List<TaskRun> latestRunInList = fetchLatestTaskRunsToday(taskId, 1);
-        if (latestRunInList.isEmpty()) {
-            return null;
-        }
-        // else
-        return latestRunInList.get(0);
-    }
-
     public List<TaskRun> fetchLatestTaskRuns(Long taskId, int limit) {
         checkNotNull(taskId, "taskId should not be null.");
 
