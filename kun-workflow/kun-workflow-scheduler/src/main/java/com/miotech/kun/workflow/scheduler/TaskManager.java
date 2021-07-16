@@ -74,7 +74,7 @@ public class TaskManager {
     public void submit(List<TaskRun> taskRuns) {
         // 生成对应的TaskAttempt
         List<TaskAttempt> taskAttempts = taskRuns.stream()
-                .map(this::createTaskAttempt).collect(Collectors.toList());
+                .map(taskRun -> createTaskAttempt(taskRun, true)).collect(Collectors.toList());
         logger.debug("TaskAttempts saved. total={}", taskAttempts.size());
         save(taskAttempts);
         triggerTaskRunReadyCheck();
@@ -93,7 +93,7 @@ public class TaskManager {
             return false;
         }
         try {
-            TaskAttempt taskAttempt = createTaskAttempt(taskRun, true);
+            TaskAttempt taskAttempt = createTaskAttempt(taskRun, false);
             logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
             save(Arrays.asList(taskAttempt));
             updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED);
@@ -115,11 +115,7 @@ public class TaskManager {
         readyEventConsumer.start();
     }
 
-    private TaskAttempt createTaskAttempt(TaskRun taskRun) {
-        return createTaskAttempt(taskRun, false);
-    }
-
-    private TaskAttempt createTaskAttempt(TaskRun taskRun, boolean retry) {
+    private TaskAttempt createTaskAttempt(TaskRun taskRun, boolean reUseLatest) {
         checkNotNull(taskRun, "taskRun should not be null.");
         checkNotNull(taskRun.getId(), "taskRun's id should not be null.");
 
@@ -127,19 +123,29 @@ public class TaskManager {
 
         int attempt = 1;
         if (savedTaskAttempt != null) {
-            attempt = retry ? savedTaskAttempt.getAttempt() + 1 : savedTaskAttempt.getAttempt();
+            attempt = savedTaskAttempt.getAttempt() + 1;
+        } else {
+            reUseLatest = false;
         }
         TaskAttempt taskAttempt = TaskAttempt.newBuilder()
-                .withId(WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), attempt))
+                .withId(reUseLatest ? savedTaskAttempt.getId() : WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), attempt))
                 .withTaskRun(taskRun)
-                .withAttempt(attempt)
-                .withStatus(retry ? TaskRunStatus.CREATED : taskRun.getStatus())
+                .withAttempt(reUseLatest ? savedTaskAttempt.getAttempt() : attempt)
+                .withStatus(reUseLatest ? savedTaskAttempt.getStatus() : determineInitStatus(taskRun))
                 .withQueueName(taskRun.getQueueName())
                 .withPriority(taskRun.getPriority())
                 .build();
         logger.debug("Created taskAttempt. taskAttempt={}", taskAttempt);
 
         return taskAttempt;
+    }
+
+    private TaskRunStatus determineInitStatus(TaskRun taskRun) {
+        return detectUpstreamFailed(taskRun) ? TaskRunStatus.UPSTREAM_FAILED : TaskRunStatus.CREATED;
+    }
+
+    private boolean detectUpstreamFailed(TaskRun taskRun) {
+        return taskRun.getStatus().equals(TaskRunStatus.UPSTREAM_FAILED);
     }
 
     private void save(List<TaskAttempt> taskAttempts) {

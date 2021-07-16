@@ -200,7 +200,7 @@ public class TaskSpawner implements InitializingBean {
     private TaskRunStatus resolveTaskRunUpstreamStatus(Task task,List<TaskRun> upstreamTaskRuns) {
         if (task.getDependencies().size() > upstreamTaskRuns.size()) {
             logger.error("dependency not satisfy, taskId = {}", task.getId());
-            return TaskRunStatus.UPSTREAM_NOT_FOUND;
+            return TaskRunStatus.CREATED;
         }
         for (TaskRun upstreamTaskRun : upstreamTaskRuns) {
             if (upstreamTaskRun.getStatus().isFailure()
