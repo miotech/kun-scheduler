@@ -1,4 +1,5 @@
-import React, { memo, useMemo, useState } from 'react';
+import { useHistory } from 'umi';
+import React, { memo, useMemo, useState, useCallback } from 'react';
 import { Button, Dropdown, Menu } from 'antd';
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMount } from 'ahooks';
@@ -19,11 +20,12 @@ interface OwnProps {
 type Props = OwnProps;
 
 export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTemplateCreateDropMenu(props) {
-  const { dispatch, selector: {
-    taskTemplates,
-    loading,
-  }} = useRedux<{
-    taskTemplates: TaskTemplate[],
+  const history = useHistory();
+  const {
+    dispatch,
+    selector: { taskTemplates, loading },
+  } = useRedux<{
+    taskTemplates: TaskTemplate[];
     loading: boolean;
   }>(s => ({
     taskTemplates: s.dataDevelopment.taskTemplates,
@@ -32,7 +34,7 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
 
   const t = useI18n();
 
-  const [ selectedTemplateName, setSelectedTemplateName ] = useState<string | null>(null);
+  const [selectedTemplateName, setSelectedTemplateName] = useState<string | null>(null);
 
   useMount(() => {
     dispatch.dataDevelopment.fetchTaskTemplates();
@@ -41,14 +43,13 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
   const overlay = useMemo(() => {
     if (taskTemplates && taskTemplates.length) {
       return (
-        <Menu onClick={({ key }) => {
-          setSelectedTemplateName(key as string);
-        }}>
+        <Menu
+          onClick={({ key }) => {
+            setSelectedTemplateName(key as string);
+          }}
+        >
           {taskTemplates.map(templateItem => (
-            <Menu.Item
-              key={templateItem.name}
-              title={templateItem.name}
-            >
+            <Menu.Item key={templateItem.name} title={templateItem.name}>
               <span>
                 <TaskTemplateIcon name={templateItem.name} />
               </span>
@@ -62,13 +63,23 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
     return <></>;
   }, [taskTemplates]);
 
+  const handleOk = useCallback(
+    async (name: string, createInCurrentView: boolean) => {
+      try {
+        const resp = await props.onCreateTaskDefinition(selectedTemplateName as string, name, createInCurrentView);
+        const { id } = resp;
+        history.push(`/data-development/task-definition/${id}`);
+        setSelectedTemplateName(null);
+      } catch (e) {
+        // do nothing
+      }
+    },
+    [history, props, selectedTemplateName],
+  );
+
   return (
     <>
-      <Dropdown
-        className={styles.TaskTemplateCreateDropMenu}
-        overlay={overlay}
-        placement="bottomRight"
-      >
+      <Dropdown className={styles.TaskTemplateCreateDropMenu} overlay={overlay} placement="bottomRight">
         <Button type="primary" loading={loading} icon={<PlusOutlined />}>
           <span>{t('dataDevelopment.definition.creationTitle')}</span>
           <DownOutlined />
@@ -77,10 +88,7 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
       <TaskDefinitionCreationModal
         taskTemplateName={selectedTemplateName || undefined}
         visible={selectedTemplateName != null}
-        onOk={async (name, createInCurrentView) => {
-          await props.onCreateTaskDefinition(selectedTemplateName as string, name, createInCurrentView);
-          setSelectedTemplateName(null);
-        }}
+        onOk={handleOk}
         onCancel={() => {
           setSelectedTemplateName(null);
         }}
