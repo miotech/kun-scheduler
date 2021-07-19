@@ -75,7 +75,7 @@ public class DatasetRepository extends BaseRepository {
                 "kmd.name as dataset_name, " +
                 "kmd.database_name as database_name, " +
                 "kmdsrca.name as datasource_name, " +
-                "kmd.deleted as deleted" +
+                "kmd.deleted as deleted\n" +
                 "from kun_mt_dataset kmd\n" +
                 "inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
                 "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n";
