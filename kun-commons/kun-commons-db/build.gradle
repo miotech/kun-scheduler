@@ -4,7 +4,7 @@ dependencies {
     implementation "com.zaxxer:HikariCP"
     implementation "org.flywaydb:flyway-core"
     implementation "org.neo4j:neo4j-ogm-core"
-    implementation "org.testcontainers:neo4j:1.15.0-rc2"
+    implementation "org.testcontainers:neo4j:1.15.1-rc2"
     implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client'
 
     runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16' // Only add if you're using the Bolt driver

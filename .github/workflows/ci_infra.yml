@@ -1,4 +1,4 @@
-name: kun-infra
+name: infra-build
 
 on:
   push:
@@ -32,6 +32,6 @@ jobs:
         with:
           java-version: 1.8
       - name: Grant execute permission for gradlew
-          run: chmod +x gradlew
+        run: chmod +x gradlew
       - name: Build with Gradle
-          run: ./gradlew build
+        run: ./gradlew build
