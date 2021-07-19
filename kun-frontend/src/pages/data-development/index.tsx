@@ -185,6 +185,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
         if (createInCurrentView && selectedView && createdTaskDefinition) {
           await putTaskDefinitionsIntoView(selectedView.id, [createdTaskDefinition.id as string]);
         }
+        return createdTaskDefinition;
       } finally {
         searchTaskDefViews();
         forceTableRefresh();

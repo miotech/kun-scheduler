@@ -28,36 +28,44 @@ interface SchedulingConfigProps {
 const { Option } = Select;
 
 const timeZoneMapList = [
-  { value: 'UTC', label: 'UTC(UTC)' },
-  { value: 'ACT', label: 'ACT(Australia/Darwin)' },
-  { value: 'AET', label: 'AET(Australia/Sydney)' },
-  { value: 'AGT', label: 'AGT(America/Argentina/Buenos_Aires)' },
-  { value: 'ART', label: 'ART(Africa/Cairo)' },
-  { value: 'AST', label: 'AST(America/Anchorage)' },
-  { value: 'BET', label: 'BET(America/Sao_Paulo)' },
-  { value: 'BST', label: 'BST(Asia/Dhaka)' },
-  { value: 'CAT', label: 'CAT(Africa/Harare)' },
-  { value: 'CNT', label: 'CNT(America/St_Johns)' },
-  { value: 'CST', label: 'CST(America/Chicago)' },
-  { value: 'CTT', label: 'CTT(Asia/Shanghai)' },
-  { value: 'EAT', label: 'EAT(Africa/Addis_Ababa)' },
-  { value: 'ECT', label: 'ECT(Europe/Paris)' },
-  { value: 'IET', label: 'IET(America/Indiana/Indianapolis)' },
-  { value: 'IST', label: 'IST(Asia/Kolkata)' },
-  { value: 'JST', label: 'JST(Asia/Tokyo)' },
-  { value: 'MIT', label: 'MIT(Pacific/Apia)' },
-  { value: 'NET', label: 'NET(Asia/Yerevan)' },
-  { value: 'NST', label: 'NST(Pacific/Auckland)' },
-  { value: 'PLT', label: 'PLT(Asia/Karachi)' },
-  { value: 'PNT', label: 'PNT(America/Phoenix)' },
-  { value: 'PRT', label: 'PRT(America/Puerto_Rico)' },
-  { value: 'PST', label: 'PST(America/Los_Angeles)' },
-  { value: 'SST', label: 'SST(Pacific/Guadalcanal)' },
-  { value: 'VST', label: 'VST(Asia/Ho_Chi_Minh)' },
-  { value: 'EST', label: 'EST(-05:00)' },
-  { value: 'MST', label: 'MST(-07:00)' },
-  { value: 'HST', label: 'HST(-10:00)' },
+  { value: 'UTC', label: 'UTC(UTC)', offset: 0 },
+  { value: 'ACT', label: 'ACT(Australia/Darwin)', offset: 9.5 },
+  { value: 'AET', label: 'AET(Australia/Sydney)', offset: 10 },
+  { value: 'AGT', label: 'AGT(America/Argentina/Buenos_Aires)', offset: -3 },
+  { value: 'ART', label: 'ART(Africa/Cairo)', offset: 2 },
+  { value: 'AST', label: 'AST(America/Anchorage)', offset: -4 },
+  { value: 'BET', label: 'BET(America/Sao_Paulo)', offset: -3 },
+  { value: 'BST', label: 'BST(Asia/Dhaka)', offset: 6 },
+  { value: 'CAT', label: 'CAT(Africa/Harare)', offset: -1 },
+  { value: 'CNT', label: 'CNT(America/St_Johns)', offset: -3.5 },
+  { value: 'CST', label: 'CST(America/Chicago)', offset: -6 },
+  { value: 'CTT', label: 'CTT(Asia/Shanghai)', offset: 8 },
+  { value: 'EAT', label: 'EAT(Africa/Addis_Ababa)', offset: 3 },
+  { value: 'ECT', label: 'ECT(Europe/Paris)', offset: 1 },
+  { value: 'IET', label: 'IET(America/Indiana/Indianapolis)', offset: -5 },
+  { value: 'IST', label: 'IST(Asia/Kolkata)', offset: 5.5 },
+  { value: 'JST', label: 'JST(Asia/Tokyo)', offset: 9 },
+  { value: 'MIT', label: 'MIT(Pacific/Apia)', offset: -11 },
+  { value: 'NET', label: 'NET(Asia/Yerevan)', offset: 4 },
+  { value: 'NST', label: 'NST(Pacific/Auckland)', offset: 12 },
+  { value: 'PLT', label: 'PLT(Asia/Karachi)', offset: 5 },
+  { value: 'PNT', label: 'PNT(America/Phoenix)', offset: -7 },
+  { value: 'PRT', label: 'PRT(America/Puerto_Rico)', offset: -4 },
+  { value: 'PST', label: 'PST(America/Los_Angeles)', offset: -8 },
+  { value: 'SST', label: 'SST(Pacific/Guadalcanal)', offset: 11 },
+  { value: 'VST', label: 'VST(Asia/Ho_Chi_Minh)', offset: 7 },
+  { value: 'EST', label: 'EST(-05:00)', offset: -5 },
+  { value: 'MST', label: 'MST(-07:00)', offset: -7 },
+  { value: 'HST', label: 'HST(-10:00)', offset: -10 },
 ];
+
+const getDefaultTimeZone = () => {
+  const offsetRate = -(new Date().getTimezoneOffset() / 60);
+  const timeZoneDefaultValue = timeZoneMapList.find(i => i.offset === offsetRate)?.value ?? 'UTC';
+  return timeZoneDefaultValue;
+};
+
+const defaultTimeZone = getDefaultTimeZone();
 
 const formItemLayout = {
   labelCol: {
@@ -171,7 +179,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
             style={{ display: 'inline-block', width: 180, marginRight: 20 }}
             name={['taskPayload', 'scheduleConfig', 'timeZoneEnum']}
             rules={[{ required: true, message: t('dataDevelopment.definition.scheduleConfig.timeZone') }]}
-            initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.timeZoneEnum || 'UTC'}
+            initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.timeZoneEnum ?? defaultTimeZone}
           >
             <Select
               placeholder={t('dataDevelopment.definition.scheduleConfig.timeZone')}
@@ -181,7 +189,9 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
               optionFilterProp="children"
             >
               {timeZoneMapList.map(i => (
-                <Option value={i.value}>{i.label}</Option>
+                <Option key={i.value} value={i.value}>
+                  {i.label}
+                </Option>
               ))}
             </Select>
           </Form.Item>
@@ -227,15 +237,38 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
     // case one-shot:
     if (selectedScheduleType === 'ONESHOT') {
       return (
-        <Form.Item
-          label={t('scheduledTasks.property.oneShotExecutionTime')}
-          name={['taskPayload', 'scheduleConfig', 'cronExpr']}
-          initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.cronExpr}
-        >
-          <OneshotDatePicker
-            style={{ width: '240px' }}
-            placeholder={t('scheduledTasks.property.oneShotExecutionTimePlaceholder')}
-          />
+        <Form.Item label={t('scheduledTasks.property.oneShotExecutionTime')}>
+          <Form.Item
+            style={{ display: 'inline-block', width: 180, marginRight: 20 }}
+            name={['taskPayload', 'scheduleConfig', 'timeZoneEnum']}
+            rules={[{ required: true, message: t('dataDevelopment.definition.scheduleConfig.timeZone') }]}
+            initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.timeZoneEnum ?? defaultTimeZone}
+          >
+            <Select
+              placeholder={t('dataDevelopment.definition.scheduleConfig.timeZone')}
+              style={{ width: '100%' }}
+              dropdownMatchSelectWidth={false}
+              showSearch
+              optionFilterProp="children"
+            >
+              {timeZoneMapList.map(i => (
+                <Option key={i.value} value={i.value}>
+                  {i.label}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            style={{ display: 'inline-block', width: 'calc(100% - 220px)' }}
+            name={['taskPayload', 'scheduleConfig', 'cronExpr']}
+            initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.cronExpr}
+          >
+            <OneshotDatePicker
+              style={{ width: 220 }}
+              placeholder={t('scheduledTasks.property.oneShotExecutionTimePlaceholder')}
+            />
+          </Form.Item>
         </Form.Item>
       );
     }
