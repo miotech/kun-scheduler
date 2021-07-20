@@ -80,10 +80,9 @@ public class MCEOperator extends KunOperator {
                 .define(DATASOURCE_DRIVER_CLASS_NAME, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, "driverClassName", "driverClassName")
                 .define(DEPLOY_MODE, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, DEPLOY_MODE, DEPLOY_MODE)
                 .define(DATASOURCE_ID, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, DATASOURCE_ID, DATASOURCE_ID)
-                .define(BROKERS, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, BROKERS, BROKERS)
-                .define(MSE_TOPIC, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, MSE_TOPIC, MSE_TOPIC)
                 .define(GID, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, GID, GID)
-                .define(MCE, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, MCE, MCE);
+                .define(MCE, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, MCE, MCE)
+                .define(MSE_URL, ConfigDef.Type.STRING, "<should-configured-at-runtime>", true, MSE_URL, MSE_URL);
         return configDef;
     }
 
@@ -97,10 +96,9 @@ public class MCEOperator extends KunOperator {
 
         props.put(DEPLOY_MODE, operatorContext.getConfig().getString(DEPLOY_MODE));
         props.put(DATASOURCE_ID, operatorContext.getConfig().getString(DATASOURCE_ID));
-        props.put(BROKERS, operatorContext.getConfig().getString(BROKERS));
-        props.put(MSE_TOPIC, operatorContext.getConfig().getString(MSE_TOPIC));
         props.put(GID, operatorContext.getConfig().getString(GID));
         props.put(MCE, operatorContext.getConfig().getString(MCE));
+        props.put(MSE_URL, operatorContext.getConfig().getString(MSE_URL));
         return props;
     }
 
