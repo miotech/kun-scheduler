@@ -7,7 +7,7 @@ buildscript {
 plugins {
     id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'java'
-    id "org.sonarqube" version "2.7"
+    id "org.sonarqube"
     id "com.gorylenko.gradle-git-properties" version "2.2.3"
 }
 

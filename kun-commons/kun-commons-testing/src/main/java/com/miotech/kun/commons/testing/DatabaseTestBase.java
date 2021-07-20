@@ -37,6 +37,10 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         return false;
     }
 
+    protected void setFlayWayLocation(){
+        
+    }
+
     @Override
     protected void configuration() {
         super.configuration();
