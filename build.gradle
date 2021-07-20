@@ -9,15 +9,6 @@ buildscript {
 
 plugins {
     id 'com.github.ksoichiro.console.reporter' version '0.6.2'
-    id "org.sonarqube" version "3.3"
-}
-
-sonarqube {
-    properties {
-        property "sonar.projectKey", "miotech_kun-scheduler"
-        property "sonar.organization", "miotech"
-        property "sonar.host.url", "https://sonarcloud.io"
-    }
 }
 
 allprojects {

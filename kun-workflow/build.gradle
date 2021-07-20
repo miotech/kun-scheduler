@@ -7,7 +7,7 @@ buildscript {
 plugins {
     id 'com.github.johnrengelman.shadow' version '5.2.0'
     id 'java'
-    id "org.sonarqube"
+    id "org.sonarqube" version "3.3"
     id "com.gorylenko.gradle-git-properties" version "2.2.3"
 }
 
@@ -39,6 +39,9 @@ shadowJar {
 apply plugin: "org.sonarqube"
 sonarqube {
     properties {
+        property "sonar.projectKey", "miotech_kun-scheduler"
+        property "sonar.organization", "miotech"
+        property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.sourceEncoding", "src/main"
         property "sonar.sourceEncoding", "UTF-8"
         property "sonar.java.binaries", "build"

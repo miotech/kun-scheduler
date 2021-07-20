@@ -1,3 +1,5 @@
+[![codecov](https://codecov.io/gh/miotech/kun-scheduler/branch/master/graph/badge.svg?token=GOFXDTB69M)](https://codecov.io/gh/miotech/kun-scheduler)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=miotech_kun-scheduler&metric=alert_status)](https://sonarcloud.io/dashboard?id=miotech_kun-scheduler)
 <p align="center">
     <img src="docs/static/img/github_bg.png">
 </p>

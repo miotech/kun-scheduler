@@ -33,17 +33,20 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     private static final String POSTGRES_IMAGE = "postgres:12.3";
 
+    protected String flywayLocation;
+
     protected boolean usePostgres() {
         return false;
     }
 
     protected void setFlayWayLocation(){
-        
+        flywayLocation = "kun-infra/";
     }
 
     @Override
     protected void configuration() {
         super.configuration();
+        setFlayWayLocation();
         addModules(new TestDatabaseModule(usePostgres()));
     }
 
@@ -55,7 +58,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         if (!usePostgres()) {
             props.put("flyway.initSql", "CREATE DOMAIN IF NOT EXISTS \"JSONB\" AS TEXT");
         }
-        DatabaseSetup setup = new DatabaseSetup(dataSource, props, "kun-infra/");
+        DatabaseSetup setup = new DatabaseSetup(dataSource, props, flywayLocation);
         setup.start();
     }
 

@@ -44,6 +44,11 @@ public class DualWriteOperatorTest extends DatabaseTestBase {
     @Inject
     private DatabaseOperator dbOperator;
 
+    @Override
+    protected void setFlayWayLocation() {
+        flywayLocation = "sql/";
+    }
+
     @Before
     public void init() {
         elasticsearchContainer = new ElasticsearchContainer(ELASTICSEARCH_IMAGE);
