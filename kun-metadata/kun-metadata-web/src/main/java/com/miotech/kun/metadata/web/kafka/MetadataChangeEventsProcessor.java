@@ -20,6 +20,8 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Properties;
 
+import static com.miotech.kun.metadata.web.constant.PropKey.INFRA_URL;
+
 @Singleton
 public class MetadataChangeEventsProcessor extends EventProcessor {
     private static final Logger logger = LoggerFactory.getLogger(MetadataChangeEventsProcessor.class);
@@ -75,8 +77,7 @@ public class MetadataChangeEventsProcessor extends EventProcessor {
         conf.put(PropKey.DRIVER_CLASS_NAME, props.get(PropKey.DRIVER_CLASS_NAME));
         conf.put(PropKey.DEPLOY_MODE, DataBuilderDeployMode.PUSH.name());
         conf.put(PropKey.MCE, JSONUtils.toJsonString(mce));
-        conf.put(PropKey.BROKERS, props.getString("kafka.bootstrapServers"));
-        conf.put(PropKey.MSE_TOPIC, props.getString("kafka.mseTopicName"));
+        conf.put(PropKey.MSE_URL, props.getString(INFRA_URL) + "/mse/_execute");
 
         return conf;
     }

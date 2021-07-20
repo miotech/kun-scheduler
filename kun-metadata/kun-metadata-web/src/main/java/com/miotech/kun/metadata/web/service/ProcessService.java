@@ -28,6 +28,8 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static com.miotech.kun.metadata.web.constant.PropKey.INFRA_URL;
+
 @Singleton
 public class ProcessService {
 
@@ -209,8 +211,7 @@ public class ProcessService {
         conf.put(PropKey.PASSWORD, props.get(PropKey.PASSWORD));
         conf.put(PropKey.DRIVER_CLASS_NAME, props.get(PropKey.DRIVER_CLASS_NAME));
         conf.put(PropKey.DEPLOY_MODE, deployMode.name());
-        conf.put(PropKey.BROKERS, props.get("kafka.bootstrapServers"));
-        conf.put(PropKey.MSE_TOPIC, props.get("kafka.mseTopicName"));
+        conf.put(PropKey.MSE_URL, props.getString(INFRA_URL) + "/mse/_execute");
 
         switch (deployMode) {
             case DATASOURCE:

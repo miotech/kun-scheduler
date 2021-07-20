@@ -18,5 +18,6 @@ public class OperatorKey {
     public static final String EXTRACT_STATS = "extract_stats";
     public static final String BROKERS = "brokers";
     public static final String MSE_TOPIC = "mseTopic";
+    public static final String MSE_URL = "mseUrl";
 
 }
