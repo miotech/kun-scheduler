@@ -86,6 +86,10 @@ public class LivyClient extends HttpApiClient {
         return toObject(this.get(url), Statement.class);
     }
 
+    public SparkApp getSparkSession(Integer sparkSessionID) {
+        return toObject(getSession(sparkSessionID), SparkApp.class);
+    }
+
     public SparkApp getSparkJob(Integer sparkJobID) {
         return toObject(getBatch(sparkJobID), SparkApp.class);
     }
@@ -113,6 +117,11 @@ public class LivyClient extends HttpApiClient {
     public String createSession(String jobPayload) {
         String url = buildUrl("/sessions");
         return this.post(url, jobPayload);
+    }
+
+    public String getSession(Integer sessionId) {
+        String url = buildUrl(SESSIONS + sessionId);
+        return this.get(url);
     }
 
     public String deleteSession(Integer sessionId) {
