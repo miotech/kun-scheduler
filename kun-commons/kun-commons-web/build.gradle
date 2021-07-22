@@ -23,6 +23,7 @@ dependencies {
     implementation 'org.apache.httpcomponents:httpclient'
     implementation 'org.apache.httpcomponents:httpmime'
     implementation 'io.github.classgraph:classgraph:4.8.104'
+    implementation "org.jooq:joor-java-8"
 
     testImplementation project(":kun-commons:kun-commons-testing")
 }

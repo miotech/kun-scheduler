@@ -90,8 +90,6 @@ public class MCEBuilder {
                 }
 
                 // 发送消息
-                /*MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.FIELD, loadSchemaResult.getGid(), loadSchemaResult.getSnapshotId());
-                httpClientUtil.doPost(props.getString(MSE_URL), JSONUtils.toJsonString(mse));*/
             } catch (Exception e) {
                 logger.error("Load schema error: ", e);
             }
