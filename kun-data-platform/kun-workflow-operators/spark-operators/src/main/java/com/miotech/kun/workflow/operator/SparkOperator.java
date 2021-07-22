@@ -4,9 +4,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.execution.*;
-import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
 import com.miotech.kun.workflow.operator.spark.models.AppInfo;
-import com.miotech.kun.workflow.operator.spark.models.SparkApp;
 import com.miotech.kun.workflow.operator.spark.models.SparkJob;
 import com.miotech.kun.workflow.operator.spark.models.StateInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -24,12 +22,6 @@ import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
 public class SparkOperator extends LivyBaseSparkOperator {
     private static final Logger logger = LoggerFactory.getLogger(SparkOperator.class);
-    private final YarnLoggerParser loggerParser = new YarnLoggerParser();
-    private final Integer LIVY_TIMEOUT_LIMIT = 3;
-    private volatile boolean cancelled = false;
-
-
-    private SparkApp app;
 
     @Override
     public boolean run() {
@@ -177,16 +169,6 @@ public class SparkOperator extends LivyBaseSparkOperator {
             return true;
         } else {
             return false;
-        }
-    }
-
-    private void tailingYarnLog(AppInfo app) {
-        try {
-            String logUrl = app.getDriverLogUrl();
-            logger.info("Fetch log from {}", logUrl);
-            logger.info(loggerParser.getYarnLogs(logUrl));
-        } catch (Exception e) {
-            logger.error("Error in fetch application logs, {}", e);
         }
     }
 

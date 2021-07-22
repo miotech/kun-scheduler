@@ -3,10 +3,7 @@ package com.miotech.kun.workflow.operator;
 import com.google.common.base.Strings;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.execution.*;
-import com.miotech.kun.workflow.operator.spark.models.SparkApp;
-import com.miotech.kun.workflow.operator.spark.models.SparkJob;
-import com.miotech.kun.workflow.operator.spark.models.StateInfo;
-import com.miotech.kun.workflow.operator.spark.models.Statement;
+import com.miotech.kun.workflow.operator.spark.models.*;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -25,7 +22,6 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
     private static final Logger logger = LoggerFactory.getLogger(SparkSQLOperator.class);
 
     private AtomicInteger currentActiveSessionId = new AtomicInteger(-1);
-    private boolean isSharedSession;
     private String currentActiveStatementId;
 
     /**
@@ -35,8 +31,6 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
     public void init() {
         OperatorContext context = getContext();
         super.init();
-        isSharedSession = SparkConfiguration.getBoolean(context, SparkConfiguration.CONF_LIVY_SHARED_SESSION);
-        logger.info("Initialize livy rest client using shared mode: {}", isSharedSession);
     }
 
     /**
@@ -48,6 +42,9 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
     public boolean run() {
         try {
             return execute();
+        }catch(Exception e){
+            logger.error(e.getMessage());
+            return false;
         } finally {
             this.cleanup();
         }
@@ -161,14 +158,27 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
                 .stream()
                 .filter(StringUtils::isNoneBlank)
                 .collect(Collectors.toList());
+
+        Integer timeout = 0;
         for (String s: statements) {
             Statement stat = livyClient.runSparkSQL(sessionId, s);
-
             currentActiveStatementId = buildStatementId(sessionId, stat.getId());
             // wait for statement ended
             do {
-                stat = livyClient.getStatement(sessionId, stat.getId());
-                logger.debug("Statement: {}", JSONUtils.toJsonString(stat));
+                try{
+                    stat = livyClient.getStatement(sessionId, stat.getId());
+                    logger.debug("Statement: {}", JSONUtils.toJsonString(stat));
+                    app = livyClient.getSparkSession(sessionId);
+                    timeout = 0;
+                }catch (RuntimeException e){
+                    timeout++;
+                    logger.warn("get job information from livy timeout, times = {}", timeout);
+                    if (timeout >= LIVY_TIMEOUT_LIMIT) {
+                        logger.error("get job information from livy failed", e);
+                        throw e;
+                    }
+                }
+
                 if (stat == null) {
                     throw new IllegalStateException("Cannot find statement: " + currentActiveStatementId + " . Maybe killed by user termination.");
                 }
@@ -178,12 +188,14 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
                 waitForSeconds(3);
             } while (!stat.getState().isSuccess());
             Statement.StatementOutput output = stat.getOutput();
-            logger.info("Output: \n {}", JSONUtils.toJsonString(output));
+            logger.info("Output for statement " + currentActiveStatementId + ": \n {}", JSONUtils.toJsonString(output));
             boolean isSuccess = output.getStatus().equals("ok");
             if (!isSuccess) {
                 return false;
             }
         }
+        logger.info("Yarn log for session " + sessionId + ", " + app.getAppId() + ": \n");
+        tailingYarnLog(app.getAppInfo());
 
         try {
             TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), context.getTaskRunId());
@@ -201,21 +213,12 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
      * or close the current active session if not in shared session mode
      */
     public void cleanup() {
-        if (isSharedSession && StringUtils.isNotBlank(currentActiveStatementId)) {
-            String[] sessionAndStat = currentActiveStatementId.split("-");
-            logger.info("Cancel current active statement {}", currentActiveStatementId);
-            livyClient.cancelSessionStatement(
-                    Integer.parseInt(sessionAndStat[0]),
-                    Integer.parseInt(sessionAndStat[1]));
-            currentActiveStatementId = null;
-        } else {
-            // current session may not be initialized
-            int sessionId =  currentActiveSessionId.get();
-            if (sessionId >= 0) {
-                logger.info("Cancel current active session {}", sessionId);
-                livyClient.deleteSession(sessionId);
-                currentActiveSessionId.compareAndSet(sessionId, -1);
-            }
+        // current session may not be initialized
+        int sessionId =  currentActiveSessionId.get();
+        if (sessionId >= 0) {
+            logger.info("Cancel current active session {}", sessionId);
+            livyClient.deleteSession(sessionId);
+            currentActiveSessionId.compareAndSet(sessionId, -1);
         }
     }
 
