@@ -149,16 +149,14 @@ public class DSI implements Serializable {
             // if dsiString is not initialized
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(encodeString(storeType));
+            stringBuilder.append(":");
+
             if (!props.keySet().isEmpty()) {
-                stringBuilder.append(":");
                 stringBuilder.append(mapToEncodedString(props));
             }
+
+            stringBuilder.append(":");
             if (!extras.keySet().isEmpty()) {
-                if (props.keySet().isEmpty()) {
-                    stringBuilder.append("::");
-                } else {
-                    stringBuilder.append(":");
-                }
                 stringBuilder.append(mapToEncodedString(extras));
             }
             dsiString = stringBuilder.toString();
