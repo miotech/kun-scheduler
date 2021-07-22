@@ -101,8 +101,8 @@ subprojects {
                 implementation 'io.fabric8:kubernetes-client:5.2.1'
                 implementation 'org.spark-project.hive:hive-jdbc:1.2.1.spark2'
                 implementation 'org.apache.hadoop:hadoop-mapreduce-client-core:2.8.5'
-                implementation "org.testcontainers:testcontainers:1.15.0-rc2"
-                implementation "org.testcontainers:postgresql:1.15.0-rc2"
+                implementation "org.testcontainers:testcontainers:1.15.1"
+                implementation "org.testcontainers:postgresql:1.15.1"
 
                 testImplementation "junit:junit:4.12"
                 testImplementation 'org.apache.httpcomponents:httpclient:4.5.12'
@@ -112,11 +112,11 @@ subprojects {
                 testImplementation "org.mockito:mockito-core:3.3.3"
                 testImplementation "org.awaitility:awaitility:4.0.3"
                 testImplementation "net.bytebuddy:byte-buddy:1.10.10"
-                testImplementation "org.testcontainers:testcontainers:1.15.0-rc2"
-                testImplementation "org.testcontainers:mongodb:1.15.0-rc2"
-                testImplementation "org.testcontainers:postgresql:1.15.0-rc2"
-                testImplementation "org.testcontainers:elasticsearch:1.15.0-rc2"
-                testImplementation "org.testcontainers:neo4j:1.15.0-rc2"
+                testImplementation "org.testcontainers:testcontainers:1.15.1"
+                testImplementation "org.testcontainers:mongodb:1.15.1"
+                testImplementation "org.testcontainers:postgresql:1.15.1"
+                testImplementation "org.testcontainers:elasticsearch:1.15.1"
+                testImplementation "org.testcontainers:neo4j:1.15.1"
                 testImplementation "com.github.goodforgod:arangodb-testcontainer:1.2.0"
                 testImplementation "org.mock-server:mockserver-netty:3.10.8"
                 testImplementation "org.mock-server:mockserver-client-java:3.10.8"

@@ -524,7 +524,6 @@ public class TaskManagerTest extends SchedulerTestBase {
             readyTaskRuns.add(taskRun);
         }
         ArgumentCaptor<TaskAttempt> captor = ArgumentCaptor.forClass(TaskAttempt.class);
-        taskManager.submit(readyTaskRuns);
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -533,12 +532,13 @@ public class TaskManagerTest extends SchedulerTestBase {
                 if (!submittedTaskRun.add(taskAttempt.getTaskRun().getId())) {
                     throw new IllegalStateException("taskAttemptId = " + taskAttempt.getId() + "is running");
                 }
-                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.RUNNING);
                 eventBus.post(prepareEvent(taskAttempt.getId()
-                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.QUEUED, TaskRunStatus.RUNNING));
                 return null;
             }
         }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(readyTaskRuns);
         for (int i = 0; i < 3; i++) {
             Thread thread = new Thread(() -> {
                     Task task = MockTaskFactory.createTask();

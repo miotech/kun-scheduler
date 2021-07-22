@@ -11,14 +11,11 @@ import com.cronutils.model.time.ExecutionTime;
 import com.cronutils.parser.CronParser;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.TimeZoneEnum;
-import sun.util.resources.cldr.en.TimeZoneNames_en_AU;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Optional;
-import java.util.TimeZone;
 
 public class CronUtils {
 
