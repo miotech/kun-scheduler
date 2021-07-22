@@ -916,36 +916,40 @@ public class TaskRunDao {
     }
 
     public List<TaskAttempt> fetchAllSatisfyTaskAttempt() {
+        OffsetDateTime dateLimit = DateTimeUtils.now().plusDays(-3);
         return dbOperator.transaction(() -> {
             List<Long> taskRunIdList = fetchAllSatisfyTaskRunId();
-            return fetchAllLatestTaskAttempt(taskRunIdList);
+            List<Long> taskAttemptIdList = fetchAllLatestTaskAttemptIds(taskRunIdList, dateLimit);
+            return fetchTaskAttemptByIds(taskAttemptIdList);
         });
     }
 
-    public List<TaskAttempt> fetchAllLatestTaskAttempt(List<Long> taskRunIdList) {
-        List<Long> taskAttemptIdList = fetchAllLatestTaskAttemptIds(taskRunIdList);
-        return fetchTaskAttemptByIds(taskAttemptIdList);
-
-
+    public List<Long> fetchAllLatestTaskAttemptIds(List<Long> taskRunIdList) {
+        return fetchAllLatestTaskAttemptIds(taskRunIdList, null);
     }
 
-    public List<Long> fetchAllLatestTaskAttemptIds(List<Long> taskRunIdList) {
+    public List<Long> fetchAllLatestTaskAttemptIds(List<Long> taskRunIdList, OffsetDateTime dateLimit) {
         if (taskRunIdList.size() == 0) {
             return Lists.newArrayList();
         }
-        OffsetDateTime notifyLimit = DateTimeUtils.now().plusDays(-3);
         String taskRunIdFilter = "(" + taskRunIdList.stream().map(id -> "?")
                 .collect(Collectors.joining(", ")) + ")";
+        String whereCase = "task_run_id in " + taskRunIdFilter;
+        if (dateLimit != null) {
+            whereCase += " and created_at > ?";
+        }
         String fetchIdSql = DefaultSQLBuilder.newBuilder()
                 .select("max(id) as task_attempt_id")
                 .from(TASK_ATTEMPT_TABLE_NAME)
-                .where("task_run_id in " + taskRunIdFilter + " and created_at > ?")
+                .where(whereCase)
                 .groupBy("task_run_id")
                 .asPrepared()
                 .getSQL();
         List<Object> params = new ArrayList<>();
         params.addAll(taskRunIdList);
-        params.add(notifyLimit);
+        if (dateLimit != null) {
+            params.add(dateLimit);
+        }
         return dbOperator.fetchAll(fetchIdSql, rs -> rs.getLong("task_attempt_id"), params.toArray());
     }
 
