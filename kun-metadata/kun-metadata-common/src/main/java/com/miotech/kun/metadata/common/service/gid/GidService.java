@@ -45,7 +45,7 @@ public class GidService {
         Preconditions.checkNotNull(dsi, "DSI cannot be null");
 
         return dbOperator.fetchOne(
-                "SELECT dataset_gid FROM kun_mt_dataset_gid WHERE dsi LIKE CONCAT(?, ':%')",
+                "SELECT dataset_gid FROM kun_mt_dataset_gid WHERE dsi LIKE CONCAT(CAST(? AS TEXT), ':%')",
                 rs -> rs.getLong(1),
                 dsi.toEssentialString()
         );
