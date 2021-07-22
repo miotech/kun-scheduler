@@ -1,8 +1,6 @@
 name: app test
 
 on:
-  push:
-    paths:
   pull_request:
     paths:
 env:
