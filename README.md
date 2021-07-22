@@ -1,3 +1,5 @@
+[![License](https://img.shields.io/:license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
+[![GitHub Build](https://img.shields.io/github/status/contexts/pulls/miotech/kun-scheduler/4)](https://github.com/miotech/kun-scheduler/actions)
 [![codecov](https://codecov.io/gh/miotech/kun-scheduler/branch/master/graph/badge.svg?token=GOFXDTB69M)](https://codecov.io/gh/miotech/kun-scheduler)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=miotech_kun-scheduler&metric=alert_status)](https://sonarcloud.io/dashboard?id=miotech_kun-scheduler)
 <p align="center">
