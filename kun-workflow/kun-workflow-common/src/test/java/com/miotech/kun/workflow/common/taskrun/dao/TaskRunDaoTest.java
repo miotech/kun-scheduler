@@ -765,5 +765,13 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         List<TaskAttempt> readyAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
         assertThat(readyAttemptList,hasSize(0));
 
+        DateTimeUtils.resetClock();
+
+    }
+
+    @Test
+    public void testNoReadyTaskRunFetchAllSatisfyTaskAttempt_shouldReturnEmptyList(){
+        List<TaskAttempt> readyAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
+        assertThat(readyAttemptList,hasSize(0));
     }
 }

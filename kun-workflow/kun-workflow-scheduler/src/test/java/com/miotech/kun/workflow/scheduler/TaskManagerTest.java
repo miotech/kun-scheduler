@@ -647,6 +647,8 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps2.getLogPath(), is(nullValue()));
         assertThat(attemptProps2.getStartAt(), is(nullValue()));
         assertThat(attemptProps2.getEndAt(), is(nullValue()));
+
+        DateTimeUtils.resetClock();
     }
 
 
