@@ -134,11 +134,10 @@ public class LocalExecutor implements Executor, ExecutorBackEnd {
                 logger.debug("taskAttemptId = {} has been submit", taskAttempt.getId());
                 return false;
             }
-            queueManage.submit(taskAttempt.cloneBuilder().withStatus(TaskRunStatus.QUEUED).build());
             if (!savedTaskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
                 miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.QUEUED);
-
             }
+            queueManage.submit(taskAttempt.cloneBuilder().withStatus(TaskRunStatus.QUEUED).build());
         }
         return true;
     }

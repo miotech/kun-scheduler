@@ -17,6 +17,11 @@ public class DatabaseOperatorTest extends DatabaseTestBase {
     @Inject
     private DatabaseOperator operator;
 
+    @Override
+    protected void setFlayWayLocation() {
+        flywayLocation = "sql/";
+    }
+
     @Test
     public void testUpdate() throws SQLException {
         // prepare
