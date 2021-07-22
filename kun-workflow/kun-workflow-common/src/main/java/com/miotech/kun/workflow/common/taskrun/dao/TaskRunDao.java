@@ -933,16 +933,20 @@ public class TaskRunDao {
         if (taskRunIdList.size() == 0) {
             return Lists.newArrayList();
         }
+        OffsetDateTime notifyLimit = DateTimeUtils.now().plusDays(-3);
         String taskRunIdFilter = "(" + taskRunIdList.stream().map(id -> "?")
                 .collect(Collectors.joining(", ")) + ")";
         String fetchIdSql = DefaultSQLBuilder.newBuilder()
                 .select("max(id) as task_attempt_id")
                 .from(TASK_ATTEMPT_TABLE_NAME)
-                .where("task_run_id in " + taskRunIdFilter)
+                .where("task_run_id in " + taskRunIdFilter + " and created_at > ?")
                 .groupBy("task_run_id")
                 .asPrepared()
                 .getSQL();
-        return dbOperator.fetchAll(fetchIdSql, rs -> rs.getLong("task_attempt_id"), taskRunIdList.toArray());
+        List<Object> params = new ArrayList<>();
+        params.addAll(taskRunIdList);
+        params.add(notifyLimit);
+        return dbOperator.fetchAll(fetchIdSql, rs -> rs.getLong("task_attempt_id"), params.toArray());
     }
 
     public List<TaskAttempt> fetchTaskAttemptByIds(List<Long> taskAttemptIdList) {
@@ -1358,18 +1362,17 @@ public class TaskRunDao {
     }
 
     public List<Long> fetchAllSatisfyTaskRunId() {
-        OffsetDateTime notifyLimit = DateTimeUtils.now().plusDays(-1);
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("id")
                 .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
                 .join("LEFT", RELATION_TABLE_NAME, RELATION_MODEL_NAME)
                 .on(TASK_RUN_MODEL_NAME + ".id = " + RELATION_MODEL_NAME + ".downstream_task_run_id")
-                .where(TASK_RUN_MODEL_NAME + ".status = ? and " + TASK_RUN_MODEL_NAME + ".created_at > ?")
+                .where(TASK_RUN_MODEL_NAME + ".status = ? ")
                 .groupBy("id")
                 .having("sum(case when dependency_status = ? or (dependency_level = ? and dependency_status = ?) then 1 else 0 end) = 0")
                 .asPrepared()
                 .getSQL();
-        List<Long> satisfyTaskRunId = dbOperator.fetchAll(sql, rs -> rs.getLong("id"), TaskRunStatus.CREATED.name(), notifyLimit,
+        List<Long> satisfyTaskRunId = dbOperator.fetchAll(sql, rs -> rs.getLong("id"), TaskRunStatus.CREATED.name(),
                 DependencyStatus.CREATED.name(), DependencyLevel.STRONG.name(), DependencyStatus.FAILED.name());
         return satisfyTaskRunId;
     }
