@@ -64,10 +64,10 @@ public class DSITest {
 
         // when reverse convert to string, dsi should sort property keys in lexicographical order,
         // and special characters should be encoded properly.
-        assertThat(dsi1.toString(), is("mysql:db=test,host=db-server,port=3306,table=company"));
-        assertThat(dsi2.toString(), is("postgres:db=test,host=192.168.1.2,port=5432,schema=dm,table=company"));
+        assertThat(dsi1.toString(), is("mysql:db=test,host=db-server,port=3306,table=company:"));
+        assertThat(dsi2.toString(), is("postgres:db=test,host=192.168.1.2,port=5432,schema=dm,table=company:"));
         assertThat(dsi3.toString(), is("file:path=%2Fdata%2Fbin%2Fabc.bin:stderr=%2Flogs%2Ferror.log,stream=true"));
-        assertThat(dsi4.toString(), is("ssh:host=192.168.1.5"));
+        assertThat(dsi4.toString(), is("ssh:host=192.168.1.5:"));
         assertThat(dsi5.toString(), is("randomType::abc=def"));
     }
 
@@ -91,8 +91,8 @@ public class DSITest {
         assertThat(dsi2.getProps().get("host"), is("::ffff:0.0.0.0"));
 
         // when convert to string, special characters should be encoded
-        assertThat(dsi1.toString(), is("https:host=localhost,key1=value+1,key2=value%40%21%242,key3=value%253%2C4"));
-        assertThat(dsi2.toString(), is("ssh:host=%3A%3Affff%3A0.0.0.0"));
+        assertThat(dsi1.toString(), is("https:host=localhost,key1=value+1,key2=value%40%21%242,key3=value%253%2C4:"));
+        assertThat(dsi2.toString(), is("ssh:host=%3A%3Affff%3A0.0.0.0:"));
     }
 
     @Test
@@ -115,7 +115,7 @@ public class DSITest {
         // Validate
         assertEquals(dsi1, dsiFromString1);
         assertTrue(dsi1.sameStoreAs(dsiFromString1));
-        assertEquals("mongodb:collection=company,db=test,host=127.0.0.1,port=27017", dsiFromString1.toString());
+        assertEquals("mongodb:collection=company,db=test,host=127.0.0.1,port=27017:", dsiFromString1.toString());
         assertEquals(dsi1.toString(), dsiFromString1.toString());
 
         assertEquals(dsi2, dsiFromString2);
