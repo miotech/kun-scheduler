@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.commons.web.utils.HttpClientUtil;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
@@ -20,7 +21,6 @@ import com.miotech.kun.metadata.databuilder.extract.filter.HiveTableSchemaExtrac
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractorFactory;
 import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
-import com.miotech.kun.metadata.databuilder.extract.tool.KafkaUtil;
 import com.miotech.kun.metadata.databuilder.extract.tool.MetaStoreParseUtil;
 import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
@@ -37,8 +37,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import static com.miotech.kun.metadata.databuilder.constant.OperatorKey.BROKERS;
-import static com.miotech.kun.metadata.databuilder.constant.OperatorKey.MSE_TOPIC;
+import static com.miotech.kun.metadata.databuilder.constant.OperatorKey.MSE_URL;
 
 @Singleton
 public class MCEBuilder {
@@ -50,16 +49,18 @@ public class MCEBuilder {
     private final MetadataDatasetDao datasetDao;
     private final DataSourceBuilder dataSourceBuilder;
     private final Loader loader;
+    private final HttpClientUtil httpClientUtil;
 
     @Inject
     public MCEBuilder(Props props, DatabaseOperator operator, GidService gidService, MetadataDatasetDao datasetDao,
-                      DataSourceBuilder dataSourceBuilder, Loader loader) {
+                      DataSourceBuilder dataSourceBuilder, Loader loader, HttpClientUtil httpClientUtil) {
         this.props = props;
         this.operator = operator;
         this.gidService = gidService;
         this.datasetDao = datasetDao;
         this.dataSourceBuilder = dataSourceBuilder;
         this.loader = loader;
+        this.httpClientUtil = httpClientUtil;
     }
 
     public void extractSchemaOfDataSource(Long datasourceId) {
@@ -89,8 +90,6 @@ public class MCEBuilder {
                 }
 
                 // 发送消息
-                /*MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.TABLE, loadSchemaResult.getGid(), loadSchemaResult.getSnapshotId());
-                KafkaUtil.send(props.getString(BROKERS), props.getString(MSE_TOPIC), JSONUtils.toJsonString(mse));*/
             } catch (Exception e) {
                 logger.error("Load schema error: ", e);
             }
@@ -122,9 +121,9 @@ public class MCEBuilder {
         // 发送消息
         try {
             MetadataStatisticsEvent mse = new MetadataStatisticsEvent(MetadataStatisticsEvent.EventType.FIELD, gid, loadSchemaResult.getSnapshotId());
-            KafkaUtil.send(props.getString(BROKERS), props.getString(MSE_TOPIC), JSONUtils.toJsonString(mse));
+            httpClientUtil.doPost(props.getString(MSE_URL), JSONUtils.toJsonString(mse));
         } catch (Exception e) {
-            logger.warn("send mse message error: ", e);
+            logger.warn("call mse execute api error: ", e);
         }
 
     }

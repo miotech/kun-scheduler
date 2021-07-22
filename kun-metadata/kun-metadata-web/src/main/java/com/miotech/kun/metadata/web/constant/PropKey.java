@@ -13,8 +13,10 @@ public class PropKey {
     public static final String DATASOURCE_ID = "datasourceId";
     public static final String GID = "gid";
     public static final String CRON_EXPR = "workflow.cronExpr";
+    public static final String INFRA_URL = "infra.url";
     public static final String MCE = "mce";
     public static final String BROKERS = "brokers";
     public static final String MSE_TOPIC = "mseTopic";
+    public static final String MSE_URL = "mseUrl";
 
 }
