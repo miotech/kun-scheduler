@@ -10,7 +10,6 @@ sourceSets {
 
 dependencies {
     implementation project(":kun-commons:kun-commons-db")
-    implementation project(":kun-commons:kun-commons-testing")
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-commons:kun-commons-web")
     implementation project(":kun-commons:kun-commons-rpc")
@@ -45,6 +44,7 @@ dependencies {
 
     testImplementation "junit:junit"
     testRuntimeOnly "org.mockito:mockito-core"
+    testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")
 }
 

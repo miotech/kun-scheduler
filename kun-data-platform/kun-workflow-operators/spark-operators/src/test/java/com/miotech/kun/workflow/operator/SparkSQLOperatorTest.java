@@ -31,7 +31,7 @@ public class SparkSQLOperatorTest extends MockServerTestBase {
         operatorRunner.setConfigKey(SparkConfiguration.CONF_VARIABLES,  "{\"bizdate\":\"'2020'\"}");
 
         // 1. create session
-        mockPost("/sessions",  "{\"proxyUser\":\"hadoop\",\"queue\":\"default\"}","{\"id\":0,\"name\":null,\"appId\":null,\"owner\":null,\"proxyUser\":null,\"state\":\"starting\",\"kind\":\"shared\",\"appInfo\":{\"driverLogUrl\":null,\"sparkUiUrl\":null},\"log\":[\"stdout: \",\"\\nstderr: \",\"\\nYARN Diagnostics: \"]}");
+        mockPost("/sessions",  null,"{\"id\":0,\"name\":null,\"appId\":null,\"owner\":null,\"proxyUser\":null,\"state\":\"starting\",\"kind\":\"shared\",\"appInfo\":{\"driverLogUrl\":null,\"sparkUiUrl\":null},\"log\":[\"stdout: \",\"\\nstderr: \",\"\\nYARN Diagnostics: \"]}");
         // 2. query session state
         mockGet("/sessions/0/state", "{\"state\":\"starting\"}");
         mockGet("/sessions/0/state", "{\"state\":\"idle\"}");
@@ -50,11 +50,6 @@ public class SparkSQLOperatorTest extends MockServerTestBase {
 
         boolean isSuccess = operatorRunner.run();
         assertTrue(isSuccess);
-        TaskAttemptReport report = operatorRunner.getReport().get();
-        assertThat(report.getOutlets().get(0),
-                sameBeanAs(new HiveTableStore(DATASTORE_URL + "/default/a", "default", "a")));
-        assertThat(report.getInlets().get(0),
-                sameBeanAs(new HiveTableStore(DATASTORE_URL + "/default/b","default", "b")));
     }
 
     @Test

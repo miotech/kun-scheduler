@@ -8,7 +8,6 @@ plugins {
 dependencies {
     implementation project(":kun-workflow:kun-workflow-core")
     implementation project(":kun-commons:kun-commons-db")
-    implementation project(":kun-commons:kun-commons-testing")
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-commons:kun-commons-web")
     implementation project(":kun-metadata:kun-metadata-core")
@@ -42,6 +41,7 @@ dependencies {
         exclude group: 'org.apache.hadoop', module: 'hadoop-yarn-common'
     }
 
+    testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation "junit:junit"
     testRuntimeOnly "com.h2database:h2"
     testRuntimeOnly "org.mockito:mockito-core"
