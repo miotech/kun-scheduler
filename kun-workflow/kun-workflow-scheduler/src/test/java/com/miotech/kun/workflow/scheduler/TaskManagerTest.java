@@ -20,6 +20,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
+import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -593,6 +594,61 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(reSubmitAttempt.getStatus(),is(TaskRunStatus.CREATED));
         assertThat(reSubmitAttempt.getId(),is(taskRun.getId() + 1));
         assertThat(reSubmitAttempt.getAttempt(),is(1));
+    }
+
+    @Test
+    public void retryOldTaskRun_shouldExecute(){
+        //prepare old taskRun
+        DateTimeUtils.freezeAt("202101010000");
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
+            eventBus.post(prepareEvent(taskAttempt.getId()
+                    , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.submit(Arrays.asList(taskRun));
+
+        awaitUntilAttemptDone(taskRun.getId() + 1);
+
+        TaskAttemptProps attemptProps1 = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+        assertThat(attemptProps1.getAttempt(), is(1));
+        assertThat(attemptProps1.getStatus(), is(TaskRunStatus.FAILED));
+        assertThat(attemptProps1.getLogPath(), is(nullValue()));
+        assertThat(attemptProps1.getStartAt(), is(nullValue()));
+        assertThat(attemptProps1.getEndAt(), is(nullValue()));
+
+        DateTimeUtils.freezeAt("202107010000");
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+            eventBus.post(prepareEvent(taskAttempt.getId()
+                    , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        //retry taskRun
+        TaskRun oldTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
+        taskManager.retry(oldTaskRun);
+
+        //verify
+        awaitUntilAttemptDone(taskRun.getId() + 2);
+
+        TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+        assertThat(attemptProps2.getAttempt(), is(2));
+        assertThat(attemptProps2.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(attemptProps2.getLogPath(), is(nullValue()));
+        assertThat(attemptProps2.getStartAt(), is(nullValue()));
+        assertThat(attemptProps2.getEndAt(), is(nullValue()));
+
+        DateTimeUtils.resetClock();
     }
 
 
