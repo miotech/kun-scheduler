@@ -65,6 +65,7 @@ services:
       DB_NEO4J_PORT:
       DB_REDIS_IP:
       DB_REDIS_PORT:
+      LIB_DIRECTORY:
     restart: always
     volumes:
       - ./data/kun-infra/data:/data
