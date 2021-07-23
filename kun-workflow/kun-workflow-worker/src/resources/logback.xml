@@ -54,7 +54,7 @@
 
     <logger name="com.miotech" level="DEBUG" />
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="ASYNCAPPLOG" />
         <appender-ref ref="APPERROR" />
         <appender-ref ref="ASYNCSTDOUT" />
