@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import javax.inject.Inject;
 import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -746,5 +747,31 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertThat(taskRun2.getDependentTaskRunIds(), Matchers.hasSize(1));
         assertThat(taskRun2.getDependentTaskRunIds(), Matchers.containsInAnyOrder(taskRun1.getId()));
 
+    }
+
+    @Test
+    public void TaskAttemptCreated3daysAgo_shouldNotExecute(){
+        //prepare attempt
+        OffsetDateTime currentDate = DateTimeUtils.freeze();
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+        //3 days passed
+        OffsetDateTime threeDaysAfter =  currentDate.plusDays(3).plusHours(1);
+        DateTimeUtils.freezeAt(threeDaysAfter.format(DateTimeFormatter.ofPattern("yyyyMMddHHmm")));
+        List<TaskAttempt> readyAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
+        assertThat(readyAttemptList,hasSize(0));
+
+        DateTimeUtils.resetClock();
+
+    }
+
+    @Test
+    public void testNoReadyTaskRunFetchAllSatisfyTaskAttempt_shouldReturnEmptyList(){
+        List<TaskAttempt> readyAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
+        assertThat(readyAttemptList,hasSize(0));
     }
 }
