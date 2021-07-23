@@ -21,7 +21,6 @@ dependencies {
     }
     implementation "com.amazonaws:aws-java-sdk-s3:1.11.306"
     implementation 'org.apache.hadoop:hadoop-aws:2.7.3'
-    implementation 'com.alibaba:druid'
 
     testImplementation project(':kun-workflow:kun-workflow-testing')
     testImplementation project(':kun-commons:kun-commons-testing')

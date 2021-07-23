@@ -13,10 +13,10 @@ public class DSITest {
     @Test
     public void DSI_buildFromValidString_shouldCreateProperly() {
         // Prepare
-        String dsiString1 = "mysql:host=db-server,port=3306,db=test,table=company";
-        String dsiString2 = "postgres:host=192.168.1.2,port=5432,db=test,schema=dm,table=company";
+        String dsiString1 = "mysql:host=db-server,port=3306,db=test,table=company:";
+        String dsiString2 = "postgres:host=192.168.1.2,port=5432,db=test,schema=dm,table=company:";
         String dsiString3 = "file:path=/data/bin/abc.bin:stream=true,stderr=/logs/error.log";
-        String dsiString4 = "ssh:host=192.168.1.5";
+        String dsiString4 = "ssh:host=192.168.1.5:";
         String dsiString5 = "randomType::abc=def";
 
         // Process
@@ -74,8 +74,8 @@ public class DSITest {
     @Test
     public void DSI_buildFromStringWithURIEncodedCharacters_shouldParseProperly() {
         // Prepare
-        String dsiStringEncoded1 = "https:host=localhost,key1=value+1,key2=value%40%21%242,key3=value%253%2c4";
-        String dsiStringEncoded2 = "ssh:host=%3a%3affff%3a0.0.0.0";
+        String dsiStringEncoded1 = "https:host=localhost,key1=value+1,key2=value%40%21%242,key3=value%253%2c4:";
+        String dsiStringEncoded2 = "ssh:host=%3a%3affff%3a0.0.0.0:";
 
         // Process
         DSI dsi1 = DSI.from(dsiStringEncoded1);
@@ -109,7 +109,7 @@ public class DSITest {
         builder2.putExtra("name", "\"foobar.txt\"");
         DSI dsi2 = builder2.build();
 
-        DSI dsiFromString1 = DSI.from("mongodb:host=127.0.0.1,port=27017,db=test,collection=company");
+        DSI dsiFromString1 = DSI.from("mongodb:host=127.0.0.1,port=27017,db=test,collection=company:");
         DSI dsiFromString2 = DSI.from("file::name=\"foobar.txt\"");
 
         // Validate
@@ -132,7 +132,6 @@ public class DSITest {
                 "host=127.0.0.1",     // no store type
                 "postgres:host=db-server,port=5432,db=123,",          // invalid comma at tail
                 "postgres:host=db-server,port=5432,db=test,db=test",  // Duplicated key
-                "postgres:host=db-server:",
                 "postgres:=",
                 "postgres:==",
                 "postgres:=,",
