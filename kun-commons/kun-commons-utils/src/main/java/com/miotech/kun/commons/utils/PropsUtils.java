@@ -139,4 +139,33 @@ public class PropsUtils {
 
         return result;
     }
+
+
+    public static Props loadPropsFromEnv(){
+       Map<String,String> systemEnv = System.getenv();
+       //filter kun env
+       Props props = new Props();
+       systemEnv.entrySet().
+               forEach(x -> {
+                   String key = x.getKey();
+                   if(isKunEnv(key)){
+                       String propValue = x.getValue() != null ? x.getValue() : "";
+                       propValue = replaceValueFromEnvironment(propValue);
+                       props.put(convertKey(key), propValue);
+                   }
+               });
+       return props;
+    }
+
+    public static String convertKey(String envKey){
+        return envKey.substring(4).replace('_','.').toLowerCase();
+    }
+
+    public static boolean isKunEnv(String envKey){
+        String KUN_PREFIX = "KUN_";
+        if(envKey.startsWith(KUN_PREFIX)){
+            return true;
+        }
+        return false;
+    }
 }
