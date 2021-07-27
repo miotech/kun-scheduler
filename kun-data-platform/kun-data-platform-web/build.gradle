@@ -47,7 +47,16 @@ task copySparkSqlOperator(type: Copy){
     dependsOn(buildSparkOperator)
 }
 
-compileJava.dependsOn(copyBashOperator,copySparkOperator,copySparkSqlOperator)
+task copySparkSubmitOperator(type: Copy){
+    from "../kun-workflow-operators/spark-operators/build/libs/spark-operators-0.1.jar"
+    rename {
+        "sparkSubmit-operator.jar"
+    }
+    into "src/main/resources"
+    dependsOn(buildSparkOperator)
+}
+
+compileJava.dependsOn(copyBashOperator,copySparkOperator,copySparkSqlOperator,copySparkSubmitOperator)
 
 task deleteLocalJar(type: Delete){
     delete "src/main/resources/bash-operator.jar"

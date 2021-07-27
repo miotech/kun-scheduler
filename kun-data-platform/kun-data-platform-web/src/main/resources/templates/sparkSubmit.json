@@ -1,0 +1,36 @@
+{
+  "name": "SparkSubmit",
+  "templateType": "spark",
+  "templateGroup": "development",
+  "operator": {
+    "name": "sparkSubmit-operator",
+    "description": "Spark Submit Operator",
+    "className": "com.miotech.kun.workflow.operator.SparkSubmitOperator"
+  },
+  "displayParameters": [
+    {
+      "name": "application",
+      "type": "string",
+      "required": false,
+      "displayName": "application main"
+    },
+    {
+      "name": "args",
+      "type": "text",
+      "required": false,
+      "displayName": "application args"
+    },
+    {
+      "name": "sparkConf",
+      "type": "keyvalue",
+      "required": false,
+      "displayName": "spark configuration"
+    }
+  ],
+  "defaultValues": {
+    "sparkConf": "{}",
+    "variables": "{}",
+    "application": ""
+  },
+  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkSubmitTaskTemplateRender"
+}

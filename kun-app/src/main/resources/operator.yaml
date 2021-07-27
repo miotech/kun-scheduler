@@ -8,6 +8,9 @@ operators:
   - name: sparkSql-operator
     className: com.miotech.kun.workflow.operator.SparkSQLOperator
     description: Spark SQL Operator
+  - name: sparkSubmit-operator
+    className: com.miotech.kun.workflow.operator.SparkSubmitOperator
+    description: Spark Submit Operator
   - name: data-quality-operator
     className: com.miotech.kun.workflow.operator.DataQualityOperator
     description: DataQuality Operator
