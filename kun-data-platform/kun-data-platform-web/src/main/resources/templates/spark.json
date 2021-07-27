@@ -5,26 +5,20 @@
   "operator": {
     "name": "spark-operator",
     "description": "Spark Operator",
-    "className": "com.miotech.kun.workflow.operator.SparkOperator"
+    "className": "com.miotech.kun.workflow.operator.SparkOperatorV2"
   },
   "displayParameters": [
     {
-      "name": "jars",
+      "name": "class",
       "type": "string",
       "required": false,
-      "displayName": "application jars"
-    },
-    {
-      "name": "files",
-      "type": "string",
-      "required": false,
-      "displayName": "application files"
+      "displayName": "class"
     },
     {
       "name": "application",
       "type": "string",
-      "required": false,
-      "displayName": "application class name"
+      "required": true,
+      "displayName": "application jar/file"
     },
     {
       "name": "args",
@@ -40,12 +34,9 @@
     }
   ],
   "defaultValues": {
-    "jars": "",
-    "files": "",
-    "livyHost": "${ dataplatform.livy.host }",
+    "yarnHost": "${ dataplatform.yarn.host }",
     "sparkConf": "{}",
-    "variables": "{}",
-    "application": ""
+    "variables": "{}"
   },
-  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkConfigTaskTemplateRender"
+  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkSubmitBasedTaskTemplateRender"
 }

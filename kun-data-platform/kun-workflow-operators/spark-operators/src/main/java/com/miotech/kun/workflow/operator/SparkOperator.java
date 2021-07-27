@@ -4,55 +4,134 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.execution.*;
-import com.miotech.kun.workflow.operator.spark.models.AppInfo;
-import com.miotech.kun.workflow.operator.spark.models.SparkJob;
-import com.miotech.kun.workflow.operator.spark.models.StateInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
+import org.joor.Reflect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
-public class SparkOperator extends LivyBaseSparkOperator {
+public class SparkOperator extends KunOperator {
+
+    private String entryFile;
     private static final Logger logger = LoggerFactory.getLogger(SparkOperator.class);
+
+    private boolean useLegacySparkOperator;
+    private final int shadowTestPct = 5;
+    private SparkOperatorV1 sparkOperatorV1 = new SparkOperatorV1();
+    private SparkOperatorV2 sparkOperatorV2 = new SparkOperatorV2();
+
+    @Override
+    public void init() {
+        OperatorContext context = getContext();
+        logger.info("Recieved task config: {}", JSONUtils.toJsonString(context.getConfig()));
+        if (context.getTaskRunId() % 10 >= shadowTestPct) {
+            useLegacySparkOperator = true;
+            sparkOperatorV1.setContext(context);
+            sparkOperatorV1.init();
+        } else {
+            useLegacySparkOperator = false;
+            Config newConfig = transformOperatorConfig(context);
+            Reflect.on(context).set("config", newConfig);
+            sparkOperatorV2.setContext(context);
+            sparkOperatorV2.init();
+        }
+    }
 
     @Override
     public boolean run() {
-        OperatorContext context = getContext();
-        logger.info("Start init spark job params");
-
-        String jars = SparkConfiguration.getString(context, CONF_LIVY_BATCH_JARS);
-        String files = SparkConfiguration.getString(context, CONF_LIVY_BATCH_FILES);
-        String application = SparkConfiguration.getString(context, CONF_LIVY_BATCH_APPLICATION);
-        String args = SparkConfiguration.getString(context, CONF_LIVY_BATCH_ARGS);
-        String sparkConf = SparkConfiguration.getString(context, CONF_LIVY_BATCH_CONF);
-        Long taskRunId = context.getTaskRunId();
-
-        String configLineageOutputPath = SparkConfiguration.getString(context, CONF_LINEAGE_OUTPUT_PATH);
-        String configLineageJarPath = SparkConfiguration.getString(context, CONF_LINEAGE_JAR_PATH);
-        String configS3AccessKey = SparkConfiguration.getString(context, CONF_S3_ACCESS_KEY);
-        String configS3SecretKey = SparkConfiguration.getString(context, CONF_S3_SECRET_KEY);
-
-        // should using task name
-        String sessionName = SparkConfiguration.getString(context, CONF_LIVY_BATCH_NAME);
-        if (Strings.isNullOrEmpty(sessionName)) {
-            sessionName = "Spark Job: " + IdGenerator.getInstance().nextId();
+        if (useLegacySparkOperator) {
+            return sparkOperatorV1.run();
         } else {
-            sessionName = sessionName + " - " + IdGenerator.getInstance().nextId();
+            return sparkOperatorV2.run();
         }
 
-        SparkJob job = new SparkJob();
+    }
+
+    @Override
+    public void abort() {
+        if (useLegacySparkOperator) {
+            sparkOperatorV1.abort();
+        } else {
+            sparkOperatorV2.abort();
+        }
+    }
+
+    @Override
+    public Optional<TaskAttemptReport> getReport() {
+        if (useLegacySparkOperator) {
+            return sparkOperatorV1.getReport();
+        } else {
+            return sparkOperatorV2.getReport();
+        }
+    }
+
+    Config transformOperatorConfig(OperatorContext context) {
+        Config config = context.getConfig();
+
+        Map<String, String> sparkConf = generateRunTimeSparkConfs(config);
+        Map<String, String> sparkSubmitParmas = generateRunTimeParams(config);
+
+        Config.Builder builder = Config.newBuilder()
+                .addConfig(SPARK_SUBMIT_PARMAS, JSONUtils.toJsonString(sparkSubmitParmas))
+                .addConfig(SPARK_CONF, JSONUtils.toJsonString(sparkConf))
+                .addConfig(SPARK_PROXY_USER, config.getString(CONF_LIVY_PROXY_USER))
+                .addConfig(SPARK_APPLICATION, entryFile)
+                .addConfig(SPARK_APPLICATION_ARGS, config.getString(SPARK_APPLICATION_ARGS))
+                .addConfig(SPARK_YARN_HOST, config.getString(SPARK_YARN_HOST))
+                .addConfig(CONF_LINEAGE_OUTPUT_PATH, config.getString(CONF_LINEAGE_OUTPUT_PATH))
+                .addConfig(CONF_LINEAGE_JAR_PATH, config.getString(CONF_LINEAGE_JAR_PATH))
+                .addConfig(CONF_S3_ACCESS_KEY, config.getString(CONF_S3_ACCESS_KEY))
+                .addConfig(CONF_S3_SECRET_KEY, config.getString(CONF_S3_SECRET_KEY));
+        return builder.build();
+    }
+
+
+    public Map<String, String> generateRunTimeParams(Config config) {
+        Map<String, String> sparkSubmitParams = new HashMap<>();
+
+        String sessionName = config.getString(CONF_LIVY_BATCH_NAME);
         if (!Strings.isNullOrEmpty(sessionName)) {
-            job.setName(sessionName);
+            sessionName = sessionName + "-" + IdGenerator.getInstance().nextId();
+            sparkSubmitParams.put("name", sessionName);
         }
 
+        String application = config.getString(CONF_LIVY_BATCH_APPLICATION);
+        if (!Strings.isNullOrEmpty(application)) {
+            sparkSubmitParams.put(SPARK_ENTRY_CLASS, application);
+        }
+        return sparkSubmitParams;
+    }
+
+    public Map<String, String> generateRunTimeSparkConfs(Config config) {
+        String sparkConfStr = config.getString(CONF_LIVY_BATCH_CONF);
+        Map<String, String> sparkConf = null;
+        if (!Strings.isNullOrEmpty(sparkConfStr)) {
+            sparkConf = JSONUtils.jsonStringToStringMap(sparkConfStr);
+        }
+        if (sparkConf == null) {
+            sparkConf = new HashMap<>();
+        }
+
+        // parse jars
+        List<String> allJars = new ArrayList<>();
+        if (sparkConf.containsKey("spark.jars")) {
+            allJars.addAll(Arrays.asList(sparkConf.get("spark.jars").split(",")));
+        }
+        String jars = config.getString(CONF_LIVY_BATCH_JARS);
+        if (!Strings.isNullOrEmpty(jars)) {
+            allJars.addAll(Arrays.asList(jars.split(",")));
+        }
+        if (!allJars.isEmpty()) {
+            sparkConf.put("spark.jars", String.join(",", allJars));
+        }
+
+        // parse entry jar/py file
+        String files = config.getString(CONF_LIVY_BATCH_FILES);
         List<String> jobFiles = new ArrayList<>();
         if (!Strings.isNullOrEmpty(files)) {
             jobFiles = Arrays.stream(files.split(","))
@@ -60,123 +139,27 @@ public class SparkOperator extends LivyBaseSparkOperator {
                     .filter(x -> !x.isEmpty())
                     .collect(Collectors.toList());
         }
-        if (!Strings.isNullOrEmpty(sparkConf)) {
-            job.setConf(JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
-        }
-
-        List<String> allJars = new ArrayList<>();
-        if (!Strings.isNullOrEmpty(jars)) {
-            allJars.addAll(Arrays.asList(jars.split(",")));
-        }
-        if(!Strings.isNullOrEmpty(configLineageJarPath)){
-            allJars.add(configLineageJarPath);
-            job.addConf("spark.sql.queryExecutionListeners","za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
-        }
-        job.setJars(allJars);
-
-        // lineage config
-        if(!Strings.isNullOrEmpty(configLineageOutputPath)){
-            job.addConf("spark.hadoop.spline.hdfs_dispatcher.address", configLineageOutputPath);
-        }
-        if(!Strings.isNullOrEmpty(configS3AccessKey)){
-            job.addConf("spark.fs.s3a.access.key", configS3AccessKey);
-        }
-        if(!Strings.isNullOrEmpty(configS3SecretKey)){
-            job.addConf("spark.fs.s3a.secret.key", configS3SecretKey);
-        }
-        job.addConf("spark.hadoop.taskRunId", taskRunId.toString());
-
-        if (!job.getConf().containsKey("spark.driver.memory")) {
-            job.addConf("spark.driver.memory", "2g");
-        }
         if (!jobFiles.isEmpty()) {
             String mainEntry = jobFiles.get(0);
             boolean isJava;
             isJava = mainEntry.endsWith(".jar");
-            job.setFile(mainEntry);
+            entryFile = mainEntry;
             logger.info("Find main entry file : {}", mainEntry);
             // set extra files
             List<String> extraFiles = jobFiles.size() > 1 ? jobFiles.subList(1, jobFiles.size()) : ImmutableList.of();
             if (!CollectionUtils.isEmpty(extraFiles)) {
                 if (isJava) {
-                    job.setFiles(extraFiles);
+                    List<String> allFiles = sparkConf.containsKey("spark.files") ? Arrays.asList(sparkConf.get("spark.files").split(",")) : new ArrayList<>();
+                    allFiles.addAll(extraFiles);
+                    sparkConf.put("spark.files", String.join(",", allFiles));
                 } else {
-                    job.setPyFiles(extraFiles);
+                    List<String> allPyFiles = sparkConf.containsKey("spark.submit.pyFiles") ? Arrays.asList(sparkConf.get("spark.submit.pyFiles").split(",")) : new ArrayList<>();
+                    allPyFiles.addAll(extraFiles);
+                    sparkConf.put("spark.submit.pyFiles", String.join(",", allPyFiles));
                 }
             }
         }
-        if (!Strings.isNullOrEmpty(application)) {
-            job.setClassName(application);
-        }
-        List<String> jobArgs = new ArrayList<>();
-        if (!Strings.isNullOrEmpty(args)) {
-            jobArgs = Arrays.stream(Arrays.stream(args.split("\\s+"))
-                    .filter(x -> !x.isEmpty())
-                    .map(String::trim).toArray(String[]::new))
-                    .map(this::replaceWithVariable)
-                    .collect(Collectors.toList());
-        }
-
-        if (!jobArgs.isEmpty()) {
-            job.setArgs(jobArgs);
-        }
-
-        logger.info("Execution job : {}", JSONUtils.toJsonString(job));
-        app = livyClient.runSparkJob(job);
-        int jobId = app.getId();
-        logger.info("Execute spark application using livy : batch id {}", jobId);
-
-        StateInfo.State jobState = null;
-        String applicationId = null;
-        AppInfo appInfo = null;
-        Integer timeout = 0;
-        do {
-            try {
-                if (StringUtils.isEmpty(applicationId)
-                        || StringUtils.isEmpty(app.getAppInfo().getDriverLogUrl())) {
-                    app = livyClient.getSparkJob(jobId);
-                    applicationId = app.getAppId();
-                    appInfo = app.getAppInfo();
-                    if (!StringUtils.isEmpty(applicationId)) {
-                        logger.info("Application info: {}", JSONUtils.toJsonString(app));
-                    }
-                }
-                jobState = livyClient.getSparkJobState(app.getId()).getState();
-                timeout = 0;
-            } catch (RuntimeException e) {
-                timeout++;
-                logger.warn("get job information from livy timeout, times = {}", timeout);
-                if (timeout >= LIVY_TIMEOUT_LIMIT) {
-                    logger.error("get job information from livy failed", e);
-                    throw e;
-                }
-            }
-            if (jobState == null) {
-                throw new IllegalStateException("Cannot find state for job: " + app.getId());
-            }
-            waitForSeconds(3);
-        } while (!cancelled && !jobState.isFinished());
-
-        tailingYarnLog(appInfo);
-        logger.info("spark job \"{}\", batch id: {}", jobState, jobId);
-        if (jobState.equals(StateInfo.State.SUCCESS)) {
-            //wait spline send execPlan
-            waitForSeconds(15);
-            //解析spark 任务上下游
-            TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), taskRunId);
-            if(taskAttemptReport != null)
-                report(taskAttemptReport);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    @Override
-    public void abort() {
-        logger.info("Delete spark batch job, id: {}", app.getId());
-        cancelled = true;
-        livyClient.deleteBatch(app.getId());
+        return sparkConf;
     }
 
     @Override
@@ -184,7 +167,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
         return new ConfigDef()
                 .define(CONF_LIVY_HOST, ConfigDef.Type.STRING, true, "Livy host to submit application, in the format `ip:port`", CONF_LIVY_HOST)
                 .define(CONF_LIVY_YARN_QUEUE, ConfigDef.Type.STRING, CONF_LIVY_YARN_QUEUE_DEFAULT, true, "yarn queue name, default is `default`", CONF_LIVY_YARN_QUEUE)
-                .define(CONF_LIVY_PROXY_USER, ConfigDef.Type.STRING, CONF_LIVY_PROXY_DEFAULT, true, "proxy use for livy", CONF_LIVY_PROXY_USER)
+                .define(CONF_LIVY_PROXY_USER, ConfigDef.Type.STRING, SPARK_PROXY_USER_DEFAULT_VALUE, true, "proxy use for livy", CONF_LIVY_PROXY_USER)
                 .define(CONF_LIVY_BATCH_JARS, ConfigDef.Type.STRING, "", true, "Java application jar files", CONF_LIVY_BATCH_JARS)
                 .define(CONF_LIVY_BATCH_FILES, ConfigDef.Type.STRING, "", true, "files to use, seperated with `,`, the first file would be used as main entry", CONF_LIVY_BATCH_FILES)
                 .define(CONF_LIVY_BATCH_APPLICATION, ConfigDef.Type.STRING, "", true, "application class name for java application", CONF_LIVY_BATCH_APPLICATION)
@@ -195,7 +178,8 @@ public class SparkOperator extends LivyBaseSparkOperator {
                 .define(CONF_LINEAGE_OUTPUT_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_OUTPUT_PATH_VALUE_DEFAULT, true, "file system address to store lineage analysis report, in the format `s3a://BUCKET/path` or `hdfs://host:port/path`", CONF_LINEAGE_OUTPUT_PATH)
                 .define(CONF_LINEAGE_JAR_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT, true, "the jar used for lineage analysis, in the format `s3a://BUCKET/xxx/xxx.jar` or `hdfs://host:port/xxx/xxx.jar`", CONF_LINEAGE_JAR_PATH)
                 .define(CONF_S3_ACCESS_KEY, ConfigDef.Type.STRING, CONF_S3_ACCESS_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_ACCESS_KEY)
-                .define(CONF_S3_SECRET_KEY, ConfigDef.Type.STRING, CONF_S3_SECRET_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_SECRET_KEY);
+                .define(CONF_S3_SECRET_KEY, ConfigDef.Type.STRING, CONF_S3_SECRET_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_SECRET_KEY)
+                .define(SPARK_YARN_HOST, ConfigDef.Type.STRING, SPARK_YARN_HOST_DEFAULT_VALUE, true, "Yarn host to submit application, in the format `ip:port`", SPARK_YARN_HOST);
     }
 
     @Override

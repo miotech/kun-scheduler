@@ -31,6 +31,19 @@ public abstract class HttpApiClient {
         return request(request);
     }
 
+    protected String put(String url, String message) {
+
+        RequestBody body = RequestBody.create(JSON, message);
+        Request request = new Request.Builder()
+                .url(url)
+                .put(body)
+                .addHeader(CONTENT_TYPE, JSON.toString())
+                .addHeader("Accept", "application/json")
+                .addHeader("Accept-charset", "UTF-8")
+                .build();
+        return request(request);
+    }
+
     protected String get(String url) {
         Request request = new Request.Builder().url(url)
                 .addHeader(CONTENT_TYPE, JSON.toString())
