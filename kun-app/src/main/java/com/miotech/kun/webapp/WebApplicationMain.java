@@ -1,7 +1,8 @@
 package com.miotech.kun.webapp;
 
-import org.springframework.boot.SpringApplication;
+import com.miotech.kun.webapp.listener.KunAppPropertySourceListener;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 
 /**
  * The application layer entry class for the following modules:
@@ -19,10 +20,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
         "com.miotech.kun.datadashboard",
         // kun-data-discovery
         "com.miotech.kun.dataquality",
-        "com.miotech.kun.datadiscovery"
+        "com.miotech.kun.datadiscovery",
+        "com.miotech.kun.webapp"
 })
 public class WebApplicationMain {
     public static void main(String[] args) {
-        SpringApplication.run(WebApplicationMain.class, args);
+        new SpringApplicationBuilder(WebApplicationMain.class)
+                .listeners(new KunAppPropertySourceListener())
+                .run(args);
     }
 }
