@@ -3,6 +3,9 @@ name: app test
 on:
   pull_request:
     paths:
+  push:
+    branches:
+      - master
 env:
   LOG_DIR: /tmp/kun-scheduler
 
