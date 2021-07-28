@@ -4,4 +4,10 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "com.fasterxml.jackson.core:jackson-annotations"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
+
+    testImplementation 'org.powermock:powermock-module-junit4'
+    testImplementation 'org.powermock:powermock-api-mockito2'
+    testImplementation 'com.github.stefanbirkner:system-rules'
+
+
 }

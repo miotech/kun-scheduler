@@ -28,11 +28,12 @@ public class KunInfraWebServer extends AbstractKunWebServer {
 
         /* Load Props */
         Props props = PropsUtils.loadAppProps();
+        props.addProps(PropsUtils.loadPropsFromEnv("INFRA"));
         // Redirect all std out and err messages into log4j
         org.eclipse.jetty.util.log.Log.setLog(new JettyLog());
 
         /* Initialize Guice Injector */
-        final Injector injector = Guice.createInjector(new KunWorkflowServerModule(props),new KunMetadataModule(props),
+        final Injector injector = Guice.createInjector(new KunWorkflowServerModule(props), new KunMetadataModule(props),
                 new KunInfraWebModule(props));
 
         WebServer webServer = injector.getInstance(KunInfraWebServer.class);

@@ -3,7 +3,6 @@ package com.miotech.kun.commons.utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
 import java.util.*;
 
 /**
@@ -14,16 +13,14 @@ public class Props {
 
     private static final Logger logger = LoggerFactory.getLogger(Props.class);
 
-    private final Map<String, String> propertiesMap;
+    private final List<Map<String, String>> propertiesList;
 
-    private String source = null;
-
-    public static Props fromProperties(Properties properties){
+    public static Props fromProperties(Properties properties) {
         return new Props(properties);
     }
 
     public Props() {
-        propertiesMap = new HashMap<>();
+        propertiesList = new ArrayList<>();
     }
 
     public Props(final Properties... properties) {
@@ -34,26 +31,13 @@ public class Props {
     }
 
     /**
-     * Create props from property input streams
-     */
-    public Props(final InputStream inputStream) throws IOException {
-        this();
-        loadFrom(inputStream);
-    }
-
-    /**
      * Create properties from maps of properties
      */
     public Props(final Map<String, String>... props) {
         this();
         for (int i = props.length - 1; i >= 0; i--) {
-            this.putAll(props[i]);
+            propertiesList.add(props[i]);
         }
-    }
-
-    private void loadFrom(final InputStream inputStream) throws IOException {
-        final Properties properties = new Properties();
-        properties.load(inputStream);
     }
 
     /**
@@ -67,111 +51,65 @@ public class Props {
      */
     public void put(final Properties properties) {
         for (final String propName : properties.stringPropertyNames()) {
-            this.propertiesMap.put(propName, properties.getProperty(propName));
+            put(propName, properties.getProperty(propName));
         }
     }
 
     /**
-     * Put string
+     * put another props into this props，values of the same key will be overwritten
+     *
+     * @param props
      */
-    public String put(final String key, final String value) {
-        return this.propertiesMap.put(key, value);
-    }
-
-    /**
-     * Put boolean
-     */
-    public String put(final String key, final Boolean value) {
-        return this.propertiesMap.put(key, value.toString());
-    }
-
-    /**
-     * Put integer
-     */
-    public String put(final String key, final Integer value) {
-        return this.propertiesMap.put(key, value.toString());
-    }
-
-    /**
-     * Put Long. Stores as String.
-     */
-    public String put(final String key, final Long value) {
-        return this.propertiesMap.put(key, value.toString());
-    }
-
-    /**
-     * Put Double. Stores as String.
-     */
-    public String put(final String key, final Double value) {
-        return this.propertiesMap.put(key, value.toString());
-    }
-
-    /**
-     * Put all properties in the props into the current props. Will handle null p.
-     */
-    public void putAll(final Props p) {
-        if (p == null) {
-            return;
-        }
-        for (final String key : p.getKeySet()) {
-            this.put(key, p.get(key));
+    public void addProps(final Props props) {
+        for (int i = props.propertiesList.size() - 1; i >= 0; i--) {
+            propertiesList.add(0, props.propertiesList.get(i));
         }
     }
 
     /**
-     * Put everything in the map into the props.
+     * Put object
      */
-    public void putAll(final Map<? extends String, ? extends String> m) {
-        if (m == null) {
-            return;
+    public void put(final String key, final Object value) {
+        if (propertiesList.size() == 0) {
+            Map<String, String> propertiesMap = new HashMap<>();
+            propertiesMap.put(key, value.toString());
+            propertiesList.add(propertiesMap);
+        } else {
+            propertiesList.get(0).put(key, value.toString());
         }
-
-        for (final Map.Entry<? extends String, ? extends String> entry : m.entrySet()) {
-            this.put(entry.getKey(), entry.getValue());
-        }
-    }
-
-    /**
-     * Returns a set of all keys, including the parents
-     */
-    public Set<String> getKeySet() {
-        final HashSet<String> keySet = new HashSet<>();
-        keySet.addAll(keySet());
-        return keySet;
-    }
-
-    /**
-     * Get the key set from the Props
-     */
-    public Set<String> keySet() {
-        return this.propertiesMap.keySet();
     }
 
     /**
      * Check key in propertiesMap
      */
-    public boolean containsKey(final Object k) {
-        return this.propertiesMap.containsKey(k);
+    public boolean containsKey(final Object key) {
+        for (Map<String, String> propertiesMap : propertiesList) {
+            String upCaseKey = key.toString().toUpperCase();
+            if (propertiesMap.containsKey(key) || propertiesMap.containsKey(upCaseKey)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
-     * Check value in propertiesMap
-     */
-    public boolean containsValue(final Object value) {
-        return this.propertiesMap.containsValue(value);
-    }
-
-    /**
-     * Return value if available in propertiesMap
+     * Return value if available in properties
      *
      * @return
      */
     public String get(final Object key) {
-        if (this.propertiesMap.containsKey(key)) {
-            return this.propertiesMap.get(key);
-        } else {
-            return null;
+        for (int i = 0; i < propertiesList.size(); i++) {
+            Map<String, String> propertiesMap = propertiesList.get(i);
+            if (propertiesMap.containsKey(key)) {
+                return propertiesMap.get(key);
+            }
+            String upCaseKey = key.toString().toUpperCase();
+            if (propertiesMap.containsKey(upCaseKey)) {
+                return propertiesMap.get(upCaseKey);
+            }
         }
+        return null;
+
     }
 
     /**
@@ -326,87 +264,19 @@ public class Props {
     }
 
     /**
-     * Clones the Props p object.
-     */
-    public static Props clone(final Props p) {
-        final Props dest = new Props();
-        for (final String key : p.keySet()) {
-            dest.put(key, p.get(key));
-        }
-        return dest;
-    }
-
-    /**
-     * Store only those properties defined at this local level
-     *
-     * @param file The file to write to
-     * @throws IOException If the file can't be found or there is an io error
-     */
-    public void store(final File file) throws IOException {
-        final BufferedOutputStream out =
-                new BufferedOutputStream(new FileOutputStream(file));
-        try {
-            store(out);
-        } finally {
-            out.close();
-        }
-    }
-
-    /**
-     * Store only those properties defined at this local level
-     *
-     * @param out The output stream to write to
-     * @throws IOException If the file can't be found or there is an io error
-     */
-    public void store(final OutputStream out) throws IOException {
-        final Properties p = new Properties();
-        for (final String key : this.propertiesMap.keySet()) {
-            p.setProperty(key, get(key));
-        }
-        p.store(out, null);
-    }
-
-    /**
      * Returns a java.util.Properties file populated with the current Properties in here.
      */
     public Properties toProperties() {
         final Properties p = new Properties();
-        for (final String key : this.propertiesMap.keySet()) {
-            p.setProperty(key, get(key));
+        for (int i = propertiesList.size() - 1; i >= 0; i--) {
+            Map<String, String> propertiesMap = propertiesList.get(i);
+            for (final String key : propertiesMap.keySet()) {
+                p.setProperty(key, get(key));
+            }
         }
 
         return p;
     }
 
-    /**
-     * Get Source information
-     */
-    public String getSource() {
-        return this.source;
-    }
-
-    /**
-     * Set Source information
-     */
-    public Props setSource(final String source) {
-        this.source = source;
-        return this;
-    }
-
-    /**
-     * override object's default toString function
-     */
-    @Override
-    public String toString() {
-        final StringBuilder builder = new StringBuilder("{");
-        for (final Map.Entry<String, String> entry : this.propertiesMap.entrySet()) {
-            builder.append(entry.getKey());
-            builder.append(": ");
-            builder.append(entry.getValue());
-            builder.append(", ");
-        }
-        builder.append("}");
-        return builder.toString();
-    }
 }
 
