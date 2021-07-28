@@ -8,19 +8,22 @@ import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
+import org.zeroturnaround.process.JavaProcess;
+import org.zeroturnaround.process.ProcessUtil;
+import org.zeroturnaround.process.Processes;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class SparkSubmitOperator extends KunOperator {
 
     private static final Logger logger = LoggerFactory.getLogger(SparkSubmitOperator.class);
     private Process process;
     private String applicationId;
+    private  Boolean submitted = false;
 
     private static final String COMMAND = "command";
     private static final String VARIABLES = "variables";
@@ -33,9 +36,9 @@ public class SparkSubmitOperator extends KunOperator {
         logger.info("Recieved task config: {}", JSONUtils.toJsonString(context.getConfig()));
 
         //TODO: su to proxyUser to execute spark-submit
-        String queue = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_YARN_QUEUE);
-        String proxyUser = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_PROXY_USER);
-        logger.info("submit spark application to queue \"{}\" as user \"{}\"", queue, proxyUser);
+//        String queue = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_YARN_QUEUE);
+//        String proxyUser = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_PROXY_USER);
+//        logger.info("submit spark application to queue \"{}\" as user \"{}\"", queue, proxyUser);
     }
 
 
@@ -61,14 +64,14 @@ public class SparkSubmitOperator extends KunOperator {
             process = startedProcess.getProcess();
 
             // wait for termination
-            int exitCode = startedProcess.getFuture()
-                    .get().getExitValue();
-            logger.info("Bash exit with code {}", exitCode);
+            int exitCode = startedProcess.getFuture().get().getExitValue();
+            submitted = true;
+            if(exitCode != 0){
+                return false;
+            }
 
             //TODO: if cluster mode, parse application Id from output, track yarn app status
-
-
-            return exitCode == 0;
+            return true;
         } catch (IOException | ExecutionException e) {
             logger.error("{}", e);
             return false;
@@ -81,7 +84,26 @@ public class SparkSubmitOperator extends KunOperator {
 
     @Override
     public void abort() {
-        //TODO: Yarn/K8/Mesos kill application
+        if(!submitted){
+            Long waitSeconds = getContext().getConfig().getLong("forceWaitSeconds");
+            JavaProcess javaProcess = Processes.newJavaProcess(process);
+            if (javaProcess.isAlive()) {
+                try {
+                    ProcessUtil.destroyGracefullyOrForcefullyAndWait(javaProcess, 30, TimeUnit.SECONDS, waitSeconds, TimeUnit.SECONDS);
+                    logger.info("Process is successfully terminated");
+                } catch (IOException | TimeoutException e) {
+                    logger.error("{}", e);
+                } catch (InterruptedException e) {
+                    logger.error("{}", e);
+                    Thread.currentThread().interrupt();
+                }
+            } else {
+                logger.info("Process already finished");
+            }
+        }else{
+            //TODO: kill spark app in yarn/k8/mesos
+        }
+
     }
 
     @Override

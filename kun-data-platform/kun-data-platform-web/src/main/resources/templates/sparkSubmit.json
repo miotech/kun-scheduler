@@ -9,10 +9,34 @@
   },
   "displayParameters": [
     {
+      "name": "master",
+      "type": "string",
+      "required": false,
+      "displayName": "master"
+    },
+    {
+      "name": "deploy-mode",
+      "type": "string",
+      "required": false,
+      "displayName": "deploy-mode"
+    },
+    {
+      "name": "proxy-user",
+      "type": "string",
+      "required": false,
+      "displayName": "proxy-user"
+    },
+    {
+      "name": "class",
+      "type": "string",
+      "required": false,
+      "displayName": "class"
+    },
+    {
       "name": "application",
       "type": "string",
       "required": false,
-      "displayName": "application main"
+      "displayName": "application jar/file"
     },
     {
       "name": "args",
@@ -29,8 +53,7 @@
   ],
   "defaultValues": {
     "sparkConf": "{}",
-    "variables": "{}",
-    "application": ""
+    "variables": "{}"
   },
   "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkSubmitTaskTemplateRender"
 }

@@ -11,16 +11,37 @@
     "variables": "{}",
     "sparkConf": "{}"
   },
-  "displayParameters": [{
+  "displayParameters": [
+    {
+      "name": "master",
+      "type": "string",
+      "required": false,
+      "displayName": "master"
+    },
+    {
+      "name": "deploy-mode",
+      "type": "string",
+      "required": false,
+      "displayName": "deploy-mode"
+    },
+    {
+      "name": "proxy-user",
+      "type": "string",
+      "required": false,
+      "displayName": "proxy-user"
+    },
+    {
     "name": "sparkSQL",
     "displayName": "sql",
     "type": "sql",
     "required" : true
-  }, {
+    },
+    {
     "name": "sparkConf",
     "type": "keyvalue",
     "required": false,
     "displayName": "Extra Spark Configuration"
-  }],
+    }
+  ],
   "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkSubmitSqlTaskTemplateRender"
 }

@@ -1,26 +1,24 @@
 package com.miotech.kun.dataplatform.common.tasktemplate.renderer;
 
-import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 
 @Component
-public class SparkSubmitSqlTaskTemplateRender extends TaskTemplateRenderer {
-    @Override
-    public TaskConfig render(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition) {
-        Map<String, Object> configMap = buildTaskConfig(taskConfig, taskTemplate, taskDefinition);
-
-        return  TaskConfig.newBuilder()
-                .withParams(configMap)
-                .build();
-    }
+public class SparkSubmitSqlTaskTemplateRender extends SparkSubmitBasedTaskTemplateRender {
 
     @Override
-    public Map<String, Object> buildTaskConfig(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition) {
-        Map<String, Object> configMap = super.buildTaskConfig(taskConfig, taskTemplate, taskDefinition);
-        return configMap;
+    public String buildSparkSubmitCmd(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition) {
+        List<String> params = buildBasicSparkCmd(taskConfig);
+        params.add(0, "spark-sql");
+
+        //parse sql
+        String sql = (String) taskConfig.get("sparkSQL");
+        params.add("-e " + "'" + sql + "'");
+        return String.join(" ", params);
     }
+
 }
