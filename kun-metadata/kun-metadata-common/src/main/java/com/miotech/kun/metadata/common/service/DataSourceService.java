@@ -63,7 +63,7 @@ public class DataSourceService {
                 .withUpdateTime(OffsetDateTime.now())
                 .build();
         dataSourceDao.update(dataSource);
-        return dataSourceDao.findById(id).get();
+        return dataSourceDao.findById(id).orElse(null);
     }
 
     public void delete(Long id) {

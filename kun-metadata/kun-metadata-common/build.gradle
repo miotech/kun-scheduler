@@ -1,6 +1,5 @@
 dependencies {
     implementation project(":kun-commons:kun-commons-db")
-    implementation project(":kun-commons:kun-commons-testing")
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-metadata:kun-metadata-service-facade")
     implementation project(':kun-metadata:kun-metadata-core')

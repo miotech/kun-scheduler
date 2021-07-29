@@ -8,7 +8,6 @@ dependencies {
     implementation ("org.mock-server:mockserver-netty:3.10.8") {
         exclude group: 'xerces', module: 'xerces'
     }
-    implementation "org.mock-server:mockserver-netty:3.10.8"
     implementation "org.mock-server:mockserver-client-java:3.10.8"
     implementation "org.testcontainers:testcontainers"
     implementation "org.testcontainers:postgresql"

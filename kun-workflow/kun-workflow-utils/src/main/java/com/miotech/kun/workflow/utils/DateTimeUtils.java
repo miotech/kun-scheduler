@@ -34,7 +34,7 @@ public class DateTimeUtils {
      * @return
      */
     public static OffsetDateTime freeze() {
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now(ZoneId.of("UTC"));
         Clock fixed = Clock.fixed(now.toInstant(), ZoneId.of("UTC"));
         setClock(fixed);
         return now;
