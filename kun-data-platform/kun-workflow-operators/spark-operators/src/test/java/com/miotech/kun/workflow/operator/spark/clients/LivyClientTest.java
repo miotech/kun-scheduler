@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit;
 @Ignore
 public class LivyClientTest {
 
-    private LivyClient client = new LivyClient("http://<livy_ip>:8998");
-    private SparkClient sparkClient = new SparkClient("<livy_ip>", 8088);
+    private LivyClient client = new LivyClient("http://10.0.1.198:8998");
+    private SparkClient sparkClient = new SparkClient("10.0.1.198:8088");
 
     @Test
     public void runSparkJob() throws InterruptedException {

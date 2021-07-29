@@ -6,7 +6,7 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.operator.spark.models.AppInfo;
 import com.miotech.kun.workflow.operator.spark.models.SparkJob;
-import com.miotech.kun.workflow.operator.spark.models.StateInfo;
+import com.miotech.kun.workflow.operator.spark.models.LivyStateInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -126,7 +126,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
         int jobId = app.getId();
         logger.info("Execute spark application using livy : batch id {}", jobId);
 
-        StateInfo.State jobState = null;
+        LivyStateInfo.State jobState = null;
         String applicationId = null;
         AppInfo appInfo = null;
         Integer timeout = 0;
@@ -159,7 +159,7 @@ public class SparkOperator extends LivyBaseSparkOperator {
 
         tailingYarnLog(appInfo);
         logger.info("spark job \"{}\", batch id: {}", jobState, jobId);
-        if (jobState.equals(StateInfo.State.SUCCESS)) {
+        if (jobState.equals(LivyStateInfo.State.SUCCESS)) {
             //wait spline send execPlan
             waitForSeconds(15);
             //解析spark 任务上下游

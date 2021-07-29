@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class StateInfo {
+public class LivyStateInfo {
 
     public enum State {
         NOT_STARTED("not_started"),

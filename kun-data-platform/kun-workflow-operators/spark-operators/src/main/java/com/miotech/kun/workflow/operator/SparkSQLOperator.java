@@ -138,7 +138,7 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
         logger.info("Running spark session in id: {}", currentActiveSessionId);
 
         // wait for session available
-        StateInfo.State sessionState;
+        LivyStateInfo.State sessionState;
         do {
             sessionState = livyClient.getSparkSessionState(sessionId).getState();
             if (sessionState == null) {

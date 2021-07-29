@@ -2,6 +2,10 @@ package com.miotech.kun.workflow.operator;
 
 import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.workflow.core.execution.*;
+import com.miotech.kun.workflow.operator.spark.clients.SparkClient;
+import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
+import com.miotech.kun.workflow.operator.spark.models.Application;
+import com.miotech.kun.workflow.operator.spark.models.YarnStateInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,27 +22,31 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class SparkSubmitOperator extends KunOperator {
 
     private static final Logger logger = LoggerFactory.getLogger(SparkSubmitOperator.class);
     private Process process;
-    private String applicationId;
     private  Boolean submitted = false;
+    private SparkClient sparkClient;
+    private String appId;
+    private final YarnLoggerParser loggerParser = new YarnLoggerParser();
 
     private static final String COMMAND = "command";
     private static final String VARIABLES = "variables";
     private static final String DISPLAY_COMMAND = "bash command";
     private static final Long FORCES_WAIT_SECONDS_DEFAULT_VALUE = 10l;
+    private static final int HTTP_TIMEOUT_LIMIT = 10;
 
     @Override
     public void init() {
         OperatorContext context = getContext();
         logger.info("Recieved task config: {}", JSONUtils.toJsonString(context.getConfig()));
 
-        //TODO: su to proxyUser to execute spark-submit
-//        String queue = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_YARN_QUEUE);
-//        String proxyUser = SparkConfiguration.getString(context, SparkConfiguration.CONF_LIVY_PROXY_USER);
-//        logger.info("submit spark application to queue \"{}\" as user \"{}\"", queue, proxyUser);
+        String yarnHost = "http://10.0.2.70:8088";
+        sparkClient = new SparkClient(yarnHost);
     }
 
 
@@ -57,9 +65,11 @@ public class SparkSubmitOperator extends KunOperator {
                 writer.write(command);
             }
             ProcessExecutor processExecutor = new ProcessExecutor();
+            OutputStream stderrStream = new ByteArrayOutputStream();
             StartedProcess startedProcess = processExecutor
                     .command("sh", commandFile.getPath())
                     .redirectOutput(Slf4jStream.of(logger).asInfo())
+                    .redirectError(stderrStream)
                     .start();
             process = startedProcess.getProcess();
 
@@ -71,7 +81,16 @@ public class SparkSubmitOperator extends KunOperator {
             }
 
             //TODO: if cluster mode, parse application Id from output, track yarn app status
-            return true;
+            String stderrString = stderrStream.toString();
+            Pattern applicationIdPattern = Pattern.compile(".*(application_\\d{13}_\\d{4}).*");
+            final Matcher matcher = applicationIdPattern.matcher(stderrString);
+            if (matcher.matches()){
+                appId = matcher.group(1);
+                logger.info("Yarn ApplicationId: {}", appId);
+                return trackYarnAppStatus(appId);
+            }else {
+                throw new IllegalStateException("Yarn applicationId not found");
+            }
         } catch (IOException | ExecutionException e) {
             logger.error("{}", e);
             return false;
@@ -102,6 +121,7 @@ public class SparkSubmitOperator extends KunOperator {
             }
         }else{
             //TODO: kill spark app in yarn/k8/mesos
+            sparkClient.killApplication(appId);
         }
 
     }
@@ -118,6 +138,54 @@ public class SparkSubmitOperator extends KunOperator {
     public Resolver getResolver() {
         // TODO: implement this
         return new NopResolver();
+    }
+
+    public boolean trackYarnAppStatus(String appId){
+        int timeout = 0;
+        YarnStateInfo.State jobState = null;
+        Application sparkApp = null;
+        do {
+            try {
+                sparkApp = sparkClient.getApp(appId);
+                jobState = YarnStateInfo.State.valueOf(sparkApp.getFinalStatus());
+                timeout = 0;
+            } catch (RuntimeException e) {
+                timeout++;
+                logger.warn("get job information from yarn timeout, times = {}", timeout);
+                if (timeout >= HTTP_TIMEOUT_LIMIT) {
+                    logger.error("get spark job information from yarn failed", e);
+                    throw e;
+                }
+            }
+            if (jobState == null) {
+                throw new IllegalStateException("Cannot find state for job: " + appId);
+            }
+            waitForSeconds(5);
+        } while ( !jobState.isFinished());
+        tailingYarnLog(sparkApp.getAmContainerLogs());
+        if(jobState.isSuccess()){
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    private void waitForSeconds(int seconds) {
+        try {
+            Thread.sleep(seconds * 1000);
+        } catch (InterruptedException e) {
+            logger.error("Failed in wait for : {}s", seconds, e);
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void tailingYarnLog(String logUrl) {
+        try {
+            logger.info("Fetch log from {}", logUrl);
+            logger.info(loggerParser.getYarnLogs(logUrl));
+        } catch (Exception e) {
+            logger.error("Error in fetch application logs, {}", e);
+        }
     }
 
 }
