@@ -15,8 +15,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -29,15 +27,6 @@ import java.util.stream.Collectors;
 public class DSI implements Serializable {
     @JsonIgnore
     private static final long serialVersionUID = -1604023597334L;
-
-    private static final String PROP_KEY_VALUE_PATTERN = "(?:(?:[a-zA-Z0-9_]|[^\\w,:%]|(?:%[0-9a-fA-F]+))+)";
-
-    private static final Pattern validatePattern =
-            Pattern.compile("^([a-zA-Z0-9_]+)" +    // store type
-                    "(?:" +
-                    ":" + "(?:(" + PROP_KEY_VALUE_PATTERN + "=" + PROP_KEY_VALUE_PATTERN + "(?:," + PROP_KEY_VALUE_PATTERN + "=" + PROP_KEY_VALUE_PATTERN + ")*)?)" +  // properties
-                    "(?::(" + PROP_KEY_VALUE_PATTERN + "=" + PROP_KEY_VALUE_PATTERN + "(?:," + PROP_KEY_VALUE_PATTERN + "=" + PROP_KEY_VALUE_PATTERN + ")*))?" +  // extras
-                    ")?$");
 
     private transient String dsiString;
 
@@ -87,13 +76,14 @@ public class DSI implements Serializable {
     }
 
     public static DSI from(String string) {
-        Matcher matcher = validatePattern.matcher(string);
-        if (!matcher.matches()) {
-            throw new IllegalArgumentException(String.format("Cannot build DSI from invalid string: \"%s\"", string));
+        String[] infos = string.split(":", -1);
+        if (infos.length != 3) {
+            throw new IllegalArgumentException("Cannot build DSI from invalid string: " + string);
         }
-        String storeType = matcher.group(1);
-        String propsStr = matcher.group(2);
-        String extraStr = matcher.group(3);
+
+        String storeType = infos[0];
+        String propsStr = infos[1];
+        String extraStr = infos[2];
 
         Map<String, String> propsMap = transformEncodedStringToMap(propsStr);
         Map<String, String> extraMap = transformEncodedStringToMap(extraStr);
@@ -113,8 +103,16 @@ public class DSI implements Serializable {
         String[] kvPairs = encodedString.split(",");
         for (String kvPair : kvPairs) {
             String[] pair = kvPair.split("=");
+            if (pair.length != 2) {
+                throw new IllegalArgumentException("Cannot transform from invalid string: " + encodedString);
+            }
+
             String key = pair[0];
             String value = pair[1];
+            if (StringUtils.isBlank(key) || StringUtils.isBlank(value)) {
+                throw new IllegalArgumentException("Cannot transform from invalid string: " + encodedString);
+            }
+
             if (props.containsKey(key)) {
                 throw new IllegalArgumentException(String.format("Duplicated key in property pair: %s", kvPair));
             }

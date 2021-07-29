@@ -57,3 +57,10 @@ notify:
   urlLink:
     enabled: true
     prefix: https://example.org
+
+spark:
+  thrift-server:
+    enabled: false
+    url:
+    username:
+    password:

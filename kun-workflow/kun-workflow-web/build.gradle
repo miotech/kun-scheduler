@@ -20,7 +20,6 @@ dependencies {
     implementation project(':kun-metadata:kun-metadata-service-facade')
     implementation project(':kun-commons:kun-commons-db')
     implementation project(':kun-commons:kun-commons-utils')
-    implementation project(':kun-commons:kun-commons-testing')
     implementation project(':kun-commons:kun-commons-web')
 
     implementation "com.fasterxml.jackson.core:jackson-core"
@@ -46,6 +45,7 @@ dependencies {
     runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16'
 
     testImplementation project(':kun-workflow:kun-workflow-testing')
+    testImplementation project(':kun-commons:kun-commons-testing')
     testImplementation project(':kun-infra')
     testImplementation project(':kun-commons:kun-commons-web')
     testImplementation "org.testcontainers:neo4j"

@@ -21,8 +21,8 @@ public class GidServiceTest extends DatabaseTestBase {
     @Test
     public void testGenerate_non_exist() {
         DataStore dataStore = new HiveTableStore("", "db1", "tb");
-        long generate = gidService.generate(dataStore);
-        Assert.assertNotNull(generate);
+        long gid = gidService.generate(dataStore);
+        Assert.assertTrue(gid > 0);
     }
 
     @Test

@@ -31,7 +31,7 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
     implementation 'com.google.code.gson:gson'
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
-    implementation 'com.alibaba:druid'
+    implementation 'com.alibaba:druid:1.1.23'
     implementation 'redis.clients:jedis'
 }
 
@@ -42,6 +42,9 @@ test {
 apply plugin: "org.sonarqube"
 sonarqube {
     properties {
+        property "sonar.projectKey", "miotech_kun-scheduler"
+        property "sonar.organization", "miotech"
+        property "sonar.host.url", "https://sonarcloud.io"
         property "sonar.sourceEncoding", "src/main"
         property "sonar.sourceEncoding", "UTF-8"
         property "sonar.java.binaries", "build"

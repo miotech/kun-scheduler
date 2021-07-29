@@ -27,6 +27,9 @@ sonarqube {
         property "sonar.sources", "src/main"
         property "sonar.sourceEncoding", "UTF-8"
         property "sonar.java.binaries", "build"
+        property "sonar.issue.ignore.multicriteria", "S2189"
+        property "sonar.issue.ignore.multicriteria.S2189.resourceKey", "src/main/java/**/*"
+        property "sonar.issue.ignore.multicriteria.S2189.ruleKey", "java:S2189"
     }
 }
 

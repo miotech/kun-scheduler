@@ -90,7 +90,6 @@ subprojects {
                 implementation "org.apache.dubbo:dubbo:2.7.8"
                 implementation 'org.apache.dubbo:dubbo-registry-redis:2.7.8'
                 implementation 'org.apache.dubbo:dubbo-spring-boot-starter:2.7.8'
-                implementation 'com.alibaba:druid:1.1.23'
                 implementation 'org.springdoc:springdoc-openapi-ui:1.4.8'
                 implementation 'redis.clients:jedis:2.9.0'
                 implementation 'org.jooq:joor-java-8:0.9.13'

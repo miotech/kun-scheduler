@@ -81,6 +81,9 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(upStore.getPort(), is(5432));
         assertThat(downStore.getHost(), is("127.0.0.1"));
         assertThat(downStore.getPort(), is(5432));
+
+        //clean up
+        deleteFilesInDir("/tmp/pgExample");
     }
 
     @Test
@@ -134,6 +137,9 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(downStore.getTable(), is("hive_test"));
         assertThat(upStore.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src"));
         assertThat(downStore.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test"));
+
+        //clean up
+        deleteFilesInDir("/tmp/hive example1");
     }
 
 
@@ -162,9 +168,6 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         writeExecPlanToFile("/tmp/upSupport example1/1.execPlan.txt", upSupport1);
         writeExecPlanToFile("/tmp/upSupport example1/2.execPlan.txt", upSupport2);
 
-        doReturn(getFilesInDir("/tmp/upSupport example1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
-        doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
-
         SplineSource execPlan_up = SplineSource.newBuilder()
                 .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src")
                 .withSourceType("hive")
@@ -179,8 +182,11 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
                 .withInputSources(Arrays.asList(execPlan_up))
                 .build();
 
-        //write execPlan2
+        //write execPlan3
         writeExecPlanToFile("/tmp/upSupport example1/3.execPlan.txt", execPlan);
+
+        doReturn(getFilesInDir("/tmp/upSupport example1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
+        doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
 
         Config config = Config.newBuilder()
                 .addConfig(SparkConfiguration.CONF_LIVY_BATCH_NAME, "upSupport example1")
@@ -198,6 +204,9 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(downStore.getTable(), is("hive_test"));
         assertThat(upStore.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src"));
         assertThat(downStore.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test"));
+
+        //clean up
+        deleteFilesInDir("/tmp/upSupport example1");
     }
 
     @Test
@@ -290,6 +299,9 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(downStore.getTable(), is("output"));
         assertThat(upStore.getLocation(), is("jdbc:hive2://127.0.0.1:10000"));
         assertThat(downStore.getLocation(), is("jdbc:hive2://127.0.0.1:10000"));
+
+        //clean up
+        deleteFilesInDir("/tmp/hiveExample2");
     }
 
     @Test
@@ -331,6 +343,9 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(upStore.getPort(), is(27017));
         assertThat(downStore.getHost(), is("127.0.0.1"));
         assertThat(downStore.getPort(), is(27017));
+
+        //clean up
+        deleteFilesInDir("/tmp/mongoExample");
     }
 
     @Test
@@ -372,6 +387,9 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(upStore.getPort(), is(5432));
         assertThat(downStore.getHost(), is("localhost"));
         assertThat(downStore.getPort(), is(9200));
+
+        //clean up
+        deleteFilesInDir("/tmp/esExample");
     }
 
 
