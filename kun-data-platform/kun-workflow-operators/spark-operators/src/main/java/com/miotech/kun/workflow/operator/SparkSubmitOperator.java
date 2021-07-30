@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.operator;
 
+import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.operator.spark.clients.SparkClient;
@@ -25,6 +26,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
+
 public class SparkSubmitOperator extends KunOperator {
 
     private static final Logger logger = LoggerFactory.getLogger(SparkSubmitOperator.class);
@@ -33,6 +36,9 @@ public class SparkSubmitOperator extends KunOperator {
     private SparkClient sparkClient;
     private String appId;
     private final YarnLoggerParser loggerParser = new YarnLoggerParser();
+    private String yarnHost;
+    private String deployMode;
+    private String master;
 
     private static final String COMMAND = "command";
     private static final String VARIABLES = "variables";
@@ -45,7 +51,9 @@ public class SparkSubmitOperator extends KunOperator {
         OperatorContext context = getContext();
         logger.info("Recieved task config: {}", JSONUtils.toJsonString(context.getConfig()));
 
-        String yarnHost = "http://10.0.2.70:8088";
+        yarnHost = SparkConfiguration.getString(context, SparkConfiguration.SPARK_YARN_HOST);
+        deployMode = SparkConfiguration.getString(context, SPARK_DEPLOY_MODE);
+        master = SparkConfiguration.getString(context, SPARK_MASTER);
         sparkClient = new SparkClient(yarnHost);
     }
 
@@ -80,17 +88,20 @@ public class SparkSubmitOperator extends KunOperator {
                 return false;
             }
 
-            //TODO: if cluster mode, parse application Id from output, track yarn app status
-            String stderrString = stderrStream.toString();
-            Pattern applicationIdPattern = Pattern.compile(".*(application_\\d{13}_\\d{4}).*");
-            final Matcher matcher = applicationIdPattern.matcher(stderrString);
-            if (matcher.matches()){
-                appId = matcher.group(1);
-                logger.info("Yarn ApplicationId: {}", appId);
-                return trackYarnAppStatus(appId);
-            }else {
-                throw new IllegalStateException("Yarn applicationId not found");
+            //if cluster mode, parse application Id from output, track yarn app status
+            if("yarn".equalsIgnoreCase(master) && "clsuter".equalsIgnoreCase(deployMode)){
+                String stderrString = stderrStream.toString();
+                Pattern applicationIdPattern = Pattern.compile(".*(application_\\d{13}_\\d{4}).*");
+                final Matcher matcher = applicationIdPattern.matcher(stderrString);
+                if (matcher.matches()){
+                    appId = matcher.group(1);
+                    logger.info("Yarn ApplicationId: {}", appId);
+                    return trackYarnAppStatus(appId);
+                }else {
+                    throw new IllegalStateException("Yarn applicationId not found");
+                }
             }
+            return true;
         } catch (IOException | ExecutionException e) {
             logger.error("{}", e);
             return false;
@@ -130,6 +141,8 @@ public class SparkSubmitOperator extends KunOperator {
     public ConfigDef config() {
         return new ConfigDef()
                 .define(COMMAND, ConfigDef.Type.STRING, true, "bash command", DISPLAY_COMMAND)
+                .define(SPARK_YARN_HOST, ConfigDef.Type.STRING, "", true, "Yarn host to submit application, in the format `ip:port`", SPARK_YARN_HOST)
+                .define(SPARK_DEPLOY_MODE, ConfigDef.Type.STRING, "", true, "deploy mode", SPARK_DEPLOY_MODE)
                 .define("forceWaitSeconds", ConfigDef.Type.LONG, FORCES_WAIT_SECONDS_DEFAULT_VALUE, true, "force terminate wait seconds", "forceWaitSeconds")
                 .define(VARIABLES, ConfigDef.Type.STRING, "{}", true, "bash variables", "variables");
     }

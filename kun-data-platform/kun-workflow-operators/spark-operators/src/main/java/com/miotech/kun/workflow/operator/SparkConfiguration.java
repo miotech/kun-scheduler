@@ -59,6 +59,11 @@ public class SparkConfiguration {
     public static final String CONF_S3_SECRET_KEY_VALUE_DEFAULT = "${ dataplatform.s3.secret.key }";
     public static final String CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT = "${ dataplatform.lineage.analysis.jar }";
 
+    //spark-submit
+    public static final String SPARK_YARN_HOST = "yarnHost";
+    public static final String SPARK_DEPLOY_MODE = "deployMode";
+    public static final String SPARK_MASTER = "master";
+
 
     private SparkConfiguration() {
     }

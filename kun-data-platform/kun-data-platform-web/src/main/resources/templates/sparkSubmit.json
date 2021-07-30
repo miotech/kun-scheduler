@@ -52,6 +52,7 @@
     }
   ],
   "defaultValues": {
+    "yarnHost": "${ dataplatform.yarn.host }",
     "sparkConf": "{}",
     "variables": "{}"
   },

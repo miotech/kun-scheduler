@@ -8,6 +8,7 @@
     "className": "com.miotech.kun.workflow.operator.SparkSubmitOperator"
   },
   "defaultValues": {
+    "yarnHost": "${ dataplatform.yarn.host }",
     "variables": "{}",
     "sparkConf": "{}"
   },
