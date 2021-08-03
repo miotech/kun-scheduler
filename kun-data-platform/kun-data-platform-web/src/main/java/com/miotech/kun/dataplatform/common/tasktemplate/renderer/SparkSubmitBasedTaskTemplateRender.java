@@ -5,6 +5,7 @@ import com.miotech.kun.dataplatform.model.taskdefinition.TaskConfig;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.workflow.client.model.ConfigKey;
+import com.miotech.kun.workflow.operator.SparkConfiguration;
 import com.miotech.kun.workflow.utils.JSONUtils;
 
 import java.util.*;
@@ -47,7 +48,7 @@ abstract public class SparkSubmitBasedTaskTemplateRender extends TaskTemplateRen
                 .build();
     }
 
-    List<String> buildBasicSparkCmd(Map<String, Object> taskConfig){
+    List<String> buildBasicSparkCmd(Map<String, Object> taskConfig, TaskDefinition taskDefinition){
         List<String> params = new ArrayList<>();
 
         // parse spark-submit options
@@ -57,6 +58,9 @@ abstract public class SparkSubmitBasedTaskTemplateRender extends TaskTemplateRen
                 params.add("--" + key + " " + value);
             }
         }
+
+        // set spark app name
+        params.add("--name" + " " + taskDefinition.getName());
 
         //parse spark conf
         Map<String, String> sparkConfig;

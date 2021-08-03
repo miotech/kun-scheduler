@@ -78,6 +78,7 @@ public class SparkSubmitOperator extends KunOperator {
                     .command("sh", commandFile.getPath())
                     .redirectOutput(Slf4jStream.of(logger).asInfo())
                     .redirectError(stderrStream)
+                    .redirectErrorAlsoTo(Slf4jStream.of(logger).asError())
                     .start();
             process = startedProcess.getProcess();
 

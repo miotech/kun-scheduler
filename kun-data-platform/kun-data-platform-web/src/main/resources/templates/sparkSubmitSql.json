@@ -20,12 +20,6 @@
       "displayName": "master"
     },
     {
-      "name": "deploy-mode",
-      "type": "string",
-      "required": false,
-      "displayName": "deploy-mode"
-    },
-    {
       "name": "proxy-user",
       "type": "string",
       "required": false,

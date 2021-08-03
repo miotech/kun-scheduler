@@ -1,6 +1,12 @@
-FROM openjdk:8u181-jdk-alpine
+#FROM openjdk:8u181-jdk-alpine
+FROM hub.miotech.com/library/ec2-spark:2.4.0
 
-RUN apk add --no-cache tini
+#RUN apk add --no-cache tini
+
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
+ENTRYPOINT ["/tini", "--", "/docker-entrypoint.sh"]
 
 WORKDIR /server/target
 

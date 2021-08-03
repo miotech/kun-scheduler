@@ -12,7 +12,7 @@ public class SparkSubmitSqlTaskTemplateRender extends SparkSubmitBasedTaskTempla
 
     @Override
     public String buildSparkSubmitCmd(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition) {
-        List<String> params = buildBasicSparkCmd(taskConfig);
+        List<String> params = buildBasicSparkCmd(taskConfig, taskDefinition);
         params.add(0, "spark-sql");
 
         //parse sql
