@@ -323,40 +323,139 @@ CREATE INDEX IF NOT EXISTS kun_mt_pull_process__dataset_id__idx ON kun_mt_pull_p
 
 --insert data
 INSERT INTO kun_mt_datasource_type (id, name)
-VALUES (1, 'AWS'),
+VALUES (1, 'Hive'),
        (2, 'MongoDB'),
        (3, 'PostgreSQL'),
        (4, 'Elasticsearch'),
-       (5, 'Arango'),
-       (6, 'Hive')
+       (5, 'Arango')
 ;
 
 INSERT INTO kun_mt_datasource_type_fields (id, type_id, name, sequence_order, format, require)
-VALUES (1, 2, 'host', 1, 'INPUT', true),
-       (2, 2, 'port', 2, 'NUMBER_INPUT', true),
-       (3, 2, 'username', 3, 'INPUT', false),
-       (4, 2, 'password', 4, 'PASSWORD', false),
-       (5, 3, 'host', 1, 'INPUT', true),
-       (6, 3, 'port', 2, 'NUMBER_INPUT', true),
-       (7, 3, 'username', 3, 'INPUT', false),
-       (8, 3, 'password', 4, 'PASSWORD', false),
-       (9, 4, 'host', 1, 'INPUT', true),
-       (10, 4, 'port', 2, 'NUMBER_INPUT', true),
-       (11, 4, 'username', 3, 'INPUT', false),
-       (12, 4, 'password', 4, 'PASSWORD', false),
-       (13, 5, 'host', 1, 'INPUT', true),
-       (14, 5, 'port', 2, 'NUMBER_INPUT', true),
-       (15, 5, 'username', 3, 'INPUT', false),
-       (16, 5, 'password', 4, 'PASSWORD', false),
-       (17, 1, 'glueAccessKey', 1, 'INPUT', false),
-       (18, 1, 'glueSecretKey', 2, 'INPUT', false),
-       (19, 1, 'glueRegion', 3, 'INPUT', false),
-       (20, 1, 'athenaUrl', 4, 'INPUT', false),
-       (21, 1, 'athenaUsername', 5, 'INPUT', false),
-       (22, 1, 'athenaPassword', 6, 'PASSWORD', false),
-       (23, 6, 'metaStoreUris', 1, 'INPUT', true),
-       (24, 6, 'dataStoreHost', 2, 'INPUT', true),
-       (25, 6, 'dataStorePort', 3, 'NUMBER_INPUT', true),
-       (26, 6, 'dataStoreUsername', 4, 'INPUT', false),
-       (27, 6, 'dataStorePassword', 5, 'PASSWORD', false)
+VALUES (1, 1, 'metaStoreUris', 1, 'INPUT', true),
+       (2, 1, 'dataStoreHost', 2, 'INPUT', true),
+       (3, 1, 'dataStorePort', 3, 'NUMBER_INPUT', true),
+       (4, 1, 'dataStoreUsername', 4, 'INPUT', false),
+       (5, 1, 'dataStorePassword', 5, 'PASSWORD', false),
+       (6, 2, 'host', 1, 'INPUT', true),
+       (7, 2, 'port', 2, 'NUMBER_INPUT', true),
+       (8, 2, 'username', 3, 'INPUT', false),
+       (9, 2, 'password', 4, 'PASSWORD', false),
+       (10, 3, 'host', 1, 'INPUT', true),
+       (11, 3, 'port', 2, 'NUMBER_INPUT', true),
+       (12, 3, 'username', 3, 'INPUT', false),
+       (13, 3, 'password', 4, 'PASSWORD', false),
+       (14, 4, 'host', 1, 'INPUT', true),
+       (15, 4, 'port', 2, 'NUMBER_INPUT', true),
+       (16, 4, 'username', 3, 'INPUT', false),
+       (17, 4, 'password', 4, 'PASSWORD', false),
+       (18, 5, 'host', 1, 'INPUT', true),
+       (19, 5, 'port', 2, 'NUMBER_INPUT', true),
+       (20, 5, 'username', 3, 'INPUT', false),
+       (21, 5, 'password', 4, 'PASSWORD', false)
 ;
+
+-- Hive Data Types
+-- Numeric Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^tinyint$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^smallint$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^int$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^bigint$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^float$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^double$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^decimal.*$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^numeric.*$','NUMBER');
+
+-- Date/Time Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^timestamp$','DATETIME');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^date$','DATETIME');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^interval$','DATETIME');
+
+-- String Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^string$','CHARACTER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^varchar.*$','CHARACTER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^char.*$','CHARACTER');
+
+-- Misc Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^boolean$','BOOLEAN');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^binary$','BINARY');
+
+-- Complex Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^array.*$','ARRAY');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^map.*$','STRUCT');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^struct.*$','STRUCT');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('HIVE','^uniontype.*$','STRUCT');
+
+
+-- PostgreSQL Data Types
+-- Numeric Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^smallint$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^integer$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^bigint$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^decimal.*$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^numeric$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^real$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^double precision$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^smallserial$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^serial$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^bigserial$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^int.*$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^float.*$','NUMBER');
+
+-- Monetary Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^money$','NUMBER');
+
+-- Character Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^char.*$','CHARACTER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^varchar.*$','CHARACTER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^text$','CHARACTER');
+
+-- Binary Data Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^bytea$','BINARY');
+
+-- Date/Time Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^timestamp.*$','DATETIME');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^date.*$','DATETIME');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^time.*$','DATETIME');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^interval.*$','DATETIME');
+
+-- Boolean Type
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^bool$','BOOLEAN');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^boolean$','BOOLEAN');
+
+
+-- Geometric Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^point$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^line$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^lseg$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^box$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^path$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^polygon$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^circle$','NUMBER');
+
+-- Network Address Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^cidr$','CHARACTER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^inet$','CHARACTER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^macaddr$','CHARACTER');
+
+-- UUID Type
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^uuid$','CHARACTER');
+
+-- XML Type
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^xml$','CHARACTER');
+
+-- JSON Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^json[b]?$','JSON');
+
+-- Arrays
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('POSTGRESQL','^_.*$','ARRAY');
+
+
+-- ElasticSearch Data Types
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('ELASTICSEARCH','^BIGINT$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('ELASTICSEARCH','^DOUBLE$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('ELASTICSEARCH','^INTEGER$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('ELASTICSEARCH','^REAL$','NUMBER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('ELASTICSEARCH','^VARCHAR$','CHARACTER');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('ELASTICSEARCH','^BOOLEAN$','BOOLEAN');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('ELASTICSEARCH','^TIMESTAMP$','DATETIME');
+INSERT INTO kun_mt_dataset_field_mapping (datasource_type,pattern,"type") VALUES ('ELASTICSEARCH','^OTHER$','UNKNOW');
