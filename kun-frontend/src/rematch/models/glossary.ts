@@ -10,11 +10,7 @@ import {
   EditGlossaryReqBody,
   addGlossaryService,
 } from '@/services/glossary';
-import {
-  deepFirstSearch,
-  deleteNodeFromParent,
-  addNodeToParent,
-} from '@/utils/glossaryUtiles';
+import { deepFirstSearch, deleteNodeFromParent, addNodeToParent } from '@/utils/glossaryUtiles';
 import { RootDispatch, RootState } from '../store';
 
 export interface GlossaryChild {
@@ -96,23 +92,16 @@ export const glossary = {
     fetchCurrentGlossaryDetailLoading: false,
   } as GlossaryState,
   reducers: {
-    updateState: (
-      state: GlossaryState,
-      payload: { key: keyof GlossaryState; value: any },
-    ) => ({
+    updateState: (state: GlossaryState, payload: { key: keyof GlossaryState; value: any }) => ({
       ...state,
       [payload.key]: payload.value,
     }),
-    updateFetchRootLoading: produce(
-      (draftState: GlossaryState, payload: boolean) => {
-        draftState.fetchRootLoading = payload;
-      },
-    ),
-    updateFetchCurrentGlossaryDetailLoading: produce(
-      (draftState: GlossaryState, payload: boolean) => {
-        draftState.fetchCurrentGlossaryDetailLoading = payload;
-      },
-    ),
+    updateFetchRootLoading: produce((draftState: GlossaryState, payload: boolean) => {
+      draftState.fetchRootLoading = payload;
+    }),
+    updateFetchCurrentGlossaryDetailLoading: produce((draftState: GlossaryState, payload: boolean) => {
+      draftState.fetchCurrentGlossaryDetailLoading = payload;
+    }),
   },
   effects: (dispatch: RootDispatch) => {
     let searchGlossariesFlag = 0;
@@ -123,7 +112,7 @@ export const glossary = {
           const resp = await fetchGlossariesService();
           if (resp) {
             const { children } = resp;
-            const rootGlossary = {
+            const rootGlossary: GlossaryNode = {
               id: 'root',
               name: formatMessage({
                 id: 'glossary.title',
@@ -131,6 +120,8 @@ export const glossary = {
               description: '',
               childrenCount: children.length,
               children,
+              depth: undefined,
+              verticalIndex: undefined,
             };
             dispatch.glossary.updateState({
               key: 'glossaryData',
@@ -143,9 +134,7 @@ export const glossary = {
         }
       },
 
-      async fetchNodeChildAndUpdateNode(
-        payload: FetchNodeChildAndUpdateNodeParam,
-      ) {
+      async fetchNodeChildAndUpdateNode(payload: FetchNodeChildAndUpdateNodeParam) {
         const { nodeData } = payload;
         const { id } = nodeData;
         if (id === 'root') {
@@ -211,19 +200,14 @@ export const glossary = {
 
           if (resp) {
             if (resp.parentId) {
-              deleteNodeFromParent(
-                id,
-                resp.parentId,
-                rootState.glossary.glossaryData,
-              );
+              deleteNodeFromParent(id, resp.parentId, rootState.glossary.glossaryData);
             } else if (rootState.glossary.glossaryData) {
               if (rootState.glossary.glossaryData?.children) {
                 // eslint-disable-next-line no-param-reassign
                 rootState.glossary.glossaryData.children = rootState.glossary.glossaryData.children.filter(
                   child => child.id !== id,
                 );
-                rootState.glossary.glossaryData.childrenCount =
-                  rootState.glossary.glossaryData.children.length;
+                rootState.glossary.glossaryData.childrenCount = rootState.glossary.glossaryData.children.length;
               }
             }
             return resp;
@@ -245,8 +229,7 @@ export const glossary = {
         rootState: RootState,
       ) {
         // 首先从之前的父节点将子节点除去
-        const oldParentId =
-          rootState.glossary.currentGlossaryDetail?.parent?.id;
+        const oldParentId = rootState.glossary.currentGlossaryDetail?.parent?.id;
 
         try {
           const resp = await editGlossaryService(id, params);
@@ -255,35 +238,20 @@ export const glossary = {
               key: 'currentGlossaryDetail',
               value: resp,
             });
-            const currentNode = deepFirstSearch(
-              rootState.glossary.glossaryData,
-              resp.id,
-            );
+            const currentNode = deepFirstSearch(rootState.glossary.glossaryData, resp.id);
 
-            if (
-              (oldParentId || params.parentId) &&
-              oldParentId !== params.parentId
-            ) {
+            if ((oldParentId || params.parentId) && oldParentId !== params.parentId) {
               if (oldParentId) {
-                deleteNodeFromParent(
-                  id,
-                  oldParentId,
-                  rootState.glossary.glossaryData,
-                );
+                deleteNodeFromParent(id, oldParentId, rootState.glossary.glossaryData);
               } else if (rootState.glossary.glossaryData?.children) {
                 rootState.glossary.glossaryData.children = rootState.glossary.glossaryData.children.filter(
                   child => child.id !== id,
                 );
-                rootState.glossary.glossaryData.childrenCount =
-                  rootState.glossary.glossaryData.children.length;
+                rootState.glossary.glossaryData.childrenCount = rootState.glossary.glossaryData.children.length;
               }
 
               if (resp.parent && resp.parent.id) {
-                addNodeToParent(
-                  currentNode,
-                  resp.parent.id,
-                  rootState.glossary.glossaryData,
-                );
+                addNodeToParent(currentNode, resp.parent.id, rootState.glossary.glossaryData);
                 if (currentNode) {
                   currentNode.name = resp.name;
                   currentNode.parentId = resp.parent?.id;
@@ -314,25 +282,18 @@ export const glossary = {
               name,
               description,
               parentId: parent?.id,
+              depth: undefined,
+              verticalIndex: undefined,
             };
             if (parent && parent.id) {
-              addNodeToParent(
-                newGlossary,
-                parent.id,
-                rootState.glossary.glossaryData,
-              );
+              addNodeToParent(newGlossary, parent.id, rootState.glossary.glossaryData);
             } else if (rootState.glossary.glossaryData) {
               if (rootState.glossary.glossaryData?.children) {
-                rootState.glossary.glossaryData.children = [
-                  newGlossary,
-                  ...rootState.glossary.glossaryData.children,
-                ];
-                rootState.glossary.glossaryData.childrenCount =
-                  rootState.glossary.glossaryData.children.length;
+                rootState.glossary.glossaryData.children = [newGlossary, ...rootState.glossary.glossaryData.children];
+                rootState.glossary.glossaryData.childrenCount = rootState.glossary.glossaryData.children.length;
               } else {
                 rootState.glossary.glossaryData.children = [newGlossary];
-                rootState.glossary.glossaryData.childrenCount =
-                  rootState.glossary.glossaryData.children.length;
+                rootState.glossary.glossaryData.childrenCount = rootState.glossary.glossaryData.children.length;
               }
             }
             return resp;
