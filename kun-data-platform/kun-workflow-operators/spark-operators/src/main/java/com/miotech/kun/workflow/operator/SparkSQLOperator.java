@@ -191,6 +191,8 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
             logger.info("Output for statement " + currentActiveStatementId + ": \n {}", JSONUtils.toJsonString(output));
             boolean isSuccess = output.getStatus().equals("ok");
             if (!isSuccess) {
+                logger.error("sql execution failed, tailing yarn log for session " + sessionId + ", " + app.getAppId() + ": \n");
+                tailingYarnLog(app.getAppInfo());
                 return false;
             }
         }
