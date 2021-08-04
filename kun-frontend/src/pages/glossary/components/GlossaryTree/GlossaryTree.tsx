@@ -1,5 +1,5 @@
-/* eslint-disable no-underscore-dangle, no-inner-declarations, no-param-reassign */
 // @ts-nocheck
+/* eslint-disable no-underscore-dangle, no-inner-declarations, no-param-reassign */
 import { useHistory } from 'umi';
 import React, { memo, useEffect, useRef, useCallback } from 'react';
 import * as d3 from 'd3';
@@ -66,7 +66,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
 
       const duration = 750;
 
-      const data = rootNode;
+      const data = { ...rootNode };
 
       data.depth = 0;
       data.verticalIndex = 0;
@@ -104,32 +104,28 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             i += 1;
             d.verticalIndex = i;
           }
-          d.data.verticalIndex = i;
+          const newData = { ...d.data };
+          newData.verticalIndex = i;
+          d.data = newData;
 
-          d.brotherVerticalIndex = verticalIndexPerDepth[d.depth]
-            ? verticalIndexPerDepth[d.depth]
-            : 0;
+          d.brotherVerticalIndex = verticalIndexPerDepth[d.depth] ? verticalIndexPerDepth[d.depth] : 0;
           verticalIndexPerDepth[d.depth] = i;
         });
 
-        const node = svgContent
-          .selectAll('g.node')
-          .data(root.descendants(), d => {
-            return d.data.id;
-          });
+        const node = svgContent.selectAll('g.node').data(root.descendants(), d => {
+          return d.data.id;
+        });
 
         // 根据横纵层级深得到偏移
         const getTransform = (depth, verticalIndex) => {
           const trX = (depth + 1) * marginWidth + depth * nodeWidth;
-          const trY =
-            (verticalIndex + 1) * marginHeight + verticalIndex * nodeHeight;
+          const trY = (verticalIndex + 1) * marginHeight + verticalIndex * nodeHeight;
 
           return `translate(${trX}, ${trY})`;
         };
 
         // 拿到源node的垂直层级
-        const verticalIndex =
-          sourceNode?.data?.verticalIndex ?? sourceNode.verticalIndex;
+        const verticalIndex = sourceNode?.data?.verticalIndex ?? sourceNode.verticalIndex;
 
         // 新添加的node
         const nodeEnter = node
@@ -169,16 +165,10 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             const brothers = d.parent.data.children;
             if (brothers && brothers.length > 1) {
               // 以前的 位置
-              const oldIndex = brothers.findIndex(
-                item => item.id === d.data.id,
-              );
+              const oldIndex = brothers.findIndex(item => item.id === d.data.id);
               // 应该移动到的 位置
               let shouldIndex;
-              for (
-                let brotherIndex = 0;
-                brotherIndex < brothers.length;
-                brotherIndex += 1
-              ) {
+              for (let brotherIndex = 0; brotherIndex < brothers.length; brotherIndex += 1) {
                 const brother = brothers[brotherIndex];
 
                 // 如果是往下面拖拽
@@ -194,10 +184,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
                       shouldIndex = brotherIndex;
                     }
                     // 如果拖拽到最后一个, 并且自己本身并不是最后一个
-                  } else if (
-                    d.data.id !== brother.id &&
-                    d.data.trY > brother.trY
-                  ) {
+                  } else if (d.data.id !== brother.id && d.data.trY > brother.trY) {
                     shouldIndex = brotherIndex;
                   }
                   // 如果往上面拖拽, 并且不是拖拽到第一个
@@ -211,20 +198,13 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
                     shouldIndex = brotherIndex;
                   }
                   // 如果是拖拽到了第一个, 并且自己本身并不是第一个
-                } else if (
-                  d.data.id !== brother.id &&
-                  d.data.trY < brother.trY
-                ) {
+                } else if (d.data.id !== brother.id && d.data.trY < brother.trY) {
                   shouldIndex = brotherIndex;
                 }
               }
               // 如果挪动了位置
               if (shouldIndex || shouldIndex === 0) {
-                const newBrothers = moveArrayItem(
-                  brothers,
-                  oldIndex,
-                  shouldIndex,
-                );
+                const newBrothers = moveArrayItem(brothers, oldIndex, shouldIndex);
                 // 得到新排列后的children
                 d.parent.data.children = newBrothers;
 
@@ -310,9 +290,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           .duration(needDuration ? duration : 0)
           .attr('transform', d => {
             const trX = (d.depth + 1) * marginWidth + d.depth * nodeWidth;
-            const trY =
-              (d.verticalIndex + 1) * marginHeight +
-              d.verticalIndex * nodeHeight;
+            const trY = (d.verticalIndex + 1) * marginHeight + d.verticalIndex * nodeHeight;
             d.data.trX = trX;
             d.data.trY = trY;
             return `translate(${trX}, ${trY})`;
@@ -324,21 +302,16 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           .transition()
           .duration(needDuration ? duration : 0)
           .attr('transform', () => {
-            const trX =
-              (sourceNode.depth + 1) * marginWidth +
-              sourceNode.depth * nodeWidth;
-            const trY =
-              (verticalIndex + 1) * marginHeight + verticalIndex * nodeHeight;
+            const trX = (sourceNode.depth + 1) * marginWidth + sourceNode.depth * nodeWidth;
+            const trY = (verticalIndex + 1) * marginHeight + verticalIndex * nodeHeight;
             return `translate(${trX}, ${trY})`;
           })
           .remove();
 
         // 处理连线
-        const link = svgContent
-          .selectAll('path.linkPath')
-          .data(root.links(), d => {
-            return d.target.data.id;
-          });
+        const link = svgContent.selectAll('path.linkPath').data(root.links(), d => {
+          return d.target.data.id;
+        });
 
         // 首先, 新加的连线需要在源节点位置
         link
@@ -348,12 +321,8 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           .attr('stroke', '#999')
           .attr('stroke-dasharray', '2, 2')
           .attr('d', () => {
-            const M1 =
-              (sourceNode.depth + 1) * nodeWidth +
-              (sourceNode.depth + 1) * marginWidth;
-            const M2 =
-              (verticalIndex + 1 / 2) * nodeHeight +
-              (verticalIndex + 1) * marginHeight;
+            const M1 = (sourceNode.depth + 1) * nodeWidth + (sourceNode.depth + 1) * marginWidth;
+            const M2 = (verticalIndex + 1 / 2) * nodeHeight + (verticalIndex + 1) * marginHeight;
 
             return `
             M${M1},${M2}
@@ -375,25 +344,17 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             let h1;
             let v;
             if (d.source.verticalIndex === d.target.verticalIndex) {
-              M1 =
-                (d.source.depth + 1) * nodeWidth +
-                (d.source.depth + 1) * marginWidth;
-              M2 =
-                (d.source.verticalIndex + 1 / 2) * nodeHeight +
-                (d.source.verticalIndex + 1) * marginHeight;
+              M1 = (d.source.depth + 1) * nodeWidth + (d.source.depth + 1) * marginWidth;
+              M2 = (d.source.verticalIndex + 1 / 2) * nodeHeight + (d.source.verticalIndex + 1) * marginHeight;
               h1 = marginWidth / 2;
               v = 0;
             } else {
-              M1 =
-                (d.source.depth + 1) * nodeWidth +
-                (d.source.depth + 1 + 1 / 2) * marginWidth;
+              M1 = (d.source.depth + 1) * nodeWidth + (d.source.depth + 1 + 1 / 2) * marginWidth;
               M2 =
                 (d.target.brotherVerticalIndex + 1 / 2) * nodeHeight +
                 (d.target.brotherVerticalIndex + 1) * marginHeight;
               h1 = 0;
-              v =
-                (d.target.verticalIndex - d.target.brotherVerticalIndex) *
-                (nodeHeight + marginHeight);
+              v = (d.target.verticalIndex - d.target.brotherVerticalIndex) * (nodeHeight + marginHeight);
             }
 
             return `
@@ -410,12 +371,8 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           .transition()
           .duration(needDuration ? duration : 0)
           .attr('d', () => {
-            const M1 =
-              (sourceNode.depth + 1) * nodeWidth +
-              (sourceNode.depth + 1) * marginWidth;
-            const M2 =
-              (verticalIndex + 1 / 2) * nodeHeight +
-              (verticalIndex + 1) * marginHeight;
+            const M1 = (sourceNode.depth + 1) * nodeWidth + (sourceNode.depth + 1) * marginWidth;
+            const M2 = (verticalIndex + 1 / 2) * nodeHeight + (verticalIndex + 1) * marginHeight;
 
             return `
             M${M1},${M2}
@@ -499,11 +456,9 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             .append('image')
             .attr('xlink:href', minus)
             .attr('class', styles.minusPlusIcon);
-          dispatch.glossary
-            .fetchNodeChildAndUpdateNode({ nodeData: d.data })
-            .then(() => {
-              update(d);
-            });
+          dispatch.glossary.fetchNodeChildAndUpdateNode({ nodeData: d.data }).then(() => {
+            update(d);
+          });
         }
       }
     }

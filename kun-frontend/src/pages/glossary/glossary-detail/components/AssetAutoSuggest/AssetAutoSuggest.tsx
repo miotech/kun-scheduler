@@ -17,13 +17,7 @@ interface Props {
   disabledIdList: string[];
 }
 
-export default memo(function AssetAutoSuggest({
-  asset,
-  onChange,
-  onDelete,
-  index,
-  disabledIdList,
-}: Props) {
+export default memo(function AssetAutoSuggest({ asset, onChange, onDelete, index, disabledIdList }: Props) {
   const [keyword, setKeyword] = useState(asset?.name ?? '');
   const [assetList, setAssetList] = useState<Asset[]>(() => {
     if (asset) {
@@ -40,11 +34,7 @@ export default memo(function AssetAutoSuggest({
       if (debounceKeyword) {
         const resp = await searchAssetsService(debounceKeyword);
         if (resp && !ignore) {
-          setAssetList(
-            resp.datasets.filter(
-              i => !disabledIdList.includes(i.id),
-            ) as Asset[],
-          );
+          setAssetList(resp.datasets.filter(i => !disabledIdList.includes(i.id)) as Asset[]);
         }
       } else {
         setAssetList([]);
@@ -75,6 +65,7 @@ export default memo(function AssetAutoSuggest({
   const options = assetList.map(item => ({
     value: `${item.name}-${item.database}-${item.datasource}`,
     asset: item,
+    id: item.id,
   }));
 
   return (
@@ -88,11 +79,7 @@ export default memo(function AssetAutoSuggest({
         // options={options}
       >
         {options.map(option => (
-          <Option
-            key={`${option.value}-${option.asset.database}-${option.asset.datasource}`}
-            value={option.value}
-            option={option}
-          >
+          <Option key={option.id} value={option.value} option={option}>
             <div className={styles.autoOption}>
               {option.value}{' '}
               {option.asset.database && (
