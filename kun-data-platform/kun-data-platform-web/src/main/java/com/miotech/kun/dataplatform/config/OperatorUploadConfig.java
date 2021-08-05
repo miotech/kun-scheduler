@@ -7,10 +7,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConditionalOnExpression("${workflow.enabled:true}")
+@ConditionalOnExpression("${infra.enabled:true}")
 public class OperatorUploadConfig {
 
-    @Value("${workflow.base-url}")
+    @Value("${infra.base-url}")
     private String workflowUrl;
 
     @Bean
