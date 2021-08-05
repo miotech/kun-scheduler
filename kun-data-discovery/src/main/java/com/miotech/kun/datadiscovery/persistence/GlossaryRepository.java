@@ -17,6 +17,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.Types;
 import java.util.*;
 
 /**
@@ -285,11 +286,56 @@ public class GlossaryRepository extends BaseRepository {
 
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
-        batchDelete(Collections.singletonList(id));
+        updatePrevId(id);
+
+        deleteRecursively(Collections.singletonList(id));
     }
 
-    @Transactional(rollbackFor = Exception.class)
-    public void batchDelete(List<Long> ids) {
+    private void updatePrevId(Long id) {
+        String nextGlossaryIdSql = "select id from kun_mt_glossary where prev_id = ?";
+        Object[] sqlParams = new Object[]{id};
+        Long nextGlossaryId = jdbcTemplate.query(nextGlossaryIdSql, sqlParams, rs -> {
+            Long gId = null;
+            if (rs.next()) {
+                gId = rs.getLong("id");
+                if (rs.wasNull()) {
+                    gId = null;
+                }
+            }
+
+            return gId;
+        });
+        if (nextGlossaryId == null) {
+            return;
+        }
+
+        String prevValueSql = "select prev_id from kun_mt_glossary where id = ?";
+        Long prevId = jdbcTemplate.query(prevValueSql, sqlParams, rs -> {
+            Long pId = null;
+            if (rs.next()) {
+                pId = rs.getLong("prev_id");
+                if (rs.wasNull()) {
+                    pId = null;
+                }
+            }
+
+            return pId;
+        });
+
+        String updatePrevIdSql = "update kun_mt_glossary set prev_id = ? where id = ?";
+        jdbcTemplate.update(updatePrevIdSql, ps -> {
+            if (prevId == null) {
+                ps.setNull(1, Types.BIGINT);
+            } else {
+                ps.setLong(1, prevId);
+            }
+
+            ps.setLong(2, nextGlossaryId);
+        });
+
+    }
+
+    private void deleteRecursively(List<Long> ids) {
         String childSql = "select id from kun_mt_glossary where parent_id in " + collectionToConditionSql(ids);
 
         List<Long> childIds = jdbcTemplate.query(childSql, rs -> {
@@ -300,11 +346,13 @@ public class GlossaryRepository extends BaseRepository {
             return idsTemp;
         }, ids.toArray());
         if (!CollectionUtils.isEmpty(childIds)) {
-            batchDelete(childIds);
+            deleteRecursively(childIds);
         }
 
         String sql = "delete from kun_mt_glossary where id in " + collectionToConditionSql(ids);
         jdbcTemplate.update(sql, ids.toArray());
+
+
     }
 
     public GlossaryPage search(BasicSearchRequest searchRequest) {
