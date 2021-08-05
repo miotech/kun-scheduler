@@ -3,6 +3,7 @@
 import { useHistory } from 'umi';
 import React, { memo, useEffect, useRef, useCallback } from 'react';
 import * as d3 from 'd3';
+import cloneDeep from 'lodash/cloneDeep';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
 
 import { GlossaryNode } from '@/rematch/models/glossary';
@@ -66,7 +67,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
 
       const duration = 750;
 
-      const data = { ...rootNode };
+      const data = cloneDeep(rootNode);
 
       data.depth = 0;
       data.verticalIndex = 0;
@@ -104,9 +105,10 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             i += 1;
             d.verticalIndex = i;
           }
-          const newData = { ...d.data };
-          newData.verticalIndex = i;
-          d.data = newData;
+          // const newData = { ...d.data };
+          // newData.verticalIndex = i;
+          // d.data = newData;
+          d.data.verticalIndex = i;
 
           d.brotherVerticalIndex = verticalIndexPerDepth[d.depth] ? verticalIndexPerDepth[d.depth] : 0;
           verticalIndexPerDepth[d.depth] = i;
@@ -416,7 +418,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
       }
 
       function addButton(d) {
-        if (d.data.childrenCount && d.data.id !== 'root') {
+        if (Number(d.data.childrenCount) && d.data.id !== 'root') {
           const canNode = d3.select(this);
 
           if (d.data.children) {
@@ -441,7 +443,7 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           .attr('width', 20)
           .attr('height', 20);
 
-        if (!d.data.childrenCount) {
+        if (!Number(d.data.childrenCount)) {
           return;
         }
         if (d.data.children) {
