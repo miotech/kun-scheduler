@@ -31,8 +31,6 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     private final OperatorDao operatorDao;
     private final String POD_WORK_DIR = "/server/target";
     private final String POD_JAR_LIB = "/server/lib";
-    private final String KUN_QUEUE = "kun-queue";
-    private final String NODE_PREFIX = "kun-workflow-";
     private final Integer DB_MAX_POOL = 1;
     private final Integer MINI_MUM_IDLE = 0;
 
@@ -158,9 +156,6 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         List<Volume> volumeList = new ArrayList<>();
         volumeList.add(nfsVolume);
         podSpec.setVolumes(volumeList);
-        Map<String, String> nodeSelector = new HashMap<>();
-        nodeSelector.put(KUN_QUEUE, NODE_PREFIX + taskAttempt.getQueueName());
-        podSpec.setNodeSelector(nodeSelector);
         return podSpec;
     }
 

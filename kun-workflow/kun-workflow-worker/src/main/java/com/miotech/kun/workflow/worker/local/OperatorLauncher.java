@@ -94,10 +94,10 @@ public class OperatorLauncher {
         TaskAttemptMsg msg = launchOperator(command);
         int exitCode = msg.getTaskRunStatus().isSuccess() ? 0 : 1;
         try {
-            logger.info("wait statusUpdate message send to executor");
+            logger.debug("wait statusUpdate message send to executor");
             statusUpdateTask.join();
         } catch (InterruptedException e) {
-            logger.info("wait statusUpdate message send to executor failed", e);
+            logger.debug("wait statusUpdate message send to executor failed", e);
         }
         writeResult(out, msg);
         System.exit(exitCode);
@@ -269,7 +269,7 @@ public class OperatorLauncher {
                 = (ch.qos.logback.classic.Logger) LoggerFactory.getLogger("com.miotech.kun.workflow");
         workerLogger.detachAndStopAllAppenders();
         rootLogger.detachAndStopAllAppenders();
-        rootLogger.setLevel(Level.DEBUG);
+        rootLogger.setLevel(Level.INFO);
 
         rootLogger.addAppender(appender);
     }
@@ -356,7 +356,7 @@ public class OperatorLauncher {
                                 Uninterruptibles.sleepUninterruptibly(HEARTBEAT_INTERVAL, TimeUnit.SECONDS);
                             }
                             updateSuccess = executorFacade.statusUpdate(msg);
-                            logger.info("send update task status message = {}, to executor result = {}", msg, updateSuccess);
+                            logger.debug("send update task status message = {}, to executor result = {}", msg, updateSuccess);
                             if (!updateSuccess) {
                                 sendTime++;
                             }
