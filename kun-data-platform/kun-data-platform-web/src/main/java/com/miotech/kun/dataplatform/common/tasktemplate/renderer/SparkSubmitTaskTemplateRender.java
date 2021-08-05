@@ -13,7 +13,7 @@ public class SparkSubmitTaskTemplateRender extends SparkSubmitBasedTaskTemplateR
     @Override
     public String buildSparkSubmitCmd(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition) {
         List<String> params = buildBasicSparkCmd(taskConfig, taskDefinition);
-        params.add(0, "spark-submit");
+//        params.add(0, "spark-submit");
 
         //parse application main and args
         String appMain = (String) taskConfig.get("application");
@@ -23,6 +23,11 @@ public class SparkSubmitTaskTemplateRender extends SparkSubmitBasedTaskTemplateR
             params.add(appArgs);
         }
         return String.join(" ", params);
+    }
+
+    @Override
+    public String getSparkBaseCmd(){
+        return "spark-submit";
     }
 
 }

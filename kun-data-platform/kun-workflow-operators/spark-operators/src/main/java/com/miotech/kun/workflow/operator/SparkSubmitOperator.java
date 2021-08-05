@@ -1,6 +1,5 @@
 package com.miotech.kun.workflow.operator;
 
-import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.operator.spark.clients.SparkClient;
@@ -40,9 +39,8 @@ public class SparkSubmitOperator extends KunOperator {
     private String deployMode;
     private String master;
 
-    private static final String COMMAND = "command";
     private static final String VARIABLES = "variables";
-    private static final String DISPLAY_COMMAND = "bash command";
+    private static final String DISPLAY_COMMAND = "spark command";
     private static final Long FORCES_WAIT_SECONDS_DEFAULT_VALUE = 10l;
     private static final int HTTP_TIMEOUT_LIMIT = 10;
 
@@ -60,17 +58,28 @@ public class SparkSubmitOperator extends KunOperator {
 
     @Override
     public boolean run() {
-        Config config = getContext().getConfig();
+        OperatorContext context = getContext();
+        Config config = context.getConfig();
+        Long taskRunId = context.getTaskRunId();
         Map<String, String> variables = JSONUtils.jsonStringToStringMap(config.getString(VARIABLES));
-        String command = config.getString(COMMAND);
-        command = StringUtils.resolveWithVariable(command, variables);
 
-        logger.debug("Execute command:\n\n {}", command);
+        //build shell cmd
+        String baseCommand = config.getString(SPARK_BASE_COMMAND);
+        String params = config.getString(SPARK_SUBMIT_PARMAS);
+
+//        Map<String, String> runTimeParams = new HashMap<>();
+//        runTimeParams.put("spark.hadoop.taskRunId", taskRunId.toString());
+        //TODO: refactor spark cmd building
+        String runTimeParams = " --conf spark.hadoop.taskRunId=" + taskRunId.toString() + " ";
+
+        String fullCommand = StringUtils.resolveWithVariable(baseCommand + runTimeParams + params, variables);
+
+        logger.debug("Execute command:\n\n {}", fullCommand);
 
         try {
             File commandFile = File.createTempFile("spark-submit-operator-", ".sh");
             try (BufferedWriter writer = new BufferedWriter(new FileWriter(commandFile))) {
-                writer.write(command);
+                writer.write(fullCommand);
             }
             ProcessExecutor processExecutor = new ProcessExecutor();
             OutputStream stderrStream = new ByteArrayOutputStream();
@@ -78,7 +87,7 @@ public class SparkSubmitOperator extends KunOperator {
                     .command("sh", commandFile.getPath())
                     .redirectOutput(Slf4jStream.of(logger).asInfo())
                     .redirectError(stderrStream)
-                    .redirectErrorAlsoTo(Slf4jStream.of(logger).asError())
+                    .redirectErrorAlsoTo(Slf4jStream.of(logger).asInfo())
                     .start();
             process = startedProcess.getProcess();
 
@@ -89,6 +98,7 @@ public class SparkSubmitOperator extends KunOperator {
                 return false;
             }
 
+            boolean finalStatus = true;
             //if cluster mode, parse application Id from output, track yarn app status
             if("yarn".equalsIgnoreCase(master) && "clsuter".equalsIgnoreCase(deployMode)){
                 String stderrString = stderrStream.toString();
@@ -97,12 +107,24 @@ public class SparkSubmitOperator extends KunOperator {
                 if (matcher.matches()){
                     appId = matcher.group(1);
                     logger.info("Yarn ApplicationId: {}", appId);
-                    return trackYarnAppStatus(appId);
+                    finalStatus = trackYarnAppStatus(appId);
                 }else {
                     throw new IllegalStateException("Yarn applicationId not found");
                 }
             }
-            return true;
+
+            if(finalStatus){
+                try{
+                    waitForSeconds(10);
+                    TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), taskRunId);
+                    if (taskAttemptReport != null)
+                        report(taskAttemptReport);
+                }catch (Exception e){
+                    logger.error("Failed to parse lineage: {}", e);
+                }
+            }
+
+            return finalStatus;
         } catch (IOException | ExecutionException e) {
             logger.error("{}", e);
             return false;
@@ -141,9 +163,14 @@ public class SparkSubmitOperator extends KunOperator {
     @Override
     public ConfigDef config() {
         return new ConfigDef()
-                .define(COMMAND, ConfigDef.Type.STRING, true, "bash command", DISPLAY_COMMAND)
+                .define(SPARK_BASE_COMMAND, ConfigDef.Type.STRING, true, "base cmd: spark-submit/spark-sql", SPARK_BASE_COMMAND)
+                .define(SPARK_SUBMIT_PARMAS, ConfigDef.Type.STRING, true, "spark-submit/spark-sql parmas", SPARK_SUBMIT_PARMAS)
                 .define(SPARK_YARN_HOST, ConfigDef.Type.STRING, "", true, "Yarn host to submit application, in the format `ip:port`", SPARK_YARN_HOST)
                 .define(SPARK_DEPLOY_MODE, ConfigDef.Type.STRING, "", true, "deploy mode", SPARK_DEPLOY_MODE)
+                .define(CONF_LINEAGE_OUTPUT_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_OUTPUT_PATH_VALUE_DEFAULT, true, "file system address to store lineage analysis report, in the format `s3a://BUCKET/path` or `hdfs://host:port/path`", CONF_LINEAGE_OUTPUT_PATH)
+                .define(CONF_LINEAGE_JAR_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT, true, "the jar used for lineage analysis, in the format `s3a://BUCKET/xxx/xxx.jar` or `hdfs://host:port/xxx/xxx.jar`", CONF_LINEAGE_JAR_PATH)
+                .define(VAR_S3_ACCESS_KEY, ConfigDef.Type.STRING, CONF_S3_ACCESS_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", VAR_S3_ACCESS_KEY)
+                .define(VAR_S3_SECRET_KEY, ConfigDef.Type.STRING, CONF_S3_SECRET_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", VAR_S3_SECRET_KEY)
                 .define("forceWaitSeconds", ConfigDef.Type.LONG, FORCES_WAIT_SECONDS_DEFAULT_VALUE, true, "force terminate wait seconds", "forceWaitSeconds")
                 .define(VARIABLES, ConfigDef.Type.STRING, "{}", true, "bash variables", "variables");
     }

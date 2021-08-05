@@ -53,6 +53,8 @@ public class SparkConfiguration {
     public static final String CONF_LINEAGE_JAR_PATH = "lineageJarPath";
     public static final String CONF_S3_ACCESS_KEY = "s3AccessKey";
     public static final String CONF_S3_SECRET_KEY = "s3SecretKey";
+    public static final String VAR_S3_ACCESS_KEY = "AWS_ACCESS_KEY_ID";
+    public static final String VAR_S3_SECRET_KEY = "AWS_SECRET_ACCESS_KEY";
 
     public static final String CONF_LINEAGE_OUTPUT_PATH_VALUE_DEFAULT = "${ dataplatform.lineage.output.path }";
     public static final String CONF_S3_ACCESS_KEY_VALUE_DEFAULT = "${ dataplatform.s3.access.key }";
@@ -63,6 +65,8 @@ public class SparkConfiguration {
     public static final String SPARK_YARN_HOST = "yarnHost";
     public static final String SPARK_DEPLOY_MODE = "deployMode";
     public static final String SPARK_MASTER = "master";
+    public static final String SPARK_BASE_COMMAND = "sparkBaseCmd";
+    public static final String SPARK_SUBMIT_PARMAS = "sparkSubmitParmas";
 
 
     private SparkConfiguration() {
