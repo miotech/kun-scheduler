@@ -120,8 +120,6 @@ export const glossary = {
               description: '',
               childrenCount: children.length,
               children,
-              depth: undefined,
-              verticalIndex: undefined,
             };
             dispatch.glossary.updateState({
               key: 'glossaryData',
