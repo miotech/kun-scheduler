@@ -33,15 +33,15 @@ public class PropsUtils {
                 .getClassLoader()
                 .getResourceAsStream(resourceName);
         Map<String, Object> yamlProps = yaml.load(inputStream);
-        Props props = new Props();
+        Map<String, String> propertiesMap = new HashMap<>();
         flatten(yamlProps)
                 .entrySet()
                 .forEach(x -> {
                     String propValue = x.getValue() != null ? x.getValue().toString() : "";
                     propValue = replaceValueFromEnvironment(propValue);
-                    props.put(x.getKey(), propValue);
+                    propertiesMap.put(x.getKey(), propValue);
                 });
-        return props;
+        return new Props(propertiesMap);
     }
 
     public static String replaceValueFromEnvironment(String rawText) {
@@ -138,5 +138,34 @@ public class PropsUtils {
         }
 
         return result;
+    }
+
+
+    public static Props loadPropsFromEnv(String moduleName) {
+        Map<String, String> systemEnv = EnvironmentUtils.getVariables();
+        //filter kun env
+        Map<String, String> propertiesMap = new HashMap<>();
+        systemEnv.entrySet().
+                forEach(x -> {
+                    String key = x.getKey();
+                    if (isKunEnv(key, moduleName)) {
+                        String propValue = x.getValue() != null ? x.getValue() : "";
+                        propertiesMap.put(convertKey(x.getKey(), moduleName), propValue);
+                    }
+                });
+        return new Props(propertiesMap);
+    }
+
+    public static String convertKey(String envKey, String moduleName) {
+        String prefix = "KUN_" + moduleName.toUpperCase() + "_";
+        return envKey.substring(prefix.length()).replace('_', '.');
+    }
+
+    public static boolean isKunEnv(String envKey, String moduleName) {
+        String prefix = "KUN_" + moduleName.toUpperCase() + "_";
+        if (envKey.startsWith(prefix)) {
+            return true;
+        }
+        return false;
     }
 }

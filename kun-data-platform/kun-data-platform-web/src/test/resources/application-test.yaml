@@ -3,9 +3,9 @@ testenv: true
 server:
   port: ${SERVER_PORT}
 
-workflow:
+infra:
   enabled: false
-  baseUrl: ${WORKFLOW_URL:}
+  baseUrl: http://${KUN_INFRA_HOST:}:${KUN_INFRA_PORT:}
   variableNamespace: dataplatform
 
 data-discovery:
