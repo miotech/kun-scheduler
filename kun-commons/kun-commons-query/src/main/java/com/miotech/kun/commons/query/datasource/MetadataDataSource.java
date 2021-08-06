@@ -33,15 +33,15 @@ public class MetadataDataSource {
 
     private void initMetadataDataSource() {
         Props props = ConfigService.getInstance().getProperties();
-        if (StringUtils.isEmpty(props.get("metadata.datasource.url"))) {
+        if (StringUtils.isEmpty(props.get("infra.datasource.url"))) {
             ConfigService.getInstance().loadConf();
             props = ConfigService.getInstance().getProperties();
         }
         HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(props.get("metadata.datasource.url"));
-        config.setUsername(props.get("metadata.datasource.username"));
-        config.setPassword(props.get("metadata.datasource.password"));
-        config.setDriverClassName(props.get("metadata.datasource.driver-class-name"));
+        config.setJdbcUrl(props.get("infra.datasource.url"));
+        config.setUsername(props.get("infra.datasource.username"));
+        config.setPassword(props.get("infra.datasource.password"));
+        config.setDriverClassName(props.get("infra.datasource.driver-class-name"));
         this.metadataDataSource = new HikariDataSource(config);
     }
 
