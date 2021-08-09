@@ -19,7 +19,7 @@ import redis.clients.jedis.JedisPoolConfig;
 @Configuration
 public class DataQualityBeanConfig {
 
-    @Value("${infra.base-url:http://kun-workflow:8088}")
+    @Value("${workflow.base-url:http://kun-workflow:8088}")
     String workflowUrl;
 
     @Value("${redis.host}")

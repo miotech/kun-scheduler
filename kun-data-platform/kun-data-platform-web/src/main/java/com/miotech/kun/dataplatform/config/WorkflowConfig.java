@@ -9,16 +9,16 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class WorkflowConfig {
-    @Value("${infra.base-url}")
+    @Value("${workflow.base-url}")
     private String workflowUrl;
 
-    @ConditionalOnExpression("${infra.enabled:true}")
+    @ConditionalOnExpression("${workflow.enabled:true}")
     @Bean
     public WorkflowClient getWorkflowClient() {
         return new DefaultWorkflowClient(workflowUrl);
     }
 
-    @Value("${infra.variable-namespace:dataplatform}")
+    @Value("${workflow.variable-namespace:dataplatform}")
     private String variableNamespace;
 
     public String getVariableNamespace() {
