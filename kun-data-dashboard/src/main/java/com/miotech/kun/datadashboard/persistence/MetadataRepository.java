@@ -26,11 +26,11 @@ public class MetadataRepository extends BaseRepository {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    public Long getTotalDatasetCount() {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("count(1) as count")
-                .from("kun_mt_dataset")
-                .getSQL();
+    public Long getTotalDatasetCount(boolean includeDeleted) {
+        String sql = "select count(1) as count from kun_mt_dataset";
+        if (!includeDeleted) {
+            sql = sql + " where deleted is false";
+        }
 
         return jdbcTemplate.queryForObject(sql, Long.class);
     }
