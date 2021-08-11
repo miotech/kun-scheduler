@@ -11,6 +11,9 @@ operators:
   - name: sparkSubmit-operator
     className: com.miotech.kun.workflow.operator.SparkSubmitOperator
     description: Spark Submit Operator
+  - name: sparkSubmitSql-operator
+    className: com.miotech.kun.workflow.operator.SparkSubmitSqlOperator
+    description: Spark Submit Sql Operator
   - name: data-quality-operator
     className: com.miotech.kun.workflow.operator.DataQualityOperator
     description: DataQuality Operator

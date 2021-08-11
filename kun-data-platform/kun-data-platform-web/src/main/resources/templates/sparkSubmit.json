@@ -29,13 +29,13 @@
     {
       "name": "class",
       "type": "string",
-      "required": false,
+      "required": true,
       "displayName": "class"
     },
     {
       "name": "application",
       "type": "string",
-      "required": false,
+      "required": true,
       "displayName": "application jar/file"
     },
     {
@@ -56,5 +56,5 @@
     "sparkConf": "{}",
     "variables": "{}"
   },
-  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkSubmitTaskTemplateRender"
+  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkSubmitBasedTaskTemplateRender"
 }

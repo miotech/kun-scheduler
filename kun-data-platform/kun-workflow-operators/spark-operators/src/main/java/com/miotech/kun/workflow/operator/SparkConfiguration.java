@@ -62,11 +62,18 @@ public class SparkConfiguration {
     public static final String CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT = "${ dataplatform.lineage.analysis.jar }";
 
     //spark-submit
-    public static final String SPARK_YARN_HOST = "yarnHost";
-    public static final String SPARK_DEPLOY_MODE = "deployMode";
+    public static final String SPARK_DEPLOY_MODE = "deploy-mode";
     public static final String SPARK_MASTER = "master";
+    public static final String SPARK_PROXY_USER = "proxy-user";
+    public static final String SPARK_ENTRY_CLASS = "class";
+
+
+    public static final String SPARK_YARN_HOST = "yarnHost";
     public static final String SPARK_BASE_COMMAND = "sparkBaseCmd";
     public static final String SPARK_SUBMIT_PARMAS = "sparkSubmitParmas";
+    public static final String SPARK_CONF = "sparkConf";
+    public static final String SPARK_APPLICATION = "application";
+    public static final String SPARK_APPLICATION_ARGS = "args";
 
 
     private SparkConfiguration() {

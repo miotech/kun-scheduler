@@ -3,12 +3,14 @@
   "templateType": "sql",
   "templateGroup": "development",
   "operator": {
-    "name": "sparkSubmit-operator",
+    "name": "sparkSubmitSql-operator",
     "description": "Spark Submit Operator",
-    "className": "com.miotech.kun.workflow.operator.SparkSubmitOperator"
+    "className": "com.miotech.kun.workflow.operator.SparkSubmitSqlOperator"
   },
   "defaultValues": {
     "yarnHost": "${ dataplatform.yarn.host }",
+    "class": "com.miotech.kun.sql.Application",
+    "application": "${ dataplatform.spark.sql.jar }",
     "variables": "{}",
     "sparkConf": "{}"
   },
@@ -26,7 +28,7 @@
       "displayName": "proxy-user"
     },
     {
-    "name": "sparkSQL",
+    "name": "args",
     "displayName": "sql",
     "type": "sql",
     "required" : true
@@ -38,5 +40,5 @@
     "displayName": "Extra Spark Configuration"
     }
   ],
-  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkSubmitSqlTaskTemplateRender"
+  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkSubmitBasedTaskTemplateRender"
 }

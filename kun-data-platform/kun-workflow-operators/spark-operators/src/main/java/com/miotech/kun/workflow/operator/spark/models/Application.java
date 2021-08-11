@@ -13,32 +13,32 @@ public class Application {
     String amContainerLogs;
 
     public String getAmContainerLogs() {
-                                     return amContainerLogs;
-                                                            }
+        return amContainerLogs;
+    }
 
     public String getId() {
-                        return id;
-                                  }
+        return id;
+    }
 
     public void setId(String id) {
-                               this.id = id;
-                                            }
+        this.id = id;
+    }
 
     public String getUser() {
-                          return user;
-                                      }
+        return user;
+    }
 
     public void setUser(String user) {
-                                   this.user = user;
-                                                    }
+        this.user = user;
+    }
 
     public String getName() {
-                          return name;
-                                      }
+        return name;
+    }
 
     public void setName(String name) {
-                                   this.name = name;
-                                                    }
+        this.name = name;
+    }
 
     public String getState() {
         return state;
@@ -54,7 +54,7 @@ public class Application {
 
     @SuppressWarnings("unchecked")
     @JsonProperty("app")
-    private void unpackNested(Map<String, Object> app){
+    private void unpackNested(Map<String, Object> app) {
         this.id = (String) app.get("id");
         this.user = (String) app.get("user");
         this.name = (String) app.get("name");

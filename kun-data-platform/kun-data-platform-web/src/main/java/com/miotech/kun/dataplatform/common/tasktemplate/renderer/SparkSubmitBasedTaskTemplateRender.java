@@ -6,64 +6,66 @@ import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.workflow.client.model.ConfigKey;
 import com.miotech.kun.workflow.utils.JSONUtils;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
-abstract public class SparkSubmitBasedTaskTemplateRender extends TaskTemplateRenderer {
+@Component
+public class SparkSubmitBasedTaskTemplateRender extends TaskTemplateRenderer {
     protected static final String SPARK_CONFIG_KEY = "sparkConf";
-    protected static final String SPARK_MASTER = "master";
-    protected static final String SPARK_DEPLOY_MODE = "deployMode";
     protected static final String SPARK_YARN_HOST = "yarnHost";
-    protected static final String[] SPARK_SUBMIT_OPTIONS = {"master", "deploy-mode", "proxy-user", "class"};
+    protected static final String[] SPARK_SUBMIT_OPTIONS = {SPARK_MASTER, SPARK_DEPLOY_MODE, SPARK_PROXY_USER, SPARK_ENTRY_CLASS};
 
     @Override
     public TaskConfig render(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition) {
         Map<String, Object> mergedConfig = mergeDefaultConfAndUserDefinedConf(taskConfig, taskTemplate);
-        String sparkSubmitParams = buildSparkSubmitCmd(mergedConfig, taskTemplate, taskDefinition);
         Map<String, Object> configMap = new HashMap<>();
-        configMap.put(SPARK_BASE_COMMAND, getSparkBaseCmd());
-        configMap.put(SPARK_SUBMIT_PARMAS, sparkSubmitParams);
 
-        String master = (String) mergedConfig.get(SPARK_MASTER);
-        if (!Strings.isNullOrEmpty(master)) {
-            configMap.put(SPARK_MASTER, master);
-        }
+        // fill sparkSubmitOperator conf
+        Map<String, String> sparkConf = getSparkConf(mergedConfig);
+        configMap.put(SPARK_CONF, JSONUtils.toJsonString(sparkConf));
 
-        String deployMode = (String) mergedConfig.get("deploy-mode");
-        if (!Strings.isNullOrEmpty(deployMode)) {
-            configMap.put(SPARK_DEPLOY_MODE, deployMode);
-        }
+        Map<String, String> sparkSubmitParams = getSparkSubmitParams(mergedConfig, taskDefinition);
+        configMap.put(SPARK_SUBMIT_PARMAS, JSONUtils.toJsonString(sparkSubmitParams));
 
         String yarnHost = (String) mergedConfig.get(SPARK_YARN_HOST);
         if (!Strings.isNullOrEmpty(yarnHost)) {
             configMap.put(SPARK_YARN_HOST, yarnHost);
         }
 
-        //s3 credential
-        configMap.put(VAR_S3_ACCESS_KEY, CONF_S3_ACCESS_KEY_VALUE_DEFAULT);
-        configMap.put(VAR_S3_SECRET_KEY, CONF_S3_SECRET_KEY_VALUE_DEFAULT);
+        String application = (String) mergedConfig.get(SPARK_APPLICATION);
+        configMap.put(SPARK_APPLICATION, application);
+
+        String applicationArgs = (String) mergedConfig.get(SPARK_APPLICATION_ARGS);
+        if (!Strings.isNullOrEmpty(applicationArgs)) {
+            configMap.put(SPARK_APPLICATION_ARGS, applicationArgs);
+        }
+
 
         return TaskConfig.newBuilder()
                 .withParams(configMap)
                 .build();
     }
 
-    List<String> buildBasicSparkCmd(Map<String, Object> taskConfig, TaskDefinition taskDefinition) {
-        List<String> params = new ArrayList<>();
-
+    public Map<String, String> getSparkSubmitParams(Map<String, Object> taskConfig, TaskDefinition taskDefinition){
+        Map<String, String> params = new HashMap<>();
         // parse spark-submit options
         for (String key : SPARK_SUBMIT_OPTIONS) {
             String value = (String) taskConfig.get(key);
             if (!Strings.isNullOrEmpty(value)) {
-                params.add("--" + key + " " + value);
+                params.put(key,  value);
             }
         }
 
         // set spark app name
-        params.add("--name" + " " + taskDefinition.getName());
+        params.put("name", taskDefinition.getName());
+        return params;
+    }
+
+    public Map<String, String> getSparkConf(Map<String, Object> taskConfig){
 
         //parse spark conf
         Map<String, String> sparkConfig;
@@ -92,11 +94,7 @@ abstract public class SparkSubmitBasedTaskTemplateRender extends TaskTemplateRen
         sparkConfig.put("spark.fs.s3a.access.key", CONF_S3_ACCESS_KEY_VALUE_DEFAULT);
         sparkConfig.put("spark.fs.s3a.secret.key", CONF_S3_SECRET_KEY_VALUE_DEFAULT);
 
-        for (Map.Entry<String, String> entry : sparkConfig.entrySet()) {
-            params.add("--conf " + entry.getKey() + "=" + entry.getValue());
-        }
-
-        return params;
+        return sparkConfig;
     }
 
     public Map<String, Object> mergeDefaultConfAndUserDefinedConf(Map<String, Object> taskConfig, TaskTemplate taskTemplate) {
@@ -113,6 +111,7 @@ abstract public class SparkSubmitBasedTaskTemplateRender extends TaskTemplateRen
                     .map(ConfigKey::getName)
                     .collect(Collectors.toSet());
             paramKeys.addAll(taskConfig.keySet());
+            paramKeys.addAll(defaultValues.keySet());
 
             for (String key : paramKeys) {
                 Object mergedValue = mergeDefaultAndUserDefinedConfig(defaultValues, taskConfig, key);
@@ -122,8 +121,5 @@ abstract public class SparkSubmitBasedTaskTemplateRender extends TaskTemplateRen
         }
         return configMap;
     }
-
-    public abstract String buildSparkSubmitCmd(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition);
-    public abstract String getSparkBaseCmd();
 
 }
