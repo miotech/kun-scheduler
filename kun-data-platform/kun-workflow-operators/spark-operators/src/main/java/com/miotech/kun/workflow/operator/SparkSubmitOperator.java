@@ -12,8 +12,8 @@ public class SparkSubmitOperator extends SparkSubmitBaseOperator {
         cmd.add("spark-submit");
         cmd.addAll(parseSparkSubmitParmas(sparkSubmitParams));
         cmd.addAll(parseSparkConf(sparkConf));
-        cmd.add(app);
-        cmd.add(appArgs);
+        cmd.add(surroundWithQuotes(app));
+        cmd.add(surroundWithQuotes(appArgs));
         return String.join(" ", cmd);
     }
 

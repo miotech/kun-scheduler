@@ -78,21 +78,21 @@ public class SparkSubmitBasedTaskTemplateRender extends TaskTemplateRenderer {
         if (sparkConfig == null) {
             sparkConfig = new HashMap<>();
         }
-        // lineage conf
-        String jars;
-        if (sparkConfig.containsKey("spark.jars")) {
-            jars = sparkConfig.get("spark.jars") + "," + CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT;
-        } else {
-            jars = CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT;
-        }
-
-        //TODO: if lineage jar not configed, adding "spark.sql.queryExecutionListeners" in sparkConf will throw exception
-        //TODO: Solution: add this config to operator level
-        sparkConfig.put("spark.jars", jars);
-        sparkConfig.put("spark.sql.queryExecutionListeners", "za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
-        sparkConfig.put("spark.hadoop.spline.hdfs_dispatcher.address", CONF_LINEAGE_OUTPUT_PATH_VALUE_DEFAULT);
-        sparkConfig.put("spark.fs.s3a.access.key", CONF_S3_ACCESS_KEY_VALUE_DEFAULT);
-        sparkConfig.put("spark.fs.s3a.secret.key", CONF_S3_SECRET_KEY_VALUE_DEFAULT);
+//        // lineage conf
+//        String jars;
+//        if (sparkConfig.containsKey("spark.jars")) {
+//            jars = sparkConfig.get("spark.jars") + "," + CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT;
+//        } else {
+//            jars = CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT;
+//        }
+//
+//        //TODO: if lineage jar not configed, adding "spark.sql.queryExecutionListeners" in sparkConf will throw exception
+//        //TODO: Solution: add this config to operator level
+//        sparkConfig.put("spark.jars", jars);
+//        sparkConfig.put("spark.sql.queryExecutionListeners", "za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
+//        sparkConfig.put("spark.hadoop.spline.hdfs_dispatcher.address", CONF_LINEAGE_OUTPUT_PATH_VALUE_DEFAULT);
+//        sparkConfig.put("spark.fs.s3a.access.key", CONF_S3_ACCESS_KEY_VALUE_DEFAULT);
+//        sparkConfig.put("spark.fs.s3a.secret.key", CONF_S3_SECRET_KEY_VALUE_DEFAULT);
 
         return sparkConfig;
     }

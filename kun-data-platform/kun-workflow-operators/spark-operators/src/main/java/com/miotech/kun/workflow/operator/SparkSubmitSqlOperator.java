@@ -19,8 +19,8 @@ public class SparkSubmitSqlOperator extends SparkSubmitBaseOperator {
         File sqlFile = storeSqlToFile(appArgs);
         addSqlFile(sparkConf, sqlFile.getPath());
         cmd.addAll(parseSparkConf(sparkConf));
-        cmd.add(app);
-        cmd.add("-f " + sqlFile.getName());
+        cmd.add(surroundWithQuotes(app));
+        cmd.add(surroundWithQuotes("-f") + " " + surroundWithQuotes(sqlFile.getName()));
         return String.join(" ", cmd);
     }
 

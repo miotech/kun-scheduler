@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.operator;
 
+import com.google.common.base.Strings;
 import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.operator.spark.clients.SparkClient;
@@ -18,6 +19,7 @@ import org.zeroturnaround.process.Processes;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -45,6 +47,36 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
 
     public abstract String buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs);
 
+    public void addRunTimeSparkConfs(Map<String, String> sparkConf, OperatorContext context){
+
+        Long taskRunId = context.getTaskRunId();
+        sparkConf.put("spark.hadoop.taskRunId", taskRunId.toString());
+        // lineage conf
+        String configLineageOutputPath = SparkConfiguration.getString(context, CONF_LINEAGE_OUTPUT_PATH);
+        String configLineageJarPath = SparkConfiguration.getString(context, CONF_LINEAGE_JAR_PATH);
+        String configS3AccessKey = SparkConfiguration.getString(context, CONF_S3_ACCESS_KEY);
+        String configS3SecretKey = SparkConfiguration.getString(context, CONF_S3_SECRET_KEY);
+
+        List<String> jars = new ArrayList<>();
+        if (sparkConf.containsKey("spark.jars")) {
+            jars.addAll(Arrays.asList(sparkConf.get("spark.jars").split(",")));
+        }
+        if (!Strings.isNullOrEmpty(configLineageJarPath)) {
+            jars.add(configLineageJarPath);
+            sparkConf.put("spark.sql.queryExecutionListeners", "za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
+        }
+        sparkConf.put("spark.jars", String.join(",", jars));
+
+        if (!Strings.isNullOrEmpty(configLineageOutputPath)) {
+            sparkConf.put("spark.hadoop.spline.hdfs_dispatcher.address", configLineageOutputPath);
+        }
+        if (!Strings.isNullOrEmpty(configS3AccessKey)) {
+            sparkConf.put("spark.fs.s3a.access.key", configS3AccessKey);
+        }
+        if (!Strings.isNullOrEmpty(configS3SecretKey)) {
+            sparkConf.put("spark.fs.s3a.secret.key", configS3SecretKey);
+        }
+    }
 
     @Override
     public void init() {
@@ -64,10 +96,11 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
 
         Map<String, String> sparkSubmitParams = JSONUtils.jsonStringToStringMap(config.getString(SPARK_SUBMIT_PARMAS));
         Map<String, String> sparkConf = JSONUtils.jsonStringToStringMap(config.getString(SPARK_CONF));
-        sparkConf.put("spark.hadoop.taskRunId", taskRunId.toString());
 
+        // add run time configs
+        addRunTimeSparkConfs(sparkConf, context);
 
-//        //build shell cmd
+        //build shell cmd
         String cmd = buildCmd(sparkSubmitParams, sparkConf, config.getString(SPARK_APPLICATION), config.getString(SPARK_APPLICATION_ARGS));
         logger.info("execute cmd: " + cmd);
 
@@ -234,7 +267,7 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
     public List<String> parseSparkSubmitParmas(Map<String, String> map) {
         List<String> params = new ArrayList<>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            params.add("--" + entry.getKey() + " " + entry.getValue());
+            params.add(surroundWithQuotes("--" + entry.getKey()) + " " + surroundWithQuotes(entry.getValue()));
         }
         return params;
     }
@@ -242,9 +275,13 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
     public List<String> parseSparkConf(Map<String, String> map) {
         List<String> params = new ArrayList<>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            params.add("--conf " + entry.getKey() + "=" + entry.getValue());
+            params.add(surroundWithQuotes("--conf") + " " + surroundWithQuotes(entry.getKey() + "=" + entry.getValue()));
         }
         return params;
+    }
+
+    public String surroundWithQuotes(String raw){
+        return '\'' + raw + '\'';
     }
 
 }
