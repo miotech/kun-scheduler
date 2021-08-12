@@ -6,6 +6,7 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
@@ -13,11 +14,14 @@ import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.executor.local.MiscService;
+import com.miotech.kun.workflow.worker.JsonCodec;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -30,14 +34,14 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     private final KubernetesClient kubernetesClient;
     private final OperatorDao operatorDao;
     private final String POD_WORK_DIR = "/server/target";
-    private final String POD_JAR_LIB = "/server/lib";
+    private final String POD_LIB_DIR = "/server/lib";
     private final Integer DB_MAX_POOL = 1;
     private final Integer MINI_MUM_IDLE = 0;
 
     @Inject
     public PodLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props, MiscService miscService,
                                KubernetesClient kubernetesClient, OperatorDao operatorDao, AbstractQueueManager queueManager) {
-        super(taskRunDao, workerMonitor, props, miscService,queueManager);
+        super(taskRunDao, workerMonitor, props, miscService, queueManager);
         this.kubernetesClient = kubernetesClient;
         this.operatorDao = operatorDao;
     }
@@ -125,7 +129,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         Map<String, String> labels = new HashMap<>();
         labels.put(KUN_WORKFLOW, null);
         labels.put(KUN_TASK_ATTEMPT_ID, String.valueOf(taskAttempt.getId()));
-        labels.put(TASK_QUEUE,taskAttempt.getQueueName());
+        labels.put(TASK_QUEUE, taskAttempt.getQueueName());
         objectMeta.setLabels(labels);
         pod.setMetadata(objectMeta);
         pod.setSpec(buildSpec(taskAttempt));
@@ -179,9 +183,11 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         logMount.setSubPath(props.getString("executor.env.logPath"));
         mounts.add(logMount);
         VolumeMount jarMount = new VolumeMount();
-        jarMount.setMountPath(POD_JAR_LIB);
+        jarMount.setMountPath(POD_LIB_DIR);
         jarMount.setName(props.getString("executor.env.nfsName"));
         jarMount.setSubPath(props.getString("executor.env.jarDirectory"));
+        ExecCommand command = buildExecCommand(taskAttempt);
+        writeExecCommandToPVC(command);
         mounts.add(jarMount);
         container.setVolumeMounts(mounts);
         container.setEnv(buildEnv(taskAttempt));
@@ -190,31 +196,36 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     private List<EnvVar> buildEnv(TaskAttempt taskAttempt) {
         logger.debug("building pod env,taskAttemptId = {}", taskAttempt.getId());
-        Operator operatorDetail = operatorDao.fetchById(taskAttempt.getTaskRun().getTask().getOperatorId())
-                .orElseThrow(EntityNotFoundException::new);
         List<EnvVar> envVarList = new ArrayList<>();
-        //add config
-        Map<String, Object> configMap = taskAttempt.getTaskRun().getConfig().getValues();
-        for (Map.Entry<String, Object> entry : configMap.entrySet()) {
-            String value = entry.getValue().toString();
-            if (entry.getValue() instanceof List) {
-                List<String> valueList = coverObjectToList(entry.getValue(), String.class);
-                value = valueList.stream().collect(Collectors.joining(","));
-            }
-            EnvVar envVar = new EnvVar();
-            envVar.setName(entry.getKey());
-            envVar.setValue(value);
-            envVarList.add(envVar);
-        }
-        String configKey = envVarList.stream().map(EnvVar::getName).collect(Collectors.joining(","));
-        addVar(envVarList, "configKey", configKey);
-        addVar(envVarList, "logPath", taskAttempt.getLogPath());
-        addVar(envVarList, "taskAttemptId", taskAttempt.getId().toString());
-        addVar(envVarList, "taskRunId", taskAttempt.getTaskRun().getId().toString());
-        addVar(envVarList, "className", operatorDetail.getClassName());
-        addVar(envVarList, "jarPath", operatorDetail.getPackagePath());
+        addVar(envVarList, "execCommandFile", POD_LIB_DIR + "/" + taskAttempt.getId());
         configDBEnv(envVarList);
         return envVarList;
+    }
+
+    private ExecCommand buildExecCommand(TaskAttempt taskAttempt) {
+        Operator operatorDetail = operatorDao.fetchById(taskAttempt.getTaskRun().getTask().getOperatorId())
+                .orElseThrow(EntityNotFoundException::new);
+        ExecCommand command = new ExecCommand();
+        command.setTaskAttemptId(taskAttempt.getId());
+        command.setTaskRunId(taskAttempt.getTaskRun().getId());
+        command.setConfig(taskAttempt.getTaskRun().getConfig());
+        command.setLogPath(taskAttempt.getLogPath());
+        command.setJarPath(operatorDetail.getPackagePath());
+        command.setClassName(operatorDetail.getClassName());
+        command.setQueueName(taskAttempt.getQueueName());
+        logger.debug("Execute task. attemptId={}, command={}", taskAttempt.getId(), command);
+
+        return command;
+    }
+
+    private void writeExecCommandToPVC(ExecCommand execCommand) {
+        String filePath = POD_LIB_DIR + "/" + execCommand.getTaskAttemptId();
+        try {
+            File execCommandFile = new File(filePath);
+            JsonCodec.MAPPER.writeValue(execCommandFile, execCommand);
+        } catch (IOException e) {
+            logger.error("failed to write exec command to file = {} ", filePath, e);
+        }
     }
 
     private void configDBEnv(List<EnvVar> envVarList) {
@@ -234,17 +245,6 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         envVar.setName(name);
         envVar.setValue(value);
         envVarList.add(envVar);
-    }
-
-    private <T> List<T> coverObjectToList(Object obj, Class<T> clazz) {
-        List<T> result = new ArrayList<T>();
-        if (obj instanceof List<?>) {
-            for (Object o : (List<?>) obj) {
-                result.add(clazz.cast(o));
-            }
-            return result;
-        }
-        return null;
     }
 
 

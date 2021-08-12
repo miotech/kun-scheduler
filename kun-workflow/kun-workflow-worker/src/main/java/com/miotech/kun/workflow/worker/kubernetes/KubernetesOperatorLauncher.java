@@ -4,26 +4,27 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.FileAppender;
-import com.google.common.base.Strings;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
-import com.miotech.kun.workflow.core.execution.*;
+import com.miotech.kun.workflow.core.execution.ExecCommand;
+import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.execution.OperatorReport;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.worker.JsonCodec;
 import com.miotech.kun.workflow.worker.OperatorContextImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class KubernetesOperatorLauncher {
     private static final Logger logger = LoggerFactory.getLogger(KubernetesOperatorLauncher.class);
@@ -112,8 +113,7 @@ public class KubernetesOperatorLauncher {
         }
     }
 
-    //rpc
-    public boolean launchOperator(ExecCommand command) {
+    private boolean launchOperator(ExecCommand command) {
         Thread thread = Thread.currentThread();
         ClassLoader cl = thread.getContextClassLoader();
         try {
@@ -182,29 +182,20 @@ public class KubernetesOperatorLauncher {
 
 
     private static ExecCommand readExecCommand() {
-        ExecCommand execCommand = new ExecCommand();
-        execCommand.setLogPath(props.getString("logPath"));
-        execCommand.setClassName(props.getString("className"));
-        execCommand.setTaskRunId(props.getLong("taskRunId"));
-        execCommand.setTaskAttemptId(props.getLong("taskAttemptId"));
-        execCommand.setJarPath(props.getString("jarPath"));
-        execCommand.setConfig(coverEnvToConfig());
-        return execCommand;
+        String execCommandFilePath = props.getString("execCommandFile");
+        try {
+            File execCommandFile = new File(execCommandFilePath);
+            ExecCommand execCommand = JsonCodec.MAPPER.readValue(execCommandFile, ExecCommand.class);
+            logger.info("execCommand = {}", execCommand);
+            //delete command file
+            execCommandFile.delete();
+            return execCommand;
+        } catch (IOException e) {
+            logger.error("failed to read exec command from file = {}", execCommandFilePath, e);
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
     }
 
-    private static Config coverEnvToConfig() {
-        Config.Builder configBuilder = Config.newBuilder();
-        String configKey = props.getString("configKey");
-        if (Strings.isNullOrEmpty(configKey)) {
-            return configBuilder.build();
-        }
-        List<String> configKeyList = Arrays.stream(configKey.split(",")).collect(Collectors.toList());
-        Set<String> exceptKey = new HashSet<>(configKeyList);
-        for (String key : exceptKey) {
-            configBuilder.addConfig(key, props.getString(key));
-        }
-        return configBuilder.build();
-    }
 
     private void processReport(Long taskRunId, OperatorReport report) {
         logger.debug("Update task's inlets/outlets. taskRunId={}, inlets={}, outlets={}",
