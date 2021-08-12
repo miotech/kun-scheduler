@@ -82,4 +82,19 @@ public class ExecCommand {
     public void setQueueName(String queueName) {
         this.queueName = queueName;
     }
+
+    @Override
+    public String toString() {
+        return "ExecCommand{" +
+                "jarPath='" + jarPath + '\'' +
+                ", className='" + className + '\'' +
+                ", config=" + config +
+                ", logPath='" + logPath + '\'' +
+                ", registerUrl='" + registerUrl + '\'' +
+                ", taskRunId=" + taskRunId +
+                ", taskAttemptId=" + taskAttemptId +
+                ", queueName='" + queueName + '\'' +
+                ", keepAlive=" + keepAlive +
+                '}';
+    }
 }
