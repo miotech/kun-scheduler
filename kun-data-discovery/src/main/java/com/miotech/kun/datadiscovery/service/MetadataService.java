@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MetadataService {
 
-    @Value("${infra.base-url:localhost:8084}")
+    @Value("${metadata.base-url:localhost:8084}")
     String url;
 
     @Autowired

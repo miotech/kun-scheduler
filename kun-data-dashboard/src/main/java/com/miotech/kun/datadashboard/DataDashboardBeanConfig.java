@@ -10,6 +10,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class DataDashboardBeanConfig {
 
-    @Value("${infra.base-url:http://kun-infra:8088}")
+    @Value("${workflow.base-url:http://kun-workflow:8088}")
     String workflowUrl;
 }
