@@ -3,6 +3,7 @@ FROM hub.miotech.com/library/ec2-spark:2.4.0
 
 #RUN apk add --no-cache tini
 
+ENV LANG en_US.utf8
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
