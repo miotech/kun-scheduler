@@ -12,13 +12,13 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class WeComServiceConfig {
 
-    @Value("${notify.zhongda.host}")
+    @Value("${notify.zhongda.host:127.0.0.1}")
     private String host = null;
 
-    @Value("${notify.zhongda.token}")
+    @Value("${notify.zhongda.token:token}")
     private String token;
 
-    @Value("${notify.zhongda.notify-group}")
+    @Value("${notify.zhongda.notify-group:group}")
     private String group;
 
     @Value("${notify.urlLink.enabled:true}")
