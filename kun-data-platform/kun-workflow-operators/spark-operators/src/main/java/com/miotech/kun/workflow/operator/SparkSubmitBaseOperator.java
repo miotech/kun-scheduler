@@ -38,16 +38,30 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
 
     private String appId;
     private String yarnHost;
-    private Boolean submitted = false;
     private Process process;
     private SparkClient sparkClient;
+    private OutputStream stderrStream = new ByteArrayOutputStream(1024 * 1024 * 3);
     private static final Logger logger = LoggerFactory.getLogger(SparkSubmitBaseOperator.class);
     private final YarnLoggerParser loggerParser = new YarnLoggerParser();
 
 
-    public abstract String buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs);
+    public abstract List<String> buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs);
 
-    public void addRunTimeSparkConfs(Map<String, String> sparkConf, OperatorContext context){
+    public void addRunTimeParams(Map<String, String> sparkSubmitParams, OperatorContext context, Map<String, String> sparkConf){
+        String proxyuser = context.getConfig().getString(SPARK_PROXY_USER);
+        if(!Strings.isNullOrEmpty(proxyuser)){
+            sparkSubmitParams.put(SPARK_PROXY_USER, proxyuser);
+        }
+
+        if(!sparkConf.containsKey("spark.submit.deployMode")){
+            sparkSubmitParams.put(SPARK_DEPLOY_MODE, "cluster");
+        }
+        if(!sparkConf.containsKey("spark.master")){
+            sparkSubmitParams.put(SPARK_MASTER, "yarn");
+        }
+    }
+
+    public void addRunTimeSparkConfs(Map<String, String> sparkConf, OperatorContext context) {
 
         Long taskRunId = context.getTaskRunId();
         sparkConf.put("spark.hadoop.taskRunId", taskRunId.toString());
@@ -99,52 +113,47 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
 
         // add run time configs
         addRunTimeSparkConfs(sparkConf, context);
+        addRunTimeParams(sparkSubmitParams, context, sparkConf);
 
         //build shell cmd
-        String cmd = buildCmd(sparkSubmitParams, sparkConf, config.getString(SPARK_APPLICATION), config.getString(SPARK_APPLICATION_ARGS));
-        logger.info("execute cmd: " + cmd);
+        List<String> cmd = buildCmd(sparkSubmitParams, sparkConf, config.getString(SPARK_APPLICATION), config.getString(SPARK_APPLICATION_ARGS));
+        logger.info("execute cmd: " + String.join(" ", cmd));
 
         try {
-            File commandFile = File.createTempFile("spark-submit-operator-", ".sh");
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter(commandFile))) {
-                writer.write(cmd);
-            }
             ProcessExecutor processExecutor = new ProcessExecutor();
-            OutputStream stderrStream = new ByteArrayOutputStream();
 
             StartedProcess startedProcess = processExecutor
                     .environment(VAR_S3_ACCESS_KEY, config.getString(VAR_S3_ACCESS_KEY))
                     .environment(VAR_S3_SECRET_KEY, config.getString(VAR_S3_SECRET_KEY))
-                    .command("sh", commandFile.getPath())
+                    .command(cmd)
                     .redirectOutput(Slf4jStream.of(logger).asInfo())
                     .redirectError(stderrStream)
                     .redirectErrorAlsoTo(Slf4jStream.of(logger).asInfo())
                     .start();
             process = startedProcess.getProcess();
 
+            boolean finalStatus = true;
+
             // wait for termination
             int exitCode = startedProcess.getFuture().get().getExitValue();
-            submitted = true;
-            if (exitCode != 0) {
-                return false;
+            logger.info("process exit code: {}", exitCode);
+            finalStatus = (exitCode == 0);
+            parseYarnAppId(stderrStream);
+
+            if (!Strings.isNullOrEmpty(appId)) {
+                finalStatus = trackYarnAppStatus(appId);
             }
 
-            boolean finalStatus = true;
-            String master = sparkSubmitParams.getOrDefault(SPARK_MASTER, "");
-            String deployMode = sparkSubmitParams.getOrDefault(SPARK_DEPLOY_MODE, "");
-            //if cluster mode, parse application Id from output, track yarn app status
-            if ("yarn".equalsIgnoreCase(master) && "clsuter".equalsIgnoreCase(deployMode)) {
-                String stderrString = stderrStream.toString();
-                Pattern applicationIdPattern = Pattern.compile(".*(application_\\d{13}_\\d{4}).*");
-                final Matcher matcher = applicationIdPattern.matcher(stderrString);
-                if (matcher.matches()) {
-                    appId = matcher.group(1);
-                    logger.info("Yarn ApplicationId: {}", appId);
-                    finalStatus = trackYarnAppStatus(appId);
-                } else {
-                    throw new IllegalStateException("Yarn applicationId not found");
-                }
-            }
+//            String master = sparkSubmitParams.getOrDefault(SPARK_MASTER, "yarn");
+//            String deployMode = sparkSubmitParams.getOrDefault(SPARK_DEPLOY_MODE, "cluster");
+//            //if cluster mode, parse application Id from output, track yarn app status
+//            if ("yarn".equalsIgnoreCase(master) && "clsuter".equalsIgnoreCase(deployMode)) {
+//                if (!Strings.isNullOrEmpty(appId)) {
+//                    finalStatus = trackYarnAppStatus(appId);
+//                } else {
+//                    throw new IllegalStateException("Yarn applicationId not found");
+//                }
+//            }
 
             if (finalStatus) {
                 try {
@@ -170,13 +179,13 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
 
     @Override
     public void abort() {
-        if (!submitted) {
+        parseYarnAppId(stderrStream);
+        if (Strings.isNullOrEmpty(appId)) {
             logger.info("aborting un-submitted process");
-            Long waitSeconds = getContext().getConfig().getLong("forceWaitSeconds");
             JavaProcess javaProcess = Processes.newJavaProcess(process);
             if (javaProcess.isAlive()) {
                 try {
-                    ProcessUtil.destroyGracefullyOrForcefullyAndWait(javaProcess, 30, TimeUnit.SECONDS, waitSeconds, TimeUnit.SECONDS);
+                    ProcessUtil.destroyGracefullyOrForcefullyAndWait(javaProcess, 30, TimeUnit.SECONDS, 10, TimeUnit.SECONDS);
                     logger.info("Process is successfully terminated");
                 } catch (IOException | TimeoutException e) {
                     logger.error("{}", e);
@@ -200,6 +209,7 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
         return new ConfigDef()
                 .define(SPARK_SUBMIT_PARMAS, ConfigDef.Type.STRING, "", true, "spark-submit parmas", SPARK_SUBMIT_PARMAS)
                 .define(SPARK_CONF, ConfigDef.Type.STRING, "", true, "key-value spark conf", SPARK_CONF)
+                .define(SPARK_PROXY_USER, ConfigDef.Type.STRING, SPARK_PROXY_USER_DEFAULT_VALUE, true, "proxy user", SPARK_PROXY_USER)
                 .define(SPARK_APPLICATION, ConfigDef.Type.STRING, "", true, "application class name for java application", SPARK_APPLICATION)
                 .define(SPARK_APPLICATION_ARGS, ConfigDef.Type.STRING, "", true, "application arguments", SPARK_APPLICATION_ARGS)
                 .define(SPARK_YARN_HOST, ConfigDef.Type.STRING, "", true, "Yarn host to submit application, in the format `ip:port`", SPARK_YARN_HOST)
@@ -214,6 +224,17 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
     public Resolver getResolver() {
         // TODO: implement this
         return new NopResolver();
+    }
+
+    public void parseYarnAppId(OutputStream stderrStream) {
+
+        String stderrString = stderrStream.toString();
+        Pattern applicationIdPattern = Pattern.compile(".*(application_\\d{13}_\\d{4}).*");
+        final Matcher matcher = applicationIdPattern.matcher(stderrString);
+        if (matcher.matches()) {
+            appId = matcher.group(1);
+            logger.info("Yarn ApplicationId: {}", appId);
+        }
     }
 
     public boolean trackYarnAppStatus(String appId) {
@@ -267,7 +288,8 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
     public List<String> parseSparkSubmitParmas(Map<String, String> map) {
         List<String> params = new ArrayList<>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            params.add(surroundWithQuotes("--" + entry.getKey()) + " " + surroundWithQuotes(entry.getValue()));
+            params.add("--" + entry.getKey());
+            params.add(entry.getValue());
         }
         return params;
     }
@@ -275,13 +297,10 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
     public List<String> parseSparkConf(Map<String, String> map) {
         List<String> params = new ArrayList<>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            params.add(surroundWithQuotes("--conf") + " " + surroundWithQuotes(entry.getKey() + "=" + entry.getValue()));
+            params.add("--conf");
+            params.add(entry.getKey() + "=" + entry.getValue());
         }
         return params;
-    }
-
-    public String surroundWithQuotes(String raw){
-        return '\'' + raw + '\'';
     }
 
 }

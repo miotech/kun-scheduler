@@ -17,7 +17,8 @@ import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 public class SparkSubmitBasedTaskTemplateRender extends TaskTemplateRenderer {
     protected static final String SPARK_CONFIG_KEY = "sparkConf";
     protected static final String SPARK_YARN_HOST = "yarnHost";
-    protected static final String[] SPARK_SUBMIT_OPTIONS = {SPARK_MASTER, SPARK_DEPLOY_MODE, SPARK_PROXY_USER, SPARK_ENTRY_CLASS};
+//    protected static final String[] SPARK_SUBMIT_OPTIONS = {SPARK_MASTER, SPARK_DEPLOY_MODE, SPARK_PROXY_USER, SPARK_ENTRY_CLASS};
+    protected static final String[] SPARK_SUBMIT_OPTIONS = {SPARK_ENTRY_CLASS};
 
     @Override
     public TaskConfig render(Map<String, Object> taskConfig, TaskTemplate taskTemplate, TaskDefinition taskDefinition) {

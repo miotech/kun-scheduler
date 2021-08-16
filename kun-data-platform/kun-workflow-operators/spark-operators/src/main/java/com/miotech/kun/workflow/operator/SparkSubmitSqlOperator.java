@@ -11,7 +11,7 @@ import java.util.Map;
 public class SparkSubmitSqlOperator extends SparkSubmitBaseOperator {
 
     @Override
-    public String buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs) {
+    public List<String> buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs) {
         List<String> cmd = new ArrayList<>();
         cmd.add("spark-submit");
         cmd.addAll(parseSparkSubmitParmas(sparkSubmitParams));
@@ -19,9 +19,10 @@ public class SparkSubmitSqlOperator extends SparkSubmitBaseOperator {
         File sqlFile = storeSqlToFile(appArgs);
         addSqlFile(sparkConf, sqlFile.getPath());
         cmd.addAll(parseSparkConf(sparkConf));
-        cmd.add(surroundWithQuotes(app));
-        cmd.add(surroundWithQuotes("-f") + " " + surroundWithQuotes(sqlFile.getName()));
-        return String.join(" ", cmd);
+        cmd.add(app);
+        cmd.add("-f");
+        cmd.add(sqlFile.getName());
+        return cmd;
     }
 
     private void addSqlFile(Map<String, String> sparkConf, String sqlFile) {

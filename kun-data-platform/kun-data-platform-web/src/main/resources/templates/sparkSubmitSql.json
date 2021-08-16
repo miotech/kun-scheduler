@@ -16,18 +16,6 @@
   },
   "displayParameters": [
     {
-      "name": "master",
-      "type": "string",
-      "required": false,
-      "displayName": "master"
-    },
-    {
-      "name": "proxy-user",
-      "type": "string",
-      "required": false,
-      "displayName": "proxy-user"
-    },
-    {
     "name": "args",
     "displayName": "sql",
     "type": "sql",
