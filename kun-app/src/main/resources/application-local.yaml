@@ -52,7 +52,7 @@ notify:
   systemDefault:
     # Allowed trigger types: ON_SUCCESS, ON_FAIL, ON_FINISH, NEVER
     triggerType: ON_FAIL
-    userConfigJson: '[{"notifierType": "WECOM"}]'
+    userConfigJson: '[{"notifierType": "EMAIL"}]'
   # Email notifier settings
   email:
     # For developers, usually, we do not spend extra time on configuring these SMTP connection settings
@@ -77,11 +77,6 @@ notify:
     enabled: ${NOTIFY_URL_LINK_ENABLED:true}
     # Your web link host url prefix in format of {PROTOCOL}://{HOST}[:PORT]. For instance, "https://kun.miotech.com", "http://127.0.0.1:12345", etc.
     prefix: ${NOTIFY_URL_LINK_PREFIX:http://localhost:9801}
-
-  zhongda:
-    host: http://zhongda.miotech.com:8000
-    token: ${NOTIFY_ZHONGDA_TOKEN:}
-    notify-group: ${NOTIFY_ZHONGDA_GROUP:kun}
 
 data-dashboard:
   long-existing-threshold: 30
