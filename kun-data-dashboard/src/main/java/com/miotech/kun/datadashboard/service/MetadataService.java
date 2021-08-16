@@ -44,7 +44,7 @@ public class MetadataService {
             return (MetadataMetrics) localCache.get(METADATA_METRICS, () -> {
                 MetadataMetrics metrics = new MetadataMetrics();
                 metrics.setTotalCaseCount(dataQualityRepository.getTotalCaseCount());
-                metrics.setTotalDatasetCount(metadataRepository.getTotalDatasetCount());
+                metrics.setTotalDatasetCount(metadataRepository.getTotalDatasetCount(false));
                 metrics.setDataQualityCoveredCount(dataQualityRepository.getCoveredDatasetCount());
                 metrics.setDataQualityLongExistingFailedCount(dataQualityRepository.getLongExistingCount());
                 metrics.setDataQualityPassCount(dataQualityRepository.getSuccessCount());
