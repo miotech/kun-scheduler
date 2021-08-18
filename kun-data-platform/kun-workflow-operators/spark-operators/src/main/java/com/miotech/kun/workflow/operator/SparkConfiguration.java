@@ -66,6 +66,7 @@ public class SparkConfiguration {
     public static final String SPARK_MASTER = "master";
     public static final String SPARK_PROXY_USER = "proxy-user";
     public static final String SPARK_PROXY_USER_DEFAULT_VALUE = "${ dataplatform.spark.proxy-user }";
+    public static final String SPARK_YARN_HOST_DEFAULT_VALUE = "${ dataplatform.yarn.host }";
     public static final String SPARK_ENTRY_CLASS = "class";
 
 

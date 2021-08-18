@@ -10,8 +10,8 @@ public class SparkSubmitOperator extends SparkSubmitBaseOperator {
     public List<String> buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs) {
         List<String> cmd = new ArrayList<>();
         cmd.add("spark-submit");
-        cmd.addAll(parseSparkSubmitParmas(sparkSubmitParams));
-        cmd.addAll(parseSparkConf(sparkConf));
+        cmd.addAll(SparkOperatorUtils.parseSparkSubmitParmas(sparkSubmitParams));
+        cmd.addAll(SparkOperatorUtils.parseSparkConf(sparkConf));
         cmd.add(app);
         cmd.add(appArgs);
         return cmd;

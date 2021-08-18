@@ -14,11 +14,11 @@ public class SparkSubmitSqlOperator extends SparkSubmitBaseOperator {
     public List<String> buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs) {
         List<String> cmd = new ArrayList<>();
         cmd.add("spark-submit");
-        cmd.addAll(parseSparkSubmitParmas(sparkSubmitParams));
+        cmd.addAll(SparkOperatorUtils.parseSparkSubmitParmas(sparkSubmitParams));
 
         File sqlFile = storeSqlToFile(appArgs);
         addSqlFile(sparkConf, sqlFile.getPath());
-        cmd.addAll(parseSparkConf(sparkConf));
+        cmd.addAll(SparkOperatorUtils.parseSparkConf(sparkConf));
         cmd.add(app);
         cmd.add("-f");
         cmd.add(sqlFile.getName());

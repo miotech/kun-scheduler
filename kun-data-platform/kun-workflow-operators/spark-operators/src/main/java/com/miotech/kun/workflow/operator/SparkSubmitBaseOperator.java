@@ -34,7 +34,6 @@ import static com.miotech.kun.workflow.operator.SparkConfiguration.VAR_S3_SECRET
 abstract public class SparkSubmitBaseOperator extends KunOperator {
 
     private static final Long FORCES_WAIT_SECONDS_DEFAULT_VALUE = 10l;
-    private static final int HTTP_TIMEOUT_LIMIT = 10;
 
     private String appId;
     private String yarnHost;
@@ -47,16 +46,16 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
 
     public abstract List<String> buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs);
 
-    public void addRunTimeParams(Map<String, String> sparkSubmitParams, OperatorContext context, Map<String, String> sparkConf){
+    public void addRunTimeParams(Map<String, String> sparkSubmitParams, OperatorContext context, Map<String, String> sparkConf) {
         String proxyuser = context.getConfig().getString(SPARK_PROXY_USER);
-        if(!Strings.isNullOrEmpty(proxyuser)){
+        if (!Strings.isNullOrEmpty(proxyuser)) {
             sparkSubmitParams.put(SPARK_PROXY_USER, proxyuser);
         }
 
-        if(!sparkConf.containsKey("spark.submit.deployMode")){
+        if (!sparkConf.containsKey("spark.submit.deployMode")) {
             sparkSubmitParams.put(SPARK_DEPLOY_MODE, "cluster");
         }
-        if(!sparkConf.containsKey("spark.master")){
+        if (!sparkConf.containsKey("spark.master")) {
             sparkSubmitParams.put(SPARK_MASTER, "yarn");
         }
     }
@@ -68,8 +67,8 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
         // lineage conf
         String configLineageOutputPath = SparkConfiguration.getString(context, CONF_LINEAGE_OUTPUT_PATH);
         String configLineageJarPath = SparkConfiguration.getString(context, CONF_LINEAGE_JAR_PATH);
-        String configS3AccessKey = SparkConfiguration.getString(context, CONF_S3_ACCESS_KEY);
-        String configS3SecretKey = SparkConfiguration.getString(context, CONF_S3_SECRET_KEY);
+        String configS3AccessKey = SparkConfiguration.getString(context, VAR_S3_ACCESS_KEY);
+        String configS3SecretKey = SparkConfiguration.getString(context, VAR_S3_SECRET_KEY);
 
         List<String> jars = new ArrayList<>();
         if (sparkConf.containsKey("spark.jars")) {
@@ -138,26 +137,17 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
             int exitCode = startedProcess.getFuture().get().getExitValue();
             logger.info("process exit code: {}", exitCode);
             finalStatus = (exitCode == 0);
-            parseYarnAppId(stderrStream);
+            appId = SparkOperatorUtils.parseYarnAppId(stderrStream);
+            logger.info("yarn application ID: {}", appId);
 
             if (!Strings.isNullOrEmpty(appId)) {
-                finalStatus = trackYarnAppStatus(appId);
+                finalStatus = SparkOperatorUtils.trackYarnAppStatus(appId, sparkClient, logger, loggerParser);
             }
 
-//            String master = sparkSubmitParams.getOrDefault(SPARK_MASTER, "yarn");
-//            String deployMode = sparkSubmitParams.getOrDefault(SPARK_DEPLOY_MODE, "cluster");
-//            //if cluster mode, parse application Id from output, track yarn app status
-//            if ("yarn".equalsIgnoreCase(master) && "clsuter".equalsIgnoreCase(deployMode)) {
-//                if (!Strings.isNullOrEmpty(appId)) {
-//                    finalStatus = trackYarnAppStatus(appId);
-//                } else {
-//                    throw new IllegalStateException("Yarn applicationId not found");
-//                }
-//            }
 
             if (finalStatus) {
                 try {
-                    waitForSeconds(10);
+                    SparkOperatorUtils.waitForSeconds(10);
                     TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), taskRunId);
                     if (taskAttemptReport != null)
                         report(taskAttemptReport);
@@ -179,29 +169,9 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
 
     @Override
     public void abort() {
-        parseYarnAppId(stderrStream);
-        if (Strings.isNullOrEmpty(appId)) {
-            logger.info("aborting un-submitted process");
-            JavaProcess javaProcess = Processes.newJavaProcess(process);
-            if (javaProcess.isAlive()) {
-                try {
-                    ProcessUtil.destroyGracefullyOrForcefullyAndWait(javaProcess, 30, TimeUnit.SECONDS, 10, TimeUnit.SECONDS);
-                    logger.info("Process is successfully terminated");
-                } catch (IOException | TimeoutException e) {
-                    logger.error("{}", e);
-                } catch (InterruptedException e) {
-                    logger.error("{}", e);
-                    Thread.currentThread().interrupt();
-                }
-            } else {
-                logger.info("Process already finished");
-            }
-        } else {
-            //TODO: kill spark app in yarn/k8/mesos
-            logger.info("aborting application in YARN: " + appId);
-            sparkClient.killApplication(appId);
-        }
-
+        appId = SparkOperatorUtils.parseYarnAppId(stderrStream);
+        logger.info("yarn application ID: {}", appId);
+        SparkOperatorUtils.abortSparkJob(appId, logger, sparkClient, process);
     }
 
     @Override
@@ -226,81 +196,5 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
         return new NopResolver();
     }
 
-    public void parseYarnAppId(OutputStream stderrStream) {
-
-        String stderrString = stderrStream.toString();
-        Pattern applicationIdPattern = Pattern.compile(".*(application_\\d{13}_\\d{4}).*");
-        final Matcher matcher = applicationIdPattern.matcher(stderrString);
-        if (matcher.matches()) {
-            appId = matcher.group(1);
-            logger.info("Yarn ApplicationId: {}", appId);
-        }
-    }
-
-    public boolean trackYarnAppStatus(String appId) {
-        int timeout = 0;
-        YarnStateInfo.State jobState = null;
-        Application sparkApp = null;
-        do {
-            try {
-                sparkApp = sparkClient.getApp(appId);
-                jobState = YarnStateInfo.State.valueOf(sparkApp.getFinalStatus());
-                timeout = 0;
-            } catch (RuntimeException e) {
-                timeout++;
-                logger.warn("get job information from yarn timeout, times = {}", timeout);
-                if (timeout >= HTTP_TIMEOUT_LIMIT) {
-                    logger.error("get spark job information from yarn failed", e);
-                    throw e;
-                }
-            }
-            if (jobState == null) {
-                throw new IllegalStateException("Cannot find state for job: " + appId);
-            }
-            waitForSeconds(5);
-        } while (!jobState.isFinished());
-        tailingYarnLog(sparkApp.getAmContainerLogs());
-        if (jobState.isSuccess()) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private void waitForSeconds(int seconds) {
-        try {
-            Thread.sleep(seconds * 1000);
-        } catch (InterruptedException e) {
-            logger.error("Failed in wait for : {}s", seconds, e);
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    private void tailingYarnLog(String logUrl) {
-        try {
-            logger.info("Fetch log from {}", logUrl);
-            logger.info(loggerParser.getYarnLogs(logUrl));
-        } catch (Exception e) {
-            logger.error("Error in fetch application logs, {}", e);
-        }
-    }
-
-    public List<String> parseSparkSubmitParmas(Map<String, String> map) {
-        List<String> params = new ArrayList<>();
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            params.add("--" + entry.getKey());
-            params.add(entry.getValue());
-        }
-        return params;
-    }
-
-    public List<String> parseSparkConf(Map<String, String> map) {
-        List<String> params = new ArrayList<>();
-        for (Map.Entry<String, String> entry : map.entrySet()) {
-            params.add("--conf");
-            params.add(entry.getKey() + "=" + entry.getValue());
-        }
-        return params;
-    }
 
 }
