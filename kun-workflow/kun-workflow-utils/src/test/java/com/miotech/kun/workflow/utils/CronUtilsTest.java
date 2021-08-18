@@ -1,10 +1,10 @@
 package com.miotech.kun.workflow.utils;
 
 import com.cronutils.model.Cron;
-import com.miotech.kun.commons.utils.TimeZoneEnum;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
@@ -37,7 +37,7 @@ public class CronUtilsTest {
         String cronExpression1 = "0 0 0 * * ?";
         Cron cron1 = CronUtils.convertStringToCron(cronExpression1);
         OffsetDateTime utcNow = DateTimeUtils.now();
-        Optional<OffsetDateTime> next = CronUtils.getNextUTCExecutionTime(cron1, utcNow, TimeZoneEnum.CTT);
+        Optional<OffsetDateTime> next = CronUtils.getNextUTCExecutionTime(cron1, utcNow, "Asia/Shanghai");
         assertThat(next.get().getHour(), is(16));
     }
 

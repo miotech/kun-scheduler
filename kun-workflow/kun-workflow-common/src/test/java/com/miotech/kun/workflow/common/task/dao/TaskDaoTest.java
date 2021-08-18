@@ -2,15 +2,14 @@ package com.miotech.kun.workflow.common.task.dao;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.workflow.common.task.dependency.TaskDependencyFunctionProvider;
 import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
-import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.*;
-import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -18,10 +17,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import javax.inject.Inject;
-import java.time.Clock;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -68,7 +64,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withName("example1")
                 .withDescription("example1_desc")
                 .withConfig(config)
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?", TimeZoneEnum.UTC))
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 15 10 * * ?", ZoneOffset.UTC.getId()))
                 .withOperatorId(1L)
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
@@ -466,7 +462,7 @@ public class TaskDaoTest extends DatabaseTestBase {
         // Process
         // 2. We update the task to execute on 11:00 instead of 10:15 everyday
         Task taskToUpdate = tasksToExecuteOn1015.get(0).cloneBuilder().withScheduleConf(
-                new ScheduleConf(ScheduleType.SCHEDULED, "0 0 11 * * ?",TimeZoneEnum.UTC)
+                new ScheduleConf(ScheduleType.SCHEDULED, "0 0 11 * * ?",ZoneOffset.UTC.getId())
         ).build();
         taskDao.update(taskToUpdate);
 
