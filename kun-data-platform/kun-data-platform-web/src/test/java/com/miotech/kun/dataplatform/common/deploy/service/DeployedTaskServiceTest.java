@@ -1,6 +1,5 @@
 package com.miotech.kun.dataplatform.common.deploy.service;
 
-import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.common.commit.dao.TaskCommitDao;
 import com.miotech.kun.dataplatform.common.deploy.vo.DeployedTaskDAG;
@@ -24,6 +23,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.ZoneOffset;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -74,7 +74,7 @@ public class DeployedTaskServiceTest extends AppTestBase {
         assertTrue(task.getId() > 0);
         assertThat(task.getName(), is(deployedTask.getName()));
         assertThat(task.getDescription(), is("Deployed Data Platform Task : " + deployedTask.getDefinitionId()));
-        assertThat(task.getScheduleConf(), sameBeanAs(new ScheduleConf(ScheduleType.SCHEDULED, "0 0 10 * * ?", TimeZoneEnum.UTC)));
+        assertThat(task.getScheduleConf(), sameBeanAs(new ScheduleConf(ScheduleType.SCHEDULED, "0 0 10 * * ?", ZoneOffset.UTC.getId())));
         assertThat(task.getDependencies().size(), is(0));
         assertThat(task.getConfig().getString("sparkSQL"), is("SELECT 1 AS T"));
 
