@@ -45,6 +45,12 @@ public class Task {
 
     private final Integer priority;
 
+    //task retry times limit
+    private final Integer retries;
+
+    //task retry delay,unit seconds
+    private final Integer retryDelay;
+
     public Long getId() {
         return id;
     }
@@ -81,8 +87,34 @@ public class Task {
         return priority;
     }
 
+    public Integer getRetries() {
+        return retries;
+    }
+
+    public Integer getRetryDelay() {
+        return retryDelay;
+    }
+
     public String getQueueName() {
         return queueName;
+    }
+
+    @Override
+    public String toString() {
+        return "Task{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", operatorId=" + operatorId +
+                ", config=" + config +
+                ", scheduleConf=" + scheduleConf +
+                ", dependencies=" + dependencies +
+                ", tags=" + tags +
+                ", queueName='" + queueName + '\'' +
+                ", priority=" + priority +
+                ", retries=" + retries +
+                ", retryDelay=" + retryDelay +
+                '}';
     }
 
     private Task(TaskBuilder builder) {
@@ -96,6 +128,8 @@ public class Task {
         this.tags = builder.tags;
         this.queueName = builder.queueName;
         this.priority = builder.priority;
+        this.retries = builder.retries;
+        this.retryDelay = builder.retryDelay;
     }
 
     public TaskBuilder cloneBuilder() {
@@ -194,22 +228,6 @@ public class Task {
         return Objects.hash(getId(), getName(), getDescription(), getOperatorId(), getConfig(), getScheduleConf(), getDependencies(), getTags(), getPriority(), getQueueName());
     }
 
-    @Override
-    public String toString() {
-        return "Task{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", operatorId=" + operatorId +
-                ", config=" + config +
-                ", scheduleConf=" + scheduleConf +
-                ", dependencies=" + dependencies +
-                ", tags=" + tags +
-                ", priority=" + priority +
-                ", queueName='" + queueName + '\'' +
-                '}';
-    }
-
     @JsonPOJOBuilder
     public static final class TaskBuilder {
         private Long id;
@@ -223,6 +241,8 @@ public class Task {
         private Integer recoverTimes;
         private String queueName;
         private Integer priority;
+        private Integer retries;
+        private Integer retryDelay;
 
         private TaskBuilder() {
         }
@@ -277,8 +297,19 @@ public class Task {
             this.priority = priority;
             return this;
         }
+
         public TaskBuilder withQueueName(String queueName){
             this.queueName = queueName;
+            return this;
+        }
+
+        public TaskBuilder withReties(Integer reties){
+            this.retries = reties;
+            return this;
+        }
+
+        public TaskBuilder withRetryDelay(Integer retryDelay){
+            this.retryDelay = retryDelay;
             return this;
         }
 
