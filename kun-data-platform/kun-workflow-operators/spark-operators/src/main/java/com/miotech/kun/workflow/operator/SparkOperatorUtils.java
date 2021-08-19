@@ -41,11 +41,16 @@ public class SparkOperatorUtils {
         }
     }
 
+    public static String surroundWithQuotes(String str){
+        return '\'' + str + '\'';
+    }
+
     public static List<String> parseSparkSubmitParmas(Map<String, String> map) {
         List<String> params = new ArrayList<>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
-            params.add("--" + entry.getKey());
-            params.add(entry.getValue());
+            params.add("--" + entry.getKey().trim());
+            params.add(entry.getValue().trim());
+//            params.add(surroundWithQuotes(entry.getValue().trim()));
         }
         return params;
     }
@@ -54,19 +59,23 @@ public class SparkOperatorUtils {
         List<String> params = new ArrayList<>();
         for (Map.Entry<String, String> entry : map.entrySet()) {
             params.add("--conf");
-            params.add(entry.getKey() + "=" + entry.getValue());
+            params.add(entry.getKey().trim() + "=" + entry.getValue().trim());
+//            params.add(surroundWithQuotes(entry.getKey().trim() + "=" + entry.getValue().trim()));
         }
         return params;
     }
 
-    public static String parseYarnAppId(OutputStream stderrStream) {
+    public static String parseYarnAppId(OutputStream stderrStream, Logger logger) {
 
         String stderrString = stderrStream.toString();
         Pattern applicationIdPattern = Pattern.compile(".*(application_\\d{13}_\\d{4}).*");
-        final Matcher matcher = applicationIdPattern.matcher(stderrString);
-        if (matcher.matches()) {
-            String appId = matcher.group(1);
-            return appId;
+        for(String line : stderrString.split("\n")){
+            final Matcher matcher = applicationIdPattern.matcher(line);
+            if (matcher.matches()) {
+                String appId = matcher.group(1);
+                logger.info("yarn application ID: {}", appId);
+                return appId;
+            }
         }
         return null;
     }

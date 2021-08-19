@@ -3,56 +3,124 @@ package com.miotech.kun.workflow.operator;
 import com.google.common.base.Strings;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.execution.*;
-import com.miotech.kun.workflow.operator.spark.models.*;
+import com.miotech.kun.workflow.operator.spark.clients.SparkClient;
+import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeroturnaround.exec.ProcessExecutor;
+import org.zeroturnaround.exec.StartedProcess;
+import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
+import java.io.*;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
 public class SparkSQLOperator extends LivyBaseSparkOperator {
 
+    private String appId;
+    private String yarnHost;
+    private Process process;
+    private SparkClient sparkClient;
+    private OutputStream stderrStream = new ByteArrayOutputStream(1024 * 1024 * 10);
     private static final Logger logger = LoggerFactory.getLogger(SparkSQLOperator.class);
+    private final YarnLoggerParser loggerParser = new YarnLoggerParser();
 
-    private AtomicInteger currentActiveSessionId = new AtomicInteger(-1);
-    private String currentActiveStatementId;
 
-    /**
-     * init a livy rest client for later api calls
-     */
     @Override
     public void init() {
         OperatorContext context = getContext();
-        super.init();
+        logger.info("Recieved task config: {}", JSONUtils.toJsonString(context.getConfig()));
+
+        yarnHost = SparkConfiguration.getString(context, SparkConfiguration.SPARK_YARN_HOST);
+        if (Strings.isNullOrEmpty(yarnHost)) {
+            String livyHost = SparkConfiguration.getString(context, CONF_LIVY_HOST);
+            yarnHost = String.join(":", Arrays.copyOf(livyHost.split(":"), livyHost.split(":").length - 1));
+        }
+        sparkClient = new SparkClient(yarnHost);
     }
 
-    /**
-     * Execute user provided sql
-     *
-     * @return true if sql execution is success
-     */
+
+
     @Override
     public boolean run() {
+
+        OperatorContext context = getContext();
+        Config config = context.getConfig();
+        Long taskRunId = context.getTaskRunId();
+
+        Map<String, String> sparkSubmitParams = new HashMap<>();
+
+        String sparkConfStr = config.getString(CONF_LIVY_BATCH_CONF);
+        Map<String, String> sparkConf = new HashMap<>();
+        if (!Strings.isNullOrEmpty(sparkConfStr)) {
+            sparkConf = JSONUtils.jsonStringToStringMap(sparkConfStr);
+        }
+
+        // add run time configs
+        addRunTimeSparkConfs(sparkConf, context);
+        addRunTimeParams(sparkSubmitParams, context, sparkConf);
+
+
+        //build shell cmd
+        List<String> cmd = buildCmd(sparkSubmitParams, sparkConf, config.getString(SPARK_APPLICATION), config.getString(CONF_SPARK_SQL));
+        logger.info("execute cmd: " + String.join(" ", cmd));
+
         try {
-            return execute();
-        }catch(Exception e){
-            logger.error(e.getMessage());
+            ProcessExecutor processExecutor = new ProcessExecutor();
+
+            StartedProcess startedProcess = processExecutor
+                    .environment(VAR_S3_ACCESS_KEY, config.getString(CONF_S3_ACCESS_KEY))
+                    .environment(VAR_S3_SECRET_KEY, config.getString(CONF_S3_SECRET_KEY))
+                    .command(cmd)
+                    .redirectOutput(Slf4jStream.of(logger).asInfo())
+                    .redirectError(stderrStream)
+                    .redirectErrorAlsoTo(Slf4jStream.of(logger).asInfo())
+                    .start();
+            process = startedProcess.getProcess();
+
+            boolean finalStatus = true;
+
+            // wait for termination
+            int exitCode = startedProcess.getFuture().get().getExitValue();
+            logger.info("process exit code: {}", exitCode);
+            finalStatus = (exitCode == 0);
+            appId = SparkOperatorUtils.parseYarnAppId(stderrStream, logger);
+
+            if (!Strings.isNullOrEmpty(appId)) {
+                finalStatus = SparkOperatorUtils.trackYarnAppStatus(appId, sparkClient, logger, loggerParser);
+
+            }
+
+
+            if (finalStatus) {
+                try {
+                    SparkOperatorUtils.waitForSeconds(10);
+                    TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), taskRunId);
+                    if (taskAttemptReport != null)
+                        report(taskAttemptReport);
+                } catch (Exception e) {
+                    logger.error("Failed to parse lineage: {}", e);
+                }
+            }
+
+            return finalStatus;
+        } catch (IOException | ExecutionException e) {
+            logger.error("{}", e);
             return false;
-        } finally {
-            this.cleanup();
+        } catch (InterruptedException e) {
+            logger.error("{}", e);
+            Thread.currentThread().interrupt();
+            return false;
         }
     }
 
     @Override
     public void abort() {
-        this.cleanup();
+        appId = SparkOperatorUtils.parseYarnAppId(stderrStream, logger);
+        SparkOperatorUtils.abortSparkJob(appId, logger, sparkClient, process);
     }
 
     @Override
@@ -72,7 +140,9 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
                 .define(CONF_LINEAGE_OUTPUT_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_OUTPUT_PATH_VALUE_DEFAULT, true, "file system address to store lineage analysis report, in the format `s3a://BUCKET/path` or `hdfs://host:port/path`", CONF_LINEAGE_OUTPUT_PATH)
                 .define(CONF_LINEAGE_JAR_PATH, ConfigDef.Type.STRING, CONF_LINEAGE_JAR_PATH_VALUE_DEFAULT, true, "the jar used for lineage analysis, in the format `s3a://BUCKET/xxx/xxx.jar` or `hdfs://host:port/xxx/xxx.jar`", CONF_LINEAGE_JAR_PATH)
                 .define(CONF_S3_ACCESS_KEY, ConfigDef.Type.STRING, CONF_S3_ACCESS_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_ACCESS_KEY)
-                .define(CONF_S3_SECRET_KEY, ConfigDef.Type.STRING, CONF_S3_SECRET_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_SECRET_KEY);
+                .define(CONF_S3_SECRET_KEY, ConfigDef.Type.STRING, CONF_S3_SECRET_KEY_VALUE_DEFAULT, true, "if using s3 to store lineage analysis report, need s3 credentials", CONF_S3_SECRET_KEY)
+                .define(SPARK_YARN_HOST, ConfigDef.Type.STRING, SPARK_YARN_HOST_DEFAULT_VALUE, true, "Yarn host to submit application, in the format `ip:port`", SPARK_YARN_HOST)
+                .define(SPARK_APPLICATION, ConfigDef.Type.STRING, SPARK_SQL_JAR_DEFAULT_VALUE, true, "application class name for java application", SPARK_APPLICATION);
     }
 
     @Override
@@ -80,152 +150,112 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
         return new NopResolver();
     }
 
-    public boolean execute() {
+    public void addRunTimeParams(Map<String, String> sparkSubmitParams, OperatorContext context, Map<String, String> sparkConf) {
+        String proxyuser = context.getConfig().getString(CONF_LIVY_PROXY_USER);
+        if (!Strings.isNullOrEmpty(proxyuser)) {
+            sparkSubmitParams.put(SPARK_PROXY_USER, proxyuser);
+        }
 
-        SparkJob job = new SparkJob();
-        OperatorContext context = getContext();
-        String jars = SparkConfiguration.getString(context, CONF_LIVY_BATCH_JARS);
-        String sparkConf = SparkConfiguration.getString(context, CONF_LIVY_BATCH_CONF);
+        if (!sparkConf.containsKey("spark.submit.deployMode")) {
+            sparkSubmitParams.put(SPARK_DEPLOY_MODE, "cluster");
+        }
+        if (!sparkConf.containsKey("spark.master")) {
+            sparkSubmitParams.put(SPARK_MASTER, "yarn");
+        }
+
         String sessionName = SparkConfiguration.getString(context, CONF_LIVY_SHARED_SESSION_NAME);
-        Long taskRunId = context.getTaskRunId();
+        if (!Strings.isNullOrEmpty(sessionName)) {
+            sessionName = sessionName + " - " + IdGenerator.getInstance().nextId();
+        }else{
+            sessionName = "Spark Job: " + IdGenerator.getInstance().nextId();
+        }
+        sparkSubmitParams.put("name", sessionName);
 
+        //TODO: make entry class configurable
+        sparkSubmitParams.put(SPARK_ENTRY_CLASS, "com.miotech.kun.sql.Application");
+
+    }
+
+    public void addRunTimeSparkConfs(Map<String, String> sparkConf, OperatorContext context) {
+
+        Long taskRunId = context.getTaskRunId();
+        sparkConf.put("spark.hadoop.taskRunId", taskRunId.toString());
+
+        // lineage conf
         String configLineageOutputPath = SparkConfiguration.getString(context, CONF_LINEAGE_OUTPUT_PATH);
         String configLineageJarPath = SparkConfiguration.getString(context, CONF_LINEAGE_JAR_PATH);
         String configS3AccessKey = SparkConfiguration.getString(context, CONF_S3_ACCESS_KEY);
         String configS3SecretKey = SparkConfiguration.getString(context, CONF_S3_SECRET_KEY);
 
-        if (Strings.isNullOrEmpty(sessionName)) {
-            sessionName = "Spark Job: " + IdGenerator.getInstance().nextId();
-        } else {
-            sessionName = sessionName + " - " + IdGenerator.getInstance().nextId();
-        }
-        if (!Strings.isNullOrEmpty(sessionName)) {
-            job.setName(sessionName);
-        }
-
-        if (!Strings.isNullOrEmpty(sparkConf)) {
-            job.setConf(JSONUtils.jsonStringToStringMap(replaceWithVariable(sparkConf)));
-        }
-
         List<String> allJars = new ArrayList<>();
+        if (sparkConf.containsKey("spark.jars")) {
+            allJars.addAll(Arrays.asList(sparkConf.get("spark.jars").split(",")));
+        }
+        if (!Strings.isNullOrEmpty(configLineageJarPath)) {
+            allJars.add(configLineageJarPath);
+            sparkConf.put("spark.sql.queryExecutionListeners", "za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
+        }
+
+        if (!Strings.isNullOrEmpty(configLineageOutputPath)) {
+            sparkConf.put("spark.hadoop.spline.hdfs_dispatcher.address", configLineageOutputPath);
+        }
+        if (!Strings.isNullOrEmpty(configS3AccessKey)) {
+            sparkConf.put("spark.fs.s3a.access.key", configS3AccessKey);
+        }
+        if (!Strings.isNullOrEmpty(configS3SecretKey)) {
+            sparkConf.put("spark.fs.s3a.secret.key", configS3SecretKey);
+        }
+
+        // parse jars
+        String jars = SparkConfiguration.getString(context, CONF_LIVY_BATCH_JARS);
         if (!Strings.isNullOrEmpty(jars)) {
             allJars.addAll(Arrays.asList(jars.split(",")));
         }
-        if(!Strings.isNullOrEmpty(configLineageJarPath)){
-            allJars.add(configLineageJarPath);
-            job.addConf("spark.sql.queryExecutionListeners","za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
+        if(!allJars.isEmpty()){
+            sparkConf.put("spark.jars", String.join(",", allJars));
         }
-        job.setJars(allJars);
 
-        // lineage config
-        if(!Strings.isNullOrEmpty(configLineageOutputPath)){
-            job.addConf("spark.hadoop.spline.hdfs_dispatcher.address", configLineageOutputPath);
+        if (!sparkConf.containsKey("spark.driver.memory")) {
+            sparkConf.put("spark.driver.memory", "2g");
         }
-        if(!Strings.isNullOrEmpty(configS3AccessKey)){
-            job.addConf("spark.fs.s3a.access.key", configS3AccessKey);
+
+    }
+
+
+    public List<String> buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs) {
+        List<String> cmd = new ArrayList<>();
+        cmd.add("spark-submit");
+        cmd.addAll(SparkOperatorUtils.parseSparkSubmitParmas(sparkSubmitParams));
+
+        File sqlFile = storeSqlToFile(appArgs);
+        addSqlFile(sparkConf, sqlFile.getPath());
+        cmd.addAll(SparkOperatorUtils.parseSparkConf(sparkConf));
+        cmd.add(app);
+        cmd.add("-f");
+        cmd.add(sqlFile.getName());
+        return cmd;
+    }
+
+    private void addSqlFile(Map<String, String> sparkConf, String sqlFile) {
+        String files = sparkConf.getOrDefault("spark.files", "");
+        if (files.equals("")) {
+            sparkConf.put("spark.files", sqlFile);
+        } else {
+            sparkConf.put("spark.files", files + "," + sqlFile);
         }
-        if(!Strings.isNullOrEmpty(configS3SecretKey)){
-            job.addConf("spark.fs.s3a.secret.key", configS3SecretKey);
-        }
-        job.addConf("spark.hadoop.taskRunId", taskRunId.toString());
-        if (!job.getConf().containsKey("spark.driver.memory")) {
-            job.addConf("spark.driver.memory", "2g");
-        }
-        logger.info("Submit spark session: {}", JSONUtils.toJsonString(job));
-        SparkApp app = livyClient.runSparkSession(job);
-        Integer sessionId = app.getId();
-        currentActiveSessionId.set(sessionId);
-        logger.info("Running spark session in id: {}", currentActiveSessionId);
+    }
 
-        // wait for session available
-        LivyStateInfo.State sessionState;
-        do {
-            sessionState = livyClient.getSparkSessionState(sessionId).getState();
-            if (sessionState == null) {
-                throw new IllegalStateException("Cannot find session: " + sessionId + " . Maybe killed by user termination.");
-            }
-            if (sessionState.isFinished()) {
-                throw new IllegalStateException(String.format("Session %d is finished, current state: %s", sessionId, sessionState));
-            }
-            waitForSeconds(3);
-        } while (!sessionState.isAvailable());
-
-        // launch sql
-        String sql = SparkConfiguration.getString(context, SparkConfiguration.CONF_SPARK_SQL);
-        sql = replaceWithVariable(sql);
-        logger.info("submit user provided sql: {}", sql);
-        List<String> statements = Arrays.asList(sql.split(";"))
-                .stream()
-                .filter(StringUtils::isNoneBlank)
-                .collect(Collectors.toList());
-
-        Integer timeout = 0;
-        for (String s: statements) {
-            Statement stat = livyClient.runSparkSQL(sessionId, s);
-            currentActiveStatementId = buildStatementId(sessionId, stat.getId());
-            // wait for statement ended
-            do {
-                try{
-                    stat = livyClient.getStatement(sessionId, stat.getId());
-                    logger.debug("Statement: {}", JSONUtils.toJsonString(stat));
-                    app = livyClient.getSparkSession(sessionId);
-                    timeout = 0;
-                }catch (RuntimeException e){
-                    timeout++;
-                    logger.warn("get job information from livy timeout, times = {}", timeout);
-                    if (timeout >= LIVY_TIMEOUT_LIMIT) {
-                        logger.error("get job information from livy failed", e);
-                        throw e;
-                    }
-                }
-
-                if (stat == null) {
-                    throw new IllegalStateException("Cannot find statement: " + currentActiveStatementId + " . Maybe killed by user termination.");
-                }
-                if (stat.getState().isFailed()) {
-                    throw new IllegalStateException(String.format("statement %s is failed, current state: %s", currentActiveStatementId, sessionState));
-                }
-                waitForSeconds(3);
-            } while (!stat.getState().isSuccess());
-            Statement.StatementOutput output = stat.getOutput();
-            logger.info("Output for statement " + currentActiveStatementId + ": \n {}", JSONUtils.toJsonString(output));
-            boolean isSuccess = output.getStatus().equals("ok");
-            if (!isSuccess) {
-                logger.error("sql execution failed, tailing yarn log for session " + sessionId + ", " + app.getAppId() + ": \n");
-                tailingYarnLog(app.getAppInfo());
-                return false;
-            }
-        }
-        logger.info("Yarn log for session " + sessionId + ", " + app.getAppId() + ": \n");
-        tailingYarnLog(app.getAppInfo());
-
+    private File storeSqlToFile(String sql) {
+        File sqlFile = null;
         try {
-            TaskAttemptReport taskAttemptReport = SparkQueryPlanLineageAnalyzer.lineageAnalysis(context.getConfig(), context.getTaskRunId());
-            if(taskAttemptReport != null)
-                report(taskAttemptReport);
-        } catch (Exception e) {
-            logger.error("Failed to parse lineage: {}", e);
+            sqlFile = File.createTempFile("spark-sql-", ".sql");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(sqlFile))) {
+                writer.write(sql);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return true;
-    }
-
-    /**
-     * When task is terminated,
-     * should terminate the current sql statement in shared session mode
-     * or close the current active session if not in shared session mode
-     */
-    public void cleanup() {
-        // current session may not be initialized
-        int sessionId =  currentActiveSessionId.get();
-        if (sessionId >= 0) {
-            logger.info("Cancel current active session {}", sessionId);
-            livyClient.deleteSession(sessionId);
-            currentActiveSessionId.compareAndSet(sessionId, -1);
-        }
-    }
-
-    private String buildStatementId(int sessionId, int statementId) {
-        return sessionId + "-" + statementId;
+        return sqlFile;
     }
 
 }

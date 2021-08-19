@@ -30,7 +30,7 @@ public class SparkOperator extends KunOperator {
     private String entryFile;
     private Process process;
     private SparkClient sparkClient;
-    private OutputStream stderrStream = new ByteArrayOutputStream(1024 * 1024 * 3);
+    private OutputStream stderrStream = new ByteArrayOutputStream(1024 * 1024 * 10);
     private static final Logger logger = LoggerFactory.getLogger(SparkOperator.class);
     private final YarnLoggerParser loggerParser = new YarnLoggerParser();
 
@@ -89,7 +89,7 @@ public class SparkOperator extends KunOperator {
             int exitCode = startedProcess.getFuture().get().getExitValue();
             logger.info("process exit code: {}", exitCode);
             finalStatus = (exitCode == 0);
-            appId = SparkOperatorUtils.parseYarnAppId(stderrStream);
+            appId = SparkOperatorUtils.parseYarnAppId(stderrStream, logger);
 
             if (!Strings.isNullOrEmpty(appId)) {
                 finalStatus = SparkOperatorUtils.trackYarnAppStatus(appId, sparkClient, logger, loggerParser);
@@ -121,13 +121,12 @@ public class SparkOperator extends KunOperator {
 
     @Override
     public void abort() {
-        appId = SparkOperatorUtils.parseYarnAppId(stderrStream);
-        logger.info("yarn application ID: {}", appId);
+        appId = SparkOperatorUtils.parseYarnAppId(stderrStream, logger);
         SparkOperatorUtils.abortSparkJob(appId, logger, sparkClient, process);
     }
 
     public void addRunTimeParams(Map<String, String> sparkSubmitParams, OperatorContext context, Map<String, String> sparkConf) {
-        String proxyuser = context.getConfig().getString(SPARK_PROXY_USER);
+        String proxyuser = context.getConfig().getString(CONF_LIVY_PROXY_USER);
         if (!Strings.isNullOrEmpty(proxyuser)) {
             sparkSubmitParams.put(SPARK_PROXY_USER, proxyuser);
         }
@@ -141,7 +140,7 @@ public class SparkOperator extends KunOperator {
 
         String sessionName = SparkConfiguration.getString(context, CONF_LIVY_BATCH_NAME);
         if (!Strings.isNullOrEmpty(sessionName)) {
-            sessionName = sessionName + " - " + IdGenerator.getInstance().nextId();
+            sessionName = sessionName + "-" + IdGenerator.getInstance().nextId();
             sparkSubmitParams.put("name", sessionName);
         }
 
@@ -219,6 +218,9 @@ public class SparkOperator extends KunOperator {
             }
         }
 
+        if (!sparkConf.containsKey("spark.driver.memory")) {
+            sparkConf.put("spark.driver.memory", "2g");
+        }
     }
 
     public List<String> buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs) {
@@ -227,7 +229,7 @@ public class SparkOperator extends KunOperator {
         cmd.addAll(SparkOperatorUtils.parseSparkSubmitParmas(sparkSubmitParams));
         cmd.addAll(SparkOperatorUtils.parseSparkConf(sparkConf));
         cmd.add(app);
-        cmd.add(appArgs);
+        cmd.addAll(Arrays.asList(appArgs.split(" ")));
         return cmd;
     }
 

@@ -39,7 +39,7 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
     private String yarnHost;
     private Process process;
     private SparkClient sparkClient;
-    private OutputStream stderrStream = new ByteArrayOutputStream(1024 * 1024 * 3);
+    private OutputStream stderrStream = new ByteArrayOutputStream(1024 * 1024 * 10);
     private static final Logger logger = LoggerFactory.getLogger(SparkSubmitBaseOperator.class);
     private final YarnLoggerParser loggerParser = new YarnLoggerParser();
 
@@ -78,7 +78,9 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
             jars.add(configLineageJarPath);
             sparkConf.put("spark.sql.queryExecutionListeners", "za.co.absa.spline.harvester.listener.SplineQueryExecutionListener");
         }
-        sparkConf.put("spark.jars", String.join(",", jars));
+        if(!jars.isEmpty()){
+            sparkConf.put("spark.jars", String.join(",", jars));
+        }
 
         if (!Strings.isNullOrEmpty(configLineageOutputPath)) {
             sparkConf.put("spark.hadoop.spline.hdfs_dispatcher.address", configLineageOutputPath);
@@ -137,7 +139,7 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
             int exitCode = startedProcess.getFuture().get().getExitValue();
             logger.info("process exit code: {}", exitCode);
             finalStatus = (exitCode == 0);
-            appId = SparkOperatorUtils.parseYarnAppId(stderrStream);
+            appId = SparkOperatorUtils.parseYarnAppId(stderrStream, logger);
             logger.info("yarn application ID: {}", appId);
 
             if (!Strings.isNullOrEmpty(appId)) {
@@ -169,8 +171,7 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
 
     @Override
     public void abort() {
-        appId = SparkOperatorUtils.parseYarnAppId(stderrStream);
-        logger.info("yarn application ID: {}", appId);
+        appId = SparkOperatorUtils.parseYarnAppId(stderrStream, logger);
         SparkOperatorUtils.abortSparkJob(appId, logger, sparkClient, process);
     }
 
