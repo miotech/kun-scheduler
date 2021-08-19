@@ -17,7 +17,7 @@ function computeFilterTypeToRequestParam(
     case 'SUCCESS':
       return 'SUCCESS';
     case 'FAILED':
-      return 'FAILED,ERROR,ABORTED';
+      return 'FAILED,ERROR';
     case 'PENDING':
       return 'QUEUED,CREATED,INITIALIZING';
     case 'BLOCKED':

@@ -95,9 +95,10 @@ export const NotificationConfig: React.FC<Props> = memo(function NotificationCon
           )}：`}</label>
         </Col>
         <Col span={18} id="notifier-type-select">
-          <Checkbox checked={weComNotifierEnabled} onChange={e => setWeComNotifierEnabled(e.target.checked)}>
+          {/* 屏蔽企业微信 */}
+          {/* <Checkbox checked={weComNotifierEnabled} onChange={e => setWeComNotifierEnabled(e.target.checked)}>
             {t('dataDevelopment.definition.notificationConfig.WECOM')}
-          </Checkbox>
+          </Checkbox> */}
           <Checkbox checked={emailNotifierEnabled} onChange={e => setEmailNotifierEnabled(e.target.checked)}>
             {t('dataDevelopment.definition.notificationConfig.EMAIL')}
           </Checkbox>
