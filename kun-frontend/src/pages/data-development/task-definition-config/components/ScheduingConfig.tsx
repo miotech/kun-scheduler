@@ -147,9 +147,9 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
         <Form.Item label={t('dataDevelopment.definition.scheduleConfig.cronExpression')}>
           <Form.Item
             style={{ display: 'inline-block', width: 180, marginRight: 20 }}
-            name={['taskPayload', 'scheduleConfig', 'timeZoneEnum']}
+            name={['taskPayload', 'scheduleConfig', 'timeZone']}
             rules={[{ required: true, message: t('dataDevelopment.definition.scheduleConfig.timeZone') }]}
-            initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.timeZoneEnum ?? defaultTimeZone}
+            initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.timeZone ?? defaultTimeZone}
           >
             <Select
               placeholder={t('dataDevelopment.definition.scheduleConfig.timeZone')}
@@ -210,9 +210,9 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
         <Form.Item label={t('scheduledTasks.property.oneShotExecutionTime')}>
           <Form.Item
             style={{ display: 'inline-block', width: 180, marginRight: 20 }}
-            name={['taskPayload', 'scheduleConfig', 'timeZoneEnum']}
+            name={['taskPayload', 'scheduleConfig', 'timeZone']}
             rules={[{ required: true, message: t('dataDevelopment.definition.scheduleConfig.timeZone') }]}
-            initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.timeZoneEnum ?? defaultTimeZone}
+            initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.timeZone ?? defaultTimeZone}
           >
             <Select
               placeholder={t('dataDevelopment.definition.scheduleConfig.timeZone')}
