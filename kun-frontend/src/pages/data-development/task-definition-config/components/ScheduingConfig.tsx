@@ -18,6 +18,8 @@ import { getTaskDefinitionsFromFlattenedProps } from '@/utils/transformDataset';
 import { OneshotDatePicker } from '@/pages/data-development/task-definition-config/components/OneshotDatePicker';
 import { parse } from '@joshoy/quartz-cron-parser';
 
+import timeZoneMapList from './timezoneMap';
+
 import styles from './BodyForm.less';
 
 interface SchedulingConfigProps {
@@ -26,38 +28,6 @@ interface SchedulingConfigProps {
 }
 
 const { Option } = Select;
-
-const timeZoneMapList = [
-  { value: 'UTC', label: 'UTC(UTC)', offset: 0 },
-  { value: 'ACT', label: 'ACT(Australia/Darwin)', offset: 9.5 },
-  { value: 'AET', label: 'AET(Australia/Sydney)', offset: 10 },
-  { value: 'AGT', label: 'AGT(America/Argentina/Buenos_Aires)', offset: -3 },
-  { value: 'ART', label: 'ART(Africa/Cairo)', offset: 2 },
-  { value: 'AST', label: 'AST(America/Anchorage)', offset: -4 },
-  { value: 'BET', label: 'BET(America/Sao_Paulo)', offset: -3 },
-  { value: 'BST', label: 'BST(Asia/Dhaka)', offset: 6 },
-  { value: 'CAT', label: 'CAT(Africa/Harare)', offset: -1 },
-  { value: 'CNT', label: 'CNT(America/St_Johns)', offset: -3.5 },
-  { value: 'CST', label: 'CST(America/Chicago)', offset: -6 },
-  { value: 'CTT', label: 'CTT(Asia/Shanghai)', offset: 8 },
-  { value: 'EAT', label: 'EAT(Africa/Addis_Ababa)', offset: 3 },
-  { value: 'ECT', label: 'ECT(Europe/Paris)', offset: 1 },
-  { value: 'IET', label: 'IET(America/Indiana/Indianapolis)', offset: -5 },
-  { value: 'IST', label: 'IST(Asia/Kolkata)', offset: 5.5 },
-  { value: 'JST', label: 'JST(Asia/Tokyo)', offset: 9 },
-  { value: 'MIT', label: 'MIT(Pacific/Apia)', offset: -11 },
-  { value: 'NET', label: 'NET(Asia/Yerevan)', offset: 4 },
-  { value: 'NST', label: 'NST(Pacific/Auckland)', offset: 12 },
-  { value: 'PLT', label: 'PLT(Asia/Karachi)', offset: 5 },
-  { value: 'PNT', label: 'PNT(America/Phoenix)', offset: -7 },
-  { value: 'PRT', label: 'PRT(America/Puerto_Rico)', offset: -4 },
-  { value: 'PST', label: 'PST(America/Los_Angeles)', offset: -8 },
-  { value: 'SST', label: 'SST(Pacific/Guadalcanal)', offset: 11 },
-  { value: 'VST', label: 'VST(Asia/Ho_Chi_Minh)', offset: 7 },
-  { value: 'EST', label: 'EST(-05:00)', offset: -5 },
-  { value: 'MST', label: 'MST(-07:00)', offset: -7 },
-  { value: 'HST', label: 'HST(-10:00)', offset: -10 },
-];
 
 const getDefaultTimeZone = () => {
   const offsetRate = -(new Date().getTimezoneOffset() / 60);

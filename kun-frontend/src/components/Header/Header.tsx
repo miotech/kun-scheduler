@@ -40,7 +40,7 @@ export default memo(function Header() {
     <AntdHeader className={css.header}>
       <span className={css.logoArea}>
         <img className={css.logoImage} src={logo} alt="Logo" />
-        <span className={css.appName}>{t('common.app.name')}</span>
+        {/* <span className={css.appName}>{t('common.app.name')}</span> */}
       </span>
 
       <I18nSwitch className={css.i18nSwitch} />
