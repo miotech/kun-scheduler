@@ -3,7 +3,6 @@ package com.miotech.kun.workflow.common.task.service;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.CommonTestBase;
@@ -649,7 +648,7 @@ public class TaskServiceTest extends CommonTestBase {
         ScheduleConf conf = ScheduleConf.newBuilder()
                 .withType(ScheduleType.SCHEDULED)
                 .withCronExpr("0 0 8 * * ?")
-                .withTimeZone(TimeZoneEnum.CTT)
+                .withTimeZone("Asia/Shanghai")
                 .build();
         TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO().cloneBuilder()
                 .withScheduleConf(conf)
@@ -673,7 +672,7 @@ public class TaskServiceTest extends CommonTestBase {
         ScheduleConf conf = ScheduleConf.newBuilder()
                 .withType(ScheduleType.SCHEDULED)
                 .withCronExpr("0 0 8 * * ?")
-                .withTimeZone(TimeZoneEnum.CTT)
+                .withTimeZone("Asia/Shanghai")
                 .build();
         Task task = MockTaskFactory.createTask().cloneBuilder()
                 .withScheduleConf(conf)
