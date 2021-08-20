@@ -29,7 +29,7 @@ public class EventNotifyConfig {
     @Value("${notify.systemDefault.triggerType:ON_FAIL}")
     private String systemDefaultConfigTriggerTypeStr;
 
-    @Value("${notify.systemDefault.userConfigJson:[{\"notifierType\":\"WECOM\"}]}")
+    @Value("${notify.systemDefault.userConfigJson:[{\"notifierType\":\"EMAIL\"}]}")
     private String systemDefaultNotifierConfigJson;
 
     @Bean
