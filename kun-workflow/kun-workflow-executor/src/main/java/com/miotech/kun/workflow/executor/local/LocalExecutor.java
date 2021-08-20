@@ -37,10 +37,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.*;
 
 @Singleton
@@ -306,9 +303,9 @@ public class LocalExecutor implements Executor, ExecutorBackEnd {
     }
 
     public boolean recover() {
-        List<TaskAttempt> taskAttemptList = taskRunDao.fetchUnStartedTaskAttemptList();
+        List<TaskAttempt> taskAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED,TaskRunStatus.ERROR));
         logger.debug("recover taskAttempt to queue count = {}", taskAttemptList.size());
-        List<TaskAttempt> runningTaskAttemptList = taskRunDao.fetchRunningTaskAttemptList();
+        List<TaskAttempt> runningTaskAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.INITIALIZING,TaskRunStatus.RUNNING));
         logger.debug("recover taskAttempt to workerPool count = {}", runningTaskAttemptList.size());
         for (TaskAttempt taskAttempt : runningTaskAttemptList) {
             workerStarterThreadPool.submit(new WorkerStartRunner(taskAttempt));
