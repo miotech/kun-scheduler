@@ -1,6 +1,5 @@
 package com.miotech.kun.dataplatform.mocking;
 
-import com.miotech.kun.commons.utils.TimeZoneEnum;
 import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.model.taskdefinition.*;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
@@ -9,6 +8,7 @@ import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.json.simple.JSONObject;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import java.time.ZoneOffset;
 import java.util.*;
 
 import static com.miotech.kun.dataplatform.common.tasktemplate.dao.TaskTemplateDaoTest.TEST_TEMPLATE;
@@ -48,7 +48,7 @@ public class MockTaskDefinitionFactory {
                                     .withInputNodes(dependencies)
                                     .withOutputDatasets(outputDatasets)
                                     .withType(ScheduleType.SCHEDULED.toString())
-                                    .withTimeZoneEnum(TimeZoneEnum.UTC)
+                                    .withTimeZone(ZoneOffset.UTC.getId())
                                     .build())
                     .withNotifyConfig(TaskDefNotifyConfig.DEFAULT_TASK_NOTIFY_CONFIG)
                     .build();

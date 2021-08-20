@@ -4,9 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.miotech.kun.commons.utils.TimeZoneEnum;
 
 import javax.annotation.Nullable;
+import java.time.ZoneOffset;
 import java.util.Objects;
 
 @JsonDeserialize(builder = ScheduleConf.ScheduleConfBuilder.class)
@@ -16,7 +16,7 @@ public class ScheduleConf {
     @Nullable
     private final String cronExpr;
 
-    private final TimeZoneEnum timeZone;
+    private final String timeZone;
 
 
     public ScheduleConf(ScheduleType type, String cronExpr) {
@@ -26,11 +26,11 @@ public class ScheduleConf {
     @JsonCreator
     public ScheduleConf(@JsonProperty("type") ScheduleType type,
                         @JsonProperty("cronExpr") @Nullable String cronExpr,
-                        @JsonProperty("timeZone") @Nullable TimeZoneEnum timeZone) {
+                        @JsonProperty("timeZone") @Nullable String timeZone) {
         this.type = type;
         this.cronExpr = cronExpr;
         if (!type.equals(ScheduleType.NONE) && Objects.isNull(timeZone)) {
-            this.timeZone = TimeZoneEnum.UTC;
+            this.timeZone = ZoneOffset.UTC.getId();
         } else {
             this.timeZone = timeZone;
         }
@@ -47,7 +47,7 @@ public class ScheduleConf {
     }
 
     @Nullable
-    public TimeZoneEnum getTimeZone() {
+    public String getTimeZone() {
         return timeZone;
     }
 
@@ -73,7 +73,7 @@ public class ScheduleConf {
     public static final class ScheduleConfBuilder {
         private ScheduleType type;
         private String cronExpr;
-        private TimeZoneEnum timeZone;
+        private String timeZone;
 
         private ScheduleConfBuilder() {
         }
@@ -88,7 +88,7 @@ public class ScheduleConf {
             return this;
         }
 
-        public ScheduleConfBuilder withTimeZone(TimeZoneEnum timeZone) {
+        public ScheduleConfBuilder withTimeZone(String timeZone) {
             this.timeZone = timeZone;
             return this;
         }
