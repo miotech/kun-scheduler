@@ -1,21 +1,15 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Strings;
-import com.miotech.kun.commons.utils.StringUtils;
 import com.miotech.kun.workflow.core.execution.*;
 import com.miotech.kun.workflow.operator.spark.clients.SparkClient;
 import com.miotech.kun.workflow.operator.spark.clients.YarnLoggerParser;
-import com.miotech.kun.workflow.operator.spark.models.Application;
-import com.miotech.kun.workflow.operator.spark.models.YarnStateInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.StartedProcess;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
-import org.zeroturnaround.process.JavaProcess;
-import org.zeroturnaround.process.ProcessUtil;
-import org.zeroturnaround.process.Processes;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -23,10 +17,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 import static com.miotech.kun.workflow.operator.SparkConfiguration.VAR_S3_SECRET_KEY;

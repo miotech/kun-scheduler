@@ -56,9 +56,12 @@ public class SparkOperator extends KunOperator {
         Map<String, String> sparkSubmitParams = new HashMap<>();
 
         String sparkConfStr = config.getString(CONF_LIVY_BATCH_CONF);
-        Map<String, String> sparkConf = new HashMap<>();
+        Map<String, String> sparkConf = null;
         if (!Strings.isNullOrEmpty(sparkConfStr)) {
-            sparkConf = JSONUtils.jsonStringToStringMap(sparkConfStr);
+            sparkConf = JSONUtils.jsonStringToStringMap(SparkOperatorUtils.replaceWithVariable(sparkConfStr, context));
+        }
+        if(sparkConf == null){
+            sparkConf = new HashMap<>();
         }
 
         // add run time configs
@@ -207,11 +210,11 @@ public class SparkOperator extends KunOperator {
             List<String> extraFiles = jobFiles.size() > 1 ? jobFiles.subList(1, jobFiles.size()) : ImmutableList.of();
             if (!CollectionUtils.isEmpty(extraFiles)) {
                 if (isJava) {
-                    List<String> allFiles = Arrays.asList(sparkConf.getOrDefault("spark.files", "").split(","));
+                    List<String> allFiles = sparkConf.containsKey("spark.files") ? Arrays.asList(sparkConf.get("spark.files").split(",")) : new ArrayList<>();
                     allFiles.addAll(extraFiles);
                     sparkConf.put("spark.files", String.join(",", allFiles));
                 } else {
-                    List<String> allPyFiles = Arrays.asList(sparkConf.getOrDefault("spark.submit.pyFiles", "").split(","));
+                    List<String> allPyFiles = sparkConf.containsKey("spark.submit.pyFiles") ? Arrays.asList(sparkConf.get("spark.submit.pyFiles").split(",")) : new ArrayList<>();
                     allPyFiles.addAll(extraFiles);
                     sparkConf.put("spark.submit.pyFiles", String.join(",", allPyFiles));
                 }

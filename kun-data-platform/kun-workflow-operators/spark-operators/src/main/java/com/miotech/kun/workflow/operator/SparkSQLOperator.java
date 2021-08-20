@@ -54,9 +54,12 @@ public class SparkSQLOperator extends LivyBaseSparkOperator {
         Map<String, String> sparkSubmitParams = new HashMap<>();
 
         String sparkConfStr = config.getString(CONF_LIVY_BATCH_CONF);
-        Map<String, String> sparkConf = new HashMap<>();
+        Map<String, String> sparkConf = null;
         if (!Strings.isNullOrEmpty(sparkConfStr)) {
-            sparkConf = JSONUtils.jsonStringToStringMap(sparkConfStr);
+            sparkConf = JSONUtils.jsonStringToStringMap(SparkOperatorUtils.replaceWithVariable(sparkConfStr, context));
+        }
+        if(sparkConf == null){
+            sparkConf = new HashMap<>();
         }
 
         // add run time configs

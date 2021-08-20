@@ -11,6 +11,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Strings;
+import com.miotech.kun.commons.utils.StringUtils;
+import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.operator.spark.clients.SparkClient;
 import com.miotech.kun.workflow.operator.spark.models.Application;
 import com.miotech.kun.workflow.operator.spark.models.YarnStateInfo;
@@ -43,6 +45,10 @@ public class SparkOperatorUtils {
 
     public static String surroundWithQuotes(String str){
         return '\'' + str + '\'';
+    }
+
+    public static String replaceWithVariable(String rawText, OperatorContext context) {
+        return StringUtils.resolveWithVariable(rawText, SparkConfiguration.getVariables(context));
     }
 
     public static List<String> parseSparkSubmitParmas(Map<String, String> map) {
