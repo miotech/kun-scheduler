@@ -68,11 +68,11 @@ public class SparkOperatorUtils {
     public static String parseYarnAppId(OutputStream stderrStream, Logger logger) {
 
         String stderrString = stderrStream.toString();
-        Pattern applicationIdPattern = Pattern.compile(".*(application_\\d{13}_\\d{4}).*");
+        Pattern applicationIdPattern = Pattern.compile(".* (application_\\d+_\\d+) .*");
         for(String line : stderrString.split("\n")){
             final Matcher matcher = applicationIdPattern.matcher(line);
             if (matcher.matches()) {
-                String appId = matcher.group(1);
+                String appId = matcher.group(1).trim();
                 logger.info("yarn application ID: {}", appId);
                 return appId;
             }
@@ -94,11 +94,8 @@ public class SparkOperatorUtils {
                 logger.warn("get job information from yarn timeout, times = {}", timeout);
                 if (timeout >= HTTP_TIMEOUT_LIMIT) {
                     logger.error("get spark job information from yarn failed", e);
-                    throw e;
+                    return false;
                 }
-            }
-            if (jobState == null) {
-                throw new IllegalStateException("Cannot find state for job: " + appId);
             }
             SparkOperatorUtils.waitForSeconds(5);
         } while (!jobState.isFinished());
