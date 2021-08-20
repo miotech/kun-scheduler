@@ -132,8 +132,8 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
         TaskRun persistedTaskRun = persistedTaskRunOptional.get();
         assertThat(persistedTaskRun.getId(), is(sampleTaskRun.getId()));
-        assertThat(persistedTaskRun.getDependentTaskRunIds(),is(sampleTaskRun.getDependentTaskRunIds()));
-        assertThat(persistedTaskRun.getTask().getId(),is(sampleTaskRun.getTask().getId()));
+        assertThat(persistedTaskRun.getDependentTaskRunIds(), is(sampleTaskRun.getDependentTaskRunIds()));
+        assertThat(persistedTaskRun.getTask().getId(), is(sampleTaskRun.getTask().getId()));
     }
 
     @Test
@@ -750,7 +750,31 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void TaskAttemptCreated3daysAgo_shouldNotExecute(){
+    public void fetchTaskRunListWithoutAttempt() {
+        //prepare
+        Task task1 = MockTaskFactory.createTask();
+        taskDao.create(task1);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        Task task2 = MockTaskFactory.createTask();
+        taskDao.create(task2);
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task1);
+        taskRunDao.createTaskRuns(Arrays.asList(taskRun1, taskRun2));
+        taskRunDao.createAttempt(taskAttempt1);
+
+
+        List<TaskRun> taskRunList = taskRunDao.fetchTaskRunListWithoutAttempt();
+
+        //verify
+        assertThat(taskRunList.size(), is(1));
+        TaskRun fetchedTaskRun = taskRunList.get(0);
+        assertThat(taskRun2.getId(), is(fetchedTaskRun.getId()));
+        assertThat(taskRun2.getStatus(), is(TaskRunStatus.CREATED));
+
+    }
+
+    @Test
+    public void TaskAttemptCreated3daysAgo_shouldNotExecute() {
         //prepare attempt
         OffsetDateTime currentDate = DateTimeUtils.freeze();
         Task task = MockTaskFactory.createTask();
@@ -760,18 +784,42 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskRunDao.createTaskRun(taskRun);
         taskRunDao.createAttempt(taskAttempt);
         //3 days passed
-        OffsetDateTime threeDaysAfter =  currentDate.plusDays(3).plusHours(1);
+        OffsetDateTime threeDaysAfter = currentDate.plusDays(3).plusHours(1);
         DateTimeUtils.freezeAt(threeDaysAfter.format(DateTimeFormatter.ofPattern("yyyyMMddHHmm")));
         List<TaskAttempt> readyAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
-        assertThat(readyAttemptList,hasSize(0));
+        assertThat(readyAttemptList, hasSize(0));
 
         DateTimeUtils.resetClock();
 
     }
 
     @Test
-    public void testNoReadyTaskRunFetchAllSatisfyTaskAttempt_shouldReturnEmptyList(){
+    public void testNoReadyTaskRunFetchAllSatisfyTaskAttempt_shouldReturnEmptyList() {
         List<TaskAttempt> readyAttemptList = taskRunDao.fetchAllSatisfyTaskAttempt();
-        assertThat(readyAttemptList,hasSize(0));
+        assertThat(readyAttemptList, hasSize(0));
     }
+
+    @Test
+    public void testFetchTaskAttemptListForRecover() {
+        //prepare
+        TaskRunStatus[] taskRunStatuses = TaskRunStatus.values();
+        List<Task> taskList = MockTaskFactory.createTasks(taskRunStatuses.length);
+        for (int i = 0; i < taskRunStatuses.length; i++) {
+            TaskRun taskRun = MockTaskRunFactory.createTaskRunWithStatus(taskList.get(i), taskRunStatuses[i]);
+            TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+            taskDao.create(taskList.get(i));
+            taskRunDao.createTaskRun(taskRun);
+            taskRunDao.createAttempt(taskAttempt);
+        }
+
+        List<TaskRunStatus> taskRunStatusConditions = Arrays.asList(TaskRunStatus.CREATED,TaskRunStatus.QUEUED, TaskRunStatus.ERROR);
+        List<TaskAttempt> selectedAttempt = taskRunDao.fetchTaskAttemptListForRecover(taskRunStatusConditions);
+        List<TaskRunStatus> selectedStatus =  selectedAttempt.stream().map(TaskAttempt::getStatus).collect(Collectors.toList());
+
+        //verify
+        assertThat(selectedAttempt, hasSize(3));
+        assertThat(selectedStatus,containsInAnyOrder(TaskRunStatus.CREATED,TaskRunStatus.ERROR,TaskRunStatus.QUEUED));
+
+    }
+
 }

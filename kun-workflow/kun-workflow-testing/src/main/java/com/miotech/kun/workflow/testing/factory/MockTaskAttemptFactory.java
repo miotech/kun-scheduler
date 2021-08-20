@@ -16,7 +16,7 @@ public class MockTaskAttemptFactory {
                 .withId(WorkflowIdGenerator.nextTaskAttemptId(taskRun.getId(), 1))
                 .withAttempt(1)
                 .withTaskRun(taskRun)
-                .withStatus(TaskRunStatus.CREATED)
+                .withStatus(taskRun.getStatus())
                 .withQueueName(taskRun.getQueueName())
                 .withPriority(taskRun.getPriority())
                 .build();

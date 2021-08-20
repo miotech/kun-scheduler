@@ -30,6 +30,24 @@ public class MockTaskRunFactory {
         return createTaskRuns(new Task[]{task}).get(0);
     }
 
+    public static TaskRun createTaskRunWithStatus(Task task,TaskRunStatus taskRunStatus){
+        return TaskRun.newBuilder()
+                .withId(WorkflowIdGenerator.nextTaskRunId())
+                .withTask(task)
+                .withInlets(new ArrayList<>())
+                .withOutlets(new ArrayList<>())
+                .withScheduleType(task.getScheduleConf().getType())
+                .withDependentTaskRunIds(new ArrayList<>())
+                .withScheduledTick(tick)
+                .withStartAt(DateTimeUtils.now())
+                .withEndAt(DateTimeUtils.now())
+                .withStatus(taskRunStatus)
+                .withConfig(Config.EMPTY)
+                .withQueueName(task.getQueueName())
+                .withPriority(task.getPriority())
+                .build();
+    }
+
     public static TaskRun createTaskRunWithTick(Task task, Tick tick) {
         return TaskRun.newBuilder()
                 .withId(WorkflowIdGenerator.nextTaskRunId())

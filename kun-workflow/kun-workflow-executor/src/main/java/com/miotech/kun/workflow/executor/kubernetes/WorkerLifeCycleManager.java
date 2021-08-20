@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -55,7 +56,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         for (WorkerInstance workerInstance : instanceList) {
             workerMonitor.register(workerInstance.getTaskAttemptId(), new InnerEventHandler());
         }
-        List<TaskAttempt> taskAttemptList = taskRunDao.fetchUnStartedTaskAttemptList();
+        List<TaskAttempt> taskAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.ERROR));
         logger.info("recover queued attempt size = {}", taskAttemptList.size());
         for (TaskAttempt taskAttempt : taskAttemptList) {
             queueManager.submit(taskAttempt);
@@ -142,7 +143,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                     .build());
         } catch (Exception e) {
             logger.warn("Failed to execute worker, taskAttemptId = {}", taskAttempt.getId(), e);
-            miscService.changeTaskAttemptStatus(taskAttempt.getId(),TaskRunStatus.ERROR);
+            miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.ERROR);
         }
     }
 
