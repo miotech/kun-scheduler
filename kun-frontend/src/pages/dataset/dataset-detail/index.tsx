@@ -25,7 +25,7 @@ import { useInterval } from 'ahooks';
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnDescInput from './components/ColumnDescInput/ColumnDescInput';
 import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
-import DataQualityTable from './components/DataQualityTable/DataQualityTable';
+// import DataQualityTable from './components/DataQualityTable/DataQualityTable';
 import LineageStreamTaskTable from './components/LineageStreamTaskTable/LineageStreamTaskTable';
 
 import styles from './index.less';
@@ -43,9 +43,11 @@ function isPullingStatus(pullProcess: DatasetPullProcessVO | null) {
     return false;
   }
   // else
-  if (pullProcess.latestMCETaskRun.status === 'SUCCESS' ||
+  if (
+    pullProcess.latestMCETaskRun.status === 'SUCCESS' ||
     pullProcess.latestMCETaskRun.status === 'FAILED' ||
-    pullProcess.latestMCETaskRun.status === 'ABORTED') {
+    pullProcess.latestMCETaskRun.status === 'ABORTED'
+  ) {
     return false;
   }
   // else
@@ -79,21 +81,14 @@ export default function DatasetDetail({ match }: Props) {
   const [fetchColumnsLoading, setFetchColumnsLoading] = useState(false);
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  const [forceReFetchInfoFlag, setForceReFetchInfoFlag ] = useState(1);
+  const [forceReFetchInfoFlag, setForceReFetchInfoFlag] = useState(1);
   const [forceUpdateAllTagListFlag, setForceUpdateAllTagListFlag] = useState(1);
-  const [
-    forceReFetchDataQualityFlag,
-    setForceReFetchDataQualityFlag,
-  ] = useState(1);
+  const [forceReFetchDataQualityFlag, setForceReFetchDataQualityFlag] = useState(1);
 
-  const [AddDataQualityModalVisible, setAddDataQualityModalVisible] = useState(
-    !!query.caseId,
-  );
+  const [AddDataQualityModalVisible, setAddDataQualityModalVisible] = useState(!!query.caseId);
 
   // 编辑 dataquality 用
-  const [currentDataQualityId, setCurrentDataQualityId] = useState<
-    string | null
-  >(query.caseId || null);
+  const [currentDataQualityId, setCurrentDataQualityId] = useState<string | null>(query.caseId || null);
 
   useEffect(() => {
     // 如果更改了搜索关键词, 那么强制切换页码数为1
@@ -129,15 +124,19 @@ export default function DatasetDetail({ match }: Props) {
   ]);
 
   /* If this dataset is still pulling, poll status of the latest process  */
-  useInterval(async function pollPullingProcess() {
-    const process = await dispatch.datasetDetail.fetchDatasetLatestPullProcess(currentId);
-    if (process?.latestMCETaskRun?.status === 'SUCCESS') {
-      message.success(t('dataDetail.msg.pullSuccess'));
-      setForceReFetchInfoFlag(v => v + 1);
-    } else if (process?.latestMCETaskRun?.status === 'FAILED' || process?.latestMCETaskRun?.status === 'ABORTED') {
-      message.error(t('dataDetail.msg.pullFailed'));
-    }
-  }, isPullingStatus(latestPullProcess) ? 3000 : null, { immediate: false });
+  useInterval(
+    async function pollPullingProcess() {
+      const process = await dispatch.datasetDetail.fetchDatasetLatestPullProcess(currentId);
+      if (process?.latestMCETaskRun?.status === 'SUCCESS') {
+        message.success(t('dataDetail.msg.pullSuccess'));
+        setForceReFetchInfoFlag(v => v + 1);
+      } else if (process?.latestMCETaskRun?.status === 'FAILED' || process?.latestMCETaskRun?.status === 'ABORTED') {
+        message.error(t('dataDetail.msg.pullFailed'));
+      }
+    },
+    isPullingStatus(latestPullProcess) ? 3000 : null,
+    { immediate: false },
+  );
 
   useEffect(() => {
     dispatch.dataDiscovery.fetchAllOwnerList();
@@ -231,12 +230,7 @@ export default function DatasetDetail({ match }: Props) {
     dispatch.datasetDetail.fetchDatasetColumns(params).then(() => {
       setFetchColumnsLoading(false);
     });
-  }, [
-    currentId,
-    debounceColumnKeyword,
-    dispatch.datasetDetail,
-    selector.columnsPagination,
-  ]);
+  }, [currentId, debounceColumnKeyword, dispatch.datasetDetail, selector.columnsPagination]);
 
   const handleChangePagination = useCallback(
     (pageNumber: number, pageSize?: number) => {
@@ -267,19 +261,19 @@ export default function DatasetDetail({ match }: Props) {
     [dispatch.datasetDetail],
   );
 
-  const handleClickAddDataQuality = useCallback(() => {
-    setCurrentDataQualityId(null);
-    setAddDataQualityModalVisible(true);
-  }, []);
+  // const handleClickAddDataQuality = useCallback(() => {
+  //   setCurrentDataQualityId(null);
+  //   setAddDataQualityModalVisible(true);
+  // }, []);
   const handleCloseAddDataQuality = useCallback(() => {
     setCurrentDataQualityId(null);
     setAddDataQualityModalVisible(false);
   }, []);
 
-  const handleClickEditDataQuality = useCallback((dqId: string) => {
-    setCurrentDataQualityId(dqId);
-    setAddDataQualityModalVisible(true);
-  }, []);
+  // const handleClickEditDataQuality = useCallback((dqId: string) => {
+  //   setCurrentDataQualityId(dqId);
+  //   setAddDataQualityModalVisible(true);
+  // }, []);
 
   const defaultRelatedTable = useMemo(
     () => ({
@@ -294,22 +288,22 @@ export default function DatasetDetail({ match }: Props) {
     setForceReFetchDataQualityFlag(i => i + 1);
   }, []);
 
-  const handleConfirmDeleteDataQuality = useCallback(
-    qualityId => {
-      dispatch.datasetDetail.deleteDataQuality({ id: qualityId }).then(resp => {
-        if (resp) {
-          const newDataQualities = selector.dataQualities?.filter(
-            i => i.id !== resp.id,
-          );
-          dispatch.datasetDetail.updateState({
-            key: 'dataQualities',
-            value: newDataQualities,
-          });
-        }
-      });
-    },
-    [dispatch.datasetDetail, selector.dataQualities],
-  );
+  // const handleConfirmDeleteDataQuality = useCallback(
+  //   qualityId => {
+  //     dispatch.datasetDetail.deleteDataQuality({ id: qualityId }).then(resp => {
+  //       if (resp) {
+  //         const newDataQualities = selector.dataQualities?.filter(
+  //           i => i.id !== resp.id,
+  //         );
+  //         dispatch.datasetDetail.updateState({
+  //           key: 'dataQualities',
+  //           value: newDataQualities,
+  //         });
+  //       }
+  //     });
+  //   },
+  //   [dispatch.datasetDetail, selector.dataQualities],
+  // );
 
   const handleChangeColumnDescription = useCallback(
     (v: string, id: string) => {
@@ -402,9 +396,11 @@ export default function DatasetDetail({ match }: Props) {
       <BackButton defaultUrl="/data-discovery/dataset" />
 
       <Spin spinning={fetchDetailLoading}>
-        <Card className={c(styles.pageContent, {
-          [styles.deleted]: deleted,
-        })}>
+        <Card
+          className={c(styles.pageContent, {
+            [styles.deleted]: deleted,
+          })}
+        >
           <div className={styles.titleRow}>
             <span className={styles.titleAndWatermark}>
               <span className={styles.title}>
@@ -414,24 +410,24 @@ export default function DatasetDetail({ match }: Props) {
             </span>
 
             <div className={styles.headingButtonGroup}>
-              {
-                /* If current dataset has been deleted, it shall not display "PULL" button in the heading */
-                (!deleted) ? (
-                  <Button
-                    size="large"
-                    type="primary"
-                    onClick={handleClickPull}
-                    disabled={latestPullProcessIsLoading || isPullingStatus(latestPullProcess)}
-                    loading={isPullingStatus(latestPullProcess)}
-                  >
-                    {isPullingStatus(latestPullProcess) ?
-                      t('dataDetail.baseItem.title.pulling', {
-                        status: latestPullProcess?.latestMCETaskRun?.status || 'UNKNOWN'
-                      }) :
-                      t('dataDetail.button.pull')}
-                  </Button>
-                ) : <></>
-              }
+              {/* If current dataset has been deleted, it shall not display "PULL" button in the heading */
+              !deleted ? (
+                <Button
+                  size="large"
+                  type="primary"
+                  onClick={handleClickPull}
+                  disabled={latestPullProcessIsLoading || isPullingStatus(latestPullProcess)}
+                  loading={isPullingStatus(latestPullProcess)}
+                >
+                  {isPullingStatus(latestPullProcess)
+                    ? t('dataDetail.baseItem.title.pulling', {
+                        status: latestPullProcess?.latestMCETaskRun?.status || 'UNKNOWN',
+                      })
+                    : t('dataDetail.button.pull')}
+                </Button>
+              ) : (
+                <></>
+              )}
             </div>
           </div>
 
@@ -439,54 +435,33 @@ export default function DatasetDetail({ match }: Props) {
             <Spin spinning={updateLoading}>
               <div className={styles.baseInfoRow}>
                 <div className={styles.infoBlock}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.database')}
-                  </div>
+                  <div className={styles.baseItemTitle}>{t('dataDetail.baseItem.title.database')}</div>
                   <div className={styles.baseContent}>{selector.database}</div>
                 </div>
 
                 <div className={styles.infoBlock}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.dbType')}
-                  </div>
+                  <div className={styles.baseItemTitle}>{t('dataDetail.baseItem.title.dbType')}</div>
                   <div className={styles.baseContent}>{selector.type}</div>
                 </div>
 
                 <div className={styles.infoBlock}>
-                  <div className={styles.baseItemTitle}>
-                    {t('dataDetail.baseItem.title.datasource')}
-                  </div>
-                  <div className={styles.baseContent}>
-                    {selector.datasource}
-                  </div>
+                  <div className={styles.baseItemTitle}>{t('dataDetail.baseItem.title.datasource')}</div>
+                  <div className={styles.baseContent}>{selector.datasource}</div>
                 </div>
 
-                <div
-                  className={styles.infoBlock}
-                  style={{ marginLeft: 'auto' }}
-                >
-                  <div
-                    className={styles.baseContent}
-                    style={{ marginBottom: 8 }}
-                  >
+                <div className={styles.infoBlock} style={{ marginLeft: 'auto' }}>
+                  <div className={styles.baseContent} style={{ marginBottom: 8 }}>
                     {t('dataDetail.baseItem.title.rowCount')}
                   </div>
-                  <div className={styles.importantContent}>
-                    {numeral(selector.rowCount).format('0,0')}
-                  </div>
+                  <div className={styles.importantContent}>{numeral(selector.rowCount).format('0,0')}</div>
                 </div>
                 <div className={styles.infoBlock}>
-                  <div
-                    className={styles.baseContent}
-                    style={{ marginBottom: 8 }}
-                  >
+                  <div className={styles.baseContent} style={{ marginBottom: 8 }}>
                     {t('dataDetail.baseItem.title.lastUpdate')}
                   </div>
                   <div className={styles.importantContent}>
                     {selector.highWatermark?.time && (
-                      <span className={styles.watermark}>
-                        {watermarkFormatter(selector.highWatermark?.time)}
-                      </span>
+                      <span className={styles.watermark}>{watermarkFormatter(selector.highWatermark?.time)}</span>
                     )}
                   </div>
                 </div>
@@ -496,22 +471,14 @@ export default function DatasetDetail({ match }: Props) {
               <div className={styles.inputRow}>
                 {selector.glossaries && selector.glossaries.length > 0 && (
                   <div className={styles.glossaryRow}>
-                    <div className={styles.baseItemTitle}>
-                      {t('dataDetail.baseItem.title.glossary')}
-                    </div>
+                    <div className={styles.baseItemTitle}>{t('dataDetail.baseItem.title.glossary')}</div>
 
                     <div className={styles.glossaryContent}>
                       {selector.glossaries.map(glossary => (
                         <div key={glossary.id} className={styles.glossaryItem}>
                           <FileTextOutlined style={{ marginRight: 4 }} />
-                          <Link
-                            to={getBackPath(
-                              `/data-discovery/glossary/${glossary.id}`,
-                            )}
-                          >
-                            <div className={styles.glossaryName}>
-                              {glossary.name}
-                            </div>
+                          <Link to={getBackPath(`/data-discovery/glossary/${glossary.id}`)}>
+                            <div className={styles.glossaryName}>{glossary.name}</div>
                           </Link>
                         </div>
                       ))}
@@ -521,9 +488,7 @@ export default function DatasetDetail({ match }: Props) {
 
                 <div className={styles.shortInputRow}>
                   <div className={styles.infoBlock} style={{ minWidth: 380 }}>
-                    <div className={styles.baseItemTitle}>
-                      {t('dataDetail.baseItem.title.tags')}
-                    </div>
+                    <div className={styles.baseItemTitle}>{t('dataDetail.baseItem.title.tags')}</div>
                     <div className={styles.baseContent}>
                       <Select
                         mode="tags"
@@ -542,9 +507,7 @@ export default function DatasetDetail({ match }: Props) {
                   </div>
 
                   <div className={styles.infoBlock} style={{ minWidth: 380 }}>
-                    <div className={styles.baseItemTitle}>
-                      {t('dataDetail.baseItem.title.owners')}
-                    </div>
+                    <div className={styles.baseItemTitle}>{t('dataDetail.baseItem.title.owners')}</div>
                     <div className={styles.baseContent}>
                       <Select
                         mode="multiple"
@@ -564,10 +527,7 @@ export default function DatasetDetail({ match }: Props) {
                 </div>
 
                 <div>
-                  <DescriptionInput
-                    value={selector.description || ''}
-                    onChange={handleChangeDescription}
-                  />
+                  <DescriptionInput value={selector.description || ''} onChange={handleChangeDescription} />
                 </div>
               </div>
 
@@ -576,9 +536,7 @@ export default function DatasetDetail({ match }: Props) {
               <div className={styles.columnsArea}>
                 <Spin spinning={fetchColumnsLoading}>
                   <div className={styles.columnsTitleRow}>
-                    <span className={styles.baseItemTitle}>
-                      {t('dataDetail.baseItem.title.clolumns')}
-                    </span>
+                    <span className={styles.baseItemTitle}>{t('dataDetail.baseItem.title.clolumns')}</span>
 
                     <div className={styles.columnSearch}>
                       <Input.Search
@@ -603,38 +561,25 @@ export default function DatasetDetail({ match }: Props) {
               <Divider className={styles.divider} />
               <div className={styles.columnsArea}>
                 <div className={styles.lineageTitleRow}>
-                  <span
-                    className={styles.baseItemTitle}
-                    style={{ marginRight: 8 }}
-                  >
+                  <span className={styles.baseItemTitle} style={{ marginRight: 8 }}>
                     {t('dataDetail.lineage.title')}
                   </span>
-                  {((selector.upstreamLineageTaskList &&
-                    selector.upstreamLineageTaskList.length > 0) ||
-                    (selector.downstreamLineageTaskList &&
-                      selector.downstreamLineageTaskList.length > 0)) && (
-                    <Link
-                      style={{ textDecoration: 'underLine' }}
-                      to={`/data-discovery/dataset/${currentId}/lineage`}
-                    >
+                  {((selector.upstreamLineageTaskList && selector.upstreamLineageTaskList.length > 0) ||
+                    (selector.downstreamLineageTaskList && selector.downstreamLineageTaskList.length > 0)) && (
+                    <Link style={{ textDecoration: 'underLine' }} to={`/data-discovery/dataset/${currentId}/lineage`}>
                       {t('dataDetail.lineage.lineageDetailLink')}
                     </Link>
                   )}
                 </div>
 
                 <div className={styles.lineageArea}>
-                  <LineageStreamTaskTable
-                    datasetId={currentId}
-                    direction={LineageDirection.UPSTREAM}
-                  />
+                  <LineageStreamTaskTable datasetId={currentId} direction={LineageDirection.UPSTREAM} />
                   <div className={styles.lineageDivider} />
-                  <LineageStreamTaskTable
-                    datasetId={currentId}
-                    direction={LineageDirection.DOWNSTREAM}
-                  />
+                  <LineageStreamTaskTable datasetId={currentId} direction={LineageDirection.DOWNSTREAM} />
                 </div>
               </div>
-              <Divider className={styles.divider} />
+              {/* 暂时屏蔽掉 test case */}
+              {/* <Divider className={styles.divider} />
 
               <div className={styles.dataQualityArea}>
                 <div className={styles.baseItemTitle}>
@@ -656,7 +601,7 @@ export default function DatasetDetail({ match }: Props) {
                       />
                     )}
                 </div>
-              </div>
+              </div> */}
             </Spin>
           </div>
         </Card>

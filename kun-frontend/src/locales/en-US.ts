@@ -1,6 +1,6 @@
 export default {
   'common.lang': 'en-US',
-  'common.app.name': 'MioTech Data Management Platform',
+  'common.app.name': 'KUN Data Management Platform',
   'common.loading': 'Loading...',
   'common.operateSuccess': 'Successful Operation',
   'common.searchContent': 'Search Content',
