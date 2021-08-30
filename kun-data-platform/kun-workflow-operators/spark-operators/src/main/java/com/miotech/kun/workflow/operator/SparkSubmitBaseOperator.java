@@ -6,10 +6,7 @@ import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
 
@@ -87,8 +84,10 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
         Config config = context.getConfig();
         Long taskRunId = context.getTaskRunId();
 
-        Map<String, String> sparkSubmitParams = JSONUtils.jsonStringToStringMap(config.getString(SPARK_SUBMIT_PARMAS));
-        Map<String, String> sparkConf = JSONUtils.jsonStringToStringMap(config.getString(SPARK_CONF));
+        String sparkParamsStr = config.getString(SPARK_SUBMIT_PARMAS);
+        Map<String, String> sparkSubmitParams = JSONUtils.jsonStringToStringMap(Strings.isNullOrEmpty(sparkParamsStr) ? "{}" : sparkParamsStr);
+        String sparkConfStr = config.getString(SPARK_CONF);
+        Map<String, String> sparkConf = JSONUtils.jsonStringToStringMap(Strings.isNullOrEmpty(sparkConfStr) ? "{}" : sparkConfStr);
 
         // add run time configs
         addRunTimeSparkConfs(sparkConf, context);

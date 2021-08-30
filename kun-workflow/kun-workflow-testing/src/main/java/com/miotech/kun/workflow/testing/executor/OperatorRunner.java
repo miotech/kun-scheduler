@@ -30,7 +30,7 @@ public class OperatorRunner {
     private static final Logger logger = LoggerFactory.getLogger(OperatorRunner.class);
     private static final String TEST_OPERATOR_RUNNER_LOGGER_NAME = "test-operator-runner";
 
-    private final MockOperatorContextImpl context;
+    private MockOperatorContextImpl context;
     private final KunOperator operator;
     private final Resource resource;
 
@@ -47,6 +47,10 @@ public class OperatorRunner {
 
     public void setConfig(Map<String, String> params) {
         this.context.setParams(params);
+    }
+
+    public void setContext(MockOperatorContextImpl context) {
+        operator.setContext(context);
     }
 
     private Resource prepareResource() {
