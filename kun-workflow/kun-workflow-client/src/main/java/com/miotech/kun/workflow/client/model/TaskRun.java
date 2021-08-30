@@ -34,6 +34,8 @@ public class TaskRun {
 
     private String queueName;
 
+    private Integer retryTimes;
+
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime startAt;
@@ -172,6 +174,14 @@ public class TaskRun {
         this.queueName = queueName;
     }
 
+    public Integer getRetryTimes() {
+        return retryTimes;
+    }
+
+    public void setRetryTimes(Integer retryTimes) {
+        this.retryTimes = retryTimes;
+    }
+
     public static final class Builder {
         private Long id;
         private Task task;
@@ -193,6 +203,7 @@ public class TaskRun {
         private List<Tag> tags;
         private String scheduleType;
         private String queueName;
+        private Integer retryTimes;
 
         private Builder() {
         }
@@ -275,8 +286,14 @@ public class TaskRun {
             this.scheduleType = scheduleType;
             return this;
         }
+
         public Builder withQueueName(String queueName){
             this.queueName = queueName;
+            return this;
+        }
+
+        public Builder withRetryTimes(Integer retryTimes){
+            this.retryTimes = retryTimes;
             return this;
         }
 
@@ -298,6 +315,7 @@ public class TaskRun {
             taskRunVO.createdAt = createdAt;
             taskRunVO.updatedAt = updatedAt;
             taskRunVO.scheduleType = scheduleType;
+            taskRunVO.setRetryTimes(retryTimes);
             return taskRunVO;
         }
     }

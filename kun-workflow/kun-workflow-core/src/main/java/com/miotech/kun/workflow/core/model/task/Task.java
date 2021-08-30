@@ -143,7 +143,9 @@ public class Task {
                 .withDependencies(dependencies)
                 .withTags(tags)
                 .withQueueName(queueName)
-                .withPriority(priority);
+                .withPriority(priority)
+                .withReties(retries)
+                .withRetryDelay(retryDelay);
     }
 
     public boolean shouldSchedule(Tick tick, OffsetDateTime currentTime) {
