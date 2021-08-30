@@ -19,6 +19,11 @@ public class Task {
     private final ScheduleConf scheduleConf;
     private final List<TaskDependency> dependencies;
     private final List<Tag> tags;
+    //task retry times limit
+    private final Integer retries;
+
+    //task retry delay,unit seconds
+    private final Integer retryDelay;
 
     public Task(Builder builder) {
         this.id = builder.id;
@@ -30,6 +35,8 @@ public class Task {
         this.dependencies = builder.dependencies;
         this.tags = builder.tags;
         this.queueName = builder.queueName;
+        this.retries = builder.retries;
+        this.retryDelay = builder.retryDelay;
 
     }
 
@@ -91,6 +98,8 @@ public class Task {
         private List<TaskDependency> dependencies;
         private List<Tag> tags;
         private String queueName;
+        private Integer retries;
+        private Integer retryDelay;
 
         private Builder() {
         }
@@ -137,6 +146,16 @@ public class Task {
 
         public Builder withQueueName(String queueName){
             this.queueName = queueName;
+            return this;
+        }
+
+        public Builder withReties(Integer reties){
+            this.retries = reties;
+            return this;
+        }
+
+        public Builder withRetryDelay(Integer retryDelay){
+            this.retryDelay = retryDelay;
             return this;
         }
 

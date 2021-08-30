@@ -44,8 +44,6 @@ public class TaskRun {
 
     private final Integer priority;
 
-    private final Integer retryMax;
-
     private final Integer retryTimes;
 
     @JsonSerialize(using = ToStringSerializer.class)
@@ -114,10 +112,6 @@ public class TaskRun {
         return queueName;
     }
 
-    public Integer getRetryMax() {
-        return retryMax;
-    }
-
     public Integer getRetryTimes() {
         return retryTimes;
     }
@@ -125,7 +119,7 @@ public class TaskRun {
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status,
                    OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
                    List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, ScheduleType scheduledType, String queueName, Integer priority,
-                   Integer retryMax,Integer retryTimes) {
+                   Integer retryTimes) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
@@ -142,7 +136,6 @@ public class TaskRun {
         this.scheduledType = scheduledType;
         this.queueName = queueName;
         this.priority = priority;
-        this.retryMax = retryMax;
         this.retryTimes = retryTimes;
     }
 
@@ -183,6 +176,7 @@ public class TaskRun {
                 ", inlets=" + inlets +
                 ", outlets=" + outlets +
                 ", priority=" + priority +
+                ", retryTimes=" + retryTimes +
                 ", dependentTaskRunIds=" + dependentTaskRunIds +
                 ", queueName='" + queueName + '\'' +
                 '}';
@@ -204,7 +198,6 @@ public class TaskRun {
         private ScheduleType scheduleType;
         private String queueName;
         private Integer priority;
-        private Integer retryMax;
         private Integer retryTimes;
 
         private TaskRunBuilder() {
@@ -284,18 +277,13 @@ public class TaskRun {
             return this;
         }
 
-        public TaskRunBuilder withRetryMax(Integer retryMax){
-            this.retryMax = retryMax;
-            return this;
-        }
-
         public TaskRunBuilder withRetryTimes(Integer retryTimes){
             this.retryTimes = retryTimes;
             return this;
         }
 
         public TaskRun build() {
-            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets, outlets, dependentTaskRunIds, scheduleType,queueName,priority,retryMax,retryTimes);
+            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets, outlets, dependentTaskRunIds, scheduleType,queueName,priority,retryTimes);
         }
     }
 }
