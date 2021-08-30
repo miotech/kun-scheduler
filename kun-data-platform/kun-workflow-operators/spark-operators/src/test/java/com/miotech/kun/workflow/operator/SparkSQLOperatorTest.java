@@ -1,126 +1,65 @@
 package com.miotech.kun.workflow.operator;
 
+import com.google.common.base.Strings;
 import com.miotech.kun.commons.testing.MockServerTestBase;
-import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
-import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
-import com.miotech.kun.workflow.testing.executor.OperatorRunner;
+import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.testing.executor.MockOperatorContextImpl;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import java.util.Map;
 
-public class SparkSQLOperatorTest extends MockServerTestBase {
-    private static final String DATASTORE_URL = "/test";
-    private OperatorRunner operatorRunner;
+import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
+import static com.miotech.kun.workflow.operator.SparkConfiguration.SPARK_CONF;
+import static org.junit.Assert.assertTrue;
+
+
+public class SparkSQLOperatorTest {
+    SparkSQLOperator operator = new SparkSQLOperator();
+    private MockOperatorContextImpl context;
 
     @Before
-    public void initSparkSqlOperator() {
-        KunOperator operator = new SparkSQLOperator();
-        operatorRunner = new OperatorRunner(operator);
-        operatorRunner.setConfigKey(SparkConfiguration.CONF_LIVY_HOST, getAddress());
-        operatorRunner.setConfigKey(SparkConfiguration.CONF_SPARK_DATASTORE_URL, DATASTORE_URL);
+    public void initSparkSQLOperator() {
+
+        context = new MockOperatorContextImpl(operator);
+        context.setParam(CONF_LIVY_HOST, "http://localhost:8089");
+        context.setParam(CONF_LIVY_PROXY_USER, "hadoop");
+        context.setParam(CONF_LIVY_BATCH_JARS, "s3:bucket/test1.jar");
+        context.setParam(CONF_LIVY_BATCH_FILES, "s3://bucket/main.py,s3://bucket/etl.jar");
+        context.setParam(CONF_LIVY_SHARED_SESSION_NAME, "test-sql");
+        context.setParam(CONF_SPARK_SQL, " select 1 ");
+        context.setParam(CONF_LIVY_BATCH_CONF, "{\"spark.jars\":\"s3:bucket/test2.jar\"}");
+        context.setParam(CONF_LINEAGE_OUTPUT_PATH, "");
+        context.setParam(CONF_LINEAGE_JAR_PATH, "");
+        context.setParam(CONF_S3_ACCESS_KEY, "");
+        context.setParam(CONF_S3_SECRET_KEY, "");
+        context.setParam(SPARK_YARN_HOST, "http://localhost:8088");
+        context.setParam(SPARK_APPLICATION, "s3://bucket/sql.jar");
+
     }
 
     @Test
-    public void run_sparksql_ok() {
-        String sqlScript = "create table a as select * from b where bizdate = {{bizdate}}";
-        operatorRunner.setConfigKey(SparkConfiguration.CONF_SPARK_SQL, sqlScript);
-        operatorRunner.setConfigKey(SparkConfiguration.CONF_VARIABLES,  "{\"bizdate\":\"'2020'\"}");
+    public void testTransformConfig() {
 
-        // 1. create session
-        mockPost("/sessions",  null,"{\"id\":0,\"name\":null,\"appId\":null,\"owner\":null,\"proxyUser\":null,\"state\":\"starting\",\"kind\":\"shared\",\"appInfo\":{\"driverLogUrl\":null,\"sparkUiUrl\":null},\"log\":[\"stdout: \",\"\\nstderr: \",\"\\nYARN Diagnostics: \"]}");
-        // 2. query session state
-        mockGet("/sessions/0/state", "{\"state\":\"starting\"}");
-        mockGet("/sessions/0/state", "{\"state\":\"idle\"}");
+        Config legacyConf = context.getConfig();
+        Config newConf = operator.transformOperatorConfig(context);
 
-        // 3. create session statement
-        String evaluatedSQL = "create table a as select * from b where bizdate = '2020'";
-        String response = String.format(" {\"id\":0,\"code\":\"%s\",\"state\":\"available\",\"progress\":0.0}", evaluatedSQL);
-        mockPost("/sessions/0/statements", String.format("{\"code\":\"%s\",\"kind\":\"sql\"}", evaluatedSQL), response);
+        String sparkParamsStr = newConf.getString(SPARK_SUBMIT_PARMAS);
+        Map<String, String> params = JSONUtils.jsonStringToStringMap(Strings.isNullOrEmpty(sparkParamsStr) ? "{}" : sparkParamsStr);
+        String sparkConfStr = newConf.getString(SPARK_CONF);
+        Map<String, String> sparkConf = JSONUtils.jsonStringToStringMap(Strings.isNullOrEmpty(sparkConfStr) ? "{}" : sparkConfStr);
 
-        // 4. query statement state
-        response = " {\"id\":0,\"code\":\"select 1\",\"state\":\"available\",\"output\":{\"status\":\"ok\",\"execution_count\":0,\"data\":{\"application/json\":{\"schema\":{\"type\":\"struct\",\"fields\":[{\"name\":\"1\",\"type\":\"integer\",\"nullable\":false,\"metadata\":{}}]},\"data\":[[1]]}}},\"progress\":1.0}";
-        mockGet("/sessions/0/statements/0", response);
+        assertTrue(params.get(SPARK_ENTRY_CLASS).equals("com.miotech.kun.sql.Application"));
+        assertTrue(sparkConf.get("spark.jars").equals("s3:bucket/test2.jar,s3:bucket/test1.jar"));
 
-        // 5. delete session
-        mockDelete("/sessions/0", "{\"msg\": \"deleted\"}");
 
-        boolean isSuccess = operatorRunner.run();
-        assertTrue(isSuccess);
-    }
-
-    @Test
-    public void run_sparksql_failed() {
-        String sqlScript = "select xxxx";
-        operatorRunner.setConfigKey(SparkConfiguration.CONF_SPARK_SQL, sqlScript);
-
-        // 1. create session
-        mockPost("/sessions",  "{\"proxyUser\":\"hadoop\",\"queue\":\"default\"}","{\"id\":0,\"name\":null,\"appId\":null,\"owner\":null,\"proxyUser\":null,\"state\":\"starting\",\"kind\":\"shared\",\"appInfo\":{\"driverLogUrl\":null,\"sparkUiUrl\":null},\"log\":[\"stdout: \",\"\\nstderr: \",\"\\nYARN Diagnostics: \"]}");
-        // 2. query session state
-        mockGet("/sessions/0/state", "{\"state\":\"starting\"}");
-        mockGet("/sessions/0/state", "{\"state\":\"idle\"}");
-
-        // 3. create session statement
-        String response = String.format(" {\"id\":0,\"code\":\"%s\",\"state\":\"available\",\"progress\":0.0}", sqlScript);
-        String request = String.format( "{\"code\":\"%s\",\"kind\":\"sql\"}", sqlScript);
-        mockPost("/sessions/0/statements", request, response);
-
-        // 4. query statement state with error traceback
-        response = String.format(" {\"id\":0,\"code\":\"%s\",\"state\":\"available\",\"output\":{\"status\":\"error\",\"execution_count\":0,\"ename\":\"Error\",\"evalue\":\"cannot resolve '`xxxx`' given input columns: []; line 1 pos 7;\\n'Project ['xxxx]\\n+- OneRowRelation\\n\",\"traceback\":[\"org.apache.spark.sql.catalyst.analysis.package$AnalysisErrorAt.failAnalysis(package.scala:42)\",\"org.apache.spark.sql.catalyst.analysis.CheckAnalysis$$anonfun$checkAnalysis$1$$anonfun$apply$3.applyOrElse(CheckAnalysis.scala:110)\",\"org.apache.spark.sql.catalyst.analysis.CheckAnalysis$$anonfun$checkAnalysis$1$$anonfun$apply$3.applyOrElse(CheckAnalysis.scala:107)\",\"org.apache.spark.sql.catalyst.trees.TreeNode$$anonfun$transformUp$1.apply(TreeNode.scala:278)\",\"org.apache.spark.sql.catalyst.trees.TreeNode$$anonfun$transformUp$1.apply(TreeNode.scala:278)\",\"org.apache.spark.sql.catalyst.trees.CurrentOrigin$.withOrigin(TreeNode.scala:70)\",\"org.apache.spark.sql.catalyst.trees.TreeNode.transformUp(TreeNode.scala:277)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan$$anonfun$transformExpressionsUp$1.apply(QueryPlan.scala:93)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan$$anonfun$transformExpressionsUp$1.apply(QueryPlan.scala:93)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan$$anonfun$1.apply(QueryPlan.scala:105)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan$$anonfun$1.apply(QueryPlan.scala:105)\",\"org.apache.spark.sql.catalyst.trees.CurrentOrigin$.withOrigin(TreeNode.scala:70)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan.transformExpression$1(QueryPlan.scala:104)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan.org$apache$spark$sql$catalyst$plans$QueryPlan$$recursiveTransform$1(QueryPlan.scala:116)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan$$anonfun$org$apache$spark$sql$catalyst$plans$QueryPlan$$recursiveTransform$1$2.apply(QueryPlan.scala:121)\",\"scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:234)\",\"scala.collection.TraversableLike$$anonfun$map$1.apply(TraversableLike.scala:234)\",\"scala.collection.immutable.List.foreach(List.scala:392)\",\"scala.collection.TraversableLike$class.map(TraversableLike.scala:234)\",\"scala.collection.immutable.List.map(List.scala:296)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan.org$apache$spark$sql$catalyst$plans$QueryPlan$$recursiveTransform$1(QueryPlan.scala:121)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan$$anonfun$2.apply(QueryPlan.scala:126)\",\"org.apache.spark.sql.catalyst.trees.TreeNode.mapProductIterator(TreeNode.scala:187)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan.mapExpressions(QueryPlan.scala:126)\",\"org.apache.spark.sql.catalyst.plans.QueryPlan.transformExpressionsUp(QueryPlan.scala:93)\",\"org.apache.spark.sql.catalyst.analysis.CheckAnalysis$$anonfun$checkAnalysis$1.apply(CheckAnalysis.scala:107)\",\"org.apache.spark.sql.catalyst.analysis.CheckAnalysis$$anonfun$checkAnalysis$1.apply(CheckAnalysis.scala:85)\",\"org.apache.spark.sql.catalyst.trees.TreeNode.foreachUp(TreeNode.scala:127)\",\"org.apache.spark.sql.catalyst.analysis.CheckAnalysis$class.checkAnalysis(CheckAnalysis.scala:85)\",\"org.apache.spark.sql.catalyst.analysis.Analyzer.checkAnalysis(Analyzer.scala:95)\",\"org.apache.spark.sql.catalyst.analysis.Analyzer$$anonfun$executeAndCheck$1.apply(Analyzer.scala:108)\",\"org.apache.spark.sql.catalyst.analysis.Analyzer$$anonfun$executeAndCheck$1.apply(Analyzer.scala:105)\",\"org.apache.spark.sql.catalyst.plans.logical.AnalysisHelper$.markInAnalyzer(AnalysisHelper.scala:201)\",\"org.apache.spark.sql.catalyst.analysis.Analyzer.executeAndCheck(Analyzer.scala:105)\",\"org.apache.spark.sql.execution.QueryExecution.analyzed$lzycompute(QueryExecution.scala:57)\",\"org.apache.spark.sql.execution.QueryExecution.analyzed(QueryExecution.scala:55)\",\"org.apache.spark.sql.execution.QueryExecution.assertAnalyzed(QueryExecution.scala:47)\",\"org.apache.spark.sql.Dataset$.ofRows(Dataset.scala:79)\",\"org.apache.spark.sql.SparkSession.sql(SparkSession.scala:643)\",\"org.apache.livy.repl.SQLInterpreter.execute(SQLInterpreter.scala:84)\",\"org.apache.livy.repl.Session$$anonfun$7.apply(Session.scala:274)\",\"org.apache.livy.repl.Session$$anonfun$7.apply(Session.scala:272)\",\"scala.Option.map(Option.scala:146)\",\"org.apache.livy.repl.Session.org$apache$livy$repl$Session$$executeCode(Session.scala:272)\",\"org.apache.livy.repl.Session$$anonfun$execute$1.apply$mcV$sp(Session.scala:168)\",\"org.apache.livy.repl.Session$$anonfun$execute$1.apply(Session.scala:163)\",\"org.apache.livy.repl.Session$$anonfun$execute$1.apply(Session.scala:163)\",\"scala.concurrent.impl.Future$PromiseCompletingRunnable.liftedTree1$1(Future.scala:24)\",\"scala.concurrent.impl.Future$PromiseCompletingRunnable.run(Future.scala:24)\",\"java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\",\"java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\",\"java.lang.Thread.run(Thread.java:748)\"]},\"progress\":1.0}", sqlScript);
-        mockGet("/sessions/0/statements/0", response);
-
-        // 5. delete session
-        mockDelete("/sessions/0", "{\"msg\": \"deleted\"}");
-        boolean isSuccess = operatorRunner.run();
-        assertFalse(isSuccess);
-    }
-
-    @Test
-    public void run_sparksession_failed() {
-        String sqlScript = "select 1";
-
-        operatorRunner.setConfigKey(SparkConfiguration.CONF_SPARK_SQL, sqlScript);
-
-        // 1. create session
-        mockPost("/sessions",  "{\"proxyUser\":\"hadoop\",\"queue\":\"default\"}","{\"id\":0,\"name\":null,\"appId\":null,\"owner\":null,\"proxyUser\":null,\"state\":\"starting\",\"kind\":\"shared\",\"appInfo\":{\"driverLogUrl\":null,\"sparkUiUrl\":null},\"log\":[\"stdout: \",\"\\nstderr: \",\"\\nYARN Diagnostics: \"]}");
-        // 2. query session state, response error due to some cause
-        mockGet("/sessions/0/state", "{\"state\":\"starting\"}");
-        mockGet("/sessions/0/state", "{\"state\":\"error\"}");
-        mockDelete("/sessions/0", "{\"msg\": \"deleted\"}");
-
-        try {
-            operatorRunner.run();
-        } catch (Exception e) {
-            assertThat(IllegalStateException.class, is(e.getClass()));
-            assertThat("Session 0 is finished, current state: ERROR", is(e.getMessage()));
-        }
-    }
-
-    @Test
-    public void run_sparksession_abort() {
-        String sqlScript = "select 1";
-
-        operatorRunner.setConfigKey(SparkConfiguration.CONF_SPARK_SQL, sqlScript);
-
-        // 1. create session
-        mockPost("/sessions",  "{\"proxyUser\":\"hadoop\",\"queue\":\"default\"}","{\"id\":0,\"name\":null,\"appId\":null,\"owner\":null,\"proxyUser\":null,\"state\":\"starting\",\"kind\":\"shared\",\"appInfo\":{\"driverLogUrl\":null,\"sparkUiUrl\":null},\"log\":[\"stdout: \",\"\\nstderr: \",\"\\nYARN Diagnostics: \"]}");
-        // 2. query session state, response error due to some cause
-        mockGet("/sessions/0/state", "{\"state\":\"starting\"}");
-        mockGet("/sessions/0/state", "{\"state\":\"starting\"}");
-        mockGet("/sessions/0/state", "{\"state\":\"starting\"}");
-
-        try {
-            operatorRunner.abortAfter(2, (context) -> {
-                mockDelete("/sessions/0", "{\"msg\": \"deleted\"}");
-                mockGet("/sessions/0/state", "{\"msg\": \"Session '0' not found\"}");
-            });
-            operatorRunner.run();
-        } catch (Exception e) {
-            assertThat(IllegalStateException.class, is(e.getClass()));
-            assertThat("Cannot find session: 0 . Maybe killed by user termination.", is(e.getMessage()));
-        }
+        assertTrue(newConf.getString(SPARK_PROXY_USER).equals(legacyConf.getString(CONF_LIVY_PROXY_USER)));
+        assertTrue(newConf.getString(SPARK_APPLICATION).equals(legacyConf.getString(SPARK_APPLICATION)));
+        assertTrue(newConf.getString(SPARK_APPLICATION_ARGS).equals(legacyConf.getString(CONF_SPARK_SQL)));
+        assertTrue(newConf.getString(CONF_LINEAGE_OUTPUT_PATH).equals(legacyConf.getString(CONF_LINEAGE_OUTPUT_PATH)));
+        assertTrue(newConf.getString(CONF_LINEAGE_JAR_PATH).equals(legacyConf.getString(CONF_LINEAGE_JAR_PATH)));
+        assertTrue(newConf.getString(CONF_S3_ACCESS_KEY).equals(legacyConf.getString(CONF_S3_ACCESS_KEY)));
+        assertTrue(newConf.getString(CONF_S3_SECRET_KEY).equals(legacyConf.getString(CONF_S3_SECRET_KEY)));
     }
 }
