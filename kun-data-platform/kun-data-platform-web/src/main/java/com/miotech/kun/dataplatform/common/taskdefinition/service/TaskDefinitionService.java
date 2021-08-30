@@ -366,6 +366,10 @@ public class TaskDefinitionService extends BaseSecurityService {
                 });
     }
 
+    public Optional<TaskTry> findTaskTryByTaskRunId(Long taskRunId) {
+        return taskTryDao.fetchByTaskRunId(taskRunId);
+    }
+
     public TaskTry stop(Long taskTryId) {
         TaskTry taskTry = findTaskTry(taskTryId);
         workflowClient.stopTaskRun(taskTry.getWorkflowTaskRunId());

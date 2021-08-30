@@ -1,10 +1,17 @@
 package com.miotech.kun.dataplatform.notify;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.miotech.kun.common.constant.DataQualityConstant;
 import com.miotech.kun.dataplatform.AppTestBase;
+import com.miotech.kun.dataplatform.common.backfill.dao.BackfillDao;
 import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfigService;
+import com.miotech.kun.dataplatform.common.taskdefinition.dao.TaskTryDao;
+import com.miotech.kun.dataplatform.mocking.MockBackfillFactory;
+import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
+import com.miotech.kun.dataplatform.model.backfill.Backfill;
 import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
 import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskTry;
 import com.miotech.kun.dataplatform.notify.service.EmailService;
 import com.miotech.kun.dataplatform.notify.service.WeComService;
 import com.miotech.kun.dataplatform.notify.userconfig.EmailNotifierUserConfig;
@@ -91,6 +98,12 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
 
     @Autowired
     private TaskNotifyConfigService taskNotifyConfigService;
+
+    @Autowired
+    private BackfillDao backfillDao;
+
+    @Autowired
+    private TaskTryDao taskTryDao;
 
     @MockBean
     private EmailService emailService;
@@ -374,4 +387,77 @@ public class WorkflowEventDispatcherTest extends AppTestBase {
 
         verify(emailService, never()).sendEmailByEventAndUserConfig(any(), any());
     }
+
+    @Test
+    public void workflowEventSubscriber_shouldNotNotifyWhenTaskNameMatched() {
+        // 1. Prepare
+        long attemptId = 1L;
+        long taskId = 1241L;
+
+        // Should not trigger, taskName matched DataQuality Task
+        prepareTaskNotifyConfig(taskId, TaskStatusNotifyTrigger.ON_FAIL);
+        TaskAttemptStatusChangeEvent eventSuccess = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, DataQualityConstant.WORKFLOW_TASK_NAME_PREFIX, taskId);
+        TaskAttemptStatusChangeEvent eventFailed = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, DataQualityConstant.WORKFLOW_TASK_NAME_PREFIX, taskId);
+
+        // 2. Process
+        mockEventPubSub.post(eventSuccess);
+        mockEventPubSub.post(eventFailed);
+
+        // 3. Validate
+        verify(weComService, never()).sendMessage(any());
+        verify(emailService, never()).sendEmailByEventAndUserConfig(any(), any());
+    }
+
+    @Test
+    public void workflowEventSubscriber_shouldNotNotifyForBackfillTask() {
+        // 1. Prepare
+        long attemptId = 1L;
+        long taskId = 1242L;
+
+        // Should not trigger for backfill task
+        prepareTaskNotifyConfig(taskId, TaskStatusNotifyTrigger.ON_FAIL);
+        TaskAttemptStatusChangeEvent eventSuccess = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "my-task-name", taskId);
+        TaskAttemptStatusChangeEvent eventFailed = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
+        prepareBackfillTaskRunRelation(eventSuccess.getTaskRunId());
+
+        // 2. Process
+        mockEventPubSub.post(eventSuccess);
+        mockEventPubSub.post(eventFailed);
+
+        // 3. Validate
+        verify(weComService, never()).sendMessage(any());
+        verify(emailService, never()).sendEmailByEventAndUserConfig(any(), any());
+    }
+
+    @Test
+    public void workflowEventSubscriber_shouldNotNotifyForDryRun() {
+        // 1. Prepare
+        long attemptId = 1L;
+        long taskId = 1243L;
+
+        // Should not trigger for dryRun task
+        prepareTaskNotifyConfig(taskId, TaskStatusNotifyTrigger.ON_FAIL);
+        TaskAttemptStatusChangeEvent eventSuccess = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "my-task-name", taskId);
+        TaskAttemptStatusChangeEvent eventFailed = new TaskAttemptStatusChangeEvent(attemptId, TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "my-task-name", taskId);
+        prepareTaskTry(eventSuccess.getTaskRunId());
+
+        // 2. Process
+        mockEventPubSub.post(eventSuccess);
+        mockEventPubSub.post(eventFailed);
+
+        // 3. Validate
+        verify(weComService, never()).sendMessage(any());
+        verify(emailService, never()).sendEmailByEventAndUserConfig(any(), any());
+    }
+
+    private void prepareBackfillTaskRunRelation(Long taskRunId) {
+        Backfill backfill = MockBackfillFactory.createBackfill(taskRunId);
+        backfillDao.create(backfill);
+    }
+
+    private void prepareTaskTry(Long taskRunId) {
+        TaskTry taskTry = MockTaskDefinitionFactory.createTaskTry(taskRunId);
+        taskTryDao.create(taskTry);
+    }
+
 }
