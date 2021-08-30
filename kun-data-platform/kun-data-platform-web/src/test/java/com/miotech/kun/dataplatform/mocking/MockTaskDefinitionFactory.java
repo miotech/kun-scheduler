@@ -70,12 +70,16 @@ public class MockTaskDefinitionFactory {
     }
 
     public static TaskTry createTaskTry() {
+        return createTaskTry(WorkflowIdGenerator.nextTaskId());
+    }
+
+    public static TaskTry createTaskTry(long taskRunId) {
         long taskTryId = DataPlatformIdGenerator.nextTaskTryId();
 
         return TaskTry.newBuilder()
                 .withId(taskTryId)
                 .withWorkflowTaskId(WorkflowIdGenerator.nextTaskId())
-                .withWorkflowTaskRunId(WorkflowIdGenerator.nextTaskRunId())
+                .withWorkflowTaskRunId(taskRunId)
                 .withDefinitionId(DataPlatformIdGenerator.nextDefinitionId())
                 .withTaskConfig(new JSONObject())
                 .withCreator(1L)
