@@ -49,6 +49,8 @@ public class MockTaskDefinitionFactory {
                                     .withOutputDatasets(outputDatasets)
                                     .withType(ScheduleType.SCHEDULED.toString())
                                     .withTimeZone(ZoneOffset.UTC.getId())
+                                    .withRetries(1)
+                                    .withRetryDelay(30)
                                     .build())
                     .withNotifyConfig(TaskDefNotifyConfig.DEFAULT_TASK_NOTIFY_CONFIG)
                     .build();
