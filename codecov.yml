@@ -1,2 +1,8 @@
 codecov:
   allow_coverage_offsets: True
+
+coverage:
+  status:
+    patch:
+      default:
+        threshold: 70%
