@@ -15,11 +15,16 @@ import com.miotech.kun.workflow.core.publish.NopEventPublisher;
 import com.miotech.kun.workflow.core.publish.RedisEventPublisher;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.ExecutorBackEnd;
-import com.miotech.kun.workflow.executor.WorkerFactory;
+import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
-import com.miotech.kun.workflow.executor.kubernetes.*;
+import com.miotech.kun.workflow.executor.kubernetes.KubernetesExecutor;
+import com.miotech.kun.workflow.executor.kubernetes.KubernetesResourceManager;
+import com.miotech.kun.workflow.executor.kubernetes.PodEventMonitor;
+import com.miotech.kun.workflow.executor.kubernetes.PodLifeCycleManager;
 import com.miotech.kun.workflow.executor.local.LocalExecutor;
-import com.miotech.kun.workflow.executor.local.LocalWorkerFactory;
+import com.miotech.kun.workflow.executor.local.LocalProcessLifeCycleManager;
+import com.miotech.kun.workflow.executor.local.LocalProcessMonitor;
+import com.miotech.kun.workflow.executor.local.LocalQueueManage;
 import com.miotech.kun.workflow.executor.rpc.KubernetesExecutorFacadeImpl;
 import com.miotech.kun.workflow.executor.rpc.LocalExecutorFacadeImpl;
 import com.miotech.kun.workflow.executor.rpc.WorkerClusterConsumer;
@@ -50,9 +55,11 @@ public class KunWorkflowServerModule extends AppModule {
         String env = props.getString("executor.env.name","local");
         if (env.equals("local")) {
             bind(Executor.class).to(LocalExecutor.class);
-            bind(ExecutorBackEnd.class).to(LocalExecutor.class);
-            bind(WorkerFactory.class).to(LocalWorkerFactory.class);
+            bind(ExecutorBackEnd.class).to(LocalProcessMonitor.class);
             bind(WorkflowExecutorFacade.class).to(LocalExecutorFacadeImpl.class);
+            bind(WorkerLifeCycleManager.class).to(LocalProcessLifeCycleManager.class);
+            bind(AbstractQueueManager.class).to(LocalQueueManage.class);
+            bind(WorkerMonitor.class).to(LocalProcessMonitor.class);
         } else if (env.equals("kubernetes")) {
             String masterUrl = props.get("executor.env.url");
             String token = props.getString("executor.env.oauthToken");

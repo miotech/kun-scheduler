@@ -30,6 +30,10 @@ public class TaskAttemptQueue {
         return queue.size();
     }
 
+    public void reset(){
+        queue.clear();
+    }
+
     public TaskAttemptQueue(ResourceQueue resourceQueue) {
         queue = new PriorityQueue<>(new TaskPriorityComparator());
         this.name = resourceQueue.getQueueName();

@@ -36,9 +36,6 @@ jobs:
         run: |
           ./gradlew check -p kun-workflow
           ./gradlew check -p kun-metadata
-      - name: Upload coverage report to codecov
-        run: |
-          CODECOV_TOKEN="c9895fa5-02da-4cf0-9f1b-fb66e47ea1c6" bash <(curl -s https://codecov.io/bash)
       # Set up JDK 11 for SonarCloud.
       - name: Set up JDK 1.11
         uses: actions/setup-java@v1

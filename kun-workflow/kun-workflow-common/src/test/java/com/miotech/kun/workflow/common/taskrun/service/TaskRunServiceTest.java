@@ -337,7 +337,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         TaskRun taskRun1 = TaskRun.newBuilder()
                 .withId(1L)
                 .withTask(task1)
-                .withStatus(TaskRunStatus.INITIALIZING)
+                .withStatus(TaskRunStatus.RUNNING)
                 .withConfig(Config.EMPTY)
                 .withScheduleType(task1.getScheduleConf().getType())
                 .withDependentTaskRunIds(Collections.emptyList())

@@ -7,8 +7,8 @@ import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
+import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.kubernetes.PodStatusSnapShot;
-import com.miotech.kun.workflow.executor.kubernetes.WorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.local.MiscService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.PodSpec;
@@ -33,11 +33,10 @@ public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
     }
 
     @Override
-    public WorkerSnapshot startWorker(TaskAttempt taskAttempt) {
+    public void startWorker(TaskAttempt taskAttempt) {
         WorkerInstance instance = WorkerInstance.newBuilder()
                 .withTaskAttemptId(taskAttempt.getId()).build();
         queueManager.addWorker(taskAttempt);
-        return new PodStatusSnapShot(instance, new PodStatus(), new PodSpec(), new ObjectMeta());
     }
 
     @Override

@@ -23,7 +23,7 @@ public abstract class AbstractQueueManager {
 
     private Logger logger = LoggerFactory.getLogger(AbstractQueueManager.class);
 
-    private Map<String, TaskAttemptQueue> queueMap;
+    protected Map<String, TaskAttemptQueue> queueMap;
     private Lock lock = new ReentrantLock();
     protected Props props;
     private MiscService miscService;
@@ -137,6 +137,23 @@ public abstract class AbstractQueueManager {
 
     public Integer getQueuedNum(String queueName) {
         return queueMap.get(queueName).getSize();
+    }
+
+    public ResourceQueue getResourceQueue(String queueName){
+        return queueMap.get(queueName).getResourceQueue();
+    }
+
+    public Integer getCapacity(String queueName){
+        TaskAttemptQueue taskAttemptQueue = queueMap.get(queueName);
+        return getCapacity(taskAttemptQueue);
+    }
+
+    //just for testing
+    public void reset(){
+        for (Map.Entry<String, TaskAttemptQueue> entry : queueMap.entrySet()) {
+            TaskAttemptQueue queue = entry.getValue();
+            queue.reset();
+        }
     }
 
     public abstract Integer getCapacity(TaskAttemptQueue taskAttemptQueue);
