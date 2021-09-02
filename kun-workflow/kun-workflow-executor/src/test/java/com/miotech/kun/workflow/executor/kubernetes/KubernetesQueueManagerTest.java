@@ -13,10 +13,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.publish.EventPublisher;
 import com.miotech.kun.workflow.core.publish.NopEventPublisher;
-import com.miotech.kun.workflow.executor.AbstractQueueManager;
-import com.miotech.kun.workflow.executor.CommonTestBase;
-import com.miotech.kun.workflow.executor.TaskAttemptQueue;
-import com.miotech.kun.workflow.executor.WorkerMonitor;
+import com.miotech.kun.workflow.executor.*;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockQueueManager;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockWorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockWorkerMonitor;
@@ -269,7 +266,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
                 }
                 return 0;
             }
-        }).when(spyManager).getCapacity(ArgumentMatchers.any());
+        }).when(spyManager).getCapacity(ArgumentMatchers.any(TaskAttemptQueue.class));
     }
 
     private KubernetesResourceManager prepareQueueManage() {

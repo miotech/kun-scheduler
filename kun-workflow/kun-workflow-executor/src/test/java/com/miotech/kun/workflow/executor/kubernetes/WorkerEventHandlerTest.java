@@ -5,7 +5,6 @@ import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstanceKind;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
@@ -24,10 +23,7 @@ import org.junit.Test;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
-import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
@@ -86,10 +82,8 @@ public class WorkerEventHandlerTest extends CommonTestBase {
             }
         };
         podEventMonitor.register(instance.getTaskAttemptId(), testHandler);
-        awaitUntilAttemptInit(taskAttempt.getId());
         TaskAttemptProps taskAttemptProps = taskRunDao.fetchLatestTaskAttempt(taskAttempt.getTaskRun().getId());
         assertThat(taskAttemptProps.getId(),is(taskAttempt.getId()));
-        assertThat(taskAttemptProps.getStatus(),is(TaskRunStatus.INITIALIZING));
     }
 
     private TaskAttempt prepareTaskAttempt() {
@@ -98,13 +92,6 @@ public class WorkerEventHandlerTest extends CommonTestBase {
         taskRunDao.createTaskRun(taskAttempt.getTaskRun());
         taskRunDao.createAttempt(taskAttempt);
         return taskAttempt;
-    }
-
-    private void awaitUntilAttemptInit(long attemptId) {
-        await().atMost(20, TimeUnit.SECONDS).until(() -> {
-            Optional<TaskRunStatus> s = taskRunDao.fetchTaskAttemptStatus(attemptId);
-            return s.isPresent() && (s.get().equals(TaskRunStatus.INITIALIZING));
-        });
     }
 
 }

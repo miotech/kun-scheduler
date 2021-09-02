@@ -26,11 +26,10 @@ dependencies {
     implementation 'org.apache.dubbo:dubbo'
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "com.h2database:h2"
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-workflow:kun-workflow-testing")
-    testRuntimeOnly "com.h2database:h2"
-    testImplementation "net.bytebuddy:byte-buddy"
 }
 
 shadowJar {

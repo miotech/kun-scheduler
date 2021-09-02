@@ -26,7 +26,7 @@ public class TestOperator7 extends KunOperator {
         while (true) {
             OffsetDateTime now = DateTimeUtils.now();
             Duration duration = Duration.between(start, now);
-            if (aborted || duration.getSeconds() > 10L) {
+            if (aborted && duration.getSeconds() > 10L) {
                 logger.info("TestOperator7 is aborting...");
                 Uninterruptibles.sleepUninterruptibly(5000, TimeUnit.MILLISECONDS);
                 break;
