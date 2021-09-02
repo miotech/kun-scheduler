@@ -14,6 +14,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.h2.tools.Server;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -35,6 +36,9 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     protected String flywayLocation;
 
+    @ClassRule
+    public static PostgreSQLContainer postgres = startPostgres();
+
     protected boolean usePostgres() {
         return false;
     }
@@ -42,6 +46,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     protected void setFlayWayLocation(){
         flywayLocation = "kun-infra/";
     }
+
 
     @Override
     protected void configuration() {
@@ -60,6 +65,11 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         }
         DatabaseSetup setup = new DatabaseSetup(dataSource, props, flywayLocation);
         setup.start();
+    }
+
+    public static PostgreSQLContainer startPostgres() {
+        PostgreSQLContainer postgres = new PostgreSQLContainer<>(POSTGRES_IMAGE);
+        return postgres;
     }
 
     @After
@@ -98,8 +108,9 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
     }
 
     public static class TestDatabaseModule extends AbstractModule {
+
+        // start H2 web console
         static {
-            // start H2 web console
             try {
                 Server.createWebServer("-webPort", "8082", "-webDaemon").start();
             } catch (SQLException e) {
@@ -117,7 +128,6 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         @Singleton
         public DataSource createDataSource() {
             if (usePostgres) {
-                PostgreSQLContainer postgres = startPostgres();
                 HikariConfig config = new HikariConfig();
                 config.setUsername(postgres.getUsername());
                 config.setPassword(postgres.getPassword());
@@ -131,12 +141,6 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
             config.setUsername("sa");
             config.setDriverClassName("org.h2.Driver");
             return new HikariDataSource(config);
-        }
-
-        private PostgreSQLContainer startPostgres() {
-            PostgreSQLContainer postgres = new PostgreSQLContainer<>(POSTGRES_IMAGE);
-            postgres.start();
-            return postgres;
         }
     }
 }

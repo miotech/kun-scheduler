@@ -13,8 +13,12 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.rpc.RpcModule;
 import com.miotech.kun.commons.rpc.RpcUtils;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.workflow.common.lineage.service.LineageService;
+import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.execution.*;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.worker.DatabaseConfig;
 import com.miotech.kun.workflow.facade.WorkflowExecutorFacade;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.worker.JsonCodec;
@@ -28,7 +32,6 @@ import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -37,15 +40,18 @@ public class OperatorLauncher {
     private static final Logger logger = LoggerFactory.getLogger(OperatorLauncher.class);
     private volatile boolean cancelled = false;
     private volatile KunOperator operator;
-    private volatile boolean abort = false;
-    private volatile TaskRunStatus taskRunStatus = TaskRunStatus.INITIALIZING;
+    private volatile TaskRunStatus taskRunStatus = TaskRunStatus.RUNNING;
     private final int RPC_RETRY_TIME = 3;
     private final Long HEARTBEAT_INTERVAL = 5L;
     private WorkflowExecutorFacade executorFacade;
-    private InitService initService;
     private Long workerId;
-    private CountDownLatch firstHeartBeat = new CountDownLatch(1);
     private static Props props;
+
+    @Inject
+    private TaskRunDao taskRunDao;
+    @Inject
+    private LineageService lineageService;
+
 
     private ArrayBlockingQueue<TaskAttemptMsg> statusUpdateQueue = new ArrayBlockingQueue<>(5);
 
@@ -64,35 +70,59 @@ public class OperatorLauncher {
         ExecCommand command = readCommand(in);
         // 初始化logger
         initLogger(command.getLogPath());
-        HeartBeatMessage heartBeatMessage = readConfig(config);
-        props = new Props();
+        DatabaseConfig databaseConfig = readConfig(config);
+        props = initProps(databaseConfig);
         props.put("rpc.registry", command.getRegisterUrl());
         Integer workerPort = RpcUtils.getRandomPort();
         props.put("rpc.port", workerPort);
         injector = Guice.createInjector(
                 new RpcModule(props),
-                new WorkerModule(props)
+                new LocalWorkerModule(props)
         );
+        Thread mainThread = Thread.currentThread();
         OperatorLauncher operatorLauncher = injector.getInstance(OperatorLauncher.class);
-        operatorLauncher.start(command, heartBeatMessage, out);
+        Thread exitHook = new Thread(() -> operatorLauncher.cancel(mainThread));
+        Runtime.getRuntime().addShutdownHook(exitHook);
+        operatorLauncher.start(command, out);
     }
 
-    private void start(ExecCommand command, HeartBeatMessage heartBeatMessage, String out) {
-        if (heartBeatMessage.getWorkerId() == null) {
-            heartBeatMessage.setWorkerId(getPid());
+    private static Props initProps(DatabaseConfig databaseConfig) {
+        Props props = new Props();
+        if (databaseConfig.getDatasourceUrl() != null) {
+            props.put("datasource.jdbcUrl", databaseConfig.getDatasourceUrl());
         }
-        workerId = heartBeatMessage.getWorkerId();
-        initService = injector.getInstance(InitService.class);
-        initService.publishRpcServices();
-        heartBeatMessage.setPort(props.getInt("rpc.port"));
-        heartBeatMessage.setTaskRunId(command.getTaskRunId());
-        heartBeatMessage.setQueueName(command.getQueueName());
-        Thread heartbeatTask = new Thread(new HeartBeatTask(heartBeatMessage));
-        heartbeatTask.start();
+        if (databaseConfig.getDatasourceUser() != null) {
+            props.put("datasource.username", databaseConfig.getDatasourceUser());
+        }
+        if (databaseConfig.getDatasourcePassword() != null) {
+            props.put("datasource.password", databaseConfig.getDatasourcePassword());
+        }
+        if (databaseConfig.getDatasourceDriver() != null) {
+            props.put("datasource.driverClassName", databaseConfig.getDatasourceDriver());
+        }
+        if (databaseConfig.getDatasourceMaxPoolSize() != null) {
+            props.put("datasource.maxPoolSize", databaseConfig.getDatasourceMaxPoolSize());
+        }
+        if (databaseConfig.getDatasourceMinIdle() != null) {
+            props.put("datasource.minimumIdle", databaseConfig.getDatasourceMinIdle());
+        }
+        if (databaseConfig.getNeo4juri() != null) {
+            props.put("neo4j.uri", databaseConfig.getNeo4juri());
+        }
+        if (databaseConfig.getNeo4jUser() != null) {
+            props.put("neo4j.username", databaseConfig.getNeo4jUser());
+        }
+        if (databaseConfig.getNeo4jPassword() != null) {
+            props.put("neo4j.password", databaseConfig.getNeo4jPassword());
+        }
+        return props;
+    }
+
+    private void start(ExecCommand command, String out) {
+        workerId = getPid();
         Thread statusUpdateTask = new Thread(new StatusUpdateTask());
         statusUpdateTask.start();
         TaskAttemptMsg msg = launchOperator(command);
-        int exitCode = msg.getTaskRunStatus().isSuccess() ? 0 : 1;
         try {
             logger.debug("wait statusUpdate message send to executor");
             statusUpdateTask.join();
@@ -100,20 +130,13 @@ public class OperatorLauncher {
             logger.debug("wait statusUpdate message send to executor failed", e);
         }
         writeResult(out, msg);
-        System.exit(exitCode);
     }
 
 
-    //rpc
-    public boolean killTask(Boolean abortByUser) {
-        if (abortByUser) {
-            abort = true;
+    private synchronized void cancel(Thread mainThread) {
+        if (taskRunStatus.isFinished()) {
+            return;
         }
-        cancel();
-        return cancelled;
-    }
-
-    private synchronized void cancel() {
         logger.info("Trying to cancel current operator.");
         if (cancelled) {
             logger.warn("Operator is already cancelled.");
@@ -123,14 +146,13 @@ public class OperatorLauncher {
         cancelled = true;
 
         if (operator != null) {
-            new Thread(() -> {
-                try {
-                    logger.info("operator going to abort.");
-                    operator.abort();
-                } catch (Exception e) {
-                    logger.error("Unexpected exception occurred during aborting operator.", e);
-                }
-            }, "abort-thread").start();
+            try {
+                logger.info("run operator abort...");
+                operator.abort();
+                mainThread.join();
+            } catch (Exception e) {
+                logger.error("Unexpected exception occurred during aborting operator.", e);
+            }
         }
     }
 
@@ -142,6 +164,10 @@ public class OperatorLauncher {
         msg.setTaskAttemptId(command.getTaskAttemptId());
         msg.setStartAt(DateTimeUtils.now());
         msg.setQueueName(command.getQueueName());
+        TaskAttemptMsg runningMsg = msg.copy();
+        taskRunStatus = TaskRunStatus.RUNNING;
+        runningMsg.setTaskRunStatus(TaskRunStatus.RUNNING);
+        statusUpdate(runningMsg);
         Thread thread = Thread.currentThread();
         ClassLoader cl = thread.getContextClassLoader();
         try {
@@ -167,11 +193,6 @@ public class OperatorLauncher {
                 logger.info("Operator is cancelled, abort execution.");
                 return cancelledMsg;
             }
-            TaskAttemptMsg runningMsg = msg.copy();
-
-            taskRunStatus = TaskRunStatus.RUNNING;
-            runningMsg.setTaskRunStatus(TaskRunStatus.RUNNING);
-            statusUpdate(runningMsg);
 
             // 运行
             logger.info("Operator start running.");
@@ -192,6 +213,11 @@ public class OperatorLauncher {
                     OperatorReport operatorReport = new OperatorReport();
                     operatorReport.copyFromReport(operator.getReport().get());
                     successMessage.setOperatorReport(operatorReport);
+                    try {
+                        processReport(command.getTaskRunId(), operatorReport);
+                    } catch (Throwable e) {
+                        logger.error("process operator report failed", e);
+                    }
                 } else {
                     successMessage.setOperatorReport(OperatorReport.BLANK);
                 }
@@ -225,9 +251,9 @@ public class OperatorLauncher {
         }
     }
 
-    private static HeartBeatMessage readConfig(String configFile) {
+    private static DatabaseConfig readConfig(String configFile) {
         try {
-            return JsonCodec.MAPPER.readValue(new File(configFile), HeartBeatMessage.class);
+            return JsonCodec.MAPPER.readValue(new File(configFile), DatabaseConfig.class);
         } catch (IOException e) {
             logger.error("Failed to read config. path={}", configFile, e);
             throw new IllegalStateException(e);
@@ -296,9 +322,6 @@ public class OperatorLauncher {
     }
 
     private TaskAttemptMsg setCancelledMsg(TaskAttemptMsg msg) {
-        if (!abort) {
-            return setFailedMsg(msg);
-        }
         taskRunStatus = TaskRunStatus.ABORTED;
         TaskAttemptMsg cancelledMsg = msg.copy();
         cancelledMsg.setTaskRunStatus(TaskRunStatus.ABORTED);
@@ -335,16 +358,20 @@ public class OperatorLauncher {
         return Long.valueOf(pid);
     }
 
+    private void processReport(Long taskRunId, OperatorReport report) {
+        logger.debug("Update task's inlets/outlets. taskRunId={}, inlets={}, outlets={}",
+                taskRunId, report.getInlets(), report.getOutlets());
+        taskRunDao.updateTaskRunInletsOutlets(taskRunId,
+                report.getInlets(), report.getOutlets());
+        TaskRun taskRun = taskRunDao.fetchTaskRunById(taskRunId).get();
+        lineageService.updateTaskLineage(taskRun.getTask(), report.getInlets(), report.getOutlets());
+
+    }
+
     class StatusUpdateTask implements Runnable {
 
         @Override
         public void run() {
-            try {
-                logger.debug("wait first heart beat send");
-                firstHeartBeat.await();
-            } catch (InterruptedException e) {
-                logger.error("wait first heart beat failed", e);
-            }
             while (!cancelled) {
                 try {
                     TaskAttemptMsg msg = statusUpdateQueue.take();
@@ -356,7 +383,7 @@ public class OperatorLauncher {
                                 Uninterruptibles.sleepUninterruptibly(HEARTBEAT_INTERVAL, TimeUnit.SECONDS);
                             }
                             updateSuccess = executorFacade.statusUpdate(msg);
-                            logger.debug("send update task status message = {}, to executor result = {}", msg, updateSuccess);
+                            logger.info("send update task status message = {}, to executor result = {}", msg, updateSuccess);
                             if (!updateSuccess) {
                                 sendTime++;
                             }
@@ -373,35 +400,6 @@ public class OperatorLauncher {
                 }
             }
 
-        }
-    }
-
-    class HeartBeatTask implements Runnable {
-
-        private HeartBeatMessage heartBeatMessage;
-
-        HeartBeatTask(HeartBeatMessage heartBeatMessage) {
-            this.heartBeatMessage = heartBeatMessage;
-        }
-
-        @Override
-        public void run() {
-            Boolean first = true;
-            while (!taskRunStatus.isFinished()) {
-                try {
-                    heartBeatMessage.setTaskRunStatus(taskRunStatus);
-                    heartBeatMessage.setTimeoutTimes(0);
-                    boolean result = executorFacade.heartBeat(heartBeatMessage);
-                    logger.debug("heart beat to executor result = {}", result);
-                    if (first) {
-                        first = false;
-                        firstHeartBeat.countDown();
-                    }
-                } catch (Exception e) {
-                    logger.error("heart beat to executor failed", e);
-                }
-                Uninterruptibles.sleepUninterruptibly(HEARTBEAT_INTERVAL, TimeUnit.SECONDS);
-            }
         }
     }
 }
