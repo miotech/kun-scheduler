@@ -12,6 +12,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
+import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.executor.local.MiscService;
 import com.miotech.kun.workflow.worker.JsonCodec;
@@ -47,12 +48,11 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     }
 
     @Override
-    public WorkerSnapshot startWorker(TaskAttempt taskAttempt) {
+    public void startWorker(TaskAttempt taskAttempt) {
         logger.info("going to start pod taskAttemptId = {}", taskAttempt.getId());
-        Pod pod = kubernetesClient.pods()
+        kubernetesClient.pods()
                 .inNamespace(props.getString("executor.env.namespace"))
                 .create(buildPod(taskAttempt));
-        return PodStatusSnapShot.fromPod(pod);
     }
 
     @Override

@@ -14,10 +14,10 @@ import java.time.OffsetDateTime;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An operator simulating a task with 5 seconds execution duration
+ * An operator simulating a task running util someone abort
  */
-public class TestOperator4 extends KunOperator {
-    private static final Logger logger = LoggerFactory.getLogger(TestOperator4.class);
+public class TestOperator8 extends KunOperator {
+    private static final Logger logger = LoggerFactory.getLogger(TestOperator8.class);
 
     private volatile boolean aborted = false;
 
@@ -28,11 +28,11 @@ public class TestOperator4 extends KunOperator {
         while (true) {
             OffsetDateTime now = DateTimeUtils.now();
             Duration duration = Duration.between(start, now);
-            if (aborted || duration.getSeconds() > 30L) {
-                logger.info("TestOperator4 is aborting...");
+            if (aborted || duration.getSeconds() > 120L) {
+                logger.info("TestOperator8 is aborting...");
                 break;
             } else {
-                logger.info("TestOperator4 is not aborted yet");
+                logger.info("TestOperator8 is running");
                 Uninterruptibles.sleepUninterruptibly(500, TimeUnit.MILLISECONDS);
             }
         }
