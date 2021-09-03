@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Col, Divider, Row, Form, Radio, Button, Select } from 'antd';
+import React, { useEffect, useState, useCallback } from 'react';
+import { Col, Divider, Row, Form, Radio, Button, Select, InputNumber } from 'antd';
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 
@@ -17,6 +17,7 @@ import LogUtils from '@/utils/logUtils';
 import { getTaskDefinitionsFromFlattenedProps } from '@/utils/transformDataset';
 import { OneshotDatePicker } from '@/pages/data-development/task-definition-config/components/OneshotDatePicker';
 import { parse } from '@joshoy/quartz-cron-parser';
+import RetryCheckBox from '@/components/RetryCheckBox/RetryCheckBox';
 
 import timeZoneMapList from './timezoneMap';
 
@@ -77,6 +78,16 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
       ? 'searchTaskDef'
       : 'inputDataset',
   );
+
+  const [isCheckedRetry, setIsCheckedRetry] = useState(
+    !!form.getFieldValue(['taskPayload', 'scheduleConfig', 'retries']),
+  );
+  useEffect(() => {
+    setIsCheckedRetry(!!form.getFieldValue(['taskPayload', 'scheduleConfig', 'retries']));
+  }, [form]);
+  const handleChangeRetry = useCallback(v => {
+    setIsCheckedRetry(!!v);
+  }, []);
 
   const renderOutputDatasetFields = (fields: FormListFieldData[], { add, remove }: FormListOperation) => {
     logger.debug('fields = %o', fields);
@@ -375,6 +386,56 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
             <Form.List name={['taskPayload', 'scheduleConfig', 'outputDatasets']}>
               {renderOutputDatasetFields}
             </Form.List>
+          </Col>
+        </Row>
+      </section>
+
+      <Divider />
+      {/* retry config */}
+      <section data-tid="retry-config">
+        <Row>
+          <Col flex="0 0 120px">
+            <span className={styles.sectionLabel}>
+              {/* Output Config */}
+              {t('dataDevelopment.definition.retryConfig')}
+            </span>
+          </Col>
+          <Col flex="1 1">
+            <Row>
+              <Form.Item
+                shouldUpdate
+                label={t('dataDevelopment.definition.scheduleConfig.retryAfterFailed')}
+                name={['taskPayload', 'scheduleConfig', 'retries']}
+                valuePropName="value"
+                initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.retries}
+              >
+                <RetryCheckBox onChange={handleChangeRetry} />
+              </Form.Item>
+            </Row>
+            <Row>
+              <Col flex="1 1">
+                <Form.Item
+                  shouldUpdate
+                  label={t('dataDevelopment.definition.scheduleConfig.retireTimes')}
+                  name={['taskPayload', 'scheduleConfig', 'retries']}
+                  initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.retries}
+                >
+                  <InputNumber width={150} min={1} disabled={!isCheckedRetry} />
+                </Form.Item>
+              </Col>
+            </Row>
+            <Row>
+              <Col flex="1 1">
+                <Form.Item
+                  shouldUpdate
+                  label={t('dataDevelopment.definition.scheduleConfig.retryDelay')}
+                  name={['taskPayload', 'scheduleConfig', 'retryDelay']}
+                  initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.retryDelay}
+                >
+                  <InputNumber width={150} min={0} disabled={!isCheckedRetry} />
+                </Form.Item>
+              </Col>
+            </Row>
           </Col>
         </Row>
       </section>

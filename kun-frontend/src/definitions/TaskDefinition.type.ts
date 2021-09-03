@@ -61,6 +61,8 @@ export interface ScheduleConfig {
   type: string;
   inputDatasets: TaskDatasetProperty[];
   outputDatasets: TaskDatasetProperty[];
+  retries: number;
+  retryDelay: number;
 }
 
 export interface TaskTryVO {
