@@ -6,8 +6,10 @@ import com.miotech.kun.dataplatform.model.taskdefinition.TaskTry;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.Optional;
+
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 public class TaskTryDaoTest extends AppTestBase {
 
@@ -22,4 +24,24 @@ public class TaskTryDaoTest extends AppTestBase {
         TaskTry fetched = taskTryDao.fetchById(taskTry.getId()).get();
         assertThat(fetched, sameBeanAs(taskTry));
     }
+
+    @Test
+    public void testFetch_byTaskRunId_ok() {
+        TaskTry taskTry = MockTaskDefinitionFactory.createTaskTry();
+        taskTryDao.create(taskTry);
+
+        Optional<TaskTry> taskTryOpt = taskTryDao.fetchByTaskRunId(taskTry.getWorkflowTaskRunId());
+        assertTrue(taskTryOpt.isPresent());
+        TaskTry fetched = taskTryOpt.get();
+        assertThat(fetched, sameBeanAs(taskTry));
+    }
+
+    @Test
+    public void testFetch_byTaskRunId_notFound() {
+        TaskTry taskTry = MockTaskDefinitionFactory.createTaskTry();
+
+        Optional<TaskTry> taskTryOpt = taskTryDao.fetchByTaskRunId(taskTry.getWorkflowTaskRunId());
+        assertFalse(taskTryOpt.isPresent());
+    }
+
 }

@@ -1,10 +1,14 @@
 package com.miotech.kun.dataplatform.notify;
 
+import com.miotech.kun.common.constant.DataQualityConstant;
+import com.miotech.kun.dataplatform.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfigService;
+import com.miotech.kun.dataplatform.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.constant.NotifierTypeNameConstants;
 import com.miotech.kun.dataplatform.model.notify.NotifyConfig;
 import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
 import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
+import com.miotech.kun.dataplatform.model.taskdefinition.TaskTry;
 import com.miotech.kun.dataplatform.notify.notifier.EmailNotifier;
 import com.miotech.kun.dataplatform.notify.notifier.WeComNotifier;
 import com.miotech.kun.dataplatform.notify.service.EmailService;
@@ -39,6 +43,12 @@ public class WorkflowEventDispatcher {
     @Autowired
     private TaskNotifyConfigService taskNotifyConfigService;
 
+    @Autowired
+    private BackfillService backfillService;
+
+    @Autowired
+    private TaskDefinitionService taskDefinitionService;
+
     @PostConstruct
     private void onDispatcherConstructed() {
         doSubscribe();
@@ -56,6 +66,12 @@ public class WorkflowEventDispatcher {
         // 1. Read task id from event payload
         Long workflowTaskId = statusChangeEvent.getTaskId();
         log.debug("Receiving `TaskAttemptStatusChangeEvent` with workflow task id = {}", workflowTaskId);
+
+        // Filter out `backfill`、`dry-run`、`data-quailty` task
+        if (filter(statusChangeEvent)) {
+            return;
+        }
+
         // 2. Is there any task notify config relates to this task id?
         Optional<TaskNotifyConfig> taskNotifyConfigOptional = taskNotifyConfigService.fetchTaskNotifyConfigByWorkflowTaskId(workflowTaskId);
 
@@ -90,6 +106,24 @@ public class WorkflowEventDispatcher {
             // 6. Notify by each notifier
             notifiers.forEach(notifier -> notifier.notify(statusChangeEvent));
         }
+    }
+
+    private boolean filter(TaskAttemptStatusChangeEvent statusChangeEvent) {
+        if (statusChangeEvent.getTaskName().startsWith(DataQualityConstant.WORKFLOW_TASK_NAME_PREFIX)) {
+            return true;
+        }
+
+        Optional<Long> backfillIdOpt = backfillService.findDerivedFromBackfill(statusChangeEvent.getTaskRunId());
+        if (backfillIdOpt.isPresent()) {
+            return true;
+        }
+
+        Optional<TaskTry> taskTryOpt = taskDefinitionService.findTaskTryByTaskRunId(statusChangeEvent.getTaskRunId());
+        if (taskTryOpt.isPresent()) {
+            return true;
+        }
+
+        return false;
     }
 
     private List<MessageNotifier> constructNotifiersFromNotifyConfig(NotifyConfig notifyConfig) {
