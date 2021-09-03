@@ -36,7 +36,8 @@ public class Props {
     public Props(final Map<String, String>... props) {
         this();
         for (int i = props.length - 1; i >= 0; i--) {
-            propertiesList.add(props[i]);
+            Map<String,String> map = new HashMap<String,String>(props[i]);
+            propertiesList.add(map);
         }
     }
 
@@ -75,7 +76,8 @@ public class Props {
             propertiesMap.put(key, value.toString());
             propertiesList.add(propertiesMap);
         } else {
-            propertiesList.get(0).put(key, value.toString());
+            Map<String, String> propertiesMap = propertiesList.get(0);
+            propertiesMap.put(key, value.toString());
         }
     }
 

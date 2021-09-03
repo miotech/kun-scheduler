@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.executor.kubernetes;
+package com.miotech.kun.workflow.executor;
 
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.miotech.kun.commons.utils.Props;
@@ -7,10 +7,6 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
-import com.miotech.kun.workflow.executor.AbstractQueueManager;
-import com.miotech.kun.workflow.executor.LifeCycleManager;
-import com.miotech.kun.workflow.executor.WorkerEventHandler;
-import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.executor.local.MiscService;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
@@ -20,17 +16,19 @@ import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 
 public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     private final Logger logger = LoggerFactory.getLogger(WorkerLifeCycleManager.class);
-    private final WorkerMonitor workerMonitor;
+    protected final WorkerMonitor workerMonitor;
     protected final Props props;
     private final MiscService miscService;
-    private final TaskRunDao taskRunDao;
-    private final AbstractQueueManager queueManager;
+    protected final TaskRunDao taskRunDao;
+    protected final AbstractQueueManager queueManager;
 
     public WorkerLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor,
                                   Props props, MiscService miscService, AbstractQueueManager queueManager) {
@@ -51,26 +49,39 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     /* ----------- public methods ------------ */
 
     public void recover() {
+        List<TaskAttempt> shouldRecoverAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.ERROR, TaskRunStatus.RUNNING));
         List<WorkerInstance> instanceList = getRunningWorker();
         logger.info("recover watch pods size = {}", instanceList.size());
         for (WorkerInstance workerInstance : instanceList) {
             workerMonitor.register(workerInstance.getTaskAttemptId(), new InnerEventHandler());
         }
-        List<TaskAttempt> taskAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.ERROR));
-        logger.info("recover queued attempt size = {}", taskAttemptList.size());
-        for (TaskAttempt taskAttempt : taskAttemptList) {
+        Set<Long> instanceSet = instanceList.stream().map(WorkerInstance::getTaskAttemptId).collect(Collectors.toSet());
+        //filter taskAttempt which instance still running
+        List<TaskAttempt> recoverAttemptList = shouldRecoverAttemptList.stream().filter(x -> !instanceSet.contains(x.getId())).collect(Collectors.toList());
+        logger.info("recover queued attempt size = {}", recoverAttemptList.size());
+        for (TaskAttempt taskAttempt : recoverAttemptList) {
             queueManager.submit(taskAttempt);
         }
     }
 
     public void reset() {
         workerMonitor.unRegisterAll();
+        queueManager.reset();
     }
 
 
     @Override
     public void start(TaskAttempt taskAttempt) {
+        WorkerSnapshot existWorkerSnapShot = get(taskAttempt.getId());
+        if (existWorkerSnapShot != null) {
+            throw new IllegalStateException("taskAttemptId = " + taskAttempt.getId() + " is running");
+        }
         queueManager.submit(taskAttempt);
+    }
+
+    @Override
+    public String getLog(Long taskAttemptId, Integer tailLines){
+        return getWorkerLog(taskAttemptId,tailLines);
     }
 
     public String logPathOfTaskAttempt(Long taskAttemptId) {
@@ -113,13 +124,13 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     /* ----------- abstract methods ------------ */
 
-    public abstract WorkerSnapshot startWorker(TaskAttempt taskAttempt);
+    protected abstract void startWorker(TaskAttempt taskAttempt);
 
-    public abstract Boolean stopWorker(Long taskAttemptId);
+    protected abstract Boolean stopWorker(Long taskAttemptId);
 
-    public abstract WorkerSnapshot getWorker(Long taskAttemptId);
+    protected abstract WorkerSnapshot getWorker(Long taskAttemptId);
 
-    public abstract String getWorkerLog(Long taskAttemptId, Integer tailLines);
+    protected abstract String getWorkerLog(Long taskAttemptId, Integer tailLines);
 
 
     /* ----------- private methods ------------ */
@@ -170,7 +181,12 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         return workerSnapshot.getStatus().isFinished();
     }
 
-    private class InnerEventHandler implements WorkerEventHandler {
+    protected class InnerEventHandler implements WorkerEventHandler {
+
+        public InnerEventHandler() {
+
+        }
+
         private TaskRunStatus preStatus;
 
         public void onReceiveSnapshot(WorkerSnapshot workerSnapshot) {//处理pod状态变更

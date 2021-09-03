@@ -18,7 +18,6 @@ import java.util.Set;
 public class TaskRunSearchFilter {
     public static final Set<TaskRunStatus> UNSTARTED_STATUS_SET = Sets.newHashSet(
             TaskRunStatus.CREATED,
-            TaskRunStatus.INITIALIZING,
             TaskRunStatus.QUEUED
     );
 

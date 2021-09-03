@@ -7,6 +7,7 @@ import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
+import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,7 +48,7 @@ public class KubernetesExecutor implements Executor {
 
     @Override
     public String workerLog(Long taskAttemptId, Integer tailLines) {
-        return podLifeCycleManager.getWorkerLog(taskAttemptId, tailLines);
+        return podLifeCycleManager.getLog(taskAttemptId, tailLines);
     }
 
     @Override
