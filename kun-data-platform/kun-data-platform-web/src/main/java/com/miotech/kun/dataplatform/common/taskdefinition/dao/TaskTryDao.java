@@ -51,6 +51,12 @@ public class TaskTryDao {
         return taskTries.stream().findAny();
     }
 
+    public Optional<TaskTry> fetchByTaskRunId(Long taskRunId) {
+        String sql = getSelectSQL(TASK_TRY_MODEL_NAME + ".wf_task_run_id = ?");
+        List<TaskTry> taskTries = jdbcTemplate.query(sql, TaskTryMapper.INSTANCE, taskRunId);
+        return taskTries.stream().findAny();
+    }
+
     public void create(TaskTry taskTry) {
 
         String sql = DefaultSQLBuilder.newBuilder()

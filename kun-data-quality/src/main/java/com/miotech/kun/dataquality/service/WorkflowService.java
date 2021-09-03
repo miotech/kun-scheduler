@@ -1,5 +1,6 @@
 package com.miotech.kun.dataquality.service;
 
+import com.miotech.kun.common.constant.DataQualityConstant;
 import com.miotech.kun.dataquality.DataQualityConfiguration;
 import com.miotech.kun.dataquality.utils.WorkflowUtils;
 import com.miotech.kun.workflow.client.WorkflowApiException;
@@ -114,7 +115,7 @@ public class WorkflowService {
 
         String caseName = dataQualityService.getCaseBasic(caseId).getName();
         return Task.newBuilder()
-                .withName(DataQualityConfiguration.WORKFLOW_TASK_NAME_PREFIX + caseId + "_" + caseName)
+                .withName(DataQualityConstant.WORKFLOW_TASK_NAME_PREFIX + caseId + "_" + caseName)
                 .withDescription("")
                 .withConfig(workflowUtils.getTaskConfig(caseId))
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
