@@ -87,6 +87,14 @@ public class Task {
         return queueName;
     }
 
+    public Integer getRetries() {
+        return retries;
+    }
+
+    public Integer getRetryDelay() {
+        return retryDelay;
+    }
+
     @JsonPOJOBuilder
     public static final class Builder {
         private Long id;
