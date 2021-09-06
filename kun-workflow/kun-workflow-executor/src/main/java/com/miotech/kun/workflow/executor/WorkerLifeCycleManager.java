@@ -177,20 +177,48 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     }
 
+    private boolean retryTaskAttemptIfNecessary(WorkerInstance workerInstance) {
+        TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(workerInstance.getTaskAttemptId()).get();
+        Integer retryLimit = taskAttempt.getTaskRun().getTask().getRetries();
+        if (taskAttempt.getRetryTimes() >= retryLimit) {
+            logger.debug("taskAttempt = {} has reach retry limit,retry limit = {}",taskAttempt.getId(),retryLimit);
+            return false;
+        }
+        logger.debug("taskAttempt = {} going to  retry,next retry times = {}",taskAttempt.getId(),taskAttempt.getRetryTimes() + 1);
+        TaskAttempt retryTaskAttempt = taskAttempt.cloneBuilder()
+                .withRetryTimes(taskAttempt.getRetryTimes() + 1)
+                .build();
+        taskRunDao.updateAttempt(retryTaskAttempt);
+        cleanupWorker(workerInstance);
+        Integer retryDelay = taskAttempt.getTaskRun().getTask().getRetryDelay();
+        //sleep to delay
+        if(retryDelay != null && retryDelay > 0){
+            logger.debug("taskAttempt = {} wait {}s for  retry",taskAttempt.getId(),retryDelay);
+            Uninterruptibles.sleepUninterruptibly(retryDelay, TimeUnit.SECONDS);
+        }
+        //retry attempt
+        queueManager.submit(taskAttempt);
+        return true;
+    }
+
     private boolean isFinish(WorkerSnapshot workerSnapshot) {
         return workerSnapshot.getStatus().isFinished();
     }
 
-    protected class InnerEventHandler implements WorkerEventHandler {
+    private boolean isFailed(WorkerSnapshot workerSnapshot) {
+        return workerSnapshot.getStatus().equals(TaskRunStatus.FAILED);
+    }
 
-        public InnerEventHandler() {
-
-        }
-
+    private class InnerEventHandler implements WorkerEventHandler {
         private TaskRunStatus preStatus;
 
         public void onReceiveSnapshot(WorkerSnapshot workerSnapshot) {//处理pod状态变更
             logger.debug("receive worker snapshot:{}", workerSnapshot);
+            if (isFailed(workerSnapshot)) {
+                if (retryTaskAttemptIfNecessary(workerSnapshot.getIns())) {
+                    return;
+                }
+            }
             if (preStatus == null || !preStatus.equals(workerSnapshot.getStatus())) {
                 changeTaskRunStatus(workerSnapshot);
                 preStatus = workerSnapshot.getStatus();

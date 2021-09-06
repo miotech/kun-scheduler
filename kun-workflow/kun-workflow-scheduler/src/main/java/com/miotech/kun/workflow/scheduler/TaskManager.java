@@ -134,6 +134,7 @@ public class TaskManager {
                 .withStatus(reUseLatest ? savedTaskAttempt.getStatus() : determineInitStatus(taskRun))
                 .withQueueName(taskRun.getQueueName())
                 .withPriority(taskRun.getPriority())
+                .withRetryTimes(0)
                 .build();
         logger.debug("Created taskAttempt. taskAttempt={}", taskAttempt);
 

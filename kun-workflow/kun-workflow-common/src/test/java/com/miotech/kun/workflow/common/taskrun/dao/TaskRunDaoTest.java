@@ -339,6 +339,24 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
+    public void updateTaskAttempt(){
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+        TaskAttempt newAttempt = taskAttempt.cloneBuilder().withRetryTimes(1).build();
+        taskRunDao.updateAttempt(newAttempt);
+        TaskAttempt saved = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+        assertThat(saved.getId(),is(newAttempt.getId()));
+        assertThat(saved.getTaskId(),is(newAttempt.getTaskId()));
+        assertThat(saved.getTaskRun().getId(),is(newAttempt.getTaskRun().getId()));
+        assertThat(saved.getRetryTimes(),is(newAttempt.getRetryTimes()));
+
+    }
+
+    @Test
     public void fetchTaskAttemptStatus_not_found() {
         // process
         Optional<TaskRunStatus> result = taskRunDao.fetchTaskAttemptStatus(-1L);

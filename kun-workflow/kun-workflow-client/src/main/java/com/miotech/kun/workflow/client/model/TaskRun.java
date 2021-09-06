@@ -172,6 +172,7 @@ public class TaskRun {
         this.queueName = queueName;
     }
 
+
     public static final class Builder {
         private Long id;
         private Task task;
@@ -275,6 +276,7 @@ public class TaskRun {
             this.scheduleType = scheduleType;
             return this;
         }
+
         public Builder withQueueName(String queueName){
             this.queueName = queueName;
             return this;

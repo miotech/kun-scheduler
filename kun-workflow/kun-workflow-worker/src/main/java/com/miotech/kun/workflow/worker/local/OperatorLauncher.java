@@ -384,9 +384,6 @@ public class OperatorLauncher {
                             }
                             updateSuccess = executorFacade.statusUpdate(msg);
                             logger.info("send update task status message = {}, to executor result = {}", msg, updateSuccess);
-                            if (!updateSuccess) {
-                                sendTime++;
-                            }
                         } catch (Exception e) {
                             sendTime++;
                             logger.error("send update task status message = {}, to executor failed,retry = {}", msg, sendTime, e);

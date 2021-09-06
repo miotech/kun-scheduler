@@ -140,6 +140,7 @@ public class MockTaskRunFactory {
                 .withStatus(TaskRunStatus.RUNNING)
                 .withQueueName(taskRun.getQueueName())
                 .withPriority(taskRun.getPriority())
+                .withRetryTimes(0)
                 .build();
     }
 }

@@ -21,6 +21,8 @@ public class TaskAttempt {
 
     private TaskRunStatus status;
 
+    private Integer retryTimes;
+
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
     private OffsetDateTime startAt;
 
@@ -62,4 +64,9 @@ public class TaskAttempt {
     public String getQueueName() {
         return queueName;
     }
+
+    public Integer getRetryTimes() {
+        return retryTimes;
+    }
+
 }
