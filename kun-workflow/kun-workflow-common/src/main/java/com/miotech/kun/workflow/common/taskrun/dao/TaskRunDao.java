@@ -59,7 +59,7 @@ public class TaskRunDao {
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
-    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path", "queue_name", "priority");
+    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path", "queue_name", "priority","retry_times");
 
     private static final String RELATION_TABLE_NAME = "kun_wf_task_run_relations";
     private static final String RELATION_MODEL_NAME = "task_run_relations";
@@ -831,7 +831,37 @@ public class TaskRunDao {
                 taskAttempt.getEndAt(),
                 taskAttempt.getLogPath(),
                 taskAttempt.getQueueName(),
-                taskAttempt.getPriority()
+                taskAttempt.getPriority(),
+                taskAttempt.getRetryTimes()
+        );
+        return taskAttempt;
+    }
+
+    public TaskAttempt updateAttempt(TaskAttempt taskAttempt) {
+
+        List<String> tableColumns = new ImmutableList.Builder<String>()
+                .addAll(taskAttemptCols)
+                .build();
+
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update(TASK_ATTEMPT_TABLE_NAME)
+                .set(tableColumns.toArray(new String[0]))
+                .where("id = ?")
+                .asPrepared()
+                .getSQL();
+
+        dbOperator.update(sql,
+                taskAttempt.getId(),
+                taskAttempt.getTaskRun().getId(),
+                taskAttempt.getAttempt(),
+                toNullableString(taskAttempt.getStatus()),
+                taskAttempt.getStartAt(),
+                taskAttempt.getEndAt(),
+                taskAttempt.getLogPath(),
+                taskAttempt.getQueueName(),
+                taskAttempt.getPriority(),
+                taskAttempt.getRetryTimes(),
+                taskAttempt.getId()
         );
         return taskAttempt;
     }
@@ -1464,6 +1494,7 @@ public class TaskRunDao {
                     .withLogPath(rs.getString(column("log_path", tableAlias)))
                     .withQueueName(rs.getString(column("queue_name", tableAlias)))
                     .withPriority(rs.getInt(column("priority", tableAlias)))
+                    .withRetryTimes(rs.getInt(column("retry_times", tableAlias)))
                     .build();
         }
     }

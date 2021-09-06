@@ -58,6 +58,14 @@ public class TaskService {
 
     private final String DEFAULT_QUEUE = "default";
 
+    private final Integer DEFAULT_RETRIES = 0;
+
+    private final Integer DEFAULT_RETRY_DELAY = 30;
+
+    private final Integer RETRY_LIMIT = 5;
+
+    private final Integer RETRY_DELAY_LIMIT = 600;
+
 
     @Inject
     public TaskService(
@@ -175,6 +183,8 @@ public class TaskService {
                 .withTags(vo.getTags() == null ? task.getTags() : vo.getTags())
                 .withQueueName(vo.getQueueName() == null ? task.getQueueName() : vo.getQueueName())
                 .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
+                .withRetries(vo.getRetries() == null ? task.getRetries() : vo.getRetries())
+                .withRetryDelay(vo.getRetryDelay() == null ? task.getRetryDelay() : vo.getRetryDelay())
                 .build();
 
         // 4. perform update
@@ -187,6 +197,15 @@ public class TaskService {
 
         Config config = parseConfig(vo);
 
+        Integer retries = DEFAULT_RETRIES;
+        if(vo.getRetries() != null){
+            retries = vo.getRetries() > RETRY_LIMIT ? RETRY_LIMIT : vo.getRetries();
+        }
+        Integer retryDelay = DEFAULT_RETRY_DELAY;
+        if(vo.getRetryDelay() != null){
+            retryDelay = vo.getRetryDelay() > RETRY_DELAY_LIMIT ? RETRY_DELAY_LIMIT : vo.getRetryDelay();
+        }
+
         Task task = fetchById(taskId).cloneBuilder()
                 .withId(taskId)
                 .withName(vo.getName())
@@ -198,6 +217,8 @@ public class TaskService {
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
                 .withTags(vo.getTags())
                 .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
+                .withRetries(retries)
+                .withRetryDelay(retryDelay)
                 .build();
 
         return fullUpdateTask(task);
@@ -376,6 +397,14 @@ public class TaskService {
     private Task convertTaskPropsVoToTask(TaskPropsVO vo) {
         Config config = parseConfig(vo);
         validateScheduleConf(vo.getScheduleConf());
+        Integer retries = DEFAULT_RETRIES;
+        if(vo.getRetries() != null){
+            retries = vo.getRetries() > RETRY_LIMIT ? RETRY_LIMIT : vo.getRetries();
+        }
+        Integer retryDelay = DEFAULT_RETRY_DELAY;
+        if(vo.getRetryDelay() != null){
+            retryDelay = vo.getRetryDelay() > RETRY_DELAY_LIMIT ? RETRY_DELAY_LIMIT : vo.getRetryDelay();
+        }
         return Task.newBuilder()
                 .withName(vo.getName())
                 .withDescription(vo.getDescription())
@@ -386,6 +415,8 @@ public class TaskService {
                 .withTags(vo.getTags())
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
                 .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
+                .withRetries(retries)
+                .withRetryDelay(retryDelay)
                 .build();
     }
 

@@ -518,6 +518,8 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withConfig(Config.EMPTY)
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
+                .withRetries(0)
+                .withRetryDelay(1)
                 .build();
         taskDao.create(task);
 
@@ -538,6 +540,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 .withTaskRun(taskRun)
                 .withAttempt(1)
                 .withStatus(runStatus)
+                .withRetryTimes(0)
                 .build()
         );
         return taskRun;
