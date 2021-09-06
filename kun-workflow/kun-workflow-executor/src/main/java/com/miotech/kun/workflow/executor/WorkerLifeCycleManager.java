@@ -4,7 +4,6 @@ import com.google.common.util.concurrent.Uninterruptibles;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
@@ -178,26 +177,8 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
 
     }
 
-    private boolean retryTaskAttemptIfNecessary(TaskAttempt taskAttempt){
-        TaskRun taskRun = taskAttempt.getTaskRun();
-        if(taskRun.getRetryTimes() >= taskRun.getRetryMax()){
-            return false;
-        }
-        TaskRun retryTaskRun = taskRun.cloneBuilder()
-                .withRetryTimes(taskRun.getRetryTimes() + 1)
-                .build();
-        taskRunDao.updateTaskRun(retryTaskRun);
-        //retry attempt
-        queueManager.submit(taskAttempt);
-        return true;
-    }
-
     private boolean isFinish(WorkerSnapshot workerSnapshot) {
         return workerSnapshot.getStatus().isFinished();
-    }
-
-    private boolean isFailed(WorkerSnapshot workerSnapshot){
-        return workerSnapshot.getStatus().equals(TaskRunStatus.FAILED);
     }
 
     private class InnerEventHandler implements WorkerEventHandler {
@@ -210,10 +191,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                 preStatus = workerSnapshot.getStatus();
             }
             if (isFinish(workerSnapshot)) {
-                if (isFailed(workerSnapshot)){
-                    TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(workerSnapshot.getIns().getTaskAttemptId()).get();
-                    retryTaskAttemptIfNecessary(taskAttempt);
-                }
                 logger.info("taskAttemptId = {},going to clean worker", workerSnapshot.getIns().getTaskAttemptId());
                 try {
                     miscService.notifyFinished(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
