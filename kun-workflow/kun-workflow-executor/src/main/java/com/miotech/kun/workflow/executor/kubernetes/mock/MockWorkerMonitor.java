@@ -6,6 +6,8 @@ import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.WorkerEventHandler;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,16 +16,20 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MockWorkerMonitor implements WorkerMonitor {
 
+    private final Logger logger = LoggerFactory.getLogger(MockWorkerMonitor.class);
+
     private Map<Long, WorkerEventHandler> registerHandlers = new ConcurrentHashMap<>();
 
     @Override
     public boolean register(Long taskAttemptId, WorkerEventHandler handler) {
+        logger.debug("register worker event handler,taskAttemptId = {}", taskAttemptId);
         registerHandlers.put(taskAttemptId, handler);
         return true;
     }
 
     @Override
     public boolean unRegister(Long taskAttemptId) {
+        logger.debug("unRegister worker event handler,taskAttemptId = {}", taskAttemptId);
         registerHandlers.remove(taskAttemptId);
         return true;
     }
@@ -40,6 +46,18 @@ public class MockWorkerMonitor implements WorkerMonitor {
             @Override
             public TaskRunStatus getStatus() {
                 return TaskRunStatus.SUCCESS;
+            }
+        };
+        registerHandlers.get(taskAttemptId).onReceiveSnapshot(workerSnapshot);
+    }
+
+    public void makeFailed(Long taskAttemptId) {
+        WorkerInstance instance = WorkerInstance.newBuilder()
+                .withTaskAttemptId(taskAttemptId).build();
+        WorkerSnapshot workerSnapshot = new WorkerSnapshot(instance, DateTimeUtils.now()) {
+            @Override
+            public TaskRunStatus getStatus() {
+                return TaskRunStatus.FAILED;
             }
         };
         registerHandlers.get(taskAttemptId).onReceiveSnapshot(workerSnapshot);

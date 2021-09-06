@@ -32,8 +32,11 @@ public class TaskAttempt {
 
     private final OffsetDateTime endAt;
 
+    private final Integer retryTimes;
+
     public TaskAttempt(Long id, TaskRun taskRun, int attempt, TaskRunStatus status,
-                       String logPath, OffsetDateTime startAt, OffsetDateTime endAt,String queueName,Integer priority) {
+                       String logPath, OffsetDateTime startAt, OffsetDateTime endAt,String queueName,Integer priority,
+                       Integer retryTimes) {
         checkNotNull(taskRun, "taskRun should not be null.");
         checkNotNull(taskRun.getTask(), "task should not be null.");
         this.id = id;
@@ -45,6 +48,7 @@ public class TaskAttempt {
         this.endAt = endAt;
         this.queueName = queueName;
         this.priority = priority;
+        this.retryTimes = retryTimes;
     }
 
     public Long getId() {
@@ -91,6 +95,11 @@ public class TaskAttempt {
         return priority;
     }
 
+
+    public Integer getRetryTimes() {
+        return retryTimes;
+    }
+
     public static TaskAttempt.Builder newBuilder() {
         return new TaskAttempt.Builder();
     }
@@ -105,7 +114,8 @@ public class TaskAttempt {
                 .withStartAt(startAt)
                 .withEndAt(endAt)
                 .withQueueName(queueName)
-                .withPriority(priority);
+                .withPriority(priority)
+                .withRetryTimes(retryTimes);
     }
 
     @Override
@@ -120,6 +130,7 @@ public class TaskAttempt {
                 ", logPath='" + logPath + '\'' +
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +
+                ", retryTimes=" + retryTimes +
                 '}';
     }
 
@@ -134,6 +145,7 @@ public class TaskAttempt {
         private OffsetDateTime endAt;
         private String queueName;
         private Integer priority;
+        private Integer retryTimes;
 
         private Builder() {
         }
@@ -183,8 +195,13 @@ public class TaskAttempt {
             return this;
         }
 
+        public Builder withRetryTimes(Integer retryTimes){
+            this.retryTimes = retryTimes;
+            return this;
+        }
+
         public TaskAttempt build() {
-            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt,queueName,priority);
+            return new TaskAttempt(id, taskRun, attempt, status, logPath, startAt, endAt,queueName,priority,retryTimes);
         }
     }
 }

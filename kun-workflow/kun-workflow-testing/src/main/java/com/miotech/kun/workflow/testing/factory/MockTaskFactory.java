@@ -63,22 +63,26 @@ public class MockTaskFactory {
     }
 
     public static Task createTask(String queueName) {
-        return createTasks(1, WorkflowIdGenerator.nextOperatorId(), queueName).get(0);
+        return createTasks(1, WorkflowIdGenerator.nextOperatorId(), queueName, 0, 1).get(0);
+    }
+
+    public static Task createTaskWithRetry(Integer retries, Integer retryDelay) {
+        return createTasks(1, WorkflowIdGenerator.nextOperatorId(), "default", retries, retryDelay).get(0);
     }
 
     public static Task createTask(Long operatorId) {
-        return createTasks(1, operatorId, "default").get(0);
+        return createTasks(1, operatorId, "default", 0, 1).get(0);
     }
 
     public static List<Task> createTasks(int num) {
-        return createTasks(num, WorkflowIdGenerator.nextOperatorId(), "default");
+        return createTasks(num, WorkflowIdGenerator.nextOperatorId(), "default", 0, 1);
     }
 
     public static List<Task> createTasks(int num, Long operatorId) {
-        return createTasks(num, operatorId, "default");
+        return createTasks(num, operatorId, "default", 0, 1);
     }
 
-    public static List<Task> createTasks(int num, Long operatorId, String queueName) {
+    public static List<Task> createTasks(int num, Long operatorId, String queueName, Integer retries, Integer retryDelay) {
         List<Task> tasks = new ArrayList<>();
 
         for (int i = 0; i < num; i++) {
@@ -94,6 +98,8 @@ public class MockTaskFactory {
                     .withTags(new ArrayList<>())
                     .withQueueName(queueName)
                     .withPriority(TaskPriority.MEDIUM.getPriority())
+                    .withRetries(retries)
+                    .withRetryDelay(retryDelay)
                     .build());
         }
         return tasks;
@@ -153,6 +159,8 @@ public class MockTaskFactory {
                                     .collect(Collectors.toList())
                     )
                     .withTags(new ArrayList<>())
+                    .withRetries(0)
+                    .withRetryDelay(30)
                     .build());
         }
         return tasks;
