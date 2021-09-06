@@ -112,7 +112,7 @@ public class TaskRun {
 
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status,
                    OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
-                   List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, ScheduleType scheduledType,String queueName,Integer priority) {
+                   List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, ScheduleType scheduledType, String queueName, Integer priority) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;

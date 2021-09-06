@@ -233,14 +233,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskRun taskRun2 = taskRunList.get(1);
         taskRunDao.createTaskRun(taskRun1);
         taskRunDao.createTaskRun(taskRun2);
-        TaskAttempt taskAttempt = TaskAttempt.newBuilder()
-                .withId(WorkflowIdGenerator.nextTaskAttemptId(taskRun1.getId(), 1))
-                .withTaskRun(taskRun1)
-                .withAttempt(1)
-                .withStatus(TaskRunStatus.FAILED)
-                .withQueueName(taskRun1.getQueueName())
-                .withPriority(taskRun1.getPriority())
-                .build();
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(taskRun1,TaskRunStatus.FAILED);
         taskRunDao.createAttempt(taskAttempt);
         taskManager.submit(Arrays.asList(taskRun2));
 //        long rerunAttemptId = taskRun1.getId() + 2;

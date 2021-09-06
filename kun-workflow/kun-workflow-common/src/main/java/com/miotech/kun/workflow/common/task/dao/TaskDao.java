@@ -56,7 +56,7 @@ public class TaskDao {
 
     public static final String TASK_TAGS_MODEL_NAME = "task_tags";
 
-    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule", "queue_name", "priority");
+    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule", "queue_name", "priority","retries","retry_delay");
 
     private static final List<String> taskTagCols = ImmutableList.of("task_id", "tag_key", "tag_value");
 
@@ -676,7 +676,9 @@ public class TaskDao {
                     JSONUtils.toJsonString(task.getConfig()),
                     JSONUtils.toJsonString(task.getScheduleConf()),
                     task.getQueueName(),
-                    task.getPriority()
+                    task.getPriority(),
+                    task.getRetries(),
+                    task.getRetryDelay()
             );
             insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
             // Update tags
@@ -710,6 +712,8 @@ public class TaskDao {
                     JSONUtils.toJsonString(task.getScheduleConf()),
                     task.getQueueName(),
                     task.getPriority(),
+                    task.getRetries(),
+                    task.getRetryDelay(),
                     task.getId()
             );
 
@@ -967,6 +971,8 @@ public class TaskDao {
                     .withTags(new ArrayList<>())
                     .withQueueName(rs.getString(TASK_MODEL_NAME + "_queue_name"))
                     .withPriority(rs.getInt(TASK_MODEL_NAME + "_priority"))
+                    .withRetries(rs.getInt(TASK_MODEL_NAME+"_retries"))
+                    .withRetryDelay(rs.getInt(TASK_MODEL_NAME+"_retry_delay"))
                     .build();
         }
     }

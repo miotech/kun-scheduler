@@ -66,7 +66,7 @@ public class LocalProcessMonitor implements WorkerMonitor, ExecutorBackEnd, Init
         WorkerEventHandler workerEventHandler = registerHandlers.get(msg.getTaskAttemptId());
         if (workerEventHandler == null) {
             logger.warn("process with taskAttemptId = {} count not found event handler", msg.getTaskAttemptId());
-            return true;
+            return false;
         }
         workerEventHandler.onReceiveSnapshot(processSnapShot);
         return true;

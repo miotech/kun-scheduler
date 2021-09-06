@@ -644,7 +644,7 @@ public class TaskServiceTest extends CommonTestBase {
     }
 
     @Test
-    public void testCreateTaskWithTimeZone_nextTickShouldBeUTC(){
+    public void testCreateTaskWithTimeZone_nextTickShouldBeUTC() {
         ScheduleConf conf = ScheduleConf.newBuilder()
                 .withType(ScheduleType.SCHEDULED)
                 .withCronExpr("0 0 8 * * ?")
@@ -664,11 +664,11 @@ public class TaskServiceTest extends CommonTestBase {
         operatorDao.createWithId(op, operatorId);
         Task saved = taskService.createTask(taskPropsVO);
         Optional<Tick> tick = taskDao.fetchNextExecutionTickByTaskId(saved.getId());
-        assertThat(tick.get().getTime().substring(8),is("0000"));
+        assertThat(tick.get().getTime().substring(8), is("0000"));
     }
 
     @Test
-    public void testUpdateTaskWithTimeZone_nextTickShouldBeUTC(){
+    public void testUpdateTaskWithTimeZone_nextTickShouldBeUTC() {
         ScheduleConf conf = ScheduleConf.newBuilder()
                 .withType(ScheduleType.SCHEDULED)
                 .withCronExpr("0 0 8 * * ?")
@@ -689,11 +689,11 @@ public class TaskServiceTest extends CommonTestBase {
         operatorDao.createWithId(op, operatorId);
         Task updated = taskService.fullUpdateTask(task);
         Optional<Tick> tick = taskDao.fetchNextExecutionTickByTaskId(updated.getId());
-        assertThat(tick.get().getTime().substring(8),is("0000"));
+        assertThat(tick.get().getTime().substring(8), is("0000"));
     }
 
     @Test
-    public void testCreateScheduleTaskWithoutTimeZone_nextTickShouldBeUTC(){
+    public void testCreateScheduleTaskWithoutTimeZone_nextTickShouldBeUTC() {
         ScheduleConf conf = ScheduleConf.newBuilder()
                 .withType(ScheduleType.SCHEDULED)
                 .withCronExpr("0 0 8 * * ?")
@@ -712,13 +712,13 @@ public class TaskServiceTest extends CommonTestBase {
         operatorDao.createWithId(op, operatorId);
         Task created = taskService.createTask(taskPropsVO);
         Optional<Tick> tick = taskDao.fetchNextExecutionTickByTaskId(created.getId());
-        assertThat(tick.get().getTime().substring(8),is("0800"));
+        assertThat(tick.get().getTime().substring(8), is("0800"));
 
     }
 
 
     @Test
-    public void testUpdateScheduleTaskWithoutTimeZone_nextTickShouldBeUTC(){
+    public void testUpdateScheduleTaskWithoutTimeZone_nextTickShouldBeUTC() {
         ScheduleConf conf = ScheduleConf.newBuilder()
                 .withType(ScheduleType.SCHEDULED)
                 .withCronExpr("0 0 8 * * ?")
@@ -739,7 +739,161 @@ public class TaskServiceTest extends CommonTestBase {
         operatorDao.createWithId(op, operatorId);
         Task updated = taskService.fullUpdateTask(task);
         Optional<Tick> tick = taskDao.fetchNextExecutionTickByTaskId(updated.getId());
-        assertThat(tick.get().getTime().substring(8),is("0800"));
+        assertThat(tick.get().getTime().substring(8), is("0800"));
 
+    }
+
+
+    @Test
+    public void testCreateTaskWithoutRetries_retries_should_be_zero() {
+        //prepare
+        TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO();
+        long operatorId = taskPropsVO.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+
+        Task task = taskService.createTask(taskPropsVO);
+        Task saved = taskDao.fetchById(task.getId()).get();
+
+        //verify
+        assertThat(saved.getRetries(), is(0));
+        assertThat(saved.getRetryDelay(), is(30));
+    }
+
+    @Test
+    public void testFullUpdateTaskWithoutRetries_retries_should_be_zero() {
+        //prepare
+        TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
+        long operatorId = createdTask.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        Task task = taskService.createTask(createdTask);
+
+        TaskPropsVO taskPropsVO = TaskPropsVO.from(task);
+        taskService.fullUpdateTaskById(task.getId(), taskPropsVO);
+        Task saved = taskDao.fetchById(task.getId()).get();
+
+        //verify
+        assertThat(saved.getRetries(), is(0));
+        assertThat(saved.getRetryDelay(), is(30));
+    }
+
+    @Test
+    public void testPartialUpdateTaskWithoutRetries_retries_should_be_saved_value() {
+        //prepare
+        TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
+        long operatorId = createdTask.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        Task task = taskService.createTask(createdTask);
+
+        TaskPropsVO taskPropsVO = TaskPropsVO.from(task);
+        Task saved = taskDao.fetchById(task.getId()).get();
+        taskService.partialUpdateTask(task.getId(), taskPropsVO);
+        Task updated = taskDao.fetchById(task.getId()).get();
+
+        //verify
+        assertThat(updated.getRetries(), is(saved.getRetries()));
+        assertThat(updated.getRetryDelay(), is(saved.getRetryDelay()));
+    }
+
+    @Test
+    public void testCreateTaskWithRetries_retries_should_be_given_value() {
+        //prepare
+        TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO()
+                .cloneBuilder()
+                .withRetries(1)
+                .withRetryDelay(10)
+                .build();
+        long operatorId = taskPropsVO.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+
+        Task task = taskService.createTask(taskPropsVO);
+        Task saved = taskDao.fetchById(task.getId()).get();
+
+        //verify
+        assertThat(saved.getRetries(), is(1));
+        assertThat(saved.getRetryDelay(), is(10));
+    }
+
+    @Test
+    public void testFullUpdateTaskWithoutRetries_retries_should_be_given_value() {
+        //prepare
+        TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
+        long operatorId = createdTask.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        Task task = taskService.createTask(createdTask);
+
+        TaskPropsVO taskPropsVO = TaskPropsVO.from(task)
+                .cloneBuilder()
+                .withRetries(1)
+                .withRetryDelay(10)
+                .build();
+        taskService.fullUpdateTaskById(task.getId(), taskPropsVO);
+        Task saved = taskDao.fetchById(task.getId()).get();
+
+        //verify
+        assertThat(saved.getRetries(), is(1));
+        assertThat(saved.getRetryDelay(), is(10));
+    }
+
+    @Test
+    public void testPartialUpdateTaskWithoutRetries_retries_should_be_given_value() {
+        //prepare
+        TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
+        long operatorId = createdTask.getOperatorId();
+        Operator op = MockOperatorFactory.createOperator()
+                .cloneBuilder()
+                .withId(operatorId)
+                .withName("Operator_" + operatorId)
+                .withClassName("NopOperator")
+                .withPackagePath(OperatorCompiler.compileJar(NopOperator.class, "NopOperator"))
+                .build();
+        operatorDao.createWithId(op, operatorId);
+        Task task = taskService.createTask(createdTask);
+
+        TaskPropsVO taskPropsVO = TaskPropsVO.from(task)
+                .cloneBuilder()
+                .withRetries(1)
+                .withRetryDelay(10)
+                .build();
+        taskService.partialUpdateTask(task.getId(), taskPropsVO);
+        Task updated = taskDao.fetchById(task.getId()).get();
+
+        //verify
+        assertThat(updated.getRetries(), is(1));
+        assertThat(updated.getRetryDelay(), is(10));
     }
 }

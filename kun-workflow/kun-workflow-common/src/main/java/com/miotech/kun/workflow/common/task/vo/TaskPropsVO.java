@@ -21,6 +21,8 @@ public class TaskPropsVO {
     private final List<Tag> tags;
     private final String queueName;
     private final String priority;
+    private final Integer retries;
+    private final Integer retryDelay;
 
     private TaskPropsVO(TaskPropsVOBuilder builder) {
         this.name = builder.name;
@@ -32,6 +34,8 @@ public class TaskPropsVO {
         this.tags = builder.tags;
         this.queueName = builder.queueName;
         this.priority = builder.priority;
+        this.retries = builder.retries;
+        this.retryDelay = builder.retryDelay;
     }
 
     public static TaskPropsVOBuilder newBuilder() {
@@ -109,6 +113,14 @@ public class TaskPropsVO {
         return queueName;
     }
 
+    public Integer getRetries() {
+        return retries;
+    }
+
+    public Integer getRetryDelay() {
+        return retryDelay;
+    }
+
     @JsonPOJOBuilder
     public static final class TaskPropsVOBuilder {
         private String name;
@@ -120,6 +132,8 @@ public class TaskPropsVO {
         private List<Tag> tags;
         private String queueName;
         private String priority;
+        private Integer retries;
+        private Integer retryDelay;
 
         private TaskPropsVOBuilder() {
         }
@@ -163,8 +177,19 @@ public class TaskPropsVO {
             this.priority = priority;
             return this;
         }
+
         public TaskPropsVOBuilder withQueueName(String queueName){
             this.queueName = queueName;
+            return this;
+        }
+
+        public TaskPropsVOBuilder withRetries(Integer retries){
+            this.retries = retries;
+            return this;
+        }
+
+        public TaskPropsVOBuilder withRetryDelay(Integer retryDelay){
+            this.retryDelay = retryDelay;
             return this;
         }
 

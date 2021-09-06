@@ -13,41 +13,43 @@ import com.miotech.kun.workflow.executor.local.MiscService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.PodSpec;
 import io.fabric8.kubernetes.api.model.PodStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @Singleton
 public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
 
-    private MockQueueManager queueManager;
-    private TaskRunDao taskRunDao;
-    private MockWorkerMonitor workerMonitor;
+    private final Logger logger = LoggerFactory.getLogger(WorkerLifeCycleManager.class);
+    private MockQueueManager mockQueueManager;
+    private MockWorkerMonitor mockWorkerMonitor;
 
 
     @Inject
     public MockWorkerLifeCycleManager(TaskRunDao taskRunDao, MockWorkerMonitor workerMonitor, Props props, MiscService miscService, MockQueueManager queueManager) {
         super(taskRunDao, workerMonitor, props, miscService, queueManager);
-        this.queueManager = queueManager;
-        this.taskRunDao = taskRunDao;
-        this.workerMonitor = workerMonitor;
+        this.mockQueueManager = queueManager;
+        this.mockWorkerMonitor = workerMonitor;
     }
 
     @Override
     public void startWorker(TaskAttempt taskAttempt) {
+        logger.info("start worker taskAttemptId = {}",taskAttempt.getId());
         WorkerInstance instance = WorkerInstance.newBuilder()
                 .withTaskAttemptId(taskAttempt.getId()).build();
-        queueManager.addWorker(taskAttempt);
+        mockQueueManager.addWorker(taskAttempt);
     }
 
     @Override
     public Boolean stopWorker(Long taskAttemptId) {
-        queueManager.removeWorker(taskRunDao.fetchAttemptById(taskAttemptId).get());
+        mockQueueManager.removeWorker(taskRunDao.fetchAttemptById(taskAttemptId).get());
         return true;
     }
 
     @Override
     public WorkerSnapshot getWorker(Long taskAttemptId) {
-        if(workerMonitor.hasRegister(taskAttemptId)){
+        if(mockWorkerMonitor.hasRegister(taskAttemptId)){
             WorkerInstance instance = WorkerInstance.newBuilder()
                     .withTaskAttemptId(taskAttemptId).build();
             return new PodStatusSnapShot(instance, new PodStatus(), new PodSpec(), new ObjectMeta());
@@ -62,15 +64,19 @@ public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
 
     @Override
     public List<WorkerInstance> getRunningWorker() {
-        return workerMonitor.allRegister();
+        return mockWorkerMonitor.allRegister();
     }
 
     public void markDone(Long taskAttemptId) {
-        workerMonitor.makeDone(taskAttemptId);
+        mockWorkerMonitor.makeDone(taskAttemptId);
+    }
+
+    public void markFailed(Long taskAttemptId){
+        mockWorkerMonitor.makeFailed(taskAttemptId);
     }
 
     public boolean hasRegister(Long taskAttemptId){
-        return workerMonitor.hasRegister(taskAttemptId);
+        return mockWorkerMonitor.hasRegister(taskAttemptId);
     }
 
 }

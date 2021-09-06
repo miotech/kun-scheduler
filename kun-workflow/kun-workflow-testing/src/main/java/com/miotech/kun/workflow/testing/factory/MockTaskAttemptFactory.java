@@ -19,6 +19,7 @@ public class MockTaskAttemptFactory {
                 .withStatus(taskRun.getStatus())
                 .withQueueName(taskRun.getQueueName())
                 .withPriority(taskRun.getPriority())
+                .withRetryTimes(0)
                 .build();
     }
 
@@ -30,6 +31,7 @@ public class MockTaskAttemptFactory {
                 .withStatus(status)
                 .withQueueName(taskRun.getQueueName())
                 .withPriority(taskRun.getPriority())
+                .withRetryTimes(0)
                 .build();
     }
 
