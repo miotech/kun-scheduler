@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.executor;
 
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -21,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 
-public abstract class WorkerLifeCycleManager implements LifeCycleManager {
+public abstract class WorkerLifeCycleManager implements LifeCycleManager, InitializingBean {
 
     private final Logger logger = LoggerFactory.getLogger(WorkerLifeCycleManager.class);
     protected final WorkerMonitor workerMonitor;
@@ -29,6 +30,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
     private final MiscService miscService;
     protected final TaskRunDao taskRunDao;
     protected final AbstractQueueManager queueManager;
+    private Thread consumer = new Thread(new TaskAttemptConsumer(), "TaskAttemptConsumer");
 
     public WorkerLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor,
                                   Props props, MiscService miscService, AbstractQueueManager queueManager) {
@@ -37,16 +39,24 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         this.workerMonitor = workerMonitor;
         this.miscService = miscService;
         this.queueManager = queueManager;
+    }
+
+
+    /* ----------- public methods ------------ */
+    @Override
+    public void afterPropertiesSet(){
         init();
     }
 
-    private void init() {
-        Thread consumer = new Thread(new TaskAttemptConsumer(), "TaskAttemptConsumer");
+    public void init() {
         queueManager.init();
         consumer.start();
     }
 
-    /* ----------- public methods ------------ */
+    public void shutdown() {
+        queueManager.reset();
+        consumer.interrupt();
+    }
 
     public void recover() {
         List<TaskAttempt> shouldRecoverAttemptList = taskRunDao.fetchTaskAttemptListForRecover(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.ERROR, TaskRunStatus.RUNNING));
@@ -249,6 +259,9 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
         @Override
         public void run() {
             while (true) {
+                if(Thread.currentThread().isInterrupted()){
+                    break;
+                }
                 try {
                     List<TaskAttempt> readyToExecuteTaskAttemptList = queueManager.drain();
                     if (readyToExecuteTaskAttemptList.size() == 0) {
@@ -263,8 +276,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager {
                             logger.warn("take taskAttempt = {} failed", taskAttempt.getId(), e);
                         }
                     }
-
-                } catch (Throwable e) {
+                } catch ( Throwable e) {
                     logger.error("failed to take taskAttempt from queue", e);
                 }
 

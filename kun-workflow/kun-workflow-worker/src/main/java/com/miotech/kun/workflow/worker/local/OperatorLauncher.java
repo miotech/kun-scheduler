@@ -382,7 +382,8 @@ public class OperatorLauncher {
                             if (sendTime > 0) {
                                 Uninterruptibles.sleepUninterruptibly(HEARTBEAT_INTERVAL, TimeUnit.SECONDS);
                             }
-                            updateSuccess = executorFacade.statusUpdate(msg);
+                            executorFacade.statusUpdate(msg);
+                            updateSuccess = true;
                             logger.info("send update task status message = {}, to executor result = {}", msg, updateSuccess);
                         } catch (Exception e) {
                             sendTime++;
