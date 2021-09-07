@@ -112,6 +112,9 @@ public class LocalExecutorTest extends CommonTestBase {
     @Inject
     private DataSource dataSource;
 
+    @Inject
+    private WorkerLifeCycleManager workerLifeCycleManager;
+
 
     private Props props;
 
@@ -185,11 +188,13 @@ public class LocalExecutorTest extends CommonTestBase {
         rpcPublisher.exportService(WorkflowExecutorFacade.class, "1.0", localExecutorFacade);
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
+        workerLifeCycleManager.init();
     }
 
     @After
     @Override
     public void tearDown(){
+        workerLifeCycleManager.shutdown();
         super.tearDown();
         try {
             ((HikariDataSource) dataSource).close();

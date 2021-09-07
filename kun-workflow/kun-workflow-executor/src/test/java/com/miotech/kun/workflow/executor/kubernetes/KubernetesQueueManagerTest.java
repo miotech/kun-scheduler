@@ -21,6 +21,7 @@ import com.miotech.kun.workflow.executor.local.MiscService;
 import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -253,6 +254,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
 
     @Before
     public void init() {
+        workerLifeCycleManager.init();
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
         kubernetesResourceManager = prepareQueueManage();
@@ -267,6 +269,11 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
                 return 0;
             }
         }).when(spyManager).getCapacity(ArgumentMatchers.any(TaskAttemptQueue.class));
+    }
+
+    @After
+    public void teardown(){
+        workerLifeCycleManager.shutdown();
     }
 
     private KubernetesResourceManager prepareQueueManage() {

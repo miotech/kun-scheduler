@@ -20,6 +20,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -72,6 +73,12 @@ public class WorkerLifeCycleManagerTest extends CommonTestBase{
     @Before
     public void init(){
         mockWorkerLifeCycleManager = spy(workerLifeCycleManager);
+        mockWorkerLifeCycleManager.init();
+    }
+
+    @After
+    public void teardown(){
+        mockWorkerLifeCycleManager.shutdown();
     }
 
     @Test
