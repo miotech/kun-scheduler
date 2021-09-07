@@ -20,18 +20,28 @@ public class ScheduleConfig {
 
     private final String timeZone;
 
+    //task retry times limit
+    private final Integer retries;
+
+    //task retry delay,unit seconds
+    private final Integer retryDelay;
+
     private ScheduleConfig(String type,
                            String cronExpr,
                            String timeZone,
                            List<Long> inputNodes,
                            List<TaskDatasetProps> inputDatasets,
-                           List<TaskDatasetProps> outputDatasets) {
+                           List<TaskDatasetProps> outputDatasets,
+                           Integer retries,
+                           Integer retryDelay) {
         this.type = type;
         this.cronExpr = cronExpr;
         this.timeZone = timeZone;
         this.inputNodes = inputNodes == null ? ImmutableList.of() : inputNodes;
         this.inputDatasets = inputDatasets == null ? ImmutableList.of() : inputDatasets;
         this.outputDatasets = outputDatasets == null ? ImmutableList.of() : outputDatasets;
+        this.retries = retries;
+        this.retryDelay = retryDelay;
     }
 
     public String getType() {
@@ -58,6 +68,14 @@ public class ScheduleConfig {
         return timeZone;
     }
 
+    public Integer getRetries() {
+        return retries;
+    }
+
+    public Integer getRetryDelay() {
+        return retryDelay;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -69,6 +87,8 @@ public class ScheduleConfig {
         private List<TaskDatasetProps> inputDatasets;
         private List<TaskDatasetProps> outputDatasets;
         private String timeZone;
+        private Integer retries;
+        private Integer retryDelay;
 
         private Builder() {
         }
@@ -103,8 +123,18 @@ public class ScheduleConfig {
             return this;
         }
 
+        public Builder withRetries(Integer retries) {
+            this.retries = retries;
+            return this;
+        }
+
+        public Builder withRetryDelay(Integer retryDelay) {
+            this.retryDelay = retryDelay;
+            return this;
+        }
+
         public ScheduleConfig build() {
-            return new ScheduleConfig(type, cronExpr, timeZone, inputNodes, inputDatasets, outputDatasets);
+            return new ScheduleConfig(type, cronExpr, timeZone, inputNodes, inputDatasets, outputDatasets, retries, retryDelay);
         }
     }
 }
