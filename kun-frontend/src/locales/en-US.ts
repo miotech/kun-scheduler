@@ -331,6 +331,7 @@ export default {
   'dataDevelopment.definition.property.currentState': 'Current state',
   'dataDevelopment.definition.paramConfig': 'Parameters Config',
   'dataDevelopment.definition.scheduleConfig': 'Scheduling Config',
+  'dataDevelopment.definition.retryConfig': 'Retry Config',
   'dataDevelopment.definition.commitModalTitle': 'Commit & Publish Task',
   'dataDevelopment.definition.commitModalMsg': 'Commit Message',
   'dataDevelopment.definition.scheduleConfig.timing': 'Timing Config',
@@ -348,6 +349,9 @@ export default {
   'dataDevelopment.definition.scheduleConfig.upstream.type.inputDataset': 'Input Dataset',
   'dataDevelopment.definition.scheduleConfig.upstream.type.search': 'Search Upstream',
   'dataDevelopment.definition.scheduleConfig.output.outputDataset': 'Output Dataset',
+  'dataDevelopment.definition.scheduleConfig.retryAfterFailed': 'Retry After Failed',
+  'dataDevelopment.definition.scheduleConfig.retireTimes': 'Retry Times',
+  'dataDevelopment.definition.scheduleConfig.retryDelay': 'Retry Delay(Second)',
   'dataDevelopment.definition.scheduleConfig.cronExpression.alertSecondsBeZero':
     "Currently cron expression only support seconds field to be '0'",
   'dataDevelopment.definition.notificationConfig': 'Notification Config',
