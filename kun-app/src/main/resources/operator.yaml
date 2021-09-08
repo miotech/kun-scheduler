@@ -3,10 +3,10 @@ operators:
     className: com.miotech.kun.workflow.operator.BashOperator
     description: Bash Operator
   - name: spark-operator
-    className: com.miotech.kun.workflow.operator.SparkOperator
+    className: com.miotech.kun.workflow.operator.SparkOperatorV2
     description: Spark Operator
   - name: sparkSql-operator
-    className: com.miotech.kun.workflow.operator.SparkSQLOperator
+    className: com.miotech.kun.workflow.operator.SparkSqlOperatorV2
     description: Spark SQL Operator
   - name: data-quality-operator
     className: com.miotech.kun.workflow.operator.DataQualityOperator

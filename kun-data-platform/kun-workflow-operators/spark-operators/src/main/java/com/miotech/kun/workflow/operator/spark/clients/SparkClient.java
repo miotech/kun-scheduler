@@ -8,18 +8,16 @@ import com.miotech.kun.workflow.operator.spark.models.Application;
 import java.io.IOException;
 
 public class SparkClient extends HttpApiClient {
-    private String host;
-    private Integer port;
+    private String address;
     private ObjectMapper objectMapper = new ObjectMapper().configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    public SparkClient(String host, Integer port) {
-        this.host = host;
-        this.port = port;
+    public SparkClient(String address) {
+        this.address = address;
     }
 
     @Override
     public String getBase() {
-        return String.format("%s:%s", host, port);
+        return address;
     }
 
     public Application getApp(String appId) {
@@ -30,9 +28,14 @@ public class SparkClient extends HttpApiClient {
         }
     }
 
-    public String getApplication(String applicationId) {
+    private String getApplication(String applicationId) {
         String appUrl = buildUrl(String.format("/ws/v1/cluster/apps/%s", applicationId));
         return get(appUrl);
+    }
+
+    public void killApplication(String appId){
+        String url = buildUrl(String.format("/ws/v1/cluster/apps/%s/state", appId));
+        put(url, "{\"state\": \"KILLED\"}");
     }
 
 }

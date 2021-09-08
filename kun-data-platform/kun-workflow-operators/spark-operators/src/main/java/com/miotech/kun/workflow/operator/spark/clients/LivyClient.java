@@ -68,9 +68,9 @@ public class LivyClient extends HttpApiClient {
         return toObject(response, SparkApp.class);
     }
 
-    public StateInfo getSparkSessionState(Integer sessionId) {
+    public LivyStateInfo getSparkSessionState(Integer sessionId) {
         String url = buildUrl(SESSIONS + sessionId + "/state");
-        return toObject(this.get(url), StateInfo.class);
+        return toObject(this.get(url), LivyStateInfo.class);
     }
 
     public Statement runSparkSQL(Integer sessionId, String sql) {
@@ -94,9 +94,9 @@ public class LivyClient extends HttpApiClient {
         return toObject(getBatch(sparkJobID), SparkApp.class);
     }
 
-    public StateInfo getSparkJobState(Integer sparkJobID) {
+    public LivyStateInfo getSparkJobState(Integer sparkJobID) {
         String url = buildUrl(BATCHES + sparkJobID + "/state");
-        return toObject(this.get(url), StateInfo.class);
+        return toObject(this.get(url), LivyStateInfo.class);
     }
 
     public String createBatch(String jobPayload){

@@ -21,6 +21,9 @@ dependencies {
     }
     implementation "com.amazonaws:aws-java-sdk-s3:1.11.306"
     implementation 'org.apache.hadoop:hadoop-aws:2.7.3'
+    implementation 'org.zeroturnaround:zt-exec:1.11'
+    implementation 'org.zeroturnaround:zt-process-killer:1.10'
+    implementation 'org.jooq:joor-java-8:0.9.13'
 
     testImplementation project(':kun-workflow:kun-workflow-testing')
     testImplementation project(':kun-commons:kun-commons-testing')
