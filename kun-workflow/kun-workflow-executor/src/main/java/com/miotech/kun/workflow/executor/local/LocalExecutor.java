@@ -1,6 +1,7 @@
 package com.miotech.kun.workflow.executor.local;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.task.TaskPriority;
@@ -10,6 +11,7 @@ import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+@Singleton
 public class LocalExecutor implements Executor {
 
     private final Logger logger = LoggerFactory.getLogger(LocalExecutor.class);

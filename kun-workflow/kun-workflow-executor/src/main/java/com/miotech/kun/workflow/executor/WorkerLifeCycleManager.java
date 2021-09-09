@@ -56,6 +56,12 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
     public void shutdown() {
         queueManager.reset();
         consumer.interrupt();
+        workerMonitor.unRegisterAll();
+    }
+
+    public void reset() {
+        workerMonitor.unRegisterAll();
+        queueManager.reset();
     }
 
     public void recover() {
@@ -72,11 +78,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         for (TaskAttempt taskAttempt : recoverAttemptList) {
             queueManager.submit(taskAttempt);
         }
-    }
-
-    public void reset() {
-        workerMonitor.unRegisterAll();
-        queueManager.reset();
     }
 
 
