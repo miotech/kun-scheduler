@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor.local;
 
+import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
@@ -9,17 +10,17 @@ import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.core.model.worker.DatabaseConfig;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
-import com.miotech.kun.workflow.core.model.worker.DatabaseConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -33,6 +34,7 @@ public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
 
     private static final Integer DB_MAX_POOL = 1;
     private static final Integer MINI_MUM_IDLE = 0;
+    private static final Integer GRACE_ABORT_TIME = 30;
 
     @Inject
     public LocalProcessLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props,
@@ -51,28 +53,14 @@ public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
 
     @Override
     public Boolean stopWorker(Long taskAttemptId) {
-        ProcessSnapShot processSnapShot = localProcessBackend.fetchProcessByTaskAttemptId(taskAttemptId);
-        if (processSnapShot == null) {
-            return true;
-        }
-        String processId = processSnapShot.getIns().getWorkerId();
+        localProcessBackend.stopProcess(taskAttemptId);
+        //wait grace abort time to check process is dead
+        new Thread(() ->{
+            Uninterruptibles.sleepUninterruptibly(GRACE_ABORT_TIME, TimeUnit.SECONDS);
+            localProcessBackend.forceStopProcess(taskAttemptId);
+        }).start();
 
-        logger.info("worker going to shutdown, taskAttemptId = {}", taskAttemptId);
-        Runtime rt = Runtime.getRuntime();
-        try {
-            Process process;
-            if (System.getProperty("os.name").toLowerCase().indexOf("windows") > -1)
-                process = rt.exec("taskkill " + processId);
-            else {
-                process = rt.exec("kill " + processId);
-            }
-            int exitCode = process.waitFor();
-            return exitCode == 0 ? true : false;
-
-        } catch (IOException | InterruptedException e) {
-            logger.error("force kill worker failed processId = {} , taskAttemptId = {}", processId, taskAttemptId);
-        }
-        return false;
+        return true;
     }
 
     @Override

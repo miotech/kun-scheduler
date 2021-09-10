@@ -2,15 +2,15 @@ package com.miotech.kun.workflow.operator;
 
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.TaskAttemptReport;
-import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import com.miotech.kun.workflow.testing.executor.OperatorRunner;
 import org.junit.Before;
 import org.junit.Test;
 
-import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class SparkSqlOperatorV1Test extends MockServerTestBase {
     private static final String DATASTORE_URL = "/test";
@@ -94,7 +94,7 @@ public class SparkSqlOperatorV1Test extends MockServerTestBase {
         try {
             operatorRunner.run();
         } catch (Exception e) {
-            assertThat(IllegalStateException.class, is(e.getClass()));
+            assertThat(e, instanceOf(e.getClass()));
             assertThat("Session 0 is finished, current state: ERROR", is(e.getMessage()));
         }
     }
@@ -119,7 +119,7 @@ public class SparkSqlOperatorV1Test extends MockServerTestBase {
             });
             operatorRunner.run();
         } catch (Exception e) {
-            assertThat(IllegalStateException.class, is(e.getClass()));
+            assertThat(e, instanceOf(IllegalStateException.class));
             assertThat("Cannot find session: 0 . Maybe killed by user termination.", is(e.getMessage()));
         }
     }

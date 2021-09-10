@@ -1,1 +1,0 @@
-workerCluster = com.miotech.kun.workflow.executor.rpc.WorkerCluster

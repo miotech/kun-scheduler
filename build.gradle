@@ -87,9 +87,6 @@ subprojects {
                 implementation 'commons-fileupload:commons-fileupload:1.4'
                 implementation "org.jooq:joor-java-8:0.9.12"
                 implementation "org.neo4j:neo4j-ogm-core:3.2.16"
-                implementation "org.apache.dubbo:dubbo:2.7.8"
-                implementation 'org.apache.dubbo:dubbo-registry-redis:2.7.8'
-                implementation 'org.apache.dubbo:dubbo-spring-boot-starter:2.7.8'
                 implementation 'org.springdoc:springdoc-openapi-ui:1.4.8'
                 implementation 'redis.clients:jedis:2.9.0'
                 implementation 'org.jooq:joor-java-8:0.9.13'

@@ -18,7 +18,6 @@ dependencies {
     implementation project(':kun-metadata:kun-metadata-service-facade')
     implementation project(':kun-workflow:kun-workflow-worker')
     implementation 'io.fabric8:kubernetes-client'
-    implementation 'org.apache.dubbo:dubbo'
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation 'org.jooq:joor-java-8'
