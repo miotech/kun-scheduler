@@ -3,7 +3,6 @@ package com.miotech.kun.infra.service;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.DatabaseSetup;
-import com.miotech.kun.commons.rpc.RpcPublisher;
 import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.infra.util.RequestParameterBuilder;
@@ -12,7 +11,6 @@ import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.kafka.MetadataConsumerStarter;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.facade.WorkflowExecutorFacade;
 import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,9 +32,6 @@ public class InitService implements InitializingBean {
     private javax.sql.DataSource dataSource;
 
     @Inject
-    private RpcPublisher rpcPublisher;
-
-    @Inject
     private MetadataConsumerStarter metadataConsumerStarter;
 
     @Inject
@@ -44,9 +39,6 @@ public class InitService implements InitializingBean {
 
     @Inject
     private OperatorUploadService operatorUploadService;
-
-    @Inject
-    private WorkflowExecutorFacade executorFacade;
 
     @Override
     public Order getOrder() {
@@ -60,7 +52,6 @@ public class InitService implements InitializingBean {
             initDataBuilder();
             startConsumer();
         }
-        publishRpcServices();
     }
 
 
@@ -88,11 +79,6 @@ public class InitService implements InitializingBean {
         } catch (Exception e) {
             logger.error("Init DataBuilder Task error: ", e);
         }
-    }
-
-    private void publishRpcServices() {
-        rpcPublisher.exportService(WorkflowExecutorFacade.class, "1.0", executorFacade);
-
     }
 
     private void startConsumer() {

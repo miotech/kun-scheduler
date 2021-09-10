@@ -2,9 +2,6 @@ package com.miotech.kun.workflow.executor.local;
 
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.InitializingBean;
-import com.miotech.kun.workflow.core.execution.HeartBeatMessage;
-import com.miotech.kun.workflow.core.execution.TaskAttemptMsg;
-import com.miotech.kun.workflow.executor.ExecutorBackEnd;
 import com.miotech.kun.workflow.executor.WorkerEventHandler;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import org.slf4j.Logger;
@@ -21,7 +18,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class LocalProcessMonitor implements WorkerMonitor, ExecutorBackEnd, InitializingBean {
+public class LocalProcessMonitor implements WorkerMonitor, InitializingBean {
 
     private final Logger logger = LoggerFactory.getLogger(LocalProcessMonitor.class);
     private Map<Long, WorkerEventHandler> registerHandlers = new ConcurrentHashMap<>();
@@ -29,20 +26,26 @@ public class LocalProcessMonitor implements WorkerMonitor, ExecutorBackEnd, Init
 
     private final LocalProcessBackend localProcessBackend;
 
+    private ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
+
     @Inject
     public LocalProcessMonitor(LocalProcessBackend localProcessBackend) {
         this.localProcessBackend = localProcessBackend;
     }
 
     public void start() {
-        logger.info("start pod monitor...");
-        ScheduledExecutorService timer = new ScheduledThreadPoolExecutor(1);
+        logger.info("start process monitor...");
         timer.scheduleAtFixedRate(new PollingProcessStatus(), 10, POLLING_PERIOD, TimeUnit.MILLISECONDS);
+        localProcessBackend.watch(new LocalProcessWatcher());
+    }
+
+    public void stop(){
+        timer.shutdown();
     }
 
     @Override
     public boolean register(Long taskAttemptId, WorkerEventHandler handler) {
-        logger.debug("register pod event handler,taskAttemptId = {}", taskAttemptId);
+        logger.debug("register process event handler,taskAttemptId = {}", taskAttemptId);
         registerHandlers.put(taskAttemptId, handler);
         return true;
     }
@@ -60,27 +63,24 @@ public class LocalProcessMonitor implements WorkerMonitor, ExecutorBackEnd, Init
     }
 
     @Override
-    public boolean statusUpdate(TaskAttemptMsg msg) {
-        logger.info("taskAttempt status change attemptMsg = {}", msg);
-        ProcessSnapShot processSnapShot = ProcessSnapShot.fromTaskAttemptMessage(msg);
-        WorkerEventHandler workerEventHandler = registerHandlers.get(msg.getTaskAttemptId());
-        if (workerEventHandler == null) {
-            logger.warn("process with taskAttemptId = {} count not found event handler", msg.getTaskAttemptId());
-            return false;
-        }
-        workerEventHandler.onReceiveSnapshot(processSnapShot);
-        return true;
-    }
-
-    @Override
-    public boolean heartBeatReceive(HeartBeatMessage heartBeatMessage) {
-        logger.debug("get heart beat from worker = {}", heartBeatMessage);
-        return true;
-    }
-
-    @Override
     public void afterPropertiesSet() {
         start();
+    }
+
+    //监控process状态变更
+    class LocalProcessWatcher implements ProcessWatcher  {
+
+        public void eventReceived(ProcessSnapShot processSnapShot) {
+            Long taskAttemptId = processSnapShot.getIns().getTaskAttemptId();
+            logger.debug("receive process event taskAttemptId = {}", taskAttemptId);
+            WorkerEventHandler workerEventHandler = registerHandlers.get(taskAttemptId);
+            if (workerEventHandler == null) {
+                logger.warn("process with taskAttemptId = {} count not found event handler", taskAttemptId);
+                return;
+            }
+            workerEventHandler.onReceiveSnapshot(processSnapShot);
+        }
+
     }
 
     class PollingProcessStatus implements Runnable {

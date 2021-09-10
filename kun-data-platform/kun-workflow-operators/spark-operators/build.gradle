@@ -20,7 +20,6 @@ dependencies {
         exclude group: 'javax.servlet', module: 'servlet-api'
     }
     implementation "com.amazonaws:aws-java-sdk-s3:1.11.306"
-    implementation 'org.apache.hadoop:hadoop-aws:2.7.3'
     implementation 'org.zeroturnaround:zt-exec:1.11'
     implementation 'org.zeroturnaround:zt-process-killer:1.10'
     implementation 'org.jooq:joor-java-8:0.9.13'
@@ -31,6 +30,7 @@ dependencies {
     testImplementation "org.mock-server:mockserver-client-java"
     testImplementation "org.awaitility:awaitility"
     testImplementation 'org.jooq:joor-java-8'
+    testImplementation 'io.netty:netty-all:4.1.67.Final'
 }
 
 shadowJar {

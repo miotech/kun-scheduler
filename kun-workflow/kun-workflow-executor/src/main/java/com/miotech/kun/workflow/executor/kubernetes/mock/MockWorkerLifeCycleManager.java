@@ -22,6 +22,7 @@ import java.util.List;
 public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
 
     private final Logger logger = LoggerFactory.getLogger(WorkerLifeCycleManager.class);
+
     private MockQueueManager mockQueueManager;
     private MockWorkerMonitor mockWorkerMonitor;
 

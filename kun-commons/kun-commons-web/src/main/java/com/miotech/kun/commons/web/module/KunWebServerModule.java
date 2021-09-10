@@ -4,7 +4,6 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseModule;
 import com.miotech.kun.commons.db.GraphDatabaseModule;
-import com.miotech.kun.commons.rpc.RpcModule;
 import com.miotech.kun.commons.utils.Props;
 import org.eclipse.jetty.server.Server;
 
@@ -22,7 +21,6 @@ public class KunWebServerModule extends AppModule {
         super.configure();
         install(new DatabaseModule());
         startNeo4jIfNeeded();
-        startRpcIfNeeded();
     }
 
     @Provides
@@ -37,9 +35,4 @@ public class KunWebServerModule extends AppModule {
         }
     }
 
-    private void startRpcIfNeeded() {
-        if (props.containsKey("rpc.registry")) {
-            install(new RpcModule(props));
-        }
-    }
 }
