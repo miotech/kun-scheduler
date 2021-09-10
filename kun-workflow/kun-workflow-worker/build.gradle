@@ -23,7 +23,6 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-facade')
     implementation project(":kun-workflow:kun-workflow-utils")
     implementation "org.postgresql:postgresql"
-    implementation 'org.apache.dubbo:dubbo'
     implementation "com.fasterxml.jackson.core:jackson-core"
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "com.h2database:h2"

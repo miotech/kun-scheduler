@@ -4,14 +4,12 @@ import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.execution.HeartBeatMessage;
 import com.miotech.kun.workflow.core.execution.TaskAttemptMsg;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import com.miotech.kun.workflow.facade.WorkflowExecutorFacade;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.worker.Worker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestWorker2 implements Worker {
-    private WorkflowExecutorFacade workflowExecutorFacade;
 
     private TaskAttemptMsg taskAttemptMsg;
 
@@ -19,10 +17,6 @@ public class TestWorker2 implements Worker {
 
     private final static Logger logger = LoggerFactory.getLogger(TestWorker2.class);
 
-
-    public TestWorker2(WorkflowExecutorFacade workflowExecutorFacade) {
-        this.workflowExecutorFacade = workflowExecutorFacade;
-    }
 
     @Override
     public void killTask(Boolean abort) {
@@ -64,7 +58,6 @@ public class TestWorker2 implements Worker {
             taskAttemptMsg.setStartAt(DateTimeUtils.now());
             taskAttemptMsg.setQueueName("default");
             taskAttemptMsg.setWorkerId(1l);
-            workflowExecutorFacade.statusUpdate(taskAttemptMsg);
             HeartBeatMessage message = new HeartBeatMessage();
             message.setWorkerId(1l);
             message.setTaskAttemptId(command.getTaskAttemptId());
@@ -79,14 +72,12 @@ public class TestWorker2 implements Worker {
                 try {
                     logger.info("running worker send heartbeat");
                     message.setTimeoutTimes(0);
-                    workflowExecutorFacade.heartBeat(message);
                     Thread.currentThread().sleep(5000);
                 } catch (Exception e) {
                     logger.error("send heartbeat failed",e);
                 }
             }
             taskAttemptMsg.setTaskRunStatus(TaskRunStatus.SUCCESS);
-            workflowExecutorFacade.statusUpdate(taskAttemptMsg);
         }
     }
 
