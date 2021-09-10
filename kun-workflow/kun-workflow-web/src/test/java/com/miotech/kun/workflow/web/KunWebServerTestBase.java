@@ -3,13 +3,13 @@ package com.miotech.kun.workflow.web;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.commons.utils.Initializer;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.infra.KunInfraWebModule;
 import com.miotech.kun.infra.KunInfraWebServer;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
+import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
@@ -37,6 +37,9 @@ public class KunWebServerTestBase extends GuiceTestBase {
     private KunInfraWebServer webServer;
 
     @Inject
+    private WorkerLifeCycleManager workerLifeCycleManager;
+
+    @Inject
     private Props props;
 
     @Override
@@ -50,8 +53,6 @@ public class KunWebServerTestBase extends GuiceTestBase {
 
     @Before
     public void setUp() {
-        injector.getInstance(Initializer.class).initialize();
-        webServer = injector.getInstance(KunInfraWebServer.class);
         new Thread(() -> webServer.start()).start();
         while (!webServer.isReady()) {
             try {
@@ -64,6 +65,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
 
     @After
     public void tearDown() {
+        workerLifeCycleManager.shutdown();
         webServer.shutdown();
     }
 
