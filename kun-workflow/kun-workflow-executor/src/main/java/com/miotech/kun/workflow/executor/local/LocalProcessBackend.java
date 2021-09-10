@@ -1,13 +1,14 @@
 package com.miotech.kun.workflow.executor.local;
 
 import com.google.common.base.Joiner;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.worker.DatabaseConfig;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstanceKind;
-import com.miotech.kun.workflow.core.model.worker.DatabaseConfig;
 import com.miotech.kun.workflow.executor.local.model.LocalProcessParams;
 import com.miotech.kun.workflow.worker.JsonCodec;
 import org.apache.commons.lang3.StringUtils;
@@ -17,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.*;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.miotech.kun.workflow.executor.local.LocalProcessConstants.KUN_ATTEMPT_ID;
@@ -26,8 +28,12 @@ import static com.miotech.kun.workflow.executor.local.LocalProcessConstants.KUN_
 public class LocalProcessBackend {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalProcessBackend.class);
+    private BlockingQueue<ProcessSnapShot> processSnapShotQueue = new LinkedBlockingQueue<>();
+    private final String THREAD_NAME_PREFIX = "processMonitor";
+    private ThreadPoolExecutor processPool = new ThreadPoolExecutor(0, Integer.MAX_VALUE, 60, TimeUnit.SECONDS, new SynchronousQueue<Runnable>(),
+            new ThreadFactoryBuilder().setNameFormat(THREAD_NAME_PREFIX +"-%d").build());
 
-    public Process startProcess(ExecCommand command,DatabaseConfig databaseConfig) {
+    public Process startProcess(ExecCommand command, DatabaseConfig databaseConfig) {
         File inputFile;
         File configFile;
         File outputFile;
@@ -38,7 +44,7 @@ public class LocalProcessBackend {
             outputFile = File.createTempFile("process_output", null);
             stdoutFile = File.createTempFile("process_stdout", null);
             JsonCodec.MAPPER.writeValue(inputFile, command);
-            JsonCodec.MAPPER.writeValue(configFile,databaseConfig);
+            JsonCodec.MAPPER.writeValue(configFile, databaseConfig);
         } catch (IOException e) {
             logger.error("Failed to create input/output file.", e);
             throw new IllegalStateException(e);
@@ -48,16 +54,34 @@ public class LocalProcessBackend {
         ProcessBuilder pb = new ProcessBuilder();
         pb.redirectErrorStream(true);
         pb.redirectOutput(stdoutFile);
-        pb.command(buildCommand(inputFile.getPath(),configFile.getPath(), outputFile.getPath(), command));
+        pb.command(buildCommand(inputFile.getPath(), configFile.getPath(), outputFile.getPath(), command));
         String cmd = Joiner.on(" ").join(pb.command());
         logger.info("Start to run command: {}", cmd);
 //         运行
         try {
-            return pb.start();
+            Process process = pb.start();
+            ProcessMonitorTask processMonitorTask = new ProcessMonitorTask(command.getTaskAttemptId(), process);
+            processPool.submit(processMonitorTask);
+            return process;
         } catch (IOException e) {
             logger.error("Failed to start process.", e);
             throw new IllegalStateException(e);
         }
+
+    }
+
+
+    /**
+     * register watcher to watch running process
+     * The onReceiveSnapshot method is called when the process status is updated
+     *
+     * @param processWatcher
+     */
+    public void watch(ProcessWatcher processWatcher) {
+        //start a thread to poll snapshot from queue
+        logger.info("start process watcher...");
+        Thread processWatcherTask = new Thread(new ProcessWatcherTask(processWatcher), "processWatcherThread");
+        processWatcherTask.start();
     }
 
     public List<ProcessSnapShot> fetchRunningProcess() {
@@ -74,7 +98,7 @@ public class LocalProcessBackend {
         return runningProcess.get(0);
     }
 
-    public List<ProcessSnapShot> fetchRunningProcess(String queueName){
+    public List<ProcessSnapShot> fetchRunningProcess(String queueName) {
         LocalProcessParams localProcessParams = new LocalProcessParams();
         localProcessParams.setQueueName(queueName);
         return fetchRunningProcess(localProcessParams);
@@ -105,6 +129,7 @@ public class LocalProcessBackend {
                 outputList.add(line);
             }
             for (String output : outputList) {
+                logger.debug("found running process message : {}",output);
                 Long taskAttemptId = findTaskAttemptId(output);
                 WorkerInstance workerInstance = new WorkerInstance(taskAttemptId, findPid(output), "local", WorkerInstanceKind.LOCAL_PROCESS);
                 ProcessSnapShot processSnapShot = new ProcessSnapShot(workerInstance, TaskRunStatus.RUNNING);
@@ -116,6 +141,48 @@ public class LocalProcessBackend {
         }
         return runningProcess;
 
+    }
+
+    public void stopProcess(Long taskAttemptId){
+        ProcessSnapShot processSnapShot = fetchProcessByTaskAttemptId(taskAttemptId);
+        if (processSnapShot == null) {
+            return ;
+        }
+        String processId = processSnapShot.getIns().getWorkerId();
+
+        logger.info("worker going to shutdown, taskAttemptId = {},processId ={}", taskAttemptId, processId);
+        Runtime rt = Runtime.getRuntime();
+        try {
+            if (System.getProperty("os.name").toLowerCase().indexOf("windows") > -1)
+                rt.exec("taskkill " + processId);
+            else {
+                rt.exec("kill -15 " + processId);
+            }
+
+        } catch (IOException e) {
+            logger.error("kill worker failed processId = {} , taskAttemptId = {}", processId, taskAttemptId);
+        }
+    }
+
+    public void forceStopProcess(Long taskAttemptId){
+        ProcessSnapShot processSnapShot = fetchProcessByTaskAttemptId(taskAttemptId);
+        if (processSnapShot == null) {
+            return ;
+        }
+        String processId = processSnapShot.getIns().getWorkerId();
+
+        logger.info("going to force kill worker, taskAttemptId = {},processId ={}", taskAttemptId, processId);
+        Runtime rt = Runtime.getRuntime();
+        try {
+            if (System.getProperty("os.name").toLowerCase().indexOf("windows") > -1)
+                rt.exec("taskkill " + processId);
+            else {
+                rt.exec("kill -9 " + processId);
+            }
+
+        } catch (IOException e) {
+            logger.error("force kill worker failed processId = {} , taskAttemptId = {}", processId, taskAttemptId);
+        }
     }
 
     private Long findTaskAttemptId(String output) {
@@ -159,5 +226,65 @@ public class LocalProcessBackend {
         jvmArgs.add(String.format("-XX:HeapDumpPath=/tmp/%d/heapdump.hprof", taskAttemptId));
 
         return jvmArgs;
+    }
+
+    class ProcessMonitorTask implements Runnable {
+
+        private Process process;
+        private Long taskAttemptId;
+
+        public ProcessMonitorTask(Long taskAttemptId, Process process) {
+            this.process = process;
+            this.taskAttemptId = taskAttemptId;
+        }
+
+        @Override
+        public void run() {
+            WorkerInstance workerInstance = new WorkerInstance(taskAttemptId, "", "local", WorkerInstanceKind.LOCAL_PROCESS);
+            ProcessSnapShot processSnapShot = new ProcessSnapShot(workerInstance, TaskRunStatus.RUNNING);
+            processSnapShotQueue.add(processSnapShot);
+            int exitCode = 1;
+            try {
+                exitCode = process.waitFor();
+            } catch (InterruptedException e) {
+                logger.warn("process monitor thread is interrupted");
+            }
+            workerInstance = new WorkerInstance(taskAttemptId, "", "local", WorkerInstanceKind.LOCAL_PROCESS);
+            TaskRunStatus taskRunStatus;
+            switch (exitCode) {
+                case 0:
+                    taskRunStatus = TaskRunStatus.SUCCESS;
+                    break;
+                case 1:
+                    taskRunStatus = TaskRunStatus.FAILED;
+                    break;
+                default:
+                    //ignore other exit code
+                    return;
+            }
+            processSnapShot = new ProcessSnapShot(workerInstance, taskRunStatus);
+            processSnapShotQueue.add(processSnapShot);
+        }
+    }
+
+    class ProcessWatcherTask implements Runnable {
+
+        private final ProcessWatcher processWatcher;
+
+        public ProcessWatcherTask(ProcessWatcher processWatcher) {
+            this.processWatcher = processWatcher;
+        }
+
+        @Override
+        public void run() {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    ProcessSnapShot processSnapShot = processSnapShotQueue.take();
+                    processWatcher.eventReceived(processSnapShot);
+                } catch (Throwable e) {
+                    logger.error("handle processSnapShot failed", e);
+                }
+            }
+        }
     }
 }

@@ -25,7 +25,6 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.tuple.Triple;
-import org.apache.dubbo.common.utils.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,8 +52,6 @@ public class TaskRunService {
 
     @Inject
     private Props props;
-
-    private final Set<Long> rerunningTaskRunIds = new ConcurrentHashSet<>();
 
     @Inject
     public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor, Scheduler scheduler) {

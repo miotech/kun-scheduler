@@ -33,7 +33,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.sql.ResultSet;
@@ -762,7 +761,7 @@ public class TaskRunDao {
      * @return
      */
     public List<TaskAttemptProps> fetchAttemptsPropByTaskRunIds(List<Long> taskRunIds) {
-        if (CollectionUtils.isEmpty(taskRunIds)) {
+        if (taskRunIds == null || taskRunIds.isEmpty()) {
             return Lists.newArrayList();
         }
 

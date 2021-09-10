@@ -1,22 +1,15 @@
 package com.miotech.kun.workflow.operator;
 
-import com.google.common.base.Strings;
 import com.miotech.kun.commons.testing.MockServerTestBase;
-import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.OperatorContext;
-import com.miotech.kun.workflow.testing.executor.MockOperatorContextImpl;
 import com.miotech.kun.workflow.testing.executor.OperatorRunner;
-import com.miotech.kun.workflow.utils.JSONUtils;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Test;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
+import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
@@ -97,7 +90,7 @@ public class SparkOperatorV1Test extends MockServerTestBase {
             });
             operatorRunner.run();
         } catch (Exception e) {
-            assertThat(e.getClass(), is(IllegalStateException.class));
+            assertThat(e, instanceOf(IllegalStateException.class));
             assertThat("Cannot find state for job: 0", is(e.getMessage()));
         }
     }

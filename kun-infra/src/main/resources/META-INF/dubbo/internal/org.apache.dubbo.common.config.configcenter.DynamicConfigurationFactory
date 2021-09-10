@@ -1,8 +1,0 @@
-nop=org.apache.dubbo.common.config.configcenter.nop.NopDynamicConfigurationFactory
-file=org.apache.dubbo.common.config.configcenter.file.FileSystemDynamicConfigurationFactory
-zookeeper=org.apache.dubbo.configcenter.support.zookeeper.ZookeeperDynamicConfigurationFactory
-apollo=org.apache.dubbo.configcenter.support.apollo.ApolloDynamicConfigurationFactory
-nacos=org.apache.dubbo.configcenter.support.nacos.NacosDynamicConfigurationFactory
-consul=org.apache.dubbo.configcenter.consul.ConsulDynamicConfigurationFactory
-
-etcd=org.apache.dubbo.configcenter.support.etcd.EtcdDynamicConfigurationFactory

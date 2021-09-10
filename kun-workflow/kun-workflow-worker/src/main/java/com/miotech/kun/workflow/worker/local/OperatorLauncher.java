@@ -10,17 +10,15 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.miotech.kun.commons.rpc.RpcModule;
-import com.miotech.kun.commons.rpc.RpcUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
-import com.miotech.kun.workflow.core.execution.*;
+import com.miotech.kun.workflow.core.execution.ExecCommand;
+import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.execution.OperatorReport;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.DatabaseConfig;
-import com.miotech.kun.workflow.facade.WorkflowExecutorFacade;
-import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.worker.JsonCodec;
 import com.miotech.kun.workflow.worker.OperatorContextImpl;
 import org.slf4j.Logger;
@@ -28,10 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.management.ManagementFactory;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -40,12 +36,11 @@ public class OperatorLauncher {
     private static final Logger logger = LoggerFactory.getLogger(OperatorLauncher.class);
     private volatile boolean cancelled = false;
     private volatile KunOperator operator;
-    private volatile TaskRunStatus taskRunStatus = TaskRunStatus.RUNNING;
-    private final int RPC_RETRY_TIME = 3;
-    private final Long HEARTBEAT_INTERVAL = 5L;
-    private WorkflowExecutorFacade executorFacade;
-    private Long workerId;
     private static Props props;
+    private volatile boolean finished = false;
+    private final Integer SUCCESS_CODE = 0;
+    private final Integer FAILED_CODE = 1;
+    private final Integer ABORTED_CODE = 2;
 
     @Inject
     private TaskRunDao taskRunDao;
@@ -53,37 +48,26 @@ public class OperatorLauncher {
     private LineageService lineageService;
 
 
-    private ArrayBlockingQueue<TaskAttemptMsg> statusUpdateQueue = new ArrayBlockingQueue<>(5);
-
-
     private static Injector injector;
-
-    @Inject
-    public OperatorLauncher(WorkflowExecutorFacade executorFacade) {
-        this.executorFacade = executorFacade;
-    }
 
     public static void main(String args[]) {
         String in = args[0];
         String config = args[1];
-        String out = args[2];
         ExecCommand command = readCommand(in);
         // 初始化logger
         initLogger(command.getLogPath());
         DatabaseConfig databaseConfig = readConfig(config);
         props = initProps(databaseConfig);
-        props.put("rpc.registry", command.getRegisterUrl());
-        Integer workerPort = RpcUtils.getRandomPort();
-        props.put("rpc.port", workerPort);
         injector = Guice.createInjector(
-                new RpcModule(props),
                 new LocalWorkerModule(props)
         );
-        Thread mainThread = Thread.currentThread();
         OperatorLauncher operatorLauncher = injector.getInstance(OperatorLauncher.class);
-        Thread exitHook = new Thread(() -> operatorLauncher.cancel(mainThread));
+        Thread exitHook = new Thread(() ->{
+            operatorLauncher.cancel();
+        });
+
         Runtime.getRuntime().addShutdownHook(exitHook);
-        operatorLauncher.start(command, out);
+        operatorLauncher.start(command);
     }
 
     private static Props initProps(DatabaseConfig databaseConfig) {
@@ -118,23 +102,14 @@ public class OperatorLauncher {
         return props;
     }
 
-    private void start(ExecCommand command, String out) {
-        workerId = getPid();
-        Thread statusUpdateTask = new Thread(new StatusUpdateTask());
-        statusUpdateTask.start();
-        TaskAttemptMsg msg = launchOperator(command);
-        try {
-            logger.debug("wait statusUpdate message send to executor");
-            statusUpdateTask.join();
-        } catch (InterruptedException e) {
-            logger.debug("wait statusUpdate message send to executor failed", e);
-        }
-        writeResult(out, msg);
+    private void start(ExecCommand command) {
+        int exitCode = launchOperator(command);
+        finished = true;
+        System.exit(exitCode);
     }
 
-
-    private synchronized void cancel(Thread mainThread) {
-        if (taskRunStatus.isFinished()) {
+    private void cancel() {
+        if (finished) {
             return;
         }
         logger.info("Trying to cancel current operator.");
@@ -149,25 +124,14 @@ public class OperatorLauncher {
             try {
                 logger.info("run operator abort...");
                 operator.abort();
-                mainThread.join();
+                waitFinished();
             } catch (Exception e) {
                 logger.error("Unexpected exception occurred during aborting operator.", e);
             }
         }
     }
 
-    //rpc
-    public TaskAttemptMsg launchOperator(ExecCommand command) {
-        TaskAttemptMsg msg = new TaskAttemptMsg();
-        msg.setWorkerId(workerId);
-        msg.setTaskRunId(command.getTaskRunId());
-        msg.setTaskAttemptId(command.getTaskAttemptId());
-        msg.setStartAt(DateTimeUtils.now());
-        msg.setQueueName(command.getQueueName());
-        TaskAttemptMsg runningMsg = msg.copy();
-        taskRunStatus = TaskRunStatus.RUNNING;
-        runningMsg.setTaskRunStatus(TaskRunStatus.RUNNING);
-        statusUpdate(runningMsg);
+    public int launchOperator(ExecCommand command) {
         Thread thread = Thread.currentThread();
         ClassLoader cl = thread.getContextClassLoader();
         try {
@@ -178,9 +142,7 @@ public class OperatorLauncher {
 
             if (cancelled) {
                 logger.info("Operator is cancelled, abort execution.");
-                TaskAttemptMsg cancelledMsg = setCancelledMsg(msg);
-                statusUpdate(cancelledMsg);
-                return cancelledMsg;
+                return ABORTED_CODE;
             }
 
             // 初始化Operator
@@ -188,10 +150,8 @@ public class OperatorLauncher {
             operator.init();
             logger.info("Operator has initialized successfully.");
             if (cancelled) {
-                TaskAttemptMsg cancelledMsg = setCancelledMsg(msg);
-                statusUpdate(cancelledMsg);
                 logger.info("Operator is cancelled, abort execution.");
-                return cancelledMsg;
+                return ABORTED_CODE;
             }
 
             // 运行
@@ -200,46 +160,34 @@ public class OperatorLauncher {
             logger.info("Operator execution finished. success={}", success);
 
             if (cancelled) {
-                TaskAttemptMsg cancelledMsg = setCancelledMsg(msg);
-                statusUpdate(cancelledMsg);
                 logger.info("Operator is cancelled, abort execution.");
-                return cancelledMsg;
+                return ABORTED_CODE;
             } else if (success) {
-                TaskAttemptMsg successMessage = msg.copy();
-                taskRunStatus = TaskRunStatus.SUCCESS;
-                successMessage.setTaskRunStatus(TaskRunStatus.SUCCESS);
-                successMessage.setEndAt(DateTimeUtils.now());
                 if (operator.getReport().isPresent()) {
-                    OperatorReport operatorReport = new OperatorReport();
-                    operatorReport.copyFromReport(operator.getReport().get());
-                    successMessage.setOperatorReport(operatorReport);
                     try {
+                        OperatorReport operatorReport = new OperatorReport();
+                        operatorReport.copyFromReport(operator.getReport().get());
                         processReport(command.getTaskRunId(), operatorReport);
                     } catch (Throwable e) {
                         logger.error("process operator report failed", e);
                     }
-                } else {
-                    successMessage.setOperatorReport(OperatorReport.BLANK);
                 }
-                statusUpdate(successMessage);
-                return successMessage;
+                return SUCCESS_CODE;
             } else {
-                TaskAttemptMsg failedMsg = setFailedMsg(msg);
-                statusUpdate(failedMsg);
-                return failedMsg;
+                return FAILED_CODE;
             }
         } catch (Throwable e) {
             logger.error("Unexpected exception occurred.", e);
-            TaskAttemptMsg failedMsg = setFailedMsg(msg);
-            statusUpdate(failedMsg);
-            return failedMsg;
+            return FAILED_CODE;
         } finally {
             thread.setContextClassLoader(cl);
         }
     }
 
-    private void statusUpdate(TaskAttemptMsg msg) {
-        statusUpdateQueue.add(msg);
+    private void waitFinished(){
+        while (!finished){
+            Uninterruptibles.sleepUninterruptibly(100, TimeUnit.MILLISECONDS);
+        }
     }
 
     private static ExecCommand readCommand(String inputFile) {
@@ -257,14 +205,6 @@ public class OperatorLauncher {
         } catch (IOException e) {
             logger.error("Failed to read config. path={}", configFile, e);
             throw new IllegalStateException(e);
-        }
-    }
-
-    private void writeResult(String outputFile, TaskAttemptMsg result) {
-        try {
-            JsonCodec.MAPPER.writeValue(new File(outputFile), result);
-        } catch (IOException e) {
-            logger.error("Failed to write output. path={}", outputFile, e);
         }
     }
 
@@ -321,42 +261,6 @@ public class OperatorLauncher {
         return logPath.substring(5);
     }
 
-    private TaskAttemptMsg setCancelledMsg(TaskAttemptMsg msg) {
-        taskRunStatus = TaskRunStatus.ABORTED;
-        TaskAttemptMsg cancelledMsg = msg.copy();
-        cancelledMsg.setTaskRunStatus(TaskRunStatus.ABORTED);
-        cancelledMsg.setEndAt(DateTimeUtils.now());
-        if (operator.getReport().isPresent()) {
-            OperatorReport operatorReport = new OperatorReport();
-            operatorReport.copyFromReport(operator.getReport().get());
-            cancelledMsg.setOperatorReport(operatorReport);
-        } else {
-            cancelledMsg.setOperatorReport(OperatorReport.BLANK);
-        }
-        return cancelledMsg;
-    }
-
-    private TaskAttemptMsg setFailedMsg(TaskAttemptMsg msg) {
-        taskRunStatus = TaskRunStatus.FAILED;
-        TaskAttemptMsg failedMsg = msg.copy();
-        failedMsg.setTaskRunStatus(TaskRunStatus.FAILED);
-        failedMsg.setEndAt(DateTimeUtils.now());
-        if (operator != null && operator.getReport().isPresent()) {
-            OperatorReport operatorReport = new OperatorReport();
-            operatorReport.copyFromReport(operator.getReport().get());
-            failedMsg.setOperatorReport(operatorReport);
-        } else {
-            failedMsg.setOperatorReport(OperatorReport.BLANK);
-        }
-        return failedMsg;
-    }
-
-
-    private Long getPid() {
-        String name = ManagementFactory.getRuntimeMXBean().getName();
-        String pid = name.split("@")[0];
-        return Long.valueOf(pid);
-    }
 
     private void processReport(Long taskRunId, OperatorReport report) {
         logger.debug("Update task's inlets/outlets. taskRunId={}, inlets={}, outlets={}",
@@ -368,36 +272,4 @@ public class OperatorLauncher {
 
     }
 
-    class StatusUpdateTask implements Runnable {
-
-        @Override
-        public void run() {
-            while (!cancelled) {
-                try {
-                    TaskAttemptMsg msg = statusUpdateQueue.take();
-                    int sendTime = 0;
-                    boolean updateSuccess = false;
-                    while (!updateSuccess && sendTime <= RPC_RETRY_TIME) {
-                        try {
-                            if (sendTime > 0) {
-                                Uninterruptibles.sleepUninterruptibly(HEARTBEAT_INTERVAL, TimeUnit.SECONDS);
-                            }
-                            executorFacade.statusUpdate(msg);
-                            updateSuccess = true;
-                            logger.info("send update task status message = {}, to executor result = {}", msg, updateSuccess);
-                        } catch (Exception e) {
-                            sendTime++;
-                            logger.error("send update task status message = {}, to executor failed,retry = {}", msg, sendTime, e);
-                        }
-                    }
-                    if (msg.getTaskRunStatus().isFinished()) {
-                        cancelled = true;
-                    }
-                } catch (InterruptedException e) {
-                    logger.error("take TaskAttemptMsg from queue failed", e);
-                }
-            }
-
-        }
-    }
 }

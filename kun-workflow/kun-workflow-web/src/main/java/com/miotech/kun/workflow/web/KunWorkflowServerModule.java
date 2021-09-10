@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.web;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.module.AppModule;
 import com.miotech.kun.workflow.LocalScheduler;
@@ -14,7 +13,6 @@ import com.miotech.kun.workflow.core.publish.EventPublisher;
 import com.miotech.kun.workflow.core.publish.NopEventPublisher;
 import com.miotech.kun.workflow.core.publish.RedisEventPublisher;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
-import com.miotech.kun.workflow.executor.ExecutorBackEnd;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.executor.kubernetes.KubernetesExecutor;
@@ -25,12 +23,7 @@ import com.miotech.kun.workflow.executor.local.LocalExecutor;
 import com.miotech.kun.workflow.executor.local.LocalProcessLifeCycleManager;
 import com.miotech.kun.workflow.executor.local.LocalProcessMonitor;
 import com.miotech.kun.workflow.executor.local.LocalQueueManage;
-import com.miotech.kun.workflow.executor.rpc.KubernetesExecutorFacadeImpl;
-import com.miotech.kun.workflow.executor.rpc.LocalExecutorFacadeImpl;
-import com.miotech.kun.workflow.executor.rpc.WorkerClusterConsumer;
-import com.miotech.kun.workflow.facade.WorkflowExecutorFacade;
 import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
-import com.miotech.kun.workflow.facade.WorkflowWorkerFacade;
 import com.miotech.kun.workflow.web.service.RecoverService;
 import com.miotech.kun.workflow.web.service.WorkflowServiceFacadeImpl;
 import io.fabric8.kubernetes.client.Config;
@@ -55,8 +48,6 @@ public class KunWorkflowServerModule extends AppModule {
         String env = props.getString("executor.env.name","local");
         if (env.equals("local")) {
             bind(Executor.class).to(LocalExecutor.class);
-            bind(ExecutorBackEnd.class).to(LocalProcessMonitor.class);
-            bind(WorkflowExecutorFacade.class).to(LocalExecutorFacadeImpl.class);
             bind(WorkerLifeCycleManager.class).to(LocalProcessLifeCycleManager.class);
             bind(AbstractQueueManager.class).to(LocalQueueManage.class);
             bind(WorkerMonitor.class).to(LocalProcessMonitor.class);
@@ -73,7 +64,6 @@ public class KunWorkflowServerModule extends AppModule {
             bind(WorkerMonitor.class).to(PodEventMonitor.class);
             bind(WorkerLifeCycleManager.class).to(PodLifeCycleManager.class);
             bind(Executor.class).to(KubernetesExecutor.class);
-            bind(WorkflowExecutorFacade.class).to(KubernetesExecutorFacadeImpl.class);
         }
         bind(EventBus.class).toInstance(new EventBus());
         bind(Scheduler.class).to(LocalScheduler.class);
@@ -82,19 +72,6 @@ public class KunWorkflowServerModule extends AppModule {
         bind(WorkflowServiceFacade.class).to(WorkflowServiceFacadeImpl.class);
     }
 
-
-    @Singleton
-    @Provides
-    public WorkerClusterConsumer workerRpcConsumer() {
-        return new WorkerClusterConsumer();
-    }
-
-
-    @Singleton
-    @Provides
-    public WorkflowWorkerFacade workerFacade(WorkerClusterConsumer workerClusterConsumer) {
-        return workerClusterConsumer.getService("default", WorkflowWorkerFacade.class, "1.0");
-    }
 
     @Provides
     public EventPublisher createRedisPublisher() {
