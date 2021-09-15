@@ -1,10 +1,9 @@
-package com.miotech.kun.workflow.core.publish;
+package com.miotech.kun.workflow.core.event;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
-import com.miotech.kun.workflow.core.event.*;
-
+import com.miotech.kun.commons.pubsub.event.Event;
 
 public class EventMapper {
     private static final ObjectMapper MAPPER = new ObjectMapper();

@@ -1,6 +1,6 @@
-package com.miotech.kun.workflow.core.publish;
+package com.miotech.kun.commons.pubsub.publish;
 
-import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.commons.pubsub.event.Event;
 
 public class NopEventPublisher implements EventPublisher {
     @Override

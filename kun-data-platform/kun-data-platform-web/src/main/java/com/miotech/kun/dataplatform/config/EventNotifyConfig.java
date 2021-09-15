@@ -1,11 +1,11 @@
 package com.miotech.kun.dataplatform.config;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
 import com.miotech.kun.dataplatform.notify.SystemDefaultNotifierConfig;
 import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
-import com.miotech.kun.workflow.core.publish.EventSubscriber;
-import com.miotech.kun.workflow.core.publish.RedisEventSubscriber;
+import com.miotech.kun.workflow.core.pubsub.RedisEventSubscriber;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

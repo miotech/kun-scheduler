@@ -1,10 +1,11 @@
 package com.miotech.kun.workflow.core.publish;
 
+import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
-import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.LineageEvent;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
+import com.miotech.kun.workflow.core.pubsub.KafkaEventPublisher;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

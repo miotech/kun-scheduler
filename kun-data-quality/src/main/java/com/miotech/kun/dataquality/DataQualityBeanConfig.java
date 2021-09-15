@@ -1,9 +1,9 @@
 package com.miotech.kun.dataquality;
 
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.dataquality.utils.WorkflowUtils;
 import com.miotech.kun.workflow.client.model.Operator;
-import com.miotech.kun.workflow.core.publish.EventSubscriber;
-import com.miotech.kun.workflow.core.publish.RedisEventSubscriber;
+import com.miotech.kun.workflow.core.pubsub.RedisEventSubscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

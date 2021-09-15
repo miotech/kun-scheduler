@@ -1,6 +1,7 @@
 package com.miotech.kun.dataplatform.notify;
 
 import com.miotech.kun.common.constant.DataQualityConstant;
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.dataplatform.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.common.notifyconfig.service.TaskNotifyConfigService;
 import com.miotech.kun.dataplatform.common.taskdefinition.service.TaskDefinitionService;
@@ -17,7 +18,6 @@ import com.miotech.kun.dataplatform.notify.userconfig.EmailNotifierUserConfig;
 import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
 import com.miotech.kun.dataplatform.notify.userconfig.WeComNotifierUserConfig;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
-import com.miotech.kun.workflow.core.publish.EventSubscriber;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
