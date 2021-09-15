@@ -2,14 +2,13 @@ package com.miotech.kun.workflow.common.task.service;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
+import com.miotech.kun.metadata.common.rpc.MetadataServiceFacadeImpl;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
-import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
-import com.miotech.kun.workflow.common.lineage.node.TaskNode;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.operator.service.LineageMockOperator;
@@ -24,6 +23,8 @@ import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
+import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
@@ -57,7 +58,8 @@ import static org.mockito.Mockito.*;
 public class TaskServiceTest extends CommonTestBase {
     private static final String PACKAGE_PATH_LINEAGE_OPERATOR = OperatorCompiler.compileJar(LineageMockOperator.class, "LineageMockOperator");
 
-    MetadataServiceFacade metadataFacade;
+    @Inject
+    private MetadataServiceFacade metadataFacade;
 
     @Inject
     private LineageService lineageService;
@@ -79,6 +81,8 @@ public class TaskServiceTest extends CommonTestBase {
     @Inject
     private TaskService taskService;
 
+    private MetadataDatasetDao metadataDatasetDao;
+
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
@@ -89,8 +93,11 @@ public class TaskServiceTest extends CommonTestBase {
 
     @Override
     protected void configuration() {
-        metadataFacade = mock(MetadataServiceFacade.class);
         super.configuration();
+        metadataDatasetDao = mock(MetadataDatasetDao.class);
+        bind(MetadataDatasetDao.class,metadataDatasetDao);
+        bind(MetadataServiceFacade.class,MetadataServiceFacadeImpl.class);
+
     }
 
     private List<Operator> insertSampleOperators() {
@@ -522,14 +529,15 @@ public class TaskServiceTest extends CommonTestBase {
                 )
                 .build();
 
-        // Mock returning random dataset by metadata facade given any datastore
+        // Mock returning dataset by metadata dao given any datastore
         doAnswer(invocation -> {
+            Long gid = invocation.getArgument(0,Long.class);
             Dataset dataset = Dataset.newBuilder()
-                    .withGid(IdGenerator.getInstance().nextId())
+                    .withGid(gid)
                     .withDataStore(null)
                     .build();
-            return dataset;
-        }).when(metadataFacade).getDatasetByDatastore(any());
+            return Optional.of(dataset);
+        }).when(metadataDatasetDao).fetchDatasetByGid(anyLong());
 
         // Process
         Task createdTask = taskService.createTask(taskVO);

@@ -20,7 +20,7 @@ public class MockDataStoreFactory {
             DataStoreType.TOPIC
     );
 
-    public static DataStore getMockDataStore(DataStoreType dataStoreType) {
+    public static DataStore getMockDataStore(DataStoreType dataStoreType, String database, String table) {
         return new DataStore(dataStoreType) {
             @Override
             public String getDatabaseName() {
@@ -29,6 +29,12 @@ public class MockDataStoreFactory {
 
             @Override
             public DSI getDSI() {
+                if (getType().equals(DataStoreType.HIVE_TABLE)) {
+                    return DSI.newBuilder().withStoreType("hive")
+                            .putProperty("database", database)
+                            .putProperty("table", table)
+                            .build();
+                }
                 return DSI.from(this.getType().toString());
             }
         };

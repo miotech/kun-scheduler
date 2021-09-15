@@ -9,4 +9,5 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation "org.apache.kafka:kafka-clients"
     implementation 'redis.clients:jedis'
+    implementation "org.neo4j:neo4j-ogm-core"
 }

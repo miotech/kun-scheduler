@@ -4,13 +4,17 @@ dependencies {
     implementation project(":kun-metadata:kun-metadata-service-facade")
     implementation project(':kun-metadata:kun-metadata-core')
     implementation project(":kun-workflow:kun-workflow-core")
+    implementation "org.neo4j:neo4j-ogm-core"
+    runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16' // Only add if you're using the Bolt driver
 
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.google.guava:guava'
 
     testImplementation project(":kun-commons:kun-commons-testing")
     testImplementation project(":kun-db-schema:kun-infra-db-schema")
+    testImplementation project(":kun-workflow:kun-workflow-utils")
     testImplementation "org.hamcrest:hamcrest"
     testImplementation "org.hamcrest:hamcrest-library"
     testImplementation 'com.shazam:shazamcrest'
+    testImplementation "org.testcontainers:neo4j"
 }

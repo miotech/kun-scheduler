@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.common.lineage.node;
+package com.miotech.kun.workflow.core.model.lineage.node;
 
 import com.miotech.kun.workflow.core.annotation.Internal;
 import com.miotech.kun.workflow.core.model.task.Task;
