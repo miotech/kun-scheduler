@@ -1,7 +1,7 @@
 package com.miotech.kun.dataplatform.model.notify;
 
+import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.dataplatform.notify.userconfig.NotifierUserConfig;
-import com.miotech.kun.workflow.core.event.Event;
 
 import java.util.List;
 

@@ -1,12 +1,12 @@
 package com.miotech.kun.dataplatform.notify.service;
 
+import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.dataplatform.common.backfill.service.BackfillService;
 import com.miotech.kun.dataplatform.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.config.NotifyLinkConfig;
 import com.miotech.kun.dataplatform.notify.userconfig.EmailNotifierUserConfig;
-import com.miotech.kun.workflow.core.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.mail.DefaultAuthenticator;

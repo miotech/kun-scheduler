@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.testing.event;
 
 import com.google.common.eventbus.Subscribe;
-import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.commons.pubsub.event.Event;
 
 import java.util.LinkedList;
 import java.util.List;

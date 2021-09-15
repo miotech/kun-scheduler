@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.notify.service;
 
-import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 

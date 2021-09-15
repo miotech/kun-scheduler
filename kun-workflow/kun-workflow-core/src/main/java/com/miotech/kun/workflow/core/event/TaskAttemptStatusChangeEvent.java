@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.core.event;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.miotech.kun.commons.pubsub.event.PublicEvent;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 

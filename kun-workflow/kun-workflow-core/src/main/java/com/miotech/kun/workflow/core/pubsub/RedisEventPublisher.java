@@ -1,15 +1,17 @@
-package com.miotech.kun.workflow.core.publish;
+package com.miotech.kun.workflow.core.pubsub;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.commons.pubsub.event.Event;
+import com.miotech.kun.workflow.core.event.EventMapper;
+import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 @Singleton
-public class RedisEventPublisher implements EventPublisher{
+public class RedisEventPublisher implements EventPublisher {
 
     private static Logger logger = LoggerFactory.getLogger(RedisEventPublisher.class);
 

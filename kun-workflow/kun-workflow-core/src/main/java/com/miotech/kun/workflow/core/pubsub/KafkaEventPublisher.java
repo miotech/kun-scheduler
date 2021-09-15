@@ -1,9 +1,11 @@
-package com.miotech.kun.workflow.core.publish;
+package com.miotech.kun.workflow.core.pubsub;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.pubsub.event.Event;
+import com.miotech.kun.workflow.core.event.EventMapper;
+import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.workflow.core.event.Event;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
