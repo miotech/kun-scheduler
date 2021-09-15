@@ -20,6 +20,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class TaskDefinitionDao {
@@ -65,6 +66,13 @@ public class TaskDefinitionDao {
     public List<TaskDefinition> fetchAll() {
         String sql = getSelectSQL(TASK_DEF_MODEL_NAME + ".is_archived = ?");
         return jdbcTemplate.query(sql, TaskDefinitionMapper.INSTANCE, false);
+    }
+
+    public List<TaskDefinition> fetchAliveTaskDefinitionByName(String taskName) {
+        String sql = getSelectSQL(TASK_DEF_MODEL_NAME + ".name = ?");
+        return jdbcTemplate.query(sql, TaskDefinitionMapper.INSTANCE, taskName).stream()
+                .filter(taskDef -> !taskDef.isArchived())
+                .collect(Collectors.toList());
     }
 
     public PaginationResult<TaskDefinition> search(TaskDefinitionSearchRequest searchRequest) {
