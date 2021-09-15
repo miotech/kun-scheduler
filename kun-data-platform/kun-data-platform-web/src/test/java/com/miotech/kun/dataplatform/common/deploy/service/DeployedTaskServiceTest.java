@@ -36,7 +36,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
-@Ignore
 @WithMockTestUser
 public class DeployedTaskServiceTest extends AppTestBase {
 
@@ -56,6 +55,7 @@ public class DeployedTaskServiceTest extends AppTestBase {
         }
     }
 
+    @Ignore
     @Test
     public void test_deployTask_created() {
         TaskCommit commit = MockTaskCommitFactory.createTaskCommit();
@@ -90,6 +90,7 @@ public class DeployedTaskServiceTest extends AppTestBase {
         assertThat(task.getTags(), is(prodTag));
     }
 
+    @Ignore
     @Test
     public void test_deployTask_modified() {
         TaskCommit commit = MockTaskCommitFactory.createTaskCommit()
@@ -121,6 +122,7 @@ public class DeployedTaskServiceTest extends AppTestBase {
         }
     }
 
+    @Ignore
     @Test
     public void test_deployTask_offlined_after_created() {
         // create and deploy
@@ -149,6 +151,7 @@ public class DeployedTaskServiceTest extends AppTestBase {
         assertThat(task.getDependencies().size(), is(0));
     }
 
+    @Ignore
     @Test
     public void test_deployTask_withDependency() {
         // create and deploy
@@ -164,6 +167,7 @@ public class DeployedTaskServiceTest extends AppTestBase {
         assertThat(deployedTasks.size(), is(taskSize));
     }
 
+    @Ignore
     @Test
     public void test_getDeployedTaskDag() {
         // prepare
@@ -204,6 +208,7 @@ public class DeployedTaskServiceTest extends AppTestBase {
         assertThat(dagTasks.getNodes().size(), is(2));
     }
 
+    @Ignore
     @Test
     public void test_searchTaskRuns_ok() {
         ScheduledTaskRunSearchRequest searchRequest = new ScheduledTaskRunSearchRequest(

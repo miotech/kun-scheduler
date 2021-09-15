@@ -5,12 +5,14 @@ import com.miotech.kun.dataplatform.common.taskdefinition.vo.TaskDefinitionSearc
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.workflow.client.model.PaginationResult;
+import com.miotech.kun.workflow.client.model.Task;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
@@ -66,6 +68,67 @@ public class TaskDefinitionDaoTest extends AppTestBase {
         List<TaskDefinition> fetched = taskDefinitionDao.fetchAll();
         assertThat(fetched.get(0), sameBeanAs(taskDefinition));
     }
+
+    @Test
+    public void test_fetchName_notFound() {
+        List<TaskDefinition> fetched = taskDefinitionDao.fetchAliveTaskDefinitionByName("test");
+        assertTrue(fetched.isEmpty());
+    }
+
+    @Test
+    public void test_fetchNameWithSingleAlive_ok() {
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinition);
+
+        Optional<TaskDefinition> fetched = taskDefinitionDao.fetchAliveTaskDefinitionByName(taskDefinition.getName()).stream()
+                .findAny();
+        assertThat(fetched.get(), sameBeanAs(taskDefinition));
+    }
+
+    @Test
+    public void test_fetchNameWithSingleArchived_notFound() {
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinition);
+        taskDefinitionDao.archive(taskDefinition.getDefinitionId());
+        List<TaskDefinition> fetched = taskDefinitionDao.fetchAliveTaskDefinitionByName(taskDefinition.getName());
+        assertTrue(fetched.isEmpty());
+    }
+
+    @Test
+    public void test_fetchNameWithMultipleArchived_notFound() {
+        Random rand = new Random();
+        int times = rand.nextInt(5) + 5;
+        for (int time = 1; time <= times; time++) {
+            TaskDefinition taskDefinitionTemp = MockTaskDefinitionFactory.createTaskDefinition();
+            taskDefinitionTemp = taskDefinitionTemp.cloneBuilder()
+                    .withName("test")
+                    .build();
+            taskDefinitionDao.archive(taskDefinitionTemp.getDefinitionId());
+        }
+        List<TaskDefinition> fetched = taskDefinitionDao.fetchAliveTaskDefinitionByName("test");
+        assertTrue(fetched.isEmpty());
+    }
+
+    @Test
+    public void test_fetchNameWithSingleAliveAndMultipleArchived_ok() {
+        Random rand = new Random();
+        int times = rand.nextInt(5) + 5;
+        for (int time = 1; time <= times; time++) {
+            TaskDefinition taskDefinitionTemp = MockTaskDefinitionFactory.createTaskDefinition();
+            taskDefinitionTemp = taskDefinitionTemp.cloneBuilder()
+                    .withName("test")
+                    .build();
+            taskDefinitionDao.create(taskDefinitionTemp);
+            if (time == times) break;
+            taskDefinitionDao.archive(taskDefinitionTemp.getDefinitionId());
+        }
+        Optional<TaskDefinition> fetched = taskDefinitionDao.fetchAliveTaskDefinitionByName("test").stream()
+                .findAny();
+        assertTrue(fetched.isPresent());
+        assertTrue(fetched.get().getName().equals("test"));
+    }
+
+
 
     @Test
     public void search_withArchived() {
