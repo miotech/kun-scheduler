@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.core.event;
+package com.miotech.kun.commons.pubsub.event;
 
 /**
  * A public event should be delivered to external systems.

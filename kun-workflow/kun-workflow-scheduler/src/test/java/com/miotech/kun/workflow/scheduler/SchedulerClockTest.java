@@ -1,7 +1,7 @@
 package com.miotech.kun.workflow.scheduler;
 
 import com.google.common.eventbus.EventBus;
-import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.testing.event.EventCollector;
 import org.junit.Before;

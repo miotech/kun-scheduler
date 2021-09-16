@@ -3,6 +3,8 @@ package com.miotech.kun.workflow.executor;
 
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.miotech.kun.commons.pubsub.publish.EventPublisher;
+import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -11,8 +13,6 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import com.miotech.kun.workflow.core.publish.EventPublisher;
-import com.miotech.kun.workflow.core.publish.NopEventPublisher;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockQueueManager;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockWorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.kubernetes.mock.MockWorkerMonitor;

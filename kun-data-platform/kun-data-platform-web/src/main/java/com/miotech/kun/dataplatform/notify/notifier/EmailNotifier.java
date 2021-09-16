@@ -1,9 +1,9 @@
 package com.miotech.kun.dataplatform.notify.notifier;
 
+import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.dataplatform.notify.MessageNotifier;
 import com.miotech.kun.dataplatform.notify.service.EmailService;
 import com.miotech.kun.dataplatform.notify.userconfig.EmailNotifierUserConfig;
-import com.miotech.kun.workflow.core.event.Event;
 
 public class EmailNotifier implements MessageNotifier {
     private final EmailService emailService;

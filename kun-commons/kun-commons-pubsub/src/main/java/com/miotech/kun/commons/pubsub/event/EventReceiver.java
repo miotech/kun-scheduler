@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.core.event;
+package com.miotech.kun.commons.pubsub.event;
 
 @FunctionalInterface
 public interface EventReceiver<E extends Event> {

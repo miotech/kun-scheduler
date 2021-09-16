@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.executor;
 
+import com.miotech.kun.commons.pubsub.publish.EventPublisher;
+import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -8,8 +10,6 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.publish.EventPublisher;
-import com.miotech.kun.workflow.core.publish.NopEventPublisher;
 import com.miotech.kun.workflow.executor.local.LocalProcessBackend;
 import com.miotech.kun.workflow.executor.local.LocalQueueManage;
 import com.miotech.kun.workflow.executor.local.MiscService;

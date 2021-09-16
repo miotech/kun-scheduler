@@ -1,7 +1,9 @@
-package com.miotech.kun.workflow.core.publish;
+package com.miotech.kun.workflow.core.pubsub;
 
-import com.miotech.kun.workflow.core.event.Event;
-import com.miotech.kun.workflow.core.event.EventReceiver;
+import com.miotech.kun.commons.pubsub.event.Event;
+import com.miotech.kun.commons.pubsub.event.EventReceiver;
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
+import com.miotech.kun.workflow.core.event.EventMapper;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

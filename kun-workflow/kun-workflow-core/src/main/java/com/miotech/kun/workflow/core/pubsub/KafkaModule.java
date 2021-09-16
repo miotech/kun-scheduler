@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.core.publish;
+package com.miotech.kun.workflow.core.pubsub;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
