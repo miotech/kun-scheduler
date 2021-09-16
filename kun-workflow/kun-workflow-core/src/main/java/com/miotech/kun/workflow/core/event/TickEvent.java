@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.core.event;
 
+import com.miotech.kun.commons.pubsub.event.PrivateEvent;
 import com.miotech.kun.workflow.core.model.common.Tick;
 
 public class TickEvent extends PrivateEvent {

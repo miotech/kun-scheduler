@@ -1,6 +1,6 @@
-package com.miotech.kun.workflow.core.publish;
+package com.miotech.kun.commons.pubsub.subscribe;
 
-import com.miotech.kun.workflow.core.event.EventReceiver;
+import com.miotech.kun.commons.pubsub.event.EventReceiver;
 
 public interface EventSubscriber {
     /**

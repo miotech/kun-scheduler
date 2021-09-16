@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.notify;
 
-import com.miotech.kun.workflow.core.event.Event;
+import com.miotech.kun.commons.pubsub.event.Event;
 
 public interface MessageNotifier {
     /**

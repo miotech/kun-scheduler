@@ -10,6 +10,7 @@ dependencies {
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-commons:kun-commons-rpc")
+    implementation project(":kun-commons:kun-commons-pubsub")
     implementation project(":kun-workflow:kun-workflow-core")
     implementation project(":kun-workflow:kun-workflow-common")
     implementation project(":kun-workflow:kun-workflow-utils")
