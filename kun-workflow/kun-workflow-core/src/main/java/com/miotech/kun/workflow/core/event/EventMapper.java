@@ -13,6 +13,7 @@ public class EventMapper {
         MAPPER.registerSubtypes(new NamedType(TickEvent.class, "TickEvent"));
         MAPPER.registerSubtypes(new NamedType(TaskAttemptStatusChangeEvent.class, "TaskAttemptStatusChangeEvent"));
         MAPPER.registerSubtypes(new NamedType(TaskAttemptFinishedEvent.class, "TaskAttemptFinishedEvent"));
+        MAPPER.registerSubtypes(new NamedType(TaskRunCreatedEvent.class, "TaskAttemptFinishedEvent"));
     }
 
     public static String toJson(Event event) throws JsonProcessingException {
