@@ -295,4 +295,9 @@ public class DefaultWorkflowClient implements WorkflowClient {
     public Boolean deleteVariable(String namespace, String key) {
         return wfApi.deleteVariable(namespace + "." + key);
     }
+
+    @Override
+    public Boolean changeTaskRunPriority(Long taskRunId, Integer priority) {
+        return wfApi.changePriority(taskRunId,priority);
+    }
 }

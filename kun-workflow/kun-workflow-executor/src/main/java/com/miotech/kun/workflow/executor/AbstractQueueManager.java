@@ -3,7 +3,6 @@ package com.miotech.kun.workflow.executor;
 import com.google.common.base.Preconditions;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
-import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.executor.local.MiscService;
@@ -122,14 +121,14 @@ public abstract class AbstractQueueManager {
         return readyTaskAttemptList;
     }
 
-    public void changePriority(long taskAttemptId, String queueName, TaskPriority priority) {
+    public void changePriority(long taskAttemptId, String queueName, Integer priority) {
         lock.lock();
         try {
             TaskAttemptQueue queue = queueMap.get(queueName);
             if (queue == null) {
                 throw new NoSuchElementException("no such queue,name = " + queueName);
             }
-            queue.changePriority(taskAttemptId, priority.getPriority());
+            queue.changePriority(taskAttemptId, priority);
         } finally {
             lock.unlock();
         }

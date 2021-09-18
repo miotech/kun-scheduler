@@ -20,7 +20,7 @@ public class TaskPropsVO {
     private final List<TaskDependencyVO> dependencies;
     private final List<Tag> tags;
     private final String queueName;
-    private final String priority;
+    private final Integer priority;
     private final Integer retries;
     private final Integer retryDelay;
 
@@ -105,7 +105,7 @@ public class TaskPropsVO {
         return dependencies;
     }
 
-    public String getPriority() {
+    public Integer getPriority() {
         return priority;
     }
 
@@ -131,7 +131,7 @@ public class TaskPropsVO {
         private List<TaskDependencyVO> dependencies;
         private List<Tag> tags;
         private String queueName;
-        private String priority;
+        private Integer priority;
         private Integer retries;
         private Integer retryDelay;
 
@@ -173,7 +173,7 @@ public class TaskPropsVO {
             return this;
         }
 
-        public TaskPropsVOBuilder withPriority(String priority) {
+        public TaskPropsVOBuilder withPriority(Integer priority) {
             this.priority = priority;
             return this;
         }

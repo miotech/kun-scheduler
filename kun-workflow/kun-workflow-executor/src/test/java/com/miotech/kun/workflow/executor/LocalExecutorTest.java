@@ -21,7 +21,6 @@ import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -972,15 +971,15 @@ public class LocalExecutorTest extends CommonTestBase {
     @Test
     public void runTaskWithPriority() {
         Task task1 = MockTaskFactory.createTask().cloneBuilder().withQueueName("test").
-                withPriority(TaskPriority.MEDIUM.getPriority()).build();
+                withPriority(16).build();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
         TaskAttempt taskAttempt1 = prepareAttempt(TestOperator1.class, MockTaskAttemptFactory.createTaskAttempt(taskRun1));
         Task task2 = MockTaskFactory.createTask().cloneBuilder().withQueueName("test").
-                withPriority(TaskPriority.HIGH.getPriority()).build();
+                withPriority(24).build();
         TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
         TaskAttempt taskAttempt2 = prepareAttempt(TestOperator1.class, MockTaskAttemptFactory.createTaskAttempt(taskRun2));
         Task task3 = MockTaskFactory.createTask().cloneBuilder().withQueueName("test").
-                withPriority(TaskPriority.LOW.getPriority()).build();
+                withPriority(8).build();
         TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task3);
         TaskAttempt taskAttempt3 = prepareAttempt(TestOperator1.class, MockTaskAttemptFactory.createTaskAttempt(taskRun3));
         executor.submit(taskAttempt1);

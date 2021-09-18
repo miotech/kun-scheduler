@@ -7,7 +7,6 @@ import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.executor.local.LocalProcessBackend;
@@ -65,15 +64,15 @@ public class LocalQueueManageTest extends CommonTestBase {
 
         LocalQueueManage localQueueManage = prepareQueueManage(props);
         Task task1 = MockTaskFactory.createTask().cloneBuilder().
-                withPriority(TaskPriority.MEDIUM.getPriority()).build();
+                withPriority(16).build();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
         TaskAttempt taskAttempt1 = createTaskAttempt(taskRun1);
         Task task2 = MockTaskFactory.createTask().cloneBuilder().
-                withPriority(TaskPriority.HIGH.getPriority()).build();
+                withPriority(24).build();
         TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
         TaskAttempt taskAttempt2 = createTaskAttempt(taskRun2);
         Task task3 = MockTaskFactory.createTask().cloneBuilder().
-                withPriority(TaskPriority.LOW.getPriority()).build();
+                withPriority(8).build();
         TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task3);
         TaskAttempt taskAttempt3 = createTaskAttempt(taskRun3);
 
@@ -85,7 +84,7 @@ public class LocalQueueManageTest extends CommonTestBase {
         localQueueManage.submit(taskAttempt2);
         localQueueManage.submit(taskAttempt3);
 
-        localQueueManage.changePriority(taskAttempt3.getId(),"default", TaskPriority.HIGHEST);
+        localQueueManage.changePriority(taskAttempt3.getId(),"default", 32);
         List<TaskAttempt> queuedAttempts = localQueueManage.drain();
 
         assertThat(queuedAttempts.get(0).getId(), is(taskAttempt3.getId()));

@@ -12,6 +12,7 @@ import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.tick.TickDao;
 import com.miotech.kun.workflow.common.variable.service.VariableService;
+import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
@@ -135,6 +136,9 @@ public class TaskSpawner implements InitializingBean {
         }
         logger.debug("to save created TaskRuns. TaskRun={}", taskRuns);
         taskRunDao.createTaskRuns(graphTaskRuns);
+        List<TaskRun> createdTaskRun = graphTaskRuns.values().stream()
+                .flatMap(Collection::stream).collect(Collectors.toList());
+        notifyTaskRunCreated(createdTaskRun);
         if (tick != SpecialTick.NULL) {
             logger.debug("to save checkpoint. checkpoint = {}", tick);
             tickDao.saveCheckPoint(tick);
@@ -277,6 +281,13 @@ public class TaskSpawner implements InitializingBean {
         @Subscribe
         public void onReceive(TickEvent event) {
             post(1L, event);
+        }
+    }
+
+    private void notifyTaskRunCreated(List<TaskRun> taskRunList){
+        for(TaskRun taskRun : taskRunList){
+            TaskRunCreatedEvent taskRunCreatedEvent = new TaskRunCreatedEvent(taskRun.getTask().getId(),taskRun.getId());
+            eventBus.post(taskRunCreatedEvent);
         }
     }
 
