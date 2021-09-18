@@ -3,7 +3,9 @@ package com.miotech.kun.workflow.scheduler;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -11,6 +13,7 @@ import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.tick.TickDao;
 import com.miotech.kun.workflow.common.variable.dao.VariableDao;
+import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.SpecialTick;
@@ -19,6 +22,7 @@ import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
@@ -102,6 +106,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     protected void configuration() {
         super.configuration();
         mock(TaskManager.class);
+
     }
 
     @Before
@@ -1010,6 +1015,63 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         List<TaskRun> result = captor.getValue();
         assertThat(result.size(), is(1));
+    }
+
+    @Test
+    public void testCreateTaskRuns_should_send_event() {
+        // collect taskRun create events
+        TaskRunEventCreatedEventListener listener = new TaskRunEventCreatedEventListener();
+        eventBus.register(listener);
+
+
+        // prepare
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
+        Task task1 = MockTaskFactory.createTask(operatorId).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId()))
+                .build();;
+
+
+        taskDao.create(task1);
+
+
+        DatabaseTaskGraph graph = injector.getInstance(DatabaseTaskGraph.class);
+        taskSpawner.schedule(graph);
+
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+
+        // process
+        Tick tick = new Tick(next);
+        eventBus.post(new TickEvent(tick));
+
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getId(), is(notNullValue()));
+        assertThat(submitted.getScheduledTick(), is(tick));
+        assertThat(submitted.getStartAt(), is(nullValue()));
+        assertThat(submitted.getEndAt(), is(nullValue()));
+        assertThat(submitted.getStatus(), is(TaskRunStatus.CREATED));
+
+        TaskRunCreatedEvent event = (TaskRunCreatedEvent) listener.getLastEvent().get();
+        assertThat(event.getTaskId(), is(task1.getId()));
+        assertThat(event.getTaskRunId(), is(submitted.getId()));
+
+    }
+
+    class TaskRunEventCreatedEventListener extends EventCollector {
+
+        @Subscribe
+        @Override
+        public void onReceive(Event event) {
+            if (event instanceof TaskRunCreatedEvent) {
+                events.add(event);
+            }
+        }
     }
 
 

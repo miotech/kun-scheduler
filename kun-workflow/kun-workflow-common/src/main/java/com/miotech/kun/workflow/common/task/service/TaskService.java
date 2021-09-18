@@ -65,6 +65,8 @@ public class TaskService {
     private final Integer RETRY_LIMIT = 5;
 
     private final Integer RETRY_DELAY_LIMIT = 600;
+    
+    private final Integer DEFAULT_PRIORITY = 16;
 
 
     @Inject
@@ -182,7 +184,7 @@ public class TaskService {
                 .withDependencies(vo.getDependencies() == null ? task.getDependencies() : parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags() == null ? task.getTags() : vo.getTags())
                 .withQueueName(vo.getQueueName() == null ? task.getQueueName() : vo.getQueueName())
-                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
+                .withPriority(vo.getPriority() == null ? DEFAULT_PRIORITY : vo.getPriority())
                 .withRetries(vo.getRetries() == null ? task.getRetries() : vo.getRetries())
                 .withRetryDelay(vo.getRetryDelay() == null ? task.getRetryDelay() : vo.getRetryDelay())
                 .build();
@@ -216,7 +218,7 @@ public class TaskService {
                 .withOperatorId(vo.getOperatorId())
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
                 .withTags(vo.getTags())
-                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
+                .withPriority(vo.getPriority() == null ? DEFAULT_PRIORITY : vo.getPriority())
                 .withRetries(retries)
                 .withRetryDelay(retryDelay)
                 .build();
@@ -414,7 +416,7 @@ public class TaskService {
                 .withDependencies(parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags())
                 .withQueueName(vo.getQueueName() == null ? DEFAULT_QUEUE : vo.getQueueName())
-                .withPriority(vo.getPriority() == null ? TaskPriority.MEDIUM.getPriority() : TaskPriority.valueOf(vo.getPriority()).getPriority())
+                .withPriority(vo.getPriority() == null ? DEFAULT_PRIORITY : vo.getPriority())
                 .withRetries(retries)
                 .withRetryDelay(retryDelay)
                 .build();

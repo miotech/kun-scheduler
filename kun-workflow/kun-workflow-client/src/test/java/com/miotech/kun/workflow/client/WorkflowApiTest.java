@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.client.model.*;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -193,6 +194,7 @@ public class WorkflowApiTest extends MockServerTestBase {
                 .withTaskRunIds(
                         Collections.singletonList(1L)
                 )
+                .withScheduleTypes(Lists.newArrayList(ScheduleType.SCHEDULED.name()))
                 .build();
         mockGet("/taskruns?taskRunIds=1", JSONUtils.toJsonString(new PaginationResult<>(1,0,1, taskRuns)));
 
@@ -281,6 +283,15 @@ public class WorkflowApiTest extends MockServerTestBase {
         mockDelete("/variables/" + vo.getNamespace() + "." + vo.getKey(), JSONUtils.toJsonString(true));
 
         Boolean result = wfApi.deleteVariable(vo.getNamespace() + "." + vo.getKey());
+        assertThat(result, is(true));
+    }
+
+    @Test
+    public void changeTaskRunPriority_shouldWork() {
+        VariableVO vo = mockVariableVO();
+        mockPut("/taskruns/changePriority?taskRunId=1&priority=32", "",JSONUtils.toJsonString(true));
+
+        Boolean result = wfApi.changePriority(1l,32);
         assertThat(result, is(true));
     }
 }

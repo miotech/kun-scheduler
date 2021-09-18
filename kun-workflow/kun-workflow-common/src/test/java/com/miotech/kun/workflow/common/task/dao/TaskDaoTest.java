@@ -69,7 +69,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .withQueueName("default")
-                .withPriority(TaskPriority.MEDIUM.getPriority())
+                .withPriority(16)
                 .withRetries(0)
                 .withRetryDelay(30)
                 .build();
@@ -203,7 +203,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                         new Tag("version", "1")
                 ))
                 .withQueueName("default")
-                .withPriority(TaskPriority.MEDIUM.getPriority())
+                .withPriority(16)
                 .withRetries(0)
                 .withRetryDelay(30)
                 .build();
