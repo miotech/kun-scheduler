@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor.local;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -39,8 +40,9 @@ public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
     @Inject
     public LocalProcessLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props,
                                         MiscService miscService, AbstractQueueManager queueManager,
-                                        OperatorDao operatorDao, LocalProcessBackend localProcessBackend) {
-        super(taskRunDao, workerMonitor, props, miscService, queueManager);
+                                        OperatorDao operatorDao, LocalProcessBackend localProcessBackend,
+                                        EventBus eventBus) {
+        super(taskRunDao, workerMonitor, props, miscService, queueManager,eventBus);
         this.operatorDao = operatorDao;
         this.localProcessBackend = localProcessBackend;
     }

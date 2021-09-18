@@ -11,6 +11,7 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -76,7 +77,7 @@ public class MiscService {
             eventBus.post(new TaskAttemptStatusChangeEvent(attemptId, prevStatus, status, attempt.getTaskName(), attempt.getTaskId()));
         } catch (ExecutionException e) {
             logger.error(String.format("failed to load taskAttempt from cahce, attempId %d", attemptId), e);
-        }catch (Exception e){
+        } catch (Exception e) {
             logger.error(String.format("task not found from attempId %d", attemptId), e);
         }
 
@@ -85,31 +86,70 @@ public class MiscService {
     public void notifyFinished(Long attemptId, TaskRunStatus status) {
         List<Long> inDataSetIds = new ArrayList<>();
         List<Long> outDataSetIds = new ArrayList<>();
-        TaskRun taskRun =  taskRunDao.fetchAttemptById(attemptId).get().getTaskRun();
-        for (DataStore dataStore : taskRun.getOutlets()) {
-            Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(dataStore);
-            if (datasetOptional.isPresent()) {
-                outDataSetIds.add(datasetOptional.get().getGid());
-            }
+        TaskRun taskRun = taskRunDao.fetchAttemptById(attemptId).get().getTaskRun();
+        try {
+            for (DataStore dataStore : taskRun.getOutlets()) {
+                Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(dataStore);
+                if (datasetOptional.isPresent()) {
+                    outDataSetIds.add(datasetOptional.get().getGid());
+                }
 
-        }
-        for (DataStore dataStore : taskRun.getInlets()) {
-            Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(dataStore);
-            if (datasetOptional.isPresent()) {
-                inDataSetIds.add(datasetOptional.get().getGid());
             }
+            for (DataStore dataStore : taskRun.getInlets()) {
+                Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(dataStore);
+                if (datasetOptional.isPresent()) {
+                    inDataSetIds.add(datasetOptional.get().getGid());
+                }
 
+            }
+            TaskAttemptFinishedEvent event = new TaskAttemptFinishedEvent(
+                    attemptId,
+                    status,
+                    taskRun.getInlets(),
+                    taskRun.getOutlets(),
+                    inDataSetIds,
+                    outDataSetIds
+            );
+            logger.info("Post taskAttemptFinishedEvent. attemptId={}, event={}", attemptId, event);
+            eventBus.post(event);
+        } catch (Exception e) {
+            logger.warn("notify finished event with taskAttemptId = {} failed", attemptId, e);
         }
-        TaskAttemptFinishedEvent event = new TaskAttemptFinishedEvent(
-                attemptId,
-                status,
-                taskRun.getInlets(),
-                taskRun.getOutlets(),
-                inDataSetIds,
-                outDataSetIds
-        );
-        logger.info("Post taskAttemptFinishedEvent. attemptId={}, event={}", attemptId, event);
-        eventBus.post(event);
+
+    }
+
+    public void notifyCheck(TaskAttempt taskAttempt) {
+        List<Long> inDataSetIds = new ArrayList<>();
+        List<Long> outDataSetIds = new ArrayList<>();
+        TaskRun taskRun = taskAttempt.getTaskRun();
+        try {
+            for (DataStore dataStore : taskRun.getOutlets()) {
+                Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(dataStore);
+                if (datasetOptional.isPresent()) {
+                    outDataSetIds.add(datasetOptional.get().getGid());
+                }
+
+            }
+            for (DataStore dataStore : taskRun.getInlets()) {
+                Optional<Dataset> datasetOptional = lineageService.fetchDatasetByDatastore(dataStore);
+                if (datasetOptional.isPresent()) {
+                    inDataSetIds.add(datasetOptional.get().getGid());
+                }
+
+            }
+            TaskAttemptCheckEvent event = new TaskAttemptCheckEvent(
+                    taskAttempt.getId(),
+                    taskRun.getId(),
+                    taskRun.getInlets(),
+                    taskRun.getOutlets(),
+                    inDataSetIds,
+                    outDataSetIds
+            );
+            logger.info("Post taskAttemptCheckEvent. attemptId={}, event={}", taskAttempt.getId(), event);
+            eventBus.post(event);
+        } catch (Exception e) {
+            logger.warn("notify finished event with taskAttemptId = {} failed", taskAttempt.getId(), e);
+        }
     }
 
     @Inject
@@ -125,7 +165,7 @@ public class MiscService {
         }
     }
 
-    private TaskAttempt loadTaskAttempt(Long attemptId){
+    private TaskAttempt loadTaskAttempt(Long attemptId) {
         Optional<TaskAttempt> attemptOptional = taskRunDao.fetchAttemptById(attemptId);
         return attemptOptional.get();
     }

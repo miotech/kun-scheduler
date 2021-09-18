@@ -51,6 +51,8 @@ public class Task {
     //task retry delay,unit seconds
     private final Integer retryDelay;
 
+    private final CheckType checkType;
+
     public Long getId() {
         return id;
     }
@@ -99,6 +101,10 @@ public class Task {
         return queueName;
     }
 
+    public CheckType getCheckType() {
+        return checkType;
+    }
+
     @Override
     public String toString() {
         return "Task{" +
@@ -130,6 +136,7 @@ public class Task {
         this.priority = builder.priority;
         this.retries = builder.retries;
         this.retryDelay = builder.retryDelay;
+        this.checkType = builder.checkType;
     }
 
     public TaskBuilder cloneBuilder() {
@@ -145,7 +152,8 @@ public class Task {
                 .withQueueName(queueName)
                 .withPriority(priority)
                 .withRetries(retries)
-                .withRetryDelay(retryDelay);
+                .withRetryDelay(retryDelay)
+                .withCheckType(checkType);
     }
 
     public boolean shouldSchedule(Tick tick, OffsetDateTime currentTime) {
@@ -247,6 +255,7 @@ public class Task {
         private Integer priority;
         private Integer retries;
         private Integer retryDelay;
+        private CheckType checkType;
 
         private TaskBuilder() {
         }
@@ -314,6 +323,11 @@ public class Task {
 
         public TaskBuilder withRetryDelay(Integer retryDelay){
             this.retryDelay = retryDelay;
+            return this;
+        }
+
+        public TaskBuilder withCheckType(CheckType checkType){
+            this.checkType = checkType;
             return this;
         }
 

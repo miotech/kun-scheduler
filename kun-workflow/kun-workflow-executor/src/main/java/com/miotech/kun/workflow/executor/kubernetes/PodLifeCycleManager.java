@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
@@ -41,8 +42,9 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
 
     @Inject
     public PodLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props, MiscService miscService,
-                               KubernetesClient kubernetesClient, OperatorDao operatorDao, AbstractQueueManager queueManager) {
-        super(taskRunDao, workerMonitor, props, miscService, queueManager);
+                               KubernetesClient kubernetesClient, OperatorDao operatorDao, AbstractQueueManager queueManager,
+                               EventBus eventBus) {
+        super(taskRunDao, workerMonitor, props, miscService, queueManager, eventBus);
         this.kubernetesClient = kubernetesClient;
         this.operatorDao = operatorDao;
     }

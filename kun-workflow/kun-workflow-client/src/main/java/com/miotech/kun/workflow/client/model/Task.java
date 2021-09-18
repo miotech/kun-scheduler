@@ -24,6 +24,7 @@ public class Task {
 
     //task retry delay,unit seconds
     private final Integer retryDelay;
+    private final String checkType;
 
     public Task(Builder builder) {
         this.id = builder.id;
@@ -37,6 +38,7 @@ public class Task {
         this.queueName = builder.queueName;
         this.retries = builder.retries;
         this.retryDelay = builder.retryDelay;
+        this.checkType = builder.checkType;
 
     }
 
@@ -97,6 +99,10 @@ public class Task {
         return retryDelay;
     }
 
+    public String getCheckType() {
+        return checkType;
+    }
+
     @JsonPOJOBuilder
     public static final class Builder {
         private Long id;
@@ -110,6 +116,7 @@ public class Task {
         private String queueName;
         private Integer retries;
         private Integer retryDelay;
+        private String checkType;
 
         private Builder() {
         }
@@ -166,6 +173,11 @@ public class Task {
 
         public Builder withRetryDelay(Integer retryDelay){
             this.retryDelay = retryDelay;
+            return this;
+        }
+
+        public Builder withCheckType(String checkType){
+            this.checkType = checkType;
             return this;
         }
 

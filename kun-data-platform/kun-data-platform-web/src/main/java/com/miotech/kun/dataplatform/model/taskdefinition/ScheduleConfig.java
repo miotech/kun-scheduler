@@ -26,6 +26,8 @@ public class ScheduleConfig {
     //task retry delay,unit seconds
     private final Integer retryDelay;
 
+    private final String checkType;
+
     private ScheduleConfig(String type,
                            String cronExpr,
                            String timeZone,
@@ -33,7 +35,8 @@ public class ScheduleConfig {
                            List<TaskDatasetProps> inputDatasets,
                            List<TaskDatasetProps> outputDatasets,
                            Integer retries,
-                           Integer retryDelay) {
+                           Integer retryDelay,
+                           String checkType) {
         this.type = type;
         this.cronExpr = cronExpr;
         this.timeZone = timeZone;
@@ -42,6 +45,7 @@ public class ScheduleConfig {
         this.outputDatasets = outputDatasets == null ? ImmutableList.of() : outputDatasets;
         this.retries = retries;
         this.retryDelay = retryDelay;
+        this.checkType = checkType;
     }
 
     public String getType() {
@@ -76,6 +80,10 @@ public class ScheduleConfig {
         return retryDelay;
     }
 
+    public String getCheckType() {
+        return checkType;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -89,6 +97,7 @@ public class ScheduleConfig {
         private String timeZone;
         private Integer retries;
         private Integer retryDelay;
+        private String checkType;
 
         private Builder() {
         }
@@ -133,8 +142,13 @@ public class ScheduleConfig {
             return this;
         }
 
+        public Builder withCheckType(String checkType){
+            this.checkType = checkType;
+            return this;
+        }
+
         public ScheduleConfig build() {
-            return new ScheduleConfig(type, cronExpr, timeZone, inputNodes, inputDatasets, outputDatasets, retries, retryDelay);
+            return new ScheduleConfig(type, cronExpr, timeZone, inputNodes, inputDatasets, outputDatasets, retries, retryDelay,checkType);
         }
     }
 }

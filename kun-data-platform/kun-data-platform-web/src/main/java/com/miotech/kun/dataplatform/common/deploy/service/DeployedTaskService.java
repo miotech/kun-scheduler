@@ -217,6 +217,7 @@ public class DeployedTaskService extends BaseSecurityService{
                 .withScheduleConf(scheduleConf)
                 .withReties(scheduleConfig.getRetries())
                 .withRetryDelay(scheduleConfig.getRetryDelay())
+                .withCheckType(scheduleConfig.getCheckType())
                 .build();
         List<Tag> searchTags = TagUtils.buildScheduleSearchTags(taskDefId, taskTemplateName);
         return workflowClient.saveTask(task, searchTags);

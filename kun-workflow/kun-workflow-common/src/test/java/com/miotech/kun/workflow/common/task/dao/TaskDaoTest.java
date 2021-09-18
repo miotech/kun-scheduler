@@ -59,7 +59,7 @@ public class TaskDaoTest extends DatabaseTestBase {
                 "PATH", "/usr/bin"
         ));
 
-        Task taskExample = Task.newBuilder()
+        Task taskExample = MockTaskFactory.createTask().cloneBuilder()
                 .withId(1L)
                 .withName("example1")
                 .withDescription("example1_desc")
@@ -190,7 +190,7 @@ public class TaskDaoTest extends DatabaseTestBase {
     public void create_WithProperId_shouldSuccess() {
         // Prepare
         Long id = WorkflowIdGenerator.nextTaskId();
-        Task insertTask = Task.newBuilder()
+        Task insertTask = MockTaskFactory.createTask().cloneBuilder()
                 .withId(id)
                 .withName("foo")
                 .withDescription("foo desc")

@@ -753,7 +753,7 @@ public class TaskServiceTest extends CommonTestBase {
 
 
     @Test
-    public void testCreateTaskWithoutRetries_retries_should_be_zero() {
+    public void testCreateTaskWithoutSettingValues_should_be_default() {
         //prepare
         TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO();
         long operatorId = taskPropsVO.getOperatorId();
@@ -772,10 +772,11 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(0));
         assertThat(saved.getRetryDelay(), is(30));
+        assertThat(saved.getCheckType(),is(CheckType.SKIP));
     }
 
     @Test
-    public void testFullUpdateTaskWithoutRetries_retries_should_be_zero() {
+    public void testFullUpdateTaskWithoutChanges_should_be_saved() {
         //prepare
         TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
         long operatorId = createdTask.getOperatorId();
@@ -796,10 +797,11 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(0));
         assertThat(saved.getRetryDelay(), is(30));
+        assertThat(saved.getCheckType(),is(CheckType.SKIP));
     }
 
     @Test
-    public void testPartialUpdateTaskWithoutRetries_retries_should_be_saved_value() {
+    public void testPartialUpdateTaskWithoutSettingValues_should_be_saved_value() {
         //prepare
         TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
         long operatorId = createdTask.getOperatorId();
@@ -821,15 +823,17 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(updated.getRetries(), is(saved.getRetries()));
         assertThat(updated.getRetryDelay(), is(saved.getRetryDelay()));
+        assertThat(updated.getCheckType(),is(saved.getCheckType()));
     }
 
     @Test
-    public void testCreateTaskWithRetries_retries_should_be_given_value() {
+    public void testCreateTaskWithSettingValues_should_be_given_value() {
         //prepare
         TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO()
                 .cloneBuilder()
                 .withRetries(1)
                 .withRetryDelay(10)
+                .withCheckType(CheckType.WAITING_EVENT.name())
                 .build();
         long operatorId = taskPropsVO.getOperatorId();
         Operator op = MockOperatorFactory.createOperator()
@@ -847,10 +851,11 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(1));
         assertThat(saved.getRetryDelay(), is(10));
+        assertThat(saved.getCheckType(),is(CheckType.WAITING_EVENT));
     }
 
     @Test
-    public void testFullUpdateTaskWithoutRetries_retries_should_be_given_value() {
+    public void testFullUpdateTaskWithSettingValues_should_be_given_value() {
         //prepare
         TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
         long operatorId = createdTask.getOperatorId();
@@ -868,6 +873,7 @@ public class TaskServiceTest extends CommonTestBase {
                 .cloneBuilder()
                 .withRetries(1)
                 .withRetryDelay(10)
+                .withCheckType(CheckType.WAITING_EVENT.name())
                 .build();
         taskService.fullUpdateTaskById(task.getId(), taskPropsVO);
         Task saved = taskDao.fetchById(task.getId()).get();
@@ -875,10 +881,11 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(1));
         assertThat(saved.getRetryDelay(), is(10));
+        assertThat(saved.getCheckType(),is(CheckType.WAITING_EVENT));
     }
 
     @Test
-    public void testPartialUpdateTaskWithoutRetries_retries_should_be_given_value() {
+    public void testPartialUpdateTaskWithSettingValues_should_be_given_value() {
         //prepare
         TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
         long operatorId = createdTask.getOperatorId();
@@ -896,6 +903,7 @@ public class TaskServiceTest extends CommonTestBase {
                 .cloneBuilder()
                 .withRetries(1)
                 .withRetryDelay(10)
+                .withCheckType(CheckType.WAITING_EVENT.name())
                 .build();
         taskService.partialUpdateTask(task.getId(), taskPropsVO);
         Task updated = taskDao.fetchById(task.getId()).get();
@@ -903,5 +911,6 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(updated.getRetries(), is(1));
         assertThat(updated.getRetryDelay(), is(10));
+        assertThat(updated.getCheckType(),is(CheckType.WAITING_EVENT));
     }
 }

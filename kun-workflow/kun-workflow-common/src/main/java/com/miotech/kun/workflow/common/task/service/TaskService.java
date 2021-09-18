@@ -68,6 +68,8 @@ public class TaskService {
     
     private final Integer DEFAULT_PRIORITY = 16;
 
+    private final CheckType DEFAULT_CHECK_TYPE = CheckType.SKIP;
+
 
     @Inject
     public TaskService(
@@ -187,6 +189,7 @@ public class TaskService {
                 .withPriority(vo.getPriority() == null ? DEFAULT_PRIORITY : vo.getPriority())
                 .withRetries(vo.getRetries() == null ? task.getRetries() : vo.getRetries())
                 .withRetryDelay(vo.getRetryDelay() == null ? task.getRetryDelay() : vo.getRetryDelay())
+                .withCheckType(vo.getCheckType() == null ? DEFAULT_CHECK_TYPE : CheckType.valueOf(vo.getCheckType()))
                 .build();
 
         // 4. perform update
@@ -221,6 +224,7 @@ public class TaskService {
                 .withPriority(vo.getPriority() == null ? DEFAULT_PRIORITY : vo.getPriority())
                 .withRetries(retries)
                 .withRetryDelay(retryDelay)
+                .withCheckType(vo.getCheckType() == null ? DEFAULT_CHECK_TYPE : CheckType.valueOf(vo.getCheckType()))
                 .build();
 
         return fullUpdateTask(task);
@@ -419,6 +423,7 @@ public class TaskService {
                 .withPriority(vo.getPriority() == null ? DEFAULT_PRIORITY : vo.getPriority())
                 .withRetries(retries)
                 .withRetryDelay(retryDelay)
+                .withCheckType(vo.getCheckType() == null ? DEFAULT_CHECK_TYPE : CheckType.valueOf(vo.getCheckType()))
                 .build();
     }
 
