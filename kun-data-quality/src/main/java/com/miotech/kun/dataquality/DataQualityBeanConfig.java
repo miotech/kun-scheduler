@@ -7,6 +7,7 @@ import com.miotech.kun.workflow.core.pubsub.RedisEventSubscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.JedisPool;
@@ -17,6 +18,7 @@ import redis.clients.jedis.JedisPoolConfig;
  * @created: 2020/7/17
  */
 @Configuration
+@ConditionalOnProperty(value = "testenv", havingValue = "false", matchIfMissing = true)
 public class DataQualityBeanConfig {
 
     @Value("${workflow.base-url:http://kun-workflow:8088}")

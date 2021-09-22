@@ -1,10 +1,23 @@
 package com.miotech.kun.workflow.core.event;
 
-public class CheckResultEvent {
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.miotech.kun.commons.pubsub.event.PublicEvent;
+
+public class CheckResultEvent extends PublicEvent {
     private final long taskRunId;
     private final boolean checkStatus;
 
     public CheckResultEvent(long taskRunId, boolean checkStatus) {
+        this.taskRunId = taskRunId;
+        this.checkStatus = checkStatus;
+    }
+
+    @JsonCreator
+    public CheckResultEvent(@JsonProperty("timestamp") long timestamp,
+                            @JsonProperty("taskRunId") Long taskRunId,
+                            @JsonProperty("taskRunId") boolean checkStatus) {
+        super(timestamp);
         this.taskRunId = taskRunId;
         this.checkStatus = checkStatus;
     }

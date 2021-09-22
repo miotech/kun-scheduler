@@ -1,7 +1,6 @@
 package com.miotech.kun.dataquality.service;
 
 import com.miotech.kun.common.constant.DataQualityConstant;
-import com.miotech.kun.dataquality.DataQualityConfiguration;
 import com.miotech.kun.dataquality.utils.WorkflowUtils;
 import com.miotech.kun.workflow.client.WorkflowApiException;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -85,10 +84,12 @@ public class WorkflowService {
         return taskId;
     }
 
-    public void executeTasks(List<Long> caseIds){
+    public List<Long> executeTasks(List<Long> caseIds){
+        List<Long> taskRunIdList = new ArrayList<>();
         for(Long id: caseIds){
-            executeTask(id);
+            taskRunIdList.add(executeTask(id));
         }
+        return taskRunIdList;
     }
 
     public void deleteTaskByCase(Long caseId) {

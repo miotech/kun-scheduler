@@ -8,5 +8,7 @@ public enum  DataQualityStatus {
 
     SUCCESS,
 
-    FAILED
+    FAILED,
+
+    CREATED
 }

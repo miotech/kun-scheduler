@@ -4,12 +4,11 @@ import com.google.common.collect.Lists;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.common.utils.DateUtils;
-import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.common.utils.JSONUtils;
-import com.miotech.kun.common.utils.WorkflowUtils;
 import com.miotech.kun.dataquality.model.bo.*;
 import com.miotech.kun.dataquality.model.entity.*;
 import com.miotech.kun.dataquality.service.DataQualityService;
+import com.miotech.kun.dataquality.service.MetadataClient;
 import com.miotech.kun.dataquality.service.WorkflowService;
 import com.miotech.kun.dataquality.utils.Constants;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -23,11 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author: Jie Chen
@@ -46,6 +42,9 @@ public class DataQualityController {
 
     @Autowired
     WorkflowClient workflowClient;
+
+    @Autowired
+    MetadataClient metadataClient;
 
     @PostMapping("/data-quality/recreate-all-task")
     public void recreateAllTasks() {
@@ -130,6 +129,8 @@ public class DataQualityController {
         vo.setId(dataQualityService.addCase(dataQualityRequest));
         Long taskId = workflowService.executeTask(vo.getId());
         dataQualityService.saveTaskId(vo.getId(), taskId);
+        //todo test case:move to service,update task is_block
+        List<Long> upstreamTaskIds = metadataClient.fetchUpstreamTaskIds(dataQualityRequest.getPrimaryDatasetGid());
         return RequestResult.success(vo);
     }
 

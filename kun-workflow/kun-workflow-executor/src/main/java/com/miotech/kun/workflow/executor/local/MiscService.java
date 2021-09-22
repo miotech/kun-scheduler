@@ -104,6 +104,8 @@ public class MiscService {
             }
             TaskAttemptFinishedEvent event = new TaskAttemptFinishedEvent(
                     attemptId,
+                    taskRun.getTask().getId(),
+                    taskRun.getId(),
                     status,
                     taskRun.getInlets(),
                     taskRun.getOutlets(),

@@ -34,4 +34,6 @@ public class DataQualityCaseBasic {
     OffsetDateTime updateTime;
 
     Boolean isPrimary;
+
+    Boolean isBlock;
 }

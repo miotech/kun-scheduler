@@ -1,9 +1,12 @@
 package com.miotech.kun.dataquality.event;
 
+import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
+import com.miotech.kun.dataquality.model.entity.DataQualityCaseBasic;
 import com.miotech.kun.dataquality.persistence.DataQualityRepository;
-import com.miotech.kun.dataquality.service.MetadataClient;
 import com.miotech.kun.dataquality.service.WorkflowService;
+import com.miotech.kun.workflow.core.event.CheckResultEvent;
+import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +29,7 @@ public class Subscriber {
     WorkflowService workflowService;
 
     @Autowired
-    MetadataClient metadataClient;
+    EventPublisher publisher;
 
     @PostConstruct
     private void onDispatcherConstructed() {
@@ -38,22 +41,53 @@ public class Subscriber {
             if (event instanceof TaskAttemptFinishedEvent) {
                 handleTaskAttemptFinishedEvent((TaskAttemptFinishedEvent) event);
             }
+            if (event instanceof TaskAttemptCheckEvent) {
+                handleTaskCheckEvent((TaskAttemptCheckEvent) event);
+            }
         });
     }
 
     private void handleTaskAttemptFinishedEvent(TaskAttemptFinishedEvent taskAttemptFinishedEvent) {
-        if (taskAttemptFinishedEvent.getFinalStatus().isSuccess()) {
-            log.info("start dq test for task attempt: " + taskAttemptFinishedEvent.getAttemptId());
-            List<Long> datasetIds = taskAttemptFinishedEvent.getOutDataSetIds();
-            if (datasetIds.isEmpty()) {
+        //handle testcase
+        DataQualityCaseBasic dataQualityCaseBasic = dataQualityRepository.fetchCaseBasicByTaskId(taskAttemptFinishedEvent.getTaskId());
+        if (dataQualityCaseBasic != null) {
+            boolean caseStatus = taskAttemptFinishedEvent.getFinalStatus().isSuccess();
+            long caseRunId = taskAttemptFinishedEvent.getTaskRunId();
+            dataQualityRepository.updateCaseRunStatus(caseRunId, caseStatus);
+            if (!dataQualityCaseBasic.getIsBlock()) {
                 return;
             }
-            log.info("get dq cases for datasetIds: " + taskAttemptFinishedEvent.getOutDataSetIds());
-            List<Long> caseIds = dataQualityRepository.getWorkflowTasksByDatasetIds(datasetIds);
-            if (!caseIds.isEmpty()) {
-                log.info("run dq test case: " + caseIds);
-                workflowService.executeTasks(caseIds);
+            Long taskRunId = dataQualityRepository.fetchTaskRunIdByCase(caseRunId);
+            if (caseStatus) {
+                boolean checkStatus = dataQualityRepository.validateTaskRunTestCase(taskRunId);
+                if (checkStatus) {
+                    CheckResultEvent event = new CheckResultEvent(taskRunId, true);
+                    sendDataQualityEvent(event);
+                }
+                return;
             }
+            CheckResultEvent event = new CheckResultEvent(taskRunId, false);
+            sendDataQualityEvent(event);
+            return;
         }
+    }
+
+    private void handleTaskCheckEvent(TaskAttemptCheckEvent taskAttemptCheckEvent) {
+        log.info("start dq test for task attempt: " + taskAttemptCheckEvent.getTaskAttemptId());
+        List<Long> datasetIds = taskAttemptCheckEvent.getOutDataSetIds();
+        if (datasetIds.isEmpty()) {
+            return;
+        }
+        log.info("get dq cases for datasetIds: " + taskAttemptCheckEvent.getOutDataSetIds());
+        List<Long> caseIds = dataQualityRepository.getWorkflowTasksByDatasetIds(datasetIds);
+        if (!caseIds.isEmpty()) {
+            log.info("run dq test case: " + caseIds);
+            List<Long> caseRunIdList = workflowService.executeTasks(caseIds);
+            dataQualityRepository.insertCaseRunWithTaskRun(taskAttemptCheckEvent.getTaskRunId(),caseRunIdList);
+        }
+    }
+
+    private void sendDataQualityEvent(CheckResultEvent event) {
+        publisher.publish(event);
     }
 }
