@@ -20,7 +20,6 @@ import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.annotation.Internal;
-import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -28,7 +27,10 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -361,7 +363,7 @@ public class TaskRunService {
         return mappings;
     }
 
-    public boolean changeTaskAttemptPriority(long taskRunId, String priority) {
+    public boolean changeTaskAttemptPriority(long taskRunId, Integer priority) {
         Optional<TaskRun> taskRunOptional = taskRunDao.fetchTaskRunById(taskRunId);
         if (!taskRunOptional.isPresent()) {
             throw new IllegalArgumentException("taskRun is not found for taskRunId: " + taskRunId);
@@ -370,10 +372,10 @@ public class TaskRunService {
         if (Objects.isNull(attempt)) {
             throw new IllegalArgumentException("Attempt is not found for taskRunId: " + taskRunId);
         }
-        executor.changePriority(attempt.getId(), attempt.getQueueName(), TaskPriority.valueOf(priority));
+        executor.changePriority(attempt.getId(), attempt.getQueueName(), priority);
         taskRunDao.updateTaskRun(taskRunOptional.get()
                 .cloneBuilder()
-                .withPriority(TaskPriority.valueOf(priority).getPriority()).build());
+                .withPriority(priority).build());
         return true;
     }
 

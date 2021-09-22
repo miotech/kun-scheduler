@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
-import com.miotech.kun.workflow.core.model.task.TaskPriority;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
@@ -58,7 +57,7 @@ public class KubernetesExecutor implements Executor {
     }
 
     @Override
-    public void changePriority(long taskAttemptId, String queueName, TaskPriority priority) {
+    public void changePriority(long taskAttemptId, String queueName, Integer priority) {
         kubernetesResourceManager.changePriority(taskAttemptId, queueName, priority);
     }
 

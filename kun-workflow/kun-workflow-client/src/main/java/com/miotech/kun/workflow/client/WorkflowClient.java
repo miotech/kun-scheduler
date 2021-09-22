@@ -261,4 +261,13 @@ public interface WorkflowClient {
      * @return {true} if success, {false} if not existing
      */
     Boolean deleteVariable(String namespace, String key);
+
+    /**
+     * change taskRun priority by taskRunId
+     * @param taskRunId id of taskRun
+     * @param priority priority of taskRun,Priorities range from 1 to Integer.MAX_VALUE,
+     * The higher the value, the higher the priority,default priority is 16
+     * @return
+     */
+    Boolean changeTaskRunPriority(Long taskRunId,Integer priority);
 }
