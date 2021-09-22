@@ -1,0 +1,6 @@
+dependencies {
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-commons:kun-commons-pubsub')
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+}

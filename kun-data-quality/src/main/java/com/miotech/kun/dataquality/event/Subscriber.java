@@ -5,6 +5,7 @@ import com.miotech.kun.dataquality.persistence.DataQualityRepository;
 import com.miotech.kun.dataquality.service.WorkflowService;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,6 +17,7 @@ import java.util.List;
 public class Subscriber {
 
     @Autowired
+    @Qualifier("data-quality-subscriber")
     private EventSubscriber workflowEventSubscriber;
 
     @Autowired

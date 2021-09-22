@@ -1,14 +1,10 @@
 package com.miotech.kun.dataplatform.mocking;
 
-import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
-import com.miotech.kun.dataplatform.model.taskdefinition.*;
-import com.miotech.kun.workflow.core.model.task.ScheduleType;
+import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskRelation;
+import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.util.*;
-
-import static com.miotech.kun.dataplatform.common.tasktemplate.dao.TaskTemplateDaoTest.TEST_TEMPLATE;
 
 public class MockTaskRelationFactory {
     private MockTaskRelationFactory() {}

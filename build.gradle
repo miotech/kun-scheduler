@@ -9,6 +9,7 @@ buildscript {
 
 plugins {
     id 'com.github.ksoichiro.console.reporter' version '0.6.2'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
 allprojects {

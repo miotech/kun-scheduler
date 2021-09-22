@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
+import com.miotech.kun.commons.utils.JsonLongFieldDeserializer;
 
 import java.time.OffsetDateTime;
 
