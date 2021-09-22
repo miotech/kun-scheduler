@@ -21,6 +21,9 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
+import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
+import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
+import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Triple;
@@ -319,6 +322,25 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(taskRunVOS,hasSize(2));
         assertThat(taskRunVOS.get(0).getId(),is(2L));
         assertThat(taskRunVOS.get(1).getId(),is(1L));
+    }
+
+    @Test
+    public void changeTaskRunPriority(){
+
+        //prepare
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+
+        taskRunService.changeTaskAttemptPriority(taskRun.getId(),32);
+
+        //verify
+        TaskRun updatedTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
+        assertThat(updatedTaskRun.getTask().getPriority(),is(16));
+        assertThat(updatedTaskRun.getPriority(),is(32));
     }
 
 

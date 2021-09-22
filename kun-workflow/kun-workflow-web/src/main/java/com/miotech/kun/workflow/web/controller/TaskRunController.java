@@ -207,7 +207,7 @@ public class TaskRunController {
     }
 
     @RouteMapping(url = "/taskruns/changePriority", method = "PUT")
-    public Object changeTaskRunPriority(@QueryParameter long taskRunId, @QueryParameter String priority) {
+    public Object changeTaskRunPriority(@QueryParameter long taskRunId, @QueryParameter Integer priority) {
         return taskRunService.changeTaskAttemptPriority(taskRunId, priority);
     }
 }

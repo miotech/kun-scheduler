@@ -343,10 +343,10 @@ public class WorkflowApi {
         if (request.getPageSize() > 0) {
             urlBuilder.addQueryParameter("pageSize", "" + request.getPageSize());
         }
-        if(request.getScheduleTypes() != null && !request.getScheduleTypes().isEmpty()){
+        if (request.getScheduleTypes() != null && !request.getScheduleTypes().isEmpty()) {
             String filterScheduleTypes = request.getScheduleTypes()
                     .stream().collect(Collectors.joining(","));
-            urlBuilder.addQueryParameter("scheduleTypes",filterScheduleTypes);
+            urlBuilder.addQueryParameter("scheduleTypes", filterScheduleTypes);
         }
         Request getRequest = new Request.Builder()
                 .url(urlBuilder.build())
@@ -431,7 +431,8 @@ public class WorkflowApi {
                 .url(url).get()
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(getRequest, new TypeReference<List<VariableVO>>() {});
+        return sendRequest(getRequest, new TypeReference<List<VariableVO>>() {
+        });
     }
 
     public VariableVO createVariable(VariableVO variableVO) {
@@ -441,7 +442,8 @@ public class WorkflowApi {
                 .post(jsonBody(variableVO))
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(postRequest, new TypeReference<VariableVO>() {});
+        return sendRequest(postRequest, new TypeReference<VariableVO>() {
+        });
     }
 
     public VariableVO updateVariable(VariableVO variableVO) {
@@ -451,7 +453,8 @@ public class WorkflowApi {
                 .put(jsonBody(variableVO))
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(putRequest, new TypeReference<VariableVO>() {});
+        return sendRequest(putRequest, new TypeReference<VariableVO>() {
+        });
     }
 
     public Boolean deleteVariable(String fullKey) {
@@ -461,6 +464,20 @@ public class WorkflowApi {
                 .delete()
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
-        return sendRequest(deleteRequest, new TypeReference<Boolean>() {});
+        return sendRequest(deleteRequest, new TypeReference<Boolean>() {
+        });
+    }
+
+    public Boolean changePriority(Long taskRunId, Integer priority) {
+        HttpUrl url = buildUrl(API_TASK_RUNS + "/changePriority")
+                .addQueryParameter("taskRunId", taskRunId.toString())
+                .addQueryParameter("priority", priority.toString()).build();
+        Request putRequest = new Request.Builder()
+                .url(url)
+                .put(jsonBody(""))
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(putRequest, new TypeReference<Boolean>() {
+        });
     }
 }

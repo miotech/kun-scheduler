@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public class EventCollector {
-    private final LinkedList<Event> events = new LinkedList<>();
+    protected final LinkedList<Event> events = new LinkedList<>();
 
     @Subscribe
     public void onReceive(Event event) {
