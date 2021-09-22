@@ -40,7 +40,7 @@ public class DataQualityBeanConfig {
                 .build();
     }
 
-    @Bean
+    @Bean("data-quality-subscriber")
     @ConditionalOnMissingBean(EventSubscriber.class)
     public EventSubscriber getRedisSubscriber() {
         JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), redisHost);

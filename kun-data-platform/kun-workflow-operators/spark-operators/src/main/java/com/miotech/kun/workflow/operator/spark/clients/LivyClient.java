@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
+import com.miotech.kun.commons.utils.HttpApiClient;
 import com.miotech.kun.workflow.operator.spark.LivyApiException;
 import com.miotech.kun.workflow.operator.spark.models.*;
 import com.miotech.kun.workflow.utils.JSONUtils;

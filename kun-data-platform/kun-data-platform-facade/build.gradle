@@ -1,0 +1,27 @@
+plugins {
+    id 'java'
+    id "org.sonarqube"
+    id "com.gorylenko.gradle-git-properties" version "2.2.3"
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':kun-monitor:kun-monitor-facade')
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation 'com.googlecode.json-simple:json-simple'
+}
+
+
+apply plugin: "org.sonarqube"
+sonarqube {
+    properties {
+        property "sonar.sources", "src/main"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.java.binaries", "build"
+    }
+}

@@ -1,11 +1,11 @@
 package com.miotech.kun.dataplatform.mocking;
 
-import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
-import com.miotech.kun.dataplatform.model.commit.CommitStatus;
-import com.miotech.kun.dataplatform.model.commit.CommitType;
-import com.miotech.kun.dataplatform.model.commit.TaskCommit;
-import com.miotech.kun.dataplatform.model.commit.TaskSnapshot;
-import com.miotech.kun.dataplatform.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.dataplatform.facade.model.commit.CommitStatus;
+import com.miotech.kun.dataplatform.facade.model.commit.CommitType;
+import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
+import com.miotech.kun.dataplatform.facade.model.commit.TaskSnapshot;
+import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
