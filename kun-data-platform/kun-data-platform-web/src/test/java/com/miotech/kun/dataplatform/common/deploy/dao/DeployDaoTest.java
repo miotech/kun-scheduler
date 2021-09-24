@@ -19,7 +19,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
-@Ignore
 public class DeployDaoTest extends AppTestBase {
 
     @Autowired

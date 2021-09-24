@@ -41,6 +41,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -109,6 +110,9 @@ public class TaskDefinitionService extends BaseSecurityService {
         String taskName = props.getName();
         Preconditions.checkNotNull(taskName, "task definition name should be null");
 
+        //Check task name duplicate
+        checkName(taskName, null);
+
         String taskTemplateName = props.getTaskTemplateName();
         Preconditions.checkNotNull(taskTemplateName, "task template name should be null");
         Preconditions.checkNotNull(taskTemplateService.find(taskTemplateName), "task template name not valid");
@@ -156,7 +160,14 @@ public class TaskDefinitionService extends BaseSecurityService {
         Preconditions.checkNotNull(request.getOwner(), "owner should not be `null`");
         Preconditions.checkNotNull(request.getTaskPayload(), "taskPayload should not be `null`");
 
+
+
         TaskDefinition taskDefinition = find(definitionId);
+
+        //Check task name duplicate
+        String taskName = request.getName();
+        checkName(taskName, definitionId);
+        
         TaskPayload taskPayload = request.getTaskPayload();
         validateSchedule(taskPayload.getScheduleConfig());
         //validate payload
@@ -200,6 +211,18 @@ public class TaskDefinitionService extends BaseSecurityService {
         return updated;
     }
 
+
+    private void checkName(String taskName, @Nullable Long taskDefinitionId) {
+        List<TaskDefinition> taskDefinitionsToCheck = taskDefinitionDao.fetchAliveTaskDefinitionByName(taskName);
+        Optional<TaskDefinition> taskDefinitionToCheck = taskDefinitionId == null? taskDefinitionsToCheck.stream()
+                .findAny() : taskDefinitionsToCheck.stream()
+                .filter(taskDef -> !taskDef.getDefinitionId().equals(taskDefinitionId))
+                .findAny();
+
+        if (taskDefinitionToCheck.isPresent()) {
+            throw new IllegalArgumentException(String.format("task definition name already exists: \"%s\"", taskName));
+        }
+    }
 
     public void checkRule(TaskDefinition taskDefinition) {
         Preconditions.checkNotNull(taskDefinition.getTaskPayload(), "taskPayload should not be `null`");
@@ -333,7 +356,7 @@ public class TaskDefinitionService extends BaseSecurityService {
         TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskRunRequest.getParameters(), taskTemplate, taskDefinition);
         Config config = new Config(taskConfig.getParams());
         Task task = Task.newBuilder()
-                .withName(taskDefId.toString())
+                .withName(taskDefinition.getName() + "_TryRun_" + taskDefId.toString())
                 .withOperatorId(operatorId)
                 .withDescription("Try Run Data Platform Task " + taskDefId)
                 .withConfig(config)

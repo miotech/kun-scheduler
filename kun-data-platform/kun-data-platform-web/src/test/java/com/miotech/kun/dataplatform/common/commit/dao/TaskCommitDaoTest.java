@@ -19,7 +19,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
-@Ignore
 public class TaskCommitDaoTest extends AppTestBase {
 
     @Autowired

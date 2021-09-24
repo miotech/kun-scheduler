@@ -33,7 +33,6 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
-@Ignore
 @WithMockTestUser
 public class TaskDefinitionServiceTest extends AppTestBase {
 
@@ -66,6 +65,25 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(taskDefinition.getName(), is("test"));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void create_checkWithSingleDuplicateTaskDefinition() {
+        CreateTaskDefinitionRequest taskDefinitionProps = new CreateTaskDefinitionRequest("test", TEST_TEMPLATE);
+        taskDefinitionService.create(taskDefinitionProps);
+        CreateTaskDefinitionRequest taskDefinitionPropsDuplicate = new CreateTaskDefinitionRequest("test", TEST_TEMPLATE);
+        taskDefinitionService.create(taskDefinitionPropsDuplicate);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void create_checkDuplicateWithMultipleArchivedTask() {
+        Random rand = new Random();
+        for (int i = 0; i < rand.nextInt(5) + 5; i++) {
+            CreateTaskDefinitionRequest taskDefinitionProps = new CreateTaskDefinitionRequest("test", TEST_TEMPLATE);
+            TaskDefinition taskDefinition = taskDefinitionService.create(taskDefinitionProps);
+            taskDefinitionService.delete(taskDefinition.getDefinitionId());
+        }
+        create_checkWithSingleDuplicateTaskDefinition();
+    }
+
     @Test
     public void update_ok() {
         // prepare
@@ -96,6 +114,57 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(updated.getTaskPayload(), sameBeanAs(updateRequest.getTaskPayload()));
     }
 
+    @Test(expected = IllegalArgumentException.class)
+    public void update_checkWithSingleDuplicateTaskDefinition() {
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinition);
+        TaskDefinition taskDefinitionUnchanged = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinitionUnchanged);
+        TaskPayload taskPayload = taskDefinition.getTaskPayload();
+        Map<String, Object> taskConfig = taskPayload.getTaskConfig();
+        taskConfig.put("sql", "select 2");
+        TaskPayload updatedTaskPayload = taskPayload
+                .cloneBuilder()
+                .withTaskConfig(taskConfig)
+                .build();
+        UpdateTaskDefinitionRequest updateRequest = new UpdateTaskDefinitionRequest(
+                taskDefinition.getDefinitionId(),
+                taskDefinitionUnchanged.getName(), //used name
+                updatedTaskPayload,
+                1L
+        );
+       taskDefinitionService.update(updateRequest.getDefinitionId(), updateRequest);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void update_checkDuplicateWithMultipleArchivedTask() {
+        //generate multiple task definition, update them to same name and delete
+        Random rand = new Random();
+        int times = rand.nextInt(5) + 5;
+        for (int time = 1; time <= times; time++) {
+            TaskDefinition taskDefinitionTemp = MockTaskDefinitionFactory.createTaskDefinition();
+            taskDefinitionDao.create(taskDefinitionTemp);
+            TaskPayload taskPayload = taskDefinitionTemp.getTaskPayload();
+            Map<String, Object> taskConfig = taskPayload.getTaskConfig();
+            taskConfig.put("sql", "select 2");
+            TaskPayload updatedTaskPayload = taskPayload
+                    .cloneBuilder()
+                    .withTaskConfig(taskConfig)
+                    .build();
+            UpdateTaskDefinitionRequest updateRequest = new UpdateTaskDefinitionRequest(
+                    taskDefinitionTemp.getDefinitionId(),
+                    "test", //same name use multiple times
+                    updatedTaskPayload,
+                    1L
+            );
+            taskDefinitionService.update(updateRequest.getDefinitionId(), updateRequest);
+            // for next to last, do not delete, check whether update successfully on last time
+            if (time == times - 1) continue;
+            taskDefinitionService.delete(taskDefinitionTemp.getDefinitionId());
+        }
+    }
+
+    @Ignore
     @Test
     public void test_update_withInputNodes() {
         // prepare with dependencies
@@ -138,6 +207,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertEquals(taskDefinition.getDefinitionId(), taskRelation.getDownstreamId());
     }
 
+    @Ignore
     @Test
     public void testRun_ok() {
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
@@ -168,6 +238,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         }
     }
 
+    @Ignore
     @Test
     public void testStop_ok() {
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
@@ -188,6 +259,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(taskRun.getStatus(), is(ABORTED));
     }
 
+    @Ignore
     @Test
     public void test_RunLog_ok() {
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
@@ -269,6 +341,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(vo.getUpstreamTaskDefinitions().get(0).getName(), is(""));
     }
 
+    @Ignore
     @Test
     public void test_delete(){
         // prepare
@@ -290,6 +363,8 @@ public class TaskDefinitionServiceTest extends AppTestBase {
 
     }
 
+
+    @Ignore
     @Test
     public void test_delete_with_downstream_dependency(){
         // if task has downstream dependencies, fail to delete
