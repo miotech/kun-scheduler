@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
+// all fail
 @Ignore
 public class DeployedTaskDaoTest extends AppTestBase {
 

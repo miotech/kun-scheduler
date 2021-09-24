@@ -105,20 +105,15 @@ public class TaskService {
             throw new EntityNotFoundException(String.format("Cannot create task with operator id: %d, target operator not found.", vo.getOperatorId()));
         }
 
-        // 3. Task name should not conflict
-        if (taskDao.fetchByName(vo.getName()).isPresent()) {
-            throw new IllegalArgumentException(String.format("Cannot create task with duplicated name: \"%s\"", vo.getName()));
-        }
-
-        // 4. convert value object to task object and assign a new task id
+        // 3. convert value object to task object and assign a new task id
         Task taskWithProps = convertTaskPropsVoToTask(vo);
         Task task = taskWithProps.cloneBuilder()
                 .withId(WorkflowIdGenerator.nextTaskId())
                 .build();
-        // 5. persist with DAO
+        // 4. persist with DAO
         taskDao.create(task);
 
-        // 6. update lineage
+        // 5. update lineage
         updateLineageGraphOnTaskCreate(task);
         return task;
     }
