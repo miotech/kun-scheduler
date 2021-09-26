@@ -119,12 +119,12 @@ export const NotificationConfig: React.FC<Props> = memo(function NotificationCon
 
   const [openSla, setOpenSla] = useState(false);
   useEffect(() => {
-    if (!form.getFieldValue(['taskPayload', 'scheduleConfig', 'slaConfig'])) {
+    if (!initTaskDefinition?.taskPayload?.scheduleConfig.slaConfig) {
       setOpenSla(false);
     } else {
       setOpenSla(true);
     }
-  }, [form]);
+  }, [initTaskDefinition?.taskPayload?.scheduleConfig.slaConfig]);
 
   const noCheckOpenSla = useCallback(
     e => {
