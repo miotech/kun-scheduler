@@ -2,9 +2,9 @@ package com.miotech.kun.dataplatform;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.miotech.kun.dataplatform.common.tasktemplate.service.TaskTemplateLoader;
-import com.miotech.kun.dataplatform.config.TestOnlyController;
-import com.miotech.kun.dataplatform.config.TestWorkflowConfig;
+import com.miotech.kun.dataplatform.web.common.tasktemplate.service.TaskTemplateLoader;
+import com.miotech.kun.dataplatform.web.config.TestOnlyController;
+import com.miotech.kun.dataplatform.web.config.TestWorkflowConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.After;
 import org.junit.Before;
@@ -88,6 +88,7 @@ public abstract class AppTestBase {
             "com.miotech.kun.common",
             "com.miotech.kun.security",
             "com.miotech.kun.dataplatform",
+            "com.miotech.kun.monitor"
     })
     @Import({TestWorkflowConfig.class, TestOnlyController.class})
     public static class Configuration {

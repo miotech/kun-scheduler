@@ -12,7 +12,7 @@ import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.utils.CronUtils;
-import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
+import com.miotech.kun.commons.utils.JsonLongFieldDeserializer;
 
 import java.time.OffsetDateTime;
 import java.util.*;

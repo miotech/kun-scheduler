@@ -85,6 +85,7 @@ jobs:
           ./gradlew check -p kun-data-discovery
           ./gradlew check -p kun-data-dashboard
           ./gradlew check -p kun-data-quality
+          ./gradlew check -p kun-monitor
       # Set up JDK 11 for SonarCloud.
       - name: Set up JDK 1.11
         uses: actions/setup-java@v1
@@ -99,6 +100,7 @@ jobs:
           ./gradlew sonarqube -p kun-data-discovery
           ./gradlew sonarqube -p kun-data-dashboard
           ./gradlew sonarqube -p kun-data-quality
+          ./gradlew sonarqube -p kun-monitor
       - name: "Upload artifact for coverage"
         uses: actions/upload-artifact@v2
         with:
@@ -109,6 +111,7 @@ jobs:
             ./kun-data-discovery/**/build/reports/jacoco/test/jacocoTestReport.xml
             ./kun-data-dashboard/**/build/reports/jacoco/test/jacocoTestReport.xml
             ./kun-data-quality/**/build/reports/jacoco/test/jacocoTestReport.xml
+            ./kun-monitor/**/build/reports/jacoco/test/jacocoTestReport.xml
 
   upload-coverage:
     name: "Upload coverage"

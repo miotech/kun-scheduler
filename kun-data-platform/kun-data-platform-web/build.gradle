@@ -69,11 +69,13 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-client')
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-data-platform:kun-workflow-operators:spark-operators')
-    implementation "com.fasterxml.jackson.core:jackson-core"
-    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation project(':kun-data-platform:kun-data-platform-facade')
     implementation project(':kun-app-common')
     implementation project(':kun-db-schema:kun-app-db-schema')
     implementation project(':kun-security:kun-security-common')
+    implementation project(':kun-monitor:kun-monitor-facade')
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
@@ -90,6 +92,7 @@ dependencies {
         exclude group: 'org.eclipse.jetty.aggregate', module: 'jetty-all'
     }
 
+    testImplementation project(':kun-monitor:kun-monitor-alert')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"
     testImplementation 'com.icegreen:greenmail'

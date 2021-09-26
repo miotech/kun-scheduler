@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
+import com.miotech.kun.commons.utils.JsonLongFieldDeserializer;
 
 import java.io.Serializable;
 import java.util.List;

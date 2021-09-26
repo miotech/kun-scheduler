@@ -9,7 +9,7 @@ import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import com.miotech.kun.workflow.utils.JsonLongFieldDeserializer;
+import com.miotech.kun.commons.utils.JsonLongFieldDeserializer;
 
 import java.time.OffsetDateTime;
 import java.util.List;

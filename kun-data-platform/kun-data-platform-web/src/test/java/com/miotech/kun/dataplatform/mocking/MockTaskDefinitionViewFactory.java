@@ -1,7 +1,7 @@
 package com.miotech.kun.dataplatform.mocking;
 
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataplatform.model.taskdefview.TaskDefinitionView;
+import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 
 import java.util.ArrayList;

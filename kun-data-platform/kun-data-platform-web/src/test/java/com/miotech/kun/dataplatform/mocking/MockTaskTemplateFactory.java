@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.mocking;
 
-import com.miotech.kun.dataplatform.model.tasktemplate.TaskTemplate;
+import com.miotech.kun.dataplatform.web.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.workflow.client.model.Operator;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;

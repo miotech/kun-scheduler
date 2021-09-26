@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.google.common.collect.Lists;
+import com.miotech.kun.commons.utils.JsonLongFieldDeserializer;
 import org.junit.Test;
 
 import java.util.HashMap;
