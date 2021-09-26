@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.operator.spark.clients;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.utils.HttpApiClient;
 import com.miotech.kun.workflow.operator.spark.models.Application;
 
 import java.io.IOException;

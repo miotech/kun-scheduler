@@ -1,6 +1,6 @@
 package com.miotech.kun.dataplatform.mocking;
 
-import com.miotech.kun.dataplatform.model.backfill.Backfill;
+import com.miotech.kun.dataplatform.facade.backfill.Backfill;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 

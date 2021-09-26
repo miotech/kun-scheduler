@@ -1,7 +1,7 @@
 package com.miotech.kun.dataplatform.mocking;
 
-import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
-import com.miotech.kun.dataplatform.model.datastore.TaskDataset;
+import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
+import com.miotech.kun.dataplatform.web.model.datastore.TaskDataset;
 
 import java.util.ArrayList;
 import java.util.List;

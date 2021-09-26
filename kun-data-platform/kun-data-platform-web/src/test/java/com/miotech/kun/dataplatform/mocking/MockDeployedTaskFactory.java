@@ -1,8 +1,8 @@
 package com.miotech.kun.dataplatform.mocking;
 
-import com.miotech.kun.dataplatform.common.utils.DataPlatformIdGenerator;
-import com.miotech.kun.dataplatform.model.commit.TaskCommit;
-import com.miotech.kun.dataplatform.model.deploy.DeployedTask;
+import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
+import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
+import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 
 import java.util.ArrayList;
 import java.util.List;

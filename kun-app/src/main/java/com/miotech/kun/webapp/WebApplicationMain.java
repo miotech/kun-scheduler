@@ -3,6 +3,8 @@ package com.miotech.kun.webapp;
 import com.miotech.kun.webapp.listener.KunAppPropertySourceListener;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * The application layer entry class for the following modules:
@@ -21,8 +23,11 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
         // kun-data-discovery
         "com.miotech.kun.dataquality",
         "com.miotech.kun.datadiscovery",
-        "com.miotech.kun.webapp"
+        "com.miotech.kun.webapp",
+        "com.miotech.kun.monitor"
 })
+@EnableScheduling
+@EnableAsync
 public class WebApplicationMain {
     public static void main(String[] args) {
         new SpringApplicationBuilder(WebApplicationMain.class)

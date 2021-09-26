@@ -1,8 +1,8 @@
 package com.miotech.kun.dataplatform.mocking;
 
 import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.dataplatform.model.notify.TaskNotifyConfig;
-import com.miotech.kun.dataplatform.model.notify.TaskStatusNotifyTrigger;
+import com.miotech.kun.monitor.facade.model.alert.TaskStatusNotifyTrigger;
+import com.miotech.kun.monitor.facade.model.alert.TaskNotifyConfig;
 
 import java.util.ArrayList;
 
