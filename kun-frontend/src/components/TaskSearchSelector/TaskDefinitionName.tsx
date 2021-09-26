@@ -20,11 +20,11 @@ export const TaskDefinitionName: React.FC<TaskDefinitionNameProps> = props => {
     if (taskDefId && taskDefId !== 'undefined') {
       run(taskDefId);
     }
-  }, [taskDefId]);
+  }, [run, taskDefId]);
 
   return (
     <span data-label="task-definition-name" {...restProps}>
-      {(loading || (!data)) ? '...' : data.name}
+      {loading || !data ? '...' : data.name}
     </span>
   );
 };
