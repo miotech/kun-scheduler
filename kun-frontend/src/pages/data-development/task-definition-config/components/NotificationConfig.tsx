@@ -27,7 +27,7 @@ type Props = OwnProps;
 const logger = LogUtils.getLoggers('NotificationConfig');
 const { Option } = Select;
 const levelList = [1, 2, 3, 4, 5];
-const hourList = Array(12)
+const hourList = Array(24)
   .fill(0)
   .map((i, idx) => idx);
 const minuteList = Array(60)
