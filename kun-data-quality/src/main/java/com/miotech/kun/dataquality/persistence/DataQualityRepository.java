@@ -1,9 +1,9 @@
 package com.miotech.kun.dataquality.persistence;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
 import com.miotech.kun.common.BaseRepository;
-import com.miotech.kun.common.utils.DateUtils;
 import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
@@ -40,6 +40,16 @@ import java.util.stream.Collectors;
 public class DataQualityRepository extends BaseRepository {
 
     private static final Integer HISTORY_RECORD_LIMIT = 6;
+
+    public static final String CASE_RUN_TABLE = "kun_dq_case_run";
+
+    public static final String CASE_RUN_MODEL = "caserun";
+
+    public static final List<String> caseRunCols = ImmutableList.of("case_run_id", "task_run_id", "case_id", "status");
+
+    public static final List<String> caseCols = ImmutableList.of("id", "name", "description", "task_id", "template_id", "execution_string"
+            , "types", "create_user", "create_time", "update_user", "update_time", "primary_dataset_id", "is_blocking");
+
 
     @Autowired
     JdbcTemplate jdbcTemplate;
@@ -120,6 +130,98 @@ public class DataQualityRepository extends BaseRepository {
         jdbcTemplate.update(sql, taskId, caseId);
     }
 
+    //return ture if all test case instance of taskRun is success
+    public DataQualityStatus validateTaskRunTestCase(long taskRunId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("status")
+                .from(CASE_RUN_TABLE, CASE_RUN_MODEL)
+                .join("inner", "kun_dq_case", "dqcase")
+                .on("dqcase.id = " + CASE_RUN_MODEL + ".case_id")
+                .where(CASE_RUN_MODEL + ".task_run_id = ? and dqcase.is_blocking = ?")
+                .asPrepared()
+                .getSQL();
+        List<String> caseRunStatusList = jdbcTemplate.queryForList(sql, String.class, taskRunId, true);
+        boolean allSuccess = true;
+        for (String caseRunStatus : caseRunStatusList) {
+            if (caseRunStatus.equals(DataQualityStatus.FAILED.name())) {
+                return DataQualityStatus.FAILED;
+            }
+            if (caseRunStatus.equals(DataQualityStatus.CREATED.name())) {
+                allSuccess = false;
+            }
+        }
+        return allSuccess ? DataQualityStatus.SUCCESS : DataQualityStatus.CREATED;
+    }
+
+    public void updateCaseRunStatus(long caseRunId, boolean status) {
+        DataQualityStatus dataQualityStatus = status ? DataQualityStatus.SUCCESS : DataQualityStatus.FAILED;
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update(CASE_RUN_TABLE)
+                .set("status")
+                .where("case_run_id = ?")
+                .asPrepared()
+                .getSQL();
+        jdbcTemplate.update(sql, dataQualityStatus.name(), caseRunId);
+    }
+
+    public long fetchTaskRunIdByCase(long caseRunId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("task_run_id")
+                .from(CASE_RUN_TABLE)
+                .where("case_run_id = ?")
+                .limit()
+                .asPrepared()
+                .getSQL();
+        return jdbcTemplate.queryForObject(sql, Long.class, caseRunId, 1);
+
+    }
+
+    public List<Long> fetchCaseRunsByTaskRunId(long taskRunId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("case_run_id")
+                .from(CASE_RUN_TABLE)
+                .where("task_run_id = ?")
+                .asPrepared()
+                .getSQL();
+        return jdbcTemplate.queryForList(sql, Long.class, taskRunId);
+
+    }
+
+    public void insertCaseRunWithTaskRun(List<CaseRun> caseRunList) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .insert(caseRunCols.toArray(new String[0]))
+                .into(CASE_RUN_TABLE)
+                .asPrepared()
+                .getSQL();
+
+        jdbcTemplate.batchUpdate(sql, new BatchPreparedStatementSetter() {
+            @Override
+            public void setValues(PreparedStatement ps, int i) throws SQLException {
+                ps.setLong(1, caseRunList.get(i).getCaseRunId());
+                ps.setLong(2, caseRunList.get(i).getTaskRunId());
+                ps.setLong(3, caseRunList.get(i).getCaseId());
+                ps.setString(4, DataQualityStatus.CREATED.name());
+            }
+
+            @Override
+            public int getBatchSize() {
+                return caseRunList.size();
+            }
+        });
+    }
+
+    public String fetchCaseRunStatus(long caseRunId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("status")
+                .from(CASE_RUN_TABLE)
+                .where("case_run_id = ?")
+                .limit()
+                .asPrepared()
+                .getSQL();
+        return jdbcTemplate.queryForObject(sql, String.class, caseRunId, 1);
+
+    }
+
     @Transactional(rollbackFor = Exception.class)
     public DeleteCaseResponse deleteCase(Long id) {
         String kdcDeleteSql = DefaultSQLBuilder.newBuilder()
@@ -172,7 +274,8 @@ public class DataQualityRepository extends BaseRepository {
                         "execution_string",
                         "update_user",
                         "update_time",
-                        "types")
+                        "types",
+                        "is_blocking")
                 .asPrepared()
                 .where("id = ?")
                 .getSQL();
@@ -185,6 +288,7 @@ public class DataQualityRepository extends BaseRepository {
                     dataQualityRequest.getUpdateUser(),
                     millisToTimestamp(dataQualityRequest.getUpdateTime()),
                     types,
+                    dataQualityRequest.getIsBlocking(),
                     id);
         } else {
             jdbcTemplate.update(kdcSql, dataQualityRequest.getName(),
@@ -194,6 +298,7 @@ public class DataQualityRepository extends BaseRepository {
                     dataQualityRequest.getUpdateUser(),
                     millisToTimestamp(dataQualityRequest.getUpdateTime()),
                     types,
+                    dataQualityRequest.getIsBlocking(),
                     id);
             if (TemplateType.FIELD.name().equals(dataQualityRequest.getDimension())) {
                 List<Long> fieldIds = ((List<?>) dataQualityRequest.getDimensionConfig().get("applyFieldIds")).stream()
@@ -398,8 +503,8 @@ public class DataQualityRepository extends BaseRepository {
     @Transactional(rollbackFor = Exception.class)
     public Long addCase(DataQualityRequest dataQualityRequest) {
         String kdcSql = DefaultSQLBuilder.newBuilder()
-                .insert().into("kun_dq_case")
-                .valueSize(12)
+                .insert(caseCols.toArray(new String[0])).into("kun_dq_case")
+                .valueSize(13)
                 .getSQL();
 
         String dimension = dataQualityRequest.getDimension();
@@ -410,29 +515,31 @@ public class DataQualityRepository extends BaseRepository {
             jdbcTemplate.update(kdcSql, caseId,
                     dataQualityRequest.getName(),
                     dataQualityRequest.getDescription(),
+                    dataQualityRequest.getTaskId(),
                     null,
                     customSql,
+                    typesStr,
                     dataQualityRequest.getCreateUser(),
                     millisToTimestamp(dataQualityRequest.getCreateTime()),
                     dataQualityRequest.getUpdateUser(),
                     millisToTimestamp(dataQualityRequest.getUpdateTime()),
-                    dataQualityRequest.getTaskId(),
-                    typesStr,
-                    null);
+                    null,
+                    dataQualityRequest.getIsBlocking());
         } else {
             Long templateId = Long.valueOf((String) dataQualityRequest.getDimensionConfig().get("templateId"));
             jdbcTemplate.update(kdcSql, caseId,
                     dataQualityRequest.getName(),
                     dataQualityRequest.getDescription(),
+                    dataQualityRequest.getTaskId(),
                     templateId,
                     null,
+                    typesStr,
                     dataQualityRequest.getCreateUser(),
                     millisToTimestamp(dataQualityRequest.getCreateTime()),
                     dataQualityRequest.getUpdateUser(),
                     millisToTimestamp(dataQualityRequest.getUpdateTime()),
-                    dataQualityRequest.getTaskId(),
-                    typesStr,
-                    null);
+                    null,
+                    dataQualityRequest.getIsBlocking());
             if (TemplateType.FIELD.name().equals(dimension)) {
                 String kdcadfSql = DefaultSQLBuilder.newBuilder()
                         .insert().into("kun_dq_case_associated_dataset_field")
@@ -479,6 +586,27 @@ public class DataQualityRepository extends BaseRepository {
             }
             return caseBasic;
         }, id);
+    }
+
+    public DataQualityCaseBasic fetchCaseBasicByTaskId(Long taskId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("id", "name", "task_id", "is_blocking")
+                .from("kun_dq_case")
+                .where("task_id = ?")
+                .getSQL();
+
+        return jdbcTemplate.query(sql, rs -> {
+            DataQualityCaseBasic caseBasic = new DataQualityCaseBasic();
+            if (rs.next()) {
+                caseBasic.setId(rs.getLong("id"));
+                caseBasic.setName(rs.getString("name"));
+                caseBasic.setTaskId(rs.getLong("task_id"));
+                caseBasic.setIsBlocking(rs.getBoolean("is_blocking"));
+            } else {
+                return null;
+            }
+            return caseBasic;
+        }, taskId);
     }
 
     private List<String> resolveDqCaseTypes(String types) {
@@ -675,8 +803,8 @@ public class DataQualityRepository extends BaseRepository {
         }, caseId);
     }
 
-    public List<Long> getWorkflowTasksByDatasetIds(List<Long> datasetIds){
-        if(datasetIds.isEmpty())
+    public List<Long> getWorkflowTasksByDatasetIds(List<Long> datasetIds) {
+        if (datasetIds.isEmpty())
             return new ArrayList<>();
 
         String sql = "select distinct(case_id) from kun_dq_case_associated_dataset where dataset_id in " + toColumnSql(datasetIds.size());

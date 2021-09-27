@@ -1,7 +1,7 @@
-package com.miotech.kun.workflow.common.lineage.service;
+package com.miotech.kun.metadata.common.factory;
 
-import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
-import com.miotech.kun.workflow.common.lineage.node.TaskNode;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
+import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 
 import java.util.ArrayList;
 import java.util.List;

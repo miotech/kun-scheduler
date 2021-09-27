@@ -1,0 +1,34 @@
+testenv: true
+
+server:
+  port: ${SERVER_PORT}
+
+workflow:
+  enabled: false
+  baseUrl: ${WORKFLOW_URL:}
+  variableNamespace: dataplatform
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driverClassName: org.h2.Driver
+    hikari:
+      connection-init-sql: CREATE DOMAIN IF NOT EXISTS  "JSONB" AS TEXT
+
+  session:
+    jdbc:
+      initialize-schema: always
+      table-name: kun_user_session
+
+  flyway:
+    enabled: true
+    clean-disabled: true
+    locations: classpath:webapp_sql
+    table: flyway_kun_webapp_schema_history
+    schemas: public
+    baselineOnMigrate: true
+    baselineVersion: 0
+
+

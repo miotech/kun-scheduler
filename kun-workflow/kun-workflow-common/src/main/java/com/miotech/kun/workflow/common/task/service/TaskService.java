@@ -7,7 +7,7 @@ import com.google.inject.Singleton;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
-import com.miotech.kun.workflow.common.lineage.node.TaskNode;
+import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
@@ -67,6 +67,8 @@ public class TaskService {
     private final Integer RETRY_DELAY_LIMIT = 600;
     
     private final Integer DEFAULT_PRIORITY = 16;
+
+    private final CheckType DEFAULT_CHECK_TYPE = CheckType.SKIP;
 
 
     @Inject
@@ -182,6 +184,7 @@ public class TaskService {
                 .withPriority(vo.getPriority() == null ? DEFAULT_PRIORITY : vo.getPriority())
                 .withRetries(vo.getRetries() == null ? task.getRetries() : vo.getRetries())
                 .withRetryDelay(vo.getRetryDelay() == null ? task.getRetryDelay() : vo.getRetryDelay())
+                .withCheckType(vo.getCheckType() == null ? DEFAULT_CHECK_TYPE : CheckType.valueOf(vo.getCheckType()))
                 .build();
 
         // 4. perform update
@@ -216,6 +219,7 @@ public class TaskService {
                 .withPriority(vo.getPriority() == null ? DEFAULT_PRIORITY : vo.getPriority())
                 .withRetries(retries)
                 .withRetryDelay(retryDelay)
+                .withCheckType(vo.getCheckType() == null ? DEFAULT_CHECK_TYPE : CheckType.valueOf(vo.getCheckType()))
                 .build();
 
         return fullUpdateTask(task);
@@ -414,6 +418,7 @@ public class TaskService {
                 .withPriority(vo.getPriority() == null ? DEFAULT_PRIORITY : vo.getPriority())
                 .withRetries(retries)
                 .withRetryDelay(retryDelay)
+                .withCheckType(vo.getCheckType() == null ? DEFAULT_CHECK_TYPE : CheckType.valueOf(vo.getCheckType()))
                 .build();
     }
 

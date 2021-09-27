@@ -16,7 +16,9 @@ public enum TaskRunStatus {
     ABORTING,
     ABORTED,
     ERROR,//系统错误
-    UPSTREAM_FAILED;
+    UPSTREAM_FAILED,
+    CHECK,
+    CHECK_FAILED;
 
     private static final Map<String, TaskRunStatus> mappings = new HashMap<>(16);
 
@@ -40,7 +42,7 @@ public enum TaskRunStatus {
     }
 
     public boolean isFailure() {
-        return this == FAILED || this == ABORTED;
+        return this == FAILED || this == ABORTED || this == CHECK_FAILED;
     }
 
     public boolean isFinished() {
@@ -60,9 +62,14 @@ public enum TaskRunStatus {
     }
 
     public boolean isTermState() {
-        return this == SUCCESS || this == FAILED || this == ABORTED || this == UPSTREAM_FAILED;
+        return this == SUCCESS || this == FAILED || this == ABORTED || this == UPSTREAM_FAILED
+                || this == CHECK_FAILED;
     }
     public boolean isRunning(){
         return this == RUNNING;
+    }
+
+    public boolean isChecking(){
+        return this == CHECK;
     }
 }

@@ -2,14 +2,14 @@ package com.miotech.kun.workflow.common.task.service;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
+import com.miotech.kun.metadata.common.service.MetadataDatasetService;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
-import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
-import com.miotech.kun.workflow.common.lineage.node.TaskNode;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.operator.service.LineageMockOperator;
@@ -24,6 +24,8 @@ import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
+import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
@@ -57,7 +59,8 @@ import static org.mockito.Mockito.*;
 public class TaskServiceTest extends CommonTestBase {
     private static final String PACKAGE_PATH_LINEAGE_OPERATOR = OperatorCompiler.compileJar(LineageMockOperator.class, "LineageMockOperator");
 
-    MetadataServiceFacade metadataFacade;
+    @Inject
+    private MetadataServiceFacade metadataFacade;
 
     @Inject
     private LineageService lineageService;
@@ -79,6 +82,8 @@ public class TaskServiceTest extends CommonTestBase {
     @Inject
     private TaskService taskService;
 
+    private MetadataDatasetDao metadataDatasetDao;
+
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
@@ -89,8 +94,12 @@ public class TaskServiceTest extends CommonTestBase {
 
     @Override
     protected void configuration() {
-        metadataFacade = mock(MetadataServiceFacade.class);
         super.configuration();
+        metadataDatasetDao = mock(MetadataDatasetDao.class);
+        bind(MetadataDatasetDao.class,metadataDatasetDao);
+        bind(MetadataServiceFacade.class, MetadataDatasetService.class);
+        bind(LineageServiceFacade.class, com.miotech.kun.metadata.common.service.LineageService.class);
+
     }
 
     private List<Operator> insertSampleOperators() {
@@ -522,14 +531,15 @@ public class TaskServiceTest extends CommonTestBase {
                 )
                 .build();
 
-        // Mock returning random dataset by metadata facade given any datastore
+        // Mock returning dataset by metadata dao given any datastore
         doAnswer(invocation -> {
+            Long gid = invocation.getArgument(0,Long.class);
             Dataset dataset = Dataset.newBuilder()
-                    .withGid(IdGenerator.getInstance().nextId())
+                    .withGid(gid)
                     .withDataStore(null)
                     .build();
-            return dataset;
-        }).when(metadataFacade).getDatasetByDatastore(any());
+            return Optional.of(dataset);
+        }).when(metadataDatasetDao).fetchDatasetByGid(anyLong());
 
         // Process
         Task createdTask = taskService.createTask(taskVO);
@@ -745,7 +755,7 @@ public class TaskServiceTest extends CommonTestBase {
 
 
     @Test
-    public void testCreateTaskWithoutRetries_retries_should_be_zero() {
+    public void testCreateTaskWithoutSettingValues_should_be_default() {
         //prepare
         TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO();
         long operatorId = taskPropsVO.getOperatorId();
@@ -764,10 +774,11 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(0));
         assertThat(saved.getRetryDelay(), is(30));
+        assertThat(saved.getCheckType(),is(CheckType.SKIP));
     }
 
     @Test
-    public void testFullUpdateTaskWithoutRetries_retries_should_be_zero() {
+    public void testFullUpdateTaskWithoutChanges_should_be_saved() {
         //prepare
         TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
         long operatorId = createdTask.getOperatorId();
@@ -788,10 +799,11 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(0));
         assertThat(saved.getRetryDelay(), is(30));
+        assertThat(saved.getCheckType(),is(CheckType.SKIP));
     }
 
     @Test
-    public void testPartialUpdateTaskWithoutRetries_retries_should_be_saved_value() {
+    public void testPartialUpdateTaskWithoutSettingValues_should_be_saved_value() {
         //prepare
         TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
         long operatorId = createdTask.getOperatorId();
@@ -813,15 +825,17 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(updated.getRetries(), is(saved.getRetries()));
         assertThat(updated.getRetryDelay(), is(saved.getRetryDelay()));
+        assertThat(updated.getCheckType(),is(saved.getCheckType()));
     }
 
     @Test
-    public void testCreateTaskWithRetries_retries_should_be_given_value() {
+    public void testCreateTaskWithSettingValues_should_be_given_value() {
         //prepare
         TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO()
                 .cloneBuilder()
                 .withRetries(1)
                 .withRetryDelay(10)
+                .withCheckType(CheckType.WAITE_EVENT.name())
                 .build();
         long operatorId = taskPropsVO.getOperatorId();
         Operator op = MockOperatorFactory.createOperator()
@@ -839,10 +853,11 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(1));
         assertThat(saved.getRetryDelay(), is(10));
+        assertThat(saved.getCheckType(),is(CheckType.WAITE_EVENT));
     }
 
     @Test
-    public void testFullUpdateTaskWithoutRetries_retries_should_be_given_value() {
+    public void testFullUpdateTaskWithSettingValues_should_be_given_value() {
         //prepare
         TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
         long operatorId = createdTask.getOperatorId();
@@ -860,6 +875,7 @@ public class TaskServiceTest extends CommonTestBase {
                 .cloneBuilder()
                 .withRetries(1)
                 .withRetryDelay(10)
+                .withCheckType(CheckType.WAITE_EVENT.name())
                 .build();
         taskService.fullUpdateTaskById(task.getId(), taskPropsVO);
         Task saved = taskDao.fetchById(task.getId()).get();
@@ -867,10 +883,11 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(1));
         assertThat(saved.getRetryDelay(), is(10));
+        assertThat(saved.getCheckType(),is(CheckType.WAITE_EVENT));
     }
 
     @Test
-    public void testPartialUpdateTaskWithoutRetries_retries_should_be_given_value() {
+    public void testPartialUpdateTaskWithSettingValues_should_be_given_value() {
         //prepare
         TaskPropsVO createdTask = MockTaskFactory.createTaskPropsVO();
         long operatorId = createdTask.getOperatorId();
@@ -888,6 +905,7 @@ public class TaskServiceTest extends CommonTestBase {
                 .cloneBuilder()
                 .withRetries(1)
                 .withRetryDelay(10)
+                .withCheckType(CheckType.WAITE_EVENT.name())
                 .build();
         taskService.partialUpdateTask(task.getId(), taskPropsVO);
         Task updated = taskDao.fetchById(task.getId()).get();
@@ -895,5 +913,6 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(updated.getRetries(), is(1));
         assertThat(updated.getRetryDelay(), is(10));
+        assertThat(updated.getCheckType(),is(CheckType.WAITE_EVENT));
     }
 }

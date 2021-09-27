@@ -2,7 +2,9 @@ package com.miotech.kun.workflow.executor;
 
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -51,7 +53,9 @@ public class LocalQueueManageTest extends CommonTestBase {
     protected void configuration() {
         super.configuration();
         bind(MetadataServiceFacade.class,mock(MetadataServiceFacade.class));
+        bind(LineageServiceFacade.class,mock(LineageServiceFacade.class));
         bind(EventPublisher.class, new NopEventPublisher());
+        bind(EventSubscriber.class, mock(EventSubscriber.class));
     }
 
     @Test

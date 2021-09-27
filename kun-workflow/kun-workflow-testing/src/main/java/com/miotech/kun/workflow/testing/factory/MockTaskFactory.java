@@ -55,6 +55,9 @@ public class MockTaskFactory {
                 .withTags(new ArrayList<>())
                 .withQueueName("default")
                 .withPriority(16)
+                .withRecoverTimes(0)
+                .withRetryDelay(1)
+                .withCheckType(CheckType.SKIP)
                 .build();
     }
 
@@ -63,26 +66,30 @@ public class MockTaskFactory {
     }
 
     public static Task createTask(String queueName) {
-        return createTasks(1, WorkflowIdGenerator.nextOperatorId(), queueName, 0, 1).get(0);
+        return createTasks(1, WorkflowIdGenerator.nextOperatorId(), queueName, 0, 1,CheckType.SKIP).get(0);
+    }
+
+    public static Task createTaskWithCheckType(CheckType checkType){
+        return createTasks(1, WorkflowIdGenerator.nextOperatorId(), "default", 0, 1,checkType).get(0);
     }
 
     public static Task createTaskWithRetry(Integer retries, Integer retryDelay) {
-        return createTasks(1, WorkflowIdGenerator.nextOperatorId(), "default", retries, retryDelay).get(0);
+        return createTasks(1, WorkflowIdGenerator.nextOperatorId(), "default", retries, retryDelay,CheckType.SKIP).get(0);
     }
 
     public static Task createTask(Long operatorId) {
-        return createTasks(1, operatorId, "default", 0, 1).get(0);
+        return createTasks(1, operatorId, "default", 0, 1,CheckType.SKIP).get(0);
     }
 
     public static List<Task> createTasks(int num) {
-        return createTasks(num, WorkflowIdGenerator.nextOperatorId(), "default", 0, 1);
+        return createTasks(num, WorkflowIdGenerator.nextOperatorId(), "default", 0, 1,CheckType.SKIP);
     }
 
     public static List<Task> createTasks(int num, Long operatorId) {
-        return createTasks(num, operatorId, "default", 0, 1);
+        return createTasks(num, operatorId, "default", 0, 1,CheckType.SKIP);
     }
 
-    public static List<Task> createTasks(int num, Long operatorId, String queueName, Integer retries, Integer retryDelay) {
+    public static List<Task> createTasks(int num, Long operatorId, String queueName, Integer retries, Integer retryDelay,CheckType checkType) {
         List<Task> tasks = new ArrayList<>();
 
         for (int i = 0; i < num; i++) {
@@ -100,6 +107,7 @@ public class MockTaskFactory {
                     .withPriority(16)
                     .withRetries(retries)
                     .withRetryDelay(retryDelay)
+                    .withCheckType(checkType)
                     .build());
         }
         return tasks;
@@ -161,6 +169,7 @@ public class MockTaskFactory {
                     .withTags(new ArrayList<>())
                     .withRetries(0)
                     .withRetryDelay(30)
+                    .withCheckType(CheckType.SKIP)
                     .build());
         }
         return tasks;

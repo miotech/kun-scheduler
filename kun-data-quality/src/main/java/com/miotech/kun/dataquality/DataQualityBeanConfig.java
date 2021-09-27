@@ -1,12 +1,15 @@
 package com.miotech.kun.dataquality;
 
+import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.dataquality.utils.WorkflowUtils;
 import com.miotech.kun.workflow.client.model.Operator;
+import com.miotech.kun.workflow.core.pubsub.RedisEventPublisher;
 import com.miotech.kun.workflow.core.pubsub.RedisEventSubscriber;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import redis.clients.jedis.JedisPool;
@@ -17,6 +20,7 @@ import redis.clients.jedis.JedisPoolConfig;
  * @created: 2020/7/17
  */
 @Configuration
+@ConditionalOnProperty(value = "testenv", havingValue = "false", matchIfMissing = true)
 public class DataQualityBeanConfig {
 
     @Value("${workflow.base-url:http://kun-workflow:8088}")
@@ -40,10 +44,17 @@ public class DataQualityBeanConfig {
                 .build();
     }
 
-    @Bean("data-quality-subscriber")
+    @Bean("dataQuality-subscriber")
     @ConditionalOnMissingBean(EventSubscriber.class)
     public EventSubscriber getRedisSubscriber() {
         JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), redisHost);
         return new RedisEventSubscriber(channel, jedisPool);
+    }
+
+    @Bean("dataQuality-publisher")
+    @ConditionalOnMissingBean(EventPublisher.class)
+    public EventPublisher getRedisPublisher() {
+        JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), redisHost);
+        return new RedisEventPublisher(channel, jedisPool);
     }
 }
