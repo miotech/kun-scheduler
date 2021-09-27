@@ -21,7 +21,7 @@ public class GraphDatabaseModule extends AbstractModule {
     private final String[] domainClasses;
 
     public static final String[] DEFAULT_NEO4J_DOMAIN_CLASSES = {
-            "com.miotech.kun.workflow.common.lineage.node"
+            "com.miotech.kun.workflow.core.model.lineage.node"
     };
 
     public GraphDatabaseModule(Props props) {

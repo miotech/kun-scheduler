@@ -91,6 +91,11 @@ public class WorkflowServiceFacadeImpl implements WorkflowServiceFacade {
     }
 
     @Override
+    public Task getTask(Long taskId) {
+        return taskService.fetchById(taskId);
+    }
+
+    @Override
     public Task createTask(Task task) {
         TaskPropsVO vo = TaskPropsVO.from(task);
         return taskService.createTask(vo);

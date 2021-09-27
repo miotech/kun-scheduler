@@ -23,6 +23,7 @@ public class TaskPropsVO {
     private final Integer priority;
     private final Integer retries;
     private final Integer retryDelay;
+    private final String checkType;
 
     private TaskPropsVO(TaskPropsVOBuilder builder) {
         this.name = builder.name;
@@ -36,6 +37,7 @@ public class TaskPropsVO {
         this.priority = builder.priority;
         this.retries = builder.retries;
         this.retryDelay = builder.retryDelay;
+        this.checkType = builder.checkType;
     }
 
     public static TaskPropsVOBuilder newBuilder() {
@@ -63,6 +65,9 @@ public class TaskPropsVO {
                 .withDependencies(dependencies)
                 .withTags(task.getTags())
                 .withQueueName(task.getQueueName())
+                .withCheckType(task.getCheckType().name())
+                .withRetries(task.getRetries())
+                .withRetryDelay(task.getRetryDelay())
                 .build();
     }
 
@@ -121,6 +126,10 @@ public class TaskPropsVO {
         return retryDelay;
     }
 
+    public String getCheckType() {
+        return checkType;
+    }
+
     @JsonPOJOBuilder
     public static final class TaskPropsVOBuilder {
         private String name;
@@ -134,6 +143,7 @@ public class TaskPropsVO {
         private Integer priority;
         private Integer retries;
         private Integer retryDelay;
+        private String checkType;
 
         private TaskPropsVOBuilder() {
         }
@@ -190,6 +200,11 @@ public class TaskPropsVO {
 
         public TaskPropsVOBuilder withRetryDelay(Integer retryDelay){
             this.retryDelay = retryDelay;
+            return this;
+        }
+
+        public TaskPropsVOBuilder withCheckType(String checkType){
+            this.checkType = checkType;
             return this;
         }
 

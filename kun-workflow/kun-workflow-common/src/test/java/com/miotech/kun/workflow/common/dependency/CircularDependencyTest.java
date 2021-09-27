@@ -1,6 +1,8 @@
 package com.miotech.kun.workflow.common.dependency;
 
 import com.google.inject.Inject;
+import com.miotech.kun.metadata.common.service.LineageService;
+import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -47,6 +49,7 @@ public class CircularDependencyTest extends CommonTestBase {
     protected void configuration() {
         super.configuration();
         bind(MetadataServiceFacade.class,mock(MetadataServiceFacade.class));
+        bind(LineageServiceFacade.class,mock(LineageService.class));
         bind(Scheduler.class,mock(Scheduler.class));
     }
 

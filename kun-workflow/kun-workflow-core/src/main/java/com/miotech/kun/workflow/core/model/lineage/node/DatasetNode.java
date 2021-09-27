@@ -1,4 +1,4 @@
-package com.miotech.kun.workflow.common.lineage.node;
+package com.miotech.kun.workflow.core.model.lineage.node;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;

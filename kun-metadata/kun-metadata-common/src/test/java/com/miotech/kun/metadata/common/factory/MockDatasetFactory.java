@@ -65,7 +65,18 @@ public class MockDatasetFactory {
                 .build();
     }
 
-    private static DataStore createDataStore(String dataStoreType, String databaseName) {
+    public static Dataset createDatasetWithDataStore(long gid, String name, long dataSourceId, List<DatasetField> fields,DataStore dataStore) {
+        return Dataset.newBuilder()
+                .withGid(gid)
+                .withDatasourceId(dataSourceId)
+                .withName(name)
+                .withDataStore(dataStore)
+                .withFields(fields)
+                .withDeleted(false)
+                .build();
+    }
+
+    public static DataStore createDataStore(String dataStoreType, String databaseName) {
         Preconditions.checkArgument(StringUtils.isNotBlank(dataStoreType), "Param `dataStoreType` should not be empty");
 
         switch (dataStoreType) {

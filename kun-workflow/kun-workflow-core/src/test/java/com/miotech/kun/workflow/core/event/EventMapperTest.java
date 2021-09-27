@@ -54,7 +54,7 @@ public class EventMapperTest {
     @Test
     public void testTaskAttemptFinishedEvent() throws JsonProcessingException {
         TaskAttemptFinishedEvent taskAttemptFinishedEvent = new TaskAttemptFinishedEvent(IdGenerator.getInstance().nextId(),
-                TaskRunStatus.CREATED, ImmutableList.of(), ImmutableList.of(), ImmutableList.of(), ImmutableList.of());
+                IdGenerator.getInstance().nextId(),IdGenerator.getInstance().nextId(),TaskRunStatus.CREATED, ImmutableList.of(), ImmutableList.of());
 
         String json = EventMapper.toJson(taskAttemptFinishedEvent);
         Event event = EventMapper.toEvent(json);
@@ -74,6 +74,18 @@ public class EventMapperTest {
         assertThat(event, isA(TaskRunCreatedEvent.class));
         TaskRunCreatedEvent createdEvent = (TaskRunCreatedEvent) event;
         assertThat(createdEvent, sameBeanAs(taskRunCreatedEvent));
+    }
+
+    @Test
+    public void testCheckResultEvent() throws JsonProcessingException {
+        Long taskRunId = IdGenerator.getInstance().nextId();
+        CheckResultEvent checkResultEvent = new CheckResultEvent(taskRunId,true);
+
+        String json = EventMapper.toJson(checkResultEvent);
+        Event event = EventMapper.toEvent(json);
+        assertThat(event, isA(CheckResultEvent.class));
+        CheckResultEvent createdEvent = (CheckResultEvent) event;
+        assertThat(createdEvent, sameBeanAs(checkResultEvent));
     }
 
 }

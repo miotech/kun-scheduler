@@ -40,7 +40,7 @@ public class LineageMockOperator extends KunOperator {
             Integer upstreamStoreCount = config.getInt("upstreamStoreCount", 1);
             List<DataStore> upstreamDataStores = new ArrayList<>();
             for (int i = 0; i < upstreamStoreCount; i += 1) {
-                upstreamDataStores.add(MockDataStoreFactory.getMockDataStore(DataStoreType.MYSQL_TABLE));
+                upstreamDataStores.add(MockDataStoreFactory.getMockDataStore(DataStoreType.HIVE_TABLE, "database" + i, "table" + i));
             }
             return upstreamDataStores;
         }
@@ -50,7 +50,7 @@ public class LineageMockOperator extends KunOperator {
             Integer downstreamStoreCount = config.getInt("downstreamStoreCount", 1);
             List<DataStore> downstreamDataStores = new ArrayList<>();
             for (int i = 0; i < downstreamStoreCount; i += 1) {
-                downstreamDataStores.add(MockDataStoreFactory.getMockDataStore(DataStoreType.MYSQL_TABLE));
+                downstreamDataStores.add(MockDataStoreFactory.getMockDataStore(DataStoreType.HIVE_TABLE, "database" + i, "table" + i));
             }
             return downstreamDataStores;
         }

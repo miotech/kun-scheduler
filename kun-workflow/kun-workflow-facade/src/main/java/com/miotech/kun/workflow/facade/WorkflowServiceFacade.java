@@ -22,6 +22,8 @@ public interface WorkflowServiceFacade {
 
     public Optional<Task> getTask(String taskName);
 
+    public Task getTask(Long taskId);
+
     public Task createTask(Task task);
 
     public TaskRun executeTask(Long taskId, Map<String, Object> taskConfig);

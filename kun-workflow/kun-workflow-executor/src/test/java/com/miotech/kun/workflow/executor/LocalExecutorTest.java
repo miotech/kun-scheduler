@@ -2,10 +2,13 @@ package com.miotech.kun.workflow.executor;
 
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -15,11 +18,14 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
+import com.miotech.kun.workflow.core.event.CheckResultEvent;
+import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -148,8 +154,10 @@ public class LocalExecutorTest extends CommonTestBase {
         MetadataServiceFacade mockMetadataFacade = Mockito.mock(MetadataServiceFacade.class);
         bind(SessionFactory.class, mock(SessionFactory.class));
         bind(MetadataServiceFacade.class, mockMetadataFacade);
+        bind(LineageServiceFacade.class,mock(LineageServiceFacade.class));
         bind(EventBus.class, new EventBus());
         bind(EventPublisher.class, new NopEventPublisher());
+        bind(EventSubscriber.class, mock(EventSubscriber.class));
         LocalProcessBackend localProcessBackend = new LocalProcessBackend();
         spyBackend = spy(localProcessBackend);
         bind(LocalProcessBackend.class, spyBackend);
@@ -1013,6 +1021,119 @@ public class LocalExecutorTest extends CommonTestBase {
 
     }
 
+    @Test
+    public void taskRunTestCaseFailed_should_be_validate_failed() throws IOException {
+        //mock data quality
+        TaskAttemptCheckEventListener listener = new TaskAttemptCheckEventListener();
+        listener.setValidateResult(false);
+        eventBus.register(listener);
+
+        //prepare
+        Task task = MockTaskFactory.createTask().cloneBuilder()
+                .withCheckType(CheckType.WAITE_EVENT)
+                .build();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+        prepareAttempt(TestOperator1.class,taskAttempt);
+
+        executor.submit(taskAttempt);
+
+        // verify
+        awaitUntilAttemptDone(taskAttempt.getId());
+        // task_run and task_attempt
+        TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+        assertThat(attemptProps.getAttempt(), is(1));
+        assertThat(attemptProps.getStatus(), is(TaskRunStatus.CHECK_FAILED));
+        assertThat(attemptProps.getLogPath(), is(notNullValue()));
+        assertThat(attemptProps.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps.getEndAt(), is(notNullValue()));
+
+        TaskRun finishedTaskRun = taskRunDao.fetchLatestTaskRun(task.getId());
+        assertThat(finishedTaskRun.getStatus(), is(attemptProps.getStatus()));
+        assertThat(finishedTaskRun.getStartAt(), is(attemptProps.getStartAt()));
+        assertThat(finishedTaskRun.getEndAt(), is(attemptProps.getEndAt()));
+        assertThat(taskRunDao.getTermAtOfTaskRun(finishedTaskRun.getId()), is(finishedTaskRun.getEndAt()));
+
+        // logs
+        Resource log = resourceLoader.getResource(attemptProps.getLogPath());
+        String content = ResourceUtils.content(log.getInputStream());
+        assertThat(content, containsString("Hello, world!"));
+        assertThat(content, containsString("URLClassLoader"));
+        assertThat(content, not(containsString("AppClassLoader")));
+
+        // events
+        assertStatusHistory(taskAttempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.CHECK,
+                TaskRunStatus.CHECK_FAILED);
+        awaitUntilProcessDown("default",0);
+        TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(taskAttempt.getId());
+        assertThat(finishedEvent.getAttemptId(), is(taskAttempt.getId()));
+        assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.CHECK_FAILED));
+        assertThat(finishedEvent.getInlets(), hasSize(2));
+        assertThat(finishedEvent.getOutlets(), hasSize(1));
+
+    }
+
+    @Test
+    public void taskRunTestCasePass_should_be_success() throws IOException{
+        //mock data quality
+        TaskAttemptCheckEventListener listener = new TaskAttemptCheckEventListener();
+        listener.setValidateResult(true);
+        eventBus.register(listener);
+
+        //prepare
+        Task task = MockTaskFactory.createTask().cloneBuilder()
+                .withCheckType(CheckType.WAITE_EVENT)
+                .build();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+        prepareAttempt(TestOperator1.class,taskAttempt);
+
+        executor.submit(taskAttempt);
+
+        // verify
+        awaitUntilAttemptDone(taskAttempt.getId());
+        // task_run and task_attempt
+        TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+        assertThat(attemptProps.getAttempt(), is(1));
+        assertThat(attemptProps.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(attemptProps.getLogPath(), is(notNullValue()));
+        assertThat(attemptProps.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps.getEndAt(), is(notNullValue()));
+
+        TaskRun finishedTaskRun = taskRunDao.fetchLatestTaskRun(task.getId());
+        assertThat(finishedTaskRun.getStatus(), is(attemptProps.getStatus()));
+        assertThat(finishedTaskRun.getStartAt(), is(attemptProps.getStartAt()));
+        assertThat(finishedTaskRun.getEndAt(), is(attemptProps.getEndAt()));
+        assertThat(taskRunDao.getTermAtOfTaskRun(finishedTaskRun.getId()), is(finishedTaskRun.getEndAt()));
+
+        // logs
+        Resource log = resourceLoader.getResource(attemptProps.getLogPath());
+        String content = ResourceUtils.content(log.getInputStream());
+        assertThat(content, containsString("Hello, world!"));
+        assertThat(content, containsString("URLClassLoader"));
+        assertThat(content, not(containsString("AppClassLoader")));
+
+        // events
+        assertStatusHistory(taskAttempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.CHECK,
+                TaskRunStatus.SUCCESS);
+        awaitUntilProcessDown("default",0);
+        TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(taskAttempt.getId());
+        assertThat(finishedEvent.getAttemptId(), is(taskAttempt.getId()));
+        assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(finishedEvent.getInlets(), hasSize(2));
+        assertThat(finishedEvent.getOutlets(), hasSize(1));
+
+    }
+
+
     private TaskAttempt prepareAttempt(Class<? extends KunOperator> operatorClass) {
         return prepareAttempt(operatorClass, operatorClass.getSimpleName());
     }
@@ -1151,5 +1272,23 @@ public class LocalExecutorTest extends CommonTestBase {
 
     private TestWorker2 getTestWorker() {
         return new TestWorker2();
+    }
+
+    class TaskAttemptCheckEventListener{
+
+        private boolean validateResult;
+
+        public void setValidateResult(boolean validateResult){
+            this.validateResult = validateResult;
+        }
+
+        @Subscribe
+        public void onReceive(Event event) {
+            if(event instanceof TaskAttemptCheckEvent){
+                Long taskRunId = ((TaskAttemptCheckEvent) event).getTaskRunId();
+                CheckResultEvent checkResultEvent = new CheckResultEvent(taskRunId,validateResult);
+                eventBus.post(checkResultEvent);
+            }
+        }
     }
 }

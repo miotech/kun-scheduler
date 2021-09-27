@@ -15,10 +15,7 @@ import com.miotech.kun.workflow.common.task.vo.TagVO;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.task.DependencyLevel;
-import com.miotech.kun.workflow.core.model.task.ScheduleConf;
-import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.task.TaskDependency;
+import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -56,7 +53,7 @@ public class TaskDao {
 
     public static final String TASK_TAGS_MODEL_NAME = "task_tags";
 
-    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule", "queue_name", "priority","retries","retry_delay");
+    private static final List<String> taskCols = ImmutableList.of("id", "name", "description", "operator_id", "config", "schedule", "queue_name", "priority","retries","retry_delay","check_type");
 
     private static final List<String> taskTagCols = ImmutableList.of("task_id", "tag_key", "tag_value");
 
@@ -678,7 +675,8 @@ public class TaskDao {
                     task.getQueueName(),
                     task.getPriority(),
                     task.getRetries(),
-                    task.getRetryDelay()
+                    task.getRetryDelay(),
+                    task.getCheckType().name()
             );
             insertTickTaskRecordByScheduleConf(task.getId(), task.getScheduleConf());
             // Update tags
@@ -714,6 +712,7 @@ public class TaskDao {
                     task.getPriority(),
                     task.getRetries(),
                     task.getRetryDelay(),
+                    task.getCheckType().name(),
                     task.getId()
             );
 
@@ -973,6 +972,7 @@ public class TaskDao {
                     .withPriority(rs.getInt(TASK_MODEL_NAME + "_priority"))
                     .withRetries(rs.getInt(TASK_MODEL_NAME+"_retries"))
                     .withRetryDelay(rs.getInt(TASK_MODEL_NAME+"_retry_delay"))
+                    .withCheckType(CheckType.valueOf(rs.getString(TASK_MODEL_NAME + "_check_type")))
                     .build();
         }
     }
