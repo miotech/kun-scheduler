@@ -38,5 +38,5 @@
     "sparkConf": "{}",
     "variables": "{}"
   },
-  "renderClassName": "com.miotech.kun.dataplatform.common.tasktemplate.renderer.SparkSubmitBasedTaskTemplateRender"
+  "renderClassName": "com.miotech.kun.dataplatform.web.common.tasktemplate.renderer.SparkSubmitBasedTaskTemplateRender"
 }
