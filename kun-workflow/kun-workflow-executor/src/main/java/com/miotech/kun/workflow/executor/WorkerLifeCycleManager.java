@@ -1,9 +1,15 @@
 package com.miotech.kun.workflow.executor;
 
+import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.core.event.CheckResultEvent;
+import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
@@ -30,27 +36,41 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
     private final MiscService miscService;
     protected final TaskRunDao taskRunDao;
     protected final AbstractQueueManager queueManager;
+    private final EventBus eventBus;
+    private final EventSubscriber eventSubscriber;
     private Thread consumer = new Thread(new TaskAttemptConsumer(), "TaskAttemptConsumer");
 
     public WorkerLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor,
-                                  Props props, MiscService miscService, AbstractQueueManager queueManager) {
+                                  Props props, MiscService miscService,
+                                  AbstractQueueManager queueManager, EventBus eventBus,
+                                  EventSubscriber eventSubscriber) {
         this.props = props;
         this.taskRunDao = taskRunDao;
         this.workerMonitor = workerMonitor;
         this.miscService = miscService;
         this.queueManager = queueManager;
+        this.eventBus = eventBus;
+        this.eventSubscriber = eventSubscriber;
     }
 
 
     /* ----------- public methods ------------ */
     @Override
-    public void afterPropertiesSet(){
+    public void afterPropertiesSet() {
         init();
     }
 
     public void init() {
         queueManager.init();
         consumer.start();
+        CheckResultEventListener listener = new CheckResultEventListener();
+        eventBus.register(listener);
+        eventSubscriber.subscribe(event -> {
+            if (event instanceof CheckResultEvent) {
+                logger.debug("receive check result event = {}", event);
+                eventBus.post(event);
+            }
+        });
     }
 
     public void shutdown() {
@@ -91,8 +111,8 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
     }
 
     @Override
-    public String getLog(Long taskAttemptId, Integer tailLines){
-        return getWorkerLog(taskAttemptId,tailLines);
+    public String getLog(Long taskAttemptId, Integer tailLines) {
+        return getWorkerLog(taskAttemptId, tailLines);
     }
 
     public String logPathOfTaskAttempt(Long taskAttemptId) {
@@ -192,10 +212,10 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(workerInstance.getTaskAttemptId()).get();
         Integer retryLimit = taskAttempt.getTaskRun().getTask().getRetries();
         if (taskAttempt.getRetryTimes() >= retryLimit) {
-            logger.debug("taskAttempt = {} has reach retry limit,retry limit = {}",taskAttempt.getId(),retryLimit);
+            logger.debug("taskAttempt = {} has reach retry limit,retry limit = {}", taskAttempt.getId(), retryLimit);
             return false;
         }
-        logger.debug("taskAttempt = {} going to  retry,next retry times = {}",taskAttempt.getId(),taskAttempt.getRetryTimes() + 1);
+        logger.debug("taskAttempt = {} going to  retry,next retry times = {}", taskAttempt.getId(), taskAttempt.getRetryTimes() + 1);
         TaskAttempt retryTaskAttempt = taskAttempt.cloneBuilder()
                 .withRetryTimes(taskAttempt.getRetryTimes() + 1)
                 .build();
@@ -203,8 +223,8 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         cleanupWorker(workerInstance);
         Integer retryDelay = taskAttempt.getTaskRun().getTask().getRetryDelay();
         //sleep to delay
-        if(retryDelay != null && retryDelay > 0){
-            logger.debug("taskAttempt = {} wait {}s for  retry",taskAttempt.getId(),retryDelay);
+        if (retryDelay != null && retryDelay > 0) {
+            logger.debug("taskAttempt = {} wait {}s for  retry", taskAttempt.getId(), retryDelay);
             Uninterruptibles.sleepUninterruptibly(retryDelay, TimeUnit.SECONDS);
         }
         //retry attempt
@@ -212,12 +232,12 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         return true;
     }
 
-    private boolean isFinish(WorkerSnapshot workerSnapshot) {
-        return workerSnapshot.getStatus().isFinished();
-    }
-
     private boolean isFailed(WorkerSnapshot workerSnapshot) {
         return workerSnapshot.getStatus().equals(TaskRunStatus.FAILED);
+    }
+
+    private boolean isSuccess(WorkerSnapshot workerSnapshot) {
+        return workerSnapshot.getStatus().isSuccess();
     }
 
     private class InnerEventHandler implements WorkerEventHandler {
@@ -229,19 +249,31 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
                 if (retryTaskAttemptIfNecessary(workerSnapshot.getIns())) {
                     return;
                 }
+                logger.info("taskAttemptId = {},going to clean worker", workerSnapshot.getIns().getTaskAttemptId());
+                miscService.notifyFinished(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
+                cleanupWorker(workerSnapshot.getIns());
+            }
+            if (isSuccess(workerSnapshot)) {
+                TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(workerSnapshot.getIns().getTaskAttemptId()).get();
+                CheckType checkType = taskAttempt.getTaskRun().getTask().getCheckType();
+                logger.debug("taskAttemptId = {},checkType is {}", taskAttempt.getId(), checkType.name());
+                switch (checkType) {
+                    case SKIP:
+                        miscService.notifyFinished(taskAttempt.getId(), workerSnapshot.getStatus());
+                        break;
+                    case WAITE_EVENT:
+                        miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.CHECK, taskAttempt.getStartAt(), null);
+                        cleanupWorker(workerSnapshot.getIns());
+                        miscService.notifyCheck(taskAttempt);
+                        return;
+                    default:
+                        throw new IllegalArgumentException("illegal check type");
+                }
+                cleanupWorker(workerSnapshot.getIns());
             }
             if (preStatus == null || !preStatus.equals(workerSnapshot.getStatus())) {
                 changeTaskRunStatus(workerSnapshot);
                 preStatus = workerSnapshot.getStatus();
-            }
-            if (isFinish(workerSnapshot)) {
-                logger.info("taskAttemptId = {},going to clean worker", workerSnapshot.getIns().getTaskAttemptId());
-                try {
-                    miscService.notifyFinished(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
-                } catch (Exception e) {
-                    logger.warn("notify finished event with taskAttemptId = {} failed", workerSnapshot.getIns().getTaskAttemptId(), e);
-                }
-                cleanupWorker(workerSnapshot.getIns());
             }
         }
 
@@ -256,11 +288,32 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
 
     }
 
+    class CheckResultEventListener {
+
+        @Subscribe
+        public void onReceive(CheckResultEvent event) {
+            handleDataQualityEvent(event);
+        }
+
+        public void handleDataQualityEvent(CheckResultEvent event) {
+            Long taskRunId = event.getTaskRunId();
+            TaskAttemptProps taskAttemptProps = taskRunDao.fetchLatestTaskAttempt(taskRunId);
+            if(taskAttemptProps.getStatus().isFinished()){
+                logger.debug("taskAttempt = {} is finished,ignore event = {}",event);
+                return;
+            }
+            TaskRunStatus taskRunStatus = event.getCheckStatus() ? TaskRunStatus.SUCCESS : TaskRunStatus.CHECK_FAILED;
+            miscService.notifyFinished(taskAttemptProps.getId(), taskRunStatus);
+            //update taskrun and downstream taskrun status
+            miscService.changeTaskAttemptStatus(taskAttemptProps.getId(), taskRunStatus, taskAttemptProps.getStartAt(), DateTimeUtils.now());
+        }
+    }
+
     class TaskAttemptConsumer implements Runnable {
         @Override
         public void run() {
             while (true) {
-                if(Thread.currentThread().isInterrupted()){
+                if (Thread.currentThread().isInterrupted()) {
                     break;
                 }
                 try {
@@ -277,7 +330,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
                             logger.warn("take taskAttempt = {} failed", taskAttempt.getId(), e);
                         }
                     }
-                } catch ( Throwable e) {
+                } catch (Throwable e) {
                     logger.error("failed to take taskAttempt from queue", e);
                 }
 

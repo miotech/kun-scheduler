@@ -1,7 +1,9 @@
 package com.miotech.kun.workflow.executor.kubernetes.mock;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
@@ -28,8 +30,10 @@ public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
 
 
     @Inject
-    public MockWorkerLifeCycleManager(TaskRunDao taskRunDao, MockWorkerMonitor workerMonitor, Props props, MiscService miscService, MockQueueManager queueManager) {
-        super(taskRunDao, workerMonitor, props, miscService, queueManager);
+    public MockWorkerLifeCycleManager(TaskRunDao taskRunDao, MockWorkerMonitor workerMonitor,
+                                      Props props, MiscService miscService, MockQueueManager queueManager,
+                                      EventBus eventBus, EventSubscriber eventSubscriber) {
+        super(taskRunDao, workerMonitor, props, miscService, queueManager,eventBus,eventSubscriber);
         this.mockQueueManager = queueManager;
         this.mockWorkerMonitor = workerMonitor;
     }

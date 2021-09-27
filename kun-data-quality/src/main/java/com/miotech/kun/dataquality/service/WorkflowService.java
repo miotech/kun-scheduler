@@ -1,7 +1,6 @@
 package com.miotech.kun.dataquality.service;
 
 import com.miotech.kun.common.constant.DataQualityConstant;
-import com.miotech.kun.dataquality.DataQualityConfiguration;
 import com.miotech.kun.dataquality.utils.WorkflowUtils;
 import com.miotech.kun.workflow.client.WorkflowApiException;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -9,6 +8,7 @@ import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.operator.OperatorUpload;
+import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +47,9 @@ public class WorkflowService {
     Boolean workflowEnable;
 
     @Autowired
+    MetadataClient metadataClient;
+
+    @Autowired
     private OperatorUpload operatorUpload;
 
     @PostConstruct
@@ -66,7 +69,7 @@ public class WorkflowService {
         return savedTask.getId();
     }
 
-    public Long executeTask(Long caseId) {
+    public TaskRun executeTask(Long caseId) {
 
         Long taskId = dataQualityService.getLatestTaskId(caseId);
         if (taskId == null || taskId.equals(0L)) {
@@ -82,13 +85,16 @@ public class WorkflowService {
         TaskRun taskRun = workflowClient.executeTask(taskId, null);
         log.info("Execute task " + taskId + " taskRun " + taskRun.getId());
 
-        return taskId;
+        return taskRun;
     }
 
-    public void executeTasks(List<Long> caseIds){
+    public List<Long> executeTasks(List<Long> caseIds){
+        List<Long> taskRunIdList = new ArrayList<>();
         for(Long id: caseIds){
-            executeTask(id);
+            TaskRun taskRun = executeTask(id);
+            taskRunIdList.add(taskRun.getId());
         }
+        return taskRunIdList;
     }
 
     public void deleteTaskByCase(Long caseId) {
@@ -107,6 +113,17 @@ public class WorkflowService {
     public void deleteTask(Long taskId) {
         if (taskId != null && !taskId.equals(0L)) {
             workflowClient.deleteTask(taskId);
+        }
+    }
+
+    public void updateUpstreamTaskCheckType(Long dataSetId, CheckType checkType){
+        List<Long> upstreamTaskIds = metadataClient.fetchUpstreamTaskIds(dataSetId);
+        for (Long upstreamTaskId : upstreamTaskIds) {
+            Task task = Task.newBuilder()
+                    .withId(upstreamTaskId)
+                    .withCheckType(checkType.name())
+                    .build();
+            workflowClient.saveTask(task, null);
         }
     }
 

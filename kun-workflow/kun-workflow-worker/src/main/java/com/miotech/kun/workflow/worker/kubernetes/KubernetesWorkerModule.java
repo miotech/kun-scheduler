@@ -4,7 +4,9 @@ import com.miotech.kun.commons.db.DatabaseModule;
 import com.miotech.kun.commons.db.GraphDatabaseModule;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.module.AppModule;
-import com.miotech.kun.metadata.common.rpc.MetadataServiceFacadeImpl;
+import com.miotech.kun.metadata.common.service.LineageService;
+import com.miotech.kun.metadata.common.service.MetadataDatasetService;
+import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 
 public class KubernetesWorkerModule extends AppModule {
@@ -20,7 +22,8 @@ public class KubernetesWorkerModule extends AppModule {
     protected void configure() {
         super.configure();
         install(new DatabaseModule());
-        bind(MetadataServiceFacade.class).to(MetadataServiceFacadeImpl.class);
+        bind(MetadataServiceFacade.class).to(MetadataDatasetService.class);
+        bind(LineageServiceFacade.class).to(LineageService.class);
         startNeo4jIfNeeded();
     }
 

@@ -94,7 +94,7 @@ public class TaskRunServiceTest extends CommonTestBase {
     private TaskRun prepareData() {
         long testId = 1L;
 
-        Task task = Task.newBuilder().withId(22L)
+        Task task = MockTaskFactory.createTask().cloneBuilder().withId(22L)
                 .withName("test task")
                 .withDescription("")
                 .withOperatorId(1L)
@@ -345,7 +345,7 @@ public class TaskRunServiceTest extends CommonTestBase {
 
 
     private void prepareTaskRuns(){
-        Task task1 = Task.newBuilder().withId(22L)
+        Task task1 = MockTaskFactory.createTask().cloneBuilder().withId(22L)
                 .withName("test task 1")
                 .withDescription("")
                 .withOperatorId(1L)
@@ -391,7 +391,7 @@ public class TaskRunServiceTest extends CommonTestBase {
     }
 
     private void prepareDataForFetchLatestTaskRuns() {
-        Task task1 = Task.newBuilder().withId(22L)
+        Task task1 = MockTaskFactory.createTask().cloneBuilder().withId(22L)
                 .withName("test task 1")
                 .withDescription("")
                 .withOperatorId(1L)
@@ -532,7 +532,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId, 1);
 
-        Task task = Task.newBuilder().withId(taskId)
+        Task task = MockTaskFactory.createTask().cloneBuilder().withId(taskId)
                 .withName("test task")
                 .withDescription("")
                 .withOperatorId(1L)

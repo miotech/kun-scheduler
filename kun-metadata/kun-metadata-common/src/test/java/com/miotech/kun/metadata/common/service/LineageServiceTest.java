@@ -1,42 +1,95 @@
-package com.miotech.kun.workflow.common.lineage.service;
+package com.miotech.kun.metadata.common.service;
 
 import com.google.common.collect.Lists;
+import com.google.inject.Inject;
+import com.miotech.kun.commons.db.GraphDatabaseModule;
+import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.metadata.common.exception.EntityNotFoundException;
+import com.miotech.kun.metadata.common.factory.MockDatasetFactory;
+import com.miotech.kun.metadata.common.factory.MockLineageNodesFactory;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
-import com.miotech.kun.metadata.facade.MetadataServiceFacade;
-import com.miotech.kun.workflow.common.CommonTestBase;
-import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
-import com.miotech.kun.workflow.common.lineage.node.DatasetNode;
-import com.miotech.kun.workflow.common.lineage.node.TaskNode;
+import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
+import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
+import com.miotech.kun.workflow.core.model.task.ScheduleConf;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
+import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.BeforeClass;
+import org.hamcrest.core.Is;
+import org.junit.After;
+import org.junit.ClassRule;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.neo4j.ogm.config.Configuration;
+import org.neo4j.ogm.session.Session;
+import org.neo4j.ogm.session.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.Neo4jContainer;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.*;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 
-public class LineageServiceTest extends CommonTestBase {
+public class LineageServiceTest extends DatabaseTestBase {
 
     private static final Logger logger = LoggerFactory.getLogger(LineageServiceTest.class);
 
-    private static final MetadataServiceFacade mockMetadataFacade = Mockito.mock(MetadataServiceFacade.class);
+    private MetadataDatasetService metadataDatasetService;
 
-    private final LineageService lineageService = new LineageService(this.neo4jSessionFactory, mockMetadataFacade);
+    @ClassRule
+    public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
+            .withAdminPassword("Mi0tech2020");
+
+    protected SessionFactory neo4jSessionFactory = initNeo4jSessionFactory();
+
+    @Inject
+    private LineageService lineageService;
+
+    @Override
+    protected void configuration() {
+        bind(SessionFactory.class, neo4jSessionFactory);
+        metadataDatasetService = mock(MetadataDatasetService.class);
+        bind(MetadataDatasetService.class,metadataDatasetService);
+        super.configuration();
+    }
+
+    @After
+    @Override
+    public void tearDown() {
+        super.tearDown();
+        clearGraph();
+    }
+
+    private void clearGraph() {
+        Session session = neo4jSessionFactory.openSession();
+        // delete all nodes with relationships
+        session.query("match (n) -[r] -> () delete n, r;", new HashMap<>());
+        // delete nodes that have no relationships
+        session.query("match (n) delete n;", new HashMap<>());
+    }
 
     private <T> int countEntitiesInStorage(Class<T> nodeClass) {
         Collection<T> nodes = this.neo4jSessionFactory.openSession().loadAll(nodeClass);
         return nodes.size();
+    }
+
+    public SessionFactory initNeo4jSessionFactory() {
+        Configuration config = new Configuration.Builder()
+                .uri(neo4jContainer.getBoltUrl())
+                .connectionPoolSize(50)
+                .credentials("neo4j", "Mi0tech2020")
+                .build();
+        return new SessionFactory(config, GraphDatabaseModule.DEFAULT_NEO4J_DOMAIN_CLASSES);
     }
 
 
@@ -114,11 +167,6 @@ public class LineageServiceTest extends CommonTestBase {
         return Pair.of(datasets, taskNodes);
     }
 
-    @BeforeClass
-    public static void init() {
-        doReturn(null).when(mockMetadataFacade)
-                .getDatasetByDatastore(Mockito.isA(DataStore.class));
-    }
 
     @Test
     public void saveDatasetNode_whenNodeNotExists_shouldInsertDatasetNode() {
@@ -176,7 +224,21 @@ public class LineageServiceTest extends CommonTestBase {
     @Test
     public void saveTask_withNonExistNodes_shouldPersist() {
         // Prepare
-        Task task = MockTaskFactory.createTask();
+        Long taskId = WorkflowIdGenerator.nextTaskId();
+        Task task = Task.newBuilder()
+                .withId(taskId)
+                .withName("task_" + taskId)
+                .withDescription("task_description_" + taskId)
+                .withConfig(Config.EMPTY)
+                .withOperatorId(WorkflowIdGenerator.nextOperatorId())
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withDependencies(new ArrayList<>())
+                .withTags(new ArrayList<>())
+                .withQueueName("default")
+                .withPriority(16)
+                .withRetries(0)
+                .withRetryDelay(0)
+                .build();
 
         // process
         lineageService.saveTask(task);
@@ -404,5 +466,61 @@ public class LineageServiceTest extends CommonTestBase {
         assertThat(edgeInfoFromDataset1ToDataset2.getTaskInfos().size(), is(1));
         assertThat(edgeInfoFromDataset2ToDataset3.getTaskInfos().size(), is(0));
         assertThat(edgeInfoFromDataset1ToDataset2.getTaskInfos().get(0).getId(), is(task1Id));
+    }
+
+    @Test
+    public void testUpdateLineage(){
+        // Prepare
+        Long upstreamDataSetId = IdGenerator.getInstance().nextId();
+        DataStore upstreamStore = MockDatasetFactory.createDataStore("Hive","upstreamStore");
+        Dataset upstreamSet = MockDatasetFactory.createDatasetWithDataStore(upstreamDataSetId,"upstreamSet",1l,null,upstreamStore);
+        Long downstreamDataSetId = IdGenerator.getInstance().nextId();
+        DataStore downstreamStore = MockDatasetFactory.createDataStore("Hive","downstreamStore");
+        Dataset downstreamSet = MockDatasetFactory.createDatasetWithDataStore(downstreamDataSetId,"downstreamSet",1l,null,downstreamStore);
+        //mock fetch dataset by datastore
+        doAnswer(invocation -> {
+            DataStore dataStore = invocation.getArgument(0,DataStore.class);
+            if(dataStore.getDatabaseName().equals(upstreamStore.getDatabaseName())){
+                return upstreamSet;
+            }
+            if(dataStore.getDatabaseName().equals(downstreamStore.getDatabaseName())){
+                return downstreamSet;
+            }
+            return null;
+        }).when(metadataDatasetService).getDatasetByDatastore(any(DataStore.class));
+
+        Long taskId = WorkflowIdGenerator.nextTaskId();
+        Task task = Task.newBuilder()
+                .withId(taskId)
+                .withName("task_" + taskId)
+                .withDescription("task_description_" + taskId)
+                .withConfig(Config.EMPTY)
+                .withOperatorId(WorkflowIdGenerator.nextOperatorId())
+                .withScheduleConf(new ScheduleConf(ScheduleType.NONE, null))
+                .withDependencies(new ArrayList<>())
+                .withTags(new ArrayList<>())
+                .withQueueName("default")
+                .withPriority(16)
+                .withRetries(0)
+                .withRetryDelay(0)
+                .build();;
+
+        // Process
+        lineageService.updateTaskLineage(task, Lists.newArrayList(upstreamStore),Lists.newArrayList(downstreamStore));
+
+        //verify
+        TaskNode taskNode = lineageService.fetchTaskNodeById(taskId).get();
+        assertThat(taskNode.getTaskId(), Is.is(taskId));
+        Set<DatasetNode> upstreamDataSets = lineageService.fetchInletNodes(taskNode.getTaskId());
+        Set<DatasetNode> downstreamDataSets = lineageService.fetchOutletNodes(taskNode.getTaskId());
+        assertThat(upstreamDataSets,hasSize(1));
+        DatasetNode upstreamDataSet = upstreamDataSets.iterator().next();
+        assertThat(upstreamDataSet.getGid(),is(upstreamDataSetId));
+        assertThat(upstreamDataSet.getDatasetName(),is(upstreamSet.getName()));
+
+        assertThat(downstreamDataSets,hasSize(1));
+        DatasetNode downstreamDataSet = downstreamDataSets.iterator().next();
+        assertThat(downstreamDataSet.getGid(),is(downstreamDataSetId));
+        assertThat(downstreamDataSet.getDatasetName(),is(downstreamSet.getName()));
     }
 }

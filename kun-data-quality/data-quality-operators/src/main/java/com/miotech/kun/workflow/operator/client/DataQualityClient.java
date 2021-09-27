@@ -124,7 +124,7 @@ public class DataQualityClient {
         }, caseId);
     }
 
-    public void recordCaseMetrics(DataQualityCaseMetrics metrics) {
+    public void recordCaseMetrics(DataQualityCaseMetrics metrics,Long caseRunId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .insert()
                 .into("kun_dq_case_metrics")
@@ -143,6 +143,14 @@ public class DataQualityClient {
                 DateUtils.millisToLocalDateTime(System.currentTimeMillis()),
                 transferRuleRecordsToPGobject(metrics.getRuleRecords()),
                 metrics.getCaseId());
+
+        String updateStatusSql = DefaultSQLBuilder.newBuilder()
+                .update("kun_dq_case_run")
+                .set("status")
+                .where("case_run_id = ?")
+                .asPrepared()
+                .getSQL();
+        databaseOperator.update(updateStatusSql, metrics.getCaseStatus().name(), caseRunId);
     }
 
     private Long getLatestFailingCount(Long caseId) {

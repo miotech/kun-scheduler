@@ -1,8 +1,10 @@
 package com.miotech.kun.workflow.executor.local;
 
+import com.google.common.eventbus.EventBus;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -39,8 +41,9 @@ public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
     @Inject
     public LocalProcessLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props,
                                         MiscService miscService, AbstractQueueManager queueManager,
-                                        OperatorDao operatorDao, LocalProcessBackend localProcessBackend) {
-        super(taskRunDao, workerMonitor, props, miscService, queueManager);
+                                        OperatorDao operatorDao, LocalProcessBackend localProcessBackend,
+                                        EventBus eventBus, EventSubscriber eventSubscriber) {
+        super(taskRunDao, workerMonitor, props, miscService, queueManager,eventBus,eventSubscriber);
         this.operatorDao = operatorDao;
         this.localProcessBackend = localProcessBackend;
     }

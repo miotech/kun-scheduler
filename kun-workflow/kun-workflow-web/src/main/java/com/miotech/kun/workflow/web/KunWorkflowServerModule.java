@@ -4,6 +4,8 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Provides;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
+import com.miotech.kun.commons.pubsub.subscribe.NopEventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.module.AppModule;
 import com.miotech.kun.workflow.LocalScheduler;
@@ -12,6 +14,7 @@ import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.core.pubsub.RedisEventPublisher;
+import com.miotech.kun.workflow.core.pubsub.RedisEventSubscriber;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
@@ -45,7 +48,7 @@ public class KunWorkflowServerModule extends AppModule {
     @Override
     protected void configure() {
         super.configure();
-        String env = props.getString("executor.env.name","local");
+        String env = props.getString("executor.env.name", "local");
         if (env.equals("local")) {
             bind(Executor.class).to(LocalExecutor.class);
             bind(WorkerLifeCycleManager.class).to(LocalProcessLifeCycleManager.class);
@@ -82,5 +85,17 @@ public class KunWorkflowServerModule extends AppModule {
 
         return new NopEventPublisher();
     }
+
+    @Provides
+    public EventSubscriber createSubscriber(){
+        if (props.containsKey("redis.host")) {
+            JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), props.getString("redis.host"));
+            return new RedisEventSubscriber(props.getString("redis.notify-channel"), jedisPool);
+        }
+
+        return new NopEventSubscriber();
+    }
+
+
 
 }
