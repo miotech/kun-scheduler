@@ -27,14 +27,11 @@ export enum ValidateOperatorEnum {
   LT = '<',
 }
 
-export const ValidateOperatorEnumValues: ValidateOperatorEnum[] = Object.values(
-  ValidateOperatorEnum,
-).map(k => k as ValidateOperatorEnum);
+export const ValidateOperatorEnumValues: ValidateOperatorEnum[] = Object.values(ValidateOperatorEnum).map(
+  k => k as ValidateOperatorEnum,
+);
 
-export const validateOperatorEnumToLocaleString: Record<
-  ValidateOperatorEnum,
-  string
-> = {
+export const validateOperatorEnumToLocaleString: Record<ValidateOperatorEnum, string> = {
   [ValidateOperatorEnum.EQ]: '=',
   [ValidateOperatorEnum.NE]: '≠',
   [ValidateOperatorEnum.GTE]: '≥',
@@ -71,9 +68,7 @@ export interface CustomizeDimensionConfigItem {
   fields: CustomizeDimensionConfigFieldItem[];
 }
 
-export type DimensionConfigItem =
-  | TableDimensionConfigItem
-  | CustomizeDimensionConfigItem;
+export type DimensionConfigItem = TableDimensionConfigItem | CustomizeDimensionConfigItem;
 
 export interface ValidateRuleItem {
   field: string | null;
@@ -94,10 +89,7 @@ export interface CustomizeDimensionConfig {
   sql: string;
 }
 
-export type DimensionConfig =
-  | CustomizeDimensionConfig
-  | TableDimensionConfig
-  | FieldDimensionConfig;
+export type DimensionConfig = CustomizeDimensionConfig | TableDimensionConfig | FieldDimensionConfig;
 
 export enum DataQualityLevel {
   HIGH = 'HIGH',
@@ -120,9 +112,7 @@ export enum DataQualityType {
   Uniqueness = 'UNIQUENESS',
 }
 
-export const dataQualityTypes: DataQualityType[] = Object.values(
-  DataQualityType,
-).map(k => k as DataQualityType);
+export const dataQualityTypes: DataQualityType[] = Object.values(DataQualityType).map(k => k as DataQualityType);
 
 export interface DataQualityBase {
   name: string;
@@ -132,6 +122,7 @@ export interface DataQualityBase {
   dimension: string | null;
   dimensionConfig: DimensionConfig | null;
   validateRules: ValidateRuleItem[];
+  isBlocking: boolean;
 }
 
 export interface DataQualityReq extends DataQualityBase {

@@ -1,24 +1,8 @@
-import React, {
-  memo,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  useRef,
-} from 'react';
+import React, { memo, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Controlled as CodeMirror } from 'react-codemirror2';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
-import {
-  Modal,
-  Spin,
-  Input,
-  Radio,
-  Select,
-  message,
-  Button,
-  Tooltip,
-} from 'antd';
+import { Modal, Spin, Input, Radio, Select, message, Button, Tooltip, Checkbox } from 'antd';
 import { RadioChangeEvent } from 'antd/lib/radio';
 import uniqueId from 'lodash/uniqueId';
 import {
@@ -47,6 +31,7 @@ import {
   dataQualityTypes,
   DataQualityHistory,
 } from '@/rematch/models/dataQuality';
+import { CheckboxChangeEvent } from 'antd/lib/checkbox';
 
 import useI18n from '@/hooks/useI18n';
 import { Column } from '@/rematch/models/datasetDetail';
@@ -91,6 +76,7 @@ export default memo(function AddDataQualityModal({
     types: [],
     // level: DataQualityLevel.LOW,
     description: '',
+    isBlocking: false,
     dimension: null,
     dimensionConfig: null, // 这里暂时用不到, 如果后面要做edit功能, 这里用useeffect赋值, 然后再给selectedTemplateId和customizeInputtingObj赋值
     validateRules: [],
@@ -116,39 +102,27 @@ export default memo(function AddDataQualityModal({
 
   const [dimensionList, setDimensionList] = useState<string[]>([]);
 
-  const [selectedTableTemplateId, setSelectedTableTemplateId] = useState<
-    string | undefined
-  >(undefined);
-  const [selectedFieldTemplateId, setSelectedFieldTemplateId] = useState<
-    string | undefined
-  >(undefined);
-  const [selectedApplyFieldIds, setSelectedApplyFieldIds] = useState<string[]>(
-    [],
-  );
+  const [selectedTableTemplateId, setSelectedTableTemplateId] = useState<string | undefined>(undefined);
+  const [selectedFieldTemplateId, setSelectedFieldTemplateId] = useState<string | undefined>(undefined);
+  const [selectedApplyFieldIds, setSelectedApplyFieldIds] = useState<string[]>([]);
 
-  const [validateSQLStatus, setValidateSQLStatus] = useState<ValidateStatus>(
-    ValidateStatus.NO_VALIDATE,
-  );
+  const [validateSQLStatus, setValidateSQLStatus] = useState<ValidateStatus>(ValidateStatus.NO_VALIDATE);
 
   const [validateRuleError, setValidateRuleError] = useState('');
 
   const [validateSQLLoading, setValidateSQLLoading] = useState(false);
   const [validateSQLErrorMsg, setValidateSQLErrorMsg] = useState('');
 
-  const [primaryDatasetGid, setPrimaryDatasetGid] = useState<string | null>(
-    null,
-  );
+  const [primaryDatasetGid, setPrimaryDatasetGid] = useState<string | null>(null);
 
   const [customizeInputtingObj, setCustomizeInputtingObj] = useState<any>({});
 
   const [history, setHistory] = useState<DataQualityHistory[]>([]);
-  const [fetchHistoryLoading, setFetchHistoryLoading] = useState<boolean>(
-    false,
-  );
+  const [fetchHistoryLoading, setFetchHistoryLoading] = useState<boolean>(false);
 
-  const [validateRuleList, setValidateRuleList] = useState<
-    { key: string; rule?: ValidateRuleItem }[]
-  >([{ key: uniqueId('validate-rule') }]);
+  const [validateRuleList, setValidateRuleList] = useState<{ key: string; rule?: ValidateRuleItem }[]>([
+    { key: uniqueId('validate-rule') },
+  ]);
 
   const [confirmLoading, setConfirmLoading] = useState(false);
 
@@ -166,6 +140,7 @@ export default memo(function AddDataQualityModal({
           // level: DataQualityLevel.LOW,
           types: [],
           description: '',
+          isBlocking: false,
           dimension: null,
           dimensionConfig: null,
           validateRules: [],
@@ -179,9 +154,7 @@ export default memo(function AddDataQualityModal({
         if (legacyData) {
           setOldData(legacyData);
           if (legacyData.relatedTables) {
-            const primaryTable = legacyData.relatedTables.find(
-              i => i.isPrimary,
-            );
+            const primaryTable = legacyData.relatedTables.find(i => i.isPrimary);
             if (primaryTable) {
               setPrimaryDatasetGid(primaryTable.id);
             } else {
@@ -192,6 +165,7 @@ export default memo(function AddDataQualityModal({
             name: legacyData.name,
             // level: DataQualityLevel.LOW,
             types: legacyData.types,
+            isBlocking: legacyData.isBlocking,
             description: legacyData.description,
             dimension: legacyData.dimension,
             dimensionConfig: legacyData.dimensionConfig,
@@ -200,7 +174,7 @@ export default memo(function AddDataQualityModal({
           });
         }
       } else {
-        setData(d => ({
+        setData((d: DataQuality) => ({
           ...d,
           relatedTables: [relatedTable],
         }));
@@ -282,22 +256,13 @@ export default memo(function AddDataQualityModal({
 
   // 切换 dimension
   useEffect(() => {
-    if (
-      data.dimensionConfig &&
-      (!oldData || (oldData && oldData.dimension === data.dimension))
-    ) {
+    if (data.dimensionConfig && (!oldData || (oldData && oldData.dimension === data.dimension))) {
       if (data.dimension === 'TABLE') {
-        setSelectedTableTemplateId(
-          (data.dimensionConfig as TableDimensionConfig).templateId,
-        );
+        setSelectedTableTemplateId((data.dimensionConfig as TableDimensionConfig).templateId);
       }
       if (data.dimension === 'FIELD') {
-        setSelectedFieldTemplateId(
-          (data.dimensionConfig as FieldDimensionConfig).templateId,
-        );
-        setSelectedApplyFieldIds(
-          (data.dimensionConfig as FieldDimensionConfig).applyFieldIds,
-        );
+        setSelectedFieldTemplateId((data.dimensionConfig as FieldDimensionConfig).templateId);
+        setSelectedApplyFieldIds((data.dimensionConfig as FieldDimensionConfig).applyFieldIds);
       }
 
       if (data.dimension === 'CUSTOMIZE') {
@@ -330,7 +295,7 @@ export default memo(function AddDataQualityModal({
     const newValidateRuleList: {
       key: string;
       rule?: ValidateRuleItem | undefined;
-    }[] = data.validateRules.map(rule => ({
+    }[] = data.validateRules.map((rule: ValidateRuleItem) => ({
       key: uniqueId('validate-rule'),
       rule,
     }));
@@ -340,39 +305,35 @@ export default memo(function AddDataQualityModal({
   }, [data.validateRules]);
 
   const onChangeData = (v: any, k: keyof DataQuality) => {
-    setData(data1 => ({
+    setData((data1: DataQuality) => ({
       ...data1,
       [k]: v,
     }));
   };
 
   const selectedDimension = useMemo(() => data.dimension, [data.dimension]);
-  const currentConfig = useMemo(
-    () => config.find(i => i.dimension === selectedDimension),
-    [config, selectedDimension],
-  );
+  const currentConfig = useMemo(() => config.find(i => i.dimension === selectedDimension), [config, selectedDimension]);
 
   const onChangeFunctionsMap = useMemo(
     () => ({
-      name: (e: React.ChangeEvent<HTMLInputElement>) =>
-        onChangeData(e.target.value, 'name'),
+      name: (e: React.ChangeEvent<HTMLInputElement>) => onChangeData(e.target.value, 'name'),
       types: (v: DataQualityType[]) => onChangeData(v, 'types'),
-      description: (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-        onChangeData(e.target.value, 'description'),
+      description: (e: React.ChangeEvent<HTMLTextAreaElement>) => onChangeData(e.target.value, 'description'),
       dimension: (e: RadioChangeEvent) => {
         onChangeData(e.target.value, 'dimension');
         if (e.target.value === 'CUSTOMIZE') {
-          setData(d => ({
+          setData((d: DataQuality) => ({
             ...d,
             relatedTables: oldData?.relatedTables || [relatedTable],
           }));
         } else {
-          setData(d => ({
+          setData((d: DataQuality) => ({
             ...d,
             relatedTables: [relatedTable],
           }));
         }
       },
+      isBlocking: (e: CheckboxChangeEvent) => onChangeData(e.target.checked, 'isBlocking'),
     }),
     [oldData?.relatedTables, relatedTable],
   );
@@ -390,13 +351,11 @@ export default memo(function AddDataQualityModal({
           if (resp.validateStatus === ValidateStatus.FAILED) {
             setValidateSQLErrorMsg(resp.validateMessage);
           } else {
-            setData(d => ({
+            setData((d: DataQuality) => ({
               ...d,
               relatedTables: resp.relatedTables,
             }));
-            const primaryTable = resp.relatedTables.find(
-              table => table.isPrimary,
-            );
+            const primaryTable = resp.relatedTables.find(table => table.isPrimary);
             if (primaryTable) {
               setPrimaryDatasetGid(primaryTable.id);
             }
@@ -448,10 +407,7 @@ export default memo(function AddDataQualityModal({
                   </Tooltip>
                 </span>
               )}
-              <Button
-                disabled={validateSQLLoading}
-                onClick={() => handleValidateSQL(customizeInputtingObj[key])}
-              >
+              <Button disabled={validateSQLLoading} onClick={() => handleValidateSQL(customizeInputtingObj[key])}>
                 {t('dataDetail.dataQuality.dimension.validate')}
               </Button>
             </div>
@@ -460,14 +416,7 @@ export default memo(function AddDataQualityModal({
       }
       return null;
     },
-    [
-      customizeInputtingObj,
-      handleValidateSQL,
-      t,
-      validateSQLErrorMsg,
-      validateSQLLoading,
-      validateSQLStatus,
-    ],
+    [customizeInputtingObj, handleValidateSQL, t, validateSQLErrorMsg, validateSQLLoading, validateSQLStatus],
   );
 
   const dimensionView = useMemo(() => {
@@ -476,15 +425,9 @@ export default memo(function AddDataQualityModal({
     }
     if (data.dimension === 'TABLE' || data.dimension === 'FIELD') {
       const { templates } = currentConfig as TableDimensionConfigItem;
-      const selectedTempId =
-        data.dimension === 'TABLE'
-          ? selectedTableTemplateId
-          : selectedFieldTemplateId;
+      const selectedTempId = data.dimension === 'TABLE' ? selectedTableTemplateId : selectedFieldTemplateId;
 
-      const setTemplateIdFunc =
-        data.dimension === 'TABLE'
-          ? setSelectedTableTemplateId
-          : setSelectedFieldTemplateId;
+      const setTemplateIdFunc = data.dimension === 'TABLE' ? setSelectedTableTemplateId : setSelectedFieldTemplateId;
       return (
         <>
           {data.dimension === 'FIELD' && (
@@ -543,9 +486,7 @@ export default memo(function AddDataQualityModal({
             {t(`dataDetail.dataQuality.dimension.${field.key}`)}
             {field.require && <span className={styles.required}>*</span>}
           </div>
-          <div className={styles.dimensionFieldContent}>
-            {getCustomizeCompFunc(field)}
-          </div>
+          <div className={styles.dimensionFieldContent}>{getCustomizeCompFunc(field)}</div>
         </div>
       ));
     }
@@ -610,6 +551,7 @@ export default memo(function AddDataQualityModal({
       // dimensionConfig,
       // validateRules,
       relatedTables,
+      isBlocking,
     } = data;
 
     let currentDimensionConfig: DimensionConfig;
@@ -635,13 +577,11 @@ export default memo(function AddDataQualityModal({
       types,
       description,
       dimension,
+      isBlocking,
       dimensionConfig: currentDimensionConfig!,
       validateRules: allRuleList,
-      relatedTableIds: relatedTables.map(i => i.id),
-      primaryDatasetGid:
-        dimension === 'CUSTOMIZE' && primaryDatasetGid
-          ? primaryDatasetGid
-          : datasetId,
+      relatedTableIds: relatedTables.map((i: RelatedTableItem) => i.id),
+      primaryDatasetGid: dimension === 'CUSTOMIZE' && primaryDatasetGid ? primaryDatasetGid : datasetId,
     };
 
     setConfirmLoading(true);
@@ -694,27 +634,19 @@ export default memo(function AddDataQualityModal({
     }
     // 未校验或者校验失败
     const noOrErrorValidate =
-      validateSQLStatus === ValidateStatus.FAILED ||
-      validateSQLStatus === ValidateStatus.NO_VALIDATE;
+      validateSQLStatus === ValidateStatus.FAILED || validateSQLStatus === ValidateStatus.NO_VALIDATE;
     // 新建的时候
     if (!dataQualityId && dimension === 'CUSTOMIZE' && noOrErrorValidate) {
       disabled = true;
     }
     // 更新的时候
-    if (
-      dataQualityId &&
-      dimension === 'CUSTOMIZE' &&
-      isUpdatedSQL &&
-      noOrErrorValidate
-    ) {
+    if (dataQualityId && dimension === 'CUSTOMIZE' && isUpdatedSQL && noOrErrorValidate) {
       disabled = true;
     }
 
     if (
       dimension === 'FIELD' &&
-      (!selectedFieldTemplateId ||
-        !selectedApplyFieldIds ||
-        selectedApplyFieldIds.length === 0)
+      (!selectedFieldTemplateId || !selectedApplyFieldIds || selectedApplyFieldIds.length === 0)
     ) {
       disabled = true;
     }
@@ -746,9 +678,7 @@ export default memo(function AddDataQualityModal({
     >
       <Spin spinning={configLoading || oldDataLoading}>
         <div className={styles.titleRow}>
-          {dataQualityId
-            ? t('dataDetail.dataQuality.editQuality')
-            : t('dataDetail.dataQuality.newQuality')}
+          {dataQualityId ? t('dataDetail.dataQuality.editQuality') : t('dataDetail.dataQuality.newQuality')}
         </div>
 
         <div className={styles.fieldArea}>
@@ -763,9 +693,7 @@ export default memo(function AddDataQualityModal({
           </div>
 
           <div className={styles.fieldItem}>
-            <div className={styles.fieldTitle}>
-              {t('dataDetail.dataQuality.type')}
-            </div>
+            <div className={styles.fieldTitle}>{t('dataDetail.dataQuality.type')}</div>
             <div className={styles.fieldContent}>
               <Select
                 mode="multiple"
@@ -783,14 +711,9 @@ export default memo(function AddDataQualityModal({
           </div>
 
           <div className={styles.fieldItem}>
-            <div className={styles.fieldTitle}>
-              {t('dataDetail.dataQuality.description')}
-            </div>
+            <div className={styles.fieldTitle}>{t('dataDetail.dataQuality.description')}</div>
             <div className={styles.fieldContent}>
-              <TextArea
-                value={data.description || ''}
-                onChange={onChangeFunctionsMap.description}
-              />
+              <TextArea value={data.description || ''} onChange={onChangeFunctionsMap.description} />
             </div>
           </div>
 
@@ -800,37 +723,22 @@ export default memo(function AddDataQualityModal({
               <span className={styles.required}>*</span>
             </div>
             <div className={styles.fieldContent}>
-              <Radio.Group
-                onChange={onChangeFunctionsMap.dimension}
-                value={data.dimension}
-              >
+              <Radio.Group onChange={onChangeFunctionsMap.dimension} value={data.dimension}>
                 {dimensionList.map(i => {
-                  const dimensionConfig = config.find(
-                    item => item.dimension === i,
-                  );
+                  const dimensionConfig = config.find(item => item.dimension === i);
                   let disabled = false;
                   if (
                     (i === 'TABLE' || i === 'FIELD') &&
-                    (!(dimensionConfig as TableDimensionConfigItem)
-                      ?.templates ||
-                      (dimensionConfig as TableDimensionConfigItem).templates
-                        ?.length === 0)
+                    (!(dimensionConfig as TableDimensionConfigItem)?.templates ||
+                      (dimensionConfig as TableDimensionConfigItem).templates?.length === 0)
                   ) {
                     disabled = true;
                   }
-                  if (
-                    i === 'FIELD' &&
-                    (!allColumns || allColumns.length === 0)
-                  ) {
+                  if (i === 'FIELD' && (!allColumns || allColumns.length === 0)) {
                     disabled = true;
                   }
                   return (
-                    <Radio
-                      className={styles.centerItem}
-                      disabled={disabled}
-                      key={i}
-                      value={i}
-                    >
+                    <Radio className={styles.centerItem} disabled={disabled} key={i} value={i}>
                       {t(`dataDetail.dataQuality.dimension.${i}`)}
                     </Radio>
                   );
@@ -850,10 +758,7 @@ export default memo(function AddDataQualityModal({
             </div>
             <div className={styles.validateFieldContentContainer}>
               {validateRuleList.map((validateRules, index) => (
-                <div
-                  key={validateRules.key}
-                  className={styles.validateFieldContent}
-                >
+                <div key={validateRules.key} className={styles.validateFieldContent}>
                   <div className={styles.validateRuleIndex}>{index + 1}</div>
                   <div className={styles.validateRuleContainer}>
                     <ValidateRule
@@ -864,23 +769,24 @@ export default memo(function AddDataQualityModal({
                     />
                   </div>
 
-                  <Button
-                    style={{ width: 32, padding: 0 }}
-                    onClick={() => handleClickDeleteRule(validateRules.key)}
-                  >
+                  <Button style={{ width: 32, padding: 0 }} onClick={() => handleClickDeleteRule(validateRules.key)}>
                     -
                   </Button>
                 </div>
               ))}
-              <Button onClick={handleClickAddRule}>
-                {`+ ${t('dataDetail.dataQuality.validate.add')}`}
-              </Button>
+              <Button onClick={handleClickAddRule}>{`+ ${t('dataDetail.dataQuality.validate.add')}`}</Button>
 
-              {validateRuleError && (
-                <span className={styles.validateRuleError}>
-                  {validateRuleError}
-                </span>
-              )}
+              {validateRuleError && <span className={styles.validateRuleError}>{validateRuleError}</span>}
+            </div>
+          </div>
+
+          <div className={styles.separator} />
+          <div className={styles.fieldItem}>
+            <div className={styles.fieldTitle}>{t('dataDetail.dataQuality.caseBlock')}</div>
+            <div className={styles.fieldContent}>
+              <Checkbox value={data.isBlocking} onChange={onChangeFunctionsMap.isBlocking}>
+                {t('dataDetail.dataQuality.caseBlock.checkboxTitle')}
+              </Checkbox>
             </div>
           </div>
 
@@ -894,11 +800,7 @@ export default memo(function AddDataQualityModal({
             <div className={styles.fieldContent}>
               <RelatedTablesComp
                 selectedTables={data.relatedTables || []}
-                defaultTableId={
-                  data.dimension === 'CUSTOMIZE'
-                    ? primaryDatasetGid
-                    : relatedTable.id
-                }
+                defaultTableId={data.dimension === 'CUSTOMIZE' ? primaryDatasetGid : relatedTable.id}
               />
             </div>
           </div>
@@ -908,9 +810,7 @@ export default memo(function AddDataQualityModal({
               <div className={styles.separator} />
 
               <div className={styles.fieldItem}>
-                <div className={styles.fieldTitle}>
-                  {t('dataDetail.dataQuality.history')}
-                </div>
+                <div className={styles.fieldTitle}>{t('dataDetail.dataQuality.history')}</div>
                 <div className={styles.fieldContent}>
                   <HistoryTable data={history} loading={fetchHistoryLoading} />
                 </div>
@@ -919,11 +819,7 @@ export default memo(function AddDataQualityModal({
           )}
         </div>
         <div className={styles.buttonRow}>
-          <Button
-            size="large"
-            style={{ marginRight: 16 }}
-            onClick={handleCancel}
-          >
+          <Button size="large" style={{ marginRight: 16 }} onClick={handleCancel}>
             {t('common.button.cancel')}
           </Button>
           <Button

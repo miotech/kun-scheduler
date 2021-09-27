@@ -74,6 +74,7 @@ export const BodyForm: React.FC<BodyFormProps> = function TaskDefinitionBodyForm
             form={form}
             initNotificationWhen={initTaskDefinition?.taskPayload?.notifyConfig?.notifyWhen || null}
             initUserNotificationConfigItems={initTaskDefinition?.taskPayload?.notifyConfig?.notifierConfig || null}
+            initTaskDefinition={initTaskDefinition}
           />
         </Tabs.TabPane>
       </Tabs>
