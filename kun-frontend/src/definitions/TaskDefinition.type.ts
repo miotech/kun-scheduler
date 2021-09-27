@@ -54,6 +54,12 @@ export interface TaskPayload {
   notifyConfig: NotifyConfig;
 }
 
+export interface SlaConfig {
+  level: number;
+  hours: number;
+  minutes: number;
+}
+
 export interface ScheduleConfig {
   cronExpr: string;
   timeZone: String;
@@ -63,6 +69,7 @@ export interface ScheduleConfig {
   outputDatasets: TaskDatasetProperty[];
   retries: number;
   retryDelay: number;
+  slaConfig: SlaConfig;
 }
 
 export interface TaskTryVO {
