@@ -53,6 +53,8 @@ public class DataQualityOperator extends KunOperator {
 
     private static final String CASE_SUCCESS_MSG_PREFIX = "CASE SUCCESS - ";
 
+    private Long caseRunId;
+
     @Override
     public void init() {
         OperatorContext context = getContext();
@@ -77,6 +79,8 @@ public class DataQualityOperator extends KunOperator {
         dataQualityRecord.setCaseId(caseId);
         dataQualityRecord.setStartTime(System.currentTimeMillis());
         dataQualityRecord.setCaseStatus(CaseStatus.SUCCESS.name());
+
+        caseRunId = context.getTaskRunId();
     }
 
     @Override
@@ -92,7 +96,7 @@ public class DataQualityOperator extends KunOperator {
             metrics.setCaseId(caseId);
             metrics.setCaseStatus(CaseStatus.FAILED);
             metrics.setErrorReason(org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace(e));
-            dataQualityClient.recordCaseMetrics(metrics);
+            dataQualityClient.recordCaseMetrics(metrics, caseRunId);
             return false;
         } finally {
             logInfo(DataSourceContainer.getInstance().toString());
@@ -187,7 +191,7 @@ public class DataQualityOperator extends KunOperator {
             QueryResultSet queryResultSet = query(queryString, currentDataset);
             doAssert(queryResultSet, dimension, rules, caseMetrics);
         }
-        dataQualityClient.recordCaseMetrics(caseMetrics);
+        dataQualityClient.recordCaseMetrics(caseMetrics, caseRunId);
         return true;
     }
 

@@ -1,7 +1,6 @@
 package com.miotech.kun.dataquality.model.bo;
 
 import com.miotech.kun.dataquality.model.entity.DataQualityRule;
-import com.miotech.kun.dataquality.model.entity.DatasetBasic;
 import lombok.Data;
 import org.json.simple.JSONObject;
 
@@ -39,4 +38,6 @@ public class DataQualityRequest {
     private String updateUser;
 
     private Long updateTime;
+
+    private Boolean isBlocking;
 }

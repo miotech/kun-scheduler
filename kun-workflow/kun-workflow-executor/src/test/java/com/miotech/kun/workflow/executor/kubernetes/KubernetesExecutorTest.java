@@ -5,6 +5,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
+import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
@@ -114,6 +115,7 @@ public class KubernetesExecutorTest extends CommonTestBase {
         bind(Props.class, props);
         bind(WorkerMonitor.class, PodEventMonitor.class);
         bind(EventPublisher.class, new NopEventPublisher());
+        bind(EventSubscriber.class, mock(EventSubscriber.class));
         bind(EventBus.class, new EventBus());
         super.configuration();
     }

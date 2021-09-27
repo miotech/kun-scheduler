@@ -7,6 +7,7 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.infra.KunInfraWebModule;
 import com.miotech.kun.infra.KunInfraWebServer;
+import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.common.constant.ConfigurationKeys;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
@@ -48,6 +49,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
         Props props = PropsUtils.loadAppProps("application-test.yaml");
         fill(props);
         bind(MetadataServiceFacade.class, mock(MetadataServiceFacade.class));
+        bind(LineageServiceFacade.class,mock(LineageServiceFacade.class));
         addModules(new KunWorkflowServerModule(props), new KunInfraWebModule(props));
     }
 

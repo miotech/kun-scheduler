@@ -4,9 +4,7 @@ import com.google.common.collect.Lists;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.common.utils.DateUtils;
-import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.common.utils.JSONUtils;
-import com.miotech.kun.common.utils.WorkflowUtils;
 import com.miotech.kun.dataquality.model.bo.*;
 import com.miotech.kun.dataquality.model.entity.*;
 import com.miotech.kun.dataquality.service.DataQualityService;
@@ -15,6 +13,7 @@ import com.miotech.kun.dataquality.utils.Constants;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunSearchRequest;
+import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -23,11 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * @author: Jie Chen
@@ -46,6 +42,7 @@ public class DataQualityController {
 
     @Autowired
     WorkflowClient workflowClient;
+
 
     @PostMapping("/data-quality/recreate-all-task")
     public void recreateAllTasks() {
@@ -128,8 +125,13 @@ public class DataQualityController {
     public RequestResult<IdVO> addCase(@RequestBody DataQualityRequest dataQualityRequest) {
         IdVO vo = new IdVO();
         vo.setId(dataQualityService.addCase(dataQualityRequest));
-        Long taskId = workflowService.executeTask(vo.getId());
+        Long taskId = workflowService.executeTask(vo.getId()).getTask().getId();
         dataQualityService.saveTaskId(vo.getId(), taskId);
+        CheckType checkType = CheckType.SKIP;
+        if(dataQualityRequest.getIsBlocking() != null && dataQualityRequest.getIsBlocking()){
+            checkType = CheckType.WAITE_EVENT;
+        }
+        workflowService.updateUpstreamTaskCheckType(dataQualityRequest.getPrimaryDatasetGid(),checkType);
         return RequestResult.success(vo);
     }
 
@@ -154,8 +156,12 @@ public class DataQualityController {
                                           @RequestBody DataQualityRequest dataQualityRequest) {
         IdVO vo = new IdVO();
         vo.setId(dataQualityService.updateCase(id, dataQualityRequest));
-        Long taskId = workflowService.executeTask(vo.getId());
+        Long taskId = workflowService.executeTask(vo.getId()).getTask().getId();
         dataQualityService.saveTaskId(vo.getId(), taskId);
+        CheckType checkType = CheckType.SKIP;
+        if(dataQualityRequest.getIsBlocking() != null && dataQualityRequest.getIsBlocking()){
+            checkType = CheckType.WAITE_EVENT;
+        }        workflowService.updateUpstreamTaskCheckType(dataQualityRequest.getPrimaryDatasetGid(),checkType);
         return RequestResult.success(vo);
     }
 
