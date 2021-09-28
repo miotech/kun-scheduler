@@ -784,7 +784,7 @@ export default memo(function AddDataQualityModal({
           <div className={styles.fieldItem}>
             <div className={styles.fieldTitle}>{t('dataDetail.dataQuality.caseBlock')}</div>
             <div className={styles.fieldContent}>
-              <Checkbox value={data.isBlocking} onChange={onChangeFunctionsMap.isBlocking}>
+              <Checkbox checked={data.isBlocking} onChange={onChangeFunctionsMap.isBlocking}>
                 {t('dataDetail.dataQuality.caseBlock.checkboxTitle')}
               </Checkbox>
             </div>
