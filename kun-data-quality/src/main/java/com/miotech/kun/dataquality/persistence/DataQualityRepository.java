@@ -692,6 +692,7 @@ public class DataQualityRepository extends BaseRepository {
                         "kdc.template_id as case_temp_id",
                         "kdc.execution_string as custom_string",
                         "kdc.types as case_types",
+                        "kdc.is_blocking as is_blocking",
                         "kdcdt.execution_string as temp_string",
                         "kdct.type as temp_type")
                 .from("kun_dq_case kdc")
@@ -725,6 +726,7 @@ public class DataQualityRepository extends BaseRepository {
                 dqCase.setValidateRules(getRulesByCaseId(id));
                 dqCase.setRelatedTables(getDatasetBasicsByCaseId(id));
                 dqCase.setTypes(resolveDqCaseTypes(rs.getString("case_types")));
+                dqCase.setIsBlocking(rs.getBoolean("is_blocking"));
             }
             return dqCase;
         }, id);
