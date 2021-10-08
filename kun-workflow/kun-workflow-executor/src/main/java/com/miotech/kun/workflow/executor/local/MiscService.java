@@ -167,6 +167,7 @@ public class MiscService {
     private class PublicEventListener {
         @Subscribe
         public void publicEvent(PublicEvent event) {
+            logger.debug("push public event = {}",event);
             publisher.publish(event);
         }
     }

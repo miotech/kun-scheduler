@@ -29,4 +29,12 @@ public class CheckResultEvent extends PublicEvent {
     public boolean getCheckStatus() {
         return checkStatus;
     }
+
+    @Override
+    public String toString() {
+        return "CheckResultEvent{" +
+                "taskRunId=" + taskRunId +
+                ", checkStatus=" + checkStatus +
+                '}';
+    }
 }
