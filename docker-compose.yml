@@ -55,6 +55,7 @@ services:
       TZ:
       APP_CONFIG_ENV:
       SPRING_PROFILES_ACTIVE:
+      KUN_INFRA_HOST:
       KUN_INFRA_PORT:
       DB_PG_IP:
       DB_PG_PORT:
