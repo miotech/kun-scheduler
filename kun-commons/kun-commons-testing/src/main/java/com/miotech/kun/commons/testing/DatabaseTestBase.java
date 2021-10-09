@@ -47,6 +47,10 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         flywayLocation = "kun-infra/";
     }
 
+    public List<String> ignore() {
+        return ImmutableList.of("kun_mt_datasource_type", "kun_mt_dataset_field_mapping");
+    }
+
 
     @Override
     protected void configuration() {
@@ -95,7 +99,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
                     .getTables(null, null, "%", new String[]{"TABLE"});
             while (rs.next()) {
                 String tableName = rs.getString(3);
-                if (tableName.startsWith("kun_")) {
+                if (tableName.startsWith("kun_") && !ignore().contains(tableName)) {
                     tables.add(tableName);
                 }
             }

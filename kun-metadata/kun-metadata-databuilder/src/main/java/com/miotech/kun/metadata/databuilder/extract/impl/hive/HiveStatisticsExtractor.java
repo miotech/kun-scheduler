@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.hive;
 
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
@@ -13,9 +14,7 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.TimeZone;
+import java.time.OffsetDateTime;
 
 public class HiveStatisticsExtractor extends StatisticsExtractorTemplate {
 
@@ -27,7 +26,7 @@ public class HiveStatisticsExtractor extends StatisticsExtractorTemplate {
     }
 
     @Override
-    public LocalDateTime getLastUpdatedTime(Dataset dataset, DataSource dataSource) {
+    public OffsetDateTime getLastUpdatedTime(Dataset dataset, DataSource dataSource) {
         String location = MetaStoreParseUtil.parseLocation(MetaStoreParseUtil.Type.META_STORE_CLIENT, dataSource, dataset.getDatabaseName(), dataset.getName());
         int idx = location.indexOf('/', location.lastIndexOf(':'));
         String url = location.substring(0, idx);
@@ -35,7 +34,7 @@ public class HiveStatisticsExtractor extends StatisticsExtractorTemplate {
         FileSystem fileSystem = HDFSOperator.create(url + "/" + dataset.getName(), "hdfs");
         try {
             FileStatus fileStatus = fileSystem.getFileStatus(new Path(path));
-            return LocalDateTime.ofInstant(Instant.ofEpochMilli(fileStatus.getModificationTime()), TimeZone.getDefault().toZoneId());
+            return DateTimeUtils.fromTimestamp(fileStatus.getModificationTime());
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         } finally {

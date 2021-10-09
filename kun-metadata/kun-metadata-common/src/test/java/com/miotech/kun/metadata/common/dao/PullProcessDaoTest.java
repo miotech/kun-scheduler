@@ -30,7 +30,7 @@ public class PullProcessDaoTest extends DatabaseTestBase {
     @Test
     public void create_withValidProcessEntity_shouldWork() {
         // 1. Prepare
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = DateTimeUtils.now();
         PullProcess pullDataSourceProcessToCreate = PullDataSourceProcess.newBuilder()
                 .withProcessId(1234L)
                 .withCreatedAt(now)
@@ -57,7 +57,7 @@ public class PullProcessDaoTest extends DatabaseTestBase {
     @Test
     public void create_withInvalidProcessEntity_shouldThrowException() {
         // 1. Prepare
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = DateTimeUtils.now();
         PullProcess pullDataSourceProcessWithInvalidProps = PullDataSourceProcess.newBuilder()
                 .withProcessId(null)
                 .withCreatedAt(now)

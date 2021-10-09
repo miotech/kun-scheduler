@@ -3,11 +3,11 @@ package com.miotech.kun.metadata.databuilder.extract.statistics;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public interface TableStatisticsExtractor {
 
-    default LocalDateTime getLastUpdatedTime(Dataset dataset, DataSource dataSource) {
+    default OffsetDateTime getLastUpdatedTime(Dataset dataset, DataSource dataSource) {
         return null;
     }
 
