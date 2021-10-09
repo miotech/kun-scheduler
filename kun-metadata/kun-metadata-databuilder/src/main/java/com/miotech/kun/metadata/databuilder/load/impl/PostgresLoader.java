@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.databuilder.load.impl;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.dataset.*;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +68,7 @@ public class PostgresLoader implements Loader {
 
             SchemaSnapshot schemaSnapshot = SchemaSnapshot.newBuilder().withFields(dataset.getFields().stream().map(field -> field.convert()).collect(Collectors.toList())).build();
             dbOperator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, fields, status, create_at) VALUES(?, CAST(? AS JSONB), ?, ?)",
-                    gid, JSONUtils.toJsonString(schemaSnapshot), DatasetLifecycleStatus.MANAGED.name(), LocalDateTime.now());
+                    gid, JSONUtils.toJsonString(schemaSnapshot), DatasetLifecycleStatus.MANAGED.name(), DateTimeUtils.now());
         }
 
         return loadSchema(gid, dataset.getFields());
@@ -91,7 +93,7 @@ public class PostgresLoader implements Loader {
 
         StatisticsSnapshot statisticsSnapshot = new StatisticsSnapshot(dataset.getTableStatistics().cloneBuilder().withStatDate(null).build(), fieldStatistics);
         dbOperator.update("UPDATE kun_mt_dataset_snapshot SET statistics_snapshot = CAST(? AS JSONB), statistics_at = ? WHERE id = ?",
-                JSONUtils.toJsonString(statisticsSnapshot), LocalDateTime.now(), snapshotId);
+                JSONUtils.toJsonString(statisticsSnapshot), DateTimeUtils.now(), snapshotId);
     }
 
     private void writeStatisticsWithOldMode(Dataset dataset) {
@@ -127,11 +129,11 @@ public class PostgresLoader implements Loader {
 
         SchemaSnapshot schemaSnapshot = SchemaSnapshot.newBuilder().withFields(fields.stream().map(field -> field.convert()).collect(Collectors.toList())).build();
         long snapshotId = dbOperator.create("INSERT INTO kun_mt_dataset_snapshot(dataset_gid, schema_snapshot, schema_at) VALUES(?, CAST(? AS JSONB), ?)",
-                gid, JSONUtils.toJsonString(schemaSnapshot), LocalDateTime.now());
+                gid, JSONUtils.toJsonString(schemaSnapshot), DateTimeUtils.now());
 
         if (datasetLifecycleSnapshot.isChanged()) {
             dbOperator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, changed, fields, status, create_at) VALUES(?, CAST(? AS JSONB), CAST(? AS JSONB), ?, ?)",
-                    gid, JSONUtils.toJsonString(datasetLifecycleSnapshot), JSONUtils.toJsonString(schemaSnapshot), DatasetLifecycleStatus.CHANGED.name(), LocalDateTime.now());
+                    gid, JSONUtils.toJsonString(datasetLifecycleSnapshot), JSONUtils.toJsonString(schemaSnapshot), DatasetLifecycleStatus.CHANGED.name(), DateTimeUtils.now());
         }
 
         return new LoadSchemaResult(gid, snapshotId);

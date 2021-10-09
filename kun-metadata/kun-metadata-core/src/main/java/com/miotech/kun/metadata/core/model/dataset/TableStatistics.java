@@ -1,10 +1,12 @@
 package com.miotech.kun.metadata.core.model.dataset;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public class TableStatistics implements Serializable {
     @JsonIgnore
@@ -14,11 +16,11 @@ public class TableStatistics implements Serializable {
 
     private final Long totalByteSize;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private final LocalDateTime statDate;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    private final OffsetDateTime statDate;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private final LocalDateTime lastUpdatedTime;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    private final OffsetDateTime lastUpdatedTime;
 
     public Long getRowCount() {
         return rowCount;
@@ -28,15 +30,17 @@ public class TableStatistics implements Serializable {
         return totalByteSize;
     }
 
-    public LocalDateTime getStatDate() {
+    public OffsetDateTime getStatDate() {
         return statDate;
     }
 
-    public LocalDateTime getLastUpdatedTime() {
+    public OffsetDateTime getLastUpdatedTime() {
         return lastUpdatedTime;
     }
 
-    public TableStatistics(Long rowCount, Long totalByteSize, LocalDateTime statDate, LocalDateTime lastUpdatedTime) {
+    @JsonCreator
+    public TableStatistics(@JsonProperty("rowCount") Long rowCount, @JsonProperty("totalByteSize") Long totalByteSize,
+                           @JsonProperty("statDate") OffsetDateTime statDate, @JsonProperty("lastUpdatedTime") OffsetDateTime lastUpdatedTime) {
         this.rowCount = rowCount;
         this.totalByteSize = totalByteSize;
         this.statDate = statDate;
@@ -58,8 +62,8 @@ public class TableStatistics implements Serializable {
     public static final class Builder {
         private Long rowCount;
         private Long totalByteSize;
-        private LocalDateTime statDate;
-        private LocalDateTime lastUpdatedTime;
+        private OffsetDateTime statDate;
+        private OffsetDateTime lastUpdatedTime;
 
         private Builder() {
         }
@@ -74,12 +78,12 @@ public class TableStatistics implements Serializable {
             return this;
         }
 
-        public Builder withStatDate(LocalDateTime statDate) {
+        public Builder withStatDate(OffsetDateTime statDate) {
             this.statDate = statDate;
             return this;
         }
 
-        public Builder withLastUpdatedTime(LocalDateTime lastUpdatedTime) {
+        public Builder withLastUpdatedTime(OffsetDateTime lastUpdatedTime) {
             this.lastUpdatedTime = lastUpdatedTime;
             return this;
         }

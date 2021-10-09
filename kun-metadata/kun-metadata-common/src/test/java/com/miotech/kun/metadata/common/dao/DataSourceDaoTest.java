@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.metadata.common.factory.MockDataSourceFactory;
 import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
@@ -104,7 +105,7 @@ public class DataSourceDaoTest extends DatabaseTestBase {
     @Test
     public void testUpdate() {
         // Prepare
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = DateTimeUtils.now();
         DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", ImmutableMap.of("name", "bar"), 1L, Lists.newArrayList("test"));
         dataSourceDao.create(dataSource);
 

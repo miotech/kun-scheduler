@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.databuilder.extract.template;
 
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
@@ -15,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.Clock;
 import java.time.LocalDateTime;
 
 public class DataWarehouseStatTemplate {
@@ -55,7 +57,7 @@ public class DataWarehouseStatTemplate {
             }
 
             FieldStatistics.Builder fieldStatBuilder = FieldStatistics.newBuilder();
-            fieldStatBuilder.withFieldName(datasetField.getName()).withStatDate(LocalDateTime.now());
+            fieldStatBuilder.withFieldName(datasetField.getName()).withStatDate(DateTimeUtils.now());
 
             if (isIgnored(datasetField.getFieldType().getType())) {
                 fieldStatBuilder.withDistinctCount(0L).withNonnullCount(0L);
