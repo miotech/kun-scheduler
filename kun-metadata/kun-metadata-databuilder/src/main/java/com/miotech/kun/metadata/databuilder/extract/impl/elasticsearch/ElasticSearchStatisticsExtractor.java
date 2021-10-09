@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch;
 
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.FieldStatistics;
 import com.miotech.kun.metadata.databuilder.client.ElasticSearchClient;
@@ -10,7 +11,6 @@ import org.elasticsearch.client.core.CountRequest;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -52,7 +52,7 @@ public class ElasticSearchStatisticsExtractor extends ElasticsearchExistenceExtr
                 return FieldStatistics.newBuilder()
                         .withFieldName(field.getName())
                         .withNonnullCount(count)
-                        .withStatDate(LocalDateTime.now()).build();
+                        .withStatDate(DateTimeUtils.now()).build();
             }).collect(Collectors.toList());
 
         } finally {

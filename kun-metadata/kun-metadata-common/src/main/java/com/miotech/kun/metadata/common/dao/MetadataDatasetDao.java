@@ -149,6 +149,34 @@ public class MetadataDatasetDao {
         return Pair.of(result + "and " + DATASET_FIELD_MODEL_NAME + ".name like concat(cast(? as text), '%')", params);
     }
 
+    public Optional<Dataset> findByName(String tableName) {
+        SQLBuilder sqlBuilder = new DefaultSQLBuilder();
+        String sql = sqlBuilder.select(DATASET_COLUMNS)
+                .from(DATASET_TABLE_NAME)
+                .where("name = ?")
+                .getSQL();
+        logger.debug("Fetching dataset with tableName: {}", tableName);
+        logger.debug("Dataset query sql: {}", sql);
+        Dataset fetchedDataset = dbOperator.fetchOne(sql, MetadataDatasetMapper.INSTANCE, tableName);
+        logger.debug("Fetched dataset: {} with tableName = {}", fetchedDataset, tableName);
+
+        if (fetchedDataset == null) {
+            return Optional.ofNullable(null);
+        }
+
+        SQLBuilder fieldsSQLBuilder = new DefaultSQLBuilder();
+        String fieldsSQL = fieldsSQLBuilder.select(DATASET_FIELD_COLUMNS)
+                .from(DATASET_FIELD_TABLE_NAME)
+                .where("dataset_gid = ?")
+                .getSQL();
+
+        List<DatasetField> fields = dbOperator.fetchAll(fieldsSQL, MetadataDatasetFieldMapper.INSTANCE, fetchedDataset.getGid());
+        Dataset dataset = fetchedDataset.cloneBuilder()
+                .withFields(fields).build();
+
+        return Optional.ofNullable(dataset);
+    }
+
     /**
      * Database result set mapper for {@link Dataset} object
      */

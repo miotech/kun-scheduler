@@ -1,12 +1,11 @@
 package com.miotech.kun.metadata.databuilder.extract.statistics;
 
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.TableStatistics;
 import com.miotech.kun.metadata.databuilder.constant.StatisticsMode;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetExistenceExtractor;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
-
-import java.time.LocalDateTime;
 
 public interface DatasetStatisticsExtractor extends DatasetExistenceExtractor, TableStatisticsExtractor, FieldStatisticsExtractor {
 
@@ -30,7 +29,7 @@ public interface DatasetStatisticsExtractor extends DatasetExistenceExtractor, T
                 .withRowCount(getRowCount(dataset, dataSource))
                 .withTotalByteSize(getTotalByteSize(dataset, dataSource))
                 .withLastUpdatedTime(getLastUpdatedTime(dataset, dataSource))
-                .withStatDate(LocalDateTime.now())
+                .withStatDate(DateTimeUtils.now())
                 .build();
     }
 
