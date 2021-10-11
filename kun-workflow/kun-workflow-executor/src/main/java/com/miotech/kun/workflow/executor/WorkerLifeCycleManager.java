@@ -1,7 +1,6 @@
 package com.miotech.kun.workflow.executor;
 
 import com.google.common.eventbus.EventBus;
-import com.google.common.eventbus.Subscribe;
 import com.google.common.util.concurrent.Uninterruptibles;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.InitializingBean;
@@ -63,12 +62,10 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
     public void init() {
         queueManager.init();
         consumer.start();
-        CheckResultEventListener listener = new CheckResultEventListener();
-        eventBus.register(listener);
         eventSubscriber.subscribe(event -> {
             if (event instanceof CheckResultEvent) {
                 logger.debug("receive check result event = {}", event);
-                eventBus.post(event);
+                handleDataQualityEvent((CheckResultEvent) event);
             }
         });
     }
@@ -288,25 +285,17 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
 
     }
 
-    class CheckResultEventListener {
-
-        @Subscribe
-        public void onReceive(CheckResultEvent event) {
-            handleDataQualityEvent(event);
+    private void handleDataQualityEvent(CheckResultEvent event) {
+        Long taskRunId = event.getTaskRunId();
+        TaskAttemptProps taskAttemptProps = taskRunDao.fetchLatestTaskAttempt(taskRunId);
+        if (taskAttemptProps.getStatus().isFinished()) {
+            logger.debug("taskAttempt = {} is finished,ignore event = {}", taskAttemptProps.getId(), event);
+            return;
         }
-
-        public void handleDataQualityEvent(CheckResultEvent event) {
-            Long taskRunId = event.getTaskRunId();
-            TaskAttemptProps taskAttemptProps = taskRunDao.fetchLatestTaskAttempt(taskRunId);
-            if(taskAttemptProps.getStatus().isFinished()){
-                logger.debug("taskAttempt = {} is finished,ignore event = {}",event);
-                return;
-            }
-            TaskRunStatus taskRunStatus = event.getCheckStatus() ? TaskRunStatus.SUCCESS : TaskRunStatus.CHECK_FAILED;
-            miscService.notifyFinished(taskAttemptProps.getId(), taskRunStatus);
-            //update taskrun and downstream taskrun status
-            miscService.changeTaskAttemptStatus(taskAttemptProps.getId(), taskRunStatus, taskAttemptProps.getStartAt(), DateTimeUtils.now());
-        }
+        TaskRunStatus taskRunStatus = event.getCheckStatus() ? TaskRunStatus.SUCCESS : TaskRunStatus.CHECK_FAILED;
+        miscService.notifyFinished(taskAttemptProps.getId(), taskRunStatus);
+        //update taskrun status
+        miscService.changeTaskAttemptStatus(taskAttemptProps.getId(), taskRunStatus, taskAttemptProps.getStartAt(), DateTimeUtils.now());
     }
 
     class TaskAttemptConsumer implements Runnable {

@@ -54,6 +54,10 @@ public class Initializer {
             Class<?> type = key.getTypeLiteral().getRawType();
             if (InitializingBean.class.isAssignableFrom(type)) {
                 InitializingBean obj = (InitializingBean) injector.getInstance(key);
+                if(beans.contains(obj)){
+                    logger.warn("skip exist initialization bean {}", obj.getClass().getName());
+                    continue;
+                }
                 beans.add(obj);
             }
         }
