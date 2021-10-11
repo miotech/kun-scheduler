@@ -109,6 +109,8 @@ public class LocalExecutorTest extends CommonTestBase {
     @Inject
     private WorkerLifeCycleManager workerLifeCycleManager;
 
+    private MockEventSubscriber mockEventSubscriber;
+
 
     private Props props;
 
@@ -157,7 +159,8 @@ public class LocalExecutorTest extends CommonTestBase {
         bind(LineageServiceFacade.class,mock(LineageServiceFacade.class));
         bind(EventBus.class, new EventBus());
         bind(EventPublisher.class, new NopEventPublisher());
-        bind(EventSubscriber.class, mock(EventSubscriber.class));
+        mockEventSubscriber = new MockEventSubscriber();
+        bind(EventSubscriber.class, mockEventSubscriber);
         LocalProcessBackend localProcessBackend = new LocalProcessBackend();
         spyBackend = spy(localProcessBackend);
         bind(LocalProcessBackend.class, spyBackend);
@@ -1287,7 +1290,7 @@ public class LocalExecutorTest extends CommonTestBase {
             if(event instanceof TaskAttemptCheckEvent){
                 Long taskRunId = ((TaskAttemptCheckEvent) event).getTaskRunId();
                 CheckResultEvent checkResultEvent = new CheckResultEvent(taskRunId,validateResult);
-                eventBus.post(checkResultEvent);
+                mockEventSubscriber.receiveEvent(checkResultEvent);
             }
         }
     }
