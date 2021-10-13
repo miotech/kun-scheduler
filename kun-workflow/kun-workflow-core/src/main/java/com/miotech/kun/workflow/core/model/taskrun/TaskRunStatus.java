@@ -72,4 +72,12 @@ public enum TaskRunStatus {
     public boolean isChecking(){
         return this == CHECK;
     }
+
+    public boolean isUpstreamFailed() {
+        return this == UPSTREAM_FAILED;
+    }
+
+    public boolean isCreated() {
+        return this == CREATED;
+    }
 }

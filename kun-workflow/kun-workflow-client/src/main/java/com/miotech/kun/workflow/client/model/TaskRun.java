@@ -52,6 +52,8 @@ public class TaskRun {
 
     private List<TaskAttempt> attempts;
 
+    private List<TaskRun> failedUpstreamTaskRuns;
+
     private List<Long> dependencyTaskRunIds;
 
     private List<Tag> tags;
@@ -144,6 +146,14 @@ public class TaskRun {
         this.attempts = attempts;
     }
 
+    public List<TaskRun> getFailedUpstreamTaskRuns() {
+        return failedUpstreamTaskRuns;
+    }
+
+    public void setFailedUpstreamTaskRuns(List<TaskRun> failedUpstreamTaskRuns) {
+        this.failedUpstreamTaskRuns = failedUpstreamTaskRuns;
+    }
+
     public List<Tag> getTags() { return tags; }
 
     public void setTags(List<Tag> tags) { this.tags = tags; }
@@ -190,6 +200,7 @@ public class TaskRun {
         @JsonDeserialize(using = CustomDateTimeDeserializer.class)
         private OffsetDateTime updatedAt;
         private List<TaskAttempt> attempts;
+        private List<TaskRun> failedUpstreamTaskRuns;
         private List<Long> dependencyTaskRunIds;
         private List<Tag> tags;
         private String scheduleType;
@@ -262,6 +273,11 @@ public class TaskRun {
             return this;
         }
 
+        public Builder withFailedUpstreamTaskRuns(List<TaskRun> failedUpstreamTaskRuns) {
+            this.failedUpstreamTaskRuns = failedUpstreamTaskRuns;
+            return this;
+        }
+
         public Builder withDependencyTaskRunIds(List<Long> dependencyTaskRunIds) {
             this.dependencyTaskRunIds = dependencyTaskRunIds;
             return this;
@@ -294,6 +310,7 @@ public class TaskRun {
             taskRunVO.setStartAt(startAt);
             taskRunVO.setEndAt(endAt);
             taskRunVO.setAttempts(attempts);
+            taskRunVO.setFailedUpstreamTaskRuns(failedUpstreamTaskRuns);
             taskRunVO.setDependencyTaskRunIds(dependencyTaskRunIds);
             taskRunVO.setTags(tags);
             taskRunVO.setQueueName(queueName);

@@ -196,9 +196,23 @@ public class TaskSpawner implements InitializingBean {
                 .withPriority(task.getPriority())
                 .withDependentTaskRunIds(upstreamTaskRunIds)
                 .withStatus(resolveTaskRunUpstreamStatus(task,upstreamTaskRuns))
+                .withFailedUpstreamTaskRunIds(resolveFailedUpstreamTaskRunIds(upstreamTaskRuns))
                 .build();
         logger.debug("TaskRun is created successfully TaskRun={}, Task={}, Tick={}.", taskRun, task, tick);
         return taskRun;
+    }
+
+    private List<Long> resolveFailedUpstreamTaskRunIds(List<TaskRun> upstreamTaskRuns) {
+        List<Long> failedUpstreamTaskRunIds = new ArrayList<>();
+        for (TaskRun upstreamTaskRun : upstreamTaskRuns) {
+            if (upstreamTaskRun.getStatus().isUpstreamFailed()) {
+                failedUpstreamTaskRunIds.addAll(upstreamTaskRun.getFailedUpstreamTaskRunIds());
+            }
+            if (upstreamTaskRun.getStatus().isFailure()) {
+                failedUpstreamTaskRunIds.add(upstreamTaskRun.getId());
+            }
+        }
+        return failedUpstreamTaskRunIds.stream().distinct().collect(Collectors.toList());
     }
 
     private TaskRunStatus resolveTaskRunUpstreamStatus(Task task,List<TaskRun> upstreamTaskRuns) {

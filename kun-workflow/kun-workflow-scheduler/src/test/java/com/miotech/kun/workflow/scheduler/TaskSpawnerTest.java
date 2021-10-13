@@ -33,6 +33,7 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.shazam.shazamcrest.matcher.CustomisableMatcher;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -938,9 +939,140 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getEndAt(), is(nullValue()));
         assertThat(submitted.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
 
-
         assertThat(submitted.getDependentTaskRunIds(), hasSize(1));
         assertThat(submitted.getDependentTaskRunIds(), contains(taskRun1.getId()));
+    }
+
+    @Test
+    //scenario: TaskRun 0>>1
+    //         before 1 create, 0 failed
+    //        when 1 create, 0 is added to failedUpstreamTaskRunIds of 1
+    public void singleUpstreamFailedBeforeCreate_updateSuccess() {
+        // prepare
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1");
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId())).build();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
+                .cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun1);
+
+        DatabaseTaskGraph graph = injector.getInstance(DatabaseTaskGraph.class);
+        taskSpawner.schedule(graph);
+
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+
+        // process
+        Tick tick = new Tick(next);
+        eventBus.post(new TickEvent(tick));
+
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        // task2
+        TaskRun taskRun2 = result.get(0);
+        assertThat(taskRun2.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+        assertThat(taskRun2.getFailedUpstreamTaskRunIds().size(), is(1));
+        assertThat(taskRun2.getFailedUpstreamTaskRunIds().get(0), is(taskRun1.getId()));
+    }
+
+    @Test
+    // scenario: TaskRun 0>>1; 0>>2; 1,2>>3
+    //         before 3 create, 0 failed
+    //          when 3 create, 0 is added to failedUp of 3 by 1 and by 2 without duplicate
+    public void mutualUpstreamFailedBeforeCreate_updateTaskRunsWithoutDuplicate_Success() {
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(4, operatorId, "0>>1;0>>2;1>>3;2>>3");
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId())).build();
+        Task task3 = tasks.get(2).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId())).build();
+        Task task4 = tasks.get(3).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId())).build();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
+                .cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskDao.create(task3);
+        taskDao.create(task4);
+        taskRunDao.createTaskRun(taskRun1);
+
+        DatabaseTaskGraph graph = injector.getInstance(DatabaseTaskGraph.class);
+        taskSpawner.schedule(graph);
+
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+
+        // process
+        Tick tick = new Tick(next);
+        eventBus.post(new TickEvent(tick));
+
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(3));
+
+        TaskRun taskRun4 = result.get(2);
+        assertThat(taskRun4.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+        assertThat(taskRun4.getFailedUpstreamTaskRunIds().size(), is(1));
+    }
+
+    @Test
+    //scenario: TaskRun 0>>1; 1>>3; 2>>3
+    //         before 3 create, 0 & 2 failed
+    //        when 3 create, 0 (not 1) & 2 is added to failedUpstreamTaskRunIds of 3
+    public void multiUpstreamFailedBeforeCreate_updateSuccess() {
+        // prepare
+        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(4, operatorId, "0>>1;1>>3;2>>3");
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId())).build();
+        Task task3 = tasks.get(2);
+        Task task4 = tasks.get(3).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId())).build();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
+                .cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task3)
+                .cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskDao.create(task3);
+        taskDao.create(task4);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun3);
+
+        DatabaseTaskGraph graph = injector.getInstance(DatabaseTaskGraph.class);
+        taskSpawner.schedule(graph);
+
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+
+        // process
+        Tick tick = new Tick(next);
+        eventBus.post(new TickEvent(tick));
+
+        // verify
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(2));
+
+        TaskRun taskRun4 = result.get(1);
+
+        assertThat(taskRun4.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+        assertThat(taskRun4.getFailedUpstreamTaskRunIds().size(), is(2));
+        assertThat(new HashSet<>(taskRun4.getFailedUpstreamTaskRunIds()),
+                is(new HashSet<>(Arrays.asList(taskRun1.getId(), taskRun3.getId()))));
     }
 
 
