@@ -1,0 +1,1 @@
+ALTER TABLE kun_wf_task_run ADD COLUMN failed_upstream_task_run_ids jsonb;
