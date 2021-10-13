@@ -12,6 +12,7 @@ import com.miotech.kun.commons.utils.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
@@ -67,6 +68,10 @@ public class JSONUtils {
             logger.error("Error occurs when converting JSON to object: ", e);
             throw ExceptionUtils.wrapIfChecked(e);
         }
+    }
+
+    public static <T> T jsonToObjectOrDefault(@Nullable String str, TypeReference<T> typeRef, T defaultValue) {
+        return str == null? defaultValue : jsonToObject(str, typeRef);
     }
 
     public static <T> List<T> jsonArrayToList(String str, Class<T> valueType){

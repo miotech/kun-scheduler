@@ -31,8 +31,6 @@ import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import java.sql.ResultSet;
@@ -51,10 +49,9 @@ import static com.miotech.kun.commons.utils.StringUtils.toNullableString;
 
 @Singleton
 public class TaskRunDao {
-    private static final Logger logger = LoggerFactory.getLogger(TaskRunDao.class);
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "start_at", "end_at", "config", "inlets", "outlets", "created_at", "updated_at", "queue_name", "priority");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "start_at", "end_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
@@ -350,6 +347,7 @@ public class TaskRunDao {
                     JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets()),
+                    JSONUtils.toJsonString(taskRun.getFailedUpstreamTaskRunIds()),
                     now,
                     now,
                     taskRun.getQueueName(),
@@ -392,7 +390,6 @@ public class TaskRunDao {
             TaskGraph graph = entry.getKey();
             List<TaskRun> taskRunList = entry.getValue();
             for (TaskRun taskRun : taskRunList) {
-                logger.debug("to create taskRun , taskRunId = {}", taskRun.getId());
                 result.add(createTaskRun(taskRun, graph));
             }
         }
@@ -430,6 +427,7 @@ public class TaskRunDao {
                     JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets()),
+                    JSONUtils.toJsonString(taskRun.getFailedUpstreamTaskRunIds()),
                     now,
                     now,
                     taskRun.getQueueName(),
@@ -477,6 +475,7 @@ public class TaskRunDao {
                     JSONUtils.toJsonString(taskRun.getConfig()),
                     JSONUtils.toJsonString(taskRun.getInlets()),
                     JSONUtils.toJsonString(taskRun.getOutlets()),
+                    JSONUtils.toJsonString(taskRun.getFailedUpstreamTaskRunIds()),
                     taskRun.getCreatedAt(),       // created_at
                     now,                          // updated_at
                     taskRun.getQueueName(),
@@ -548,7 +547,6 @@ public class TaskRunDao {
             }
             taskRunParams.addAll(taskRunIds);
             dbOperator.update(updateTaskRun.getSQL(), taskRunParams.toArray());
-
             List<Object> taskAttemptParams = new ArrayList<>();
             taskAttemptParams.add(taskRunStatus.name());
             if (termAt != null) {
@@ -561,6 +559,45 @@ public class TaskRunDao {
         });
     }
 
+    public void updateTaskRunWithFailedUpstream(Long taskRunId, List<Long> downstreamTaskRunIds, TaskRunStatus taskRunStatus) {
+        for (Long downstreamTaskRunId : downstreamTaskRunIds) {
+            List<TaskRun> failedTaskRuns = fetchFailedUpstreamTaskRuns(downstreamTaskRunId);
+            List<Long> failedTaskRunIds = failedTaskRuns.stream()
+                    .map(TaskRun::getId)
+                    .collect(Collectors.toList());
+            SQLBuilder sql = DefaultSQLBuilder.newBuilder()
+                    .update(TASK_RUN_TABLE_NAME)
+                    .set("failed_upstream_task_run_ids=?")
+                    .where("id = " + downstreamTaskRunId);
+            List<Object> taskRunParams = new ArrayList<>();
+            if (taskRunStatus.isCreated()) {
+                failedTaskRunIds.remove(taskRunId);
+            }
+            if (taskRunStatus.isUpstreamFailed()) {
+                failedTaskRunIds.add(taskRunId);
+            }
+            taskRunParams.add(JSONUtils.toJsonString(failedTaskRunIds));
+            dbOperator.update(sql.getSQL(), taskRunParams.toArray());
+        }
+    }
+
+    public List<TaskRun> fetchFailedUpstreamTaskRuns(Long taskRunId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("failed_upstream_task_run_ids")
+                .from(TASK_RUN_TABLE_NAME)
+                .where("id = ?")
+                .getSQL();
+        List<Long> failedUpstreamTaskRunIds = dbOperator.fetchOne(sql,
+                rs -> JSONUtils.jsonToObject(rs.getString(1), new TypeReference<List<Long>>(){}),
+                taskRunId);
+        if (failedUpstreamTaskRunIds == null || failedUpstreamTaskRunIds.isEmpty()) return new ArrayList<>();
+        List<Optional<TaskRun>> failedUpstreamTaskRuns = fetchTaskRunsByIds(failedUpstreamTaskRunIds);
+        return failedUpstreamTaskRuns.stream()
+                .map(r -> r.orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
     /**
      * Recursively fetch all downstream taskRunIds with the given taskRunId
      * only support postgres
@@ -569,7 +606,6 @@ public class TaskRunDao {
      * @return
      */
     public List<Long> fetchDownStreamTaskRunIdsRecursive(Long taskRunId) {
-        logger.debug("fetch downstream taskRunIds from postgres...");
         String recursiveResult = "fetch_downstream";
         String unRecursiveSql = DefaultSQLBuilder.newBuilder()
                 .select("downstream_task_run_id")
@@ -1459,6 +1495,8 @@ public class TaskRunDao {
                     }))
                     .withOutlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_outlets"), new TypeReference<List<DataStore>>() {
                     }))
+                    .withFailedUpstreamTaskRunIds(JSONUtils.jsonToObjectOrDefault(rs.getString(TASK_RUN_MODEL_NAME + "_failed_upstream_task_run_ids"),
+                            new TypeReference<List<Long>>(){}, new ArrayList<>()))
                     .withDependentTaskRunIds(Collections.emptyList())
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_end_at")))
