@@ -32,6 +32,7 @@ import org.mockito.stubbing.Answer;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
@@ -291,7 +292,6 @@ public class TaskManagerTest extends SchedulerTestBase {
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
-                System.out.println("do answer...");
                 TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
                 if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
                     taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
@@ -334,6 +334,247 @@ public class TaskManagerTest extends SchedulerTestBase {
         assertThat(attemptProps3.getEndAt(), is(nullValue()));
         assertThat(taskRunDao.getTermAtOfTaskRun(taskRun3.getId()), is(notNullValue()));
     }
+
+    @Test
+    //scenario: 0>>1 1>>2
+    // when 0 failed, add 0 to failedUpstreamTaskRun of 1,2
+    public void upstreamFail_UpdateMultiDownstreamTaskRunIdsWithSingleFailedTaskRun_Success() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
+        taskList.forEach(task -> taskDao.create(task));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>2");
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRun taskRun3 = taskRunList.get(2);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+            } else {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(taskRunList);
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).size(), is(1));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun3.getId()).size(), is(1));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).get(0).getId(), is(taskRun1.getId()));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun3.getId()).get(0).getId(), is(taskRun1.getId()));
+    }
+
+    @Test
+    //scenario: 0>>1 0>>2 1,2>>3
+    //         0 failed, update 0 to failedUpstreamTaskRun to 1,2,3 and to 3 ONLY ONCE
+    public void mutualUpstreamFail_UpdateDownstreamTaskRunOnlyOnce_Success() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;0>>2;1>>3;2>>3");
+        taskList.forEach(task -> taskDao.create(task));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;0>>2;1>>3;2>>3");
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRun taskRun3 = taskRunList.get(2);
+        TaskRun taskRun4 = taskRunList.get(3);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createTaskRun(taskRun4);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+            } else {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(taskRunList);
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun4.getId()).size(), is(1));
+
+    }
+
+
+
+    @Test
+    //scenario: 0>>1 1>>2.
+    // 0 failed, 1&2 -> upstream failed. 0 is added to failedUpstreamTaskRunIds of 1&2
+    // retry 0, 1&2 -> created. failedUpstreamTaskRunIds of 1&2 is removed.
+    public void retryFailedUpstream_UpdateMultiDownstreamTaskRunsWhenTaskRunRetry_Success() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
+        taskList.forEach(task -> taskDao.create(task));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>2");
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRun taskRun3 = taskRunList.get(2);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId())) {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+            } else {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(taskRunList);
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).get(0).getId(), is(taskRun1.getId()));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun3.getId()).get(0).getId(), is(taskRun1.getId()));
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+            eventBus.post(prepareEvent(taskAttempt.getId()
+                    , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.retry(taskRunDao.fetchTaskRunById(taskRun1.getId()).get());
+
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).isEmpty(), is(true));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun3.getId()).isEmpty(), is(true));
+
+    }
+
+    @Test
+    // scenario: 0>>1 1>>3 2>>3.
+    //         0&2 failed
+    //         status of 1&3 -> upstream failed
+    //         0 is added to failedUpstreamTaskRunIds of 1&3
+    //         2 is added to failedUpstreamTaskRunIds of 3
+    public void upstreamFail_UpdateMultiDownstreamTaskRunIdsWithMultiFailedTaskRun_Success() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;1>>3;2>>3");
+
+        taskList.forEach(task -> taskDao.create(task));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>3;2>>3");
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRun taskRun3 = taskRunList.get(2);
+        TaskRun taskRun4 = taskRunList.get(3);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createTaskRun(taskRun4);
+
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId()) || taskAttempt.getTaskRun().getId().equals(taskRun3.getId())) {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+            } else {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(taskRunList);
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).size(), is(1));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun4.getId()).size(), is(2));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).get(0).getId(), is(taskRun1.getId()));
+        assertThat(new HashSet<>(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun4.getId()).stream()
+                        .map(TaskRun::getId).collect(Collectors.toList())),
+                is(new HashSet<>(Arrays.asList(taskRun1.getId(), taskRun3.getId()))));
+    }
+
+
+    @Test
+    // scenario: 0>>1 1>>3 2>>3.
+    // Step 1: 0&2 failed
+    //         status of 1&3 -> upstream failed
+    //         0 is added to failedUpstreamTaskRunIds of 1&3
+    //         2 is added to failedUpstreamTaskRunIds of 3
+    // Step 2: rerun 0
+    //         status of 1 -> created.
+    //         failedUpstreamTaskRunIds 0 of 1&3 is removed.
+    //         failedUpstreamTaskRunIds 2 of 3 is remained.
+    public void retryFailedUpstream_UpdateMultiDownstreamTaskRunIdsWithMultiFailedTaskRun_Success() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;1>>3;2>>3");
+        taskList.forEach(task -> taskDao.create(task));
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>3;2>>3");
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRun taskRun3 = taskRunList.get(2);
+        TaskRun taskRun4 = taskRunList.get(3);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createTaskRun(taskRun4);
+
+
+        //make taskRun 1 & 3 fail
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            if (taskAttempt.getTaskRun().getId().equals(taskRun1.getId()) || taskAttempt.getTaskRun().getId().equals(taskRun3.getId())) {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.FAILED);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED));
+            } else {
+                taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+                eventBus.post(prepareEvent(taskAttempt.getId()
+                        , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            }
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+        taskManager.submit(taskRunList);
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+
+        //verify failed upstream taskRuns of taskRun 2 & 4
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).size(), is(1));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun4.getId()).size(), is(2));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).get(0).getId(), is(taskRun1.getId()));
+        assertThat(new HashSet<>(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun4.getId()).stream()
+                        .map(TaskRun::getId).collect(Collectors.toList())),
+                is(new HashSet<>(Arrays.asList(taskRun1.getId(), taskRun3.getId()))));
+
+        //retry taskRun 1
+        doAnswer(invocation -> {
+            TaskAttempt taskAttempt = invocation.getArgument(0, TaskAttempt.class);
+            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.SUCCESS);
+            eventBus.post(prepareEvent(taskAttempt.getId()
+                    , taskAttempt.getTaskName(), taskAttempt.getTaskId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS));
+            return null;
+        }).when(executor).submit(ArgumentMatchers.any());
+
+        taskManager.retry(taskRunDao.fetchTaskRunById(taskRun1.getId()).get());
+
+        //verify failed upstream taskRuns of taskRun 2 & 4
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).size(), is(0));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun4.getId()).size(), is(1));
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun4.getId()).get(0).getId(), is(taskRun3.getId()));
+
+    }
+
 
     @Test
     public void retryTaskRunRecoverDownStream() {

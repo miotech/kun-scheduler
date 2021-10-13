@@ -628,4 +628,59 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(result.getMiddle(), is(25));
         assertThat(result.getRight(), is(29));
     }
+
+    @Test
+    public void taskRunConvertToVo_success() {
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.FAILED)
+                .build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId()))
+                .build();
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createAttempt(taskAttempt1);
+
+        TaskRunVO taskRunVO2 = taskRunService.convertToVO(taskRun2);
+
+        assertThat(taskRunVO2.getTask().getId(), is(task2.getId()));
+        assertThat(taskRunVO2.getFailedUpstreamTaskRuns().get(0).getId(), is(taskRun1.getId()));
+    }
+
+    @Test
+    public void taskRunsConvertToVOs_success() {
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.FAILED)
+                .withFailedUpstreamTaskRunIds(null)
+                .build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId()))
+                .build();
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createAttempt(taskAttempt1);
+
+        List<TaskRunVO> taskRunVOs = taskRunService.convertToVO(Arrays.asList(taskRun1, taskRun2));
+        assertThat(taskRunVOs.size(), is(2));
+        assertThat(taskRunVOs.get(0).getTask().getId(), is(task1.getId()));
+    }
+
 }

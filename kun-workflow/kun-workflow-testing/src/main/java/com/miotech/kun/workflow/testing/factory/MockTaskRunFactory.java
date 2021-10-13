@@ -43,6 +43,7 @@ public class MockTaskRunFactory {
                 .withEndAt(DateTimeUtils.now())
                 .withStatus(taskRunStatus)
                 .withConfig(Config.EMPTY)
+                .withFailedUpstreamTaskRunIds(new ArrayList<>())
                 .withQueueName(task.getQueueName())
                 .withPriority(task.getPriority())
                 .build();
@@ -61,6 +62,7 @@ public class MockTaskRunFactory {
                 .withEndAt(DateTimeUtils.now())
                 .withStatus(TaskRunStatus.CREATED)
                 .withConfig(Config.EMPTY)
+                .withFailedUpstreamTaskRunIds(new ArrayList<>())
                 .withQueueName(task.getQueueName())
                 .withPriority(task.getPriority())
                 .build();
@@ -102,6 +104,7 @@ public class MockTaskRunFactory {
                     .withScheduledTick(tick)
                     .withStartAt(null)
                     .withEndAt(null)
+                    .withFailedUpstreamTaskRunIds(new ArrayList<>())
                     .withQueueName(tasks.get(i).getQueueName())
                     .withPriority(tasks.get(i).getPriority())
                     .build();
@@ -124,6 +127,7 @@ public class MockTaskRunFactory {
                 .withEndAt(DateTimeUtils.now())
                 .withStatus(TaskRunStatus.QUEUED)
                 .withConfig(Config.EMPTY)
+                .withFailedUpstreamTaskRunIds(new ArrayList<>())
                 .withQueueName(task.getQueueName())
                 .withPriority(task.getPriority())
                 .build();

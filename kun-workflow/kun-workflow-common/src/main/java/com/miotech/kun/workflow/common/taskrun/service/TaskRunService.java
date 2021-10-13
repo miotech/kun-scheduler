@@ -20,6 +20,7 @@ import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.annotation.Internal;
+import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -27,6 +28,7 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -290,7 +292,7 @@ public class TaskRunService {
         Map<Long, List<TaskAttemptProps>> taskAttemptPropsMap = groupByTaskRunId(taskAttemptProps);
 
         return taskRuns.stream().map(taskRun ->
-                buildTaskRunVO(taskRun, taskAttemptPropsMap.get(taskRun.getId()))).collect(Collectors.toList());
+                buildTaskRunVO(taskRun, taskAttemptPropsMap.get(taskRun.getId()), new ArrayList<>())).collect(Collectors.toList());
     }
 
     public TaskRunVO convertToVO(TaskRun taskRun) {
@@ -303,7 +305,10 @@ public class TaskRunService {
                         .withTaskName(taskRun.getTask().getName())
                         .build())
                 .collect(Collectors.toList());
-        return buildTaskRunVO(taskRun, attempts);
+        List<TaskRun> failedUpstreamTaskRuns = taskRun.getStatus().isUpstreamFailed()?
+                taskRunDao.fetchFailedUpstreamTaskRuns(taskRun.getId()) : Collections.emptyList();
+        logger.debug("ConvertToVO: failed upstream task runs {}", failedUpstreamTaskRuns.toString());
+        return buildTaskRunVO(taskRun, attempts, failedUpstreamTaskRuns);
     }
 
     /**
@@ -393,7 +398,7 @@ public class TaskRunService {
         return taskAttemptPropsMap;
     }
 
-    private TaskRunVO buildTaskRunVO(TaskRun taskRun, List<TaskAttemptProps> attempts) {
+    private TaskRunVO buildTaskRunVO(TaskRun taskRun, List<TaskAttemptProps> attempts, List<TaskRun> failedUpstreamTaskRuns) {
         TaskRunVO vo = new TaskRunVO();
         vo.setTask(taskRun.getTask());
         vo.setId(taskRun.getId());
@@ -408,6 +413,7 @@ public class TaskRunService {
         vo.setUpdatedAt(taskRun.getUpdatedAt());
         vo.setConfig(taskRun.getConfig());
         vo.setAttempts(attempts);
+        vo.setFailedUpstreamTaskRuns(failedUpstreamTaskRuns);
         return vo;
     }
 

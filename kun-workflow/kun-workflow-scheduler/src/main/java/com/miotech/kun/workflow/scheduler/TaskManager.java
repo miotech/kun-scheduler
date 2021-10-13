@@ -214,6 +214,7 @@ public class TaskManager {
         } else {
             taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus);
         }
+        taskRunDao.updateTaskRunWithFailedUpstream(taskRunId, downStreamTaskRunIds, taskRunStatus);
     }
 
     private boolean postgresEnable() {
