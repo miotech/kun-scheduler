@@ -37,6 +37,7 @@ public class KubernetesOperatorLauncher {
     @Inject
     private LineageService lineageService;
 
+    private static Injector injector;
 
     public static void main(String args[]) {
         props = new Props(System.getenv());
@@ -44,7 +45,7 @@ public class KubernetesOperatorLauncher {
         ExecCommand command = readExecCommand();
         // 初始化logger
         initLogger(command.getLogPath());
-        Injector injector = Guice.createInjector(
+        injector = Guice.createInjector(
                 new KubernetesWorkerModule(props)
         );
         KubernetesOperatorLauncher operatorLauncher = injector.getInstance(KubernetesOperatorLauncher.class);
@@ -60,7 +61,9 @@ public class KubernetesOperatorLauncher {
     }
 
     private OperatorContext initContext(ExecCommand command) {
-        return new OperatorContextImpl(command.getConfig(), command.getTaskRunId());
+        OperatorContext context = new OperatorContextImpl(command.getConfig(), command.getTaskRunId());
+        injector.injectMembers(context);
+        return context;
     }
 
     private static void initLogger(String logPath) {

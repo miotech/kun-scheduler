@@ -209,7 +209,9 @@ public class OperatorLauncher {
     }
 
     private OperatorContext initContext(ExecCommand command) {
-        return new OperatorContextImpl(command.getConfig(), command.getTaskRunId());
+        OperatorContext context = new OperatorContextImpl(command.getConfig(), command.getTaskRunId());
+        injector.injectMembers(context);
+        return context;
     }
 
     private static void initLogger(String logPath) {
