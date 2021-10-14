@@ -98,20 +98,25 @@ public class Subscriber {
         }
         log.info("get dq cases for datasetIds: " + taskAttemptCheckEvent.getOutDataSetIds());
         List<Long> caseIds = dataQualityRepository.getWorkflowTasksByDatasetIds(datasetIds);
-        if (!caseIds.isEmpty()) {
-            log.info("run dq test case: " + caseIds);
-            List<Long> caseRunIdList = workflowService.executeTasks(caseIds);
+        if (caseIds.isEmpty()) {
             Long taskRunId = taskAttemptCheckEvent.getTaskRunId();
-            List<CaseRun> caseRunList = new ArrayList<>();
-            for (int i = 0; i < caseRunIdList.size(); i++) {
-                CaseRun caseRun = new CaseRun();
-                caseRun.setCaseRunId(caseRunIdList.get(i));
-                caseRun.setTaskRunId(taskRunId);
-                caseRun.setCaseId(caseIds.get(i));
-                caseRunList.add(caseRun);
-            }
-            dataQualityRepository.insertCaseRunWithTaskRun(caseRunList);
+            log.debug("no test case for taskRunId = {} ",taskRunId);
+            CheckResultEvent event = new CheckResultEvent(taskRunId, true);
+            sendDataQualityEvent(event);
+            return;
         }
+        log.info("run dq test case: " + caseIds);
+        List<Long> caseRunIdList = workflowService.executeTasks(caseIds);
+        Long taskRunId = taskAttemptCheckEvent.getTaskRunId();
+        List<CaseRun> caseRunList = new ArrayList<>();
+        for (int i = 0; i < caseRunIdList.size(); i++) {
+            CaseRun caseRun = new CaseRun();
+            caseRun.setCaseRunId(caseRunIdList.get(i));
+            caseRun.setTaskRunId(taskRunId);
+            caseRun.setCaseId(caseIds.get(i));
+            caseRunList.add(caseRun);
+        }
+        dataQualityRepository.insertCaseRunWithTaskRun(caseRunList);
     }
 
     private void sendDataQualityEvent(CheckResultEvent event) {

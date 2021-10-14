@@ -115,8 +115,6 @@ public class TaskService {
         // 4. persist with DAO
         taskDao.create(task);
 
-        // 5. update lineage
-        updateLineageGraphOnTaskCreate(task);
         return task;
     }
 
@@ -181,10 +179,10 @@ public class TaskService {
                 .withDependencies(vo.getDependencies() == null ? task.getDependencies() : parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags() == null ? task.getTags() : vo.getTags())
                 .withQueueName(vo.getQueueName() == null ? task.getQueueName() : vo.getQueueName())
-                .withPriority(vo.getPriority() == null ? DEFAULT_PRIORITY : vo.getPriority())
+                .withPriority(vo.getPriority() == null ? task.getPriority() : vo.getPriority())
                 .withRetries(vo.getRetries() == null ? task.getRetries() : vo.getRetries())
                 .withRetryDelay(vo.getRetryDelay() == null ? task.getRetryDelay() : vo.getRetryDelay())
-                .withCheckType(vo.getCheckType() == null ? DEFAULT_CHECK_TYPE : CheckType.valueOf(vo.getCheckType()))
+                .withCheckType(vo.getCheckType() == null ? task.getCheckType() : CheckType.valueOf(vo.getCheckType()))
                 .build();
 
         // 4. perform update
@@ -250,8 +248,6 @@ public class TaskService {
         // 5. Fetch updated task
         Task updatedTask = taskDao.fetchById(task.getId()).orElseThrow(IllegalStateException::new);
 
-        // 6. Update lineage graph
-        updateLineageGraphOnTaskUpdate(updatedTask);
 
         return updatedTask;
     }
