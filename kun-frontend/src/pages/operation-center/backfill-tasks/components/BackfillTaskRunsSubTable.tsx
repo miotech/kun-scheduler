@@ -32,6 +32,7 @@ function renderStatus(status: RunStatusEnum) {
     case 'ABORTED':
     case 'ABORTING':
     case 'FAILED':
+    case 'CHECK_FAILED':
       return <Badge status="error" text={status} />;
     case 'SUCCESS':
       return <Badge status="success" text={status} />;

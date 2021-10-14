@@ -25,6 +25,10 @@ export interface Node {
       endTime: string | number | Date;
       taskDefinitionId: string;
       renderAsTaskRunDAG?: boolean;
+      failedUpstreamTaskRuns: {
+        id: string;
+        name: string;
+      }[];
     }>;
 }
 
@@ -67,6 +71,7 @@ function renderStatus(status: RunStatusEnum) {
     case 'ABORTED':
     case 'ABORTING':
     case 'FAILED':
+    case 'CHECK_FAILED':
       return <Badge status="error" text={status} />;
     case 'SUCCESS':
       return <Badge status="success" text={status} />;
@@ -143,6 +148,20 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
                     : '-'}
                 </td>
               </tr>
+              {!!data.failedUpstreamTaskRuns && (
+                <tr>
+                  <td>{t('taskRun.property.failedLink')}</td>
+                  <td>
+                    {data.failedUpstreamTaskRuns.map(i => (
+                      <div>
+                        <Link to={`/operation-center/task-run-id/${i.id}`} target="_blank">
+                          {i.name}
+                        </Link>
+                      </div>
+                    ))}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         }

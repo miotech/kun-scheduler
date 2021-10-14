@@ -66,6 +66,10 @@ export const TaskRunDAG: FunctionComponent<Props> = props => {
             endTime: taskrun.endAt,
             taskRunId: taskrun.id,
             taskDefinitionId: get(taskrun, 'taskDefinitionId', null),
+            failedUpstreamTaskRuns: taskrun?.failedUpstreamTaskRuns?.map(i => ({
+              id: i.id,
+              name: i.task.name,
+            })),
           } as any,
         };
       });
