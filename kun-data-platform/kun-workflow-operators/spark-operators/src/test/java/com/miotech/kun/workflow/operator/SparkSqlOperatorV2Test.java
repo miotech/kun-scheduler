@@ -43,12 +43,13 @@ public class SparkSqlOperatorV2Test {
         context.setParam(SPARK_CONF, "");
         context.setParam(SPARK_PROXY_USER, "hadoop");
         context.setParam(SPARK_APPLICATION, "s3://bucket/sql.jar");
-        context.setParam(SPARK_APPLICATION_ARGS, " select 1 ");
+        context.setParam(SPARK_APPLICATION_ARGS, " select * from db.table_${execute_time} ");
         context.setParam(SPARK_YARN_HOST, "http://localhost:8088");
         context.setParam(CONF_LINEAGE_OUTPUT_PATH, "");
         context.setParam(CONF_LINEAGE_JAR_PATH, "");
         context.setParam(CONF_S3_ACCESS_KEY, "");
         context.setParam(CONF_S3_SECRET_KEY, "");
+        operator.setContext(context);
 
         Config config = context.getConfig();
         String sparkParamsStr = config.getString(SPARK_SUBMIT_PARMAS);
@@ -116,7 +117,7 @@ public class SparkSqlOperatorV2Test {
         {
             e.printStackTrace();
         }
-        assertTrue(contentBuilder.toString().trim().equals("select 1"));
+        assertTrue(contentBuilder.toString().trim().equals("select * from db.table_000000000000"));
         assertTrue (cmd.get(len-2).endsWith("-f"));
         assertTrue (cmd.get(len-3).endsWith("s3://bucket/sql.jar"));
     }

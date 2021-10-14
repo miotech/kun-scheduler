@@ -100,6 +100,11 @@ public class TaskRunDao {
         DOWNSTREAM
     }
 
+    public String getTickByTaskRunId(Long taskRunId) {
+        return dbOperator.fetchOne("SELECT scheduled_tick FROM " + TASK_RUN_TABLE_NAME + " WHERE id = ?",
+                rs -> rs.getString("scheduled_tick"), taskRunId);
+    }
+
     private SQLBuilder getTaskRunSQLBuilderWithDefaultConfig() {
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(TASK_RUN_MODEL_NAME, taskRunCols);

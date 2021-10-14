@@ -50,6 +50,11 @@ public class MockOperatorContextImpl implements OperatorContext {
         return taskRunId;
     }
 
+    @Override
+    public String getExecuteTime(){
+        return "000000000000";
+    }
+
     public List<DataStore> getInlets() {
         return inlets;
     }
