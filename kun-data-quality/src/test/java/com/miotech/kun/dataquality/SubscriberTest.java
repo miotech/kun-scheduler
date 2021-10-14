@@ -239,6 +239,26 @@ public class SubscriberTest extends DataQualityTestBase {
     }
 
     @Test
+    public void handleNoCase_should_send_success_event(){
+        //prepare dataset
+        Long dateset1Id = IdGenerator.getInstance().nextId();
+        Long dateset2Id = IdGenerator.getInstance().nextId();
+
+        //prepare check event
+        Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
+        Long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId, 1);
+        List<Long> outputDateSets = Lists.newArrayList(dateset1Id,dateset2Id);
+        TaskAttemptCheckEvent event = new TaskAttemptCheckEvent(taskAttemptId, taskRunId, new ArrayList<>(), outputDateSets);
+        eventSubscriber.receiveEvent(event);
+
+
+        //verify
+        ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
+        verify(publisher,times(1)).publish(eventCaptor.capture());
+
+    }
+
+    @Test
     public void handleAllCaseSuccess_should_send_success_event(){
         //prepare case
         Long dateset1Id = IdGenerator.getInstance().nextId();

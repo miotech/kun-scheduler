@@ -251,6 +251,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
+                TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt.getId());
         assertThat(finishedEvent.getAttemptId(), is(attempt.getId()));
@@ -301,6 +302,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.RUNNING,
+                TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
 
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt.getId());
@@ -362,6 +364,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
+                TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
 
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt.getId());
@@ -423,6 +426,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
+                TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
 
         assertThat(localQueueManager.getCapacity("default"), is(localQueueManager.getResourceQueue("default").getWorkerNumbers()));
@@ -468,6 +472,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
+                TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
         awaitUntilProcessDown("default",0);
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt.getId());
@@ -550,6 +555,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
+                TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
 
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt1.getId());
@@ -969,6 +975,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
+                TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
 
         //verity resource
@@ -1033,7 +1040,7 @@ public class LocalExecutorTest extends CommonTestBase {
 
         //prepare
         Task task = MockTaskFactory.createTask().cloneBuilder()
-                .withCheckType(CheckType.WAITE_EVENT)
+                .withCheckType(CheckType.WAIT_EVENT)
                 .build();
         TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
         TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
@@ -1089,7 +1096,7 @@ public class LocalExecutorTest extends CommonTestBase {
 
         //prepare
         Task task = MockTaskFactory.createTask().cloneBuilder()
-                .withCheckType(CheckType.WAITE_EVENT)
+                .withCheckType(CheckType.WAIT_EVENT)
                 .build();
         TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
         TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
