@@ -129,7 +129,7 @@ public class DataQualityController {
         dataQualityService.saveTaskId(vo.getId(), taskId);
         CheckType checkType = CheckType.SKIP;
         if(dataQualityRequest.getIsBlocking() != null && dataQualityRequest.getIsBlocking()){
-            checkType = CheckType.WAITE_EVENT;
+            checkType = CheckType.WAIT_EVENT;
         }
         workflowService.updateUpstreamTaskCheckType(dataQualityRequest.getPrimaryDatasetGid(),checkType);
         return RequestResult.success(vo);
@@ -160,7 +160,7 @@ public class DataQualityController {
         dataQualityService.saveTaskId(vo.getId(), taskId);
         CheckType checkType = CheckType.SKIP;
         if(dataQualityRequest.getIsBlocking() != null && dataQualityRequest.getIsBlocking()){
-            checkType = CheckType.WAITE_EVENT;
+            checkType = CheckType.WAIT_EVENT;
         }        workflowService.updateUpstreamTaskCheckType(dataQualityRequest.getPrimaryDatasetGid(),checkType);
         return RequestResult.success(vo);
     }
