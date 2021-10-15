@@ -186,12 +186,44 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         }
     }
 
-    private void changeTaskRunStatus(WorkerSnapshot workerSnapshot) {
-        TaskRunStatus taskRunStatus = workerSnapshot.getStatus();
-        OffsetDateTime startAt = taskRunStatus.isRunning() ? workerSnapshot.getCreatedTime() : null;
-        OffsetDateTime endAt = taskRunStatus.isFinished() ? workerSnapshot.getCreatedTime() : null;
+    private void updateRunningStatus(WorkerSnapshot workerSnapshot) {
+        OffsetDateTime startAt = workerSnapshot.getCreatedTime();
         miscService.changeTaskAttemptStatus(workerSnapshot.getIns().getTaskAttemptId(),
-                taskRunStatus, startAt, endAt);
+                TaskRunStatus.RUNNING, startAt, null);
+    }
+
+    private void updateFailedStatus(WorkerSnapshot workerSnapshot) {
+        OffsetDateTime endAt = workerSnapshot.getCreatedTime();
+        miscService.notifyFinished(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
+        miscService.changeTaskAttemptStatus(workerSnapshot.getIns().getTaskAttemptId(),
+                TaskRunStatus.FAILED, null, endAt);
+
+    }
+
+    private void updateSuccessStatus(WorkerSnapshot workerSnapshot) {
+        OffsetDateTime endAt = workerSnapshot.getCreatedTime();
+        miscService.notifyFinished(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
+        miscService.changeTaskAttemptStatus(workerSnapshot.getIns().getTaskAttemptId(),
+                TaskRunStatus.SUCCESS, null, endAt);
+
+    }
+
+    private void updateCheckStatus(WorkerSnapshot workerSnapshot) {
+        TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(workerSnapshot.getIns().getTaskAttemptId()).get();
+        logger.debug("taskAttempt = {} going to check", taskAttempt.getId());
+        CheckType checkType = taskAttempt.getTaskRun().getTask().getCheckType();
+        logger.debug("taskAttemptId = {},checkType is {}", taskAttempt.getId(), checkType.name());
+        miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.CHECK, taskAttempt.getStartAt(), null);
+        miscService.notifyCheck(taskAttempt);
+        switch (checkType) {
+            case SKIP:
+                updateSuccessStatus(workerSnapshot);
+                break;
+            case WAIT_EVENT:
+                break;
+            default:
+                throw new IllegalArgumentException("illegal check type");
+        }
     }
 
     private void updateTaskAttemptAborted(Long taskAttemptId) {
@@ -217,7 +249,6 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
                 .withRetryTimes(taskAttempt.getRetryTimes() + 1)
                 .build();
         taskRunDao.updateAttempt(retryTaskAttempt);
-        cleanupWorker(workerInstance);
         Integer retryDelay = taskAttempt.getTaskRun().getTask().getRetryDelay();
         //sleep to delay
         if (retryDelay != null && retryDelay > 0) {
@@ -227,6 +258,10 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         //retry attempt
         queueManager.submit(taskAttempt);
         return true;
+    }
+
+    private boolean isRunning(WorkerSnapshot workerSnapshot) {
+        return workerSnapshot.getStatus().isRunning();
     }
 
     private boolean isFailed(WorkerSnapshot workerSnapshot) {
@@ -242,35 +277,26 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
 
         public void onReceiveSnapshot(WorkerSnapshot workerSnapshot) {//处理pod状态变更
             logger.debug("receive worker snapshot:{}", workerSnapshot);
+            if (preStatus != null && preStatus.equals(workerSnapshot.getStatus())) {
+                //ignore duplicate event
+                return;
+            }
+            preStatus = workerSnapshot.getStatus();
+            if (isRunning(workerSnapshot)) {
+                updateRunningStatus(workerSnapshot);
+                return;
+            }
+            // worker is not running ,clean up
+            cleanupWorker(workerSnapshot.getIns());
+
             if (isFailed(workerSnapshot)) {
-                if (retryTaskAttemptIfNecessary(workerSnapshot.getIns())) {
-                    return;
+                if (!retryTaskAttemptIfNecessary(workerSnapshot.getIns())) {
+                    updateFailedStatus(workerSnapshot);
                 }
-                logger.info("taskAttemptId = {},going to clean worker", workerSnapshot.getIns().getTaskAttemptId());
-                miscService.notifyFinished(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
-                cleanupWorker(workerSnapshot.getIns());
-            }
-            if (isSuccess(workerSnapshot)) {
-                TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(workerSnapshot.getIns().getTaskAttemptId()).get();
-                CheckType checkType = taskAttempt.getTaskRun().getTask().getCheckType();
-                logger.debug("taskAttemptId = {},checkType is {}", taskAttempt.getId(), checkType.name());
-                switch (checkType) {
-                    case SKIP:
-                        miscService.notifyFinished(taskAttempt.getId(), workerSnapshot.getStatus());
-                        break;
-                    case WAITE_EVENT:
-                        miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.CHECK, taskAttempt.getStartAt(), null);
-                        cleanupWorker(workerSnapshot.getIns());
-                        miscService.notifyCheck(taskAttempt);
-                        return;
-                    default:
-                        throw new IllegalArgumentException("illegal check type");
-                }
-                cleanupWorker(workerSnapshot.getIns());
-            }
-            if (preStatus == null || !preStatus.equals(workerSnapshot.getStatus())) {
-                changeTaskRunStatus(workerSnapshot);
-                preStatus = workerSnapshot.getStatus();
+            } else if (isSuccess(workerSnapshot)) {
+                updateCheckStatus(workerSnapshot);
+            } else {
+                throw new IllegalStateException("illegal worker status");
             }
         }
 
