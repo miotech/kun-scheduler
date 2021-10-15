@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.databuilder.extract.fileparser;
 
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.dataset.TableStatistics;
 import org.apache.hadoop.conf.Configuration;
@@ -12,9 +13,7 @@ import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.BlockMetaData;
 
 import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.TimeZone;
+import java.time.OffsetDateTime;
 
 public class ParquetParser {
 
@@ -22,7 +21,7 @@ public class ParquetParser {
         Path inputPath = new Path(location);
         try {
             FileSystem fileSystem = inputPath.getFileSystem(configuration);
-            LocalDateTime lastUpdatedTime = null;
+            OffsetDateTime lastUpdatedTime = null;
 
             RemoteIterator<LocatedFileStatus> locatedFileStatusRemoteIterator = fileSystem.listFiles(inputPath, true);
             long rowCount = 0;
@@ -30,9 +29,9 @@ public class ParquetParser {
             while (locatedFileStatusRemoteIterator.hasNext()) {
                 LocatedFileStatus locatedFileStatus = locatedFileStatusRemoteIterator.next();
 
-                LocalDateTime fileModificationTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(locatedFileStatus.getModificationTime()), TimeZone.getDefault().toZoneId());
+                OffsetDateTime fileModificationTime = DateTimeUtils.fromTimestamp(locatedFileStatus.getModificationTime());
                 if (lastUpdatedTime == null) {
-                    lastUpdatedTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(locatedFileStatus.getModificationTime()), TimeZone.getDefault().toZoneId());
+                    lastUpdatedTime = DateTimeUtils.fromTimestamp(locatedFileStatus.getModificationTime());
                 } else {
                     lastUpdatedTime = lastUpdatedTime.isBefore(fileModificationTime) ? fileModificationTime: lastUpdatedTime;
                 }
@@ -52,7 +51,7 @@ public class ParquetParser {
                     .withRowCount(rowCount)
                     .withTotalByteSize(totalByteSize)
                     .withLastUpdatedTime(lastUpdatedTime)
-                    .withStatDate(LocalDateTime.now())
+                    .withStatDate(DateTimeUtils.now())
                     .build();
         } catch (IOException e) {
             throw ExceptionUtils.wrapIfChecked(e);
