@@ -4,6 +4,7 @@ import com.amazonaws.services.glue.model.Table;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.utils.HttpClientUtil;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
@@ -31,6 +32,7 @@ import com.miotech.kun.workflow.core.model.lineage.HiveTableStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.List;
@@ -208,7 +210,7 @@ public class MCEBuilder {
             int updateRowCount = operator.update("UPDATE kun_mt_dataset SET deleted = false WHERE gid = ? AND deleted is true", gid);
             if (updateRowCount == 1) {
                 // 记录MANAGED事件
-                operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.MANAGED.name(), LocalDateTime.now());
+                operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.MANAGED.name(), DateTimeUtils.now());
             }
         } else {
             if (logger.isDebugEnabled()) {
@@ -218,7 +220,7 @@ public class MCEBuilder {
             int updateRowCount = operator.update("UPDATE kun_mt_dataset SET deleted = true WHERE gid = ? AND deleted is false", gid);
             if (updateRowCount == 1) {
                 // 记录DELETED事件
-                operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.DELETED.name(), LocalDateTime.now());
+                operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.DELETED.name(), DateTimeUtils.now());
             }
         }
     }

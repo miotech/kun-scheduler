@@ -1,10 +1,12 @@
 package com.miotech.kun.metadata.core.model.dataset;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 
 public class FieldStatistics implements Serializable {
     @JsonIgnore
@@ -18,8 +20,8 @@ public class FieldStatistics implements Serializable {
 
     private final String updatedBy;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private final LocalDateTime statDate;
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX")
+    private final OffsetDateTime statDate;
 
     public String getFieldName() {
         return fieldName;
@@ -37,11 +39,14 @@ public class FieldStatistics implements Serializable {
         return updatedBy;
     }
 
-    public LocalDateTime getStatDate() {
+    public OffsetDateTime getStatDate() {
         return statDate;
     }
 
-    public FieldStatistics(String fieldName, long distinctCount, long nonnullCount, String updatedBy, LocalDateTime statDate) {
+    @JsonCreator
+    public FieldStatistics(@JsonProperty("fieldName") String fieldName, @JsonProperty("distinctCount") long distinctCount,
+                           @JsonProperty("nonnullCount") long nonnullCount, @JsonProperty("updatedBy") String updatedBy,
+                           @JsonProperty("statDate") OffsetDateTime statDate) {
         this.fieldName = fieldName;
         this.distinctCount = distinctCount;
         this.nonnullCount = nonnullCount;
@@ -67,7 +72,7 @@ public class FieldStatistics implements Serializable {
         private long distinctCount;
         private long nonnullCount;
         private String updatedBy;
-        private LocalDateTime statDate;
+        private OffsetDateTime statDate;
 
         public Builder withFieldName(String fieldName) {
             this.fieldName = fieldName;
@@ -89,7 +94,7 @@ public class FieldStatistics implements Serializable {
             return this;
         }
 
-        public Builder withStatDate(LocalDateTime statDate) {
+        public Builder withStatDate(OffsetDateTime statDate) {
             this.statDate = statDate;
             return this;
         }

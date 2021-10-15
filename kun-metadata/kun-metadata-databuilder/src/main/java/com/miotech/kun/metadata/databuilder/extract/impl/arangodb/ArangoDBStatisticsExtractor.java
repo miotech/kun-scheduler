@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.arangodb;
 
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.FieldStatistics;
@@ -8,7 +9,6 @@ import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatistics
 import com.miotech.kun.metadata.databuilder.model.ArangoDataSource;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,7 +43,7 @@ public class ArangoDBStatisticsExtractor extends ArangoDBExistenceExtractor impl
                 return FieldStatistics.newBuilder()
                         .withFieldName(field.getName())
                         .withNonnullCount(count)
-                        .withStatDate(LocalDateTime.now()).build();
+                        .withStatDate(DateTimeUtils.now()).build();
             }).collect(Collectors.toList());
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);

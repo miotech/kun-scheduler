@@ -7,20 +7,20 @@ import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.databuilder.client.GlueClient;
-import com.miotech.kun.metadata.databuilder.extract.tool.MetaStoreParseUtil;
 import com.miotech.kun.metadata.databuilder.client.S3Client;
 import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.databuilder.extract.fileparser.ParquetParser;
 import com.miotech.kun.metadata.databuilder.extract.statistics.StatisticsExtractorTemplate;
 import com.miotech.kun.metadata.databuilder.extract.template.DataWarehouseStatTemplate;
+import com.miotech.kun.metadata.databuilder.extract.tool.MetaStoreParseUtil;
 import com.miotech.kun.metadata.databuilder.extract.tool.S3URIParser;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 public class GlueStatisticsExtractor extends StatisticsExtractorTemplate {
@@ -35,9 +35,9 @@ public class GlueStatisticsExtractor extends StatisticsExtractorTemplate {
     }
 
     @Override
-    public LocalDateTime getLastUpdatedTime(Dataset dataset, DataSource dataSource) {
+    public OffsetDateTime getLastUpdatedTime(Dataset dataset, DataSource dataSource) {
         Table table = GlueClient.searchTable((AWSDataSource) dataSource, dataset.getDatabaseName(), dataset.getName());
-        return table == null ? null : table.getUpdateTime().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        return table == null ? null : table.getUpdateTime().toInstant().atZone(ZoneId.of("UTC")).toOffsetDateTime();
     }
 
     @Override
