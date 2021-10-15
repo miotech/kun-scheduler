@@ -208,7 +208,7 @@ export const appRoutes = [
                 title: 'common.pageTitle.operationCenter.scheduledTasks',
                 path: './:id',
                 exact: true,
-                component: '@/pages/operation-center/scheduled-tasks',
+                component: '@/pages/operation-center/task-run-id-direct',
                 wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
               },
             ],
