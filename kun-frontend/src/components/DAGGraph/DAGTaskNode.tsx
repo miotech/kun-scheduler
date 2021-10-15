@@ -153,7 +153,9 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
                   <td>
                     {data.failedUpstreamTaskRuns.map(i => (
                       <div>
-                        <Link to={`/operation-center/task-run-id/${i.id}`}>{i.name}</Link>
+                        <Link to={`/operation-center/task-run-id/${i.id}`} target="_blank">
+                          {i.name}
+                        </Link>
                       </div>
                     ))}
                   </td>
