@@ -400,6 +400,7 @@ export default {
   'taskRun.property.startAt': '开始时间',
   'taskRun.property.endAt': '结束时间',
   'taskRun.property.duration': '耗时',
+  'taskRun.property.failedLink': '失败链接',
   'taskRun.rerun': '重新运行',
   'taskRun.abort': '中止',
   'taskRun.rerun.alert': '确认重新运行该实例吗？',
