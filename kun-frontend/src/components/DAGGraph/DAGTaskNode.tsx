@@ -25,6 +25,10 @@ export interface Node {
       endTime: string | number | Date;
       taskDefinitionId: string;
       renderAsTaskRunDAG?: boolean;
+      failedUpstreamTaskRuns: {
+        id: string;
+        name: string;
+      }[];
     }>;
 }
 
@@ -143,6 +147,18 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
                     : '-'}
                 </td>
               </tr>
+              {!!data.failedUpstreamTaskRuns && (
+                <tr>
+                  <td>{t('taskRun.property.failedLink')}</td>
+                  <td>
+                    {data.failedUpstreamTaskRuns.map(i => (
+                      <div>
+                        <Link to={`/operation-center/task-run-id/${i.id}`}>{i.name}</Link>
+                      </div>
+                    ))}
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         }
