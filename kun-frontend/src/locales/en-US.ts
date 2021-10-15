@@ -410,7 +410,7 @@ export default {
   'taskRun.property.startAt': 'Start Time',
   'taskRun.property.endAt': 'End Time',
   'taskRun.property.duration': 'Duration',
-  'taskRun.property.failedLink': 'Failed Link',
+  'taskRun.property.failedLink': 'Failed Upstream Task',
   'taskRun.rerun': 'Re-run',
   'taskRun.abort': 'Abort',
   'taskRun.rerun.alert': 'Are you sure to rerun this instance?',
