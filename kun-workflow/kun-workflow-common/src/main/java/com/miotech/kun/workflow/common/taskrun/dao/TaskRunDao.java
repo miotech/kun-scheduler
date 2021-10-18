@@ -588,7 +588,7 @@ public class TaskRunDao {
                 .where("id = ?")
                 .getSQL();
         List<Long> failedUpstreamTaskRunIds = dbOperator.fetchOne(sql,
-                rs -> JSONUtils.jsonToObject(rs.getString(1), new TypeReference<List<Long>>(){}),
+                rs -> JSONUtils.jsonToObjectOrDefault(rs.getString(1), new TypeReference<List<Long>>(){}, new ArrayList<>()),
                 taskRunId);
         if (failedUpstreamTaskRunIds == null || failedUpstreamTaskRunIds.isEmpty()) return new ArrayList<>();
         List<Optional<TaskRun>> failedUpstreamTaskRuns = fetchTaskRunsByIds(failedUpstreamTaskRunIds);
