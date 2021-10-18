@@ -173,6 +173,19 @@ public class DeployedTaskController {
         return RequestResult.success(deployedTaskService.getWorkFlowTaskRunDag(id, upstreamLevel, downstreamLevel));
     }
 
+    @GetMapping("/deployed-taskruns/{taskRunId}/definitionId")
+    @ApiOperation("return task definition id of task run")
+    public RequestResult<Long> getTaskDefinitionIdOfTaskRun(@PathVariable Long taskRunId) {
+        Preconditions.checkArgument(Objects.nonNull(taskRunId), "task run id cannot be null");
+        TaskRun taskRun = workflowClient.getTaskRun(taskRunId);
+        Optional<DeployedTask> deployedTask = deployedTaskService.findByWorkflowTaskId(taskRun.getTask().getId());
+        if (deployedTask.isPresent()) {
+            return RequestResult.success(deployedTask.get().getDefinitionId());
+        } else {
+            return RequestResult.error(404, "task definition id not found");
+        }
+    }
+
     @PostMapping("/deployed-taskruns/{taskRunId}/_restart")
     @ApiOperation("Rerun a single taskrun instance immediately")
     public RequestResult<TaskRun> restartTaskRunInstance(@PathVariable Long taskRunId) {

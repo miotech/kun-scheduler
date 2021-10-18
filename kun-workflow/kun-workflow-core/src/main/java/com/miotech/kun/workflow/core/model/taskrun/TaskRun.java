@@ -48,6 +48,8 @@ public class TaskRun {
     @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private final List<Long> dependentTaskRunIds;
 
+    private final List<Long> failedUpstreamTaskRunIds;
+
     private final String queueName;
 
     public Long getId() {
@@ -98,6 +100,10 @@ public class TaskRun {
         return dependentTaskRunIds;
     }
 
+    public List<Long> getFailedUpstreamTaskRunIds() {
+        return failedUpstreamTaskRunIds;
+    }
+
     public ScheduleType getScheduledType() {
         return scheduledType;
     }
@@ -110,9 +116,10 @@ public class TaskRun {
         return queueName;
     }
 
-    public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status,
-                   OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
-                   List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, ScheduleType scheduledType, String queueName, Integer priority) {
+    public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status, OffsetDateTime startAt,
+                   OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt, List<DataStore> inlets,
+                   List<DataStore> outlets, List<Long> dependentTaskRunIds, List<Long> failedUpstreamTaskRunIds,
+                   ScheduleType scheduledType, String queueName, Integer priority) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
@@ -126,6 +133,7 @@ public class TaskRun {
         this.inlets = inlets;
         this.outlets = outlets;
         this.dependentTaskRunIds = dependentTaskRunIds;
+        this.failedUpstreamTaskRunIds = failedUpstreamTaskRunIds;
         this.scheduledType = scheduledType;
         this.queueName = queueName;
         this.priority = priority;
@@ -149,6 +157,7 @@ public class TaskRun {
                 .withCreatedAt(createdAt)
                 .withUpdatedAt(updatedAt)
                 .withDependentTaskRunIds(dependentTaskRunIds)
+                .withFailedUpstreamTaskRunIds(failedUpstreamTaskRunIds)
                 .withScheduleType(scheduledType)
                 .withQueueName(queueName)
                 .withPriority(priority);
@@ -169,6 +178,7 @@ public class TaskRun {
                 ", outlets=" + outlets +
                 ", priority=" + priority +
                 ", dependentTaskRunIds=" + dependentTaskRunIds +
+                ", failedUpstreamTaskRunIds=" + failedUpstreamTaskRunIds +
                 ", queueName='" + queueName + '\'' +
                 '}';
     }
@@ -186,6 +196,7 @@ public class TaskRun {
         private List<DataStore> inlets;
         private List<DataStore> outlets;
         private List<Long> dependentTaskRunIds;
+        private List<Long> failedUpstreamTaskRunIds;
         private ScheduleType scheduleType;
         private String queueName;
         private Integer priority;
@@ -253,6 +264,11 @@ public class TaskRun {
             return this;
         }
 
+        public TaskRunBuilder withFailedUpstreamTaskRunIds(List<Long> failedUpstreamTaskRunIds) {
+            this.failedUpstreamTaskRunIds = failedUpstreamTaskRunIds;
+            return this;
+        }
+
         public TaskRunBuilder withScheduleType(ScheduleType scheduleType) {
             this.scheduleType = scheduleType;
             return this;
@@ -268,7 +284,8 @@ public class TaskRun {
         }
 
         public TaskRun build() {
-            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets, outlets, dependentTaskRunIds, scheduleType,queueName,priority);
+            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets,
+                    outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority);
         }
     }
 }

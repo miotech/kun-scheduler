@@ -25,10 +25,7 @@ import org.junit.Test;
 import javax.inject.Inject;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -840,4 +837,53 @@ public class TaskRunDaoTest extends DatabaseTestBase {
 
     }
 
+    @Test
+    public void fetchFailedUpstreamTaskRuns_ShouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        Task task1 = taskList.get(0);
+        Task task2 = taskList.get(1);
+        taskList.forEach(task -> taskDao.create(task));
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
+                .cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2)
+                .cloneBuilder().withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId())).build();
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+
+        assertThat(taskRunDao.fetchFailedUpstreamTaskRuns(taskRun2.getId()).get(0).getId(), is(taskRun1.getId()));
+    }
+
+    @Test
+    public void updateTaskRunWithFailedUpstream() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
+        Task task1 = taskList.get(0);
+        Task task2 = taskList.get(1);
+        Task task3 = taskList.get(2);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task3);
+        taskList.forEach(task -> taskDao.create(task));
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+
+
+        taskRun1 = taskRun1.cloneBuilder().withStatus(TaskRunStatus.FAILED).build();
+        List<Long> downstreamTaskRunIds = Arrays.asList(taskRun2.getId(), taskRun3.getId());
+        taskRunDao.updateTaskRunWithFailedUpstream(taskRun1.getId(), downstreamTaskRunIds, TaskRunStatus.UPSTREAM_FAILED);
+
+        assertThat(taskRunDao.fetchTaskRunById(taskRun2.getId()).get().getFailedUpstreamTaskRunIds().get(0),
+                is(taskRun1.getId()));
+        assertThat(taskRunDao.fetchTaskRunById(taskRun3.getId()).get().getFailedUpstreamTaskRunIds().get(0),
+                is(taskRun1.getId()));
+
+        taskRun1 = taskRun1.cloneBuilder().withStatus(TaskRunStatus.CREATED).build();
+        taskRunDao.updateTaskRunWithFailedUpstream(taskRun1.getId(), downstreamTaskRunIds, TaskRunStatus.CREATED);
+        assertThat(taskRunDao.fetchTaskRunById(taskRun2.getId()).get().getFailedUpstreamTaskRunIds(),
+                is(empty()));
+        assertThat(taskRunDao.fetchTaskRunById(taskRun3.getId()).get().getFailedUpstreamTaskRunIds(),
+                is(empty()));
+
+
+    }
 }
