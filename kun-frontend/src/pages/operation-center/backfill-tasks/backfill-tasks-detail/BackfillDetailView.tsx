@@ -41,6 +41,9 @@ function renderByTaskRunListStatus(status: RunStatusEnum[]) {
   if (status.some(s => s === 'FAILED')) {
     return <Badge status="error" text="FAILED" />;
   }
+  if (status.some(s => s === 'CHECK_FAILED')) {
+    return <Badge status="error" text="CHECK_FAILED" />;
+  }
   if (status.every(s => s === 'SUCCESS' || s === 'SKIPPED')) {
     return <Badge status="success" text="SUCCESS" />;
   }
