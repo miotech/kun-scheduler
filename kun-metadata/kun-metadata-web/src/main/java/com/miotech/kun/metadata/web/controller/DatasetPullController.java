@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
 import com.miotech.kun.commons.web.annotation.RouteVariable;
-import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
+import com.miotech.kun.metadata.core.model.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.model.vo.PullProcessVO;
 import com.miotech.kun.metadata.web.service.ProcessService;
 import org.slf4j.Logger;

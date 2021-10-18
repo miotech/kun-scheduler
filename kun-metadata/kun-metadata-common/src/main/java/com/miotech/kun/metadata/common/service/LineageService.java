@@ -103,7 +103,7 @@ public class LineageService implements LineageServiceFacade {
      * @return Optional dataset object
      */
     public Optional<Dataset> fetchDatasetByDatastore(DataStore dataStore) {
-        return Optional.ofNullable(metadataDatasetService.getDatasetByDatastore(dataStore));
+        return Optional.ofNullable(metadataDatasetService.createDataSetIfNotExist(dataStore));
     }
 
 

@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.web.service;
 
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
+import com.miotech.kun.metadata.core.model.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.model.vo.PullProcessVO;
 import com.miotech.kun.workflow.core.model.task.Task;

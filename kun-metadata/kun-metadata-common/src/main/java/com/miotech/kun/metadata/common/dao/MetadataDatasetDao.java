@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.common.dao;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -7,12 +8,13 @@ import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
+import com.miotech.kun.commons.utils.DateTimeUtils;
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
+import com.miotech.kun.metadata.common.utils.JSONUtils;
+import com.miotech.kun.metadata.core.model.constant.DatasetLifecycleStatus;
+import com.miotech.kun.metadata.core.model.dataset.*;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
-import com.miotech.kun.metadata.core.model.dataset.DataStore;
-import com.miotech.kun.metadata.core.model.dataset.Dataset;
-import com.miotech.kun.metadata.core.model.dataset.DatasetField;
-import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -22,12 +24,13 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Singleton
 public class MetadataDatasetDao {
     private static final Logger logger = LoggerFactory.getLogger(MetadataDatasetDao.class);
 
-    private static final String[] DATASET_COLUMNS = {"gid", "name", "datasource_id", "schema", "data_store", "database_name", "deleted"};
+    private static final String[] DATASET_COLUMNS = {"gid", "name", "datasource_id", "data_store", "database_name","dsi","deleted"};
     private static final String[] DATASET_FIELD_COLUMNS = {"name", "type", "description", "raw_type, is_primary_key, is_nullable"};
 
     private static final String DATASET_TABLE_NAME = "kun_mt_dataset";
@@ -35,6 +38,9 @@ public class MetadataDatasetDao {
 
     public static final String DATASET_MODEL_NAME = "dataset";
     public static final String DATASET_FIELD_MODEL_NAME = "dataset_field";
+
+    private static final String[] DATASET_LIFE_CYCLE_COLUMNS = {"dataset_gid", "fields", "status", "create_at"};
+    private static final String DATASET_LIFE_CYCLE_TABLE_NAME = "kun_mt_dataset_lifecycle";
 
     @Inject
     DatabaseOperator dbOperator;
@@ -71,6 +77,56 @@ public class MetadataDatasetDao {
                 .withFields(fields).build();
 
         return Optional.ofNullable(dataset);
+    }
+
+    public Dataset createDataset(Dataset dataset){
+        String dsi = dataset.getDSI();
+        long gid = IdGenerator.getInstance().nextId();
+        String datasetSql = new DefaultSQLBuilder()
+                .insert(DATASET_COLUMNS)
+                .into(DATASET_TABLE_NAME)
+                .asPrepared()
+                .getSQL();
+        dbOperator.update(datasetSql,
+                gid, dataset.getName(),
+                dataset.getDatasourceId(),
+                DataStoreJsonUtil.toJson(dataset.getDataStore()),
+                dataset.getDatabaseName(),
+                dsi,
+                false
+        );
+        SchemaSnapshot.Builder builder = SchemaSnapshot.newBuilder();
+        if(dataset.getFields() != null){
+            builder.withFields(dataset.getFields().stream().map(field -> field.convert()).collect(Collectors.toList()));
+        }
+        SchemaSnapshot schemaSnapshot = builder.build();
+        String lifecycleSql = new DefaultSQLBuilder()
+                .insert(DATASET_LIFE_CYCLE_COLUMNS)
+                .into(DATASET_LIFE_CYCLE_TABLE_NAME)
+                .asPrepared()
+                .getSQL();
+        dbOperator.update(lifecycleSql,
+                gid, JSONUtils.toJsonString(schemaSnapshot), DatasetLifecycleStatus.MANAGED.name(), DateTimeUtils.now());
+        Optional<Dataset> datasetOptional = fetchDatasetByGid(gid);
+        if(datasetOptional.isPresent()){
+            return datasetOptional.get();
+        }
+        return null;
+    }
+
+    public Dataset fetchDatasetByDSI(String dsi){
+        // Convert dataStore to JSON
+        Preconditions.checkNotNull(dsi, "DSI cannot be null");
+        String sql = new DefaultSQLBuilder().select(DATASET_COLUMNS)
+                .from(DATASET_TABLE_NAME)
+                .where("dsi = ?")
+                .asPrepared()
+                .getSQL();
+        return dbOperator.fetchOne(
+                sql,
+                MetadataDatasetMapper.INSTANCE,
+                dsi
+        );
     }
 
     public List<String> suggestDatabase(Long dataSourceId, String prefix) {
@@ -185,13 +241,13 @@ public class MetadataDatasetDao {
 
         @Override
         public Dataset map(ResultSet rs) throws SQLException {
-            DataStore dataStore = DataStoreJsonUtil.toDataStore(rs.getString(5));
+            DataStore dataStore = DataStoreJsonUtil.toDataStore(rs.getString("data_store"));
 
             Dataset dataset = Dataset.newBuilder()
-                    .withGid(rs.getLong(1))
-                    .withName(rs.getString(2))
-                    .withDatasourceId(rs.getLong(3))
-                    .withDeleted(rs.getBoolean(7))
+                    .withGid(rs.getLong("gid"))
+                    .withName(rs.getString("name"))
+                    .withDatasourceId(rs.getLong("datasource_id"))
+                    .withDeleted(rs.getBoolean("deleted"))
                     // TODO: parse missing fields
                     .withTableStatistics(null)
                     .withFields(null)

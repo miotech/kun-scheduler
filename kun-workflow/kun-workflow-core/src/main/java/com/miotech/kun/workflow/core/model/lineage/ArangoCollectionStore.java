@@ -2,8 +2,11 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.metadata.core.model.dataset.DSI;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.miotech.kun.metadata.core.model.dataset.DataStoreType.ARANGO_COLLECTION;
 
@@ -51,13 +54,22 @@ public class ArangoCollectionStore extends DataStore {
     }
 
     @Override
-    public DSI getDSI() {
-        return DSI.newBuilder()
-                .withStoreType("arango")
-                .putProperty("host", host)
-                .putProperty("port", String.valueOf(port))
-                .putProperty("database", database)
-                .putProperty("collection", collection)
-                .build();
+    public String getLocationInfo() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(database).append(":").append(collection);
+        return stringBuilder.toString();
+    }
+
+    @Override
+    public ConnectionInfo getConnectionInfo() {
+        Map<String,Object> values = new HashMap<>();
+        values.put("host",getHost());
+        values.put("port",getPort());
+        return new ConnectionInfo(values);
+    }
+
+    @Override
+    public String getName() {
+        return collection;
     }
 }

@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.common.service;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
@@ -9,6 +10,7 @@ import com.miotech.kun.metadata.common.dao.DataSourceDao;
 import com.miotech.kun.metadata.common.factory.MockDataSourceFactory;
 import com.miotech.kun.metadata.common.factory.MockDatasetFactory;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
@@ -18,15 +20,21 @@ import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.theories.DataPoints;
+import org.junit.experimental.theories.FromDataPoints;
+import org.junit.experimental.theories.Theories;
+import org.junit.experimental.theories.Theory;
+import org.junit.runner.RunWith;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(Theories.class)
 public class MetadataDatasetServiceTest extends DatabaseTestBase {
 
     @Inject
@@ -43,8 +51,14 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         // Clear kun_mt_datasource_type, because flyway initializes some data
         dbOperator.update("TRUNCATE TABLE kun_mt_datasource_type");
         // Init test data
-        dbOperator.update("INSERT INTO kun_mt_datasource_type(id, name) VALUES(?, ?)",
-                1L, "AWS");
+        dbOperator.update("INSERT INTO kun_mt_datasource_type (id, name)\n" +
+                "VALUES (1, 'Hive'),\n" +
+                "       (2, 'MongoDB'),\n" +
+                "       (3, 'PostgreSQL'),\n" +
+                "       (4, 'Elasticsearch'),\n" +
+                "       (5, 'Arango'),\n" +
+                "       (6, 'AWS')\n" +
+                ";");
     }
 
     @Test
@@ -75,7 +89,7 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         Dataset datasetOfBook = MockDatasetFactory.createDataset("book", 1L, "dw", null, "Hive");
         insertDataset(dbOperator, datasetOfBook);
 
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", Maps.newHashMap(), 1L, null);
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", Maps.newHashMap(), 6L, null);
         dataSourceDao.create(dataSource);
 
         // Execute
@@ -113,7 +127,7 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         Dataset datasetOfBook = MockDatasetFactory.createDataset("book", 1L, "dw", null, "Hive");
         insertDataset(dbOperator, datasetOfBook);
 
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", Maps.newHashMap(), 1L, null);
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", Maps.newHashMap(), 6L, null);
         dataSourceDao.create(dataSource);
 
         // Execute
@@ -152,7 +166,7 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         Dataset datasetOfBook = MockDatasetFactory.createDataset("book", 1L, "dw", null, "Hive");
         insertDataset(dbOperator, datasetOfBook);
 
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", Maps.newHashMap(), 1L, null);
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "dataSource-1", Maps.newHashMap(), 6L, null);
         dataSourceDao.create(dataSource);
 
         // Execute
@@ -183,11 +197,107 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         assertTrue(datasetColumnSuggestResponse.getColumns().isEmpty());
     }
 
+    @Test
+    public void createDatasetDSIExist_should_return_old_one(){
+        //prepare
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "hive", Maps.newHashMap(), 1L, null);
+        dataSourceDao.create(dataSource);
+        DataStore oldStore = MockDatasetFactory.createDataStore("Hive","test","old");
+        Dataset oldSet = metadataDatasetService.createDataSetIfNotExist(oldStore);
+
+        DataStore newStore = MockDatasetFactory.createDataStore("Hive","test","old");
+        Dataset newSet = metadataDatasetService.createDataSetIfNotExist(newStore);
+
+        //verify
+        assertThat(newSet.getGid(),is(oldSet.getGid()));
+        assertThat(newSet.getDatasourceId(),is(oldSet.getDatasourceId()));
+        assertThat(newSet.getDSI(),is(oldSet.getDSI()));
+    }
+
+    @Test
+    public void createDatasetNotExist_should_create_new_one(){
+        //prepare
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "hive", Maps.newHashMap(), 1L, null);
+        dataSourceDao.create(dataSource);
+        DataStore oldStore = MockDatasetFactory.createDataStore("Hive","test","old");
+        Dataset oldSet = metadataDatasetService.createDataSetIfNotExist(oldStore);
+        DataStore newStore = MockDatasetFactory.createDataStore("Hive","test","new");
+
+        Dataset newSet = metadataDatasetService.createDataSetIfNotExist(newStore);
+
+        //verify
+        assertThat(newSet.getDSI(),not(oldSet.getDSI()));
+        assertThat(newSet.getGid(),not(oldSet.getGid()));
+        assertThat(newSet.getDatasourceId(),is(dataSource.getId()));
+        assertThat(newSet.getDatabaseName(),is(newStore.getDatabaseName()));
+        assertThat(newSet.getName(),is(newStore.getName()));
+
+
+    }
+
+    @DataPoints("datasources")
+    public static DataSource[] testDataSources(){
+        DataSource hive =  MockDataSourceFactory.createDataSource(1, "hive", Maps.newHashMap(), 1L, null);
+        Map<String,Object> mongoConnection = ImmutableMap.of("host","127.0.0.1","port",27017);
+        DataSource mongo =  MockDataSourceFactory.createDataSource(2, "mongo", mongoConnection, 2L, null);
+        Map<String,Object> pgConnection = ImmutableMap.of("host","127.0.0.1","port",5432);
+        DataSource pg =  MockDataSourceFactory.createDataSource(3, "postgres", pgConnection, 3L, null);
+        Map<String,Object> esConnection = ImmutableMap.of("host","127.0.0.1","port",9200);
+        DataSource es =  MockDataSourceFactory.createDataSource(4, "elasticSearch", esConnection, 4L, null);
+        Map<String,Object> arangoConnection = ImmutableMap.of("host","127.0.0.1","port",8529);
+        DataSource arango =  MockDataSourceFactory.createDataSource(5, "arango", arangoConnection, 5L, null);
+        DataSource[] dataSources = {hive,mongo,pg,es,arango};
+        return dataSources;
+    }
+
+
+    private String covertSourceIdToStoreType(int sourceId){
+        String sourceType;
+        switch (sourceId){
+            case 1:
+                sourceType = "Hive";
+                break;
+            case 2:
+                sourceType = "MongoDB";
+                break;
+            case 3:
+                sourceType = "PostgreSQL";
+                break;
+            case 4:
+                sourceType = "Elasticsearch";
+                break;
+            case 5:
+                sourceType = "Arango";
+                break;
+            default:
+                throw new IllegalStateException("not support sourceType :"+ sourceId);
+        }
+        return sourceType;
+    }
+
+    @Theory
+    public void fetchDatasetByDSI(@FromDataPoints("datasources") DataSource dataSource){
+        //prepare
+        dataSourceDao.create(dataSource);
+        String dataStoreType = covertSourceIdToStoreType(dataSource.getTypeId().intValue());
+        DataStore dataStore = MockDatasetFactory.createDataStore(dataStoreType,"test","table");
+        Dataset dataset = metadataDatasetService.createDataSetIfNotExist(dataStore);
+
+        Dataset fetched = metadataDatasetService.fetchDataSetByDSI(dataset.getDSI());
+
+        //verify
+        assertThat(fetched.getGid(),is(dataset.getGid()));
+        assertThat(fetched.getName(),is(dataset.getName()));
+        assertThat(fetched.getDatabaseName(),is(dataset.getDatabaseName()));
+        assertThat(fetched.getDSI(),is(dataset.getDSI()));
+        assertThat(fetched.getDatasourceId(),is(dataset.getDatasourceId()));
+    }
+
     private void insertDataset(DatabaseOperator dbOperator, Dataset dataset) {
         dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name, dsi, deleted) VALUES(?, ?, ?, CAST(? AS JSONB), ?, ?, ?)",
                 dataset.getGid(), dataset.getName(), dataset.getDatasourceId(), DataStoreJsonUtil.toJson(dataset.getDataStore()),
                 dataset.getDatabaseName(),
-                dataset.getDataStore().getDSI().toFullString(),
+                dataset.getDSI(),
                 dataset.isDeleted()
         );
 

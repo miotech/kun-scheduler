@@ -9,7 +9,7 @@ import com.miotech.kun.metadata.common.dao.PullProcessDao;
 import com.miotech.kun.metadata.core.model.process.PullDataSourceProcess;
 import com.miotech.kun.metadata.core.model.process.PullDatasetProcess;
 import com.miotech.kun.metadata.core.model.process.PullProcess;
-import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
+import com.miotech.kun.metadata.core.model.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.model.vo.PullProcessVO;

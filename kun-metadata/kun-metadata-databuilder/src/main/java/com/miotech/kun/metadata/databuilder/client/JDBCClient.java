@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.client;
 
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
+import com.miotech.kun.metadata.core.model.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.tool.UseDatabaseUtil;
 import com.miotech.kun.metadata.databuilder.model.AWSDataSource;
 import com.miotech.kun.metadata.databuilder.model.HiveDataSource;

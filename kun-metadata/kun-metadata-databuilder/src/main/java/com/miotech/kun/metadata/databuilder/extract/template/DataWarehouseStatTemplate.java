@@ -6,7 +6,7 @@ import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
 import com.miotech.kun.metadata.core.model.dataset.FieldStatistics;
 import com.miotech.kun.metadata.databuilder.client.JDBCClient;
-import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
+import com.miotech.kun.metadata.core.model.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.tool.DatabaseIdentifierProcessor;
 import com.miotech.kun.metadata.databuilder.model.DataSource;
 import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
