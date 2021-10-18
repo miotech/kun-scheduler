@@ -1,70 +1,70 @@
 module.exports = {
-  title: 'KUN',
-  tagline: 'Open source all in one data management platform',
-  url: 'https://miotech.github.io',
-  baseUrl: '/KUN/',
-  onBrokenLinks: 'throw',
-  favicon: 'img/favicon.ico',
-  organizationName: 'miotech', // Usually your GitHub org/user name.
-  projectName: 'KUN', // Usually your repo name.
+  title: "KUN",
+  tagline: "Open source all in one data management platform",
+  url: "https://miotech.github.io",
+  baseUrl: "/KUN/",
+  onBrokenLinks: "throw",
+  favicon: "img/favicon.ico",
+  organizationName: "miotech", // Usually your GitHub org/user name.
+  projectName: "KUN", // Usually your repo name.
   themeConfig: {
     navbar: {
-      title: 'KUN',
+      title: "KUN",
       logo: {
-        alt: 'KUN Logo',
-        src: 'img/logo.svg',
+        alt: "KUN Logo",
+        src: "img/logo.svg",
       },
       items: [
         {
-          to: 'docs/',
-          activeBasePath: 'docs',
-          label: 'Docs',
-          position: 'left',
+          to: "docs/",
+          activeBasePath: "docs",
+          label: "Docs",
+          position: "left",
         },
         // {to: 'blog', label: 'Blog', position: 'left'},
         {
-          href: 'https://github.com/miotech/KUN',
-          label: 'GitHub',
-          position: 'right',
+          href: "https://github.com/miotech/KUN",
+          label: "GitHub",
+          position: "right",
         },
         {
           to: "api/",
           activeBasePath: "api",
           label: "API",
           position: "left",
-        }
+        },
       ],
     },
     footer: {
-      style: 'dark',
+      style: "dark",
       links: [
         {
-          title: 'Community',
+          title: "Community",
           items: [
             {
-              label: 'Stack Overflow',
-              href: 'https://stackoverflow.com/questions/tagged/docusaurus',
+              label: "Stack Overflow",
+              href: "https://stackoverflow.com/questions/tagged/docusaurus",
             },
             {
-              label: 'Discord',
-              href: 'https://discordapp.com/invite/docusaurus',
+              label: "Discord",
+              href: "https://discordapp.com/invite/docusaurus",
             },
             {
-              label: 'Twitter',
-              href: 'https://twitter.com/docusaurus',
+              label: "Twitter",
+              href: "https://twitter.com/docusaurus",
             },
           ],
         },
         {
-          title: 'More',
+          title: "More",
           items: [
             // {
             //   label: 'Blog',
             //   to: 'blog',
             // },
             {
-              label: 'GitHub',
-              href: 'https://github.com/miotech/KUN',
+              label: "GitHub",
+              href: "https://github.com/miotech/KUN",
             },
           ],
         },
@@ -74,15 +74,15 @@ module.exports = {
   },
   presets: [
     [
-      '@docusaurus/preset-classic',
+      "@docusaurus/preset-classic",
       {
         docs: {
           // It is recommended to set document id as docs home page (`docs/` path).
           // homePageId: 'doc1',
-          sidebarPath: require.resolve('./sidebars.js'),
+          sidebarPath: require.resolve("./sidebars.js"),
           // Please change this to your repo.
           editUrl:
-            'https://github.com/facebook/docusaurus/edit/master/website/',
+            "https://github.com/facebook/docusaurus/edit/master/website/",
         },
         // blog: {
         //   showReadingTime: true,
@@ -90,9 +90,9 @@ module.exports = {
         //   editUrl:
         //     'https://github.com/facebook/docusaurus/edit/master/website/blog/',
         // },
-        theme: {
-          customCss: require.resolve('./src/css/custom.css'),
-        },
+        // theme: {
+        //   customCss: require.resolve("./src/css/custom.css"),
+        // },
       },
     ],
   ],

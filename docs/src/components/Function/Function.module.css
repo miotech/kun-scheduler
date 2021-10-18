@@ -1,0 +1,49 @@
+.Function {
+  padding: 50px 100px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #262a2f;
+  line-height: 34px;
+  margin-bottom: 35px;
+  text-align: center;
+}
+
+.cardContainer {
+  display: flex;
+  align-items: center;
+}
+
+.card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 58px 32px 32px 32px;
+  background-color: white;
+}
+
+.card:not(:last-child) {
+  margin-right: 40px;
+}
+
+.cardImg {
+  width: 50%;
+  padding-bottom: 50%;
+  margin-bottom: 40px;
+}
+
+.cardTitle {
+  font-size: 20px;
+  font-weight: bold;
+  color: #262a2f;
+  margin-bottom: 17px;
+}
+
+.cardSubTitle {
+  font-size: 14px;
+  color: #49a9de;
+  line-height: 20px;
+}
