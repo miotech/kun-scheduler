@@ -9,10 +9,12 @@ import java.util.Objects;
 public class SplineSource {
     private final String sourceName;
     private final String sourceType;
+    private final TableInfo tableInfo;
 
-    public SplineSource(String sourceName, String sourceType) {
+    public SplineSource(String sourceName, String sourceType ,TableInfo tableInfo) {
         this.sourceName = sourceName;
         this.sourceType = sourceType;
+        this.tableInfo = tableInfo;
     }
 
     public String getSourceName() {
@@ -21,6 +23,10 @@ public class SplineSource {
 
     public String getSourceType() {
         return sourceType;
+    }
+
+    public TableInfo getTableInfo() {
+        return tableInfo;
     }
 
     public static SplineSourceBuilder newBuilder(){
@@ -32,13 +38,14 @@ public class SplineSource {
         if (this == o) return true;
         if (!(o instanceof SplineSource)) return false;
         SplineSource that = (SplineSource) o;
-        return Objects.equals(getSourceName(), that.getSourceName()) &&
-                Objects.equals(getSourceType(), that.getSourceType());
+        return getSourceName().equals(that.getSourceName()) &&
+                getSourceType().equals(that.getSourceType()) &&
+                Objects.equals(getTableInfo(), that.getTableInfo());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSourceName(), getSourceType());
+        return Objects.hash(getSourceName(), getSourceType(), getTableInfo());
     }
 
     @Override
@@ -46,6 +53,7 @@ public class SplineSource {
         return "SplineSource{" +
                 "sourceName='" + sourceName + '\'' +
                 ", sourceType='" + sourceType + '\'' +
+                ", tableInfo=" + tableInfo +
                 '}';
     }
 
@@ -53,6 +61,7 @@ public class SplineSource {
     public static final class SplineSourceBuilder {
         private String sourceName;
         private String sourceType;
+        private TableInfo tableInfo;
 
 
         public SplineSourceBuilder withSourceName(String sourceName) {
@@ -65,8 +74,13 @@ public class SplineSource {
             return this;
         }
 
+        public SplineSourceBuilder withTableInfo(TableInfo tableInfo){
+            this.tableInfo = tableInfo;
+            return this;
+        }
+
         public SplineSource build() {
-            return new SplineSource(sourceName, sourceType);
+            return new SplineSource(sourceName, sourceType,tableInfo);
         }
     }
 }
