@@ -8,6 +8,7 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.commons.utils.JsonLongFieldDeserializer;
 
@@ -40,6 +41,8 @@ public class TaskRunVO {
     private OffsetDateTime updatedAt;
 
     private List<TaskAttemptProps> attempts;
+
+    private List<TaskRun> failedUpstreamTaskRuns;
 
     @JsonSerialize(contentUsing = ToStringSerializer.class)
     private List<Long> dependentTaskRunIds;
@@ -122,6 +125,14 @@ public class TaskRunVO {
 
     public void setAttempts(List<TaskAttemptProps> attempts) {
         this.attempts = attempts;
+    }
+
+    public List<TaskRun> getFailedUpstreamTaskRuns() {
+        return failedUpstreamTaskRuns;
+    }
+
+    public void setFailedUpstreamTaskRuns(List<TaskRun> failedUpstreamTaskRuns) {
+        this.failedUpstreamTaskRuns = failedUpstreamTaskRuns;
     }
 
     public List<Long> getDependentTaskRunIds() {
