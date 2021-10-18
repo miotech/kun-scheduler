@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.common.dao.DataSourceDao;
+import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
+import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DataSourceType;
 import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
@@ -36,6 +38,55 @@ public class DataSourceService {
                 dataSourceDao.fetchTotalCountWithFilter(filter), dataSourceDao.fetchWithFilter(filter));
     }
 
+    public boolean isDatasourceExist(DataSource datasource){
+        return dataSourceDao.isDatasourceExist(datasource);
+    }
+
+    public Long getDataSourceIdByConnectionInfo(DataStoreType storeType, ConnectionInfo connectionInfo){
+        if(DataStoreType.HIVE_TABLE.equals(storeType)){
+            return fetchHiveDataSourceId();
+        }
+        String sourceType = covertStoreTypeToSourceType(storeType);
+        DataSource dataSource = dataSourceDao.fetchDataSourceByConnectionInfo(sourceType,connectionInfo);
+        if(dataSource != null){
+            return dataSource.getId();
+        }
+        return null;
+    }
+
+    private String covertStoreTypeToSourceType(DataStoreType storeType){
+        String sourceType;
+        switch (storeType){
+            case POSTGRES_TABLE:
+                sourceType = "PostgreSQL";
+                break;
+            case MONGO_COLLECTION:
+                sourceType = "MongoDB";
+                break;
+            case ELASTICSEARCH_INDEX:
+                sourceType = "Elasticsearch";
+                break;
+            case ARANGO_COLLECTION:
+                sourceType = "Arango";
+                break;
+            default:
+                throw new IllegalStateException("not support storeType :"+ storeType);
+        }
+        return sourceType;
+    }
+
+    private Long fetchHiveDataSourceId(){
+        List<Long> datasourceIds = fetchDataSourceIdByType("Hive");
+        if(datasourceIds.size() > 0){
+            return datasourceIds.get(0);
+        }
+        datasourceIds = fetchDataSourceIdByType("AWS");
+        if(datasourceIds.size() > 0){
+            return datasourceIds.get(0);
+        }
+        throw new IllegalStateException("hive datasource not exist");
+    }
+
     public DataSource create(DataSourceRequest dataSourceRequest) {
         DataSource dataSource = DataSource.newBuilder()
                 .withId(IdGenerator.getInstance().nextId())
@@ -48,6 +99,11 @@ public class DataSourceService {
                 .withUpdateUser(dataSourceRequest.getUpdateUser())
                 .withUpdateTime(OffsetDateTime.now())
                 .build();
+        boolean isExist = isDatasourceExist(dataSource);
+        if(isExist){
+            throw new IllegalArgumentException("datasource with type " + dataSource.getTypeId()
+                    +  " and connection info " + dataSource.getConnectionInfo() +" is exist");
+        }
         dataSourceDao.create(dataSource);
         return dataSource;
     }

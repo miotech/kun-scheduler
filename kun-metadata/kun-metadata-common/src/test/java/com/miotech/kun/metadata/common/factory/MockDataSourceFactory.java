@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.common.factory;
 
 import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -28,6 +29,15 @@ public class MockDataSourceFactory {
                 .withCreateTime(OffsetDateTime.now())
                 .withUpdateUser(updateUser)
                 .withUpdateTime(OffsetDateTime.now())
+                .build();
+    }
+
+    public static DataSourceRequest createRequest( String name, Map<String, Object> connectionInfo, long typeId, List<String> tags){
+        return DataSourceRequest.newBuilder()
+                .withName(name)
+                .withConnectionInfo(new ConnectionInfo(connectionInfo))
+                .withTypeId(typeId)
+                .withTags(tags)
                 .build();
     }
 

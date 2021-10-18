@@ -121,6 +121,63 @@ public class DataSourceDao {
         return fetchDataSourcesJoiningTag(dataSourcesSQL, whereClauseAndParams.getRight().toArray());
     }
 
+    public DataSource fetchDataSourceByConnectionInfo(String typeName, ConnectionInfo connectionInfo){
+        logger.debug("Fetch dataSourceId with type: {}", typeName);
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(DATASOURCE_MODEL_NAME, Arrays.asList(DATASOURCE_TABLE_COLUMNS));
+        columnsMap.put(DATASOURCE_ATTR_MODEL_NAME,Arrays.asList(DATASOURCE_ATTR_TABLE_COLUMNS));
+        columnsMap.put(DATASOURCE_TYPE_MODEL_NAME,Arrays.asList(DATASOURCE_TYPE_TABLE_COLUMNS));
+        String dataSourceIdSQL = DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .autoAliasColumns()
+                .from(DATASOURCE_TABLE_NAME, DATASOURCE_MODEL_NAME)
+                .join("INNER", DATASOURCE_TYPE_TABLE_NAME, DATASOURCE_TYPE_MODEL_NAME)
+                .on(DATASOURCE_MODEL_NAME + ".type_id = " + DATASOURCE_TYPE_MODEL_NAME + ".id")
+                .join("INNER", DATASOURCE_ATTR_TABLE_NAME, DATASOURCE_ATTR_MODEL_NAME)
+                .on(DATASOURCE_MODEL_NAME + ".id = " + DATASOURCE_ATTR_MODEL_NAME + ".datasource_id")
+                .where(DATASOURCE_TYPE_MODEL_NAME + ".name = ?")
+                .getSQL();
+
+        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL,DataSourceResultMapper.INSTANCE , typeName);
+        for (DataSource dataSource : dataSourceList){
+            if(checkConnectionInfo(dataSource,connectionInfo)){
+                return dataSource;
+            }
+        }
+        return null;
+    }
+
+    public boolean isDatasourceExist(DataSource dataSource){
+        ConnectionInfo connectionInfo = dataSource.getConnectionInfo();
+        Long typeId = dataSource.getTypeId();
+        String dataSourceIdSQL = DefaultSQLBuilder.newBuilder()
+                .select(DATASOURCE_TABLE_COLUMNS)
+                .from(DATASOURCE_TABLE_NAME)
+                .where("type_id = ?")
+                .asPrepared()
+                .getSQL();
+        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL,DataSourceBasicMapper.INSTANCE , typeId);
+        for (DataSource savedSource : dataSourceList){
+            if(checkConnectionInfo(savedSource,connectionInfo)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean checkConnectionInfo(DataSource dataSource,ConnectionInfo searchConnectionInfo){
+        Map<String,Object> dataSourceConnectionInfo = dataSource.getConnectionInfo().getValues();
+
+        for(Map.Entry<String,Object> props : searchConnectionInfo.getValues().entrySet()){
+            if(!dataSourceConnectionInfo.containsKey(props.getKey()) ||
+                    !dataSourceConnectionInfo.get(props.getKey()).equals(props.getValue())){
+                return false;
+            }
+        }
+        return true;
+
+    }
+
     private DataSource fetchDataSourceJoiningTag(String sql, Object... params) {
         DataSource dataSource = dbOperator.fetchOne(sql, DataSourceResultMapper.INSTANCE, params);
         if (dataSource == null) {
@@ -294,6 +351,19 @@ public class DataSourceDao {
                     .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(DATASOURCE_ATTR_MODEL_NAME + "_create_time")))
                     .withUpdateUser(rs.getString(DATASOURCE_ATTR_MODEL_NAME + "_update_user"))
                     .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(DATASOURCE_ATTR_MODEL_NAME + "_update_time")))
+                    .build();
+        }
+    }
+
+    private static class DataSourceBasicMapper implements ResultSetMapper<DataSource> {
+        public static final DataSourceDao.DataSourceBasicMapper INSTANCE = new DataSourceDao.DataSourceBasicMapper();
+
+        @Override
+        public DataSource map(ResultSet rs) throws SQLException {
+            return DataSource.newBuilder()
+                    .withId(rs.getLong("id"))
+                    .withConnectionInfo(new ConnectionInfo(JSONUtils.jsonStringToMap(rs.getString("connection_info"), String.class, Object.class)))
+                    .withTypeId(rs.getLong("type_id"))
                     .build();
         }
     }

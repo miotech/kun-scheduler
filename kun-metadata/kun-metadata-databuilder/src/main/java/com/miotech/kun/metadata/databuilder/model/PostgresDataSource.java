@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
+import com.miotech.kun.metadata.core.model.constant.DatabaseType;
 import com.miotech.kun.metadata.databuilder.extract.tool.ConnectUrlUtil;
 
 public class PostgresDataSource extends DataSource {

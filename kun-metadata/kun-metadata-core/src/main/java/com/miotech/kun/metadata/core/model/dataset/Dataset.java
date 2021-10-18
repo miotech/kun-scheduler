@@ -56,6 +56,10 @@ public class Dataset implements Serializable {
         return tableStatistics;
     }
 
+    public String getDSI(){
+        return datasourceId + ":" + getDataStore().getLocationInfo();
+    }
+
     @Nullable
     @JsonIgnore
     public String getDatabaseName() {
@@ -81,6 +85,7 @@ public class Dataset implements Serializable {
     public Builder cloneBuilder() {
         return newBuilder()
                 .withGid(gid)
+                .withDatasourceId(datasourceId)
                 .withName(name)
                 .withDataStore(dataStore)
                 .withDeleted(deleted)

@@ -4,10 +4,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.DateTimeUtils;
-import com.miotech.kun.metadata.common.service.gid.GidService;
-import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
+import com.miotech.kun.metadata.common.service.MetadataDatasetService;
+import com.miotech.kun.metadata.core.model.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.core.model.dataset.*;
-import com.miotech.kun.metadata.databuilder.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.model.DatasetFieldInformation;
 import com.miotech.kun.metadata.databuilder.model.DatasetLifecycleSnapshot;
@@ -31,12 +30,12 @@ public class PostgresLoader implements Loader {
     private static Logger logger = LoggerFactory.getLogger(PostgresLoader.class);
 
     private final DatabaseOperator dbOperator;
-    private final GidService gidGenerator;
+    private final MetadataDatasetService datasetService;
 
     @Inject
-    public PostgresLoader(DatabaseOperator dbOperator, GidService gidService) {
+    public PostgresLoader(DatabaseOperator dbOperator, MetadataDatasetService datasetService) {
         this.dbOperator = dbOperator;
-        this.gidGenerator = gidService;
+        this.datasetService = datasetService;
     }
 
     @Override
@@ -54,24 +53,13 @@ public class PostgresLoader implements Loader {
         if (dataset == null || dataset.getDataStore() == null) {
             return new LoadSchemaResult(-1L, -1L);
         }
-
-        long gid = gidGenerator.generate(dataset.getDataStore());
-        if (!judgeDatasetExisted(gid)) {
-            dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name, dsi, deleted) VALUES(?, ?, ?, CAST(? AS JSONB), ?, ?, ?)",
-                    gid, dataset.getName(),
-                    dataset.getDatasourceId(),
-                    DataStoreJsonUtil.toJson(dataset.getDataStore()),
-                    dataset.getDatabaseName(),
-                    dataset.getDataStore().getDSI().toFullString(),
-                    false
-            );
-
-            SchemaSnapshot schemaSnapshot = SchemaSnapshot.newBuilder().withFields(dataset.getFields().stream().map(field -> field.convert()).collect(Collectors.toList())).build();
-            dbOperator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, fields, status, create_at) VALUES(?, CAST(? AS JSONB), ?, ?)",
-                    gid, JSONUtils.toJsonString(schemaSnapshot), DatasetLifecycleStatus.MANAGED.name(), DateTimeUtils.now());
+        String dsi = dataset.getDSI();
+        Dataset savedDataSet = datasetService.fetchDataSetByDSI(dsi);
+        if (savedDataSet == null) {
+            savedDataSet = datasetService.createDataSet(dataset);
         }
 
-        return loadSchema(gid, dataset.getFields());
+        return loadSchema(savedDataSet.getGid(), dataset.getFields());
     }
 
     @Override
@@ -233,11 +221,6 @@ public class PostgresLoader implements Loader {
             return null;
         }, gid);
         return fieldMap;
-    }
-
-    private boolean judgeDatasetExisted(long gid) {
-        Long c = dbOperator.fetchOne("SELECT COUNT(*) FROM kun_mt_dataset WHERE gid = ?", rs -> rs.getLong(1), gid);
-        return (c != null && c != 0);
     }
 
     private void fill(List<DatasetField> fields, Map<String, DatasetFieldInformation> fieldInfos, List<DatasetLifecycleSnapshot.Column> dropFields,

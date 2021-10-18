@@ -68,7 +68,7 @@ public class LineageService {
      * @return Optional dataset object
      */
     public Optional<Dataset> fetchDatasetByDatastore(DataStore dataStore) {
-        return Optional.ofNullable(metadataFacade.getDatasetByDatastore(dataStore));
+        return Optional.ofNullable(metadataFacade.createDataSetIfNotExist(dataStore));
     }
 
 

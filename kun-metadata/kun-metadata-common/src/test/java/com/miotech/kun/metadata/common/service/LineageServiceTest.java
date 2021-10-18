@@ -472,10 +472,10 @@ public class LineageServiceTest extends DatabaseTestBase {
     public void testUpdateLineage(){
         // Prepare
         Long upstreamDataSetId = IdGenerator.getInstance().nextId();
-        DataStore upstreamStore = MockDatasetFactory.createDataStore("Hive","upstreamStore");
+        DataStore upstreamStore = MockDatasetFactory.createDataStore("Hive","upstreamStore","table");
         Dataset upstreamSet = MockDatasetFactory.createDatasetWithDataStore(upstreamDataSetId,"upstreamSet",1l,null,upstreamStore);
         Long downstreamDataSetId = IdGenerator.getInstance().nextId();
-        DataStore downstreamStore = MockDatasetFactory.createDataStore("Hive","downstreamStore");
+        DataStore downstreamStore = MockDatasetFactory.createDataStore("Hive","downstreamStore","table");
         Dataset downstreamSet = MockDatasetFactory.createDatasetWithDataStore(downstreamDataSetId,"downstreamSet",1l,null,downstreamStore);
         //mock fetch dataset by datastore
         doAnswer(invocation -> {
@@ -487,7 +487,7 @@ public class LineageServiceTest extends DatabaseTestBase {
                 return downstreamSet;
             }
             return null;
-        }).when(metadataDatasetService).getDatasetByDatastore(any(DataStore.class));
+        }).when(metadataDatasetService).createDataSetIfNotExist(any(DataStore.class));
 
         Long taskId = WorkflowIdGenerator.nextTaskId();
         Task task = Task.newBuilder()

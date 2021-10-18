@@ -54,7 +54,7 @@ public class MockDatasetFactory {
     }
 
     public static Dataset createDataset(long gid, String name, long dataSourceId, String databaseName, List<DatasetField> fields, String dataStoreType) {
-        DataStore dataStore = createDataStore(dataStoreType, databaseName);
+        DataStore dataStore = createDataStore(dataStoreType, databaseName,"table");
         return Dataset.newBuilder()
                 .withGid(gid)
                 .withDatasourceId(dataSourceId)
@@ -76,20 +76,20 @@ public class MockDatasetFactory {
                 .build();
     }
 
-    public static DataStore createDataStore(String dataStoreType, String databaseName) {
+    public static DataStore createDataStore(String dataStoreType, String databaseName,String tableName) {
         Preconditions.checkArgument(StringUtils.isNotBlank(dataStoreType), "Param `dataStoreType` should not be empty");
 
         switch (dataStoreType) {
             case "Hive":
-                return new HiveTableStore("location", databaseName, "table");
-            case "Mongo":
-                return new MongoDataStore("127.0.0.1", 27017, databaseName, "collection");
-            case "Postgres":
-                return new PostgresDataStore("127.0.0.1", 5432, databaseName, "public", "table");
+                return new HiveTableStore("location", databaseName, tableName);
+            case "MongoDB":
+                return new MongoDataStore("127.0.0.1", 27017, databaseName, tableName);
+            case "PostgreSQL":
+                return new PostgresDataStore("127.0.0.1", 5432, databaseName, "public", tableName);
             case "Arango":
-                return new ArangoCollectionStore("127.0.0.1", 8529, databaseName, "collection");
+                return new ArangoCollectionStore("127.0.0.1", 8529, databaseName, tableName);
             case "Elasticsearch":
-                return new ElasticSearchIndexStore("127.0.0.1", 9200, "index");
+                return new ElasticSearchIndexStore("127.0.0.1", 9200, tableName);
             default:
                 throw new IllegalArgumentException("Invalid dataStoreType: " + dataStoreType);
         }
