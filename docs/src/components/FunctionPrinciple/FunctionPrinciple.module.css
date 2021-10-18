@@ -1,0 +1,17 @@
+.FunctionPrinciple {
+  padding: 60px 124px 0 124px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #262a2f;
+  line-height: 34px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.img {
+  width: calc(100% - 248px);
+  padding-bottom: 60%;
+}

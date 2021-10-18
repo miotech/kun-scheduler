@@ -1,0 +1,44 @@
+.DocPaginator {
+  display: flex;
+  background-color: rgba(73, 169, 222, 0.05);
+  height: 110px;
+  align-items: center;
+}
+
+.paginationNavItem {
+  flex: 1;
+  padding: 0 53px;
+  display: flex;
+}
+
+.paginationNavItemNext {
+  justify-content: flex-end;
+}
+
+.paginationNavLink {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  text-decoration: none !important;
+}
+
+.previousTitleContent {
+  display: flex;
+  flex-direction: column;
+}
+.nextTitleContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.paginationNavSublabel {
+  text-decoration: none !important;
+  color: #113366;
+}
+.paginationNavLabel {
+  text-decoration: none !important;
+  color: #49a9de;
+}
+.directionIcon {
+  color: #113366;
+}
