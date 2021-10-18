@@ -56,6 +56,7 @@ public class Dataset implements Serializable {
         return tableStatistics;
     }
 
+    @JsonIgnore
     public String getDSI(){
         return datasourceId + ":" + getDataStore().getLocationInfo();
     }
