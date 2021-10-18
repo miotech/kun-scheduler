@@ -147,7 +147,7 @@ public class SparkOperatorResolver implements Resolver {
         switch (type) {
             case "hive":
             case "parquet":
-                dataStore = toHive(sourceName);
+                dataStore = toHive(splineSource);
                 break;
             case "mongodb":
                 dataStore = toMongo(sourceName);
@@ -187,7 +187,13 @@ public class SparkOperatorResolver implements Resolver {
         return dataStore;
     }
 
-    private HiveTableStore toHive(String datasource) {
+    private HiveTableStore toHive(SplineSource splineSource) {
+        TableInfo tableInfo = splineSource.getTableInfo();
+        String datasource = splineSource.getSourceName();
+        if (tableInfo != null) {
+            logger.debug("get table {} info from splineSource", tableInfo);
+            return new HiveTableStore(datasource, tableInfo.getDatabaseName(), tableInfo.getTableName());
+        }
         Pattern pattern = Pattern.compile(HIVE_FORMAT);
         Matcher matcher = pattern.matcher(datasource);
         if (matcher.matches()) {

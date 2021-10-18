@@ -392,6 +392,60 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         deleteFilesInDir("/tmp/esExample");
     }
 
+    @Test
+    public void resolveHiveWithTableInfo() throws IOException {
+
+        TableInfo upstreamTable = TableInfo.newBuilder()
+                .withTableName("upTable")
+                .withDatabaseName("upDatabase")
+                .build();
+        TableInfo downStreamTable = TableInfo.newBuilder()
+                .withTableName("downTable")
+                .withDatabaseName("downDatabase")
+                .build();
+
+        SplineSource execPlan_up = SplineSource.newBuilder()
+                .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src")
+                .withSourceType("hive")
+                .withTableInfo(upstreamTable)
+                .build();
+        SplineSource execPlan_down = SplineSource.newBuilder()
+                .withSourceName("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test")
+                .withSourceType("hive")
+                .withTableInfo(downStreamTable)
+                .build();
+        ExecPlan execPlan2 = ExecPlan.newBuilder()
+                .withTaskName("hive example1")
+                .withOutputSource(execPlan_down)
+                .withInputSources(Arrays.asList(execPlan_up))
+                .build();
+
+        //write execPlan2
+        writeExecPlanToFile("/tmp/hive example1/1/2.execPlan.txt", execPlan2);
+        doReturn(getFilesInDir("/tmp/hive example1/1")).when(mockHdfsFileSystem).copyFilesInDir(Mockito.any());
+        doNothing().when(mockHdfsFileSystem).deleteFilesInDir(Mockito.any());
+
+        Config config = Config.newBuilder()
+                .addConfig(SparkConfiguration.CONF_LIVY_BATCH_NAME, "hive example1")
+                .addConfig(SparkConfiguration.CONF_LIVY_BATCH_CONF, HDFS_CONF)
+                .build();
+        List<DataStore> upstreamDataList = sparkOperatorResolver.resolveUpstreamDataStore(config);
+        List<DataStore> downstreamDataList = sparkOperatorResolver.resolveDownstreamDataStore(config);
+        HiveTableStore upStore = (HiveTableStore) upstreamDataList.get(0);
+        HiveTableStore downStore = (HiveTableStore) downstreamDataList.get(0);
+        assertThat(upstreamDataList, hasSize(1));
+        assertThat(downstreamDataList, hasSize(1));
+        assertThat(upStore.getDatabase(), is("upDatabase"));
+        assertThat(downStore.getDatabase(), is("downDatabase"));
+        assertThat(upStore.getTable(), is("upTable"));
+        assertThat(downStore.getTable(), is("downTable"));
+        assertThat(upStore.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src"));
+        assertThat(downStore.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test"));
+
+        //clean up
+        deleteFilesInDir("/tmp/hive example1");
+    }
+
 
     private void writeExecPlanToFile(String fileName, ExecPlan execPlan) throws IOException {
         String dir = fileName.substring(0, fileName.lastIndexOf('/'));
