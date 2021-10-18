@@ -1,6 +1,6 @@
-package com.miotech.kun.metadata.databuilder.constant;
+package com.miotech.kun.metadata.core.model.constant;
 
-import io.prestosql.jdbc.$internal.guava.base.Preconditions;
+import com.google.common.base.Preconditions;
 
 public enum  DataBuilderDeployMode {
 

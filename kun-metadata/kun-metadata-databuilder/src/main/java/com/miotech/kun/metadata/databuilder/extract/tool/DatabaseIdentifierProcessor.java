@@ -1,6 +1,6 @@
 package com.miotech.kun.metadata.databuilder.extract.tool;
 
-import com.miotech.kun.metadata.databuilder.constant.DatabaseType;
+import com.miotech.kun.metadata.core.model.constant.DatabaseType;
 
 public class DatabaseIdentifierProcessor {
 

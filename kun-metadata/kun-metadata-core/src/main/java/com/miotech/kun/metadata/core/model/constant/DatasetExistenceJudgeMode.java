@@ -1,4 +1,4 @@
-package com.miotech.kun.metadata.databuilder.constant;
+package com.miotech.kun.metadata.core.model.constant;
 
 public enum DatasetExistenceJudgeMode {
 

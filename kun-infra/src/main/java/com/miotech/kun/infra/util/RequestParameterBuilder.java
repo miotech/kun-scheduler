@@ -2,7 +2,7 @@ package com.miotech.kun.infra.util;
 
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.metadata.databuilder.constant.DataBuilderDeployMode;
+import com.miotech.kun.metadata.core.model.constant.DataBuilderDeployMode;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.PropKey;
 import com.miotech.kun.workflow.core.execution.Config;

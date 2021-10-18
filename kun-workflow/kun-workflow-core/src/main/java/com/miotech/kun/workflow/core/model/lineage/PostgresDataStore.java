@@ -2,9 +2,12 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.metadata.core.model.dataset.DSI;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
+import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class PostgresDataStore extends DataStore {
 
@@ -60,14 +63,22 @@ public class PostgresDataStore extends DataStore {
     }
 
     @Override
-    public DSI getDSI() {
-        return DSI.newBuilder()
-                .withStoreType("postgres")
-                .putProperty("host", host)
-                .putProperty("port", String.valueOf(port))
-                .putProperty("database", database)
-                .putProperty("schema", schema)
-                .putProperty("table", tableName)
-                .build();
+    public String getLocationInfo() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(database).append(":").append(schema).append(":").append(tableName);
+        return stringBuilder.toString();
+    }
+
+    @Override
+    public ConnectionInfo getConnectionInfo() {
+        Map<String,Object> values = new HashMap<>();
+        values.put("host",getHost());
+        values.put("port",getPort());
+        return new ConnectionInfo(values);
+    }
+
+    @Override
+    public String getName() {
+        return tableName;
     }
 }

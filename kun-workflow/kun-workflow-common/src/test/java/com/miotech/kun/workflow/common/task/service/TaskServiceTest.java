@@ -2,7 +2,6 @@ package com.miotech.kun.workflow.common.task.service;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
-import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.service.MetadataDatasetService;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
@@ -79,7 +78,7 @@ public class TaskServiceTest extends CommonTestBase {
     @Inject
     private TaskService taskService;
 
-    private MetadataDatasetDao metadataDatasetDao;
+    private MetadataDatasetService metadataDatasetService;
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
@@ -92,8 +91,8 @@ public class TaskServiceTest extends CommonTestBase {
     @Override
     protected void configuration() {
         super.configuration();
-        metadataDatasetDao = mock(MetadataDatasetDao.class);
-        bind(MetadataDatasetDao.class,metadataDatasetDao);
+        metadataDatasetService = mock(MetadataDatasetService.class);
+        bind(MetadataDatasetService.class,metadataDatasetService);
         bind(MetadataServiceFacade.class, MetadataDatasetService.class);
         bind(LineageServiceFacade.class, com.miotech.kun.metadata.common.service.LineageService.class);
 
