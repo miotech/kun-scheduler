@@ -8,6 +8,7 @@ export type RunStatusEnum =
   | 'RUNNING'
   | 'SKIPPED'
   | 'SUCCESS'
-  | 'UPSTREAM_FAILED';
+  | 'UPSTREAM_FAILED'
+  | 'CHECK_FAILED';
 
 export type DeployStatusEnum = 'CREATED' | 'FAILED' | 'SUCCESS' | 'WORKING';

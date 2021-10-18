@@ -5,6 +5,15 @@ import { Tag } from '@/definitions/Tag.type';
 import { Task, TaskVariable } from '@/definitions/Task.type';
 import { TaskAttempt } from '@/definitions/TaskAttempt.type';
 
+export interface FailedUpstreamTaskRunTask {
+  id: string;
+  name: string;
+}
+export interface FailedUpstreamTaskRun {
+  id: string;
+  task: FailedUpstreamTaskRunTask;
+}
+
 export interface TaskRun {
   id: string;
   attempts: TaskAttempt[];
@@ -18,6 +27,7 @@ export interface TaskRun {
   tags: Tag[];
   variable: TaskVariable[];
   task: Task;
+  failedUpstreamTaskRuns?: FailedUpstreamTaskRun[];
 }
 
 export interface TaskRunLog {

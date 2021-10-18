@@ -36,7 +36,12 @@ momentDurationFormatSetup(moment);
 
 function taskRunAlreadyComplete(status: RunStatusEnum): boolean {
   return (
-    status === 'SUCCESS' || status === 'SKIPPED' || status === 'FAILED' || status === 'ABORTED' || status === 'ABORTING'
+    status === 'SUCCESS' ||
+    status === 'SKIPPED' ||
+    status === 'FAILED' ||
+    status === 'ABORTED' ||
+    status === 'ABORTING' ||
+    status === 'CHECK_FAILED'
   );
 }
 

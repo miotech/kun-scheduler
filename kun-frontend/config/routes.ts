@@ -199,6 +199,21 @@ export const appRoutes = [
             ],
           },
           {
+            title: 'common.pageTitle.operationCenter.scheduledTasks',
+            path: './task-run-id',
+            menuDisplay: false,
+            breadcrumbLink: false,
+            routes: [
+              {
+                title: 'common.pageTitle.operationCenter.scheduledTasks',
+                path: './:id',
+                exact: true,
+                component: '@/pages/operation-center/task-run-id-direct',
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+              },
+            ],
+          },
+          {
             title: 'common.pageTitle.operationCenter.backfillTasks',
             path: './backfill-tasks',
             menuDisplay: true,
