@@ -8,11 +8,13 @@ import com.miotech.kun.metadata.core.model.dataset.Dataset;
  * @author Josh Ouyang
  */
 public interface MetadataServiceFacade {
+
     /**
-     * Obtain dataset model object (from remote) by given datastore as search key.
-     * @param datastore key datastore object
-     * @return Dataset model object. Returns null if not found by datastore key.
+     * fetch dataset by given datastore,if dataset not exist,
+     * create new one and return
+     * @param datastore
+     * @return Dataset
      */
-    Dataset getDatasetByDatastore(DataStore datastore);
+    Dataset createDataSetIfNotExist(DataStore datastore);
 
 }

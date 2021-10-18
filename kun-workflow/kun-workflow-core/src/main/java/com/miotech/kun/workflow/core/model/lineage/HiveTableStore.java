@@ -2,10 +2,12 @@ package com.miotech.kun.workflow.core.model.lineage;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.miotech.kun.metadata.core.model.dataset.DSI;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
+import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class HiveTableStore extends DataStore {
@@ -44,11 +46,10 @@ public class HiveTableStore extends DataStore {
     }
 
     @Override
-    public DSI getDSI() {
-        return DSI.newBuilder().withStoreType("hive")
-                .putProperty("database", database)
-                .putProperty("table", table)
-                .build();
+    public String getLocationInfo() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append(database).append(":").append(table);
+        return stringBuilder.toString();
     }
 
     @Override
@@ -64,5 +65,16 @@ public class HiveTableStore extends DataStore {
     @Override
     public int hashCode() {
         return Objects.hash(getLocation(), getDatabase(), getTable());
+    }
+
+    @Override
+    public ConnectionInfo getConnectionInfo() {
+        Map<String,Object> values = new HashMap<>();
+        return new ConnectionInfo(values);
+    }
+
+    @Override
+    public String getName() {
+        return table;
     }
 }

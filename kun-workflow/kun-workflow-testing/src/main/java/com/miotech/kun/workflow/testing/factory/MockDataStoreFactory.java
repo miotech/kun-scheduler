@@ -1,11 +1,13 @@
 package com.miotech.kun.workflow.testing.factory;
 
 import com.google.common.collect.Lists;
-import com.miotech.kun.metadata.core.model.dataset.DSI;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
+import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MockDataStoreFactory {
     public static final List<DataStoreType> dataStoreTypes = Lists.newArrayList(
@@ -28,14 +30,24 @@ public class MockDataStoreFactory {
             }
 
             @Override
-            public DSI getDSI() {
+            public String getLocationInfo() {
                 if (getType().equals(DataStoreType.HIVE_TABLE)) {
-                    return DSI.newBuilder().withStoreType("hive")
-                            .putProperty("database", database)
-                            .putProperty("table", table)
-                            .build();
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append(database).append(":").append(table);
+                    return stringBuilder.toString();
                 }
-                return DSI.from(this.getType().toString());
+                return "";
+            }
+
+            @Override
+            public ConnectionInfo getConnectionInfo() {
+                Map<String,Object> values = new HashMap<>();
+                return new ConnectionInfo(values);
+            }
+
+            @Override
+            public String getName() {
+                return table;
             }
         };
     }

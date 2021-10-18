@@ -4,9 +4,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
-import com.miotech.kun.metadata.common.service.gid.GidService;
+import com.miotech.kun.metadata.common.utils.JSONUtils;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
@@ -26,15 +27,12 @@ public class MetadataDatasetService implements MetadataServiceFacade {
 
     private final MetadataDatasetDao metadataDatasetDao;
     private final DataSourceService dataSourceService;
-    private final GidService gidService;
 
     @Inject
     public MetadataDatasetService(MetadataDatasetDao metadataDatasetDao,
-                                  DataSourceService dataSourceService,
-                                  GidService gidService) {
+                                  DataSourceService dataSourceService) {
         this.metadataDatasetDao = metadataDatasetDao;
         this.dataSourceService = dataSourceService;
-        this.gidService = gidService;
     }
 
     /**
@@ -62,20 +60,50 @@ public class MetadataDatasetService implements MetadataServiceFacade {
         return metadataDatasetDao.suggestDatabase(dataSourceId, prefix);
     }
 
-    public Dataset getDatasetByDatastore(DataStore datastore) {
-        long gid = gidService.generate(datastore);
-        logger.debug("fetched gid = {}", gid);
-
-        Optional<Dataset> datasetOptional = fetchDatasetByGid(gid);
-        if (datasetOptional.isPresent()) {
-            return datasetOptional.get();
+    public Dataset createDataSetIfNotExist(DataStore dataStore) {
+        logger.debug("fetching datasource by dataStore = {}",JSONUtils.toJsonString(dataStore));
+        Long dataSourceId = getDataSourceIdByDatastore(dataStore);
+        if(dataSourceId == null){
+            throw new IllegalStateException("datasource not exist with datastore = " + JSONUtils.toJsonString(dataStore));
+        }
+        String locationInfo = dataStore.getLocationInfo();
+        String dsi = dataSourceId + ":" + locationInfo;
+        logger.debug("fetching dataset by dsi = {}",dsi);
+        Dataset dataset = metadataDatasetDao.fetchDatasetByDSI(dsi);
+        if (dataset != null) {
+            return dataset;
         } else {
-            return null;
+            logger.debug("dataset with dsi = {} not exist,going to create dataset",dsi);
+            return createDataSet(dataSourceId, dataStore);
         }
     }
 
+    public Dataset createDataSet(Dataset dataset) {
+        return metadataDatasetDao.createDataset(dataset);
+    }
+
+    public Dataset fetchDataSetByDSI(String dsi) {
+        return metadataDatasetDao.fetchDatasetByDSI(dsi);
+    }
+
+    private Long getDataSourceIdByDatastore(DataStore dataStore) {
+        ConnectionInfo connectionInfo = dataStore.getConnectionInfo();
+        Long dataSourceId = dataSourceService.getDataSourceIdByConnectionInfo(dataStore.getType(), connectionInfo);
+        return dataSourceId;
+    }
+
+
     public List<String> suggestTable(String databaseName, String prefix) {
         return suggestTable(databaseName, prefix, DEFAULT_SUGGEST_DATASOURCE_TYPE);
+    }
+
+    private Dataset createDataSet(Long dataSourceId, DataStore dataStore) {
+        Dataset dataset = Dataset.newBuilder()
+                .withName(dataStore.getName())
+                .withDatasourceId(dataSourceId)
+                .withDataStore(dataStore)
+                .build();
+        return metadataDatasetDao.createDataset(dataset);
     }
 
     private List<String> suggestTable(String databaseName, String prefix, String dataSourceType) {

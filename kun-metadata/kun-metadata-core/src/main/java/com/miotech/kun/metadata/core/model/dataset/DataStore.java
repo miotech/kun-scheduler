@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.core.model.dataset;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
@@ -30,10 +31,21 @@ public abstract class DataStore implements Serializable {
     }
 
     /**
-     * Returns data store identifier (DSI) of this datastore object
-     * @return data store identifier
+     * Returns data set identifier (DSI) of this datastore object
+     * @return data set identifier
      */
     @JsonIgnore
     @Nullable
-    public abstract DSI getDSI();
+    public abstract String getLocationInfo();
+
+    @JsonIgnore
+    @Nullable
+    /**
+     * @return data store connection info
+     */
+    public abstract ConnectionInfo getConnectionInfo();
+
+    @JsonIgnore
+    @Nullable
+    public abstract String getName();
 }

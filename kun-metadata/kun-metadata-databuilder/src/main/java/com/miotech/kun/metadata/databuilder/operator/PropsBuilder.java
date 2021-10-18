@@ -3,8 +3,8 @@ package com.miotech.kun.metadata.databuilder.operator;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
 
-import static com.miotech.kun.metadata.databuilder.constant.OperatorKey.*;
-import static com.miotech.kun.metadata.databuilder.constant.OperatorKey.DATASOURCE_DRIVER_CLASS_NAME;
+import static com.miotech.kun.metadata.core.model.constant.OperatorKey.*;
+import static com.miotech.kun.metadata.core.model.constant.OperatorKey.DATASOURCE_DRIVER_CLASS_NAME;
 
 public class PropsBuilder {
 

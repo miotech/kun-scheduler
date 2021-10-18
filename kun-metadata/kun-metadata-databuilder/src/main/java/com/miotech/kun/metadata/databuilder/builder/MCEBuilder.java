@@ -8,16 +8,15 @@ import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.utils.HttpClientUtil;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
-import com.miotech.kun.metadata.common.service.gid.GidService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
+import com.miotech.kun.metadata.core.model.constant.DatasetExistenceJudgeMode;
+import com.miotech.kun.metadata.core.model.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.event.MetadataChangeEvent;
 import com.miotech.kun.metadata.core.model.event.MetadataStatisticsEvent;
 import com.miotech.kun.metadata.databuilder.client.GlueClient;
-import com.miotech.kun.metadata.databuilder.constant.DatasetExistenceJudgeMode;
-import com.miotech.kun.metadata.databuilder.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.databuilder.extract.filter.HiveTableSchemaExtractFilter;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractor;
 import com.miotech.kun.metadata.databuilder.extract.schema.DatasetSchemaExtractorFactory;
@@ -39,7 +38,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 
-import static com.miotech.kun.metadata.databuilder.constant.OperatorKey.MSE_URL;
+import static com.miotech.kun.metadata.core.model.constant.OperatorKey.MSE_URL;
 
 @Singleton
 public class MCEBuilder {
@@ -47,18 +46,16 @@ public class MCEBuilder {
 
     private final Props props;
     private final DatabaseOperator operator;
-    private final GidService gidService;
     private final MetadataDatasetDao datasetDao;
     private final DataSourceBuilder dataSourceBuilder;
     private final Loader loader;
     private final HttpClientUtil httpClientUtil;
 
     @Inject
-    public MCEBuilder(Props props, DatabaseOperator operator, GidService gidService, MetadataDatasetDao datasetDao,
+    public MCEBuilder(Props props, DatabaseOperator operator, MetadataDatasetDao datasetDao,
                       DataSourceBuilder dataSourceBuilder, Loader loader, HttpClientUtil httpClientUtil) {
         this.props = props;
         this.operator = operator;
-        this.gidService = gidService;
         this.datasetDao = datasetDao;
         this.dataSourceBuilder = dataSourceBuilder;
         this.loader = loader;
@@ -138,25 +135,23 @@ public class MCEBuilder {
         DataStore dataStore = generateDataStore(mce, connectionInfo);
 
         // 生成gid
-        long gid = gidService.generate(dataStore);
+        String locationInfo = dataStore.getLocationInfo();
+        String dsi = mce.getDataSourceId() + ":" + locationInfo;
+        Dataset dataset = datasetDao.fetchDatasetByDSI(dsi);
+        if(dataset == null){
+            Dataset newDataSet = Dataset.newBuilder()
+                    .withName(mce.getTableName())
+                    .withDatasourceId(mce.getDataSourceId())
+                    .withDataStore(dataStore)
+                    .build();
+            dataset = datasetDao.createDataset(newDataSet);
+        }
         if (mce.getEventType().equals(MetadataChangeEvent.EventType.DROP_TABLE)) {
-            updateDatasetStatus(false, gid);
+            updateDatasetStatus(false, dataset.getGid());
             return;
         }
 
-        Optional<Dataset> dataset = datasetDao.fetchDatasetByGid(gid);
-        if (!dataset.isPresent()) {
-            operator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name, dsi, deleted) VALUES(?, ?, ?, CAST(? AS JSONB), ?, ?, ?)",
-                    gid, mce.getTableName(),
-                    mce.getDataSourceId(),
-                    DataStoreJsonUtil.toJson(dataStore),
-                    mce.getDatabaseName(),
-                    dataStore.getDSI().toFullString(),
-                    false
-            );
-        }
-
-        extractSchemaOfDataset(gid);
+        extractSchemaOfDataset(dataset.getGid());
     }
 
     private DataStore generateDataStore(MetadataChangeEvent mce, String connectionInfo) {
