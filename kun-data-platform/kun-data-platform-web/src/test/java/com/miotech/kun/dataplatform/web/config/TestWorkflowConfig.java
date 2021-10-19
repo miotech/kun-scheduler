@@ -2,7 +2,6 @@ package com.miotech.kun.dataplatform.web.config;
 
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
-import com.miotech.kun.monitor.facade.alert.TaskNotifyConfigFacade;
 import com.miotech.kun.monitor.facade.model.alert.SystemDefaultNotifierConfig;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.ConfigKey;
