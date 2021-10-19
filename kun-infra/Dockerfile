@@ -1,6 +1,13 @@
-FROM openjdk:8u181-jdk-alpine
+# Get base image
+FROM miotechoss/kun-spark:0.7.0-rc1
+# ssh
+EXPOSE 22
 
-RUN apk add --no-cache tini
+USER root
+
+ENV TINI_VERSION v0.19.0
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod +x /tini
 
 WORKDIR /server/target
 
@@ -15,4 +22,4 @@ ADD docker-entrypoint.sh /
 RUN chmod +x  /docker-entrypoint.sh
 
 ENV APP_CONFIG_ENV local
-ENTRYPOINT ["/sbin/tini", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/tini", "--", "/docker-entrypoint.sh"]
