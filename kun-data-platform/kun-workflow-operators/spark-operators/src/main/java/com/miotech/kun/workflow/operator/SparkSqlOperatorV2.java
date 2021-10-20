@@ -8,7 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.miotech.kun.commons.utils.ExprUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class SparkSqlOperatorV2 extends SparkSubmitBaseOperator {
+    private static final Logger logger = LoggerFactory.getLogger(SparkSqlOperatorV2.class);
+
 
     @Override
     public List<String> buildCmd(Map<String, String> sparkSubmitParams, Map<String, String> sparkConf, String app, String appArgs) {
@@ -16,7 +22,9 @@ public class SparkSqlOperatorV2 extends SparkSubmitBaseOperator {
         cmd.add("spark-submit");
         cmd.addAll(SparkOperatorUtils.parseSparkSubmitParmas(sparkSubmitParams));
 
-        File sqlFile = storeSqlToFile(appArgs);
+        String sql = ExprUtils.evalExecuteTimeExpr(appArgs, getContext().getExecuteTime());
+
+        File sqlFile = storeSqlToFile(sql);
         addSqlFile(sparkConf, sqlFile.getPath());
         cmd.addAll(SparkOperatorUtils.parseSparkConf(sparkConf));
         cmd.add(app);
