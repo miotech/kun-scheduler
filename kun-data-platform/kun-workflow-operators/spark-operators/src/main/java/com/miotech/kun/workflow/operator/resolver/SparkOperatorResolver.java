@@ -190,6 +190,7 @@ public class SparkOperatorResolver implements Resolver {
     private HiveTableStore toHive(SplineSource splineSource) {
         TableInfo tableInfo = splineSource.getTableInfo();
         String datasource = splineSource.getSourceName();
+        logger.info("spline source = {}",splineSource);
         if (tableInfo != null) {
             logger.debug("get table {} info from splineSource", tableInfo);
             return new HiveTableStore(datasource, tableInfo.getDatabaseName(), tableInfo.getTableName());

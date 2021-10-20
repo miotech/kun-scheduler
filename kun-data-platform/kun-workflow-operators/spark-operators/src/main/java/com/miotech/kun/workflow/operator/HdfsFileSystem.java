@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class HdfsFileSystem {
@@ -18,9 +19,10 @@ public class HdfsFileSystem {
     private final Logger logger = LoggerFactory.getLogger(HdfsFileSystem.class);
     private FileSystem fileSystem;
     private String hdfsUri;
-    public HdfsFileSystem(String hdfsUri, Configuration conf) throws URISyntaxException,IOException {
+
+    public HdfsFileSystem(String hdfsUri, Configuration conf) throws URISyntaxException, IOException {
         this.hdfsUri = hdfsUri;
-        this.fileSystem = FileSystem.get(new URI(hdfsUri),conf);
+        this.fileSystem = FileSystem.get(new URI(hdfsUri), conf);
     }
 
     /**
@@ -29,11 +31,19 @@ public class HdfsFileSystem {
      * @return
      * @throws IOException
      */
-    public  List<String> copyFilesInDir(String dirPath) throws IOException {
+    public List<String> copyFilesInDir(String dirPath) throws IOException {
         List<String> fileList = new ArrayList<>();
         Path path = new Path(hdfsUri + "/" + dirPath);
         FileStatus[] fileStatus = fileSystem.listStatus(path);
         logger.debug("file size = {}", fileStatus.length);
+        Arrays.sort(fileStatus, (o1,o2) -> {
+            if (o1.getModificationTime() < o2.getModificationTime()) {
+                return -1;
+            } else if (o1.getModificationTime() == o2.getModificationTime()) {
+                return 0;
+            }
+            return 1;
+        });
         for (FileStatus fileStat : fileStatus) {
             String localFile = "/tmp" + fileStat.getPath().toUri().getPath();
             logger.debug("copy hdfs file = {} to local file = {}", fileStat.getPath(), localFile);
@@ -48,8 +58,8 @@ public class HdfsFileSystem {
      * @param dirPath files directory in hdfs
      * @throws IOException
      */
-    public void deleteFilesInDir(String dirPath) throws IOException{
-        fileSystem.delete(new Path(hdfsUri + "/" + dirPath),true);
+    public void deleteFilesInDir(String dirPath) throws IOException {
+        fileSystem.delete(new Path(hdfsUri + "/" + dirPath), true);
     }
 
 }
