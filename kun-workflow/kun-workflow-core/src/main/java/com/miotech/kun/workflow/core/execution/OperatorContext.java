@@ -14,6 +14,13 @@ public interface OperatorContext {
      */
     public Config getConfig();
 
+    /**
+     * 获取任务运行实例ID
+     */
     public Long getTaskRunId();
 
+    /**
+     * 获取任务调度执行时间
+     */
+    public String getExecuteTime();
 }

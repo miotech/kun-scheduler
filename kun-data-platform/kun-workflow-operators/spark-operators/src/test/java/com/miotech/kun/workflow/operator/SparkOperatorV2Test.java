@@ -58,6 +58,7 @@ public class SparkOperatorV2Test {
         assertFalse(cmdString.contains("spark.fs.s3a.access.key"));
         assertFalse(cmdString.contains("spark.sql.queryExecutionListeners"));
         assertTrue(cmdString.endsWith("-e dev"));
+        assertTrue(cmdString.contains("spark.hadoop.taskRun.scheduledTick=000000000000"));
     }
 
     @Test
@@ -88,5 +89,6 @@ public class SparkOperatorV2Test {
         assertTrue(cmd.contains("spark.fs.s3a.access.key=s3_access_key"));
         assertTrue(cmd.contains("spark.dynamicAllocation.maxExecutors=10"));
         assertTrue(cmdString.contains("s3://bucket/lineage.jar"));
+        assertTrue(cmdString.contains("spark.hadoop.taskRun.scheduledTick=000000000000"));
     }
 }

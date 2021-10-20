@@ -9,6 +9,8 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.task.ScheduleConf;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -885,5 +887,18 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 is(empty()));
 
 
+    }
+
+    @Test
+    public void getTickByTaskRunId_withTick_shouldSuccess(){
+        String tick = "202110131111";
+        Task taskWithUTC = MockTaskFactory.createTask();
+        taskDao.create(taskWithUTC);
+        TaskRun taskRunWithUTC = MockTaskRunFactory.createTaskRun(1L, taskWithUTC)
+                .cloneBuilder()
+                .withScheduledTick(new Tick(tick))
+                .build();
+        taskRunDao.createTaskRun(taskRunWithUTC);
+        assertTrue(tick.equals(taskRunDao.getTickByTaskRunId(1L)));
     }
 }
