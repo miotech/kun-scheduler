@@ -1,0 +1,25 @@
+.SupportContent {
+  padding: 50px 180px 80px 180px;
+  height: 314px;
+}
+
+.title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #262a2f;
+  line-height: 34px;
+  margin-bottom: 35px;
+  text-align: center;
+}
+
+.imgContainer {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.img {
+  width: 200px;
+  height: 100px;
+}

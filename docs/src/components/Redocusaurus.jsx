@@ -1,7 +1,7 @@
 import React from 'react';
 import merge from 'lodash.merge';
 // import { RedocStandalone } from 'redoc';
-import useThemeContext from '@theme/hooks/useThemeContext';
+// import useThemeContext from '@theme/hooks/useThemeContext';
 import ExecutionEnvironment from '@docusaurus/ExecutionEnvironment';
 import './styles.css';
 
@@ -104,8 +104,8 @@ function getThemeOptions(isDarkMode) {
  * }} props
  */
 function Redocusaurus(props) {
-  const { isDarkTheme } = useThemeContext();
-  const theme = getThemeOptions(isDarkTheme);
+  // const { isDarkTheme } = useThemeContext();
+  const theme = getThemeOptions(false);
 
   return (
     <div className="redocusaurus">

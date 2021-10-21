@@ -12,6 +12,20 @@
   overflow: hidden;
 }
 
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.colorContent {
+  background-color: rgba(73, 169, 222, 0.05);
+}
+
+.colorContentInner {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
 @media screen and (max-width: 966px) {
   .heroBanner {
     padding: 2rem;

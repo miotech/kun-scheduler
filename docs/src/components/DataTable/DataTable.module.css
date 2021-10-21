@@ -1,0 +1,11 @@
+.DataTable {
+  padding: 0 164px 0 140px;
+  display: flex;
+  align-items: center;
+}
+
+.img {
+  width: calc(150% - 140px);
+  padding-bottom: 51%;
+  margin-right: 104px;
+}
