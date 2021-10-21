@@ -1,6 +1,20 @@
 <p align="center">
     <img src="docs/static/img/github_bg.png">
 </p>
+<p align="center">
+    <a href="https://www.apache.org/licenses/LICENSE-2.0.txt">
+        <img alt="license" src="https://img.shields.io/:license-Apache%202-blue.svg" />
+    </a>
+    <a href="https://github.com/miotech/kun-scheduler/actions">
+        <img alt="GitHub Build" src="https://img.shields.io/github/workflow/status/miotech/kun-scheduler/ci%20ut" />
+    </a>
+    <a href="https://codecov.io/gh/miotech/kun-scheduler">
+        <img alt="codecov" src="https://codecov.io/gh/miotech/kun-scheduler/branch/master/graph/badge.svg?token=GOFXDTB69M" />
+    </a>
+    <a href="https://sonarcloud.io/dashboard?id=miotech_kun-scheduler">
+        <img alt="Quality Gate Status" src="https://sonarcloud.io/api/project_badges/measure?project=miotech_kun-scheduler&metric=alert_status">
+    </a>
+</p>
 
 # 介绍
 
@@ -23,7 +37,7 @@ kun-scheduler 的特性主要包括：
 最快地试用 kun-scheduler 的方法是使用 Docker Compose 进行部署，需要满足以下要求
 
 ```
-Docer >= v17.03
+Docker >= v17.03
 Docker Compose >= v1.27.0
 ```
 
@@ -62,33 +76,41 @@ Killed
 
 以下会用几个简单的例子来展示 kun-scheduler 如何使用。
 
+## 导入数据到Hive
+对于csv文件，你可以通过Hive的load功能导入，例如
+
+1. 上传cvs文件到hdfs
+2. 创建Hive表
+3. load csv文件到Hive表
+
+对于MySQL中的表，你可以通过下面几种方法将其导入到Hive
+
+1. 使用DataX导入，详细使用说明可参考: [DataX详细介绍](https://github.com/alibaba/DataX)
+2. 将数据转存为csv文件后导入
+
 ## 采集 Hive 数据源中的所有表
 
-首先我们需要添加一个 Hive 数据源。（注意：目前仅支持 mysql 的 metastore）
+首先我们需要添加一个 Hive 数据源。
 
 1. 点击左侧标签页的“设置”->“数据源设置”，然后点击右上角的“新增数据源”。
 2. 数据源名字可以任意填写，类型选择“Hive”，然后填写以下信息
 
     ```
-    dataSettings.field.metastoreHost: metastore的数据库host
-    dataSettings.field.metastorePort: metastore的数据库port
-    dataSettings.field.metastoreDatabaseName: metastore使用的database name
-    dataSettings.field.metastoreUsername: metastore的数据库的username
-    dataSettings.field.metastorePassword: metastore的数据库的password
-    dataSettings.field.datastoreHost: HiveServer的host
-    dataSettings.field.datastorePort: HiveServer的port
-    dataSettings.field.datastoreUsername: HiveServer的用户名
-    dataSettings.field.datastorePassword: HiveServer的密码
+    HiveMetaStore 地址: metaStore的uris地址
+    HiveServer 主机: HiveServer的host
+    HiveServer 端口: HiveServer的port
+    HiveServer 用户名: HiveServer的用户名
+    HiveServer 密码: HiveServer的密码
     ```
 3. 添加完数据源之后，点击数据源的刷新按钮。这样 kun-scheduler 就会开始收集 Hive 中所有的表信息。
 4. 由于导入过程目前还没有制作进度条，所以请耐心等待。过一段时间后数据源就会导入完成，并展示在“数据集”页面里。
 
 ## 创建一个 Spark 任务，并解析输入表和输出表
 
-首先我们要有一个 livy 集群，并把地址配置到 kun-scheduler 里面。
+首先我们要有一个 yarn 集群，并把地址配置到 kun-scheduler 里面。
 
 1. 点击左侧标签页的“设置”->“全局变量设置”，然后点击“创建新变量”。
-2. 填写 key 为 `livy.host`，value 则是 livy 的地址，形如`http://10.0.2.14:8998`。
+2. 填写 key 为 `yarn.host`，value 则是 yarn 的地址，形如`127.0.0.1:8088`。
 
 然后我们需要上传血缘解析的 jar 包到 HDFS 上。
 
@@ -98,21 +120,13 @@ Killed
     ```
     lineage.analysis.jar: 血缘解析 jar 包上传以后的地址
     lineage.output.path: HDFS 的临时目录，因为血缘解析结果会暂存为 HDFS 上的文件
-    s3.access.key: 如使用 s3 作为存储，则需要在这里增加 s3 的 access key
-    s3.secret.key: 同上，s3 的 secret access key
+    spark.sql.jar: 封装SparkSQL任务的jar的地址
     ```
 
-接下来我们开始创建 Spark 任务。
+接下来我们开始创建 SparkSQL 任务。
 
-1. 点击左侧标签页的“数据开发”，选择右上角的“创建任务”，创建“Spark”任务。
-2. 输入任务名之后，任务会被创建，点击进入任务的配置页面，有以下参数
-
-    ```
-    application files: Spark 脚本所在的 jar 包路径。需要注意的是 jar 包必须上传到 HDFS 或 s3 上面，这里填写的是 HDFS 或 s3 路径。必填。
-    application class name: Spark 脚本的 main class name。
-    application jars: 任务运行所需的其他额外 jar 包。选填。
-    application args: 任务执行时的命令行参数。选填。
-    ```
+1. 点击左侧标签页的“数据开发”，选择右上角的“创建任务”，创建“SparkSQL”任务。
+2. 输入任务名之后，任务会被创建，点击进入任务的配置页面，填写sql脚本
 3. 配置完任务参数后，再打开“调度规则”，选择“手动触发”，保存。
 4. 点击右上角的“试运行”按钮，可以对任务进行试跑。
 5. 如试跑无问题，点击右上角的“发布”按钮，可以将任务发布到线上，也就会正式开始调度了。不过由于我们选择的调度方式是”手动触发“，所以不会被自动调度，但可以手动补数据。

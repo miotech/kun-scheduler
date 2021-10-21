@@ -1,9 +1,19 @@
-[![License](https://img.shields.io/:license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0.txt)
-[![GitHub Build](https://img.shields.io/github/workflow/status/miotech/kun-scheduler/ci%20ut)](https://github.com/miotech/kun-scheduler/actions)
-[![codecov](https://codecov.io/gh/miotech/kun-scheduler/branch/master/graph/badge.svg?token=GOFXDTB69M)](https://codecov.io/gh/miotech/kun-scheduler)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=miotech_kun-scheduler&metric=alert_status)](https://sonarcloud.io/dashboard?id=miotech_kun-scheduler)
 <p align="center">
     <img src="docs/static/img/github_bg.png">
+</p>
+<p align="center">
+    <a href="https://www.apache.org/licenses/LICENSE-2.0.txt">
+        <img alt="license" src="https://img.shields.io/:license-Apache%202-blue.svg" />
+    </a>
+    <a href="https://github.com/miotech/kun-scheduler/actions">
+        <img alt="GitHub Build" src="https://img.shields.io/github/workflow/status/miotech/kun-scheduler/ci%20ut" />
+    </a>
+    <a href="https://codecov.io/gh/miotech/kun-scheduler">
+        <img alt="codecov" src="https://codecov.io/gh/miotech/kun-scheduler/branch/master/graph/badge.svg?token=GOFXDTB69M" />
+    </a>
+    <a href="https://sonarcloud.io/dashboard?id=miotech_kun-scheduler">
+        <img alt="Quality Gate Status" src="https://sonarcloud.io/api/project_badges/measure?project=miotech_kun-scheduler&metric=alert_status">
+    </a>
 </p>
 
 # Intro
@@ -29,7 +39,7 @@
 The fastest way to start *kun-scheduler* is using Docker Compose. Make sure you have Docker and Docker Compose installed, and they meet the minimum required version.
 
 ```
-Docer >= v17.03
+Docker >= v17.03
 Docker Compose >= v1.27.0
 ```
 
@@ -62,15 +72,11 @@ If you found a mysterious error message `Killed` in bootstrap, it is caused by t
 2. The data source name can be any words, select type as "Hive", then fill in the following information
 
     ```
-    dataSettings.field.metastoreHost: metastore db's host
-    dataSettings.field.metastorePort: metastore db's port
-    dataSettings.field.metastoreDatabaseName: metastore db's name
-    dataSettings.field.metastoreUsername: username to access metastore db
-    dataSettings.field.metastorePassword: password to access metastore db
-    dataSettings.field.datastoreHost: HiveServer's host
-    dataSettings.field.datastorePort: HiveServer's port
-    dataSettings.field.datastoreUsername: HiveServer's username
-    dataSettings.field.datastorePassword: HiveServer's password
+    HiveMetaStore Uris: metastore uris
+    HiveServer Host: HiveServer's host
+    HiveServer Port: HiveServer's port
+    HiveServer Username: HiveServer's username
+    HiveServer Password: HiveServer's password
     ```
 3. After adding the data source, click the refresh button of the data source. In this way, kun-scheduler will start collecting all the table information in Hive.
 4. Since the importing process needs some minutes to finish but has not yet implemented a progress bar, please be patient. After a period of time, the data source will be imported and displayed on the "Data Set" page.
