@@ -5,7 +5,7 @@ import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.DatabaseSetup;
 import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.commons.utils.Props;
-import com.miotech.kun.infra.util.RequestParameterBuilder;
+import com.miotech.kun.infra.util.MetadataSysTaskBuilder;
 import com.miotech.kun.metadata.web.constant.OperatorParam;
 import com.miotech.kun.metadata.web.constant.TaskParam;
 import com.miotech.kun.metadata.web.kafka.MetadataConsumerStarter;
@@ -94,12 +94,12 @@ public class InitService implements InitializingBean {
     }
 
     private void createOperator(String operatorName) {
-        Operator operatorOfCreated = workflowServiceFacade.saveOperator(operatorName, RequestParameterBuilder.buildOperatorForCreate(operatorName));
+        Operator operatorOfCreated = workflowServiceFacade.saveOperator(operatorName, MetadataSysTaskBuilder.buildOperatorForCreate(operatorName));
         setProp(operatorName, operatorOfCreated.getId().toString());
     }
 
     private void createTask(Long operatorId, String taskName) {
-        Task taskOfCreated = workflowServiceFacade.createTask(RequestParameterBuilder.buildTaskForCreate(taskName,
+        Task taskOfCreated = workflowServiceFacade.createTask(MetadataSysTaskBuilder.buildTaskForCreate(taskName,
                 operatorId, props));
         setProp(taskName, taskOfCreated.getId().toString());
     }
