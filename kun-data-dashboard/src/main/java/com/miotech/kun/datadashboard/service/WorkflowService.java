@@ -31,8 +31,7 @@ public class WorkflowService {
 
     private static final List<Tag> DATA_PLATFORM_FILTER_TAGS =
             Lists.newArrayList(
-                    new Tag(Constants.DATA_PLATFORM_TAG_PROJECT_NAME, Constants.DATA_PLATFORM_TAG_PROJECT_VALUE),
-                    new Tag(Constants.DATA_PLATFORM_TAG_KEY_TYPE, Constants.DATA_PLATFORM_TAG_VALUE_SCHEDULED)
+                    new Tag(Constants.DATA_PLATFORM_TAG_PROJECT_NAME, Constants.DATA_PLATFORM_TAG_PROJECT_VALUE)
             );
     private final ConcurrentMap<OffsetDateTime, DateTimeTaskCount> dateTimeTaskCountMap = new ConcurrentHashMap<>();
 
