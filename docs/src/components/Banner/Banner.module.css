@@ -1,0 +1,42 @@
+.Banner {
+  width: 100%;
+  padding: 0 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.BannerContent {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+}
+.Logo {
+  width: 73px;
+  height: 30px;
+  margin-bottom: 24px;
+}
+
+.title {
+  width: 460px;
+  font-size: 46px;
+  color: black;
+  line-height: 64px;
+  font-weight: bold;
+  font-family: PingFangSC;
+  margin-bottom: 24px;
+}
+.begin {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  color: #49a9de;
+  font-weight: bold;
+  cursor: pointer;
+}
+.bannerImg {
+  flex: 1;
+  padding-bottom: 50%;
+  margin-left: 100px;
+}

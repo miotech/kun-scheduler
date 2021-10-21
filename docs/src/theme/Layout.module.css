@@ -1,0 +1,9 @@
+.Layout {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.contentWrapper {
+  height: calc(100% - 70px);
+  overflow: auto;
+}
