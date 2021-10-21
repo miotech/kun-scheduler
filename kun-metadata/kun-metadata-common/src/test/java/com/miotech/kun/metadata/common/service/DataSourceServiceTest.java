@@ -4,6 +4,8 @@ import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.common.dao.DataSourceDao;
 import com.miotech.kun.metadata.common.factory.MockDataSourceFactory;
+import com.miotech.kun.metadata.common.factory.MockDatasetFactory;
+import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
 import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
@@ -76,7 +78,8 @@ public class DataSourceServiceTest extends DatabaseTestBase {
         DataSource saved = MockDataSourceFactory.createDataSource(1,"saved",values,3,new ArrayList<>());
         dataSourceDao.create(saved);
 
-        Long dataSourceId = dataSourceService.getDataSourceIdByConnectionInfo(DataStoreType.POSTGRES_TABLE,new ConnectionInfo(values));
+        DataStore dataStore = MockDatasetFactory.createDataStore("PostgreSQL","kun","test");
+        Long dataSourceId = dataSourceService.getDataSourceIdByConnectionInfo(DataStoreType.POSTGRES_TABLE,dataStore.getConnectionInfo());
         DataSource selected = dataSourceDao.findById(dataSourceId).get();
 
         //verify

@@ -121,12 +121,12 @@ public class DataSourceDao {
         return fetchDataSourcesJoiningTag(dataSourcesSQL, whereClauseAndParams.getRight().toArray());
     }
 
-    public DataSource fetchDataSourceByConnectionInfo(String typeName, ConnectionInfo connectionInfo){
+    public DataSource fetchDataSourceByConnectionInfo(String typeName, ConnectionInfo connectionInfo) {
         logger.debug("Fetch dataSourceId with type: {}", typeName);
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(DATASOURCE_MODEL_NAME, Arrays.asList(DATASOURCE_TABLE_COLUMNS));
-        columnsMap.put(DATASOURCE_ATTR_MODEL_NAME,Arrays.asList(DATASOURCE_ATTR_TABLE_COLUMNS));
-        columnsMap.put(DATASOURCE_TYPE_MODEL_NAME,Arrays.asList(DATASOURCE_TYPE_TABLE_COLUMNS));
+        columnsMap.put(DATASOURCE_ATTR_MODEL_NAME, Arrays.asList(DATASOURCE_ATTR_TABLE_COLUMNS));
+        columnsMap.put(DATASOURCE_TYPE_MODEL_NAME, Arrays.asList(DATASOURCE_TYPE_TABLE_COLUMNS));
         String dataSourceIdSQL = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .autoAliasColumns()
@@ -138,16 +138,16 @@ public class DataSourceDao {
                 .where(DATASOURCE_TYPE_MODEL_NAME + ".name = ?")
                 .getSQL();
 
-        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL,DataSourceResultMapper.INSTANCE , typeName);
-        for (DataSource dataSource : dataSourceList){
-            if(checkConnectionInfo(dataSource,connectionInfo)){
+        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL, DataSourceResultMapper.INSTANCE, typeName);
+        for (DataSource dataSource : dataSourceList) {
+            if (checkConnectionInfo(dataSource, connectionInfo)) {
                 return dataSource;
             }
         }
         return null;
     }
 
-    public boolean isDatasourceExist(DataSource dataSource){
+    public boolean isDatasourceExist(DataSource dataSource) {
         ConnectionInfo connectionInfo = dataSource.getConnectionInfo();
         Long typeId = dataSource.getTypeId();
         String dataSourceIdSQL = DefaultSQLBuilder.newBuilder()
@@ -156,26 +156,34 @@ public class DataSourceDao {
                 .where("type_id = ?")
                 .asPrepared()
                 .getSQL();
-        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL,DataSourceBasicMapper.INSTANCE , typeId);
-        for (DataSource savedSource : dataSourceList){
-            if(checkConnectionInfo(savedSource,connectionInfo)){
+        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL, DataSourceBasicMapper.INSTANCE, typeId);
+        for (DataSource savedSource : dataSourceList) {
+            if (checkConnectionInfo(savedSource, connectionInfo)) {
                 return true;
             }
         }
         return false;
     }
 
-    private boolean checkConnectionInfo(DataSource dataSource,ConnectionInfo searchConnectionInfo){
-        Map<String,Object> dataSourceConnectionInfo = dataSource.getConnectionInfo().getValues();
+    private boolean checkConnectionInfo(DataSource dataSource, ConnectionInfo searchConnectionInfo) {
+        Map<String, Object> dataSourceConnectionInfo = dataSource.getConnectionInfo().getValues();
 
-        for(Map.Entry<String,Object> props : searchConnectionInfo.getValues().entrySet()){
-            if(!dataSourceConnectionInfo.containsKey(props.getKey()) ||
-                    !dataSourceConnectionInfo.get(props.getKey()).equals(props.getValue())){
+        for (Map.Entry<String, Object> props : searchConnectionInfo.getValues().entrySet()) {
+            if (!dataSourceConnectionInfo.containsKey(props.getKey()) ||
+                    !sameConnectionValues(dataSourceConnectionInfo.get(props.getKey()), props.getValue())) {
                 return false;
             }
         }
         return true;
 
+    }
+
+    private boolean sameConnectionValues(Object saved, Object search) {
+        if (search instanceof Integer || search instanceof Long
+                || search instanceof Boolean ) {
+            return (search.toString()).equals(saved.toString());
+        }
+        return saved.equals(search);
     }
 
     private DataSource fetchDataSourceJoiningTag(String sql, Object... params) {
