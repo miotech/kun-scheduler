@@ -362,16 +362,17 @@ public class TaskDao {
         String whereClause = StringUtils.joinWith(" OR ", whereSubClauses.toArray());
 
         String taskIdColumn = TASK_TAGS_MODEL_NAME + ".task_id";
-        String sql = DefaultSQLBuilder.newBuilder()
+        SQLBuilder sqlBuilder =  DefaultSQLBuilder.newBuilder()
                 .select(taskIdColumn)
                 .from(TASK_TAGS_TABLE_NAME, TASK_TAGS_MODEL_NAME)
                 .where(whereClause)
-                .groupBy(taskIdColumn)
-                .having("count(1) = ?")
-                .getSQL();
-
-        // should match all tags as required
-        params.add(tags.size());
+                .groupBy(taskIdColumn);
+        if(tags.size() > 1){
+            sqlBuilder.having("count(1) = ?");
+            // should match all tags as required
+            params.add(tags.size());
+        }
+        String sql = sqlBuilder.getSQL();
         return Pair.of(sql, params);
     }
 
