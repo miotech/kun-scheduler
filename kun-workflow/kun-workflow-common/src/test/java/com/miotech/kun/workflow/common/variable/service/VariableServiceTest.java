@@ -148,6 +148,24 @@ public class VariableServiceTest extends DatabaseTestBase {
     }
 
     @Test
+    public void resolveVariable_withoutValue() {
+        variableDao.create(MockVariableFactory.createVariable()
+                .cloneBuilder()
+                .withNamespace("test-name")
+                .withKey("test")
+                .withValue("hello_test")
+                .build());
+
+        // no_exist variable
+        String result = variableService.resolveVariable("hello_${test-name.no_exist}");
+        assertThat(result, is("hello_${test-name.no_exist}"));
+
+        // mixed
+        result = variableService.resolveVariable("hello_${test-name.test}_${ test-name.no_exist}");
+        assertThat(result, is("hello_hello_test_${ test-name.no_exist}"));
+    }
+
+    @Test
     public void renderConfig() {
         variableDao.create(MockVariableFactory.createVariable()
                 .cloneBuilder()

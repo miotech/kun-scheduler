@@ -42,7 +42,7 @@ public class VariableService {
 
     public String get(String key) {
         Variable variable = find(key);
-        return variable == null ? "" : find(key).getValue();
+        return variable == null ? null : variable.getValue();
     }
 
     public Map<String, String> getVariables(String prefix) {
@@ -96,7 +96,10 @@ public class VariableService {
             for (int i = 1; i < matcher.groupCount(); i = i + 2) {
                 String fullMatch = matcher.group(i);
                 String variableKey = matcher.group(i + 1);
-                result = result.replace(fullMatch, get(variableKey));
+                String variableVal = get(variableKey);
+                if (variableVal != null) {
+                    result = result.replace(fullMatch, variableVal);
+                }
             }
         }
         return result;
