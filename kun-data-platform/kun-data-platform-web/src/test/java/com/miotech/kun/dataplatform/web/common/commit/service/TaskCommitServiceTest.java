@@ -5,8 +5,10 @@ import com.miotech.kun.dataplatform.facade.model.commit.CommitStatus;
 import com.miotech.kun.dataplatform.facade.model.commit.CommitType;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
-import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
+import com.miotech.kun.dataplatform.mocking.MockTaskCommitFactory;
+import com.miotech.kun.dataplatform.web.common.commit.vo.TaskCommitVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
+import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +16,14 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
 @WithMockTestUser
 public class TaskCommitServiceTest extends AppTestBase {
@@ -54,6 +61,37 @@ public class TaskCommitServiceTest extends AppTestBase {
     public void testGetLatestCommit_empty() {
         Map<Long, TaskCommit> latestCommit = taskCommitService.getLatestCommit(ImmutableList.of(1L, 2L));
         assertTrue(latestCommit.isEmpty());
+    }
+
+    @Test
+    public void findByTaskDefinitionId_success() {
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinition);
+        TaskCommit taskCommit1 = taskCommitService.commit(taskDefinition.getDefinitionId(), "first time");
+        TaskCommit taskCommit2 = taskCommitService.commit(taskDefinition.getDefinitionId(), "second time");
+
+        List<TaskCommit> result = taskCommitService.findByTaskDefinitionId(taskDefinition.getDefinitionId());
+        List<TaskCommit> commitList = Arrays.asList(taskCommit1, taskCommit2);
+        assertThat(new HashSet<>(commitList.stream().map(TaskCommit::getId).collect(Collectors.toList())),
+                is(new HashSet<>(result.stream().map(TaskCommit::getId).collect(Collectors.toList()))));
+    }
+
+
+    @Test
+    public void convertToVO_success() {
+        TaskCommit taskCommit = MockTaskCommitFactory.createTaskCommit();
+        TaskCommitVO taskCommitVO = taskCommitService.convertVO(taskCommit);
+
+        assertThat(taskCommit.getId(), is(taskCommitVO.getId()));
+        assertThat(taskCommit.getDefinitionId(), is(taskCommitVO.getDefinitionId()));
+        assertThat(taskCommit.getVersion(), is(taskCommitVO.getVersion()));
+        assertThat(taskCommit.getMessage(), is(taskCommitVO.getMessage()));
+        assertThat(taskCommit.getSnapshot(), sameBeanAs(taskCommitVO.getSnapshot()));
+        assertThat(taskCommit.getCommitter(), is(taskCommitVO.getCommitter()));
+        assertThat(taskCommit.getCommittedAt(), is(taskCommitVO.getCommittedAt()));
+        assertThat(taskCommit.getCommitType(), is(taskCommitVO.getCommitType()));
+        assertThat(taskCommit.getCommitStatus(), is(taskCommitVO.getCommitStatus()));
+        assertThat(taskCommit.isLatestCommit(), is(taskCommitVO.isLatestCommit()));
     }
 
     @Test
