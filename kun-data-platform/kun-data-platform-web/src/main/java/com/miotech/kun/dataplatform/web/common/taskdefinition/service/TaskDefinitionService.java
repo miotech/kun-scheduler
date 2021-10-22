@@ -9,6 +9,7 @@ import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
+import com.miotech.kun.dataplatform.web.common.commit.vo.TaskCommitVO;
 import com.miotech.kun.dataplatform.web.common.datastore.service.DatasetService;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskService;
@@ -418,11 +419,14 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 status
         );
     }
-
     public TaskDefinitionVO convertToVO(TaskDefinition taskDefinition) {
+        return convertToVO(taskDefinition, Collections.emptyList());
+    }
+
+    public TaskDefinitionVO convertToVO(TaskDefinition taskDefinition, List<TaskCommitVO> taskCommits) {
         Map<Long, Boolean> commitStatus = taskCommitService.getLatestCommitStatus(
                 Collections.singletonList(taskDefinition.getDefinitionId()));
-        return mapVO(taskDefinition, commitStatus);
+        return mapVO(taskDefinition, commitStatus, taskCommits);
     }
 
     public List<TaskDefinitionVO> convertToVOList(List<TaskDefinition> taskDefinitions, boolean withTaskPayload) {
@@ -436,12 +440,17 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 .collect(Collectors.toList());
     }
 
-    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus) {
+    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, List<TaskCommitVO> taskCommits) {
         List<Long> upstreamDefinitionIds = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
-        return mapVO(taskDefinition, commitStatus, taskDefinitionDao.fetchByIds(upstreamDefinitionIds), true);
+        return mapVO(taskDefinition, commitStatus, taskDefinitionDao.fetchByIds(upstreamDefinitionIds), true, taskCommits);
     }
 
     private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, List<TaskDefinition> taskDefinitions, boolean withTaskPayload) {
+        return mapVO(taskDefinition, commitStatus, taskDefinitions, withTaskPayload, Collections.emptyList());
+    }
+
+    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, List<TaskDefinition> taskDefinitions,
+                                   boolean withTaskPayload, List<TaskCommitVO> taskCommits) {
         List<TaskDefinitionProps> taskDefinitionProps;
         if (CollectionUtils.isEmpty(taskDefinitions)) {
             List<Long> upstreamDefinitionIds = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
@@ -466,7 +475,8 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 taskDefinitionProps,
                 taskDefinition.getLastModifier(),
                 taskDefinition.getUpdateTime(),
-                taskDefinition.getCreateTime()
+                taskDefinition.getCreateTime(),
+                taskCommits
         );
     }
 

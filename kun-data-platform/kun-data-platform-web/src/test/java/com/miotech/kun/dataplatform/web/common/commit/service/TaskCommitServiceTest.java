@@ -5,6 +5,8 @@ import com.miotech.kun.dataplatform.facade.model.commit.CommitStatus;
 import com.miotech.kun.dataplatform.facade.model.commit.CommitType;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.dataplatform.mocking.MockTaskCommitFactory;
+import com.miotech.kun.dataplatform.web.common.commit.vo.TaskCommitVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.security.testing.WithMockTestUser;
@@ -12,8 +14,11 @@ import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.NoSuchElementException;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
@@ -32,7 +37,7 @@ public class TaskCommitServiceTest extends AppTestBase {
             taskCommitService.commit(1L, null);
         } catch (Throwable e) {
             assertTrue(NoSuchElementException.class.isAssignableFrom(e.getClass()));
-            assertThat(e.getMessage(), Matchers.is("Task definition not found: \"1\""));
+            assertThat(e.getMessage(), is("Task definition not found: \"1\""));
         }
     }
 
@@ -43,9 +48,40 @@ public class TaskCommitServiceTest extends AppTestBase {
 
         String msg = "Create test message";
         TaskCommit commit = taskCommitService.commit(taskDefinition.getDefinitionId(), msg);
-        assertThat(commit.getCommitStatus(), Matchers.is(CommitStatus.SUBMITTED));
-        assertThat(commit.getCommitType(), Matchers.is(CommitType.CREATED));
-        assertThat(commit.getVersion(), Matchers.is("V1"));
-        assertThat(commit.getMessage(), Matchers.is(msg));
+        assertThat(commit.getCommitStatus(), is(CommitStatus.SUBMITTED));
+        assertThat(commit.getCommitType(), is(CommitType.CREATED));
+        assertThat(commit.getVersion(), is("V1"));
+        assertThat(commit.getMessage(), is(msg));
+    }
+
+    @Test
+    public void findByTaskDefinitionId_success() {
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinition);
+        TaskCommit taskCommit1 = taskCommitService.commit(taskDefinition.getDefinitionId(), "first time");
+        TaskCommit taskCommit2 = taskCommitService.commit(taskDefinition.getDefinitionId(), "second time");
+
+        List<TaskCommit> result = taskCommitService.findByTaskDefinitionId(taskDefinition.getDefinitionId());
+        List<TaskCommit> commitList = Arrays.asList(taskCommit1, taskCommit2);
+        assertThat(new HashSet<>(commitList.stream().map(TaskCommit::getId).collect(Collectors.toList())),
+                is(new HashSet<>(result.stream().map(TaskCommit::getId).collect(Collectors.toList()))));
+    }
+
+
+    @Test
+    public void convertToVO_success() {
+        TaskCommit taskCommit = MockTaskCommitFactory.createTaskCommit();
+        TaskCommitVO taskCommitVO = taskCommitService.convertVO(taskCommit);
+
+        assertThat(taskCommit.getId(), is(taskCommitVO.getId()));
+        assertThat(taskCommit.getDefinitionId(), is(taskCommitVO.getDefinitionId()));
+        assertThat(taskCommit.getVersion(), is(taskCommitVO.getVersion()));
+        assertThat(taskCommit.getMessage(), is(taskCommitVO.getMessage()));
+        assertThat(taskCommit.getSnapshot(), sameBeanAs(taskCommitVO.getSnapshot()));
+        assertThat(taskCommit.getCommitter(), is(taskCommitVO.getCommitter()));
+        assertThat(taskCommit.getCommittedAt(), is(taskCommitVO.getCommittedAt()));
+        assertThat(taskCommit.getCommitType(), is(taskCommitVO.getCommitType()));
+        assertThat(taskCommit.getCommitStatus(), is(taskCommitVO.getCommitStatus()));
+        assertThat(taskCommit.isLatestCommit(), is(taskCommitVO.isLatestCommit()));
     }
 }

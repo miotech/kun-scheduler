@@ -25,8 +25,7 @@ import static com.miotech.kun.dataplatform.web.common.tasktemplate.dao.TaskTempl
 import static com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus.*;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
-import static org.hamcrest.Matchers.in;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
@@ -303,6 +302,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(vo.getCreator(), is(taskDefinition.getCreator()));
         assertThat(vo.isArchived(), is(taskDefinition.isArchived()));
         assertThat(vo.isDeployed(), is(false));
+        assertThat(vo.getTaskCommits(), is(empty()));
         // upstreams
         assertThat(vo.getUpstreamTaskDefinitions().size(), is(1));
         assertThat(vo.getUpstreamTaskDefinitions().get(0).getId(), is(upstreamTaskDefinition.getDefinitionId()));
@@ -332,6 +332,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(vo.getCreator(), is(taskDefinition.getCreator()));
         assertThat(vo.isArchived(), is(taskDefinition.isArchived()));
         assertThat(vo.isDeployed(), is(false));
+        assertThat(vo.getTaskCommits(), is(empty()));
         // upstreams name should be empty
         assertThat(vo.getUpstreamTaskDefinitions().size(), is(1));
         assertThat(vo.getUpstreamTaskDefinitions().get(0).getId(), is(upstreamTaskDefinition.getDefinitionId()));
