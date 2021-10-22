@@ -53,6 +53,9 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
     @Autowired
     private TaskTemplateService taskTemplateService;
 
+    @Autowired
+    private TaskDefinitionService taskDefinitionService;
+
     public DeployedTask find(Long definitionId) {
         return deployedTaskDao.fetchById(definitionId)
                 .<IllegalArgumentException>orElseThrow(() -> {
@@ -122,12 +125,14 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
 
     private DeployedTask updateDeployedTask(TaskCommit commit) {
         Task remoteTask = buildTaskFromCommit(commit);
+        TaskDefinition taskDefinition = taskDefinitionService.find(commit.getDefinitionId());
         DeployedTask task = find(commit.getDefinitionId());
         DeployedTask updated = task
                 .cloneBuilder()
                 .withName(remoteTask.getName())
                 .withTaskCommit(commit)
                 .withWorkflowTaskId(remoteTask.getId())
+                .withOwner(taskDefinition.getOwner())
                 .build();
         deployedTaskDao.update(updated);
         return updated;
@@ -425,7 +430,7 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         List<String> userList = new ArrayList<>();
         Optional<DeployedTask> taskOptional = deployedTaskDao.fetchByWorkflowTaskId(wfTaskId);
         if(taskOptional.isPresent()){
-            Long userId = taskOptional.get().getOwner();
+            Long userId = taskDefinitionService.find(taskOptional.get().getDefinitionId()).getOwner();
             UserInfo userInfo = getUserById(userId);
             if(userId != null)
                 userList.add(userInfo.getUsername());
