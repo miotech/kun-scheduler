@@ -422,7 +422,8 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
     public TaskDefinitionVO convertToVO(TaskDefinition taskDefinition) {
         Map<Long, Boolean> commitStatus = taskCommitService.getLatestCommitStatus(
                 Collections.singletonList(taskDefinition.getDefinitionId()));
-        return mapVO(taskDefinition, commitStatus);
+        Map<Long, TaskCommit> latestCommits = taskCommitService.getLatestCommit(Collections.singletonList(taskDefinition.getDefinitionId()));
+        return mapVO(taskDefinition, commitStatus, latestCommits);
     }
 
     public List<TaskDefinitionVO> convertToVOList(List<TaskDefinition> taskDefinitions, boolean withTaskPayload) {
@@ -431,17 +432,22 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                         .map(TaskDefinition::getDefinitionId)
                         .collect(Collectors.toList())
         );
+        Map<Long, TaskCommit> latestCommits = taskCommitService.getLatestCommit(taskDefinitions.stream()
+                .map(TaskDefinition::getDefinitionId)
+                .collect(Collectors.toList()));
+
         return taskDefinitions.stream()
-                .map(taskDefinition -> mapVO(taskDefinition, commitStatus, null, withTaskPayload))
+                .map(taskDefinition -> mapVO(taskDefinition, commitStatus, null, withTaskPayload, latestCommits))
                 .collect(Collectors.toList());
     }
 
-    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus) {
+    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, Map<Long, TaskCommit> latestCommits) {
         List<Long> upstreamDefinitionIds = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
-        return mapVO(taskDefinition, commitStatus, taskDefinitionDao.fetchByIds(upstreamDefinitionIds), true);
+        return mapVO(taskDefinition, commitStatus, taskDefinitionDao.fetchByIds(upstreamDefinitionIds), true, latestCommits);
     }
 
-    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, List<TaskDefinition> taskDefinitions, boolean withTaskPayload) {
+    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, List<TaskDefinition> taskDefinitions,
+                                   boolean withTaskPayload, Map<Long, TaskCommit> latestCommits) {
         List<TaskDefinitionProps> taskDefinitionProps;
         if (CollectionUtils.isEmpty(taskDefinitions)) {
             List<Long> upstreamDefinitionIds = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
@@ -462,12 +468,22 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 taskDefinition.getCreator(),
                 taskDefinition.isArchived(),
                 commitStatus.get(taskDefinition.getDefinitionId()),
+                isUpdatedButNotDeployed(taskDefinition, latestCommits),
                 taskDefinition.getOwner(),
                 taskDefinitionProps,
                 taskDefinition.getLastModifier(),
                 taskDefinition.getUpdateTime(),
                 taskDefinition.getCreateTime()
         );
+    }
+
+    private boolean isUpdatedButNotDeployed(TaskDefinition taskDefinition, Map<Long, TaskCommit> latestCommits) {
+        if (!latestCommits.containsKey(taskDefinition.getDefinitionId())) {
+            return true;
+        }
+
+        TaskCommit taskCommit = latestCommits.get(taskDefinition.getDefinitionId());
+        return taskDefinition.getUpdateTime().isAfter(taskCommit.getCommittedAt());
     }
 
     public TaskTryVO convertToTaskTryVO(TaskTry taskTry) {

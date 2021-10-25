@@ -5,17 +5,18 @@ import com.miotech.kun.dataplatform.facade.model.commit.CommitStatus;
 import com.miotech.kun.dataplatform.facade.model.commit.CommitType;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
-import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
+import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.security.testing.WithMockTestUser;
-import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import java.util.Map;
 import java.util.NoSuchElementException;
 
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.*;
 
 @WithMockTestUser
 public class TaskCommitServiceTest extends AppTestBase {
@@ -32,7 +33,7 @@ public class TaskCommitServiceTest extends AppTestBase {
             taskCommitService.commit(1L, null);
         } catch (Throwable e) {
             assertTrue(NoSuchElementException.class.isAssignableFrom(e.getClass()));
-            assertThat(e.getMessage(), Matchers.is("Task definition not found: \"1\""));
+            assertThat(e.getMessage(), is("Task definition not found: \"1\""));
         }
     }
 
@@ -43,9 +44,31 @@ public class TaskCommitServiceTest extends AppTestBase {
 
         String msg = "Create test message";
         TaskCommit commit = taskCommitService.commit(taskDefinition.getDefinitionId(), msg);
-        assertThat(commit.getCommitStatus(), Matchers.is(CommitStatus.SUBMITTED));
-        assertThat(commit.getCommitType(), Matchers.is(CommitType.CREATED));
-        assertThat(commit.getVersion(), Matchers.is("V1"));
-        assertThat(commit.getMessage(), Matchers.is(msg));
+        assertThat(commit.getCommitStatus(), is(CommitStatus.SUBMITTED));
+        assertThat(commit.getCommitType(), is(CommitType.CREATED));
+        assertThat(commit.getVersion(), is("V1"));
+        assertThat(commit.getMessage(), is(msg));
     }
+
+    @Test
+    public void testGetLatestCommit_empty() {
+        Map<Long, TaskCommit> latestCommit = taskCommitService.getLatestCommit(ImmutableList.of(1L, 2L));
+        assertTrue(latestCommit.isEmpty());
+    }
+
+    @Test
+    public void testGetLatestCommit_createThenFetch() {
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinition);
+
+        String msg = "Create test message";
+        taskCommitService.commit(taskDefinition.getDefinitionId(), msg);
+        msg = "Create taset message v2";
+        taskCommitService.commit(taskDefinition.getDefinitionId(), msg);
+
+        Map<Long, TaskCommit> latestCommit = taskCommitService.getLatestCommit(ImmutableList.of(taskDefinition.getDefinitionId()));
+        assertFalse(latestCommit.isEmpty());
+        assertThat(latestCommit.get(taskDefinition.getDefinitionId()).getMessage(), is(msg));
+    }
+
 }

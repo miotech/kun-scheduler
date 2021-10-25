@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.web.common.commit.dao;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.miotech.kun.dataplatform.facade.model.commit.CommitStatus;
 import com.miotech.kun.dataplatform.facade.model.commit.CommitType;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
@@ -222,6 +223,27 @@ public class TaskCommitDao {
                 .asPrepared()
                 .getSQL();
         return jdbcTemplate.update(sql, isLatest, commitId);
+    }
+
+    public Map<Long, TaskCommit> getLatestCommit(List<Long> definitionIds) {
+        Map<Long, TaskCommit> result = Maps.newHashMap();
+        if (CollectionUtils.isEmpty(definitionIds)) {
+            return result;
+        }
+
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_COMMIT_MODEL_NAME, taskCommitCols);
+        String sql = DefaultSQLBuilder.newBuilder()
+                .columns(columnsMap)
+                .from(TASK_COMMIT_TABLE_NAME, TASK_COMMIT_MODEL_NAME)
+                .where(String.format("%s.task_def_id in (%s) and %s.is_latest is true", TASK_COMMIT_MODEL_NAME,
+                        StringUtils.repeatJoin("?", ",", definitionIds.size()), TASK_COMMIT_MODEL_NAME))
+                .asPrepared()
+                .autoAliasColumns()
+                .getSQL();
+
+        jdbcTemplate.query(sql, TaskCommitMapper.INSTANCE, definitionIds.toArray()).stream().forEach(taskCommit -> result.put(taskCommit.getDefinitionId(), taskCommit));
+        return result;
     }
 
     public static class TaskCommitMapper implements RowMapper<TaskCommit> {
