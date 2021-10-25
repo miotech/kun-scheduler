@@ -12,6 +12,7 @@
 }
 
 .img {
-  width: calc(100% - 248px);
+  width: calc(100% - 48px);
+  margin: 0 auto;
   padding-bottom: 60%;
 }

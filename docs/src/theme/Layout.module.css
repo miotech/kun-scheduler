@@ -1,6 +1,7 @@
 .Layout {
   height: 100vh;
   overflow: hidden;
+  font-family: PingFangSC;
 }
 
 .contentWrapper {
