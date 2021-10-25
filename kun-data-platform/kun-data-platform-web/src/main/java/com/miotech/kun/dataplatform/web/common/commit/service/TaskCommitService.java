@@ -159,4 +159,8 @@ public class TaskCommitService extends BaseSecurityService {
     public Map<Long, Boolean> getLatestCommitStatus(List<Long> definitionIds) {
         return taskCommitDao.getLatestCommitStatus(definitionIds);
     }
+
+    public Map<Long, TaskCommit> getLatestCommit(List<Long> definitionIds) {
+        return taskCommitDao.getLatestCommit(definitionIds);
+    }
 }
