@@ -2,7 +2,7 @@ module.exports = {
   title: "KUN",
   tagline: "Open source all in one data management platform",
   url: "https://miotech.github.io",
-  baseUrl: "/KUN/",
+  baseUrl: "/",
   onBrokenLinks: "throw",
   favicon: "img/favicon.ico",
   organizationName: "miotech", // Usually your GitHub org/user name.
