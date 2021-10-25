@@ -22,7 +22,9 @@ export default function Banner() {
           立即开始
         </Link>
       </div>
-      <ImgBackContainer className={css.bannerImg} img={logoUrl} />
+      <div className={css.bannerImgContainer}>
+        <ImgBackContainer className={css.bannerImg} img={logoUrl} />
+      </div>
     </div>
   );
 }
