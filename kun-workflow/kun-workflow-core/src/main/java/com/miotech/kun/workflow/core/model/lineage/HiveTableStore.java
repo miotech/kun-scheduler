@@ -37,7 +37,8 @@ public class HiveTableStore extends DataStore {
         super(DataStoreType.HIVE_TABLE);
         this.location = location;
         this.database = database;
-        this.table = table;
+        //hive not support upperCase table name
+        this.table = toLowCase(table);
     }
 
     @Override
@@ -76,5 +77,9 @@ public class HiveTableStore extends DataStore {
     @Override
     public String getName() {
         return table;
+    }
+
+    private String toLowCase(String table){
+        return table.toLowerCase();
     }
 }
