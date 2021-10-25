@@ -437,8 +437,8 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
         assertThat(downstreamDataList, hasSize(1));
         assertThat(upStore.getDatabase(), is("upDatabase"));
         assertThat(downStore.getDatabase(), is("downDatabase"));
-        assertThat(upStore.getTable(), is("upTable"));
-        assertThat(downStore.getTable(), is("downTable"));
+        assertThat(upStore.getTable(), is("uptable"));
+        assertThat(downStore.getTable(), is("downtable"));
         assertThat(upStore.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/src"));
         assertThat(downStore.getLocation(), is("file:/spline/spline-spark-agent/spark-warehouse/sparktest.db/hive_test"));
 
