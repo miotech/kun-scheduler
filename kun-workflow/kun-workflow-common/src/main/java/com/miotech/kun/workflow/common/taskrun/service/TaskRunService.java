@@ -20,7 +20,6 @@ import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.annotation.Internal;
-import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -28,7 +27,6 @@ import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nullable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -125,7 +123,7 @@ public class TaskRunService {
                 logger.debug("get logs from executor success,line count = {}", lineCount);
                 return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLineIndex, endLineIndex, logList);
             } catch (RuntimeException e) {
-                logger.warn("get taskAttemptId = {} from executor failed", taskAttempt.getId(), e);
+                //worker is not running,get log from log file
             }
         }
         try {
