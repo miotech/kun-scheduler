@@ -293,6 +293,22 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         assertThat(fetched.getDatasourceId(),is(dataset.getDatasourceId()));
     }
 
+
+    @Test
+    public void createHiveDataSet_dataset_name_should_be_lowerCase(){
+        //prepare
+        String tableName = "UpperCaseTable";
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1, "hive", Maps.newHashMap(), 1L, null);
+        dataSourceDao.create(dataSource);
+        DataStore dataStore = MockDatasetFactory.createDataStore("Hive","test",tableName);
+        Dataset dataset = metadataDatasetService.createDataSetIfNotExist(dataStore);
+
+        //verify
+        assertThat(dataset.getName(),is(tableName.toLowerCase()));
+        assertThat(dataset.getDatabaseName(),is("test"));
+        assertThat(dataset.getDatasourceId(),is(1l));
+    }
+
     private void insertDataset(DatabaseOperator dbOperator, Dataset dataset) {
         dbOperator.update("INSERT INTO kun_mt_dataset(gid, name, datasource_id, data_store, database_name, dsi, deleted) VALUES(?, ?, ?, CAST(? AS JSONB), ?, ?, ?)",
                 dataset.getGid(), dataset.getName(), dataset.getDatasourceId(), DataStoreJsonUtil.toJson(dataset.getDataStore()),

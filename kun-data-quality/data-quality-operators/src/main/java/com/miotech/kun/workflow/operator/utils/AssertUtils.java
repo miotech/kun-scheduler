@@ -52,7 +52,7 @@ public class AssertUtils {
                 throw newUnsupportedValue(originalValue, FieldType.NUMBER);
             }
             originNumber = (Number) originalValue;
-            return compareString(originNumber.toString(), expectedValue, operator, FieldType.NUMBER);
+            return compareNumber(originNumber, expectedValue, operator, FieldType.NUMBER);
         } else if (FieldType.STRING.name().equalsIgnoreCase(expectedType)) {
             String originString;
             if (!(originalValue instanceof String)) {
@@ -70,6 +70,34 @@ public class AssertUtils {
                                          String operator,
                                          FieldType fieldType) {
         int compareResult = StringUtils.compare(originString, expectedValue);
+        return checkCompareResult(compareResult,operator,fieldType);
+    }
+
+    private static boolean compareNumber(Number originNumber,
+                                         String expectedValue,
+                                         String operator,
+                                         FieldType fieldType){
+        int compareResult = compareNumber(originNumber,expectedValue);
+        return checkCompareResult(compareResult,operator,fieldType);
+    }
+
+    private static int compareNumber(Number originNumber,String expectedValue ){
+        if(originNumber instanceof Integer){
+            Integer expectedNumber = Integer.valueOf(expectedValue);
+            return ((Integer) originNumber).compareTo(expectedNumber);
+        }
+        if(originNumber instanceof Long){
+            Long expectedNumber = Long.valueOf(expectedValue);
+            return ((Long) originNumber).compareTo(expectedNumber);
+        }
+        if(originNumber instanceof Double){
+            Double expectedNumber = Double.valueOf(expectedValue);
+            return ((Double) originNumber).compareTo(expectedNumber);
+        }
+        throw new IllegalArgumentException("Unsupported Number: " + originNumber);
+    }
+
+    private static boolean checkCompareResult(int compareResult,String operator,FieldType fieldType){
         if (EQ.equals(operator)) {
             return compareResult == 0;
         } else if (NEQ.equals(operator)) {
@@ -83,7 +111,7 @@ public class AssertUtils {
         } else if (LTE.equals(operator)) {
             return compareResult <= 0;
         } else {
-            throw newUnsupportedOperator(operator, fieldType);
+            throw newUnsupportedOperator(operator,fieldType);
         }
     }
 
