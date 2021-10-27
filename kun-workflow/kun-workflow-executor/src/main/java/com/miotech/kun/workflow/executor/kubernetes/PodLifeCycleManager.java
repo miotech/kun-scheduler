@@ -216,6 +216,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         command.setJarPath(operatorDetail.getPackagePath());
         command.setClassName(operatorDetail.getClassName());
         command.setQueueName(taskAttempt.getQueueName());
+        command.setExecuteTarget(taskAttempt.getTaskRun().getExecuteTarget());
         logger.debug("Execute task. attemptId={}, command={}", taskAttempt.getId(), command);
 
         return command;

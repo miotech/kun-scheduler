@@ -61,7 +61,7 @@ public class KubernetesOperatorLauncher {
     }
 
     private OperatorContext initContext(ExecCommand command) {
-        OperatorContext context = new OperatorContextImpl(command.getConfig(), command.getTaskRunId());
+        OperatorContext context = new OperatorContextImpl(command.getConfig(), command.getTaskRunId(),command.getExecuteTarget());
         injector.injectMembers(context);
         return context;
     }

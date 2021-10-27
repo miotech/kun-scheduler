@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.core.execution;
 
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.resource.Resource;
 
 public interface OperatorContext {
@@ -23,4 +24,9 @@ public interface OperatorContext {
      * 获取任务调度执行时间
      */
     public String getExecuteTime();
+
+    /**
+     * 获取任务执行环境信息
+     */
+    public ExecuteTarget getExecuteTarget();
 }

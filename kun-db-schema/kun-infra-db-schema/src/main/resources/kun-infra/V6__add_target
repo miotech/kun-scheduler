@@ -1,0 +1,13 @@
+CREATE TABLE IF NOT EXISTS kun_wf_target (
+    id bigserial primary key,
+    "name" varchar(64) NOT NULL,
+    "config" jsonb,
+    "description" varchar(1024),
+    "create_at" timestamp,
+    "update_at" timestamp
+
+);
+
+CREATE UNIQUE INDEX kun_wf_target_name ON public.kun_wf_target USING btree (name);
+
+ALTER TABLE kun_wf_task_run ADD COLUMN target jsonb ;
