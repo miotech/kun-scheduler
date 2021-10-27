@@ -86,8 +86,17 @@ public interface WorkflowClient {
     /**
      * create and launch task then forget
      * @param task
+     * @param taskConfig
      */
     TaskRun executeTask(Task task, Map<String, Object> taskConfig);
+
+    /**
+     * create and launch task then forget
+     * @param task
+     * @param taskConfig
+     * @param targetId
+     */
+    TaskRun executeTask(Task task, Map<String, Object> taskConfig,Long targetId);
 
     /**
      * execute an existing task
@@ -96,6 +105,15 @@ public interface WorkflowClient {
      * @return
      */
     TaskRun executeTask(Long taskId, Map<String, Object> taskConfig);
+
+    /**
+     * execute an existing task
+     * @param taskId
+     * @param taskConfig
+     * @param targetId
+     * @return
+     */
+    TaskRun executeTask(Long taskId, Map<String, Object> taskConfig,Long targetId);
 
     /**
      * launch existed tasks

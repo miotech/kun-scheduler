@@ -10,6 +10,8 @@ import java.util.stream.Collectors;
 public class RunTaskRequest {
     private Map<Long, Map<String, Object>> taskConfigs = Maps.newHashMap();
 
+    private Long targetId;
+
     public void addTaskConfig(Long taskId, Map<String, Object> overwriteConfig) {
         this.taskConfigs.put(taskId, overwriteConfig);
     }
@@ -21,6 +23,14 @@ public class RunTaskRequest {
                         x.getValue())
                 )
                 .collect(Collectors.toList());
+    }
+
+    public Long getTargetId() {
+        return targetId;
+    }
+
+    public void setTargetId(Long targetId) {
+        this.targetId = targetId;
     }
 
     @Override
