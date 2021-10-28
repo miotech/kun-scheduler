@@ -25,7 +25,7 @@ import { useInterval } from 'ahooks';
 import DescriptionInput from './components/DescriptionInput/DescriptionInput';
 import ColumnDescInput from './components/ColumnDescInput/ColumnDescInput';
 import AddDataQualityModal from './components/AddDataQualityModal/AddDataQualityModal';
-// import DataQualityTable from './components/DataQualityTable/DataQualityTable';
+import DataQualityTable from './components/DataQualityTable/DataQualityTable';
 import LineageStreamTaskTable from './components/LineageStreamTaskTable/LineageStreamTaskTable';
 
 import styles from './index.less';
@@ -261,19 +261,19 @@ export default function DatasetDetail({ match }: Props) {
     [dispatch.datasetDetail],
   );
 
-  // const handleClickAddDataQuality = useCallback(() => {
-  //   setCurrentDataQualityId(null);
-  //   setAddDataQualityModalVisible(true);
-  // }, []);
+  const handleClickAddDataQuality = useCallback(() => {
+    setCurrentDataQualityId(null);
+    setAddDataQualityModalVisible(true);
+  }, []);
   const handleCloseAddDataQuality = useCallback(() => {
     setCurrentDataQualityId(null);
     setAddDataQualityModalVisible(false);
   }, []);
 
-  // const handleClickEditDataQuality = useCallback((dqId: string) => {
-  //   setCurrentDataQualityId(dqId);
-  //   setAddDataQualityModalVisible(true);
-  // }, []);
+  const handleClickEditDataQuality = useCallback((dqId: string) => {
+    setCurrentDataQualityId(dqId);
+    setAddDataQualityModalVisible(true);
+  }, []);
 
   const defaultRelatedTable = useMemo(
     () => ({
@@ -288,22 +288,20 @@ export default function DatasetDetail({ match }: Props) {
     setForceReFetchDataQualityFlag(i => i + 1);
   }, []);
 
-  // const handleConfirmDeleteDataQuality = useCallback(
-  //   qualityId => {
-  //     dispatch.datasetDetail.deleteDataQuality({ id: qualityId }).then(resp => {
-  //       if (resp) {
-  //         const newDataQualities = selector.dataQualities?.filter(
-  //           i => i.id !== resp.id,
-  //         );
-  //         dispatch.datasetDetail.updateState({
-  //           key: 'dataQualities',
-  //           value: newDataQualities,
-  //         });
-  //       }
-  //     });
-  //   },
-  //   [dispatch.datasetDetail, selector.dataQualities],
-  // );
+  const handleConfirmDeleteDataQuality = useCallback(
+    qualityId => {
+      dispatch.datasetDetail.deleteDataQuality({ id: qualityId }).then(resp => {
+        if (resp) {
+          const newDataQualities = selector.dataQualities?.filter(i => i.id !== resp.id);
+          dispatch.datasetDetail.updateState({
+            key: 'dataQualities',
+            value: newDataQualities,
+          });
+        }
+      });
+    },
+    [dispatch.datasetDetail, selector.dataQualities],
+  );
 
   const handleChangeColumnDescription = useCallback(
     (v: string, id: string) => {
@@ -579,29 +577,25 @@ export default function DatasetDetail({ match }: Props) {
                 </div>
               </div>
               {/* 暂时屏蔽掉 test case */}
-              {/* <Divider className={styles.divider} />
+              <Divider className={styles.divider} />
 
               <div className={styles.dataQualityArea}>
                 <div className={styles.baseItemTitle}>
                   {t('dataDetail.baseItem.title.dataQuality')}
-                  <span
-                    className={styles.addButton}
-                    onClick={handleClickAddDataQuality}
-                  >
+                  <span className={styles.addButton} onClick={handleClickAddDataQuality}>
                     {t('common.button.add')}
                   </span>
                 </div>
                 <div className={styles.baseContent}>
-                  {selector.dataQualities &&
-                    selector.dataQualities.length > 0 && (
-                      <DataQualityTable
-                        data={selector.dataQualities}
-                        onDelete={handleConfirmDeleteDataQuality}
-                        onClick={handleClickEditDataQuality}
-                      />
-                    )}
+                  {selector.dataQualities && selector.dataQualities.length > 0 && (
+                    <DataQualityTable
+                      data={selector.dataQualities}
+                      onDelete={handleConfirmDeleteDataQuality}
+                      onClick={handleClickEditDataQuality}
+                    />
+                  )}
                 </div>
-              </div> */}
+              </div>
             </Spin>
           </div>
         </Card>

@@ -6,8 +6,8 @@ import { GlossaryNode } from '@/rematch/models/glossary';
  * @param time
  */
 export const watermarkFormatter = (time?: string | number) => {
-  if (time && !Number.isNaN(Number(time))) {
-    return moment(Number(time)).format('YYYY-MM-DD HH:mm:ss');
+  if (time) {
+    return moment(time).format('YYYY-MM-DD HH:mm:ss');
   }
   return '';
 };
@@ -17,10 +17,7 @@ export const watermarkFormatter = (time?: string | number) => {
  * @param node
  * @param targetId
  */
-export const deepFirstSearch = (
-  node: GlossaryNode | null,
-  targetId: string,
-) => {
+export const deepFirstSearch = (node: GlossaryNode | null, targetId: string) => {
   if (node != null) {
     const stack: GlossaryNode[] = [];
     stack.push(node);
@@ -44,20 +41,14 @@ export const deepFirstSearch = (
  * @param parentId
  * @param dataGrope
  */
-export const deleteNodeFromParent = (
-  id: string,
-  parentId: string,
-  dataGrope: GlossaryNode | null,
-) => {
+export const deleteNodeFromParent = (id: string, parentId: string, dataGrope: GlossaryNode | null) => {
   const parentNodeData = deepFirstSearch(dataGrope, parentId);
   if (parentNodeData) {
     if (parentNodeData.childrenCount) {
       parentNodeData.childrenCount -= 1;
     }
     if (parentNodeData.children) {
-      parentNodeData.children = parentNodeData.children.filter(
-        child => child.id !== id,
-      );
+      parentNodeData.children = parentNodeData.children.filter(child => child.id !== id);
       if (parentNodeData.children.length === 0) {
         parentNodeData.children = null;
       }
@@ -71,11 +62,7 @@ export const deleteNodeFromParent = (
  * @param parentId
  * @param dataGrope
  */
-export const addNodeToParent = (
-  currentNode: GlossaryNode | null,
-  parentId: string,
-  dataGrope: GlossaryNode | null,
-) => {
+export const addNodeToParent = (currentNode: GlossaryNode | null, parentId: string, dataGrope: GlossaryNode | null) => {
   const newParentNode = deepFirstSearch(dataGrope, parentId);
   if (newParentNode) {
     if (newParentNode.childrenCount) {
