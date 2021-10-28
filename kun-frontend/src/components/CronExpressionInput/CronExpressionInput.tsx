@@ -32,6 +32,24 @@ function normalizeProvidedCronExpressionValue(value?: string): string | undefine
     .join(' ');
 }
 
+function fixScopValue(value?: string) {
+  if (!value) {
+    return '';
+  }
+  const strArr = value.split(' ');
+  const withDashItemIdex = strArr.findIndex(i => i.includes('-'));
+  const withDashItem = strArr.find(i => i.includes('-'));
+  if (withDashItem) {
+    const arr = withDashItem.split('-');
+    const start = arr[0];
+    const end = arr[1];
+    if (start > end) {
+      strArr[withDashItemIdex] = `${start}-${start}`;
+    }
+  }
+  return strArr.join(' ');
+}
+
 export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, CronExpressionInputProps>(
   function CronExpressionInput(props) {
     const { value, onChange, className, hideErrorAlert = false } = props;
@@ -84,27 +102,29 @@ export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, C
           }}
         />
         <div className="cron-expression-input__selector-component-wrapper" />
-          {isValidCronExpressionFlag ?
-            <>
-              {semanticTip}
-              <div className={c('cron-expression-input', className)}>
-                <ReQuartzCron
-                  value={appliedValue}
-                  tabs={[Tab.MINUTES, Tab.HOURS, Tab.DAY, Tab.MONTH, Tab.YEAR]}
-                  onChange={(v: string) => {
-                    if (onChange) {
-                      onChange(v);
-                    } else {
-                      setUncontrolledValue(v);
-                    }
-                  }}
-                  localization={LOCALIZATION[t('common.lang')] || undefined}
-                />
-              </div>
-            </> :
-            <></>
-          }
+        {isValidCronExpressionFlag ? (
+          <>
+            {semanticTip}
+            <div className={c('cron-expression-input', className)}>
+              <ReQuartzCron
+                value={appliedValue}
+                tabs={[Tab.MINUTES, Tab.HOURS, Tab.DAY, Tab.MONTH, Tab.YEAR]}
+                onChange={(v: string) => {
+                  const v1 = fixScopValue(v);
+                  if (onChange) {
+                    onChange(v1);
+                  } else {
+                    setUncontrolledValue(v1);
+                  }
+                }}
+                localization={LOCALIZATION[t('common.lang')] || undefined}
+              />
+            </div>
+          </>
+        ) : (
+          <></>
+        )}
       </div>
     );
-  }
+  },
 );
