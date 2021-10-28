@@ -117,7 +117,11 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
   const rect = useMemo(() => {
     const content = data?.renderAsTaskRunDAG ? (
       <Popover
-        title={title}
+        title={
+          <div style={{ maxWidth: 300, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+            {title}
+          </div>
+        }
         overlayClassName="taskrun-dag-node-popover"
         content={
           <table style={{ tableLayout: 'fixed', minWidth: '320px' }}>
@@ -153,7 +157,9 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
                   <td>{t('taskRun.property.failedLink')}</td>
                   <td>
                     {data.failedUpstreamTaskRuns.map(i => (
-                      <div>
+                      <div
+                        style={{ maxWidth: 190, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}
+                      >
                         <Link to={`/operation-center/task-run-id/${i.id}`} target="_blank">
                           {i.name}
                         </Link>
