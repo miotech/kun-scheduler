@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,7 +23,10 @@ public class SparkSqlOperatorV2 extends SparkSubmitBaseOperator {
         cmd.add("spark-submit");
         cmd.addAll(SparkOperatorUtils.parseSparkSubmitParmas(sparkSubmitParams));
 
-        String sql = ExprUtils.evalExecuteTimeExpr(appArgs, getContext().getExecuteTime());
+        Map<String, Object> exprArgs = new HashMap<>();
+        exprArgs.put("execute_time", getContext().getExecuteTime());
+        exprArgs.put("target.schema", getContext().getExecuteTarget().getProperty("schema"));
+        String sql = ExprUtils.evalExpr(appArgs, exprArgs);
 
         File sqlFile = storeSqlToFile(sql);
         addSqlFile(sparkConf, sqlFile.getPath());

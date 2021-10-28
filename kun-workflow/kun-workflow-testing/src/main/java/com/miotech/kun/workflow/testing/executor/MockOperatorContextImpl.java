@@ -58,7 +58,7 @@ public class MockOperatorContextImpl implements OperatorContext {
 
     @Override
     public ExecuteTarget getExecuteTarget() {
-        return ExecuteTarget.newBuilder().withName("test").build();
+        return ExecuteTarget.newBuilder().withName("test").withProperties(ImmutableMap.of("schema", "test")).build();
     }
 
     public List<DataStore> getInlets() {
