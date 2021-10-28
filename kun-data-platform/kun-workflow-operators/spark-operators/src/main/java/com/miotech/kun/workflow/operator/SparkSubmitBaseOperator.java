@@ -38,6 +38,8 @@ abstract public class SparkSubmitBaseOperator extends KunOperator {
         sparkConf.put("spark.hadoop.taskRunId", taskRunId.toString());
         String taskRunTick = context.getExecuteTime();
         sparkConf.put("spark.hadoop.taskRun.scheduledTick", taskRunTick);
+        String taskTarget = context.getExecuteTarget().getName();
+        sparkConf.put("spark.hadoop.taskRun.target", taskTarget);
         // lineage conf
         String configLineageOutputPath = SparkConfiguration.getString(context, CONF_LINEAGE_OUTPUT_PATH);
         String configLineageJarPath = SparkConfiguration.getString(context, CONF_LINEAGE_JAR_PATH);
