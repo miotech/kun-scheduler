@@ -35,88 +35,90 @@ const logger = LogUtils.getLoggers('DeployedTasksTableComp');
 const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo(function DeployedTasksTable(props) {
   const t = useI18n();
 
-  const {
-    selectedTask, setSelectedTask,
-  } = props;
+  const { selectedTask, setSelectedTask } = props;
 
-  const {
-    pageNum = 1,
-    pageSize = 25,
-    total = 0,
-    onChangePagination,
-  } = props;
+  const { pageNum = 1, pageSize = 25, total = 0, onChangePagination } = props;
 
-  const columns = useMemo<ColumnProps<DeployedTask>[]>(() => [
-    // Column: Deployed task name
-    {
-      title: t('scheduledTasks.property.name'),
-      dataIndex: 'name',
-      key: 'name',
-      render: (txt: string, record: DeployedTask) => {
-        return (
-          <Link to={
-            SafeUrlAssembler()
-              .template('/operation-center/scheduled-tasks/:id')
-              .param({ id: record.id })
-              .toString()
-          }
-          >
-            {txt}
-          </Link>
-        );
+  const columns = useMemo<ColumnProps<DeployedTask>[]>(
+    () => [
+      // Column: Deployed task name
+      {
+        title: t('scheduledTasks.property.name'),
+        dataIndex: 'name',
+        key: 'name',
+        render: (txt: string, record: DeployedTask) => {
+          return (
+            <Link
+              to={SafeUrlAssembler()
+                .template('/operation-center/scheduled-tasks/:id')
+                .param({ id: record.id })
+                .toString()}
+              style={{
+                display: 'inline-block',
+                maxWidth: 500,
+                whiteSpace: 'nowrap',
+                textOverflow: 'ellipsis',
+                overflow: 'hidden',
+              }}
+            >
+              {txt}
+            </Link>
+          );
+        },
       },
-    },
-    // Column: Owner
-    {
-      title: t('scheduledTasks.property.owner'),
-      dataIndex: 'owner',
-      key: 'owner',
-      render: (txt: string) => txt ? <UsernameText userId={txt} /> : '',
-    },
-    // Column: Last run time
-    {
-      title: t('scheduledTasks.property.lastRunTime'),
-      dataIndex: ['latestTaskRun', 'startAt'],
-      key: 'latestRunTime',
-      render: (txt: string) => txt ? moment(txt).format('YYYY-MM-DD HH:mm:ss') : '-',
-      width: 200,
-    },
-    // Column: Last run status
-    {
-      title: t('scheduledTasks.property.lastRunStatus'),
-      dataIndex: ['latestTaskRun', 'status'],
-      key: 'latestRunStatus',
-      render: (txt: RunStatusEnum) => txt ? <StatusText status={txt} /> : '-',
-      width: 120,
-    },
-    // Column: Cron expression
-    {
-      title: t('scheduledTasks.property.cronExpression'),
-      dataIndex: ['taskPayload', 'scheduleConfig', 'cronExpr'],
-      key: 'cronExpr',
-      width: 200,
-      render: (txt: string) => {
-        return (
-          // eslint-disable-next-line react-hooks/rules-of-hooks
-          <Tooltip title={useCronSemanticText(txt, {
-          })}>
-            <Text code>{txt}</Text>
-          </Tooltip>
-        );
+      // Column: Owner
+      {
+        title: t('scheduledTasks.property.owner'),
+        dataIndex: 'owner',
+        key: 'owner',
+        render: (txt: string) => (txt ? <UsernameText userId={txt} /> : ''),
       },
-    },
-  ], [t]);
+      // Column: Last run time
+      {
+        title: t('scheduledTasks.property.lastRunTime'),
+        dataIndex: ['latestTaskRun', 'startAt'],
+        key: 'latestRunTime',
+        render: (txt: string) => (txt ? moment(txt).format('YYYY-MM-DD HH:mm:ss') : '-'),
+        width: 200,
+      },
+      // Column: Last run status
+      {
+        title: t('scheduledTasks.property.lastRunStatus'),
+        dataIndex: ['latestTaskRun', 'status'],
+        key: 'latestRunStatus',
+        render: (txt: RunStatusEnum) => (txt ? <StatusText status={txt} /> : '-'),
+        width: 120,
+      },
+      // Column: Cron expression
+      {
+        title: t('scheduledTasks.property.cronExpression'),
+        dataIndex: ['taskPayload', 'scheduleConfig', 'cronExpr'],
+        key: 'cronExpr',
+        width: 200,
+        render: (txt: string) => {
+          return (
+            // eslint-disable-next-line react-hooks/rules-of-hooks
+            <Tooltip title={useCronSemanticText(txt, {})}>
+              <Text code>{txt}</Text>
+            </Tooltip>
+          );
+        },
+      },
+    ],
+    [t],
+  );
 
-  const handleRowEvents = useCallback((record: DeployedTask) => {
-    return {
-      onClick: () => {
-        logger.trace('record = %o;', record);
-        setSelectedTask(record);
-      },
-    };
-  }, [
-    setSelectedTask,
-  ]);
+  const handleRowEvents = useCallback(
+    (record: DeployedTask) => {
+      return {
+        onClick: () => {
+          logger.trace('record = %o;', record);
+          setSelectedTask(record);
+        },
+      };
+    },
+    [setSelectedTask],
+  );
 
   return (
     <KunSpin spinning={props.loading}>
@@ -139,7 +141,9 @@ const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo(function Deploy
           selectedRowKeys: selectedTask ? [selectedTask.id] : [],
           hideSelectAll: true,
           type: 'radio',
-          onSelect: (record) => { setSelectedTask(record); },
+          onSelect: record => {
+            setSelectedTask(record);
+          },
         }}
         onRow={handleRowEvents}
       />

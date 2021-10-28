@@ -292,9 +292,7 @@ export default function DatasetDetail({ match }: Props) {
   //   qualityId => {
   //     dispatch.datasetDetail.deleteDataQuality({ id: qualityId }).then(resp => {
   //       if (resp) {
-  //         const newDataQualities = selector.dataQualities?.filter(
-  //           i => i.id !== resp.id,
-  //         );
+  //         const newDataQualities = selector.dataQualities?.filter(i => i.id !== resp.id);
   //         dispatch.datasetDetail.updateState({
   //           key: 'dataQualities',
   //           value: newDataQualities,
@@ -584,22 +582,18 @@ export default function DatasetDetail({ match }: Props) {
               <div className={styles.dataQualityArea}>
                 <div className={styles.baseItemTitle}>
                   {t('dataDetail.baseItem.title.dataQuality')}
-                  <span
-                    className={styles.addButton}
-                    onClick={handleClickAddDataQuality}
-                  >
+                  <span className={styles.addButton} onClick={handleClickAddDataQuality}>
                     {t('common.button.add')}
                   </span>
                 </div>
                 <div className={styles.baseContent}>
-                  {selector.dataQualities &&
-                    selector.dataQualities.length > 0 && (
-                      <DataQualityTable
-                        data={selector.dataQualities}
-                        onDelete={handleConfirmDeleteDataQuality}
-                        onClick={handleClickEditDataQuality}
-                      />
-                    )}
+                  {selector.dataQualities && selector.dataQualities.length > 0 && (
+                    <DataQualityTable
+                      data={selector.dataQualities}
+                      onDelete={handleConfirmDeleteDataQuality}
+                      onClick={handleClickEditDataQuality}
+                    />
+                  )}
                 </div>
               </div> */}
             </Spin>
