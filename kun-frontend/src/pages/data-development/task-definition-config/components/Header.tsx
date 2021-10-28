@@ -158,6 +158,7 @@ export const Header: React.FC<Props> = props => {
         <h2 className={styles.DefinitionTitle}>
           {/* Definition title and edit input */}
           <EditText
+            viewContainerClassName={styles.EditText}
             value={draftTaskDef?.name || ''}
             type="text"
             validation={value => {
