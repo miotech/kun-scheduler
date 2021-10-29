@@ -36,7 +36,14 @@
   cursor: pointer;
 }
 .bannerImg {
+  width: 100%;
+  max-width: 550px;
+  padding-bottom: 60%;
+}
+.bannerImgContainer {
+  height: 603px;
   flex: 1;
-  padding-bottom: 50%;
-  margin-left: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

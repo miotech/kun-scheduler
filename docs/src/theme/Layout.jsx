@@ -3,6 +3,7 @@ import NavBar from "@theme/NavBar";
 import ThemeProvider from "@theme/ThemeProvider";
 import UserPreferencesProvider from "@theme/UserPreferencesProvider";
 import Footer from "./Footer";
+import Copyright from './Copyright/Copyright';
 
 import css from "./Layout.module.css";
 
@@ -22,6 +23,7 @@ export default function Layout({ children }) {
         <div className={css.contentWrapper}>
           <div>{children}</div>
           <Footer />
+          <Copyright />
         </div>
       </div>
     </Providers>
