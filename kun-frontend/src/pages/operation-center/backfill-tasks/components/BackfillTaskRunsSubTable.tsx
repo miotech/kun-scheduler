@@ -88,9 +88,15 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(function BackfillT
         render: (txt: any, record: TaskRun) => {
           const definitionId = getTaskDefinitionIdByTaskRun(record);
           return definitionId != null ? (
-            <Link to={`/data-development/task-definition/${definitionId}`}>{record.task.name}</Link>
+            <Link to={`/data-development/task-definition/${definitionId}`}>
+              <div style={{ maxWidth: 400, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+                {record.task.name}
+              </div>
+            </Link>
           ) : (
-            record.task.name
+            <div style={{ maxWidth: 400, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+              {record.task.name}
+            </div>
           );
         },
       },
