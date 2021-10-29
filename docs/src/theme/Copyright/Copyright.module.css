@@ -1,0 +1,9 @@
+.Copyright {
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(145,165,183,0.5);
+  background-color: #113366;
+  font-size: 12px;
+}
