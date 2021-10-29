@@ -25,6 +25,9 @@ public class TaskDefinitionVO {
     @JsonProperty("isDeployed")
     private final boolean deployed;
 
+    @JsonProperty("isUpdated")
+    private final boolean updated;
+
     private final Long owner;
 
     private final List<TaskDefinitionProps> upstreamTaskDefinitions;
@@ -42,6 +45,7 @@ public class TaskDefinitionVO {
                             Long creator,
                             boolean archived,
                             boolean deployed,
+                            boolean updated,
                             Long owner,
                             List<TaskDefinitionProps> upstreamTaskDefinitions,
                             Long lastModifier,
@@ -55,6 +59,7 @@ public class TaskDefinitionVO {
         this.creator = creator;
         this.archived = archived;
         this.deployed = deployed;
+        this.updated = updated;
         this.owner = owner;
         this.upstreamTaskDefinitions = upstreamTaskDefinitions;
         this.lastModifier = lastModifier;

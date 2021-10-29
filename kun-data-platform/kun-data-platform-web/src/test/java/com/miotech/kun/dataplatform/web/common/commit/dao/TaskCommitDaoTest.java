@@ -2,27 +2,40 @@ package com.miotech.kun.dataplatform.web.common.commit.dao;
 
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
+import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
+import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitSearchRequest;
 import com.miotech.kun.dataplatform.mocking.MockTaskCommitFactory;
+import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
+import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import org.hamcrest.Matchers;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
-// TODO: figure out a solution to bootstrap Workflow facade related tests
+@WithMockTestUser
 public class TaskCommitDaoTest extends AppTestBase {
 
     @Autowired
     private TaskCommitDao taskCommitDao;
+
+    @Autowired
+    private TaskDefinitionDao taskDefinitionDao;
+
+    @Autowired
+    private TaskCommitService taskCommitService;
 
     @Test
     public void testCreate_TaskCommit_ok() {
@@ -54,4 +67,32 @@ public class TaskCommitDaoTest extends AppTestBase {
         assertThat(taskCommitPage.getPageSize(), Matchers.is(10));
         assertThat(taskCommitPage.getPageNum(), Matchers.is(1));
     }
+
+    @Test
+    public void testGetLatestCommit_definitionIdsIsEmpty() {
+        Map<Long, TaskCommit> latestCommit = taskCommitDao.getLatestCommit(ImmutableList.of());
+        assertTrue(latestCommit.isEmpty());
+    }
+
+    @Test
+    public void testGetLatestCommit_empty() {
+        Map<Long, TaskCommit> latestCommit = taskCommitDao.getLatestCommit(ImmutableList.of(1L, 2L));
+        assertTrue(latestCommit.isEmpty());
+    }
+
+    @Test
+    public void testGetLatestCommit_createThenFetch() {
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinition);
+
+        String msg = "Create test message";
+        taskCommitService.commit(taskDefinition.getDefinitionId(), msg);
+        msg = "Create taset message v2";
+        taskCommitService.commit(taskDefinition.getDefinitionId(), msg);
+
+        Map<Long, TaskCommit> latestCommit = taskCommitDao.getLatestCommit(ImmutableList.of(taskDefinition.getDefinitionId()));
+        assertFalse(latestCommit.isEmpty());
+        assertThat(latestCommit.get(taskDefinition.getDefinitionId()).getMessage(), is(msg));
+    }
+
 }

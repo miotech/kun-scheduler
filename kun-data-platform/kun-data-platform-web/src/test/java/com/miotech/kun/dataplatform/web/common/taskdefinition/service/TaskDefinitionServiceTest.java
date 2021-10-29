@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.web.common.taskdefinition.service;
 
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.*;
+import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
@@ -48,9 +49,8 @@ public class TaskDefinitionServiceTest extends AppTestBase {
     @Autowired
     private DeployService deployService;
 
-    @Test
-    public void find() {
-    }
+    @Autowired
+    private TaskCommitService taskCommitService;
 
     @Test
     public void create_ok() {
@@ -282,7 +282,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
     }
 
     @Test
-    public void test_convertToVO() {
+    public void test_convertToVO_notDeployed() {
         // create definition with dependencies
         TaskDefinition upstreamTaskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
         taskDefinitionDao.create(upstreamTaskDefinition);
@@ -303,6 +303,40 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(vo.getCreator(), is(taskDefinition.getCreator()));
         assertThat(vo.isArchived(), is(taskDefinition.isArchived()));
         assertThat(vo.isDeployed(), is(false));
+        assertThat(vo.isUpdated(), is(true));
+        // upstreams
+        assertThat(vo.getUpstreamTaskDefinitions().size(), is(1));
+        assertThat(vo.getUpstreamTaskDefinitions().get(0).getId(), is(upstreamTaskDefinition.getDefinitionId()));
+        assertThat(vo.getUpstreamTaskDefinitions().get(0).getName(), is(upstreamTaskDefinition.getName()));
+    }
+
+    @Test
+    public void test_convertToVO_updatedButNotDeployed() {
+        // create definition with dependencies
+        TaskDefinition upstreamTaskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(upstreamTaskDefinition);
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinitions(1, Collections.singletonList(upstreamTaskDefinition.getDefinitionId()))
+                .get(0);
+        taskDefinitionDao.create(taskDefinition);
+
+        // commit
+        String msg = "commit test msg";
+        taskCommitService.commit(taskDefinition.getDefinitionId(), msg);
+
+        TaskDefinitionVO vo = taskDefinitionService.convertToVO(taskDefinition);
+
+        assertTrue(vo.getId() > 0);
+        assertThat(vo.getName(), is(taskDefinition.getName()));
+        assertThat(vo.getCreateTime(), is(taskDefinition.getCreateTime()));
+        assertThat(vo.getLastModifier(), is(taskDefinition.getLastModifier()));
+        assertThat(vo.getLastUpdateTime(), is(taskDefinition.getUpdateTime()));
+        assertThat(vo.getOwner(), is(taskDefinition.getOwner()));
+        assertThat(vo.getTaskTemplateName(), is(taskDefinition.getTaskTemplateName()));
+        assertThat(vo.getTaskPayload(), sameBeanAs(taskDefinition.getTaskPayload()));
+        assertThat(vo.getCreator(), is(taskDefinition.getCreator()));
+        assertThat(vo.isArchived(), is(taskDefinition.isArchived()));
+        assertThat(vo.isDeployed(), is(false));
+        assertThat(vo.isUpdated(), is(false));
         // upstreams
         assertThat(vo.getUpstreamTaskDefinitions().size(), is(1));
         assertThat(vo.getUpstreamTaskDefinitions().get(0).getId(), is(upstreamTaskDefinition.getDefinitionId()));
