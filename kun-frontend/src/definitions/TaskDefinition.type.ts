@@ -23,6 +23,7 @@ export interface TaskDefinition {
   id: number | string;
   isArchived: boolean;
   isDeployed: boolean;
+  isUpdated: boolean;
   name: string;
   taskTemplateName: string;
   taskPayload: TaskPayload | null;

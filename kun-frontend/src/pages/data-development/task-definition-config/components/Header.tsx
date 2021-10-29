@@ -12,6 +12,7 @@ import {
   commitAndDeployTaskDefinition,
   deleteTaskDefinition,
   updateTaskDefinition,
+  fetchTaskDefinitionDetail,
 } from '@/services/data-development/task-definitions';
 
 import { getFlattenedTaskDefinition } from '@/utils/transformDataset';
@@ -85,7 +86,7 @@ export const Header: React.FC<Props> = props => {
       logger.debug('Form.values =', form.getFieldsValue());
       await form.validateFields();
       // if all fields are valid
-      await updateTaskDefinition({
+      const newTaskDefinition = await updateTaskDefinition({
         id: taskDefId,
         name: draftTaskDef?.name || '',
         owner: draftTaskDef?.owner || '',
@@ -109,6 +110,7 @@ export const Header: React.FC<Props> = props => {
       });
       message.success(t('common.operateSuccess'));
       dispatch.dataDevelopment.setDefinitionFormDirty(false);
+      setDraftTaskDef(newTaskDefinition);
     } catch (e) {
       logger.warn(e);
       // hint each form error
@@ -116,7 +118,16 @@ export const Header: React.FC<Props> = props => {
         e.errorFields.forEach((fieldErr: { errors: string[] }) => message.error(fieldErr.errors[0]));
       }
     }
-  }, [form, taskDefId, draftTaskDef?.name, draftTaskDef?.owner, props.taskTemplate, t, dispatch.dataDevelopment]);
+  }, [
+    form,
+    taskDefId,
+    draftTaskDef?.name,
+    draftTaskDef?.owner,
+    props.taskTemplate,
+    t,
+    dispatch.dataDevelopment,
+    setDraftTaskDef,
+  ]);
 
   const renderCommitBtn = () => {
     if (definitionFormDirty) {
@@ -147,6 +158,7 @@ export const Header: React.FC<Props> = props => {
         <h2 className={styles.DefinitionTitle}>
           {/* Definition title and edit input */}
           <EditText
+            viewContainerClassName={styles.EditText}
             value={draftTaskDef?.name || ''}
             type="text"
             validation={value => {
@@ -200,12 +212,15 @@ export const Header: React.FC<Props> = props => {
           </Descriptions.Item>
           {/* Status */}
           <Descriptions.Item label={t('dataDevelopment.definition.property.currentState')}>
-            {draftTaskDef?.isDeployed && (
+            {!draftTaskDef?.isUpdated && draftTaskDef?.isDeployed && (
               <Tag color="processing">{t('dataDevelopment.definition.property.isDeployed')}</Tag>
             )}
             {draftTaskDef?.isArchived && <Tag color="error">{t('dataDevelopment.definition.property.isArchived')}</Tag>}
             {!draftTaskDef?.isDeployed && !draftTaskDef?.isArchived && (
               <Tag color="default">{t('dataDevelopment.definition.property.draft')}</Tag>
+            )}
+            {draftTaskDef?.isUpdated && (
+              <Tag className={styles.updatedTag}>{t('dataDevelopment.definition.property.isUpdated')}</Tag>
             )}
           </Descriptions.Item>
           {/* Owner */}
@@ -252,7 +267,9 @@ export const Header: React.FC<Props> = props => {
         onConfirm={async (commitMsg: string) => {
           const respData = await commitAndDeployTaskDefinition(taskDefId, commitMsg);
           if (respData) {
+            const newTaskDefinition = await await fetchTaskDefinitionDetail(taskDefId);
             message.success('Commit success.');
+            setDraftTaskDef(newTaskDefinition);
             setCommitModalVisible(false);
           }
         }}
