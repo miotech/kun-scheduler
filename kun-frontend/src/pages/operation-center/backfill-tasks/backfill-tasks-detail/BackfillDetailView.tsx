@@ -235,10 +235,12 @@ export const BackfillDetailView: React.FC<Props> = memo(function BackfillDetailV
     pageError,
     backfillDetailData,
     t,
-    reloadTable,
     tableIsReloading,
+    reloadTable,
     handleAbortTaskRun,
     handleRestartTaskRun,
+    handleRerunBackfillInstance,
+    handleStopBackfillInstance,
   ]);
 
   return (

@@ -117,7 +117,9 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
               })
               .toString()}
           >
-            {record.name}
+            <div style={{ maxWidth: 300, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+              {record.name}
+            </div>
           </Link>
         ),
       },
