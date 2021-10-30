@@ -43,12 +43,35 @@ Docker Compose >= v1.27.0
 
 部署包括以下步骤：
 
+Step1:Download kun-scheduler
 ```
-curl -LfO 'https://raw.githubusercontent.com/miotech/kun-scheduler/master/dist/kun-scheduler-0.7.0-rc1.tar.gz'
-tar xf kun-scheduler-0.7.0-rc1.tar.gz
+curl -LfO 'https://raw.githubusercontent.com/miotech/kun-scheduler/master/dist/kun-scheduler-0.7.0-rc3.tar.gz'
+tar xf kun-scheduler-0.7.0-rc3.tar.gz
 cd kun-scheduler
 docker-compose up
 ```
+
+Step2:Config Hadoop env
+```
+edit hadoop.env file and config follwing params
+#hive configuration
+HIVE_SITE_CONF_hive_metastore_uris=
+HIVE_SITE_CONF_hive_metastore_warehouse_dir=
+
+#hdfs-site configuration
+HDFS_CONF_fs_defaultFS=
+
+#yarn-site configuration
+//yarn ip
+YARN_CONF_yarn_resourcemanager_hostname=
+
+#core-site configuration
+CORE_CONF_fs_defaultFS=
+```
+
+Step3:start docker-compose
+```
+docker-compose up
 
 首次启动因为需要初始化数据库等操作，所以需大约等待1分钟左右。当看到下面这行日志时，说明启动已经完成。
 
@@ -127,15 +150,19 @@ Killed
 
 1. 点击左侧标签页的“数据开发”，选择右上角的“创建任务”，创建“SparkSQL”任务。
 2. 输入任务名之后，任务会被创建，点击进入任务的配置页面，填写sql脚本
+DROP TABLE IF EXISTS kun.sales_record; CREATE TABLE kun.sales_record (id BIGINT, name STRING,price DECIMAL, date STRING); INSERT INTO TABLE kun.sales_record VALUES (1, 'cola', 3,'2021-07-01'),(2, 'ice-cream', 5,'2021-07-01'),(3, 'cola', 3,'2021-07-02');
 3. 配置完任务参数后，再打开“调度规则”，选择“手动触发”，保存。
 4. 点击右上角的“试运行”按钮，可以对任务进行试跑。
 5. 如试跑无问题，点击右上角的“发布”按钮，可以将任务发布到线上，也就会正式开始调度了。不过由于我们选择的调度方式是”手动触发“，所以不会被自动调度，但可以手动补数据。
-6. 再次回到“数据开发”页面，勾选中刚刚创建的任务，点击右上角的“执行数据回填”，就会触发一次补数据。补数据的结果可以在左侧标签页的“补数据实例”处看到。
+6. 仿照之前的步骤，再创建一个spark-sql任务，填写sql脚本
+CREATE TABLE if not exists kun.daily_sales;INSERT INTO kun.daily_sales_record SELECT date,sum(price) from kun.sales_record group by date
+并在"调度规则"的"上游配置"中填入之前创建的任务名并选中搜索结果，最后将这个任务保存并发布
+7. 再次回到“数据开发”页面，勾选中刚刚创建的任务，点击右上角的“执行数据回填”，就会触发一次补数据。补数据的结果可以在左侧标签页的“补数据实例”处看到。
 
-最后我们再来看下数据血缘的解析结果。假设上面这个任务读取了 `dwd.transaction_details`，并写入 `dws.transaction_summary` 表。我们可以在“数据集”中看到血缘解析的结果。
+最后我们再来看下数据血缘的解析结果。
 
 1. 打开左侧标签页的“数据探索”，点击“数据集”。
-2. 搜索 `transaction_details` 表或 `transaction_summary` 表，在血缘中可以看到刚刚创建的任务。
+2. 搜索 `sales_record` 表或 `daily_sales` 表，在血缘中可以看到刚刚创建的任务。
 
 ## 构造一条 Pipeline
 

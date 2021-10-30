@@ -43,12 +43,36 @@ Docker >= v17.03
 Docker Compose >= v1.27.0
 ```
 
-Then you can start *kun-scheduler* with following commands
+Then you can start *kun-scheduler* with following step
 
+Step1:Download kun-scheduler
 ```
-curl -LfO 'https://raw.githubusercontent.com/miotech/kun-scheduler/master/dist/kun-scheduler-0.7.0-rc1.tar.gz'
-tar xf kun-scheduler-0.7.0-rc1.tar.gz
+curl -LfO 'https://raw.githubusercontent.com/miotech/kun-scheduler/master/dist/kun-scheduler-0.7.0-rc3.tar.gz'
+tar xf kun-scheduler-0.7.0-rc3.tar.gz
 cd kun-scheduler
+docker-compose up
+```
+
+Step2:Config Hadoop env
+```
+edit hadoop.env file and config follwing params
+#hive configuration
+HIVE_SITE_CONF_hive_metastore_uris=
+HIVE_SITE_CONF_hive_metastore_warehouse_dir=
+
+#hdfs-site configuration
+HDFS_CONF_fs_defaultFS=
+
+#yarn-site configuration
+//yarn ip
+YARN_CONF_yarn_resourcemanager_hostname=
+
+#core-site configuration
+CORE_CONF_fs_defaultFS=
+```
+
+Step3:start docker-compose
+```
 docker-compose up
 ```
 
@@ -81,7 +105,7 @@ If you found a mysterious error message `Killed` in bootstrap, it is caused by t
 3. After adding the data source, click the refresh button of the data source. In this way, kun-scheduler will start collecting all the table information in Hive.
 4. Since the importing process needs some minutes to finish but has not yet implemented a progress bar, please be patient. After a period of time, the data source will be imported and displayed on the "Data Set" page.
 
-## Create a Spark task and parse the input and output tables
+## Create a Spark sql task and parse the input and output tables
 
 First, we need to have a livy cluster and configure the address to kun-scheduler.
 
