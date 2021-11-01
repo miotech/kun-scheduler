@@ -3,24 +3,31 @@ package com.miotech.kun.dataplatform.web.common.taskdefinition.service;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
+import com.miotech.kun.dataplatform.mocking.MockTaskRunFactory;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskRelationDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.*;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
+import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.client.model.RunTaskRequest;
+import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunLogRequest;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.json.simple.JSONObject;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.miotech.kun.dataplatform.web.common.tasktemplate.dao.TaskTemplateDaoTest.TEST_TEMPLATE;
 import static com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus.*;
@@ -29,6 +36,7 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.in;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
 @WithMockTestUser
@@ -454,5 +462,170 @@ public class TaskDefinitionServiceTest extends AppTestBase {
     public void test_deploy_fail_when_upstream_not_deployed(){
         // task relation should be removed as well when delete task
         //need mock workflow
+    }
+
+
+    //Scenario: only one taskDef in batch
+    @Test
+    public void runBatchOneTaskDef_shouldSuccess() {
+        TaskDefinition taskDef = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDef);
+        TaskTryBatchRequest taskTryBatchRequest = new TaskTryBatchRequest(Collections.singletonList(taskDef.getDefinitionId()));
+
+        List<Task> taskList = new ArrayList<>();
+        Mockito.doAnswer(invocation -> {
+            Task task = invocation.getArgument(0);
+            task = task.cloneBuilder()
+                    .withId(WorkflowIdGenerator.nextTaskId())
+                    .build();
+            taskList.add(task);
+            return task;
+        }).when(workflowClient).saveTask(any(Task.class), any(List.class));
+
+        Mockito.doAnswer(invocation -> MockTaskRunFactory.createTaskRuns(taskList)).when(workflowClient).executeTasks(any(RunTaskRequest.class));
+
+        List<TaskTry> taskTryList = taskDefinitionService.runBatch(taskTryBatchRequest);
+
+        assertThat(taskTryList.size(), is(1));
+        TaskTry taskTry = taskTryList.get(0);
+        assertThat(taskTry.getDefinitionId(), is(taskDef.getDefinitionId()));
+    }
+
+    //scenario
+    //  taskDef  1,2 -> 3
+    // select 1 2 3 to try run
+    @Test
+    public void runBatchMultiTaskDef_shouldSuccess() {
+        TaskDefinition taskDef1 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinition taskDef2 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinition taskDef3 = MockTaskDefinitionFactory.createTaskDefinitions(1,
+                Arrays.asList(taskDef1.getDefinitionId(), taskDef2.getDefinitionId())).get(0);
+        taskDefinitionDao.create(taskDef1);
+        taskDefinitionDao.create(taskDef2);
+        taskDefinitionDao.create(taskDef3);
+
+        TaskTryBatchRequest taskTryBatchRequest = new TaskTryBatchRequest(Arrays.asList(taskDef1.getDefinitionId(),
+                taskDef2.getDefinitionId(), taskDef3.getDefinitionId()));
+
+        List<Task> taskList = new ArrayList<>();
+        Mockito.doAnswer(invocation -> {
+            Task task = invocation.getArgument(0);
+            task = task.cloneBuilder()
+                    .withId(WorkflowIdGenerator.nextTaskId())
+                    .build();
+            taskList.add(task);
+            return task;
+        }).when(workflowClient).saveTask(any(Task.class), any(List.class));
+
+        Mockito.doAnswer(invocation -> MockTaskRunFactory.createTaskRuns(taskList)).when(workflowClient).executeTasks(any(RunTaskRequest.class));
+
+        List<TaskTry> taskTryList = taskDefinitionService.runBatch(taskTryBatchRequest);
+
+        assertThat(taskTryList.size(), is(3));
+        assertThat(new HashSet<>(taskTryList.stream().map(TaskTry::getDefinitionId).collect(Collectors.toList())),
+                is(new HashSet<>(Arrays.asList(taskDef1.getDefinitionId(), taskDef2.getDefinitionId(), taskDef3.getDefinitionId()))));
+
+    }
+
+    //scenario
+    //taskDef  1 -> 2,  2 -> 1
+    //check circular dependency
+    @Test(expected = RuntimeException.class)
+    public void runMultiTaskDefBatch_withCircularDependency_shouldFail() {
+        Long taskDef1Id = DataPlatformIdGenerator.nextDefinitionId();
+        TaskDefinition taskDef2 = MockTaskDefinitionFactory.createTaskDefinitions(1, Collections.singletonList(taskDef1Id)).get(0);
+        TaskDefinition taskDef1 = MockTaskDefinitionFactory.createTaskDefinitions(1, Collections.singletonList(taskDef2.getDefinitionId()), taskDef1Id).get(0);
+        taskDefinitionDao.create(taskDef1);
+        taskDefinitionDao.create(taskDef2);
+        TaskTryBatchRequest taskTryBatchRequest = new TaskTryBatchRequest(Arrays.asList(taskDef1.getDefinitionId(),
+                taskDef2.getDefinitionId()));
+        try {
+            taskDefinitionService.runBatch(taskTryBatchRequest);
+        } catch(RuntimeException e) {
+            String message = "Task try run batch has circular dependence";
+            assertThat(e.getMessage(), is(message));
+            throw e;
+        }
+    }
+
+    //scenario:
+    // taskDef  1,2 -> 3, 3,4 -> 5
+    // select 1 3 5 to try run
+    @Test
+    public void runBatchMultiTaskDef_selectedTaskDef_shouldSuccess() {
+        TaskDefinition taskDef1 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinition taskDef2 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinition taskDef3 = MockTaskDefinitionFactory.createTaskDefinitions(1,
+                Arrays.asList(taskDef1.getDefinitionId(), taskDef2.getDefinitionId())).get(0);
+        TaskDefinition taskDef4 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinition taskDef5 = MockTaskDefinitionFactory.createTaskDefinitions(1,
+                Arrays.asList(taskDef3.getDefinitionId(), taskDef4.getDefinitionId())).get(0);
+        taskDefinitionDao.create(taskDef1);
+        taskDefinitionDao.create(taskDef2);
+        taskDefinitionDao.create(taskDef3);
+        taskDefinitionDao.create(taskDef4);
+        taskDefinitionDao.create(taskDef5);
+
+        List<Long> tryTaskDefIdList = Arrays.asList(taskDef1.getDefinitionId(), taskDef3.getDefinitionId(), taskDef5.getDefinitionId());
+        TaskTryBatchRequest taskTryBatchRequest = new TaskTryBatchRequest(tryTaskDefIdList);
+
+        List<Task> taskList = new ArrayList<>();
+        Mockito.doAnswer(invocation -> {
+            Task task = invocation.getArgument(0);
+            task = task.cloneBuilder()
+                    .withId(WorkflowIdGenerator.nextTaskId())
+                    .build();
+            taskList.add(task);
+            return task;
+        }).when(workflowClient).saveTask(any(Task.class), any(List.class));
+
+        Mockito.doAnswer(invocation -> MockTaskRunFactory.createTaskRuns(taskList)).when(workflowClient).executeTasks(any(RunTaskRequest.class));
+
+        List<TaskTry> taskTryList = taskDefinitionService.runBatch(taskTryBatchRequest);
+
+        assertThat(taskTryList.size(), is(3));
+        assertThat(new HashSet<>(taskTryList.stream().map(TaskTry::getDefinitionId).collect(Collectors.toList())),
+                is(new HashSet<>(Arrays.asList(taskDef1.getDefinitionId(), taskDef3.getDefinitionId(), taskDef5.getDefinitionId()))));
+    }
+
+    //Scenario:
+    // taskdef 1 -> 2
+    // run batch and stop them
+    @Test
+    public void stopBatch_shouldSuccess() {
+        //prepare
+        TaskDefinition taskDef1 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinition taskDef2 = MockTaskDefinitionFactory.createTaskDefinitions(1,
+                Collections.singletonList(taskDef1.getDefinitionId())).get(0);
+        taskDefinitionDao.create(taskDef1);
+        taskDefinitionDao.create(taskDef2);
+
+        TaskTryBatchRequest taskTryBatchRequest1 = new TaskTryBatchRequest(Arrays.asList(taskDef1.getDefinitionId(),
+                taskDef2.getDefinitionId()));
+
+        List<Task> taskList = new ArrayList<>();
+        Mockito.doAnswer(invocation -> {
+            Task task = invocation.getArgument(0);
+            task = task.cloneBuilder()
+                    .withId(WorkflowIdGenerator.nextTaskId())
+                    .build();
+            taskList.add(task);
+            return task;
+        }).when(workflowClient).saveTask(any(Task.class), any(List.class));
+
+        Mockito.doAnswer(invocation -> MockTaskRunFactory.createTaskRuns(taskList)).when(workflowClient).executeTasks(any(RunTaskRequest.class));
+
+        //run batch
+        List<TaskTry> taskTryList = taskDefinitionService.runBatch(taskTryBatchRequest1);
+
+        assertThat(taskTryList.size(), is(2));
+        assertThat(new HashSet<>(taskTryList.stream().map(TaskTry::getDefinitionId).collect(Collectors.toList())),
+                is(new HashSet<>(Arrays.asList(taskDef1.getDefinitionId(), taskDef2.getDefinitionId()))));
+
+        //stop batch
+        Mockito.doNothing().when(workflowClient).stopTaskRuns(any(List.class));
+        TaskTryBatchRequest taskTryBatchRequest2 = new TaskTryBatchRequest(taskTryList.stream().map(TaskTry::getId).collect(Collectors.toList()));
+        taskDefinitionService.stopBatch(taskTryBatchRequest2);
+        Mockito.verify(workflowClient, Mockito.times(1)).stopTaskRuns(any(List.class));
     }
 }
