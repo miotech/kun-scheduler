@@ -1,8 +1,12 @@
 package com.miotech.kun.dataplatform.web.common.taskdefinition.service;
 
 import com.cronutils.model.Cron;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.miotech.kun.dataplatform.facade.TaskDefinitionFacade;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
@@ -28,6 +32,7 @@ import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -36,6 +41,10 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jgrapht.alg.cycle.CycleDetector;
+import org.jgrapht.graph.DefaultEdge;
+import org.jgrapht.graph.SimpleDirectedGraph;
+import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -43,6 +52,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.jgrapht.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -57,6 +67,8 @@ import static com.miotech.kun.monitor.facade.model.alert.TaskDefNotifyConfig.DEF
 public class TaskDefinitionService extends BaseSecurityService implements TaskDefinitionFacade {
 
     private static final List<ScheduleType> VALID_SCHEDULE_TYPE = ImmutableList.of(ScheduleType.SCHEDULED, ScheduleType.ONESHOT, ScheduleType.NONE);
+
+    private static final Long devTargetId = 2L; //TODO edit in prod version
 
     @Autowired
     private TaskDefinitionDao taskDefinitionDao;
@@ -369,8 +381,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 .withDependencies(new ArrayList<>())
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, ""))
                 .build();
-
-        TaskRun taskRun = workflowClient.executeTask(task, taskRunRequest.getVariables());
+        TaskRun taskRun = workflowClient.executeTask(task, taskRunRequest.getVariables(), devTargetId);
         JSONObject userInputTaskConfig = new JSONObject();
         userInputTaskConfig.put("parameters", taskRunRequest.getParameters());
         userInputTaskConfig.put("variables", taskRunRequest.getVariables());
@@ -387,6 +398,132 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         return taskTry;
     }
 
+
+
+
+    public List<TaskTry> runBatch(TaskTryBatchRequest taskTryBatchRequest) {
+        Preconditions.checkNotNull(taskTryBatchRequest);
+
+        Graph<TaskDefinition, DefaultEdge> graph = buildTaskRunBatchGraph(taskTryBatchRequest);
+
+        BiMap<TaskDefinition, Task> taskDefToTaskBiMap = saveTaskInTopoOrder(graph);
+
+        RunTaskRequest runTaskRequest = new RunTaskRequest();
+        taskDefToTaskBiMap.values().stream()
+                .map(Task::getId)
+                .forEach(x -> runTaskRequest.addTaskConfig(x, Maps.newHashMap()));
+        runTaskRequest.setTargetId(devTargetId);
+
+        //Map<Long, TaskRun> taskIdToTaskRunMap = workflowClient.executeTasks(runTaskRequest, devTargetId);
+        Map<Long, TaskRun> taskIdToTaskRunMap = workflowClient.executeTasks(runTaskRequest);
+
+        List<TaskTry> taskTryList = persistTaskTry(taskIdToTaskRunMap, taskDefToTaskBiMap);
+
+        return taskTryList;
+    }
+
+    @VisibleForTesting
+    Graph<TaskDefinition, DefaultEdge> buildTaskRunBatchGraph(TaskTryBatchRequest taskTryBatchRequest) {
+        List<TaskDefinition> taskDefList = taskDefinitionDao.fetchByIds(taskTryBatchRequest.getIdList());
+        List<Long> taskDefIdList = taskDefList.stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toList());
+        Map<TaskDefinition, List<TaskDefinition>> taskDefWithDependenciesMap = new HashMap<>();
+        for (TaskDefinition taskDef : taskDefList) {
+            //获取包含在当前批量试运行中的上游任务id
+            List<Long> upstreamTaskDefIdList = resolveUpstreamTaskDefIds(taskDef.getTaskPayload()).stream()
+                    .filter(taskDefIdList::contains)
+                    .collect(Collectors.toList());
+
+            taskDefWithDependenciesMap.put(taskDef,
+                    taskDefList.stream()
+                            .filter(x -> upstreamTaskDefIdList.contains(x.getDefinitionId()))
+                            .collect(Collectors.toList()));
+        }
+
+        //建立task def graph
+        Graph<TaskDefinition, DefaultEdge> graph = new SimpleDirectedGraph<>(DefaultEdge.class);
+        taskDefList.forEach(graph::addVertex);
+        for (TaskDefinition taskDef : taskDefWithDependenciesMap.keySet()) {
+            List<TaskDefinition> upstreamTaskDefList = taskDefWithDependenciesMap.get(taskDef);
+            upstreamTaskDefList.forEach(x -> graph.addEdge(x, taskDef));
+        }
+        return graph;
+    }
+
+    private BiMap<TaskDefinition, Task> saveTaskInTopoOrder(Graph<TaskDefinition, DefaultEdge> graph) {
+        //判断是否存在循环依赖 (是否有环)
+        CycleDetector<TaskDefinition, DefaultEdge> cycleDetector = new CycleDetector<>(graph);
+        if (cycleDetector.detectCycles()) {
+            throw new RuntimeException("Task try run batch has circular dependence");
+        }
+
+        BiMap<TaskDefinition, Task> taskDefToTaskBiMap = HashBiMap.create();
+
+        Long creator = getCurrentUser().getId();
+
+        //按拓扑排序结果依次saveTask()获取TaskID
+        TopologicalOrderIterator<TaskDefinition, DefaultEdge> iterator = new TopologicalOrderIterator<>(graph);
+        while (iterator.hasNext()) {
+            TaskDefinition taskDef = iterator.next();
+            Long taskDefId = taskDef.getDefinitionId();
+
+            TaskTemplate taskTemplate = taskTemplateService.find(taskDef.getTaskTemplateName());
+            checkParams(taskTemplate, taskDef.getTaskPayload().getTaskConfig());
+            Long operatorId = taskTemplate.getOperator().getId();
+
+            TaskConfig taskConfig = taskTemplateService.getTaskConfig(taskDef.getTaskPayload().getTaskConfig(), taskTemplate.getName(), taskDef);
+            Config config = new Config(taskConfig.getParams());
+
+            List<TaskDependency> dependencies = graph.incomingEdgesOf(taskDef).stream()
+                    .map(graph::getEdgeSource)
+                    .map(taskDefToTaskBiMap::get).filter(Objects::nonNull)
+                    .map(Task::getId)
+                    .map(x -> new TaskDependency(x, "taskDependency"))
+                    .distinct()
+                    .collect(Collectors.toList());
+
+            Task task = Task.newBuilder()
+                    .withName(taskDef.getName() +  "_TryRun_" + taskDefId.toString())
+                    .withOperatorId(operatorId)
+                    .withDescription("Try Run Data Platform Task " + taskDefId)
+                    .withConfig(config)
+                    .withTags(TagUtils.buildTryRunTags(creator, taskDefId))
+                    .withDependencies(dependencies)
+                    .withScheduleConf(new ScheduleConf(ScheduleType.NONE, ""))
+                    .build();
+            List<Tag> searchTags = TagUtils.buildTryRunSearchTags(taskDefId, taskTemplate.getName());
+
+            task = workflowClient.saveTask(task, searchTags);
+            taskDefToTaskBiMap.put(taskDef, task);
+        }
+        return taskDefToTaskBiMap;
+    }
+
+    private List<TaskTry> persistTaskTry(Map<Long, TaskRun> taskIdToTaskRunMap, BiMap<TaskDefinition, Task> taskDefToTaskBiMap) {
+        Long creator = getCurrentUser().getId();
+        List<TaskTry> taskTryList = new ArrayList<>();
+        for (TaskRun taskRun : taskIdToTaskRunMap.values()) {
+            Long taskTryId = DataPlatformIdGenerator.nextTaskTryId();
+            Long taskDefId = taskDefToTaskBiMap.inverse().get(taskRun.getTask()).getDefinitionId();
+            TaskDefinition taskDef = taskDefToTaskBiMap.keySet().stream()
+                    .filter(x -> x.getDefinitionId().equals(taskDefId))
+                    .findFirst().get();
+            JSONObject taskConfig = new JSONObject(taskDef.getTaskPayload().getTaskConfig());
+            TaskTry taskTry = TaskTry.newBuilder()
+                    .withId(taskTryId)
+                    .withWorkflowTaskId(taskRun.getTask().getId())
+                    .withWorkflowTaskRunId(taskRun.getId())
+                    .withTaskConfig(taskConfig)
+                    .withCreator(creator)
+                    .withDefinitionId(taskDefId)
+                    .build();
+            taskTryDao.create(taskTry);
+            taskTryList.add(taskTry);
+        }
+        return taskTryList;
+    }
+
+
+
     public TaskTry findTaskTry(Long taskTryId) {
         return taskTryDao.fetchById(taskTryId)
                 .<IllegalArgumentException>orElseThrow(() -> {
@@ -402,6 +539,14 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         TaskTry taskTry = findTaskTry(taskTryId);
         workflowClient.stopTaskRun(taskTry.getWorkflowTaskRunId());
         return taskTry;
+    }
+
+    public void stopBatch(TaskTryBatchRequest taskTryBatchRequest) {
+        List<Long> taskTryIdList = taskTryBatchRequest.getIdList();
+        List<TaskTry> taskTryList = taskTryDao.fetchByIds(taskTryIdList);
+        workflowClient.stopTaskRuns(taskTryList.stream()
+                .map(TaskTry::getWorkflowTaskRunId)
+                .collect(Collectors.toList()));
     }
 
     public TaskRunLogVO runLog(TaskRunLogRequest request) {
@@ -481,6 +626,10 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 taskRun.getStatus(),
                 taskTry.getTaskConfig()
         );
+    }
+
+    public List<TaskTryVO> convertToTaskTryVOList(List<TaskTry> taskTryList) {
+        return taskTryList.stream().map(this::convertToTaskTryVO).collect(Collectors.toList());
     }
 
     private void validateSchedule(ScheduleConfig conf) {

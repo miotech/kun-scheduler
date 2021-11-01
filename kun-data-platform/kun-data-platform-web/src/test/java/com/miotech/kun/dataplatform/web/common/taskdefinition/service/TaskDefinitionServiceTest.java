@@ -13,13 +13,17 @@ import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunLogRequest;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import org.jgrapht.Graph;
+import org.jgrapht.graph.DefaultEdge;
 import org.json.simple.JSONObject;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.miotech.kun.dataplatform.web.common.tasktemplate.dao.TaskTemplateDaoTest.TEST_TEMPLATE;
 import static com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus.*;
@@ -420,5 +424,47 @@ public class TaskDefinitionServiceTest extends AppTestBase {
     public void test_deploy_fail_when_upstream_not_deployed(){
         // task relation should be removed as well when delete task
         //need mock workflow
+    }
+
+    //Scenario:
+    //  taskDef  1,2 -> 3,   3,4 -> 5
+    // select 1 3 5 to try run
+    // get upstream for 1 3 5 and build DAG, should not include 2 4
+    @Test
+    public void buildTaskTryGraph_shouldSuccess() {
+        TaskDefinition taskDef1 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinition taskDef2 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinition taskDef3 = MockTaskDefinitionFactory.createTaskDefinitions(1,
+                Arrays.asList(taskDef1.getDefinitionId(), taskDef2.getDefinitionId())).get(0);
+        TaskDefinition taskDef4 = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskDefinition taskDef5 = MockTaskDefinitionFactory.createTaskDefinitions(1,
+                Arrays.asList(taskDef3.getDefinitionId(), taskDef4.getDefinitionId())).get(0);
+        taskDefinitionDao.create(taskDef1);
+        taskDefinitionDao.create(taskDef2);
+        taskDefinitionDao.create(taskDef3);
+        taskDefinitionDao.create(taskDef4);
+        taskDefinitionDao.create(taskDef5);
+
+        List<Long> tryTaskDefIdList = Arrays.asList(taskDef1.getDefinitionId(), taskDef3.getDefinitionId(), taskDef5.getDefinitionId());
+        TaskTryBatchRequest taskTryBatchRequest = new TaskTryBatchRequest(tryTaskDefIdList);
+        Graph<TaskDefinition, DefaultEdge> graph = taskDefinitionService.buildTaskRunBatchGraph(taskTryBatchRequest);
+        assertThat(graph.vertexSet().size(), is(3));
+        assertThat(new HashSet<>(graph.vertexSet().stream().map(TaskDefinition::getDefinitionId).collect(Collectors.toList())),
+                is(new HashSet<>(tryTaskDefIdList)));
+
+        TaskDefinition taskDef1InGraph = graph.vertexSet().stream().filter( x -> x.getDefinitionId().equals(taskDef1.getDefinitionId())).collect(Collectors.toList()).get(0);
+        TaskDefinition taskDef3InGraph = graph.vertexSet().stream().filter( x -> x.getDefinitionId().equals(taskDef3.getDefinitionId())).collect(Collectors.toList()).get(0);
+        TaskDefinition taskDef5InGraph = graph.vertexSet().stream().filter( x -> x.getDefinitionId().equals(taskDef5.getDefinitionId())).collect(Collectors.toList()).get(0);
+
+        assertThat(graph.getEdgeTarget(graph.outgoingEdgesOf(taskDef1InGraph).iterator().next()), is(taskDef3InGraph));
+        assertThat(graph.getEdgeTarget(graph.outgoingEdgesOf(taskDef3InGraph).iterator().next()), is(taskDef5InGraph));
+
+    }
+
+
+    //Scenario: only one taskDef in batch
+    @Test
+    public void runBatch_shouldSuccess() {
+
     }
 }
