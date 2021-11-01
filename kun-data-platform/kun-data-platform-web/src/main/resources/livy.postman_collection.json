@@ -1,0 +1,40 @@
+{
+	"info": {
+		"_postman_id": "e0c3aecd-4a06-4adc-bbfc-411c2c4b67de",
+		"name": "livy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "http://10.0.2.14:8998/batches",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"file\":\"s3://com.miotech.data.prd/spline/testLiviy-1.0-SNAPSHOT.jar\",\n    \"className\":\"com.spark.sparkapp.SparkTest\",\n    \"jars\":[\n        \"s3://com.miotech.data.prd/spline/spark-2.4-spline-agent-bundle_2.11-0.6.0-SNAPSHOT.jar\",\n        \"s3://com.miotech.data.prd/spline/postgresql-42.1.4.jar\",\n        \"s3://com.miotech.data.prd/spline/spark-sql_2.11-2.4.2.jar\"\n    ],\n    \"conf\":{\n        \"spark.sql.queryExecutionListeners\":\"za.co.absa.spline.harvester.listener.SplineQueryExecutionListener\",\n        \"spark.hadoop.taskRunId\":\"54321\"\n    },\n    \"name\":\"testPG1\"\n    \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://10.0.2.14:8998/batches",
+					"protocol": "http",
+					"host": [
+						"10",
+						"0",
+						"2",
+						"14"
+					],
+					"port": "8998",
+					"path": [
+						"batches"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

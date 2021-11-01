@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import org.slf4j.Logger;
@@ -310,5 +311,10 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public Boolean changeTaskRunPriority(Long taskRunId, Integer priority) {
         return wfApi.changePriority(taskRunId, priority);
+    }
+
+    @Override
+    public List<ExecuteTarget> getTargetList() {
+        return wfApi.getTargetList();
     }
 }

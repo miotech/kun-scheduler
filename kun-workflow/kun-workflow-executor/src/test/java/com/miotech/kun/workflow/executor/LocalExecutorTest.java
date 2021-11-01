@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.executor;
 import com.google.common.collect.Iterables;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
+import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
@@ -11,6 +12,9 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.LocalScheduler;
+import com.miotech.kun.workflow.common.executetarget.DefaultTargetProvider;
+import com.miotech.kun.workflow.common.executetarget.ExecuteTargetService;
+import com.miotech.kun.workflow.common.executetarget.TargetProvider;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -24,6 +28,7 @@ import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -109,6 +114,12 @@ public class LocalExecutorTest extends CommonTestBase {
     @Inject
     private WorkerLifeCycleManager workerLifeCycleManager;
 
+    @Inject
+    private ExecuteTargetService executeTargetService;
+
+    @Inject
+    private DatabaseOperator databaseOperator;
+
     private MockEventSubscriber mockEventSubscriber;
 
 
@@ -170,10 +181,12 @@ public class LocalExecutorTest extends CommonTestBase {
         bind(WorkerLifeCycleManager.class, LocalProcessLifeCycleManager.class);
         bind(Executor.class, LocalExecutor.class);
         bind(Scheduler.class, LocalScheduler.class);
+        bind(TargetProvider.class, DefaultTargetProvider.class);
     }
 
     @Before
     public void setUp() {
+        databaseOperator.update("truncate table kun_wf_target RESTART IDENTITY");
         props.put("datasource.jdbcUrl", postgres.getJdbcUrl() + "&stringtype=unspecified");
         props.put("datasource.username", postgres.getUsername());
         props.put("datasource.password", postgres.getPassword());
@@ -1141,6 +1154,64 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
 
+    }
+
+    @Test
+    public void runWorkerWithTarget() throws IOException{
+        //prepare
+        ExecuteTarget testTarget = ExecuteTarget.newBuilder()
+                .withName("test")
+                .build();
+        executeTargetService.createExecuteTarget(testTarget);
+        ExecuteTarget prodTarget = ExecuteTarget.newBuilder()
+                .withName("prod")
+                .build();
+        executeTargetService.createExecuteTarget(prodTarget);
+
+        ExecuteTarget expectTarget = executeTargetService.fetchExecuteTarget("test");
+
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task)
+                .cloneBuilder()
+                .withExecuteTarget(expectTarget)
+                .build();
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+        prepareAttempt(TestTargetOperator.class,taskAttempt);
+
+        executor.submit(taskAttempt);
+
+        // verify
+        awaitUntilAttemptDone(taskAttempt.getId());
+        // task_run and task_attempt
+        TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(taskRun.getId());
+        assertThat(attemptProps.getAttempt(), is(1));
+        assertThat(attemptProps.getStatus(), is(TaskRunStatus.SUCCESS));
+        assertThat(attemptProps.getLogPath(), is(notNullValue()));
+        assertThat(attemptProps.getStartAt(), is(notNullValue()));
+        assertThat(attemptProps.getEndAt(), is(notNullValue()));
+
+        TaskRun finishedTaskRun = taskRunDao.fetchLatestTaskRun(task.getId());
+        assertThat(finishedTaskRun.getStatus(), is(attemptProps.getStatus()));
+        assertThat(finishedTaskRun.getStartAt(), is(attemptProps.getStartAt()));
+        assertThat(finishedTaskRun.getEndAt(), is(attemptProps.getEndAt()));
+        assertThat(taskRunDao.getTermAtOfTaskRun(finishedTaskRun.getId()), is(finishedTaskRun.getEndAt()));
+
+        // logs
+        Resource log = resourceLoader.getResource(attemptProps.getLogPath());
+        String content = ResourceUtils.content(log.getInputStream());
+        assertThat(content, containsString("running target is " + expectTarget.getName()));
+
+        // events
+        assertStatusHistory(taskAttempt.getId(),
+                TaskRunStatus.CREATED,
+                TaskRunStatus.QUEUED,
+                TaskRunStatus.RUNNING,
+                TaskRunStatus.CHECK,
+                TaskRunStatus.SUCCESS);
+        awaitUntilProcessDown("default",0);
+        TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(taskAttempt.getId());
+        assertThat(finishedEvent.getAttemptId(), is(taskAttempt.getId()));
+        assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
     }
 
 

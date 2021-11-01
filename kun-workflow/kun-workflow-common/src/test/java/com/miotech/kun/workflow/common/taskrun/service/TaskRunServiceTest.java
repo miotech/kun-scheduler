@@ -5,6 +5,8 @@ import com.google.inject.Inject;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.executetarget.DefaultTargetProvider;
+import com.miotech.kun.workflow.common.executetarget.TargetProvider;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
@@ -69,6 +71,12 @@ public class TaskRunServiceTest extends CommonTestBase {
 
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
+
+    @Override
+    protected void configuration() {
+        super.configuration();
+        bind(TargetProvider.class, DefaultTargetProvider.class);
+    }
 
 
     @Before

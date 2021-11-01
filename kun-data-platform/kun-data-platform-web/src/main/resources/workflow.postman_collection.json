@@ -1,0 +1,275 @@
+{
+	"info": {
+		"_postman_id": "e53dad9e-37b7-4baa-87d8-dbd9cae191cb",
+		"name": "workflow",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "run task directly",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "\n[\n    {\n\n    \"taskId\":112532017752571904,\n    \"config\": {\n        \n    }\n}\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://kun.miotech.com/kun/api/workflow/tasks/_run/",
+					"protocol": "https",
+					"host": [
+						"kun",
+						"miotech",
+						"com"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"tasks",
+						"_run",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "upload operator",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/Users/shiki/backup/knowledge-graph-etl-1.0.jar.zip"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://kun.miotech.com/kun/api/workflow/operators/230305320046428160/_upload",
+					"protocol": "https",
+					"host": [
+						"kun",
+						"miotech",
+						"com"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"operators",
+						"230305320046428160",
+						"_upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "update task",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": \"213569754336591872\",\n    \"name\": \"Test spark submit lineage\",\n    \"description\": \"\",\n    \"operatorId\": \"213848675007332352\",\n    \"priority\":\"MEDIUM\",\n    \"queueName\":\"default\",\n    \"config\": {\n    \"values\":{\n        \"sparkBaseCmd\":\"spark-sql \",\n        \"sparkSubmitParmas\":\"-e 'CREATE TABLE demo_sales(id BIGINT, name STRING,price DECIMAL, date STRING);INSERT INTO TABLE demo_sales VALUES (1, \\\"cola\\\", 3,\\\"2021-07-01\\\"), (2, \\\"ice-cream\\\", 5,\\\"2021-07-01\\\"),(3, \\\"cola\\\", 3,\\\"2021-07-02\\\");' --master yarn --conf spark.sql.queryExecutionListeners=za.co.absa.spline.harvester.listener.SplineQueryExecutionListener --conf spark.hadoop.spline.hdfs_dispatcher.address=hdfs://namenode:8020/user/hive  --jars hdfs://namenode:8020/user/hive/lineage/spark-spline.jar --executor-memory 1G\",\n        \"lineageOutputPath\":\"hdfs://namenode:8020\"\n    }\n},\n    \"scheduleConf\": {\n        \"type\": \"SCHEDULED\",\n        \"cronExpr\": \"0 52 15 * * ?\",\n        \"timeZone\": \"CTT\"\n    },\n    \"dependencies\": [\n    ],\n    \"tags\": [\n        {\n            \"key\": \"owner\",\n            \"value\": \"106929110202187776\"\n        },\n        {\n            \"key\": \"isArchived\",\n            \"value\": \"false\"\n        },\n        {\n            \"key\": \"taskTemplateName\",\n            \"value\": \"DataSync\"\n        },\n        {\n            \"key\": \"project\",\n            \"value\": \"KUN_DATA_PLATFORM\"\n        },\n        {\n            \"key\": \"commitId\",\n            \"value\": \"113835056346169344\"\n        },\n        {\n            \"key\": \"env\",\n            \"value\": \"DEV\"\n        },\n        {\n            \"key\": \"type\",\n            \"value\": \"scheduled\"\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:62500/tasks/213859840013893632",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "62500",
+					"path": [
+						"tasks",
+						"213859840013893632"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "abort task",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "https://kun-dev.miotech.com/kun/api/workflow/taskruns/185270796371886080/_abort",
+					"protocol": "https",
+					"host": [
+						"kun-dev",
+						"miotech",
+						"com"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"taskruns",
+						"185270796371886080",
+						"_abort"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "livy pg",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"file\":\"file:/Users/shiki/sparklib/shade/testLiviy-1.0-SNAPSHOT.jar\",\n    \"className\":\"com.spark.sparkapp.SparkTest\",\n    \"jars\":[\n        \"file:/Users/shiki/sparklib/spark-2.4-spline-agent-bundle_2.11-0.6.0-SNAPSHOT.jar\",\n        \"file:/Users/shiki/sparklib/postgresql-42.1.4.jar\",\n        \"file:/Users/shiki/sparklib/spark-sql_2.11-2.4.2.jar\"\n    ],\n    \"conf\":{\n        \"spark.sql.queryExecutionListeners\":\"za.co.absa.spline.harvester.listener.SplineQueryExecutionListener\"\n    },\n    \"name\":\"test-livy-spline1\"\n    \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "127.0.0.1:8998/batches",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8998",
+					"path": [
+						"batches"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get log",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://kun.miotech.com/kun/api/workflow/taskruns/222605381971476480/logs",
+					"protocol": "https",
+					"host": [
+						"kun",
+						"miotech",
+						"com"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"taskruns",
+						"222605381971476480",
+						"logs"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create task",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Test retry task2\",\n    \"description\": \"\",\n    \"operatorId\": \"83580549096013824\",\n    \"priority\":\"MEDIUM\",\n    \"queueName\":\"default\",\n    \"retries\":1,\n    \"retryDelay\":40,\n    \"config\": {\n        \"values\": {\n            \"command\":\"sleep 30s\"\n        }\n    },\n    \"scheduleConf\": {\n        \"type\": \"SCHEDULED\",\n        \"cronExpr\": \"0 0 10 * * ?\"\n    },\n    \"dependencies\": [\n    ],\n    \"tags\": [\n        {\n            \"key\": \"owner\",\n            \"value\": \"106929110202187776\"\n        },\n        {\n            \"key\": \"isArchived\",\n            \"value\": \"false\"\n        },\n        {\n            \"key\": \"taskTemplateName\",\n            \"value\": \"DataSync\"\n        },\n        {\n            \"key\": \"project\",\n            \"value\": \"KUN_DATA_PLATFORM\"\n        },\n        {\n            \"key\": \"commitId\",\n            \"value\": \"113835056346169344\"\n        },\n        {\n            \"key\": \"env\",\n            \"value\": \"DEV\"\n        },\n        {\n            \"key\": \"type\",\n            \"value\": \"scheduled\"\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://kun-dev.miotech.com/kun/api/workflow/tasks",
+					"protocol": "https",
+					"host": [
+						"kun-dev",
+						"miotech",
+						"com"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create operator",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\":\"spark-submit-operator\",\n    \"description\":\"spark submit\",\n    \"className\":\"com.miotech.kun.workflow.operator.SparkSubmitOperator\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:50475/operators",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "50475",
+					"path": [
+						"operators"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "get log",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "127.0.0.1:61738/taskruns/213850009731334145/log",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "61738",
+					"path": [
+						"taskruns",
+						"213850009731334145",
+						"log"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

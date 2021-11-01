@@ -2,6 +2,8 @@ package com.miotech.kun.workflow.common.graph;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.workflow.common.executetarget.DefaultTargetProvider;
+import com.miotech.kun.workflow.common.executetarget.TargetProvider;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.common.Tick;
@@ -24,6 +26,11 @@ public class DirectTaskGraphTest extends DatabaseTestBase {
     private TaskRunDao taskRunDao;
 
 
+    @Override
+    protected void configuration() {
+        super.configuration();
+        bind(TargetProvider.class, DefaultTargetProvider.class);
+    }
 
     @Test
     public void testTopoSort(){

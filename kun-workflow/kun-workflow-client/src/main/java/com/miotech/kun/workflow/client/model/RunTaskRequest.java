@@ -1,28 +1,24 @@
 package com.miotech.kun.workflow.client.model;
 
-import com.google.common.collect.Maps;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class RunTaskRequest {
-    private Map<Long, Map<String, Object>> taskConfigs = Maps.newHashMap();
+    private List<RunTaskInfo> runTasks = new ArrayList<>();
 
     private Long targetId;
 
     public void addTaskConfig(Long taskId, Map<String, Object> overwriteConfig) {
-        this.taskConfigs.put(taskId, overwriteConfig);
+        RunTaskInfo runTaskInfo = new RunTaskInfo();
+        runTaskInfo.setTaskId(taskId);
+        runTaskInfo.setConfig(overwriteConfig);
+        runTasks.add(runTaskInfo);
     }
 
     public List<RunTaskInfo> getRunTasks() {
-        return this.taskConfigs.entrySet()
-                .stream().map(x -> new RunTaskInfo(
-                        x.getKey(),
-                        x.getValue())
-                )
-                .collect(Collectors.toList());
+        return runTasks;
     }
 
     public Long getTargetId() {
@@ -36,13 +32,14 @@ public class RunTaskRequest {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof RunTaskRequest)) return false;
         RunTaskRequest that = (RunTaskRequest) o;
-        return Objects.equals(taskConfigs, that.taskConfigs);
+        return Objects.equals(getRunTasks(), that.getRunTasks()) &&
+                Objects.equals(getTargetId(), that.getTargetId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(taskConfigs);
+        return Objects.hash(getRunTasks(), getTargetId());
     }
 }

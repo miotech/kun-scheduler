@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.client;
 
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 
@@ -288,4 +289,7 @@ public interface WorkflowClient {
      * @return
      */
     Boolean changeTaskRunPriority(Long taskRunId,Integer priority);
+
+    List<ExecuteTarget> getTargetList();
+
 }

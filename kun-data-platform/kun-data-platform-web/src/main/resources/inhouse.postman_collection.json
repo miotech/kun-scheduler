@@ -1,0 +1,45 @@
+{
+	"info": {
+		"_postman_id": "86f93464-33bd-41ae-a2ca-062286ec0cab",
+		"name": "inhouse",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "uploadjar",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": []
+						}
+					]
+				},
+				"url": {
+					"raw": "https://kun-nx.miotech.com:5443/kun/api/workflow/operators/109610971021967360/_upload",
+					"protocol": "https",
+					"host": [
+						"kun-nx",
+						"miotech",
+						"com"
+					],
+					"port": "5443",
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"operators",
+						"109610971021967360",
+						"_upload"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

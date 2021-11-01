@@ -9,6 +9,8 @@ import com.miotech.kun.commons.pubsub.subscribe.NopEventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.module.AppModule;
 import com.miotech.kun.workflow.LocalScheduler;
+import com.miotech.kun.workflow.common.executetarget.DefaultTargetProvider;
+import com.miotech.kun.workflow.common.executetarget.TargetProvider;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
@@ -68,6 +70,7 @@ public class KunWorkflowServerModule extends AppModule {
             bind(WorkerLifeCycleManager.class).to(PodLifeCycleManager.class);
             bind(Executor.class).to(KubernetesExecutor.class);
         }
+        bind(TargetProvider.class).to(DefaultTargetProvider.class);
         bind(EventBus.class).toInstance(new EventBus());
         bind(Scheduler.class).to(LocalScheduler.class);
         bind(TaskGraph.class).to(DatabaseTaskGraph.class);

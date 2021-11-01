@@ -1,0 +1,292 @@
+{
+	"info": {
+		"_postman_id": "cc20022b-cb3f-4381-b278-32b119803926",
+		"name": "kun",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "localh/kun/api/workflow/operators/83580549096013824/_upload",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localh/kun/api/workflow/operators/83580549096013824/_upload",
+					"host": [
+						"localh"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"operators",
+						"83580549096013824",
+						"_upload"
+					]
+				},
+				"description": "sdf"
+			},
+			"response": []
+		},
+		{
+			"name": "update task 1",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"test task1 depend on 2,3\",\n    \"description\": \"task has 2 upstream\",\n    \"operatorId\": \"83580549096013824\",\n    \"config\": {\n        \"values\": {\n            \"command\":\"ls -a\"\n        }\n    },\n    \"scheduleConf\": {\n        \"type\": \"SCHEDULED\",\n        \"cronExpr\": \"0 52 10 * * ?\"\n    },\n    \"dependencies\": [\n        {\n            \"upstreamTaskId\": \"116480976376299520\",\n            \"dependencyFunc\": \"latestTaskRun\"\n        },\n        {\n            \"upstreamTaskId\": \"116481376429015040\",\n            \"dependencyFunc\": \"latestTaskRun\"\n        }\n    ],\n    \"tags\": [\n        {\n            \"key\": \"owner\",\n            \"value\": \"106929110202187776\"\n        },\n        {\n            \"key\": \"isArchived\",\n            \"value\": \"false\"\n        },\n        {\n            \"key\": \"taskTemplateName\",\n            \"value\": \"DataSync\"\n        },\n        {\n            \"key\": \"project\",\n            \"value\": \"KUN_DATA_PLATFORM\"\n        },\n        {\n            \"key\": \"commitId\",\n            \"value\": \"113835056346169344\"\n        },\n        {\n            \"key\": \"env\",\n            \"value\": \"DEV\"\n        },\n        {\n            \"key\": \"type\",\n            \"value\": \"scheduled\"\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://kun-dev.miotech.com/kun/api/workflow/tasks/116480378641842176",
+					"protocol": "https",
+					"host": [
+						"kun-dev",
+						"miotech",
+						"com"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"tasks",
+						"116480378641842176"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://kun-workflow:8088/taskruns/_search",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "http://kun-workflow:8088/taskruns/_search",
+					"protocol": "http",
+					"host": [
+						"kun-workflow"
+					],
+					"port": "8088",
+					"path": [
+						"taskruns",
+						"_search"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://zhongda.miotech.com:8000/alertservice/send-wechat",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "token",
+							"value": "ZXGfFpQs7ubLBPJYCZVHn",
+							"type": "text"
+						},
+						{
+							"key": "group",
+							"value": "kun-dev",
+							"type": "text"
+						},
+						{
+							"key": "body",
+							"value": "test",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://zhongda.miotech.com:8000/alertservice/send-wechat",
+					"protocol": "http",
+					"host": [
+						"zhongda",
+						"miotech",
+						"com"
+					],
+					"port": "8000",
+					"path": [
+						"alertservice",
+						"send-wechat"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "优先级",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "https://kun.miotech.com/kun/api/workflow/taskruns/changePriority?taskRunId=233809006785724416&priority=32",
+					"protocol": "https",
+					"host": [
+						"kun",
+						"miotech",
+						"com"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"taskruns",
+						"changePriority"
+					],
+					"query": [
+						{
+							"key": "taskRunId",
+							"value": "233809006785724416"
+						},
+						{
+							"key": "priority",
+							"value": "32"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "rerun ",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "https://kun-dev.miotech.com/kun/api/workflow/taskruns/185270796371886080/_rerun",
+					"protocol": "https",
+					"host": [
+						"kun-dev",
+						"miotech",
+						"com"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"taskruns",
+						"185270796371886080",
+						"_rerun"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "https://kun-dev.miotech.com/kun/api/workflow/tasks/116480378641842176",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "https://kun-dev.miotech.com/kun/api/workflow/tasks/116480378641842176",
+					"protocol": "https",
+					"host": [
+						"kun-dev",
+						"miotech",
+						"com"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"tasks",
+						"116480378641842176"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "https://kun-dev.miotech.com/kun/api/workflow/operators/76671693556285440/_upload",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "file",
+							"type": "file",
+							"src": "/Users/shiki/Desktop/spark-operator.jar"
+						}
+					]
+				},
+				"url": {
+					"raw": "https://kun-dev.miotech.com/kun/api/workflow/operators/76671693556285440/_upload",
+					"protocol": "https",
+					"host": [
+						"kun-dev",
+						"miotech",
+						"com"
+					],
+					"path": [
+						"kun",
+						"api",
+						"workflow",
+						"operators",
+						"76671693556285440",
+						"_upload"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "http://zhongda.miotech.com:8000/alertservice/send-wechat",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"body\":\"test\",\n    \"user_list\":\"yidewei\",\n    \"token\":\"ZXGfFpQs7ubLBPJYCZVHn\",\n    \"group\":\"\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://zhongda.miotech.com:8000/alertservice/send-wechat",
+					"protocol": "http",
+					"host": [
+						"zhongda",
+						"miotech",
+						"com"
+					],
+					"port": "8000",
+					"path": [
+						"alertservice",
+						"send-wechat"
+					],
+					"query": [
+						{
+							"key": "user_list",
+							"value": "yidewei",
+							"disabled": true
+						},
+						{
+							"key": "token",
+							"value": "ZXGfFpQs7ubLBPJYCZVHn",
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

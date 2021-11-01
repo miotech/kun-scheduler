@@ -3,15 +3,15 @@ package com.miotech.kun.workflow.common.task.vo;
 import java.util.List;
 
 public class RunTasksParams {
-    List<RunTaskVO> runTaskVOs;
+    List<RunTaskVO> runTasks;
     Long targetId;
 
     public List<RunTaskVO> getRunTaskVOs() {
-        return runTaskVOs;
+        return runTasks;
     }
 
     public void setRunTaskVOs(List<RunTaskVO> runTaskVOs) {
-        this.runTaskVOs = runTaskVOs;
+        this.runTasks = runTaskVOs;
     }
 
     public Long getTargetId() {

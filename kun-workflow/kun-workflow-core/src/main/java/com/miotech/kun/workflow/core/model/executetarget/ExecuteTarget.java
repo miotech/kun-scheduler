@@ -1,17 +1,18 @@
 package com.miotech.kun.workflow.core.model.executetarget;
 
-import java.util.Map;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.Objects;
 
-public class ExecuteTarget{
+public class ExecuteTarget {
     private final Long id;
     private final String name;
-    private final Map<String,Object> config;
 
-    public ExecuteTarget(Long id, String name, Map<String, Object> config) {
+    @JsonCreator
+    public ExecuteTarget(@JsonProperty("id") Long id, @JsonProperty("name") String name) {
         this.id = id;
         this.name = name;
-        this.config = config;
     }
 
     public Long getId() {
@@ -22,19 +23,14 @@ public class ExecuteTarget{
         return name;
     }
 
-    public Map<String, Object> getConfig() {
-        return config;
-    }
-
-    public static ExecuteTargetBuilder newBuilder(){
+    public static ExecuteTargetBuilder newBuilder() {
         return new ExecuteTargetBuilder();
     }
 
-    public ExecuteTargetBuilder cloneBuilder(){
+    public ExecuteTargetBuilder cloneBuilder() {
         return ExecuteTarget.newBuilder()
                 .withId(id)
-                .withName(name)
-                .withConfig(config);
+                .withName(name);
     }
 
     @Override
@@ -42,9 +38,13 @@ public class ExecuteTarget{
         if (this == o) return true;
         if (!(o instanceof ExecuteTarget)) return false;
         ExecuteTarget that = (ExecuteTarget) o;
-        return getId().equals(that.getId()) &&
-                getName().equals(that.getName()) &&
-                Objects.equals(getConfig(), that.getConfig());
+        return Objects.equals(getId(), that.getId()) &&
+                getName().equals(that.getName());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getName());
     }
 
     @Override
@@ -52,19 +52,12 @@ public class ExecuteTarget{
         return "ExecuteTarget{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
-                ", config=" + config +
                 '}';
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getId(), getName(), getConfig());
     }
 
     public static final class ExecuteTargetBuilder {
         private Long id;
         private String name;
-        private Map<String,Object> config;
 
         private ExecuteTargetBuilder() {
         }
@@ -79,13 +72,8 @@ public class ExecuteTarget{
             return this;
         }
 
-        public ExecuteTargetBuilder withConfig(Map<String, Object> config) {
-            this.config = config;
-            return this;
-        }
-
         public ExecuteTarget build() {
-            return new ExecuteTarget(id, name, config);
+            return new ExecuteTarget(id, name);
         }
     }
 }
