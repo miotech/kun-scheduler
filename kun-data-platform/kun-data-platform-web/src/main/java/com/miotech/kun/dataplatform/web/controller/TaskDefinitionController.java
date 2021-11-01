@@ -1,5 +1,7 @@
 package com.miotech.kun.dataplatform.web.controller;
 
+import com.google.common.base.Preconditions;
+import com.miotech.kun.common.model.AcknowledgementVO;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
@@ -139,6 +141,24 @@ public class TaskDefinitionController {
     public RequestResult<TaskTryVO> stopTaskDefinitionDetail(@PathVariable Long id) {
         TaskTry taskTry = taskDefinitionService.stop(id);
         return RequestResult.success(taskDefinitionService.convertToTaskTryVO(taskTry));
+    }
+
+    @PostMapping("/task-tries/_runBatch")
+    @ApiOperation("Try to run batch TaskDefinition")
+    public RequestResult<List<TaskTryVO>> runTaskDefinitions(@RequestBody TaskTryBatchRequest taskTryBatchRequest) {
+        Preconditions.checkArgument(taskTryBatchRequest != null, "TaskDefinition id list should not be null");
+        List<TaskTry> taskTryList = taskDefinitionService.runBatch(taskTryBatchRequest);
+        return RequestResult.success(taskDefinitionService.convertToTaskTryVOList(taskTryList));
+
+    }
+
+    @PostMapping("/task-tries/_stopBatch")
+    @ApiOperation("Try to run batch TaskDefinition")
+    public RequestResult<AcknowledgementVO> stopTaskDefinitions(@RequestBody TaskTryBatchRequest taskTryBatchRequest) {
+        Preconditions.checkArgument(taskTryBatchRequest != null, "TaskTry id list should not be null");
+        taskDefinitionService.stopBatch(taskTryBatchRequest);
+        return RequestResult.success(new AcknowledgementVO("Operation acknowledged."));
+
     }
 
     @GetMapping("/task-tries/{id}")
