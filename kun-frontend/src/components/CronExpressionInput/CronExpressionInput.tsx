@@ -36,19 +36,24 @@ function fixScopValue(value?: string) {
   if (!value) {
     return '';
   }
+
   const strArr = value.split(' ');
+  const newArr = [...strArr];
   strArr.forEach((i, idx) => {
     if (i.includes('-')) {
       const arr = i.split('-');
-      const start = arr[0];
-      const end = arr[1];
+      const start = Number(arr[0]);
+      const end = Number(arr[1]);
       if (start > end) {
-        strArr[idx] = `${start}-${start}`;
+        newArr[idx] = `${start}-${start}`;
+      } else {
+        newArr[idx] = `${start}-${end}`;
       }
     }
   });
 
-  return strArr.join(' ');
+  const res = newArr.join(' ');
+  return res;
 }
 
 export const CronExpressionInput = React.forwardRef<Partial<HTMLInputElement>, CronExpressionInputProps>(
