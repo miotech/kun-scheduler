@@ -1,5 +1,6 @@
 package com.miotech.kun.dataplatform.web.common.taskdefinition.dao;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
@@ -55,6 +56,14 @@ public class TaskTryDao {
         String sql = getSelectSQL(TASK_TRY_MODEL_NAME + ".wf_task_run_id = ?");
         List<TaskTry> taskTries = jdbcTemplate.query(sql, TaskTryMapper.INSTANCE, taskRunId);
         return taskTries.stream().findAny();
+    }
+
+    public List<TaskTry> fetchByIds(List<Long> ids) {
+        Preconditions.checkNotNull(ids, "ids should not be `null`");
+        if (ids.isEmpty()) return ImmutableList.of();
+        String sql = getSelectSQL(TASK_TRY_MODEL_NAME + String.format(".id in (%s)",
+                com.miotech.kun.commons.utils.StringUtils.repeatJoin("?", ",", ids.size())));
+        return jdbcTemplate.query(sql, TaskTryMapper.INSTANCE, ids.toArray());
     }
 
     public void create(TaskTry taskTry) {
