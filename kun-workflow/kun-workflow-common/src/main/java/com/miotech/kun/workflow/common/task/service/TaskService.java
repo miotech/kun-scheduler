@@ -65,7 +65,7 @@ public class TaskService {
     private final Integer RETRY_LIMIT = 5;
 
     private final Integer RETRY_DELAY_LIMIT = 600;
-    
+
     private final Integer DEFAULT_PRIORITY = 16;
 
     private final CheckType DEFAULT_CHECK_TYPE = CheckType.SKIP;
@@ -196,11 +196,11 @@ public class TaskService {
         Config config = parseConfig(vo);
 
         Integer retries = DEFAULT_RETRIES;
-        if(vo.getRetries() != null){
+        if (vo.getRetries() != null) {
             retries = vo.getRetries() > RETRY_LIMIT ? RETRY_LIMIT : vo.getRetries();
         }
         Integer retryDelay = DEFAULT_RETRY_DELAY;
-        if(vo.getRetryDelay() != null){
+        if (vo.getRetryDelay() != null) {
             retryDelay = vo.getRetryDelay() > RETRY_DELAY_LIMIT ? RETRY_DELAY_LIMIT : vo.getRetryDelay();
         }
 
@@ -339,6 +339,10 @@ public class TaskService {
     }
 
     public List<Long> runTasks(List<RunTaskVO> runTaskVOs) {
+        return runTasks(runTaskVOs, null);
+    }
+
+    public List<Long> runTasks(List<RunTaskVO> runTaskVOs, Long targetId) {
         Map<Long, RunTaskVO> rtvMap = runTaskVOs.stream()
                 .collect(Collectors.toMap(RunTaskVO::getTaskId, Function.identity()));
 
@@ -355,6 +359,7 @@ public class TaskService {
 
         // build taskRunEnv
         TaskRunEnv.Builder envBuilder = TaskRunEnv.newBuilder();
+        envBuilder.setTargetId(targetId);
         for (Task t : tasks) {
             Long taskId = t.getId();
             Optional<Operator> operatorOptional = operatorDao.fetchById(t.getOperatorId());
@@ -395,11 +400,11 @@ public class TaskService {
         Config config = parseConfig(vo);
         validateScheduleConf(vo.getScheduleConf());
         Integer retries = DEFAULT_RETRIES;
-        if(vo.getRetries() != null){
+        if (vo.getRetries() != null) {
             retries = vo.getRetries() > RETRY_LIMIT ? RETRY_LIMIT : vo.getRetries();
         }
         Integer retryDelay = DEFAULT_RETRY_DELAY;
-        if(vo.getRetryDelay() != null){
+        if (vo.getRetryDelay() != null) {
             retryDelay = vo.getRetryDelay() > RETRY_DELAY_LIMIT ? RETRY_DELAY_LIMIT : vo.getRetryDelay();
         }
         return Task.newBuilder()

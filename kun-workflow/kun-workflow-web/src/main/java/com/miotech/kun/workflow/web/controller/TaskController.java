@@ -2,17 +2,17 @@ package com.miotech.kun.workflow.web.controller;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
-import com.miotech.kun.workflow.common.task.service.TaskService;
-import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
-import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
-import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.commons.web.annotation.QueryParameter;
 import com.miotech.kun.commons.web.annotation.RequestBody;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
 import com.miotech.kun.commons.web.annotation.RouteVariable;
-import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
+import com.miotech.kun.workflow.common.task.filter.TaskSearchFilter;
+import com.miotech.kun.workflow.common.task.service.TaskService;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
+import com.miotech.kun.workflow.common.task.vo.RunTasksParams;
+import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
+import com.miotech.kun.workflow.core.model.task.Task;
+import com.miotech.kun.workflow.web.entity.AcknowledgementVO;
 
 import java.util.List;
 import java.util.Objects;
@@ -84,8 +84,8 @@ public class TaskController {
     }
 
     @RouteMapping(url= "/tasks/_run", method = "POST")
-    public Object runTasks(@RequestBody List<RunTaskVO> runTaskVOs) {
-        List<Long> taskRunIds = taskService.runTasks(runTaskVOs);
+    public Object runTasks(@RequestBody RunTasksParams runTasksParams) {
+        List<Long> taskRunIds = taskService.runTasks(runTasksParams.getRunTaskVOs(),runTasksParams.getTargetId());
         return taskRunIds;
     }
 }

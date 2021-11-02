@@ -5,10 +5,10 @@ import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.backfill.Backfill;
+import com.miotech.kun.dataplatform.mocking.MockBackfillFactory;
 import com.miotech.kun.dataplatform.web.common.backfill.dao.BackfillDao;
 import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillCreateInfo;
 import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillSearchParams;
-import com.miotech.kun.dataplatform.mocking.MockBackfillFactory;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.RunTaskRequest;
@@ -140,10 +140,14 @@ public class BackfillServiceTest extends AppTestBase {
                 .withConfig(Config.EMPTY)
                 .build();
         Mockito.doAnswer((invocation) -> {
+            RunTaskRequest request = invocation.getArgument(0, RunTaskRequest.class);
+            Long taskId = request.getRunTasks().get(0).getTaskId();
             Map<Long, TaskRun> taskRunMap = new HashMap<>();
-            taskRunMap.put(101L, mockTaskRun);
+            if (taskId.equals(101L)) {
+                taskRunMap.put(taskId, mockTaskRun);
+            }
             return taskRunMap;
-        }).when(workflowClient).executeTasks(Mockito.eq(expectedRunRequest));
+        }).when(workflowClient).executeTasks(Mockito.any(RunTaskRequest.class));
 
         // mock fetch by id
         Mockito.doAnswer(invocation -> mockTaskRun)

@@ -24,6 +24,10 @@ public class DirectTaskGraphTest extends DatabaseTestBase {
     private TaskRunDao taskRunDao;
 
 
+    @Override
+    protected void configuration() {
+        super.configuration();
+    }
 
     @Test
     public void testTopoSort(){

@@ -2,6 +2,7 @@ package com.miotech.kun.workflow.client;
 
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 
@@ -86,8 +87,17 @@ public interface WorkflowClient {
     /**
      * create and launch task then forget
      * @param task
+     * @param taskConfig
      */
     TaskRun executeTask(Task task, Map<String, Object> taskConfig);
+
+    /**
+     * create and launch task then forget
+     * @param task
+     * @param taskConfig
+     * @param targetId
+     */
+    TaskRun executeTask(Task task, Map<String, Object> taskConfig,Long targetId);
 
     /**
      * execute an existing task
@@ -96,6 +106,15 @@ public interface WorkflowClient {
      * @return
      */
     TaskRun executeTask(Long taskId, Map<String, Object> taskConfig);
+
+    /**
+     * execute an existing task
+     * @param taskId
+     * @param taskConfig
+     * @param targetId
+     * @return
+     */
+    TaskRun executeTask(Long taskId, Map<String, Object> taskConfig,Long targetId);
 
     /**
      * launch existed tasks
@@ -270,4 +289,11 @@ public interface WorkflowClient {
      * @return
      */
     Boolean changeTaskRunPriority(Long taskRunId,Integer priority);
+
+    /**
+     * get all target
+     * @return list of targets
+     */
+    List<ExecuteTarget> getTargetList();
+
 }

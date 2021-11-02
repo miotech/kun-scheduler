@@ -7,6 +7,7 @@ import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.commons.utils.EventConsumer;
 import com.miotech.kun.commons.utils.EventLoop;
 import com.miotech.kun.commons.utils.InitializingBean;
+import com.miotech.kun.workflow.common.executetarget.ExecuteTargetService;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -18,6 +19,7 @@ import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -54,7 +56,11 @@ public class TaskSpawner implements InitializingBean {
     private final TickDao tickDao;
 
     private final Deque<TaskGraph> graphs;
+
     private final InnerEventLoop eventLoop;
+
+    private final ExecuteTargetService executeTargetService;
+
 
     @Inject
     public TaskSpawner(TaskManager taskManager,
@@ -62,7 +68,9 @@ public class TaskSpawner implements InitializingBean {
                        OperatorService operatorService,
                        VariableService variableService,
                        EventBus eventBus,
-                       TickDao tickDao) {
+                       TickDao tickDao,
+                       ExecuteTargetService executeTargetService
+    ) {
         this.taskManager = taskManager;
         this.taskRunDao = taskRunDao;
         this.operatorService = operatorService;
@@ -73,6 +81,7 @@ public class TaskSpawner implements InitializingBean {
         this.eventLoop = new InnerEventLoop();
         this.eventBus.register(this.eventLoop);
         this.tickDao = tickDao;
+        this.executeTargetService = executeTargetService;
         this.eventLoop.start();
     }
 
@@ -153,16 +162,18 @@ public class TaskSpawner implements InitializingBean {
 
     //幂等，重放tick不会创建新的taskRun
     private List<TaskRun> createTaskRuns(List<Task> tasks, Tick tick, TaskRunEnv env) {
+        Long targetId = env.getTargetId();
+        ExecuteTarget executeTarget = getExecuteTargetById(targetId);
         List<TaskRun> results = new ArrayList<>(tasks.size());
         for (Task task : tasks) {
             List<TaskRun> upstreamTaskRun = resolveDependencies(task, tick, results);
             try {
                 if (tick == SpecialTick.NULL) {
-                    results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun));
+                    results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, executeTarget));
                 } else {
                     TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
                     if (taskRun == null) {
-                        results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun));
+                        results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, executeTarget));
                     } else {
                         results.add(taskRun);
                     }
@@ -176,7 +187,7 @@ public class TaskSpawner implements InitializingBean {
     }
 
 
-    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> upstreamTaskRuns) {
+    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> upstreamTaskRuns, ExecuteTarget executeTarget) {
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         Config config = prepareConfig(task, task.getConfig(), runtimeConfig);
         ScheduleType scheduleType = task.getScheduleConf().getType();
@@ -195,8 +206,9 @@ public class TaskSpawner implements InitializingBean {
                 .withQueueName(task.getQueueName())
                 .withPriority(task.getPriority())
                 .withDependentTaskRunIds(upstreamTaskRunIds)
-                .withStatus(resolveTaskRunUpstreamStatus(task,upstreamTaskRuns))
+                .withStatus(resolveTaskRunUpstreamStatus(task, upstreamTaskRuns))
                 .withFailedUpstreamTaskRunIds(resolveFailedUpstreamTaskRunIds(upstreamTaskRuns))
+                .withExecuteTarget(executeTarget)
                 .build();
         logger.debug("TaskRun is created successfully TaskRun={}, Task={}, Tick={}.", taskRun, task, tick);
         return taskRun;
@@ -215,7 +227,7 @@ public class TaskSpawner implements InitializingBean {
         return failedUpstreamTaskRunIds.stream().distinct().collect(Collectors.toList());
     }
 
-    private TaskRunStatus resolveTaskRunUpstreamStatus(Task task,List<TaskRun> upstreamTaskRuns) {
+    private TaskRunStatus resolveTaskRunUpstreamStatus(Task task, List<TaskRun> upstreamTaskRuns) {
         if (task.getDependencies().size() > upstreamTaskRuns.size()) {
             logger.error("dependency not satisfy, taskId = {}", task.getId());
             return TaskRunStatus.CREATED;
@@ -275,6 +287,14 @@ public class TaskSpawner implements InitializingBean {
         taskRunDao.createTaskRuns(taskRuns);
     }
 
+    private ExecuteTarget getExecuteTargetById(Long targetId) {
+        if (targetId == null) {
+            logger.debug("targetId is null, use default target");
+            return executeTargetService.getDefaultTarget();
+        }
+        return executeTargetService.fetchExecuteTarget(targetId);
+    }
+
     private void submit(List<TaskRun> taskRuns) {
         taskManager.submit(taskRuns);
     }
@@ -298,9 +318,9 @@ public class TaskSpawner implements InitializingBean {
         }
     }
 
-    private void notifyTaskRunCreated(List<TaskRun> taskRunList){
-        for(TaskRun taskRun : taskRunList){
-            TaskRunCreatedEvent taskRunCreatedEvent = new TaskRunCreatedEvent(taskRun.getTask().getId(),taskRun.getId());
+    private void notifyTaskRunCreated(List<TaskRun> taskRunList) {
+        for (TaskRun taskRun : taskRunList) {
+            TaskRunCreatedEvent taskRunCreatedEvent = new TaskRunCreatedEvent(taskRun.getTask().getId(), taskRun.getId());
             eventBus.post(taskRunCreatedEvent);
         }
     }
