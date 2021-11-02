@@ -38,6 +38,22 @@ public class TagUtils {
         tags.put(TAG_TASK_DEFINITION_ID_NAME, definitionId.toString());
         return mapToTags(tags);
     }
+
+    public static List<Tag> buildTryRunSearchTags(Long definitionId,
+                                                  String taskTemplateName) {
+        Map<String, String> tags = new HashMap<>();
+        tags.put(TAG_PROJECT_NAME, TAG_PROJECT_VALUE);
+        tags.put(TAG_ENV_NAME, TAG_ENV_DEV);
+        tags.put(TAG_TASK_TYPE_NAME, TAG_TASK_TYPE_MANUAL);
+        if (definitionId != null) {
+            tags.put(TAG_TASK_DEFINITION_ID_NAME, definitionId.toString());
+        }
+        if (taskTemplateName != null) {
+            tags.put(TAG_TASK_TEMPLATE_NAME, taskTemplateName);
+        }
+        return  mapToTags(tags);
+    }
+
     public static List<Tag> buildScheduleRunTags(Long definitionId,
                                                  Long commitId,
                                                  String taskTemplateName,

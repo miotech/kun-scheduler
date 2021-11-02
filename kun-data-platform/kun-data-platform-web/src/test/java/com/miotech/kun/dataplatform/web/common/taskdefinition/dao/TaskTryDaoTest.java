@@ -6,9 +6,11 @@ import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
 public class TaskTryDaoTest extends AppTestBase {
@@ -42,6 +44,31 @@ public class TaskTryDaoTest extends AppTestBase {
 
         Optional<TaskTry> taskTryOpt = taskTryDao.fetchByTaskRunId(taskTry.getWorkflowTaskRunId());
         assertFalse(taskTryOpt.isPresent());
+    }
+
+    @Test
+    public void fetchByIds_success() {
+        TaskTry taskTry1 = MockTaskDefinitionFactory.createTaskTry();
+        TaskTry taskTry2 = MockTaskDefinitionFactory.createTaskTry();
+        taskTryDao.create(taskTry1);
+        taskTryDao.create(taskTry2);
+        List<Long> taskTryIdList = Arrays.asList(taskTry1.getId(), taskTry2.getId());
+        List<TaskTry> taskTryList = taskTryDao.fetchByIds(taskTryIdList);
+        assertThat(taskTryList.size(), is(2));
+        assertThat(new HashSet<>(taskTryIdList),
+                is(new HashSet<>(taskTryList.stream().map(TaskTry::getId).collect(Collectors.toList()))));
+
+    }
+
+    @Test
+    public void fetchByIds_notFound() {
+        TaskTry taskTry1 = MockTaskDefinitionFactory.createTaskTry();
+        TaskTry taskTry2 = MockTaskDefinitionFactory.createTaskTry();
+
+        List<Long> taskTryIdList = Arrays.asList(taskTry1.getId(), taskTry2.getId());
+        List<TaskTry> taskTryList = taskTryDao.fetchByIds(taskTryIdList);
+        assertThat(taskTryList.size(), is(0));
+
     }
 
 }
