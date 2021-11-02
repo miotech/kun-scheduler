@@ -5,6 +5,7 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.resource.Resource;
 
 import java.util.Collections;
@@ -53,6 +54,11 @@ public class MockOperatorContextImpl implements OperatorContext {
     @Override
     public String getExecuteTime(){
         return "000000000000";
+    }
+
+    @Override
+    public ExecuteTarget getExecuteTarget() {
+        return ExecuteTarget.newBuilder().withName("test").build();
     }
 
     public List<DataStore> getInlets() {

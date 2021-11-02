@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.OperatorContext;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.google.common.base.Strings;
@@ -19,14 +20,16 @@ import java.util.TimeZone;
 public class OperatorContextImpl implements OperatorContext {
     private final Config config;
     private final Long taskRunId;
+    private final ExecuteTarget executeTarget;
     @Inject
     private TaskRunDao taskRunDao;
 
     static final Logger logger = LoggerFactory.getLogger(OperatorContextImpl.class);
 
-    public OperatorContextImpl(Config config,Long taskRunId) {
+    public OperatorContextImpl(Config config,Long taskRunId,ExecuteTarget executeTarget) {
         this.config = config;
         this.taskRunId = taskRunId;
+        this.executeTarget = executeTarget;
     }
 
     @Override
@@ -74,6 +77,11 @@ public class OperatorContextImpl implements OperatorContext {
             logger.error("parse timestamp failed", e);
             throw new IllegalArgumentException("timestamp format " + PATTERN + " can not be parsed");
         }
+    }
+
+    @Override
+    public ExecuteTarget getExecuteTarget() {
+        return executeTarget;
     }
 }
 

@@ -1,5 +1,7 @@
 package com.miotech.kun.workflow.core.execution;
 
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
+
 public class ExecCommand {
     private String jarPath;
     private String className;
@@ -10,6 +12,7 @@ public class ExecCommand {
     private Long taskAttemptId;
     private String queueName;
     private Boolean keepAlive;
+    private ExecuteTarget executeTarget;
 
     public String getJarPath() {
         return jarPath;
@@ -83,6 +86,14 @@ public class ExecCommand {
         this.queueName = queueName;
     }
 
+    public ExecuteTarget getExecuteTarget() {
+        return executeTarget;
+    }
+
+    public void setExecuteTarget(ExecuteTarget executeTarget) {
+        this.executeTarget = executeTarget;
+    }
+
     @Override
     public String toString() {
         return "ExecCommand{" +
@@ -95,6 +106,7 @@ public class ExecCommand {
                 ", taskAttemptId=" + taskAttemptId +
                 ", queueName='" + queueName + '\'' +
                 ", keepAlive=" + keepAlive +
+                ", executeTarget=" + executeTarget +
                 '}';
     }
 }
