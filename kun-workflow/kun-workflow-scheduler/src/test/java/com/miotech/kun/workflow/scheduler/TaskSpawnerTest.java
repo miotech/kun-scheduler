@@ -6,6 +6,9 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.pubsub.event.Event;
+import com.miotech.kun.workflow.common.executetarget.DefaultTargetProvider;
+import com.miotech.kun.workflow.common.executetarget.ExecuteTargetService;
+import com.miotech.kun.workflow.common.executetarget.TargetProvider;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -18,6 +21,7 @@ import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -33,7 +37,6 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.shazam.shazamcrest.matcher.CustomisableMatcher;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -99,9 +102,15 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     @Inject
     private SchedulerClock schedulerClock;
 
+    @Inject
+    private DatabaseOperator databaseOperator;
+
     private ch.qos.logback.core.Appender<ch.qos.logback.classic.spi.ILoggingEvent> appender;
 
     private Long operatorId;
+
+    @Inject
+    private ExecuteTargetService executeTargetService;
 
     @Override
     protected void configuration() {
@@ -112,6 +121,9 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
     @Before
     public void init() {
+
+        databaseOperator.update("truncate table kun_wf_target RESTART IDENTITY");
+
         operatorId = 1L;
         String className = "TestOperator1";
 
@@ -1195,6 +1207,96 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
     }
 
+
+    @Test
+    public void runTaskWithTarget_should_contains_in_taskRun() {
+        // prepare
+        Task task = MockTaskFactory.createTask(operatorId);
+        taskDao.create(task);
+        //prepare
+        ExecuteTarget testTarget = ExecuteTarget.newBuilder()
+                .withName("test")
+                .build();
+        executeTargetService.createExecuteTarget(testTarget);
+
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+        // process
+        TaskRunEnv context = buildEnv(task.getId(), ImmutableMap.of("var1", "val1"),1l);
+        DirectTaskGraph graph = new DirectTaskGraph(task);
+        taskSpawner.run(graph, context);
+
+        // verify
+        ExecuteTarget expectTarget = executeTargetService.fetchExecuteTarget(1l);
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getId(), is(notNullValue()));
+        assertThat(submitted.getTask(), safeSameBeanAs(task));
+        assertThat(submitted.getScheduledTick(), is(SpecialTick.NULL.toTick()));
+        assertThat(submitted.getStartAt(), is(nullValue()));
+        assertThat(submitted.getEndAt(), is(nullValue()));
+        assertThat(submitted.getStatus(), is(TaskRunStatus.CREATED));
+
+        assertThat(submitted.getConfig().size(), is(2));
+        assertThat(submitted.getConfig().getString("var1"), is("val1"));
+        assertThat(submitted.getConfig().getString("var2"), is("default2"));
+        assertThat(submitted.getExecuteTarget(),is(expectTarget));
+
+        TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
+        assertThat(submitted, safeSameBeanAs(saved));
+    }
+
+    @Test
+    public void runTaskWithoutTarget_should_use_defaultTarget_taskRun() {
+        // prepare
+        Task task = MockTaskFactory.createTask(operatorId);
+        taskDao.create(task);
+        //prepare
+        ExecuteTarget testTarget = ExecuteTarget.newBuilder()
+                .withName("test")
+                .build();
+        executeTargetService.createExecuteTarget(testTarget);
+        //prepare
+        ExecuteTarget prodTarget = ExecuteTarget.newBuilder()
+                .withName("prod")
+                .build();
+        executeTargetService.createExecuteTarget(prodTarget);
+
+        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
+        // process
+        TaskRunEnv context = buildEnv(task.getId(), ImmutableMap.of("var1", "val1"),null);
+        DirectTaskGraph graph = new DirectTaskGraph(task);
+        taskSpawner.run(graph, context);
+
+        // verify
+        ExecuteTarget defaultTarget = executeTargetService.getDefaultTarget();
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+        verify(taskManager).submit(captor.capture());
+
+        List<TaskRun> result = captor.getValue();
+        assertThat(result.size(), is(1));
+
+        TaskRun submitted = result.get(0);
+        assertThat(submitted.getId(), is(notNullValue()));
+        assertThat(submitted.getTask(), safeSameBeanAs(task));
+        assertThat(submitted.getScheduledTick(), is(SpecialTick.NULL.toTick()));
+        assertThat(submitted.getStartAt(), is(nullValue()));
+        assertThat(submitted.getEndAt(), is(nullValue()));
+        assertThat(submitted.getStatus(), is(TaskRunStatus.CREATED));
+
+        assertThat(submitted.getConfig().size(), is(2));
+        assertThat(submitted.getConfig().getString("var1"), is("val1"));
+        assertThat(submitted.getConfig().getString("var2"), is("default2"));
+        assertThat(submitted.getExecuteTarget(),is(defaultTarget));
+
+        TaskRun saved = taskRunDao.fetchTaskRunById(submitted.getId()).get();
+        assertThat(submitted, safeSameBeanAs(saved));
+    }
+
     class TaskRunEventCreatedEventListener extends EventCollector {
 
         @Subscribe
@@ -1210,6 +1312,13 @@ public class TaskSpawnerTest extends SchedulerTestBase {
     private TaskRunEnv buildEnv(Long taskId, Map<String, Object> config) {
         TaskRunEnv.Builder builder = TaskRunEnv.newBuilder()
                 .addConfig(taskId, config);
+        return builder.build();
+    }
+
+    private TaskRunEnv buildEnv(Long taskId, Map<String, Object> config,Long targetId) {
+        TaskRunEnv.Builder builder = TaskRunEnv.newBuilder()
+                .addConfig(taskId, config)
+                .setTargetId(targetId);
         return builder.build();
     }
 

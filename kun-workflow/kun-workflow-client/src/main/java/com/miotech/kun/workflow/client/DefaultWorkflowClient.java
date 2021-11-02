@@ -4,6 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import org.slf4j.Logger;
@@ -142,6 +143,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
 
     @Override
     public TaskRun executeTask(Task task, Map<String, Object> taskConfig) {
+        return executeTask(task, taskConfig, null);
+    }
+
+    @Override
+    public TaskRun executeTask(Task task, Map<String, Object> taskConfig, Long targetId) {
         Task saved;
         Optional<Task> taskOptional = getTask(task.getName());
         if (taskOptional.isPresent()) {
@@ -150,13 +156,19 @@ public class DefaultWorkflowClient implements WorkflowClient {
         } else {
             saved = wfApi.createTask(task);
         }
-        return executeTask(saved.getId(), taskConfig);
+        return executeTask(saved.getId(), taskConfig, targetId);
     }
 
     @Override
     public TaskRun executeTask(Long taskId, Map<String, Object> taskConfig) {
+        return executeTask(taskId, taskConfig, null);
+    }
+
+    @Override
+    public TaskRun executeTask(Long taskId, Map<String, Object> taskConfig, Long targetId) {
         RunTaskRequest request = new RunTaskRequest();
         request.addTaskConfig(taskId, taskConfig != null ? taskConfig : Maps.newHashMap());
+        request.setTargetId(targetId);
         List<Long> taskRunIds = wfApi.runTasks(request);
         if (taskRunIds.isEmpty()) {
             throw new WorkflowClientException("No task run found after execution for task: " + taskId);
@@ -298,6 +310,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
 
     @Override
     public Boolean changeTaskRunPriority(Long taskRunId, Integer priority) {
-        return wfApi.changePriority(taskRunId,priority);
+        return wfApi.changePriority(taskRunId, priority);
+    }
+
+    @Override
+    public List<ExecuteTarget> getTargetList() {
+        return wfApi.getTargetList();
     }
 }

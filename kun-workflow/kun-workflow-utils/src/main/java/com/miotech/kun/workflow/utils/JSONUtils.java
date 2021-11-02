@@ -61,6 +61,10 @@ public class JSONUtils {
         }
     }
 
+    public static <T> T jsonToObjectOrDefault(String str, Class<T> valueType,T defaultValue) {
+        return str == null ? defaultValue : jsonToObject(str, valueType);
+    }
+
     public static <T> T jsonToObject(String str, TypeReference<T> typeRef) {
         try {
             return objectMapper.readValue(str, typeRef);

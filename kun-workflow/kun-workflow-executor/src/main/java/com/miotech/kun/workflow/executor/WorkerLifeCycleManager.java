@@ -126,14 +126,12 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
             if (taskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
                 updateTaskAttemptAborted(taskAttemptId);
                 return;
-            }
-            if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
+            }else if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
                 queueManager.remove(taskAttempt);
                 updateTaskAttemptAborted(taskAttemptId);
                 return;
-            }
-            if (taskAttempt.getStatus().isFinished()) {
-                throw new IllegalStateException("unable to stop a finish worker");
+            } else {
+                throw new IllegalStateException("unable to stop taskRun with status: " + taskAttempt.getStatus());
             }
         }
         if (!stopWorker(taskAttemptId)) {

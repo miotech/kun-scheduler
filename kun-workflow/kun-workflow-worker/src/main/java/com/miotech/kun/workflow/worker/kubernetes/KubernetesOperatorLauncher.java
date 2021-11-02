@@ -41,10 +41,11 @@ public class KubernetesOperatorLauncher {
 
     public static void main(String args[]) {
         props = new Props(System.getenv());
-        logger.info("props={}", props);
         ExecCommand command = readExecCommand();
         // 初始化logger
         initLogger(command.getLogPath());
+        logger.info("props={}", props);
+        logger.info("execCommand = {}", command);
         injector = Guice.createInjector(
                 new KubernetesWorkerModule(props)
         );
@@ -61,7 +62,7 @@ public class KubernetesOperatorLauncher {
     }
 
     private OperatorContext initContext(ExecCommand command) {
-        OperatorContext context = new OperatorContextImpl(command.getConfig(), command.getTaskRunId());
+        OperatorContext context = new OperatorContextImpl(command.getConfig(), command.getTaskRunId(),command.getExecuteTarget());
         injector.injectMembers(context);
         return context;
     }
@@ -189,7 +190,6 @@ public class KubernetesOperatorLauncher {
         try {
             File execCommandFile = new File(execCommandFilePath);
             ExecCommand execCommand = JsonCodec.MAPPER.readValue(execCommandFile, ExecCommand.class);
-            logger.info("execCommand = {}", execCommand);
             //delete command file
             execCommandFile.delete();
             return execCommand;

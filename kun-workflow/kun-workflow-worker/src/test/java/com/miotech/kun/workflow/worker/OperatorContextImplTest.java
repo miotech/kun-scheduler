@@ -1,7 +1,5 @@
 package com.miotech.kun.workflow.worker;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.inject.Injector;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
@@ -20,7 +18,7 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 public class OperatorContextImplTest extends DatabaseTestBase {
 
@@ -33,7 +31,7 @@ public class OperatorContextImplTest extends DatabaseTestBase {
     public void init(){
         config = new HashMap<>();
         config.put("args", "hello");
-        context = new OperatorContextImpl(new Config(config), 1L);
+        context = new OperatorContextImpl(new Config(config), 1L,null);
         injector.injectMembers(context);
         taskRunDao = injector.getInstance(TaskRunDao.class);
         taskDao = injector.getInstance(TaskDao.class);
