@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.task.vo.RunTaskVO;
+import com.miotech.kun.workflow.common.task.vo.RunTasksParams;
 import com.miotech.kun.workflow.common.task.vo.TaskPropsVO;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
@@ -259,7 +260,9 @@ public class TaskControllerTest extends KunWebServerTestBase {
         Config errorConfig = Config.newBuilder().addConfig("var3", "default3").build();
         taskVO.setTaskId(createdTask.getId());
         taskVO.setConfig(errorConfig.getValues());
-        String request = JSONUtils.toJsonString(Lists.newArrayList(taskVO));
+        RunTasksParams runTasksParams = new RunTasksParams();
+        runTasksParams.setRunTaskVOs(Lists.newArrayList(taskVO));
+        String request = JSONUtils.toJsonString(runTasksParams);
         String runRes = post("/tasks/_run",request);
         ExceptionResponse exceptionResponse = jsonSerializer.toObject(runRes, ExceptionResponse.class);
         assertThat(exceptionResponse.getCode(),is(400));

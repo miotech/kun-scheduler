@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import com.miotech.kun.workflow.client.model.*;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.utils.JSONUtils;
@@ -29,6 +30,7 @@ public class WorkflowApi {
     private static final String API_TASK_RUNS = "/taskruns";
     private static final String API_LINEAGES = "/lineages";
     private static final String API_VARIABLES = "/variables";
+    private static final String API_TARGETS = "/targets";
 
     private final String baseUrl;
     private final OkHttpClient client;
@@ -239,7 +241,7 @@ public class WorkflowApi {
                 .addPathSegment("_run")
                 .build();
         Request postRequest = new Request.Builder().url(url)
-                .post(jsonBody(request.getRunTasks()))
+                .post(jsonBody(request))
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
         return sendRequest(postRequest, new TypeReference<List<Long>>() {
@@ -478,6 +480,18 @@ public class WorkflowApi {
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
         return sendRequest(putRequest, new TypeReference<Boolean>() {
+        });
+    }
+
+    // Target
+    public List<ExecuteTarget> getTargetList() {
+        HttpUrl url = buildUrl(API_TARGETS)
+                .build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<List<ExecuteTarget>>() {
         });
     }
 }

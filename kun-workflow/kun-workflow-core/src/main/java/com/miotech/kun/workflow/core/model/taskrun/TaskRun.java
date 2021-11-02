@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.commons.utils.JsonLongFieldDeserializer;
@@ -51,6 +52,8 @@ public class TaskRun {
     private final List<Long> failedUpstreamTaskRunIds;
 
     private final String queueName;
+
+    private final ExecuteTarget executeTarget;
 
     public Long getId() {
         return id;
@@ -116,10 +119,14 @@ public class TaskRun {
         return queueName;
     }
 
+    public ExecuteTarget getExecuteTarget() {
+        return executeTarget;
+    }
+
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status, OffsetDateTime startAt,
                    OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt, List<DataStore> inlets,
                    List<DataStore> outlets, List<Long> dependentTaskRunIds, List<Long> failedUpstreamTaskRunIds,
-                   ScheduleType scheduledType, String queueName, Integer priority) {
+                   ScheduleType scheduledType, String queueName, Integer priority,ExecuteTarget executeTarget) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
@@ -137,6 +144,7 @@ public class TaskRun {
         this.scheduledType = scheduledType;
         this.queueName = queueName;
         this.priority = priority;
+        this.executeTarget = executeTarget;
     }
 
     public static TaskRunBuilder newBuilder() {
@@ -160,7 +168,8 @@ public class TaskRun {
                 .withFailedUpstreamTaskRunIds(failedUpstreamTaskRunIds)
                 .withScheduleType(scheduledType)
                 .withQueueName(queueName)
-                .withPriority(priority);
+                .withPriority(priority)
+                .withExecuteTarget(executeTarget);
     }
 
     @Override
@@ -200,6 +209,7 @@ public class TaskRun {
         private ScheduleType scheduleType;
         private String queueName;
         private Integer priority;
+        private ExecuteTarget executeTarget;
 
         private TaskRunBuilder() {
         }
@@ -283,9 +293,14 @@ public class TaskRun {
             return this;
         }
 
+        public TaskRunBuilder withExecuteTarget(ExecuteTarget executeTarget){
+            this.executeTarget = executeTarget;
+            return this;
+        }
+
         public TaskRun build() {
             return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets,
-                    outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority);
+                    outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority,executeTarget);
         }
     }
 }

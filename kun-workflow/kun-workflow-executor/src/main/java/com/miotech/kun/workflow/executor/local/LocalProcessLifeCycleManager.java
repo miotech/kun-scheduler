@@ -100,6 +100,7 @@ public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
         command.setJarPath(operatorDetail.getPackagePath());
         command.setClassName(operatorDetail.getClassName());
         command.setQueueName(attempt.getQueueName());
+        command.setExecuteTarget(attempt.getTaskRun().getExecuteTarget());
         logger.debug("Execute task. attemptId={}, command={}", attemptId, command);
         return command;
     }

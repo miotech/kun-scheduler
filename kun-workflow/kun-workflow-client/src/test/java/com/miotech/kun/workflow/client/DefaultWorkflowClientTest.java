@@ -6,6 +6,7 @@ import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -226,6 +227,15 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         // cleanup
         client.deleteTask(created1.getId());
         client.deleteTask(created2.getId());
+
+    }
+
+    @Test
+    public void testGetTargetList(){
+       List<ExecuteTarget> executeTargetList =  client.getTargetList();
+       assertThat(executeTargetList,hasSize(2));
+       assertThat(executeTargetList.get(0).getName(),is("prod"));
+       assertThat(executeTargetList.get(1).getName(),is("dev"));
 
     }
 

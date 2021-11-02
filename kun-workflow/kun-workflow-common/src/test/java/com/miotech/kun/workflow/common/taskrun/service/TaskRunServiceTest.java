@@ -70,6 +70,11 @@ public class TaskRunServiceTest extends CommonTestBase {
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
+    @Override
+    protected void configuration() {
+        super.configuration();
+    }
+
 
     @Before
     public void setUp() {

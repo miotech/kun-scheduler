@@ -21,6 +21,7 @@ import com.miotech.kun.workflow.common.tick.TickDao;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -51,7 +52,7 @@ import static com.miotech.kun.commons.utils.StringUtils.toNullableString;
 public class TaskRunDao {
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "start_at", "end_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "start_at", "end_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority","target");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
@@ -356,7 +357,8 @@ public class TaskRunDao {
                     now,
                     now,
                     taskRun.getQueueName(),
-                    taskRun.getPriority()
+                    taskRun.getPriority(),
+                    JSONUtils.toJsonString(taskRun.getExecuteTarget())
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
@@ -436,7 +438,8 @@ public class TaskRunDao {
                     now,
                     now,
                     taskRun.getQueueName(),
-                    taskRun.getPriority()
+                    taskRun.getPriority(),
+                    JSONUtils.toJsonString(taskRun.getExecuteTarget())
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
@@ -485,6 +488,7 @@ public class TaskRunDao {
                     now,                          // updated_at
                     taskRun.getQueueName(),
                     taskRun.getPriority(),
+                    JSONUtils.toJsonString(taskRun.getExecuteTarget()),
                     taskRun.getId()
             );
 
@@ -1510,6 +1514,8 @@ public class TaskRunDao {
                     .withConfig(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_config"), Config.class))
                     .withQueueName(rs.getString(TASK_RUN_MODEL_NAME + "_queue_name"))
                     .withPriority(rs.getInt(TASK_RUN_MODEL_NAME + "_priority"))
+                    .withExecuteTarget(JSONUtils.jsonToObjectOrDefault(rs.getString(TASK_RUN_MODEL_NAME + "_target"),
+                            ExecuteTarget.class, ExecuteTarget.newBuilder().build()))
                     .build();
         }
     }
