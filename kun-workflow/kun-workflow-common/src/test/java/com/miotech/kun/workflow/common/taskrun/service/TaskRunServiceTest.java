@@ -46,6 +46,8 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 public class TaskRunServiceTest extends CommonTestBase {
     private TaskRunService taskRunService;
@@ -160,7 +162,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertEquals(2, taskRunLogVO.getAttempt());
 
         // attempt = -1 as latest
-        taskRunLogVO = taskRunService.getTaskRunLog(taskRunId,-1,0, 3);
+        taskRunLogVO = taskRunService.getTaskRunLog(taskRunId, -1, 0, 3);
         assertEquals(1, taskRunLogVO.getLogs().size());
         assertEquals(2, taskRunLogVO.getAttempt());
         assertEquals(testStr, taskRunLogVO.getLogs().get(0));
@@ -231,7 +233,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         Mockito.when(taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId))
                 .thenReturn(Collections.emptyList());
         try {
-            taskRunService.getTaskRunLog(taskRunId,-1, 1, 2);
+            taskRunService.getTaskRunLog(taskRunId, -1, 1, 2);
         } catch (Exception e) {
             assertEquals(EntityNotFoundException.class, e.getClass());
             assertEquals("Cannot find task attempt -1 of task run with id = 1.", e.getMessage());
@@ -252,7 +254,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         Mockito.when(taskRunDao.fetchAttemptsPropByTaskRunId(taskRunId))
                 .thenReturn(Collections.singletonList(attemptProps));
 
-        TaskRunLogVO vo = taskRunService.getTaskRunLog(taskRunId,-1, -3, null);
+        TaskRunLogVO vo = taskRunService.getTaskRunLog(taskRunId, -1, -3, null);
         assertThat(vo.getLogs().size(), is(3));
         assertThat(vo.getLogs().get(0), is("line 2"));
         assertThat(vo.getAttempt(), is(1));
@@ -288,9 +290,9 @@ public class TaskRunServiceTest extends CommonTestBase {
     private Resource creatResource(String fileName, String text, int times) throws IOException {
         File file = tempFolder.newFile(fileName);
         Resource resource = resourceLoader.getResource("file://" + file.getPath(), true);
-        Writer writer= new PrintWriter(resource.getOutputStream());
+        Writer writer = new PrintWriter(resource.getOutputStream());
 
-        for (int i=0; i < times; i++) {
+        for (int i = 0; i < times; i++) {
             writer.write(text);
         }
         writer.flush();
@@ -319,18 +321,18 @@ public class TaskRunServiceTest extends CommonTestBase {
 
 
     @Test
-    public void fetchLatestTaskRunsOrderByCreateTime(){
+    public void fetchLatestTaskRunsOrderByCreateTime() {
         prepareTaskRuns();
         List<Long> taskIdsToQuery = Lists.newArrayList(22L);
         Map<Long, List<TaskRunVO>> mappings = taskRunService.fetchLatestTaskRuns(taskIdsToQuery, 10);
         List<TaskRunVO> taskRunVOS = mappings.get(22L);
-        assertThat(taskRunVOS,hasSize(2));
-        assertThat(taskRunVOS.get(0).getId(),is(2L));
-        assertThat(taskRunVOS.get(1).getId(),is(1L));
+        assertThat(taskRunVOS, hasSize(2));
+        assertThat(taskRunVOS.get(0).getId(), is(2L));
+        assertThat(taskRunVOS.get(1).getId(), is(1L));
     }
 
     @Test
-    public void changeTaskRunPriority(){
+    public void changeTaskRunPriority() {
 
         //prepare
         Task task = MockTaskFactory.createTask();
@@ -340,16 +342,44 @@ public class TaskRunServiceTest extends CommonTestBase {
         taskRunDao.createTaskRun(taskRun);
         taskRunDao.createAttempt(taskAttempt);
 
-        taskRunService.changeTaskAttemptPriority(taskRun.getId(),32);
+        taskRunService.changeTaskRunPriority(taskRun.getId(), 32);
 
         //verify
         TaskRun updatedTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
-        assertThat(updatedTaskRun.getTask().getPriority(),is(16));
-        assertThat(updatedTaskRun.getPriority(),is(32));
+        TaskAttempt updatedAttempt = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+        assertThat(updatedTaskRun.getTask().getPriority(), is(16));
+        assertThat(updatedTaskRun.getPriority(), is(32));
+        assertThat(updatedAttempt.getPriority(), is(32));
+    }
+
+    @Test
+    public void changeTaskRunPriorityHasInQueued_should_invoke_executor() {
+
+        //prepare
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.QUEUED)
+                .build();
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+
+        taskRunService.changeTaskRunPriority(taskRun.getId(), 32);
+
+        //verify
+        TaskRun updatedTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
+        TaskAttempt updatedAttempt = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
+        assertThat(updatedTaskRun.getTask().getPriority(), is(16));
+        assertThat(updatedTaskRun.getPriority(), is(32));
+        assertThat(updatedAttempt.getPriority(), is(32));
+
+        verify(executor, times(1)).changePriority(taskAttempt.getId(), taskAttempt.getQueueName(), 32);
     }
 
 
-    private void prepareTaskRuns(){
+    private void prepareTaskRuns() {
         Task task1 = MockTaskFactory.createTask().cloneBuilder().withId(22L)
                 .withName("test task 1")
                 .withDescription("")
@@ -375,7 +405,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         taskRunDao.createTaskRun(taskRun1);
         try {
             Thread.sleep(1000l);
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 
