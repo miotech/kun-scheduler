@@ -403,8 +403,8 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
 
 
     public List<TaskTry> runBatch(TaskTryBatchRequest taskTryBatchRequest) {
-
-        logger.info("TryRun tasks in batch");
+        logger.info("TryRun tasks in batch, task def id={}", taskTryBatchRequest.getIdList().stream()
+                .map(Object::toString).collect(Collectors.joining(",")));
 
         Preconditions.checkNotNull(taskTryBatchRequest);
         //build graph
@@ -467,7 +467,8 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         runTaskRequest.setTargetId(devTargetId);
 
         //execute tasks
-        logger.info("Try to execute tasks");
+        logger.info("Try to execute tasks, task id = {}", taskDefToTaskMap.values().stream()
+                .map(Task::getId).map(Object::toString).collect(Collectors.joining(",")));
         Map<Long, TaskRun> taskIdToTaskRunMap = workflowClient.executeTasks(runTaskRequest);
 
         //persist task try
