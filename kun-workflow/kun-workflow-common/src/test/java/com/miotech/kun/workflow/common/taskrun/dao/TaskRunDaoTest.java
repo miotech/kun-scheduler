@@ -9,8 +9,6 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.task.ScheduleConf;
-import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -27,7 +25,10 @@ import org.junit.Test;
 import javax.inject.Inject;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -900,5 +901,39 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 .build();
         taskRunDao.createTaskRun(taskRunWithUTC);
         assertTrue(tick.equals(taskRunDao.getTickByTaskRunId(1L)));
+    }
+
+    @Test
+    public void fetchLatestTaskRunsWithFilterStatus(){
+        // Prepare
+        // 1. create task runs
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+
+        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:01.00Z"), ZoneId.of("UTC")));
+        TaskRun taskrun1 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.CREATED);
+
+        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:02.00Z"), ZoneId.of("UTC")));
+        TaskRun taskrun2 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.QUEUED);
+
+        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")));
+        TaskRun taskrun3 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.RUNNING);
+
+        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")));
+        TaskRun taskrun4 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.FAILED);
+
+        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")));
+        TaskRun taskrun5 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.SUCCESS);
+
+        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")));
+        TaskRun taskrun6 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.CHECK);
+
+        List<TaskRun> sampleTaskRuns = Lists.newArrayList(taskrun1, taskrun2, taskrun3);
+
+        taskRunDao.createTaskRuns(sampleTaskRuns);
+
+        // Process
+        TaskRun latestTaskRun = taskRunDao.fetchLatestTaskRun(task.getId());
+
     }
 }

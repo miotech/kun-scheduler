@@ -31,6 +31,8 @@ public class TaskRun {
 
     private final TaskRunStatus status;
 
+    private final OffsetDateTime queuedAt;
+
     private final OffsetDateTime startAt;
 
     private final OffsetDateTime endAt;
@@ -73,6 +75,10 @@ public class TaskRun {
 
     public TaskRunStatus getStatus() {
         return status;
+    }
+
+    public OffsetDateTime getQueuedAt() {
+        return queuedAt;
     }
 
     public OffsetDateTime getStartAt() {
@@ -123,9 +129,9 @@ public class TaskRun {
         return executeTarget;
     }
 
-    public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status, OffsetDateTime startAt,
-                   OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt, List<DataStore> inlets,
-                   List<DataStore> outlets, List<Long> dependentTaskRunIds, List<Long> failedUpstreamTaskRunIds,
+    public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status, OffsetDateTime queuedAt,
+                   OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
+                   List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, List<Long> failedUpstreamTaskRunIds,
                    ScheduleType scheduledType, String queueName, Integer priority,ExecuteTarget executeTarget) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
@@ -133,6 +139,7 @@ public class TaskRun {
         this.config = config;
         this.scheduledTick = scheduledTick;
         this.status = status;
+        this.queuedAt = queuedAt;
         this.startAt = startAt;
         this.endAt = endAt;
         this.createdAt = createdAt;
@@ -158,6 +165,7 @@ public class TaskRun {
                 .withConfig(config)
                 .withScheduledTick(scheduledTick)
                 .withStatus(status)
+                .withQueuedAt(queuedAt)
                 .withStartAt(startAt)
                 .withEndAt(endAt)
                 .withInlets(inlets)
@@ -181,6 +189,7 @@ public class TaskRun {
                 ", scheduledTick=" + scheduledTick +
                 ", scheduledType=" + scheduledType +
                 ", status=" + status +
+                ", queuedAt=" + queuedAt +
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +
                 ", inlets=" + inlets +
@@ -189,6 +198,7 @@ public class TaskRun {
                 ", dependentTaskRunIds=" + dependentTaskRunIds +
                 ", failedUpstreamTaskRunIds=" + failedUpstreamTaskRunIds +
                 ", queueName='" + queueName + '\'' +
+                ", executeTarget=" + executeTarget +
                 '}';
     }
 
@@ -198,6 +208,7 @@ public class TaskRun {
         private Config config;
         private Tick scheduledTick;
         private TaskRunStatus status;
+        private OffsetDateTime queuedAt;
         private OffsetDateTime startAt;
         private OffsetDateTime endAt;
         private OffsetDateTime createdAt;
@@ -236,6 +247,11 @@ public class TaskRun {
 
         public TaskRunBuilder withStatus(TaskRunStatus status) {
             this.status = status;
+            return this;
+        }
+
+        public TaskRunBuilder withQueuedAt(OffsetDateTime queuedAt){
+            this.queuedAt = queuedAt;
             return this;
         }
 
@@ -299,7 +315,7 @@ public class TaskRun {
         }
 
         public TaskRun build() {
-            return new TaskRun(id, task, config, scheduledTick, status, startAt, endAt, createdAt, updatedAt, inlets,
+            return new TaskRun(id, task, config, scheduledTick, status, queuedAt, startAt, endAt, createdAt, updatedAt, inlets,
                     outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority,executeTarget);
         }
     }

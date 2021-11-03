@@ -136,7 +136,7 @@ public class TaskManager {
                 .withPriority(taskRun.getPriority())
                 .withRetryTimes(0)
                 .build();
-        logger.debug("Created taskAttempt. taskAttempt={}", taskAttempt);
+        logger.debug("Created taskAttempt. taskAttemptId = {}", taskAttempt.getId());
 
         return taskAttempt;
     }

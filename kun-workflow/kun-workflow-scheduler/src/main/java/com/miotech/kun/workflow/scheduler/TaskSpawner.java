@@ -143,11 +143,10 @@ public class TaskSpawner implements InitializingBean {
             graphTaskRuns.put(graph, taskRunList);
 
         }
-        logger.debug("to save created TaskRuns. TaskRun={}", taskRuns);
+        logger.debug("to save created TaskRuns. TaskRun={}", taskRuns.stream().map(TaskRun::getId).collect(Collectors.toList()));
         taskRunDao.createTaskRuns(graphTaskRuns);
         List<TaskRun> createdTaskRun = graphTaskRuns.values().stream()
                 .flatMap(Collection::stream).collect(Collectors.toList());
-        notifyTaskRunCreated(createdTaskRun);
         if (tick != SpecialTick.NULL) {
             logger.debug("to save checkpoint. checkpoint = {}", tick);
             tickDao.saveCheckPoint(tick);
@@ -156,6 +155,7 @@ public class TaskSpawner implements InitializingBean {
         if (taskRuns.size() > 0) {
             submit(taskRuns);
         }
+        notifyTaskRunCreated(createdTaskRun);
         return taskRuns;
     }
 
