@@ -31,13 +31,13 @@ public class MockTaskDefinitionFactory {
         return createTaskDefinitions(num, dependencies, null);
     }
 
-    public static List<TaskDefinition> createTaskDefinitions(int num, List<Long> dependencies, Long definitionId) {
+    public static List<TaskDefinition> createTaskDefinitions(int num, List<Long> dependencies, Long defId) {
         List<TaskDefinition> tasksDefs = new ArrayList<>();
         Map<String, Object> taskConfig = new HashMap<>();
 
         for (int i = 0; i < num; i++) {
             long taskId = DataPlatformIdGenerator.nextTaskDefinitionId();
-            definitionId = definitionId == null? DataPlatformIdGenerator.nextDefinitionId() : definitionId;
+            Long definitionId = defId == null? DataPlatformIdGenerator.nextDefinitionId() : defId;
             taskConfig.put("sparkSQL", "SELECT 1 AS T");
             List<TaskDatasetProps> outputDatasets = Collections.singletonList(new TaskDatasetProps(
                     definitionId,
