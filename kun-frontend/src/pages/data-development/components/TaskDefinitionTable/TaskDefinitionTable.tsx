@@ -21,6 +21,7 @@ import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
 import { TaskTemplateIcon } from '@/components/TaskTemplateIcon/TaskTemplateIcon.component';
 import { EventEmitter } from 'ahooks/lib/useEventEmitter';
 import styles from './TaskDefinitionTable.module.less';
+import TextContainer from '@/components/TextContainer/TextContainer';
 
 interface OwnProps {
   taskDefViewId: string | null;
@@ -117,9 +118,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
               })
               .toString()}
           >
-            <div style={{ maxWidth: 300, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-              {record.name}
-            </div>
+            <TextContainer maxWidth={250}>{record.name}</TextContainer>
           </Link>
         ),
       },
