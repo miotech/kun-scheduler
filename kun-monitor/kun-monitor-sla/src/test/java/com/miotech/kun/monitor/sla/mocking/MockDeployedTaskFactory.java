@@ -35,4 +35,18 @@ public class MockDeployedTaskFactory {
         }
         return tasksDefs;
     }
+
+    public static DeployedTask createDeployedTask(TaskCommit taskCommit) {
+        long taskId = DataPlatformIdGenerator.nextDeployedTaskId();
+        return DeployedTask.newBuilder()
+                .withId(taskId)
+                .withName(taskCommit.getSnapshot().getName())
+                .withDefinitionId(taskCommit.getDefinitionId())
+                .withTaskTemplateName("SparkSQL")
+                .withTaskCommit(taskCommit)
+                .withWorkflowTaskId(1L)
+                .withOwner(1L)
+                .withArchived(false)
+                .build();
+    }
 }

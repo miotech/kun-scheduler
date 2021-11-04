@@ -23,7 +23,7 @@ import java.util.Optional;
 @Component
 public class TimelineScheduler {
 
-    private static final String MSG_TEMPLATE = "Deployed task: '%s' not completed before the deadline.%n%nSee link: %s";
+    private static final String MSG_TEMPLATE = "Deployed task: '%s' not completed before the deadline.%nRoot definition id:%s%n%nSee link: %s";
 
     @Value("${notify.urlLink.prefix}")
     private String prefix;
@@ -66,7 +66,7 @@ public class TimelineScheduler {
             }
 
             DeployedTask deployedTask = deployedTaskOpt.get();
-            String msg = String.format(MSG_TEMPLATE, deployedTask.getName(), this.prefix + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", definitionId, taskTimeline.getTaskRunId()));
+            String msg = String.format(MSG_TEMPLATE, deployedTask.getName(), taskTimeline.getRootDefinitionId(), this.prefix + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", definitionId, taskTimeline.getTaskRunId()));
             log.debug("Task: {} is not executed before the deadline, send an alarm, msg: {}", deployedTask.getName(), msg);
             notifyFacade.notify(deployedTask.getWorkflowTaskId(), msg);
         }

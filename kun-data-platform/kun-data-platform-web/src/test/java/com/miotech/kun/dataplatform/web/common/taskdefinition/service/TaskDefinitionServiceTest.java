@@ -11,6 +11,7 @@ import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskRelationDa
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.*;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
+import com.miotech.kun.monitor.facade.sla.SlaFacade;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.RunTaskRequest;
@@ -59,6 +60,9 @@ public class TaskDefinitionServiceTest extends AppTestBase {
 
     @Autowired
     private TaskCommitService taskCommitService;
+
+    @Autowired
+    private SlaFacade slaFacade;
 
     @Test
     public void create_ok() {
@@ -628,4 +632,5 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         taskDefinitionService.stopBatch(taskTryBatchRequest2);
         Mockito.verify(workflowClient, Mockito.times(1)).stopTaskRuns(any(List.class));
     }
+
 }

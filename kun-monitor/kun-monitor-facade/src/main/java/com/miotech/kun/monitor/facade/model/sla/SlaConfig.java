@@ -48,27 +48,29 @@ public class SlaConfig {
             return null;
         }
 
-        int hrs = 0;
-        if (this.hours != null) {
-            hrs = this.hours;
-        }
-
-        int min = 0;
-        if (this.minutes != null) {
-            min = this.minutes;
-        }
-
-        int tv = hrs * 60 + min;
         LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter pattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-        ZonedDateTime deadlineDateTime = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), hrs, min)
+        ZonedDateTime deadlineDateTime = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), hours, minutes)
                 .atZone(ZoneId.of(timeZone)).withZoneSameInstant(ZoneId.systemDefault());
+
+        DateTimeFormatter pattern = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        int tv = deadlineDateTime.getHour() * 60 + deadlineDateTime.getMinute();
         int ctv = now.getHour() * 60 + now.getMinute();
         if (ctv < tv) {
             return deadlineDateTime.format(pattern);
         }
 
         return deadlineDateTime.plusDays(1).format(pattern);
+    }
+
+    public Integer getDeadlineValue(String timeZone) {
+        if(this.hours == null && this.minutes == null) {
+            return null;
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        ZonedDateTime deadlineDateTime = LocalDateTime.of(now.getYear(), now.getMonth(), now.getDayOfMonth(), hours, minutes)
+                .atZone(ZoneId.of(timeZone)).withZoneSameInstant(ZoneId.systemDefault());
+        return deadlineDateTime.getHour() * 60 + deadlineDateTime.getMinute();
     }
 
     public Integer getPriority() {

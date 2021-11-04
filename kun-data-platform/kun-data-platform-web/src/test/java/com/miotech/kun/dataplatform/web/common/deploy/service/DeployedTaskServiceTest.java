@@ -6,14 +6,17 @@ import com.miotech.kun.dataplatform.facade.model.commit.CommitType;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
-import com.miotech.kun.dataplatform.mocking.MockDeployedTaskFactory;
-import com.miotech.kun.dataplatform.mocking.MockTaskCommitFactory;
-import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
-import com.miotech.kun.dataplatform.mocking.MockWorkflowTaskFactory;
+import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskRelation;
+import com.miotech.kun.dataplatform.mocking.*;
 import com.miotech.kun.dataplatform.web.common.commit.dao.TaskCommitDao;
 import com.miotech.kun.dataplatform.web.common.deploy.dao.DeployedTaskDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
+import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskRelationDao;
+import com.miotech.kun.dataplatform.web.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
+import com.miotech.kun.monitor.facade.model.sla.SlaConfig;
+import com.miotech.kun.monitor.facade.model.sla.TaskDefinitionNode;
+import com.miotech.kun.monitor.facade.sla.SlaFacade;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -21,11 +24,14 @@ import com.miotech.kun.workflow.client.model.Task;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doAnswer;
@@ -44,10 +50,19 @@ public class DeployedTaskServiceTest extends AppTestBase {
     private DeployedTaskDao deployedTaskDao;
 
     @Autowired
+    private TaskDefinitionService taskDefinitionService;
+
+    @Autowired
     private TaskDefinitionDao taskDefinitionDao;
 
     @Autowired
     private WorkflowClient workflowClient;
+
+    @Autowired
+    private SlaFacade slaFacade;
+
+    @Autowired
+    private TaskRelationDao taskRelationDao;
 
     @Test
     public void test_find_failed() {
@@ -76,6 +91,38 @@ public class DeployedTaskServiceTest extends AppTestBase {
         assertThat(deployedTask.getOwner(), is(commit.getSnapshot().getOwner()));
         assertThat(deployedTask.getDefinitionId(), is(commit.getDefinitionId()));
         assertThat(deployedTask.getTaskTemplateName(), is(commit.getSnapshot().getTaskTemplateName()));
+    }
+
+    @Test
+    public void test_deployTask_created_node_existed() {
+        // mock
+        Task mockTask = MockWorkflowTaskFactory.mockTask(1L);
+        doReturn(mockTask).when(workflowClient).saveTask(any(), anyList());
+
+        Long taskDefId = IdGenerator.getInstance().nextId();
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition(taskDefId, MockSlaFactory.create());
+        TaskCommit commit = MockTaskCommitFactory.createTaskCommit(taskDefinition);
+        taskCommitDao.create(commit);
+
+        // create task-definition node
+        slaFacade.save(MockTaskDefinitionNodeFactory.create(commit.getDefinitionId()));
+        // invocation
+        deployedTaskService.deployTask(commit);
+
+        // verify
+        DeployedTask deployedTask = deployedTaskService.find(commit.getDefinitionId());
+        assertThat(deployedTask.getWorkflowTaskId(), is(mockTask.getId()));
+        assertThat(deployedTask.getOwner(), is(commit.getSnapshot().getOwner()));
+        assertThat(deployedTask.getDefinitionId(), is(commit.getDefinitionId()));
+        assertThat(deployedTask.getTaskTemplateName(), is(commit.getSnapshot().getTaskTemplateName()));
+        TaskDefinitionNode node = slaFacade.findById(taskDefId);
+        assertThat(node, notNullValue());
+        assertThat(node.getId(), is(taskDefId));
+        assertThat(node.getName(), is(taskDefinition.getName()));
+        SlaConfig slaConfig = commit.getSnapshot().getTaskPayload().getScheduleConfig().getSlaConfig();
+        assertThat(node.getLevel(), is(slaConfig.getLevel()));
+        assertThat(node.getDeadline(), is(slaConfig.getDeadlineValue(commit.getSnapshot().getTaskPayload().getScheduleConfig().getTimeZone())));
+        assertThat(node.getWorkflowTaskId(), is(deployedTask.getWorkflowTaskId()));
     }
 
     @Test
@@ -219,6 +266,55 @@ public class DeployedTaskServiceTest extends AppTestBase {
         // verify
         assertThat(usernames.size(), is(1));
         assertThat(usernames.get(0), is(username));
+    }
+
+    @Test
+    public void testFetchUnarchived() {
+        List<DeployedTask> result = MockDeployedTaskFactory.createDeployedTask(2);
+        result.forEach(x -> {
+            taskCommitDao.create(x.getTaskCommit());
+            deployedTaskDao.create(x);
+        });
+
+        List<DeployedTask> unarchived = deployedTaskService.fetchUnarchived();
+        assertThat(unarchived.size(), is(2));
+
+        // set archived=true
+        DeployedTask deployedTask = result.get(0);
+        DeployedTask archivedDeployedTask = deployedTask.cloneBuilder().withArchived(true).build();
+        deployedTaskDao.update(archivedDeployedTask);
+
+        unarchived = deployedTaskService.fetchUnarchived();
+        assertThat(unarchived.size(), is(1));
+    }
+
+    @Test
+    public void testRebuildRelationship() {
+        // mock
+        doAnswer((i) -> {
+            Task task = i.getArgument(0, Task.class);
+            Task.Builder taskBuilder = task.cloneBuilder().withId(IdGenerator.getInstance().nextId());
+            return taskBuilder.build();
+        }).when(workflowClient).saveTask(any(), anyList());
+
+        // create and deploy
+        int taskSize = 2;
+        List<TaskCommit> commits = MockTaskCommitFactory.createTaskCommit(taskSize);
+        commits.forEach(taskCommitDao::create);
+        commits.forEach(tc -> taskDefinitionDao.create(MockTaskDefinitionFactory.createTaskDefinition(tc.getDefinitionId(), null)));
+        commits.stream()
+                .map(deployedTaskService::deployTask)
+                .collect(Collectors.toList());
+        taskRelationDao.create(ImmutableList.of(new TaskRelation(commits.get(0).getDefinitionId(), commits.get(1).getDefinitionId(), OffsetDateTime.now(), OffsetDateTime.now())));
+
+        // rebuild relationship
+        deployedTaskService.rebuildRelationship();
+
+        // validate
+        TaskCommit taskCommit = commits.get(0);
+        TaskDefinitionNode node = slaFacade.findById(taskCommit.getDefinitionId());
+        assertThat(node, notNullValue());
+        assertThat(node.getId(), is(taskCommit.getDefinitionId()));
     }
 
 }
