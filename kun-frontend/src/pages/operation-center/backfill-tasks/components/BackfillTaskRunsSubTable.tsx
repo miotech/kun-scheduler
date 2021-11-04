@@ -10,6 +10,7 @@ import { dayjs } from '@/utils/datetime-utils';
 import Icon, { FileSearchOutlined } from '@ant-design/icons';
 import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
+import TextContainer from '@/components/TextContainer/TextContainer';
 
 interface OwnProps {
   data: TaskRun[];
@@ -89,14 +90,10 @@ export const BackfillTaskRunsSubTable: React.FC<Props> = memo(function BackfillT
           const definitionId = getTaskDefinitionIdByTaskRun(record);
           return definitionId != null ? (
             <Link to={`/data-development/task-definition/${definitionId}`}>
-              <div style={{ maxWidth: 400, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-                {record.task.name}
-              </div>
+              <TextContainer maxWidth={400}>{record.task.name}</TextContainer>
             </Link>
           ) : (
-            <div style={{ maxWidth: 400, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
-              {record.task.name}
-            </div>
+            <TextContainer maxWidth={400}>{record.task.name}</TextContainer>
           );
         },
       },
