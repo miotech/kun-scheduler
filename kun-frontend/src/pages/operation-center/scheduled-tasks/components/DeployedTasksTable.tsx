@@ -16,6 +16,7 @@ import { StatusText } from '@/components/StatusText';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { UsernameText } from '@/components/UsernameText';
 import styles from './DeployedTasksTable.less';
+import TextContainer from '@/components/TextContainer/TextContainer';
 
 interface DeployedTasksTableProps {
   tableData: DeployedTask[];
@@ -53,15 +54,8 @@ const DeployedTasksTableComp: FC<DeployedTasksTableProps> = memo(function Deploy
                 .template('/operation-center/scheduled-tasks/:id')
                 .param({ id: record.id })
                 .toString()}
-              style={{
-                display: 'inline-block',
-                maxWidth: 500,
-                whiteSpace: 'nowrap',
-                textOverflow: 'ellipsis',
-                overflow: 'hidden',
-              }}
             >
-              {txt}
+              <TextContainer maxWidth={500}>{txt}</TextContainer>
             </Link>
           );
         },

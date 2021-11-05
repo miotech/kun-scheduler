@@ -8,6 +8,7 @@ import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { dayjs } from '@/utils/datetime-utils';
 import useI18n from '@/hooks/useI18n';
 import moment from 'moment-timezone';
+import TextContainer from '../TextContainer/TextContainer';
 
 export interface Node {
   x: number;
@@ -118,9 +119,9 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
     const content = data?.renderAsTaskRunDAG ? (
       <Popover
         title={
-          <div style={{ maxWidth: 300, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}>
+          <TextContainer maxWidth={250} ellipsis tooltipTitle={title}>
             {title}
-          </div>
+          </TextContainer>
         }
         overlayClassName="taskrun-dag-node-popover"
         content={
@@ -157,13 +158,11 @@ export const DAGTaskNode: React.FC<DAGTaskNodeProps> = props => {
                   <td>{t('taskRun.property.failedLink')}</td>
                   <td>
                     {data.failedUpstreamTaskRuns.map(i => (
-                      <div
-                        style={{ maxWidth: 190, whiteSpace: 'nowrap', textOverflow: 'ellipsis', overflow: 'hidden' }}
-                      >
+                      <TextContainer key={i.id} maxWidth={190} ellipsis tooltipTitle={i.name}>
                         <Link to={`/operation-center/task-run-id/${i.id}`} target="_blank">
                           {i.name}
                         </Link>
-                      </div>
+                      </TextContainer>
                     ))}
                   </td>
                 </tr>
