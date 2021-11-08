@@ -32,6 +32,8 @@ public class TaskRunVO {
 
     private List<DataStore> outlets;
 
+    private OffsetDateTime queuedAt;
+
     private OffsetDateTime startAt;
 
     private OffsetDateTime endAt;
@@ -101,6 +103,14 @@ public class TaskRunVO {
 
     public void setOutlets(List<DataStore> outlets) {
         this.outlets = outlets;
+    }
+
+    public OffsetDateTime getQueuedAt() {
+        return queuedAt;
+    }
+
+    public void setQueuedAt(OffsetDateTime queuedAt) {
+        this.queuedAt = queuedAt;
     }
 
     public OffsetDateTime getStartAt() {

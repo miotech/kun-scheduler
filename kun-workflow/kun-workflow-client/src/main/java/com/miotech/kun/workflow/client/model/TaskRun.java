@@ -36,6 +36,10 @@ public class TaskRun {
 
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
     @JsonSerialize(using = CustomDateTimeSerializer.class)
+    private OffsetDateTime queuedAt;
+
+    @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
     private OffsetDateTime startAt;
 
     @JsonDeserialize(using = CustomDateTimeDeserializer.class)
@@ -112,6 +116,14 @@ public class TaskRun {
 
     public void setOutlets(List<DataStore> outlets) {
         this.outlets = outlets;
+    }
+
+    public void setQueuedAt(OffsetDateTime queuedAt) {
+        this.queuedAt = queuedAt;
+    }
+
+    public OffsetDateTime getQueuedAt() {
+        return queuedAt;
     }
 
     public OffsetDateTime getStartAt() {
@@ -192,6 +204,9 @@ public class TaskRun {
         private List<DataStore> inlets;
         private List<DataStore> outlets;
         @JsonDeserialize(using = CustomDateTimeDeserializer.class)
+        @JsonSerialize(using = CustomDateTimeSerializer.class)
+        private OffsetDateTime queuedAt;
+        @JsonDeserialize(using = CustomDateTimeDeserializer.class)
         private OffsetDateTime startAt;
         @JsonDeserialize(using = CustomDateTimeDeserializer.class)
         private OffsetDateTime endAt;
@@ -245,6 +260,11 @@ public class TaskRun {
 
         public Builder withOutlets(List<DataStore> outlets) {
             this.outlets = outlets;
+            return this;
+        }
+
+        public Builder withQueuedAt(OffsetDateTime queuedAt){
+            this.queuedAt = queuedAt;
             return this;
         }
 
@@ -307,6 +327,7 @@ public class TaskRun {
             taskRunVO.setStatus(status);
             taskRunVO.setInlets(inlets);
             taskRunVO.setOutlets(outlets);
+            taskRunVO.setQueuedAt(queuedAt);
             taskRunVO.setStartAt(startAt);
             taskRunVO.setEndAt(endAt);
             taskRunVO.setAttempts(attempts);

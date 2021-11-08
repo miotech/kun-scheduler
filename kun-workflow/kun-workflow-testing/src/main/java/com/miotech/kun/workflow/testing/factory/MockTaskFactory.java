@@ -32,7 +32,7 @@ public class MockTaskFactory {
                 .withDependencies(new ArrayList<>())
                 .withTags(new ArrayList<>())
                 .withQueueName("default")
-                .withPriority(16)
+                .withPriority(0)
                 .build();
     }
 
@@ -54,7 +54,7 @@ public class MockTaskFactory {
                 .withDependencies(dependencies)
                 .withTags(new ArrayList<>())
                 .withQueueName("default")
-                .withPriority(16)
+                .withPriority(0)
                 .withRecoverTimes(0)
                 .withRetryDelay(1)
                 .withCheckType(CheckType.SKIP)
@@ -104,7 +104,7 @@ public class MockTaskFactory {
                     .withDependencies(new ArrayList<>())
                     .withTags(new ArrayList<>())
                     .withQueueName(queueName)
-                    .withPriority(16)
+                    .withPriority(0)
                     .withRetries(retries)
                     .withRetryDelay(retryDelay)
                     .withCheckType(checkType)
@@ -160,7 +160,7 @@ public class MockTaskFactory {
                     .withOperatorId(operatorId)
                     .withScheduleConf(scheduleConf)
                     .withQueueName("default")
-                    .withPriority(16)
+                    .withPriority(0)
                     .withDependencies(
                             selectItems(ids, parsed.get(i)).stream()
                                     .map(upId -> new TaskDependency(upId, taskId, depFuncProvider.from("latestTaskRun")))

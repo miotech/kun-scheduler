@@ -7,6 +7,7 @@ import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import okhttp3.*;
 import org.apache.commons.collections4.CollectionUtils;
@@ -492,6 +493,22 @@ public class WorkflowApi {
                 .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
                 .build();
         return sendRequest(getRequest, new TypeReference<List<ExecuteTarget>>() {
+        });
+    }
+
+    public List<TaskRun> getLatestTaskRuns(Long taskId, List<TaskRunStatus> filterStatusList, int limit){
+        String statusQueryString = String.join(",",
+                filterStatusList.stream().map(Enum::name).collect(Collectors.toList())
+        );
+        HttpUrl url = buildUrl(API_TASK_RUNS + "/" + taskId + "/latest")
+                .addQueryParameter("filterStatusList",statusQueryString)
+                .addQueryParameter("limit",String.valueOf(limit))
+                .build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<List<TaskRun>>() {
         });
     }
 }

@@ -21,6 +21,7 @@ import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.annotation.Internal;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.tuple.Triple;
@@ -303,7 +304,7 @@ public class TaskRunService {
                         .withTaskName(taskRun.getTask().getName())
                         .build())
                 .collect(Collectors.toList());
-        List<TaskRun> failedUpstreamTaskRuns = taskRun.getStatus().isUpstreamFailed()?
+        List<TaskRun> failedUpstreamTaskRuns = taskRun.getStatus().isUpstreamFailed() ?
                 taskRunDao.fetchFailedUpstreamTaskRuns(taskRun.getId()) : Collections.emptyList();
         logger.debug("ConvertToVO: failed upstream task runs {}", failedUpstreamTaskRuns.toString());
         return buildTaskRunVO(taskRun, attempts, failedUpstreamTaskRuns);
@@ -366,20 +367,25 @@ public class TaskRunService {
         return mappings;
     }
 
-    public boolean changeTaskAttemptPriority(long taskRunId, Integer priority) {
-        Optional<TaskRun> taskRunOptional = taskRunDao.fetchTaskRunById(taskRunId);
-        if (!taskRunOptional.isPresent()) {
-            throw new IllegalArgumentException("taskRun is not found for taskRunId: " + taskRunId);
-        }
+    public boolean changeTaskRunPriority(long taskRunId, Integer priority) {
+        logger.debug("going to change task run priority in database, taskRunId = {},priority = {}", taskRunId, priority);
+        boolean result = taskRunDao.changePriority(taskRunId, priority);
         TaskAttemptProps attempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
-        if (Objects.isNull(attempt)) {
-            throw new IllegalArgumentException("Attempt is not found for taskRunId: " + taskRunId);
+        if (!Objects.isNull(attempt) && attempt.getStatus().equals(TaskRunStatus.QUEUED)) {
+            logger.debug("going to change task attempt priority in executor, taskAttemptId = {},priority = {}", attempt.getId(), priority);
+            executor.changePriority(attempt.getId(), attempt.getQueueName(), priority);
         }
-        executor.changePriority(attempt.getId(), attempt.getQueueName(), priority);
-        taskRunDao.updateTaskRun(taskRunOptional.get()
-                .cloneBuilder()
-                .withPriority(priority).build());
-        return true;
+        return result;
+    }
+
+    public List<TaskRunVO> fetchLatestTaskRuns(Long taskId, List<TaskRunStatus> filterStatus, int limit) {
+        Preconditions.checkNotNull(taskId);
+        Preconditions.checkArgument(limit > 0);
+        Preconditions.checkArgument(limit <= 100);
+
+        List<TaskRun> taskRunList = taskRunDao.fetchLatestTaskRuns(taskId, filterStatus, limit);
+
+        return taskRunList.stream().map(this::convertToVO).collect(Collectors.toList());
     }
 
     private Map<Long, List<TaskAttemptProps>> groupByTaskRunId(List<TaskAttemptProps> taskAttemptProps) {
@@ -405,6 +411,7 @@ public class TaskRunService {
         vo.setInlets(taskRun.getInlets());
         vo.setOutlets(taskRun.getOutlets());
         vo.setDependentTaskRunIds(taskRun.getDependentTaskRunIds());
+        vo.setQueuedAt(taskRun.getQueuedAt());
         vo.setStartAt(taskRun.getStartAt());
         vo.setEndAt(taskRun.getEndAt());
         vo.setCreatedAt(taskRun.getCreatedAt());
