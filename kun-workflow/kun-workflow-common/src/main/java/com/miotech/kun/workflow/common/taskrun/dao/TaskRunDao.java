@@ -52,11 +52,11 @@ import static com.miotech.kun.commons.utils.StringUtils.toNullableString;
 public class TaskRunDao {
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "start_at", "end_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority","target");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority", "target");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
-    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path", "queue_name", "priority","retry_times");
+    private static final List<String> taskAttemptCols = ImmutableList.of("id", "task_run_id", "attempt", "status", "start_at", "end_at", "log_path", "queue_name", "priority", "retry_times");
 
     private static final String RELATION_TABLE_NAME = "kun_wf_task_run_relations";
     private static final String RELATION_MODEL_NAME = "task_run_relations";
@@ -348,6 +348,7 @@ public class TaskRunDao {
                     taskRun.getScheduledTick().toString(),
                     toNullableString(taskRun.getStatus()),
                     scheduleType,
+                    taskRun.getQueuedAt(),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
@@ -429,6 +430,7 @@ public class TaskRunDao {
                     taskRun.getScheduledTick().toString(),
                     toNullableString(taskRun.getStatus()),
                     scheduleType,
+                    taskRun.getQueuedAt(),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
@@ -478,6 +480,7 @@ public class TaskRunDao {
                     taskRun.getScheduledTick().toString(),
                     toNullableString(taskRun.getStatus()),
                     taskRun.getScheduledType().name(),
+                    taskRun.getQueuedAt(),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
@@ -597,7 +600,8 @@ public class TaskRunDao {
                 .where("id = ?")
                 .getSQL();
         List<Long> failedUpstreamTaskRunIds = dbOperator.fetchOne(sql,
-                rs -> JSONUtils.jsonToObjectOrDefault(rs.getString(1), new TypeReference<List<Long>>(){}, new ArrayList<>()),
+                rs -> JSONUtils.jsonToObjectOrDefault(rs.getString(1), new TypeReference<List<Long>>() {
+                }, new ArrayList<>()),
                 taskRunId);
         if (failedUpstreamTaskRunIds == null || failedUpstreamTaskRunIds.isEmpty()) return new ArrayList<>();
         List<Optional<TaskRun>> failedUpstreamTaskRuns = fetchTaskRunsByIds(failedUpstreamTaskRunIds);
@@ -924,15 +928,15 @@ public class TaskRunDao {
     }
 
     public Optional<TaskRunStatus> updateTaskAttemptStatus(Long taskAttemptId, TaskRunStatus status) {
-        return updateTaskAttemptStatus(taskAttemptId, status, null, null, null);
+        return updateTaskAttemptStatus(taskAttemptId, status, null, null, null, null);
     }
 
     public Optional<TaskRunStatus> updateTaskAttemptStatus(Long taskAttemptId, TaskRunStatus status,
                                                            @Nullable OffsetDateTime startAt, @Nullable OffsetDateTime endAt) {
-        return updateTaskAttemptStatus(taskAttemptId, status, startAt, endAt, null);
+        return updateTaskAttemptStatus(taskAttemptId, status, null, startAt, endAt, null);
     }
 
-    public Optional<TaskRunStatus> updateTaskAttemptStatus(Long taskAttemptId, TaskRunStatus status,
+    public Optional<TaskRunStatus> updateTaskAttemptStatus(Long taskAttemptId, TaskRunStatus status, @Nullable OffsetDateTime queuedAt,
                                                            @Nullable OffsetDateTime startAt, @Nullable OffsetDateTime endAt, @Nullable OffsetDateTime termAt) {
         checkNotNull(taskAttemptId, "taskAttemptId should not be null.");
         checkNotNull(status, "status should not be null.");
@@ -952,6 +956,13 @@ public class TaskRunDao {
                 .set("status")
                 .where("id = ?");
         pmTr.add(status.toString());
+
+        if (queuedAt != null) {
+            sbTa.set("queued_at");
+            pmTa.add(queuedAt);
+            sbTr.set("queued_at");
+            pmTr.add(queuedAt);
+        }
 
         if (startAt != null) {
             sbTa.set("start_at");
@@ -1106,6 +1117,26 @@ public class TaskRunDao {
         return dbOperator.update(sql, logPath, taskAttemptId) >= 0;
     }
 
+    public boolean changePriority(Long taskRunId, Integer priority) {
+        String taskRunSql = DefaultSQLBuilder.newBuilder()
+                .update(TASK_RUN_TABLE_NAME)
+                .set("priority")
+                .where("id = ?")
+                .asPrepared()
+                .getSQL();
+
+        String taskAttemptSql = DefaultSQLBuilder.newBuilder()
+                .update(TASK_ATTEMPT_TABLE_NAME)
+                .set("priority")
+                .where("task_run_id = ?")
+                .asPrepared()
+                .getSQL();
+        return dbOperator.transaction(() -> {
+            int i = dbOperator.update(taskRunSql, priority, taskRunId);
+            return dbOperator.update(taskAttemptSql, priority, taskRunId) > 0;
+        });
+    }
+
     private boolean deleteTaskAttempts(Long taskRunId) {
         String dependencySQL = DefaultSQLBuilder.newBuilder()
                 .delete()
@@ -1179,7 +1210,7 @@ public class TaskRunDao {
     }
 
     public TaskRun fetchLatestTaskRun(Long taskId) {
-        List<TaskRun> latestRunInList = fetchLatestTaskRuns(taskId, 1);
+        List<TaskRun> latestRunInList = fetchLatestTaskRuns(taskId, null, 1);
         if (latestRunInList.isEmpty()) {
             return null;
         }
@@ -1187,15 +1218,27 @@ public class TaskRunDao {
         return latestRunInList.get(0);
     }
 
-    public List<TaskRun> fetchLatestTaskRuns(Long taskId, int limit) {
+    public List<TaskRun> fetchLatestTaskRuns(Long taskId, List<TaskRunStatus> filterStatus, int limit) {
         checkNotNull(taskId, "taskId should not be null.");
 
-        String sql = getTaskRunSQLBuilderWithDefaultConfig()
-                .where("task_id = ?")
+        List<Object> params = new ArrayList<>();
+        params.add(taskId);
+        SQLBuilder sqlBuilder = getTaskRunSQLBuilderWithDefaultConfig();
+        StringBuilder whereCase = new StringBuilder().append("task_id = ?");
+        if (filterStatus != null && filterStatus.size() > 0) {
+            String filterString = filterStatus.stream().map(x -> "?").collect(Collectors.joining(","));
+            whereCase.append(" and status in (").append(filterString).append(")");
+            List<String> statusStringList = filterStatus.stream().map(Enum::name).collect(Collectors.toList());
+            params.addAll(statusStringList);
+        }
+        sqlBuilder.where(whereCase.toString());
+        params.add(limit);
+        String sql = sqlBuilder
                 .orderBy(TASK_RUN_MODEL_NAME + ".id DESC")
-                .limit(limit)
+                .limit()
+                .asPrepared()
                 .getSQL();
-        return dbOperator.fetchAll(sql, taskRunMapperInstance, taskId);
+        return dbOperator.fetchAll(sql, taskRunMapperInstance, params.toArray());
     }
 
     public Map<Long, List<TaskRun>> fetchLatestTaskRunsByBatch(List<Long> taskIds, int limitPerTask) {
@@ -1222,17 +1265,6 @@ public class TaskRunDao {
         }
 
         return resultMap;
-    }
-
-    public List<TaskRun> fetchLatestTaskRunsToday(Long taskId, int limit) {
-        checkNotNull(taskId, "taskId should not be null.");
-        OffsetDateTime todayMorning = DateTimeUtils.todayMorning();
-        String sql = getTaskRunSQLBuilderWithDefaultConfig()
-                .where("task_id = ? and " + TASK_RUN_MODEL_NAME + ".created_at > ?")
-                .orderBy(TASK_RUN_MODEL_NAME + ".created_at DESC")
-                .limit(limit)
-                .getSQL();
-        return dbOperator.fetchAll(sql, taskRunMapperInstance, taskId, todayMorning);
     }
 
     public TaskAttemptProps fetchLatestTaskAttempt(Long taskRunId) {
@@ -1379,7 +1411,7 @@ public class TaskRunDao {
     }
 
     public List<TaskAttempt> fetchTaskAttemptListForRecover(List<TaskRunStatus> taskRunStatusList) {
-        if(taskRunStatusList.size() == 0){
+        if (taskRunStatusList.size() == 0) {
             return new ArrayList<>();
         }
         String filterTaskRunStatus = taskRunStatusList.stream().map(x -> "?").collect(Collectors.joining(","));
@@ -1505,8 +1537,10 @@ public class TaskRunDao {
                     .withOutlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_outlets"), new TypeReference<List<DataStore>>() {
                     }))
                     .withFailedUpstreamTaskRunIds(JSONUtils.jsonToObjectOrDefault(rs.getString(TASK_RUN_MODEL_NAME + "_failed_upstream_task_run_ids"),
-                            new TypeReference<List<Long>>(){}, new ArrayList<>()))
+                            new TypeReference<List<Long>>() {
+                            }, new ArrayList<>()))
                     .withDependentTaskRunIds(Collections.emptyList())
+                    .withQueuedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_queued_at")))
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_end_at")))
                     .withCreatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_created_at")))

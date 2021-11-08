@@ -9,8 +9,6 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
-import com.miotech.kun.workflow.core.model.task.ScheduleConf;
-import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
@@ -27,7 +25,10 @@ import org.junit.Test;
 import javax.inject.Inject;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -338,7 +339,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void updateTaskAttempt(){
+    public void updateTaskAttempt() {
         Task task = MockTaskFactory.createTask();
         TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
         TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
@@ -348,10 +349,10 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskAttempt newAttempt = taskAttempt.cloneBuilder().withRetryTimes(1).build();
         taskRunDao.updateAttempt(newAttempt);
         TaskAttempt saved = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
-        assertThat(saved.getId(),is(newAttempt.getId()));
-        assertThat(saved.getTaskId(),is(newAttempt.getTaskId()));
-        assertThat(saved.getTaskRun().getId(),is(newAttempt.getTaskRun().getId()));
-        assertThat(saved.getRetryTimes(),is(newAttempt.getRetryTimes()));
+        assertThat(saved.getId(), is(newAttempt.getId()));
+        assertThat(saved.getTaskId(), is(newAttempt.getTaskId()));
+        assertThat(saved.getTaskRun().getId(), is(newAttempt.getTaskRun().getId()));
+        assertThat(saved.getRetryTimes(), is(newAttempt.getRetryTimes()));
 
     }
 
@@ -829,13 +830,13 @@ public class TaskRunDaoTest extends DatabaseTestBase {
             taskRunDao.createAttempt(taskAttempt);
         }
 
-        List<TaskRunStatus> taskRunStatusConditions = Arrays.asList(TaskRunStatus.CREATED,TaskRunStatus.QUEUED, TaskRunStatus.ERROR);
+        List<TaskRunStatus> taskRunStatusConditions = Arrays.asList(TaskRunStatus.CREATED, TaskRunStatus.QUEUED, TaskRunStatus.ERROR);
         List<TaskAttempt> selectedAttempt = taskRunDao.fetchTaskAttemptListForRecover(taskRunStatusConditions);
-        List<TaskRunStatus> selectedStatus =  selectedAttempt.stream().map(TaskAttempt::getStatus).collect(Collectors.toList());
+        List<TaskRunStatus> selectedStatus = selectedAttempt.stream().map(TaskAttempt::getStatus).collect(Collectors.toList());
 
         //verify
         assertThat(selectedAttempt, hasSize(3));
-        assertThat(selectedStatus,containsInAnyOrder(TaskRunStatus.CREATED,TaskRunStatus.ERROR,TaskRunStatus.QUEUED));
+        assertThat(selectedStatus, containsInAnyOrder(TaskRunStatus.CREATED, TaskRunStatus.ERROR, TaskRunStatus.QUEUED));
 
     }
 
@@ -890,7 +891,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void getTickByTaskRunId_withTick_shouldSuccess(){
+    public void getTickByTaskRunId_withTick_shouldSuccess() {
         String tick = "202110131111";
         Task taskWithUTC = MockTaskFactory.createTask();
         taskDao.create(taskWithUTC);
@@ -901,4 +902,5 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         taskRunDao.createTaskRun(taskRunWithUTC);
         assertTrue(tick.equals(taskRunDao.getTickByTaskRunId(1L)));
     }
+
 }
