@@ -339,7 +339,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void updateTaskAttempt(){
+    public void updateTaskAttempt() {
         Task task = MockTaskFactory.createTask();
         TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
         TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
@@ -349,10 +349,10 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskAttempt newAttempt = taskAttempt.cloneBuilder().withRetryTimes(1).build();
         taskRunDao.updateAttempt(newAttempt);
         TaskAttempt saved = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
-        assertThat(saved.getId(),is(newAttempt.getId()));
-        assertThat(saved.getTaskId(),is(newAttempt.getTaskId()));
-        assertThat(saved.getTaskRun().getId(),is(newAttempt.getTaskRun().getId()));
-        assertThat(saved.getRetryTimes(),is(newAttempt.getRetryTimes()));
+        assertThat(saved.getId(), is(newAttempt.getId()));
+        assertThat(saved.getTaskId(), is(newAttempt.getTaskId()));
+        assertThat(saved.getTaskRun().getId(), is(newAttempt.getTaskRun().getId()));
+        assertThat(saved.getRetryTimes(), is(newAttempt.getRetryTimes()));
 
     }
 
@@ -830,13 +830,13 @@ public class TaskRunDaoTest extends DatabaseTestBase {
             taskRunDao.createAttempt(taskAttempt);
         }
 
-        List<TaskRunStatus> taskRunStatusConditions = Arrays.asList(TaskRunStatus.CREATED,TaskRunStatus.QUEUED, TaskRunStatus.ERROR);
+        List<TaskRunStatus> taskRunStatusConditions = Arrays.asList(TaskRunStatus.CREATED, TaskRunStatus.QUEUED, TaskRunStatus.ERROR);
         List<TaskAttempt> selectedAttempt = taskRunDao.fetchTaskAttemptListForRecover(taskRunStatusConditions);
-        List<TaskRunStatus> selectedStatus =  selectedAttempt.stream().map(TaskAttempt::getStatus).collect(Collectors.toList());
+        List<TaskRunStatus> selectedStatus = selectedAttempt.stream().map(TaskAttempt::getStatus).collect(Collectors.toList());
 
         //verify
         assertThat(selectedAttempt, hasSize(3));
-        assertThat(selectedStatus,containsInAnyOrder(TaskRunStatus.CREATED,TaskRunStatus.ERROR,TaskRunStatus.QUEUED));
+        assertThat(selectedStatus, containsInAnyOrder(TaskRunStatus.CREATED, TaskRunStatus.ERROR, TaskRunStatus.QUEUED));
 
     }
 
@@ -891,7 +891,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void getTickByTaskRunId_withTick_shouldSuccess(){
+    public void getTickByTaskRunId_withTick_shouldSuccess() {
         String tick = "202110131111";
         Task taskWithUTC = MockTaskFactory.createTask();
         taskDao.create(taskWithUTC);
@@ -903,37 +903,4 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertTrue(tick.equals(taskRunDao.getTickByTaskRunId(1L)));
     }
 
-    @Test
-    public void fetchLatestTaskRunsWithFilterStatus(){
-        // Prepare
-        // 1. create task runs
-        Task task = MockTaskFactory.createTask();
-        taskDao.create(task);
-
-        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:01.00Z"), ZoneId.of("UTC")));
-        TaskRun taskrun1 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.CREATED);
-
-        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:02.00Z"), ZoneId.of("UTC")));
-        TaskRun taskrun2 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.QUEUED);
-
-        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")));
-        TaskRun taskrun3 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.RUNNING);
-
-        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")));
-        TaskRun taskrun4 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.FAILED);
-
-        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")));
-        TaskRun taskrun5 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.SUCCESS);
-
-        DateTimeUtils.setClock(Clock.fixed(Instant.parse("2020-01-01T00:00:03.00Z"), ZoneId.of("UTC")));
-        TaskRun taskrun6 = MockTaskRunFactory.createTaskRunWithStatus(task,TaskRunStatus.CHECK);
-
-        List<TaskRun> sampleTaskRuns = Lists.newArrayList(taskrun1, taskrun2, taskrun3);
-
-        taskRunDao.createTaskRuns(sampleTaskRuns);
-
-        // Process
-        TaskRun latestTaskRun = taskRunDao.fetchLatestTaskRun(task.getId());
-
-    }
 }

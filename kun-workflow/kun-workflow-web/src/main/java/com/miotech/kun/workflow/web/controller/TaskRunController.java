@@ -16,7 +16,10 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.miotech.kun.commons.utils.ArgumentCheckUtils.parseBooleanQueryParameter;
@@ -204,6 +207,16 @@ public class TaskRunController {
         int safeLimit = (limit <= SAFE_PAGE_SIZE_UPPER_LIMIT) ? limit : SAFE_PAGE_SIZE_UPPER_LIMIT;
         Map<Long, List<TaskRunVO>> taskRunsVO = taskRunService.fetchLatestTaskRuns(taskIds, safeLimit);
         return taskRunsVO;
+    }
+
+    @RouteMapping(url = "/taskruns/{taskId}/latest", method = "GET")
+    public Object fetchLatestTaskRuns(@RouteVariable Long taskId, @QueryParameter Integer limit, @QueryParameter List<String> filterStatusList) {
+        Preconditions.checkArgument(Objects.nonNull(limit) && (limit > 0), "argument `limit` should be a positive integer.");
+
+        List<TaskRunStatus> filterStatus = filterStatusList.stream().map(TaskRunStatus::valueOf).collect(Collectors.toList());
+        int safeLimit = (limit <= SAFE_PAGE_SIZE_UPPER_LIMIT) ? limit : SAFE_PAGE_SIZE_UPPER_LIMIT;
+        List<TaskRunVO> taskRunVOList = taskRunService.fetchLatestTaskRuns(taskId, filterStatus, safeLimit);
+        return taskRunVOList;
     }
 
     @RouteMapping(url = "/taskruns/changePriority", method = "PUT")

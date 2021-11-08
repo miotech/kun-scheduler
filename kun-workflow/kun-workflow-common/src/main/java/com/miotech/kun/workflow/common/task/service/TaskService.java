@@ -66,7 +66,7 @@ public class TaskService {
 
     private final Integer RETRY_DELAY_LIMIT = 600;
 
-    private final Integer DEFAULT_PRIORITY = 16;
+    private final Integer DEFAULT_PRIORITY = 0;
 
     private final CheckType DEFAULT_CHECK_TYPE = CheckType.SKIP;
 

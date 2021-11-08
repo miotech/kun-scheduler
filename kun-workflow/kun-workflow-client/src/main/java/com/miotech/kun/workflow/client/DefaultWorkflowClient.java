@@ -7,6 +7,7 @@ import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -271,6 +272,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
         for (Long taskRunId : taskRunIds) {
             wfApi.stopTaskRun(taskRunId);
         }
+    }
+
+    @Override
+    public List<TaskRun> getLatestTaskRuns(Long taskId, List<TaskRunStatus> filterStatus, int limit) {
+        return wfApi.getLatestTaskRuns(taskId, filterStatus, limit);
     }
 
     @Override

@@ -378,6 +378,16 @@ public class TaskRunService {
         return result;
     }
 
+    public List<TaskRunVO> fetchLatestTaskRuns(Long taskId, List<TaskRunStatus> filterStatus, int limit) {
+        Preconditions.checkNotNull(taskId);
+        Preconditions.checkArgument(limit > 0);
+        Preconditions.checkArgument(limit <= 100);
+
+        List<TaskRun> taskRunList = taskRunDao.fetchLatestTaskRuns(taskId, filterStatus, limit);
+
+        return taskRunList.stream().map(this::convertToVO).collect(Collectors.toList());
+    }
+
     private Map<Long, List<TaskAttemptProps>> groupByTaskRunId(List<TaskAttemptProps> taskAttemptProps) {
         Map<Long, List<TaskAttemptProps>> taskAttemptPropsMap = Maps.newHashMap();
         for (TaskAttemptProps taskAttemptProp : taskAttemptProps) {
@@ -401,6 +411,7 @@ public class TaskRunService {
         vo.setInlets(taskRun.getInlets());
         vo.setOutlets(taskRun.getOutlets());
         vo.setDependentTaskRunIds(taskRun.getDependentTaskRunIds());
+        vo.setQueuedAt(taskRun.getQueuedAt());
         vo.setStartAt(taskRun.getStartAt());
         vo.setEndAt(taskRun.getEndAt());
         vo.setCreatedAt(taskRun.getCreatedAt());
