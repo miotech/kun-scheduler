@@ -52,7 +52,7 @@ import static com.miotech.kun.commons.utils.StringUtils.toNullableString;
 public class TaskRunDao {
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
-    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "start_at", "end_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority", "target");
+    private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority", "target");
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
@@ -348,6 +348,7 @@ public class TaskRunDao {
                     taskRun.getScheduledTick().toString(),
                     toNullableString(taskRun.getStatus()),
                     scheduleType,
+                    taskRun.getQueuedAt(),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
@@ -429,6 +430,7 @@ public class TaskRunDao {
                     taskRun.getScheduledTick().toString(),
                     toNullableString(taskRun.getStatus()),
                     scheduleType,
+                    taskRun.getQueuedAt(),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
@@ -478,6 +480,7 @@ public class TaskRunDao {
                     taskRun.getScheduledTick().toString(),
                     toNullableString(taskRun.getStatus()),
                     taskRun.getScheduledType().name(),
+                    taskRun.getQueuedAt(),
                     taskRun.getStartAt(),
                     taskRun.getEndAt(),
                     JSONUtils.toJsonString(taskRun.getConfig()),
@@ -1207,7 +1210,7 @@ public class TaskRunDao {
     }
 
     public TaskRun fetchLatestTaskRun(Long taskId) {
-        List<TaskRun> latestRunInList = fetchLatestTaskRuns(taskId, 1, null);
+        List<TaskRun> latestRunInList = fetchLatestTaskRuns(taskId, null, 1);
         if (latestRunInList.isEmpty()) {
             return null;
         }
@@ -1215,7 +1218,7 @@ public class TaskRunDao {
         return latestRunInList.get(0);
     }
 
-    public List<TaskRun> fetchLatestTaskRuns(Long taskId, int limit, List<TaskRunStatus> filterStatus) {
+    public List<TaskRun> fetchLatestTaskRuns(Long taskId, List<TaskRunStatus> filterStatus, int limit) {
         checkNotNull(taskId, "taskId should not be null.");
 
         List<Object> params = new ArrayList<>();
@@ -1223,15 +1226,17 @@ public class TaskRunDao {
         SQLBuilder sqlBuilder = getTaskRunSQLBuilderWithDefaultConfig();
         StringBuilder whereCase = new StringBuilder().append("task_id = ?");
         if (filterStatus != null && filterStatus.size() > 0) {
-            String filterStatusString = filterStatus.stream().map(x -> "?").collect(Collectors.joining(","));
-            whereCase.append(" and status in ").append(filterStatusString);
-            params.addAll(params);
+            String filterString = filterStatus.stream().map(x -> "?").collect(Collectors.joining(","));
+            whereCase.append(" and status in (").append(filterString).append(")");
+            List<String> statusStringList = filterStatus.stream().map(Enum::name).collect(Collectors.toList());
+            params.addAll(statusStringList);
         }
         sqlBuilder.where(whereCase.toString());
         params.add(limit);
         String sql = sqlBuilder
                 .orderBy(TASK_RUN_MODEL_NAME + ".id DESC")
-                .limit(limit)
+                .limit()
+                .asPrepared()
                 .getSQL();
         return dbOperator.fetchAll(sql, taskRunMapperInstance, params.toArray());
     }
@@ -1535,6 +1540,7 @@ public class TaskRunDao {
                             new TypeReference<List<Long>>() {
                             }, new ArrayList<>()))
                     .withDependentTaskRunIds(Collections.emptyList())
+                    .withQueuedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_queued_at")))
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
                     .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_end_at")))
                     .withCreatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_created_at")))

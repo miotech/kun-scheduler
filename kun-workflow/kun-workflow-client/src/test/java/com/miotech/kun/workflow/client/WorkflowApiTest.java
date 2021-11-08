@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static com.miotech.kun.workflow.client.mock.MockingFactory.*;
 import static com.miotech.kun.workflow.utils.DateTimeUtils.atMillisecondPrecision;
@@ -66,7 +67,7 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void updateOperator() {
         Operator operator = mockOperator();
-        mockPut("/operators/" + 1, JSONUtils.toJsonString(operator),  JSONUtils.toJsonString(operator));
+        mockPut("/operators/" + 1, JSONUtils.toJsonString(operator), JSONUtils.toJsonString(operator));
         assertThat(wfApi.updateOperator(1L, operator), sameBeanAs(operator));
     }
 
@@ -79,7 +80,7 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void createTask() {
         Task task = mockTask();
-        mockPost("/tasks", JSONUtils.toJsonString(task),  JSONUtils.toJsonString(task));
+        mockPost("/tasks", JSONUtils.toJsonString(task), JSONUtils.toJsonString(task));
         Task result = wfApi.createTask(task);
         assertTrue(result.getId() > 0);
         assertThat(result.getName(), is(task.getName()));
@@ -92,7 +93,7 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void getTask() {
         Task task = mockTask();
-        mockGet("/tasks/1" , JSONUtils.toJsonString(task));
+        mockGet("/tasks/1", JSONUtils.toJsonString(task));
         Task result = wfApi.getTask(1L);
         assertTrue(result.getId() > 0);
         assertThat(result.getName(), is(task.getName()));
@@ -105,7 +106,7 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void updateTask() {
         Task task = mockTask();
-        mockPatch("/tasks/1", JSONUtils.toJsonString(task),  JSONUtils.toJsonString(task));
+        mockPatch("/tasks/1", JSONUtils.toJsonString(task), JSONUtils.toJsonString(task));
         Task result = wfApi.updateTask(task.getId(), task);
         assertTrue(result.getId() > 0);
         assertThat(result.getName(), is(task.getName()));
@@ -132,7 +133,7 @@ public class WorkflowApiTest extends MockServerTestBase {
                 .build();
         mockPost("/tasks/_search",
                 JSONUtils.toJsonString(request),
-                JSONUtils.toJsonString(new PaginationResult<>(1,0,1,  tasks)));
+                JSONUtils.toJsonString(new PaginationResult<>(1, 0, 1, tasks)));
 
         PaginationResult<Task> result = wfApi.searchTasks(request);
         assertThat(result.getRecords().size(), is(1));
@@ -153,7 +154,7 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void getTaskRun() {
         TaskRun taskRun = mockTaskRun();
-        mockGet("/taskruns/1" , JSONUtils.toJsonString(taskRun));
+        mockGet("/taskruns/1", JSONUtils.toJsonString(taskRun));
         TaskRun result = wfApi.getTaskRun(1L);
         assertTrue(result.getId() > 0);
         assertThat(result.getInlets(), sameBeanAs(taskRun.getInlets()));
@@ -169,7 +170,7 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void getTaskRunStatus() {
         TaskRunState state = new TaskRunState(TaskRunStatus.CREATED);
-        mockGet("/taskruns/1/status" , JSONUtils.toJsonString(state));
+        mockGet("/taskruns/1/status", JSONUtils.toJsonString(state));
         TaskRunState result = wfApi.getTaskRunStatus(1L);
         assertThat(result.getStatus(), is(TaskRunStatus.CREATED));
     }
@@ -177,7 +178,7 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void getTaskRunLog() {
         TaskRunLog runLog = new TaskRunLog();
-        mockGet("/taskruns/1/logs" , JSONUtils.toJsonString(runLog));
+        mockGet("/taskruns/1/logs", JSONUtils.toJsonString(runLog));
         TaskRunLogRequest runLogRequest = TaskRunLogRequest.newBuilder()
                 .withTaskRunId(1L)
                 .build();
@@ -196,7 +197,7 @@ public class WorkflowApiTest extends MockServerTestBase {
                 )
                 .withScheduleTypes(Lists.newArrayList(ScheduleType.SCHEDULED.name()))
                 .build();
-        mockGet("/taskruns?taskRunIds=1", JSONUtils.toJsonString(new PaginationResult<>(1,0,1, taskRuns)));
+        mockGet("/taskruns?taskRunIds=1", JSONUtils.toJsonString(new PaginationResult<>(1, 0, 1, taskRuns)));
 
         PaginationResult<TaskRun> result = wfApi.getTaskRuns(request);
         assertThat(result.getRecords().size(), is(1));
@@ -218,7 +219,7 @@ public class WorkflowApiTest extends MockServerTestBase {
                 .build();
         mockPost("/taskruns/_search",
                 JSONUtils.toJsonString(request),
-                JSONUtils.toJsonString(new PaginationResult<>(1,0,1,  taskRuns)));
+                JSONUtils.toJsonString(new PaginationResult<>(1, 0, 1, taskRuns)));
 
         PaginationResult<TaskRun> result = wfApi.searchTaskRuns(request);
         assertThat(result.getRecords().size(), is(1));
@@ -230,7 +231,7 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void getLatestTaskRuns_shouldWork() {
         Task task = mockTask();
-        mockPost("/tasks", JSONUtils.toJsonString(task),  JSONUtils.toJsonString(task));
+        mockPost("/tasks", JSONUtils.toJsonString(task), JSONUtils.toJsonString(task));
 
         TaskRun taskRun = mockTaskRun();
         // Adjust precision to prevent potential failure
@@ -289,9 +290,32 @@ public class WorkflowApiTest extends MockServerTestBase {
     @Test
     public void changeTaskRunPriority_shouldWork() {
         VariableVO vo = mockVariableVO();
-        mockPut("/taskruns/changePriority?taskRunId=1&priority=32", "",JSONUtils.toJsonString(true));
+        mockPut("/taskruns/changePriority?taskRunId=1&priority=32", "", JSONUtils.toJsonString(true));
 
-        Boolean result = wfApi.changePriority(1l,32);
+        Boolean result = wfApi.changePriority(1l, 32);
         assertThat(result, is(true));
+    }
+
+    @Test
+    public void getLatestTaskRunsWithFilterStatus_shouldWork() {
+        Task task = mockTask();
+        mockPost("/tasks", JSONUtils.toJsonString(task), JSONUtils.toJsonString(task));
+
+        TaskRun createdTaskRun = mockTaskRun();
+        // Adjust precision to prevent potential failure
+        createdTaskRun.setStatus(TaskRunStatus.CREATED);
+        createdTaskRun.setStartAt(DateTimeUtils.atMillisecondPrecision(createdTaskRun.getStartAt()));
+        createdTaskRun.setEndAt(DateTimeUtils.atMillisecondPrecision(createdTaskRun.getEndAt()));
+
+        List<TaskRunStatus> filterStatus = Lists.newArrayList(TaskRunStatus.QUEUED);
+        String filterStatusString = filterStatus.stream().map(Enum::name).collect(Collectors.joining(","));
+        List<TaskRun> mockResult = Lists.newArrayList(createdTaskRun);
+        mockGet(
+                "/taskruns/" + task.getId() + "/latest?filterStatusList=" + filterStatusString + "&limit=10",
+                JSONUtils.toJsonString(mockResult)
+        );
+
+        List<TaskRun> result = wfApi.getLatestTaskRuns(task.getId(), filterStatus, 10);
+        assertThat(result, sameBeanAs(mockResult));
     }
 }

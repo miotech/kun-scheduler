@@ -347,7 +347,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         //verify
         TaskRun updatedTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
         TaskAttempt updatedAttempt = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
-        assertThat(updatedTaskRun.getTask().getPriority(), is(16));
+        assertThat(updatedTaskRun.getTask().getPriority(), is(0));
         assertThat(updatedTaskRun.getPriority(), is(32));
         assertThat(updatedAttempt.getPriority(), is(32));
     }
@@ -371,7 +371,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         //verify
         TaskRun updatedTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
         TaskAttempt updatedAttempt = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
-        assertThat(updatedTaskRun.getTask().getPriority(), is(16));
+        assertThat(updatedTaskRun.getTask().getPriority(), is(0));
         assertThat(updatedTaskRun.getPriority(), is(32));
         assertThat(updatedAttempt.getPriority(), is(32));
 

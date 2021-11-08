@@ -5,6 +5,7 @@ import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.io.File;
 import java.util.List;
@@ -227,6 +228,15 @@ public interface WorkflowClient {
      * * @return
      */
     void stopTaskRuns(List<Long> taskRunIds);
+
+    /**
+     * Get latest N task runs of given task id with filter taskRun status
+     * @param taskId id of task
+     * @param filterStatus task run status used to filter
+     * @param limit size of the task run list for given task
+     * @return
+     */
+    List<TaskRun> getLatestTaskRuns(Long taskId, List<TaskRunStatus> filterStatus, int limit);
 
     /**
      * Get latest N task runs of given task ids.

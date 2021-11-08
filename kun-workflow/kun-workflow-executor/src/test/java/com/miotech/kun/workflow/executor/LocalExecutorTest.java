@@ -12,9 +12,7 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.LocalScheduler;
-import com.miotech.kun.workflow.common.executetarget.DefaultTargetProvider;
 import com.miotech.kun.workflow.common.executetarget.ExecuteTargetService;
-import com.miotech.kun.workflow.common.executetarget.TargetProvider;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -940,10 +938,11 @@ public class LocalExecutorTest extends CommonTestBase {
             String queueName = invocation.getArgument(0, String.class);
             List<ProcessSnapShot> result = new ArrayList<>();
             if (queueName.equals("default")) {
-                WorkerInstance workerInstance = new WorkerInstance(111, "222", "local", WorkerInstanceKind.LOCAL_PROCESS);
-                ProcessSnapShot processSnapShot1 = new ProcessSnapShot(workerInstance, TaskRunStatus.RUNNING);
+                WorkerInstance workerInstance1 = new WorkerInstance(111, "222", "local", WorkerInstanceKind.LOCAL_PROCESS);
+                ProcessSnapShot processSnapShot1 = new ProcessSnapShot(workerInstance1, TaskRunStatus.RUNNING);
                 result.add(processSnapShot1);
-                ProcessSnapShot processSnapShot2 = new ProcessSnapShot(workerInstance, TaskRunStatus.RUNNING);
+                WorkerInstance workerInstance2 = new WorkerInstance(222, "333", "local", WorkerInstanceKind.LOCAL_PROCESS);
+                ProcessSnapShot processSnapShot2 = new ProcessSnapShot(workerInstance2, TaskRunStatus.RUNNING);
                 result.add(processSnapShot2);
                 return result;
             } else {
@@ -1211,6 +1210,39 @@ public class LocalExecutorTest extends CommonTestBase {
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(taskAttempt.getId());
         assertThat(finishedEvent.getAttemptId(), is(taskAttempt.getId()));
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
+    }
+
+
+    @Test
+    public void fetchTaskRunInQueued_queued_at_should_not_null(){
+        Task task = MockTaskFactory.createTask();
+        taskDao.create(task);
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        taskRunDao.createTaskRun(taskRun);
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+        executor.submit(taskAttempt);
+        doAnswer(invocation -> {
+            String queueName = invocation.getArgument(0, String.class);
+            List<ProcessSnapShot> result = new ArrayList<>();
+            if (queueName.equals("default")) {
+                WorkerInstance workerInstance1 = new WorkerInstance(111, "222", "local", WorkerInstanceKind.LOCAL_PROCESS);
+                ProcessSnapShot processSnapShot1 = new ProcessSnapShot(workerInstance1, TaskRunStatus.RUNNING);
+                result.add(processSnapShot1);
+                WorkerInstance workerInstance2 = new WorkerInstance(222, "333", "local", WorkerInstanceKind.LOCAL_PROCESS);
+                ProcessSnapShot processSnapShot2 = new ProcessSnapShot(workerInstance2, TaskRunStatus.RUNNING);
+                result.add(processSnapShot2);
+                return result;
+            } else {
+                return invocation.callRealMethod();
+            }
+        }).when(spyBackend).fetchRunningProcess("default");
+
+        TaskRun queuedTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
+
+        assertThat(queuedTaskRun.getQueuedAt(),notNullValue());
+        assertThat(queuedTaskRun.getStatus(),is(TaskRunStatus.QUEUED));
+
     }
 
 
