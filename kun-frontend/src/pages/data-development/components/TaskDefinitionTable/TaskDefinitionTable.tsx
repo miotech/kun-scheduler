@@ -20,8 +20,8 @@ import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/mod
 import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
 import { TaskTemplateIcon } from '@/components/TaskTemplateIcon/TaskTemplateIcon.component';
 import { EventEmitter } from 'ahooks/lib/useEventEmitter';
-import styles from './TaskDefinitionTable.module.less';
 import TextContainer from '@/components/TextContainer/TextContainer';
+import styles from './TaskDefinitionTable.module.less';
 
 interface OwnProps {
   taskDefViewId: string | null;
@@ -118,7 +118,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
               })
               .toString()}
           >
-            <TextContainer maxWidth={250}>{record.name}</TextContainer>
+            <TextContainer className={styles.taskName}>{record.name}</TextContainer>
           </Link>
         ),
       },
