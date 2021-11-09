@@ -9,6 +9,7 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-metadata:kun-metadata-core')
+    implementation project(':kun-data-platform:kun-workflow-operators:operator-utils')
     implementation 'com.google.guava:guava'
     implementation 'com.squareup.okhttp3:okhttp:3.14.6'
     implementation "com.fasterxml.jackson.core:jackson-databind"
