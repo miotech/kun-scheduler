@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Col, Divider, Row, Form, Radio, Button, Select, InputNumber } from 'antd';
 import { PlusOutlined, CloseOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 
 import { FormInstance } from 'antd/es/form';
-import { TaskDefinition } from '@/definitions/TaskDefinition.type';
+import { TaskDefinition, BlockType } from '@/definitions/TaskDefinition.type';
 import { FormListFieldData } from 'antd/es/form/FormList';
 import { FormListOperation } from 'antd/lib/form/FormList';
 
@@ -88,6 +88,24 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
   const handleChangeRetry = useCallback(v => {
     setIsCheckedRetry(!!v);
   }, []);
+
+  const blockOptions = useMemo(
+    () => [
+      {
+        label: t('dataDevelopment.definition.scheduleConfig.blockConfig.NONE'),
+        value: BlockType.NONE,
+      },
+      {
+        label: t('dataDevelopment.definition.scheduleConfig.blockConfig.WAIT_PREDECESSOR'),
+        value: BlockType.WAIT_PREDECESSOR,
+      },
+      {
+        label: t('dataDevelopment.definition.scheduleConfig.blockConfig.WAIT_PREDECESSOR_DOWNSTREAM'),
+        value: BlockType.WAIT_PREDECESSOR_DOWNSTREAM,
+      },
+    ],
+    [t],
+  );
 
   const renderOutputDatasetFields = (fields: FormListFieldData[], { add, remove }: FormListOperation) => {
     logger.debug('fields = %o', fields);
@@ -436,6 +454,28 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
                 </Form.Item>
               </Col>
             </Row>
+          </Col>
+        </Row>
+      </section>
+      <Divider />
+      <section data-tid="block-config">
+        <Row>
+          <Col flex="0 0 120px">
+            <span className={styles.sectionLabel}>
+              {/* Output Config */}
+              {t('dataDevelopment.definition.scheduleConfig.blockConfig')}
+            </span>
+          </Col>
+          <Col flex="1 1">
+            <Form.Item
+              shouldUpdate
+              label={t('dataDevelopment.definition.scheduleConfig.blockType')}
+              name={['taskPayload', 'scheduleConfig', 'blockType']}
+              valuePropName="value"
+              initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.blockType ?? BlockType.NONE}
+            >
+              <Select style={{ width: 200 }} options={blockOptions} />
+            </Form.Item>
           </Col>
         </Row>
       </section>

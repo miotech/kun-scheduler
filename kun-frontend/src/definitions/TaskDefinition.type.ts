@@ -61,6 +61,12 @@ export interface SlaConfig {
   minutes: number;
 }
 
+export enum BlockType {
+  NONE = 'NONE',
+  WAIT_PREDECESSOR = 'WAIT_PREDECESSOR',
+  WAIT_PREDECESSOR_DOWNSTREAM = 'WAIT_PREDECESSOR_DOWNSTREAM',
+}
+
 export interface ScheduleConfig {
   cronExpr: string;
   timeZone: String;
@@ -71,6 +77,7 @@ export interface ScheduleConfig {
   retries: number;
   retryDelay: number;
   slaConfig: SlaConfig;
+  blockType: BlockType;
 }
 
 export interface TaskTryVO {
