@@ -13,7 +13,9 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Repository
@@ -80,6 +82,11 @@ public class TaskRelationDao {
                 .where("downstream_task_id = ?")
                 .getSQL();
         jdbcTemplate.update(sqlRemove, taskDefId);
+    }
+
+    public List<TaskRelation> fetchAll() {
+        String sql = getSelectSQL(null);
+        return jdbcTemplate.query(sql, TaskRelationDao.TaskRelationMapper.INSTANCE);
     }
 
     public static class TaskRelationMapper implements RowMapper<TaskRelation> {
