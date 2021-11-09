@@ -192,6 +192,11 @@ public class DeployedTaskDao {
         );
     }
 
+    public List<DeployedTask> fetchUnarchived() {
+        String sql = getSelectSQL(String.format(" %s.is_archived is false", DEPLOYED_TASK_MODEL_NAME));
+        return jdbcTemplate.query(sql, DeployedTaskMapper.INSTANCE);
+    }
+
     public static class DeployedTaskMapper implements RowMapper<DeployedTask> {
         public static final DeployedTaskMapper INSTANCE = new DeployedTaskMapper();
 

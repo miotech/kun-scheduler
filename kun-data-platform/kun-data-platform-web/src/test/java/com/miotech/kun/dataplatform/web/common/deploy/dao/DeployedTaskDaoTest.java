@@ -2,25 +2,23 @@ package com.miotech.kun.dataplatform.web.common.deploy.dao;
 
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
+import com.miotech.kun.dataplatform.mocking.MockDeployedTaskFactory;
 import com.miotech.kun.dataplatform.web.common.commit.dao.TaskCommitDao;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployedTaskSearchRequest;
-import com.miotech.kun.dataplatform.mocking.MockDeployedTaskFactory;
 import com.miotech.kun.workflow.client.model.PaginationResult;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 
-// TODO: figure out a solution to bootstrap Workflow facade related tests
-// all fail
-@Ignore
 public class DeployedTaskDaoTest extends AppTestBase {
 
     @Autowired
@@ -34,7 +32,8 @@ public class DeployedTaskDaoTest extends AppTestBase {
         DeployedTask deployedTask = generateData();
 
         DeployedTask fetched = deployedTaskDao.fetchById(deployedTask.getDefinitionId()).get();
-        assertThat(fetched, sameBeanAs(deployedTask));
+        assertThat(fetched, sameBeanAs(deployedTask).ignoring("taskCommit"));
+        assertThat(fetched.getTaskCommit(), sameBeanAs(deployedTask.getTaskCommit()).ignoring("committedAt"));
     }
 
     @Test
@@ -43,8 +42,8 @@ public class DeployedTaskDaoTest extends AppTestBase {
 
         List<DeployedTask> fetched = deployedTaskDao.fetchByIds(
                 deployedTasks.stream()
-                .map(DeployedTask::getDefinitionId)
-                .collect(Collectors.toList()));
+                        .map(DeployedTask::getDefinitionId)
+                        .collect(Collectors.toList()));
         assertThat(fetched.size(), is(deployedTasks.size()));
     }
 
@@ -74,7 +73,7 @@ public class DeployedTaskDaoTest extends AppTestBase {
                 null,
                 Collections.emptyList());
         deployPage = deployedTaskDao.search(request);
-        assertThat(deployPage.getTotalCount(), is((long) deployList.size()));
+        assertThat(deployPage.getTotalCount(), is(deployList.size()));
         assertThat(deployPage.getPageSize(), is(10));
         assertThat(deployPage.getPageNum(), is(1));
 
@@ -89,7 +88,11 @@ public class DeployedTaskDaoTest extends AppTestBase {
         assertThat(deployPage.getTotalCount(), is(deployList.size()));
         assertThat(deployPage.getPageSize(), is(10));
         assertThat(deployPage.getPageNum(), is(1));
-        assertThat(deployPage.getRecords().get(0),sameBeanAs(deployedTask));
+        final DeployedTask dt = deployPage.getRecords().get(0);
+        Optional<DeployedTask> deployedTaskOptional = deployList.stream().filter(d -> d.getDefinitionId().equals(dt.getDefinitionId())).findFirst();
+        assertTrue(deployedTaskOptional.isPresent());
+        assertThat(dt, sameBeanAs(deployedTaskOptional.get()).ignoring("taskCommit"));
+        assertThat(dt.getTaskCommit(), sameBeanAs(deployedTaskOptional.get().getTaskCommit()).ignoring("committedAt"));
 
         // filter with name and task template name
         request = new DeployedTaskSearchRequest(10, 1,
@@ -99,10 +102,14 @@ public class DeployedTaskDaoTest extends AppTestBase {
                 deployedTask.getName(),
                 Collections.emptyList());
         deployPage = deployedTaskDao.search(request);
-        assertThat(deployPage.getTotalCount(), is(1L));
+        assertThat(deployPage.getTotalCount(), is(1));
         assertThat(deployPage.getPageSize(), is(10));
         assertThat(deployPage.getPageNum(), is(1));
-        assertThat(deployPage.getRecords().get(0),sameBeanAs(deployedTask));
+        final DeployedTask dt2 = deployPage.getRecords().get(0);
+        Optional<DeployedTask> deployedTaskOptional2 = deployList.stream().filter(d -> d.getDefinitionId().equals(dt2.getDefinitionId())).findFirst();
+        assertTrue(deployedTaskOptional2.isPresent());
+        assertThat(dt2, sameBeanAs(deployedTaskOptional2.get()).ignoring("taskCommit"));
+        assertThat(dt2.getTaskCommit(), sameBeanAs(deployedTaskOptional2.get().getTaskCommit()).ignoring("committedAt"));
 
         // filter with definition id
         request = new DeployedTaskSearchRequest(10, 1,
@@ -113,7 +120,26 @@ public class DeployedTaskDaoTest extends AppTestBase {
                 Collections.emptyList());
         deployPage = deployedTaskDao.search(request);
         assertThat(deployPage.getTotalCount(), is(1));
-        assertThat(deployPage.getRecords().get(0), sameBeanAs(deployedTask));
+        final DeployedTask dt3 = deployPage.getRecords().get(0);
+        Optional<DeployedTask> deployedTaskOptional3 = deployList.stream().filter(d -> d.getDefinitionId().equals(dt3.getDefinitionId())).findFirst();
+        assertTrue(deployedTaskOptional3.isPresent());
+        assertThat(dt3, sameBeanAs(deployedTaskOptional3.get()).ignoring("taskCommit"));
+        assertThat(dt3.getTaskCommit(), sameBeanAs(deployedTaskOptional3.get().getTaskCommit()).ignoring("committedAt"));
+    }
+
+    @Test
+    public void testFetchUnarchived() {
+        List<DeployedTask> deployedTasks = generateData(2);
+        List<DeployedTask> unarchived = deployedTaskDao.fetchUnarchived();
+        assertThat(unarchived.size(), is(2));
+
+        // set archived=true
+        DeployedTask deployedTask = deployedTasks.get(0);
+        DeployedTask archivedDeployedTask = deployedTask.cloneBuilder().withArchived(true).build();
+        deployedTaskDao.update(archivedDeployedTask);
+
+        unarchived = deployedTaskDao.fetchUnarchived();
+        assertThat(unarchived.size(), is(1));
     }
 
     private DeployedTask generateData() {

@@ -41,9 +41,11 @@ dependencies {
     implementation "org.flywaydb:flyway-core"
     implementation 'org.apache.commons:commons-email'
     implementation "com.cronutils:cron-utils"
+    implementation 'org.neo4j:neo4j-jdbc-driver:3.5.1'
 
     testImplementation project(':kun-data-platform:kun-data-platform-web')
     testImplementation project(':kun-monitor:kun-monitor-alert')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"
+    testImplementation "org.testcontainers:neo4j"
 }

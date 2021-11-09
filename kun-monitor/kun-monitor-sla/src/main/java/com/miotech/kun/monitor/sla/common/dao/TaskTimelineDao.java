@@ -68,13 +68,17 @@ public class TaskTimelineDao {
 
         @Override
         public TaskTimeline mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Long rootDefinitionId = rs.getLong("root_definition_id");
+            if (rs.wasNull()) {
+                rootDefinitionId = null;
+            }
             return TaskTimeline.newBuilder()
                     .withId(rs.getLong("id"))
                     .withTaskRunId(rs.getLong("task_run_id"))
                     .withDefinitionId(rs.getLong("definition_id"))
                     .withLevel(rs.getInt("level"))
                     .withDeadline(rs.getString("deadline"))
-                    .withRootDefinitionId(rs.getLong("root_definition_id"))
+                    .withRootDefinitionId(rootDefinitionId)
                     .withCreatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("created_at")))
                     .withUpdatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("updated_at")))
                     .build();

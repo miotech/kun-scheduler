@@ -75,6 +75,13 @@ public class DeployedTaskController {
         return RequestResult.success(result);
     }
 
+    @PostMapping("/deployed-tasks/relationship-graph/rebuild")
+    @ApiOperation("Rebuild all task's relationship in neo4j")
+    public RequestResult<Void> rebuildRelationship() {
+        deployedTaskService.rebuildRelationship();
+        return RequestResult.success();
+    }
+
     @GetMapping("/deployed-tasks/{id}/dag")
     @ApiOperation("Get dag of deployed task")
     public RequestResult<DeployedTaskDAG> getDeployedTaskDAG(@PathVariable Long id,

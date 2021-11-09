@@ -1,11 +1,14 @@
 package com.miotech.kun.dataplatform.mocking;
 
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.monitor.facade.model.alert.TaskDefNotifyConfig;
+import com.miotech.kun.monitor.facade.model.sla.SlaConfig;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
+import org.apache.commons.compress.utils.Lists;
 import org.json.simple.JSONObject;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
@@ -29,6 +32,23 @@ public class MockTaskDefinitionFactory {
 
     public static List<TaskDefinition> createTaskDefinitions(int num, List<Long> dependencies) {
         return createTaskDefinitions(num, dependencies, null);
+    }
+
+    public static TaskDefinition createTaskDefinition(Long definitionId, SlaConfig slaConfig) {
+        long id = IdGenerator.getInstance().nextId();
+        return TaskDefinition.newBuilder()
+                .withId(id)
+                .withName("taskdef_" + id)
+                .withDefinitionId(definitionId)
+                .withTaskTemplateName(TEST_TEMPLATE)
+                .withTaskPayload(createTaskPayload(definitionId, slaConfig))
+                .withCreator(1L)
+                .withOwner(1L)
+                .withArchived(false)
+                .withLastModifier(1L)
+                .withCreateTime(DateTimeUtils.now())
+                .withUpdateTime(DateTimeUtils.now())
+                .build();
     }
 
     public static List<TaskDefinition> createTaskDefinitions(int num, List<Long> dependencies, Long defId) {
@@ -90,6 +110,34 @@ public class MockTaskDefinitionFactory {
                 .withDefinitionId(DataPlatformIdGenerator.nextDefinitionId())
                 .withTaskConfig(new JSONObject())
                 .withCreator(1L)
+                .build();
+    }
+
+    private static TaskPayload createTaskPayload(Long definitionId, SlaConfig slaConfig) {
+        Map<String, Object> taskConfig = new HashMap<>();
+        taskConfig.put("sparkSQL", "SELECT 1 AS T");
+
+        List<TaskDatasetProps> outputDatasets = Collections.singletonList(new TaskDatasetProps(
+                definitionId,
+                1L,
+                "TEST.test_table1"
+        ));
+
+        return TaskPayload.newBuilder()
+                .withTaskConfig(taskConfig)
+                .withScheduleConfig(
+                        ScheduleConfig
+                                .newBuilder()
+                                .withCronExpr("0 0 10 * * ?")
+                                .withInputNodes(Lists.newArrayList())
+                                .withOutputDatasets(outputDatasets)
+                                .withType(ScheduleType.SCHEDULED.toString())
+                                .withTimeZone(ZoneOffset.UTC.getId())
+                                .withRetries(1)
+                                .withRetryDelay(30)
+                                .withSlaConfig(slaConfig)
+                                .build())
+                .withNotifyConfig(TaskDefNotifyConfig.DEFAULT_TASK_NOTIFY_CONFIG)
                 .build();
     }
 }
