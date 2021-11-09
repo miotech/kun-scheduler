@@ -1,6 +1,8 @@
 package com.miotech.kun.monitor.sla.timeline.service;
 
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
+import com.miotech.kun.dataplatform.facade.model.commit.TaskSnapshot;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.web.common.commit.dao.TaskCommitDao;
@@ -10,10 +12,7 @@ import com.miotech.kun.monitor.facade.model.sla.SlaConfig;
 import com.miotech.kun.monitor.sla.AppTestBase;
 import com.miotech.kun.monitor.sla.common.dao.TaskTimelineDao;
 import com.miotech.kun.monitor.sla.common.service.TaskTimelineService;
-import com.miotech.kun.monitor.sla.mocking.MockSlaFactory;
-import com.miotech.kun.monitor.sla.mocking.MockDeployedTaskFactory;
-import com.miotech.kun.monitor.sla.mocking.MockTaskDefinitionFactory;
-import com.miotech.kun.monitor.sla.mocking.MockTaskTimelineFactory;
+import com.miotech.kun.monitor.sla.mocking.*;
 import com.miotech.kun.monitor.sla.model.TaskTimeline;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import org.junit.Test;
@@ -76,20 +75,12 @@ public class TaskTimelineServiceTest extends AppTestBase {
         assertTrue(taskTimelines.isEmpty());
     }
 
-    @Test(expected = NoSuchElementException.class)
-    public void testHandleTaskRunCreatedEvent_deployedThenThrowException() {
-        // Build DeployedTask, then write to the database
-        DeployedTask deployedTask = MockDeployedTaskFactory.createDeployedTask();
-        prepareDeployedTask(deployedTask);
-
-        TaskRunCreatedEvent event = new TaskRunCreatedEvent(deployedTask.getWorkflowTaskId(), IdGenerator.getInstance().nextId());
-        taskTimelineService.handleTaskRunCreatedEvent(event);
-    }
-
     @Test
     public void testHandleTaskRunCreatedEvent_deployedThenFetchedWithoutBaseline() {
         // Build DeployedTask, then write to the database
-        DeployedTask deployedTask = MockDeployedTaskFactory.createDeployedTask();
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition(IdGenerator.getInstance().nextId(), null);
+        TaskCommit taskCommit = MockTaskCommitFactory.createTaskCommit(taskDefinition);
+        DeployedTask deployedTask = MockDeployedTaskFactory.createDeployedTask(taskCommit);
         prepareDeployedTask(deployedTask);
 
         // Prepare
@@ -108,10 +99,7 @@ public class TaskTimelineServiceTest extends AppTestBase {
         DeployedTask deployedTask = MockDeployedTaskFactory.createDeployedTask();
         prepareDeployedTask(deployedTask);
 
-        // Build SlaConfig, then write to the database
-        SlaConfig slaConfig = MockSlaFactory.create();
-        prepareTaskDefinitionWithBaseline(deployedTask.getDefinitionId(), slaConfig);
-
+        SlaConfig slaConfig = deployedTask.getTaskCommit().getSnapshot().getTaskPayload().getScheduleConfig().getSlaConfig();
         TaskRunCreatedEvent event = new TaskRunCreatedEvent(deployedTask.getWorkflowTaskId(), IdGenerator.getInstance().nextId());
         taskTimelineService.handleTaskRunCreatedEvent(event);
 

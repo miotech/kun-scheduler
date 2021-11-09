@@ -8,10 +8,17 @@ workflow:
 
 spring:
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun?stringtype=unspecified
-    username: ${DB_PG_USERNAME}
-    password: ${DB_PG_PASSWORD}
+    postgresql:
+      driver-class-name: org.postgresql.Driver
+      url: jdbc:postgresql://${DB_PG_IP}:${DB_PG_PORT}/kun?stringtype=unspecified
+      username: ${DB_PG_USERNAME}
+      password: ${DB_PG_PASSWORD}
+
+    neo4j:
+      driver-class-name: org.neo4j.jdbc.bolt.BoltDriver
+      url: jdbc:neo4j:bolt://${DB_NEO4J_IP}:${DB_NEO4J_PORT}
+      username: ${DB_NEO4J_USERNAME}
+      password: ${DB_NEO4J_PASSWORD}
 
   flyway:
     enabled: true
@@ -44,6 +51,8 @@ management:
     elasticsearch:
       enabled: false
     ldap:
+      enabled: false
+    db:
       enabled: false
 
 # Notification configurations items

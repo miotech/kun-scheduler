@@ -13,12 +13,16 @@ data-discovery:
 
 spring:
   datasource:
-    url: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
-    username: sa
-    password:
-    driverClassName: org.h2.Driver
     hikari:
       connection-init-sql: CREATE DOMAIN IF NOT EXISTS  "JSONB" AS TEXT
+    postgresql:
+      url: jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE
+      username: sa
+      password:
+      driverClassName: org.h2.Driver
+    neo4j:
+      enabled: false
+
 
   session:
     jdbc:

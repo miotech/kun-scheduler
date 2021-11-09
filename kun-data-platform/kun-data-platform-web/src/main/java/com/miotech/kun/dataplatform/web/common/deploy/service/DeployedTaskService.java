@@ -11,11 +11,15 @@ import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.web.common.deploy.dao.DeployedTaskDao;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.*;
+import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskRelationDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.TaskRunLogVO;
 import com.miotech.kun.dataplatform.web.common.tasktemplate.service.TaskTemplateService;
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.web.common.utils.TagUtils;
+import com.miotech.kun.monitor.facade.model.sla.SlaConfig;
+import com.miotech.kun.monitor.facade.model.sla.TaskDefinitionNode;
+import com.miotech.kun.monitor.facade.sla.SlaFacade;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -45,6 +49,12 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
 
     @Autowired
     private DeployedTaskDao deployedTaskDao;
+
+    @Autowired
+    private TaskRelationDao taskRelationDao;
+
+    @Autowired
+    private SlaFacade slaFacade;
 
     @Autowired
     @Lazy
@@ -107,7 +117,6 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
     private DeployedTask createDeployedTask(TaskCommit commit) {
         TaskSnapshot snapshot = commit.getSnapshot();
         String taskTemplateName = snapshot.getTaskTemplateName();
-
         Task remoteTask = buildTaskFromCommit(commit);
         DeployedTask deployedTask = DeployedTask.newBuilder()
                 .withId(DataPlatformIdGenerator.nextDeployedTaskId())
@@ -189,6 +198,7 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
                         .collect(Collectors.toList()))
                 .orElseGet(ImmutableList::of);
         deployedTaskIds.addAll(inputDatasets);
+
         List<Long> existedWorkflowIds = deployedTaskDao.fetchWorkflowTaskId(deployedTaskIds);
         Preconditions.checkState(
                 deployedTaskIds.size() == existedWorkflowIds.size(),
@@ -222,7 +232,45 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
                 .withRetryDelay(scheduleConfig.getRetryDelay())
                 .build();
         List<Tag> searchTags = TagUtils.buildScheduleSearchTags(taskDefId, taskTemplateName);
-        return workflowClient.saveTask(task, searchTags);
+        Task remoteTask = workflowClient.saveTask(task, searchTags);
+
+        // update dependencies in neo4j
+        updateDependenciesInNeo4j(deployedTaskIds, taskDefId, snapshot, remoteTask);
+        return remoteTask;
+    }
+
+    private void updateDependenciesInNeo4j(List<Long> deployedTaskIds, Long taskDefId, TaskSnapshot snapshot, Task remoteTask) {
+        TaskDefinitionNode node = slaFacade.findById(taskDefId);
+        SlaConfig slaConfig = snapshot.getTaskPayload().getScheduleConfig().getSlaConfig();
+        Integer level = calculateLevel(slaConfig);
+        Integer deadline = calculateDeadline(slaConfig, snapshot.getTaskPayload().getScheduleConfig().getTimeZone());
+
+        if (node == null) {
+            slaFacade.save(TaskDefinitionNode.from(taskDefId, snapshot.getName(), level, deadline, remoteTask.getId(), null));
+        } else {
+            slaFacade.update(TaskDefinitionNode.from(taskDefId, snapshot.getName(), level,deadline , remoteTask.getId(), null));
+        }
+
+        slaFacade.unbind(taskDefId, TaskDefinitionNode.Relationship.OUTPUT);
+        for (Long id : deployedTaskIds) {
+            slaFacade.bind(id, taskDefId, TaskDefinitionNode.Relationship.OUTPUT);
+        }
+    }
+
+    private Integer calculateDeadline(SlaConfig slaConfig, String timeZone) {
+        if (slaConfig == null) {
+            return null;
+        }
+
+        return slaConfig.getDeadlineValue(timeZone);
+    }
+
+    private Integer calculateLevel(SlaConfig slaConfig) {
+        if (slaConfig == null) {
+            return null;
+        }
+
+        return slaConfig.getLevel();
     }
 
     public DeployedTaskDAG getDeployedTaskDag(Long definitionId, int upstreamLevel, int downstreamLevel) {
@@ -441,4 +489,36 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
     public Optional<DeployedTask> findByWorkflowTaskId(Long workflowTaskId) {
         return deployedTaskDao.fetchByWorkflowTaskId(workflowTaskId);
     }
+
+    public List<DeployedTask> fetchUnarchived() {
+        return deployedTaskDao.fetchUnarchived();
+    }
+
+    public void rebuildRelationship() {
+        List<DeployedTask> deployedTasks = fetchUnarchived();
+        for (DeployedTask deployedTask : deployedTasks) {
+            Long definitionId = deployedTask.getDefinitionId();
+            TaskDefinition taskDefinition = taskDefinitionService.find(definitionId);
+            ScheduleConfig scheduleConfig = taskDefinition.getTaskPayload().getScheduleConfig();
+            // 写入图数据库
+            SlaConfig slaConfig = scheduleConfig.getSlaConfig();
+            Integer level = null;
+            Integer deadline = null;
+            if (slaConfig != null) {
+                level = slaConfig.getLevel();
+                deadline = slaConfig.getDeadlineValue(scheduleConfig.getTimeZone());
+            }
+
+            TaskDefinitionNode taskDefinitionNode = TaskDefinitionNode.from(definitionId, taskDefinition.getName(),
+                    level, deadline, deployedTask.getWorkflowTaskId(), null);
+            slaFacade.save(taskDefinitionNode);
+        }
+
+        List<TaskRelation> taskRelations = taskRelationDao.fetchAll();
+        for (TaskRelation taskRelation : taskRelations) {
+            // 建立关系
+            slaFacade.bind(taskRelation.getUpstreamId(), taskRelation.getDownstreamId(), TaskDefinitionNode.Relationship.OUTPUT);
+        }
+    }
+
 }
