@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.miotech.kun.commons.utils.ExprUtils;
+import com.miotech.kun.workflow.operator.utils.ExprUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +25,7 @@ public class SparkSqlOperatorV2 extends SparkSubmitBaseOperator {
 
         Map<String, Object> exprArgs = new HashMap<>();
         exprArgs.put("execute_time", getContext().getExecuteTime());
-        exprArgs.put("target.schema", getContext().getExecuteTarget().getProperty("schema"));
+        exprArgs.put("target", getContext().getExecuteTarget());
         String sql = ExprUtils.evalExpr(appArgs, exprArgs);
 
         File sqlFile = storeSqlToFile(sql);

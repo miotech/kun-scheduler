@@ -1,0 +1,10 @@
+plugins {
+    id 'java'
+}
+
+dependencies {
+    implementation 'org.freemarker:freemarker:2.3.30'
+    implementation project(':kun-workflow:kun-workflow-core')
+
+    testImplementation "junit:junit:4.12"
+}
