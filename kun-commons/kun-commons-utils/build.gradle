@@ -5,7 +5,6 @@ dependencies {
     implementation "com.fasterxml.jackson.core:jackson-annotations"
     implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310"
     implementation 'com.squareup.okhttp3:okhttp'
-    implementation 'org.freemarker:freemarker:2.3.30'
 
     testImplementation 'org.powermock:powermock-module-junit4'
     testImplementation 'org.powermock:powermock-api-mockito2'
