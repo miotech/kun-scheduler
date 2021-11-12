@@ -1,7 +1,9 @@
 package com.miotech.kun.monitor.sla.schedule;
 
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
+import com.miotech.kun.dataplatform.facade.TaskDefinitionFacade;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
+import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.monitor.sla.common.service.TaskTimelineService;
 import com.miotech.kun.monitor.sla.model.TaskTimeline;
 import com.miotech.kun.monitor.sla.utils.LocalDateTimeUtils;
@@ -10,6 +12,7 @@ import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRunState;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Async;
@@ -23,7 +26,7 @@ import java.util.Optional;
 @Component
 public class TimelineScheduler {
 
-    private static final String MSG_TEMPLATE = "Deployed task: '%s' not completed before the deadline.%n%nSee link: %s";
+    private static final String MSG_TEMPLATE = "Deployed task: '%s' not completed before the deadline.%nRoot definition:%s%n%nSee link: %s";
 
     @Value("${notify.urlLink.prefix}")
     private String prefix;
@@ -39,6 +42,9 @@ public class TimelineScheduler {
 
     @Autowired
     private DeployedTaskFacade deployedTaskFacade;
+
+    @Autowired
+    private TaskDefinitionFacade taskDefinitionFacade;
 
     @Async
     @Scheduled(cron = "0 0/1 * * * ?")
@@ -66,10 +72,20 @@ public class TimelineScheduler {
             }
 
             DeployedTask deployedTask = deployedTaskOpt.get();
-            String msg = String.format(MSG_TEMPLATE, deployedTask.getName(), this.prefix + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", definitionId, taskTimeline.getTaskRunId()));
+            String rootDefinitionName = fetchTaskDefinitionName(taskTimeline.getRootDefinitionId());
+            String msg = String.format(MSG_TEMPLATE, deployedTask.getName(), rootDefinitionName, this.prefix + String.format("/operation-center/scheduled-tasks/%s?taskRunId=%s", definitionId, taskTimeline.getTaskRunId()));
             log.debug("Task: {} is not executed before the deadline, send an alarm, msg: {}", deployedTask.getName(), msg);
             notifyFacade.notify(deployedTask.getWorkflowTaskId(), msg);
         }
+    }
+
+    private String fetchTaskDefinitionName(Long rootDefinitionId) {
+        if (rootDefinitionId != null) {
+            TaskDefinition taskDefinition = taskDefinitionFacade.find(rootDefinitionId);
+            return taskDefinition.getName();
+        }
+
+        return StringUtils.EMPTY;
     }
 
 }

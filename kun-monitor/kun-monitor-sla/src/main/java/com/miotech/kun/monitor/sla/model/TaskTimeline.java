@@ -68,6 +68,18 @@ public class TaskTimeline {
         return new Builder();
     }
 
+    public Builder cloneBuilder() {
+        return newBuilder()
+                .withId(id)
+                .withTaskRunId(taskRunId)
+                .withDefinitionId(definitionId)
+                .withLevel(level)
+                .withDeadline(deadline)
+                .withRootDefinitionId(rootDefinitionId)
+                .withCreatedAt(createdAt)
+                .withUpdatedAt(updatedAt);
+    }
+
     public static final class Builder {
         private Long id;
         private Long taskRunId;

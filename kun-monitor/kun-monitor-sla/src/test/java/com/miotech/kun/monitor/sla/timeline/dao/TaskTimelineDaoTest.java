@@ -13,6 +13,7 @@ import java.util.List;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 
 public class TaskTimelineDaoTest extends AppTestBase {
 
@@ -29,7 +30,7 @@ public class TaskTimelineDaoTest extends AppTestBase {
         assertThat(taskTimelines.size(), is(1));
         TaskTimeline taskTimelineOfFetch = taskTimelines.get(0);
         assertThat(taskTimelineOfFetch, sameBeanAs(taskTimeline).ignoring("id").ignoring("rootDefinitionId"));
-        assertThat(taskTimelineOfFetch.getRootDefinitionId(), is(0L));
+        assertThat(taskTimelineOfFetch.getRootDefinitionId(), nullValue());
     }
 
     @Test

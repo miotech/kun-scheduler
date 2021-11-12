@@ -1,5 +1,6 @@
 package com.miotech.kun.dataplatform.mocking;
 
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
@@ -22,13 +23,14 @@ public class MockDeployedTaskFactory {
         for (int i = 0; i < num; i++) {
             TaskCommit taskCommit = MockTaskCommitFactory.createTaskCommit();
             long taskId = DataPlatformIdGenerator.nextDeployedTaskId();
+            long workflowTaskId = IdGenerator.getInstance().nextId();
             tasksDefs.add(DeployedTask.newBuilder()
                     .withId(taskId)
                     .withName(taskCommit.getSnapshot().getName())
                     .withDefinitionId(taskCommit.getDefinitionId())
                     .withTaskTemplateName("SparkSQL")
                     .withTaskCommit(taskCommit)
-                    .withWorkflowTaskId(1L)
+                    .withWorkflowTaskId(workflowTaskId)
                     .withOwner(1L)
                     .withArchived(false)
                     .build());

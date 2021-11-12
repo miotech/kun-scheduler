@@ -25,6 +25,8 @@ import com.miotech.kun.dataplatform.web.common.utils.TagUtils;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.ParameterDefinition;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.monitor.facade.alert.TaskNotifyConfigFacade;
+import com.miotech.kun.monitor.facade.model.sla.TaskDefinitionNode;
+import com.miotech.kun.monitor.facade.sla.SlaFacade;
 import com.miotech.kun.security.service.BaseSecurityService;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
@@ -38,6 +40,7 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jgrapht.Graph;
 import org.jgrapht.alg.cycle.CycleDetector;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
@@ -51,7 +54,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.jgrapht.*;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -100,6 +102,9 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
 
     @Autowired
     private TaskNotifyConfigFacade taskNotifyConfigFacade;
+
+    @Autowired
+    private SlaFacade slaFacade;
 
     @Autowired
     @Lazy
@@ -229,7 +234,6 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         return updated;
     }
 
-
     private void checkName(String taskName, @Nullable Long taskDefinitionId) {
         List<TaskDefinition> taskDefinitionsToCheck = taskDefinitionDao.fetchAliveTaskDefinitionByName(taskName);
         Optional<TaskDefinition> taskDefinitionToCheck = taskDefinitionId == null? taskDefinitionsToCheck.stream()
@@ -320,6 +324,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
 
         taskDefinitionDao.archive(taskDefId);
         taskRelationDao.delete(taskDefId);
+        slaFacade.deleteNodeAndRelationship(taskDefId);
 
         //offline deployed task
         TaskCommit commit = taskCommitService.commit(taskDefId, "OFFLINE");
@@ -528,7 +533,6 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
     }
 
 
-
     public TaskTry findTaskTry(Long taskTryId) {
         return taskTryDao.fetchById(taskTryId)
                 .<IllegalArgumentException>orElseThrow(() -> {
@@ -659,4 +663,5 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
             CronUtils.validateCron(cron);
         }
     }
+
 }

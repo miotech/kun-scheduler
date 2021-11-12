@@ -8,7 +8,6 @@ import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskTry;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
-import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskService;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.service.TaskDefinitionService;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.*;
@@ -39,9 +38,6 @@ public class TaskDefinitionController {
 
     @Autowired
     private DeployService deployService;
-
-    @Autowired
-    private DeployedTaskService deployedTaskService;
 
     @PostMapping("/task-definitions")
     @ApiOperation("Create TaskDefinition")

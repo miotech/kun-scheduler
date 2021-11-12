@@ -92,14 +92,17 @@ dependencies {
     implementation ('org.spark-project.hive:hive-jdbc') {
         exclude group: 'org.eclipse.jetty.aggregate', module: 'jetty-all'
     }
+    implementation 'org.neo4j:neo4j-jdbc-driver:3.5.1'
 
     testImplementation project(':kun-monitor:kun-monitor-alert')
+    testImplementation project(':kun-monitor:kun-monitor-sla')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"
     testImplementation 'com.icegreen:greenmail'
     testImplementation 'com.icegreen:greenmail-junit4'
     testImplementation 'com.icegreen:greenmail-spring'
     testImplementation 'org.jooq:joor-java-8'
+    testImplementation "org.testcontainers:neo4j"
 }
 
 jacocoTestReport {
