@@ -7,12 +7,14 @@ import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
+import com.miotech.kun.workflow.core.model.common.Condition;
 import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.common.Tick;
+import com.miotech.kun.workflow.core.model.task.BlockType;
+import com.miotech.kun.workflow.core.model.task.ScheduleConf;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.*;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
@@ -25,10 +27,7 @@ import org.junit.Test;
 import javax.inject.Inject;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
@@ -818,6 +817,32 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
+    public void testFetchAllSatisfyTaskAttempt_shouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        for (TaskRun taskRun : taskRunList) {
+            taskDao.create(taskRun.getTask());
+            taskRunDao.createTaskRun(taskRun);
+            taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun));
+        }
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+
+        List<Long> satisfiedTaskRuns = taskRunDao.fetchAllSatisfyTaskRunId();
+
+        assertThat(satisfiedTaskRuns.size(), is(1));
+        assertThat(satisfiedTaskRuns.get(0), is(taskRun1.getId()));
+
+        taskRunDao.updateTaskRunStatusByTaskRunId(Collections.singletonList(taskRun1.getId()), TaskRunStatus.SUCCESS);
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunStatus.SUCCESS);
+
+        satisfiedTaskRuns = taskRunDao.fetchAllSatisfyTaskRunId();
+        assertThat(satisfiedTaskRuns.size(), is(1));
+        assertThat(satisfiedTaskRuns.get(0), is(taskRun2.getId()));
+
+    }
+
+    @Test
     public void testFetchTaskAttemptListForRecover() {
         //prepare
         TaskRunStatus[] taskRunStatuses = TaskRunStatus.values();
@@ -903,4 +928,177 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         assertTrue(tick.equals(taskRunDao.getTickByTaskRunId(1L)));
     }
 
+    @Test
+    public void fetchTaskRunConditionsById_shouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        for (TaskRun taskRun : taskRuns) {
+            taskDao.create(taskRun.getTask());
+            taskRunDao.createTaskRun(taskRun);
+        }
+
+        TaskRun taskRun1 = taskRuns.get(0);
+        TaskRun taskRun2 = taskRuns.get(1);
+
+        List<TaskRunCondition> taskRunConditions = taskRunDao.fetchTaskRunConditionsById(taskRun2.getId());
+
+        assertThat(taskRunConditions.size(), is(1));
+        TaskRunCondition taskRunCondition = taskRunConditions.get(0);
+        assertThat(taskRunCondition.getCondition(), is(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString()))));
+
+    }
+
+    @Test
+    public void updateTaskRunStatusByTaskRunId_shouldSuccess() {
+        Task task1 = MockTaskFactory.createTask();
+        Task task2 = MockTaskFactory.createTask();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task1);
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun1));
+        taskRunDao.createAttempt(MockTaskAttemptFactory.createTaskAttempt(taskRun2));
+
+        taskRunDao.updateTaskRunStatusByTaskRunId(Collections.singletonList(taskRun1.getId()), TaskRunStatus.BLOCKED);
+        taskRunDao.updateTaskRunStatusByTaskRunId(Collections.singletonList(taskRun2.getId()), TaskRunStatus.UPSTREAM_FAILED);
+
+        TaskRun tr1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
+        TaskRun tr2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+
+        assertThat(tr1.getStatus(), is(TaskRunStatus.BLOCKED));
+        assertThat(tr2.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+    }
+
+    //scenario: task1>>task2  task1->task3 which means task1 is task2's upstream and task1 is task3's predecessor
+    // when task1 success change task2 and task3's condition result
+    @Test
+    public void updateConditionsWithTaskRun_statusIsSuccess_shouldSuccess() {
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        Task task1 = taskList.get(0);
+        Task task2 = taskList.get(1);
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        Task task3 = MockTaskFactory.createTask();
+        TaskRunCondition taskRunCondition3 = TaskRunCondition.newBuilder()
+                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString())))
+                .withResult(false)
+                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
+                .build();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task3).cloneBuilder()
+                .withTaskRunConditions(Collections.singletonList(taskRunCondition3))
+                .build();
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskDao.create(task3);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+
+        //taskRun1 success
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunStatus.SUCCESS);
+
+        //check taskRun 2&3's condition result
+        TaskRunCondition tc2 = taskRunDao.fetchTaskRunConditionsById(taskRun2.getId()).get(0);
+        TaskRunCondition tc3 = taskRunDao.fetchTaskRunConditionsById(taskRun3.getId()).get(0);
+        assertThat(tc2.getCondition(), is(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString()))));
+        assertThat(tc3.getCondition(), is(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString()))));
+        assertThat(tc2.getType(), is(ConditionType.TASKRUN_DEPENDENCY_SUCCESS));
+        assertThat(tc3.getType(), is(ConditionType.TASKRUN_PREDECESSOR_FINISH));
+        assertThat(tc2.getResult(), is(true));
+        assertThat(tc3.getResult(), is(true));
+    }
+
+    @Test
+    public void fetchRestrictedTaskRunIdsFromCondition_shouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;0>>2");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;0>>2");
+        for (TaskRun taskRun : taskRunList) {
+            taskDao.create(taskRun.getTask());
+            taskRunDao.createTaskRun(taskRun);
+        }
+        TaskRun taskRun0 = taskRunList.get(0);
+        TaskRun taskRun1 = taskRunList.get(1);
+        TaskRun taskRun2 = taskRunList.get(2);
+        Condition condition = new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString()));
+        List<Long> restrictedTaskRunIds = taskRunDao.fetchRestrictedTaskRunIdsFromConditions(Collections.singletonList(condition));
+
+        assertThat(restrictedTaskRunIds.size(), is(2));
+        assertThat(new HashSet<>(restrictedTaskRunIds), is(new HashSet<>(Arrays.asList(taskRun1.getId(), taskRun2.getId()))));
+    }
+
+    //scenario: 0,1,2 are all 3,4's upstream
+    // make 0, 1, 2 success in order, check function result
+    @Test
+    public void fetchRestrictedTaskRunIdsWithConditionType_shouldSuccess() {
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(5, "0>>3;1>>3;2>>3;0>>4;1>>4;2>>4");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>3;1>>3;2>>3;0>>4;1>>4;2>>4");
+        for(TaskRun taskRun : taskRunList) {
+            taskDao.create(taskRun.getTask());
+            taskRunDao.createTaskRun(taskRun);
+        }
+        TaskRun taskRun0 = taskRunList.get(0);
+        TaskRun taskRun1 = taskRunList.get(1);
+        TaskRun taskRun2 = taskRunList.get(2);
+        TaskRun taskRun3 = taskRunList.get(3);
+        TaskRun taskRun4 = taskRunList.get(4);
+        // 0 success
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun0.getId()), TaskRunStatus.SUCCESS);
+        Condition condition = new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString()));
+        List<Long> restrictedTaskRunIds = taskRunDao.fetchRestrictedTaskRunIdsFromConditions(Collections.singletonList(condition));
+        List<Long> taskRunIdsWithUpstreamFailed = taskRunDao.fetchRestrictedTaskRunIdsWithConditionType(restrictedTaskRunIds, ConditionType.TASKRUN_DEPENDENCY_SUCCESS);
+        //check 0 success result
+        assertThat(taskRunIdsWithUpstreamFailed.size(), is(2));
+        assertThat(new HashSet<>(taskRunIdsWithUpstreamFailed),
+                is(new HashSet<>(Arrays.asList(taskRun3.getId(), taskRun4.getId()))));
+
+        //1 success
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunStatus.SUCCESS);
+        condition = new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString()));
+        restrictedTaskRunIds = taskRunDao.fetchRestrictedTaskRunIdsFromConditions(Collections.singletonList(condition));
+        taskRunIdsWithUpstreamFailed = taskRunDao.fetchRestrictedTaskRunIdsWithConditionType(restrictedTaskRunIds, ConditionType.TASKRUN_DEPENDENCY_SUCCESS);
+
+        //check 1 success result
+        assertThat(taskRunIdsWithUpstreamFailed.size(), is(2));
+        assertThat(new HashSet<>(taskRunIdsWithUpstreamFailed),
+                is(new HashSet<>(Arrays.asList(taskRun3.getId(), taskRun4.getId()))));
+
+        // 2 success
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun2.getId()), TaskRunStatus.SUCCESS);
+        condition = new Condition(Collections.singletonMap("taskRunId", taskRun2.getId().toString()));
+        restrictedTaskRunIds = taskRunDao.fetchRestrictedTaskRunIdsFromConditions(Collections.singletonList(condition));
+        taskRunIdsWithUpstreamFailed = taskRunDao.fetchRestrictedTaskRunIdsWithConditionType(restrictedTaskRunIds, ConditionType.TASKRUN_DEPENDENCY_SUCCESS);
+
+        //check 2 success result
+        assertThat(taskRunIdsWithUpstreamFailed.size(), is(0));
+
+    }
+
+    //scenario: task run 0 is 1's predecessor
+    // when 0 is running, 1 is blocked
+    @Test
+    public void fetchTaskRunIdsWithBlockType_shouldSuccess() {
+        Task task = MockTaskFactory.createTask().cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 * * ? * * *",
+                        ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR))
+                .build();
+        taskDao.create(task);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withStatus(TaskRunStatus.RUNNING).build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withStatus(TaskRunStatus.BLOCKED)
+                .withTaskRunConditions(Collections.singletonList(TaskRunCondition.newBuilder()
+                        .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString())))
+                        .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH).withResult(false).build()))
+                .build();
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        List<Long> result = taskRunDao.fetchTaskRunIdsWithBlockType(Collections.singletonList(taskRun2.getId()));
+
+        assertThat(result.get(0), is(taskRun2.getId()));
+    }
 }

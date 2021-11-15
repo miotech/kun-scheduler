@@ -9,11 +9,13 @@ import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.execution.KunOperator;
+import com.miotech.kun.workflow.core.model.common.Condition;
 import com.miotech.kun.workflow.core.model.operator.Operator;
+import com.miotech.kun.workflow.core.model.task.BlockType;
+import com.miotech.kun.workflow.core.model.task.ScheduleConf;
+import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.*;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
@@ -30,6 +32,8 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import javax.inject.Inject;
+import java.sql.SQLOutput;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -117,6 +121,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskAttempt attempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
         taskRunDao.createAttempt(attempt1);
         taskRunDao.updateTaskAttemptStatus(attempt1.getId(), TaskRunStatus.SUCCESS);
+        taskRunDao.updateConditionsWithTaskRuns(Collections.singletonList(taskRun1.getId()), TaskRunStatus.SUCCESS);
 
         // process
         taskManager.submit(Lists.newArrayList(taskRun2));
@@ -575,6 +580,250 @@ public class TaskManagerTest extends SchedulerTestBase {
 
     }
 
+    //scenario: task 0; taskRun 1 is 0's predecessor
+    // 0 is running, 1 is blocked
+    // when 0 is failed,  1 changed to created
+    @Test
+    public void predecessorFinish_successorStatusToCREATED_success() throws InterruptedException {
+        Task task = MockTaskFactory.createTask().cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 * * ? * * *",
+                        ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR))
+                .build();
+        taskDao.create(task);
+        TaskRun taskRun0 = MockTaskRunFactory.createTaskRunWithStatus(task, TaskRunStatus.RUNNING);
+        TaskRunCondition taskRunCondition = TaskRunCondition.newBuilder()
+                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString())))
+                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
+                .withResult(false).build();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRunWithStatus(task, TaskRunStatus.BLOCKED)
+                .cloneBuilder().withTaskRunConditions(Collections.singletonList(taskRunCondition)).build();
+        taskRunDao.createTaskRun(taskRun0);
+        taskRunDao.createTaskRun(taskRun1);
+
+        TaskAttempt taskAttempt0 = MockTaskAttemptFactory.createTaskAttempt(taskRun0);
+        taskRunDao.createAttempt(taskAttempt0);
+
+        //process
+        taskManager.submit(Collections.singletonList(taskRun1));
+        TimeUnit.SECONDS.sleep(2);
+        assertThat(invoked(), is(false));
+
+        taskRunDao.updateTaskAttemptStatus(taskAttempt0.getId(), TaskRunStatus.FAILED, null, null);
+        eventBus.post(new TaskAttemptStatusChangeEvent(taskAttempt0.getId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "test task", task.getId()));
+
+        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
+
+        //check
+        List<TaskAttempt> result = getSubmittedTaskAttempts();
+        assertThat(result, is(hasSize(1)));
+
+        TaskAttempt taskAttempt = result.get(0);
+        assertThat(taskAttempt.getTaskRun().getId(), is(taskRun1.getId()));
+        assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
+    }
+
+    //scenario: task 0>>1; taskRun 2 is 0's predecessor
+    // 0 is success, 1 is running, so 2 is blocked
+    // when 1 is failed,  2 changed to created
+    @Test
+    public void predecessorDownstreamFinish_successorStatusToCREATED_success() throws InterruptedException {
+        //prepare
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1");
+        Task task0 = tasks.get(0).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 * * ? * * *",
+                        ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR_DOWNSTREAM))
+                .build();
+        Task task1 = tasks.get(1);
+        taskDao.create(task0);
+        taskDao.create(task1);
+        TaskRun taskRun0 = taskRuns.get(0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
+        TaskRun taskRun1 = taskRuns.get(1).cloneBuilder().withStatus(TaskRunStatus.RUNNING).build();
+        //prepare taskRun2
+        List<TaskRunCondition> taskRunConditions = new ArrayList<>();
+        TaskRunCondition taskRunCondition0 = TaskRunCondition.newBuilder()
+                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString())))
+                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
+                .withResult(true)
+                .build();
+        taskRunConditions.add(taskRunCondition0);
+        TaskRunCondition taskRunCondition1 = TaskRunCondition.newBuilder()
+                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString())))
+                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
+                .withResult(false)
+                .build();
+        taskRunConditions.add(taskRunCondition1);
+
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task0).cloneBuilder()
+                .withTaskRunConditions(taskRunConditions)
+                .withStatus(TaskRunStatus.BLOCKED).build();
+        taskRunDao.createTaskRun(taskRun0);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        taskRunDao.createAttempt(taskAttempt1);
+
+        //process
+        taskManager.submit(Collections.singletonList(taskRun2));
+        TimeUnit.SECONDS.sleep(2);
+        assertThat(invoked(), is(false));
+
+        taskRunDao.updateTaskAttemptStatus(taskAttempt1.getId(), TaskRunStatus.FAILED, null, null);
+        eventBus.post(new TaskAttemptStatusChangeEvent(taskAttempt1.getId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "test task", task1.getId()));
+
+        //check
+        TimeUnit.SECONDS.sleep(2);
+        List<TaskAttempt> result = getSubmittedTaskAttempts();
+        assertThat(result, is(hasSize(1)));
+
+        TaskAttempt taskAttempt = result.get(0);
+        assertThat(taskAttempt.getTaskRun().getId(), is(taskRun2.getId()));
+        assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
+
+
+        //process
+        taskManager.submit(Collections.singletonList(taskRun2));
+
+        awaitUntilAttemptDone(taskRun1.getId() + 1);
+        //check
+        TaskAttemptProps attemptProps2 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
+        assertThat(attemptProps2.getStatus(), is(TaskRunStatus.CREATED));
+    }
+
+    //scenario: task 0>>1>>2, taskrun 0>>1>>2, taskrun 2 is predecessor of 3
+    // task2 is SCHEDULED with blockType: wait_predecessor
+    // currently taskrun 0 running, taskrun 1 2 created, taskrun 3 blocked
+    // when taskrun 0 failed, 1&2 upstream_failed, 3 should be CREATED
+    @Test
+    public void farUpstreamFailed_terminateDownstream_blockedShouldCancel() throws InterruptedException {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>2");
+        Task task0 = taskList.get(0);
+        Task task1 = taskList.get(1);
+        Task task2 = taskList.get(2).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 * * ? * * *",
+                        ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR))
+                .build();
+        taskDao.create(task0);
+        taskDao.create(task1);
+        taskDao.create(task2);
+        TaskRun taskRun0 = taskRunList.get(0).cloneBuilder().withStatus(TaskRunStatus.RUNNING).build();
+        TaskRun taskRun1 = taskRunList.get(1);
+        TaskRun taskRun2 = taskRunList.get(2);
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task2).cloneBuilder()
+                .withTaskRunConditions(Collections.singletonList(TaskRunCondition.newBuilder()
+                        .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun2.getId().toString())))
+                        .withResult(false)
+                        .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
+                        .build()))
+                .build();
+        taskRunDao.createTaskRun(taskRun0);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+
+        TaskAttempt taskAttempt0 = MockTaskAttemptFactory.createTaskAttempt(taskRun0);
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
+        TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt(taskRun3);
+        taskRunDao.createAttempt(taskAttempt0);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.createAttempt(taskAttempt2);
+        taskRunDao.createAttempt(taskAttempt3);
+
+        //process
+        taskManager.submit(Collections.singletonList(taskRun3));
+        TimeUnit.SECONDS.sleep(2);
+        assertThat(invoked(), is(false));
+
+        taskRunDao.updateTaskAttemptStatus(taskAttempt0.getId(), TaskRunStatus.FAILED, null, null);
+        eventBus.post(new TaskAttemptStatusChangeEvent(taskAttempt0.getId(), TaskRunStatus.RUNNING, TaskRunStatus.FAILED, "test task", task1.getId()));
+
+        //check
+        TimeUnit.SECONDS.sleep(5);
+        List<TaskAttempt> result = getSubmittedTaskAttempts();
+        assertThat(result, is(hasSize(1)));
+
+        TaskAttempt taskAttempt = result.get(0);
+        assertThat(taskAttempt.getTaskRun().getId(), is(taskRun3.getId()));
+        assertThat(taskAttempt.getStatus(), is(TaskRunStatus.CREATED));
+
+    }
+
+    //scenario: task 0>>1; taskrun 0>>1; 2>>3 (0>>1 is 2>>3's predecessor)
+    // task 0 & 1 are WAIT_PREDECESSOR_DOWNSTREAM
+    // now, 0 is success, 1 is running, 2 is blocked by 1, 3 is created
+    // when 1 is success, 2 is running, 3 should be re-processed as created
+    @Test
+    public void multiBlockTasks() throws InterruptedException {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRunList0 = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        List<TaskRun> taskRunList1 = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+
+        //prepare task
+        Task task0 = taskList.get(0).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 * * ? * * *",
+                        ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR_DOWNSTREAM)).build();
+        Task task1 = taskList.get(1).cloneBuilder()
+                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 * * ? * * *",
+                        ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR_DOWNSTREAM)).build();
+        taskDao.create(task0);
+        taskDao.create(task1);
+        //prepare task run 0 & 1
+        TaskRun taskRun0 = taskRunList0.get(0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
+        TaskRun taskRun1 = taskRunList0.get(1).cloneBuilder().withStatus(TaskRunStatus.RUNNING).build();
+        taskRunDao.createTaskRun(taskRun0);
+        taskRunDao.createTaskRun(taskRun1);
+        //prepare task run 2 with two block conditions
+        TaskRunCondition taskRunCondition0 = TaskRunCondition.newBuilder()
+                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString())))
+                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH).withResult(true).build();
+        TaskRunCondition taskRunCondition1 = TaskRunCondition.newBuilder()
+                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString())))
+                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH).withResult(false).build();
+        TaskRun taskRun2 = taskRunList1.get(0).cloneBuilder().withStatus(TaskRunStatus.BLOCKED)
+                .withTaskRunConditions(Arrays.asList(taskRunCondition0, taskRunCondition1)).build();
+        TaskRunCondition taskRunCondition2 = TaskRunCondition.newBuilder()
+                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun1.getId().toString())))
+                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH).withResult(false).build();
+        TaskRunCondition taskRunCondition3 = TaskRunCondition.newBuilder()
+                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun2.getId().toString())))
+                .withType(ConditionType.TASKRUN_DEPENDENCY_SUCCESS).withResult(false).build();
+        TaskRun taskRun3 = taskRunList1.get(1).cloneBuilder().withStatus(TaskRunStatus.CREATED)
+                .withTaskRunConditions(Arrays.asList(taskRunCondition2, taskRunCondition3)).build();
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+
+        TaskAttempt taskAttempt0 = MockTaskAttemptFactory.createTaskAttempt(taskRun0);
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
+        TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt(taskRun3);
+        taskRunDao.createAttempt(taskAttempt0);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.createAttempt(taskAttempt2);
+        taskRunDao.createAttempt(taskAttempt3);
+
+        //process
+        taskManager.submit(Collections.singletonList(taskRun2));
+        TimeUnit.SECONDS.sleep(2);
+        assertThat(invoked(), is(false));
+
+        taskRunDao.updateTaskAttemptStatus(taskAttempt0.getId(), TaskRunStatus.SUCCESS, null, null);
+        eventBus.post(new TaskAttemptStatusChangeEvent(taskAttempt1.getId(), TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, "test task", task1.getId()));
+
+        //check
+        TimeUnit.SECONDS.sleep(2);
+        List<TaskAttempt> result = getSubmittedTaskAttempts();
+        assertThat(result, is(hasSize(1)));
+
+        TaskAttempt attempt = result.get(0);
+        assertThat(attempt.getTaskRun().getId(), is(taskRun2.getId()));
+        assertThat(attempt.getStatus(), is(TaskRunStatus.CREATED));
+
+        TaskAttemptProps attempt3 = taskRunDao.fetchLatestTaskAttempt(taskRun2.getId());
+        assertThat(attempt3.getStatus(), is(TaskRunStatus.CREATED));
+    }
 
     @Test
     public void retryTaskRunRecoverDownStream() {
