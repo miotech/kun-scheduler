@@ -10,6 +10,7 @@ import com.miotech.kun.commons.utils.InitializingBean;
 import com.miotech.kun.workflow.common.executetarget.ExecuteTargetService;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.service.OperatorService;
+import com.miotech.kun.workflow.common.taskrun.condition.TaskRunConditionFunction;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.common.tick.TickDao;
 import com.miotech.kun.workflow.common.variable.service.VariableService;
@@ -21,7 +22,9 @@ import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.task.*;
+import com.miotech.kun.workflow.core.model.taskrun.ConditionType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunCondition;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -61,6 +64,8 @@ public class TaskSpawner implements InitializingBean {
 
     private final ExecuteTargetService executeTargetService;
 
+    private final TaskRunConditionFunction taskRunConditionFunction;
+
 
     @Inject
     public TaskSpawner(TaskManager taskManager,
@@ -69,13 +74,14 @@ public class TaskSpawner implements InitializingBean {
                        VariableService variableService,
                        EventBus eventBus,
                        TickDao tickDao,
-                       ExecuteTargetService executeTargetService
-    ) {
+                       ExecuteTargetService executeTargetService,
+                       TaskRunConditionFunction taskRunConditionFunction) {
         this.taskManager = taskManager;
         this.taskRunDao = taskRunDao;
         this.operatorService = operatorService;
         this.variableService = variableService;
         this.eventBus = eventBus;
+        this.taskRunConditionFunction = taskRunConditionFunction;
 
         this.graphs = new ConcurrentLinkedDeque<>();
         this.eventLoop = new InnerEventLoop();
@@ -167,13 +173,15 @@ public class TaskSpawner implements InitializingBean {
         List<TaskRun> results = new ArrayList<>(tasks.size());
         for (Task task : tasks) {
             List<TaskRun> upstreamTaskRun = resolveDependencies(task, tick, results);
+            List<TaskRunCondition> taskRunConditions = taskRunConditionFunction.resolveTaskRunConditionForPredecessor(task);
+            taskRunConditions.addAll(taskRunConditionFunction.resolveTaskRunConditionForDependency(upstreamTaskRun));
             try {
                 if (tick == SpecialTick.NULL) {
-                    results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, executeTarget));
+                    results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, taskRunConditions, executeTarget));
                 } else {
                     TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
                     if (taskRun == null) {
-                        results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, executeTarget));
+                        results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, taskRunConditions, executeTarget));
                     } else {
                         results.add(taskRun);
                     }
@@ -187,7 +195,8 @@ public class TaskSpawner implements InitializingBean {
     }
 
 
-    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> upstreamTaskRuns, ExecuteTarget executeTarget) {
+    private TaskRun createTaskRun(Task task, Tick tick, Map<String, Object> runtimeConfig, List<TaskRun> upstreamTaskRuns,
+                                  List<TaskRunCondition> taskRunConditions, ExecuteTarget executeTarget) {
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
         Config config = prepareConfig(task, task.getConfig(), runtimeConfig);
         ScheduleType scheduleType = task.getScheduleConf().getType();
@@ -206,8 +215,9 @@ public class TaskSpawner implements InitializingBean {
                 .withQueueName(task.getQueueName())
                 .withPriority(task.getPriority())
                 .withDependentTaskRunIds(upstreamTaskRunIds)
-                .withStatus(resolveTaskRunUpstreamStatus(task, upstreamTaskRuns))
+                .withStatus(resolveTaskRunStatus(task, upstreamTaskRuns, taskRunConditions))
                 .withFailedUpstreamTaskRunIds(resolveFailedUpstreamTaskRunIds(upstreamTaskRuns))
+                .withTaskRunConditions(taskRunConditions)
                 .withExecuteTarget(executeTarget)
                 .build();
         logger.debug("TaskRun is created successfully TaskRun={}, Task={}, Tick={}.", taskRun, task, tick);
@@ -227,17 +237,35 @@ public class TaskSpawner implements InitializingBean {
         return failedUpstreamTaskRunIds.stream().distinct().collect(Collectors.toList());
     }
 
-    private TaskRunStatus resolveTaskRunUpstreamStatus(Task task, List<TaskRun> upstreamTaskRuns) {
+    private TaskRunStatus resolveTaskRunStatus(Task task, List<TaskRun> upstreamTaskRuns, List<TaskRunCondition> taskRunConditions) {
         if (task.getDependencies().size() > upstreamTaskRuns.size()) {
             logger.error("dependency not satisfy, taskId = {}", task.getId());
             return TaskRunStatus.CREATED;
         }
+
+        // UPSTREAM_FAILED is given higher priority than BLOCKED
+        // TaskRun's status can be both UPSTREAM_FAILED and BLOCKED, UPSTREAM_FAILED is set in such situation
+
+        //check upstream exists failed or upstream_failed
+        boolean allUpstreamSuccess = true;
         for (TaskRun upstreamTaskRun : upstreamTaskRuns) {
             if (upstreamTaskRun.getStatus().isFailure()
                     || upstreamTaskRun.getStatus().equals(TaskRunStatus.UPSTREAM_FAILED)) {
                 return TaskRunStatus.UPSTREAM_FAILED;
             }
+            if (!upstreamTaskRun.getStatus().isSuccess()) {
+                allUpstreamSuccess = false;
+            }
         }
+        // when all upstream dependencies are satisfied, check whether is blocked
+        if (allUpstreamSuccess) {
+            for (TaskRunCondition taskRunCondition : taskRunConditions) {
+                if (taskRunCondition.getType().equals(ConditionType.TASKRUN_PREDECESSOR_FINISH) && !taskRunCondition.getResult()) {
+                    return TaskRunStatus.BLOCKED;
+                }
+            }
+        }
+
         return TaskRunStatus.CREATED;
     }
 

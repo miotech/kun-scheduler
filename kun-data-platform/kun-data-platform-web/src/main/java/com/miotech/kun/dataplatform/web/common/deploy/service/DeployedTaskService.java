@@ -26,6 +26,7 @@ import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.task.BlockType;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -186,7 +187,8 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         ScheduleConf scheduleConf = new ScheduleConf(
                 ScheduleType.valueOf(scheduleConfig.getType()),
                 scheduleConfig.getCronExpr(),
-                scheduleConfig.getTimeZone());
+                scheduleConfig.getTimeZone(),
+                BlockType.valueOf(scheduleConfig.getBlockType()));
         // prepare dependencies
         List<Long> deployedTaskIds = new ArrayList<>();
         List<Long> inputNodes = taskPayload.getScheduleConfig().getInputNodes();
