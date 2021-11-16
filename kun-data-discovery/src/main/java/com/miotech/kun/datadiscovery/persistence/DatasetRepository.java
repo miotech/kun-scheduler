@@ -11,7 +11,6 @@ import com.miotech.kun.datadiscovery.model.bo.DatabaseRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
-import com.miotech.kun.dataquality.persistence.DataQualityRepository;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,9 +34,6 @@ public class DatasetRepository extends BaseRepository {
 
     @Autowired
     JdbcTemplate jdbcTemplate;
-
-    @Autowired
-    DataQualityRepository dataQualityRepository;
 
     @Autowired
     GlossaryRepository glossaryRepository;
