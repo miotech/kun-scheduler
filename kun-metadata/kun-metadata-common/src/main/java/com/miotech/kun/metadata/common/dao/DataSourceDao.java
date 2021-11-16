@@ -9,10 +9,11 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
-import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.*;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
-import com.miotech.kun.metadata.core.model.datasource.DataSourceType;
+import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
+import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -41,7 +42,7 @@ public class DataSourceDao {
     public static final String DATASOURCE_TYPE_MODEL_NAME = "datasource_type";
     public static final String DATASOURCE_TYPE_FIELD_MODEL_NAME = "datasource_type_field";
 
-    private static final String[] DATASOURCE_TABLE_COLUMNS = {"id", "connection_info", "type_id"};
+    private static final String[] DATASOURCE_TABLE_COLUMNS = {"id", "connection_info", "type_id", "connection_config", "datasource_type"};
     private static final String[] DATASOURCE_ATTR_TABLE_COLUMNS = {"datasource_id", "name", "create_user", "create_time", "update_user", "update_time"};
     private static final String[] DATASOURCE_TAG_TABLE_COLUMNS = {"datasource_id", "tag"};
     private static final String[] DATASOURCE_TYPE_TABLE_COLUMNS = {"id", "name"};
@@ -53,11 +54,9 @@ public class DataSourceDao {
     public List<Long> fetchDataSourceIdByType(String typeName) {
         logger.debug("Fetch dataSourceId with type: {}", typeName);
         String dataSourceIdSQL = DefaultSQLBuilder.newBuilder()
-                .select(DATASOURCE_MODEL_NAME + ".id")
-                .from(DATASOURCE_TABLE_NAME, DATASOURCE_MODEL_NAME)
-                .join("INNER", DATASOURCE_TYPE_TABLE_NAME, DATASOURCE_TYPE_MODEL_NAME)
-                .on(DATASOURCE_MODEL_NAME + ".type_id = " + DATASOURCE_TYPE_MODEL_NAME + ".id")
-                .where(DATASOURCE_TYPE_MODEL_NAME + ".name = ?")
+                .select("id")
+                .from(DATASOURCE_TABLE_NAME)
+                .where("datasource_type = ?")
                 .getSQL();
 
         return dbOperator.fetchAll(dataSourceIdSQL, rs -> rs.getLong(1), typeName);
@@ -121,24 +120,24 @@ public class DataSourceDao {
         return fetchDataSourcesJoiningTag(dataSourcesSQL, whereClauseAndParams.getRight().toArray());
     }
 
-    public DataSource fetchDataSourceByConnectionInfo(String typeName, ConnectionInfo connectionInfo) {
-        logger.debug("Fetch dataSourceId with type: {}", typeName);
+    public DataSource fetchDataSourceByConnectionInfo(DatasourceType datasourceType, ConnectionInfo connectionInfo) {
+        logger.debug("Fetch dataSourceId with type: {},connectionInfo:{}", datasourceType, connectionInfo);
         Map<String, List<String>> columnsMap = new HashMap<>();
         columnsMap.put(DATASOURCE_MODEL_NAME, Arrays.asList(DATASOURCE_TABLE_COLUMNS));
         columnsMap.put(DATASOURCE_ATTR_MODEL_NAME, Arrays.asList(DATASOURCE_ATTR_TABLE_COLUMNS));
-        columnsMap.put(DATASOURCE_TYPE_MODEL_NAME, Arrays.asList(DATASOURCE_TYPE_TABLE_COLUMNS));
         String dataSourceIdSQL = DefaultSQLBuilder.newBuilder()
                 .columns(columnsMap)
                 .autoAliasColumns()
                 .from(DATASOURCE_TABLE_NAME, DATASOURCE_MODEL_NAME)
-                .join("INNER", DATASOURCE_TYPE_TABLE_NAME, DATASOURCE_TYPE_MODEL_NAME)
-                .on(DATASOURCE_MODEL_NAME + ".type_id = " + DATASOURCE_TYPE_MODEL_NAME + ".id")
                 .join("INNER", DATASOURCE_ATTR_TABLE_NAME, DATASOURCE_ATTR_MODEL_NAME)
                 .on(DATASOURCE_MODEL_NAME + ".id = " + DATASOURCE_ATTR_MODEL_NAME + ".datasource_id")
-                .where(DATASOURCE_TYPE_MODEL_NAME + ".name = ?")
+                .where(DATASOURCE_MODEL_NAME + ".datasource_type = ?")
                 .getSQL();
 
-        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL, DataSourceResultMapper.INSTANCE, typeName);
+        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL, DataSourceResultMapper.INSTANCE, datasourceType.name());
+        if (datasourceType.equals(DatasourceType.HIVE)) {
+            return fetchHiveDatasource(dataSourceList);
+        }
         for (DataSource dataSource : dataSourceList) {
             if (checkConnectionInfo(dataSource, connectionInfo)) {
                 return dataSource;
@@ -148,15 +147,15 @@ public class DataSourceDao {
     }
 
     public boolean isDatasourceExist(DataSource dataSource) {
-        ConnectionInfo connectionInfo = dataSource.getConnectionInfo();
-        Long typeId = dataSource.getTypeId();
+        ConnectionInfo connectionInfo = dataSource.getConnectionConfig().getDataConnection();
+        DatasourceType type = dataSource.getDatasourceType();
         String dataSourceIdSQL = DefaultSQLBuilder.newBuilder()
                 .select(DATASOURCE_TABLE_COLUMNS)
                 .from(DATASOURCE_TABLE_NAME)
-                .where("type_id = ?")
+                .where("datasource_type = ?")
                 .asPrepared()
                 .getSQL();
-        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL, DataSourceBasicMapper.INSTANCE, typeId);
+        List<DataSource> dataSourceList = dbOperator.fetchAll(dataSourceIdSQL, DataSourceBasicMapper.INSTANCE, type.name());
         for (DataSource savedSource : dataSourceList) {
             if (checkConnectionInfo(savedSource, connectionInfo)) {
                 return true;
@@ -165,25 +164,25 @@ public class DataSourceDao {
         return false;
     }
 
-    private boolean checkConnectionInfo(DataSource dataSource, ConnectionInfo searchConnectionInfo) {
-        Map<String, Object> dataSourceConnectionInfo = dataSource.getConnectionInfo().getValues();
-
-        for (Map.Entry<String, Object> props : searchConnectionInfo.getValues().entrySet()) {
-            if (!dataSourceConnectionInfo.containsKey(props.getKey()) ||
-                    !sameConnectionValues(dataSourceConnectionInfo.get(props.getKey()), props.getValue())) {
-                return false;
+    private DataSource fetchHiveDatasource(List<DataSource> dataSources) {
+        DataSource athena = null;
+        for (DataSource dataSource : dataSources) {
+            ConnectionType connectionType = dataSource.getConnectionConfig().getDataConnection().getConnectionType();
+            if (connectionType.equals(ConnectionType.HIVE_SERVER)) {
+                return dataSource;
+            }
+            if (connectionType.equals(ConnectionType.ATHENA)) {
+                athena = dataSource;
             }
         }
-        return true;
-
+        return athena;
     }
 
-    private boolean sameConnectionValues(Object saved, Object search) {
-        if (search instanceof Integer || search instanceof Long
-                || search instanceof Boolean ) {
-            return (search.toString()).equals(saved.toString());
-        }
-        return saved.equals(search);
+    private boolean checkConnectionInfo(DataSource dataSource, ConnectionInfo searchConnectionInfo) {
+        logger.debug("check datasource : {},searchConnectionInfo:{}", dataSource, searchConnectionInfo);
+        ConnectionInfo dataSourceConnectionInfo = dataSource.getConnectionConfig().getDataConnection();
+        //hashcode and equals method of connectionInfo should ignore user and password
+        return dataSourceConnectionInfo.equals(searchConnectionInfo);
     }
 
     private DataSource fetchDataSourceJoiningTag(String sql, Object... params) {
@@ -219,6 +218,10 @@ public class DataSourceDao {
         // Update tag
         updateTag(dataSource);
 
+        //compatible old data
+        ConnectionInfoV1 connectionInfoV1 = generateConnectionInfoV1(dataSource);
+        Long typeId = generateTypeId(dataSource);
+
         dbOperator.transaction(() -> {
                     String insertDataSourceSQL = DefaultSQLBuilder.newBuilder()
                             .insert(DATASOURCE_TABLE_COLUMNS)
@@ -227,8 +230,10 @@ public class DataSourceDao {
                             .getSQL();
                     dbOperator.update(insertDataSourceSQL,
                             dataSource.getId(),
-                            JSONUtils.toJsonString(dataSource.getConnectionInfo().getValues()),
-                            dataSource.getTypeId());
+                            JSONUtils.toJsonString(connectionInfoV1),
+                            typeId,
+                            JSONUtils.toJsonString(dataSource.getConnectionConfig()),
+                            dataSource.getDatasourceType().name());
 
                     String insertDataSourceAttrSQL = DefaultSQLBuilder.newBuilder()
                             .insert(DATASOURCE_ATTR_TABLE_COLUMNS)
@@ -257,14 +262,22 @@ public class DataSourceDao {
         // Update tag
         updateTag(dataSource);
 
+        //compatible old data
+        ConnectionInfoV1 connectionInfoV1 = generateConnectionInfoV1(dataSource);
+        Long typeId = generateTypeId(dataSource);
+
         dbOperator.transaction(() -> {
                     String insertDataSourceSQL = DefaultSQLBuilder.newBuilder()
                             .update(DATASOURCE_TABLE_NAME)
-                            .set("connection_info", "type_id")
+                            .set("connection_info","type_id","connection_config", "datasource_type")
                             .where("id = ?")
                             .asPrepared()
                             .getSQL();
-                    dbOperator.update(insertDataSourceSQL, JSONUtils.toJsonString(dataSource.getConnectionInfo().getValues()), dataSource.getTypeId(), dataSource.getId());
+                    dbOperator.update(insertDataSourceSQL,
+                            JSONUtils.toJsonString(connectionInfoV1),
+                            typeId,
+                            JSONUtils.toJsonString(dataSource.getConnectionConfig()),
+                            dataSource.getDatasourceType().name(), dataSource.getId());
 
                     String insertDataSourceAttrSQL = DefaultSQLBuilder.newBuilder()
                             .update(DATASOURCE_ATTR_TABLE_NAME)
@@ -326,23 +339,13 @@ public class DataSourceDao {
         dbOperator.update(deleteDataSourceSQL, id);
     }
 
-    public List<DataSourceType> getAllTypes() {
+    public List<DatasourceTemplate> getAllTypes() {
         String dataSourceTypeSQL = DefaultSQLBuilder.newBuilder()
                 .select(DATASOURCE_TYPE_TABLE_COLUMNS)
                 .from(DATASOURCE_TYPE_TABLE_NAME)
                 .getSQL();
-        List<DataSourceType> dataSourceTypes = dbOperator.fetchAll(dataSourceTypeSQL, DataSourceTypeResultMapper.INSTANCE);
-        return dataSourceTypes.stream().map(dataSourceType -> fetchTypeField(dataSourceType)).collect(Collectors.toList());
-    }
-
-    private DataSourceType fetchTypeField(DataSourceType dataSourceType) {
-        String dataSourceTypeFieldSQL = DefaultSQLBuilder.newBuilder()
-                .select(DATASOURCE_TYPE_FIELD_TABLE_COLUMNS)
-                .from(DATASOURCE_TYPE_FIELD_TABLE_NAME)
-                .where("type_id = ?")
-                .getSQL();
-        List<DataSourceType.Field> fields = dbOperator.fetchAll(dataSourceTypeFieldSQL, DataSourceTypeFieldResultMapper.INSTANCE, dataSourceType.getId());
-        return dataSourceType.cloneBuilder().withFields(fields).build();
+        List<DatasourceTemplate> datasourceTemplates = dbOperator.fetchAll(dataSourceTypeSQL, DataSourceTemplateMapper.INSTANCE);
+        return datasourceTemplates;
     }
 
     private static class DataSourceResultMapper implements ResultSetMapper<DataSource> {
@@ -350,11 +353,15 @@ public class DataSourceDao {
 
         @Override
         public DataSource map(ResultSet rs) throws SQLException {
+            ConnectionInfoV1 connectionInfoV1 = new ConnectionInfoV1(JSONUtils.jsonStringToMap(rs.getString(DATASOURCE_MODEL_NAME + "_connection_info"), String.class, Object.class));
+            ConnectionConfig connectionConfig = JSONUtils.jsonToObject(rs.getString(DATASOURCE_MODEL_NAME + "_connection_config"), ConnectionConfig.class);
+            connectionConfig.setValues(connectionInfoV1.getValues());
             return DataSource.newBuilder()
                     .withId(rs.getLong(DATASOURCE_MODEL_NAME + "_id"))
                     .withName(rs.getString(DATASOURCE_ATTR_MODEL_NAME + "_name"))
-                    .withConnectionInfo(new ConnectionInfo(JSONUtils.jsonStringToMap(rs.getString(DATASOURCE_MODEL_NAME + "_connection_info"), String.class, Object.class)))
                     .withTypeId(rs.getLong(DATASOURCE_MODEL_NAME + "_type_id"))
+                    .withConnectionConfig(connectionConfig)
+                    .withDatasourceType(DatasourceType.valueOf(rs.getString(DATASOURCE_MODEL_NAME + "_datasource_type")))
                     .withCreateUser(rs.getString(DATASOURCE_ATTR_MODEL_NAME + "_create_user"))
                     .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(DATASOURCE_ATTR_MODEL_NAME + "_create_time")))
                     .withUpdateUser(rs.getString(DATASOURCE_ATTR_MODEL_NAME + "_update_user"))
@@ -370,33 +377,22 @@ public class DataSourceDao {
         public DataSource map(ResultSet rs) throws SQLException {
             return DataSource.newBuilder()
                     .withId(rs.getLong("id"))
-                    .withConnectionInfo(new ConnectionInfo(JSONUtils.jsonStringToMap(rs.getString("connection_info"), String.class, Object.class)))
-                    .withTypeId(rs.getLong("type_id"))
+                    .withConnectionConfig(JSONUtils.jsonToObject(rs.getString("connection_config"), ConnectionConfig.class))
+                    .withDatasourceType(DatasourceType.valueOf(rs.getString("datasource_type")))
                     .build();
         }
     }
 
-    private static class DataSourceTypeResultMapper implements ResultSetMapper<DataSourceType> {
-        public static final DataSourceDao.DataSourceTypeResultMapper INSTANCE = new DataSourceDao.DataSourceTypeResultMapper();
+    private static class DataSourceTemplateMapper implements ResultSetMapper<DatasourceTemplate> {
+        public static final DataSourceDao.DataSourceTemplateMapper INSTANCE = new DataSourceDao.DataSourceTemplateMapper();
+
 
         @Override
-        public DataSourceType map(ResultSet rs) throws SQLException {
-            return DataSourceType.newBuilder()
+        public DatasourceTemplate map(ResultSet rs) throws SQLException {
+            return DatasourceTemplate.newBuilder()
+                    .withType(rs.getString("name"))
                     .withId(rs.getLong("id"))
-                    .withName(rs.getString("name"))
                     .build();
-        }
-    }
-
-    private static class DataSourceTypeFieldResultMapper implements ResultSetMapper<DataSourceType.Field> {
-        public static final DataSourceDao.DataSourceTypeFieldResultMapper INSTANCE = new DataSourceDao.DataSourceTypeFieldResultMapper();
-
-        @Override
-        public DataSourceType.Field map(ResultSet rs) throws SQLException {
-            return new DataSourceType.Field(rs.getString("format"),
-                    rs.getBoolean("require"),
-                    rs.getString("name"),
-                    rs.getInt("sequence_order"));
         }
     }
 
@@ -415,5 +411,82 @@ public class DataSourceDao {
 
         return Pair.of(whereClause, params);
     }
+
+
+    /**
+     * just used to compatible old data
+     * will be removed after discovery refactor
+     */
+    private Long generateTypeId(DataSource dataSource){
+        DatasourceType datasourceType = dataSource.getDatasourceType();
+        ConnectionInfo userConnection = dataSource.getConnectionConfig().getUserConnection();
+        ConnectionType userConnectionType = userConnection.getConnectionType();
+        switch (datasourceType){
+            case POSTGRESQL:
+                return 3l;
+            case MONGODB:
+                return 2l;
+            case ARANGO:
+                return 5l;
+            case ELASTICSEARCH:
+                return 4l;
+            case MYSQL:
+                return 7l;
+            case HIVE:
+                if(userConnectionType.equals(ConnectionType.ATHENA)){
+                    return 1l;
+                }else {
+                    return 6l;
+                }
+            default:
+                throw new IllegalStateException(datasourceType + " is not supported");
+        }
+    }
+
+    /**
+     * just used to compatible old data
+     * will be removed after discovery refactor
+     */
+    private ConnectionInfoV1 generateConnectionInfoV1(DataSource dataSource) {
+        Map<String, Object> oldConfig = new HashMap<>();
+        ConnectionConfig connectionConfig = dataSource.getConnectionConfig();
+        ConnectionInfo userConnection = connectionConfig.getUserConnection();
+        ConnectionInfo metaConnection = connectionConfig.getMetadataConnection();
+        ConnectionInfo storageConnection = connectionConfig.getStorageConnection();
+        if (dataSource.getDatasourceType().equals(DatasourceType.HIVE)) {
+            if (userConnection instanceof HiveServerConnectionInfo) {
+                oldConfig.put("dataStoreHost", ((HiveServerConnectionInfo) userConnection).getHost());
+                oldConfig.put("dataStorePort", ((HiveServerConnectionInfo) userConnection).getPort());
+                oldConfig.put("dataStoreUsername", ((HiveServerConnectionInfo) userConnection).getUsername());
+                oldConfig.put("dataStorePassword", ((HiveServerConnectionInfo) userConnection).getPassword());
+                if (metaConnection != null && metaConnection instanceof HiveMetaStoreConnectionInfo) {
+                    oldConfig.put("metaStoreUris", ((HiveMetaStoreConnectionInfo) metaConnection).getMetaStoreUris());
+                }
+            } else if (userConnection instanceof AthenaConnectionInfo) {
+                oldConfig.put("athenaUrl", ((AthenaConnectionInfo) userConnection).getAthenaUrl());
+                oldConfig.put("athenaUsername", ((AthenaConnectionInfo) userConnection).getAthenaUsername());
+                oldConfig.put("athenaPassword", ((AthenaConnectionInfo) userConnection).getAthenaPassword());
+                if (metaConnection != null && metaConnection instanceof GlueConnectionInfo) {
+                    oldConfig.put("glueRegion", ((GlueConnectionInfo) metaConnection).getGlueRegion());
+                    oldConfig.put("glueAccessKey", ((GlueConnectionInfo) metaConnection).getGlueAccessKey());
+                    oldConfig.put("glueSecretKey", ((GlueConnectionInfo) metaConnection).getGlueSecretKey());
+                }
+                if (storageConnection != null && storageConnection instanceof S3ConnectionInfo) {
+                    oldConfig.put("s3Region", ((S3ConnectionInfo) storageConnection).getS3Region());
+                    oldConfig.put("s3AccessKey", ((S3ConnectionInfo) storageConnection).getS3AccessKey());
+                    oldConfig.put("s3SecretKey", ((S3ConnectionInfo) storageConnection).getS3SecretKey());
+                }
+            }
+        } else if (userConnection instanceof PostgresConnectionInfo) {
+            PostgresConnectionInfo connection = (PostgresConnectionInfo) userConnection;
+            oldConfig.put("host", connection.getHost());
+            oldConfig.put("port", connection.getPort());
+            oldConfig.put("username", connection.getUsername());
+            oldConfig.put("password", connection.getPassword());
+        }
+
+        return new ConnectionInfoV1(oldConfig);
+    }
+
 
 }

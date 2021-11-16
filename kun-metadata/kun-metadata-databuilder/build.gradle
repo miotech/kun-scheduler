@@ -28,12 +28,10 @@ dependencies {
     implementation "org.mongodb:mongo-java-driver"
     implementation "org.jooq:joor-java-8"
     implementation "com.amazonaws:aws-java-sdk-glue"
-    implementation "com.syncron.amazonaws:simba-athena-jdbc-driver"
     implementation "com.arangodb:arangodb-java-driver"
     implementation "org.apache.kafka:kafka-clients"
     implementation "com.amazonaws:aws-java-sdk-s3"
     implementation 'org.apache.hadoop:hadoop-aws'
-    implementation 'org.apache.parquet:parquet-hadoop'
     implementation("org.apache.hadoop:hadoop-hdfs") {
         exclude group: 'javax.servlet', module: 'servlet-api'
         exclude group: 'xerces', module: 'xercesImpl'

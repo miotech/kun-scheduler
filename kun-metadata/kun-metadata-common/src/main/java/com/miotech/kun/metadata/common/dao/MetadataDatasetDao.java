@@ -129,6 +129,16 @@ public class MetadataDatasetDao {
         );
     }
 
+    public Dataset fetchDataSet(Long datasourceId,String database,String table){
+        String sql = new DefaultSQLBuilder()
+                .select(DATASET_COLUMNS)
+                .from(DATASET_TABLE_NAME)
+                .where("datasource_id = ? AND database_name = ? AND name = ?")
+                .asPrepared()
+                .getSQL();
+        return dbOperator.fetchOne(sql,MetadataDatasetMapper.INSTANCE,datasourceId,database,table);
+    }
+
     public List<String> suggestDatabase(Long dataSourceId, String prefix) {
         logger.debug("Suggest database by dataSourceId: {}, prefix: {}", dataSourceId, prefix);
         Pair<String, List<Object>> whereClause = generateWhereClauseForSuggestDatabase(dataSourceId, prefix);

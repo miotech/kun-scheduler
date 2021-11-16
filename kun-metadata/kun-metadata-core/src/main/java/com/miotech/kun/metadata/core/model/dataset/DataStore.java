@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.core.model.dataset;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
