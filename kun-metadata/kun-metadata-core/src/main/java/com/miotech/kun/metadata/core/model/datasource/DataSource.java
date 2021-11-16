@@ -2,6 +2,7 @@ package com.miotech.kun.metadata.core.model.datasource;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -11,20 +12,22 @@ public class DataSource {
 
     private final Long id;
     private final String name;
-    private final ConnectionInfo connectionInfo;
     private final Long typeId;
+    private final ConnectionConfig connectionConfig;
+    private final DatasourceType datasourceType;
     private final List<String> tags;
     private final String createUser;
     private final OffsetDateTime createTime;
     private final String updateUser;
     private final OffsetDateTime updateTime;
 
-    public DataSource(Long id, String name, ConnectionInfo connectionInfo, Long typeId, List<String> tags, String createUser,
+    public DataSource(Long id, String name, Long typeId, ConnectionConfig connectionConfig, DatasourceType datasourceType, List<String> tags, String createUser,
                       OffsetDateTime createTime, String updateUser, OffsetDateTime updateTime) {
         this.id = id;
         this.name = name;
-        this.connectionInfo = connectionInfo;
         this.typeId = typeId;
+        this.connectionConfig = connectionConfig;
+        this.datasourceType = datasourceType;
         this.tags = tags;
         this.createUser = createUser;
         this.createTime = createTime;
@@ -40,12 +43,12 @@ public class DataSource {
         return name;
     }
 
-    public ConnectionInfo getConnectionInfo() {
-        return connectionInfo;
+    public ConnectionConfig getConnectionConfig() {
+        return connectionConfig;
     }
 
-    public Long getTypeId() {
-        return typeId;
+    public DatasourceType getDatasourceType() {
+        return datasourceType;
     }
 
     public List<String> getTags() {
@@ -68,6 +71,10 @@ public class DataSource {
         return updateTime;
     }
 
+    public Long getTypeId() {
+        return typeId;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -76,22 +83,23 @@ public class DataSource {
         return DataSource.newBuilder()
                 .withId(id)
                 .withName(name)
-                .withConnectionInfo(connectionInfo)
                 .withTypeId(typeId)
+                .withConnectionConfig(connectionConfig)
+                .withDatasourceType(datasourceType)
                 .withTags(tags)
                 .withCreateUser(createUser)
                 .withCreateTime(createTime)
                 .withUpdateUser(updateUser)
-                .withUpdateTime(updateTime)
-                ;
+                .withUpdateTime(updateTime);
     }
 
     @JsonPOJOBuilder
     public static final class Builder {
         private Long id;
         private String name;
-        private ConnectionInfo connectionInfo;
         private Long typeId;
+        private ConnectionConfig connectionConfig;
+        private DatasourceType datasourceType;
         private List<String> tags;
         private String createUser;
         private OffsetDateTime createTime;
@@ -111,13 +119,18 @@ public class DataSource {
             return this;
         }
 
-        public Builder withConnectionInfo(ConnectionInfo connectionInfo) {
-            this.connectionInfo = connectionInfo;
+        public Builder withTypeId(Long typeId){
+            this.typeId = typeId;
             return this;
         }
 
-        public Builder withTypeId(Long typeId) {
-            this.typeId = typeId;
+        public Builder withConnectionConfig(ConnectionConfig connectionConfig) {
+            this.connectionConfig = connectionConfig;
+            return this;
+        }
+
+        public Builder withDatasourceType(DatasourceType datasourceType) {
+            this.datasourceType = datasourceType;
             return this;
         }
 
@@ -147,7 +160,7 @@ public class DataSource {
         }
 
         public DataSource build() {
-            return new DataSource(id, name, connectionInfo, typeId, tags, createUser, createTime, updateUser, updateTime);
+            return new DataSource(id, name, typeId, connectionConfig, datasourceType, tags, createUser, createTime, updateUser, updateTime);
         }
     }
 }

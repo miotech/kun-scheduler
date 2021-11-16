@@ -18,5 +18,5 @@ import java.util.List;
 @AllArgsConstructor
 public class DataSourcePage extends PageInfo {
 
-    private List<DataSource> datasources;
+    private List<DataSourceVO> datasources;
 }

@@ -4,7 +4,21 @@ dependencies {
     implementation project(":kun-metadata:kun-metadata-service-facade")
     implementation project(':kun-metadata:kun-metadata-core')
     implementation project(":kun-workflow:kun-workflow-core")
+    implementation 'com.google.guava:guava'
+    implementation "org.mongodb:mongo-java-driver"
+    implementation "com.amazonaws:aws-java-sdk-glue"
+    implementation "com.syncron.amazonaws:simba-athena-jdbc-driver"
+    implementation "com.arangodb:arangodb-java-driver"
+    implementation "org.apache.kafka:kafka-clients"
+    implementation "com.amazonaws:aws-java-sdk-s3"
+    implementation 'mysql:mysql-connector-java'
+    implementation 'org.apache.hive:hive-jdbc'
     implementation "org.neo4j:neo4j-ogm-core"
+    implementation("org.apache.hadoop:hadoop-hdfs") {
+        exclude group: 'javax.servlet', module: 'servlet-api'
+        exclude group: 'xerces', module: 'xercesImpl'
+    }
+    implementation 'org.apache.hadoop:hadoop-common:2.8.5'
     runtime 'org.neo4j:neo4j-ogm-bolt-driver:3.2.16' // Only add if you're using the Bolt driver
 
     implementation 'org.apache.commons:commons-lang3'

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonValue;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class DatasetFieldType implements Serializable {
     @JsonIgnore
@@ -26,6 +27,19 @@ public class DatasetFieldType implements Serializable {
 
     public String getRawType() {
         return rawType;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DatasetFieldType that = (DatasetFieldType) o;
+        return type == that.type && Objects.equals(rawType, that.rawType);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, rawType);
     }
 
     public enum Type {
