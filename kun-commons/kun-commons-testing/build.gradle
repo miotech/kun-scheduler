@@ -7,6 +7,7 @@ dependencies {
     implementation "com.h2database:h2"
     implementation ("org.mock-server:mockserver-netty:3.10.8") {
         exclude group: 'xerces', module: 'xerces'
+        exclude group: 'xerces', module: 'xercesImpl'
     }
     implementation "org.mock-server:mockserver-client-java:3.10.8"
     implementation "org.testcontainers:testcontainers"

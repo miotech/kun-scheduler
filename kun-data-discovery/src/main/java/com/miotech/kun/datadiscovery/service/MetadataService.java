@@ -5,13 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.common.model.AcknowledgementVO;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
-import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
-import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
-import com.miotech.kun.metadata.core.model.datasource.DataSourceType;
-import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
-import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
-import com.miotech.kun.metadata.core.model.vo.PaginationVO;
+import com.miotech.kun.metadata.core.model.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,10 +85,10 @@ public class MetadataService {
                 .getBody();
     }
 
-    public List<DataSourceType> getTypes() {
+    public List<DatasourceTemplate> getTypes() {
         String createUrl = url + "/datasource/types";
         return restTemplate.exchange(createUrl, HttpMethod.GET, null,
-                new ParameterizedTypeReference<List<DataSourceType>>() {}).getBody();
+                new ParameterizedTypeReference<List<DatasourceTemplate>>() {}).getBody();
     }
 
     public Map<String, PullProcessVO> fetchLatestPullProcessByDataSourceIds(List<Long> datasourceIds) {

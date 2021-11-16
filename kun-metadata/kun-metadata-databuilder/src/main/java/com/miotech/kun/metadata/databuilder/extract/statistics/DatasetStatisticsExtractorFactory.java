@@ -1,34 +1,26 @@
 package com.miotech.kun.metadata.databuilder.extract.statistics;
 
 import com.google.common.base.Preconditions;
-import com.miotech.kun.metadata.databuilder.extract.impl.arangodb.ArangoDBStatisticsExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.elasticsearch.ElasticSearchStatisticsExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.glue.GlueStatisticsExtractor;
+import com.miotech.kun.metadata.common.cataloger.Cataloger;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.databuilder.extract.impl.hive.HiveStatisticsExtractor;
-import com.miotech.kun.metadata.databuilder.extract.impl.mongodb.MongoDBStatisticsExtractor;
 import com.miotech.kun.metadata.databuilder.extract.impl.postgresql.PostgreSQLStatisticsExtractor;
-import com.miotech.kun.metadata.databuilder.model.DataSource;
 
 public class DatasetStatisticsExtractorFactory {
 
     private DatasetStatisticsExtractorFactory() {
     }
 
-    public static DatasetStatisticsExtractor createExtractor(DataSource.Type type) {
+    public static DatasetStatisticsExtractor createExtractor(DataSource dataSource, Dataset dataset , Cataloger cataloger) {
+        DatasourceType type = dataSource.getDatasourceType();
         Preconditions.checkNotNull(type);
         switch (type) {
-            case AWS:
-                return new GlueStatisticsExtractor();
             case HIVE:
-                return new HiveStatisticsExtractor();
-            case ARANGO:
-                return new ArangoDBStatisticsExtractor();
-            case MONGODB:
-                return new MongoDBStatisticsExtractor();
+                return new HiveStatisticsExtractor(dataSource,dataset,cataloger);
             case POSTGRESQL:
-                return new PostgreSQLStatisticsExtractor();
-            case ELASTICSEARCH:
-                return new ElasticSearchStatisticsExtractor();
+                return new PostgreSQLStatisticsExtractor(dataSource,dataset,cataloger);
             default:
                 throw new IllegalArgumentException("Invalid type: " + type);
         }

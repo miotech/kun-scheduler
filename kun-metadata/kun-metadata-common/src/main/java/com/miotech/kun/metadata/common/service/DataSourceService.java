@@ -5,17 +5,19 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.common.dao.DataSourceDao;
+import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
-import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
-import com.miotech.kun.metadata.core.model.datasource.DataSourceType;
+import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
+import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
 import com.miotech.kun.metadata.core.model.vo.PaginationVO;
 import org.apache.commons.lang3.StringUtils;
 
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Singleton
 public class DataSourceService {
@@ -38,61 +40,53 @@ public class DataSourceService {
                 dataSourceDao.fetchTotalCountWithFilter(filter), dataSourceDao.fetchWithFilter(filter));
     }
 
-    public boolean isDatasourceExist(DataSource datasource){
+    public boolean isDatasourceExist(DataSource datasource) {
         return dataSourceDao.isDatasourceExist(datasource);
     }
 
-    public Long getDataSourceIdByConnectionInfo(DataStoreType storeType, ConnectionInfo connectionInfo){
-        if(DataStoreType.HIVE_TABLE.equals(storeType)){
-            return fetchHiveDataSourceId();
-        }
-        String sourceType = covertStoreTypeToSourceType(storeType);
-        DataSource dataSource = dataSourceDao.fetchDataSourceByConnectionInfo(sourceType,connectionInfo);
-        if(dataSource != null){
+    public Long getDataSourceIdByConnectionInfo(DataStoreType storeType, ConnectionInfo connectionInfo) {
+        DatasourceType sourceType = covertStoreTypeToSourceType(storeType);
+        DataSource dataSource = dataSourceDao.fetchDataSourceByConnectionInfo(sourceType, connectionInfo);
+        if (dataSource != null) {
             return dataSource.getId();
         }
         return null;
     }
 
-    private String covertStoreTypeToSourceType(DataStoreType storeType){
-        String sourceType;
-        switch (storeType){
-            case POSTGRES_TABLE:
-                sourceType = "PostgreSQL";
-                break;
-            case MONGO_COLLECTION:
-                sourceType = "MongoDB";
-                break;
-            case ELASTICSEARCH_INDEX:
-                sourceType = "Elasticsearch";
-                break;
-            case ARANGO_COLLECTION:
-                sourceType = "Arango";
-                break;
-            default:
-                throw new IllegalStateException("not support storeType :"+ storeType);
-        }
-        return sourceType;
+    public Optional<DataSource> getDatasourceById(Long datasourceId) {
+        return dataSourceDao.findById(datasourceId);
     }
 
-    private Long fetchHiveDataSourceId(){
-        List<Long> datasourceIds = fetchDataSourceIdByType("Hive");
-        if(datasourceIds.size() > 0){
-            return datasourceIds.get(0);
+    private DatasourceType covertStoreTypeToSourceType(DataStoreType storeType) {
+        DatasourceType sourceType;
+        switch (storeType) {
+            case POSTGRES_TABLE:
+                sourceType = DatasourceType.POSTGRESQL;
+                break;
+            case MONGO_COLLECTION:
+                sourceType = DatasourceType.MONGODB;
+                break;
+            case ELASTICSEARCH_INDEX:
+                sourceType = DatasourceType.ELASTICSEARCH;
+                break;
+            case ARANGO_COLLECTION:
+                sourceType = DatasourceType.ARANGO;
+                break;
+            case HIVE_TABLE:
+                sourceType = DatasourceType.HIVE;
+                break;
+            default:
+                throw new IllegalStateException("not support storeType :" + storeType);
         }
-        datasourceIds = fetchDataSourceIdByType("AWS");
-        if(datasourceIds.size() > 0){
-            return datasourceIds.get(0);
-        }
-        throw new IllegalStateException("hive datasource not exist");
+        return sourceType;
     }
 
     public DataSource create(DataSourceRequest dataSourceRequest) {
         DataSource dataSource = DataSource.newBuilder()
                 .withId(IdGenerator.getInstance().nextId())
                 .withName(dataSourceRequest.getName())
-                .withConnectionInfo(dataSourceRequest.getConnectionInfo())
-                .withTypeId(dataSourceRequest.getTypeId())
+                .withConnectionConfig(dataSourceRequest.getConnectionConfig())
+                .withDatasourceType(dataSourceRequest.getDatasourceType())
                 .withTags(dataSourceRequest.getTags())
                 .withCreateUser(dataSourceRequest.getCreateUser())
                 .withCreateTime(OffsetDateTime.now())
@@ -100,9 +94,9 @@ public class DataSourceService {
                 .withUpdateTime(OffsetDateTime.now())
                 .build();
         boolean isExist = isDatasourceExist(dataSource);
-        if(isExist){
-            throw new IllegalArgumentException("datasource with type " + dataSource.getTypeId()
-                    +  " and connection info " + dataSource.getConnectionInfo() +" is exist");
+        if (isExist) {
+            throw new IllegalArgumentException("datasource with type " + dataSource.getDatasourceType()
+                    + " and connection info " + dataSource.getConnectionConfig() + " is exist");
         }
         dataSourceDao.create(dataSource);
         return dataSource;
@@ -112,8 +106,8 @@ public class DataSourceService {
         DataSource dataSource = DataSource.newBuilder()
                 .withId(id)
                 .withName(dataSourceRequest.getName())
-                .withConnectionInfo(dataSourceRequest.getConnectionInfo())
-                .withTypeId(dataSourceRequest.getTypeId())
+                .withConnectionConfig(dataSourceRequest.getConnectionConfig())
+                .withDatasourceType(dataSourceRequest.getDatasourceType())
                 .withTags(dataSourceRequest.getTags())
                 .withUpdateUser(dataSourceRequest.getUpdateUser())
                 .withUpdateTime(OffsetDateTime.now())
@@ -126,7 +120,15 @@ public class DataSourceService {
         dataSourceDao.delete(id);
     }
 
-    public List<DataSourceType> getAllTypes() {
+    public List<DatasourceTemplate> getAllTypes() {
         return dataSourceDao.getAllTypes();
+    }
+
+    public DataSource fetchDatasource(Long datasourceId){
+        Optional<DataSource> dataSource = dataSourceDao.findById(datasourceId);
+        if(dataSource.isPresent()){
+            return dataSource.get();
+        }
+        return null;
     }
 }

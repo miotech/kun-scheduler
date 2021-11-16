@@ -7,7 +7,7 @@ import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
-import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
@@ -23,7 +23,7 @@ public class MetadataDatasetService implements MetadataServiceFacade {
 
     private final Logger logger = LoggerFactory.getLogger(MetadataDatasetService.class);
 
-    private static final String DEFAULT_SUGGEST_DATASOURCE_TYPE = "AWS";
+    private static final String DEFAULT_SUGGEST_DATASOURCE_TYPE = "HIVE";
 
     private final MetadataDatasetDao metadataDatasetDao;
     private final DataSourceService dataSourceService;

@@ -2,22 +2,20 @@ package com.miotech.kun.metadata.databuilder.extract.template;
 
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.metadata.common.connector.ConnectorFactory;
+import com.miotech.kun.metadata.core.model.connection.ConnectionType;
+import com.miotech.kun.metadata.common.connector.Connector;
+import com.miotech.kun.metadata.common.connector.Query;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
 import com.miotech.kun.metadata.core.model.dataset.FieldStatistics;
-import com.miotech.kun.metadata.databuilder.client.JDBCClient;
-import com.miotech.kun.metadata.core.model.constant.DatabaseType;
+import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.databuilder.extract.tool.DatabaseIdentifierProcessor;
-import com.miotech.kun.metadata.databuilder.model.DataSource;
 import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.time.Clock;
-import java.time.LocalDateTime;
 
 public class DataWarehouseStatTemplate {
     private static Logger logger = LoggerFactory.getLogger(DataWarehouseStatTemplate.class);
@@ -25,22 +23,19 @@ public class DataWarehouseStatTemplate {
     private final String dbName;
     private final String dbNameAfterEscape;
     private final String schemaName;
-    private final String schemaNameAfterEscape;
-
+    private final ConnectionType connectionType;
     private final String tableName;
     private final String tableNameAfterEscape;
-    private final DatabaseType databaseType;
-    private final Connection connection;
+    private final Connector connector;
 
-    public DataWarehouseStatTemplate(String dbName, String schemaName, String tableName, DatabaseType databaseType, DataSource dataSource) {
+    public DataWarehouseStatTemplate(String dbName, String schemaName, String tableName, DataSource dataSource) {
+        connectionType =  dataSource.getConnectionConfig().getDataConnection().getConnectionType();
         this.dbName = dbName;
-        this.dbNameAfterEscape = DatabaseIdentifierProcessor.escape(dbName, databaseType);
+        this.dbNameAfterEscape = DatabaseIdentifierProcessor.escape(dbName, connectionType);
         this.schemaName = schemaName;
-        this.schemaNameAfterEscape = DatabaseIdentifierProcessor.escape(schemaName, databaseType);
         this.tableName = tableName;
-        this.tableNameAfterEscape = DatabaseIdentifierProcessor.escape(tableName, databaseType);
-        this.databaseType = databaseType;
-        this.connection = JDBCClient.getConnection(dataSource, dbName, schemaName);
+        this.tableNameAfterEscape = DatabaseIdentifierProcessor.escape(tableName, connectionType);
+        this.connector = ConnectorFactory.generateConnector(dataSource);
     }
 
     public FieldStatistics getFieldStats(DatasetField datasetField, String distinctCountSql, String nonNullCountSql) {
@@ -48,7 +43,6 @@ public class DataWarehouseStatTemplate {
             logger.debug("DataWarehouseStatTemplate getFieldStats start. database: {}, table: {}, datasetField: {}", dbName,
                     tableName, JSONUtils.toJsonString(datasetField));
         }
-        PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
             if (logger.isDebugEnabled()) {
@@ -67,8 +61,8 @@ public class DataWarehouseStatTemplate {
             // Temporarily close distinct count
             fieldStatBuilder.withDistinctCount(0L);
 
-            statement = connection.prepareStatement(nonNullCountSql);
-            resultSet = statement.executeQuery();
+            Query query = new Query(dbName,schemaName,nonNullCountSql);
+            resultSet = connector.query(query);
             while (resultSet.next()) {
                 fieldStatBuilder.withNonnullCount(resultSet.getLong(1));
             }
@@ -76,17 +70,15 @@ public class DataWarehouseStatTemplate {
             return fieldStatBuilder.build();
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
-        } finally {
-            JDBCClient.close(null, statement, resultSet);
         }
     }
 
-    public FieldStatistics getFieldStats(DatasetField datasetField, DataSource.Type type) {
-        String fieldNameAfterEscape = DatabaseIdentifierProcessor.escape(datasetField.getName(), databaseType);
+    public FieldStatistics getFieldStats(DatasetField datasetField) {
+        String fieldNameAfterEscape = DatabaseIdentifierProcessor.escape(datasetField.getName(), connectionType);
 
-        switch (type) {
-            case AWS:
-            case HIVE:
+        switch (connectionType) {
+            case ATHENA:
+            case HIVE_THRIFT:
                 String dwDistinctCountSql = String.format("SELECT COUNT(*) FROM (SELECT %s FROM %s.%s GROUP BY %s) t1",
                         fieldNameAfterEscape, dbNameAfterEscape, tableNameAfterEscape, fieldNameAfterEscape);
                 String dwNonNullCountSql = String.format("SELECT COUNT(*) FROM %s.%s WHERE %s IS NOT NULL",
@@ -105,7 +97,7 @@ public class DataWarehouseStatTemplate {
 
                 return getFieldStats(datasetField, postgreSQLDistinctCountSQL, postgreSQLNonNullCountSql);
             default:
-                throw new UnsupportedOperationException("Upsupported dataSourceType: " + type.name());
+                throw new UnsupportedOperationException("Upsupported dataSourceType: " + connectionType.name());
         }
     }
 
@@ -115,12 +107,11 @@ public class DataWarehouseStatTemplate {
             logger.debug("DataWarehouseStatTemplate rowCountSQL: {}", rowCountSQL);
         }
 
-        PreparedStatement statement = null;
         ResultSet resultSet = null;
         try {
             long rowCount = 0;
-            statement = connection.prepareStatement(rowCountSQL);
-            resultSet = statement.executeQuery();
+            Query query = new Query(dbName,schemaName,rowCountSQL);
+            resultSet = connector.query(query);
             while (resultSet.next()) {
                 rowCount = resultSet.getLong(1);
             }
@@ -128,15 +119,13 @@ public class DataWarehouseStatTemplate {
             return rowCount;
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
-        } finally {
-            JDBCClient.close(null, statement, resultSet);
         }
     }
 
-    public Long getRowCount(DataSource.Type type) {
+    public Long getRowCount(ConnectionType type) {
         switch (type) {
-            case AWS:
-            case HIVE:
+            case ATHENA:
+            case HIVE_THRIFT:
                 String dwRowCountSQL = String.format("SELECT COUNT(*) FROM %s.%s", dbNameAfterEscape, tableNameAfterEscape);
                 return getRowCount(dwRowCountSQL);
             case POSTGRESQL:
@@ -145,10 +134,6 @@ public class DataWarehouseStatTemplate {
             default:
                 throw new UnsupportedOperationException("Upsupported dataSourceType: " + type.name());
         }
-    }
-
-    public void close() {
-        JDBCClient.close(connection);
     }
 
     private boolean isIgnored(DatasetFieldType.Type type) {
