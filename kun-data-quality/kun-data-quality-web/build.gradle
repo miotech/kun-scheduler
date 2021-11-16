@@ -1,0 +1,58 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'java'
+    id "io.freefair.lombok"
+    id "org.sonarqube"
+}
+
+bootJar {
+    enabled = false
+}
+
+jar {
+    enabled = true
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+dependencies {
+    implementation project(':kun-workflow:kun-workflow-client')
+    implementation project(':kun-workflow:kun-workflow-core')
+    implementation project(':kun-workflow:kun-workflow-utils')
+    implementation project(':kun-security:kun-security-common')
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(":kun-commons:kun-commons-db")
+    implementation project(":kun-commons:kun-commons-query")
+    implementation project(":kun-commons:kun-commons-pubsub")
+    implementation project(':kun-app-common')
+
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+    implementation 'com.google.code.gson:gson'
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+    implementation 'com.alibaba:druid:1.1.23'
+    implementation 'redis.clients:jedis'
+    testImplementation project(':kun-metadata:kun-metadata-core')
+    testImplementation project(':kun-data-quality:data-quality-operators')
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'com.h2database:h2'
+
+}
+
+test {
+    useJUnitPlatform()
+}
+
+apply plugin: "org.sonarqube"
+sonarqube {
+    properties {
+        property "sonar.projectKey", "miotech_kun-scheduler"
+        property "sonar.organization", "miotech"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.sourceEncoding", "src/main"
+        property "sonar.sourceEncoding", "UTF-8"
+        property "sonar.java.binaries", "build"
+    }
+}
