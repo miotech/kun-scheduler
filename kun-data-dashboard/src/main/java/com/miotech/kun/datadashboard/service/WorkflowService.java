@@ -67,14 +67,6 @@ public class WorkflowService {
                 .build();
         Integer runningCount = workflowClient.countTaskRun(runningRequest);
 
-        TaskRunSearchRequest startedRequest = TaskRunSearchRequest.newBuilder()
-                .withIncludeStartedOnly(true)
-                .withTags(DATA_PLATFORM_FILTER_TAGS)
-                .withScheduleTypes(SCHEDULE_TYPE_FILTER)
-                .withPageSize(0)
-                .build();
-        Integer startedCount = workflowClient.countTaskRun(startedRequest);
-
         TaskRunSearchRequest pendingRequest = TaskRunSearchRequest.newBuilder()
                 .withDateFrom(DateTimeUtils.now().minusDays(1))
                 .withIncludeStartedOnly(false)
@@ -99,7 +91,6 @@ public class WorkflowService {
         metrics.setSuccessTaskCount(successCount);
         metrics.setFailedTaskCount(failedCount);
         metrics.setRunningTaskCount(runningCount);
-        metrics.setStartedTaskCount(startedCount);
         metrics.setPendingTaskCount(pendingCount);
         metrics.setUpstreamFailedTaskCount(upstreamFailedTaskCount);
 
