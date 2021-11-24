@@ -12,7 +12,7 @@ import lombok.EqualsAndHashCode;
 @Data
 public class TestCasesRequest extends PageInfo {
 
-    String sortColumn = "continuousFailingCount";
+    String sortColumn = "updateTime";
 
     String sortOrder = "desc";
 }
