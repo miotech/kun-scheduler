@@ -18,15 +18,21 @@ public class ScheduleConf {
 
     private final String timeZone;
 
+    private final BlockType blockType;
 
     public ScheduleConf(ScheduleType type, String cronExpr) {
-        this(type, cronExpr, null);
+        this(type, cronExpr, null, BlockType.NONE);
+    }
+
+    public ScheduleConf(ScheduleType type, String cronExpr, String timeZone) {
+        this(type, cronExpr, timeZone, BlockType.NONE);
     }
 
     @JsonCreator
     public ScheduleConf(@JsonProperty("type") ScheduleType type,
                         @JsonProperty("cronExpr") @Nullable String cronExpr,
-                        @JsonProperty("timeZone") @Nullable String timeZone) {
+                        @JsonProperty("timeZone") @Nullable String timeZone,
+                        @JsonProperty("blockType") BlockType blockType) {
         this.type = type;
         this.cronExpr = cronExpr;
         if (!type.equals(ScheduleType.NONE) && Objects.isNull(timeZone)) {
@@ -34,6 +40,7 @@ public class ScheduleConf {
         } else {
             this.timeZone = timeZone;
         }
+        this.blockType = blockType;
     }
 
     public ScheduleType getType() {
@@ -51,18 +58,24 @@ public class ScheduleConf {
         return timeZone;
     }
 
+    public BlockType getBlockType() {
+        return blockType;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ScheduleConf that = (ScheduleConf) o;
         return type == that.type &&
-                Objects.equals(cronExpr, that.cronExpr);
+                Objects.equals(cronExpr, that.cronExpr) &&
+                Objects.equals(timeZone, that.timeZone) &&
+                blockType == that.blockType;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(type, cronExpr);
+        return Objects.hash(type, cronExpr, timeZone, blockType);
     }
 
     public static ScheduleConfBuilder newBuilder() {
@@ -74,6 +87,7 @@ public class ScheduleConf {
         private ScheduleType type;
         private String cronExpr;
         private String timeZone;
+        private BlockType blockType;
 
         private ScheduleConfBuilder() {
         }
@@ -93,8 +107,13 @@ public class ScheduleConf {
             return this;
         }
 
+        public ScheduleConfBuilder withBlockType(BlockType blockType) {
+            this.blockType = blockType;
+            return this;
+        }
+
         public ScheduleConf build() {
-            return new ScheduleConf(type, cronExpr, timeZone);
+            return new ScheduleConf(type, cronExpr, timeZone, blockType);
         }
     }
 }

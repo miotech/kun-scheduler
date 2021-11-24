@@ -216,7 +216,7 @@ export const Header: React.FC<Props> = props => {
               <Tag color="processing">{t('dataDevelopment.definition.property.isDeployed')}</Tag>
             )}
             {draftTaskDef?.isArchived && <Tag color="error">{t('dataDevelopment.definition.property.isArchived')}</Tag>}
-            {!draftTaskDef?.isDeployed && !draftTaskDef?.isArchived && (
+            {!draftTaskDef?.isUpdated && !draftTaskDef?.isDeployed && !draftTaskDef?.isArchived && (
               <Tag color="default">{t('dataDevelopment.definition.property.draft')}</Tag>
             )}
             {draftTaskDef?.isUpdated && (

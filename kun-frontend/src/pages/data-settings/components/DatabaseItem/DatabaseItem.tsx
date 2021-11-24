@@ -9,6 +9,7 @@ import useRedux from '@/hooks/useRedux';
 import { watermarkFormatter } from '@/utils/glossaryUtiles';
 
 import { StatusText } from '@/components/StatusText';
+import useFetchPullDataset from '@/hooks/useFetchPullDataset';
 import styles from './DatabaseItem.less';
 
 interface Props {
@@ -20,6 +21,8 @@ interface Props {
 export default memo(function DatabaseItem({ database, onClickDelete, onClickUpdate }: Props) {
   const t = useI18n();
 
+  const { pushDatasetPullingItem } = useFetchPullDataset();
+
   const { selector, dispatch } = useRedux(state => ({
     databaseTypeFieldMapList: state.dataSettings.databaseTypeFieldMapList,
     latestPullProcessesMap: state.dataSettings.pullProcesses,
@@ -30,16 +33,26 @@ export default memo(function DatabaseItem({ database, onClickDelete, onClickUpda
 
   const handleClickPull = useCallback(() => {
     setPullLoading(true);
-    dispatch.dataSettings.pullDatasetsFromDatabase(database.id).then(resp => {
-      dispatch.dataSettings.searchDataBases();
-      return resp;
-    }).then(resp => {
-      if (resp) {
-        message.success(t('dataSettings.databaseItem.pullingIntoProgress'));
-      }
-      setPullLoading(false);
-    });
-  }, [database.id, dispatch.dataSettings, t]);
+    dispatch.dataSettings
+      .pullDatasetsFromDatabase(database.id)
+      .then(resp => {
+        if (resp) {
+          pushDatasetPullingItem({
+            ...resp,
+            id: database.id,
+            name: database.name,
+          });
+        }
+        dispatch.dataSettings.searchDataBases();
+        return resp;
+      })
+      .then(resp => {
+        if (resp) {
+          message.success(t('dataSettings.databaseItem.pullingIntoProgress'));
+        }
+        setPullLoading(false);
+      });
+  }, [database.id, database.name, dispatch.dataSettings, pushDatasetPullingItem, t]);
 
   const handleClickDelete = useCallback(() => {
     Modal.confirm({

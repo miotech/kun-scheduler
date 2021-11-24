@@ -4,6 +4,7 @@ import { Pagination, Sort } from '@/definitions/common-types';
 import { delet, get, post } from '@/utils/requestUtils';
 import { DEFAULT_API_PREFIX } from '@/constants/api-prefixes';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
+import { DatasetPullProcessVO } from './datasetDetail';
 
 export interface SearchDataBasesRespBody extends Pagination, Sort {
   datasources: DataSource[];
@@ -50,7 +51,7 @@ export interface PullDatasetsFromDatabaseResp {
 }
 
 export async function pullDatasetsFromDatabaseService(id: string) {
-  return post<PullDatasetsFromDatabaseResp>('/metadata/datasource/:id/pull', {
+  return post<DatasetPullProcessVO>('/metadata/datasource/:id/pull', {
     pathParams: { id },
     prefix: DEFAULT_API_PREFIX,
   });
