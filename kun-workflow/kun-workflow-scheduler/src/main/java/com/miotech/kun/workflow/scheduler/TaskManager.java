@@ -10,9 +10,8 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
-import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.common.Condition;
+import com.miotech.kun.workflow.core.model.taskrun.*;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.slf4j.Logger;
@@ -21,10 +20,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Singleton;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -96,7 +92,9 @@ public class TaskManager {
             TaskAttempt taskAttempt = createTaskAttempt(taskRun, false);
             logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
             save(Arrays.asList(taskAttempt));
-            updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED);
+            List<Long> downstreamTaskRunIds = updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED);
+            updateTaskRunConditions(downstreamTaskRunIds, TaskRunStatus.CREATED);
+            updateRestrictedTaskRunsStatus(downstreamTaskRunIds);
             triggerTaskRunReadyCheck();
             return true;
         } catch (Exception e) {
@@ -142,11 +140,12 @@ public class TaskManager {
     }
 
     private TaskRunStatus determineInitStatus(TaskRun taskRun) {
-        return detectUpstreamFailed(taskRun) ? TaskRunStatus.UPSTREAM_FAILED : TaskRunStatus.CREATED;
+        return detectUpstreamFailedOrBlocked(taskRun) ? taskRun.getStatus() : TaskRunStatus.CREATED;
     }
 
-    private boolean detectUpstreamFailed(TaskRun taskRun) {
-        return taskRun.getStatus().equals(TaskRunStatus.UPSTREAM_FAILED);
+    private boolean detectUpstreamFailedOrBlocked(TaskRun taskRun) {
+        return taskRun.getStatus().equals(TaskRunStatus.UPSTREAM_FAILED) ||
+                taskRun.getStatus().equals(TaskRunStatus.BLOCKED);
     }
 
     private void save(List<TaskAttempt> taskAttempts) {
@@ -174,16 +173,49 @@ public class TaskManager {
         public void onReceive(Event event) {
             if (event instanceof TaskAttemptStatusChangeEvent) {
                 TaskAttemptStatusChangeEvent taskAttemptStatusChangeEvent = (TaskAttemptStatusChangeEvent) event;
+                Long taskRunId = taskAttemptStatusChangeEvent.getTaskRunId();
                 TaskRunStatus currentStatus = taskAttemptStatusChangeEvent.getToStatus();
+                List<Long> ids = new ArrayList<>(Collections.singletonList(taskRunId));
                 if (currentStatus.isFinished()) {
-                    if (currentStatus.isSuccess()) {
-                        triggerTaskRunReadyCheck();
-                    } else if (currentStatus.isFailure()) {
-                        updateDownStreamStatus(taskAttemptStatusChangeEvent.getTaskRunId(), TaskRunStatus.UPSTREAM_FAILED);
+                    updateTaskRunConditions(ids, currentStatus);
+                    List<Long> downstreamTaskRunIds;
+                    if (currentStatus.isFailure()) {
+                        downstreamTaskRunIds = updateDownStreamStatus(taskRunId, TaskRunStatus.UPSTREAM_FAILED);
+                        updateTaskRunConditions(downstreamTaskRunIds, TaskRunStatus.UPSTREAM_FAILED);
+                        ids.addAll(downstreamTaskRunIds);
                     }
+                    updateRestrictedTaskRunsStatus(ids);
+                    triggerTaskRunReadyCheck();
                 }
             }
         }
+    }
+
+    private void updateTaskRunConditions(List<Long> taskRunIds, TaskRunStatus status) {
+        if (taskRunIds.isEmpty()) return;
+        taskRunDao.updateConditionsWithTaskRuns(taskRunIds, status);
+    }
+
+    private void updateRestrictedTaskRunsStatus(List<Long> taskRunIds) {
+        if (taskRunIds.isEmpty()) return;
+
+        List<Condition> conditions = taskRunIds.stream()
+                .map(x -> new Condition(Collections.singletonMap("taskRunId", x.toString())))
+                .collect(Collectors.toList());
+        List<Long> restrictedTaskRunIds = taskRunDao.fetchRestrictedTaskRunIdsFromConditions(conditions);
+
+        restrictedTaskRunIds.removeAll(taskRunIds);
+
+        List<Long> taskRunIdsNotProcess = taskRunDao.fetchRestrictedTaskRunIdsWithConditionType(restrictedTaskRunIds, ConditionType.TASKRUN_DEPENDENCY_SUCCESS);
+        restrictedTaskRunIds.removeAll(taskRunIdsNotProcess);
+
+        List<TaskRunStatus> allowToUpdateStatus = Arrays.asList(TaskRunStatus.CREATED, TaskRunStatus.BLOCKED);
+
+        List<Long> taskRunIdsWithBlocked = taskRunDao.fetchTaskRunIdsWithBlockType(restrictedTaskRunIds);
+        taskRunDao.updateTaskRunStatusByTaskRunId(taskRunIdsWithBlocked, TaskRunStatus.BLOCKED, allowToUpdateStatus);
+
+        restrictedTaskRunIds.removeAll(taskRunIdsWithBlocked);
+        taskRunDao.updateTaskRunStatusByTaskRunId(restrictedTaskRunIds, TaskRunStatus.CREATED, allowToUpdateStatus);
     }
 
     private void triggerTaskRunReadyCheck() {
@@ -204,7 +236,7 @@ public class TaskManager {
         }
     }
 
-    private void updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
+    private List<Long> updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
         boolean usePostgres = postgresEnable();
         List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId, usePostgres);
         logger.debug("fetch downStream taskRunIds = {},taskRunId = {}", downStreamTaskRunIds, taskRunId);
@@ -215,6 +247,7 @@ public class TaskManager {
             taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus);
         }
         taskRunDao.updateTaskRunWithFailedUpstream(taskRunId, downStreamTaskRunIds, taskRunStatus);
+        return downStreamTaskRunIds;
     }
 
     private boolean postgresEnable() {

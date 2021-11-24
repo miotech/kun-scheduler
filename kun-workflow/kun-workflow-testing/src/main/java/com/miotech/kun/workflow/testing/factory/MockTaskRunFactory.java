@@ -2,17 +2,17 @@ package com.miotech.kun.workflow.testing.factory;
 
 import com.google.common.collect.Lists;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.Condition;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.task.Task;
-import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.*;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.miotech.kun.workflow.testing.factory.MockFactoryUtils.parseRelations;
 import static com.miotech.kun.workflow.testing.factory.MockFactoryUtils.selectItems;
@@ -98,6 +98,7 @@ public class MockTaskRunFactory {
                     .withConfig(Config.EMPTY)
                     .withScheduleType(tasks.get(i).getScheduleConf().getType())
                     .withDependentTaskRunIds(selectItems(ids, edges.get(i)))
+                    .withTaskRunConditions(resolveTaskRunConditions(selectItems(ids, edges.get(i))))
                     .withInlets(Collections.emptyList())
                     .withOutlets(Collections.emptyList())
                     .withStatus(TaskRunStatus.CREATED)
@@ -148,5 +149,17 @@ public class MockTaskRunFactory {
                 .withPriority(taskRun.getPriority())
                 .withRetryTimes(0)
                 .build();
+    }
+
+    private static List<TaskRunCondition> resolveTaskRunConditions(List<Long> upstreamIds) {
+        if (upstreamIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return upstreamIds.stream()
+                .map(x -> TaskRunCondition.newBuilder()
+                    .withCondition(new Condition(Collections.singletonMap("taskRunId", x.toString())))
+                    .withType(ConditionType.TASKRUN_DEPENDENCY_SUCCESS)
+                    .withResult(false).build())
+                .collect(Collectors.toList());
     }
 }

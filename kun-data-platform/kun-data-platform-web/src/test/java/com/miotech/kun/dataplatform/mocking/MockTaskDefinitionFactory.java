@@ -4,6 +4,7 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.monitor.facade.model.alert.TaskDefNotifyConfig;
+import com.miotech.kun.workflow.core.model.task.BlockType;
 import com.miotech.kun.monitor.facade.model.sla.SlaConfig;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -74,6 +75,7 @@ public class MockTaskDefinitionFactory {
                                     .withOutputDatasets(outputDatasets)
                                     .withType(ScheduleType.SCHEDULED.toString())
                                     .withTimeZone(ZoneOffset.UTC.getId())
+                                    .withBlockType(BlockType.NONE.toString())
                                     .withRetries(1)
                                     .withRetryDelay(30)
                                     .build())
@@ -133,6 +135,7 @@ public class MockTaskDefinitionFactory {
                                 .withOutputDatasets(outputDatasets)
                                 .withType(ScheduleType.SCHEDULED.toString())
                                 .withTimeZone(ZoneOffset.UTC.getId())
+                                .withBlockType(BlockType.NONE.toString())
                                 .withRetries(1)
                                 .withRetryDelay(30)
                                 .withSlaConfig(slaConfig)
