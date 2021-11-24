@@ -1,18 +1,31 @@
 package com.miotech.kun.dataquality;
 
+import com.google.common.collect.Lists;
 import com.miotech.kun.dataquality.mock.MockDataQualityFactory;
+import com.miotech.kun.dataquality.mock.MockOperatorFactory;
 import com.miotech.kun.dataquality.web.model.bo.DataQualityRequest;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.dataquality.web.service.WorkflowService;
+import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.client.model.ConfigKey;
+import com.miotech.kun.workflow.client.model.Operator;
+import com.miotech.kun.workflow.client.model.Task;
+import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.model.task.CheckType;
+import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -32,6 +45,33 @@ public class DataQualityControllerTest extends DataQualityTestBase {
 
     @SpyBean
     private WorkflowService workflowService;
+
+    @MockBean
+    private WorkflowClient workflowClient;
+
+    @Before
+    public void mock() {
+        doAnswer(invocation -> {
+            Long taskId = invocation.getArgument(0,Long.class);
+            TaskRun taskRun = TaskRun.newBuilder().withTask(Task.newBuilder().withId(taskId).build())
+                    .withId(WorkflowIdGenerator.nextTaskRunId()).build();
+            return taskRun;
+        }).when(workflowClient).executeTask(anyLong(),any());
+
+        doAnswer(invocation -> {
+            Task task = invocation.getArgument(0,Task.class);
+            Task createdTask = task.cloneBuilder().withId(WorkflowIdGenerator.nextTaskId()).build();
+            return createdTask;
+        }).when(workflowClient).createTask(any(Task.class));
+
+        doReturn(MockOperatorFactory.createOperator())
+                .when(workflowClient)
+                .saveOperator(anyString(), any());
+
+        doReturn(Optional.of(MockOperatorFactory.createOperator())).when(workflowClient).getOperator(anyString());
+
+        doReturn(MockOperatorFactory.createOperator()).when(workflowClient).getOperator(anyLong());
+    }
 
     @Test
     public void updateIsBlocking_shouldCallWorkflowApi() throws Exception {

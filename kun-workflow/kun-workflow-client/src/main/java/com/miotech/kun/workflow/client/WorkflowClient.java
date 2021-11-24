@@ -5,12 +5,15 @@ import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public interface WorkflowClient {
 
@@ -262,6 +265,13 @@ public interface WorkflowClient {
      * @return edge info object
      */
     EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid);
+
+    /**
+     * Get all the tables produced by task
+     * @param taskId
+     * @return
+     */
+    Set<DatasetInfo> fetchOutletNodes(Long taskId);
 
     /**
      * Fetch all defined variables in workflow

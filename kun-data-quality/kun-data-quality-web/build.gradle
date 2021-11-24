@@ -26,6 +26,7 @@ dependencies {
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-commons:kun-commons-query")
     implementation project(":kun-commons:kun-commons-pubsub")
+    implementation project(':kun-monitor:kun-monitor-facade')
     implementation project(':kun-app-common')
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -34,6 +35,7 @@ dependencies {
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
     implementation 'com.alibaba:druid:1.1.23'
     implementation 'redis.clients:jedis'
+    implementation "com.cronutils:cron-utils"
     testImplementation project(':kun-metadata:kun-metadata-core')
     testImplementation project(':kun-data-quality:data-quality-operators')
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

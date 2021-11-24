@@ -1,32 +1,50 @@
 package com.miotech.kun.dataquality;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.pubsub.event.Event;
+import com.miotech.kun.commons.pubsub.event.PrivateEvent;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.mock.MockDataQualityFactory;
+import com.miotech.kun.dataquality.mock.MockOperatorFactory;
 import com.miotech.kun.dataquality.mock.MockSubscriber;
 import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import com.miotech.kun.dataquality.web.model.bo.DataQualityRequest;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
+import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
 import com.miotech.kun.dataquality.web.service.WorkflowService;
+import com.miotech.kun.workflow.client.WorkflowClient;
+import com.miotech.kun.workflow.client.model.ConfigKey;
+import com.miotech.kun.workflow.client.model.Operator;
+import com.miotech.kun.workflow.client.model.Task;
+import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.event.CheckResultEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
+import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
+import com.miotech.kun.workflow.core.execution.ConfigDef;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
 
 public class SubscriberTest extends DataQualityTestBase {
 
@@ -39,9 +57,38 @@ public class SubscriberTest extends DataQualityTestBase {
     @SpyBean
     private WorkflowService workflowService;
 
+    @MockBean
+    private WorkflowClient workflowClient;
+
+    @SpyBean
+    private AbnormalDatasetService abnormalDatasetService;
+
     @SpyBean
     private EventPublisher publisher;
 
+    @Before
+    public void mock() {
+        doAnswer(invocation -> {
+            Long taskId = invocation.getArgument(0,Long.class);
+            TaskRun taskRun = TaskRun.newBuilder().withTask(Task.newBuilder().withId(taskId).build())
+                    .withId(WorkflowIdGenerator.nextTaskRunId()).build();
+            return taskRun;
+        }).when(workflowClient).executeTask(anyLong(),any());
+
+        doAnswer(invocation -> {
+            Task task = invocation.getArgument(0,Task.class);
+            Task createdTask = task.cloneBuilder().withId(WorkflowIdGenerator.nextTaskId()).build();
+            return createdTask;
+        }).when(workflowClient).createTask(any(Task.class));
+
+        doReturn(MockOperatorFactory.createOperator())
+                .when(workflowClient)
+                .saveOperator(anyString(), any());
+
+        doReturn(Optional.of(MockOperatorFactory.createOperator())).when(workflowClient).getOperator(anyString());
+
+        doReturn(MockOperatorFactory.createOperator()).when(workflowClient).getOperator(anyLong());
+    }
 
     @Test
     public void handleCheckEvent_should_invoke_related_test_case() {
@@ -340,6 +387,64 @@ public class SubscriberTest extends DataQualityTestBase {
         ArgumentCaptor<Event> eventCaptor = ArgumentCaptor.forClass(Event.class);
         verify(publisher,times(0)).publish(eventCaptor.capture());
 
+    }
+
+    @Test
+    public void testDoSubscribe_RandomMockEvent() {
+        Event nonRelatedEvent = new RandomMockEvent();
+        eventSubscriber.receiveEvent(nonRelatedEvent);
+        verify(abnormalDatasetService, never()).handleTaskRunCreatedEvent(any());
+    }
+
+    @Test
+    public void testDoSubscribe_TaskRunCreatedEvent() {
+        // mock
+        doAnswer(invocation -> {
+            Long taskRunId = invocation.getArgument(0,Long.class);
+            TaskRun taskRun = TaskRun.newBuilder().withId(taskRunId)
+                    .withTask(Task.newBuilder().withId(taskRunId + 1).withName("test_task").build())
+                    .withStatus(TaskRunStatus.SUCCESS)
+                    .withQueueName("default")
+                    .build();
+            return taskRun;
+        }).when(workflowClient).getTaskRun(anyLong());
+        doReturn(ImmutableSet.of(new DatasetInfo(IdGenerator.getInstance().nextId(), "test_dataset"))).when(workflowClient).fetchOutletNodes(anyLong());
+
+        // post event
+        TaskRunCreatedEvent taskRunCreatedEvent = new TaskRunCreatedEvent(IdGenerator.getInstance().nextId(), IdGenerator.getInstance().nextId());
+        eventSubscriber.receiveEvent(taskRunCreatedEvent);
+
+        verify(abnormalDatasetService, times(1)).handleTaskRunCreatedEvent(any());
+        verify(workflowClient, times(1)).getTaskRun(any());
+        verify(workflowClient, times(1)).fetchOutletNodes(any());
+    }
+
+    @Test
+    public void testDoSubscribe_TaskRunCreatedEvent_IgnoredQueueName() {
+        // mock
+        doAnswer(invocation -> {
+            Long taskRunId = invocation.getArgument(0,Long.class);
+            TaskRun taskRun = TaskRun.newBuilder().withId(taskRunId)
+                    .withTask(Task.newBuilder().withId(taskRunId + 1).withName("test_task").build())
+                    .withStatus(TaskRunStatus.FAILED)
+                    .withQueueName("metadata")
+                    .build();
+            return taskRun;
+        }).when(workflowClient).getTaskRun(anyLong());
+
+        // post event
+        TaskRunCreatedEvent taskRunCreatedEvent = new TaskRunCreatedEvent(IdGenerator.getInstance().nextId(), IdGenerator.getInstance().nextId());
+        eventSubscriber.receiveEvent(taskRunCreatedEvent);
+
+        verify(workflowClient, times(1)).getTaskRun(anyLong());
+        verify(workflowClient, never()).fetchOutletNodes(anyLong());
+
+    }
+
+    /**
+     * A dummy mock event type to test response of listener (expect to take no effect)
+     */
+    private static class RandomMockEvent extends PrivateEvent {
     }
 
 }
