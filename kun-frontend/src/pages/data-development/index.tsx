@@ -1,3 +1,4 @@
+import { useHistory } from 'umi';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { ReflexContainer, ReflexSplitter, ReflexElement } from 'react-reflex';
 import { useEventEmitter, useUnmount } from 'ahooks';
@@ -34,7 +35,7 @@ import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/mod
 import 'react-reflex/styles.css';
 import { StringParam, useQueryParams } from 'use-query-params';
 import { fetchDeployedTasks } from '@/services/task-deployments/deployed-tasks';
-import { message } from 'antd';
+import { message, notification } from 'antd';
 import { createAndRunBackfill } from '@/services/data-backfill/backfill.services';
 import useI18n from '@/hooks/useI18n';
 import { ConfirmBackfillCreateModal } from '@/pages/data-development/components/ConfirmBackfillCreateModal/ConfirmBackfillCreateModal';
@@ -61,6 +62,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   }));
 
   const t = useI18n();
+  const history = useHistory();
 
   const [query, setQuery] = useQueryParams({
     view: StringParam,
@@ -208,8 +210,16 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     [forceTableRefresh, searchTaskDefViews, selectedTaskDefIds],
   );
 
+  const handleClickTask = useCallback(
+    (id, e) => {
+      e.preventDefault();
+      history.push(`/operation-center/backfill-tasks/${id}`);
+    },
+    [history],
+  );
+
   const handleClickRunBackfill = useCallback(
-    async (name: string, taskDefIds: string[]) => {
+    async (name1: string, taskDefIds: string[]) => {
       try {
         const relatedDeployedTasks = await fetchDeployedTasks({
           definitionIds: taskDefIds,
@@ -221,17 +231,30 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
           message.error(t('dataDevelopment.runBackfillTaskDefNotPublishedMessage'));
           return;
         }
-        await createAndRunBackfill({
-          name,
+        const resp = await createAndRunBackfill({
+          name: name1,
           workflowTaskIds: relatedWorkflowIds,
           taskDefinitionIds: taskDefIds,
         });
-        message.success('Backfill created.');
+
+        const { id, name } = resp;
+
+        notification.open({
+          message: t('backfill.create.notification.title'),
+          description: (
+            <span>
+              {t('backfill.create.notification.desc')}{' '}
+              <a href={`/operation-center/backfill-tasks/${id}`} onClick={e => handleClickTask(id, e)}>
+                {name}
+              </a>
+            </span>
+          ),
+        });
       } catch (e) {
         message.error('Run backfill failed.');
       }
     },
-    [t],
+    [handleClickTask, t],
   );
 
   const handleRemoveTaskDefsFromCurrentView = useCallback(

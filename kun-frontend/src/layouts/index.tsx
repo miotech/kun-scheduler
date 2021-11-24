@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useEffect } from 'react';
 import { IRouteComponentProps, IRoute, Route } from 'umi';
 import { Spin } from 'antd';
 import { Provider } from 'react-redux';
@@ -7,6 +7,7 @@ import { KunSpinIndicator } from '@/components/KunSpin/KunSpinIndicator';
 import { store } from '@/rematch/store';
 import useI18n from '@/hooks/useI18n';
 import BrowserCheck from '@/components/BrowserCheck/BrowserCheck';
+import useFetchPullDataset from '@/hooks/useFetchPullDataset';
 
 import DefaultLayout from './DefaultLayout/DefaultLayout';
 
@@ -23,6 +24,14 @@ function initializeKunSpinIndicator() {
 
 export default function Layout({ children, location, route }: IRouteComponentProps) {
   const t = useI18n();
+
+  const { startFetchInterval, stopFetchInterval } = useFetchPullDataset();
+  useEffect(() => {
+    startFetchInterval();
+    return () => {
+      stopFetchInterval();
+    };
+  }, [startFetchInterval, stopFetchInterval]);
 
   initializeKunSpinIndicator();
 

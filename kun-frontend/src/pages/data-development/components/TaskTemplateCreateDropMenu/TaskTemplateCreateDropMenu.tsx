@@ -1,6 +1,6 @@
 import { useHistory } from 'umi';
 import React, { memo, useMemo, useState, useCallback } from 'react';
-import { Button, Dropdown, Menu } from 'antd';
+import { Button, Dropdown, Menu, notification } from 'antd';
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
@@ -20,7 +20,6 @@ interface OwnProps {
 type Props = OwnProps;
 
 export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTemplateCreateDropMenu(props) {
-  const history = useHistory();
   const {
     dispatch,
     selector: { taskTemplates, loading },
@@ -31,6 +30,8 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
     taskTemplates: s.dataDevelopment.taskTemplates,
     loading: s.loading.effects.dataDevelopment.fetchTaskTemplates,
   }));
+
+  const history = useHistory();
 
   const t = useI18n();
 
@@ -63,18 +64,39 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
     return <></>;
   }, [taskTemplates]);
 
+  const handleClickTask = useCallback(
+    (id, e) => {
+      e.preventDefault();
+      history.push(`/data-development/task-definition/${id}`);
+    },
+    [history],
+  );
+
   const handleOk = useCallback(
-    async (name: string, createInCurrentView: boolean) => {
+    async (name1: string, createInCurrentView: boolean) => {
       try {
-        const resp = await props.onCreateTaskDefinition(selectedTemplateName as string, name, createInCurrentView);
-        const { id } = resp;
-        history.push(`/data-development/task-definition/${id}`);
+        const resp = await props.onCreateTaskDefinition(selectedTemplateName as string, name1, createInCurrentView);
+        const { id, name } = resp;
+        // history.push(`/data-development/task-definition/${id}`);
+
+        notification.open({
+          message: t('taskTemplate.create.notification.title'),
+          description: (
+            <span>
+              {t('taskTemplate.create.notification.desc')}{' '}
+              <a href={`/data-development/task-definition/${id}`} onClick={e => handleClickTask(id, e)}>
+                {name}
+              </a>
+            </span>
+          ),
+        });
+
         setSelectedTemplateName(null);
       } catch (e) {
         // do nothing
       }
     },
-    [history, props, selectedTemplateName],
+    [handleClickTask, props, selectedTemplateName, t],
   );
 
   return (

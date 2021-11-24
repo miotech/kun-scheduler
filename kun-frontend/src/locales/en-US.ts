@@ -355,6 +355,12 @@ export default {
   'dataDevelopment.definition.scheduleConfig.retryAfterFailed': 'Retry After Failed',
   'dataDevelopment.definition.scheduleConfig.retireTimes': 'Retry Times',
   'dataDevelopment.definition.scheduleConfig.retryDelay': 'Retry Delay(Second)',
+  'dataDevelopment.definition.scheduleConfig.blockConfig': 'Block Setting',
+  'dataDevelopment.definition.scheduleConfig.blockType': 'Block Config',
+  'dataDevelopment.definition.scheduleConfig.blockConfig.NONE': 'No Block',
+  'dataDevelopment.definition.scheduleConfig.blockConfig.WAIT_PREDECESSOR': 'Wait Predecessor Taskrun',
+  'dataDevelopment.definition.scheduleConfig.blockConfig.WAIT_PREDECESSOR_DOWNSTREAM':
+    'Wait Predecessor TaskRun‘s Downstream',
   'dataDevelopment.definition.scheduleConfig.cronExpression.alertSecondsBeZero':
     "Currently cron expression only support seconds field to be '0'",
   'dataDevelopment.definition.notificationConfig': 'Notification Config',
@@ -504,4 +510,13 @@ export default {
   'settings.variableSettings.deleteAlert': 'Confirm delete variable {key}? You may not undo this action later.',
   'settings.variableSettings.duplicateKeyAlert': 'Key {key} already exists',
   'settings.variableSettings.updateSecretVariableAlert': 'Confirm overwrite variable {key} to the following value?',
+  'taskTemplate.create.notification.title': 'Created successfully',
+  'taskTemplate.create.notification.desc': 'Task created',
+  'backfill.create.notification.title': 'Created successfully',
+  'backfill.create.notification.desc': 'Backfill created',
+  'datasetPull.notification.success.title':
+    'Datasource pull has been completed. Please check the result in the Dataset list.',
+  'datasetPull.notification.success.desc': 'Data sources that are successfully pulled:',
+  'datasetPull.notification.failed.title': 'Datasource pull failed',
+  'datasetPull.notification.failed.desc': 'Data source that failed to pull',
 };
