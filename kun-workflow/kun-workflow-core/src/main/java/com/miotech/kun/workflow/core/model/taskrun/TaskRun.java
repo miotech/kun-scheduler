@@ -57,6 +57,8 @@ public class TaskRun {
 
     private final ExecuteTarget executeTarget;
 
+    private final List<TaskRunCondition> taskRunConditions;
+
     public Long getId() {
         return id;
     }
@@ -129,10 +131,14 @@ public class TaskRun {
         return executeTarget;
     }
 
+    public List<TaskRunCondition> getTaskRunConditions() {
+        return taskRunConditions;
+    }
+
     public TaskRun(Long id, Task task, Config config, Tick scheduledTick, TaskRunStatus status, OffsetDateTime queuedAt,
                    OffsetDateTime startAt, OffsetDateTime endAt, OffsetDateTime createdAt, OffsetDateTime updatedAt,
                    List<DataStore> inlets, List<DataStore> outlets, List<Long> dependentTaskRunIds, List<Long> failedUpstreamTaskRunIds,
-                   ScheduleType scheduledType, String queueName, Integer priority,ExecuteTarget executeTarget) {
+                   ScheduleType scheduledType, String queueName, Integer priority, ExecuteTarget executeTarget, List<TaskRunCondition> taskRunConditions) {
         checkNotNull(task, "task should not be null.");
         this.id = id;
         this.task = task;
@@ -152,6 +158,7 @@ public class TaskRun {
         this.queueName = queueName;
         this.priority = priority;
         this.executeTarget = executeTarget;
+        this.taskRunConditions = taskRunConditions;
     }
 
     public static TaskRunBuilder newBuilder() {
@@ -177,7 +184,8 @@ public class TaskRun {
                 .withScheduleType(scheduledType)
                 .withQueueName(queueName)
                 .withPriority(priority)
-                .withExecuteTarget(executeTarget);
+                .withExecuteTarget(executeTarget)
+                .withTaskRunConditions(taskRunConditions);
     }
 
     @Override
@@ -192,6 +200,8 @@ public class TaskRun {
                 ", queuedAt=" + queuedAt +
                 ", startAt=" + startAt +
                 ", endAt=" + endAt +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
                 ", inlets=" + inlets +
                 ", outlets=" + outlets +
                 ", priority=" + priority +
@@ -199,6 +209,7 @@ public class TaskRun {
                 ", failedUpstreamTaskRunIds=" + failedUpstreamTaskRunIds +
                 ", queueName='" + queueName + '\'' +
                 ", executeTarget=" + executeTarget +
+                ", taskRunConditions=" + taskRunConditions +
                 '}';
     }
 
@@ -221,6 +232,7 @@ public class TaskRun {
         private String queueName;
         private Integer priority;
         private ExecuteTarget executeTarget;
+        private List<TaskRunCondition> taskRunConditions;
 
         private TaskRunBuilder() {
         }
@@ -314,9 +326,14 @@ public class TaskRun {
             return this;
         }
 
+        public TaskRunBuilder withTaskRunConditions(List<TaskRunCondition> taskRunConditions) {
+            this.taskRunConditions = taskRunConditions;
+            return this;
+        }
+
         public TaskRun build() {
             return new TaskRun(id, task, config, scheduledTick, status, queuedAt, startAt, endAt, createdAt, updatedAt, inlets,
-                    outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority,executeTarget);
+                    outlets, dependentTaskRunIds, failedUpstreamTaskRunIds, scheduleType,queueName,priority,executeTarget, taskRunConditions);
         }
     }
 }

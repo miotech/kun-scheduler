@@ -26,6 +26,7 @@ dependencies {
     implementation project(':kun-data-discovery')
     implementation project(':kun-db-schema:kun-app-db-schema')
     implementation project(':kun-monitor')
+    implementation project(':kun-data-quality')
 
     implementation 'com.fasterxml.jackson.core:jackson-core'
     implementation 'com.fasterxml.jackson.core:jackson-databind'

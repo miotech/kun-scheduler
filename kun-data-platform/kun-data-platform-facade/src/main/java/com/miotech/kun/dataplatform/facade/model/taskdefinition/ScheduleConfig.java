@@ -29,6 +29,8 @@ public class ScheduleConfig {
 
     private final SlaConfig slaConfig;
 
+    private final String blockType;
+
     private ScheduleConfig(String type,
                            String cronExpr,
                            String timeZone,
@@ -37,7 +39,8 @@ public class ScheduleConfig {
                            List<TaskDatasetProps> outputDatasets,
                            Integer retries,
                            Integer retryDelay,
-                           SlaConfig slaConfig) {
+                           SlaConfig slaConfig,
+                           String blockType) {
         this.type = type;
         this.cronExpr = cronExpr;
         this.timeZone = timeZone;
@@ -47,6 +50,7 @@ public class ScheduleConfig {
         this.retries = retries;
         this.retryDelay = retryDelay;
         this.slaConfig = slaConfig;
+        this.blockType = blockType;
     }
 
     public String getType() {
@@ -85,6 +89,10 @@ public class ScheduleConfig {
         return slaConfig;
     }
 
+    public String getBlockType() {
+        return blockType;
+    }
+
     public static Builder newBuilder() {
         return new Builder();
     }
@@ -99,6 +107,7 @@ public class ScheduleConfig {
         private Integer retries;
         private Integer retryDelay;
         private SlaConfig slaConfig;
+        private String blockType;
 
         private Builder() {
         }
@@ -148,9 +157,13 @@ public class ScheduleConfig {
             return this;
         }
 
+        public Builder withBlockType(String blockType) {
+            this.blockType = blockType;
+            return this;
+        }
         public ScheduleConfig build() {
             return new ScheduleConfig(type, cronExpr, timeZone, inputNodes, inputDatasets, outputDatasets, retries,
-                    retryDelay, slaConfig);
+                    retryDelay, slaConfig, blockType);
         }
     }
 

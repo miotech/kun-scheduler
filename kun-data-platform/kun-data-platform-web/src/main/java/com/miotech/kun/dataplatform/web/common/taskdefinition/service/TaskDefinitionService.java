@@ -32,6 +32,7 @@ import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.common.Tag;
+import com.miotech.kun.workflow.core.model.task.BlockType;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -68,6 +69,8 @@ import static com.miotech.kun.monitor.facade.model.alert.TaskDefNotifyConfig.DEF
 public class TaskDefinitionService extends BaseSecurityService implements TaskDefinitionFacade {
 
     private static final List<ScheduleType> VALID_SCHEDULE_TYPE = ImmutableList.of(ScheduleType.SCHEDULED, ScheduleType.ONESHOT, ScheduleType.NONE);
+
+    private static final List<BlockType> VALID_BLOCK_TYPE = ImmutableList.of(BlockType.NONE, BlockType.WAIT_PREDECESSOR, BlockType.WAIT_PREDECESSOR_DOWNSTREAM);
 
     private static final Long devTargetId = 2L; //TODO edit in prod version
 
@@ -294,6 +297,13 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
             Preconditions.checkArgument(StringUtils.isNoneBlank(scheduleConfig.getCronExpr()),
                     "Cron Expression should not be blank");
         }
+        // check block setting is valid
+        Preconditions.checkNotNull(scheduleConfig.getBlockType(), "Block setting should not be null");
+        BlockType blockType = BlockType.valueOf(scheduleConfig.getBlockType());
+        Preconditions.checkArgument(VALID_BLOCK_TYPE.contains(blockType),
+                "Block type should be one of the followings: " + VALID_BLOCK_TYPE.stream()
+                        .map(BlockType::name)
+                        .collect(Collectors.joining(",")));
         // check dependency is valid
         List<Long> dependencyNodes = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
         List<Long> taskDefinitionIds = taskDefinitionDao.fetchByIds(dependencyNodes)
