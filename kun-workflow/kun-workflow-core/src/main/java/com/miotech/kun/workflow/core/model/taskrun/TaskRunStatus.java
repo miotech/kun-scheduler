@@ -17,6 +17,7 @@ public enum TaskRunStatus {
     ABORTED,
     ERROR,//系统错误
     UPSTREAM_FAILED,
+    BLOCKED,
     CHECK,
     CHECK_FAILED;
 

@@ -19,14 +19,12 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.tick.TickDao;
 import com.miotech.kun.workflow.core.execution.Config;
+import com.miotech.kun.workflow.core.model.common.Condition;
 import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.task.*;
-import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunDependency;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.*;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -61,6 +59,11 @@ public class TaskRunDao {
     private static final String RELATION_TABLE_NAME = "kun_wf_task_run_relations";
     private static final String RELATION_MODEL_NAME = "task_run_relations";
     private static final List<String> taskRunRelationCols = ImmutableList.of("upstream_task_run_id", "downstream_task_run_id", "dependency_level", "dependency_status");
+
+    private static final String CONDITION_TABLE_NAME = "kun_wf_task_run_conditions";
+    private static final String CONDITION_MODEL_NAME = "task_run_conditions";
+    private static final  List<String> taskRunConditionCols = ImmutableList.of("task_run_id", "condition", "result", "type", "created_at", "updated_at");
+
     private static final Map<String, String> sortKeyToFieldMapper = new HashMap<>();
 
     private static final Integer RECOVER_LIMIT_DAYS = 3;
@@ -84,6 +87,9 @@ public class TaskRunDao {
 
     @Inject
     private TaskRunMapper taskRunMapperInstance;
+
+    @Inject
+    private TaskRunConditionMapper taskRunConditionMapperInstance;
 
     @Inject
     private TickDao tickDao;
@@ -363,6 +369,9 @@ public class TaskRunDao {
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
+            if (taskRun.getTaskRunConditions() != null) {
+                createTaskRunConditions(taskRun.getId(), taskRun.getTaskRunConditions());
+            }
             return taskRun;
         });
 
@@ -445,6 +454,9 @@ public class TaskRunDao {
             );
 
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
+            if (taskRun.getTaskRunConditions() != null) {
+                createTaskRunConditions(taskRun.getId(), taskRun.getTaskRunConditions());
+            }
             if (taskRun.getScheduledTick() != SpecialTick.NULL) {
                 taskGraph.updateTasksNextExecutionTick(taskRun.getScheduledTick(), Lists.newArrayList(taskRun.getTask()));
             }
@@ -497,6 +509,10 @@ public class TaskRunDao {
 
             deleteTaskRunDependencies(taskRun.getId());
             createTaskRunDependencies(taskRun.getId(), taskRun.getDependentTaskRunIds(), taskRun.getTask());
+            deleteTaskRunConditions(taskRun.getId());
+            if (taskRun.getTaskRunConditions() != null) {
+                createTaskRunConditions(taskRun.getId(), taskRun.getTaskRunConditions());
+            }
             return taskRun;
         });
 
@@ -569,6 +585,53 @@ public class TaskRunDao {
 
             return null;
         });
+    }
+
+    public void updateTaskRunStatusByTaskRunId(List<Long> taskRunIds, TaskRunStatus taskRunStatus) {
+        updateTaskRunStatusByTaskRunId(taskRunIds, taskRunStatus, null);
+    }
+
+    /**
+     * update task run status whose original status is allowed to change status
+     *
+     * @param taskRunIds task runs to be updated
+     * @param taskRunStatus result status
+     * @param allowToChangeStatus task run in these status is allowed to update status
+     *
+     * @return
+     */
+    public void updateTaskRunStatusByTaskRunId(List<Long> taskRunIds, TaskRunStatus taskRunStatus,
+                                               @Nullable List<TaskRunStatus> allowToChangeStatus) {
+        if (taskRunIds.isEmpty()) return;
+        List<Long> taskAttemptIds = fetchAllLatestTaskAttemptIds(taskRunIds);
+        List<Object> paramsTr = new ArrayList<>();
+        List<Object> paramsTa = new ArrayList<>();
+
+        SQLBuilder taskAttemptSql = DefaultSQLBuilder.newBuilder()
+                .update(TASK_ATTEMPT_TABLE_NAME)
+                .set("status");
+        SQLBuilder taskRunSql = DefaultSQLBuilder.newBuilder()
+                .update(TASK_RUN_TABLE_NAME)
+                .set("status");
+        paramsTa.add(taskRunStatus.name());
+        paramsTr.add(taskRunStatus.name());
+
+        String whereClause = "id IN (" + repeatJoin("?", ",", taskAttemptIds.size()) + ")";
+        paramsTa.addAll(taskAttemptIds);
+        paramsTr.addAll(taskRunIds);
+        if (allowToChangeStatus != null) {
+            whereClause += "AND status IN (" + repeatJoin("?", ",", allowToChangeStatus.size()) + ")";
+            paramsTa.addAll(allowToChangeStatus.stream().map(Enum::name).collect(Collectors.toList()));
+            paramsTr.addAll(allowToChangeStatus.stream().map(Enum::name).collect(Collectors.toList()));
+        }
+
+        String finalWhereClause = whereClause;
+        dbOperator.transaction(() -> {
+            dbOperator.update(taskRunSql.where(finalWhereClause).asPrepared().getSQL(), paramsTr.toArray());
+            dbOperator.update(taskAttemptSql.where(finalWhereClause).asPrepared().getSQL(), paramsTa.toArray());
+            return null;
+        });
+
     }
 
     public void updateTaskRunWithFailedUpstream(Long taskRunId, List<Long> downstreamTaskRunIds, TaskRunStatus taskRunStatus) {
@@ -689,7 +752,7 @@ public class TaskRunDao {
      */
     public boolean deleteTaskRun(Long taskRunId) {
         return dbOperator.transaction(() -> {
-
+            deleteTaskRunConditions(taskRunId);
             deleteTaskRunDependencies(taskRunId);
             deleteTaskAttempts(taskRunId);
             String deleteSQL = DefaultSQLBuilder.newBuilder()
@@ -1209,6 +1272,135 @@ public class TaskRunDao {
         dbOperator.batch(dependencySQL, params);
     }
 
+    public List<TaskRunCondition> fetchTaskRunConditionsById(Long taskRunId) {
+        String conditionSQL = DefaultSQLBuilder.newBuilder()
+                .select(taskRunConditionCols.toArray(new String[0]))
+                .from(CONDITION_TABLE_NAME, CONDITION_MODEL_NAME)
+                .where("task_run_id = ?")
+                .autoAliasColumns()
+                .asPrepared()
+                .getSQL();
+        return dbOperator.fetchAll(conditionSQL, new TaskRunConditionMapper(), taskRunId);
+    }
+
+    public void createTaskRunConditions(Long taskRunId, List<TaskRunCondition> taskRunConditions) {
+        if (taskRunConditions.isEmpty()) return;
+        OffsetDateTime now = DateTimeUtils.now();
+        List<String> tableColumns = new ImmutableList.Builder<String>()
+                .addAll(taskRunConditionCols)
+                .build();
+        String conditionSQL = DefaultSQLBuilder.newBuilder()
+                .insert(tableColumns.toArray(new String[0]))
+                .into(CONDITION_TABLE_NAME)
+                .asPrepared()
+                .getSQL();
+        Object[][] params = new Object[taskRunConditions.size()][6];
+        for (int i = 0; i < taskRunConditions.size(); i++) {
+            TaskRunCondition taskRunCondition = taskRunConditions.get(i);
+            params[i] = new Object[]{taskRunId, JSONUtils.toJsonString(taskRunCondition.getCondition()), taskRunCondition.getResult(), taskRunCondition.getType().name(), now, now};
+        }
+        dbOperator.batch(conditionSQL, params);
+    }
+
+    public boolean deleteTaskRunConditions(Long taskRunId) {
+        String conditionSQL = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from(CONDITION_TABLE_NAME)
+                .where("task_run_id = ?")
+                .getSQL();
+        return dbOperator.update(conditionSQL, taskRunId) >= 0;
+    }
+
+    /**
+     * when task run is updated to static status
+     * update condition table whose condition is this taskrun
+     * result is calculated by status
+     *
+     * @param taskRunIds
+     * @param status status should be static (exclude xx-ing)
+     * @return number of effected rows
+     */
+    public int updateConditionsWithTaskRuns(List<Long> taskRunIds, TaskRunStatus status) {
+        //todo
+        SQLBuilder sbTc = DefaultSQLBuilder.newBuilder()
+                .update(CONDITION_TABLE_NAME)
+                .set("result");
+        List<Object> pmTc = Lists.newArrayList();
+        if (status.isCreated()) {
+            pmTc.add(false);
+        } else {
+            pmTc.add(true);
+        }
+        taskRunIds.forEach(x -> pmTc.add(JSONUtils.toJsonString(new Condition(Collections.singletonMap("taskRunId", x.toString())))));
+        if (status.isSuccess() || status.isCreated()) {
+            sbTc.where("condition in (" + repeatJoin("?", ",", taskRunIds.size()) + ") and (type = ? or type = ?)");
+            pmTc.add(ConditionType.TASKRUN_DEPENDENCY_SUCCESS.name());
+        } else if (status.isFailure() || status.isUpstreamFailed()) {
+            sbTc.where("condition in (" + repeatJoin("?", ",", taskRunIds.size()) + ") and type = ?");
+        }
+        pmTc.add(ConditionType.TASKRUN_PREDECESSOR_FINISH.name());
+        String conditionSQL = sbTc.asPrepared().getSQL();
+        return dbOperator.update(conditionSQL, pmTc.toArray());
+    }
+
+    /**
+     * Fetch task run ids not satisfy condition type
+     * which type is conditionType and result is false
+     *
+     * @param taskRunIds
+     * @param conditionType
+     * @return list of task run ids
+     */
+    public List<Long> fetchRestrictedTaskRunIdsWithConditionType(List<Long> taskRunIds, ConditionType conditionType) {
+        if (taskRunIds.isEmpty()) return Collections.emptyList();
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("task_run_id")
+                .from(CONDITION_TABLE_NAME)
+                .where("task_run_id IN (" + repeatJoin("?", ",", taskRunIds.size()) + ")")
+                .groupBy("task_run_id")
+                .having("sum(case when type = ? and result = ? then 1 else 0 end) > 0")
+                .asPrepared()
+                .getSQL();
+        List<Object> params = new ArrayList<>(taskRunIds.size() + 2);
+        params.addAll(taskRunIds);
+        params.add(conditionType.name());
+        params.add(false);
+
+        return dbOperator.fetchAll(sql, rs -> rs.getLong(1), params.toArray());
+    }
+
+    public List<Long> fetchTaskRunIdsWithBlockType(List<Long> taskRunIds) {
+        if (taskRunIds.isEmpty()) return Collections.emptyList();
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("task_run_id")
+                .from(CONDITION_TABLE_NAME)
+                .where("task_run_id IN (" + repeatJoin("?", ",", taskRunIds.size()) + ")")
+                .groupBy("task_run_id")
+                .having("sum(case when type = ? and result = ? then 1 else 0 end) = 0 and" +
+                        " sum(case when type = ? and result = ? then 1 else 0 end) > 0")
+                .asPrepared()
+                .getSQL();
+        List<Object> params = new ArrayList<>(taskRunIds.size() + 4);
+        params.addAll(taskRunIds);
+        params.add(ConditionType.TASKRUN_DEPENDENCY_SUCCESS.name());
+        params.add(false);
+        params.add(ConditionType.TASKRUN_PREDECESSOR_FINISH.name());
+        params.add(false);
+        return dbOperator.fetchAll(sql, rs -> rs.getLong(1), params.toArray());
+    }
+
+    public List<Long> fetchRestrictedTaskRunIdsFromConditions(List<Condition> conditions) {
+        String conditionSQL = DefaultSQLBuilder.newBuilder()
+                .select("task_run_id")
+                .from(CONDITION_TABLE_NAME)
+                .where("condition in (" + repeatJoin("?", ",", conditions.size()) + ")")
+                .asPrepared().getSQL();
+        return dbOperator.fetchAll(conditionSQL, rs -> rs.getLong(1),
+                conditions.stream().map(JSONUtils::toJsonString).toArray())
+                .stream().distinct().collect(Collectors.toList());
+    }
+
+
     public TaskRun fetchLatestTaskRun(Long taskId) {
         List<TaskRun> latestRunInList = fetchLatestTaskRuns(taskId, null, 1);
         if (latestRunInList.isEmpty()) {
@@ -1479,17 +1671,17 @@ public class TaskRunDao {
 
     public List<Long> fetchAllSatisfyTaskRunId() {
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("id")
+                .select(TASK_RUN_MODEL_NAME + ".id")
                 .from(TASK_RUN_TABLE_NAME, TASK_RUN_MODEL_NAME)
-                .join("LEFT", RELATION_TABLE_NAME, RELATION_MODEL_NAME)
-                .on(TASK_RUN_MODEL_NAME + ".id = " + RELATION_MODEL_NAME + ".downstream_task_run_id")
+                .join("LEFT", CONDITION_TABLE_NAME, CONDITION_MODEL_NAME)
+                .on(TASK_RUN_MODEL_NAME + ".id = " + CONDITION_MODEL_NAME + ".task_run_id")
                 .where(TASK_RUN_MODEL_NAME + ".status = ? ")
-                .groupBy("id")
-                .having("sum(case when dependency_status = ? or (dependency_level = ? and dependency_status = ?) then 1 else 0 end) = 0")
+                .groupBy(TASK_RUN_MODEL_NAME + ".id")
+                .having("sum(case when result = ? then 1 else 0 end) = 0")
                 .asPrepared()
                 .getSQL();
-        List<Long> satisfyTaskRunId = dbOperator.fetchAll(sql, rs -> rs.getLong("id"), TaskRunStatus.CREATED.name(),
-                DependencyStatus.CREATED.name(), DependencyLevel.STRONG.name(), DependencyStatus.FAILED.name());
+        List<Long> satisfyTaskRunId = dbOperator.fetchAll(sql, rs -> rs.getLong("id"),
+                TaskRunStatus.CREATED.name(), false);
         return satisfyTaskRunId;
     }
 
@@ -1537,8 +1729,7 @@ public class TaskRunDao {
                     .withOutlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_outlets"), new TypeReference<List<DataStore>>() {
                     }))
                     .withFailedUpstreamTaskRunIds(JSONUtils.jsonToObjectOrDefault(rs.getString(TASK_RUN_MODEL_NAME + "_failed_upstream_task_run_ids"),
-                            new TypeReference<List<Long>>() {
-                            }, new ArrayList<>()))
+                            new TypeReference<List<Long>>(){}, new ArrayList<>()))
                     .withDependentTaskRunIds(Collections.emptyList())
                     .withQueuedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_queued_at")))
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
@@ -1550,6 +1741,20 @@ public class TaskRunDao {
                     .withPriority(rs.getInt(TASK_RUN_MODEL_NAME + "_priority"))
                     .withExecuteTarget(JSONUtils.jsonToObjectOrDefault(rs.getString(TASK_RUN_MODEL_NAME + "_target"),
                             ExecuteTarget.class, ExecuteTarget.newBuilder().build()))
+                    .build();
+        }
+    }
+
+    private static class TaskRunConditionMapper implements  ResultSetMapper<TaskRunCondition> {
+
+        @Override
+        public TaskRunCondition map(ResultSet rs) throws SQLException {
+            return TaskRunCondition.newBuilder()
+                    .withCondition(JSONUtils.jsonToObject(rs.getString("condition"), Condition.class))
+                    .withResult(rs.getBoolean("result"))
+                    .withType(ConditionType.valueOf(rs.getString("type")))
+                    .withCreatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("created_at")))
+                    .withUpdatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("updated_at")))
                     .build();
         }
     }

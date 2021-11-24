@@ -144,7 +144,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
                 "\"operatorId\":\"%s\"," +
                 "\"config\":{\"values\": {}}," +
                 "\"dependencies\":[]," +
-                "\"scheduleConf\":{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\"}," +
+                "\"scheduleConf\":{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\",\"blockType\": \"NONE\"}," +
                 "\"tags\": [{ \"key\": \"version\", \"value\": \"1.2\" }]}", upstreamTask.getOperatorId());
 
         String response = post("/tasks", postJson);
@@ -157,7 +157,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description"));
         assertThat(result.get("config").toString(), is("{\"values\":{\"testKey1\":false}}"));
-        assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\"}"));
+        assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\",\"blockType\":\"NONE\"}"));
         assertThat(result.get("dependencies").toString(), is("[]"));
         assertThat(result.get("tags").toString(), is("[{\"key\":\"version\",\"value\":\"1.2\"}]"));
 
@@ -167,7 +167,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
                 "\"operatorId\":\"%s\"," +
                 "\"config\":{\"values\": {}}," +
                 "\"dependencies\":[]," +
-                "\"scheduleConf\":{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\"}," +
+                "\"scheduleConf\":{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\",\"blockType\": \"NONE\"}," +
                 "\"tags\": []}", taskID, upstreamTask.getOperatorId());
 
         response = put("/tasks/" + result.get("id").asText(), putJson);
@@ -179,7 +179,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description UPDATED"));
         assertThat(result.get("config").toString(), is("{\"values\":{\"testKey1\":false}}"));
-        assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\"}"));
+        assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\",\"blockType\":\"NONE\"}"));
         assertThat(result.get("dependencies").toString(), is("[]"));
         assertThat(result.get("tags").toString(), is("[]"));
     }
@@ -191,7 +191,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
                 "\"description\":\"scheduled_test_task description\"," +
                 "\"operatorId\":\"%s\"," +
                 "\"config\":{\"values\": {}}," +
-                "\"scheduleConf\":{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\"}," +
+                "\"scheduleConf\":{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\",\"blockType\": \"NONE\"}," +
                 "\"dependencies\":[{\"upstreamTaskId\": \"%s\", \"dependencyFunc\": \"latestTaskRun\"}]," +
                 "\"tags\": [{ \"key\": \"version\", \"value\": \"1.2\" }]}", upstreamTask.getOperatorId(), upstreamTask.getId());
 
@@ -203,7 +203,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
         assertThat(result.get("name").asText(), is("scheduled_test_task"));
         assertThat(result.get("description").asText(), is("scheduled_test_task description"));
         assertThat(result.get("config").toString(), is("{\"values\":{\"testKey1\":false}}"));
-        assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\"}"));
+        assertThat(result.get("scheduleConf").toString(), is("{\"type\":\"SCHEDULED\",\"cronExpr\":\"0 */1 * * * ?\",\"timeZone\":\"UTC\",\"blockType\":\"NONE\"}"));
         assertThat(result.get("dependencies").toString(), is(String.format("[{\"upstreamTaskId\":\"%s\",\"downstreamTaskId\":null,\"dependencyFunc\":\"latestTaskRun\",\"dependencyLevel\":\"STRONG\"}]", upstreamTask.getId())));
         assertThat(result.get("tags").toString(), is("[{\"key\":\"version\",\"value\":\"1.2\"}]"));
     }
