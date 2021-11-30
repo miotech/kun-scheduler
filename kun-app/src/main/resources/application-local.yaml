@@ -104,6 +104,8 @@ data-quality:
   workflow:
     task:
       cron: 0 0 0 * * ?
+  daily:
+    start: 0 30 0 * * ?
 
 springdoc:
   swagger-ui:
