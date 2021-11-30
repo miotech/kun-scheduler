@@ -8,21 +8,24 @@ import { TopMaxRowCountChangeTable } from '@/pages/monitoring-dashboard/componen
 import { FailedTestCasesTable } from '@/pages/monitoring-dashboard/components/data-discovery-board/FailedTestCasesTable';
 import { DatasetsMetricsTable } from '@/pages/monitoring-dashboard/components/data-discovery-board/DatasetsMetricsTable';
 import { TableOnChangeCallback } from '@/definitions/common-types';
-import { ColumnMetrics, FailedTestCase } from '@/services/monitoring-dashboard';
+import { ColumnMetrics, AbnormalDataset } from '@/services/monitoring-dashboard';
 import normalizeSingleColumnSorter from '@/utils/normalizeSingleColumnSorter';
 
 export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
   const t = useI18n();
 
-  const { selector: {
-    dataDiscoveryBoardData: {
-      metadataMetrics,
-      maxRowCountChange,
-      failedTestCases,
-      datasetMetrics,
-      metadataMetricsLoading,
+  const {
+    selector: {
+      dataDiscoveryBoardData: {
+        metadataMetrics,
+        maxRowCountChange,
+        failedTestCases,
+        datasetMetrics,
+        metadataMetricsLoading,
+      },
     },
-  }, dispatch } = useRedux(state => ({
+    dispatch,
+  } = useRedux(state => ({
     dataDiscoveryBoardData: state.monitoringDashboard.dataDiscoveryBoardData,
   }));
 
@@ -42,12 +45,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
       sortColumn: failedTestCases.sortColumn || undefined,
       sortOrder: failedTestCases.sortOrder || undefined,
     });
-  }, [
-    failedTestCases.pageNum,
-    failedTestCases.pageSize,
-    failedTestCases.sortColumn,
-    failedTestCases.sortOrder,
-  ]);
+  }, [failedTestCases.pageNum, failedTestCases.pageSize, failedTestCases.sortColumn, failedTestCases.sortOrder]);
 
   // setup pagination change listener for datasets table
   useUpdateEffect(() => {
@@ -55,18 +53,12 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
       pageNumber: datasetMetrics.pageNum,
       pageSize: datasetMetrics.pageSize,
     });
-  }, [
-    datasetMetrics.pageNum,
-    datasetMetrics.pageSize,
-  ]);
+  }, [datasetMetrics.pageNum, datasetMetrics.pageSize]);
 
   // table change handler for failed test cases table
-  const handleFailedTestCasesTableChange: TableOnChangeCallback<FailedTestCase> =
-    useCallback((pagination, filters, sorter) => {
-      const {
-        sortOrder,
-        sortColumn,
-      } = normalizeSingleColumnSorter(sorter);
+  const handleFailedTestCasesTableChange: TableOnChangeCallback<AbnormalDataset> = useCallback(
+    (pagination, filters, sorter) => {
+      const { sortOrder, sortColumn } = normalizeSingleColumnSorter(sorter);
 
       dispatch.monitoringDashboard.setFailedTestCases({
         ...failedTestCases,
@@ -75,23 +67,21 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
         sortOrder,
         sortColumn,
       });
-    }, [
-      dispatch.monitoringDashboard,
-      failedTestCases,
-    ]);
+    },
+    [dispatch.monitoringDashboard, failedTestCases],
+  );
 
   // table change handler for datasets table
-  const handleDatasetMetricsTableChange: TableOnChangeCallback<ColumnMetrics> =
-    useCallback((pagination) => {
+  const handleDatasetMetricsTableChange: TableOnChangeCallback<ColumnMetrics> = useCallback(
+    pagination => {
       dispatch.monitoringDashboard.setDatasetMetrics({
         ...datasetMetrics,
         pageNum: pagination.current || datasetMetrics.pageNum,
         pageSize: pagination.pageSize || datasetMetrics.pageSize,
       });
-    }, [
-      dispatch.monitoringDashboard,
-      datasetMetrics,
-    ]);
+    },
+    [dispatch.monitoringDashboard, datasetMetrics],
+  );
 
   const ratioCardSection = useMemo(() => {
     return (
@@ -145,10 +135,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
       {/* Top 10 Datasets with max row count change table */}
       <Row gutter={[8, 8]}>
         <Col span={24}>
-          <TopMaxRowCountChangeTable
-            data={maxRowCountChange.data}
-            loading={maxRowCountChange.loading}
-          />
+          <TopMaxRowCountChangeTable data={maxRowCountChange.data} loading={maxRowCountChange.loading} />
         </Col>
       </Row>
       {/* Failed Test cases table */}
