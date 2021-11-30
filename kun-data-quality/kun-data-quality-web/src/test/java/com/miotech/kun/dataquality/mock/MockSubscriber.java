@@ -8,6 +8,9 @@ public class MockSubscriber implements EventSubscriber {
 
     private EventReceiver receiver;
 
+    public void post(Event event) {
+        receiver.post(event);
+    }
 
     @Override
     public void subscribe(EventReceiver receiver) {

@@ -117,30 +117,7 @@ public abstract class DataQualityTestBase {
 
         @Bean
         public WorkflowClient getWorkflowClient() {
-            WorkflowClient mockClient = Mockito.mock(WorkflowClient.class);
-
-            doAnswer(invocation -> {
-                Long taskId = invocation.getArgument(0,Long.class);
-                TaskRun taskRun = TaskRun.newBuilder().withTask(Task.newBuilder().withId(taskId).build())
-                        .withId(WorkflowIdGenerator.nextTaskRunId()).build();
-                return taskRun;
-            }).when(mockClient).executeTask(anyLong(),any());
-
-            doAnswer(invocation -> {
-                Task task = invocation.getArgument(0,Task.class);
-                Task createdTask = task.cloneBuilder().withId(WorkflowIdGenerator.nextTaskId()).build();
-                return createdTask;
-            }).when(mockClient).createTask(any(Task.class));
-
-            doReturn(getMockOperator())
-                    .when(mockClient)
-                    .saveOperator(anyString(), any());
-
-            doReturn(Optional.of(getMockOperator())).when(mockClient).getOperator(anyString());
-
-            doReturn(getMockOperator()).when(mockClient).getOperator(anyLong());
-
-            return mockClient;
+            return Mockito.mock(WorkflowClient.class);
         }
 
         @Bean

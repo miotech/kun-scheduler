@@ -7,6 +7,8 @@ import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +17,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class DefaultWorkflowClient implements WorkflowClient {
@@ -292,6 +295,11 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public EdgeInfo getLineageEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
         return wfApi.getLineageEdgeInfo(upstreamDatasetGid, downstreamDatasetGid);
+    }
+
+    @Override
+    public Set<DatasetInfo> fetchOutletNodes(Long taskId) {
+        return wfApi.fetchOutletNodes(taskId);
     }
 
     @Override
