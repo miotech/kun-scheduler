@@ -3,6 +3,7 @@ package com.miotech.kun.datadashboard.controller;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.datadashboard.model.bo.*;
 import com.miotech.kun.datadashboard.model.entity.*;
+import com.miotech.kun.datadashboard.model.entity.datadevelopment.StatisticChartResult;
 import com.miotech.kun.datadashboard.service.MetadataService;
 import com.miotech.kun.datadashboard.service.WorkflowService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +53,16 @@ public class DashboardController {
     @GetMapping("/dashboard/data-development/date-time-metrics")
     public RequestResult<DateTimeMetrics> getDateTimeMetrics(DateTimeMetricsRequest request) {
         return RequestResult.success(workflowService.getDateTimeMetrics(request));
+    }
+
+    @GetMapping("/dashboard/data-development/statistic-chart")
+    public RequestResult<StatisticChartResult> getStatisticChartResult(StatisticChartRequest request) {
+        return RequestResult.success(workflowService.getStatisticChartResult(request));
+    }
+
+    @GetMapping("/dashboard/data-development/chart-tasks")
+    public RequestResult<DataDevelopmentTasks> getDataDevelopmentTasksByChart(StatisticChartTasksRequest tasksRequest) {
+        return RequestResult.success(workflowService.getDataDevelopmentTasks(tasksRequest));
     }
 
     @GetMapping("/dashboard/data-development/tasks")

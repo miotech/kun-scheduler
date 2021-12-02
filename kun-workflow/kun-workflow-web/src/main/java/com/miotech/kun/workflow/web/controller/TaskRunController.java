@@ -87,6 +87,7 @@ public class TaskRunController {
                                @QueryParameter List<Long> taskIds,
                                @QueryParameter String dateFrom,
                                @QueryParameter String dateTo,
+                               @QueryParameter(defaultValue = "false") String endAfter,
                                @QueryParameter(defaultValue = "false") String includeStartedOnly,
                                @QueryParameter List<String> scheduleTypes
 

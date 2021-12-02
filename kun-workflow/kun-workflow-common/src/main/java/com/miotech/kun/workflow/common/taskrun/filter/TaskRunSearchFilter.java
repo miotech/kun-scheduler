@@ -43,6 +43,10 @@ public class TaskRunSearchFilter {
 
     private final OffsetDateTime dateTo;
 
+    private final OffsetDateTime endBefore;
+
+    private final OffsetDateTime endAfter;
+
     private final List<String> scheduleTypes;
 
     private final Integer pageNum;
@@ -74,6 +78,8 @@ public class TaskRunSearchFilter {
         this.status = builder.status;
         this.dateFrom = builder.dateFrom;
         this.dateTo = builder.dateTo;
+        this.endBefore = builder.endBefore;
+        this.endAfter = builder.endAfter;
         this.pageNum = builder.pageNum;
         this.pageSize = builder.pageSize;
         this.tags = builder.tags;
@@ -98,6 +104,14 @@ public class TaskRunSearchFilter {
 
     public OffsetDateTime getDateTo() {
         return dateTo;
+    }
+
+    public OffsetDateTime getEndBefore() {
+        return endBefore;
+    }
+
+    public OffsetDateTime getEndAfter() {
+        return endAfter;
     }
 
     public Integer getPageNum() {
@@ -135,6 +149,8 @@ public class TaskRunSearchFilter {
                 .withTaskIds(taskIds)
                 .withDateFrom(dateFrom)
                 .withDateTo(dateTo)
+                .withEndBefore(endBefore)
+                .withEndAfter(endAfter)
                 .withStatus(status)
                 .withPageNum(pageNum)
                 .withPageSize(pageSize)
@@ -155,6 +171,8 @@ public class TaskRunSearchFilter {
                 Objects.equals(getStatus(), that.getStatus()) &&
                 Objects.equals(getDateFrom(), that.getDateFrom()) &&
                 Objects.equals(getDateTo(), that.getDateTo()) &&
+                Objects.equals(getEndBefore(), that.getEndBefore()) &&
+                Objects.equals(getEndAfter(), that.getEndAfter()) &&
                 Objects.equals(getScheduleTypes(), that.getScheduleTypes()) &&
                 Objects.equals(getPageNum(), that.getPageNum()) &&
                 Objects.equals(getPageSize(), that.getPageSize()) &&
@@ -166,7 +184,8 @@ public class TaskRunSearchFilter {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTaskIds(), getTaskRunIds(), getStatus(), getDateFrom(), getDateTo(), getScheduleTypes(), getPageNum(), getPageSize(), getTags(), getSortKey(), getSortOrder(), getIncludeStartedOnly());
+        return Objects.hash(getTaskIds(), getTaskRunIds(), getStatus(), getDateFrom(), getDateTo(), getEndBefore(), getEndAfter(),
+                getScheduleTypes(), getPageNum(), getPageSize(), getTags(), getSortKey(), getSortOrder(), getIncludeStartedOnly());
     }
 
     @JsonPOJOBuilder
@@ -175,6 +194,8 @@ public class TaskRunSearchFilter {
         private Set<TaskRunStatus> status;
         private OffsetDateTime dateFrom;
         private OffsetDateTime dateTo;
+        private OffsetDateTime endBefore;
+        private OffsetDateTime endAfter;
         private Integer pageNum;
         private Integer pageSize;
         private List<Tag> tags;
@@ -205,6 +226,16 @@ public class TaskRunSearchFilter {
 
         public Builder withDateTo(OffsetDateTime dateTo) {
             this.dateTo = dateTo;
+            return this;
+        }
+
+        public Builder withEndBefore(OffsetDateTime endBefore) {
+            this.endBefore = endBefore;
+            return this;
+        }
+
+        public Builder withEndAfter(OffsetDateTime endAfter) {
+            this.endAfter = endAfter;
             return this;
         }
 

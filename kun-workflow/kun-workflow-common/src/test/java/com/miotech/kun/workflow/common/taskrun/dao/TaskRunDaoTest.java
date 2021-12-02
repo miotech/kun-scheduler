@@ -510,34 +510,26 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    @Ignore
-    // This test case is no longer effective since we have changed the indicator to create time
     public void fetchTaskRunsByFilter_withDateRangeFilter_shouldReturnFilterTaskRuns() {
         // prepare
         DateTimeUtils.setClock(getMockClock());
         prepareTaskRunsWithDependencyRelations();
 
         // process
-        List<TaskRun> runsStarted2HoursLater = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+        List<TaskRun> runsWithinCreationRange = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
                 .newBuilder()
-                .withDateFrom(DateTimeUtils.now().plusHours(2))
+                .withDateFrom(DateTimeUtils.now().plusHours(0))
+                .withDateTo(DateTimeUtils.now().plusHours(1))
                 .build());
 
-        List<TaskRun> runsEnded2HoursLater = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+        List<TaskRun> runsWithinTerminationRange = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
                 .newBuilder()
-                .withDateTo(DateTimeUtils.now().plusHours(2))
+                .withEndAfter(DateTimeUtils.now().plusHours(2))
+                .withEndBefore(DateTimeUtils.now().plusHours(3))
                 .build());
-
-        List<TaskRun> runsWithinDateRange = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
-                .newBuilder()
-                .withDateFrom(DateTimeUtils.now().plusHours(1))
-                .withDateTo(DateTimeUtils.now().plusHours(6))
-                .build());
-
         // validate
-        assertThat(runsStarted2HoursLater.size(), is(2));
-        assertThat(runsEnded2HoursLater.size(), is(1));
-        assertThat(runsWithinDateRange.size(), is(1));
+        assertThat(runsWithinCreationRange.size(), is(4));
+        assertThat(runsWithinTerminationRange.size(), is(1));
     }
 
     @Test
