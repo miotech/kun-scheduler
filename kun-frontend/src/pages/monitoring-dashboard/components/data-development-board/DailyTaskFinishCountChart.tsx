@@ -1,7 +1,6 @@
 import React, { memo, useMemo, useRef } from 'react';
-import {
-  DailyTaskFinishCount, DailyTaskFinishLineChart
-} from '@/components/Monitoring/DailyTaskFinishLineChart/DailyTaskFinishLineChart';
+import { DailyTaskFinishCount } from '@/components/Monitoring/DailyTaskFinishLineChart/DailyTaskFinishLineChart';
+import { DailyTaskFinishBarChart } from '@/components/Monitoring/DailyTaskFinishLineChart';
 import { Card } from 'antd';
 import { useSize } from 'ahooks';
 import useI18n from '@/hooks/useI18n';
@@ -20,10 +19,7 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
 
   const chartWrapperRef: React.RefObject<any> = useRef<any>();
 
-  const {
-    width = 468,
-    height = 468,
-  } = useSize(chartWrapperRef);
+  const { width = 468, height = 468 } = useSize(chartWrapperRef);
 
   const { data, loading } = props;
 
@@ -31,14 +27,15 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
     if (data && data.length) {
       return data.map((datum: DailyTaskFinishCount) => ({
         ...datum,
-        time: dayjs(datum.time).startOf('day').toDate().getTime(),
+        time: dayjs(datum.time)
+          .startOf('day')
+          .toDate()
+          .getTime(),
       }));
     }
     // else
     return [];
-  }, [
-    data,
-  ]);
+  }, [data]);
 
   if (loading) {
     return (
@@ -55,7 +52,9 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
     return (
       <Card bodyStyle={{ padding: '8px' }}>
         <h3>{t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title')}</h3>
-        <div ref={chartWrapperRef} className="no-data">No Data</div>
+        <div ref={chartWrapperRef} className="no-data">
+          No Data
+        </div>
       </Card>
     );
   }
@@ -64,8 +63,8 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
     <Card bodyStyle={{ padding: '8px' }}>
       <h3>{t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title')}</h3>
       <div ref={chartWrapperRef} style={{ position: 'relative', width: '100%', height: '468px' }}>
-        <DailyTaskFinishLineChart
-          data={normalizedData || []}
+        <DailyTaskFinishBarChart
+          // data={[]}
           // Avoid cases that consistently invoke `useSize` updates
           width={width - 8}
           height={height - 8}
