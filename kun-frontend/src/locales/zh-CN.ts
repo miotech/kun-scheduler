@@ -457,6 +457,8 @@ export default {
   'monitoringDashboard.dataDevelopment.totalTaskCount': '总任务数',
   'monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title': '日任务完成数',
   'monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.count': '{count} 个任务',
+  'monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.status': '9点状态',
+  'monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.finallyStatus': '最终状态',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.title': '任务详情',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.taskName': '任务名称',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.taskStatus': '任务状态',

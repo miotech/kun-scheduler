@@ -1,6 +1,7 @@
 import {
   ColumnMetrics,
   DailyTaskCount,
+  DailyStatistic,
   DataDevelopmentMetrics,
   DevTaskDetail,
   MetadataMetrics,
@@ -50,9 +51,15 @@ export interface DataDevelopmentBoardData {
     data: DailyTaskCount[];
     error: Error | null;
   };
+  dailyStatisticList: {
+    loading: boolean;
+    data: DailyStatistic[];
+    error: Error | null;
+  };
   taskDetailsSelectedFilter: DataDevelopmentBoardFilterCardType;
   taskDetailsDisplayStartedOnly: boolean;
   taskDetailsDisplayLast24HoursOnly: boolean;
+  taskDetailsForWeekParams: any;
   taskDetails: {
     data: DevTaskDetail[];
     loading: boolean;
@@ -113,9 +120,15 @@ export const initState: MonitoringDashboardModelState = {
       loading: false,
       error: null,
     },
+    dailyStatisticList: {
+      data: [],
+      loading: false,
+      error: null,
+    },
     taskDetailsSelectedFilter: null,
     taskDetailsDisplayStartedOnly: false,
     taskDetailsDisplayLast24HoursOnly: true,
+    taskDetailsForWeekParams: false,
     taskDetails: {
       data: [],
       loading: false,
