@@ -3,9 +3,9 @@ import {
   DailyTaskCount,
   DataDevelopmentMetrics,
   DevTaskDetail,
-  FailedTestCase,
   MetadataMetrics,
   RowCountChange,
+  AbnormalDataset,
 } from '@/services/monitoring-dashboard';
 
 export type DataDevelopmentBoardFilterCardType = 'SUCCESS' | 'FAILED' | 'RUNNING' | 'PENDING' | 'BLOCKED' | null;
@@ -23,7 +23,7 @@ export interface DataDiscoveryBoardData {
   failedTestCases: {
     loading: boolean;
     error: Error | null;
-    data: FailedTestCase[];
+    data: AbnormalDataset[];
     sortColumn: string | null;
     sortOrder: 'ASC' | 'DESC' | null;
     pageNum: number;

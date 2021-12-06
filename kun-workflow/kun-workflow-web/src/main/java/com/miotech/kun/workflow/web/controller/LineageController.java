@@ -6,6 +6,8 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.web.annotation.QueryParameter;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
+import com.miotech.kun.workflow.core.model.lineage.TaskOutlets;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
@@ -161,6 +163,13 @@ public class LineageController {
         Preconditions.checkArgument(Objects.nonNull(upstreamDatasetGid), "upstream dataset gid cannot be null.");
         Preconditions.checkArgument(Objects.nonNull(downstreamDatasetGid), "downstream dataset gid cannot be null.");
         return lineageService.fetchEdgeInfo(upstreamDatasetGid, downstreamDatasetGid);
+    }
+
+    @RouteMapping(url = "/lineages/outlets", method = "GET")
+    public TaskOutlets fetchOutletNodes(@QueryParameter Long taskId) {
+        Set<DatasetNode> datasetNodes = lineageService.fetchOutletNodes(taskId);
+        return new TaskOutlets(datasetNodes.stream().map(node ->
+                new DatasetInfo(node.getGid(), node.getDatasetName())).collect(Collectors.toSet()));
     }
 
 }

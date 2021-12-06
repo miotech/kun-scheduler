@@ -1,15 +1,18 @@
 package com.miotech.kun.dataquality.web.event;
 
+import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import com.miotech.kun.dataquality.web.model.entity.CaseRun;
 import com.miotech.kun.dataquality.web.model.entity.DataQualityCaseBasic;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
+import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
 import com.miotech.kun.dataquality.web.service.WorkflowService;
 import com.miotech.kun.workflow.core.event.CheckResultEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
+import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,6 +37,9 @@ public class Subscriber {
     WorkflowService workflowService;
 
     @Autowired
+    private AbnormalDatasetService abnormalDatasetService;
+
+    @Autowired
     @Qualifier("dataQuality-publisher")
     EventPublisher publisher;
 
@@ -49,6 +55,9 @@ public class Subscriber {
             }
             if (event instanceof TaskAttemptCheckEvent) {
                 handleTaskCheckEvent((TaskAttemptCheckEvent) event);
+            }
+            if (event instanceof TaskRunCreatedEvent) {
+                handleTaskRunCreatedEvent((TaskRunCreatedEvent) event);
             }
         });
     }
@@ -117,6 +126,11 @@ public class Subscriber {
             caseRunList.add(caseRun);
         }
         dataQualityRepository.insertCaseRunWithTaskRun(caseRunList);
+    }
+
+    private void handleTaskRunCreatedEvent(TaskRunCreatedEvent event) {
+        log.info("record taskRun created event, event: {}", JSONUtils.toJsonString(event));
+        abnormalDatasetService.handleTaskRunCreatedEvent(event);
     }
 
     private void sendDataQualityEvent(CheckResultEvent event) {

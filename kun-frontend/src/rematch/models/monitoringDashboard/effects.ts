@@ -4,8 +4,8 @@ import { MonitoringDashboardModelState as ModelState } from '@/rematch/models/mo
 import {
   DataDevelopmentMetrics,
   DatasetColumnMetricsInfo,
-  FailedTestCasesInfo,
   MetadataMetrics,
+  AbnormalDatasetDatasetInfo,
 } from '@/services/monitoring-dashboard';
 import { PaginationReqBody, SortReqBody } from '@/definitions/common-types';
 
@@ -76,7 +76,7 @@ const loadTopDatasetsMaxRowCountChange = (dispatch: RootDispatch) => {
 
 // Data discovery board: fetch failed test cases
 const loadFailedTestCases = (params: PaginationReqBody & Partial<SortReqBody>, dispatch: RootDispatch) => {
-  dispatch.monitoringDashboard.updateFailedTestCases({
+  dispatch.monitoringDashboard.updateAbnormalDatasets({
     loading: true,
   });
 
@@ -90,11 +90,11 @@ const loadFailedTestCases = (params: PaginationReqBody & Partial<SortReqBody>, d
       sortColumn: (params.sortColumn as any) || undefined,
       sortOrder: params.sortOrder || undefined,
     })
-    .then((fetchedData: FailedTestCasesInfo) => {
+    .then((fetchedData: AbnormalDatasetDatasetInfo) => {
       if (currentFlag === loadFailedTestCasesFlag) {
-        dispatch.monitoringDashboard.updateFailedTestCases({
+        dispatch.monitoringDashboard.updateAbnormalDatasets({
           loading: false,
-          data: fetchedData.dataQualityCases,
+          data: fetchedData.abnormalDatasets,
           total: fetchedData.totalCount,
           error: null,
         });
@@ -102,7 +102,7 @@ const loadFailedTestCases = (params: PaginationReqBody & Partial<SortReqBody>, d
     })
     .catch(e => {
       if (currentFlag === loadFailedTestCasesFlag) {
-        dispatch.monitoringDashboard.updateFailedTestCases({
+        dispatch.monitoringDashboard.updateAbnormalDatasets({
           loading: false,
           data: [],
           error: e,
