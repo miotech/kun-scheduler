@@ -1,0 +1,25 @@
+.content {
+  overflow-x: scroll;
+
+  .row {
+    display: flex;
+    align-items: center;
+
+    .col {
+      min-width: 91px;
+      font-size: 12px;
+      margin: 0 10px;
+      height: 364px;
+
+      .column {
+        min-height: 40px;
+        width: 91px;
+      }
+    }
+  }
+
+  &::-webkit-scrollbar {
+    width: 0 !important;
+    height: 0 !important;
+  }
+}

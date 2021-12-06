@@ -152,6 +152,16 @@ export interface FetchDataDevelopmentDailyTaskCountParams {
   hours?: number;
 }
 
+export interface TaskResult{
+ status: string;
+ finalStatus: string;
+ taskCount: number
+}
+export interface DailyStatistic {
+  time: number;
+  totalCount: number;
+  taskResultList: TaskResult[]
+}
 export interface DailyTaskCount {
   time: number;
   taskCount: number;
