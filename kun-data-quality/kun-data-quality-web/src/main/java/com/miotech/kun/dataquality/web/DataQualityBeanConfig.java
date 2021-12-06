@@ -45,14 +45,12 @@ public class DataQualityBeanConfig {
     }
 
     @Bean("dataQuality-subscriber")
-    @ConditionalOnMissingBean(EventSubscriber.class)
     public EventSubscriber getRedisSubscriber() {
         JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), redisHost);
         return new RedisEventSubscriber(channel, jedisPool);
     }
 
     @Bean("dataQuality-publisher")
-    @ConditionalOnMissingBean(EventPublisher.class)
     public EventPublisher getRedisPublisher() {
         JedisPool jedisPool = new JedisPool(new JedisPoolConfig(), redisHost);
         return new RedisEventPublisher(channel, jedisPool);

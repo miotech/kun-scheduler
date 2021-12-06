@@ -6,10 +6,7 @@ import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.datadashboard.model.bo.ColumnMetricsRequest;
 import com.miotech.kun.datadashboard.model.bo.RowCountChangeRequest;
 import com.miotech.kun.datadashboard.model.bo.TestCasesRequest;
-import com.miotech.kun.datadashboard.model.entity.ColumnMetricsList;
-import com.miotech.kun.datadashboard.model.entity.DataQualityCases;
-import com.miotech.kun.datadashboard.model.entity.DatasetRowCountChanges;
-import com.miotech.kun.datadashboard.model.entity.MetadataMetrics;
+import com.miotech.kun.datadashboard.model.entity.*;
 import com.miotech.kun.datadashboard.persistence.DataQualityRepository;
 import com.miotech.kun.datadashboard.persistence.MetadataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,8 +62,8 @@ public class MetadataService {
         }
     }
 
-    public DataQualityCases getTestCases(TestCasesRequest testCasesRequest) {
-        return dataQualityRepository.getTestCases(testCasesRequest);
+    public AbnormalDatasets getTestCases(TestCasesRequest testCasesRequest) {
+        return dataQualityRepository.getAbnormalDatasets(testCasesRequest);
     }
 
     public ColumnMetricsList getColumnMetricsList(ColumnMetricsRequest columnMetricsRequest) {

@@ -7,6 +7,9 @@ import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.TaskOutlets;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
+import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import okhttp3.*;
@@ -19,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -426,6 +430,18 @@ public class WorkflowApi {
                 .build();
         return sendRequest(getRequest, new TypeReference<EdgeInfo>() {
         });
+    }
+
+    public Set<DatasetInfo> fetchOutletNodes(Long taskId) {
+        HttpUrl url = buildUrl(API_LINEAGES + "/outlets")
+                .addQueryParameter("taskId", String.valueOf(taskId))
+                .build();
+        Request getRequest = new Request.Builder()
+                .url(url).get()
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(getRequest, new TypeReference<TaskOutlets>() {
+        }).getOutlets();
     }
 
     public List<VariableVO> getAllVariables() {
