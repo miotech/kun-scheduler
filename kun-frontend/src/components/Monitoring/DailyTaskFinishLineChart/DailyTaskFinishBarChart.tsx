@@ -1,10 +1,12 @@
 import React, { memo } from 'react';
 import ReactEcharts from 'echarts-for-react';
+import { DailyStatistic } from '@/services/monitoring-dashboard';
+import { dayjs } from '@/utils/datetime-utils';
 
 interface OwnProps {
   width: number;
   height: number;
-  // data?: [];
+  data: DailyStatistic[];
 }
 
 type Props = OwnProps;
@@ -13,8 +15,22 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
   const {
     width = 1024,
     height = 768,
-    // data = [],
+    data = [],
   } = props;
+  const xAxis:string[] = []
+  const sucList:number[] = []
+  const faiList:number[] = []
+  const upsList:number[] = []
+  const aboList:number[] = []
+  const ongList:number[] = []
+  data.forEach(item=> {
+    xAxis.push(dayjs(item.time).format('MM-DD'))
+    sucList.push(item.taskResultList.find(idx=>idx.status === 'SUCCESS')?.taskCount || 0)
+    faiList.push(item.taskResultList.find(idx=>idx.status === 'FAILED')?.taskCount || 0)
+    upsList.push(item.taskResultList.find(idx=>idx.status === 'UPSTREAM_FAILED')?.taskCount || 0)
+    aboList.push(item.taskResultList.find(idx=>idx.status === 'ABORTED')?.taskCount || 0)
+    ongList.push(item.taskResultList.filter(idx=>idx.status === 'ONGOING').reduce((accumulator, currentValue)=>(accumulator + currentValue.taskCount),0))
+  })
   const defaultOption = {
     tooltip: {
       trigger: 'axis',
@@ -33,7 +49,7 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
     xAxis: [
       {
         type: 'category',
-        data: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', '12'],
+        data: xAxis,
       },
     ],
     yAxis: [
@@ -49,7 +65,7 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
         emphasis: {
           focus: 'series',
         },
-        data: [320, 332, 301, 334, 390, 330, 320],
+        data: sucList,
       },
       {
         name: 'FAILED',
@@ -58,7 +74,7 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
         emphasis: {
           focus: 'series',
         },
-        data: [120, 132, 101, 134, 90, 230, 210],
+        data: faiList,
       },
       {
         name: 'UPSTREAM_FAILED',
@@ -67,7 +83,7 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
         emphasis: {
           focus: 'series',
         },
-        data: [220, 182, 191, 234, 290, 330, 310],
+        data: upsList,
       },
       {
         name: 'ABORTED',
@@ -76,13 +92,13 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
         emphasis: {
           focus: 'series',
         },
-        data: [150, 232, 201, 154, 190, 330, 410],
+        data: aboList,
       },
       {
         name: 'ONGOING',
         type: 'bar',
         stack: 'Ad',
-        data: [862, 1018, 964, 1026, 1679, 1600, 1570],
+        data: ongList,
         emphasis: {
           focus: 'series',
         },

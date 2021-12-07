@@ -4,9 +4,6 @@ import Styles from './DailyTaskFinishCountTable.less'
 import { dayjs } from '@/utils/datetime-utils';
 import { DailyStatistic, TaskResult } from '@/services/monitoring-dashboard';
 interface OwnProps {
-  pageNum: number;
-  pageSize: number;
-  total: number;
   data: DailyStatistic[];
   loading?: boolean;
 }
@@ -56,10 +53,10 @@ export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTas
           {data.map(item => (
             <div key={item.time} className={Styles.col}>
               <div className={Styles.column}>{timeToWeek(item.time)},{dayjs(item.time as number).format('YYYY-MM-DD')}</div>
-              {firstColumn.map((i, index) => (<div key={index} style={{color: '#262a2f'}} className={Styles.column}>
+              {firstColumn.map((i, index) => (<div key={index} style={{ color: '#262a2f', cursor: 'pointer' }} className={Styles.column}>
                 {renderAccount(firstColumn[index] ? firstColumn[index] : 'ONGOING', secondColumn[index], item.taskResultList)}
               </div>))}
-              <div className={Styles.column} style={{color: '#262a2f'}}>{item.totalCount}</div>
+              <div className={Styles.column} style={{ color: '#262a2f', cursor: 'pointer' }}>{item.totalCount}</div>
             </div>))}
         </div>
       </div>

@@ -55,9 +55,6 @@ export interface DataDevelopmentBoardData {
     loading: boolean;
     data: DailyStatistic[];
     error: Error | null;
-    pageNum: number;
-    pageSize: number;
-    total: number;
   };
   taskDetailsSelectedFilter: DataDevelopmentBoardFilterCardType;
   taskDetailsDisplayStartedOnly: boolean;
@@ -207,7 +204,7 @@ export const initState: MonitoringDashboardModelState = {
                 {
                     "status": "ABORTED",
                     "finalStatus": "ABORTED",
-                    "taskCount": 1
+                    "taskCount": 20
                 },
                 {
                     "status": "ONGOING",
@@ -217,7 +214,7 @@ export const initState: MonitoringDashboardModelState = {
                 {
                     "status": "ONGOING",
                     "finalStatus": "UPSTREAM_FAILED",
-                    "taskCount": 11
+                    "taskCount": 31
                 },
                 {
                     "status": "ONGOING",
@@ -613,10 +610,7 @@ export const initState: MonitoringDashboardModelState = {
             ]
       }],
       loading: false,
-      error: null,
-      pageNum: 1,
-      pageSize: 15,
-      total: 0,
+      error: null
     },
     taskDetailsSelectedFilter: null,
     taskDetailsDisplayStartedOnly: false,

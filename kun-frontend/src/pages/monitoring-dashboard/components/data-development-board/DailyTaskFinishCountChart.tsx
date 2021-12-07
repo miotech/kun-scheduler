@@ -6,8 +6,9 @@ import { useSize } from 'ahooks';
 import useI18n from '@/hooks/useI18n';
 import { KunSpin } from '@/components/KunSpin';
 import { dayjs } from '@/utils/datetime-utils';
-
+import { DailyStatistic } from '@/services/monitoring-dashboard';
 interface OwnProps {
+  dailyStatisticList: DailyStatistic[]
   data: DailyTaskFinishCount[];
   loading?: boolean;
 }
@@ -21,7 +22,7 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
 
   const { width = 468, height = 468 } = useSize(chartWrapperRef);
 
-  const { data, loading } = props;
+  const { data, loading, dailyStatisticList } = props;
 
   const normalizedData = useMemo(() => {
     if (data && data.length) {
@@ -64,8 +65,7 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
       <h3>{t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title')}</h3>
       <div ref={chartWrapperRef} style={{ position: 'relative', width: '100%', height: '468px' }}>
         <DailyTaskFinishBarChart
-          // data={[]}
-          // Avoid cases that consistently invoke `useSize` updates
+          data={dailyStatisticList}
           width={width - 8}
           height={height - 8}
         />
