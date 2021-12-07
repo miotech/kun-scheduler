@@ -53,10 +53,10 @@ export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTas
           {data.map(item => (
             <div key={item.time} className={Styles.col}>
               <div className={Styles.column}>{timeToWeek(item.time)},{dayjs(item.time as number).format('YYYY-MM-DD')}</div>
-              {firstColumn.map((i, index) => (<div key={index} style={{ color: '#262a2f', cursor: 'pointer',textAlign:'center' }} className={Styles.column+''+Styles.taskCount}>
+              {firstColumn.map((i, index) => (<div key={index}  className={Styles.column+' '+Styles.taskCount}>
                 {renderAccount(firstColumn[index] ? firstColumn[index] : 'ONGOING', secondColumn[index], item.taskResultList)}
               </div>))}
-              <div className={Styles.column+''+Styles.taskCount}>{item.totalCount}</div>
+              <div className={Styles.column+' '+Styles.taskCount}>{item.totalCount}</div>
             </div>))}
         </div>
       </div>
