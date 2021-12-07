@@ -3,6 +3,8 @@ import { Card } from 'antd';
 import Styles from './DailyTaskFinishCountTable.less'
 import { dayjs } from '@/utils/datetime-utils';
 import { DailyStatistic, TaskResult } from '@/services/monitoring-dashboard';
+import c from 'clsx';
+
 interface OwnProps {
   data: DailyStatistic[];
   loading?: boolean;
@@ -29,7 +31,7 @@ const renderAccount = (status: string, finalStatus: string, taskResultList: Task
   return res ? res.taskCount : ''
 }
 const firstColumn = ['SUCCESS', 'FAILED', 'UPSTREAM_FAILED', 'ABORTED', 'ONGOING', '', '', '', '', '', '']
-const secondColumn = ['SUCCESS', 'FAILED', 'UPSTREAM_FAILED', 'ABORTED', 'ABORTED', 'FAILED', 'RUNNING', 'SUCCESS', 'UPSTREAM_FAILED', 'BLOCKED', 'CREATED']
+const secondColumn = ['SUCCESS', 'FAILED', 'UPSTREAM_FAILED', 'ABORTED', 'ABORTED', 'FAILED', 'RUNNING', 'SUCCESS', 'UPSTREAM_FAILED', 'BLOCKED', 'CREATED', '']
 
 export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTaskFinishCountTable(props) {
   const { data } = props;
@@ -53,10 +55,10 @@ export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTas
           {data.map(item => (
             <div key={item.time} className={Styles.col}>
               <div className={Styles.column}>{timeToWeek(item.time)},{dayjs(item.time as number).format('YYYY-MM-DD')}</div>
-              {firstColumn.map((i, index) => (<div key={index}  className={Styles.column+' '+Styles.taskCount}>
+              {firstColumn.map((i, index) => (<div key={index}  className={c(Styles.column,Styles.taskCount)}>
                 {renderAccount(firstColumn[index] ? firstColumn[index] : 'ONGOING', secondColumn[index], item.taskResultList)}
               </div>))}
-              <div className={Styles.column+' '+Styles.taskCount}>{item.totalCount}</div>
+              <div className={c(Styles.column,Styles.taskCount)}>{item.totalCount}</div>
             </div>))}
         </div>
       </div>
