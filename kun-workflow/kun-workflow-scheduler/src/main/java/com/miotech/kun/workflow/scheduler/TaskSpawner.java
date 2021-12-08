@@ -22,7 +22,6 @@ import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.task.*;
-import com.miotech.kun.workflow.core.model.taskrun.ConditionType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunCondition;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -137,12 +136,9 @@ public class TaskSpawner implements InitializingBean {
 
     private List<TaskRun> spawn(Collection<TaskGraph> graphs, Tick tick, TaskRunEnv env) {
         List<TaskRun> taskRuns = new ArrayList<>();
-        OffsetDateTime currentTickTime = DateTimeUtils.now();
         Map<TaskGraph, List<TaskRun>> graphTaskRuns = new HashMap<>();
         for (TaskGraph graph : graphs) {
-            List<Task> tasksToRun = graph.tasksScheduledAt(tick).stream().
-                    filter(task -> task.shouldSchedule(tick, currentTickTime)).collect(Collectors.toList());
-            List<TaskRun> taskRunList = createTaskRuns(tasksToRun, tick, env);
+            List<TaskRun> taskRunList = createTaskRuns(graph, tick, env);
             taskRuns.addAll(taskRunList);
             List<Task> taskList = taskRunList.stream().map(TaskRun::getTask).collect(Collectors.toList());
             logger.debug("tasks to run: {}, at tick {}", taskList, tick);
@@ -167,7 +163,10 @@ public class TaskSpawner implements InitializingBean {
 
 
     //幂等，重放tick不会创建新的taskRun
-    private List<TaskRun> createTaskRuns(List<Task> tasks, Tick tick, TaskRunEnv env) {
+    private List<TaskRun> createTaskRuns(TaskGraph graph, Tick tick, TaskRunEnv env) {
+        OffsetDateTime currentTickTime = DateTimeUtils.now();
+        List<Task> tasks = graph.tasksScheduledAt(tick).stream().
+                filter(task -> task.shouldSchedule(tick, currentTickTime)).collect(Collectors.toList());
         Long targetId = env.getTargetId();
         ExecuteTarget executeTarget = getExecuteTargetById(targetId);
         List<TaskRun> results = new ArrayList<>(tasks.size());
@@ -175,17 +174,16 @@ public class TaskSpawner implements InitializingBean {
             List<TaskRun> upstreamTaskRun = resolveDependencies(task, tick, results);
             List<TaskRunCondition> taskRunConditions = taskRunConditionFunction.resolveTaskRunConditionForPredecessor(task);
             taskRunConditions.addAll(taskRunConditionFunction.resolveTaskRunConditionForDependency(upstreamTaskRun));
+            TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
             try {
                 if (tick == SpecialTick.NULL) {
-                    results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, taskRunConditions, executeTarget));
+                    taskRun = createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, taskRunConditions, executeTarget);
                 } else {
-                    TaskRun taskRun = taskRunDao.fetchTaskRunByTaskAndTick(task.getId(), tick);
                     if (taskRun == null) {
-                        results.add(createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, taskRunConditions, executeTarget));
-                    } else {
-                        results.add(taskRun);
+                        taskRun = createTaskRun(task, tick, env.getConfig(task.getId()), upstreamTaskRun, taskRunConditions, executeTarget);
                     }
                 }
+                results.add(taskRun);
             } catch (Exception e) {
                 logger.error("create taskRun failed , taskId = {}", task.getId(), e);
             }
@@ -215,7 +213,7 @@ public class TaskSpawner implements InitializingBean {
                 .withQueueName(task.getQueueName())
                 .withPriority(task.getPriority())
                 .withDependentTaskRunIds(upstreamTaskRunIds)
-                .withStatus(resolveTaskRunStatus(task, upstreamTaskRuns, taskRunConditions))
+                .withStatus(TaskRunStatus.CREATED)
                 .withFailedUpstreamTaskRunIds(resolveFailedUpstreamTaskRunIds(upstreamTaskRuns))
                 .withTaskRunConditions(taskRunConditions)
                 .withExecuteTarget(executeTarget)
@@ -227,7 +225,7 @@ public class TaskSpawner implements InitializingBean {
     private List<Long> resolveFailedUpstreamTaskRunIds(List<TaskRun> upstreamTaskRuns) {
         List<Long> failedUpstreamTaskRunIds = new ArrayList<>();
         for (TaskRun upstreamTaskRun : upstreamTaskRuns) {
-            if (upstreamTaskRun.getStatus().isUpstreamFailed()) {
+            if (upstreamTaskRun.getFailedUpstreamTaskRunIds() != null && upstreamTaskRun.getFailedUpstreamTaskRunIds().size() > 0) {
                 failedUpstreamTaskRunIds.addAll(upstreamTaskRun.getFailedUpstreamTaskRunIds());
             }
             if (upstreamTaskRun.getStatus().isFailure()) {
@@ -235,38 +233,6 @@ public class TaskSpawner implements InitializingBean {
             }
         }
         return failedUpstreamTaskRunIds.stream().distinct().collect(Collectors.toList());
-    }
-
-    private TaskRunStatus resolveTaskRunStatus(Task task, List<TaskRun> upstreamTaskRuns, List<TaskRunCondition> taskRunConditions) {
-        if (task.getDependencies().size() > upstreamTaskRuns.size()) {
-            logger.error("dependency not satisfy, taskId = {}", task.getId());
-            return TaskRunStatus.CREATED;
-        }
-
-        // UPSTREAM_FAILED is given higher priority than BLOCKED
-        // TaskRun's status can be both UPSTREAM_FAILED and BLOCKED, UPSTREAM_FAILED is set in such situation
-
-        //check upstream exists failed or upstream_failed
-        boolean allUpstreamSuccess = true;
-        for (TaskRun upstreamTaskRun : upstreamTaskRuns) {
-            if (upstreamTaskRun.getStatus().isFailure()
-                    || upstreamTaskRun.getStatus().equals(TaskRunStatus.UPSTREAM_FAILED)) {
-                return TaskRunStatus.UPSTREAM_FAILED;
-            }
-            if (!upstreamTaskRun.getStatus().isSuccess()) {
-                allUpstreamSuccess = false;
-            }
-        }
-        // when all upstream dependencies are satisfied, check whether is blocked
-        if (allUpstreamSuccess) {
-            for (TaskRunCondition taskRunCondition : taskRunConditions) {
-                if (taskRunCondition.getType().equals(ConditionType.TASKRUN_PREDECESSOR_FINISH) && !taskRunCondition.getResult()) {
-                    return TaskRunStatus.BLOCKED;
-                }
-            }
-        }
-
-        return TaskRunStatus.CREATED;
     }
 
     private List<TaskRun> resolveDependencies(Task task, Tick tick, List<TaskRun> others) {

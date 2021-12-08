@@ -10,6 +10,7 @@ import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
+import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
@@ -74,6 +75,9 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
     @Inject
     private EventBus eventBus;
 
+    @Inject
+    private TaskRunStateMachine taskRunStateMachine;
+
     @Rule
     public ExpectedException expectedEx = ExpectedException.none();
 
@@ -111,6 +115,9 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
         awaitUntilAttemptStarted(taskAttempt1.getId());
         awaitUntilAttemptStarted(taskAttempt2.getId());
 
+        workerLifeCycleManager.markRunning(taskAttempt1.getId());
+        workerLifeCycleManager.markRunning(taskAttempt2.getId());
+
         //worker run finish
         workerLifeCycleManager.markDone(taskAttempt1.getId());
         workerLifeCycleManager.markDone(taskAttempt2.getId());
@@ -144,6 +151,9 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
         awaitUntilAttemptStarted(taskAttempt1.getId());
         awaitUntilAttemptStarted(taskAttempt2.getId());
 
+        workerLifeCycleManager.markRunning(taskAttempt1.getId());
+        workerLifeCycleManager.markRunning(taskAttempt2.getId());
+
         assertTaskQueueing(taskAttempt3);
 
         assertThat(workerLifeCycleManager.getRunningWorker().size(), is(2));
@@ -151,6 +161,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
 
         //wait attempt3 start
         awaitUntilAttemptStarted(taskAttempt3.getId());
+        workerLifeCycleManager.markRunning(taskAttempt3.getId());
         workerLifeCycleManager.markDone(taskAttempt3.getId());
         //verify
         TaskAttempt savedAttempt3 = taskRunDao.fetchAttemptById(taskAttempt3.getId()).get();
@@ -180,6 +191,9 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
         //wait attempt start
         awaitUntilAttemptStarted(taskAttempt1.getId());
         awaitUntilAttemptStarted(taskAttempt2.getId());
+
+        workerLifeCycleManager.markRunning(taskAttempt1.getId());
+        workerLifeCycleManager.markRunning(taskAttempt2.getId());
 
         //worker run finish
         workerLifeCycleManager.markDone(taskAttempt1.getId());
@@ -263,6 +277,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
         eventBus.register(eventCollector);
         kubernetesResourceManager = prepareQueueManage();
         spyManager = spy(kubernetesResourceManager);
+        taskRunStateMachine.start();
         doAnswer(new Answer() {
             @Override
             public Object answer(InvocationOnMock invocation) throws Throwable {
@@ -281,7 +296,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
     }
 
     private KubernetesResourceManager prepareQueueManage() {
-        KubernetesResourceManager queueManager = new KubernetesResourceManager(mock(KubernetesClient.class), mockProps, miscService);
+        KubernetesResourceManager queueManager = new KubernetesResourceManager(mock(KubernetesClient.class), mockProps, miscService,eventBus);
         queueManager.init();
         return queueManager;
     }

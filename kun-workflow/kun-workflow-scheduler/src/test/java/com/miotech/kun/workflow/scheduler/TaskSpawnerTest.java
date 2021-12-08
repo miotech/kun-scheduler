@@ -6,9 +6,7 @@ import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.pubsub.event.Event;
-import com.miotech.kun.workflow.common.executetarget.DefaultTargetProvider;
 import com.miotech.kun.workflow.common.executetarget.ExecuteTargetService;
-import com.miotech.kun.workflow.common.executetarget.TargetProvider;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
 import com.miotech.kun.workflow.common.graph.DirectTaskGraph;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
@@ -19,15 +17,12 @@ import com.miotech.kun.workflow.common.variable.dao.VariableDao;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.model.common.Condition;
 import com.miotech.kun.workflow.core.model.common.SpecialTick;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.task.*;
-import com.miotech.kun.workflow.core.model.taskrun.ConditionType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunCondition;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
@@ -161,7 +156,6 @@ public class TaskSpawnerTest extends SchedulerTestBase {
             taskDao.create(task);
         }
         ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
-        OffsetDateTime now = DateTimeUtils.freeze();
 
 
         // process
@@ -176,7 +170,6 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         verify(appender, atLeast(0)).doAppend(logCaptor.capture());
         String logs = logCaptor.getAllValues().stream().map(log -> log.getMessage()).collect(Collectors.joining(";"));
         assertThat(logs, containsString("create taskRun failed , taskId = {}"));
-        assertThat(logs, containsString("dependency not satisfy, taskId = {}"));
 
 
         // verify
@@ -953,7 +946,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(submitted.getScheduledTick(), is(tick));
         assertThat(submitted.getStartAt(), is(nullValue()));
         assertThat(submitted.getEndAt(), is(nullValue()));
-        assertThat(submitted.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+        assertThat(submitted.getStatus(), is(TaskRunStatus.CREATED));
 
         assertThat(submitted.getDependentTaskRunIds(), hasSize(1));
         assertThat(submitted.getDependentTaskRunIds(), contains(taskRun1.getId()));
@@ -994,7 +987,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         // task2
         TaskRun taskRun2 = result.get(0);
-        assertThat(taskRun2.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+        assertThat(taskRun2.getStatus(), is(TaskRunStatus.CREATED));
         assertThat(taskRun2.getFailedUpstreamTaskRunIds().size(), is(1));
         assertThat(taskRun2.getFailedUpstreamTaskRunIds().get(0), is(taskRun1.getId()));
     }
@@ -1038,7 +1031,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         assertThat(result.size(), is(3));
 
         TaskRun taskRun4 = result.get(2);
-        assertThat(taskRun4.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+        assertThat(taskRun4.getStatus(), is(TaskRunStatus.CREATED));
         assertThat(taskRun4.getFailedUpstreamTaskRunIds().size(), is(1));
     }
 
@@ -1085,157 +1078,10 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
         TaskRun taskRun4 = result.get(1);
 
-        assertThat(taskRun4.getStatus(), is(TaskRunStatus.UPSTREAM_FAILED));
+        assertThat(taskRun4.getStatus(), is(TaskRunStatus.CREATED));
         assertThat(taskRun4.getFailedUpstreamTaskRunIds().size(), is(2));
         assertThat(new HashSet<>(taskRun4.getFailedUpstreamTaskRunIds()),
                 is(new HashSet<>(Arrays.asList(taskRun1.getId(), taskRun3.getId()))));
-    }
-
-    //scenario: up&down stream: task0>>1;  (taskRun0>>1) is (taskRun2>>3) predecessor
-    // current status: taskRun0 success, 1 running, 2 success
-    // taskRun3 need to wait predecessor 1 finish
-    // when 3 created, 3 should be blocked and 1 are 5's conditions with correct config
-    @Test
-    public void testTaskRunBlockByPredecessor_createSuccess() {
-        //prepare
-        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
-        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, operatorId, "0>>1");
-        Task task0 = tasks.get(0);
-        Task task1 = tasks.get(1).cloneBuilder()
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR))
-                .build();
-        TaskRun taskRun0 = MockTaskRunFactory.createTaskRun(task0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
-        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1).cloneBuilder().withStatus(TaskRunStatus.RUNNING).build();
-        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task0).cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
-        taskDao.create(task0);
-        taskDao.create(task1);
-        taskRunDao.createTaskRun(taskRun0);
-        taskRunDao.createTaskRun(taskRun1);
-        taskRunDao.createTaskRun(taskRun2);
-
-        DatabaseTaskGraph graph = injector.getInstance(DatabaseTaskGraph.class);
-        taskSpawner.schedule(graph);
-
-        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
-
-        // process
-        Tick tick = new Tick(next);
-        eventBus.post(new TickEvent(tick));
-
-        // verify
-        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskManager).submit(captor.capture());
-
-        List<TaskRun> result = captor.getValue();
-        assertThat(result.size(), is(1));
-
-        //taskrun 3
-        TaskRun taskRun3 = result.get(0);
-        assertThat(taskRun3.getStatus(), is(TaskRunStatus.BLOCKED));
-        assertThat(taskRun3.getTaskRunConditions().size(), is(2));
-    }
-
-    //scenario: up&down stream: task0>>1;0>>2;  taskRun3 is 0' predecessor
-    // current status: taskRun 0 success, 1 success, 2 running
-    // 3 need to wait predecessor downstream 1&2 finish
-    // when 3 created, 3 should be blocked and 2 are 3's condition with correct config
-    @Test
-    public void testTaskRunBlockByPredecessorDownstream_createSuccess() {
-        //prepare
-        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
-        List<Task> tasks = MockTaskFactory.createTasksWithRelations(3, operatorId, "0>>1;0>>2");
-        Task task0 = tasks.get(0).cloneBuilder()
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR_DOWNSTREAM))
-                .build();
-        Task task1 = tasks.get(1);
-        Task task2 = tasks.get(2);
-        TaskRun taskRun0 = MockTaskRunFactory.createTaskRun(task0)
-                .cloneBuilder().withStatus(TaskRunStatus.SUCCESS).build();
-        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
-                .cloneBuilder()
-                .withDependentTaskRunIds(Collections.singletonList(taskRun0.getId()))
-                .withStatus(TaskRunStatus.SUCCESS).build();
-        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2)
-                .cloneBuilder()
-                .withDependentTaskRunIds(Collections.singletonList(taskRun0.getId()))
-                .withStatus(TaskRunStatus.RUNNING).build();
-        taskDao.create(task0);
-        taskDao.create(task1);
-        taskDao.create(task2);
-        taskRunDao.createTaskRun(taskRun0);
-        taskRunDao.createTaskRun(taskRun1);
-        taskRunDao.createTaskRun(taskRun2);
-
-        DatabaseTaskGraph graph = injector.getInstance(DatabaseTaskGraph.class);
-        taskSpawner.schedule(graph);
-
-        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
-
-        // process
-        Tick tick = new Tick(next);
-        eventBus.post(new TickEvent(tick));
-
-        // verify
-        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskManager).submit(captor.capture());
-
-        List<TaskRun> result = captor.getValue();
-        assertThat(result.size(), is(1));
-
-        //taskrun 3
-        TaskRun taskRun3 = result.get(0);
-        List<TaskRunCondition> taskRunConditions = taskRun3.getTaskRunConditions();
-
-        assertThat(taskRun3.getStatus(), is(TaskRunStatus.BLOCKED));
-        assertThat(taskRun3.getTaskRunConditions().size(), is(3));
-    }
-
-    //scenario: task 0; task run 0 is 1's predecessor, 1 is 2's predecessor
-    // 0 is running, 1 is blocked when spawn 2 , 2's status should be BLOCKED
-    @Test
-    public void multiBlocked_shouldCreateWithBlocked() {
-        OffsetDateTime next = DateTimeUtils.now().plusSeconds(120);
-        Task task = MockTaskFactory.createTask(operatorId).cloneBuilder()
-                .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, CRON_EVERY_MINUTE, ZoneOffset.UTC.getId(), BlockType.WAIT_PREDECESSOR))
-                .build();
-        TaskRun taskRun0 = MockTaskRunFactory.createTaskRun(task)
-                .cloneBuilder().withStatus(TaskRunStatus.RUNNING).build();
-        TaskRunCondition taskRunCondition = TaskRunCondition.newBuilder()
-                .withCondition(new Condition(Collections.singletonMap("taskRunId", taskRun0.getId().toString())))
-                .withType(ConditionType.TASKRUN_PREDECESSOR_FINISH)
-                .withResult(false)
-                .build();
-        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task)
-                .cloneBuilder()
-                .withTaskRunConditions(Collections.singletonList(taskRunCondition))
-                .withStatus(TaskRunStatus.BLOCKED).build();
-        taskDao.create(task);
-        taskRunDao.createTaskRun(taskRun0);
-        taskRunDao.createTaskRun(taskRun1);
-
-        DatabaseTaskGraph graph = injector.getInstance(DatabaseTaskGraph.class);
-        taskSpawner.schedule(graph);
-
-        ArgumentCaptor<List<TaskRun>> captor = ArgumentCaptor.forClass(List.class);
-
-        // process
-        Tick tick = new Tick(next);
-        eventBus.post(new TickEvent(tick));
-
-        // verify
-        await().atMost(10, TimeUnit.SECONDS).until(this::invoked);
-        verify(taskManager).submit(captor.capture());
-
-        List<TaskRun> result = captor.getValue();
-        assertThat(result.size(), is(1));
-
-        //taskRun 2
-        TaskRun taskRun2 = result.get(0);
-        List<TaskRunCondition> taskRunConditions = taskRun2.getTaskRunConditions();
-        assertThat(taskRun2.getStatus(), is(TaskRunStatus.BLOCKED));
-        assertThat(taskRunConditions.size(), is(1));
-        assertThat(taskRunConditions.get(0).getResult(), is(false));
-
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor;
 
+import com.google.common.eventbus.EventBus;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.commons.pubsub.publish.NopEventPublisher;
 import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
@@ -48,6 +49,9 @@ public class LocalQueueManageTest extends CommonTestBase {
 
     @Inject
     private TaskRunDao taskRunDao;
+
+    @Inject
+    private EventBus eventBus;
 
     @Override
     protected void configuration() {
@@ -133,7 +137,7 @@ public class LocalQueueManageTest extends CommonTestBase {
     }
 
     private LocalQueueManage prepareQueueManage(Props props) {
-        LocalQueueManage localQueueManage = new LocalQueueManage(props, miscService,localProcessBackend);
+        LocalQueueManage localQueueManage = new LocalQueueManage(props, miscService,localProcessBackend,eventBus);
         localQueueManage.init();
         return localQueueManage;
     }
