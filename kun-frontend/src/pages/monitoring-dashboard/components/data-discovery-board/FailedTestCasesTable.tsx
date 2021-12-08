@@ -141,7 +141,6 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
 
   const expandedRowRender = (record: AbnormalDataset) => {
     const useableData = [
-      ...record.cases.map(i => ({ ...i, datasetGid: record.datasetGid })),
       ...record.tasks.map(i => ({
         caseName: 'DataUpdateFailed',
         caseId: i.taskName,
@@ -149,6 +148,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
         errorReason: t('monitoringDashboard.dataDiscovery.failedTestCasesTable.resultContent', { name: i.taskName }),
         status: 'FAILED',
       })),
+      ...record.cases.map(i => ({ ...i, datasetGid: record.datasetGid })),
     ] as FailedTestCase[];
     return (
       <Table
