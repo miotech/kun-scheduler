@@ -35,6 +35,10 @@ public class TaskDefinitionViewDao {
 
     private static final String VIEW_AND_TASK_DEF_RELATION_MODEL_NAME = "view_taskdef_relation";
 
+    private static final String TASK_DEF_TABLE_NAME = "kun_dp_task_definition";
+
+    private static final String TASK_DEF_MODEL_NAME = "taskdef";
+
     private static final List<String> viewCols = ImmutableList.of("id", "name", "creator", "last_modifier", "create_time", "update_time");
 
     private static final List<String> viewTaskDefRelationCols = ImmutableList.of("view_id", "task_def_id");   //NOSONAR
@@ -130,6 +134,34 @@ public class TaskDefinitionViewDao {
             paramsList.addAll(taskDefIds);
             whereClauseBuilder.append("(" + TASK_DEF_VIEW_MODEL_NAME + ".id IN (" + subSelectSql + ")) AND ");
         }
+
+        if (Objects.nonNull(searchParams.getTaskDefName()) || Objects.nonNull(searchParams.getTaskDefCreatorIds())
+                || Objects.nonNull(searchParams.getTaskTemplateName())) {
+            StringBuilder subWhereClauseBuilder = new StringBuilder();
+            if (Objects.nonNull(searchParams.getTaskDefName()) && !searchParams.getTaskDefName().isEmpty()) {
+                subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".name ILIKE CONCAT('%', CAST(? AS TEXT), '%')) AND ");
+                paramsList.add(searchParams.getTaskDefName().trim());
+            }
+            if (Objects.nonNull(searchParams.getTaskDefCreatorIds()) && !searchParams.getTaskDefCreatorIds().isEmpty()) {
+                subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".creator IN (" + SQLUtils.generateSqlInClausePlaceholders(searchParams.getTaskDefCreatorIds()) + ")) AND ");
+                paramsList.addAll(searchParams.getTaskDefCreatorIds());
+            }
+            if (Objects.nonNull(searchParams.getTaskTemplateName()) && !searchParams.getTaskTemplateName().isEmpty()) {
+                subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".task_template_name = ?) AND");
+                paramsList.add(searchParams.getTaskTemplateName());
+            }
+            String subWhereClauseString = subWhereClauseBuilder.append("(1 = 1)").toString();
+
+            String subSelectSql = DefaultSQLBuilder.newBuilder()
+                    .select("view_id")
+                    .from(VIEW_AND_TASK_DEF_RELATION_TABLE_NAME, VIEW_AND_TASK_DEF_RELATION_MODEL_NAME)
+                    .join(TASK_DEF_TABLE_NAME, TASK_DEF_MODEL_NAME)
+                    .on(VIEW_AND_TASK_DEF_RELATION_MODEL_NAME + ".task_def_id = " + TASK_DEF_MODEL_NAME + ".definition_id")
+                    .where(subWhereClauseString)
+                    .getSQL();
+            whereClauseBuilder.append("(" + TASK_DEF_VIEW_MODEL_NAME + ".id IN (" + subSelectSql + ")) AND ");
+        }
+
         String whereClauseString = whereClauseBuilder.append("(1 = 1)").toString();
         return new WhereClause(whereClauseString, paramsList.toArray(new Object[0]));
     }
