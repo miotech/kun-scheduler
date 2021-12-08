@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor.kubernetes;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
@@ -23,8 +24,8 @@ public class KubernetesResourceManager extends AbstractQueueManager {
     private KubernetesClient client;
 
     @Inject
-    public KubernetesResourceManager(KubernetesClient client, Props props, MiscService miscService) {
-        super(props, miscService);
+    public KubernetesResourceManager(KubernetesClient client, Props props, MiscService miscService, EventBus eventBus) {
+        super(props, miscService, eventBus);
         this.client = client;
     }
 

@@ -7,10 +7,14 @@ import com.miotech.kun.commons.utils.EventConsumer;
 import com.miotech.kun.commons.utils.EventLoop;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskRunProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.model.common.Condition;
+import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.*;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
@@ -73,6 +77,9 @@ public class TaskManager {
                 .map(taskRun -> createTaskAttempt(taskRun, true)).collect(Collectors.toList());
         logger.debug("TaskAttempts saved. total={}", taskAttempts.size());
         save(taskAttempts);
+        for(TaskAttempt taskAttempt : taskAttempts){
+            resolveTaskRunStatus(taskAttempt);
+        }
         triggerTaskRunReadyCheck();
     }
 
@@ -92,6 +99,11 @@ public class TaskManager {
             TaskAttempt taskAttempt = createTaskAttempt(taskRun, false);
             logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
             save(Arrays.asList(taskAttempt));
+
+            TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RESCHEDULE,taskAttempt.getId());
+            eventBus.post(taskRunTransitionEvent);
+
+            //retry task run will change downstream status from upstream failed to created
             List<Long> downstreamTaskRunIds = updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED);
             updateTaskRunConditions(downstreamTaskRunIds, TaskRunStatus.CREATED);
             updateRestrictedTaskRunsStatus(downstreamTaskRunIds);
@@ -151,7 +163,42 @@ public class TaskManager {
     private void save(List<TaskAttempt> taskAttempts) {
         for (TaskAttempt ta : taskAttempts) {
             taskRunDao.createAttempt(ta);
-            taskRunDao.updateTaskAttemptStatus(ta.getId(), ta.getStatus());
+        }
+    }
+
+    private void resolveTaskRunStatus(TaskAttempt taskAttempt) {
+        TaskRun taskRun = taskAttempt.getTaskRun();
+        List<TaskRunProps> upstreamTaskRuns = taskRunDao.fetchUpstreamTaskRunsById(taskRun.getId());
+        Task task = taskRun.getTask();
+        List<TaskRunCondition> taskRunConditions = taskRun.getTaskRunConditions();
+        if (task.getDependencies().size() > upstreamTaskRuns.size()) {
+            logger.error("dependency not satisfy, taskId = {}", task.getId());
+            return;
+        }
+
+        // UPSTREAM_FAILED is given higher priority than BLOCKED
+        // TaskRun's status can be both UPSTREAM_FAILED and BLOCKED, UPSTREAM_FAILED is set in such situation
+
+        //check upstream exists failed or upstream_failed
+        boolean allUpstreamSuccess = true;
+        for (TaskRunProps upstreamTaskRun : upstreamTaskRuns) {
+            if (upstreamTaskRun.getStatus().isFailure()
+                    || upstreamTaskRun.getStatus().equals(TaskRunStatus.UPSTREAM_FAILED)) {
+                TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.UPSTREAM_FAILED,taskAttempt.getId());
+                eventBus.post(taskRunTransitionEvent);
+            }
+            if (!upstreamTaskRun.getStatus().isSuccess()) {
+                allUpstreamSuccess = false;
+            }
+        }
+        // when all upstream dependencies are satisfied, check whether is blocked
+        if (allUpstreamSuccess) {
+            for (TaskRunCondition taskRunCondition : taskRunConditions) {
+                if (taskRunCondition.getType().equals(ConditionType.TASKRUN_PREDECESSOR_FINISH) && !taskRunCondition.getResult()) {
+                    TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.HANGUP,taskAttempt.getId());
+                    eventBus.post(taskRunTransitionEvent);
+                }
+            }
         }
     }
 
