@@ -5,6 +5,7 @@ import { DailyStatistic, TaskResult } from '@/services/monitoring-dashboard';
 import c from 'clsx';
 import useRedux from '@/hooks/useRedux';
 import Styles from './DailyTaskFinishCountTable.less';
+import useI18n from '@/hooks/useI18n';
 
 interface OwnProps {
   data: DailyStatistic[];
@@ -57,6 +58,7 @@ const secondColumn = [
 
 export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTaskFinishCountTable(props) {
   const { data } = props;
+  const t = useI18n();
   const { dispatch } = useRedux(() => ({}));
   const setParams = (targetTime: number, status: string, finalStatus: string) => {
     const params = {
@@ -72,7 +74,9 @@ export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTas
       <div className={Styles.content}>
         <div className={Styles.row}>
           <div className={Styles.col}>
-            <div className={Styles.column}>9点状态</div>
+            <div className={Styles.column}>
+              {t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.status')}
+            </div>
             {firstColumn.map((item, index) => (
               <div key={item + index} className={Styles.column}>
                 {item}
@@ -81,7 +85,9 @@ export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTas
             <div className={Styles.column}>SUM</div>
           </div>
           <div className={Styles.col}>
-            <div className={Styles.column}>最终状态</div>
+            <div className={Styles.column}>
+              {t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.finallyStatus')}
+            </div>
             {secondColumn.map((item, index) => (
               <div key={item + index} className={Styles.column}>
                 {item}
