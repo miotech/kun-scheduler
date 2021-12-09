@@ -54,6 +54,7 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
     dailyTaskFinish,
     dailyStatisticList,
     taskDetails,
+    taskDetailsForWeekParams,
     dataDevelopmentMetricsLoading,
   } = dataDevelopmentBoardData;
 
@@ -77,8 +78,9 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
         selectedFilterCardType != null ? computeFilterTypeToRequestParam(selectedFilterCardType) : undefined,
       includeStartedOnly: selectedFilterCardType !== 'PENDING' ? taskDetailsDisplayStartedOnly : false,
       last24HoursOnly: taskDetailsDisplayLast24HoursOnly,
+      taskDetailsForWeekParams,
     });
-  }, [taskDetails.pageNum, taskDetails.pageSize, selectedFilterCardType, taskDetailsDisplayStartedOnly, taskDetailsDisplayLast24HoursOnly]);
+  }, [taskDetails.pageNum, taskDetails.pageSize, selectedFilterCardType, taskDetailsDisplayStartedOnly, taskDetailsDisplayLast24HoursOnly, taskDetailsForWeekParams]);
 
   const topMetricsRow = useMemo(() => {
     return (
@@ -194,16 +196,17 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
       {/* Daily task finish count chart */}
       <Row gutter={[8, 8]}>
         <Col span={24}>
-          <DailyTaskFinishCountChart dailyStatisticList={dailyStatisticList.data} data={dailyTaskFinish.data} loading={dailyTaskFinish.loading} />
+          <DailyTaskFinishCountChart
+            dailyStatisticList={dailyStatisticList.data}
+            data={dailyTaskFinish.data}
+            loading={dailyTaskFinish.loading}
+          />
         </Col>
       </Row>
       {/* Daily task finish count table */}
       <Row gutter={[8, 8]}>
         <Col span={24}>
-          <DailyTaskFinishCountTable 
-            data={dailyStatisticList.data} 
-            loading={dailyStatisticList.loading} 
-          />
+          <DailyTaskFinishCountTable data={dailyStatisticList.data} loading={dailyStatisticList.loading} />
         </Col>
       </Row>
       {/* Task details table */}

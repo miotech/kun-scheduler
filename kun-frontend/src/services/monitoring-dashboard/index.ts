@@ -152,15 +152,24 @@ export interface FetchDataDevelopmentDailyTaskCountParams {
   hours?: number;
 }
 
-export interface TaskResult{
- status: string;
- finalStatus: string;
- taskCount: number
+export interface TaskResult {
+  status: string;
+  finalStatus: string;
+  taskCount: number;
 }
 export interface DailyStatistic {
   time: number;
   totalCount: number;
-  taskResultList: TaskResult[]
+  taskResultList: TaskResult[];
+}
+
+export interface TaskDetailsForWeekParams {
+  pageNumber: number;
+  pageSize: number;
+  targetTime: number;
+  status: string;
+  finalStatus: string;
+  timezoneOffset: number;
 }
 export interface DailyTaskCount {
   time: number;
@@ -201,6 +210,18 @@ export interface DevTaskDetailsInfo extends PaginationRespBodyBase {
 
 export function fetchDataDevelopmentTaskDetails(reqParams: Partial<PaginationReqBody> = {}) {
   return get<DevTaskDetailsInfo>('/dashboard/data-development/tasks', {
+    query: reqParams,
+  });
+}
+
+export function fetchDataDevelopmentChartTaskDetails(reqParams: Partial<PaginationReqBody> = {}) {
+  return get<DevTaskDetailsInfo>('/dashboard/data-development/chart-tasks', {
+    query: reqParams,
+  });
+}
+
+export function fetchDataDevelopmentStatisticChart(reqParams: any) {
+  return get<any>('/dashboard/data-development/statistic-chart', {
     query: reqParams,
   });
 }
