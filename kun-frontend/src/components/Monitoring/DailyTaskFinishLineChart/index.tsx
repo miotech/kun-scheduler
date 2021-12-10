@@ -1,3 +1,2 @@
-import { DailyTaskFinishLineChart } from './DailyTaskFinishLineChart';
-
-export default DailyTaskFinishLineChart;
+export { DailyTaskFinishLineChart } from './DailyTaskFinishLineChart';
+export { DailyTaskFinishBarChart } from './DailyTaskFinishBarChart';

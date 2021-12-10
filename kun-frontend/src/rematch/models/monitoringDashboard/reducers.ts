@@ -93,11 +93,22 @@ export const reducers = {
   ),
   setTaskDetailsSelectedFilter: produce((draftState: ModelState, payload: DataDevelopmentBoardFilterCardType) => {
     draftState.dataDevelopmentBoardData.taskDetailsSelectedFilter = payload;
+    draftState.dataDevelopmentBoardData.taskDetailsForWeekParams = null;
   }),
   setTaskDetailsDisplayStartedOnly: produce((draftState: ModelState, payload: boolean) => {
     draftState.dataDevelopmentBoardData.taskDetailsDisplayStartedOnly = payload;
+    draftState.dataDevelopmentBoardData.taskDetailsForWeekParams = null;
   }),
   setTaskDetailsDisplayLast24HoursOnly: produce((draftState: ModelState, payload: boolean) => {
     draftState.dataDevelopmentBoardData.taskDetailsDisplayLast24HoursOnly = payload;
+    draftState.dataDevelopmentBoardData.taskDetailsForWeekParams = null;
+  }),
+  setTaskDetailsForWeekParams: produce((draftState: ModelState, payload: boolean) => {
+    draftState.dataDevelopmentBoardData.taskDetailsForWeekParams = payload;
+    draftState.dataDevelopmentBoardData.taskDetails.pageNum = 1;
+  }),
+
+  updateStatisticChartData: produce((draftState: ModelState, payload) => {
+    draftState.dataDevelopmentBoardData.dailyStatisticList = payload;
   }),
 };
