@@ -39,6 +39,12 @@ public class TaskRunSearchRequest {
     @JsonSerialize(using = CustomDateTimeSerializer.class)
     private final OffsetDateTime dateTo;
 
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    private final OffsetDateTime endBefore;
+
+    @JsonSerialize(using = CustomDateTimeSerializer.class)
+    private final OffsetDateTime endAfter;
+
     /**
      * should be one of: "id", "status", "startAt", "endAt" or null
      * by default, null is equivalent to "startAt" as filter
@@ -63,6 +69,8 @@ public class TaskRunSearchRequest {
         this.status = builder.status;
         this.dateFrom = builder.dateFrom;
         this.dateTo = builder.dateTo;
+        this.endBefore = builder.endBefore;
+        this.endAfter = builder.endAfter;
         this.sortKey = builder.sortKey;
         this.sortOrder = builder.sortOrder;
         this.includeStartedOnly = builder.includeStartedOnly;
@@ -105,6 +113,14 @@ public class TaskRunSearchRequest {
         return dateTo;
     }
 
+    public OffsetDateTime getEndBefore() {
+        return endBefore;
+    }
+
+    public OffsetDateTime getEndAfter() {
+        return endAfter;
+    }
+
     public String getSortKey() {
         return sortKey;
     }
@@ -136,6 +152,8 @@ public class TaskRunSearchRequest {
         private Set<TaskRunStatus> status;
         private OffsetDateTime dateFrom;
         private OffsetDateTime dateTo;
+        private OffsetDateTime endBefore;
+        private OffsetDateTime endAfter;
         private String sortKey;
         private String sortOrder;
         private Boolean includeStartedOnly;
@@ -185,6 +203,16 @@ public class TaskRunSearchRequest {
 
         public Builder withDateTo(OffsetDateTime dateTo) {
             this.dateTo = dateTo;
+            return this;
+        }
+
+        public Builder withEndBefore(OffsetDateTime endBefore) {
+            this.endBefore = endBefore;
+            return this;
+        }
+
+        public Builder withEndAfter(OffsetDateTime endAfter) {
+            this.endAfter = endAfter;
             return this;
         }
 

@@ -203,6 +203,7 @@ export interface LoadTaskDetailsParams extends PaginationReqBody {
   taskRunStatus?: string;
   includeStartedOnly?: boolean;
   last24HoursOnly?: boolean;
+  taskDetailsForWeekParams?: any;
 }
 
 // task details
@@ -237,6 +238,55 @@ const loadTaskDetails = (params: LoadTaskDetailsParams, dispatch: RootDispatch) 
     });
 };
 
+// task chart details
+const loadChartTaskDetails = (params: LoadTaskDetailsParams, dispatch: RootDispatch) => {
+  dispatch.monitoringDashboard.updateTaskDetails({
+    loading: true,
+  });
+
+  loadTaskDetailsFlag += 1;
+  const currentFlag = loadTaskDetailsFlag;
+
+  return services
+    .fetchDataDevelopmentChartTaskDetails(params)
+    .then(fetchedData => {
+      if (currentFlag === loadTaskDetailsFlag) {
+        dispatch.monitoringDashboard.updateTaskDetails({
+          data: fetchedData.tasks,
+          loading: false,
+          error: null,
+          total: fetchedData.totalCount,
+        });
+      }
+    })
+    .catch(e => {
+      if (currentFlag === loadTaskDetailsFlag) {
+        dispatch.monitoringDashboard.updateTaskDetails({
+          data: [],
+          loading: false,
+          error: e,
+        });
+      }
+    });
+};
+const loadStatisticChartData = async (dispatch: RootDispatch) => {
+  let data = [];
+  let error = null;
+  const params = {
+    timezoneOffset: 8,
+  };
+  const res = await services.fetchDataDevelopmentStatisticChart(params).catch(e => {
+    error = e;
+  });
+  if (res) {
+    data = res.dailyStatisticList;
+  }
+  dispatch.monitoringDashboard.updateStatisticChartData({
+    data,
+    loading: false,
+    error,
+  });
+};
 /**
  * Store effects for monitoring dashboard
  * @param dispatch
@@ -250,6 +300,7 @@ export const effects = (dispatch: RootDispatch) => ({
     dispatch.monitoringDashboard.setAllSettled(false);
     Promise.allSettled([
       loadDataDiscoveryMetrics(dispatch),
+      loadStatisticChartData(dispatch),
       loadTopDatasetsMaxRowCountChange(dispatch),
       loadFailedTestCases(
         {
@@ -300,6 +351,13 @@ export const effects = (dispatch: RootDispatch) => ({
     await loadDailyTaskFinish(dispatch);
   },
   async reloadTaskDetails(params: LoadTaskDetailsParams) {
-    await loadTaskDetails(params, dispatch);
+    if (params.taskDetailsForWeekParams) {
+      await loadChartTaskDetails(
+        { pageNumber: params.pageNumber, pageSize: params.pageSize, ...params.taskDetailsForWeekParams },
+        dispatch,
+      );
+    } else {
+      await loadTaskDetails(params, dispatch);
+    }
   },
 });

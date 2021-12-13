@@ -468,6 +468,8 @@ export default {
   'monitoringDashboard.dataDevelopment.totalTaskCount': 'Total Task Count',
   'monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title': 'Daily Task Finish Count',
   'monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.count': '{count} tasks',
+  'monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.status': 'status at 9am',
+  'monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.finallyStatus': 'final status',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.title': 'Task Details',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.taskName': 'Task Name',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.taskStatus': 'Task Status',
