@@ -241,8 +241,18 @@ public class TaskRunDao {
             sqlArgs.add(filter.getDateFrom());
         }
         if (Objects.nonNull(filter.getDateTo())) {
-            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".created_at <= ? )");
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".created_at < ? )");
             sqlArgs.add(filter.getDateTo());
+        }
+
+        if (Objects.nonNull(filter.getEndBefore())) {
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".end_at < ? )");
+            sqlArgs.add(filter.getEndBefore());
+        }
+
+        if (Objects.nonNull(filter.getEndAfter())) {
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".end_at >= ?  or " + TASK_RUN_MODEL_NAME + ".end_at is NULL)");
+            sqlArgs.add(filter.getEndAfter());
         }
 
         // Search by status
