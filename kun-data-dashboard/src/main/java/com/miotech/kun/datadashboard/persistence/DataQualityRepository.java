@@ -9,6 +9,7 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.datadashboard.model.bo.TestCasesRequest;
 import com.miotech.kun.datadashboard.model.entity.*;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -123,6 +124,7 @@ public class DataQualityRepository extends BaseRepository {
                 abnormalDataset.setDatasetName(datasetBasic.getDatasetName());
                 abnormalDataset.setDatabaseName(datasetBasic.getDatabase());
                 abnormalDataset.setDatasourceName(datasetBasic.getDataSource());
+                abnormalDataset.setGlossaries(datasetBasic.getGlossaries());
                 abnormalDataset.setUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("last_update_time")));
                 abnormalDatasets.add(abnormalDataset);
             }
@@ -202,14 +204,16 @@ public class DataQualityRepository extends BaseRepository {
         }, datasetGids.toArray());
     }
 
-    private DatasetBasic getDatasetBasic (Long datasetGid) {
+    private DatasetBasic getDatasetBasic(Long datasetGid) {
         String sql = DefaultSQLBuilder.newBuilder()
-                .select("kmd.name as dataset_name", "kmd.database_name as database_name", "kmda.name as datasource_name")
+                .select("kmd.name as dataset_name", "kmd.database_name as database_name", "kmda.name as datasource_name", "string_agg(concat(cast(kmg.id as varchar), ',', kmg.name), ';') as glossaries")
                 .from("kun_mt_dataset kmd")
                 .join("inner", "kun_mt_datasource", "kmds").on("kmd.datasource_id = kmds.id")
                 .join("inner", "kun_mt_datasource_attrs", "kmda").on("kmda.datasource_id = kmd.datasource_id")
+                .join("left", "kun_mt_glossary_to_dataset_ref", "kmgtdr").on("kmd.gid = kmgtdr.dataset_id")
+                .join("left", "kun_mt_glossary", "kmg").on("kmg.id = kmgtdr.glossary_id")
                 .where("kmd.gid = ?")
-                .limit(1)
+                .groupBy("kmd.name, kmd.database_name, kmda.name")
                 .getSQL();
 
         return jdbcTemplate.query(sql, rs -> {
@@ -217,14 +221,26 @@ public class DataQualityRepository extends BaseRepository {
             String datasetName = null;
             String databaseName = null;
             String datasourceName = null;
+            List<GlossaryBasic> glossaries = Lists.newArrayList();
             if (rs.next()) {
                 datasetName = rs.getString("dataset_name");
                 databaseName = rs.getString("database_name");
                 datasourceName = rs.getString("datasource_name");
+                String glossariesStr = rs.getString("glossaries");
+                if (StringUtils.isNotBlank(glossariesStr)) {
+                    Arrays.stream(glossariesStr.split(";"))
+                            .filter(info -> info.split(",").length == 2)
+                            .forEach(info -> {
+                        String[] infoArr = info.split(",");
+                        GlossaryBasic glossary = new GlossaryBasic(Long.parseLong(infoArr[0]), infoArr[1]);
+                        glossaries.add(glossary);
+                    });
+                }
             }
             datasetBasic.setDatasetName(datasetName);
             datasetBasic.setDatabase(databaseName);
             datasetBasic.setDataSource(datasourceName);
+            datasetBasic.setGlossaries(glossaries);
 
             return datasetBasic;
         }, datasetGid);
