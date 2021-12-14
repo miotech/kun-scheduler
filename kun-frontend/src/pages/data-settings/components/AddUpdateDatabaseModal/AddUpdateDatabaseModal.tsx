@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useState, useEffect, useCallback } from 'react';
 
-import { Modal, Input, Select, Button, InputNumber } from 'antd';
+import { Modal, Input, Select, Button, Radio } from 'antd';
 import _ from 'lodash';
 
 import { watermarkFormatter } from '@/utils/glossaryUtiles';
@@ -8,12 +8,18 @@ import { watermarkFormatter } from '@/utils/glossaryUtiles';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 
+import { UpdateDatasourceInfo, DatasourceInfo, DataSource } from '@/rematch/models/dataSettings';
 import {
-  UpdateDatasourceInfo,
-  DatasourceInfo,
-  DataSource,
-  DatabaseTypeItemFieldItem,
-} from '@/rematch/models/dataSettings';
+  dataSourceList,
+  DataSourceType,
+  HiveTempType,
+  getConnectionContentMap,
+  otherConnections,
+  hiveConnections,
+  ConnectionItem,
+  getCurrentFields,
+  isSame,
+} from './fieldMap';
 import styles from './AddUpdateDatabaseModal.less';
 
 interface Props {
@@ -24,7 +30,7 @@ interface Props {
 }
 
 const initDatabaseInfo: DatasourceInfo = {
-  typeId: null,
+  datasourceType: null,
   name: '',
   information: {},
   tags: [],
@@ -32,12 +38,7 @@ const initDatabaseInfo: DatasourceInfo = {
 
 const { Option } = Select;
 
-export default memo(function AddUpdateDatabaseModal({
-  visible,
-  database,
-  onClose,
-  onConfirm,
-}: Props) {
+export default memo(function AddUpdateDatabaseModal({ visible, database, onClose, onConfirm }: Props) {
   const t = useI18n();
 
   const { selector, dispatch } = useRedux(state => ({
@@ -45,195 +46,242 @@ export default memo(function AddUpdateDatabaseModal({
     databaseTypeFieldMapList: state.dataSettings.databaseTypeFieldMapList,
   }));
 
-  const modalTitle = useMemo(
-    () => (database ? database.name : t('dataSettings.addDatasource')),
-    [database, t],
-  );
+  const modalTitle = useMemo(() => (database ? database.name : t('dataSettings.addDatasource')), [database, t]);
 
-  const [newDatabase, setNewDatabase] = useState<
-    UpdateDatasourceInfo | DatasourceInfo
-  >(() => initDatabaseInfo);
+  const [newDatabase, setNewDatabase] = useState<UpdateDatasourceInfo | DatasourceInfo>(() => initDatabaseInfo);
 
   useEffect(() => {
     if (visible) {
       dispatch.dataDiscovery.fetchAllTagList();
       if (database) {
-        setNewDatabase(database);
+        const tempDatabase = { ...database };
+        const newInformation = { ...tempDatabase.information };
+        const { userConnection } = newInformation;
+        _.forEach(tempDatabase.information, (v, k) => {
+          if (v && k !== 'userConnection') {
+            if (isSame(userConnection, v)) {
+              newInformation[k] = {
+                connectionType: HiveTempType.SAME,
+              };
+            }
+          }
+        });
+
+        tempDatabase.information = newInformation;
+
+        setNewDatabase(tempDatabase);
       } else {
         setNewDatabase(initDatabaseInfo);
       }
     }
   }, [database, dispatch.dataDiscovery, visible]);
 
-  const [
-    currentDatabaseTypeFieldMap,
-    setCurrentDatabaseTypeFieldMap,
-  ] = useState<DatabaseTypeItemFieldItem[]>([]);
-
-  useEffect(() => {
-    const currentFiledMap = selector.databaseTypeFieldMapList.find(
-      mapItem => mapItem.id === newDatabase.typeId,
-    );
-    if (currentFiledMap) {
-      setCurrentDatabaseTypeFieldMap(currentFiledMap.fields);
-    } else {
-      setCurrentDatabaseTypeFieldMap([]);
-    }
-  }, [newDatabase.typeId, selector.databaseTypeFieldMapList]);
-
-  const allDatabaseTypes = useMemo(
-    () => selector.databaseTypeFieldMapList || [],
-    [selector.databaseTypeFieldMapList],
-  );
-
   const handleUpdateNewDatabase = useCallback((v, k) => {
-    setNewDatabase(b => ({
-      ...b,
-      [k]: v,
-    }));
+    let information = {};
+
+    if (k === 'datasourceType') {
+      if (v === DataSourceType.HIVE) {
+        const informationContent = getConnectionContentMap(HiveTempType.HIVE_SERVER);
+        information = {
+          userConnection: {
+            connectionType: HiveTempType.HIVE_SERVER,
+            ...informationContent,
+          },
+          storageConnection: {
+            connectionType: HiveTempType.SAME,
+          },
+          dataConnection: {
+            connectionType: HiveTempType.SAME,
+          },
+          metadataConnection: {
+            connectionType: HiveTempType.SAME,
+          },
+        };
+      } else {
+        const informationContent = getConnectionContentMap(HiveTempType.HIVE_SERVER);
+        information = {
+          userConnection: {
+            connectionType: v,
+            ...informationContent,
+          },
+        };
+      }
+      setNewDatabase(b => ({
+        ...b,
+        [k]: v,
+        information,
+      }));
+    } else {
+      setNewDatabase(b => ({
+        ...b,
+        [k]: v,
+      }));
+    }
   }, []);
 
   const handleChangeFuncMaps = useMemo(
     () => ({
-      type: (v: string) => handleUpdateNewDatabase(v, 'typeId'),
+      datasourceType: (v: string) => handleUpdateNewDatabase(v, 'datasourceType'),
       tags: (v: string[]) => handleUpdateNewDatabase(v, 'tags'),
-      name: (e: React.ChangeEvent<HTMLInputElement>) =>
-        handleUpdateNewDatabase(e.target.value, 'name'),
+      name: (e: React.ChangeEvent<HTMLInputElement>) => handleUpdateNewDatabase(e.target.value, 'name'),
     }),
     [handleUpdateNewDatabase],
   );
 
-  const handleUpdateNewDatabaseInformation = useCallback((v, k) => {
+  const hanldeUpdateConnectionTempType = useCallback((t1: HiveTempType, connection: string) => {
     setNewDatabase(b => ({
       ...b,
       information: {
         ...b.information,
-        [k]: v,
+        [connection]: {
+          connectionType: t1,
+          ...getConnectionContentMap(t1),
+        },
       },
     }));
   }, []);
 
-  const handleChangeInformationFuncMaps = useMemo(() => {
-    const resultMap: any = {};
-    currentDatabaseTypeFieldMap.forEach(field => {
-      if (field.format === 'NUMBER_INPUT') {
-        resultMap[field.key] = (v: number) =>
-          handleUpdateNewDatabaseInformation(v, field.key);
-      } else {
-        resultMap[field.key] = (e: any) =>
-          handleUpdateNewDatabaseInformation(e.target.value, field.key);
+  const handleUpdateNewDatabaseInformation = useCallback((v, k, connection: string) => {
+    setNewDatabase(b => ({
+      ...b,
+      information: {
+        ...b.information,
+        [connection]: {
+          ...(b.information as any)[connection],
+          [k]: v,
+        },
+      },
+    }));
+  }, []);
+
+  const handleChangeInformationFunc = useCallback(
+    (e, field, connection) => {
+      handleUpdateNewDatabaseInformation(e.target.value, field, connection);
+    },
+    [handleUpdateNewDatabaseInformation],
+  );
+  const handleClickConfirm = useCallback(() => {
+    const { information, datasourceType, ...otherParams } = newDatabase;
+
+    const { userConnection } = information;
+    const resultInformation = { ...information };
+    _.forEach(information, (v, k) => {
+      if (v && k !== 'userConnection') {
+        const { connectionType } = v;
+        if (connectionType === HiveTempType.SAME) {
+          resultInformation[k] = userConnection;
+        }
       }
     });
-    return resultMap;
-  }, [currentDatabaseTypeFieldMap, handleUpdateNewDatabaseInformation]);
 
-  const handleClickConfirm = useCallback(() => {
-    const { information, typeId, ...otherParams } = newDatabase;
-    const currentFiledMap = selector.databaseTypeFieldMapList.find(
-      mapItem => mapItem.id === typeId,
-    );
-    const currrentFieldList = currentFiledMap?.fields;
-    const newInformation: any = {};
-    currrentFieldList?.forEach(field => {
-      newInformation[field.key] = information[field.key] ?? null;
-    });
-    const resultDatabase = {
-      information: newInformation,
-      typeId,
-      ...otherParams,
-    };
+    const resultDatabase = { datasourceType, ...otherParams, information: resultInformation };
+
     onConfirm(resultDatabase);
-  }, [newDatabase, onConfirm, selector.databaseTypeFieldMapList]);
+  }, [newDatabase, onConfirm]);
 
   const disableConfirm = useMemo(() => {
-    let disable = false;
-    currentDatabaseTypeFieldMap.forEach(field => {
-      if (!newDatabase.information[field.key] && field.require) {
-        disable = true;
+    return false;
+  }, []);
+
+  const inputComp = useCallback(
+    (field: { field: string; type: string; require?: boolean }, connection: string) => {
+      let comp: any;
+      switch (field.type) {
+        case 'string':
+          comp = (
+            <div key={field.field} className={styles.inputItem}>
+              <div className={styles.inputTitle}>
+                {t(`dataSettings.field.${field.field}`)}
+                {field.require && <span className={styles.required}>*</span>}
+              </div>
+              <div className={styles.inputComp}>
+                <Input
+                  value={newDatabase.information[connection][field.field]}
+                  onChange={e => handleChangeInformationFunc(e, field.field, connection)}
+                />
+              </div>
+            </div>
+          );
+          break;
+        case 'password':
+          comp = (
+            <div key={field.field} className={styles.inputItem}>
+              <div className={styles.inputTitle}>
+                {t(`dataSettings.field.${field.field}`)}
+                {field.require && <span className={styles.required}>*</span>}
+              </div>
+              <div className={styles.inputComp}>
+                <Input
+                  type="password"
+                  value={newDatabase.information[connection][field.field]}
+                  onChange={e => handleChangeInformationFunc(e, field.field, connection)}
+                />
+              </div>
+            </div>
+          );
+          break;
+
+        default:
+          break;
       }
-    });
-    if (!newDatabase.name) {
-      disable = true;
-    }
-    if (!newDatabase.typeId) {
-      disable = true;
-    }
-    return disable;
-  }, [
-    currentDatabaseTypeFieldMap,
-    newDatabase.information,
-    newDatabase.name,
-    newDatabase.typeId,
-  ]);
+      return comp;
+    },
+    [handleChangeInformationFunc, newDatabase.information, t],
+  );
 
-  const inputComp = (field: DatabaseTypeItemFieldItem) => {
-    let comp: any;
-    switch (field.format) {
-      case 'INPUT':
-        comp = (
-          <div key={field.key} className={styles.inputItem}>
-            <div className={styles.inputTitle}>
-              {t(`dataSettings.field.${field.key}`)}
-              {field.require && <span className={styles.required}>*</span>}
-            </div>
-            <div className={styles.inputComp}>
-              <Input
-                value={newDatabase.information[field.key]}
-                onChange={handleChangeInformationFuncMaps[field.key]}
-              />
-            </div>
-          </div>
-        );
-        break;
-      case 'PASSWORD':
-        comp = (
-          <div key={field.key} className={styles.inputItem}>
-            <div className={styles.inputTitle}>
-              {t(`dataSettings.field.${field.key}`)}
-              {field.require && <span className={styles.required}>*</span>}
-            </div>
-            <div className={styles.inputComp}>
-              <Input
-                type="password"
-                value={newDatabase.information[field.key]}
-                onChange={handleChangeInformationFuncMaps[field.key]}
-              />
-            </div>
-          </div>
-        );
-        break;
-      case 'NUMBER_INPUT':
-        comp = (
-          <div key={field.key} className={styles.inputItem}>
-            <div className={styles.inputTitle}>
-              {t(`dataSettings.field.${field.key}`)}
-              {field.require && <span className={styles.required}>*</span>}
-            </div>
-            <div className={styles.inputComp}>
-              <InputNumber
-                style={{ width: '100%' }}
-                value={
-                  newDatabase.information[field.key]
-                    ? Number(newDatabase.information[field.key])
-                    : undefined
-                }
-                onChange={handleChangeInformationFuncMaps[field.key]}
-              />
-            </div>
-          </div>
-        );
-        break;
-
-      default:
-        break;
+  const currentConnections: ConnectionItem[] | null = useMemo(() => {
+    if (!newDatabase.datasourceType) {
+      return null;
     }
-    return comp;
-  };
+    if (newDatabase.datasourceType !== DataSourceType.HIVE) {
+      return otherConnections;
+    }
+    return hiveConnections;
+  }, [newDatabase.datasourceType]);
 
-  const informationCompList = _.orderBy(
-    currentDatabaseTypeFieldMap,
-    'order',
-  ).map(field => inputComp(field));
+  const getConnectionUI = useCallback(
+    (c: ConnectionItem) => {
+      if (!c) {
+        return null;
+      }
+      const connectionTypeValue = newDatabase.information?.[c.connection]?.connectionType;
+      const radioOptions = c.templateList;
+      const fields = getCurrentFields(connectionTypeValue as HiveTempType);
+      return (
+        <div className={styles.connectionSection} key={c.connection}>
+          <div className={styles.connectionTitle}>{t(`dataSettings.addUpdate.connectionTitle.${c.connection}`)}</div>
+          {radioOptions.length > 1 && (
+            <div className={styles.inputItem}>
+              <div className={styles.inputTitle}>{t('dataSettings.field.accessMethod')}</div>
+              <div className={styles.inputComp}>
+                <Radio.Group
+                  onChange={(v: any) => hanldeUpdateConnectionTempType(v.target.value, c.connection)}
+                  value={connectionTypeValue}
+                >
+                  {radioOptions.map(i => (
+                    <Radio value={i} key={i}>
+                      {t(`dataSettings.addUpdate.connectionTypeOption.${i}`)}
+                    </Radio>
+                  ))}
+                </Radio.Group>
+              </div>
+            </div>
+          )}
+          {fields.map(field => (
+            <div key={field.field}>{inputComp(field, c.connection)}</div>
+          ))}
+        </div>
+      );
+    },
+    [hanldeUpdateConnectionTempType, inputComp, newDatabase, t],
+  );
+
+  const connectionUIList = useMemo(() => {
+    if (!currentConnections) {
+      return null;
+    }
+    return currentConnections.map(i => getConnectionUI(i));
+  }, [currentConnections, getConnectionUI]);
 
   return (
     <Modal
@@ -251,10 +299,7 @@ export default memo(function AddUpdateDatabaseModal({
             <span className={styles.required}>*</span>
           </div>
           <div className={styles.inputComp}>
-            <Input
-              value={newDatabase.name}
-              onChange={handleChangeFuncMaps.name}
-            />
+            <Input value={newDatabase.name} onChange={handleChangeFuncMaps.name} />
           </div>
         </div>
 
@@ -266,70 +311,54 @@ export default memo(function AddUpdateDatabaseModal({
           <div className={styles.inputComp}>
             <Select
               style={{ width: '100%' }}
-              value={newDatabase.typeId || undefined}
-              onChange={handleChangeFuncMaps.type}
+              value={newDatabase.datasourceType || undefined}
+              onChange={handleChangeFuncMaps.datasourceType}
             >
-              {allDatabaseTypes.map(type => (
-                <Option key={type.id} value={type.id}>
-                  {type.type}
+              {dataSourceList.map(type => (
+                <Option key={type} value={type}>
+                  {type}
                 </Option>
               ))}
             </Select>
           </div>
         </div>
 
-        {informationCompList}
+        {connectionUIList}
 
         {database && (
           <>
             <div className={styles.inputItem}>
-              <div className={styles.inputTitle}>
-                {t('dataSettings.addUpdate.createUser')}
-              </div>
+              <div className={styles.inputTitle}>{t('dataSettings.addUpdate.createUser')}</div>
               <div className={styles.inputComp}>
                 <Input disabled value={database.create_user} />
               </div>
             </div>
 
             <div className={styles.inputItem}>
-              <div className={styles.inputTitle}>
-                {t('dataSettings.addUpdate.createTime')}
-              </div>
+              <div className={styles.inputTitle}>{t('dataSettings.addUpdate.createTime')}</div>
               <div className={styles.inputComp}>
-                <Input
-                  disabled
-                  value={watermarkFormatter(database.create_time)}
-                />
+                <Input disabled value={watermarkFormatter(database.create_time)} />
               </div>
             </div>
 
             <div className={styles.inputItem}>
-              <div className={styles.inputTitle}>
-                {t('dataSettings.addUpdate.updateUser')}
-              </div>
+              <div className={styles.inputTitle}>{t('dataSettings.addUpdate.updateUser')}</div>
               <div className={styles.inputComp}>
                 <Input disabled value={database.update_user} />
               </div>
             </div>
 
             <div className={styles.inputItem}>
-              <div className={styles.inputTitle}>
-                {t('dataSettings.addUpdate.updateTime')}
-              </div>
+              <div className={styles.inputTitle}>{t('dataSettings.addUpdate.updateTime')}</div>
               <div className={styles.inputComp}>
-                <Input
-                  disabled
-                  value={watermarkFormatter(database.update_time)}
-                />
+                <Input disabled value={watermarkFormatter(database.update_time)} />
               </div>
             </div>
           </>
         )}
 
         <div className={styles.inputItem}>
-          <div className={styles.inputTitle}>
-            {t('dataSettings.addUpdate.tags')}
-          </div>
+          <div className={styles.inputTitle}>{t('dataSettings.addUpdate.tags')}</div>
           <div className={styles.inputComp}>
             <Select
               style={{ width: '100%' }}
@@ -350,12 +379,7 @@ export default memo(function AddUpdateDatabaseModal({
         <Button size="large" style={{ marginRight: 24 }} onClick={onClose}>
           {t('common.button.cancel')}
         </Button>
-        <Button
-          disabled={disableConfirm}
-          size="large"
-          type="primary"
-          onClick={handleClickConfirm}
-        >
+        <Button disabled={disableConfirm} size="large" type="primary" onClick={handleClickConfirm}>
           {database ? t('common.button.update') : t('common.button.add')}
         </Button>
       </div>
