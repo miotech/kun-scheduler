@@ -6,6 +6,7 @@ import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskRunProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.core.model.common.Condition;
 import com.miotech.kun.workflow.core.model.common.Tag;
@@ -21,7 +22,6 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.hamcrest.Matchers;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.inject.Inject;
@@ -1092,5 +1092,28 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         List<Long> result = taskRunDao.fetchTaskRunIdsWithBlockType(Collections.singletonList(taskRun2.getId()));
 
         assertThat(result.get(0), is(taskRun2.getId()));
+    }
+
+    @Test
+    public void fetchDirectUpstreamTaskRun_should_only_contains_direct_upstream(){
+        //prepare
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4,"0>>1;1>>3;2>>3");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList,"0>>1;1>>3;2>>3");
+        for (Task task : taskList){
+            taskDao.create(task);
+        }
+        for(TaskRun taskRun : taskRunList){
+            taskRunDao.createTaskRun(taskRun);
+        }
+        TaskRun srcTaskRun = taskRunList.get(3);
+
+        List<TaskRunProps> directUpstream = taskRunDao.fetchUpstreamTaskRunsById(srcTaskRun.getId());
+
+        //verify
+        assertThat(directUpstream,hasSize(2));
+        List<Long> fetchedIds = directUpstream.stream().map(TaskRunProps::getId).collect(Collectors.toList());
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRun taskRun3 = taskRunList.get(2);
+        assertThat(fetchedIds,containsInAnyOrder(taskRun2.getId(),taskRun3.getId()));
     }
 }

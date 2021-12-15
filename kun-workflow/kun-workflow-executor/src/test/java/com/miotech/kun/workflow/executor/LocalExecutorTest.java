@@ -12,6 +12,7 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import com.miotech.kun.workflow.LocalScheduler;
+import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.executetarget.ExecuteTargetService;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
@@ -20,11 +21,7 @@ import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
-import com.miotech.kun.workflow.core.event.CheckResultEvent;
-import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
-import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
-import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
-import com.miotech.kun.workflow.core.execution.ExecCommand;
+import com.miotech.kun.workflow.core.event.*;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.operator.Operator;
@@ -55,8 +52,6 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.neo4j.ogm.session.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import javax.inject.Inject;
 import javax.sql.DataSource;
@@ -118,23 +113,15 @@ public class LocalExecutorTest extends CommonTestBase {
     @Inject
     private DatabaseOperator databaseOperator;
 
+    @Inject
+    private TaskRunStateMachine taskRunStateMachine;
+
     private MockEventSubscriber mockEventSubscriber;
 
 
     private Props props;
 
     private final Logger logger = LoggerFactory.getLogger(LocalExecutorTest.class);
-
-    private static final DockerImageName REDIS_IMAGE = DockerImageName.parse("redis:6.0.8");
-
-    public static GenericContainer redis = getRedis();
-
-    public static GenericContainer getRedis() {
-        GenericContainer redis = new GenericContainer(REDIS_IMAGE)
-                .withExposedPorts(6379);
-        redis.start();
-        return redis;
-    }
 
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -149,10 +136,6 @@ public class LocalExecutorTest extends CommonTestBase {
     @Override
     protected void configuration() {
         props = new Props();
-        String redisIp = redis.getHost();
-        logger.info("redisIp:" + redisIp);
-        props.put("rpc.registry", "redis://" + redisIp + ":" + redis.getMappedPort(6379));
-        props.put("rpc.port", 9001);
         props.put("executor.env.resourceQueues", "default,test");
         props.put("executor.env.resourceQueues.default.quota.workerNumbers", 2);
         props.put("executor.env.resourceQueues.test.quota.workerNumbers", 2);
@@ -165,7 +148,7 @@ public class LocalExecutorTest extends CommonTestBase {
         MetadataServiceFacade mockMetadataFacade = Mockito.mock(MetadataServiceFacade.class);
         bind(SessionFactory.class, mock(SessionFactory.class));
         bind(MetadataServiceFacade.class, mockMetadataFacade);
-        bind(LineageServiceFacade.class,mock(LineageServiceFacade.class));
+        bind(LineageServiceFacade.class, mock(LineageServiceFacade.class));
         bind(EventBus.class, new EventBus());
         bind(EventPublisher.class, new NopEventPublisher());
         mockEventSubscriber = new MockEventSubscriber();
@@ -193,17 +176,18 @@ public class LocalExecutorTest extends CommonTestBase {
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
         workerMonitor.start();
+        taskRunStateMachine.start();
     }
 
     @After
     @Override
-    public void tearDown(){
+    public void tearDown() {
         workerLifeCycleManager.shutdown();
         workerMonitor.stop();
         super.tearDown();
         try {
             ((HikariDataSource) dataSource).close();
-        }catch (Exception e){
+        } catch (Exception e) {
 
         }
 
@@ -234,7 +218,7 @@ public class LocalExecutorTest extends CommonTestBase {
         ).when(spyBackend).startProcess(ArgumentMatchers.any(), ArgumentMatchers.any());
         executor.recover();
         awaitUntilAttemptDone(attempt.getId());
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
         assertThat(attemptProps.getAttempt(), is(1));
@@ -258,7 +242,6 @@ public class LocalExecutorTest extends CommonTestBase {
         // events
         assertStatusHistory(attempt.getId(),
                 TaskRunStatus.CREATED,
-                TaskRunStatus.QUEUED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.CHECK,
@@ -311,7 +294,6 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.CREATED,
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.RUNNING,
-                TaskRunStatus.RUNNING,
                 TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
 
@@ -321,20 +303,20 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(finishedEvent.getInlets(), hasSize(2));
         assertThat(finishedEvent.getOutlets(), hasSize(1));
 
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
         assertThat(localQueueManager.getCapacity("default"), is(localQueueManager.getResourceQueue("default").getWorkerNumbers()));
 
     }
 
     @Test
     //taskAttempt下发到worker执行，executor重启,重启前销毁worker
-    public void executorRestartAndKillWorker() throws IOException {
+    public void executorRestartWhenWorkerIsRunning() throws IOException {
         TaskRun mockTaskRun = MockTaskRunFactory.createTaskRun();
         TaskAttempt attempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(mockTaskRun, TaskRunStatus.CREATED);
         prepareAttempt(TestOperator1.class, attempt);
         doAnswer(invocation -> {
-            ExecCommand command = invocation.getArgument(0, ExecCommand.class);
-            miscService.changeTaskAttemptStatus(command.getTaskAttemptId(),TaskRunStatus.RUNNING);
+            TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RUNNING,attempt.getId());
+            eventBus.post(taskRunTransitionEvent);
             return null;
         }).when(spyBackend).startProcess(ArgumentMatchers.any(), ArgumentMatchers.any());
         executor.submit(attempt);
@@ -346,7 +328,7 @@ public class LocalExecutorTest extends CommonTestBase {
         executor.reset();
         executor.recover();
         awaitUntilAttemptDone(attempt.getId());
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
         assertThat(attemptProps.getAttempt(), is(1));
@@ -408,7 +390,7 @@ public class LocalExecutorTest extends CommonTestBase {
 
         //clean up running process
         executor.cancel(runningTaskAttempt.getId());
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
         // events
         assertStatusHistory(runningTaskAttempt.getId(),
                 TaskRunStatus.CREATED,
@@ -428,7 +410,7 @@ public class LocalExecutorTest extends CommonTestBase {
         TaskAttempt newTaskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
         taskRunDao.createAttempt(newTaskAttempt);
 
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
         boolean result = executor.submit(newTaskAttempt);
         assertThat(result, is(true));
         // events
@@ -484,7 +466,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(attempt.getId());
         assertThat(finishedEvent.getAttemptId(), is(attempt.getId()));
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
@@ -517,7 +499,7 @@ public class LocalExecutorTest extends CommonTestBase {
         attempt = prepareAttempt(TestOperator1_1.class, "TestOperator1");
         executor.submit(attempt);
         awaitUntilAttemptDone(attempt.getId());
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
         // task_run and task_attempt
         attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
@@ -543,7 +525,7 @@ public class LocalExecutorTest extends CommonTestBase {
         // verify
         awaitUntilAttemptDone(attempt1.getId());
         awaitUntilAttemptDone(attempt2.getId());
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
         // task_run and task_attempt
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt1.getTaskRun().getId());
@@ -600,7 +582,7 @@ public class LocalExecutorTest extends CommonTestBase {
 
         // verify
         awaitUntilAttemptDone(attempt.getId());
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
         // task_run and task_attempt
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
@@ -681,7 +663,7 @@ public class LocalExecutorTest extends CommonTestBase {
 
         // verify
         awaitUntilAttemptDone(attempt.getId());
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
         // task_run and task_attempt
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
@@ -726,7 +708,7 @@ public class LocalExecutorTest extends CommonTestBase {
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
         // verify
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
@@ -771,7 +753,7 @@ public class LocalExecutorTest extends CommonTestBase {
 
         // wait until aborted
         awaitUntilAttemptAbort(attempt.getId());
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
 
         // verify
@@ -813,7 +795,7 @@ public class LocalExecutorTest extends CommonTestBase {
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
 
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
         // verify
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
@@ -856,7 +838,7 @@ public class LocalExecutorTest extends CommonTestBase {
 
         // wait until aborted
         awaitUntilAttemptDone(attempt.getId());
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
         // verify
         TaskAttemptProps attemptProps = taskRunDao.fetchLatestTaskAttempt(attempt.getTaskRun().getId());
@@ -909,7 +891,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.QUEUED,
                 TaskRunStatus.ABORTED);
 
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
 
         assertThat(localQueueManager.getCapacity("default"), is(2));
 
@@ -1055,7 +1037,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 .build();
         TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
         TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
-        prepareAttempt(TestOperator1.class,taskAttempt);
+        prepareAttempt(TestOperator1.class, taskAttempt);
 
         executor.submit(taskAttempt);
 
@@ -1089,7 +1071,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.CHECK,
                 TaskRunStatus.CHECK_FAILED);
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(taskAttempt.getId());
         assertThat(finishedEvent.getAttemptId(), is(taskAttempt.getId()));
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.CHECK_FAILED));
@@ -1099,7 +1081,7 @@ public class LocalExecutorTest extends CommonTestBase {
     }
 
     @Test
-    public void taskRunTestCasePass_should_be_success() throws IOException{
+    public void taskRunTestCasePass_should_be_success() throws IOException {
         //mock data quality
         TaskAttemptCheckEventListener listener = new TaskAttemptCheckEventListener();
         listener.setValidateResult(true);
@@ -1111,7 +1093,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 .build();
         TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
         TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
-        prepareAttempt(TestOperator1.class,taskAttempt);
+        prepareAttempt(TestOperator1.class, taskAttempt);
 
         executor.submit(taskAttempt);
 
@@ -1145,7 +1127,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(taskAttempt.getId());
         assertThat(finishedEvent.getAttemptId(), is(taskAttempt.getId()));
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
@@ -1155,7 +1137,7 @@ public class LocalExecutorTest extends CommonTestBase {
     }
 
     @Test
-    public void runWorkerWithTarget() throws IOException{
+    public void runWorkerWithTarget() throws IOException {
         //prepare
         ExecuteTarget testTarget = ExecuteTarget.newBuilder()
                 .withName("test")
@@ -1174,7 +1156,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 .withExecuteTarget(expectTarget)
                 .build();
         TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
-        prepareAttempt(TestTargetOperator.class,taskAttempt);
+        prepareAttempt(TestTargetOperator.class, taskAttempt);
 
         executor.submit(taskAttempt);
 
@@ -1206,7 +1188,7 @@ public class LocalExecutorTest extends CommonTestBase {
                 TaskRunStatus.RUNNING,
                 TaskRunStatus.CHECK,
                 TaskRunStatus.SUCCESS);
-        awaitUntilProcessDown("default",0);
+        awaitUntilProcessDown("default", 0);
         TaskAttemptFinishedEvent finishedEvent = getFinishedEvent(taskAttempt.getId());
         assertThat(finishedEvent.getAttemptId(), is(taskAttempt.getId()));
         assertThat(finishedEvent.getFinalStatus(), is(TaskRunStatus.SUCCESS));
@@ -1214,7 +1196,7 @@ public class LocalExecutorTest extends CommonTestBase {
 
 
     @Test
-    public void fetchTaskRunInQueued_queued_at_should_not_null(){
+    public void fetchTaskRunInQueued_queued_at_should_not_null() {
         Task task = MockTaskFactory.createTask();
         taskDao.create(task);
         TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
@@ -1240,8 +1222,8 @@ public class LocalExecutorTest extends CommonTestBase {
 
         TaskRun queuedTaskRun = taskRunDao.fetchTaskRunById(taskRun.getId()).get();
 
-        assertThat(queuedTaskRun.getQueuedAt(),notNullValue());
-        assertThat(queuedTaskRun.getStatus(),is(TaskRunStatus.QUEUED));
+        assertThat(queuedTaskRun.getQueuedAt(), notNullValue());
+        assertThat(queuedTaskRun.getStatus(), is(TaskRunStatus.QUEUED));
 
     }
 
@@ -1347,14 +1329,14 @@ public class LocalExecutorTest extends CommonTestBase {
     }
 
 
-    private void awaitUntilOperatorRunning(Long attemptId){
+    private void awaitUntilOperatorRunning(Long attemptId) {
         TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(attemptId).get();
         await().atMost(120, TimeUnit.SECONDS).until(() -> {
             try {
                 Resource log = resourceLoader.getResource(taskAttempt.getLogPath());
                 String content = ResourceUtils.content(log.getInputStream());
                 return content.contains("Operator start running");
-            }catch (Exception e){
+            } catch (Exception e) {
                 return false;
             }
 
@@ -1386,19 +1368,19 @@ public class LocalExecutorTest extends CommonTestBase {
         return new TestWorker2();
     }
 
-    class TaskAttemptCheckEventListener{
+    class TaskAttemptCheckEventListener {
 
         private boolean validateResult;
 
-        public void setValidateResult(boolean validateResult){
+        public void setValidateResult(boolean validateResult) {
             this.validateResult = validateResult;
         }
 
         @Subscribe
         public void onReceive(Event event) {
-            if(event instanceof TaskAttemptCheckEvent){
+            if (event instanceof TaskAttemptCheckEvent) {
                 Long taskRunId = ((TaskAttemptCheckEvent) event).getTaskRunId();
-                CheckResultEvent checkResultEvent = new CheckResultEvent(taskRunId,validateResult);
+                CheckResultEvent checkResultEvent = new CheckResultEvent(taskRunId, validateResult);
                 mockEventSubscriber.receiveEvent(checkResultEvent);
             }
         }

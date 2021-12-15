@@ -9,6 +9,7 @@ import com.miotech.kun.commons.pubsub.subscribe.EventSubscriber;
 import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
+import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -54,6 +55,9 @@ public class WorkerLifeCycleManagerTest extends CommonTestBase{
     @Inject
     private MockWorkerLifeCycleManager mockWorkerLifeCycleManager;
 
+    @Inject
+    private TaskRunStateMachine taskRunStateMachine;
+
     @Override
     protected void configuration() {
 
@@ -78,6 +82,7 @@ public class WorkerLifeCycleManagerTest extends CommonTestBase{
     public void init(){
         mockWorkerLifeCycleManager = spy(workerLifeCycleManager);
         mockWorkerLifeCycleManager.init();
+        taskRunStateMachine.start();
     }
 
     @After
@@ -95,17 +100,20 @@ public class WorkerLifeCycleManagerTest extends CommonTestBase{
         taskRunDao.createAttempt(taskAttempt);
 
         mockWorkerLifeCycleManager.start(taskAttempt);
-
         //execute
         awaitUntilAttemptStarted(taskAttempt.getId());
+        mockWorkerLifeCycleManager.markRunning(taskAttempt.getId());
+
         mockWorkerLifeCycleManager.markFailed(taskAttempt.getId());
 
         //first retry
         awaitUntilAttemptStarted(taskAttempt.getId());
+        mockWorkerLifeCycleManager.markRunning(taskAttempt.getId());
         mockWorkerLifeCycleManager.markFailed(taskAttempt.getId());
 
         //second retry
         awaitUntilAttemptStarted(taskAttempt.getId());
+        mockWorkerLifeCycleManager.markRunning(taskAttempt.getId());
         mockWorkerLifeCycleManager.markFailed(taskAttempt.getId());
 
         awaitUntilAttemptDone(taskAttempt.getId());
@@ -130,10 +138,12 @@ public class WorkerLifeCycleManagerTest extends CommonTestBase{
 
         //execute
         awaitUntilAttemptStarted(taskAttempt.getId());
+        mockWorkerLifeCycleManager.markRunning(taskAttempt.getId());
         mockWorkerLifeCycleManager.markFailed(taskAttempt.getId());
 
         //first retry
         awaitUntilAttemptStarted(taskAttempt.getId());
+        mockWorkerLifeCycleManager.markRunning(taskAttempt.getId());
         mockWorkerLifeCycleManager.markDone(taskAttempt.getId());
 
         awaitUntilAttemptDone(taskAttempt.getId());
@@ -158,6 +168,7 @@ public class WorkerLifeCycleManagerTest extends CommonTestBase{
 
         //execute
         awaitUntilAttemptStarted(taskAttempt.getId());
+        mockWorkerLifeCycleManager.markRunning(taskAttempt.getId());
         mockWorkerLifeCycleManager.markFailed(taskAttempt.getId());
 
         awaitUntilAttemptDone(taskAttempt.getId());

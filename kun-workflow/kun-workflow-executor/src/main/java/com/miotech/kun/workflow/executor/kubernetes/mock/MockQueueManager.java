@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor.kubernetes.mock;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
@@ -18,8 +19,8 @@ public class MockQueueManager extends AbstractQueueManager {
     Map<String, Integer> map = new ConcurrentHashMap<>();
 
     @Inject
-    public MockQueueManager(Props props, MiscService miscService) {
-        super(props, miscService);
+    public MockQueueManager(Props props, MiscService miscService, EventBus eventBus) {
+        super(props, miscService, eventBus);
     }
 
     @Override

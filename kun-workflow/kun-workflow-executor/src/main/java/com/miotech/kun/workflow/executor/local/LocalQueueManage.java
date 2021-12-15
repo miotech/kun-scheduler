@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.executor.local;
 
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.Props;
@@ -21,8 +22,8 @@ public class LocalQueueManage extends AbstractQueueManager {
 
 
     @Inject
-    public LocalQueueManage(Props props, MiscService miscService, LocalProcessBackend localProcessBackend) {
-        super(props, miscService);
+    public LocalQueueManage(Props props, MiscService miscService, LocalProcessBackend localProcessBackend, EventBus eventBus) {
+        super(props, miscService,eventBus);
         this.localProcessBackend = localProcessBackend;
     }
 
