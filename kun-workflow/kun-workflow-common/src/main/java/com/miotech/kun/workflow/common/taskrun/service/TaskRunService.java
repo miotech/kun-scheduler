@@ -119,8 +119,10 @@ public class TaskRunService {
         if (endLineIndex != null && endLineIndex == Integer.MAX_VALUE) {
             try {
                 logger.debug("trying to get worker log from executor");
-                String logs = executor.workerLog(taskAttempt.getId(), 0 - startLineIndex);
+                Integer tailLines = startLineIndex == 0? Integer.MAX_VALUE : -startLineIndex;
+                String logs = executor.workerLog(taskAttempt.getId(), tailLines);
                 List<String> logList = coverLogsToList(logs);
+                lineCount = logList.size();
                 logger.debug("get logs from executor success,line count = {}", lineCount);
                 return TaskRunLogVOFactory.create(taskRunId, taskAttempt.getAttempt(), startLineIndex, endLineIndex, logList);
             } catch (RuntimeException e) {
