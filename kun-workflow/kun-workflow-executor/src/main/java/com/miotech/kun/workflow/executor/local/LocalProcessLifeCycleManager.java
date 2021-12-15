@@ -91,7 +91,6 @@ public class LocalProcessLifeCycleManager extends WorkerLifeCycleManager {
         logger.debug("Fetched operator's details. operatorId={}, details={}", operatorId, operatorDetail);
 
         ExecCommand command = new ExecCommand();
-        command.setRegisterUrl(props.getString("rpc.registry"));
         command.setTaskAttemptId(attemptId);
         command.setTaskRunId(attempt.getTaskRun().getId());
         command.setKeepAlive(false);

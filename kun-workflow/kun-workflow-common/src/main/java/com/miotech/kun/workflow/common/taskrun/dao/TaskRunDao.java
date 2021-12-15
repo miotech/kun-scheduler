@@ -16,6 +16,7 @@ import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
+import com.miotech.kun.workflow.common.taskrun.bo.TaskRunProps;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.tick.TickDao;
 import com.miotech.kun.workflow.core.execution.Config;
@@ -51,6 +52,8 @@ public class TaskRunDao {
     protected static final String TASK_RUN_MODEL_NAME = "taskrun";
     protected static final String TASK_RUN_TABLE_NAME = "kun_wf_task_run";
     private static final List<String> taskRunCols = ImmutableList.of("id", "task_id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "config", "inlets", "outlets", "failed_upstream_task_run_ids", "created_at", "updated_at", "queue_name", "priority", "target");
+    private static final List<String> taskRunPropsCols = ImmutableList.of("id", "scheduled_tick", "status", "schedule_type", "queued_at", "start_at", "end_at", "config", "created_at", "updated_at", "queue_name", "priority", "target");
+
 
     private static final String TASK_ATTEMPT_MODEL_NAME = "taskattempt";
     private static final String TASK_ATTEMPT_TABLE_NAME = "kun_wf_task_attempt";
@@ -62,7 +65,7 @@ public class TaskRunDao {
 
     private static final String CONDITION_TABLE_NAME = "kun_wf_task_run_conditions";
     private static final String CONDITION_MODEL_NAME = "task_run_conditions";
-    private static final  List<String> taskRunConditionCols = ImmutableList.of("task_run_id", "condition", "result", "type", "created_at", "updated_at");
+    private static final List<String> taskRunConditionCols = ImmutableList.of("task_run_id", "condition", "result", "type", "created_at", "updated_at");
 
     private static final Map<String, String> sortKeyToFieldMapper = new HashMap<>();
 
@@ -604,10 +607,9 @@ public class TaskRunDao {
     /**
      * update task run status whose original status is allowed to change status
      *
-     * @param taskRunIds task runs to be updated
-     * @param taskRunStatus result status
+     * @param taskRunIds          task runs to be updated
+     * @param taskRunStatus       result status
      * @param allowToChangeStatus task run in these status is allowed to update status
-     *
      * @return
      */
     public void updateTaskRunStatusByTaskRunId(List<Long> taskRunIds, TaskRunStatus taskRunStatus,
@@ -1327,7 +1329,7 @@ public class TaskRunDao {
      * result is calculated by status
      *
      * @param taskRunIds
-     * @param status status should be static (exclude xx-ing)
+     * @param status     status should be static (exclude xx-ing)
      * @return number of effected rows
      */
     public int updateConditionsWithTaskRuns(List<Long> taskRunIds, TaskRunStatus status) {
@@ -1406,7 +1408,7 @@ public class TaskRunDao {
                 .where("condition in (" + repeatJoin("?", ",", conditions.size()) + ")")
                 .asPrepared().getSQL();
         return dbOperator.fetchAll(conditionSQL, rs -> rs.getLong(1),
-                conditions.stream().map(JSONUtils::toJsonString).toArray())
+                        conditions.stream().map(JSONUtils::toJsonString).toArray())
                 .stream().distinct().collect(Collectors.toList());
     }
 
@@ -1540,6 +1542,31 @@ public class TaskRunDao {
         Preconditions.checkArgument(distance > 0, "Argument `distance` should be positive, but found: %d", distance);
 
         return fetchDependentTaskRunsById(srcTaskRunId, distance, DependencyDirection.DOWNSTREAM, includeSelf);
+    }
+
+    /**
+     * fetch direct upstreamTaskRun by taskRunId
+     *
+     * @param srcTaskRunId
+     * @return
+     */
+    public List<TaskRunProps> fetchUpstreamTaskRunsById(Long srcTaskRunId) {
+        String subSql = DefaultSQLBuilder.newBuilder()
+                .select("upstream_task_run_id")
+                .from(RELATION_TABLE_NAME)
+                .where("downstream_task_run_id = ?")
+                .asPrepared()
+                .getSQL();
+        Map<String, List<String>> columnsMap = new HashMap<>();
+        columnsMap.put(TASK_RUN_MODEL_NAME, taskRunPropsCols);
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(taskRunPropsCols.toArray(new String[0]))
+                .from(TASK_RUN_TABLE_NAME)
+                .where("id in ( " + subSql + " )")
+                .asPrepared()
+                .getSQL();
+
+        return dbOperator.fetchAll(sql, TaskRunPropsMapper.INSTANCE, srcTaskRunId);
     }
 
     /**
@@ -1718,6 +1745,31 @@ public class TaskRunDao {
         }
     }
 
+    public static class TaskRunPropsMapper implements ResultSetMapper<TaskRunProps> {
+
+        public static final TaskRunDao.TaskRunPropsMapper INSTANCE = new TaskRunDao.TaskRunPropsMapper();
+
+        @Override
+        public TaskRunProps map(ResultSet rs) throws SQLException {
+            return TaskRunProps.newBuilder()
+                    .withId(rs.getLong("id"))
+                    .withConfig(JSONUtils.jsonToObject(rs.getString("config"), Config.class))
+                    .withScheduledTick(new Tick(rs.getString("scheduled_tick")))
+                    .withStatus(TaskRunStatus.valueOf(rs.getString("status")))
+                    .withQueuedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("queued_at")))
+                    .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("start_at")))
+                    .withEndAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("end_at")))
+                    .withCreatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("created_at")))
+                    .withUpdatedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp("updated_at")))
+                    .withScheduleType(ScheduleType.valueOf(rs.getString("schedule_type")))
+                    .withQueueName(rs.getString("queue_name"))
+                    .withPriority(rs.getInt("priority"))
+                    .withExecuteTarget(JSONUtils.jsonToObjectOrDefault(rs.getString("target"),
+                            ExecuteTarget.class, ExecuteTarget.newBuilder().build()))
+                    .build();
+        }
+    }
+
 
     public static class TaskRunMapper implements ResultSetMapper<TaskRun> {
         public static final TaskRunDao.TaskRunMapper INSTANCE = new TaskRunDao.TaskRunMapper();
@@ -1739,7 +1791,8 @@ public class TaskRunDao {
                     .withOutlets(JSONUtils.jsonToObject(rs.getString(TASK_RUN_MODEL_NAME + "_outlets"), new TypeReference<List<DataStore>>() {
                     }))
                     .withFailedUpstreamTaskRunIds(JSONUtils.jsonToObjectOrDefault(rs.getString(TASK_RUN_MODEL_NAME + "_failed_upstream_task_run_ids"),
-                            new TypeReference<List<Long>>(){}, new ArrayList<>()))
+                            new TypeReference<List<Long>>() {
+                            }, new ArrayList<>()))
                     .withDependentTaskRunIds(Collections.emptyList())
                     .withQueuedAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_queued_at")))
                     .withStartAt(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_RUN_MODEL_NAME + "_start_at")))
@@ -1755,7 +1808,7 @@ public class TaskRunDao {
         }
     }
 
-    private static class TaskRunConditionMapper implements  ResultSetMapper<TaskRunCondition> {
+    private static class TaskRunConditionMapper implements ResultSetMapper<TaskRunCondition> {
 
         @Override
         public TaskRunCondition map(ResultSet rs) throws SQLException {

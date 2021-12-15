@@ -16,6 +16,7 @@ import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.core.pubsub.RedisEventPublisher;
 import com.miotech.kun.workflow.core.pubsub.RedisEventSubscriber;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
+import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.executor.WorkerLifeCycleManager;
 import com.miotech.kun.workflow.executor.WorkerMonitor;
 import com.miotech.kun.workflow.executor.kubernetes.KubernetesExecutor;
@@ -72,6 +73,7 @@ public class KunWorkflowServerModule extends AppModule {
         bind(Scheduler.class).to(LocalScheduler.class);
         bind(TaskGraph.class).to(DatabaseTaskGraph.class);
         bind(RecoverService.class);
+        bind(TaskRunStateMachine.class);
         bind(WorkflowServiceFacade.class).to(WorkflowServiceFacadeImpl.class);
     }
 

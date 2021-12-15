@@ -8,6 +8,8 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
 import com.miotech.kun.workflow.core.event.CheckResultEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
@@ -18,7 +20,6 @@ import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
@@ -124,11 +125,11 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         if (workerSnapshot == null) {
             TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(taskAttemptId).get();
             if (taskAttempt.getStatus().equals(TaskRunStatus.CREATED)) {
-                updateTaskAttemptAborted(taskAttemptId);
+                sendAbortEvent(taskAttemptId);
                 return;
-            }else if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
+            } else if (taskAttempt.getStatus().equals(TaskRunStatus.QUEUED)) {
                 queueManager.remove(taskAttempt);
-                updateTaskAttemptAborted(taskAttemptId);
+                sendAbortEvent(taskAttemptId);
                 return;
             } else {
                 throw new IllegalStateException("unable to stop taskRun with status: " + taskAttempt.getStatus());
@@ -137,7 +138,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         if (!stopWorker(taskAttemptId)) {
             throw new IllegalStateException("stop worker failed");
         }
-        updateTaskAttemptAborted(taskAttemptId);
+        sendAbortEvent(taskAttemptId);
         cleanupWorker(workerSnapshot.getIns());
     }
 
@@ -171,62 +172,69 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         String logPath = logPathOfTaskAttempt(taskAttempt.getId());
         logger.debug("Update logPath to TaskAttempt. attemptId={}, path={}", taskAttempt.getId(), logPath);
         taskRunDao.updateTaskAttemptLogPath(taskAttempt.getId(), logPath);
-
-        workerMonitor.register(taskAttempt.getId(), new InnerEventHandler());
+        Long taskAttemptId = taskAttempt.getId();
+        workerMonitor.register(taskAttemptId, new InnerEventHandler());
         try {
             startWorker(taskAttempt
                     .cloneBuilder()
                     .withLogPath(logPath)
                     .build());
         } catch (Exception e) {
-            logger.warn("Failed to execute worker, taskAttemptId = {}", taskAttempt.getId(), e);
-            miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.ERROR);
+            logger.warn("Failed to execute worker, taskAttemptId = {}", taskAttemptId, e);
+            sendExceptionEvent(taskAttemptId);
         }
     }
 
-    private void updateRunningStatus(WorkerSnapshot workerSnapshot) {
-        OffsetDateTime startAt = workerSnapshot.getCreatedTime();
-        miscService.changeTaskAttemptStatus(workerSnapshot.getIns().getTaskAttemptId(),
-                TaskRunStatus.RUNNING, startAt, null);
+    private void sendExceptionEvent(Long taskAttemptId) {
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.EXCEPTION, taskAttemptId);
+        eventBus.post(taskRunTransitionEvent);
     }
 
-    private void updateFailedStatus(WorkerSnapshot workerSnapshot) {
-        OffsetDateTime endAt = workerSnapshot.getCreatedTime();
-        miscService.notifyFinished(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
-        miscService.changeTaskAttemptStatus(workerSnapshot.getIns().getTaskAttemptId(),
-                TaskRunStatus.FAILED, null, endAt);
-
+    private void sendRunningEvent(Long taskAttemptId) {
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RUNNING, taskAttemptId);
+        eventBus.post(taskRunTransitionEvent);
     }
 
-    private void updateSuccessStatus(WorkerSnapshot workerSnapshot) {
-        OffsetDateTime endAt = workerSnapshot.getCreatedTime();
-        miscService.notifyFinished(workerSnapshot.getIns().getTaskAttemptId(), workerSnapshot.getStatus());
-        miscService.changeTaskAttemptStatus(workerSnapshot.getIns().getTaskAttemptId(),
-                TaskRunStatus.SUCCESS, null, endAt);
-
+    private void sendCheckEvent(Long taskAttemptId) {
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.CHECK, taskAttemptId);
+        eventBus.post(taskRunTransitionEvent);
     }
 
-    private void updateCheckStatus(WorkerSnapshot workerSnapshot) {
+    private void sendFailedEvent(Long taskAttemptId) {
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.FAILED, taskAttemptId);
+        eventBus.post(taskRunTransitionEvent);
+    }
+
+    private void sendCheckFailedEvent(Long taskAttemptId) {
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.CHECK_FAILED, taskAttemptId);
+        eventBus.post(taskRunTransitionEvent);
+    }
+
+    private void sendCheckSuccessEvent(Long taskAttemptId) {
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.CHECK_SUCCESS, taskAttemptId);
+        eventBus.post(taskRunTransitionEvent);
+    }
+
+    private void sendAbortEvent(Long taskAttemptId) {
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.ABORT, taskAttemptId);
+        eventBus.post(taskRunTransitionEvent);
+    }
+
+    private void check(WorkerSnapshot workerSnapshot) {
         TaskAttempt taskAttempt = taskRunDao.fetchAttemptById(workerSnapshot.getIns().getTaskAttemptId()).get();
         logger.debug("taskAttempt = {} going to check", taskAttempt.getId());
         CheckType checkType = taskAttempt.getTaskRun().getTask().getCheckType();
         logger.debug("taskAttemptId = {},checkType is {}", taskAttempt.getId(), checkType.name());
-        miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.CHECK, taskAttempt.getStartAt(), null);
-        miscService.notifyCheck(taskAttempt);
+        sendCheckEvent(taskAttempt.getId());
         switch (checkType) {
             case SKIP:
-                updateSuccessStatus(workerSnapshot);
+                sendCheckSuccessEvent(taskAttempt.getId());
                 break;
             case WAIT_EVENT:
                 break;
             default:
                 throw new IllegalArgumentException("illegal check type");
         }
-    }
-
-    private void updateTaskAttemptAborted(Long taskAttemptId) {
-        miscService.changeTaskAttemptStatus(taskAttemptId,
-                TaskRunStatus.ABORTED, null, DateTimeUtils.now());
     }
 
     private void cleanupWorker(WorkerInstance workerInstance) {
@@ -280,8 +288,9 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
                 return;
             }
             preStatus = workerSnapshot.getStatus();
+            Long taskAttemptId = workerSnapshot.getIns().getTaskAttemptId();
             if (isRunning(workerSnapshot)) {
-                updateRunningStatus(workerSnapshot);
+                sendRunningEvent(taskAttemptId);
                 return;
             }
             // worker is not running ,clean up
@@ -289,10 +298,10 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
 
             if (isFailed(workerSnapshot)) {
                 if (!retryTaskAttemptIfNecessary(workerSnapshot.getIns())) {
-                    updateFailedStatus(workerSnapshot);
+                    sendFailedEvent(taskAttemptId);
                 }
             } else if (isSuccess(workerSnapshot)) {
-                updateCheckStatus(workerSnapshot);
+                check(workerSnapshot);
             } else {
                 throw new IllegalStateException("illegal worker status");
             }
@@ -316,10 +325,11 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
             logger.debug("taskAttempt = {} is finished,ignore event = {}", taskAttemptProps.getId(), event);
             return;
         }
-        TaskRunStatus taskRunStatus = event.getCheckStatus() ? TaskRunStatus.SUCCESS : TaskRunStatus.CHECK_FAILED;
-        miscService.notifyFinished(taskAttemptProps.getId(), taskRunStatus);
-        //update taskrun status
-        miscService.changeTaskAttemptStatus(taskAttemptProps.getId(), taskRunStatus, taskAttemptProps.getStartAt(), DateTimeUtils.now());
+        if (event.getCheckStatus()) {
+            sendCheckSuccessEvent(taskAttemptProps.getId());
+        } else {
+            sendCheckFailedEvent(taskAttemptProps.getId());
+        }
     }
 
     class TaskAttemptConsumer implements Runnable {
