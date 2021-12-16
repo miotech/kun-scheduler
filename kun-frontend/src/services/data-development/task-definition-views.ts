@@ -1,7 +1,10 @@
 import { delet, get, patch, post, put } from '@/utils/requestUtils';
 import { API_DATA_PLATFORM_PREFIX } from '@/constants/api-prefixes';
 import {
-  SearchTaskDefinitionViewParams, TaskDefinitionView, TaskDefinitionViewUpdateVO, TaskDefinitionViewVO
+  SearchTaskDefinitionViewParams,
+  TaskDefinitionView,
+  TaskDefinitionViewUpdateVO,
+  TaskDefinitionViewVO,
 } from '@/definitions/TaskDefinitionView.type';
 import { PaginationRespBody } from '@/definitions/common-types';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
@@ -19,6 +22,9 @@ export async function searchTaskDefinitionViews(searchParams: SearchTaskDefiniti
       pageSize: searchParams.pageSize,
       sortKey: searchParams.sortColumn,
       sortOrder: searchParams.sortOrder,
+      taskDefName: searchParams.taskDefName,
+      taskTemplateName: searchParams.taskTemplateName,
+      taskDefCreatorIds: searchParams.taskDefCreatorIds,
     },
     mockCode: 'task-def-views.search',
   });

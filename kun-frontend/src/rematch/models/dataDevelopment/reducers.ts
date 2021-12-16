@@ -1,5 +1,6 @@
 import {
-  DataDevelopmentModelFilter, DataDevelopmentModelState as ModelState
+  DataDevelopmentModelFilter,
+  DataDevelopmentModelState as ModelState,
 } from '@/rematch/models/dataDevelopment/model-state';
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
@@ -51,7 +52,7 @@ export const reducers = {
       taskDefViewsList: payload,
     };
   },
-  addTaskDefinitionViewsToList: (state: ModelState, payload: TaskDefinitionViewBase[]): ModelState => {
+  addTaskDefinitionViewsToList: (state: ModelState): ModelState => {
     return {
       ...state,
     };
@@ -66,6 +67,12 @@ export const reducers = {
     return {
       ...state,
       taskTemplates: payload,
+    };
+  },
+  setRecordCount: (state: ModelState, payload: number): ModelState => {
+    return {
+      ...state,
+      recordCount: payload,
     };
   },
 };

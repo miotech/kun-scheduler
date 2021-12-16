@@ -24,7 +24,12 @@ export interface TaskDefinitionViewUpdateVO {
 
 export type TaskDefinitionViewSortColumns = 'id' | 'name' | 'createTime' | 'updateTime';
 
-export interface SearchTaskDefinitionViewParams extends PaginationReqBody, Partial<SortReqBody<TaskDefinitionViewSortColumns>> {
+export interface SearchTaskDefinitionViewParams
+  extends PaginationReqBody,
+    Partial<SortReqBody<TaskDefinitionViewSortColumns>> {
   keyword?: string;
   creator?: string | number;
+  taskDefName?: string;
+  taskTemplateName?: string;
+  taskDefCreatorIds?: string[];
 }

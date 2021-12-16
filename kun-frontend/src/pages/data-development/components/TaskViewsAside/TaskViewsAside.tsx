@@ -1,14 +1,13 @@
 import React, { memo, useCallback, useMemo, useState } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
+import useRedux from '@/hooks/useRedux';
 
 import { TaskViewListItem } from '@/pages/data-development/components/TaskViewsAside/TaskViewListItem';
 
 import { TaskDefinitionViewBase, TaskDefinitionViewVO } from '@/definitions/TaskDefinitionView.type';
 
 import { KunSpin } from '@/components/KunSpin';
-import { useRequest, useUpdateEffect } from 'ahooks';
-import { fetchTaskDefinitionTotalCount } from '@/services/data-development/task-definitions';
 import styles from './TaskViewsAside.module.less';
 
 interface OwnProps {
@@ -36,20 +35,13 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
     loading,
     selectedView,
     allowAllTaskDefsView = true,
-    updateTime,
   } = props;
 
-  const [ searchText, setSearchText ] = useState<string>('');
+  const { selector } = useRedux(state => state.dataDevelopment);
+
+  const [searchText, setSearchText] = useState<string>('');
 
   const t = useI18n();
-
-  const { data: taskDefTotalCount, loading: taskDefTotalCountIsLoading, run: reFetchTotalCount } = useRequest(fetchTaskDefinitionTotalCount);
-
-  useUpdateEffect(() => {
-    reFetchTotalCount();
-  }, [
-    updateTime,
-  ]);
 
   const viewItems = useMemo(() => {
     let viewItemsDOMs = views.map(view => (
@@ -58,7 +50,7 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
         view={view}
         onEdit={onEdit}
         onSelect={onSelectItem}
-        selected={(selectedView != null) ? view.id === selectedView.id : false}
+        selected={selectedView != null ? view.id === selectedView.id : false}
       />
     ));
     if (allowAllTaskDefsView) {
@@ -69,32 +61,23 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
           onSelect={onSelectItem}
           key="all-items"
           selected={selectedView == null}
-          count={(taskDefTotalCount == null) ? null : taskDefTotalCount}
-          countIsLoading={taskDefTotalCountIsLoading}
+          count={selector.recordCount}
         />,
         ...viewItemsDOMs,
       ];
     }
     return viewItemsDOMs;
-  }, [
-    allowAllTaskDefsView,
-    onEdit,
-    onSelectItem,
-    selectedView,
-    t,
-    taskDefTotalCount,
-    taskDefTotalCountIsLoading,
-    views,
-  ]);
+  }, [allowAllTaskDefsView, onEdit, onSelectItem, selectedView, selector.recordCount, t, views]);
 
-  const handleViewSearch = useCallback(function handleViewSearch(ev) {
-    setSearchText(ev.target.value);
-    if (onSearch) {
-      onSearch(ev.target.value);
-    }
-  }, [
-    onSearch,
-  ]);
+  const handleViewSearch = useCallback(
+    function handleViewSearch(ev) {
+      setSearchText(ev.target.value);
+      if (onSearch) {
+        onSearch(ev.target.value);
+      }
+    },
+    [onSearch],
+  );
 
   return (
     <aside data-tid="task-views-aside" className={styles.TaskViewsAside}>
