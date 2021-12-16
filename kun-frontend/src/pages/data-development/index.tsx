@@ -103,9 +103,12 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   const searchTaskDefViews = useCallback(() => {
     dispatch.dataDevelopment.fetchTaskDefViews({
       keyword: taskDefViewSearchKeyword,
+      taskDefName: filters.name,
+      taskTemplateName: filters.taskTemplateName || undefined,
+      taskDefCreatorIds: filters.creatorIds as any,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [taskDefViewSearchKeyword]);
+  }, [taskDefViewSearchKeyword, filters.name, filters.taskTemplateName, filters.creatorIds]);
 
   const forceTableRefresh = useCallback(() => {
     setUpdateTime(Date.now());
@@ -114,7 +117,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   useEffect(() => {
     searchTaskDefViews();
     // eslint-disable-next-line
-  }, []);
+  }, [searchTaskDefViews]);
 
   useDebouncedUpdateEffect(
     () => {
