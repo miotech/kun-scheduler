@@ -629,6 +629,87 @@ public class TaskDefinitionViewServiceTest extends AppTestBase {
     }
 
     @Test
+    public void searchPageWithTaskDefAsFilter_shouldDoFiltering() {
+        //arrange taskDef and taskDefView
+        List<TaskDefinition> taskDefinitionList = MockTaskDefinitionFactory.createTaskDefinitions(3);
+        TaskDefinition taskDefinition0 = taskDefinitionList.get(0).cloneBuilder()
+                .withName("apple juice")
+                .withCreator(0L)
+                .withTaskTemplateName("SparkSQL")
+                .build();
+        TaskDefinition taskDefinition1 = taskDefinitionList.get(1).cloneBuilder()
+                .withName("apple juice")
+                .withCreator(1L)
+                .withTaskTemplateName("Bash")
+                .build();
+        TaskDefinition taskDefinition2 = taskDefinitionList.get(2).cloneBuilder()
+                .withName("boy")
+                .withCreator(1L)
+                .withTaskTemplateName("SparkSQL")
+                .build();
+        List<TaskDefinitionView> viewList = prepareListOfViews(3);
+        TaskDefinitionView view0 = viewList.get(0);
+        TaskDefinitionView view1 = viewList.get(1).cloneBuilder()
+                .withIncludedTaskDefinitions(Arrays.asList(taskDefinition0, taskDefinition1)).build();
+        TaskDefinitionView view2 = viewList.get(2).cloneBuilder()
+                .withIncludedTaskDefinitions(Arrays.asList(taskDefinition2)).build();
+        taskDefinitionDao.create(taskDefinition0);
+        taskDefinitionDao.create(taskDefinition1);
+        taskDefinitionDao.create(taskDefinition2);
+        taskDefinitionViewService.save(view0);
+        taskDefinitionViewService.save(view1);
+        taskDefinitionViewService.save(view2);
+        //arrange searchParam
+        TaskDefinitionViewSearchParams searchParams1 = TaskDefinitionViewSearchParams.builder()
+                .pageNum(1)
+                .pageSize(100)
+                .taskDefName("e j")
+                .build();
+        TaskDefinitionViewSearchParams searchParams2 = TaskDefinitionViewSearchParams.builder()
+                .pageNum(1)
+                .pageSize(100)
+                .taskDefCreatorIds(Arrays.asList(1L))
+                .build();
+
+        TaskDefinitionViewSearchParams searchParams3 = TaskDefinitionViewSearchParams.builder()
+                .pageNum(1)
+                .pageSize(100)
+                .taskTemplateName("SparkSQL")
+                .build();
+
+
+        //act
+        PageResult<TaskDefinitionViewVO> searchResult1 = taskDefinitionViewService.searchPage(searchParams1);
+
+        PageResult<TaskDefinitionViewVO> searchResult2 = taskDefinitionViewService.searchPage(searchParams2);
+
+        PageResult<TaskDefinitionViewVO> searchResult3 = taskDefinitionViewService.searchPage(searchParams3);
+
+        //assert
+        List<Long> resultDefIds1 = new ArrayList<>();
+        searchResult1.getRecords().stream().forEach(x -> resultDefIds1.addAll(x.getIncludedTaskDefinitionIds()));
+        assertThat(searchResult1.getRecords().size(), is(1));
+        assertThat(searchResult1.getTotalCount(), is(1));
+        assertThat(new HashSet<>(resultDefIds1),
+                is(new HashSet<>(Arrays.asList(taskDefinition0.getDefinitionId(), taskDefinition1.getDefinitionId()))));
+
+        List<Long> resultDefIds2 = new ArrayList<>();
+        searchResult2.getRecords().stream().forEach(x -> resultDefIds2.addAll(x.getIncludedTaskDefinitionIds()));
+        assertThat(searchResult2.getRecords().size(), is(2));
+        assertThat(searchResult2.getTotalCount(), is(2));
+        assertThat(new HashSet<>(resultDefIds2),
+                is(new HashSet<>(Arrays.asList(taskDefinition1.getDefinitionId(), taskDefinition2.getDefinitionId()))));
+
+        List<Long> resultDefIds3 = new ArrayList<>();
+        searchResult3.getRecords().stream().forEach(x -> resultDefIds3.addAll(x.getIncludedTaskDefinitionIds()));
+        assertThat(searchResult3.getRecords().size(), is(2));
+        assertThat(searchResult3.getTotalCount(), is(2));
+        assertThat(new HashSet<>(resultDefIds3),
+                is(new HashSet<>(Arrays.asList(taskDefinition0.getDefinitionId(), taskDefinition2.getDefinitionId()))));
+    }
+
+
+    @Test
     public void searchPage_withInvalidArguments_shouldThrowException() {
         // prepare 100 views
         prepareListOfViews(100);
