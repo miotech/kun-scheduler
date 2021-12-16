@@ -38,14 +38,14 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
   } = metadataMetrics || {};
 
   // setup pagination change listener for failed test cases table
-  useUpdateEffect(() => {
-    dispatch.monitoringDashboard.reloadFailedTestCases({
-      pageSize: failedTestCases.pageSize,
-      pageNumber: failedTestCases.pageNum,
-      sortColumn: failedTestCases.sortColumn || undefined,
-      sortOrder: failedTestCases.sortOrder || undefined,
-    });
-  }, [failedTestCases.pageNum, failedTestCases.pageSize, failedTestCases.sortColumn, failedTestCases.sortOrder]);
+  // useUpdateEffect(() => {
+  //   dispatch.monitoringDashboard.reloadFailedTestCases({
+  //     pageSize: 100,
+  //     pageNumber: failedTestCases.pageNum,
+  //     sortColumn: failedTestCases.sortColumn || undefined,
+  //     sortOrder: failedTestCases.sortOrder || undefined,
+  //   });
+  // }, [failedTestCases.pageNum, failedTestCases.pageSize, failedTestCases.sortColumn, failedTestCases.sortOrder]);
 
   // setup pagination change listener for datasets table
   useUpdateEffect(() => {
@@ -144,7 +144,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
           <FailedTestCasesTable
             data={failedTestCases.data}
             pageNum={failedTestCases.pageNum}
-            pageSize={failedTestCases.pageSize}
+            pageSize={failedTestCases.showPageSize}
             total={failedTestCases.total}
             onChange={handleFailedTestCasesTableChange}
             loading={failedTestCases.loading}

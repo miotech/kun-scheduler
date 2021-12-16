@@ -1,8 +1,8 @@
 import React, { memo, useMemo } from 'react';
 import moment from 'moment';
 import { ColumnProps } from 'antd/es/table';
-import { FailedTestCase, AbnormalDataset } from '@/services/monitoring-dashboard';
-import { Card, Table, Tooltip } from 'antd';
+import { FailedTestCase, AbnormalDataset, Glossary } from '@/services/monitoring-dashboard';
+import { Card, Table, Tooltip, Tag } from 'antd';
 import { dayjs } from '@/utils/datetime-utils';
 import useI18n from '@/hooks/useI18n';
 import { TableOnChangeCallback } from '@/definitions/common-types';
@@ -24,6 +24,19 @@ interface OwnProps {
 }
 
 type Props = OwnProps;
+
+const sortFn = (a: any, b: any) => {
+  if (!a) {
+    return 1;
+  }
+  if (!b) {
+    return -1;
+  }
+  if (a > b) {
+    return 1;
+  }
+  return -1;
+};
 
 export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCasesTable(props) {
   const { data, pageNum, pageSize, total, onChange, loading } = props;
@@ -85,7 +98,9 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
                     width: '100%',
                   }}
                 >
-                  {errorReason}
+                  <Link to={`/operation-center/task-run-id/${record.taskRunId}`} target="_blank">
+                    {errorReason}
+                  </Link>
                 </div>
               </Tooltip>
             );
@@ -144,6 +159,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
       ...record.tasks.map(i => ({
         caseName: 'DataUpdateFailed',
         caseId: i.taskName,
+        taskRunId: i.taskRunId,
         updateTime: i.updateTime,
         errorReason: t('monitoringDashboard.dataDiscovery.failedTestCasesTable.resultContent', { name: i.taskName }),
         status: 'FAILED',
@@ -169,17 +185,18 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
         key: 'ordinal',
         title: '#',
         width: 60,
-        render: (txt: any, record: AbnormalDataset, index: number) => (
+        render: (_txt: any, _record: AbnormalDataset, index: number) => (
           <span>{(pageNum - 1) * pageSize + index + 1}</span>
         ),
       },
       {
         key: 'datasetName',
         dataIndex: 'datasetName',
+        sorter: (a: AbnormalDataset, b: AbnormalDataset) => sortFn(a.datasetName, b.datasetName),
         title: t('monitoringDashboard.dataDiscovery.abnormalDataset.datasetName'),
         render: (txt: string, record: AbnormalDataset) => {
           return (
-            <TextContainer>
+            <TextContainer ellipsis tooltipTitle={txt} className={styles.dataSetRow}>
               <Link
                 to={SafeUrlAssembler()
                   .template('/data-discovery/dataset/:datasetId')
@@ -197,19 +214,42 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
       {
         key: 'databaseName',
         dataIndex: 'databaseName',
-        width: 150,
+        sorter: (a: AbnormalDataset, b: AbnormalDataset) => sortFn(a.databaseName, b.databaseName),
+        width: 140,
         title: t('monitoringDashboard.dataDiscovery.abnormalDataset.databaseName'),
       },
       {
-        key: 'datasourceName',
-        dataIndex: 'datasourceName',
-        width: 150,
-        title: t('monitoringDashboard.dataDiscovery.abnormalDataset.datasourceName'),
+        key: 'glossaries',
+        dataIndex: 'glossaries',
+        width: 160,
+        title: t('monitoringDashboard.dataDiscovery.abnormalDataset.glossary'),
+        render: (v: Glossary[]) => {
+          return (
+            <div className={styles.tag}>
+              {v &&
+                v.map((item: Glossary) => (
+                  <Link key={item.id} to={`/data-discovery/glossary/${item.id}`} target="_blank">
+                    <Tag className={styles.item} color="success">
+                      {item.name}
+                    </Tag>
+                  </Link>
+                ))}
+            </div>
+          );
+        },
       },
+      // {
+      //   key: 'datasourceName',
+      //   dataIndex: 'datasourceName',
+      //   sorter: (a:AbnormalDataset, b:AbnormalDataset) => sortFn(a.datasourceName,b.datasourceName),
+      //   width: 120,
+      //   title: t('monitoringDashboard.dataDiscovery.abnormalDataset.datasourceName'),
+      // },
       {
         key: 'failedCaseCount',
         dataIndex: 'failedCaseCount',
-        width: 100,
+        sorter: (a: AbnormalDataset, b: AbnormalDataset) => sortFn(a.failedCaseCount, b.failedCaseCount),
+        width: 140,
         title: t('monitoringDashboard.dataDiscovery.abnormalDataset.failedCaseCount'),
       },
       {
