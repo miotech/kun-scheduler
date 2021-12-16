@@ -68,12 +68,12 @@ public class TaskDefinitionController {
                 archived,
                 viewIds
         );
-        PaginationResult<TaskDefinition> taskDefintions = taskDefinitionService.search(searchRequest);
+        PaginationResult<TaskDefinition> taskDefinitions = taskDefinitionService.search(searchRequest);
         PaginationResult<TaskDefinitionVO> result = new PaginationResult<>(
-                taskDefintions.getPageSize(),
-                taskDefintions.getPageNum(),
-                taskDefintions.getTotalCount(),
-                taskDefinitionService.convertToVOList(taskDefintions.getRecords(), true)
+                taskDefinitions.getPageSize(),
+                taskDefinitions.getPageNum(),
+                taskDefinitions.getTotalCount(),
+                taskDefinitionService.convertToVOList(taskDefinitions.getRecords(), true)
         );
         return RequestResult.success(result);
     }
