@@ -249,22 +249,12 @@ public class TaskRunDao {
         }
 
         if (Objects.nonNull(filter.getEndBefore())) {
-            // use term_at to clarify upstream_failed time
-            if (Objects.nonNull(filter.getStatus()) && filter.getStatus().contains(TaskRunStatus.UPSTREAM_FAILED)) {
-                whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".term_at < ? or  " + TASK_RUN_MODEL_NAME + ".term_at is NULL)");
-            } else {
-                whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".end_at < ? )");
-            }
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".term_at < ? )");
             sqlArgs.add(filter.getEndBefore());
         }
 
         if (Objects.nonNull(filter.getEndAfter())) {
-            // use term_at to clarify upstream_failed time
-            if (Objects.nonNull(filter.getStatus()) && filter.getStatus().contains(TaskRunStatus.UPSTREAM_FAILED)) {
-                whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".term_at >= ? )");
-            } else {
-                whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".end_at >= ?  or " + TASK_RUN_MODEL_NAME + ".end_at is NULL)");
-            }
+            whereConditions.add("(" + TASK_RUN_MODEL_NAME + ".term_at >= ?  or " + TASK_RUN_MODEL_NAME + ".term_at is NULL)");
             sqlArgs.add(filter.getEndAfter());
         }
 
