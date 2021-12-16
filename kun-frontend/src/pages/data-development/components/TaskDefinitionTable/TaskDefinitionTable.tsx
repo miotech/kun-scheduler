@@ -4,6 +4,7 @@ import { useRequest, useUpdateEffect } from 'ahooks';
 import { Link } from 'umi';
 import { searchTaskDefinition } from '@/services/data-development/task-definitions';
 import useI18n from '@/hooks/useI18n';
+import useRedux from '@/hooks/useRedux';
 import { UsernameText } from '@/components/UsernameText';
 import { dayjs } from '@/utils/datetime-utils';
 import SafeUrlAssembler from 'safe-url-assembler';
@@ -53,6 +54,8 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
     currentViewChangeEvent,
   } = props;
 
+  const { dispatch } = useRedux(state => state.dataDevelopment);
+
   const [pageNum, setPageNum] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(25);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
@@ -61,6 +64,10 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
   const { data, loading, run: doFetch } = useRequest(searchTaskDefinition, {
     manual: true,
   });
+
+  useEffect(() => {
+    dispatch.dataDevelopment.setRecordCount(data?.totalCount ?? 0);
+  }, [data, dispatch.dataDevelopment]);
 
   useUpdateEffect(() => {
     // clear selected row keys when view changed
