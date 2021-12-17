@@ -29,4 +29,6 @@ public class AbnormalDataset {
 
     List<AbnormalCase> cases;
 
+    List<GlossaryBasic> glossaries;
+
 }
