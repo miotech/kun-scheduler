@@ -22,7 +22,8 @@ export interface DataDevelopmentModelState {
   definitionFormDirty: boolean;
   taskDefViewsList: TaskDefinitionViewBase[];
   selectedTaskDefView: TaskDefinitionViewBase | null;
-  taskTemplates: TaskTemplate[],
+  taskTemplates: TaskTemplate[];
+  recordCount: number;
 }
 
 export const initState: DataDevelopmentModelState = {
@@ -42,4 +43,5 @@ export const initState: DataDevelopmentModelState = {
   taskDefViewsList: [],
   selectedTaskDefView: null,
   taskTemplates: [],
+  recordCount: 0,
 };

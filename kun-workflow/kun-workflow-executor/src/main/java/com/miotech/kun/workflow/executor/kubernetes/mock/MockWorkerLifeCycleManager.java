@@ -80,6 +80,10 @@ public class MockWorkerLifeCycleManager extends WorkerLifeCycleManager {
         mockWorkerMonitor.makeFailed(taskAttemptId);
     }
 
+    public void markRunning(Long taskAttemptId){
+        mockWorkerMonitor.makeRunning(taskAttemptId);
+    }
+
     public boolean hasRegister(Long taskAttemptId){
         return mockWorkerMonitor.hasRegister(taskAttemptId);
     }

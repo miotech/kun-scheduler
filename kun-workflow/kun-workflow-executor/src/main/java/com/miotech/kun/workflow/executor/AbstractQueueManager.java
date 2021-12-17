@@ -1,10 +1,12 @@
 package com.miotech.kun.workflow.executor;
 
 import com.google.common.base.Preconditions;
+import com.google.common.eventbus.EventBus;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.model.resource.ResourceQueue;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
-import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.executor.local.MiscService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,12 +27,14 @@ public abstract class AbstractQueueManager {
     protected Map<String, TaskAttemptQueue> queueMap;
     private Lock lock = new ReentrantLock();
     protected Props props;
+    private final EventBus eventBus;
     private MiscService miscService;
 
-    public AbstractQueueManager(Props props, MiscService miscService) {
+    public AbstractQueueManager(Props props, MiscService miscService ,EventBus eventBus) {
         this.props = props;
         queueMap = new ConcurrentHashMap<>();
         this.miscService = miscService;
+        this.eventBus = eventBus;
     }
 
     public void init() {//根据配置文件初始化nameSpace资源配额
@@ -84,7 +88,8 @@ public abstract class AbstractQueueManager {
             }
             logger.debug("submit taskAttempt = {} to queue = {}", taskAttempt.getId(), queue.getName());
             queue.add(taskAttempt);
-            miscService.changeTaskAttemptStatus(taskAttempt.getId(), TaskRunStatus.QUEUED);
+            TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.SUBMIT,taskAttempt.getId());
+            eventBus.post(taskRunTransitionEvent);
         } finally {
             lock.unlock();
         }
