@@ -441,6 +441,7 @@ export default {
   'monitoringDashboard.dataDiscovery.abnormalDataset.failedCaseCount': '失败case数量',
   'monitoringDashboard.dataDiscovery.abnormalDataset.lastUpdateTime': '上次更新时间',
   'monitoringDashboard.dataDiscovery.abnormalDataset.databaseName': '数据库',
+  'monitoringDashboard.dataDiscovery.abnormalDataset.glossary': '标签集',
   'monitoringDashboard.dataDiscovery.abnormalDataset.datasourceName': '数据源',
   'monitoringDashboard.dataDiscovery.datasetColumnMetricsTable.title': '数据集',
   'monitoringDashboard.dataDiscovery.datasetColumnMetricsTable.datasetName': '数据集名称',

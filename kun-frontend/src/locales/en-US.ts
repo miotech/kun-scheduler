@@ -452,6 +452,7 @@ export default {
   'monitoringDashboard.dataDiscovery.abnormalDataset.failedCaseCount': 'Failed Test Cases Count',
   'monitoringDashboard.dataDiscovery.abnormalDataset.lastUpdateTime': 'Last Updated Time',
   'monitoringDashboard.dataDiscovery.abnormalDataset.databaseName': 'Database',
+  'monitoringDashboard.dataDiscovery.abnormalDataset.glossary': 'Glossary',
   'monitoringDashboard.dataDiscovery.abnormalDataset.datasourceName': 'Datasource',
   'monitoringDashboard.dataDiscovery.datasetColumnMetricsTable.title': 'Datasets',
   'monitoringDashboard.dataDiscovery.datasetColumnMetricsTable.datasetName': 'Dataset Name',
