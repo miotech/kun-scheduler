@@ -1,10 +1,13 @@
 package com.miotech.kun.workflow.common.taskrun.service;
 
 import com.google.common.collect.Lists;
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.miotech.kun.workflow.LocalScheduler;
+import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.CommonTestBase;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
+import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
@@ -44,7 +47,7 @@ import java.util.concurrent.RunnableFuture;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -66,6 +69,11 @@ public class TaskRunServiceTest extends CommonTestBase {
     @Inject
     private LocalScheduler scheduler;
 
+    @Inject
+    private EventBus eventBus;
+
+    private TaskRunStateMachine taskRunStateMachine;
+
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
@@ -85,8 +93,11 @@ public class TaskRunServiceTest extends CommonTestBase {
                 taskRunDao,
                 resourceLoader,
                 executor,
-                scheduler
+                scheduler,
+                eventBus
         ));
+        taskRunStateMachine = new TaskRunStateMachine(taskRunDao,eventBus,mock(LineageService.class));
+        taskRunStateMachine.start();
     }
 
     @Test
@@ -717,5 +728,106 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(taskRunVOs.size(), is(2));
         assertThat(taskRunVOs.get(0).getTask().getId(), is(task1.getId()));
     }
+
+    @Test
+    public void removeAllTaskRunDependency_should_make_it_able_to_run(){
+        //prepare
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1);
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(tasks,"0>>1");
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.createAttempt(taskAttempt2);
+
+        taskRunService.removeDependency(taskRun2.getId(),Lists.newArrayList(taskRun1.getId()));
+
+        //verify
+        List<Long> satisfyTaskRunIds = taskRunDao.fetchAllSatisfyTaskRunId();
+        assertThat(satisfyTaskRunIds,containsInAnyOrder(taskRun1.getId(),taskRun2.getId()));
+    }
+
+    @Test
+    public void removeUpstreamFailedTaskRunDependency_should_change_status_to_created(){
+        //prepare
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1);
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(tasks,"0>>1");
+        TaskRun taskRun1 = taskRunList.get(0)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.FAILED)
+                .withFailedUpstreamTaskRunIds(null)
+                .build();
+        TaskRun taskRun2 = taskRunList.get(1)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId()))
+                .build();
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.createAttempt(taskAttempt2);
+
+        taskRunService.removeDependency(taskRun2.getId(),Lists.newArrayList(taskRun1.getId()));
+
+        //verify
+        TaskRun savedTaskRun2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
+        assertThat(savedTaskRun2.getStatus(),is(TaskRunStatus.CREATED));
+    }
+
+    @Test
+    public void removePartOfTaskRunDependency_should_not_able_to_run(){
+        //prepare
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2");
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1);
+        Task task3 = tasks.get(2);
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(tasks,"0>>2;1>>2");
+        TaskRun taskRun1 = taskRunList.get(0)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.FAILED)
+                .withFailedUpstreamTaskRunIds(null)
+                .build();
+        TaskRun taskRun2 = taskRunList.get(1);
+        TaskRun taskRun3 = taskRunList.get(2)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId()))
+                .build();
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
+        TaskAttempt taskAttempt3 = MockTaskAttemptFactory.createTaskAttempt(taskRun3);
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskDao.create(task3);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.createAttempt(taskAttempt2);
+        taskRunDao.createAttempt(taskAttempt3);
+
+        taskRunService.removeDependency(taskRun3.getId(),Lists.newArrayList(taskRun1.getId()));
+
+        //verify
+        TaskRun savedTaskRun3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
+        assertThat(savedTaskRun3.getStatus(),is(TaskRunStatus.CREATED));
+        List<Long> satisfyTaskRunIds = taskRunDao.fetchAllSatisfyTaskRunId();
+        assertThat(satisfyTaskRunIds,hasSize(1));
+        assertThat(satisfyTaskRunIds.get(0),is(taskRun2.getId()));
+    }
+
 
 }
