@@ -8,7 +8,6 @@ import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
-import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -330,5 +329,10 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public List<ExecuteTarget> getTargetList() {
         return wfApi.getTargetList();
+    }
+
+    @Override
+    public void removeTaskRunDependency(Long taskRunId, List<Long> upstreamTaskRunIds) {
+        wfApi.removeTaskRunDependency(taskRunId,upstreamTaskRunIds);
     }
 }
