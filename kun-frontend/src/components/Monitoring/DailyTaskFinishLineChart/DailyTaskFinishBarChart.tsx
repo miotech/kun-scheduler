@@ -2,6 +2,7 @@ import React, { memo } from 'react';
 import ReactEcharts from 'echarts-for-react';
 import { DailyStatistic } from '@/services/monitoring-dashboard';
 import { dayjs } from '@/utils/datetime-utils';
+import useRedux from '@/hooks/useRedux';
 
 interface OwnProps {
   width: number;
@@ -12,6 +13,23 @@ interface OwnProps {
 type Props = OwnProps;
 
 export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskFinishBarChart(props) {
+  const timeCache: string[] = []
+  const { dispatch } = useRedux(() => ({}));
+  const onChartClick = (obj:any) => {
+    const targetTime = timeCache[obj.dataIndex]
+    const params = {
+      targetTime,
+      status: obj.seriesName,
+      finalStatus: obj.seriesName === 'ONGONING' ? '' : obj.seriesName,
+      timezoneOffset: 8,
+    }
+    dispatch.monitoringDashboard.setTaskDetailsForWeekParams(params);
+    console.log(obj)
+  }
+  const onEvents = {
+    'click': onChartClick,
+  }
+
   const {
     width = 1024,
     height = 768,
@@ -25,6 +43,7 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
   const ongList:number[] = []
   data.forEach(item=> {
     xAxis.push(dayjs(item.time).format('MM-DD'))
+    timeCache.push(item.time)
     sucList.push(item.taskResultList.find(idx=>idx.status === 'SUCCESS')?.taskCount || 0)
     faiList.push(item.taskResultList.find(idx=>idx.status === 'FAILED')?.taskCount || 0)
     upsList.push(item.taskResultList.find(idx=>idx.status === 'UPSTREAM_FAILED')?.taskCount || 0)
@@ -105,5 +124,5 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
       },
     ],
   };
-  return <ReactEcharts style={{ height, width }} option={defaultOption} />;
+  return <ReactEcharts  onEvents={onEvents}  style={{ height, width }} option={defaultOption} />;
 });
