@@ -171,7 +171,7 @@ public class WorkflowService {
             List<TaskRunStatus> terminatedStatus = ImmutableList.of(TaskRunStatus.SUCCESS, TaskRunStatus.FAILED,
                     TaskRunStatus.UPSTREAM_FAILED, TaskRunStatus.ABORTED);
             for (TaskRunStatus status : terminatedStatus) {
-                request = buildTaskRunSearchRequest(start, end, ImmutableSet.of(status));
+                request = buildTaskRunSearchRequest(start, end, ImmutableSet.of(status), null, end);
                 count = workflowClient.countTaskRun(request);
                 totalCount += count;
                 taskResultList.add(new TaskResult(status.name(), status, count));
@@ -182,7 +182,7 @@ public class WorkflowService {
                     TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, TaskRunStatus.ABORTED, TaskRunStatus.CREATED, TaskRunStatus.BLOCKED);
 
             for (TaskRunStatus status : finalStatus) {
-                request = buildTaskRunSearchRequest(start, end, ImmutableSet.of(status), end);
+                request = buildTaskRunSearchRequest(start, end, ImmutableSet.of(status), end, null);
                 count = workflowClient.countTaskRun(request);
                 totalCount += count;
                 taskResultList.add(new TaskResult("ONGOING", status, count));
@@ -198,17 +198,13 @@ public class WorkflowService {
         return new StatisticChartResult(dailyStatisticList);
     }
 
-    private TaskRunSearchRequest buildTaskRunSearchRequest(OffsetDateTime startOfCreation, OffsetDateTime endOfCreation) {
-        return buildTaskRunSearchRequest(startOfCreation, endOfCreation, null, null);
-    }
-
     private TaskRunSearchRequest buildTaskRunSearchRequest(OffsetDateTime startOfCreation, OffsetDateTime endOfCreation,
                                                            @Nullable Set<TaskRunStatus> status) {
-        return buildTaskRunSearchRequest(startOfCreation, endOfCreation, status, null);
+        return buildTaskRunSearchRequest(startOfCreation, endOfCreation, status, null, null);
     }
 
     private TaskRunSearchRequest buildTaskRunSearchRequest(OffsetDateTime startOfCreation, OffsetDateTime endOfCreation,
-                                                           @Nullable Set<TaskRunStatus> status, @Nullable OffsetDateTime startOfTermination) {
+               @Nullable Set<TaskRunStatus> status, @Nullable OffsetDateTime startOfTermination, @Nullable OffsetDateTime endOfTermination) {
         TaskRunSearchRequest.Builder builder =  TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withScheduleTypes(SCHEDULE_TYPE_FILTER)
@@ -221,6 +217,10 @@ public class WorkflowService {
 
         if (Objects.nonNull(startOfTermination)) {
             builder.withEndAfter(startOfTermination);
+        }
+
+        if (Objects.nonNull(endOfTermination)) {
+            builder.withEndBefore(endOfTermination);
         }
 
         return builder.build();
@@ -259,6 +259,8 @@ public class WorkflowService {
                 .withSortOrder("DESC");
         if (status.equals("ONGOING")) {
             builder.withEndAfter(targetTime.plusDays(1));
+        } else {
+            builder.withEndBefore(targetTime.plusDays(1));
         }
         TaskRunSearchRequest searchRequest = builder.build();
 

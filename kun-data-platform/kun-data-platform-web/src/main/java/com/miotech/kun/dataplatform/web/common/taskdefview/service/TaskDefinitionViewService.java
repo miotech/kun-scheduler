@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -63,8 +64,42 @@ public class TaskDefinitionViewService extends BaseSecurityService {
             finalParams = searchParams.toBuilder().pageSize(PAGE_SIZE_SEARCH_MAX).build();
         }
 
-        List<TaskDefinitionViewVO> viewList = this.taskDefinitionViewDao.fetchListBySearchParams(finalParams)
-                .stream()
+        List<TaskDefinitionView> viewList = this.taskDefinitionViewDao.fetchListBySearchParams(finalParams);
+
+        if (Objects.nonNull(searchParams.getTaskDefCreatorIds()) && !searchParams.getTaskDefCreatorIds().isEmpty()) {
+            List<Long> taskDefCreatorIds = searchParams.getTaskDefCreatorIds();
+            viewList = viewList.stream()
+                    .map(x -> x.cloneBuilder().withIncludedTaskDefinitions(x.getIncludedTaskDefinitions()
+                            .stream()
+                            .filter(td -> taskDefCreatorIds.contains(td.getCreator()))
+                            .collect(Collectors.toList()))
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        if (Objects.nonNull(searchParams.getTaskDefName()) && !searchParams.getTaskDefName().isEmpty()) {
+            String taskDefName = searchParams.getTaskDefName();
+            viewList = viewList.stream()
+                    .map(x -> x.cloneBuilder().withIncludedTaskDefinitions(x.getIncludedTaskDefinitions()
+                                    .stream()
+                                    .filter(td -> td.getName().toLowerCase().contains(taskDefName.toLowerCase()))
+                                    .collect(Collectors.toList()))
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        if (Objects.nonNull(searchParams.getTaskTemplateName()) && !searchParams.getTaskTemplateName().isEmpty()) {
+            String taskTemplateName = searchParams.getTaskTemplateName();
+            viewList = viewList.stream()
+                    .map(x -> x.cloneBuilder().withIncludedTaskDefinitions(x.getIncludedTaskDefinitions()
+                                    .stream()
+                                    .filter(td -> td.getTaskTemplateName().contains(taskTemplateName))
+                                    .collect(Collectors.toList()))
+                            .build())
+                    .collect(Collectors.toList());
+        }
+
+        List<TaskDefinitionViewVO> viewVOList = viewList.stream()
                 .map(TaskDefinitionViewVO::from)
                 .collect(Collectors.toList());
         Integer totalCount = this.taskDefinitionViewDao.fetchTotalCount(searchParams);
@@ -72,7 +107,7 @@ public class TaskDefinitionViewService extends BaseSecurityService {
                 finalParams.getPageSize(),
                 finalParams.getPageNum(),
                 totalCount,
-                viewList
+                viewVOList
         );
     }
 

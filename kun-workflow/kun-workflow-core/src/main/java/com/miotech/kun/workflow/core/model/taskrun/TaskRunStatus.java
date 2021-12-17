@@ -7,7 +7,6 @@ import java.util.Map;
 public enum TaskRunStatus {
     CREATED,
     QUEUED,
-    INITIALIZING,
     RUNNING,
     SUCCESS,
     FAILED,
@@ -80,5 +79,13 @@ public enum TaskRunStatus {
 
     public boolean isCreated() {
         return this == CREATED;
+    }
+
+    public boolean isBlocking(){
+        return this == BLOCKED;
+    }
+
+    public boolean isReady(){
+        return !isCreated() && !isUpstreamFailed() && !isBlocking();
     }
 }
