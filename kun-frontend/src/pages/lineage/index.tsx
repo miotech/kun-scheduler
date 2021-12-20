@@ -5,19 +5,16 @@ import { useSize } from 'ahooks';
 import Card from '@/components/Card/Card';
 import useRedux from '@/hooks/useRedux';
 import LineageBoard from '@/components/LineageDiagram/LineageBoard';
-import {
-  LineageDagreNodeData,
-  LineageDagreNode,
-} from '@/components/LineageDiagram/LineageBoard/LineageBoard';
+import { LineageDagreNodeData, LineageDagreNode } from '@/components/LineageDiagram/LineageBoard/LineageBoard';
 import BackButton from '@/components/BackButton/BackButton';
 import { LineageDirection } from '@/services/lineage';
 import { LineageBoardZoomProvider } from '@/components/LineageDiagram/LineageBoard/LineageBoardZoomProvider';
+import { collectDownstreamNodes, collectUpstreamNodes } from '@/pages/lineage/helpers/searchUpstreamDownstream';
 import SideDropCard from './components/SideDropCard/SideDropCard';
 import { transformNodes } from './helpers/transformNodes';
 import { transformEdges } from './helpers/transformEdges';
 
 import styles from './index.less';
-import { collectDownstreamNodes, collectUpstreamNodes } from '@/pages/lineage/helpers/searchUpstreamDownstream';
 
 export default function Lineage() {
   const { selector, dispatch } = useRedux(state => state.lineage);
@@ -27,7 +24,10 @@ export default function Lineage() {
   const [currentType, setCurrentType] = useState<'dataset' | 'task'>('dataset');
 
   const boardWrapperRef = useRef<any>();
-  const { width: boardWidth, height: boardHeight } = useSize(boardWrapperRef);
+  const size = useSize(boardWrapperRef);
+  const { width: boardWidth, height: boardHeight } = useMemo(() => size ?? { width: undefined, height: undefined }, [
+    size,
+  ]);
 
   useEffect(() => {
     if (match.params.datasetId !== selector.oldDatasetId) {
@@ -40,10 +40,7 @@ export default function Lineage() {
     }
   }, [dispatch.lineage, match.params.datasetId, selector.oldDatasetId]);
 
-  const nodes = transformNodes(
-    selector.graph.vertices,
-    selector.selectedNodeId,
-  );
+  const nodes = transformNodes(selector.graph.vertices, selector.selectedNodeId);
   const edges = transformEdges(
     selector.graph.edges,
     `${selector?.selectedEdgeInfo?.sourceNodeId}-${selector?.selectedEdgeInfo?.destNodeId}`,
@@ -57,16 +54,10 @@ export default function Lineage() {
       });
     });
     (edges || []).forEach(edge => {
-      g.setEdge(
-        { v: edge.src, w: edge.dest },
-        { selected: edge.selected || false },
-      );
+      g.setEdge({ v: edge.src, w: edge.dest }, { selected: edge.selected || false });
     });
     return g;
-  }, [
-    nodes,
-    edges,
-  ]);
+  }, [nodes, edges]);
 
   const handleClickNode = useCallback(
     (node: LineageDagreNodeData) => {
@@ -84,12 +75,7 @@ export default function Lineage() {
     [dispatch.lineage],
   );
   const handleClickEdge = useCallback(
-    (edgeInfo: {
-      srcNodeId: string;
-      destNodeId: string;
-      srcNode: LineageDagreNode;
-      destNode: LineageDagreNode;
-    }) => {
+    (edgeInfo: { srcNodeId: string; destNodeId: string; srcNode: LineageDagreNode; destNode: LineageDagreNode }) => {
       setIsExpanded(true);
       setCurrentType('task');
       dispatch.lineage.updateState({
@@ -137,37 +123,46 @@ export default function Lineage() {
     [dispatch.lineage],
   );
 
-  const removeByNodeIds = useCallback((nodeIdCollectionToRemove: string[]) => {
-    const nextStateVertices = [...selector.graph.vertices].filter(n => nodeIdCollectionToRemove.indexOf(n.vertexId) < 0);
-    const nextStateEdges = [...selector.graph.edges].filter(e =>
-      (nodeIdCollectionToRemove.indexOf(e.sourceVertexId) < 0) && (nodeIdCollectionToRemove.indexOf(e.destVertexId) < 0));
-    dispatch.lineage.updateGraph({
-      vertices: nextStateVertices,
-      edges: nextStateEdges,
-    });
-  }, [dispatch.lineage, selector.graph.edges, selector.graph.vertices]);
+  const removeByNodeIds = useCallback(
+    (nodeIdCollectionToRemove: string[]) => {
+      const nextStateVertices = [...selector.graph.vertices].filter(
+        n => nodeIdCollectionToRemove.indexOf(n.vertexId) < 0,
+      );
+      const nextStateEdges = [...selector.graph.edges].filter(
+        e =>
+          nodeIdCollectionToRemove.indexOf(e.sourceVertexId) < 0 &&
+          nodeIdCollectionToRemove.indexOf(e.destVertexId) < 0,
+      );
+      dispatch.lineage.updateGraph({
+        vertices: nextStateVertices,
+        edges: nextStateEdges,
+      });
+    },
+    [dispatch.lineage, selector.graph.edges, selector.graph.vertices],
+  );
 
-  const handleCollapseUpstream = useCallback((nodeId: string) => {
-    const upstreamNodesToRemove = collectUpstreamNodes(graph, nodeId);
-    removeByNodeIds(upstreamNodesToRemove);
-  }, [graph, removeByNodeIds]);
+  const handleCollapseUpstream = useCallback(
+    (nodeId: string) => {
+      const upstreamNodesToRemove = collectUpstreamNodes(graph, nodeId);
+      removeByNodeIds(upstreamNodesToRemove);
+    },
+    [graph, removeByNodeIds],
+  );
 
-  const handleCollapseDownstream = useCallback((nodeId: string) => {
-    const downstreamNodesToRemove = collectDownstreamNodes(graph, nodeId);
-    removeByNodeIds(downstreamNodesToRemove);
-  }, [graph, removeByNodeIds]);
+  const handleCollapseDownstream = useCallback(
+    (nodeId: string) => {
+      const downstreamNodesToRemove = collectDownstreamNodes(graph, nodeId);
+      removeByNodeIds(downstreamNodesToRemove);
+    },
+    [graph, removeByNodeIds],
+  );
 
   return (
     <div className={styles.page}>
-      <BackButton
-        defaultUrl={`/data-discovery/dataset/${match.params.datasetId}`}
-      />
+      <BackButton defaultUrl={`/data-discovery/dataset/${match.params.datasetId}`} />
 
       <Card className={styles.content}>
-        <div
-          ref={boardWrapperRef as any}
-          style={{ position: 'relative', width: '100%', height: '100%' }}
-        >
+        <div ref={boardWrapperRef as any} style={{ position: 'relative', width: '100%', height: '100%' }}>
           <LineageBoardZoomProvider
             width={boardWidth || 1000}
             height={boardHeight || 500}
