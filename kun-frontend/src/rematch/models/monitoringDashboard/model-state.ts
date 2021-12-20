@@ -29,6 +29,7 @@ export interface DataDiscoveryBoardData {
     sortOrder: 'ASC' | 'DESC' | null;
     pageNum: number;
     pageSize: number;
+    showPageSize: number;
     total: number;
   };
   // dataset metrics table state
@@ -93,7 +94,8 @@ export const initState: MonitoringDashboardModelState = {
       sortColumn: null,
       sortOrder: null,
       pageNum: 1,
-      pageSize: 10,
+      pageSize: 65535,
+      showPageSize: 10,
       total: 0,
     },
     datasetMetrics: {

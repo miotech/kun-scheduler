@@ -272,6 +272,7 @@ export const Header: React.FC<Props> = props => {
             setDraftTaskDef(newTaskDefinition);
             setCommitModalVisible(false);
           }
+          return respData;
         }}
       />
     </header>
