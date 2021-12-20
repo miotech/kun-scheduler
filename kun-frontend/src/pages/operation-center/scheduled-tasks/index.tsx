@@ -44,12 +44,7 @@ export const ScheduledTaskView: React.FC<ScheduledTaskViewProps> = () => {
   // Shall not trigger after mount
   useUpdateEffect(() => {
     dispatch.scheduledTasks.setShouldRefresh(true);
-  }, [
-    filters.taskTemplateName,
-    filters.ownerIds,
-    filters.pageNum,
-    filters.pageSize,
-  ]);
+  }, [filters.taskTemplateName, filters.ownerIds, filters.pageNum, filters.pageSize]);
 
   useUnmount(() => {
     dispatch.scheduledTasks.resetAll();
@@ -58,29 +53,16 @@ export const ScheduledTaskView: React.FC<ScheduledTaskViewProps> = () => {
   return (
     <div id="scheduled-task-view">
       <Headings />
-      <main
-        id="scheduled-task-view-main-content"
-        className={styles.MainContent}
-      >
+      <main id="scheduled-task-view-main-content" className={styles.MainContent}>
         {/* Table container */}
         <section className={styles.TableContainer}>
           <Card>
-            <DeployedTasksTable
-              selectedTask={selectedTask}
-              setSelectedTask={setSelectedTask}
-            />
+            <DeployedTasksTable selectedTask={selectedTask} setSelectedTask={setSelectedTask} />
           </Card>
         </section>
         {/* DAG container */}
-        <section
-          id="deployed-task-dag-container"
-          className={styles.DAGContainer}
-        >
-          <DeployedTaskDAG
-            task={selectedTask}
-            width={DAGContainerSize.width}
-            height={DAGContainerSize.height}
-          />
+        <section id="deployed-task-dag-container" className={styles.DAGContainer}>
+          <DeployedTaskDAG task={selectedTask} width={DAGContainerSize?.width} height={DAGContainerSize?.height} />
         </section>
       </main>
     </div>

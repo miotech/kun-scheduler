@@ -18,7 +18,7 @@ export const effects = (dispatch: RootDispatch) => ({
         pageSize: 100,
         ...payload,
       });
-      dispatch.dataDevelopment.setTaskDefinitionViewsList(taskDefViews.records);
+      return taskDefViews.records;
     } finally {
       // do nothing
     }
