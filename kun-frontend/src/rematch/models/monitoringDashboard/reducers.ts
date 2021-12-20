@@ -106,9 +106,13 @@ export const reducers = {
   setTaskDetailsForWeekParams: produce((draftState: ModelState, payload: boolean) => {
     draftState.dataDevelopmentBoardData.taskDetailsForWeekParams = payload;
     draftState.dataDevelopmentBoardData.taskDetails.pageNum = 1;
+    draftState.dataDevelopmentBoardData.taskDetailsSelectedFilter = null;
   }),
 
   updateStatisticChartData: produce((draftState: ModelState, payload) => {
-    draftState.dataDevelopmentBoardData.dailyStatisticList = payload;
+    draftState.dataDevelopmentBoardData.dailyStatisticList = {
+      ...draftState.dataDevelopmentBoardData.dailyStatisticList,
+      ...payload,
+    }
   }),
 };

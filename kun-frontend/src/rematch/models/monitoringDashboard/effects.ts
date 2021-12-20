@@ -275,6 +275,9 @@ const loadStatisticChartData = async (dispatch: RootDispatch) => {
   const params = {
     timezoneOffset: 8,
   };
+  dispatch.monitoringDashboard.updateStatisticChartData({
+    loading: true,
+  });
   const res = await services.fetchDataDevelopmentStatisticChart(params).catch(e => {
     error = e;
   });

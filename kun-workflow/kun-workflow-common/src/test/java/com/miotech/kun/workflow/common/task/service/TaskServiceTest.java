@@ -724,6 +724,8 @@ public class TaskServiceTest extends CommonTestBase {
         assertThat(saved.getRetries(), is(0));
         assertThat(saved.getRetryDelay(), is(30));
         assertThat(saved.getCheckType(),is(CheckType.SKIP));
+        assertThat(saved.getScheduleConf().getTimeZone(),is("Z"));
+        assertThat(saved.getScheduleConf().getBlockType(),is(BlockType.NONE));
     }
 
     @Test
@@ -740,15 +742,18 @@ public class TaskServiceTest extends CommonTestBase {
                 .build();
         operatorDao.createWithId(op, operatorId);
         Task task = taskService.createTask(createdTask);
+        Task saved = taskDao.fetchById(task.getId()).get();
 
         TaskPropsVO taskPropsVO = TaskPropsVO.from(task);
         taskService.fullUpdateTaskById(task.getId(), taskPropsVO);
-        Task saved = taskDao.fetchById(task.getId()).get();
+        Task updated = taskDao.fetchById(task.getId()).get();
 
         //verify
-        assertThat(saved.getRetries(), is(0));
-        assertThat(saved.getRetryDelay(), is(30));
-        assertThat(saved.getCheckType(),is(CheckType.SKIP));
+        assertThat(updated.getRetries(), is(saved.getRetries()));
+        assertThat(updated.getRetryDelay(), is(saved.getRetryDelay()));
+        assertThat(updated.getCheckType(),is(saved.getCheckType()));
+        assertThat(updated.getScheduleConf().getTimeZone(),is(saved.getScheduleConf().getTimeZone()));
+        assertThat(updated.getScheduleConf().getBlockType(),is(saved.getScheduleConf().getBlockType()));
     }
 
     @Test
@@ -775,16 +780,25 @@ public class TaskServiceTest extends CommonTestBase {
         assertThat(updated.getRetries(), is(saved.getRetries()));
         assertThat(updated.getRetryDelay(), is(saved.getRetryDelay()));
         assertThat(updated.getCheckType(),is(saved.getCheckType()));
+        assertThat(updated.getScheduleConf().getTimeZone(),is(saved.getScheduleConf().getTimeZone()));
+        assertThat(updated.getScheduleConf().getBlockType(),is(saved.getScheduleConf().getBlockType()));
     }
 
     @Test
     public void testCreateTaskWithSettingValues_should_be_given_value() {
         //prepare
+        ScheduleConf scheduleConf = ScheduleConf
+                .newBuilder()
+                .withType(ScheduleType.NONE)
+                .withTimeZone("Asia/Shanghai")
+                .withBlockType(BlockType.WAIT_PREDECESSOR)
+                .build();
         TaskPropsVO taskPropsVO = MockTaskFactory.createTaskPropsVO()
                 .cloneBuilder()
                 .withRetries(1)
                 .withRetryDelay(10)
                 .withCheckType(CheckType.WAIT_EVENT.name())
+                .withScheduleConf(scheduleConf)
                 .build();
         long operatorId = taskPropsVO.getOperatorId();
         Operator op = MockOperatorFactory.createOperator()
@@ -803,6 +817,9 @@ public class TaskServiceTest extends CommonTestBase {
         assertThat(saved.getRetries(), is(1));
         assertThat(saved.getRetryDelay(), is(10));
         assertThat(saved.getCheckType(),is(CheckType.WAIT_EVENT));
+        assertThat(saved.getScheduleConf().getType(),is(ScheduleType.NONE));
+        assertThat(saved.getScheduleConf().getTimeZone(),is("Asia/Shanghai"));
+        assertThat(saved.getScheduleConf().getBlockType(),is(BlockType.WAIT_PREDECESSOR));
     }
 
     @Test
@@ -820,11 +837,18 @@ public class TaskServiceTest extends CommonTestBase {
         operatorDao.createWithId(op, operatorId);
         Task task = taskService.createTask(createdTask);
 
+        ScheduleConf scheduleConf = ScheduleConf
+                .newBuilder()
+                .withType(ScheduleType.NONE)
+                .withTimeZone("Asia/Shanghai")
+                .withBlockType(BlockType.WAIT_PREDECESSOR)
+                .build();
         TaskPropsVO taskPropsVO = TaskPropsVO.from(task)
                 .cloneBuilder()
                 .withRetries(1)
                 .withRetryDelay(10)
                 .withCheckType(CheckType.WAIT_EVENT.name())
+                .withScheduleConf(scheduleConf)
                 .build();
         taskService.fullUpdateTaskById(task.getId(), taskPropsVO);
         Task saved = taskDao.fetchById(task.getId()).get();
@@ -833,6 +857,9 @@ public class TaskServiceTest extends CommonTestBase {
         assertThat(saved.getRetries(), is(1));
         assertThat(saved.getRetryDelay(), is(10));
         assertThat(saved.getCheckType(),is(CheckType.WAIT_EVENT));
+        assertThat(saved.getScheduleConf().getType(),is(ScheduleType.NONE));
+        assertThat(saved.getScheduleConf().getTimeZone(),is("Asia/Shanghai"));
+        assertThat(saved.getScheduleConf().getBlockType(),is(BlockType.WAIT_PREDECESSOR));
     }
 
     @Test
@@ -850,11 +877,18 @@ public class TaskServiceTest extends CommonTestBase {
         operatorDao.createWithId(op, operatorId);
         Task task = taskService.createTask(createdTask);
 
+        ScheduleConf scheduleConf = ScheduleConf
+                .newBuilder()
+                .withType(ScheduleType.NONE)
+                .withTimeZone("Asia/Shanghai")
+                .withBlockType(BlockType.WAIT_PREDECESSOR)
+                .build();
         TaskPropsVO taskPropsVO = TaskPropsVO.from(task)
                 .cloneBuilder()
                 .withRetries(1)
                 .withRetryDelay(10)
                 .withCheckType(CheckType.WAIT_EVENT.name())
+                .withScheduleConf(scheduleConf)
                 .build();
         taskService.partialUpdateTask(task.getId(), taskPropsVO);
         Task updated = taskDao.fetchById(task.getId()).get();
@@ -863,5 +897,8 @@ public class TaskServiceTest extends CommonTestBase {
         assertThat(updated.getRetries(), is(1));
         assertThat(updated.getRetryDelay(), is(10));
         assertThat(updated.getCheckType(),is(CheckType.WAIT_EVENT));
+        assertThat(updated.getScheduleConf().getType(),is(ScheduleType.NONE));
+        assertThat(updated.getScheduleConf().getTimeZone(),is("Asia/Shanghai"));
+        assertThat(updated.getScheduleConf().getBlockType(),is(BlockType.WAIT_PREDECESSOR));
     }
 }
