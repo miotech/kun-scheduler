@@ -1,12 +1,14 @@
-import React, { memo, useCallback, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo, useState, useEffect } from 'react';
 import { PlusOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
+import { useRequest } from 'ahooks';
 
 import { TaskViewListItem } from '@/pages/data-development/components/TaskViewsAside/TaskViewListItem';
 
 import { TaskDefinitionViewBase, TaskDefinitionViewVO } from '@/definitions/TaskDefinitionView.type';
 
+import { searchTaskDefinition } from '@/services/data-development/task-definitions';
 import { KunSpin } from '@/components/KunSpin';
 import styles from './TaskViewsAside.module.less';
 
@@ -37,11 +39,32 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
     allowAllTaskDefsView = true,
   } = props;
 
-  const { selector } = useRedux(state => state.dataDevelopment);
+  const { selector, dispatch } = useRedux(state => state.dataDevelopment);
 
   const [searchText, setSearchText] = useState<string>('');
 
   const t = useI18n();
+
+  const { data, run: doFetch } = useRequest(searchTaskDefinition, {
+    manual: true,
+  });
+
+  useEffect(() => {
+    if (selector.filters) {
+      doFetch({
+        pageNum: 1,
+        pageSize: 10,
+        name: selector.filters.name,
+        taskTemplateName: selector.filters.taskTemplateName || undefined,
+        creatorIds: selector.filters.creatorIds as any,
+        viewIds: undefined,
+      });
+    }
+  }, [doFetch, selector.filters, selector.filters.creatorIds, selector.filters.name, selector.filters.taskTemplateName]);
+
+  useEffect(() => {
+    dispatch.dataDevelopment.setRecordCount(data?.totalCount ?? 0);
+  }, [data, dispatch.dataDevelopment]);
 
   const viewItems = useMemo(() => {
     let viewItemsDOMs = views.map(view => (

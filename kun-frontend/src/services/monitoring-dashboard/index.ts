@@ -60,6 +60,7 @@ export interface FailedTestCase {
   status: string;
   errorReason: string;
   updateTime: number;
+  taskRunId: string;
   // default sort column
   continuousFailingCount: number;
   caseOwner: string;
@@ -77,6 +78,10 @@ export interface FailedTask {
   updateTime: string;
 }
 
+export interface Glossary {
+  id: string;
+  name: string;
+}
 export interface AbnormalDataset {
   datasetGid: string;
   datasetName: string;
@@ -84,6 +89,7 @@ export interface AbnormalDataset {
   datasourceName: string;
   failedCaseCount: number;
   lastUpdatedTime: string;
+  glossaries: Glossary[];
   tasks: FailedTask[];
   cases: FailedTestCase[];
 }
