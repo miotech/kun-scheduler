@@ -7,6 +7,7 @@ import useI18n from '@/hooks/useI18n';
 import { KunSpin } from '@/components/KunSpin';
 import { dayjs } from '@/utils/datetime-utils';
 import { DailyStatistic } from '@/services/monitoring-dashboard';
+import { DailyTaskFinishCountTable } from './DailyTaskFinishCountTable';
 interface OwnProps {
   dailyStatisticList: DailyStatistic[]
   data: DailyTaskFinishCount[];
@@ -61,15 +62,16 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
   }
 
   return (
-    <Card bodyStyle={{ padding: '8px' }}>
+    <Card bodyStyle={{ padding: '8px'}}>
       <h3>{t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title')}</h3>
-      <div ref={chartWrapperRef} style={{ position: 'relative', width: '100%', height: '468px' }}>
+      <div ref={chartWrapperRef} style={{ position: 'relative', width: '100%', height: '468px',overflowX:'scroll' }}>
         <DailyTaskFinishBarChart
           data={dailyStatisticList}
-          width={width - 8}
+          width={width + 108}
           height={height - 8}
         />
       </div>
+      {/* <DailyTaskFinishCountTable data={dailyStatisticList} loading={loading} /> */}
     </Card>
   );
 });
