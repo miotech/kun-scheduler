@@ -88,7 +88,8 @@ public class DataQualityRepository extends BaseRepository {
     }
 
     public AbnormalDatasets getAbnormalDatasets(TestCasesRequest testCasesRequest) {
-        String sql = "select kdc.primary_dataset_id as gid, " +
+        String sql = "select gid, max(last_update_time) last_update_time from (" +
+                "select kdc.primary_dataset_id as gid, " +
                 "max(kdcm.update_time) as last_update_time " +
                 "from " +
                 "(select case_id, update_time, continuous_failing_count, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY update_time desc) AS row_number from kun_dq_case_metrics) kdcm " +
@@ -101,7 +102,8 @@ public class DataQualityRepository extends BaseRepository {
                 "max(kdad.update_time) as last_update_time " +
                 "from kun_dq_abnormal_dataset kdad " +
                 "where kdad.status = 'FAILED' and kdad.schedule_at = (select max(schedule_at) from kun_dq_abnormal_dataset where status is not null) " +
-                "group by kdad.dataset_gid ";
+                "group by kdad.dataset_gid) t " +
+                "group by gid ";
 
 
         String countSql = "select count(1) from (" + sql + ") as result";
