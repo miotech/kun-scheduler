@@ -46,6 +46,7 @@ export const TaskViewsAside: React.FC<Props> = memo(function TaskViewsAside(prop
   const t = useI18n();
 
   const { data, run: doFetch } = useRequest(searchTaskDefinition, {
+    debounceWait: 500,
     manual: true,
   });
 
