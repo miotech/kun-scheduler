@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState, useMemo } from 'react';
 // import useRedux from '@/hooks/useRedux';
 import { WorkflowCanvas } from '@/components/Workflow/canvas/Canvas.component';
 import { useSize } from 'ahooks';
@@ -6,17 +6,10 @@ import LogUtils from '@/utils/logUtils';
 import { convertTaskDefinitionsToGraph } from '@/pages/data-development/helpers/taskDefsToGraph';
 
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
-import {
-  WorkflowNode,
-  WorkflowEdge,
-  Transform,
-} from '@/components/Workflow/Workflow.typings';
+import { WorkflowNode, WorkflowEdge, Transform } from '@/components/Workflow/Workflow.typings';
 
 import { computeDragInclusive } from '@/components/Workflow/helpers/dragbox-inclusive';
-import {
-  TASK_DAG_NODE_HEIGHT,
-  TASK_DAG_NODE_WIDTH,
-} from '@/components/Workflow/Workflow.constants';
+import { TASK_DAG_NODE_HEIGHT, TASK_DAG_NODE_WIDTH } from '@/components/Workflow/Workflow.constants';
 import { Tool, ViewerMouseEvent } from 'react-svg-pan-zoom';
 import { TOOL_BOX_SELECT } from '@/components/Workflow/toolbar/WorkflowDAGToolbar.component';
 import styles from './TaskDAG.module.less';
@@ -116,17 +109,15 @@ export const TaskDAG: React.FC<Props> = memo(function TaskDAG(props) {
   );
 
   const containerRef = useRef<any>();
-  const { width, height } = useSize(containerRef);
+  const size = useSize(containerRef);
+
+  const { width, height } = useMemo(() => size ?? { width: undefined, height: undefined }, [size]);
 
   const handleNodeClick = useCallback(
     (workflowNode: WorkflowNode, multiselectMode?: boolean) => {
       if (multiselectMode) {
         if (selectedTaskDefIds.indexOf(workflowNode.id) >= 0) {
-          setSelectedTaskDefIds(
-            selectedTaskDefIds.filter(
-              taskDefId => taskDefId !== workflowNode.id,
-            ),
-          );
+          setSelectedTaskDefIds(selectedTaskDefIds.filter(taskDefId => taskDefId !== workflowNode.id));
         } else {
           setSelectedTaskDefIds([...selectedTaskDefIds, workflowNode.id]);
         }
