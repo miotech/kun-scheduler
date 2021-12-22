@@ -51,6 +51,16 @@ public class AbnormalDatasetRepository {
         return updatedRows == 1;
     }
 
+    public void updateStatusByTaskRunId(Long taskRunId, String status) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .update(TABLE_NAME)
+                .set("status", "update_time")
+                .where("task_run_id = ?")
+                .asPrepared()
+                .getSQL();
+        jdbcTemplate.update(sql, status, DateTimeUtils.now(), taskRunId);
+    }
+
     public List<AbnormalDataset> fetchByScheduleAtAndStatusIsNull(String scheduleAt) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(TABLE_COLUMNS.toArray(new String[0]))
