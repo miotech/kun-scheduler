@@ -1,6 +1,7 @@
 package com.miotech.kun.dataplatform.web.controller;
 
 import com.google.common.base.Preconditions;
+import com.miotech.kun.common.model.AcknowledgementVO;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskService;
@@ -23,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/")
@@ -149,6 +151,14 @@ public class DeployedTaskController {
         return RequestResult.success(deployedTaskService.searchTaskRun(deploySearchRequest));
     }
 
+    @PostMapping("/deployed-taskruns/remove-taskrun-dependency")
+    @ApiOperation("remove task run dependency")
+    public RequestResult<Object> removeTaskRunDependency(@RequestParam Long taskRunId,
+                                                         @RequestParam List<Long> upstreamTaskRunIds) {
+        deployedTaskService.removeTaskRunDependency(taskRunId, upstreamTaskRunIds);
+        return RequestResult.success(new AcknowledgementVO("Operation acknowledged"));
+    }
+
     @GetMapping("/deployed-taskruns/{id}")
     @ApiOperation("Get detail of scheduled taskrun")
     public RequestResult<TaskRun> getWorkflowTaskRun(@PathVariable Long id) {
@@ -170,6 +180,13 @@ public class DeployedTaskController {
         // else
         return RequestResult.success(deployedTaskService.getWorkFlowTaskRunLog(id, start, end, attemptNum));
     }
+
+    @GetMapping("/deployed-taskruns/{id}/upstream-taskruns")
+    @ApiOperation("Get one level upstream taskruns")
+    public RequestResult<List<TaskRun>> getUpstreamTaskRuns(@PathVariable Long id) {
+        return RequestResult.success(deployedTaskService.getUpstreamTaskRuns(id));
+    }
+
 
     @GetMapping("/deployed-taskruns/{id}/dag")
     @ApiOperation("Get dag of scheduled taskrun")

@@ -362,6 +362,21 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         return workflowClient.searchTaskRun(searchRequest);
     }
 
+    public void removeTaskRunDependency(Long taskRunId, List<Long> upstreamTaskRunIds) {
+        Preconditions.checkNotNull(taskRunId, TASK_RUN_ID_NOT_NULL);
+        Preconditions.checkNotNull(upstreamTaskRunIds, "upstream task run id should not be null");
+        Preconditions.checkArgument(!upstreamTaskRunIds.isEmpty(), "upstream task run id should not be empty");
+        log.debug("taskrun is : {} and upstreamTaskRunIds are {} : ", taskRunId, upstreamTaskRunIds);
+        workflowClient.removeTaskRunDependency(taskRunId, upstreamTaskRunIds);
+    }
+
+    public List<TaskRun> getUpstreamTaskRuns(Long taskRunId) {
+        Preconditions.checkNotNull(taskRunId, TASK_RUN_ID_NOT_NULL);
+        return getWorkFlowTaskRunDag(taskRunId, 1, 0).getNodes().stream()
+                .filter(tr -> !Objects.equals(tr.getId(), taskRunId))
+                .collect(Collectors.toList());
+    }
+
     public TaskRun getWorkFlowTaskRun(Long taskRunId) {
         Preconditions.checkNotNull(taskRunId, TASK_RUN_ID_NOT_NULL);
         return workflowClient.getTaskRun(taskRunId);
