@@ -2,26 +2,16 @@ package com.miotech.kun.datadashboard.model.entity;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.util.List;
-
-/**
- * @author: Jie Chen
- * @created: 2020/9/17
- */
 @Data
-public class DatasetBasic {
+@AllArgsConstructor
+public class GlossaryBasic {
 
     @JsonSerialize(using= ToStringSerializer.class)
-    Long gid;
+    private Long id;
 
-    String datasetName;
-
-    String database;
-
-    String dataSource;
-
-    List<GlossaryBasic> glossaries;
+    private String name;
 
 }
