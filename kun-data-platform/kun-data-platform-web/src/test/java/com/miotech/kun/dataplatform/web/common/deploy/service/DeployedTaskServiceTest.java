@@ -21,12 +21,17 @@ import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.Task;
+import com.miotech.kun.workflow.client.model.TaskRun;
+import com.miotech.kun.workflow.client.model.TaskRunDAG;
+import com.miotech.kun.workflow.client.model.TaskRunDependency;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -317,4 +322,25 @@ public class DeployedTaskServiceTest extends AppTestBase {
         assertThat(node.getId(), is(taskCommit.getDefinitionId()));
     }
 
+    @Test
+    public void getUpstreamTaskRuns_shouldOk() {
+        //prepare
+        Task task1 = MockWorkflowTaskFactory.mockTask(1L);
+        Task task2 = MockWorkflowTaskFactory.mockTask(1L);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1);
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2);
+        TaskRunDAG taskRunDAG = new TaskRunDAG();
+        taskRunDAG.setNodes(Arrays.asList(taskRun1, taskRun2));
+        taskRunDAG.setEdges(Collections.singletonList(new TaskRunDependency(taskRun2.getId(), taskRun1.getId())));
+
+        //mock
+        doReturn(taskRunDAG).when(deployedTaskService).getWorkFlowTaskRunDag(anyLong(),anyInt(),anyInt());
+
+        //execute
+        List<TaskRun> upstreamTaskRun = deployedTaskService.getUpstreamTaskRuns(taskRun2.getId());
+
+        //verify
+        assertThat(upstreamTaskRun.size(), is(1));
+        assertThat(upstreamTaskRun.get(0).getId(), is(taskRun1.getId()));
+    }
 }
