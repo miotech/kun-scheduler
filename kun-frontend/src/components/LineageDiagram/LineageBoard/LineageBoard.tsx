@@ -49,7 +49,12 @@ interface OwnProps {
   onCollapseDownstream?: (datasetId: string) => any;
   onClickNode?: (node: LineageDagreNodeData, event: React.MouseEvent<any>) => any;
   onClickEdge?: (
-    edgeInfo: { srcNodeId: string; destNodeId: string; srcNode: LineageDagreNode; destNode: LineageDagreNode },
+    edgeInfo: {
+      srcNodeId: string;
+      destNodeId: string;
+      srcNode: LineageDagreNode;
+      destNode: LineageDagreNode;
+    },
     event: React.MouseEvent<SVGPathElement>,
   ) => any;
   onClickBackground?: (event: React.MouseEvent<any>) => any;
