@@ -135,12 +135,12 @@ public class TaskDefinitionViewDao {
             whereClauseBuilder.append("(" + TASK_DEF_VIEW_MODEL_NAME + ".id IN (" + subSelectSql + ")) AND ");
         }
 
-        if (Objects.nonNull(searchParams.getTaskDefName()) || Objects.nonNull(searchParams.getTaskDefCreatorIds())
-                || Objects.nonNull(searchParams.getTaskTemplateName())) {
+        if ((Objects.nonNull(searchParams.getTaskDefName()) && !searchParams.getTaskDefName().isEmpty())
+                || Objects.nonNull(searchParams.getTaskDefCreatorIds()) || Objects.nonNull(searchParams.getTaskTemplateName())) {
             StringBuilder subWhereClauseBuilder = new StringBuilder();
             if (Objects.nonNull(searchParams.getTaskDefName()) && !searchParams.getTaskDefName().isEmpty()) {
                 subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".name ILIKE CONCAT('%', CAST(? AS TEXT), '%')) AND ");
-                paramsList.add(searchParams.getTaskDefName().trim());
+                paramsList.add(searchParams.getTaskDefName());
             }
             if (Objects.nonNull(searchParams.getTaskDefCreatorIds()) && !searchParams.getTaskDefCreatorIds().isEmpty()) {
                 subWhereClauseBuilder.append("(" + TASK_DEF_MODEL_NAME + ".creator IN (" + SQLUtils.generateSqlInClausePlaceholders(searchParams.getTaskDefCreatorIds()) + ")) AND ");
