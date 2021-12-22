@@ -6,7 +6,6 @@ import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
-import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.io.File;
@@ -315,5 +314,13 @@ public interface WorkflowClient {
      * @return list of targets
      */
     List<ExecuteTarget> getTargetList();
+
+    /**
+     * remove dependency of the current taskRun
+     * does not affect the next schedule taskRun
+     * @param taskRunId
+     * @param upstreamTaskRunIds
+     */
+    void removeTaskRunDependency(Long taskRunId, List<Long> upstreamTaskRunIds);
 
 }
