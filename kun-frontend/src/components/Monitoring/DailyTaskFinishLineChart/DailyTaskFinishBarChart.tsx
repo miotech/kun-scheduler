@@ -12,33 +12,41 @@ interface OwnProps {
 
 type Props = OwnProps;
 
+const timeToWeek = (time: string) => {
+  const day = dayjs(time as string).day();
+  switch (day) {
+    case 0:
+      return 'Sun';
+    case 1:
+      return 'Mon';
+    case 2:
+      return 'Tue';
+    case 3:
+      return 'Wed';
+    case 4:
+      return 'Thu';
+    case 5:
+      return 'Fri';
+    case 6:
+      return 'Sat';
+    default:
+      return '';
+  }
+};
+
 export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskFinishBarChart(props) {
-  let echartRef:any = null
   const timeCache: string[] = []
   const { dispatch } = useRedux(() => ({}));
   const onChartClick = (obj:any) => {
-    console.log(obj.dataIndex)
-    // echartRef.getEchartsInstance().dispatchAction({
-    //   type: 'select',
-    //   seriesId: obj.seriesId,
-    //   // seriesIndex: obj.dataIndex,
-    //   seriesName: obj.seriesName
-    // })
-    // echartRef.getEchartsInstance().dispatchAction({
-    //   type: 'highlight',
-    //   name: obj.name,
-    //   // seriesIndex: obj.dataIndex,
-    //   // seriesName: obj.seriesName
-    // })
     const targetTime = timeCache[obj.dataIndex]
     const params = {
       targetTime,
       status: obj.seriesName,
-      finalStatus: obj.seriesName === 'ONGONING' ? '' : obj.seriesName,
+      finalStatus: obj.seriesName === 'ONGOING' ? '' : obj.seriesName,
+      showId: null,
       timezoneOffset: 8,
     }
     dispatch.monitoringDashboard.setTaskDetailsForWeekParams(params);
-    console.log(obj)
   }
   const onEvents = {
     'click': onChartClick,
@@ -55,7 +63,7 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
   const aboList:number[] = []
   const ongList:number[] = []
   data.forEach(item=> {
-    xAxis.push(dayjs(item.time).format('MM-DD'))
+    xAxis.push(`${timeToWeek(item.time)},${dayjs(item.time).format('MM-DD')}`)
     timeCache.push(item.time)
     sucList.push(item.taskResultList.find(idx=>idx.status === 'SUCCESS')?.taskCount || 0)
     faiList.push(item.taskResultList.find(idx=>idx.status === 'FAILED')?.taskCount || 0)
@@ -70,6 +78,9 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
       axisPointer: {
         type: 'shadow',
       },
+    },
+    textStyle: {
+      color: '#9c9c9c'
     },
     color: ['#9bc655', 'rgb(238,108,69)', '#8f5a2c', '#ffb5cd', '#3ec3cb'],
     legend: {},
@@ -88,6 +99,10 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
     yAxis: [
       {
         type: 'value',
+        axisLine: {
+          show: true,
+        },
+        name: 'Count'
       },
     ],
     series: [
@@ -95,6 +110,7 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
         name: 'SUCCESS',
         type: 'bar',
         stack: 'Ad',
+        barWidth: '45%',
         emphasis: {
           focus: 'series',
         },
@@ -138,5 +154,5 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
       },
     ],
   };
-  return <ReactEcharts   ref={(e) => { echartRef = e; }} onEvents={onEvents} style={{ height, width }} option={defaultOption} />;
+  return <ReactEcharts  onEvents={onEvents} style={{ height, width }} option={defaultOption} />;
 });
