@@ -410,7 +410,6 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       />
       <AddToOtherViewModal
         visible={addToOtherViewModalVisible}
-        taskDefViews={taskDefViewsList}
         currentViewId={selectedView?.id || null}
         onOk={targetViewId => {
           return handleAddTaskDefsToOtherView(targetViewId).then(() => {

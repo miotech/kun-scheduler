@@ -1,10 +1,10 @@
-import React, { memo, useCallback } from 'react';
+import React, { memo, useCallback, useEffect } from 'react';
 import { Form, message, Modal, Select } from 'antd';
-import { TaskDefinitionViewBase } from '@/definitions/TaskDefinitionView.type';
+import { useRequest } from 'ahooks';
 import useI18n from '@/hooks/useI18n';
+import { searchTaskDefinitionViews } from '@/services/data-development/task-definition-views';
 
 interface OwnProps {
-  taskDefViews: TaskDefinitionViewBase[];
   onOk?: (selectedTaskViewId: string) => any;
   onCancel?: () => any;
   visible?: boolean;
@@ -14,16 +14,21 @@ interface OwnProps {
 type Props = OwnProps;
 
 export const AddToOtherViewModal: React.FC<Props> = memo(function AddToOtherViewModal(props) {
-  const {
-    taskDefViews,
-    onOk,
-    onCancel,
-    visible,
-    currentViewId,
-  } = props;
+  const { onOk, onCancel, visible, currentViewId } = props;
 
-  const [ form ] = Form.useForm();
+  const [form] = Form.useForm();
   const t = useI18n();
+
+  const { data: searchTaskDefinitionViewsRecords, run: doFetch } = useRequest(searchTaskDefinitionViews, {
+    manual: true,
+  });
+
+  useEffect(() => {
+    doFetch({
+      pageNumber: 1,
+      pageSize: 100,
+    });
+  }, [doFetch]);
 
   const handleOk = useCallback(async () => {
     if (onOk) {
@@ -35,11 +40,7 @@ export const AddToOtherViewModal: React.FC<Props> = memo(function AddToOtherView
         // do nothing
       }
     }
-  }, [
-    form,
-    onOk,
-    t,
-  ]);
+  }, [form, onOk, t]);
 
   return (
     <Modal
@@ -56,14 +57,12 @@ export const AddToOtherViewModal: React.FC<Props> = memo(function AddToOtherView
           label={t('dataDevelopment.addSelectedTasksToOtherViews.targetViewToAdd')}
         >
           <Select showSearch optionFilterProp="title">
-            {taskDefViews.filter(view => {
-              return currentViewId !== view.id;
-            }).map(view => (
-              <Select.Option
-                value={view.id}
-                title={view.name}
-                key={view.id}
-              >
+            {(
+              searchTaskDefinitionViewsRecords?.records.filter(view => {
+                return currentViewId !== view.id;
+              }) ?? []
+            ).map(view => (
+              <Select.Option value={view.id} title={view.name} key={view.id}>
                 {view.name}
               </Select.Option>
             ))}
