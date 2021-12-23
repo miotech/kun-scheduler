@@ -202,7 +202,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
             selectedTaskRun={selectedTaskRun}
             selectedAttemptMap={selectedAttemptMap}
             setSelectedAttemptMap={setSelectedAttemptMap}
-            dagContainerSize={dagContainerSize}
+            dagContainerSize={dagContainerSize || { width: undefined, height: undefined }}
             currentTab={currentTab}
             setCurrentTab={setCurrentTab}
           />

@@ -59,6 +59,7 @@ export const TaskDefinitionTable: React.FC<Props> = memo(function TaskDefinition
   const t = useI18n();
 
   const { data, loading, run: doFetch } = useRequest(searchTaskDefinition, {
+    debounceWait: 500,
     manual: true,
   });
 

@@ -98,7 +98,9 @@ public class TaskCommitService extends BaseSecurityService {
                 .withTaskPayload(taskDefinition.getTaskPayload())
                 .withOwner(taskDefinition.getOwner())
                 .build();
-        validateSnapshotCronExpression(snapshot);
+        if (commitType != CommitType.OFFLINE) {
+            validateSnapshotCronExpression(snapshot);
+        }
         TaskCommit commit = TaskCommit.newBuilder()
                 .withId(DataPlatformIdGenerator.nextCommitId())
                 .withDefinitionId(taskDefinitionId)

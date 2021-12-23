@@ -7,8 +7,9 @@ import useI18n from '@/hooks/useI18n';
 import { KunSpin } from '@/components/KunSpin';
 import { dayjs } from '@/utils/datetime-utils';
 import { DailyStatistic } from '@/services/monitoring-dashboard';
+
 interface OwnProps {
-  dailyStatisticList: DailyStatistic[]
+  dailyStatisticList: DailyStatistic[];
   data: DailyTaskFinishCount[];
   loading?: boolean;
 }
@@ -20,7 +21,8 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
 
   const chartWrapperRef: React.RefObject<any> = useRef<any>();
 
-  const { width = 468, height = 468 } = useSize(chartWrapperRef);
+  const size = useSize(chartWrapperRef);
+  const { width = 468, height = 468 } = useMemo(() => size ?? { width: undefined, height: undefined }, [size]);
 
   const { data, loading, dailyStatisticList } = props;
 
@@ -64,11 +66,7 @@ export const DailyTaskFinishCountChart: React.FC<Props> = memo(function DailyTas
     <Card bodyStyle={{ padding: '8px' }}>
       <h3>{t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title')}</h3>
       <div ref={chartWrapperRef} style={{ position: 'relative', width: '100%', height: '468px' }}>
-        <DailyTaskFinishBarChart
-          data={dailyStatisticList}
-          width={width - 8}
-          height={height - 8}
-        />
+        <DailyTaskFinishBarChart data={dailyStatisticList} width={width - 8} height={height - 8} />
       </div>
     </Card>
   );

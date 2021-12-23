@@ -76,7 +76,7 @@
     "@visx/tooltip": "^1.1.0",
     "@visx/zoom": "^1.0.0",
     "@wry/equality": "^0.1.11",
-    "ahooks": "^2.3.0",
+    "ahooks": "^3.0.6",
     "antd": "^4.17.1",
     "axios": "^0.21.1",
     "clipboard-polyfill": "^3.0.1",

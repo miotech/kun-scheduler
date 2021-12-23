@@ -1,7 +1,7 @@
 import { useHistory } from 'umi';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { ReflexContainer, ReflexSplitter, ReflexElement } from 'react-reflex';
-import { useEventEmitter, useUnmount } from 'ahooks';
+import { useEventEmitter, useUnmount, useRequest } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
 import uniq from 'lodash/uniq';
@@ -22,6 +22,7 @@ import {
   putTaskDefinitionsIntoView,
   removeTaskDefinitionsFromView,
   updateTaskDefinitionView,
+  searchTaskDefinitionViews,
 } from '@/services/data-development/task-definition-views';
 import { createTaskDefinition } from '@/services/data-development/task-definitions';
 
@@ -99,11 +100,17 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
   });
 
   /* Task definition view effects and callbacks */
+  const { data: searchTaskDefinitionViewsRecords, run: doFetch } = useRequest(searchTaskDefinitionViews, {
+    debounceWait: 500,
+    manual: true,
+  });
 
-  const searchTaskDefViews = useCallback(() => {
-    dispatch.dataDevelopment.fetchTaskDefViews({
+  const searchTaskDefViews = useCallback(async () => {
+    await doFetch({
+      pageNumber: 1,
+      pageSize: 100,
       keyword: taskDefViewSearchKeyword,
-      taskDefName: filters.name,
+      taskDefName: filters.name || undefined,
       taskTemplateName: filters.taskTemplateName || undefined,
       taskDefCreatorIds: filters.creatorIds as any,
     });
@@ -118,6 +125,12 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     searchTaskDefViews();
     // eslint-disable-next-line
   }, [searchTaskDefViews]);
+
+  useEffect(() => {
+    if (searchTaskDefinitionViewsRecords?.records) {
+      dispatch.dataDevelopment.setTaskDefinitionViewsList(searchTaskDefinitionViewsRecords.records);
+    }
+  }, [dispatch.dataDevelopment, searchTaskDefinitionViewsRecords?.records]);
 
   useDebouncedUpdateEffect(
     () => {
@@ -397,7 +410,6 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       />
       <AddToOtherViewModal
         visible={addToOtherViewModalVisible}
-        taskDefViews={taskDefViewsList}
         currentViewId={selectedView?.id || null}
         onOk={targetViewId => {
           return handleAddTaskDefsToOtherView(targetViewId).then(() => {
