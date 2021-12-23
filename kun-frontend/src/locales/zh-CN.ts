@@ -314,6 +314,7 @@ export default {
   'dataDevelopment.addSelectedTasksToOtherViews.comment': '注：仅在已选任务未被目标视图包含时生效',
   'dataDevelopment.goToDefinitionDetails': '查看任务详情',
   'dataDevelopment.goToScheduledTasks': '查看周期实例',
+  'dataDevelopment.backfill': '数据回填',
   'dataDevelopment.definition.property.name': '任务名称',
   'dataDevelopment.definition.property.owner': '归属人',
   'dataDevelopment.definition.property.updater': '更新人',
