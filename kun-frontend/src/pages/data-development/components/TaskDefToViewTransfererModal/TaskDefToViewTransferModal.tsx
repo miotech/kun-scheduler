@@ -13,7 +13,6 @@ import { fetchAllTaskDefinitions } from '@/services/data-development/task-defini
 import { TaskDefinitionViewBase } from '@/definitions/TaskDefinitionView.type';
 import { TaskDefinition, TaskDefinitionModel } from '@/definitions/TaskDefinition.type';
 
-
 interface OwnProps {
   visible?: boolean;
   viewsList: TaskDefinitionViewBase[];
@@ -30,40 +29,30 @@ type Props = OwnProps;
 export const logger = LogUtils.getLoggers('TaskDefToViewTransferModal');
 
 export const TaskDefToViewTransferModal: React.FC<Props> = memo(function TaskDefToViewTransferModal(props) {
-  const {
-    visible,
-    initSrcView,
-    initTargetView,
-    viewsList,
-  } = props;
+  const { visible, initSrcView, initTargetView, viewsList } = props;
 
   const t = useI18n();
 
-  const [ srcView, setSrcView ] = useState<TaskDefinitionViewBase | null>(initSrcView || null);
-  const [ targetView, setTargetView ] = useState<TaskDefinitionViewBase | null>(initTargetView || null);
-  const [ loadingSrcView, setLoadingSrcView ] = useState<boolean>(false);
-  const [ taskDefsOfSrcView, setTaskDefsOfSrcView ] = useState<(TaskDefinition | TaskDefinitionModel)[]>([]);
-  const [ draftTargetViewTaskDefinitions, setDraftTargetViewTaskDefinitions ] = useState<(TaskDefinition | TaskDefinitionModel)[]>([]);
-  const [ draftTargetViewDefinitionIds, setDraftTargetViewDefinitionIds ] = useState<string[]>([]);
+  const [srcView, setSrcView] = useState<TaskDefinitionViewBase | null>(initSrcView || null);
+  const [targetView, setTargetView] = useState<TaskDefinitionViewBase | null>(initTargetView || null);
+  const [loadingSrcView, setLoadingSrcView] = useState<boolean>(false);
+  const [taskDefsOfSrcView, setTaskDefsOfSrcView] = useState<(TaskDefinition | TaskDefinitionModel)[]>([]);
+  const [draftTargetViewTaskDefinitions, setDraftTargetViewTaskDefinitions] = useState<
+    (TaskDefinition | TaskDefinitionModel)[]
+  >([]);
+  const [draftTargetViewDefinitionIds, setDraftTargetViewDefinitionIds] = useState<string[]>([]);
 
-  const {
-    loading: loadingTargetView,
-    run: doTargetViewFetch,
-  } = useRequest(fetchTaskDefinitionViewDetail, {
+  const { loading: loadingTargetView, runAsync: doTargetViewFetch } = useRequest(fetchTaskDefinitionViewDetail, {
     manual: true,
   });
 
   useEffect(() => {
     setSrcView(initSrcView || null);
-  }, [
-    initSrcView,
-  ]);
+  }, [initSrcView]);
 
   useEffect(() => {
     setTargetView(initTargetView || null);
-  }, [
-    initTargetView,
-  ]);
+  }, [initTargetView]);
 
   useEffect(() => {
     setLoadingSrcView(true);
@@ -71,10 +60,12 @@ export const TaskDefToViewTransferModal: React.FC<Props> = memo(function TaskDef
       fetchTaskDefinitionViewDetail(srcView.id)
         .then(data => {
           if (data) {
-            setTaskDefsOfSrcView(data.includedTaskDefinitions.map(taskDef => ({
-              ...taskDef,
-              id: taskDef.definitionId,
-            })));
+            setTaskDefsOfSrcView(
+              data.includedTaskDefinitions.map(taskDef => ({
+                ...taskDef,
+                id: taskDef.definitionId,
+              })),
+            );
           }
         })
         .finally(() => {
@@ -82,36 +73,38 @@ export const TaskDefToViewTransferModal: React.FC<Props> = memo(function TaskDef
         });
     } else {
       // fetch all task definitions
-      fetchAllTaskDefinitions().then(data => {
-        if (data) {
-          setTaskDefsOfSrcView(data);
-        }
-      }).finally(() => {
-        setLoadingSrcView(false);
-      });
+      fetchAllTaskDefinitions()
+        .then(data => {
+          if (data) {
+            setTaskDefsOfSrcView(data);
+          }
+        })
+        .finally(() => {
+          setLoadingSrcView(false);
+        });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    srcView,
-  ]);
+  }, [srcView]);
 
   useEffect(() => {
     if (targetView) {
       doTargetViewFetch(targetView.id).then(data => {
         if (data) {
           // Reset draft selected keys when reloaded
-          setDraftTargetViewDefinitionIds((data?.includedTaskDefinitions || []).map(taskDef => `${taskDef.definitionId}`));
-          setDraftTargetViewTaskDefinitions((data?.includedTaskDefinitions || []).map(taskdef => ({
-            ...taskdef,
-            id: taskdef.definitionId,
-          })));
+          setDraftTargetViewDefinitionIds(
+            (data?.includedTaskDefinitions || []).map(taskDef => `${taskDef.definitionId}`),
+          );
+          setDraftTargetViewTaskDefinitions(
+            (data?.includedTaskDefinitions || []).map(taskdef => ({
+              ...taskdef,
+              id: taskdef.definitionId,
+            })),
+          );
         }
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    targetView,
-  ]);
+  }, [targetView]);
 
   const srcViewSelect = useMemo(() => {
     return (
@@ -129,24 +122,14 @@ export const TaskDefToViewTransferModal: React.FC<Props> = memo(function TaskDef
           setSrcView(nextViewState || null);
         }}
       >
-        {
-          (viewsList || []).map(view => (
-            <Select.Option
-              key={view.id}
-              value={view.id}
-              title={view.name}
-            >
-              {view.name}
-            </Select.Option>
-          ))
-        }
+        {(viewsList || []).map(view => (
+          <Select.Option key={view.id} value={view.id} title={view.name}>
+            {view.name}
+          </Select.Option>
+        ))}
       </Select>
     );
-  }, [
-    props.lockSrcView,
-    viewsList,
-    srcView,
-  ]);
+  }, [props.lockSrcView, viewsList, srcView]);
 
   const targetViewSelect = useMemo(() => {
     return (
@@ -162,35 +145,19 @@ export const TaskDefToViewTransferModal: React.FC<Props> = memo(function TaskDef
           setTargetView(nextViewState || null);
         }}
       >
-        {
-          (viewsList || []).map(view => (
-            <Select.Option
-              key={view.id}
-              value={view.id}
-              title={view.name}
-            >
-              {view.name}
-            </Select.Option>
-          ))
-        }
+        {(viewsList || []).map(view => (
+          <Select.Option key={view.id} value={view.id} title={view.name}>
+            {view.name}
+          </Select.Option>
+        ))}
       </Select>
     );
-  }, [
-    props.lockTargetView,
-    targetView,
-    viewsList,
-  ]);
+  }, [props.lockTargetView, targetView, viewsList]);
 
   const dataSource = useMemo(() => {
-    const mergedDataSource = [
-      ...taskDefsOfSrcView,
-      ...draftTargetViewTaskDefinitions,
-    ];
+    const mergedDataSource = [...taskDefsOfSrcView, ...draftTargetViewTaskDefinitions];
     return uniqBy(mergedDataSource, item => `${item.id}`);
-  }, [
-    taskDefsOfSrcView,
-    draftTargetViewTaskDefinitions,
-  ]);
+  }, [taskDefsOfSrcView, draftTargetViewTaskDefinitions]);
 
   const renderItem = useCallback((taskDefItem: TaskDefinition | TaskDefinitionModel) => {
     return {
@@ -200,12 +167,13 @@ export const TaskDefToViewTransferModal: React.FC<Props> = memo(function TaskDef
     };
   }, []);
 
-  const handleChange = useCallback(function handleChange(targetKeys: string[] /* , direction: TransferDirection, moveKeys: string[] */) {
-    setDraftTargetViewDefinitionIds(targetKeys);
-    setDraftTargetViewTaskDefinitions([...dataSource].filter(taskDef => targetKeys.indexOf(`${taskDef.id}`) >= 0));
-  }, [
-    dataSource
-  ]);
+  const handleChange = useCallback(
+    function handleChange(targetKeys: string[] /* , direction: TransferDirection, moveKeys: string[] */) {
+      setDraftTargetViewDefinitionIds(targetKeys);
+      setDraftTargetViewTaskDefinitions([...dataSource].filter(taskDef => targetKeys.indexOf(`${taskDef.id}`) >= 0));
+    },
+    [dataSource],
+  );
 
   return (
     <Modal
@@ -232,10 +200,7 @@ export const TaskDefToViewTransferModal: React.FC<Props> = memo(function TaskDef
       <KunSpin spinning={loadingSrcView || loadingTargetView}>
         <Row>
           <Transfer
-            titles={[
-              t('dataDevelopment.transferModal.srcTitle'),
-              t('dataDevelopment.transferModal.targetTitle'),
-            ]}
+            titles={[t('dataDevelopment.transferModal.srcTitle'), t('dataDevelopment.transferModal.targetTitle')]}
             listStyle={{
               width: 350,
               height: 450,
