@@ -1,11 +1,8 @@
-import { useHistory } from 'umi';
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { ReflexContainer, ReflexSplitter, ReflexElement } from 'react-reflex';
 import { useEventEmitter, useUnmount, useRequest } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
 import useDebouncedUpdateEffect from '@/hooks/useDebouncedUpdateEffect';
-import uniq from 'lodash/uniq';
-
 import { TaskDefinitionFilterToolbar } from '@/pages/data-development/components/FilterToolbar/TaskDefinitionFilterToolbar';
 import { TaskViewsAside } from '@/pages/data-development/components/TaskViewsAside/TaskViewsAside';
 import { TaskDefinitionTable } from '@/pages/data-development/components/TaskDefinitionTable/TaskDefinitionTable';
@@ -35,10 +32,6 @@ import { DataDevelopmentModelFilter } from '@/rematch/models/dataDevelopment/mod
 
 import 'react-reflex/styles.css';
 import { StringParam, useQueryParams } from 'use-query-params';
-import { fetchDeployedTasks } from '@/services/task-deployments/deployed-tasks';
-import { message, notification } from 'antd';
-import { createAndRunBackfill } from '@/services/data-backfill/backfill.services';
-import useI18n from '@/hooks/useI18n';
 import { ConfirmBackfillCreateModal } from '@/pages/data-development/components/ConfirmBackfillCreateModal/ConfirmBackfillCreateModal';
 import styles from './index.less';
 
@@ -61,9 +54,6 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     selectedView: s.dataDevelopment.selectedTaskDefView,
     loadingTaskDefs: s.loading.effects.dataDevelopment.fetchTaskDefinitions,
   }));
-
-  const t = useI18n();
-  const history = useHistory();
 
   const [query, setQuery] = useQueryParams({
     view: StringParam,
@@ -226,53 +216,6 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     [forceTableRefresh, searchTaskDefViews, selectedTaskDefIds],
   );
 
-  const handleClickTask = useCallback(
-    (id, e) => {
-      e.preventDefault();
-      history.push(`/operation-center/backfill-tasks/${id}`);
-    },
-    [history],
-  );
-
-  const handleClickRunBackfill = useCallback(
-    async (name1: string, taskDefIds: string[]) => {
-      try {
-        const relatedDeployedTasks = await fetchDeployedTasks({
-          definitionIds: taskDefIds,
-        });
-        const relatedWorkflowIds = uniq(
-          (relatedDeployedTasks?.records || []).map(deployedTask => deployedTask.workflowTaskId),
-        );
-        if (relatedWorkflowIds.length !== taskDefIds.length) {
-          message.error(t('dataDevelopment.runBackfillTaskDefNotPublishedMessage'));
-          return;
-        }
-        const resp = await createAndRunBackfill({
-          name: name1,
-          workflowTaskIds: relatedWorkflowIds,
-          taskDefinitionIds: taskDefIds,
-        });
-
-        const { id, name } = resp;
-
-        notification.open({
-          message: t('backfill.create.notification.title'),
-          description: (
-            <span>
-              {t('backfill.create.notification.desc')}{' '}
-              <a href={`/operation-center/backfill-tasks/${id}`} onClick={e => handleClickTask(id, e)}>
-                {name}
-              </a>
-            </span>
-          ),
-        });
-      } catch (e) {
-        message.error('Run backfill failed.');
-      }
-    },
-    [handleClickTask, t],
-  );
-
   const handleRemoveTaskDefsFromCurrentView = useCallback(
     async (taskDefIdsToRemove: string[], viewId: string) => {
       try {
@@ -423,7 +366,6 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       />
       <ConfirmBackfillCreateModal
         visible={confirmBackfillCreateModalVisible}
-        onConfirm={handleClickRunBackfill}
         selectedTaskDefIds={selectedTaskDefIds}
         onCancel={() => {
           setConfirmBackfillCreateModalVisible(false);
