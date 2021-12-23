@@ -4,10 +4,7 @@ import { useSize } from 'ahooks';
 import dagre, { graphlib } from 'dagre';
 import { NodeGroup } from 'react-move';
 import isNil from 'lodash/isNil';
-import {
-  DatasetNodeCard,
-  PortStateType,
-} from '@/components/LineageDiagram/DatasetNodeCard/DatasetNodeCard';
+import { DatasetNodeCard, PortStateType } from '@/components/LineageDiagram/DatasetNodeCard/DatasetNodeCard';
 import LogUtils from '@/utils/logUtils';
 import { KunSpin } from '@/components/KunSpin';
 import { Group } from '@visx/group';
@@ -16,10 +13,7 @@ import { buildLineageEdgePath } from '@/components/LineageDiagram/LineageBoard/h
 import { collectDownstreamNodes, collectUpstreamNodes } from '@/pages/lineage/helpers/searchUpstreamDownstream';
 import { ProvidedZoom } from '@visx/zoom/lib/types';
 
-import {
-  NodeGroupElement,
-  ReactMoveTiming,
-} from '@/definitions/ReactMove.type';
+import { NodeGroupElement, ReactMoveTiming } from '@/definitions/ReactMove.type';
 import { LineageEdge, LineageNode } from '@/definitions/Lineage.type';
 import { Dataset } from '@/definitions/Dataset.type';
 
@@ -53,12 +47,14 @@ interface OwnProps {
   onExpandDownstream?: (datasetId: string) => any;
   onCollapseUpstream?: (datasetId: string) => any;
   onCollapseDownstream?: (datasetId: string) => any;
-  onClickNode?: (
-    node: LineageDagreNodeData,
-    event: React.MouseEvent<any>,
-  ) => any;
+  onClickNode?: (node: LineageDagreNodeData, event: React.MouseEvent<any>) => any;
   onClickEdge?: (
-    edgeInfo: { srcNodeId: string; destNodeId: string, srcNode: LineageDagreNode; destNode: LineageDagreNode; },
+    edgeInfo: {
+      srcNodeId: string;
+      destNodeId: string;
+      srcNode: LineageDagreNode;
+      destNode: LineageDagreNode;
+    },
     event: React.MouseEvent<SVGPathElement>,
   ) => any;
   onClickBackground?: (event: React.MouseEvent<any>) => any;
@@ -124,8 +120,8 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
   const ref = useRef() as RefObject<HTMLDivElement>;
   const size = useSize(ref);
 
-  const width = isNil(props.width) ? (size.width || 0) : props.width;
-  const height = isNil(props.height) ? (size.height || 0) : props.height;
+  const width = isNil(props.width) ? size?.width || 0 : props.width;
+  const height = isNil(props.height) ? size?.height || 0 : props.height;
 
   const graph = useMemo(() => {
     const g = new dagre.graphlib.Graph();
@@ -148,10 +144,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
       });
     });
     (edges || []).forEach(edge => {
-      g.setEdge(
-        { v: edge.src, w: edge.dest },
-        { selected: edge.selected || false },
-      );
+      g.setEdge({ v: edge.src, w: edge.dest }, { selected: edge.selected || false });
     });
     dagre.layout(g);
     logger.debug('generated graph =', g);
@@ -159,9 +152,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
   }, [nodes, edges, nodesep, edgesep, ranksep, rankdir, align, ranker]);
 
   const nodesData = useMemo(() => {
-    return graph
-      .nodes()
-      .map((nodeId: string) => graph.node(nodeId) as LineageDagreNode);
+    return graph.nodes().map((nodeId: string) => graph.node(nodeId) as LineageDagreNode);
   }, [graph]);
 
   const [upstreamNodeIdsCollection, downstreamNodeIdsCollection] = useMemo(() => {
@@ -170,14 +161,8 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
       return [[], []] as [string[], string[]];
     }
     // else
-    return [
-      collectUpstreamNodes(graph, centerNodeId),
-      collectDownstreamNodes(graph, centerNodeId),
-    ];
-  }, [
-    graph,
-    centerNodeId,
-  ]);
+    return [collectUpstreamNodes(graph, centerNodeId), collectDownstreamNodes(graph, centerNodeId)];
+  }, [graph, centerNodeId]);
 
   const leftPortStates = useMemo(() => {
     const portStates: Record<string, PortStateType> = {};
@@ -189,19 +174,14 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
           expectedDegree: node.data.inDegree,
           graph,
           loadingStateNodeIds,
-          alwaysHiddenNodeIds: centerNodeId ?
-            [...downstreamNodeIdsCollection, centerNodeId] : downstreamNodeIdsCollection,
+          alwaysHiddenNodeIds: centerNodeId
+            ? [...downstreamNodeIdsCollection, centerNodeId]
+            : downstreamNodeIdsCollection,
         });
       }
     });
     return portStates;
-  }, [
-    centerNodeId,
-    downstreamNodeIdsCollection,
-    graph,
-    loadingStateNodeIds,
-    nodes,
-  ]);
+  }, [centerNodeId, downstreamNodeIdsCollection, graph, loadingStateNodeIds, nodes]);
 
   const rightPortStates = useMemo(() => {
     const portStates: Record<string, PortStateType> = {};
@@ -213,27 +193,17 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
           expectedDegree: node.data.outDegree,
           graph,
           loadingStateNodeIds,
-          alwaysHiddenNodeIds: centerNodeId ?
-            [...upstreamNodeIdsCollection, centerNodeId] : upstreamNodeIdsCollection,
+          alwaysHiddenNodeIds: centerNodeId ? [...upstreamNodeIdsCollection, centerNodeId] : upstreamNodeIdsCollection,
         });
       }
     });
     return portStates;
-  }, [
-    centerNodeId,
-    upstreamNodeIdsCollection,
-    graph,
-    loadingStateNodeIds,
-    nodes,
-  ]);
+  }, [centerNodeId, upstreamNodeIdsCollection, graph, loadingStateNodeIds, nodes]);
 
   const renderNodeGroupElement = useCallback(
     (nodeGroupElement: LineageNodeGroupElement) => {
       const { data: node, state } = nodeGroupElement;
-      logger.trace(
-        'In renderNodeGroupElement, nodeGroupElement =',
-        nodeGroupElement,
-      );
+      logger.trace('In renderNodeGroupElement, nodeGroupElement =', nodeGroupElement);
       return (
         <g key={node.id} data-node-id={node.id}>
           <foreignObject
@@ -243,9 +213,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
             width={(node.width || NODE_DEFAULT_WIDTH) + PORT_WIDTH}
             height={node.height || NODE_DEFAULT_HEIGHT}
           >
-            <div
-              style={{ position: 'relative', left: '10px', cursor: 'pointer' }}
-            >
+            <div style={{ position: 'relative', left: '10px', cursor: 'pointer' }}>
               <DatasetNodeCard
                 state={(() => {
                   if (node.id === centerNodeId) {
@@ -298,12 +266,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
         </g>
       );
     },
-    [
-      props,
-      leftPortStates,
-      rightPortStates,
-      centerNodeId,
-    ],
+    [props, leftPortStates, rightPortStates, centerNodeId],
   );
 
   const renderLineageNodesGroup = () => {
@@ -429,10 +392,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
         }}
         enter={(e: LineageEdge, idx: number) => {
           logger.trace('In enter fn, n =', e, '; idx =', idx);
-          const [fromNode, destNode] = [
-            graph.node(e.src) as LineageDagreNode,
-            graph.node(e.dest) as LineageDagreNode,
-          ];
+          const [fromNode, destNode] = [graph.node(e.src) as LineageDagreNode, graph.node(e.dest) as LineageDagreNode];
           if (!fromNode || !destNode) {
             return {};
           }
@@ -448,10 +408,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
         }}
         update={(e: LineageEdge, idx: number) => {
           logger.trace('In update fn, n =', e, '; idx =', idx);
-          const [fromNode, destNode] = [
-            graph.node(e.src) as LineageDagreNode,
-            graph.node(e.dest) as LineageDagreNode,
-          ];
+          const [fromNode, destNode] = [graph.node(e.src) as LineageDagreNode, graph.node(e.dest) as LineageDagreNode];
           if (!fromNode || !destNode) {
             return {};
           }
@@ -486,7 +443,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                       { x: state.srcNodeX, y: state.srcNodeY },
                       { x: state.destNodeX, y: state.destNodeY },
                       {
-                        srcOffsetX: portIsVisibleState(rightPortStates[edge.data.src]) ? (PORT_WIDTH / 2 - 1) : 0,
+                        srcOffsetX: portIsVisibleState(rightPortStates[edge.data.src]) ? PORT_WIDTH / 2 - 1 : 0,
                         destOffsetX: portIsVisibleState(leftPortStates[edge.data.dest]) ? -(PORT_WIDTH / 2) : 0,
                       },
                     )}
@@ -505,7 +462,7 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                       { x: state.srcNodeX, y: state.srcNodeY },
                       { x: state.destNodeX, y: state.destNodeY },
                       {
-                        srcOffsetX: portIsVisibleState(rightPortStates[edge.data.src]) ? (PORT_WIDTH / 2 - 1) : 0,
+                        srcOffsetX: portIsVisibleState(rightPortStates[edge.data.src]) ? PORT_WIDTH / 2 - 1 : 0,
                         destOffsetX: portIsVisibleState(leftPortStates[edge.data.dest]) ? -(PORT_WIDTH / 2) : 0,
                       },
                     )}
@@ -515,8 +472,8 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
                           {
                             srcNodeId: edge.data.src,
                             destNodeId: edge.data.dest,
-                            srcNode: (graph.node(edge.data.src) as LineageDagreNode),
-                            destNode: (graph.node(edge.data.dest) as LineageDagreNode),
+                            srcNode: graph.node(edge.data.src) as LineageDagreNode,
+                            destNode: graph.node(edge.data.dest) as LineageDagreNode,
                           },
                           ev,
                         );
@@ -535,14 +492,10 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
     );
   };
 
-
   return (
     <div className="lineage-board" ref={ref}>
       <KunSpin spinning={loading}>
-        <svg
-          width={width}
-          height={height}
-        >
+        <svg width={width} height={height}>
           <rect
             data-tid="lineage-board-background"
             onClick={ev => {
@@ -557,14 +510,12 @@ export const LineageBoard: React.FC<Props> = memo(function LineageBoard(props) {
             onTouchMove={props?.onDragMove}
             onTouchEnd={props?.onDragEnd}
             cursor={props.backgroundCursor || undefined}
-            width={size.width || 0}
-            height={size.height || 0}
+            width={size?.width || 0}
+            height={size?.height || 0}
             fill="transparent"
           />
           {svgDefs}
-          <g
-            transform={isNil(props.zoom) ? undefined : props.zoom.toString()}
-          >
+          <g transform={isNil(props.zoom) ? undefined : props.zoom.toString()}>
             {renderLineageEdgesGroup()}
             {/* Lineage nodes group */}
             {renderLineageNodesGroup()}
@@ -593,7 +544,12 @@ function computeNodePortState(
 */
 
 function computePortState({
-  graph, id, direction, expectedDegree, loadingStateNodeIds, alwaysHiddenNodeIds
+  graph,
+  id,
+  direction,
+  expectedDegree,
+  loadingStateNodeIds,
+  alwaysHiddenNodeIds,
 }: {
   graph: Graph;
   id: string;
@@ -617,10 +573,10 @@ function computePortState({
   if (expectedDegree === 0) {
     return 'hidden';
   }
-  if ((typeof currentDegree === 'number') && (currentDegree < expectedDegree)) {
+  if (typeof currentDegree === 'number' && currentDegree < expectedDegree) {
     return 'collapsed';
   }
-  if ((typeof currentDegree === 'number') && (currentDegree === expectedDegree)) {
+  if (typeof currentDegree === 'number' && currentDegree === expectedDegree) {
     return 'expanded';
   }
   // else
@@ -628,5 +584,5 @@ function computePortState({
 }
 
 function portIsVisibleState(portState?: PortStateType): boolean {
-  return (portState === 'expanded') || (portState === 'loading') || (portState === 'collapsed');
+  return portState === 'expanded' || portState === 'loading' || portState === 'collapsed';
 }
