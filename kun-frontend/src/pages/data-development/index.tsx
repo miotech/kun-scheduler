@@ -110,7 +110,7 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
       pageNumber: 1,
       pageSize: 100,
       keyword: taskDefViewSearchKeyword,
-      taskDefName: filters.name,
+      taskDefName: filters.name || undefined,
       taskTemplateName: filters.taskTemplateName || undefined,
       taskDefCreatorIds: filters.creatorIds as any,
     });
