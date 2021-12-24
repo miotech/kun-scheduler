@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
 
 import javax.annotation.Nullable;
-import java.time.ZoneOffset;
 import java.util.Objects;
 
 @JsonDeserialize(builder = ScheduleConf.ScheduleConfBuilder.class)
@@ -35,11 +34,7 @@ public class ScheduleConf {
                         @JsonProperty("blockType") BlockType blockType) {
         this.type = type;
         this.cronExpr = cronExpr;
-        if (!type.equals(ScheduleType.NONE) && Objects.isNull(timeZone)) {
-            this.timeZone = ZoneOffset.UTC.getId();
-        } else {
-            this.timeZone = timeZone;
-        }
+        this.timeZone = timeZone;
         this.blockType = blockType;
     }
 
@@ -80,6 +75,14 @@ public class ScheduleConf {
 
     public static ScheduleConfBuilder newBuilder() {
         return new ScheduleConfBuilder();
+    }
+
+    public ScheduleConfBuilder cloneBuilder(){
+        return newBuilder()
+                .withType(type)
+                .withCronExpr(cronExpr)
+                .withTimeZone(timeZone)
+                .withBlockType(blockType);
     }
 
     @JsonPOJOBuilder

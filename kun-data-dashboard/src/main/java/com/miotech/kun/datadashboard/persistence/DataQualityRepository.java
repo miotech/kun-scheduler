@@ -98,13 +98,11 @@ public class DataQualityRepository extends BaseRepository {
                 "where kdcm.row_number <= 1 and kdcm.continuous_failing_count > 0 " +
                 "group by kdc.primary_dataset_id " +
                 "union " +
-                "select kdad.dataset_gid as gid, " +
-                "max(kdad.update_time) as last_update_time " +
-                "from kun_dq_abnormal_dataset kdad " +
-                "where kdad.status = 'FAILED' and kdad.schedule_at = (select max(schedule_at) from kun_dq_abnormal_dataset where status is not null) " +
-                "group by kdad.dataset_gid) t " +
+                "select kdad.dataset_gid as gid, kdad.update_time as last_update_time " +
+                "from " +
+                "(select dataset_gid, update_time, status, row_number() over(partition by dataset_gid order by update_time desc) rn from kun_dq_abnormal_dataset where status is not null) kdad " +
+                "where kdad.rn = 1 and kdad.status = 'FAILED') t " +
                 "group by gid ";
-
 
         String countSql = "select count(1) from (" + sql + ") as result";
 
@@ -182,9 +180,9 @@ public class DataQualityRepository extends BaseRepository {
 
     private Map<Long, List<AbnormalTask>> getFailedTask(List<Long> datasetGids) {
         String sql = "select kdad.task_id, kdad.task_name, kdad.task_run_id, kdad.update_time, kdad.dataset_gid " +
-                "from kun_dq_abnormal_dataset kdad " +
-                "where kdad.dataset_gid in " + toColumnSql(datasetGids.size()) + " " +
-                "and kdad.status = 'FAILED' and kdad.schedule_at = (select max(schedule_at) from kun_dq_abnormal_dataset where status is not null)";
+                "from (select task_id, task_name, task_run_id, update_time, dataset_gid, status, row_number() over(partition by dataset_gid order by update_time desc) as rn from kun_dq_abnormal_dataset where status is not null " +
+                "and dataset_gid in " + toColumnSql(datasetGids.size()) + " " + ") kdad " +
+                "where kdad.rn = 1 and kdad.status = 'FAILED' ";
         return jdbcTemplate.query(sql, rs -> {
             Map<Long, List<AbnormalTask>> result = Maps.newHashMap();
             while (rs.next()) {

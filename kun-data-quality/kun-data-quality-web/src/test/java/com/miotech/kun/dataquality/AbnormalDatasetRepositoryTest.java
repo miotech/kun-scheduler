@@ -11,6 +11,7 @@ import java.util.List;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -56,6 +57,25 @@ public class AbnormalDatasetRepositoryTest extends DataQualityTestBase {
         List<AbnormalDataset> abnormalDatasets = abnormalDatasetRepository.fetchByScheduleAtAndStatusIsNull(abnormalDataset.getScheduleAt());
         assertThat(abnormalDatasets.size(), is(1));
         assertThat(abnormalDatasets.get(0), sameBeanAs(abnormalDataset).ignoring("id"));
+    }
+
+    @Test
+    public void testUpdateStatusByTaskRunId() {
+        // create abnormal dataset
+        AbnormalDataset abnormalDataset = MockAbnormalDatasetFactory.create();
+        abnormalDatasetRepository.create(abnormalDataset);
+
+        List<AbnormalDataset> abnormalDatasets = abnormalDatasetRepository.fetchAll();
+        assertThat(abnormalDatasets.size(), is(1));
+        assertThat(abnormalDatasets.get(0).getStatus(), nullValue());
+
+        // execute
+        abnormalDatasetRepository.updateStatusByTaskRunId(abnormalDataset.getTaskRunId(), "SUCCESS");
+
+        // validate
+        abnormalDatasets = abnormalDatasetRepository.fetchAll();
+        assertThat(abnormalDatasets.size(), is(1));
+        assertThat(abnormalDatasets.get(0).getStatus(), is("SUCCESS"));
     }
 
 }

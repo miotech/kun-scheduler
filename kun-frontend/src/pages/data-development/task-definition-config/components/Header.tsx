@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import moment from 'moment';
 import { Button, Descriptions, message, Modal, Space, Tag, Tooltip } from 'antd';
 import { FormInstance } from 'antd/es/form';
-import { history, Link } from 'umi';
+import { history, Link, useRouteMatch } from 'umi';
 import isArray from 'lodash/isArray';
 import { EditText } from '@/components/EditText';
 import useRedux from '@/hooks/useRedux';
@@ -14,7 +14,6 @@ import {
   updateTaskDefinition,
   fetchTaskDefinitionDetail,
 } from '@/services/data-development/task-definitions';
-
 import { getFlattenedTaskDefinition } from '@/utils/transformDataset';
 import { TaskCommitModal } from '@/pages/data-development/task-definition-config/components/TaskCommitModal';
 import { UserSelect } from '@/components/UserSelect';
@@ -24,7 +23,7 @@ import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 
 import { transformFormTaskConfig } from '@/pages/data-development/task-definition-config/helpers';
-
+import { ConfirmBackfillCreateModal } from '@/pages/data-development/components/ConfirmBackfillCreateModal/ConfirmBackfillCreateModal';
 import SafeUrlAssembler from 'safe-url-assembler';
 import { ArrowRightOutlined } from '@ant-design/icons';
 import { NotifyWhen } from '@/definitions/NotifyConfig.type';
@@ -42,9 +41,11 @@ export interface Props {
 const logger = LogUtils.getLoggers('Header');
 
 export const Header: React.FC<Props> = props => {
+  const match = useRouteMatch<{ taskDefId: string }>();
   const { draftTaskDef, setDraftTaskDef, form, taskDefId, handleCommitDryRun } = props;
 
   const [commitModalVisible, setCommitModalVisible] = useState<boolean>(false);
+  const [confirmBackfillCreateModalVisible, setConfirmBackfillCreateModalVisible] = useState<boolean>(false);
 
   const t = useI18n();
 
@@ -197,6 +198,8 @@ export const Header: React.FC<Props> = props => {
             <Button onClick={handleDeleteBtnClick}>{t('common.button.delete')}</Button>
             {/* Dry run */}
             <Button onClick={handleCommitDryRun}>{t('common.button.dryrun')}</Button>
+            {/* Backfill */}
+            <Button onClick={() => setConfirmBackfillCreateModalVisible(true)}>{t('dataDevelopment.backfill')}</Button>
             {/* Save */}
             <Button onClick={handleSaveBtnClick}>{t('common.button.save')}</Button>
             {/* Commit */}
@@ -273,6 +276,14 @@ export const Header: React.FC<Props> = props => {
             setCommitModalVisible(false);
           }
           return respData;
+        }}
+      />
+      <ConfirmBackfillCreateModal
+        visible={confirmBackfillCreateModalVisible}
+        selectedTaskDefIds={[match.params.taskDefId]}
+        initValue={draftTaskDef?.name}
+        onCancel={() => {
+          setConfirmBackfillCreateModalVisible(false);
         }}
       />
     </header>

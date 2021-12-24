@@ -321,6 +321,7 @@ export default {
     'Note: Only effective when selected task(s) is not contained by target view',
   'dataDevelopment.goToDefinitionDetails': 'Go to task details',
   'dataDevelopment.goToScheduledTasks': 'Go to scheduled tasks',
+  'dataDevelopment.backfill': 'Backfill',
   'dataDevelopment.definition.property.name': 'Task Name',
   'dataDevelopment.definition.property.owner': 'Owner',
   'dataDevelopment.definition.property.updater': 'Updater',

@@ -196,18 +196,16 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
         title: t('monitoringDashboard.dataDiscovery.abnormalDataset.datasetName'),
         render: (txt: string, record: AbnormalDataset) => {
           return (
-            <TextContainer ellipsis tooltipTitle={txt} className={styles.dataSetRow}>
-              <Link
-                to={SafeUrlAssembler()
-                  .template('/data-discovery/dataset/:datasetId')
-                  .param({
-                    datasetId: record.datasetGid,
-                  })
-                  .toString()}
+            <Link
+               to={SafeUrlAssembler()
+                .template('/data-discovery/dataset/:datasetId')
+                .param({
+                  datasetId: record.datasetGid,
+                })
+                .toString()}
               >
-                {txt}
-              </Link>
-            </TextContainer>
+               {txt}
+            </Link>
           );
         },
       },
