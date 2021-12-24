@@ -1,11 +1,9 @@
 import React, { memo } from 'react';
-import { Card } from 'antd';
-import { dayjs } from '@/utils/datetime-utils';
 import { DailyStatistic, TaskResult } from '@/services/monitoring-dashboard';
 import c from 'clsx';
 import useRedux from '@/hooks/useRedux';
-import Styles from './DailyTaskFinishCountTable.less';
 import useI18n from '@/hooks/useI18n';
+import Styles from './DailyTaskFinishCountTable.less';
 
 interface OwnProps {
   data: DailyStatistic[];
@@ -14,32 +12,41 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-const timeToWeek = (time: number) => {
-  const day = dayjs(time as number).day();
-  switch (day) {
-    case 0:
-      return 'Sun';
-    case 1:
-      return 'Mon';
-    case 2:
-      return 'Tue';
-    case 3:
-      return 'Wed';
-    case 4:
-      return 'Thu';
-    case 5:
-      return 'Fri';
-    case 6:
-      return 'Sat';
-    default:
-      return '';
+
+const renderCount = (ischecked:boolean, status: string, finalStatus: string, taskResultList: TaskResult[]) => {
+  if(!status) {
+    status = 'ONGOING'
   }
+  const res = taskResultList.find(item => item.status === status && item.finalStatus === finalStatus);
+  const count =  res ? res.taskCount : 0;
+  if(finalStatus === 'FAILED') {
+    let color = ''
+    if( count >=0 && count <=20){
+      color = '#ffe0d7'
+    }else if(count > 20 && count <=40){
+      color = '#ffc1af'
+    }else if(count > 40 && count <=60){
+      color = '#ffa286'
+    }else if(count > 60 && count <=80){
+      color = '#ff825e'
+    }else{
+      color = '#ff6336'
+    }
+   return <div style={{backgroundColor: ischecked ? '': color}} className={Styles.countForErr} >{count}</div>
+  }
+   return count
 };
 
-const renderCount = (status: string, finalStatus: string, taskResultList: TaskResult[]) => {
-  const res = taskResultList.find(item => item.status === status && item.finalStatus === finalStatus);
-  return res ? res.taskCount : '';
-};
+const isChecked = (showId:string,time:string,status:string,finalStatus:string) => {
+  if(!status) {
+    status = 'ONGOING'
+  }
+  if(showId === (time + status + finalStatus)) {
+    return true
+  }
+  return false
+}
+
 const firstColumn = ['SUCCESS', 'FAILED', 'UPSTREAM_FAILED', 'ABORTED', 'ONGOING', '', '', '', '', '', ''];
 const secondColumn = [
   'SUCCESS',
@@ -59,56 +66,68 @@ const secondColumn = [
 export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTaskFinishCountTable(props) {
   const { data } = props;
   const t = useI18n();
-  const { dispatch } = useRedux(() => ({}));
-  const setParams = (targetTime: number, status: string, finalStatus: string) => {
+  const {
+    selector: {
+      taskDetailsForWeekParams
+    },
+    dispatch,
+  } = useRedux(s => ({
+    taskDetailsForWeekParams: s.monitoringDashboard.dataDevelopmentBoardData.taskDetailsForWeekParams,
+  }));
+  const setParams = (targetTime: string, status: string, finalStatus: string) => {
+    if(!status) {
+      status = 'ONGOING'
+    }
     const params = {
       targetTime,
       status,
       finalStatus,
       timezoneOffset: 8,
+      showId: targetTime + status + finalStatus
     };
     dispatch.monitoringDashboard.setTaskDetailsForWeekParams(params);
   };
   return (
-    <Card>
-      <div className={Styles.content}>
+    <div className={Styles.content}>
         <div className={Styles.row}>
-          <div className={Styles.col}>
-            <div className={Styles.column}>
+          <div className={Styles.col} style={{maxWidth: '55px'}}>
+            <div className={Styles.column} style={{width: '55px'}}>
               {t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.status')}
             </div>
             {firstColumn.map((item, index) => (
-              <div key={item + index} className={Styles.column}>
+              <div key={item + index} style={{width: '55px'}} className={Styles.column}>
                 {item}
               </div>
             ))}
             <div className={Styles.column}>SUM</div>
           </div>
-          <div className={Styles.col}>
-            <div className={Styles.column}>
+          <div className={Styles.col} style={{maxWidth: '55px'}}>
+            <div className={Styles.column} style={{width: '55px'}}>
               {t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.finallyStatus')}
             </div>
             {secondColumn.map((item, index) => (
-              <div key={item + index} className={Styles.column}>
+              <div key={item + index} style={{width: '55px'}} className={Styles.column}>
                 {item}
               </div>
             ))}
           </div>
-          {data.map(item => (
+        </div>
+        <div className={Styles.row} style={{justifyContent:'space-around',minWidth:'687px'}}>
+          {data && data.map(item => (
             <div key={item.time} className={Styles.col}>
               <div className={Styles.column}>
-                {timeToWeek(item.time)},{dayjs(item.time as number).format('YYYY-MM-DD')}
               </div>
               {firstColumn.map((i, index) => (
                 <div
                   key={i + index}
                   onClick={() =>
-                    setParams(item.time, firstColumn[index] ? firstColumn[index] : 'ONGOING', secondColumn[index])
+                    setParams(item.time, firstColumn[index], secondColumn[index])
                   }
-                  className={c(Styles.column, Styles.taskCount)}
+                  className={c(Styles.column, Styles.taskCount, taskDetailsForWeekParams && isChecked(taskDetailsForWeekParams.showId,item.time,firstColumn[index],secondColumn[index]) ?  Styles.checked : '')}
                 >
                   {renderCount(
-                    firstColumn[index] ? firstColumn[index] : 'ONGOING',
+                    taskDetailsForWeekParams && isChecked(taskDetailsForWeekParams.showId,item.time,firstColumn[index],secondColumn[index]),
+                    firstColumn[index],
                     secondColumn[index],
                     item.taskResultList,
                   )}
@@ -120,7 +139,6 @@ export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTas
             </div>
           ))}
         </div>
-      </div>
-    </Card>
+    </div>
   );
 });

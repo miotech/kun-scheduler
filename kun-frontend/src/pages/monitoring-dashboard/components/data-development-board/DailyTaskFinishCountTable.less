@@ -1,23 +1,37 @@
 .content {
-  overflow-x: scroll;
-
+  position: relative;
+  padding: 0 10px;
+  top: -32px;
+  display: flex;
+  align-items: center;
   .row {
     display: flex;
     align-items: center;
 
     .col {
-      min-width: 91px;
       font-size: 12px;
       margin: 0 10px;
       .column {
-        height: 40px;
-        width: 91px;
+        height: 26px;
+        width: 50px;
+        line-height: 26px;
         overflow: hidden;
+        color: #9c9c9c;
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
       .taskCount {
         color: #262a2f;
         cursor: pointer;
         text-align: center ;
+      }
+      .checked {
+        color: #52c41a;
+        background:#f6ffed; 
+        border: 1px solid #b7eb8f;
+        border-radius: 5px;
+        line-height: 30px;
       }
     }
   }
@@ -25,5 +39,11 @@
   &::-webkit-scrollbar {
     width: 0 !important;
     height: 0 !important;
+  }
+  .countForErr{
+    width: 30px;
+    height: 18px;
+    line-height: 18px;
+    border-radius: 4px;
   }
 }
