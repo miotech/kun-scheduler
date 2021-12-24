@@ -2,23 +2,21 @@
   background-color: @modalBackgroundColor;
   padding: 20px 76px 20px 40px;
   border-bottom: 1px solid @borderColor;
+}
 
-  .inputItem {
-    display: flex;
-    align-items: center;
-    &:not(:last-child) {
-      margin-bottom: 20px;
-    }
+.inputItem {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
 
-    .inputTitle {
-      flex: 0 0 135px;
-      font-size: 16px;
-      color: @secondary;
-    }
+  .inputTitle {
+    flex: 0 0 135px;
+    font-size: 14px;
+    color: @secondary;
+  }
 
-    .inputComp {
-      flex: 1;
-    }
+  .inputComp {
+    flex: 1;
   }
 }
 
@@ -39,4 +37,10 @@
 
 .required {
   margin-left: 4px;
+}
+
+.connectionTitle {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 12px;
 }

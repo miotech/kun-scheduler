@@ -102,7 +102,7 @@ export default memo(function DatabaseItem({ database, onClickDelete, onClickUpda
       <div className={styles.infoArea}>
         <div className={styles.nameRow}>
           <span className={styles.name}>{database.name}</span>
-          <span className={styles.dbType}>{getDbType(database.typeId)}</span>
+          <span className={styles.dbType}>{getDbType(database.datasourceType)}</span>
         </div>
         <div className={styles.updateUser}>{`${t('dataSettings.updateUser')}: ${database.update_user}`}</div>
       </div>

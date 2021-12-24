@@ -1,10 +1,6 @@
 import React, { useCallback, useState, useEffect } from 'react';
 import { Input, Button, Spin, message, Pagination } from 'antd';
-import {
-  DatasourceInfo,
-  UpdateDatasourceInfo,
-  DataSource,
-} from '@/rematch/models/dataSettings';
+import { DatasourceInfo, UpdateDatasourceInfo, DataSource } from '@/rematch/models/dataSettings';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
@@ -50,13 +46,7 @@ export default function DataSettings() {
 
   useEffect(() => {
     handleSearch();
-  }, [
-    dispatch,
-    pagination.pageNumber,
-    pagination.pageSize,
-    handleSearch,
-    debounceSearchContent,
-  ]);
+  }, [dispatch, pagination.pageNumber, pagination.pageSize, handleSearch, debounceSearchContent]);
 
   const [addDatabaseModalVisible, setAddDatabaseModalVisible] = useState(false);
 
@@ -77,9 +67,7 @@ export default function DataSettings() {
     [dispatch.dataSettings, handleSearch, t],
   );
 
-  const [updateDatabaseModalVisible, setUpdateDatabaseModalVisible] = useState(
-    false,
-  );
+  const [updateDatabaseModalVisible, setUpdateDatabaseModalVisible] = useState(false);
 
   const handleCloseUpdateDatabaseModal = useCallback(() => {
     setUpdateDatabaseModalVisible(false);
@@ -104,8 +92,8 @@ export default function DataSettings() {
 
   const handleConfirmUpdateDatabaseModal = useCallback(
     (newDatabase: UpdateDatasourceInfo) => {
-      const { id, typeId, name, information, tags } = newDatabase;
-      const params = { id, typeId, name, information, tags };
+      const { id, datasourceType, name, information, tags } = newDatabase;
+      const params = { id, datasourceType, name, information, tags };
       dispatch.dataSettings.updateDatabase(params).then(resp => {
         if (resp) {
           message.success(t('common.operateSuccess'));
@@ -169,18 +157,10 @@ export default function DataSettings() {
             }
           />
           <div className={styles.ButtonsGroupRight}>
-            <Button
-              type="default"
-              size="large"
-              onClick={doRefresh}
-            >
+            <Button type="default" size="large" onClick={doRefresh}>
               {t('common.refresh')}
             </Button>
-            <Button
-              size="large"
-              type="primary"
-              onClick={() => setAddDatabaseModalVisible(true)}
-            >
+            <Button size="large" type="primary" onClick={() => setAddDatabaseModalVisible(true)}>
               {t('dataSettings.addDatasource')}
             </Button>
           </div>
@@ -228,11 +208,7 @@ export default function DataSettings() {
         database={currentDatabase}
         visible={updateDatabaseModalVisible}
         onClose={handleCloseUpdateDatabaseModal}
-        onConfirm={
-          handleConfirmUpdateDatabaseModal as (
-            newDatabase: UpdateDatasourceInfo | DatasourceInfo,
-          ) => void
-        }
+        onConfirm={handleConfirmUpdateDatabaseModal as (newDatabase: UpdateDatasourceInfo | DatasourceInfo) => void}
       />
     </div>
   );
