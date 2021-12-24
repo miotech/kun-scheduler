@@ -48,11 +48,13 @@ export interface DatabaseTypeItem {
 export type DatabaseTypeList = DatabaseTypeItem[];
 
 export type DatabaseInfomation = {
-  [k in DatabaseField]?: string | number;
+  [k: string]: {
+    [j: string]: string;
+  };
 };
 
 export interface DatasourceInfo {
-  typeId: string | null;
+  datasourceType: string | null;
   name: string;
   information: DatabaseInfomation;
   tags: string[];
