@@ -12,7 +12,11 @@ public class UseDatabaseUtil {
 
     public static String useSchema(String url, String database, String schema) {
         url = fixUrl(url);
-        return useDatabase(url, database) + "?currentSchema=" + schema;
+        url = useDatabase(url, database);
+        if(schema == null){
+            return url;
+        }
+        return url + "?currentSchema=" + schema;
     }
 
     private static String fixUrl(String url) {

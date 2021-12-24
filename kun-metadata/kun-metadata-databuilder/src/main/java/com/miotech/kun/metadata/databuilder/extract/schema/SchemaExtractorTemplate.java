@@ -1,6 +1,5 @@
 package com.miotech.kun.metadata.databuilder.extract.schema;
 
-import com.google.common.collect.Iterators;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
@@ -8,7 +7,6 @@ import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.List;
 
 public abstract class SchemaExtractorTemplate {
@@ -29,7 +27,7 @@ public abstract class SchemaExtractorTemplate {
 
     protected abstract void close();
 
-    public final Iterator<Dataset> extract() {
+    public final Dataset extract() {
         Dataset.Builder datasetBuilder = Dataset.newBuilder();
 
         try {
@@ -49,6 +47,6 @@ public abstract class SchemaExtractorTemplate {
         } finally {
             close();
         }
-        return Iterators.forArray(datasetBuilder.build());
+        return datasetBuilder.build();
     }
 }
