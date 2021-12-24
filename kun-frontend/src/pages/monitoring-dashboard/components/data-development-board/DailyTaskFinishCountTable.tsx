@@ -91,22 +91,22 @@ export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTas
     <div className={Styles.content}>
         <div className={Styles.row}>
           <div className={Styles.col} style={{maxWidth: '55px'}}>
-            <div className={Styles.column} style={{width: '55px'}}>
+            <div className={Styles.columnLeft}>
               {t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.status')}
             </div>
             {firstColumn.map((item, index) => (
-              <div key={item + index} style={{width: '55px'}} className={Styles.column}>
+              <div key={item + index} className={Styles.columnLeft}>
                 {item}
               </div>
             ))}
-            <div className={Styles.column}>SUM</div>
+            <div className={Styles.columnLeft}>SUM</div>
           </div>
           <div className={Styles.col} style={{maxWidth: '55px'}}>
-            <div className={Styles.column} style={{width: '55px'}}>
+            <div className={Styles.columnLeft}>
               {t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.finallyStatus')}
             </div>
             {secondColumn.map((item, index) => (
-              <div key={item + index} style={{width: '55px'}} className={Styles.column}>
+              <div key={item + index}  className={Styles.columnLeft}>
                 {item}
               </div>
             ))}
