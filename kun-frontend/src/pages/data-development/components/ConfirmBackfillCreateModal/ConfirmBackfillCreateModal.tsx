@@ -1,69 +1,110 @@
-import React, { memo, useCallback, useState } from 'react';
-import { Form, Input, Modal } from 'antd';
+import React, { memo, useState } from 'react';
+import { Form, Input, Modal, notification, message } from 'antd';
 import useI18n from '@/hooks/useI18n';
+import { useHistory } from 'umi';
+import uniq from 'lodash/uniq';
+import { fetchDeployedTasks } from '@/services/task-deployments/deployed-tasks';
+import { createAndRunBackfill } from '@/services/data-backfill/backfill.services';
 
 interface OwnProps {
   visible?: boolean;
-  onConfirm: (name: string, selectedTaskDefIds: string[]) => any;
   onCancel?: () => any;
   selectedTaskDefIds?: string[];
+  initValue?: string;
 }
 
 type Props = OwnProps;
 
-export const ConfirmBackfillCreateModal: React.FC<Props> = memo(
-  function ConfirmBackfillCreateModal(props) {
-    const { visible, onCancel, onConfirm, selectedTaskDefIds = [] } = props;
+export const ConfirmBackfillCreateModal: React.FC<Props> = memo(function ConfirmBackfillCreateModal(props) {
+  const { visible, onCancel, selectedTaskDefIds = [], initValue } = props;
 
-    const t = useI18n();
+  const t = useI18n();
+  const history = useHistory();
 
-    const [form] = Form.useForm<{
-      name: string;
-    }>();
+  const [form] = Form.useForm<{
+    name: string;
+  }>();
 
-    const [confirmLoading, setConfirmLoading] = useState<boolean>(false);
+  const [confirmLoading, setConfirmLoading] = useState<boolean>(false);
 
-    const handleOk = useCallback(async () => {
-      if (onConfirm) {
-        try {
-          setConfirmLoading(true);
-          const name = await form.getFieldValue('name');
-          await onConfirm(name, selectedTaskDefIds);
-          if (onCancel) {
-            form.resetFields();
-            onCancel();
-          }
-        } finally {
-          setConfirmLoading(false);
-        }
+  const handleClickTask = (id: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    history.push(`/operation-center/backfill-tasks/${id}`);
+  };
+
+  const handleClickRunBackfill = async (name1: string, taskDefIds: string[]) => {
+    try {
+      const relatedDeployedTasks = await fetchDeployedTasks({
+        definitionIds: taskDefIds,
+      });
+      const relatedWorkflowIds = uniq(
+        (relatedDeployedTasks?.records || []).map(deployedTask => deployedTask.workflowTaskId),
+      );
+      if (relatedWorkflowIds.length !== taskDefIds.length) {
+        message.error(t('dataDevelopment.runBackfillTaskDefNotPublishedMessage'));
+        return;
       }
-    }, [form, onCancel, onConfirm, selectedTaskDefIds]);
+      const resp = await createAndRunBackfill({
+        name: name1,
+        workflowTaskIds: relatedWorkflowIds,
+        taskDefinitionIds: taskDefIds,
+      });
 
-    return (
-      <Modal
-        visible={visible}
-        title={t('dataDevelopment.runBackfill')}
-        onCancel={() => {
-          if (onCancel) {
-            form.resetFields();
-            onCancel();
-          }
+      const { id, name } = resp;
+
+      notification.open({
+        message: t('backfill.create.notification.title'),
+        description: (
+          <span>
+            {t('backfill.create.notification.desc')}{' '}
+            <a href={`/operation-center/backfill-tasks/${id}`} onClick={e => handleClickTask(id, e)}>
+              {name}
+            </a>
+          </span>
+        ),
+      });
+    } catch (e) {
+      message.error('Run backfill failed.');
+    }
+  };
+  const handleOk = async () => {
+    try {
+      setConfirmLoading(true);
+      const name = await form.getFieldValue('name');
+      await handleClickRunBackfill(name, selectedTaskDefIds);
+      if (onCancel) {
+        form.resetFields();
+        onCancel();
+      }
+    } finally {
+      setConfirmLoading(false);
+    }
+  };
+  return (
+    <Modal
+      visible={visible}
+      title={t('dataDevelopment.runBackfill')}
+      onCancel={() => {
+        if (onCancel) {
+          form.resetFields();
+          onCancel();
+        }
+      }}
+      okButtonProps={{
+        loading: confirmLoading,
+      }}
+      onOk={handleOk}
+    >
+      <Form
+        form={form}
+        initialValues={{
+          name: initValue,
         }}
-        okButtonProps={{
-          loading: confirmLoading,
-        }}
-        onOk={handleOk}
       >
-        <Form form={form}>
-          <Form.Item
-            name="name"
-            label={t('dataDevelopment.backfillName')}
-            required
-          >
-            <Input placeholder={t('dataDevelopment.backfillName')} />
-          </Form.Item>
-        </Form>
-      </Modal>
-    );
-  },
-);
+        <Form.Item name="name" label={t('dataDevelopment.backfillName')} required>
+          <Input placeholder={t('dataDevelopment.backfillName')} />
+        </Form.Item>
+      </Form>
+    </Modal>
+  );
+});
