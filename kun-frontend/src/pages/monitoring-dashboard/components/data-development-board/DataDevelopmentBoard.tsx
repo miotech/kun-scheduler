@@ -9,7 +9,7 @@ import { TableOnChangeCallback } from '@/definitions/common-types';
 import { DevTaskDetail } from '@/services/monitoring-dashboard';
 import { useUpdateEffect } from 'ahooks';
 import { DataDevelopmentBoardFilterCardType } from '@/rematch/models/monitoringDashboard/model-state';
-import { DailyTaskFinishCountTable } from './DailyTaskFinishCountTable';
+// import { DailyTaskFinishCountTable } from './DailyTaskFinishCountTable';
 
 function computeFilterTypeToRequestParam(
   selectedFilterCardType: DataDevelopmentBoardFilterCardType,
@@ -52,7 +52,6 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
   const {
     dataDevelopmentMetrics: metrics,
     dailyTaskFinish,
-    dailyStatisticList,
     taskDetails,
     taskDetailsForWeekParams,
     dataDevelopmentMetricsLoading,
@@ -197,17 +196,11 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
       <Row gutter={[8, 8]}>
         <Col span={24}>
           <DailyTaskFinishCountChart
-            dailyStatisticList={dailyStatisticList.data}
             data={dailyTaskFinish.data}
             loading={dailyTaskFinish.loading}
           />
         </Col>
-      </Row>
-      {/* Daily task finish count table */}
-      <Row gutter={[8, 8]}>
-        <Col span={24}>
-          <DailyTaskFinishCountTable data={dailyStatisticList.data} loading={dailyStatisticList.loading} />
-        </Col>
+        {/* <DailyTaskFinishCountTable data={dailyStatisticList.data} loading={dailyStatisticList.loading} /> */}
       </Row>
       {/* Task details table */}
       <Row gutter={[8, 8]}>
