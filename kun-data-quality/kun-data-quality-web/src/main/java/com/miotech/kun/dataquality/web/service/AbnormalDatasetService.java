@@ -77,4 +77,8 @@ public class AbnormalDatasetService {
     private boolean filter(TaskRun taskRun) {
         return !IGNORED_QUEUE_NAMES.contains(taskRun.getQueueName());
     }
+
+    public void updateStatusByTaskRunId(Long taskRunId, String status) {
+        abnormalDatasetRepository.updateStatusByTaskRunId(taskRunId, status);
+    }
 }
