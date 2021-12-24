@@ -1,5 +1,6 @@
 package com.miotech.kun.datadashboard.service;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
@@ -144,6 +145,7 @@ public class WorkflowService {
     }
 
     public StatisticChartResult getStatisticChartResult(StatisticChartRequest statisticChartRequest) {
+        Preconditions.checkNotNull(statisticChartRequest.getTimezoneOffset(), "Time zone offset should not be null");
         Integer timezoneOffset = statisticChartRequest.getTimezoneOffset();
         OffsetDateTime currentTime = DateUtils.getCurrentDateTime(timezoneOffset);
         LocalDate currentDate = currentTime.toLocalDate();
@@ -243,16 +245,26 @@ public class WorkflowService {
     }
 
     public DataDevelopmentTasks getDataDevelopmentTasks(StatisticChartTasksRequest tasksRequest) {
+        Preconditions.checkNotNull(tasksRequest.getTimezoneOffset(), "Time zone offset should not be null.");
+        Preconditions.checkNotNull(tasksRequest.getStatus(), "Status at 9 am should not be null.");
+        Preconditions.checkNotNull(tasksRequest.getTargetTime(), "Time to search should not be null");
+        Set<TaskRunStatus> statusToSearch;
+        if (Objects.nonNull(tasksRequest.getFinalStatus())) {
+            TaskRunStatus finalStatus = tasksRequest.getFinalStatus();
+            statusToSearch = ImmutableSet.of(finalStatus);
+        } else {
+            statusToSearch = ImmutableSet.of(TaskRunStatus.FAILED, TaskRunStatus.UPSTREAM_FAILED,
+                    TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, TaskRunStatus.ABORTED, TaskRunStatus.CREATED, TaskRunStatus.BLOCKED);
+        }
         Integer timezoneOffset = tasksRequest.getTimezoneOffset();
         OffsetDateTime targetTime = DateUtils.millisToOffsetDateTime(tasksRequest.getTargetTime().toInstant().toEpochMilli(), ZoneOffset.ofHours(timezoneOffset));
         String status = tasksRequest.getStatus();
-        TaskRunStatus finalStatus = tasksRequest.getFinalStatus();
         TaskRunSearchRequest.Builder builder = TaskRunSearchRequest.newBuilder()
                 .withTags(DATA_PLATFORM_FILTER_TAGS)
                 .withScheduleTypes(SCHEDULE_TYPE_FILTER)
                 .withPageNum(tasksRequest.getPageNumber())
                 .withPageSize(tasksRequest.getPageSize())
-                .withStatus(ImmutableSet.of(finalStatus))
+                .withStatus(statusToSearch)
                 .withDateFrom(targetTime)
                 .withDateTo(targetTime.plusDays(1))
                 .withSortKey("createdAt")

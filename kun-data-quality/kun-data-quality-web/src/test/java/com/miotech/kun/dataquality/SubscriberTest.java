@@ -1,6 +1,5 @@
 package com.miotech.kun.dataquality;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.pubsub.event.Event;
@@ -16,17 +15,13 @@ import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
 import com.miotech.kun.dataquality.web.service.WorkflowService;
 import com.miotech.kun.workflow.client.WorkflowClient;
-import com.miotech.kun.workflow.client.model.ConfigKey;
-import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.event.CheckResultEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptCheckEvent;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
-import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
-import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Before;

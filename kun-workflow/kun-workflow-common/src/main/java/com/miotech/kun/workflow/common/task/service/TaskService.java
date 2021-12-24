@@ -30,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -69,6 +70,8 @@ public class TaskService {
     private final Integer DEFAULT_PRIORITY = 0;
 
     private final CheckType DEFAULT_CHECK_TYPE = CheckType.SKIP;
+
+    private final BlockType DEFAULT_BLOCK_TYPE = BlockType.NONE;
 
 
     @Inject
@@ -239,8 +242,13 @@ public class TaskService {
         // 3. check dependency
         checkCircularDependency(task);
 
+        ScheduleConf scheduleConf = fillScheduleConfig(task.getScheduleConf());
+        Task toUpdate = task.cloneBuilder()
+                .withScheduleConf(scheduleConf)
+                .build();
+
         // 4. Update target task. If there is no task affected (task not exists), throw exception
-        boolean taskUpdated = taskDao.update(task);
+        boolean taskUpdated = taskDao.update(toUpdate);
         if (!taskUpdated) {
             throw new EntityNotFoundException(String.format("Cannot perform update on non-exist task with id: %d", task.getId()));
         }
@@ -398,7 +406,11 @@ public class TaskService {
 
     private Task convertTaskPropsVoToTask(TaskPropsVO vo) {
         Config config = parseConfig(vo);
+
         validateScheduleConf(vo.getScheduleConf());
+        //fill scheduleConf with default value
+        ScheduleConf scheduleConf = fillScheduleConfig(vo.getScheduleConf());
+
         Integer retries = DEFAULT_RETRIES;
         if (vo.getRetries() != null) {
             retries = vo.getRetries() > RETRY_LIMIT ? RETRY_LIMIT : vo.getRetries();
@@ -411,7 +423,7 @@ public class TaskService {
                 .withName(vo.getName())
                 .withDescription(vo.getDescription())
                 .withOperatorId(vo.getOperatorId())
-                .withScheduleConf(vo.getScheduleConf())
+                .withScheduleConf(scheduleConf)
                 .withConfig(config)
                 .withDependencies(parseDependencyVO(vo.getDependencies()))
                 .withTags(vo.getTags())
@@ -428,6 +440,22 @@ public class TaskService {
             Cron cron = CronUtils.convertStringToCron(conf.getCronExpr());
             CronUtils.validateCron(cron);
         }
+    }
+
+    private ScheduleConf fillScheduleConfig(ScheduleConf conf){
+        BlockType blockType = conf.getBlockType();
+        ScheduleType scheduleType =  conf.getType();
+        String timeZone = conf.getTimeZone();
+        if (!scheduleType.equals(ScheduleType.NONE) && Objects.isNull(timeZone)) {
+            timeZone = ZoneOffset.UTC.getId();
+        }
+        if(blockType == null){
+            blockType = BlockType.NONE;
+        }
+        return conf.cloneBuilder()
+                .withTimeZone(timeZone)
+                .withBlockType(blockType)
+                .build();
     }
 
     private void validateTaskIntegrity(Task task) {

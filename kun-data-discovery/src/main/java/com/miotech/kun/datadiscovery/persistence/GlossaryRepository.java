@@ -352,6 +352,9 @@ public class GlossaryRepository extends BaseRepository {
         String sql = "delete from kun_mt_glossary where id in " + collectionToConditionSql(ids);
         jdbcTemplate.update(sql, ids.toArray());
 
+        // unbind with dataset
+        String unbindSQL = "delete from kun_mt_glossary_to_dataset_ref where glossary_id in " + collectionToConditionSql(ids);
+        jdbcTemplate.update(unbindSQL, ids.toArray());
 
     }
 
