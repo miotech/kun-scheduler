@@ -164,7 +164,7 @@ export interface TaskResult {
   taskCount: number;
 }
 export interface DailyStatistic {
-  time: number;
+  time: string;
   totalCount: number;
   taskResultList: TaskResult[];
 }
