@@ -1,18 +1,18 @@
 package com.miotech.kun.metadata.databuilder.extract.tool;
 
-import com.miotech.kun.metadata.core.model.constant.DatabaseType;
+import com.miotech.kun.metadata.core.model.connection.ConnectionType;
 
 public class DatabaseIdentifierProcessor {
 
     private DatabaseIdentifierProcessor() {
     }
 
-    public static String escape(String name, DatabaseType dbType) {
+    public static String escape(String name, ConnectionType dbType) {
         switch (dbType) {
             case ATHENA:
-            case POSTGRES:
+            case POSTGRESQL:
                 return "\"" + name + "\"";
-            case HIVE:
+            case HIVE_SERVER:
             case PRESTO:
                 return "`" + name + "`";
             default:

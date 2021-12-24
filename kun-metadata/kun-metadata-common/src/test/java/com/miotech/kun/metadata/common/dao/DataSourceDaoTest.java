@@ -1,13 +1,16 @@
 package com.miotech.kun.metadata.common.dao;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.metadata.common.factory.MockDataSourceFactory;
-import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
+import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionType;
+import com.miotech.kun.metadata.core.model.connection.HiveServerConnectionInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
 import org.junit.Test;
 
@@ -16,7 +19,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
@@ -28,7 +32,8 @@ public class DataSourceDaoTest extends DatabaseTestBase {
     @Test
     public void testFetchById_withExistGid() {
         // Prepare
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", ImmutableMap.of("name", "bar"), 1L, Lists.newArrayList("test"));
+        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
         dataSourceDao.create(dataSource);
 
         // Execute
@@ -41,7 +46,7 @@ public class DataSourceDaoTest extends DatabaseTestBase {
         assertThat(existDataSource.getId(), is(1L));
         assertThat(existDataSource.getName(), is("Hive"));
         assertThat(existDataSource.getTags(), containsInAnyOrder("test"));
-        assertThat(existDataSource.getTypeId(), is(1L));
+        assertThat(existDataSource.getDatasourceType(), is(DatasourceType.HIVE));
 
         assertFalse(nonExistDataSourceOpt.isPresent());
     }
@@ -49,7 +54,8 @@ public class DataSourceDaoTest extends DatabaseTestBase {
     @Test
     public void testFetchTotalCountWithFilter() {
         // Prepare
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", ImmutableMap.of("name", "bar"), 1L, Lists.newArrayList("test"));
+        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
         dataSourceDao.create(dataSource);
 
         // Execute
@@ -64,7 +70,8 @@ public class DataSourceDaoTest extends DatabaseTestBase {
     @Test
     public void testFetchWithFilter() {
         // Prepare
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", ImmutableMap.of("name", "bar"), 1L, Lists.newArrayList("test"));
+        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
         dataSourceDao.create(dataSource);
 
         // Execute
@@ -77,7 +84,7 @@ public class DataSourceDaoTest extends DatabaseTestBase {
         assertThat(dataSourceOfFetch.getId(), is(1L));
         assertThat(dataSourceOfFetch.getName(), is("Hive"));
         assertThat(dataSourceOfFetch.getTags(), containsInAnyOrder("test"));
-        assertThat(dataSourceOfFetch.getTypeId(), is(1L));
+        assertThat(dataSourceOfFetch.getDatasourceType(), is(DatasourceType.HIVE));
 
         assertThat(nonExistDataSources.size(), is(0));
     }
@@ -85,34 +92,43 @@ public class DataSourceDaoTest extends DatabaseTestBase {
     @Test
     public void testCreate() {
         // Prepare
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", ImmutableMap.of("name", "bar"), 1L, Lists.newArrayList("test"));
+        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
 
         // Execute
         dataSourceDao.create(dataSource);
-
         // Validate
         Optional<DataSource> dataSourceOpt = dataSourceDao.findById(1L);
+
+
         assertTrue(dataSourceOpt.isPresent());
         DataSource dataSourceOfFetch = dataSourceOpt.get();
         assertThat(dataSourceOfFetch.getId(), is(1L));
         assertThat(dataSourceOfFetch.getName(), is("Hive"));
-        assertThat(dataSourceOfFetch.getConnectionInfo().getValues(), hasKey("name"));
-        assertThat(dataSourceOfFetch.getConnectionInfo().getValues(), hasValue("bar"));
+
+        HiveServerConnectionInfo connectionInfo = (HiveServerConnectionInfo) dataSourceOpt.get().getConnectionConfig().getUserConnection();
+        assertThat(connectionInfo.getHost(), is("127.0.0.1"));
+        assertThat(connectionInfo.getPort(), is(10000));
         assertThat(dataSourceOfFetch.getTags(), containsInAnyOrder("test"));
-        assertThat(dataSourceOfFetch.getTypeId(), is(1L));
+        assertThat(dataSourceOfFetch.getDatasourceType(), is(DatasourceType.HIVE));
     }
 
     @Test
     public void testUpdate() {
         // Prepare
+        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
         OffsetDateTime now = DateTimeUtils.now();
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", ImmutableMap.of("name", "bar"), 1L, Lists.newArrayList("test"));
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive",hiveServerConnectionInfo,DatasourceType.HIVE, Lists.newArrayList("test"));
         dataSourceDao.create(dataSource);
 
         // Execute
         OffsetDateTime updateTime = now.minusMinutes(1);
+        ConnectionConfig connectionConfig = ConnectionConfig
+                .newBuilder()
+                .withUserConnection(new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"192.168.1.101",10001))
+                .build();
         DataSource dataSourceForUpdate = dataSource.cloneBuilder()
-                .withConnectionInfo(new ConnectionInfo(ImmutableMap.<String, Object>builder().put("name", "foo").build()))
+                .withConnectionConfig(connectionConfig)
                 .withUpdateUser("updater")
                 .withUpdateTime(updateTime)
                 .withTags(Lists.newArrayList("tag1", "tag2"))
@@ -125,10 +141,12 @@ public class DataSourceDaoTest extends DatabaseTestBase {
         DataSource dataSourceOfFetch = dataSourceOpt.get();
         assertThat(dataSourceOfFetch.getId(), is(1L));
         assertThat(dataSourceOfFetch.getName(), is("Hive"));
-        assertThat(dataSourceOfFetch.getConnectionInfo().getValues(), hasKey("name"));
-        assertThat(dataSourceOfFetch.getConnectionInfo().getValues(), hasValue("foo"));
+
+        HiveServerConnectionInfo connectionInfo = (HiveServerConnectionInfo) dataSourceOpt.get().getConnectionConfig().getUserConnection();
+        assertThat(connectionInfo.getHost(), is("192.168.1.101"));
+        assertThat(connectionInfo.getPort(), is(10001));
         assertThat(dataSourceOfFetch.getTags(), containsInAnyOrder("tag1", "tag2"));
-        assertThat(dataSourceOfFetch.getTypeId(), is(1L));
+        assertThat(dataSourceOfFetch.getDatasourceType(), is(DatasourceType.HIVE));
         assertThat(dataSourceOfFetch.getUpdateUser(), is("updater"));
         assertThat(dataSourceOfFetch.getUpdateTime(), is(updateTime));
     }
@@ -136,7 +154,8 @@ public class DataSourceDaoTest extends DatabaseTestBase {
     @Test
     public void testDelete() {
         // Prepare
-        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", ImmutableMap.of("name", "bar"), 1L, Lists.newArrayList("test"));
+        ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
+        DataSource dataSource = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
         dataSourceDao.create(dataSource);
 
         // Execute

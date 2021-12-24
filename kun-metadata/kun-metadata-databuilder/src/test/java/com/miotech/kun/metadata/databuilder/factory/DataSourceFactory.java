@@ -1,31 +1,25 @@
 package com.miotech.kun.metadata.databuilder.factory;
 
 import com.miotech.kun.commons.utils.DateTimeUtils;
-import com.miotech.kun.commons.utils.IdGenerator;
-import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
+import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 
 public class DataSourceFactory {
 
     private DataSourceFactory() {
     }
 
-    public static DataSource create() {
-        return create(1L, new ConnectionInfo(ImmutableMap.of()));
-    }
 
-    public static DataSource create(Long typeId, ConnectionInfo connectionInfo) {
+    public static DataSource createDataSource(long dataSourceId, String name, ConnectionConfig connectionConfig, DatasourceType type) {
         return DataSource.newBuilder()
-                .withId(IdGenerator.getInstance().nextId())
-                .withName("Test-DataSource")
-                .withConnectionInfo(connectionInfo)
-                .withTypeId(typeId)
-                .withTags(ImmutableList.of("a", "b", "c"))
-                .withCreateUser("admin")
+                .withId(dataSourceId)
+                .withDatasourceType(type)
+                .withName(name)
+                .withConnectionConfig(connectionConfig)
+                .withCreateUser("createUser")
+                .withUpdateUser("updateUser")
                 .withCreateTime(DateTimeUtils.now())
-                .withUpdateUser("admin")
                 .withUpdateTime(DateTimeUtils.now())
                 .build();
     }

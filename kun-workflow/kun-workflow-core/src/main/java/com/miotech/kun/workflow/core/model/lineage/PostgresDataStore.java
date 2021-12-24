@@ -4,10 +4,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
-import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
-
-import java.util.HashMap;
-import java.util.Map;
+import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionType;
+import com.miotech.kun.metadata.core.model.connection.PostgresConnectionInfo;
 
 public class PostgresDataStore extends DataStore {
 
@@ -20,7 +19,6 @@ public class PostgresDataStore extends DataStore {
     private final String schema;
 
     private final String tableName;
-
 
 
     @JsonCreator
@@ -71,10 +69,7 @@ public class PostgresDataStore extends DataStore {
 
     @Override
     public ConnectionInfo getConnectionInfo() {
-        Map<String,Object> values = new HashMap<>();
-        values.put("host",getHost());
-        values.put("port",getPort());
-        return new ConnectionInfo(values);
+        return new PostgresConnectionInfo(ConnectionType.POSTGRESQL, host, port);
     }
 
     @Override

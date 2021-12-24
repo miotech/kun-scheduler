@@ -4,10 +4,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
-import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 public class HiveTableStore extends DataStore {
@@ -70,8 +68,7 @@ public class HiveTableStore extends DataStore {
 
     @Override
     public ConnectionInfo getConnectionInfo() {
-        Map<String,Object> values = new HashMap<>();
-        return new ConnectionInfo(values);
+        return new ConnectionInfo(null);
     }
 
     @Override
