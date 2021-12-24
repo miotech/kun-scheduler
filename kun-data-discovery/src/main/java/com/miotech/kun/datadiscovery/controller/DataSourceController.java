@@ -3,12 +3,8 @@ package com.miotech.kun.datadiscovery.controller;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
-import com.miotech.kun.datadiscovery.model.bo.DataSourceRequest;
 import com.miotech.kun.datadiscovery.model.bo.DataSourceSearchRequest;
-import com.miotech.kun.datadiscovery.model.entity.DataSource;
-import com.miotech.kun.datadiscovery.model.entity.DataSourceBasicPage;
-import com.miotech.kun.datadiscovery.model.entity.DataSourcePage;
-import com.miotech.kun.datadiscovery.model.entity.DataSourceType;
+import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
 import com.miotech.kun.datadiscovery.service.DataSourceService;
 import com.miotech.kun.datadiscovery.service.DatasetFieldService;
@@ -58,14 +54,14 @@ public class DataSourceController {
     }
 
     @PostMapping("/metadata/datasource/add")
-    public RequestResult<DataSource> addDataSource(@RequestBody DataSourceRequest dataSourceRequest) {
-        return RequestResult.success(dataSourceService.add(dataSourceRequest));
+    public RequestResult<DataSourceVO> addDataSource(@RequestBody com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
+        return RequestResult.success(dataSourceService.add(dataSourceVo));
     }
 
     @PostMapping("/metadata/datasource/{id}/update")
-    public RequestResult<DataSource> updateDataSource(@PathVariable Long id,
-                                                      @RequestBody DataSourceRequest dataSourceRequest) {
-        return RequestResult.success(dataSourceService.update(id, dataSourceRequest));
+    public RequestResult<DataSourceVO> updateDataSource(@PathVariable Long id,
+                                                        @RequestBody com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
+        return RequestResult.success(dataSourceService.update(id, dataSourceVo));
     }
 
     @DeleteMapping("/metadata/datasource/{id}")
@@ -89,7 +85,7 @@ public class DataSourceController {
     }
 
     @GetMapping("/metadata/datasource/types")
-    public RequestResult<List<DataSourceType>> getDataSourceTypes() {
+    public RequestResult<List<DataSourceTemplateVO>> getDataSourceTypes() {
         return RequestResult.success(dataSourceService.getAllTypes());
     }
 

@@ -1,50 +1,35 @@
 package com.miotech.kun.metadata.databuilder.extract.impl.hive;
 
-import com.miotech.kun.commons.utils.DateTimeUtils;
-import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.metadata.core.model.dataset.Dataset;
-import com.miotech.kun.metadata.core.model.constant.DatabaseType;
+import com.miotech.kun.metadata.common.cataloger.Cataloger;
 import com.miotech.kun.metadata.core.model.constant.DatasetExistenceJudgeMode;
+import com.miotech.kun.metadata.core.model.dataset.Dataset;
+import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.databuilder.extract.statistics.StatisticsExtractorTemplate;
-import com.miotech.kun.metadata.databuilder.extract.template.DataWarehouseStatTemplate;
-import com.miotech.kun.metadata.databuilder.extract.tool.MetaStoreParseUtil;
-import com.miotech.kun.metadata.databuilder.model.DataSource;
-import com.miotech.kun.metadata.databuilder.model.HiveDataSource;
-import org.apache.hadoop.fs.FileStatus;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 
 public class HiveStatisticsExtractor extends StatisticsExtractorTemplate {
 
-    @Override
-    public DataWarehouseStatTemplate buildDataWarehouseStatTemplate(Dataset dataset, DataSource dataSource) {
-        HiveDataSource hiveDataSource = (HiveDataSource) dataSource;
-        return new DataWarehouseStatTemplate(dataset.getDatabaseName(), null,
-                dataset.getName(), DatabaseType.HIVE, hiveDataSource);
+    private static final Logger logger = LoggerFactory.getLogger(HiveStatisticsExtractor.class);
+
+    public HiveStatisticsExtractor(DataSource dataSource, Dataset dataset, Cataloger cataloger) {
+        super(dataSource, dataset, cataloger);
     }
 
     @Override
-    public OffsetDateTime getLastUpdatedTime(Dataset dataset, DataSource dataSource) {
-        String location = MetaStoreParseUtil.parseLocation(MetaStoreParseUtil.Type.META_STORE_CLIENT, dataSource, dataset.getDatabaseName(), dataset.getName());
-        int idx = location.indexOf('/', location.lastIndexOf(':'));
-        String url = location.substring(0, idx);
-        String path = location.substring(idx);
-        FileSystem fileSystem = HDFSOperator.create(url + "/" + dataset.getName(), "hdfs");
-        try {
-            FileStatus fileStatus = fileSystem.getFileStatus(new Path(path));
-            return DateTimeUtils.fromTimestamp(fileStatus.getModificationTime());
-        } catch (Exception e) {
-            throw ExceptionUtils.wrapIfChecked(e);
-        } finally {
-            HDFSOperator.close(fileSystem);
-        }
+    public OffsetDateTime getLastUpdatedTime() {
+        return cataloger.getLastUpdatedTime(dataset);
     }
 
     @Override
-    public boolean judgeExistence(Dataset dataset, DataSource dataSource, DatasetExistenceJudgeMode judgeMode) {
-        HiveExistenceExtractor hiveExistenceExtractor = new HiveExistenceExtractor();
-        return hiveExistenceExtractor.judgeExistence(dataset, dataSource, DatasetExistenceJudgeMode.DATASET);
+    public Long getTotalByteSize() {
+        return cataloger.getTotalByteSize(dataset);
+    }
+
+    @Override
+    public boolean judgeExistence(Dataset dataset, DatasetExistenceJudgeMode judgeMode) {
+        return cataloger.judgeExistence(dataset, judgeMode);
     }
 }

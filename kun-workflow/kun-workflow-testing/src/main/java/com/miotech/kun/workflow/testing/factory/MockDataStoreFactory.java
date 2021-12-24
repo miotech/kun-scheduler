@@ -3,7 +3,7 @@ package com.miotech.kun.workflow.testing.factory;
 import com.google.common.collect.Lists;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.DataStoreType;
-import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
 
 import java.util.HashMap;
 import java.util.List;
@@ -42,7 +42,7 @@ public class MockDataStoreFactory {
             @Override
             public ConnectionInfo getConnectionInfo() {
                 Map<String,Object> values = new HashMap<>();
-                return new ConnectionInfo(values);
+                return new ConnectionInfo(null);
             }
 
             @Override

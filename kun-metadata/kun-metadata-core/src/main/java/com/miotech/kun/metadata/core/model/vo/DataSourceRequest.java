@@ -2,19 +2,19 @@ package com.miotech.kun.metadata.core.model.vo;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonPOJOBuilder;
-import com.miotech.kun.metadata.core.model.datasource.ConnectionInfo;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
+import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 
 import java.util.List;
-import java.util.Map;
 
 @JsonDeserialize(builder = DataSourceRequest.Builder.class)
 public class DataSourceRequest {
 
     private final String name;
 
-    private final Long typeId;
+    private final DatasourceType datasourceType;
 
-    private final ConnectionInfo connectionInfo;
+    private final ConnectionConfig connectionConfig;
 
     private final List<String> tags;
 
@@ -22,10 +22,10 @@ public class DataSourceRequest {
 
     private final String updateUser;
 
-    public DataSourceRequest(String name, Long typeId, ConnectionInfo connectionInfo, List<String> tags, String createUser, String updateUser) {
+    public DataSourceRequest(String name, DatasourceType datasourceType, ConnectionConfig connectionConfig, List<String> tags, String createUser, String updateUser) {
         this.name = name;
-        this.typeId = typeId;
-        this.connectionInfo = connectionInfo;
+        this.datasourceType = datasourceType;
+        this.connectionConfig = connectionConfig;
         this.tags = tags;
         this.createUser = createUser;
         this.updateUser = updateUser;
@@ -35,12 +35,12 @@ public class DataSourceRequest {
         return name;
     }
 
-    public Long getTypeId() {
-        return typeId;
+    public DatasourceType getDatasourceType() {
+        return datasourceType;
     }
 
-    public ConnectionInfo getConnectionInfo() {
-        return connectionInfo;
+    public ConnectionConfig getConnectionConfig() {
+        return connectionConfig;
     }
 
     public List<String> getTags() {
@@ -62,8 +62,8 @@ public class DataSourceRequest {
     @JsonPOJOBuilder
     public static final class Builder {
         private String name;
-        private Long typeId;
-        private ConnectionInfo connectionInfo;
+        private DatasourceType datasourceType;
+        private ConnectionConfig connectionConfig;
         private List<String> tags;
         private String createUser;
         private String updateUser;
@@ -76,13 +76,13 @@ public class DataSourceRequest {
             return this;
         }
 
-        public Builder withTypeId(Long typeId) {
-            this.typeId = typeId;
+        public Builder withDatasourceType(DatasourceType datasourceType) {
+            this.datasourceType = datasourceType;
             return this;
         }
 
-        public Builder withConnectionInfo(ConnectionInfo connectionInfo) {
-            this.connectionInfo = connectionInfo;
+        public Builder withConnectionConfig(ConnectionConfig connectionConfig) {
+            this.connectionConfig = connectionConfig;
             return this;
         }
 
@@ -102,7 +102,7 @@ public class DataSourceRequest {
         }
 
         public DataSourceRequest build() {
-            return new DataSourceRequest(name, typeId, connectionInfo, tags, createUser, updateUser);
+            return new DataSourceRequest(name, datasourceType, connectionConfig, tags, createUser, updateUser);
         }
     }
 }
