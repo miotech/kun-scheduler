@@ -2,15 +2,17 @@ package com.miotech.kun.metadata.databuilder.builder;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.miotech.kun.metadata.common.cataloger.Cataloger;
+import com.miotech.kun.metadata.common.cataloger.CatalogerFactory;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
+import com.miotech.kun.metadata.common.service.DataSourceService;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.constant.DatasetExistenceJudgeMode;
 import com.miotech.kun.metadata.core.model.constant.StatisticsMode;
+import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatisticsExtractor;
 import com.miotech.kun.metadata.databuilder.extract.statistics.DatasetStatisticsExtractorFactory;
-import com.miotech.kun.metadata.databuilder.extract.tool.DataSourceBuilder;
 import com.miotech.kun.metadata.databuilder.load.Loader;
-import com.miotech.kun.metadata.databuilder.model.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,17 +23,20 @@ public class MSEBuilder {
     private static final Logger logger = LoggerFactory.getLogger(MSEBuilder.class);
 
     private final MetadataDatasetDao datasetDao;
-    private final DataSourceBuilder dataSourceBuilder;
+    private final DataSourceService dataSourceService;
     private final Loader loader;
+    private final CatalogerFactory catalogerFactory;
 
     @Inject
-    public MSEBuilder(MetadataDatasetDao datasetDao, DataSourceBuilder dataSourceBuilder, Loader loader) {
+    public MSEBuilder(MetadataDatasetDao datasetDao, DataSourceService dataSourceService, Loader loader,
+                      CatalogerFactory catalogerFactory) {
         this.datasetDao = datasetDao;
-        this.dataSourceBuilder = dataSourceBuilder;
+        this.dataSourceService = dataSourceService;
         this.loader = loader;
+        this.catalogerFactory = catalogerFactory;
     }
 
-    public void extractStatistics(Long gid, Long snapshotId, StatisticsMode statisticsMode)  {
+    public void extractStatistics(Long gid, Long snapshotId, StatisticsMode statisticsMode) {
         if (logger.isDebugEnabled()) {
             logger.debug("Begin to extractStat, gid: {}", gid);
         }
@@ -47,15 +52,21 @@ public class MSEBuilder {
             return;
         }
 
-        DataSource dataSource = dataSourceBuilder.fetchByGid(gid);
-        DatasetStatisticsExtractor extractor = DatasetStatisticsExtractorFactory.createExtractor(dataSource.getType());
-        boolean existed = extractor.judgeExistence(dataset.get(), dataSource, DatasetExistenceJudgeMode.DATASET);
+        Optional<DataSource> dataSourceOptional = dataSourceService.getDatasourceById(dataset.get().getDatasourceId());
+        if (!dataSourceOptional.isPresent()) {
+            logger.warn("Datasource not found, datasourceId: {}", dataset.get().getDatasourceId());
+            return;
+        }
+        DataSource dataSource = dataSourceOptional.get();
+        Cataloger cataloger = catalogerFactory.generateCataloger(dataSource);
+        DatasetStatisticsExtractor extractor = DatasetStatisticsExtractorFactory.createExtractor(dataSource, dataset.get(), cataloger);
+        boolean existed = extractor.judgeExistence(dataset.get(), DatasetExistenceJudgeMode.DATASET);
         if (!existed) {
             logger.warn("Dataset: {} no longer existed， need to be marked as `deleted`", gid);
             return;
         }
 
-        Dataset datasetWithStat = extractor.extract(dataset.get(), dataSource, statisticsMode);
+        Dataset datasetWithStat = extractor.extract(statisticsMode);
         loader.loadStatistics(snapshotId, datasetWithStat);
     }
 }

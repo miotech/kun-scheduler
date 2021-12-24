@@ -1,11 +1,11 @@
 package com.miotech.kun.datadiscovery.service;
 
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
-import com.miotech.kun.datadiscovery.model.bo.DataSourceRequest;
 import com.miotech.kun.datadiscovery.model.bo.DataSourceSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
-import com.miotech.kun.datadiscovery.persistence.DataSourceRepository;
 import com.miotech.kun.datadiscovery.util.JSONUtils;
+import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
 import com.miotech.kun.metadata.core.model.vo.PaginationVO;
 import com.miotech.kun.security.service.BaseSecurityService;
 import org.json.simple.JSONObject;
@@ -23,9 +23,6 @@ import java.util.stream.Collectors;
 public class DataSourceService extends BaseSecurityService {
 
     @Autowired
-    DataSourceRepository datasourceRepository;
-
-    @Autowired
     MetadataService metadataService;
 
     public DataSourceBasicPage search(BasicSearchRequest basicSearchRequest) {
@@ -40,11 +37,12 @@ public class DataSourceService extends BaseSecurityService {
                 datasourceSearchRequest.getPageNumber(), datasourceSearchRequest.getPageSize());
         List<com.miotech.kun.metadata.core.model.datasource.DataSource> records = result.getRecords();
         DataSourcePage dataSourcePage = new DataSourcePage(records.stream()
-                .map(ds -> DataSource.builder()
+                .map(ds -> DataSourceVO.builder()
                         .id(ds.getId())
+                        .datasourceType(ds.getDatasourceType().name())
                         .typeId(ds.getTypeId())
                         .name(ds.getName())
-                        .connectInfo(JSONUtils.jsonToObject(ds.getConnectionInfo().getValues(), JSONObject.class))
+                        .connectionConfig(JSONUtils.jsonToObject(ds.getConnectionConfig().getValues(), JSONObject.class))
                         .createUser(ds.getCreateUser())
                         .createTime(ds.getCreateTime())
                         .updateUser(ds.getUpdateUser())
@@ -59,28 +57,21 @@ public class DataSourceService extends BaseSecurityService {
         return dataSourcePage;
     }
 
-    public List<DataSourceType> getAllTypes() {
-        List<com.miotech.kun.metadata.core.model.datasource.DataSourceType> types = metadataService.getTypes();
+    public List<DataSourceTemplateVO> getAllTypes() {
+        List<DatasourceTemplate> types = metadataService.getTypes();
         return types.stream()
-                .map(type -> new DataSourceType(type.getId(), type.getName(), type.getFields().stream()
-                        .map(field -> DatasourceTypeField.builder()
-                                .name(field.getName())
-                                .sequenceOrder(field.getSequenceOrder())
-                                .format(field.getFormat())
-                                .require(field.isRequire())
-                                .build())
-                        .collect(Collectors.toList())))
+                .map(type -> new DataSourceTemplateVO(type.getType(),type.getId()))
                 .collect(Collectors.toList());
     }
 
-    public DataSource add(DataSourceRequest dataSourceRequest) {
-        fillCreateRequest(dataSourceRequest);
-        com.miotech.kun.metadata.core.model.datasource.DataSource ds = metadataService.create(dataSourceRequest.convert());
-        return DataSource.builder()
+    public DataSourceVO add(com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
+        fillCreateRequest(dataSourceVo);
+        DataSource ds = metadataService.create(dataSourceVo.convert());
+        return DataSourceVO.builder()
                 .id(ds.getId())
-                .typeId(ds.getTypeId())
+                .datasourceType(ds.getDatasourceType().name())
                 .name(ds.getName())
-                .connectInfo(JSONUtils.jsonToObject(ds.getConnectionInfo().getValues(), JSONObject.class))
+                .connectionConfig(JSONUtils.jsonToObject(ds.getConnectionConfig(), JSONObject.class))
                 .createUser(ds.getCreateUser())
                 .createTime(ds.getCreateTime())
                 .updateUser(ds.getUpdateUser())
@@ -89,14 +80,14 @@ public class DataSourceService extends BaseSecurityService {
                 .build();
     }
 
-    public DataSource update(Long id, DataSourceRequest dataSourceRequest) {
-        fillUpdateRequest(dataSourceRequest);
-        com.miotech.kun.metadata.core.model.datasource.DataSource ds = metadataService.update(id, dataSourceRequest.convert());
-        return DataSource.builder()
+    public DataSourceVO update(Long id, com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
+        fillUpdateRequest(dataSourceVo);
+        DataSource ds = metadataService.update(id, dataSourceVo.convert());
+        return DataSourceVO.builder()
                 .id(ds.getId())
-                .typeId(ds.getTypeId())
+                .datasourceType(ds.getDatasourceType().name())
                 .name(ds.getName())
-                .connectInfo(JSONUtils.jsonToObject(ds.getConnectionInfo().getValues(), JSONObject.class))
+                .connectionConfig(JSONUtils.jsonToObject(ds.getConnectionConfig(), JSONObject.class))
                 .createUser(ds.getCreateUser())
                 .createTime(ds.getCreateTime())
                 .updateUser(ds.getUpdateUser())
@@ -109,18 +100,18 @@ public class DataSourceService extends BaseSecurityService {
         metadataService.delete(id);
     }
 
-    private void fillCreateRequest(DataSourceRequest dataSourceRequest) {
+    private void fillCreateRequest(com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
         String username = getCurrentUsername();
-        dataSourceRequest.setCreateUser(username);
-        dataSourceRequest.setUpdateUser(username);
-        dataSourceRequest.setCreateTime(System.currentTimeMillis());
-        dataSourceRequest.setUpdateTime(dataSourceRequest.getCreateTime());
+        dataSourceVo.setCreateUser(username);
+        dataSourceVo.setUpdateUser(username);
+        dataSourceVo.setCreateTime(System.currentTimeMillis());
+        dataSourceVo.setUpdateTime(dataSourceVo.getCreateTime());
     }
 
-    private void fillUpdateRequest(DataSourceRequest dataSourceRequest) {
+    private void fillUpdateRequest(com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
         String username = getCurrentUsername();
-        dataSourceRequest.setUpdateUser(username);
-        dataSourceRequest.setUpdateTime(dataSourceRequest.getCreateTime());
+        dataSourceVo.setUpdateUser(username);
+        dataSourceVo.setUpdateTime(dataSourceVo.getCreateTime());
     }
 
 }

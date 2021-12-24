@@ -9,7 +9,7 @@ import com.miotech.kun.metadata.common.service.DataSourceService;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.vo.DataSourceRequest;
 import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
-import com.miotech.kun.metadata.core.model.datasource.DataSourceType;
+import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
 import com.miotech.kun.metadata.core.model.vo.PaginationVO;
 import com.miotech.kun.metadata.web.model.vo.AcknowledgementVO;
 
@@ -44,8 +44,13 @@ public class DataSourceController {
     }
 
     @RouteMapping(url = "/datasource/types", method = "GET")
-    public List<DataSourceType> getDataSourceTypes() {
+    public List<DatasourceTemplate> getDataSourceTypes() {
         return dataSourceService.getAllTypes();
+    }
+
+    @RouteMapping(url = "/datasource/{id}", method = "GET")
+    public DataSource getDataSource(@RouteVariable Long id) {
+        return dataSourceService.fetchDatasource(id);
     }
 
 }
