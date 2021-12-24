@@ -196,7 +196,7 @@ export default memo(function AddUpdateDatabaseModal({ visible, database, onClose
               </div>
               <div className={styles.inputComp}>
                 <Input
-                  value={newDatabase.information[connection][field.field]}
+                  value={newDatabase?.information?.[connection]?.[field.field]}
                   onChange={e => handleChangeInformationFunc(e, field.field, connection)}
                 />
               </div>
@@ -213,7 +213,7 @@ export default memo(function AddUpdateDatabaseModal({ visible, database, onClose
               <div className={styles.inputComp}>
                 <Input
                   type="password"
-                  value={newDatabase.information[connection][field.field]}
+                  value={newDatabase?.information?.[connection]?.[field.field]}
                   onChange={e => handleChangeInformationFunc(e, field.field, connection)}
                 />
               </div>
