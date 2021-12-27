@@ -1,13 +1,23 @@
 package com.miotech.kun.workflow.operator.client;
 
+import com.google.common.collect.ImmutableList;
 import com.miotech.kun.common.utils.DateUtils;
-import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.query.datasource.MetadataDataSource;
+import com.miotech.kun.commons.query.service.ConfigService;
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.dataquality.core.Dataset;
+import com.miotech.kun.dataquality.core.ExpectationMethod;
+import com.miotech.kun.dataquality.core.ExpectationSpec;
+import com.miotech.kun.dataquality.core.ValidationResult;
+import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.workflow.operator.DataQualityConfiguration;
 import com.miotech.kun.workflow.operator.model.*;
+import com.miotech.kun.workflow.operator.utils.DataSourceClient;
+import com.miotech.kun.workflow.utils.JSONUtils;
 import org.postgresql.util.PGobject;
 
 import java.sql.SQLException;
@@ -20,10 +30,87 @@ import java.util.List;
  */
 public class DataQualityClient {
 
+    private static final String EXPECTATION_TABLE_NAME = "kun_dq_expectation";
+    private static final String EXPECTATION_RUN_TABLE_NAME = "kun_dq_expectation_run";
+    private static final List<String> EXPECTATION_COLUMNS = ImmutableList.of("id", "name", "types", "description", "method", "trigger",
+            "dataset_gid", "task_id", "is_blocking", "create_time", "update_time", "create_user", "update_user");
+    private static final List<String> EXPECTATION_RUN_INSERT_COLUMNS = ImmutableList.of("expectation_id", "passed", "execution_result",
+            "assertion_result", "continuous_failing_count", "update_time");
+
+
     private DatabaseOperator databaseOperator;
 
     private DataQualityClient() {
         databaseOperator = new DatabaseOperator(MetadataDataSource.getInstance().getMetadataDataSource());
+    }
+
+    public ExpectationSpec getExpectation(Long caseId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(EXPECTATION_COLUMNS.toArray(new String[0]))
+                .from(EXPECTATION_TABLE_NAME)
+                .where("id = ?")
+                .getSQL();
+
+        return databaseOperator.query(sql, rs -> {
+            ExpectationSpec.Builder builder = ExpectationSpec.newBuilder();
+            if (rs.next()) {
+                Long datasetGid = rs.getLong("dataset_gid");
+                Long dataSourceId = fetchDataSourceIdByGid(datasetGid);
+                builder
+                        .withExpectationId(rs.getLong("id"))
+                        .withName(rs.getString("name"))
+                        .withDescription(rs.getString("description"))
+                        .withMethod(com.miotech.kun.workflow.utils.JSONUtils.jsonToObject(rs.getString("method"), ExpectationMethod.class))
+                        .withTrigger(ExpectationSpec.ExpectationTrigger.valueOf(rs.getString("trigger")))
+                        .withTaskId(rs.getLong("task_id"))
+                        .withIsBlocking(rs.getBoolean("is_blocking"))
+                        .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("create_time")))
+                        .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")))
+                        .withCreateUser(rs.getString("create_user"))
+                        .withUpdateUser(rs.getString("update_user"));
+
+                DataSourceClient client = new DataSourceClient(ConfigService.getInstance().getProperties().get(DataQualityConfiguration.INFRA_BASE_URL));
+                DataSource dataSourceById = client.getDataSourceById(dataSourceId);
+                builder.withDataset(Dataset.builder().gid(datasetGid).dataSource(dataSourceById).build());
+            }
+            return builder.build();
+        }, caseId);
+    }
+
+    private Long fetchDataSourceIdByGid(Long datasetGid) {
+        String sql = "select datasource_id from kun_mt_dataset where gid = ?";
+        return databaseOperator.fetchOne(sql, rs -> rs.getLong("datasource_id"), datasetGid);
+    }
+
+    public void record(ValidationResult vr, Long caseRunId) {
+        long failedCount = 0;
+        if (!vr.isPassed()) {
+            failedCount = getLatestFailingCount(vr.getExpectationId()) + 1;
+        }
+
+        String sql = DefaultSQLBuilder.newBuilder()
+                .insert(EXPECTATION_RUN_INSERT_COLUMNS.toArray(new String[0]))
+                .into(EXPECTATION_RUN_TABLE_NAME)
+                .asPrepared()
+                .getSQL();
+
+        databaseOperator.create(sql,
+                vr.getExpectationId(),
+                vr.isPassed(),
+                vr.getExecutionResult(),
+                transferRuleRecordsToPGObject(vr.getAssertionResults()),
+                failedCount,
+                vr.getUpdateTime()
+                );
+
+        String updateStatusSql = DefaultSQLBuilder.newBuilder()
+                .update("kun_dq_case_run")
+                .set("status")
+                .where("case_run_id = ?")
+                .asPrepared()
+                .getSQL();
+        String status = vr.isPassed() ? "SUCCESS" : "FAILED";
+        databaseOperator.update(updateStatusSql, status, caseRunId);
     }
 
     private static class SingletonHolder {
@@ -124,7 +211,7 @@ public class DataQualityClient {
         }, caseId);
     }
 
-    public void recordCaseMetrics(DataQualityCaseMetrics metrics,Long caseRunId) {
+    public void recordCaseMetrics(DataQualityCaseMetrics metrics, Long caseRunId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .insert()
                 .into("kun_dq_case_metrics")
@@ -141,7 +228,7 @@ public class DataQualityClient {
                 metrics.getErrorReason(),
                 failedCount,
                 DateUtils.millisToLocalDateTime(System.currentTimeMillis()),
-                transferRuleRecordsToPGobject(metrics.getRuleRecords()),
+                transferRuleRecordsToPGObject(metrics.getRuleRecords()),
                 metrics.getCaseId());
 
         String updateStatusSql = DefaultSQLBuilder.newBuilder()
@@ -153,27 +240,27 @@ public class DataQualityClient {
         databaseOperator.update(updateStatusSql, metrics.getCaseStatus().name(), caseRunId);
     }
 
-    private Long getLatestFailingCount(Long caseId) {
+    private Long getLatestFailingCount(Long expectationId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("continuous_failing_count")
-                .from("kun_dq_case_metrics")
-                .where("case_id = ?")
+                .from(EXPECTATION_RUN_TABLE_NAME)
+                .where("expectation_id = ?")
                 .orderBy("update_time desc")
                 .limit(1)
                 .getSQL();
 
-        Long latestFailingCount = databaseOperator.fetchOne(sql, rs -> rs.getLong("continuous_failing_count"), caseId);
+        Long latestFailingCount = databaseOperator.fetchOne(sql, rs -> rs.getLong("continuous_failing_count"), expectationId);
         if (latestFailingCount == null) {
             return 0L;
         }
         return latestFailingCount;
     }
 
-    private PGobject transferRuleRecordsToPGobject(List<DataQualityRule> ruleRecords) {
+    private PGobject transferRuleRecordsToPGObject(Object obj) {
         PGobject jsonObject = new PGobject();
         jsonObject.setType("jsonb");
         try {
-            jsonObject.setValue(JSONUtils.toJsonString(ruleRecords));
+            jsonObject.setValue(JSONUtils.toJsonString(obj));
         } catch (SQLException e) {
             throw ExceptionUtils.wrapIfChecked(new RuntimeException(e));
         }

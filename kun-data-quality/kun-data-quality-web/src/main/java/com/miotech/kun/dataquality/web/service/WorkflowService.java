@@ -1,6 +1,7 @@
 package com.miotech.kun.dataquality.web.service;
 
 import com.miotech.kun.common.constant.DataQualityConstant;
+import com.miotech.kun.dataquality.web.common.service.ExpectationService;
 import com.miotech.kun.dataquality.web.utils.WorkflowUtils;
 import com.miotech.kun.workflow.client.WorkflowApiException;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -32,9 +33,6 @@ public class WorkflowService {
     WorkflowClient workflowClient;
 
     @Autowired
-    DataQualityService dataQualityService;
-
-    @Autowired
     Operator operator;
 
     @Autowired
@@ -52,6 +50,9 @@ public class WorkflowService {
     @Autowired
     private OperatorUpload operatorUpload;
 
+    @Autowired
+    private ExpectationService expectationService;
+
     @PostConstruct
     public void init() {
         if (workflowEnable) {
@@ -61,17 +62,15 @@ public class WorkflowService {
     }
 
     public Long createTask(Long caseId) {
-
         Task task = buildTask(caseId);
-
         Task savedTask = workflowClient.createTask(task);
-        dataQualityService.saveTaskId(caseId, savedTask.getId());
+        expectationService.updateTaskId(caseId, savedTask.getId());
         return savedTask.getId();
     }
 
     public TaskRun executeTask(Long caseId) {
 
-        Long taskId = dataQualityService.getLatestTaskId(caseId);
+        Long taskId = expectationService.getTaskId(caseId);
         if (taskId == null || taskId.equals(0L)) {
             taskId = createTask(caseId);
         } else {
@@ -98,15 +97,15 @@ public class WorkflowService {
     }
 
     public void deleteTaskByCase(Long caseId) {
-        Long taskId = dataQualityService.getLatestTaskId(caseId);
+        Long taskId = expectationService.getTaskId(caseId);
         try {
             if (taskId != null) {
                 workflowClient.getTask(taskId);
             }
         } catch (WorkflowApiException e) {
-            dataQualityService.saveTaskId(caseId, null);
             return;
         }
+
         deleteTask(taskId);
     }
 
@@ -130,7 +129,7 @@ public class WorkflowService {
     private Task buildTask(Long caseId) {
         Operator savedOperator = workflowClient.saveOperator(this.operator.getName(), this.operator);
 
-        String caseName = dataQualityService.getCaseBasic(caseId).getName();
+        String caseName = expectationService.fetchById(caseId).getName();
         return Task.newBuilder()
                 .withName(DataQualityConstant.WORKFLOW_TASK_NAME_PREFIX + caseId + "_" + caseName)
                 .withDescription("")

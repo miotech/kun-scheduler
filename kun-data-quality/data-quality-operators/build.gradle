@@ -9,10 +9,13 @@ dependencies {
     implementation project(':kun-workflow:kun-workflow-utils')
     implementation project(':kun-workflow:kun-workflow-core')
     implementation project(':kun-workflow:kun-workflow-testing')
+    implementation project(":kun-metadata:kun-metadata-common")
+    implementation project(":kun-metadata:kun-metadata-core")
     implementation project(':kun-commons:kun-commons-query')
     implementation project(":kun-commons:kun-commons-utils")
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-app-common")
+    implementation project(":kun-data-quality:kun-data-quality-core")
     implementation 'com.syncron.amazonaws:simba-athena-jdbc-driver'
     implementation 'org.postgresql:postgresql'
     implementation "commons-dbutils:commons-dbutils"
