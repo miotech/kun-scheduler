@@ -25,6 +25,9 @@ public class TaskRunConditionFunction {
 
     public List<TaskRunCondition> resolveTaskRunConditionForPredecessor(Task task) {
         BlockType blockType = task.getScheduleConf().getBlockType();
+        if (blockType.equals(BlockType.NONE)) {
+            return new ArrayList<>();
+        }
         TaskRun predecessorTaskRun = taskRunDao.fetchLatestTaskRun(task.getId());
         if (predecessorTaskRun == null) {
             return new ArrayList<>();

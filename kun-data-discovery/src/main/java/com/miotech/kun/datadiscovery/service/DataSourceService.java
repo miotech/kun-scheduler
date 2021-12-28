@@ -1,9 +1,11 @@
 package com.miotech.kun.datadiscovery.service;
 
+import com.google.common.collect.Maps;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DataSourceSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.util.JSONUtils;
+import com.miotech.kun.metadata.core.model.connection.ConnectionConfig;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.vo.DatasourceTemplate;
 import com.miotech.kun.metadata.core.model.vo.PaginationVO;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -42,7 +45,7 @@ public class DataSourceService extends BaseSecurityService {
                         .datasourceType(ds.getDatasourceType().name())
                         .typeId(ds.getTypeId())
                         .name(ds.getName())
-                        .connectionConfig(JSONUtils.jsonToObject(ds.getConnectionConfig().getValues(), JSONObject.class))
+                        .connectionConfig(JSONUtils.jsonToObject(toFlatMap(ds.getConnectionConfig()), JSONObject.class))
                         .createUser(ds.getCreateUser())
                         .createTime(ds.getCreateTime())
                         .updateUser(ds.getUpdateUser())
@@ -112,6 +115,15 @@ public class DataSourceService extends BaseSecurityService {
         String username = getCurrentUsername();
         dataSourceVo.setUpdateUser(username);
         dataSourceVo.setUpdateTime(dataSourceVo.getCreateTime());
+    }
+
+    private Map<String,Object> toFlatMap(ConnectionConfig connectionConfig){
+        Map<String,Object> flatMap = Maps.newHashMap(connectionConfig.getValues());
+        flatMap.put("userConnection",connectionConfig.getUserConnection());
+        flatMap.put("dataConnection",connectionConfig.getDataConnection());
+        flatMap.put("metadataConnection",connectionConfig.getMetadataConnection());
+        flatMap.put("storageConnection",connectionConfig.getStorageConnection());
+        return flatMap;
     }
 
 }
