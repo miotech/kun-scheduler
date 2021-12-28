@@ -64,7 +64,7 @@ public class SecurityServerConfig extends WebSecurityConfigurerAdapter {
     @Value("${spring.ldap.user-search-base:}")
     private String userSearchBase;
 
-    @Value("${security.pass-token:***REMOVED***}")
+    @Value("${security.pass-token:40A4C5379B73F31D6CD24F6A7C5C3ACB}")
     private String passToken;
 
     @Value("${spring.security.oauth2.client.enable:false}")
