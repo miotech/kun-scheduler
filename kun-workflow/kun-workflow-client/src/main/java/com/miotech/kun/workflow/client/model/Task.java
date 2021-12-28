@@ -19,6 +19,7 @@ public class Task {
     private final ScheduleConf scheduleConf;
     private final List<TaskDependency> dependencies;
     private final List<Tag> tags;
+    private final Integer priority;
     //task retry times limit
     private final Integer retries;
 
@@ -36,6 +37,7 @@ public class Task {
         this.dependencies = builder.dependencies;
         this.tags = builder.tags;
         this.queueName = builder.queueName;
+        this.priority = builder.priority;
         this.retries = builder.retries;
         this.retryDelay = builder.retryDelay;
         this.checkType = builder.checkType;
@@ -55,6 +57,7 @@ public class Task {
                 .withScheduleConf(scheduleConf)
                 .withOperatorId(operatorId)
                 .withTags(tags)
+                .withPriority(priority)
                 .withConfig(config)
                 .withQueueName(queueName)
                 .withReties(retries)
@@ -91,6 +94,10 @@ public class Task {
         return queueName;
     }
 
+    public Integer getPriority() {
+        return priority;
+    }
+
     public Integer getRetries() {
         return retries;
     }
@@ -113,6 +120,7 @@ public class Task {
         private ScheduleConf scheduleConf;
         private List<TaskDependency> dependencies;
         private List<Tag> tags;
+        private Integer priority;
         private String queueName;
         private Integer retries;
         private Integer retryDelay;
@@ -158,6 +166,11 @@ public class Task {
 
         public Builder withTags(List<Tag> tags) {
             this.tags = tags;
+            return this;
+        }
+
+        public Builder withPriority(Integer priority){
+            this.priority = priority;
             return this;
         }
 
