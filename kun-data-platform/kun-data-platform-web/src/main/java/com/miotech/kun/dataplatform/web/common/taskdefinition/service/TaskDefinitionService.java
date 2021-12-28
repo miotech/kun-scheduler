@@ -74,6 +74,8 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
 
     private static final Long devTargetId = 2L; //TODO edit in prod version
 
+    private static final Integer DEFAULT_TRY_RUN_PRIORITY = 6;
+
     private static final Logger logger = LoggerFactory.getLogger(TaskDefinitionService.class);
 
     @Autowired
@@ -394,6 +396,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 .withDescription("Try Run Data Platform Task " + taskDefId)
                 .withConfig(config)
                 .withTags(TagUtils.buildTryRunTags(creator, taskDefId))
+                .withPriority(DEFAULT_TRY_RUN_PRIORITY)
                 .withDependencies(new ArrayList<>())
                 .withScheduleConf(new ScheduleConf(ScheduleType.NONE, ""))
                 .build();
@@ -462,6 +465,7 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                     .withDescription("Try Run Data Platform Task " + taskDefId)
                     .withConfig(config)
                     .withTags(TagUtils.buildTryRunTags(creator, taskDefId))
+                    .withPriority(DEFAULT_TRY_RUN_PRIORITY)
                     .withDependencies(dependencies)
                     .withScheduleConf(new ScheduleConf(ScheduleType.NONE, ""))
                     .build();
