@@ -18,7 +18,7 @@ import org.springframework.web.client.RestTemplate;
  */
 public class BaseSecurityService {
 
-    @Value("${security.pass-token:40A4C5379B73F31D6CD24F6A7C5C3ACB}")
+    @Value("${security.pass-token:***REMOVED***}")
     String passToken;
 
     /**
