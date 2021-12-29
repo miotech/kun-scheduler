@@ -8,9 +8,12 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.common.worker.filter.WorkerImageFilter;
+import com.miotech.kun.workflow.common.worker.service.WorkerImageService;
 import com.miotech.kun.workflow.core.execution.ExecCommand;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
+import com.miotech.kun.workflow.core.model.worker.WorkerImage;
 import com.miotech.kun.workflow.core.model.worker.WorkerInstance;
 import com.miotech.kun.workflow.core.model.worker.WorkerSnapshot;
 import com.miotech.kun.workflow.executor.AbstractQueueManager;
@@ -36,6 +39,7 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     private final Logger logger = LoggerFactory.getLogger(PodLifeCycleManager.class);
     private final KubernetesClient kubernetesClient;
     private final OperatorDao operatorDao;
+    private final WorkerImageService workerImageService;
     private final String POD_WORK_DIR = "/server/target";
     private final String POD_LIB_DIR = "/server/lib";
     private final Integer DB_MAX_POOL = 1;
@@ -44,10 +48,26 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
     @Inject
     public PodLifeCycleManager(TaskRunDao taskRunDao, WorkerMonitor workerMonitor, Props props, MiscService miscService,
                                KubernetesClient kubernetesClient, OperatorDao operatorDao, AbstractQueueManager queueManager,
-                               EventBus eventBus, EventSubscriber eventSubscriber) {
+                               EventBus eventBus, EventSubscriber eventSubscriber, WorkerImageService workerImageService) {
         super(taskRunDao, workerMonitor, props, miscService, queueManager, eventBus, eventSubscriber);
         this.kubernetesClient = kubernetesClient;
         this.operatorDao = operatorDao;
+        this.workerImageService = workerImageService;
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        //set active image to the latest one;
+        WorkerImageFilter imageFilter = WorkerImageFilter.newBuilder()
+                .withName(POD_IMAGE_NAME)
+                .withPage(0)
+                .withPageSize(1)
+                .build();
+        List<WorkerImage> workerImageList = workerImageService.fetchWorkerImage(imageFilter).getRecords();
+        if(workerImageList.size() > 0){
+            workerImageService.setActiveVersion(workerImageList.get(0).getId());
+        }
     }
 
     @Override
@@ -172,7 +192,8 @@ public class PodLifeCycleManager extends WorkerLifeCycleManager {
         Container container = new Container();
         container.setImagePullPolicy(IMAGE_PULL_POLICY);
         String containerName = getContainerFromOperator(operatorId);
-        String imageName = POD_IMAGE_NAME;
+        WorkerImage workerImage = workerImageService.fetchActiveImage(POD_IMAGE_NAME);
+        String imageName = POD_IMAGE_NAME + ":" + workerImage.getVersion();
         if (props.containsKey("executor.env.privateHub")) {
             imageName = props.getString("executor.env.privateHub.url") + "/" + imageName;
         }
