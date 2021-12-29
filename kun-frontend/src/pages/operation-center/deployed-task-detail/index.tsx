@@ -192,6 +192,7 @@ const DeployedTaskDetailView: FunctionComponent<DeployedTaskDetailViewProps> = (
               setSelectedTaskRun={setSelectedTaskRun}
               onClickRerunTaskRun={handleRestartTaskRun}
               onClickStopTaskRun={handleAbortTaskRun}
+              refreshTaskRun={doRefresh}
             />
           </KunSpin>
         </ReflexElement>
