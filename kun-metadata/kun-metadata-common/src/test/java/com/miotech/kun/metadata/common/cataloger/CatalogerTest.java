@@ -9,21 +9,16 @@ import com.miotech.kun.metadata.common.service.FieldMappingService;
 import com.miotech.kun.metadata.core.model.connection.*;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
-import org.junit.experimental.theories.DataPoints;
-import org.junit.experimental.theories.FromDataPoints;
-import org.junit.experimental.theories.Theories;
-import org.junit.experimental.theories.Theory;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.notNullValue;
 import static org.junit.Assert.assertThat;
 
 
-@RunWith(Theories.class)
 public class CatalogerTest extends DatabaseTestBase {
 
     @Inject
@@ -32,8 +27,7 @@ public class CatalogerTest extends DatabaseTestBase {
     private DataSourceDao dataSourceDao;
 
 
-    @DataPoints("ConnectionConfig")
-    public static ConnectionConfig[] connectionConfigs() {
+    public static Stream<ConnectionConfig> connectionConfigs() {
         ConnectionInfo athenaConnectionInfo = new AthenaConnectionInfo(ConnectionType.ATHENA,"jdbc:awsathena","user","password");
         ConnectionInfo glueConnectionInfo = new GlueConnectionInfo(ConnectionType.GLUE,"glue","glue","glue");
         ConnectionInfo s3ConnectionInfo = new S3ConnectionInfo(ConnectionType.S3,"glue","glue","glue");
@@ -57,12 +51,13 @@ public class CatalogerTest extends DatabaseTestBase {
         ConnectionConfig pgConfig = ConnectionConfig.newBuilder()
                 .withUserConnection(pgConnectionInfo)
                 .build();
-        ConnectionConfig[] connectionConfigs = {awsConfig,hiveConfig,pgConfig};
+        Stream<ConnectionConfig> connectionConfigs = Stream.of(awsConfig,hiveConfig,pgConfig);
         return connectionConfigs;
     }
 
-    @Theory
-    public void testGenerateCataloger(@FromDataPoints("ConnectionConfig") ConnectionConfig connectionConfig){
+    @ParameterizedTest
+    @MethodSource("connectionConfigs")
+    public void testGenerateCataloger(ConnectionConfig connectionConfig){
         ClientFactory clientFactory = mock(ClientFactory.class);
         CatalogerFactory catalogerFactory = new CatalogerFactory(fieldMappingService,clientFactory);
 
@@ -70,23 +65,5 @@ public class CatalogerTest extends DatabaseTestBase {
         dataSourceDao.create(aws);
         Cataloger cataloger = catalogerFactory.generateCataloger(aws);
         assertThat(cataloger,notNullValue());
-    }
-
-    class QueryResult{
-        private ResultSet resultSet;
-        private Connection connection;
-
-        public ResultSet getResultSet() {
-            return resultSet;
-        }
-
-        public void close(){
-            try {
-                connection.close();
-            }catch (Exception e){
-
-            }
-
-        }
     }
 }

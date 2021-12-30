@@ -2,7 +2,7 @@ package com.miotech.kun.workflow.operator.utils;
 
 import com.google.common.collect.ImmutableMap;
 import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;

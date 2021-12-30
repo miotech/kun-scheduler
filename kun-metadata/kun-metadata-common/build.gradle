@@ -31,6 +31,5 @@ dependencies {
     testImplementation project(":kun-workflow:kun-workflow-utils")
     testImplementation "org.hamcrest:hamcrest"
     testImplementation "org.hamcrest:hamcrest-library"
-    testImplementation 'com.shazam:shazamcrest'
     testImplementation "org.testcontainers:neo4j"
 }

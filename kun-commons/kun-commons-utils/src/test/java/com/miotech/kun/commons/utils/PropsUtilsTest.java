@@ -1,21 +1,21 @@
 package com.miotech.kun.commons.utils;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-@RunWith(PowerMockRunner.class)
+@ExtendWith(SystemStubsExtension.class)
 @PrepareForTest(EnvironmentUtils.class)
 public class PropsUtilsTest {
 
-    @Rule
-    public final EnvironmentVariables environmentVariables
+    @SystemStub
+    public EnvironmentVariables environmentVariables
             = new EnvironmentVariables();
 
     @Test

@@ -20,8 +20,8 @@ import com.miotech.kun.metadata.databuilder.context.ApplicationContext;
 import com.miotech.kun.metadata.databuilder.factory.DataSourceFactory;
 import com.miotech.kun.metadata.databuilder.load.Loader;
 import com.miotech.kun.metadata.databuilder.load.impl.PostgresLoader;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.PostgreSQLContainer;
 
 import java.sql.Connection;
@@ -55,7 +55,7 @@ public class MCEBuilderTest extends DatabaseTestBase {
         bind(Loader.class, PostgresLoader.class);
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         Props props = createProps();
         ApplicationContext.init(props);

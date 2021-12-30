@@ -9,14 +9,11 @@ import com.miotech.kun.dataquality.mock.MockSubscriber;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.ConfigKey;
 import com.miotech.kun.workflow.client.model.Operator;
-import com.miotech.kun.workflow.client.model.Task;
-import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.operator.OperatorUpload;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -26,7 +23,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestTemplate;
 
 import javax.sql.DataSource;
@@ -35,14 +31,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = DataQualityTestBase.Configuration.class)
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
@@ -57,7 +48,7 @@ public abstract class DataQualityTestBase {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
-    @After
+    @AfterEach
     public void tearDown() {
         truncateAllTables();
     }

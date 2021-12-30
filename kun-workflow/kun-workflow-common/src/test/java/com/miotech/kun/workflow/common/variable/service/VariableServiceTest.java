@@ -8,7 +8,7 @@ import com.miotech.kun.workflow.common.variable.vo.VariableVO;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.variable.Variable;
 import com.miotech.kun.workflow.testing.factory.MockVariableFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;

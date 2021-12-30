@@ -13,8 +13,8 @@ import com.miotech.kun.workflow.core.model.task.*;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.time.*;
@@ -44,8 +44,7 @@ public class TaskDaoTest extends DatabaseTestBase {
     }
 
 
-
-    @After
+    @AfterEach
     public void resetClock() {
         // reset global clock after each test
         DateTimeUtils.resetClock();
@@ -219,7 +218,7 @@ public class TaskDaoTest extends DatabaseTestBase {
         assertThat(persistedTask, sameBeanAs(insertTask));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void create_withEmptyId_shouldThrowException() {
         // Prepare
         Task insertTask = Task.newBuilder()
@@ -233,15 +232,14 @@ public class TaskDaoTest extends DatabaseTestBase {
                 .build();
 
         // Process
-        taskDao.create(insertTask);
+        assertThrows(RuntimeException.class, () -> taskDao.create(insertTask));
 
-        // Expect exception thrown
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void create_withDuplicatedId_shouldThrowException() {
         // Prepare
-        Task insertTask = Task.newBuilder()
+        Task insertTask = MockTaskFactory.createTask().cloneBuilder()
                 .withId(1L)
                 .withName("foo")
                 .withDescription("foo desc")
@@ -255,9 +253,7 @@ public class TaskDaoTest extends DatabaseTestBase {
 
         // Process
         taskDao.create(insertTask);
-        taskDao.create(duplicatedTask);
-
-        // Expect exception thrown
+        assertThrows(RuntimeException.class, () -> taskDao.create(duplicatedTask));
     }
 
     @Test
@@ -466,7 +462,7 @@ public class TaskDaoTest extends DatabaseTestBase {
         // Process
         // 2. We update the task to execute on 11:00 instead of 10:15 everyday
         Task taskToUpdate = tasksToExecuteOn1015.get(0).cloneBuilder().withScheduleConf(
-                new ScheduleConf(ScheduleType.SCHEDULED, "0 0 11 * * ?",ZoneOffset.UTC.getId())
+                new ScheduleConf(ScheduleType.SCHEDULED, "0 0 11 * * ?", ZoneOffset.UTC.getId())
         ).build();
         taskDao.update(taskToUpdate);
 

@@ -10,7 +10,7 @@ import com.miotech.kun.dataplatform.web.common.commit.vo.TaskCommitVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.security.testing.WithMockTestUser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
@@ -19,11 +19,11 @@ import java.util.NoSuchElementException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @WithMockTestUser
 public class TaskCommitServiceTest extends AppTestBase {

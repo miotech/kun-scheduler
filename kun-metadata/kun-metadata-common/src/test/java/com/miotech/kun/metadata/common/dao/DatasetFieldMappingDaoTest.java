@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.core.model.dataset.DatasetFieldMapping;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ public class DatasetFieldMappingDaoTest extends DatabaseTestBase {
     @Inject
     private DatabaseOperator databaseOperator;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         databaseOperator.update("TRUNCATE TABLE kun_mt_dataset_field_mapping");
     }

@@ -16,18 +16,16 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.Arrays;
-import java.util.Collection;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
-@RunWith(Parameterized.class)
 public class TaskRunStateMachineTest extends DatabaseTestBase {
 
     private TaskRunStateMachine taskRunStateMachine;
@@ -41,31 +39,16 @@ public class TaskRunStateMachineTest extends DatabaseTestBase {
     @Inject
     private EventBus eventBus;
 
-    private TaskAttempt taskAttempt;
-
-    private TaskRunTransitionEvent event;
-
-    private TaskRunStatus nextStatus;
-
-    public TaskRunStateMachineTest(TaskAttempt taskAttempt, TaskRunTransitionEvent event, TaskRunStatus nextStatus){
-        this.taskAttempt = taskAttempt;
-        this.event = event;
-        this.nextStatus = nextStatus;
-    }
-
-
-    @Parameterized.Parameters
-    @SuppressWarnings("unchecked")
-    public static Collection prepareData(){
+    public static Stream<Arguments> prepareData() {
         Task task = MockTaskFactory.createTask();
         //prepare attempt
-        TaskAttempt createdAttempt = prepareAttempt(task,TaskRunStatus.CREATED);
-        TaskAttempt blockedAttempt = prepareAttempt(task,TaskRunStatus.BLOCKED);
-        TaskAttempt upstreamFailedAttempt = prepareAttempt(task,TaskRunStatus.UPSTREAM_FAILED);
-        TaskAttempt queuedAttempt = prepareAttempt(task,TaskRunStatus.QUEUED);
-        TaskAttempt runningAttempt = prepareAttempt(task,TaskRunStatus.RUNNING);
-        TaskAttempt failedAttempt = prepareAttempt(task,TaskRunStatus.FAILED);
-        TaskAttempt checkAttempt = prepareAttempt(task,TaskRunStatus.CHECK);
+        TaskAttempt createdAttempt = prepareAttempt(task, TaskRunStatus.CREATED);
+        TaskAttempt blockedAttempt = prepareAttempt(task, TaskRunStatus.BLOCKED);
+        TaskAttempt upstreamFailedAttempt = prepareAttempt(task, TaskRunStatus.UPSTREAM_FAILED);
+        TaskAttempt queuedAttempt = prepareAttempt(task, TaskRunStatus.QUEUED);
+        TaskAttempt runningAttempt = prepareAttempt(task, TaskRunStatus.RUNNING);
+        TaskAttempt failedAttempt = prepareAttempt(task, TaskRunStatus.FAILED);
+        TaskAttempt checkAttempt = prepareAttempt(task, TaskRunStatus.CHECK);
 
         //prepare event
         TaskRunTransitionEvent createToQueuedEvent = createEvent(createdAttempt, TaskRunTransitionEventType.SUBMIT);
@@ -86,36 +69,35 @@ public class TaskRunStateMachineTest extends DatabaseTestBase {
         TaskRunTransitionEvent checkToAbort = createEvent(checkAttempt, TaskRunTransitionEventType.ABORT);
 
 
-
-        Object [][] bject = {
-                {createdAttempt,createToQueuedEvent,TaskRunStatus.QUEUED},
-                {createdAttempt,createToBlockedEvent,TaskRunStatus.BLOCKED},
-                {createdAttempt,createToUpstreamFailedEvent,TaskRunStatus.UPSTREAM_FAILED},
-                {blockedAttempt,blockToCreateEvent,TaskRunStatus.CREATED},
-                {upstreamFailedAttempt,upstreamFailedToCreate,TaskRunStatus.CREATED},
-                {queuedAttempt,queueToRunning,TaskRunStatus.RUNNING},
-                {runningAttempt,runningToCheck,TaskRunStatus.CHECK},
-                {runningAttempt,runningToFailed,TaskRunStatus.FAILED},
-                {checkAttempt,checkToCheckFailed,TaskRunStatus.CHECK_FAILED},
-                {checkAttempt,checkToSuccess,TaskRunStatus.SUCCESS},
-                {failedAttempt,failedToCreated,TaskRunStatus.CREATED},
-                {createdAttempt,createToAbort,TaskRunStatus.ABORTED},
-                {queuedAttempt,queueToAbort,TaskRunStatus.ABORTED},
-                {runningAttempt,runningToAbort,TaskRunStatus.ABORTED},
-                {blockedAttempt,blockToAbort,TaskRunStatus.ABORTED},
-                {checkAttempt,checkToAbort,TaskRunStatus.ABORTED}
-        };
-        return Arrays.asList(bject);
+        return Stream.of(
+                Arguments.of(createdAttempt, createToQueuedEvent, TaskRunStatus.QUEUED),
+                Arguments.of(createdAttempt, createToBlockedEvent, TaskRunStatus.BLOCKED),
+                Arguments.of(createdAttempt, createToUpstreamFailedEvent, TaskRunStatus.UPSTREAM_FAILED),
+                Arguments.of(blockedAttempt, blockToCreateEvent, TaskRunStatus.CREATED),
+                Arguments.of(upstreamFailedAttempt, upstreamFailedToCreate, TaskRunStatus.CREATED),
+                Arguments.of(queuedAttempt, queueToRunning, TaskRunStatus.RUNNING),
+                Arguments.of(runningAttempt, runningToCheck, TaskRunStatus.CHECK),
+                Arguments.of(runningAttempt, runningToFailed, TaskRunStatus.FAILED),
+                Arguments.of(checkAttempt, checkToCheckFailed, TaskRunStatus.CHECK_FAILED),
+                Arguments.of(checkAttempt, checkToSuccess, TaskRunStatus.SUCCESS),
+                Arguments.of(failedAttempt, failedToCreated, TaskRunStatus.CREATED),
+                Arguments.of(createdAttempt, createToAbort, TaskRunStatus.ABORTED),
+                Arguments.of(queuedAttempt, queueToAbort, TaskRunStatus.ABORTED),
+                Arguments.of(runningAttempt, runningToAbort, TaskRunStatus.ABORTED),
+                Arguments.of(blockedAttempt, blockToAbort, TaskRunStatus.ABORTED),
+                Arguments.of(checkAttempt, checkToAbort, TaskRunStatus.ABORTED)
+        );
     }
 
-    @Before
-    public void init(){
-        taskRunStateMachine = new TaskRunStateMachine(taskRunDao,eventBus,mock(LineageService.class));
+    @BeforeEach
+    public void init() {
+        taskRunStateMachine = new TaskRunStateMachine(taskRunDao, eventBus, mock(LineageService.class));
         taskRunStateMachine.start();
     }
 
-    @Test
-    public void testStateTransition(){
+    @ParameterizedTest
+    @MethodSource("prepareData")
+    public void testStateTransition(TaskAttempt taskAttempt, TaskRunTransitionEvent event, TaskRunStatus nextStatus) {
         TaskRun taskRun = taskAttempt.getTaskRun();
         Task task = taskRun.getTask();
         taskDao.create(task);
@@ -126,20 +108,19 @@ public class TaskRunStateMachineTest extends DatabaseTestBase {
 
         TaskAttempt nextAttempt = taskRunDao.fetchAttemptById(taskAttempt.getId()).get();
 
-        assertThat(nextAttempt.getStatus(),is(nextStatus));
-
+        assertThat(nextAttempt.getStatus(), is(nextStatus));
 
 
     }
 
-    private static TaskAttempt prepareAttempt(Task task, TaskRunStatus taskRunStatus){
-        TaskRun taskRun = MockTaskRunFactory.createTaskRunWithStatus(task,taskRunStatus);
-        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(taskRun,taskRunStatus);
+    private static TaskAttempt prepareAttempt(Task task, TaskRunStatus taskRunStatus) {
+        TaskRun taskRun = MockTaskRunFactory.createTaskRunWithStatus(task, taskRunStatus);
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttemptWithStatus(taskRun, taskRunStatus);
         return taskAttempt;
     }
 
-    private static TaskRunTransitionEvent createEvent(TaskAttempt taskAttempt, TaskRunTransitionEventType eventType){
-        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(eventType,taskAttempt.getId());
+    private static TaskRunTransitionEvent createEvent(TaskAttempt taskAttempt, TaskRunTransitionEventType eventType) {
+        TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(eventType, taskAttempt.getId());
         return taskRunTransitionEvent;
     }
 }

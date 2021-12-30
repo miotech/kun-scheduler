@@ -6,7 +6,7 @@ import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.workflow.core.model.common.Tick;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 

@@ -1,7 +1,7 @@
 package com.miotech.kun.commons.testing;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.mockserver.integration.ClientAndServer;
 import org.mockserver.model.Header;
 import org.mockserver.model.HttpRequest;
@@ -19,12 +19,12 @@ public class MockServerTestBase {
 
     private static ClientAndServer mockServer;
 
-    @BeforeClass
+    @BeforeAll
     public static void setUp() {
         mockServer = startClientAndServer(10180);
     }
 
-    @AfterClass
+    @AfterAll
     public static void tearDown() {
         mockServer.stop();
     }

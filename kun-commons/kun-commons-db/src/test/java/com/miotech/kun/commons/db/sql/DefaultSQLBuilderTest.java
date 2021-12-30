@@ -1,6 +1,6 @@
 package com.miotech.kun.commons.db.sql;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.*;
 

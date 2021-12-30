@@ -6,9 +6,9 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.core.event.LineageEvent;
 import com.miotech.kun.workflow.core.model.lineage.ElasticSearchIndexStore;
 import com.miotech.kun.workflow.core.pubsub.KafkaEventPublisher;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public class KafkaEventPublisherTest {
 
     Props kafkaConf;
 
-    @Before
+    @BeforeEach
     public void setUp() throws Exception {
 
         kafkaConf = new Props();
@@ -38,7 +38,7 @@ public class KafkaEventPublisherTest {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void publish() {
 
         KafkaEventPublisher publisher = new KafkaEventPublisher("test", kafkaConf);

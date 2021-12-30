@@ -8,7 +8,7 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.metadata.core.model.process.PullDataSourceProcess;
 import com.miotech.kun.metadata.core.model.process.PullDatasetProcess;
 import com.miotech.kun.metadata.core.model.process.PullProcess;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.sql.Timestamp;
 import java.time.Instant;

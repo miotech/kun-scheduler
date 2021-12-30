@@ -8,7 +8,7 @@ import com.miotech.kun.dataplatform.facade.backfill.Backfill;
 import com.miotech.kun.dataplatform.web.common.backfill.vo.BackfillSearchParams;
 import com.miotech.kun.dataplatform.mocking.MockBackfillFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 
@@ -23,7 +23,7 @@ import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class BackfillDaoTest extends AppTestBase {
     @Autowired

@@ -2,21 +2,20 @@ package com.miotech.kun.dataplatform.web.common.deploy.dao;
 
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
-import com.miotech.kun.dataplatform.web.common.deploy.vo.DeploySearchRequest;
 import com.miotech.kun.dataplatform.mocking.MockDeployFactory;
+import com.miotech.kun.dataplatform.web.common.deploy.vo.DeploySearchRequest;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import org.hamcrest.Matchers;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
 public class DeployDaoTest extends AppTestBase {

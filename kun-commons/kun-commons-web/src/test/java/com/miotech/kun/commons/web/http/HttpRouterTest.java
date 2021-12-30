@@ -4,13 +4,12 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
 import com.miotech.kun.commons.web.mock.MockController;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 public class HttpRouterTest extends GuiceTestBase {
 
@@ -45,9 +44,9 @@ public class HttpRouterTest extends GuiceTestBase {
         assertEquals(deleteRoute, handler.getRoute());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void getRequestMappingHandler_withDuplicateRouteMapping() {
-        httpRouter.addRouter(TestDuplicateRoutes.class);
+        assertThrows(IllegalStateException.class,() -> httpRouter.addRouter(TestDuplicateRoutes.class));
     }
 
     @Test

@@ -8,14 +8,14 @@ import com.miotech.kun.workflow.client.model.ConfigKey;
 import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.operator.SparkConfiguration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 import java.util.Collections;
 import java.util.List;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 public class SparkConfigTaskTemplateRenderTest {
 

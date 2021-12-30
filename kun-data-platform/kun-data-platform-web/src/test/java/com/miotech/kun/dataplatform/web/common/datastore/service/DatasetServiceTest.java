@@ -3,19 +3,19 @@ package com.miotech.kun.dataplatform.web.common.datastore.service;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDatasetProps;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.web.common.datastore.vo.DatasetSearchRequest;
 import com.miotech.kun.dataplatform.web.common.datastore.vo.DatasetVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
-import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.security.testing.WithMockTestUser;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.List;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
 
 @WithMockTestUser
 public class DatasetServiceTest extends AppTestBase {

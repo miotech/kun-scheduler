@@ -18,22 +18,19 @@ import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
 import org.apache.commons.collections4.CollectionUtils;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.experimental.theories.DataPoints;
-import org.junit.experimental.theories.FromDataPoints;
-import org.junit.experimental.theories.Theories;
-import org.junit.experimental.theories.Theory;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertTrue;
 
-@RunWith(Theories.class)
 public class MetadataDatasetServiceTest extends DatabaseTestBase {
 
     @Inject
@@ -45,7 +42,7 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
     @Inject
     private MetadataDatasetService metadataDatasetService;
 
-    @Before
+    @BeforeEach
     public void clearThenInit() {
         // Clear kun_mt_datasource_type, because flyway initializes some data
         dbOperator.update("TRUNCATE TABLE kun_mt_datasource_type");
@@ -233,8 +230,7 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
 
     }
 
-    @DataPoints("datasources")
-    public static DataSource[] testDataSources() {
+    public static Stream<DataSource> testDataSources() {
         // Prepare
         ConnectionInfo hiveServerConnectionInfo = new HiveServerConnectionInfo(ConnectionType.HIVE_SERVER,"127.0.0.1",10000);
         DataSource hive = MockDataSourceFactory.createDataSource(1L, "Hive", hiveServerConnectionInfo, DatasourceType.HIVE, Lists.newArrayList("test"));
@@ -248,8 +244,7 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         ConnectionInfo arangoConnection = new ArangoConnectionInfo(ConnectionType.ARANGO,"127.0.0.1",8529);
         DataSource arango = MockDataSourceFactory.createDataSource(4, "arango", arangoConnection, DatasourceType.ARANGO, null);
 
-        DataSource[] dataSources = {hive, mongo, pg, arango};
-        return dataSources;
+        return Stream.of(hive, mongo, pg, arango);
     }
 
 
@@ -277,8 +272,9 @@ public class MetadataDatasetServiceTest extends DatabaseTestBase {
         return storeType;
     }
 
-    @Theory
-    public void fetchDatasetByDSI(@FromDataPoints("datasources") DataSource dataSource) {
+    @ParameterizedTest
+    @MethodSource("testDataSources")
+    public void fetchDatasetByDSI(DataSource dataSource) {
         //prepare
         dataSourceDao.create(dataSource);
         String dataStoreType = covertSourceTypeToStoreType(dataSource.getDatasourceType());

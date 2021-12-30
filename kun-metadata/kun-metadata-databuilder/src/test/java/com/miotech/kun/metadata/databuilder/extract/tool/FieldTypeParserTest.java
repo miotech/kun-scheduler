@@ -7,7 +7,7 @@ import com.miotech.kun.metadata.common.utils.FieldTypeParser;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.stream.Collectors;

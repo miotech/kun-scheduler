@@ -22,8 +22,8 @@ import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.event.MetadataChangeEvent;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.time.OffsetDateTime;
@@ -58,7 +58,7 @@ public class GlueBackendTest extends DatabaseTestBase {
         s3Client = mock(AmazonS3.class);
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         doReturn(awsGlue).when(clientFactory).getAWSGlue(anyString(), anyString(), anyString());
         doReturn(hiveMetaStoreClient).when(clientFactory).getHiveClient(anyString());

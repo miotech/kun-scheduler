@@ -10,9 +10,9 @@ import com.miotech.kun.workflow.core.model.executetarget.ExecuteTarget;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.time.ZoneOffset;
@@ -29,7 +29,7 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
 
     private DefaultWorkflowClient client;
 
-    @Before
+    @BeforeEach
     public void init() {
         client = new DefaultWorkflowClient(getBaseUrl());
     }
@@ -160,7 +160,7 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
         client.deleteTask(created2.getId());
     }
 
-    @Ignore
+    @Disabled
     //todo:删除task需要把对应的taskRun、taskAttempt清除
     public void searchTaskRunsWithScheduleType(){
         // prepare
@@ -239,7 +239,7 @@ public class DefaultWorkflowClientTest extends MockKunWebServerTestBase {
 
     }
 
-    @Ignore
+    @Disabled
     public void executeSparkTask() {
         // prepare
         Config config = Config.newBuilder()

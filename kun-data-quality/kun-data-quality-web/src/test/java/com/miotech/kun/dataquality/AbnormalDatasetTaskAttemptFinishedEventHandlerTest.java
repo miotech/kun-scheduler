@@ -8,7 +8,7 @@ import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
 import com.miotech.kun.dataquality.web.service.AbnormalDatasetTaskAttemptFinishedEventHandler;
 import com.miotech.kun.workflow.core.event.TaskAttemptFinishedEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;

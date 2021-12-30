@@ -21,8 +21,8 @@ import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.assertj.core.util.Lists;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -112,7 +112,7 @@ public class TaskAttemptStatusChangeEventDispatcherTest extends AppTestBase {
 
     private MockEventPubSub mockEventPubSub;
 
-    @Before
+    @BeforeEach
     public void beforeTest() {
         mockEventPubSub = (MockEventPubSub) eventSubscriber;
     }

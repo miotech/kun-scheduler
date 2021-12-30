@@ -1,17 +1,15 @@
 package com.miotech.kun.workflow.operator;
 
 import com.google.common.base.Strings;
-import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.testing.executor.MockOperatorContextImpl;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
 import static com.miotech.kun.workflow.operator.SparkConfiguration.*;
-import static com.miotech.kun.workflow.operator.SparkConfiguration.SPARK_CONF;
 import static org.junit.Assert.assertTrue;
 
 
@@ -19,7 +17,7 @@ public class SparkSQLOperatorTest {
     SparkSQLOperator operator = new SparkSQLOperator();
     private MockOperatorContextImpl context;
 
-    @Before
+    @BeforeEach
     public void initSparkSQLOperator() {
 
         context = new MockOperatorContextImpl(operator);

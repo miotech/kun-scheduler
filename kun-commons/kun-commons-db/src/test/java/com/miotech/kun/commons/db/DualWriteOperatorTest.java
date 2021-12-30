@@ -12,9 +12,9 @@ import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.common.xcontent.XContentType;
 import org.hamcrest.Matcher;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 import javax.sql.DataSource;
@@ -22,7 +22,8 @@ import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.Matchers.is;
 
 public class DualWriteOperatorTest extends DatabaseTestBase {
 
@@ -49,7 +50,7 @@ public class DualWriteOperatorTest extends DatabaseTestBase {
         flywayLocation = "sql/";
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         elasticsearchContainer = new ElasticsearchContainer(ELASTICSEARCH_IMAGE);
         elasticsearchContainer.start();
@@ -57,7 +58,7 @@ public class DualWriteOperatorTest extends DatabaseTestBase {
         prepare();
     }
 
-    @After
+    @AfterEach
     public void close() {
         elasticsearchContainer.close();
     }

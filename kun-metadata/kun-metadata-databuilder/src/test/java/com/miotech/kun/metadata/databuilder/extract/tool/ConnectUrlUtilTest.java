@@ -3,7 +3,9 @@ package com.miotech.kun.metadata.databuilder.extract.tool;
 import com.miotech.kun.metadata.core.model.constant.DatabaseType;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.Assert.assertThrows;
 
 public class ConnectUrlUtilTest {
 
@@ -39,10 +41,10 @@ public class ConnectUrlUtilTest {
         MatcherAssert.assertThat(url, Matchers.is(generateUrl));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testConvertToConnectUrl_invalid() {
-        String generateUrl = ConnectUrlUtil.convertToConnectUrl("127.0.0.1", 27017, "glue",
-                "password", DatabaseType.GLUE);
+        assertThrows(IllegalArgumentException.class,()->ConnectUrlUtil.convertToConnectUrl("127.0.0.1", 27017, "glue",
+                "password", DatabaseType.GLUE));
     }
 
 }

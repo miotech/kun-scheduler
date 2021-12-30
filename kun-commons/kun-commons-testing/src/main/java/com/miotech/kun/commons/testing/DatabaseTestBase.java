@@ -12,12 +12,13 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.h2.tools.Server;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -25,6 +26,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+@Testcontainers
 public abstract class DatabaseTestBase extends GuiceTestBase {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseTestBase.class);
 
@@ -36,7 +38,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
 
     protected String flywayLocation;
 
-    @ClassRule
+    @Container
     public static PostgreSQLContainer postgres = startPostgres();
 
     protected boolean usePostgres() {
@@ -59,7 +61,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         addModules(new TestDatabaseModule(usePostgres()));
     }
 
-    @Before
+    @BeforeEach
     public void initDatabase() {
         // initialize database
         dataSource = injector.getInstance(DataSource.class);
@@ -76,7 +78,7 @@ public abstract class DatabaseTestBase extends GuiceTestBase {
         return postgres;
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         truncateAllTables();
     }

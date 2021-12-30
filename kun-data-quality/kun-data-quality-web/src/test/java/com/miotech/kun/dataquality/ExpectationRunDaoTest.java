@@ -4,7 +4,7 @@ import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.core.ValidationResult;
 import com.miotech.kun.dataquality.mock.MockValidationResultFactory;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationRunDao;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.hamcrest.Matchers.is;

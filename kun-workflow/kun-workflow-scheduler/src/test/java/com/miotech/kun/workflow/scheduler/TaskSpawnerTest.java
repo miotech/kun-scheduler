@@ -33,9 +33,9 @@ import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.shazam.shazamcrest.matcher.CustomisableMatcher;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import org.slf4j.LoggerFactory;
@@ -118,7 +118,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
 
     }
 
-    @Before
+    @BeforeEach
     public void init() {
 
         databaseOperator.update("truncate table kun_wf_target RESTART IDENTITY");
@@ -139,7 +139,7 @@ public class TaskSpawnerTest extends SchedulerTestBase {
         ((ch.qos.logback.classic.Logger) LoggerFactory.getLogger(TaskSpawner.class)).addAppender(appender);
     }
 
-    @After
+    @AfterEach
     public void resetClock() {
         DateTimeUtils.resetClock();
     }

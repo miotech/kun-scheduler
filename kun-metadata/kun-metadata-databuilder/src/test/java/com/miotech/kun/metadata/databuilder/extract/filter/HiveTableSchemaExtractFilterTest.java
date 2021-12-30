@@ -1,7 +1,7 @@
 package com.miotech.kun.metadata.databuilder.extract.filter;
 
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class HiveTableSchemaExtractFilterTest {
 

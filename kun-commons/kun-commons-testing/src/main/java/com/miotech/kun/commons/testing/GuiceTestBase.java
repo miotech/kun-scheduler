@@ -6,8 +6,9 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.util.Modules;
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.Mockito;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +24,7 @@ public abstract class GuiceTestBase {
 
     protected Injector injector;
 
-    @Before
+    @BeforeEach
     public void initInject() {
         // do custom configurations
         configuration();

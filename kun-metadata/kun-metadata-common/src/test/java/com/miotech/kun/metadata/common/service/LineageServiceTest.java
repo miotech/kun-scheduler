@@ -20,15 +20,16 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hamcrest.core.Is;
-import org.junit.After;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.neo4j.ogm.config.Configuration;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Neo4jContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,13 +41,14 @@ import static org.junit.Assert.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 
+@Testcontainers
 public class LineageServiceTest extends DatabaseTestBase {
 
     private static final Logger logger = LoggerFactory.getLogger(LineageServiceTest.class);
 
     private MetadataDatasetService metadataDatasetService;
 
-    @ClassRule
+    @Container
     public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
             .withAdminPassword("Mi0tech2020");
 
@@ -63,7 +65,7 @@ public class LineageServiceTest extends DatabaseTestBase {
         super.configuration();
     }
 
-    @After
+    @AfterEach
     @Override
     public void tearDown() {
         super.tearDown();

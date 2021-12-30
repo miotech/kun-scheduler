@@ -1,7 +1,7 @@
 testenv: true
 
 server:
-  port: ${SERVER_PORT}
+  port: ${SERVER_PORT:8088}
 
 workflow:
   enabled: false

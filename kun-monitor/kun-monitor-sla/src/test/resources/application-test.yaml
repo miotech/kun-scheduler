@@ -1,7 +1,7 @@
 testenv: true
 
 server:
-  port: ${SERVER_PORT}
+  port: ${SERVER_PORT:8088}
 
 workflow:
   enabled: false
@@ -12,6 +12,8 @@ data-discovery:
   baseUrl: https://kun-dev.miotech.com
 
 spring:
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration
   datasource:
     hikari:
       connection-init-sql: CREATE DOMAIN IF NOT EXISTS  "JSONB" AS TEXT

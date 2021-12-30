@@ -2,7 +2,7 @@ package com.miotech.kun.commons.db;
 
 import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.sql.SQLException;
 import java.util.List;

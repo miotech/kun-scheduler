@@ -2,8 +2,8 @@ import com.miotech.kun.commons.query.JDBCQuery;
 import com.miotech.kun.commons.query.JDBCQueryExecutor;
 import com.miotech.kun.commons.query.model.QueryResultSet;
 import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
@@ -11,7 +11,7 @@ import java.util.Map;
  * @author: Jie Chen
  * @created: 2020/7/13
  */
-@Ignore
+@Disabled
 public class JDBCQueryTest {
 
     @Test

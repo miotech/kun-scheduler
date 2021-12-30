@@ -3,7 +3,7 @@ package com.miotech.kun.metadata.databuilder.extract.tool;
 import com.miotech.kun.metadata.core.model.connection.ConnectionType;
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class DatabaseIdentifierProcessorTest {
 

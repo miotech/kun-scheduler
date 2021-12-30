@@ -37,8 +37,11 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.junit.*;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,7 +57,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-@Ignore
+@Disabled
 public class KubernetesExecutorTest extends CommonTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(PodLifeCycleManager.class);
@@ -86,7 +89,6 @@ public class KubernetesExecutorTest extends CommonTestBase {
 
     private KubernetesClient client;
 
-    @Rule
     public final EnvironmentVariables environmentVariables
             = new EnvironmentVariables();
 
@@ -120,7 +122,7 @@ public class KubernetesExecutorTest extends CommonTestBase {
         super.configuration();
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         environmentVariables.set("DOCKER_TLS_VERIFY", "1");
         environmentVariables.set("DOCKER_HOST", "tcp://127.0.0.1:32802");
@@ -130,7 +132,7 @@ public class KubernetesExecutorTest extends CommonTestBase {
         eventBus.register(eventCollector);
     }
 
-    @After
+    @AfterEach
     public void reset() {
     }
 
@@ -170,7 +172,7 @@ public class KubernetesExecutorTest extends CommonTestBase {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void startTaskAttemptWithResourceOverLimit() {
         ResourceQueue resourceQueue = ResourceQueue.newBuilder()
                 .withQueueName("test")
@@ -334,7 +336,7 @@ public class KubernetesExecutorTest extends CommonTestBase {
     }
 
     @Test
-    @Ignore
+    @Disabled
     public void testChangePodPriority() {
 
     }

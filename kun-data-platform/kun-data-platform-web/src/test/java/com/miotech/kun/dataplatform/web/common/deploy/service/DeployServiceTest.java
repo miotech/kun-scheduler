@@ -7,27 +7,28 @@ import com.miotech.kun.dataplatform.facade.model.deploy.DeployCommit;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployStatus;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.dataplatform.mocking.MockTaskCommitFactory;
+import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.web.common.commit.dao.TaskCommitDao;
 import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployRequest;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
-import com.miotech.kun.dataplatform.mocking.MockTaskCommitFactory;
-import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.security.testing.WithMockTestUser;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
-@Ignore
+@Disabled
 @WithMockTestUser
 public class DeployServiceTest extends AppTestBase {
 

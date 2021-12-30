@@ -1,7 +1,7 @@
 package com.miotech.kun.commons.utils;
 
 import com.google.common.collect.Iterables;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
 import java.util.Map;

@@ -1,7 +1,7 @@
 package com.miotech.kun.commons.utils;
 
 import com.google.common.collect.ImmutableMap;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;

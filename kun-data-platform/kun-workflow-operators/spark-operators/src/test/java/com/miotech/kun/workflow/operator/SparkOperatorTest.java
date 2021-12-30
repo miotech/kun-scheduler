@@ -6,8 +6,8 @@ import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.testing.executor.MockOperatorContextImpl;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import junit.framework.TestCase;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 
@@ -20,7 +20,7 @@ public class SparkOperatorTest {
     SparkOperator operator = new SparkOperator();
     private MockOperatorContextImpl context;
 
-    @Before
+    @BeforeEach
     public void initSparkOperator(){
 
         context = new MockOperatorContextImpl(operator);

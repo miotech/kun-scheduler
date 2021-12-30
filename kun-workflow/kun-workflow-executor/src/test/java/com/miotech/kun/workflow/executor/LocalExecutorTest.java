@@ -43,12 +43,13 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.ResourceUtils;
 import com.zaxxer.hikari.HikariDataSource;
-import org.junit.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.neo4j.ogm.session.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,7 +70,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.doAnswer;
 
-@RunWith(MockitoJUnitRunner.Silent.class)
 public class LocalExecutorTest extends CommonTestBase {
 
     @Inject
@@ -123,7 +123,6 @@ public class LocalExecutorTest extends CommonTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(LocalExecutorTest.class);
 
-    @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
     private EventCollector eventCollector;
@@ -139,11 +138,11 @@ public class LocalExecutorTest extends CommonTestBase {
         props.put("executor.env.resourceQueues", "default,test");
         props.put("executor.env.resourceQueues.default.quota.workerNumbers", 2);
         props.put("executor.env.resourceQueues.test.quota.workerNumbers", 2);
+        props.put("datasource.maxPoolSize", 1);
+        props.put("datasource.minimumIdle", 0);
         props.put("neo4j.uri", neo4jContainer.getBoltUrl());
         props.put("neo4j.username", "neo4j");
         props.put("neo4j.password", neo4jContainer.getAdminPassword());
-        props.put("datasource.maxPoolSize", 1);
-        props.put("datasource.minimumIdle", 0);
         super.configuration();
         MetadataServiceFacade mockMetadataFacade = Mockito.mock(MetadataServiceFacade.class);
         bind(SessionFactory.class, mock(SessionFactory.class));
@@ -164,8 +163,9 @@ public class LocalExecutorTest extends CommonTestBase {
         bind(Scheduler.class, LocalScheduler.class);
     }
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    public void setUp() throws IOException{
+        tempFolder.create();
         databaseOperator.update("truncate table kun_wf_target RESTART IDENTITY");
         props.put("datasource.jdbcUrl", postgres.getJdbcUrl() + "&stringtype=unspecified");
         props.put("datasource.username", postgres.getUsername());
@@ -179,7 +179,7 @@ public class LocalExecutorTest extends CommonTestBase {
         taskRunStateMachine.start();
     }
 
-    @After
+    @AfterEach
     @Override
     public void tearDown() {
         workerLifeCycleManager.shutdown();
@@ -868,7 +868,7 @@ public class LocalExecutorTest extends CommonTestBase {
         assertThat(localQueueManager.getCapacity("default"), is(localQueueManager.getResourceQueue("default").getWorkerNumbers()));
     }
 
-    @Ignore
+    @Disabled
     public void abortTaskAttemptInQueue() {
         //prepare
         TaskAttempt taskAttempt = prepareAttempt(TestOperator1.class);
