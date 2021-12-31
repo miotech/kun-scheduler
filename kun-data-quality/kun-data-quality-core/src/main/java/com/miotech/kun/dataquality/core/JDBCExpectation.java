@@ -27,7 +27,7 @@ public class JDBCExpectation implements Expectation {
         Connector connector = null;
         try {
             connector = ConnectorFactory.generateConnector(dataSource);
-            Query query = new Query(null, null, ((JDBCExpectationMethod) spec.getMethod()).getSql());
+            Query query = new Query(null, null, ((JDBCExpectationMethod) spec.getMethod()).removeEndSemicolon());
             ResultSet rs = connector.query(query);
             ValidationResult vr = spec.getMethod().validate(rs);
             return vr.cloneBuilder().withExpectationId(spec.getExpectationId()).build();
