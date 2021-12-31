@@ -80,7 +80,16 @@ public class TaskManager {
         for(TaskAttempt taskAttempt : taskAttempts){
             resolveTaskRunStatus(taskAttempt);
         }
-        triggerTaskRunReadyCheck();
+        trigger();
+    }
+
+    /**
+     * trigger runnable taskRun to start
+     */
+    public void trigger() {
+        TaskRunReadyCheckEvent event = new TaskRunReadyCheckEvent(System.currentTimeMillis());
+        taskRunReadyCheckEventQueue.offer(event);
+
     }
 
     /**
@@ -107,7 +116,7 @@ public class TaskManager {
             List<Long> downstreamTaskRunIds = updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED);
             updateTaskRunConditions(downstreamTaskRunIds, TaskRunStatus.CREATED);
             updateRestrictedTaskRunsStatus(downstreamTaskRunIds);
-            triggerTaskRunReadyCheck();
+            trigger();
             return true;
         } catch (Exception e) {
             logger.error("Failed to re-run taskrun with id = {} due to exceptions.", taskRun.getId());
@@ -232,7 +241,7 @@ public class TaskManager {
                         ids.addAll(downstreamTaskRunIds);
                     }
                     updateRestrictedTaskRunsStatus(ids);
-                    triggerTaskRunReadyCheck();
+                    trigger();
                 }
             }
         }
@@ -263,12 +272,6 @@ public class TaskManager {
 
         restrictedTaskRunIds.removeAll(taskRunIdsWithBlocked);
         taskRunDao.updateTaskRunStatusByTaskRunId(restrictedTaskRunIds, TaskRunStatus.CREATED, allowToUpdateStatus);
-    }
-
-    private void triggerTaskRunReadyCheck() {
-        TaskRunReadyCheckEvent event = new TaskRunReadyCheckEvent(System.currentTimeMillis());
-        taskRunReadyCheckEventQueue.offer(event);
-
     }
 
     private void submitSatisfyTaskAttemptToExecutor() {
