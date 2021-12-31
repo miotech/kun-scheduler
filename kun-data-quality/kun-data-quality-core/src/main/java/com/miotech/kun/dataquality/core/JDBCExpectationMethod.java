@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.DateTimeUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -27,6 +28,11 @@ public class JDBCExpectationMethod extends ExpectationMethod {
         return sql;
     }
 
+    public String removeEndSemicolon() {
+        String trimSQL = this.sql.trim();
+        return StringUtils.removeEnd(trimSQL, ";").trim();
+    }
+
     public List<JDBCExpectationAssertion> getAssertions() {
         return assertions;
     }
@@ -40,7 +46,7 @@ public class JDBCExpectationMethod extends ExpectationMethod {
                 List<JDBCExpectationAssertionResult> assertionResults = Lists.newArrayList();
                 for (JDBCExpectationAssertion assertion : assertions) {
                     String field = assertion.getField();
-                    String originalValue = rs.getString(field);
+                    String originalValue = rs.getObject(field).toString();
                     boolean result = assertion.doAssert(originalValue);
                     if (!result) {
                         passed = false;
