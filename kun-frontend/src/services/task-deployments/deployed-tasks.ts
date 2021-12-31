@@ -259,3 +259,30 @@ export async function abortTaskRunInstance(taskRunId: string): ServiceRespPromis
     prefix: API_DATA_PLATFORM_PREFIX,
   });
 }
+
+/**
+ * 获取上游一层任务实例
+ * @param taskRunId
+ */
+export async function queryUpstreamTaskruns(taskRunId: string): ServiceRespPromise<TaskRun[]> {
+  return get('/deployed-taskruns/:taskRunId/upstream-taskruns', {
+    pathParams: {
+      taskRunId,
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
+  });
+}
+
+/**
+ * 解除任务实例依赖
+ * @param taskRunId
+ */
+export async function removeTaskrunDependency(taskRunId: string, upstreamTaskRunIds: string[]) {
+  return post('/deployed-taskruns/remove-taskrun-dependency', {
+    query: {
+      taskRunId,
+      upstreamTaskRunIds,
+    },
+    prefix: API_DATA_PLATFORM_PREFIX,
+  });
+}
