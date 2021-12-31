@@ -272,7 +272,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
 
     @Before
     public void init() {
-        workerLifeCycleManager.init();
+        workerLifeCycleManager.afterPropertiesSet();
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
         kubernetesResourceManager = prepareQueueManage();

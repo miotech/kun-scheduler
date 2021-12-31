@@ -112,7 +112,7 @@ export const DailyTaskFinishCountTable: React.FC<Props> = memo(function DailyTas
             ))}
           </div>
         </div>
-        <div className={Styles.row} style={{justifyContent:'space-around',minWidth:'687px'}}>
+        <div className={Styles.row} style={{justifyContent:'space-around',minWidth:'676px'}}>
           {data && data.map(item => (
             <div key={item.time} className={Styles.col}>
               <div className={Styles.column}>

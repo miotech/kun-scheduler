@@ -12,6 +12,7 @@ repositories {
 
 dependencies {
     implementation project(':kun-data-quality:kun-data-quality-web')
+    implementation project(':kun-data-quality:kun-data-quality-core')
     implementation project(':kun-data-quality:data-quality-operators')
 }
 

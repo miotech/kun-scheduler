@@ -66,7 +66,7 @@ export const DailyTaskFinishCountChart: React.FC = memo(function DailyTaskFinish
     <Card bodyStyle={{ padding: '8px'}}>
       <h3>{t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title')}</h3>
       <div ref={chartWrapperRef} style={{ position: 'relative', width: '100%',overflowX:'scroll' }}>
-        <div style={{paddingLeft:'110px'}}>
+        <div style={{paddingLeft:'100px'}}>
         <DailyTaskFinishBarChart
           data={data}
           width={766}

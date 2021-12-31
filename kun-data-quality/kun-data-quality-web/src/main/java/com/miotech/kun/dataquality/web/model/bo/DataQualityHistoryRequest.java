@@ -12,4 +12,6 @@ import java.util.List;
 public class DataQualityHistoryRequest {
 
     List<Long> caseIds;
+
+    int limit = 7;
 }

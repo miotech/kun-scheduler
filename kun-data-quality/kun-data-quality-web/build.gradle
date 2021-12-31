@@ -27,7 +27,9 @@ dependencies {
     implementation project(":kun-commons:kun-commons-query")
     implementation project(":kun-commons:kun-commons-pubsub")
     implementation project(':kun-monitor:kun-monitor-facade')
+    implementation project(":kun-metadata:kun-metadata-core")
     implementation project(':kun-app-common')
+    implementation project(":kun-data-quality:kun-data-quality-core")
 
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'

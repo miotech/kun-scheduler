@@ -1592,6 +1592,43 @@ public class TaskRunDao {
                 .build()).collect(Collectors.toList());
     }
 
+    public void removeTaskRunDependency(Long taskRunId, List<Long> dependencyTaskRunIds) {
+        if(dependencyTaskRunIds.size() == 0){
+            return;
+        }
+        String upstreamFilter = repeatJoin("?", ",", dependencyTaskRunIds.size());
+        //remove dependency
+        String removeDependencySql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from(RELATION_TABLE_NAME)
+                .where("downstream_task_run_id = ? and upstream_task_run_id in ( " + upstreamFilter + " )")
+                .asPrepared()
+                .getSQL();
+        List<Object> dependencyParams = new ArrayList<>();
+        dependencyParams.add(taskRunId);
+        dependencyParams.addAll(dependencyTaskRunIds);
+        //remove conditions
+        String removeConditionSql = DefaultSQLBuilder.newBuilder()
+                .delete()
+                .from(CONDITION_TABLE_NAME)
+                .where("task_run_id = ? and type = ? and condition in ( " + upstreamFilter + " )")
+                .asPrepared()
+                .getSQL();
+        List<Object> conditionParams = new ArrayList<>();
+        conditionParams.add(taskRunId);
+        conditionParams.add(ConditionType.TASKRUN_DEPENDENCY_SUCCESS.name());
+        dependencyTaskRunIds.forEach(x -> conditionParams.add(JSONUtils.toJsonString(new Condition(Collections.singletonMap("taskRunId", x.toString())))));
+
+        dbOperator.transaction(() ->{
+            dbOperator.update(removeDependencySql, dependencyParams.toArray());
+            dbOperator.update(removeConditionSql,conditionParams.toArray());
+            List<Long> conditions = dbOperator.fetchAll("select task_run_id from kun_wf_task_run_conditions",rs -> rs.getLong(1));
+            return conditions;
+        });
+
+
+    }
+
     private List<Long> fetchTaskRunIdsWithoutAttempt(OffsetDateTime recoverLimit) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select(TASK_RUN_MODEL_NAME + ".id")

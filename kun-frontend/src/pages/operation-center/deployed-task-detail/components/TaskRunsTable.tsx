@@ -1,5 +1,5 @@
-import React, { FunctionComponent, useCallback, useMemo } from 'react';
-import { Button, Popconfirm, Select, Space, Table, Tooltip } from 'antd';
+import React, { FunctionComponent, useCallback, useMemo, useState } from 'react';
+import { Button, Popconfirm, Select, Space, Table, Tooltip, Dropdown, Menu } from 'antd';
 import range from 'lodash/range';
 import moment from 'moment-timezone';
 import momentDurationFormatSetup from 'moment-duration-format';
@@ -9,12 +9,12 @@ import useI18n from '@/hooks/useI18n';
 import getLatestAttempt from '@/utils/getLatestAttempt';
 import { StatusText } from '@/components/StatusText';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
-import Icon, { StepForwardOutlined } from '@ant-design/icons';
+import Icon, { StepForwardOutlined, CaretDownOutlined, CloseCircleOutlined } from '@ant-design/icons';
 import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
-
 import { dayjs } from '@/utils/datetime-utils';
 import { TaskAttempt } from '@/definitions/TaskAttempt.type';
+import { DependenceRemove } from './DependenceRemove';
 import styles from './TaskRunsTable.less';
 
 interface TaskRunsTableProps {
@@ -29,6 +29,7 @@ interface TaskRunsTableProps {
   onClickRerunTaskRun?: (taskRun: TaskRun | null) => any;
   selectedAttemptMap: Record<string, number>;
   setSelectedAttemptMap: (nextState: Record<string, number>) => any;
+  refreshTaskRun: () => any;
 }
 
 // @ts-ignore
@@ -60,6 +61,8 @@ function convertScheduledTick(tickValue?: string) {
 
 const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
   const t = useI18n();
+  const [visible, setVisible] = useState<boolean>(false);
+  const [currentId, setCurrentId] = useState<string>('');
 
   const {
     tableData = [],
@@ -73,8 +76,31 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
     onClickStopTaskRun = () => {},
     selectedAttemptMap,
     setSelectedAttemptMap,
+    refreshTaskRun = () => {},
   } = props;
 
+  const menu = (taskRunId: string) => {
+    return (
+      <Menu>
+        <Menu.Item key="dependence">
+          <Button
+            icon={<CloseCircleOutlined />}
+            size="small"
+            type="text"
+            style={{ color: 'rgb(178,164,112)' }}
+            // disabled={stopDisabled}
+            onClick={() => {
+              setVisible(true);
+              setCurrentId(taskRunId);
+            }}
+          >
+            {/* 解除依赖 */}
+            {t('taskRun.dependence')}
+          </Button>
+        </Menu.Item>
+      </Menu>
+    );
+  };
   const getCorrespondingAttempt = useCallback(
     (record: TaskRun) => {
       if (!selectedAttemptMap[record.id]) {
@@ -222,7 +248,7 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
       {
         title: '',
         key: 'operations',
-        width: 120,
+        width: 140,
         render: (txt, taskRun) => {
           const stopDisabled = taskRunAlreadyComplete(taskRun.status);
           return (
@@ -249,27 +275,32 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
                     </Button>
                   </Popconfirm>
                 ) : (
-                  <Popconfirm
-                    title={t('taskRun.abort.alert')}
-                    disabled={stopDisabled}
-                    onConfirm={ev => {
-                      ev?.stopPropagation();
-                      onClickStopTaskRun(taskRun);
-                    }}
-                  >
-                    <Button
-                      icon={<Icon component={StopIcon} />}
-                      size="small"
-                      danger
-                      disabled={stopDisabled}
-                      onClick={ev => {
-                        ev.stopPropagation();
-                      }}
-                    >
-                      {/* 中止 */}
-                      {t('taskRun.abort')}
-                    </Button>
-                  </Popconfirm>
+                  <Dropdown overlay={() => menu(taskRun.id)}>
+                    <Space size="small">
+                      <Popconfirm
+                        title={t('taskRun.abort.alert')}
+                        disabled={stopDisabled}
+                        onConfirm={ev => {
+                          ev?.stopPropagation();
+                          onClickStopTaskRun(taskRun);
+                        }}
+                      >
+                        <Button
+                          icon={<Icon component={StopIcon} />}
+                          size="small"
+                          danger
+                          disabled={stopDisabled}
+                          onClick={ev => {
+                            ev.stopPropagation();
+                          }}
+                        >
+                          {/* 中止 */}
+                          {t('taskRun.abort')}
+                        </Button>
+                      </Popconfirm>
+                      <CaretDownOutlined />
+                    </Space>
+                  </Dropdown>
                 )}
               </Space>
             </span>
@@ -294,30 +325,38 @@ const TaskRunsTable: FunctionComponent<TaskRunsTableProps> = props => {
   );
 
   return (
-    <Table
-      className={styles.TaskRunsTable}
-      columns={columns}
-      dataSource={tableData}
-      rowKey="id"
-      size="small"
-      pagination={{
-        current: pageNum,
-        pageSize,
-        total,
-        onChange: onChangePagination,
-      }}
-      rowSelection={{
-        selectedRowKeys: selectedTaskRun ? [selectedTaskRun.id] : [],
-        type: 'radio',
-        columnWidth: 30,
-        onSelect: record => {
-          if (setSelectedTaskRun) {
-            setSelectedTaskRun(record);
-          }
-        },
-      }}
-      onRow={handleRowEvents}
-    />
+    <>
+      <Table
+        className={styles.TaskRunsTable}
+        columns={columns}
+        dataSource={tableData}
+        rowKey="id"
+        size="small"
+        pagination={{
+          current: pageNum,
+          pageSize,
+          total,
+          onChange: onChangePagination,
+        }}
+        rowSelection={{
+          selectedRowKeys: selectedTaskRun ? [selectedTaskRun.id] : [],
+          type: 'radio',
+          columnWidth: 30,
+          onSelect: record => {
+            if (setSelectedTaskRun) {
+              setSelectedTaskRun(record);
+            }
+          },
+        }}
+        onRow={handleRowEvents}
+      />
+      <DependenceRemove
+        refreshTaskRun={refreshTaskRun}
+        visible={visible}
+        currentId={currentId}
+        onCancel={() => setVisible(false)}
+      />
+    </>
   );
 };
 

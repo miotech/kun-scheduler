@@ -24,6 +24,9 @@ public class WorkflowUtils {
     @Value("${metadata.datasource.driver-class-name:org.postgresql.Driver}")
     String metadataDriverClass;
 
+    @Value("${infra.base-url:http://kun-infra:8088}")
+    String infraBaseUrl;
+
     public Config getTaskConfig(Long caseId) {
         return Config.newBuilder()
                 .addConfig(DataQualityConfiguration.METADATA_DATASOURCE_URL, metadataUrl)
@@ -31,6 +34,7 @@ public class WorkflowUtils {
                 .addConfig(DataQualityConfiguration.METADATA_DATASOURCE_PASSWORD, metadataPassword)
                 .addConfig(DataQualityConfiguration.METADATA_DATASOURCE_DIRVER_CLASS, metadataDriverClass)
                 .addConfig("caseId", caseId)
+                .addConfig(DataQualityConfiguration.INFRA_BASE_URL, infraBaseUrl)
                 .build();
     }
 }

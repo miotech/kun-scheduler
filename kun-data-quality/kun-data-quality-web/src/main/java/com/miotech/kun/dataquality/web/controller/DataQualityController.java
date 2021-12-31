@@ -13,13 +13,11 @@ import com.miotech.kun.dataquality.web.utils.Constants;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.client.model.TaskRunSearchRequest;
-import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -112,7 +110,7 @@ public class DataQualityController {
 
     @GetMapping("/data-quality/history")
     public RequestResult<List<DataQualityHistoryRecords>> getHistory(DataQualityHistoryRequest request) {
-        return RequestResult.success(dataQualityService.getHistory(request));
+        return RequestResult.success(dataQualityService.getHistory(request.getCaseIds(), request.getLimit()));
     }
 
     @GetMapping("/data-quality/dimension/get-config")
@@ -121,18 +119,10 @@ public class DataQualityController {
     }
 
     @PostMapping("/data-quality/add")
-    @Transactional(rollbackFor = Exception.class)
     public RequestResult<IdVO> addCase(@RequestBody DataQualityRequest dataQualityRequest) {
-        IdVO vo = new IdVO();
-        vo.setId(dataQualityService.addCase(dataQualityRequest));
-        Long taskId = workflowService.executeTask(vo.getId()).getTask().getId();
-        dataQualityService.saveTaskId(vo.getId(), taskId);
-        CheckType checkType = CheckType.SKIP;
-        if(dataQualityRequest.getIsBlocking() != null && dataQualityRequest.getIsBlocking()){
-            checkType = CheckType.WAIT_EVENT;
-        }
-        workflowService.updateUpstreamTaskCheckType(dataQualityRequest.getPrimaryDatasetGid(),checkType);
-        return RequestResult.success(vo);
+        ExpectationBO expectationBO = dataQualityRequest.convertTo();
+        Long id = dataQualityService.createExpectation(expectationBO);
+        return RequestResult.success(new IdVO(id));
     }
 
     @GetMapping("/data-quality/{id}")
@@ -154,24 +144,14 @@ public class DataQualityController {
     @PostMapping("/data-quality/{id}/edit")
     public RequestResult<IdVO> updateCase(@PathVariable("id") Long id,
                                           @RequestBody DataQualityRequest dataQualityRequest) {
-        IdVO vo = new IdVO();
-        vo.setId(dataQualityService.updateCase(id, dataQualityRequest));
-        Long taskId = workflowService.executeTask(vo.getId()).getTask().getId();
-        dataQualityService.saveTaskId(vo.getId(), taskId);
-        CheckType checkType = CheckType.SKIP;
-        if(dataQualityRequest.getIsBlocking() != null && dataQualityRequest.getIsBlocking()){
-            checkType = CheckType.WAIT_EVENT;
-        }        workflowService.updateUpstreamTaskCheckType(dataQualityRequest.getPrimaryDatasetGid(),checkType);
-        return RequestResult.success(vo);
+        ExpectationBO expectationBO = dataQualityRequest.convertTo();
+        dataQualityService.updateExpectation(id, expectationBO);
+        return RequestResult.success(new IdVO(id));
     }
 
     @DeleteMapping("/data-quality/{id}/delete")
     public RequestResult<IdVO> deleteCase(@PathVariable("id") Long id) {
-        workflowService.deleteTaskByCase(id);
-        DeleteCaseResponse response = dataQualityService.deleteCase(id);
-        IdVO vo = new IdVO();
-        vo.setId(response.getId());
-
-        return RequestResult.success(vo);
+        dataQualityService.deleteExpectation(id);
+        return RequestResult.success(new IdVO(id));
     }
 }

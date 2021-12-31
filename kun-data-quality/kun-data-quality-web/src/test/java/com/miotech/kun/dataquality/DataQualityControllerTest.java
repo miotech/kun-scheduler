@@ -1,17 +1,14 @@
 package com.miotech.kun.dataquality;
 
-import com.google.common.collect.Lists;
 import com.miotech.kun.dataquality.mock.MockDataQualityFactory;
 import com.miotech.kun.dataquality.mock.MockOperatorFactory;
 import com.miotech.kun.dataquality.web.model.bo.DataQualityRequest;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
+import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
 import com.miotech.kun.dataquality.web.service.WorkflowService;
 import com.miotech.kun.workflow.client.WorkflowClient;
-import com.miotech.kun.workflow.client.model.ConfigKey;
-import com.miotech.kun.workflow.client.model.Operator;
 import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
-import com.miotech.kun.workflow.core.execution.ConfigDef;
 import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.junit.Before;
@@ -33,7 +30,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-
 public class DataQualityControllerTest extends DataQualityTestBase {
 
 
@@ -45,6 +41,9 @@ public class DataQualityControllerTest extends DataQualityTestBase {
 
     @SpyBean
     private WorkflowService workflowService;
+
+    @SpyBean
+    private DatasetRepository datasetRepository;
 
     @MockBean
     private WorkflowClient workflowClient;
@@ -81,6 +80,7 @@ public class DataQualityControllerTest extends DataQualityTestBase {
         String url = "/kun/api/v1/data-quality/" + caseId + "/edit";
 
         doNothing().when(workflowService).updateUpstreamTaskCheckType(anyLong(), any(CheckType.class));
+        doReturn(1L).when(datasetRepository).findDataSourceIdByGid(anyLong());
 
         String content = "{\"name\":\"total_count_test\",\"types\":null,\"description\":\"\",\"dimension\":\"CUSTOMIZE\",\"isBlocking\":true,\"dimensionConfig\":{\"sql\":\"select count(*) as total_count from dev.demo_sales;\"},\"validateRules\":[{\"field\":\"total_count\",\"operator\":\"=\",\"expectedType\":\"NUMBER\",\"expectedValue\":\"3\"}],\"relatedTableIds\":[\"231692912319004672\"],\"primaryDatasetGid\":\"231692912319004672\"}";
         MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.post(url)
@@ -101,6 +101,7 @@ public class DataQualityControllerTest extends DataQualityTestBase {
         //prepare
         String url = "/kun/api/v1/data-quality/add";
         doNothing().when(workflowService).updateUpstreamTaskCheckType(anyLong(), any(CheckType.class));
+        doReturn(1L).when(datasetRepository).findDataSourceIdByGid(anyLong());
 
         String content = "{\"name\":\"total_count_test\",\"types\":null,\"description\":\"\",\"dimension\":\"CUSTOMIZE\",\"isBlocking\":true,\"dimensionConfig\":{\"sql\":\"select count(*) as total_count from dev.demo_sales;\"},\"validateRules\":[{\"field\":\"total_count\",\"operator\":\"=\",\"expectedType\":\"NUMBER\",\"expectedValue\":\"3\"}],\"relatedTableIds\":[\"231692912319004672\"],\"primaryDatasetGid\":\"231692912319004672\"}";
         MvcResult mvcResult = mvc.perform(MockMvcRequestBuilders.post(url)
