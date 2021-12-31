@@ -60,7 +60,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
         init();
     }
 
-    public void init() {
+    protected void init() {
         queueManager.init();
         consumer.start();
         eventSubscriber.subscribe(event -> {
