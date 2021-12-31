@@ -57,39 +57,6 @@ public class DataQualityRepository extends BaseRepository {
     @Autowired
     DatasetRepository datasetRepository;
 
-    public List<DataQualityHistoryRecords> getHistory(DataQualityHistoryRequest request) {
-        if (CollectionUtils.isEmpty(request.getCaseIds())) {
-            return Lists.newArrayList();
-        }
-        String sql = "select * from (select *, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY update_time desc) AS row_number\n" +
-                "from kun_dq_case_metrics\n" +
-                "where case_id in " + toColumnSql(request.getCaseIds().size()) + ") kdcm\n" +
-                "where kdcm.row_number <= " + HISTORY_RECORD_LIMIT;
-        return jdbcTemplate.query(sql, rs -> {
-            Map<Long, DataQualityHistoryRecords> recordsMap = new HashMap<>();
-            while (rs.next()) {
-                Long caseId = rs.getLong("case_id");
-                DataQualityHistoryRecords records = recordsMap.computeIfAbsent(caseId, key -> new DataQualityHistoryRecords());
-                List<DataQualityHistory> historyList = records.getHistoryList();
-                records.setCaseId(caseId);
-                DataQualityHistory history = new DataQualityHistory();
-                if (rs.getLong("continuous_failing_count") == 0) {
-                    history.setStatus(DataQualityStatus.SUCCESS.name());
-                } else {
-                    history.setStatus(DataQualityStatus.FAILED.name());
-                }
-                history.setContinuousFailingCount(rs.getLong("continuous_failing_count"));
-                history.setUpdateTime(timestampToOffsetDateTime(rs, "update_time"));
-                history.setErrorReason(rs.getString("error_reason"));
-                Type type = new TypeToken<List<DataQualityRule>>() {
-                }.getType();
-                history.setRuleRecords(JSONUtils.toJavaObject(rs.getString("rule_records"), type));
-                historyList.add(history);
-            }
-            return Lists.newArrayList(recordsMap.values());
-        }, request.getCaseIds().toArray());
-    }
-
     public List<Long> getAllTaskId() {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("task_id")
@@ -426,67 +393,6 @@ public class DataQualityRepository extends BaseRepository {
             }
 
         });
-    }
-
-    public DimensionConfig getDimensionConfig(String dsType) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("kdct.name as name",
-                        "kdct.type as type",
-                        "kdcdt.id as id")
-                .from("kun_dq_case_template kdct")
-                .join("inner", "kun_dq_case_datasource_template", "kdcdt").on("kdcdt.template_id = kdct.id")
-                .join("inner", "kun_mt_datasource_type", "kmdt").on("kmdt.id = kdcdt.datasource_type_id")
-                .where("kmdt.name = ?")
-                .getSQL();
-
-        return jdbcTemplate.query(sql, rs -> {
-            DimensionConfig dimensionConfig = new DimensionConfig();
-            Map<String, JSONObject> dimensionMap = new HashMap<>();
-            for (TemplateType value : TemplateType.values()) {
-                if (value == TemplateType.CUSTOMIZE) {
-                    continue;
-                }
-                JSONObject templateDimension = new JSONObject();
-                templateDimension.put("dimension", value.name());
-                templateDimension.put("templates", new JSONArray());
-                dimensionMap.put(value.name(), templateDimension);
-                dimensionConfig.getDimensionConfigs().add(templateDimension);
-            }
-            while (rs.next()) {
-                String type = rs.getString("type");
-                JSONObject templateDimension = dimensionMap.get(type);
-
-                JSONObject template = new JSONObject();
-                template.put("id", rs.getString("id"));
-                template.put("name", rs.getString("name"));
-                ((JSONArray) templateDimension.get("templates")).add(template);
-            }
-
-            dimensionConfig.getDimensionConfigs().add(getCustomDimensionConfig());
-            return dimensionConfig;
-        }, dsType);
-    }
-
-    private JSONObject getCustomDimensionConfig() {
-        JSONObject customDimension = new JSONObject();
-        customDimension.put("dimension", TemplateType.CUSTOMIZE);
-        JSONArray customFields = new JSONArray();
-        JSONObject sqlField = createCustomField("sql", 1, "SQL", true);
-        customFields.add(sqlField);
-        customDimension.put("fields", customFields);
-        return customDimension;
-    }
-
-    private JSONObject createCustomField(String key,
-                                         Integer order,
-                                         String format,
-                                         Boolean require) {
-        JSONObject field = new JSONObject();
-        field.put("key", key);
-        field.put("order", order);
-        field.put("format", format);
-        field.put("require", require);
-        return field;
     }
 
     private String resolveDqCaseTypes(List<String> types) {

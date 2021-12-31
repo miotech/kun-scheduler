@@ -50,4 +50,9 @@ public class ConfigService {
     public void setMetadataDataSourceDriverClass(String driverClass) {
         this.props.put("metadata.datasource.driver-class-name", driverClass);
     }
+
+    public void setInfraBaseUrl(String infraBaseUrl) {
+        this.props.put("infra.base-url", infraBaseUrl);
+    }
+
 }

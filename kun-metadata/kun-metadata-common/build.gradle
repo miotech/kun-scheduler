@@ -12,7 +12,9 @@ dependencies {
     implementation "org.apache.kafka:kafka-clients"
     implementation "com.amazonaws:aws-java-sdk-s3"
     implementation 'mysql:mysql-connector-java'
-    implementation 'org.apache.hive:hive-jdbc'
+    implementation ("org.apache.hive:hive-jdbc") {
+        exclude group: 'org.eclipse.jetty.aggregate', module: 'jetty-all'
+    }
     implementation "org.neo4j:neo4j-ogm-core"
     implementation("org.apache.hadoop:hadoop-hdfs") {
         exclude group: 'javax.servlet', module: 'servlet-api'

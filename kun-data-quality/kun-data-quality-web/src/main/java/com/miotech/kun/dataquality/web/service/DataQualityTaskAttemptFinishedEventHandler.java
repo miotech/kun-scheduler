@@ -1,6 +1,7 @@
 package com.miotech.kun.dataquality.web.service;
 
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
+import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import com.miotech.kun.dataquality.web.model.entity.DataQualityCaseBasic;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
@@ -19,6 +20,9 @@ public class DataQualityTaskAttemptFinishedEventHandler implements TaskAttemptFi
     DataQualityRepository dataQualityRepository;
 
     @Autowired
+    private ExpectationDao expectationDao;
+
+    @Autowired
     @Qualifier("dataQuality-publisher")
     EventPublisher publisher;
 
@@ -26,15 +30,15 @@ public class DataQualityTaskAttemptFinishedEventHandler implements TaskAttemptFi
     public void handle(TaskAttemptFinishedEvent taskAttemptFinishedEvent) {
         log.info("handle task attempt finish event = {}", taskAttemptFinishedEvent);
         //handle testcase
-        DataQualityCaseBasic dataQualityCaseBasic = dataQualityRepository.fetchCaseBasicByTaskId(taskAttemptFinishedEvent.getTaskId());
+        DataQualityCaseBasic dataQualityCaseBasic = expectationDao.fetchCaseBasicByTaskId(taskAttemptFinishedEvent.getTaskId());
         if (dataQualityCaseBasic == null) {
             return;
         }
         boolean caseStatus = taskAttemptFinishedEvent.getFinalStatus().isSuccess();
         long caseRunId = taskAttemptFinishedEvent.getTaskRunId();
-        Long taskRunId = dataQualityRepository.fetchTaskRunIdByCase(caseRunId);
+        Long taskRunId = expectationDao.fetchTaskRunIdByCase(caseRunId);
         if (caseStatus) {
-            DataQualityStatus checkStatus = dataQualityRepository.validateTaskRunTestCase(taskRunId);
+            DataQualityStatus checkStatus = expectationDao.validateTaskRunTestCase(taskRunId);
             if (checkStatus.equals(DataQualityStatus.SUCCESS)) {
                 log.info("taskRunId = {} all test case has pass", taskRunId);
                 CheckResultEvent event = new CheckResultEvent(taskRunId, true);
