@@ -318,4 +318,13 @@ public class WorkflowApiTest extends MockServerTestBase {
         List<TaskRun> result = wfApi.getLatestTaskRuns(task.getId(), filterStatus, 10);
         assertThat(result, sameBeanAs(mockResult));
     }
+
+    @Test
+    public void removeTaskRunDependency_shouldWork() {
+        Long taskRunId = 1l;
+        Long upstreamId = 2l;
+        mockPut("/taskruns/removeDependency?taskRunId=" + taskRunId + "&upstreamTaskRunIds=" + upstreamId, "", JSONUtils.toJsonString(true));
+        Boolean result = wfApi.removeTaskRunDependency(taskRunId, Lists.newArrayList(upstreamId));
+        assertThat(result, is(true));
+    }
 }

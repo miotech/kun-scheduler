@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.taskrun.service;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.utils.ExceptionUtils;
@@ -20,6 +21,8 @@ import com.miotech.kun.workflow.common.taskrun.vo.*;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.annotation.Internal;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
+import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.core.resource.Resource;
@@ -41,27 +44,26 @@ public class TaskRunService {
 
     private final Logger logger = LoggerFactory.getLogger(TaskRunService.class);
 
-    @Inject
-    private TaskRunDao taskRunDao;
+    private final TaskRunDao taskRunDao;
 
-    @Inject
-    private ResourceLoader resourceLoader;
+    private final ResourceLoader resourceLoader;
 
-    @Inject
-    private Executor executor;
+    private final Executor executor;
 
-    @Inject
-    private Scheduler scheduler;
+    private final Scheduler scheduler;
+
+    private final EventBus eventBus;
 
     @Inject
     private Props props;
 
     @Inject
-    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor, Scheduler scheduler) {
+    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor, Scheduler scheduler, EventBus eventBus) {
         this.taskRunDao = taskRunDao;
         this.resourceLoader = resourceLoader;
         this.executor = executor;
         this.scheduler = scheduler;
+        this.eventBus = eventBus;
     }
 
     /* --------------------------------------- */
@@ -388,6 +390,18 @@ public class TaskRunService {
         List<TaskRun> taskRunList = taskRunDao.fetchLatestTaskRuns(taskId, filterStatus, limit);
 
         return taskRunList.stream().map(this::convertToVO).collect(Collectors.toList());
+    }
+
+    public Boolean removeDependency(Long taskRunId, List<Long> upstreamTaskRunIds){
+        //remove dependency in database
+        taskRunDao.removeTaskRunDependency(taskRunId,upstreamTaskRunIds);
+
+        //reschedule taskRun if necessary
+        TaskAttemptProps taskAttempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
+        if(taskAttempt.getStatus().isUpstreamFailed()){
+            eventBus.post(new TaskRunTransitionEvent(TaskRunTransitionEventType.RESCHEDULE,taskAttempt.getId()));
+        }
+        return true;
     }
 
     private Map<Long, List<TaskAttemptProps>> groupByTaskRunId(List<TaskAttemptProps> taskAttemptProps) {

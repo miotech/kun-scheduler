@@ -9,7 +9,6 @@ import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.TaskOutlets;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
-import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import okhttp3.*;
@@ -22,6 +21,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -512,13 +512,13 @@ public class WorkflowApi {
         });
     }
 
-    public List<TaskRun> getLatestTaskRuns(Long taskId, List<TaskRunStatus> filterStatusList, int limit){
+    public List<TaskRun> getLatestTaskRuns(Long taskId, List<TaskRunStatus> filterStatusList, int limit) {
         String statusQueryString = String.join(",",
                 filterStatusList.stream().map(Enum::name).collect(Collectors.toList())
         );
         HttpUrl url = buildUrl(API_TASK_RUNS + "/" + taskId + "/latest")
-                .addQueryParameter("filterStatusList",statusQueryString)
-                .addQueryParameter("limit",String.valueOf(limit))
+                .addQueryParameter("filterStatusList", statusQueryString)
+                .addQueryParameter("limit", String.valueOf(limit))
                 .build();
         Request getRequest = new Request.Builder()
                 .url(url).get()
@@ -526,5 +526,20 @@ public class WorkflowApi {
                 .build();
         return sendRequest(getRequest, new TypeReference<List<TaskRun>>() {
         });
+    }
+
+    public Boolean removeTaskRunDependency(Long taskRunId, List<Long> upstreamTaskRunIds) {
+        String upstreamString = upstreamTaskRunIds.stream().map(Objects::toString).collect(Collectors.joining(","));
+        HttpUrl url = buildUrl(API_TASK_RUNS + "/removeDependency")
+                .addQueryParameter("taskRunId", taskRunId.toString())
+                .addQueryParameter("upstreamTaskRunIds", upstreamString)
+                .build();
+
+        Request putRequest = new Request.Builder()
+                .url(url)
+                .put(jsonBody(""))
+                .addHeader(CONTENT_TYPE, APPLICATION_JSON.toString())
+                .build();
+        return sendRequest(putRequest,Boolean.class);
     }
 }
