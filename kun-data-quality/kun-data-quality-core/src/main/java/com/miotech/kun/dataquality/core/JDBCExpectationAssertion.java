@@ -57,17 +57,20 @@ public class JDBCExpectationAssertion {
     public boolean doAssert(String originalValue) {
         switch (comparisonOperator) {
             case EQUALS:
+                if (expectedValue.contains(".") || originalValue.contains(".")) {
+                    return Double.parseDouble(expectedValue) == Double.parseDouble(originalValue);
+                }
                 return expectedValue.equals(originalValue);
             case LESS_THAN:
-                return Long.parseLong(originalValue) < Long.parseLong(expectedValue);
+                return Double.parseDouble(originalValue) < Double.parseDouble(expectedValue);
             case LESS_THAN_OR_EQUALS:
-                return Long.parseLong(originalValue) <= Long.parseLong(expectedValue);
+                return Double.parseDouble(originalValue) <= Double.parseDouble(expectedValue);
             case GREATER_THAN:
-                return Long.parseLong(originalValue) > Long.parseLong(expectedValue);
+                return Double.parseDouble(originalValue) > Double.parseDouble(expectedValue);
             case GREATER_THAN_OR_EQUALS:
-                return Long.parseLong(originalValue) >= Long.parseLong(expectedValue);
+                return Double.parseDouble(originalValue) >= Double.parseDouble(expectedValue);
             case NOT_EQUALS:
-                return Long.parseLong(originalValue) != Long.parseLong(expectedValue);
+                return Double.parseDouble(originalValue) != Double.parseDouble(expectedValue);
             default:
                 throw new IllegalArgumentException("Invalid comparisonOperator: " + comparisonOperator);
         }
