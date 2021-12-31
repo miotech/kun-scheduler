@@ -2,6 +2,8 @@ package com.miotech.kun.webapp;
 
 import com.miotech.kun.webapp.listener.KunAppPropertySourceListener;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -25,7 +27,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         "com.miotech.kun.datadiscovery",
         "com.miotech.kun.webapp",
         "com.miotech.kun.monitor"
-})
+}, exclude = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
 @EnableScheduling
 @EnableAsync
 public class WebApplicationMain {

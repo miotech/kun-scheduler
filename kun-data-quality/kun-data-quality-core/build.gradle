@@ -1,0 +1,14 @@
+plugins {
+    id 'java'
+    id "io.freefair.lombok"
+    id "org.sonarqube"
+}
+
+dependencies {
+    implementation project(':kun-commons:kun-commons-utils')
+    implementation project(":kun-metadata:kun-metadata-common")
+    implementation project(":kun-metadata:kun-metadata-core")
+    implementation "com.fasterxml.jackson.core:jackson-core"
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+    implementation "org.projectlombok:lombok"
+}

@@ -56,4 +56,10 @@ public class DatasetRepository {
             return basic;
         }, basic.getName(), basic.getDatabase(), basic.getDatasource(), basic.getDatasourceType());
     }
+
+    public Long findDataSourceIdByGid(Long gid) {
+        String sql = "select datasource_id from kun_mt_dataset where gid = ?";
+        return jdbcTemplate.queryForObject(sql, Long.class, gid);
+    }
+
 }

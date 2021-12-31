@@ -1,35 +1,17 @@
 package com.miotech.kun.workflow.operator;
 
-import com.miotech.kun.commons.query.JDBCQuery;
-import com.miotech.kun.commons.query.JDBCQueryExecutor;
-import com.miotech.kun.commons.query.datasource.DataSourceContainer;
-import com.miotech.kun.commons.query.datasource.DataSourceType;
-import com.miotech.kun.commons.query.datasource.MetadataDataSource;
-import com.miotech.kun.commons.query.model.QueryResultSet;
 import com.miotech.kun.commons.query.service.ConfigService;
+import com.miotech.kun.commons.utils.DateTimeUtils;
+import com.miotech.kun.dataquality.core.Expectation;
+import com.miotech.kun.dataquality.core.ExpectationFactory;
+import com.miotech.kun.dataquality.core.ExpectationSpec;
+import com.miotech.kun.dataquality.core.ValidationResult;
 import com.miotech.kun.workflow.core.execution.*;
-import com.miotech.kun.commons.utils.ExceptionUtils;
-import com.miotech.kun.workflow.core.execution.Config;
-import com.miotech.kun.workflow.core.execution.ConfigDef;
-import com.miotech.kun.workflow.core.execution.KunOperator;
-import com.miotech.kun.workflow.core.execution.OperatorContext;
 import com.miotech.kun.workflow.operator.client.DataQualityClient;
-import com.miotech.kun.workflow.operator.client.MetadataClient;
-import com.miotech.kun.workflow.operator.model.*;
-import com.miotech.kun.workflow.operator.utils.AssertUtils;
-import com.miotech.kun.workflow.utils.JSONUtils;
-import freemarker.template.Configuration;
-import freemarker.template.Template;
-import freemarker.template.TemplateException;
-import freemarker.template.Version;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.io.StringWriter;
-import java.util.*;
 
 import static com.miotech.kun.workflow.operator.DataQualityConfiguration.*;
 
@@ -42,18 +24,8 @@ public class DataQualityOperator extends KunOperator {
     private static final Logger logger = LoggerFactory.getLogger(DataQualityOperator.class);
 
     private Long caseId;
-
-    private DataQualityRecord dataQualityRecord;
-
-    private DataQualityClient dataQualityClient;
-
-    private MetadataClient metadataClient;
-
-    private static final String CASE_FAIL_MSG_PREFIX = "CASE FAIL - ";
-
-    private static final String CASE_SUCCESS_MSG_PREFIX = "CASE SUCCESS - ";
-
     private Long caseRunId;
+    private DataQualityClient dataQualityClient;
 
     @Override
     public void init() {
@@ -64,46 +36,36 @@ public class DataQualityOperator extends KunOperator {
         configService.setMetadataDataSourceUsername(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_USERNAME));
         configService.setMetadataDataSourcePassword(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_PASSWORD));
         configService.setMetadataDataSourceDriverClass(config.getString(DataQualityConfiguration.METADATA_DATASOURCE_DIRVER_CLASS));
+        configService.setInfraBaseUrl(config.getString(INFRA_BASE_URL));
 
         dataQualityClient = DataQualityClient.getInstance();
-        metadataClient = MetadataClient.getInstance();
 
         String caseIdStr = context.getConfig().getString("caseId");
         if (StringUtils.isEmpty(caseIdStr)) {
-            logError("Data quality case id is empty.");
-            throw new RuntimeException("Data quality case id is empty.");
+            logger.error("Data quality case id is empty.");
+            throw new IllegalArgumentException("Data quality case id is empty.");
         }
         caseId = Long.valueOf(caseIdStr);
-
-        dataQualityRecord = new DataQualityRecord();
-        dataQualityRecord.setCaseId(caseId);
-        dataQualityRecord.setStartTime(System.currentTimeMillis());
-        dataQualityRecord.setCaseStatus(CaseStatus.SUCCESS.name());
-
         caseRunId = context.getTaskRunId();
     }
 
     @Override
     public boolean run() {
         try {
-            return doRun();
+            ExpectationSpec expectationSpec = dataQualityClient.getExpectation(caseId);
+            Expectation expectation = ExpectationFactory.get(expectationSpec);
+            ValidationResult vr = expectation.validate();
+            dataQualityClient.record(vr, caseRunId);
+            return true;
         } catch (Exception e) {
-            logError("Failed to run test case.", e);
-            dataQualityRecord.setCaseId(caseId);
-            dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
-            dataQualityRecord.appendErrorReason(e.getMessage());
-            DataQualityCaseMetrics metrics = new DataQualityCaseMetrics();
-            metrics.setCaseId(caseId);
-            metrics.setCaseStatus(CaseStatus.FAILED);
-            metrics.setErrorReason(org.apache.commons.lang3.exception.ExceptionUtils.getStackTrace(e));
-            dataQualityClient.recordCaseMetrics(metrics, caseRunId);
+            logger.error(String.format("caseId=%d %s", caseId, "Failed to run test case."), e);
+            ValidationResult.Builder vrb = ValidationResult.newBuilder();
+            vrb.withExpectationId(caseId);
+            vrb.withPassed(false);
+            vrb.withExecutionResult(ExceptionUtils.getStackTrace(e));
+            vrb.withUpdateTime(DateTimeUtils.now());
+            dataQualityClient.record(vrb.build(), caseRunId);
             return false;
-        } finally {
-            logInfo(DataSourceContainer.getInstance().toString());
-            MetadataDataSource.getInstance().cleanUp();
-            DataSourceContainer.getInstance().cleanUp();
-            dataQualityRecord.setEndTime(System.currentTimeMillis());
-            logger.info("DQ_RECORD>>>" + JSONUtils.toJsonString(dataQualityRecord));
         }
     }
 
@@ -120,6 +82,7 @@ public class DataQualityOperator extends KunOperator {
                 .define(METADATA_DATASOURCE_PASSWORD, ConfigDef.Type.STRING, true, "datasource connection password", METADATA_DATASOURCE_PASSWORD)
                 .define(METADATA_DATASOURCE_DIRVER_CLASS, ConfigDef.Type.STRING, true, "datasource driver class", METADATA_DATASOURCE_DIRVER_CLASS)
                 .define(DATAQUALITY_CASE_ID, ConfigDef.Type.STRING, true, "data quality case id", DATAQUALITY_CASE_ID)
+                .define(INFRA_BASE_URL, ConfigDef.Type.STRING, true, "infra base url", INFRA_BASE_URL)
                 ;
     }
 
@@ -128,169 +91,4 @@ public class DataQualityOperator extends KunOperator {
         return new NopResolver();
     }
 
-    private String getFullTableName(Dataset dataset) {
-        if (DataSourceType.AWS.name().equals(dataset.getDatasourceType())) {
-            return dataset.getDatabase() + "." + "\"" + dataset.getName() + "\"";
-        }
-        return dataset.getName();
-    }
-
-    private boolean doRun() {
-        DataQualityCase dataQualityCase = dataQualityClient.getCase(caseId);
-
-        TemplateType dimension = dataQualityCase.getDimension();
-        List<DataQualityRule> rules = dataQualityCase.getRules();
-
-        List<Long> datasetIds = dataQualityCase.getDatasetIds();
-        Dataset currentDataset = metadataClient.getDataset(datasetIds.get(0));
-
-        List<String> queryStrings = new ArrayList<>();
-        if (dimension == TemplateType.TABLE) {
-            // Table Dimension
-            String templateString = dataQualityCase.getExecutionString();
-            Map<String, Object> args = new HashMap<>();
-            args.put("table", getFullTableName(currentDataset));
-            try {
-                String queryString = parseTemplate(templateString, args);
-                queryStrings.add(queryString);
-            } catch (Exception e) {
-                throwError("Failed to parse template string.");
-            }
-
-        } else if (dimension == TemplateType.FIELD) {
-            // Field Dimension
-            String templateString = dataQualityCase.getExecutionString();
-
-            List<DatasetField> datasetFields = metadataClient.getDatasetFields(dataQualityClient.getDatasetFieldIdsByCaseId(caseId));
-            Map<String, Object> args = new HashMap<>();
-            args.put("table", getFullTableName(currentDataset));
-
-            for (DatasetField datasetField : datasetFields) {
-                args.put("field", datasetField.getName());
-                try {
-                    String queryString = parseTemplate(templateString, args);
-                    queryStrings.add(queryString);
-                } catch (Exception e) {
-                    throwError("Failed to parse template string.");
-                }
-                args.remove("field");
-            }
-
-        } else if (dimension == TemplateType.CUSTOMIZE) {
-            // Custom Dimension
-            String queryString = dataQualityCase.getExecutionString();
-            queryStrings.add(queryString);
-        } else {
-            throwError("Unsupported template type: " + dimension.name());
-        }
-
-        DataQualityCaseMetrics caseMetrics = new DataQualityCaseMetrics();
-        caseMetrics.setCaseId(caseId);
-        caseMetrics.setCaseStatus(CaseStatus.SUCCESS);
-        for (String queryString : queryStrings) {
-            QueryResultSet queryResultSet = query(queryString, currentDataset);
-            doAssert(queryResultSet, dimension, rules, caseMetrics);
-        }
-        dataQualityClient.recordCaseMetrics(caseMetrics, caseRunId);
-        return true;
-    }
-
-    private void logError(String msg) {
-        logError(msg, null);
-    }
-
-    private void logError(String msg, Throwable throwable) {
-        logger.error(String.format("caseId=%d %s", caseId, msg), throwable);
-    }
-
-    private void logInfo(String msg) {
-        logger.info(String.format("caseId=%d %s", caseId, msg));
-    }
-
-    private void logCaseFail(String msg) {
-        logInfo(CASE_FAIL_MSG_PREFIX + msg);
-    }
-
-    private void logCaseFail(Object originalValue, DataQualityRule rule) {
-        logCase(CASE_FAIL_MSG_PREFIX, originalValue, rule);
-    }
-
-    private void logCaseSuccess(Object originalValue, DataQualityRule rule) {
-        logCase(CASE_SUCCESS_MSG_PREFIX, originalValue, rule);
-    }
-
-    private void logCase(String msgPrefix, Object originalValue, DataQualityRule rule) {
-        logInfo(msgPrefix + getRecordErrorReason(originalValue, rule));
-    }
-
-    private String getRecordErrorReason(Object originalValue,
-                                        DataQualityRule rule) {
-        String originalValueStr = "$null";
-        if (originalValue != null) {
-            originalValueStr = originalValue.toString();
-        }
-        return "originalValue: " + originalValueStr + " rule: " + rule.toString();
-    }
-
-    private void throwError(String errorMsg) {
-        throw ExceptionUtils.wrapIfChecked(new RuntimeException(errorMsg));
-    }
-
-    private void doRuleAssert(Object originalValue,
-                              DataQualityRule rule,
-                              DataQualityCaseMetrics metrics) {
-        rule.setOriginalValue(Objects.toString(originalValue, "$null"));
-        metrics.add(rule);
-        boolean ruleCase = AssertUtils.doAssert(rule.getExpectedType(),
-                rule.getOperator(),
-                originalValue,
-                rule.getExpectedValue());
-
-        if (ruleCase) {
-            logCaseSuccess(originalValue, rule);
-        } else {
-            logCaseFail(originalValue, rule);
-            dataQualityRecord.setCaseStatus(CaseStatus.FAILED.name());
-            dataQualityRecord.appendErrorReason(getRecordErrorReason(originalValue, rule));
-            metrics.setCaseStatus(CaseStatus.FAILED);
-        }
-    }
-
-    private void doAssert(QueryResultSet resultSet,
-                          TemplateType templateType,
-                          List<DataQualityRule> rules,
-                          DataQualityCaseMetrics metrics) {
-        if (CollectionUtils.isEmpty(resultSet.getResultSet())) {
-            throwError("SQL query return empty result set.");
-        }
-        Map<String, ?> row = resultSet.getResultSet().get(0);
-        if (templateType == TemplateType.CUSTOMIZE) {
-            for (DataQualityRule rule : rules) {
-                Object originalValue = row.get(rule.getField());
-                doRuleAssert(originalValue, rule, metrics);
-            }
-        } else {
-            Object originalValue = row.values().iterator().next();
-            for (DataQualityRule rule : rules) {
-                doRuleAssert(originalValue, rule, metrics);
-            }
-        }
-    }
-
-    private QueryResultSet query(String queryString, Dataset dataset) {
-
-        JDBCQuery query = JDBCQuery.newBuilder()
-                .datasetId(dataset.getId())
-                .queryString(queryString)
-                .build();
-
-        return JDBCQueryExecutor.getInstance().execute(query);
-    }
-
-    private String parseTemplate(String sourceString, Map<String, Object> args) throws IOException, TemplateException {
-        Template template = new Template("parseTemplate", sourceString, new Configuration(new Version("2.3.30")));
-        StringWriter result = new StringWriter();
-        template.process(args, result);
-        return result.toString();
-    }
 }

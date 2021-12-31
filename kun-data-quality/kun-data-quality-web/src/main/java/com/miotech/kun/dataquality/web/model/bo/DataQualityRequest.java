@@ -40,4 +40,19 @@ public class DataQualityRequest {
     private Long updateTime;
 
     private Boolean isBlocking;
+
+    public ExpectationBO convertTo() {
+        return ExpectationBO.builder()
+                .name(this.name)
+                .types(this.types)
+                .description(this.description)
+                .sql((String) this.dimensionConfig.get("sql"))
+                .validateRules(this.validateRules)
+                .relatedTableIds(this.relatedTableIds)
+                .datasetGid(this.primaryDatasetGid)
+                .taskId(this.taskId)
+                .isBlocking(this.isBlocking)
+                .build();
+    }
+
 }

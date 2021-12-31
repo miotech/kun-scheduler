@@ -44,12 +44,12 @@ public class DataQualityRepository extends BaseRepository {
     public Long getLongExistingCount() {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("count(1) as count")
-                .from("kun_dq_case_metrics kdcm")
-                .join("inner", "(\n" +
-                        "         select case_id, max(update_time) as last_update_time\n" +
-                        "         from kun_dq_case_metrics\n" +
-                        "         group by case_id\n" +
-                        "     )", "last_metrics").on("last_metrics.last_update_time = kdcm.update_time")
+                .from("kun_dq_expectation_run kder")
+                .join("inner", "( " +
+                        "         select expectation_id, max(update_time) as last_update_time " +
+                        "         from kun_dq_expectation_run " +
+                        "         group by expectation_id " +
+                        "     )", "last_metrics").on("last_metrics.last_update_time = kder.update_time")
                 .where("continuous_failing_count >= " + longExistingThreshold)
                 .getSQL();
 
@@ -59,12 +59,12 @@ public class DataQualityRepository extends BaseRepository {
     public Long getSuccessCount() {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("count(1) as count")
-                .from("kun_dq_case_metrics kdcm")
-                .join("inner", "(\n" +
-                        "         select case_id, max(update_time) as last_update_time\n" +
-                        "         from kun_dq_case_metrics\n" +
-                        "         group by case_id\n" +
-                        "     )", "last_metrics").on("last_metrics.last_update_time = kdcm.update_time")
+                .from("kun_dq_expectation_run kder")
+                .join("inner", "( " +
+                        "         select expectation_id, max(update_time) as last_update_time " +
+                        "         from kun_dq_expectation_run " +
+                        "         group by expectation_id " +
+                        "     )", "last_metrics").on("last_metrics.last_update_time = kder.update_time")
                 .where("continuous_failing_count = 0")
                 .getSQL();
 
@@ -74,7 +74,7 @@ public class DataQualityRepository extends BaseRepository {
     public Long getTotalCaseCount() {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("count(1) as count")
-                .from("kun_dq_case")
+                .from("kun_dq_expectation")
                 .getSQL();
 
         return jdbcTemplate.queryForObject(sql, Long.class);
@@ -89,14 +89,14 @@ public class DataQualityRepository extends BaseRepository {
 
     public AbnormalDatasets getAbnormalDatasets(TestCasesRequest testCasesRequest) {
         String sql = "select gid, max(last_update_time) last_update_time from (" +
-                "select kdc.primary_dataset_id as gid, " +
-                "max(kdcm.update_time) as last_update_time " +
+                "select kde.dataset_gid as gid, " +
+                "max(kder.update_time) as last_update_time " +
                 "from " +
-                "(select case_id, update_time, continuous_failing_count, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY update_time desc) AS row_number from kun_dq_case_metrics) kdcm " +
+                "(select expectation_id, update_time, continuous_failing_count, ROW_NUMBER() OVER (PARTITION BY expectation_id ORDER BY update_time desc) AS row_number from kun_dq_expectation_run) kder " +
                 "inner join " +
-                "kun_dq_case kdc on kdcm.case_id = kdc.id " +
-                "where kdcm.row_number <= 1 and kdcm.continuous_failing_count > 0 " +
-                "group by kdc.primary_dataset_id " +
+                "kun_dq_expectation kde on kder.expectation_id = kde.id " +
+                "where kder.row_number <= 1 and kder.continuous_failing_count > 0 " +
+                "group by kde.dataset_gid " +
                 "union " +
                 "select kdad.dataset_gid as gid, kdad.update_time as last_update_time " +
                 "from " +
@@ -145,12 +145,12 @@ public class DataQualityRepository extends BaseRepository {
     }
 
     private Map<Long, List<AbnormalCase>> getCases(List<Long> datasetGids) {
-        String sql = "select kdc.id, kdc.name, kdcm.continuous_failing_count, kdc.create_user, kdc.primary_dataset_id, kdcm.rule_records, kdcm.update_time " +
+        String sql = "select kde.id, kde.name, kder.continuous_failing_count, kde.create_user, kde.dataset_gid, kder.assertion_result, kder.update_time " +
                 "from " +
-                "(select case_id, update_time, continuous_failing_count, rule_records, ROW_NUMBER() OVER (PARTITION BY case_id ORDER BY update_time desc) AS row_number from kun_dq_case_metrics) kdcm " +
+                "(select expectation_id, update_time, continuous_failing_count, assertion_result, ROW_NUMBER() OVER (PARTITION BY expectation_id ORDER BY update_time desc) AS row_number from kun_dq_expectation_run) kder " +
                 "inner join " +
-                "kun_dq_case kdc on kdcm.case_id = kdc.id " +
-                "where kdcm.row_number <= 1 and kdc.primary_dataset_id in " + toColumnSql(datasetGids.size());
+                "kun_dq_expectation kde on kder.expectation_id = kde.id " +
+                "where kder.row_number <= 1 and kde.dataset_gid in " + toColumnSql(datasetGids.size());
 
         return jdbcTemplate.query(sql, rs -> {
             Map<Long, List<AbnormalCase>> result = Maps.newHashMap();
@@ -163,9 +163,9 @@ public class DataQualityRepository extends BaseRepository {
                 abnormalCase.setStatus(continuousFailingCount > 0 ? "FAILED" : "SUCCESS");
                 abnormalCase.setCaseOwner(rs.getString("create_user"));
                 abnormalCase.setUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")));
-                abnormalCase.setRuleRecords(JSONUtils.toJavaObject(rs.getString("rule_records"),
+                abnormalCase.setRuleRecords(JSONUtils.toJavaObject(rs.getString("assertion_result"),
                         new TypeToken<List<DataQualityRule>>() {}.getType()));
-                long primaryDatasetId = rs.getLong("primary_dataset_id");
+                long primaryDatasetId = rs.getLong("dataset_gid");
                 if (result.containsKey(primaryDatasetId)) {
                     result.get(primaryDatasetId).add(abnormalCase);
                 } else {
