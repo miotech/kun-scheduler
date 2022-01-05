@@ -1207,8 +1207,8 @@ public class TaskRunDao {
                 .asPrepared()
                 .getSQL();
         return dbOperator.transaction(() -> {
-            int i = dbOperator.update(taskRunSql, priority, taskRunId);
-            return dbOperator.update(taskAttemptSql, priority, taskRunId) > 0;
+            dbOperator.update(taskAttemptSql, priority, taskRunId);
+            return dbOperator.update(taskRunSql, priority, taskRunId) > 0;
         });
     }
 
