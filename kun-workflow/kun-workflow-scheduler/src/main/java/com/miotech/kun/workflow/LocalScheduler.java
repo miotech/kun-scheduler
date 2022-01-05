@@ -4,6 +4,7 @@ import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.task.TaskRunEnv;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.scheduler.TaskManager;
 import com.miotech.kun.workflow.scheduler.TaskSpawner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +19,9 @@ public class LocalScheduler implements Scheduler {
 
     @Inject
     private TaskSpawner taskSpawner;
+
+    @Inject
+    private TaskManager taskManager;
 
     @Override
     public void schedule(TaskGraph graph) {
@@ -34,5 +38,10 @@ public class LocalScheduler implements Scheduler {
     @Override
     public boolean rerun(TaskRun taskRun) {
         return taskSpawner.rerun(taskRun);
+    }
+
+    @Override
+    public void trigger() {
+        taskManager.trigger();
     }
 }
