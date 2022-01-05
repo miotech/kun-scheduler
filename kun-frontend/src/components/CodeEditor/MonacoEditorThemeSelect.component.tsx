@@ -12,11 +12,7 @@ type Props = OwnProps;
 export const MonacoEditorThemeSelect: React.FC<Props> = memo(function MonacoEditorThemeSelect(props) {
   const { value, onChange, className } = props;
   return (
-    <Select
-      value={value}
-      onChange={onChange}
-      className={className}
-    >
+    <Select value={value} onChange={onChange} className={className} style={{ width: '120px' }}>
       <Select.Option value="light">Light</Select.Option>
       <Select.Option value="xcode">Xcode</Select.Option>
       <Select.Option value="github">GitHub</Select.Option>
