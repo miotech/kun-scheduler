@@ -1,12 +1,14 @@
 /* eslint-disable no-underscore-dangle */
-import React, { memo, useCallback, useLayoutEffect, useRef } from 'react';
+import React, { memo, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { Button } from 'antd';
 
 import loadMonacoThemes from '@/components/CodeEditor/themes/load-themes';
 import { MonacoEditorThemeSelect } from '@/components/CodeEditor/MonacoEditorThemeSelect.component';
 import { useStickyState } from '@/hooks/useStickyState';
-import MonacoEditor, { loader, useMonaco } from '@monaco-editor/react';
+import Editor, { loader, useMonaco } from '@monaco-editor/react';
 import { MONACO_EDITOR_THEME_LOCALSTORAGE_KEY } from '@/constants/localstorage-keys.const';
+import { FullscreenOutlined, FullscreenExitOutlined } from '@ant-design/icons';
+import { FullScreen, useFullScreenHandle } from 'react-full-screen';
 
 // TODO: Seems like an eslint bug?
 // eslint-disable-next-line import/no-unresolved
@@ -31,9 +33,11 @@ loader.init().then(monaco => {
 export const DefaultMonacoEditor: React.FC<Props> = memo(function DefaultMonacoEditor(props) {
   const monaco = useMonaco();
   const editorRef = useRef<editor.IStandaloneCodeEditor>(null);
+  const [full, setFull] = useState(false);
+  const handle = useFullScreenHandle();
 
   const { defaultValue, value, theme: propsTheme, onChange, language } = props;
-  const [ themeStored, setTheme ] = useStickyState<string>('light', MONACO_EDITOR_THEME_LOCALSTORAGE_KEY);
+  const [themeStored, setTheme] = useStickyState<string>('light', MONACO_EDITOR_THEME_LOCALSTORAGE_KEY);
   const theme = propsTheme || themeStored;
 
   useLayoutEffect(() => {
@@ -61,36 +65,54 @@ export const DefaultMonacoEditor: React.FC<Props> = memo(function DefaultMonacoE
   }, []);
 
   return (
-    <div className="monaco-editor-wrapper">
-      <nav className="monaco-editor-wrapper__toolbar">
-        <div className="monaco-editor-wrapper__toolbar__left">
-          {/* TODO: toolbar content left side */}
-        </div>
-        <div className="monaco-editor-wrapper__toolbar__right">
-          {/* Auto format */}
-          <Button onClick={handleAutoFormat}>
-            Auto Format
-          </Button>
-          {/* Theme selector */}
-          <MonacoEditorThemeSelect
-            value={theme}
-            onChange={(nextVal: string) => {
-              setTheme(nextVal);
-            }}
+    <FullScreen handle={handle} onChange={setFull}>
+      <div className="monaco-editor-wrapper">
+        <nav className="monaco-editor-wrapper__toolbar">
+          <div className="monaco-editor-wrapper__toolbar__left">{/* TODO: toolbar content left side */}</div>
+          <div className="monaco-editor-wrapper__toolbar__right">
+            {/* Auto format */}
+            <Button style={{ marginRight: '5px' }} onClick={handleAutoFormat}>
+              Auto Format
+            </Button>
+            {/* Theme selector */}
+            <MonacoEditorThemeSelect
+              value={theme}
+              onChange={(nextVal: string) => {
+                setTheme(nextVal);
+              }}
+            />
+            {!full && (
+              <FullscreenOutlined
+                style={{ margin: '0 20px 0 10px' }}
+                onClick={() => {
+                  setFull(true);
+                  handle.enter();
+                }}
+              />
+            )}
+            {full && (
+              <FullscreenExitOutlined
+                style={{ margin: '0 20px 0 10px' }}
+                onClick={() => {
+                  setFull(true);
+                  handle.exit();
+                }}
+              />
+            )}
+          </div>
+        </nav>
+        <div className="monaco-editor-wrapper__editor">
+          <Editor
+            value={value}
+            onChange={onChange}
+            language={language}
+            defaultValue={defaultValue}
+            height={full ? '100vh' : '450px'}
+            theme={theme}
+            onMount={handleEditorDidMount}
           />
         </div>
-      </nav>
-      <div className="monaco-editor-wrapper__editor">
-        <MonacoEditor
-          value={value}
-          onChange={onChange}
-          language={language}
-          defaultValue={defaultValue}
-          height="450px"
-          theme={theme}
-          onMount={handleEditorDidMount}
-        />
       </div>
-    </div>
+    </FullScreen>
   );
 });
