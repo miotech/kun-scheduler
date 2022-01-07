@@ -96,7 +96,7 @@
     "kld-affine": "^2.1.1",
     "kld-intersections": "^0.7.0",
     "lint-staged": "^10.0.7",
-    "lodash": "^4.17.15",
+    "lodash": "^4.17.21",
     "micromatch": "^4.0.2",
     "moment": "^2.27.0",
     "moment-duration-format": "^2.3.2",
