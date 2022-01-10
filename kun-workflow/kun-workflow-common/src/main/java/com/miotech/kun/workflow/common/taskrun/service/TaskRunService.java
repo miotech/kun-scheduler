@@ -401,6 +401,9 @@ public class TaskRunService {
         if(taskAttempt.getStatus().isUpstreamFailed()){
             eventBus.post(new TaskRunTransitionEvent(TaskRunTransitionEventType.RESCHEDULE,taskAttempt.getId()));
         }
+
+        //trigger runnable taskRun
+        scheduler.trigger();
         return true;
     }
 

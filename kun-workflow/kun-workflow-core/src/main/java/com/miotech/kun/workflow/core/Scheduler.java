@@ -24,4 +24,9 @@ public interface Scheduler {
      * 重新运行一个taskRun
      */
     public boolean rerun(TaskRun taskRun);
+
+    /**
+     * trigger runnable taskRun to start
+     */
+    public void trigger();
 }

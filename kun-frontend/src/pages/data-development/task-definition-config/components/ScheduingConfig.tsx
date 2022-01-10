@@ -293,7 +293,7 @@ export const SchedulingConfig: React.FC<SchedulingConfigProps> = function Schedu
                 label={t('dataDevelopment.definition.scheduleConfig.scheduleType')}
                 name={['taskPayload', 'scheduleConfig', 'type']}
                 rules={[{ required: true }]}
-                initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.type}
+                initialValue={initTaskDefinition?.taskPayload?.scheduleConfig?.type || 'NONE'}
               >
                 <Radio.Group>
                   <Radio value="ONESHOT">
