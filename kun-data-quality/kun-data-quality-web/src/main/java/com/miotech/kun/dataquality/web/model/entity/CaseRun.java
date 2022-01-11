@@ -15,4 +15,6 @@ public class CaseRun {
     private Long caseId;
 
     private String status;
+
+    private Long taskAttemptId;
 }
