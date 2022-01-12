@@ -59,6 +59,13 @@ public class TaskCommitService extends BaseSecurityService {
         return new ArrayList<>(resultMap.values());
     }
 
+    public List<TaskCommit> findByTaskDefinitionId(Long taskDefinitionId) {
+        Preconditions.checkNotNull(taskDefinitionId, "task definition id should not be null");
+        return taskCommitDao.fetchByTaskDefinitionId(taskDefinitionId).stream()
+                .sorted(Comparator.comparingInt(o -> -Integer.parseInt(o.getVersion().substring(1))))
+                .collect(Collectors.toList());
+    }
+
     public PaginationResult<TaskCommit> search(CommitSearchRequest request) {
         Preconditions.checkArgument(request.getPageNum() > 0, "page number should be a positive number");
         Preconditions.checkArgument(request.getPageSize() > 0, "page size should be a positive number");
@@ -150,6 +157,7 @@ public class TaskCommitService extends BaseSecurityService {
                 commit.getDefinitionId(),
                 commit.getVersion(),
                 commit.getMessage(),
+                commit.getSnapshot(),
                 commit.getCommitter(),
                 commit.getCommittedAt(),
                 commit.getCommitType(),

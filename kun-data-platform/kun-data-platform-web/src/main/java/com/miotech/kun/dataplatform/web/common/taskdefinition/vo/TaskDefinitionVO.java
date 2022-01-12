@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.web.common.taskdefinition.vo;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskPayload;
+import com.miotech.kun.dataplatform.web.common.commit.vo.TaskCommitVO;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
@@ -38,6 +39,8 @@ public class TaskDefinitionVO {
 
     private final Long lastModifier;
 
+    private final List<TaskCommitVO> taskCommits;
+
     public TaskDefinitionVO(Long id,
                             String name,
                             String taskTemplateName,
@@ -50,7 +53,8 @@ public class TaskDefinitionVO {
                             List<TaskDefinitionProps> upstreamTaskDefinitions,
                             Long lastModifier,
                             OffsetDateTime lastUpdateTime,
-                            OffsetDateTime createTime
+                            OffsetDateTime createTime,
+                            List<TaskCommitVO> taskCommits
                             ) {
         this.id = id;
         this.name = name;
@@ -65,5 +69,6 @@ public class TaskDefinitionVO {
         this.lastModifier = lastModifier;
         this.lastUpdateTime = lastUpdateTime;
         this.createTime = createTime;
+        this.taskCommits = taskCommits;
     }
 }

@@ -10,6 +10,7 @@ import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.*;
 import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
+import com.miotech.kun.dataplatform.web.common.commit.vo.TaskCommitVO;
 import com.miotech.kun.dataplatform.web.common.datastore.service.DatasetService;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskService;
@@ -587,11 +588,15 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         );
     }
 
+
+
     public TaskDefinitionVO convertToVO(TaskDefinition taskDefinition) {
         Map<Long, Boolean> commitStatus = taskCommitService.getLatestCommitStatus(
                 Collections.singletonList(taskDefinition.getDefinitionId()));
         Map<Long, TaskCommit> latestCommits = taskCommitService.getLatestCommit(Collections.singletonList(taskDefinition.getDefinitionId()));
-        return mapVO(taskDefinition, commitStatus, latestCommits);
+        List<TaskCommitVO> taskCommitVOs = taskCommitService.findByTaskDefinitionId(taskDefinition.getDefinitionId()).stream()
+                .map(taskCommitService::convertVO).collect(Collectors.toList());
+        return mapVO(taskDefinition, commitStatus, latestCommits, taskCommitVOs);
     }
 
     public List<TaskDefinitionVO> convertToVOList(List<TaskDefinition> taskDefinitions, boolean withTaskPayload) {
@@ -605,17 +610,18 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 .collect(Collectors.toList()));
 
         return taskDefinitions.stream()
-                .map(taskDefinition -> mapVO(taskDefinition, commitStatus, null, withTaskPayload, latestCommits))
+                .map(taskDefinition -> mapVO(taskDefinition, commitStatus, null, withTaskPayload, latestCommits, Collections.emptyList()))
                 .collect(Collectors.toList());
     }
 
-    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, Map<Long, TaskCommit> latestCommits) {
+    private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, Map<Long, TaskCommit> latestCommits, List<TaskCommitVO> taskCommitVOs) {
         List<Long> upstreamDefinitionIds = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
-        return mapVO(taskDefinition, commitStatus, taskDefinitionDao.fetchByIds(upstreamDefinitionIds), true, latestCommits);
+        return mapVO(taskDefinition, commitStatus, taskDefinitionDao.fetchByIds(upstreamDefinitionIds), true, latestCommits, taskCommitVOs);
     }
 
+
     private TaskDefinitionVO mapVO(TaskDefinition taskDefinition, Map<Long, Boolean> commitStatus, List<TaskDefinition> taskDefinitions,
-                                   boolean withTaskPayload, Map<Long, TaskCommit> latestCommits) {
+                                   boolean withTaskPayload, Map<Long, TaskCommit> latestCommits, List<TaskCommitVO> taskCommits) {
         List<TaskDefinitionProps> taskDefinitionProps;
         if (CollectionUtils.isEmpty(taskDefinitions)) {
             List<Long> upstreamDefinitionIds = resolveUpstreamTaskDefIds(taskDefinition.getTaskPayload());
@@ -641,7 +647,8 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 taskDefinitionProps,
                 taskDefinition.getLastModifier(),
                 taskDefinition.getUpdateTime(),
-                taskDefinition.getCreateTime()
+                taskDefinition.getCreateTime(),
+                taskCommits
         );
     }
 
@@ -677,5 +684,4 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
             CronUtils.validateCron(cron);
         }
     }
-
 }

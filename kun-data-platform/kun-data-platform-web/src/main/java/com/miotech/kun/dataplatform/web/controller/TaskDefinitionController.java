@@ -6,7 +6,10 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.dataplatform.facade.model.deploy.Deploy;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskTry;
+import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
+import com.miotech.kun.dataplatform.web.common.commit.vo.CommitSearchRequest;
+import com.miotech.kun.dataplatform.web.common.commit.vo.TaskCommitVO;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.service.TaskDefinitionService;
@@ -21,8 +24,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/")
@@ -35,6 +41,9 @@ public class TaskDefinitionController {
 
     @Autowired
     private TaskDefinitionViewService taskDefinitionViewService;
+
+    @Autowired
+    private TaskCommitService taskCommitService;
 
     @Autowired
     private DeployService deployService;
