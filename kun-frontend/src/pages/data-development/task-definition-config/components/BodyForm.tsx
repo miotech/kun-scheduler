@@ -11,6 +11,7 @@ import { FieldData } from 'rc-field-form/lib/interface';
 
 import { ParamConfig } from '@/pages/data-development/task-definition-config/components/ParamConfig';
 import { SchedulingConfig } from '@/pages/data-development/task-definition-config/components/ScheduingConfig';
+import { VersionHistory } from './VersionHisotry';
 import useRedux from '@/hooks/useRedux';
 
 import { NotificationConfig } from '@/pages/data-development/task-definition-config/components/NotificationConfig';
@@ -76,6 +77,10 @@ export const BodyForm: React.FC<BodyFormProps> = function TaskDefinitionBodyForm
             initUserNotificationConfigItems={initTaskDefinition?.taskPayload?.notifyConfig?.notifierConfig || null}
             initTaskDefinition={initTaskDefinition}
           />
+        </Tabs.TabPane>
+        {/* Version history */}
+        <Tabs.TabPane tab={t('dataDevelopment.definition.versionHistory')} key="versionHistory" forceRender>
+          <VersionHistory taskCommits={initTaskDefinition?.taskCommits || []} />
         </Tabs.TabPane>
       </Tabs>
     </Form>
