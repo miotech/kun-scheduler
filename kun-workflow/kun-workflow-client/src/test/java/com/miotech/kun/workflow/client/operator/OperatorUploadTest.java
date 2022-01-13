@@ -4,8 +4,8 @@ import com.miotech.kun.workflow.client.DefaultWorkflowClient;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.mock.MockKunWebServerTestBase;
 import com.miotech.kun.workflow.client.model.Operator;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
@@ -20,7 +20,7 @@ public class OperatorUploadTest extends MockKunWebServerTestBase {
 
     private OperatorUpload operatorUpload;
 
-    @Before
+    @BeforeEach
     public void init(){
         clientUtil = new DefaultWorkflowClient(getBaseUrl());
         operatorUpload = new OperatorUpload(clientUtil);

@@ -2,9 +2,9 @@ package com.miotech.kun.workflow.operator;
 
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.testing.executor.OperatorRunner;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,12 +13,12 @@ import java.util.Map;
  * @author: Jie Chen
  * @created: 2020/7/17
  */
-@Ignore
+@Disabled
 public class DataQualityOperatorTest {
 
     private OperatorRunner operatorRunner;;
 
-    @Before
+    @BeforeEach
     public void setUp(){
         KunOperator operator = new DataQualityOperator();
         operatorRunner = new OperatorRunner(operator);

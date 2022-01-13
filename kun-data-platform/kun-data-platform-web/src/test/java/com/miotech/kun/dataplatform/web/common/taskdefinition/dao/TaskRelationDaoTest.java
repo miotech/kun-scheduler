@@ -2,15 +2,17 @@ package com.miotech.kun.dataplatform.web.common.taskdefinition.dao;
 
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskRelation;
-
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
-import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import com.miotech.kun.dataplatform.mocking.MockTaskRelationFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
+import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TaskRelationDaoTest extends AppTestBase {
 

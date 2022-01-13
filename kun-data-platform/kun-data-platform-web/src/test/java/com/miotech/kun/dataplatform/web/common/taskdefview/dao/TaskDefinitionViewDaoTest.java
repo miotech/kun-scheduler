@@ -3,13 +3,13 @@ package com.miotech.kun.dataplatform.web.common.taskdefview.dao;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
-import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
-import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionViewFactory;
+import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
+import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +18,10 @@ import java.time.OffsetDateTime;
 import java.util.*;
 
 import static com.miotech.kun.dataplatform.web.common.taskdefview.dao.TaskDefinitionViewDao.TASK_DEF_VIEW_TABLE_NAME;
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TaskDefinitionViewDaoTest extends AppTestBase {
     private final Logger logger = LoggerFactory.getLogger(TaskDefinitionViewDaoTest.class);

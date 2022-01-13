@@ -47,7 +47,7 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"
     testImplementation 'com.icegreen:greenmail'
-    testImplementation 'com.icegreen:greenmail-junit4'
+    testImplementation 'com.icegreen:greenmail-junit5'
     testImplementation 'com.icegreen:greenmail-spring'
     testImplementation 'org.jooq:joor-java-8'
     testImplementation "org.testcontainers:neo4j"

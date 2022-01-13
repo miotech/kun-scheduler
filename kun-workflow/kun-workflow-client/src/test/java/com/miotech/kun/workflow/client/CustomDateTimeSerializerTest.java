@@ -6,8 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -24,7 +24,7 @@ public class CustomDateTimeSerializerTest {
     private SerializerProvider serializerProvider;
     private Writer jsonWriter;
 
-    @Before
+    @BeforeEach
     public void setup() {
         try {
             jsonWriter = new StringWriter();

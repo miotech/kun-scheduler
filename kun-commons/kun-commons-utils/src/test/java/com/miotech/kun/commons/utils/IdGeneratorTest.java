@@ -1,9 +1,10 @@
 package com.miotech.kun.commons.utils;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.assertThrows;
 
 public class IdGeneratorTest {
     private static final long RESERVED_BITS = 12L;
@@ -56,7 +57,7 @@ public class IdGeneratorTest {
         assertThat(result[1], is((long) reservedId));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void testCombine_whenExceptionThrows() {
         /* `IdGenerator.combine` should raise exceptions
            when baseId hybrids non-zero reserved part */
@@ -66,6 +67,6 @@ public class IdGeneratorTest {
 
         long combinedId = IdGenerator.getInstance().combine(baseId, reservedId);
 
-        IdGenerator.getInstance().combine(combinedId, reservedId);
+        assertThrows(IllegalArgumentException.class, () -> IdGenerator.getInstance().combine(combinedId, reservedId));
     }
 }

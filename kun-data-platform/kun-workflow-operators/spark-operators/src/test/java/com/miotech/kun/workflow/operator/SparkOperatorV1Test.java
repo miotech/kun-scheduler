@@ -3,8 +3,8 @@ package com.miotech.kun.workflow.operator;
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.testing.executor.OperatorRunner;
-import org.junit.Before;
-import org.junit.Ignore;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,14 +18,14 @@ public class SparkOperatorV1Test extends MockServerTestBase {
 
     private OperatorRunner operatorRunner;
 
-    @Before
+    @BeforeEach
     public void init(){
         KunOperator operator = new SparkOperator();
         operatorRunner = new OperatorRunner(operator);
         operatorRunner.setConfigKey(SparkConfiguration.CONF_LIVY_HOST, getAddress());
     }
 
-    @Ignore
+    @Disabled
     public void run() {
         Map<String ,String> params = new HashMap<>();
         params.put(SparkConfiguration.CONF_LIVY_BATCH_FILES, "file:///test.jar");
@@ -58,7 +58,7 @@ public class SparkOperatorV1Test extends MockServerTestBase {
         assertTrue(String.join("\n", operatorRunner.getLog()).contains("Livy client connect to \"http://localhost:10180\" to queue \"default\" as user \"hadoop\""));
     }
 
-    @Ignore
+    @Disabled
     public void testRun_abort() {
         Map<String ,String> params = new HashMap<>();
         params.put(SparkConfiguration.CONF_LIVY_BATCH_FILES, "file:///test.jar");

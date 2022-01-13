@@ -3,12 +3,12 @@ package com.miotech.kun.workflow.operator.spark.clients;
 import com.miotech.kun.workflow.operator.spark.models.SparkApp;
 import com.miotech.kun.workflow.operator.spark.models.SparkJob;
 import org.awaitility.Awaitility;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.TimeUnit;
 
-@Ignore
+@Disabled
 public class LivyClientTest {
 
     private LivyClient client = new LivyClient("http://10.0.1.198:8998");

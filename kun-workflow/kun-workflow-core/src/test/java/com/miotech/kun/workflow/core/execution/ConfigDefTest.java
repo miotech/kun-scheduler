@@ -2,7 +2,7 @@ package com.miotech.kun.workflow.core.execution;
 
 import com.google.common.collect.ImmutableMap;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Map;
 

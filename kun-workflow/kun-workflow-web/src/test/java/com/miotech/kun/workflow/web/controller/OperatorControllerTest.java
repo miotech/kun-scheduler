@@ -4,18 +4,20 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import com.miotech.kun.workflow.common.operator.dao.OperatorDao;
 import com.miotech.kun.workflow.common.task.vo.OperatorVO;
+import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
-import com.miotech.kun.workflow.common.task.vo.PaginationVO;
-import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import okhttp3.*;
 import org.hamcrest.Matchers;
-import org.junit.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.File;
@@ -33,8 +35,7 @@ public class OperatorControllerTest extends KunWebServerTestBase {
     private static final String nopOperatorClassName = NopOperator.class.getSimpleName();
     private static final String nopOperatorPath = OperatorCompiler.compileJar(NopOperator.class,  nopOperatorClassName);
 
-    @ClassRule
-    public static TemporaryFolder temporaryFolder = new TemporaryFolder();
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
     @Inject
     private OperatorDao operatorDao;
@@ -45,8 +46,9 @@ public class OperatorControllerTest extends KunWebServerTestBase {
     @Inject
     private DatabaseOperator dbOperator;
 
-    @Before
-    public void preapreData() {
+    @BeforeEach
+    public void prepareData() throws IOException {
+        temporaryFolder.create();
         List<Operator> mockOperatorLists = new ArrayList<>();
         for (int i = 0; i < 200; ++i) {
             Operator op = MockOperatorFactory.createOperator();
@@ -65,6 +67,11 @@ public class OperatorControllerTest extends KunWebServerTestBase {
 
         dbOperator.update("TRUNCATE TABLE kun_wf_operator");
         mockOperatorLists.forEach(operatorDao::create);
+    }
+
+    @AfterEach
+    public void cleanUp(){
+        temporaryFolder.delete();
     }
 
     @Test
@@ -102,7 +109,7 @@ public class OperatorControllerTest extends KunWebServerTestBase {
                 .build();
 
         try (Response resp = client.newCall(request).execute()) {
-            Assert.assertThat(resp.body().string(),
+            assertThat(resp.body().string(),
                     Matchers.is("{\"ack\":true,\"message\":\"package uploaded\"}"));
         } catch (IOException e) {
             throw ExceptionUtils.wrapIfChecked(e);

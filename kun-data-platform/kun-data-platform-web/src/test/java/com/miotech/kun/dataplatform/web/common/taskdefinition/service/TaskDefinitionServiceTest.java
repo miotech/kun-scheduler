@@ -2,14 +2,14 @@ package com.miotech.kun.dataplatform.web.common.taskdefinition.service;
 
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.*;
-import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
+import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.mocking.MockTaskRunFactory;
+import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitRequest;
 import com.miotech.kun.dataplatform.web.common.deploy.service.DeployService;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskRelationDao;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.*;
-import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.monitor.facade.sla.SlaFacade;
 import com.miotech.kun.security.testing.WithMockTestUser;
@@ -21,8 +21,8 @@ import com.miotech.kun.workflow.client.model.TaskRunLogRequest;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.json.simple.JSONObject;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,7 +35,10 @@ import static com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus.*;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.in;
+import static org.hamcrest.Matchers.is;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 // TODO: figure out a solution to bootstrap Workflow facade related tests
@@ -73,15 +76,16 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(taskDefinition.getName(), is("test"));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void create_checkWithSingleDuplicateTaskDefinition() {
         CreateTaskDefinitionRequest taskDefinitionProps = new CreateTaskDefinitionRequest("test", TEST_TEMPLATE);
         taskDefinitionService.create(taskDefinitionProps);
         CreateTaskDefinitionRequest taskDefinitionPropsDuplicate = new CreateTaskDefinitionRequest("test", TEST_TEMPLATE);
-        taskDefinitionService.create(taskDefinitionPropsDuplicate);
+        assertThrows(IllegalArgumentException.class,() -> taskDefinitionService.create(taskDefinitionPropsDuplicate));
+
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void create_checkDuplicateWithMultipleArchivedTask() {
         Random rand = new Random();
         for (int i = 0; i < rand.nextInt(5) + 5; i++) {
@@ -122,7 +126,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(updated.getTaskPayload(), sameBeanAs(updateRequest.getTaskPayload()));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void update_checkWithSingleDuplicateTaskDefinition() {
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
         taskDefinitionDao.create(taskDefinition);
@@ -141,15 +145,16 @@ public class TaskDefinitionServiceTest extends AppTestBase {
                 updatedTaskPayload,
                 1L
         );
-       taskDefinitionService.update(updateRequest.getDefinitionId(), updateRequest);
+        assertThrows(IllegalArgumentException.class, () -> taskDefinitionService.update(updateRequest.getDefinitionId(), updateRequest));
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void update_checkDuplicateWithMultipleArchivedTask() {
         //generate multiple task definition, update them to same name and delete
         Random rand = new Random();
         int times = rand.nextInt(5) + 5;
-        for (int time = 1; time <= times; time++) {
+        //prepare multiple archived tasks
+        for (int time = 1; time < times; time++) {
             TaskDefinition taskDefinitionTemp = MockTaskDefinitionFactory.createTaskDefinition();
             taskDefinitionDao.create(taskDefinitionTemp);
             TaskPayload taskPayload = taskDefinitionTemp.getTaskPayload();
@@ -166,13 +171,34 @@ public class TaskDefinitionServiceTest extends AppTestBase {
                     1L
             );
             taskDefinitionService.update(updateRequest.getDefinitionId(), updateRequest);
-            // for next to last, do not delete, check whether update successfully on last time
+            // for the last, do not delete, check whether update successfully on last time
             if (time == times - 1) continue;
             taskDefinitionService.delete(taskDefinitionTemp.getDefinitionId());
         }
+
+        //update taskDefinition with duplicate name
+        TaskDefinition taskDefinitionTemp = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(taskDefinitionTemp);
+        TaskPayload taskPayload = taskDefinitionTemp.getTaskPayload();
+        Map<String, Object> taskConfig = taskPayload.getTaskConfig();
+        taskConfig.put("sql", "select 2");
+        TaskPayload updatedTaskPayload = taskPayload
+                .cloneBuilder()
+                .withTaskConfig(taskConfig)
+                .build();
+        UpdateTaskDefinitionRequest updateRequest = new UpdateTaskDefinitionRequest(
+                taskDefinitionTemp.getDefinitionId(),
+                "test", //same name use multiple times
+                updatedTaskPayload,
+                1L
+        );
+
+        //verify
+        assertThrows(IllegalArgumentException.class,() -> taskDefinitionService.update(updateRequest.getDefinitionId(), updateRequest));
+
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void test_update_withInputNodes() {
         // prepare with dependencies
@@ -215,7 +241,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertEquals(taskDefinition.getDefinitionId(), taskRelation.getDownstreamId());
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testRun_ok() {
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
@@ -246,7 +272,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         }
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void testStop_ok() {
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
@@ -267,7 +293,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(taskRun.getStatus(), is(ABORTED));
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void test_RunLog_ok() {
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
@@ -287,7 +313,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
                         .getTaskRunState(taskTry.getWorkflowTaskRunId())
                         .getStatus().isFinished());
         TaskRunLogVO vo = taskDefinitionService.runLog(request);
-        assertThat(vo.getStatus(), in(new TaskRunStatus[]{RUNNING,SUCCESS,FAILED}));
+        assertThat(vo.getStatus(), in(new TaskRunStatus[]{RUNNING, SUCCESS, FAILED}));
         assertThat(vo.getTaskRunId(), is(taskTry.getWorkflowTaskRunId()));
         assertTrue(vo.getLogs().size() > 0);
     }
@@ -386,9 +412,9 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         assertThat(vo.getUpstreamTaskDefinitions().get(0).getName(), is(""));
     }
 
-    @Ignore
+    @Disabled
     @Test
-    public void test_delete(){
+    public void test_delete() {
         // prepare
         TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
         taskDefinitionDao.create(taskDefinition);
@@ -409,9 +435,9 @@ public class TaskDefinitionServiceTest extends AppTestBase {
     }
 
 
-    @Ignore
+    @Disabled
     @Test
-    public void test_delete_with_downstream_dependency(){
+    public void test_delete_with_downstream_dependency() {
         // if task has downstream dependencies, fail to delete
 
         // prepare with dependencies
@@ -443,9 +469,9 @@ public class TaskDefinitionServiceTest extends AppTestBase {
 
         // delete upstream task should fail
         RuntimeException exception = null;
-        try{
+        try {
             taskDefinitionService.delete(upstreamTaskDefinition.getDefinitionId());
-        }catch (RuntimeException e){
+        } catch (RuntimeException e) {
             exception = e;
         }
         assertNotNull(exception);
@@ -465,7 +491,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
     }
 
     @Test
-    public void test_deploy_fail_when_upstream_not_deployed(){
+    public void test_deploy_fail_when_upstream_not_deployed() {
         // task relation should be removed as well when delete task
         //need mock workflow
     }
@@ -536,7 +562,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
     //scenario
     //taskDef  1 -> 2,  2 -> 1
     //check circular dependency
-    @Test(expected = RuntimeException.class)
+    @Test
     public void runMultiTaskDefBatch_withCircularDependency_shouldFail() {
         Long taskDef1Id = DataPlatformIdGenerator.nextDefinitionId();
         TaskDefinition taskDef2 = MockTaskDefinitionFactory.createTaskDefinitions(1, Collections.singletonList(taskDef1Id)).get(0);
@@ -545,13 +571,8 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         taskDefinitionDao.create(taskDef2);
         TaskTryBatchRequest taskTryBatchRequest = new TaskTryBatchRequest(Arrays.asList(taskDef1.getDefinitionId(),
                 taskDef2.getDefinitionId()));
-        try {
-            taskDefinitionService.runBatch(taskTryBatchRequest);
-        } catch(RuntimeException e) {
-            String message = "Task try run batch has circular dependence";
-            assertThat(e.getMessage(), is(message));
-            throw e;
-        }
+        Exception ex = assertThrows(RuntimeException.class, () -> taskDefinitionService.runBatch(taskTryBatchRequest));
+        assertEquals("Task try run batch has circular dependence", ex.getMessage());
     }
 
     //scenario:

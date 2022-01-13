@@ -4,8 +4,8 @@ import com.miotech.kun.monitor.facade.model.sla.TaskDefinitionNode;
 import com.miotech.kun.monitor.sla.AppTestBase;
 import com.miotech.kun.monitor.sla.common.dao.SlaDao;
 import com.miotech.kun.monitor.sla.mocking.MockTaskDefinitionNodeFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -25,7 +25,7 @@ public class SlaDaoTest extends AppTestBase {
     @Qualifier("neo4jJdbcTemplate")
     private JdbcTemplate jdbcTemplate;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         // clear all nodes
         jdbcTemplate.update("MATCH (td: TASK_DEFINITION) DETACH DELETE td");

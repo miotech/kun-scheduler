@@ -19,8 +19,8 @@ import org.apache.hadoop.hive.metastore.api.FieldSchema;
 import org.apache.hadoop.hive.metastore.api.StorageDescriptor;
 import org.apache.hadoop.hive.metastore.api.Table;
 import org.apache.thrift.TException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -52,7 +52,7 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
         
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         doReturn(hiveMetaStoreClient).when(clientFactory).getHiveClient(anyString());
     }

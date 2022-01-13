@@ -4,8 +4,8 @@ import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.testing.executor.MockOperatorContextImpl;
 import com.miotech.kun.workflow.testing.executor.OperatorRunner;
 import org.joor.Reflect;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -22,7 +22,7 @@ public class SparkOperatorV2Test {
     private MockOperatorContextImpl context;
     SparkOperatorUtils sparkOperatorUtils;
 
-    @Before
+    @BeforeEach
     public void initSparkOperator() {
         context = new MockOperatorContextImpl(operator);
         context.setParam(SPARK_SUBMIT_PARMAS, "{\"class\":\"com.miotech.sql.Application\"}");

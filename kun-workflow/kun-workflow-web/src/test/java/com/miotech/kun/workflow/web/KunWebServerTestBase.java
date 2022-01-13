@@ -16,21 +16,23 @@ import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.Neo4jContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+@Testcontainers
 public class KunWebServerTestBase extends GuiceTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(KunWebServerTestBase.class);
 
-    @ClassRule
+    @Container
     public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
             .withAdminPassword("Mi0tech2020");
 
@@ -53,7 +55,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
         addModules(new KunWorkflowServerModule(props), new KunInfraWebModule(props));
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         new Thread(() -> webServer.start()).start();
         while (!webServer.isReady()) {
@@ -65,7 +67,7 @@ public class KunWebServerTestBase extends GuiceTestBase {
         }
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         workerLifeCycleManager.shutdown();
         webServer.shutdown();

@@ -30,7 +30,16 @@ public class PropertyLogger  {
                 .flatMap(Arrays::stream)
                 .distinct()
 //                .filter(prop -> !(prop.contains("credentials") || prop.contains("password")))
-                .forEach(prop -> LOGGER.info("{}: {}", prop, env.getProperty(prop)));
+                .forEach(
+                        prop -> {
+                            try {
+                                LOGGER.info("{}: {}", prop, env.getProperty(prop));
+                            }catch (Throwable e){
+                                LOGGER.warn("{}",e);
+                            }
+
+                        }
+                );
         LOGGER.info("===========================================");
     }
 }

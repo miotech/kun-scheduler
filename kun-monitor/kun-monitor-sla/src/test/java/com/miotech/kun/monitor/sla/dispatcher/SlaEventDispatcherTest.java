@@ -13,8 +13,8 @@ import com.miotech.kun.monitor.facade.model.alert.NotifierUserConfig;
 import com.miotech.kun.monitor.facade.model.alert.TaskStatusNotifyTrigger;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import com.miotech.kun.workflow.utils.JSONUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -86,7 +86,7 @@ public class SlaEventDispatcherTest extends AppTestBase {
 
     private MockEventPubSub mockEventPubSub;
 
-    @Before
+    @BeforeEach
     public void beforeTest() {
         mockEventPubSub = (MockEventPubSub) eventSubscriber;
     }

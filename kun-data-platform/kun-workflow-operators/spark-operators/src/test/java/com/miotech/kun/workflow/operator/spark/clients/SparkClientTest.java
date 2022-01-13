@@ -2,8 +2,8 @@ package com.miotech.kun.workflow.operator.spark.clients;
 
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.operator.spark.models.Application;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertTrue;
 
@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
 public class SparkClientTest extends MockServerTestBase {
     private SparkClient sparkClient;
 
-    @Before
+    @BeforeEach
     public void init(){
         String server = getAddress();
         sparkClient = new SparkClient(server);

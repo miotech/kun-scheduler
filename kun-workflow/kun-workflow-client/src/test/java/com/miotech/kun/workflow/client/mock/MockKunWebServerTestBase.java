@@ -12,13 +12,14 @@ import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Neo4jContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
@@ -27,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.awaitility.Awaitility.await;
 
+@Testcontainers
 public class MockKunWebServerTestBase extends GuiceTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(MockKunWebServerTestBase.class);
@@ -44,7 +46,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
         return redis;
     }
 
-    @ClassRule
+    @Container
     public static Neo4jContainer neo4jContainer = new Neo4jContainer("neo4j:3.5.20")
             .withAdminPassword("Mi0tech2020");
 
@@ -64,7 +66,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
                 , new KunInfraWebModule(props), new KunMetadataModule(props));
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         props = injector.getInstance(Props.class);
         webServer = injector.getInstance(KunInfraWebServer.class);
@@ -80,7 +82,7 @@ public class MockKunWebServerTestBase extends GuiceTestBase {
                 });
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         webServer.shutdown();
     }

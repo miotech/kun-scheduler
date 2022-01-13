@@ -5,8 +5,8 @@ import com.google.inject.Guice;
 import com.google.inject.util.Types;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.commons.web.mock.MockObject;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.util.Arrays;
@@ -23,7 +23,7 @@ public class JsonSerializerTest {
 
     private String runTasksJson;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         jsonSerializer = Guice.createInjector().getInstance(JsonSerializer.class);
 

@@ -17,9 +17,7 @@ import com.miotech.kun.workflow.executor.local.LocalQueueManage;
 import com.miotech.kun.workflow.executor.local.MiscService;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,9 +32,6 @@ import static org.hamcrest.Matchers.is;
 public class LocalQueueManageTest extends CommonTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(LocalQueueManageTest.class);
-
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
     @Inject
     private MiscService miscService;

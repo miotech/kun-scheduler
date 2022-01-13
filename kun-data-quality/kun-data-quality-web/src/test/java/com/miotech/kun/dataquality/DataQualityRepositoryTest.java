@@ -8,7 +8,7 @@ import com.miotech.kun.dataquality.web.model.entity.CaseRun;
 import com.miotech.kun.dataquality.web.model.entity.DataQualityCaseBasic;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;

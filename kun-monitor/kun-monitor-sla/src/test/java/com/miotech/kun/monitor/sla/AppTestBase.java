@@ -4,8 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.monitor.sla.config.TestFacadeConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -16,7 +15,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -24,7 +22,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = AppTestBase.Configuration.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
@@ -41,7 +38,7 @@ public abstract class AppTestBase {
     @Autowired
     protected JdbcTemplate jdbcTemplate;
 
-    @After
+    @AfterEach
     public void tearDown() {
         truncateAllTables();
     }

@@ -4,8 +4,8 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.core.model.dataset.DatasetFieldType;
 import com.miotech.kun.metadata.common.service.FieldMappingService;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -15,7 +15,7 @@ public class FieldMappingServiceTest extends DatabaseTestBase {
     @Inject
     private FieldMappingService fieldMappingService;
 
-    @After
+    @AfterEach
     public void clearCache() {
         fieldMappingService.clear();
     }

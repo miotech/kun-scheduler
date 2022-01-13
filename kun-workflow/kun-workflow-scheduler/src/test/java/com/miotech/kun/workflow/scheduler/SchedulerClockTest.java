@@ -4,8 +4,8 @@ import com.google.common.eventbus.EventBus;
 import com.miotech.kun.commons.pubsub.event.Event;
 import com.miotech.kun.workflow.core.event.TickEvent;
 import com.miotech.kun.workflow.testing.event.EventCollector;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -29,7 +29,7 @@ public class SchedulerClockTest extends SchedulerTestBase {
         super.configuration();
     }
 
-    @Before
+    @BeforeEach
     public void setUp() {
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);

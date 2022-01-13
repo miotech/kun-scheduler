@@ -23,9 +23,9 @@ import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -78,14 +78,14 @@ public class WorkerLifeCycleManagerTest extends CommonTestBase{
         bind(WorkerMonitor.class, workerMonitor);
     }
 
-    @Before
+    @BeforeEach
     public void init(){
         mockWorkerLifeCycleManager = spy(workerLifeCycleManager);
         mockWorkerLifeCycleManager.init();
         taskRunStateMachine.start();
     }
 
-    @After
+    @AfterEach
     public void teardown(){
         mockWorkerLifeCycleManager.shutdown();
     }

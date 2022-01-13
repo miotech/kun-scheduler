@@ -27,8 +27,8 @@ import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -67,7 +67,7 @@ public class SubscriberTest extends DataQualityTestBase {
     @SpyBean
     private EventPublisher publisher;
 
-    @Before
+    @BeforeEach
     public void mock() {
         doAnswer(invocation -> {
             Long taskId = invocation.getArgument(0, Long.class);

@@ -8,7 +8,7 @@ import com.miotech.kun.workflow.common.worker.dao.WorkerImageDao;
 import com.miotech.kun.workflow.common.worker.filter.WorkerImageFilter;
 import com.miotech.kun.workflow.common.worker.service.WorkerImageService;
 import com.miotech.kun.workflow.core.model.worker.WorkerImage;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

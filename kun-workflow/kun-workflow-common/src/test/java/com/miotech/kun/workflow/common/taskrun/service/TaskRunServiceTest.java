@@ -30,11 +30,9 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Triple;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
@@ -74,11 +72,7 @@ public class TaskRunServiceTest extends CommonTestBase {
 
     private TaskRunStateMachine taskRunStateMachine;
 
-    @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
-
-    @Rule
-    public ExpectedException expectedEx = ExpectedException.none();
 
     @Override
     protected void configuration() {
@@ -86,8 +80,9 @@ public class TaskRunServiceTest extends CommonTestBase {
     }
 
 
-    @Before
-    public void setUp() {
+    @BeforeEach
+    public void setUp() throws IOException {
+        tempFolder.create();
         this.taskRunDao = spy(this.taskRunDao);
         this.taskRunService = spy(new TaskRunService(
                 taskRunDao,
@@ -142,7 +137,7 @@ public class TaskRunServiceTest extends CommonTestBase {
     public void getTaskRunLog() throws IOException {
         Long taskRunId = 1L;
         String testStr = "hellow world";
-        Resource resource = creatResource("xyz", testStr, 1);
+        Resource resource = createResource("xyz", testStr, 1);
 
         TaskAttemptProps attemptProps1 = TaskAttemptProps.newBuilder()
                 .withAttempt(1)
@@ -184,7 +179,7 @@ public class TaskRunServiceTest extends CommonTestBase {
     @Test
     public void getTaskRunLog_withstartLine() throws IOException {
         Long taskRunId = 1L;
-        Resource resource = creatResource("xyz", "hello world\n", 3);
+        Resource resource = createResource("xyz", "hello world\n", 3);
 
         TaskAttemptProps attemptProps = TaskAttemptProps.newBuilder()
                 .withAttempt(1)
@@ -212,7 +207,7 @@ public class TaskRunServiceTest extends CommonTestBase {
     @Test
     public void getTaskRunLog_withendLine() throws IOException {
         Long taskRunId = 1L;
-        Resource resource = creatResource("xyz", "hello world\n", 3);
+        Resource resource = createResource("xyz", "hello world\n", 3);
 
 
         TaskAttemptProps attemptProps = TaskAttemptProps.newBuilder()
@@ -256,7 +251,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         // Prepare
         Long taskRunId = 1L;
         String testStr = "line 1\nline 2\nline 3\nline 4\n";
-        Resource resource = creatResource("xyz", testStr, 1);
+        Resource resource = createResource("xyz", testStr, 1);
         TaskAttemptProps attemptProps = TaskAttemptProps.newBuilder()
                 .withAttempt(1)
                 .withLogPath(resource.getLocation())
@@ -298,7 +293,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(stopSignalReceived.getOrDefault(11L, false), is(true));
     }
 
-    private Resource creatResource(String fileName, String text, int times) throws IOException {
+    private Resource createResource(String fileName, String text, int times) throws IOException {
         File file = tempFolder.newFile(fileName);
         Resource resource = resourceLoader.getResource("file://" + file.getPath(), true);
         Writer writer = new PrintWriter(resource.getOutputStream());
@@ -498,17 +493,13 @@ public class TaskRunServiceTest extends CommonTestBase {
 
     @Test
     public void rerunTaskRun_whenLatestAttemptNotFinished_shouldThrowsIllegalStateException() throws IllegalStateException {
-        // 1. Prepare
+        // Prepare
         TaskRun taskRunFailed = prepareTaskRunAndTaskAttempt(TaskRunStatus.RUNNING);
         mockExecutorOnSubmit();
 
-        // 2. Validate
-        expectedEx.expect(IllegalStateException.class);
-        expectedEx.expectMessage("taskRun status must be finished");
-
-        // 3. Process
-        taskRunService.rerunTaskRun(taskRunFailed.getId());
-
+        // Process
+        Exception ex = assertThrows(IllegalStateException.class, () -> taskRunService.rerunTaskRun(taskRunFailed.getId()));
+        assertEquals("taskRun status must be finished ", ex.getMessage());
     }
 
     @Test
@@ -536,7 +527,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         }
     }
 
-    @Ignore
+    @Disabled
     @Test
     public void rerunTaskRun_whenConcurrentlyInvoked_shouldOnlyTakeOneEffect() throws Exception {
         // 1. Prepare

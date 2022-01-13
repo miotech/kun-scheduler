@@ -30,13 +30,9 @@ import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Pair;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,7 +47,6 @@ import static org.junit.Assert.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-@RunWith(MockitoJUnitRunner.class)
 public class TaskServiceTest extends CommonTestBase {
     private static final String PACKAGE_PATH_LINEAGE_OPERATOR = OperatorCompiler.compileJar(LineageMockOperator.class, "LineageMockOperator");
 
@@ -80,10 +75,7 @@ public class TaskServiceTest extends CommonTestBase {
 
     private MetadataDatasetService metadataDatasetService;
 
-    @Rule
-    public ExpectedException expectedEx = ExpectedException.none();
-
-    @Before
+    @BeforeEach
     public void beforeEach() {
         operatorService = spy(operatorService);
     }
@@ -92,7 +84,7 @@ public class TaskServiceTest extends CommonTestBase {
     protected void configuration() {
         super.configuration();
         metadataDatasetService = mock(MetadataDatasetService.class);
-        bind(MetadataDatasetService.class,metadataDatasetService);
+        bind(MetadataDatasetService.class, metadataDatasetService);
         bind(MetadataServiceFacade.class, MetadataDatasetService.class);
         bind(LineageServiceFacade.class, com.miotech.kun.metadata.common.service.LineageService.class);
 
@@ -545,9 +537,8 @@ public class TaskServiceTest extends CommonTestBase {
                 .build();
         operatorDao.createWithId(op, operatorId);
         //verify
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("config seconds in cron is not supported yet");
-        taskService.createTask(taskPropsVO);
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> taskService.createTask(taskPropsVO));
+        assertEquals("config seconds in cron is not supported yet", ex.getMessage());
     }
 
     @Test
@@ -571,9 +562,8 @@ public class TaskServiceTest extends CommonTestBase {
                 .withScheduleConf(conf)
                 .build();
         //verify
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("config seconds in cron is not supported yet");
-        taskService.fullUpdateTaskById(saved.getId(), newVo);
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> taskService.fullUpdateTaskById(saved.getId(), newVo));
+        assertEquals("config seconds in cron is not supported yet", ex.getMessage());
     }
 
     @Test
@@ -597,9 +587,8 @@ public class TaskServiceTest extends CommonTestBase {
                 .withScheduleConf(conf)
                 .build();
         //verify
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("config seconds in cron is not supported yet");
-        taskService.partialUpdateTask(saved.getId(), newVo);
+        Exception ex = assertThrows(IllegalArgumentException.class, () -> taskService.partialUpdateTask(saved.getId(), newVo));
+        assertEquals("config seconds in cron is not supported yet", ex.getMessage());
     }
 
     @Test
@@ -723,9 +712,9 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(0));
         assertThat(saved.getRetryDelay(), is(30));
-        assertThat(saved.getCheckType(),is(CheckType.SKIP));
-        assertThat(saved.getScheduleConf().getTimeZone(),is("Z"));
-        assertThat(saved.getScheduleConf().getBlockType(),is(BlockType.NONE));
+        assertThat(saved.getCheckType(), is(CheckType.SKIP));
+        assertThat(saved.getScheduleConf().getTimeZone(), is("Z"));
+        assertThat(saved.getScheduleConf().getBlockType(), is(BlockType.NONE));
     }
 
     @Test
@@ -751,9 +740,9 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(updated.getRetries(), is(saved.getRetries()));
         assertThat(updated.getRetryDelay(), is(saved.getRetryDelay()));
-        assertThat(updated.getCheckType(),is(saved.getCheckType()));
-        assertThat(updated.getScheduleConf().getTimeZone(),is(saved.getScheduleConf().getTimeZone()));
-        assertThat(updated.getScheduleConf().getBlockType(),is(saved.getScheduleConf().getBlockType()));
+        assertThat(updated.getCheckType(), is(saved.getCheckType()));
+        assertThat(updated.getScheduleConf().getTimeZone(), is(saved.getScheduleConf().getTimeZone()));
+        assertThat(updated.getScheduleConf().getBlockType(), is(saved.getScheduleConf().getBlockType()));
     }
 
     @Test
@@ -779,9 +768,9 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(updated.getRetries(), is(saved.getRetries()));
         assertThat(updated.getRetryDelay(), is(saved.getRetryDelay()));
-        assertThat(updated.getCheckType(),is(saved.getCheckType()));
-        assertThat(updated.getScheduleConf().getTimeZone(),is(saved.getScheduleConf().getTimeZone()));
-        assertThat(updated.getScheduleConf().getBlockType(),is(saved.getScheduleConf().getBlockType()));
+        assertThat(updated.getCheckType(), is(saved.getCheckType()));
+        assertThat(updated.getScheduleConf().getTimeZone(), is(saved.getScheduleConf().getTimeZone()));
+        assertThat(updated.getScheduleConf().getBlockType(), is(saved.getScheduleConf().getBlockType()));
     }
 
     @Test
@@ -816,10 +805,10 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(1));
         assertThat(saved.getRetryDelay(), is(10));
-        assertThat(saved.getCheckType(),is(CheckType.WAIT_EVENT));
-        assertThat(saved.getScheduleConf().getType(),is(ScheduleType.NONE));
-        assertThat(saved.getScheduleConf().getTimeZone(),is("Asia/Shanghai"));
-        assertThat(saved.getScheduleConf().getBlockType(),is(BlockType.WAIT_PREDECESSOR));
+        assertThat(saved.getCheckType(), is(CheckType.WAIT_EVENT));
+        assertThat(saved.getScheduleConf().getType(), is(ScheduleType.NONE));
+        assertThat(saved.getScheduleConf().getTimeZone(), is("Asia/Shanghai"));
+        assertThat(saved.getScheduleConf().getBlockType(), is(BlockType.WAIT_PREDECESSOR));
     }
 
     @Test
@@ -856,10 +845,10 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(saved.getRetries(), is(1));
         assertThat(saved.getRetryDelay(), is(10));
-        assertThat(saved.getCheckType(),is(CheckType.WAIT_EVENT));
-        assertThat(saved.getScheduleConf().getType(),is(ScheduleType.NONE));
-        assertThat(saved.getScheduleConf().getTimeZone(),is("Asia/Shanghai"));
-        assertThat(saved.getScheduleConf().getBlockType(),is(BlockType.WAIT_PREDECESSOR));
+        assertThat(saved.getCheckType(), is(CheckType.WAIT_EVENT));
+        assertThat(saved.getScheduleConf().getType(), is(ScheduleType.NONE));
+        assertThat(saved.getScheduleConf().getTimeZone(), is("Asia/Shanghai"));
+        assertThat(saved.getScheduleConf().getBlockType(), is(BlockType.WAIT_PREDECESSOR));
     }
 
     @Test
@@ -896,9 +885,9 @@ public class TaskServiceTest extends CommonTestBase {
         //verify
         assertThat(updated.getRetries(), is(1));
         assertThat(updated.getRetryDelay(), is(10));
-        assertThat(updated.getCheckType(),is(CheckType.WAIT_EVENT));
-        assertThat(updated.getScheduleConf().getType(),is(ScheduleType.NONE));
-        assertThat(updated.getScheduleConf().getTimeZone(),is("Asia/Shanghai"));
-        assertThat(updated.getScheduleConf().getBlockType(),is(BlockType.WAIT_PREDECESSOR));
+        assertThat(updated.getCheckType(), is(CheckType.WAIT_EVENT));
+        assertThat(updated.getScheduleConf().getType(), is(ScheduleType.NONE));
+        assertThat(updated.getScheduleConf().getTimeZone(), is("Asia/Shanghai"));
+        assertThat(updated.getScheduleConf().getBlockType(), is(BlockType.WAIT_PREDECESSOR));
     }
 }

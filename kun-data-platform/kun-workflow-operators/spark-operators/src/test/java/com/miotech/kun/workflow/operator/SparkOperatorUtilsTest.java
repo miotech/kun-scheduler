@@ -2,8 +2,8 @@ package com.miotech.kun.workflow.operator;
 
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.testing.executor.MockOperatorContextImpl;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,7 +21,7 @@ public class SparkOperatorUtilsTest {
     private static final Logger logger = LoggerFactory.getLogger(SparkOperatorUtilsTest.class);
 
 
-    @Before
+    @BeforeEach
     public void initSparkOperatorUtils() {
         context = new MockOperatorContextImpl(operator);
         context.setParam(SPARK_SUBMIT_PARMAS, "{\"class\":\"com.miotech.sql.Application\"}");

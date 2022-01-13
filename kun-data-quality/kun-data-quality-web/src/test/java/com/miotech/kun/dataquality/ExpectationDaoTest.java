@@ -16,7 +16,7 @@ import com.miotech.kun.dataquality.web.model.entity.DataQualityHistoryRecords;
 import com.miotech.kun.dataquality.web.model.entity.DatasetBasic;
 import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 

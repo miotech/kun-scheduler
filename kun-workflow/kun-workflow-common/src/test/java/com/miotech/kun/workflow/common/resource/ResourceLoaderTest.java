@@ -1,27 +1,30 @@
 package com.miotech.kun.workflow.common.resource;
 
 import com.miotech.kun.workflow.core.resource.Resource;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.rules.TemporaryFolder;
 
 import java.io.*;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 public class ResourceLoaderTest {
 
     private ResourceLoader resourceLoader = new ResourceLoaderImpl();
 
-    @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
-    @Test(expected = ResourceNotFoundException.class)
+    @BeforeEach
+    public void init() throws IOException{
+        tempFolder.create();
+    }
+
+    @Test
     public void getResource_notFound() throws IOException {
         File file = tempFolder.newFile("xyz");
         file.delete();
-        resourceLoader.getResource("file://" + file.getPath());
+        assertThrows(ResourceNotFoundException.class,()->resourceLoader.getResource("file://" + file.getPath()));
     }
 
     @Test

@@ -5,15 +5,15 @@ import com.google.common.collect.Sets;
 import com.miotech.kun.common.model.PageResult;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
+import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionViewFactory;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewCreateInfoVO;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewVO;
-import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
-import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionViewFactory;
 import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.OffsetDateTime;
@@ -24,7 +24,7 @@ import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class TaskDefinitionViewServiceTest extends AppTestBase {
 
