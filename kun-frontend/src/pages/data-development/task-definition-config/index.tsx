@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import c from 'clsx';
-import { useRouteMatch } from 'umi';
+import { useRouteMatch, useLocation } from 'umi';
 import { Alert, Card, Form } from 'antd';
 import { KunSpin } from '@/components/KunSpin';
 import { useMount, useTitle, useUnmount } from 'ahooks';
@@ -44,6 +44,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [sqlDryRunTabs, setSqlDryRunTabs] = useState<SQLQueryTab[] | null>(null);
   const [sqlDryRunOrdinal, setSqlDryRunOrdinal] = useState<number>(1);
+  const location = useLocation();
 
   const {
     selector: { initTaskDefinition, formIsDirty },
@@ -65,9 +66,7 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
     return false;
     */
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    initTaskDefinition,
-  ]);
+  }, [initTaskDefinition]);
 
   useTitle(
     initTaskDefinition != null
@@ -84,8 +83,11 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
   const [taskTemplate, taskTemplateIsLoading] = useTaskTemplateByName(initTaskDefinition?.taskTemplateName);
 
   useEffect(() => {
+    if (initTaskDefinition && location.query.taskPayload) {
+      initTaskDefinition.taskPayload = JSON.parse(location.query.taskPayload);
+    }
     setDraftTaskDef(initTaskDefinition ? normalizeTaskDefinition(initTaskDefinition, taskTemplate || null) : null);
-  }, [initTaskDefinition, taskTemplate]);
+  }, [location, initTaskDefinition, taskTemplate]);
 
   useUnmount(() => {
     dispatch.dataDevelopment.setEditingTaskDefinition(null);
@@ -129,28 +131,30 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
         // logger.debug('Value = ', monacoModel.getValue());
         const sqlValue: string = monacoModel.getValue();
         if (sqlValue && sqlValue.length) {
-          const nextSqlDrayRunTabs = (sqlDryRunTabs == null) ? [] : [...sqlDryRunTabs];
+          const nextSqlDrayRunTabs = sqlDryRunTabs == null ? [] : [...sqlDryRunTabs];
           const id = `${Date.now()}`;
           doSQLExecute({
             sql: sqlValue,
             pageNum: 1,
             pageSize: 100,
-          }).then(data => {
-            setSqlDryRunTabs(lastState => {
-              const newState = [...(lastState || [])];
-              const targetTabIdx = newState.findIndex(tab => tab.id === id);
-              newState[targetTabIdx].response = data;
-              newState[targetTabIdx].done = true;
-              return newState;
+          })
+            .then(data => {
+              setSqlDryRunTabs(lastState => {
+                const newState = [...(lastState || [])];
+                const targetTabIdx = newState.findIndex(tab => tab.id === id);
+                newState[targetTabIdx].response = data;
+                newState[targetTabIdx].done = true;
+                return newState;
+              });
+            })
+            .catch(() => {
+              setSqlDryRunTabs(lastState => {
+                const newState = [...(lastState || [])];
+                const targetTabIdx = newState.findIndex(tab => tab.id === id);
+                newState[targetTabIdx].done = true;
+                return newState;
+              });
             });
-          }).catch(() => {
-            setSqlDryRunTabs(lastState => {
-              const newState = [...(lastState || [])];
-              const targetTabIdx = newState.findIndex(tab => tab.id === id);
-              newState[targetTabIdx].done = true;
-              return newState;
-            });
-          });
           nextSqlDrayRunTabs.push({
             response: null,
             id,
@@ -271,7 +275,9 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
   return (
     <div className={c(styles.TaskDefinitionConfigView)}>
       {bodyContent}
-      {isSQLTask ? <></> : (
+      {isSQLTask ? (
+        <></>
+      ) : (
         <BottomLayout
           visible={taskTryId !== null}
           title={bottomLayoutTitle}
@@ -287,12 +293,15 @@ export const TaskDefinitionConfigView: React.FC<{}> = function TaskDefinitionCon
           />
         </BottomLayout>
       )}
-      {(isSQLTask && sqlDryRunTabs?.length) ?
+      {isSQLTask && sqlDryRunTabs?.length ? (
         <SqlDryRunBottomLayout
           tabs={sqlDryRunTabs}
           setTabs={setSqlDryRunTabs}
           doSqlExecuteAndFetchPage={doSqlExecuteAndFetchPage}
-        /> : <></>}
+        />
+      ) : (
+        <></>
+      )}
     </div>
   );
 };

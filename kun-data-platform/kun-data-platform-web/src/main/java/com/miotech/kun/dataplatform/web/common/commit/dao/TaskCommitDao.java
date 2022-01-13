@@ -119,6 +119,11 @@ public class TaskCommitDao {
         return jdbcTemplate.query(sql, TaskCommitMapper.INSTANCE, ids.toArray());
     }
 
+    public List<TaskCommit> fetchByTaskDefinitionId(Long taskDefinitionId) {
+        String sql = getSelectSQL(String.format("%s.task_def_id=?", TASK_COMMIT_MODEL_NAME));
+        return jdbcTemplate.query(sql, TaskCommitMapper.INSTANCE, taskDefinitionId);
+    }
+
     public PaginationResult<TaskCommit> search(CommitSearchRequest searchRequest) {
         StringBuilder whereClause = new StringBuilder();
         whereClause.append(" 1 = 1");

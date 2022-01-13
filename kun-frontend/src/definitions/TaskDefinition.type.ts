@@ -27,6 +27,7 @@ export interface TaskDefinition {
   name: string;
   taskTemplateName: string;
   taskPayload: TaskPayload | null;
+  taskCommits: TaskCommit[];
   upstreamTaskDefinitions: { id: string; name: string }[];
   lastUpdateTime: string;
   lastModifier: string;
@@ -48,7 +49,15 @@ export const TaskDefinitionType = T.Record({
   createTime: T.String.Or(T.Null),
   owner: T.String.Or(T.Number),
 });
-
+export interface TaskCommit {
+  id: string;
+  committedAt: string;
+  committer: string;
+  version: string;
+  message: string;
+  snapshot: { taskPayload: TaskPayload; taskTemplateName: string; owner: string };
+  latestCommit: boolean;
+}
 export interface TaskPayload {
   scheduleConfig: ScheduleConfig;
   taskConfig: Record<string, any>;

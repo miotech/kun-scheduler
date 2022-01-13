@@ -16,6 +16,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +68,41 @@ public class TaskCommitDaoTest extends AppTestBase {
         assertThat(taskCommitPage.getTotalCount(), Matchers.is(1));
         assertThat(taskCommitPage.getPageSize(), Matchers.is(10));
         assertThat(taskCommitPage.getPageNum(), Matchers.is(1));
+    }
+
+    @Test
+    public void fetchById_success() {
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        TaskCommit taskCommit = MockTaskCommitFactory.createTaskCommit();
+        taskCommit.cloneBuilder().withDefinitionId(taskDefinition.getDefinitionId()).build();
+        taskCommitDao.create(taskCommit);
+        TaskCommit result = taskCommitDao.fetchById(taskCommit.getId()).get();
+        assertThat(taskCommit.getId(), is(result.getId()));
+    }
+
+    @Test
+    public void fetchByTaskDefinitionId_success() {
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        List<TaskCommit> commitList = MockTaskCommitFactory.createTaskCommit(3);
+        TaskCommit taskCommit1 = commitList.get(0).cloneBuilder()
+                .withDefinitionId(taskDefinition.getDefinitionId())
+                .withLatestCommit(false)
+                .build();
+        TaskCommit taskCommit2 = commitList.get(1).cloneBuilder()
+                .withDefinitionId(taskDefinition.getDefinitionId())
+                .withLatestCommit(false)
+                .build();
+        TaskCommit taskCommit3 = commitList.get(2).cloneBuilder()
+                .withDefinitionId(taskDefinition.getDefinitionId())
+                .build();
+        taskCommitDao.create(taskCommit1);
+        taskCommitDao.create(taskCommit2);
+        taskCommitDao.create(taskCommit3);
+
+        List<TaskCommit> result = taskCommitDao.fetchByTaskDefinitionId(taskDefinition.getDefinitionId());
+        commitList = Arrays.asList(taskCommit1, taskCommit2, taskCommit3);
+        assertThat(new HashSet<>(commitList.stream().map(TaskCommit::getId).collect(Collectors.toList())),
+                is(new HashSet<>(result.stream().map(TaskCommit::getId).collect(Collectors.toList()))));
     }
 
     @Test
