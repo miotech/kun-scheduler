@@ -1,4 +1,3 @@
-import { useHistory } from 'umi';
 import React, { memo, useMemo, useState, useCallback } from 'react';
 import { Button, Dropdown, Menu, notification, Input } from 'antd';
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
@@ -30,8 +29,6 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
     taskTemplates: s.dataDevelopment.taskTemplates,
     loading: s.loading.effects.dataDevelopment.fetchTaskTemplates,
   }));
-
-  const history = useHistory();
 
   const t = useI18n();
 
@@ -81,14 +78,6 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
     return <></>;
   }, [taskTemplates, templateSearchValue]);
 
-  const handleClickTask = useCallback(
-    (id, e) => {
-      e.preventDefault();
-      history.push(`/data-development/task-definition/${id}`);
-    },
-    [history],
-  );
-
   const handleOk = useCallback(
     async (name1: string, createInCurrentView: boolean) => {
       try {
@@ -101,9 +90,7 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
           description: (
             <span>
               {t('taskTemplate.create.notification.desc')}{' '}
-              <a href={`/data-development/task-definition/${id}`} onClick={e => handleClickTask(id, e)}>
-                {name}
-              </a>
+              <a href={`/data-development/task-definition/${id}`}>{name}</a>
             </span>
           ),
         });
@@ -113,7 +100,7 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
         // do nothing
       }
     },
-    [handleClickTask, props, selectedTemplateName, t],
+    [props, selectedTemplateName, t],
   );
 
   return (
