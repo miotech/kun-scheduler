@@ -4,10 +4,7 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.datadiscovery.model.bo.*;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
-import com.miotech.kun.datadiscovery.service.DataSourceService;
-import com.miotech.kun.datadiscovery.service.DatasetFieldService;
-import com.miotech.kun.datadiscovery.service.DatasetService;
-import com.miotech.kun.datadiscovery.service.MetadataService;
+import com.miotech.kun.datadiscovery.service.*;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
 import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
 import com.miotech.kun.workflow.client.WorkflowClient;
@@ -40,29 +37,29 @@ public class DatasetController {
 
     @GetMapping("/metadata/databases")
     public RequestResult<List<Database>> getDatabases(DatabaseRequest request) {
-        return RequestResult.success(datasetService.getDatabases(request));
+        return RequestResult.success(metadataService.getDatabases(request));
     }
 
     @GetMapping("/metadata/datasets/search")
     public RequestResult<DatasetBasicPage> searchDatasets(BasicSearchRequest basicSearchRequest) {
-        return RequestResult.success(datasetService.search(basicSearchRequest));
+        return RequestResult.success(metadataService.searchDatasets(basicSearchRequest));
     }
 
     @GetMapping("/metadata/datasets")
     public RequestResult<DatasetBasicPage> getDatasets(DatasetSearchRequest searchRequests) {
-        return RequestResult.success(datasetService.search(searchRequests));
+        return RequestResult.success(metadataService.fullTextSearch(searchRequests));
     }
 
     @GetMapping("/metadata/dataset/{id}")
     public RequestResult<Dataset> getDatasetDetail(@PathVariable Long id) {
-        Dataset dataset = datasetService.find(id);
+        Dataset dataset = metadataService.findById(id);
         return RequestResult.success(dataset);
     }
 
     @PostMapping("/metadata/dataset/{id}/update")
     public RequestResult<Dataset> updateDataset(@PathVariable Long id,
                                                 @RequestBody DatasetRequest datasetRequest) {
-        Dataset dataset = datasetService.update(id, datasetRequest);
+        Dataset dataset = metadataService.updateDataSet(id, datasetRequest);
         return RequestResult.success(dataset);
     }
 
@@ -81,13 +78,13 @@ public class DatasetController {
     @GetMapping("/metadata/dataset/{id}/columns")
     public RequestResult<DatasetFieldPage> getDatasetColumns(@PathVariable Long id,
                                                              DatasetFieldSearchRequest searchRequest) {
-        return RequestResult.success(datasetFieldService.find(id, searchRequest));
+        return RequestResult.success(metadataService.findColumns(id, searchRequest));
     }
 
     @PostMapping("/metadata/column/{id}/update")
     public RequestResult<DatasetField> updateDatasetColumn(@PathVariable Long id,
                                                            @RequestBody DatasetFieldRequest datasetFieldRequest) {
-        return RequestResult.success(datasetFieldService.update(id, datasetFieldRequest));
+        return RequestResult.success(metadataService.updateColumn(id, datasetFieldRequest));
     }
 
     @GetMapping("/metadata/dataset/database/_suggest")

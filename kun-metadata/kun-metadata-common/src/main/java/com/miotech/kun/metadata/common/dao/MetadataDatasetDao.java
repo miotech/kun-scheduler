@@ -10,27 +10,34 @@ import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
+import com.miotech.kun.commons.utils.NumberUtils;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
 import com.miotech.kun.metadata.core.model.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.core.model.dataset.*;
-import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
+import com.miotech.kun.metadata.core.model.vo.*;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.Optional;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Singleton
 public class MetadataDatasetDao {
     private static final Logger logger = LoggerFactory.getLogger(MetadataDatasetDao.class);
 
-    private static final String[] DATASET_COLUMNS = {"gid", "name", "datasource_id", "data_store", "database_name","dsi","deleted"};
+    private static final String[] DATASET_COLUMNS = {"gid", "name", "datasource_id", "data_store", "database_name", "dsi", "deleted"};
     private static final String[] DATASET_FIELD_COLUMNS = {"name", "type", "description", "raw_type, is_primary_key, is_nullable"};
 
     private static final String DATASET_TABLE_NAME = "kun_mt_dataset";
@@ -42,8 +49,21 @@ public class MetadataDatasetDao {
     private static final String[] DATASET_LIFE_CYCLE_COLUMNS = {"dataset_gid", "fields", "status", "create_at"};
     private static final String DATASET_LIFE_CYCLE_TABLE_NAME = "kun_mt_dataset_lifecycle";
 
+    private static final Map<String, String> SORT_KEY_MAP = new HashMap<>();
+
+    static {
+        SORT_KEY_MAP.put("name", "name");
+        SORT_KEY_MAP.put("databaseName", "database_name");
+        SORT_KEY_MAP.put("datasourceName", "datasource_name");
+        SORT_KEY_MAP.put("type", "type");
+        SORT_KEY_MAP.put("highWatermark", "high_watermark");
+    }
+
     @Inject
     DatabaseOperator dbOperator;
+
+    @Inject
+    TagDao tagDao;
 
     /**
      * Fetch dataset by its global id and returns an optional object.
@@ -79,7 +99,7 @@ public class MetadataDatasetDao {
         return Optional.ofNullable(dataset);
     }
 
-    public Dataset createDataset(Dataset dataset){
+    public Dataset createDataset(Dataset dataset) {
         String dsi = dataset.getDSI();
         long gid = IdGenerator.getInstance().nextId();
         String datasetSql = new DefaultSQLBuilder()
@@ -96,7 +116,7 @@ public class MetadataDatasetDao {
                 false
         );
         SchemaSnapshot.Builder builder = SchemaSnapshot.newBuilder();
-        if(dataset.getFields() != null){
+        if (dataset.getFields() != null) {
             builder.withFields(dataset.getFields().stream().map(field -> field.convert()).collect(Collectors.toList()));
         }
         SchemaSnapshot schemaSnapshot = builder.build();
@@ -108,13 +128,13 @@ public class MetadataDatasetDao {
         dbOperator.update(lifecycleSql,
                 gid, JSONUtils.toJsonString(schemaSnapshot), DatasetLifecycleStatus.MANAGED.name(), DateTimeUtils.now());
         Optional<Dataset> datasetOptional = fetchDatasetByGid(gid);
-        if(datasetOptional.isPresent()){
+        if (datasetOptional.isPresent()) {
             return datasetOptional.get();
         }
         return null;
     }
 
-    public Dataset fetchDatasetByDSI(String dsi){
+    public Dataset fetchDatasetByDSI(String dsi) {
         // Convert dataStore to JSON
         Preconditions.checkNotNull(dsi, "DSI cannot be null");
         String sql = new DefaultSQLBuilder().select(DATASET_COLUMNS)
@@ -129,14 +149,14 @@ public class MetadataDatasetDao {
         );
     }
 
-    public Dataset fetchDataSet(Long datasourceId,String database,String table){
+    public Dataset fetchDataSet(Long datasourceId, String database, String table) {
         String sql = new DefaultSQLBuilder()
                 .select(DATASET_COLUMNS)
                 .from(DATASET_TABLE_NAME)
                 .where("datasource_id = ? AND database_name = ? AND name = ?")
                 .asPrepared()
                 .getSQL();
-        return dbOperator.fetchOne(sql,MetadataDatasetMapper.INSTANCE,datasourceId,database,table);
+        return dbOperator.fetchOne(sql, MetadataDatasetMapper.INSTANCE, datasourceId, database, table);
     }
 
     public List<String> suggestDatabase(Long dataSourceId, String prefix) {
@@ -243,6 +263,318 @@ public class MetadataDatasetDao {
         return Optional.ofNullable(dataset);
     }
 
+    public List<DatabaseBaseInfo> getDatabases(List<Long> dataSourceIds) {
+        if (CollectionUtils.isEmpty(dataSourceIds)) {
+            return Lists.newArrayList();
+        }
+
+        String whereClause = "kmd.database_name is not null and kmd.datasource_id in (" + StringUtils.repeat("?", ",", dataSourceIds.size()) + ")";
+        SQLBuilder preSql = DefaultSQLBuilder.newBuilder()
+                .select("distinct kmd.database_name")
+                .from("kun_mt_dataset kmd")
+                .where(whereClause);
+        String finalSql = preSql.getSQL();
+        return dbOperator.fetchAll(finalSql, rs -> {
+            String databaseName = rs.getString("database_name");
+            return new DatabaseBaseInfo(databaseName);
+        }, dataSourceIds.toArray());
+    }
+
+    public DatasetBasicSearch searchDatasets(BasicSearchRequest request) {
+        DatasetBasicSearch page = new DatasetBasicSearch();
+        page.setPageNumber(request.getPageNumber());
+        page.setPageSize(request.getPageSize());
+        if (StringUtils.isBlank(request.getKeyword())) {
+            List<DatasetBasicInfo> datasetBasicInfos = Lists.newArrayList();
+            page.setDatasets(datasetBasicInfos);
+            return page;
+        }
+
+        String sql = "select kmd.gid, " +
+                "kmd.name as dataset_name, " +
+                "kmd.database_name as database_name, " +
+                "kmdsrca.name as datasource_name, " +
+                "kmd.deleted as deleted " +
+                "from kun_mt_dataset kmd " +
+                "inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id " +
+                "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id ";
+
+        String whereClause = "where upper(kmd.name) like ? ";
+        sql += whereClause;
+
+        String orderClause = "order by kmd.name asc ";
+        sql += orderClause;
+
+        String limitSql = "limit " + request.getPageSize() + " offset 0";
+        sql += limitSql;
+
+        List<DatasetBasicInfo> datasetBasicInfos = dbOperator.fetchAll(sql, rs -> {
+            DatasetBasicInfo basic = new DatasetBasicInfo();
+            basic.setGid(rs.getLong("gid"));
+            basic.setName(rs.getString("dataset_name"));
+            basic.setDatabase(rs.getString("database_name"));
+            basic.setDatasource(rs.getString("datasource_name"));
+            basic.setDeleted(rs.getBoolean("deleted"));
+
+            return basic;
+        }, "%" + request.getKeyword().toUpperCase() + "%");
+
+        page.setDatasets(datasetBasicInfos);
+        return page;
+    }
+
+    public DatasetBasicSearch fullTextSearch(DatasetSearchRequest request) {
+        StringBuilder whereClause = new StringBuilder("where 1=1").append("\n");
+        List<Object> pstmtArgs = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(request.getDsIdList()) || CollectionUtils.isNotEmpty(request.getDsTypeList())) {
+            if (CollectionUtils.isNotEmpty(request.getDsIdList())) {
+                whereClause.append("and kmdsrc.id in ").append(collectionToConditionSql(pstmtArgs, request.getDsIdList())).append("\n");
+            }
+            if (CollectionUtils.isNotEmpty(request.getDsTypeList())) {
+                whereClause.append("and kmdsrc.type_id in ").append(collectionToConditionSql(pstmtArgs, request.getDsTypeList())).append("\n");
+            }
+        }
+        if (CollectionUtils.isNotEmpty(request.getOwnerList())) {
+            whereClause.append("and owner in ").append(collectionToConditionSql(pstmtArgs, request.getOwnerList())).append("\n");
+        }
+        if (CollectionUtils.isNotEmpty(request.getTagList())) {
+            whereClause.append("and tag in ").append(collectionToConditionSql(pstmtArgs, request.getTagList())).append("\n");
+        }
+        if (CollectionUtils.isNotEmpty(request.getDbList())) {
+            whereClause.append("and database_name in ").append(collectionToConditionSql(pstmtArgs, request.getDbList())).append("\n");
+        }
+        if (StringUtils.isNotEmpty(request.getSearchContent())) {
+            whereClause.append("and upper(kmd.name) like ?").append("\n");
+            pstmtArgs.add(toLikeSql(request.getSearchContent().toUpperCase()));
+        }
+        if (request.getWatermarkStart() != null) {
+            whereClause.append("and high_watermark >= ?").append("\n");
+            pstmtArgs.add(millisToTimestamp(request.getWatermarkStart()));
+        }
+        if (request.getWatermarkEnd() != null) {
+            whereClause.append("and high_watermark <= ?").append("\n");
+            pstmtArgs.add(millisToTimestamp(request.getWatermarkEnd()));
+        }
+        if ((request.getDisplayDeleted() == null) || (!request.getDisplayDeleted())) {
+            whereClause.append("and NOT kmd.deleted").append("\n");
+        }
+
+        String orderByClause = "order by name\n";
+        if (StringUtils.isNotEmpty(request.getSortKey())
+                && StringUtils.isNotEmpty(request.getSortOrder())) {
+            orderByClause = "order by " + SORT_KEY_MAP.get(request.getSortKey()) + " " + request.getSortOrder() + "\n";
+        }
+
+        String limitSql = toLimitSql(request.getPageNumber(), request.getPageSize());
+
+        String sql = "select kmd.*, " +
+                "kmdsrct.name as type, " +
+                "kmdsrca.name as datasource_name, " +
+                "kmda.description as dataset_description, " +
+                "string_agg(distinct(kmdo.owner), ',') as owners, " +
+                "string_agg(distinct(kmdt.tag), ',') as tags, " +
+                "watermark.high_watermark as high_watermark\n" +
+                "from kun_mt_dataset kmd\n" +
+                "         inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
+                "         inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n" +
+                "         inner join kun_mt_datasource_type kmdsrct on kmdsrct.id = kmdsrc.type_id\n" +
+                "         left join kun_mt_dataset_attrs kmda on kmd.gid = kmda.dataset_gid\n" +
+                "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
+                "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
+                "         left join (select dataset_gid, max(last_updated_time) as high_watermark from kun_mt_dataset_stats group by dataset_gid) watermark on watermark.dataset_gid = kmd.gid\n";
+
+        String groupClause = "group by kmd.gid, kmd.name, kmd.datasource_id, kmd.schema, kmd.data_store, kmd.database_name, type, datasource_name, dataset_description, watermark.high_watermark\n";
+        sql += whereClause;
+        sql += groupClause;
+
+        String countSql = "select count(1) as total_count from (" + sql + ") as result";
+        Integer totalCount = dbOperator.fetchOne(countSql, rs -> rs.getLong(1), pstmtArgs.toArray()).intValue();
+
+        sql += orderByClause;
+        sql += limitSql;
+
+        DatasetBasicSearch pageResult = new DatasetBasicSearch();
+        pageResult.setPageNumber(request.getPageNumber());
+        pageResult.setPageSize(request.getPageSize());
+        pageResult.setTotalCount(totalCount);
+
+        List<DatasetBasicInfo> datasetBasicInfos = dbOperator.fetchAll(sql, rs -> {
+            DatasetBasicInfo datasetBasicInfo = new DatasetBasicInfo();
+            setDatasetBasicField(datasetBasicInfo, rs);
+            return datasetBasicInfo;
+        }, pstmtArgs.toArray());
+
+        pageResult.setDatasets(datasetBasicInfos);
+        return pageResult;
+    }
+
+    public DatasetDetail getDatasetDetail(Long id) {
+        String sql = "select kmd.*, " +
+                "kmdsrct.name as type, " +
+                "kmdsrca.name as datasource_name, " +
+                "kmda.description as dataset_description, " +
+                "string_agg(distinct(kmdo.owner), ',') as owners, " +
+                "string_agg(distinct(kmdt.tag), ',') as tags, " +
+                "watermark.high_watermark as high_watermark, " +
+                "watermark.low_watermark as low_watermark," +
+                "kmd.deleted as deleted\n" +
+                "from kun_mt_dataset kmd\n" +
+                "         inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
+                "         inner join kun_mt_datasource_type kmdsrct on kmdsrct.id = kmdsrc.type_id\n" +
+                "         inner join kun_mt_datasource_attrs kmdsrca on kmdsrca.datasource_id = kmdsrc.id\n" +
+                "         left join kun_mt_dataset_attrs kmda on kmd.gid = kmda.dataset_gid\n" +
+                "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
+                "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
+                "         left join (select dataset_gid, max(last_updated_time) as high_watermark, min(last_updated_time) as low_watermark from kun_mt_dataset_stats group by dataset_gid) watermark on watermark.dataset_gid = kmd.gid\n";
+
+        String whereClause = "where kmd.gid = ?\n";
+        String groupByClause = "group by kmd.gid, type, datasource_name, dataset_description, high_watermark, low_watermark";
+
+        sql = sql + whereClause + groupByClause;
+        return dbOperator.fetchOne(sql, rs -> {
+            DatasetDetail dataset = new DatasetDetail();
+            setDatasetBasicField(dataset, rs);
+            dataset.setRowCount(getRowCount(id));
+            dataset.setDeleted(rs.getBoolean("deleted"));
+
+            return dataset;
+        }, id);
+    }
+
+    public Long getRowCount(Long gid) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("row_count")
+                .from("kun_mt_dataset_stats")
+                .where("dataset_gid = ?")
+                .orderBy("stats_date desc")
+                .limit(1)
+                .getSQL();
+
+        return dbOperator.fetchOne(sql, rs -> rs.getLong("row_count"), gid);
+    }
+
+    public void updateDataset(Long id, DatasetUpdateRequest updateRequest) {
+        String sql = "insert into kun_mt_dataset_attrs values (?, ?) " +
+                "on conflict (dataset_gid) " +
+                "do update set description = ?";
+        dbOperator.update(sql, id, updateRequest.getDescription(), updateRequest.getDescription());
+        overwriteOwners(id, updateRequest.getOwners());
+        tagDao.save(updateRequest.getTags());
+        tagDao.overwriteDatasetTags(id, updateRequest.getTags());
+    }
+
+    public void overwriteOwners(Long gid, List<String> owners) {
+        String sql = "delete from kun_mt_dataset_owners where dataset_gid = ?";
+        dbOperator.update(sql, gid);
+
+        if (CollectionUtils.isEmpty(owners)) {
+            return;
+        }
+
+        String addOwnerRefSql = "insert into kun_mt_dataset_owners values (?, ?, ?)";
+        for (String owner : owners) {
+            if (StringUtils.isBlank(owner)) {
+                continue;
+            }
+
+            dbOperator.update(addOwnerRefSql, IdGenerator.getInstance().nextId(), gid, owner);
+        }
+    }
+
+    public DatasetFieldPageInfo searchDatasetFields(Long id, DatasetColumnSearchRequest searchRequest) {
+        Long rowCount = getRowCount(id);
+
+        DatasetFieldPageInfo datasetFieldPage = new DatasetFieldPageInfo();
+        StringBuilder sqlBuilder = new StringBuilder(
+                "select distinct on (name, id) kmdf.id as id, kmdf.name as name, kmdf.type as type, kmdf.description as description, \n" +
+                        "stats.distinct_count as distinct_count, stats.nonnull_count as nonnull_count, stats.stats_date as stats_date\n" +
+                        "from kun_mt_dataset_field kmdf\n" +
+                        "left join kun_mt_dataset_field_stats stats\n" +
+                        "on kmdf.id = stats.field_id\n"
+        );
+
+        Pair<String, List<Object>> whereClauseAndParams = getWhereClauseAndArgumentsForFindByDatasetGid(id, searchRequest);
+        String whereClause = whereClauseAndParams.getLeft();
+        List<Object> preparedStmtArgs = whereClauseAndParams.getRight();
+        sqlBuilder.append(whereClause);
+
+        String totalCountSql = "select count(*) as total_count from kun_mt_dataset_field kmdf " + whereClause;
+        Integer totalCount = dbOperator.fetchOne(totalCountSql, rs -> rs.getInt("total_count"), preparedStmtArgs.toArray());
+
+        String orderByClause = "order by kmdf.name asc, kmdf.id desc, stats.stats_date desc\n";
+        String limitSql = toLimitSql(searchRequest.getPageNumber(), searchRequest.getPageSize());
+
+        sqlBuilder.append(orderByClause);
+        sqlBuilder.append(limitSql);
+
+        String sql = sqlBuilder.toString();
+
+        List<DatasetFieldInfo> datasetFields = dbOperator.fetchAll(sql, rs -> {
+//            List<DatasetFieldInfo> columns = new ArrayList<>();
+//            while (rs.next()) {
+                DatasetFieldInfo column = new DatasetFieldInfo();
+                column.setId(rs.getLong("id"));
+                column.setName(rs.getString("name"));
+                column.setDescription(rs.getString("description"));
+                column.setType(rs.getString("type"));
+                Watermark watermark = new Watermark();
+                column.setHighWatermark(watermark);
+                column.setDistinctCount(rs.getLong("distinct_count"));
+                column.setNotNullCount(rs.getLong("nonnull_count"));
+                if (rowCount != null && !rowCount.equals(0L) && column.getNotNullCount() != null) {
+                    double nonnullPercentage = column.getNotNullCount() * 1.0 / rowCount;
+                    BigDecimal bigDecimal = BigDecimal.valueOf(nonnullPercentage);
+                    column.setNotNullPercentage(bigDecimal.setScale(4, BigDecimal.ROUND_HALF_UP).doubleValue());
+                }
+                return column;
+//                columns.add(column);
+//            }
+//            return columns;
+        }, preparedStmtArgs.toArray());
+
+        datasetFieldPage.setPageNumber(searchRequest.getPageNumber());
+        datasetFieldPage.setPageSize(searchRequest.getPageSize());
+        datasetFieldPage.setTotalCount(totalCount);
+        datasetFieldPage.setColumns(datasetFields);
+
+        return datasetFieldPage;
+    }
+
+    private Pair<String, List<Object>> getWhereClauseAndArgumentsForFindByDatasetGid(Long datasetGid, DatasetColumnSearchRequest searchRequest) {
+        // init clause builder and parameter
+        StringBuilder whereClauseBuilder = new StringBuilder("where kmdf.dataset_gid = ?\n");
+        List<Object> whereArgs = new ArrayList<>();
+        whereArgs.add(datasetGid);
+
+        if (StringUtils.isNotEmpty(searchRequest.getKeyword())) {
+            whereClauseBuilder.append("and kmdf.name ILIKE ?\n");
+            whereArgs.add(toLikeSql(searchRequest.getKeyword().toUpperCase()));
+        }
+
+        return Pair.of(whereClauseBuilder.toString(), whereArgs);
+    }
+
+    public DatasetFieldInfo updateDatasetColumn(Long id, DatasetColumnUpdateRequest updateRequest) {
+        String sql = "update kun_mt_dataset_field set description = ? where id = ?";
+        dbOperator.update(sql, updateRequest.getDescription(), id);
+        return findFieldById(id);
+    }
+
+    public DatasetFieldInfo findFieldById(Long id) {
+        String sql = "select id, name, type, description from kun_mt_dataset_field where id = ?";
+
+        return dbOperator.fetchOne(sql, rs -> {
+            DatasetFieldInfo datasetField = new DatasetFieldInfo();
+            if (rs.next()) {
+                datasetField.setId(rs.getLong("id"));
+                datasetField.setName(rs.getString("name"));
+                datasetField.setType(rs.getString("type"));
+                datasetField.setDescription(rs.getString("description"));
+            }
+            return datasetField;
+        }, id);
+    }
+
     /**
      * Database result set mapper for {@link Dataset} object
      */
@@ -289,4 +621,78 @@ public class MetadataDatasetDao {
                     .build();
         }
     }
+
+    private void setDatasetBasicField(DatasetBasicInfo datasetBasicInfo, ResultSet rs) throws SQLException {
+        datasetBasicInfo.setGid(rs.getLong("gid"));
+        datasetBasicInfo.setType(rs.getString("type"));
+        datasetBasicInfo.setDatasource(rs.getString("datasource_name"));
+        datasetBasicInfo.setDescription(rs.getString("dataset_description"));
+        datasetBasicInfo.setName(rs.getString("name"));
+        datasetBasicInfo.setDatabase(rs.getString("database_name"));
+        datasetBasicInfo.setOwners(sqlToList(rs.getString("owners")));
+        datasetBasicInfo.setTags(sqlToList(rs.getString("tags")));
+        datasetBasicInfo.setDeleted(rs.getBoolean("deleted"));
+        Watermark highWatermark = new Watermark();
+        Timestamp highWatermarkTimestamp = rs.getTimestamp("high_watermark");
+        if (highWatermarkTimestamp != null) {
+            highWatermark.setTime(NumberUtils.toDouble(DateTimeUtils.fromTimestamp(highWatermarkTimestamp).toEpochSecond()));
+        }
+        datasetBasicInfo.setHighWatermark(highWatermark);
+
+        Watermark lowWatermark = new Watermark();
+        Timestamp lowWatermarkTimestamp = rs.getTimestamp("high_watermark");
+        if (lowWatermarkTimestamp != null) {
+            lowWatermark.setTime(NumberUtils.toDouble(DateTimeUtils.fromTimestamp(lowWatermarkTimestamp).toEpochSecond()));
+        }
+        datasetBasicInfo.setLowWatermark(lowWatermark);
+    }
+
+    private List<String> sqlToList(String sql) {
+        if (StringUtils.isNotEmpty(sql)) {
+            return Arrays.asList(sql.split(","));
+        }
+        return Collections.emptyList();
+    }
+
+    public String collectionToConditionSql(List<Object> pstmtArgs, Collection<?> collection) {
+        if (CollectionUtils.isNotEmpty(collection)) {
+            StringBuilder collectionSql = new StringBuilder("(");
+            for (Object object : collection) {
+                collectionSql.append("?").append(",");
+                if (pstmtArgs != null) {
+                    pstmtArgs.add(object);
+                }
+            }
+            collectionSql.deleteCharAt(collectionSql.length() - 1);
+            collectionSql.append(")");
+            return collectionSql.toString();
+        }
+        return "";
+    }
+
+    public String toLikeSql(String keyword) {
+        return "%" + keyword + "%";
+    }
+
+    public LocalDateTime millisToTimestamp(Long millis) {
+        return ObjectUtils.defaultIfNull(LocalDateTime.ofInstant(Instant.ofEpochMilli(millis), ZoneOffset.UTC), null);
+    }
+
+    public String toLimitSql(int pageNum, int pageSize) {
+        StringBuilder pageSql = new StringBuilder();
+        pageSql.append("limit ").append(pageSize).append(" offset ").append((pageNum - 1) * pageSize);
+        return pageSql.toString();
+    }
+
+    public String toColumnSql(int length) {
+        if (length == 0) {
+            return "";
+        }
+        StringJoiner stringJoiner = new StringJoiner(",", "(", ")");
+        for (int i = 0; i < length; i++) {
+            stringJoiner.add("?");
+        }
+        return stringJoiner.toString();
+    }
+
 }

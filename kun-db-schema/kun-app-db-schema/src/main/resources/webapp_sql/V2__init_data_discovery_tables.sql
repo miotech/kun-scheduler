@@ -1,24 +1,5 @@
 -- V1__init_ddl.sql
 
-create table if not exists kun_mt_dataset_attrs (
-    dataset_gid bigint primary key,
-    description varchar(16384)
-);
-
-create table if not exists kun_mt_dataset_owners (
-    id           bigserial primary key,
-    dataset_gid  bigint not null,
-    owner        varchar(256) not null
-);
-
-create table if not exists kun_mt_dataset_tags
-(
-    id            bigserial primary key,
-    dataset_gid   bigint not null,
-    tag           varchar(256) not null,
-    constraint kun_mt_dataset_tags_dataset_gid_tag_key unique (dataset_gid, tag)
-);
-
 create table if not exists kun_mt_glossary
 (
     id          bigserial     primary key,

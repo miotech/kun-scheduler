@@ -6,10 +6,10 @@ import com.google.inject.Inject;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
+import com.miotech.kun.metadata.core.model.dataset.DatabaseBaseInfo;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.connection.ConnectionInfo;
-import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestRequest;
-import com.miotech.kun.metadata.core.model.vo.DatasetColumnSuggestResponse;
+import com.miotech.kun.metadata.core.model.vo.*;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
 import org.apache.commons.collections4.CollectionUtils;
 import org.slf4j.Logger;
@@ -134,5 +134,33 @@ public class MetadataDatasetService implements MetadataServiceFacade {
                         new DatasetColumnSuggestResponse(request.getDatabaseName(), request.getTableName(),
                                 metadataDatasetDao.suggestColumn(dataSourceId, request)))
                 .collect(Collectors.toList());
+    }
+
+    public List<DatabaseBaseInfo> getDatabases(List<Long> dataSourceIds) {
+        return metadataDatasetDao.getDatabases(dataSourceIds);
+    }
+
+    public DatasetBasicSearch searchDatasets(BasicSearchRequest request) {
+        return metadataDatasetDao.searchDatasets(request);
+    }
+
+    public DatasetBasicSearch fullTextSearch(DatasetSearchRequest request) {
+        return metadataDatasetDao.fullTextSearch(request);
+    }
+
+    public DatasetDetail getDatasetDetail(Long id) {
+        return metadataDatasetDao.getDatasetDetail(id);
+    }
+
+    public void updateDataset(Long id, DatasetUpdateRequest updateRequest) {
+        metadataDatasetDao.updateDataset(id, updateRequest);
+    }
+
+    public DatasetFieldPageInfo searchDatasetFields(Long id, DatasetColumnSearchRequest searchRequest) {
+        return metadataDatasetDao.searchDatasetFields(id, searchRequest);
+    }
+
+    public DatasetFieldInfo updateDatasetColumn(Long id, DatasetColumnUpdateRequest updateRequest) {
+        return metadataDatasetDao.updateDatasetColumn(id, updateRequest);
     }
 }
