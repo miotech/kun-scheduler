@@ -20,6 +20,7 @@ export const AddToOtherViewModal: React.FC<Props> = memo(function AddToOtherView
   const t = useI18n();
 
   const { data: searchTaskDefinitionViewsRecords, run: doFetch } = useRequest(searchTaskDefinitionViews, {
+    debounceWait: 300,
     manual: true,
   });
 
@@ -41,7 +42,16 @@ export const AddToOtherViewModal: React.FC<Props> = memo(function AddToOtherView
       }
     }
   }, [form, onOk, t]);
-
+  const onSearch = useCallback(
+    async (value: string) => {
+      doFetch({
+        pageNumber: 1,
+        pageSize: 100,
+        keyword: value,
+      });
+    },
+    [doFetch],
+  );
   return (
     <Modal
       visible={visible}
@@ -56,7 +66,7 @@ export const AddToOtherViewModal: React.FC<Props> = memo(function AddToOtherView
           required
           label={t('dataDevelopment.addSelectedTasksToOtherViews.targetViewToAdd')}
         >
-          <Select showSearch optionFilterProp="title">
+          <Select onSearch={onSearch} showSearch optionFilterProp="title">
             {(
               searchTaskDefinitionViewsRecords?.records.filter(view => {
                 return currentViewId !== view.id;
