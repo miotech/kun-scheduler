@@ -21,13 +21,13 @@ public class PassTokenFilter implements Filter {
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain) throws IOException, ServletException {
-            if (isEqualToPassToken((HttpServletRequest) req, passToken)) {
-                Authentication authentication = new PassToken();
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-                setUserInfoInContextHolder();
-            }
+        if (isEqualToPassToken((HttpServletRequest) req, passToken)) {
+            Authentication authentication = new PassToken();
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            setUserInfoInContextHolder();
+        }
 
-            chain.doFilter(req, res);
+        chain.doFilter(req, res);
 
     }
 

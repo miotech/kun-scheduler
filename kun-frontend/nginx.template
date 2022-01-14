@@ -48,6 +48,15 @@ server {
         proxy_redirect off;
     }
 
+    location /kun/open-api {
+            proxy_set_header Host $http_host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Scheme $scheme;
+            add_header cache-control public;
+            proxy_pass http://${KUN_APP_HOST}:${KUN_APP_PORT};
+            proxy_redirect off;
+        }
+
     location /kun/api/workflow {
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;

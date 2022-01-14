@@ -26,7 +26,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         "com.miotech.kun.dataquality",
         "com.miotech.kun.datadiscovery",
         "com.miotech.kun.webapp",
-        "com.miotech.kun.monitor"
+        "com.miotech.kun.monitor",
+        "com.miotech.kun.openapi"
 }, exclude = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
 @EnableScheduling
 @EnableAsync

@@ -38,9 +38,27 @@ public class BaseSecurityService {
         return SecurityContextHolder.getUserInfo();
     }
 
+    public void setCurrentUser(UserInfo userInfo) {
+        SecurityContextHolder.setUserInfo(userInfo);
+    }
+
     public UserInfo getUserById(Long id) {
         HttpEntity httpEntity = new HttpEntity(getFinalRequestHttpHeaders());
         String userInfoUrl = ConfigKey.getSecurityServerUserInfoUrl() + id;
+        ResponseEntity<RequestResult<UserInfo>> userResult = restTemplate.exchange(userInfoUrl,
+                HttpMethod.GET,
+                httpEntity,
+                new ParameterizedTypeReference<RequestResult<UserInfo>>() {
+                });
+        if (!userResult.getStatusCode().is2xxSuccessful()) {
+            return null;
+        }
+        return userResult.getBody().getResult();
+    }
+
+    public UserInfo getUserByUsername(String username) {
+        HttpEntity httpEntity = new HttpEntity(getFinalRequestHttpHeaders());
+        String userInfoUrl = ConfigKey.getSecurityServerUserInfoUrl()+ "name/" + username;
         ResponseEntity<RequestResult<UserInfo>> userResult = restTemplate.exchange(userInfoUrl,
                 HttpMethod.GET,
                 httpEntity,
