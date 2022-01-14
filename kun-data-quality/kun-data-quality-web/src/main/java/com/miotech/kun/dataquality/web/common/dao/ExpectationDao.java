@@ -244,16 +244,16 @@ public class ExpectationDao {
         }, taskId);
     }
 
-    public DataQualityStatus validateTaskRunTestCase(Long taskRunId) {
+    public DataQualityStatus validateTaskAttemptTestCase(Long taskAttemptId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("status")
                 .from(CASE_RUN_TABLE, CASE_RUN_MODEL)
                 .join("inner", "kun_dq_expectation", "kde")
                 .on("kde.id = " + CASE_RUN_MODEL + ".case_id")
-                .where(CASE_RUN_MODEL + ".task_run_id = ? and kde.is_blocking = ?")
+                .where(CASE_RUN_MODEL + ".task_attempt_id = ? and kde.is_blocking = ?")
                 .asPrepared()
                 .getSQL();
-        List<String> caseRunStatusList = jdbcTemplate.queryForList(sql, String.class, taskRunId, true);
+        List<String> caseRunStatusList = jdbcTemplate.queryForList(sql, String.class, taskAttemptId, true);
         boolean allSuccess = true;
         for (String caseRunStatus : caseRunStatusList) {
             if (caseRunStatus.equals(DataQualityStatus.FAILED.name())) {
@@ -264,17 +264,6 @@ public class ExpectationDao {
             }
         }
         return allSuccess ? DataQualityStatus.SUCCESS : DataQualityStatus.CREATED;
-    }
-
-    public Long fetchTaskRunIdByCase(long caseRunId) {
-        String sql = DefaultSQLBuilder.newBuilder()
-                .select("task_run_id")
-                .from(CASE_RUN_TABLE)
-                .where("case_run_id = ?")
-                .limit()
-                .asPrepared()
-                .getSQL();
-        return jdbcTemplate.queryForObject(sql, Long.class, caseRunId, 1);
     }
 
     public DataQualityCaseBasics getExpectationBasic(DataQualitiesRequest request) {

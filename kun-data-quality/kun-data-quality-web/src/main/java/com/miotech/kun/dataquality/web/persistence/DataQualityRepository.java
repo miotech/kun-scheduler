@@ -2,32 +2,29 @@ package com.miotech.kun.dataquality.web.persistence;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
-import com.google.gson.reflect.TypeToken;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.common.utils.IdUtils;
-import com.miotech.kun.common.utils.JSONUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.web.model.DataQualityStatus;
 import com.miotech.kun.dataquality.web.model.TemplateType;
 import com.miotech.kun.dataquality.web.model.bo.DataQualitiesRequest;
-import com.miotech.kun.dataquality.web.model.bo.DataQualityHistoryRequest;
 import com.miotech.kun.dataquality.web.model.bo.DataQualityRequest;
 import com.miotech.kun.dataquality.web.model.bo.DeleteCaseResponse;
 import com.miotech.kun.dataquality.web.model.entity.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.reflect.Type;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -45,7 +42,7 @@ public class DataQualityRepository extends BaseRepository {
 
     public static final String CASE_RUN_MODEL = "caserun";
 
-    public static final List<String> caseRunCols = ImmutableList.of("case_run_id", "task_run_id", "case_id", "status");
+    public static final List<String> caseRunCols = ImmutableList.of("case_run_id", "task_run_id", "case_id", "status", "task_attempt_id");
 
     public static final List<String> caseCols = ImmutableList.of("id", "name", "description", "task_id", "template_id", "execution_string"
             , "types", "create_user", "create_time", "update_user", "update_time", "primary_dataset_id", "is_blocking");
@@ -131,6 +128,17 @@ public class DataQualityRepository extends BaseRepository {
         jdbcTemplate.update(sql, dataQualityStatus.name(), caseRunId);
     }
 
+    public CaseRun fetchCaseRunByCaseRunId(long caseRunId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(caseRunCols.toArray(new String[0]))
+                .from(CASE_RUN_TABLE)
+                .where("case_run_id = ?")
+                .limit()
+                .asPrepared()
+                .getSQL();
+        return jdbcTemplate.queryForObject(sql, CaseRunMapper.INSTANCE, caseRunId, 1);
+    }
+
     public long fetchTaskRunIdByCase(long caseRunId) {
         String sql = DefaultSQLBuilder.newBuilder()
                 .select("task_run_id")
@@ -168,6 +176,7 @@ public class DataQualityRepository extends BaseRepository {
                 ps.setLong(2, caseRunList.get(i).getTaskRunId());
                 ps.setLong(3, caseRunList.get(i).getCaseId());
                 ps.setString(4, DataQualityStatus.CREATED.name());
+                ps.setLong(5, caseRunList.get(i).getTaskAttemptId());
             }
 
             @Override
@@ -725,6 +734,24 @@ public class DataQualityRepository extends BaseRepository {
             }
             return caseIds;
         }, datasetIds.toArray());
+    }
+
+
+    public static class CaseRunMapper implements RowMapper<CaseRun> {
+
+        public static final CaseRunMapper INSTANCE = new CaseRunMapper();
+
+
+        @Override
+        public CaseRun mapRow(ResultSet rs, int rowNum) throws SQLException {
+            CaseRun caseRun = new CaseRun();
+            caseRun.setCaseId(rs.getLong("case_id"));
+            caseRun.setCaseRunId(rs.getLong("case_run_id"));
+            caseRun.setTaskRunId(rs.getLong("task_run_id"));
+            caseRun.setTaskAttemptId(rs.getLong("task_attempt_id"));
+            caseRun.setStatus(rs.getString("status"));
+            return caseRun;
+        }
     }
 
 }

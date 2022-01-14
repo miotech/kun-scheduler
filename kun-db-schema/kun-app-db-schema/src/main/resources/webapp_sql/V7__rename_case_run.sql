@@ -1,0 +1,1 @@
+ALTER TABLE kun_dq_case_run add task_attempt_id int8;
