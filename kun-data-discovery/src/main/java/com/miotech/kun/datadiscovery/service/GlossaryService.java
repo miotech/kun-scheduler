@@ -1,15 +1,19 @@
 package com.miotech.kun.datadiscovery.service;
 
+import com.google.common.collect.Lists;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.Glossary;
+import com.miotech.kun.datadiscovery.model.entity.GlossaryBasic;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryChildren;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryPage;
 import com.miotech.kun.datadiscovery.persistence.GlossaryRepository;
 import com.miotech.kun.security.service.BaseSecurityService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * @author: Jie Chen
@@ -27,6 +31,14 @@ public class GlossaryService extends BaseSecurityService {
 
     public Long updateGraph(Long id, GlossaryGraphRequest glossaryGraphRequest) {
         return glossaryRepository.updateGraph(id, glossaryGraphRequest);
+    }
+
+    public List<GlossaryBasic> getGlossariesByDataset(Long datasetGid) {
+        if (datasetGid == null) {
+            return Lists.newArrayList();
+        }
+
+        return glossaryRepository.getGlossariesByDataset(datasetGid);
     }
 
     public Glossary add(GlossaryRequest glossaryRequest) {

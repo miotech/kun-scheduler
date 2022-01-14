@@ -29,14 +29,14 @@ public class DataSourceService extends BaseSecurityService {
     MetadataService metadataService;
 
     public DataSourceBasicPage search(BasicSearchRequest basicSearchRequest) {
-        List<com.miotech.kun.metadata.core.model.datasource.DataSource> records = metadataService.search(basicSearchRequest.getKeyword(), basicSearchRequest.getPageNumber(), basicSearchRequest.getPageSize()).getRecords();
+        List<com.miotech.kun.metadata.core.model.datasource.DataSource> records = metadataService.searchDataSource(basicSearchRequest.getKeyword(), basicSearchRequest.getPageNumber(), basicSearchRequest.getPageSize()).getRecords();
         return new DataSourceBasicPage(records.stream()
                 .map(ds -> new DatasourceBasic(ds.getId(), ds.getName()))
                 .collect(Collectors.toList()));
     }
 
     public DataSourcePage search(DataSourceSearchRequest datasourceSearchRequest) {
-        PaginationVO<com.miotech.kun.metadata.core.model.datasource.DataSource> result = metadataService.search(datasourceSearchRequest.getSearch(),
+        PaginationVO<com.miotech.kun.metadata.core.model.datasource.DataSource> result = metadataService.searchDataSource(datasourceSearchRequest.getSearch(),
                 datasourceSearchRequest.getPageNumber(), datasourceSearchRequest.getPageSize());
         List<com.miotech.kun.metadata.core.model.datasource.DataSource> records = result.getRecords();
         DataSourcePage dataSourcePage = new DataSourcePage(records.stream()
@@ -61,7 +61,7 @@ public class DataSourceService extends BaseSecurityService {
     }
 
     public List<DataSourceTemplateVO> getAllTypes() {
-        List<DatasourceTemplate> types = metadataService.getTypes();
+        List<DatasourceTemplate> types = metadataService.getDataSourceTypes();
         return types.stream()
                 .map(type -> new DataSourceTemplateVO(type.getType(),type.getId()))
                 .collect(Collectors.toList());
@@ -69,7 +69,7 @@ public class DataSourceService extends BaseSecurityService {
 
     public DataSourceVO add(com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
         fillCreateRequest(dataSourceVo);
-        DataSource ds = metadataService.create(dataSourceVo.convert());
+        DataSource ds = metadataService.createDataSource(dataSourceVo.convert());
         return DataSourceVO.builder()
                 .id(ds.getId())
                 .datasourceType(ds.getDatasourceType().name())
@@ -85,7 +85,7 @@ public class DataSourceService extends BaseSecurityService {
 
     public DataSourceVO update(Long id, com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
         fillUpdateRequest(dataSourceVo);
-        DataSource ds = metadataService.update(id, dataSourceVo.convert());
+        DataSource ds = metadataService.updateDataSource(id, dataSourceVo.convert());
         return DataSourceVO.builder()
                 .id(ds.getId())
                 .datasourceType(ds.getDatasourceType().name())
@@ -100,7 +100,7 @@ public class DataSourceService extends BaseSecurityService {
     }
 
     public void delete(Long id) {
-        metadataService.delete(id);
+        metadataService.deleteDataSource(id);
     }
 
     private void fillCreateRequest(com.miotech.kun.datadiscovery.model.bo.DataSourceVo dataSourceVo) {
