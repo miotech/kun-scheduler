@@ -1,6 +1,6 @@
 import { useHistory } from 'umi';
 import React, { memo, useMemo, useState, useCallback } from 'react';
-import { Button, Dropdown, Menu, notification } from 'antd';
+import { Button, Dropdown, Menu, notification, Input } from 'antd';
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
@@ -36,33 +36,50 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
   const t = useI18n();
 
   const [selectedTemplateName, setSelectedTemplateName] = useState<string | null>(null);
+  const [templateSearchValue, setTemplateSearchValue] = useState<string | null>(null);
 
   useMount(() => {
     dispatch.dataDevelopment.fetchTaskTemplates();
   });
-
+  const onChange = (e: any) => {
+    const { value } = e.target;
+    setTemplateSearchValue(value);
+  };
   const overlay = useMemo(() => {
     if (taskTemplates && taskTemplates.length) {
       return (
         <Menu
+          className={styles.menu}
           onClick={({ key }) => {
             setSelectedTemplateName(key as string);
           }}
         >
-          {taskTemplates.map(templateItem => (
-            <Menu.Item key={templateItem.name} title={templateItem.name}>
-              <span>
-                <TaskTemplateIcon name={templateItem.name} />
-              </span>
-              <span>{templateItem.name}</span>
-            </Menu.Item>
-          ))}
+          <div style={{ padding: '7px' }}>
+            <Input onChange={onChange} placeholder="search" allowClear />
+          </div>
+          {taskTemplates.map(templateItem => {
+            const rep = templateSearchValue
+              ? templateItem.name.toLowerCase().includes(templateSearchValue as string)
+              : true;
+            if (rep) {
+              return (
+                <Menu.Item key={templateItem.name} title={templateItem.name}>
+                  <span>
+                    <TaskTemplateIcon name={templateItem.name} />
+                    &nbsp;
+                  </span>
+                  <span>{templateItem.name}</span>
+                </Menu.Item>
+              );
+            }
+            return '';
+          })}
         </Menu>
       );
     }
     // else
     return <></>;
-  }, [taskTemplates]);
+  }, [taskTemplates, templateSearchValue]);
 
   const handleClickTask = useCallback(
     (id, e) => {
