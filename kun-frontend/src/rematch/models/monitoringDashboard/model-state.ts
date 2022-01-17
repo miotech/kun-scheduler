@@ -30,6 +30,7 @@ export interface DataDiscoveryBoardData {
     pageNum: number;
     pageSize: number;
     showPageSize: number;
+    glossaryFilter: string | null;
     total: number;
   };
   // dataset metrics table state
@@ -97,6 +98,7 @@ export const initState: MonitoringDashboardModelState = {
       pageNum: 1,
       pageSize: 65535,
       showPageSize: 10,
+      glossaryFilter: null,
       total: 0,
     },
     datasetMetrics: {

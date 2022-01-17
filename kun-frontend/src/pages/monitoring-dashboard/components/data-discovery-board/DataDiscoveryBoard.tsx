@@ -142,6 +142,7 @@ export const DataDiscoveryBoard: React.FC = memo(function DataDiscoveryBoard() {
       <Row gutter={[8, 8]}>
         <Col span={24}>
           <FailedTestCasesTable
+            glossaryFilter={failedTestCases.glossaryFilter}
             data={failedTestCases.data}
             pageNum={failedTestCases.pageNum}
             pageSize={failedTestCases.showPageSize}

@@ -12,6 +12,15 @@ export interface DataDevelopmentModelState {
   filters: DataDevelopmentModelFilter;
   totalCount: number;
   taskDefinitions: TaskDefinition[];
+  taskList: {
+    loading: boolean;
+    error: string | null;
+    pageNum: number;
+    pageSize: number;
+    totalCount: number;
+    data: [];
+    isInit: boolean;
+  };
   displayType: 'DAG' | 'LIST';
   dagTaskDefs: TaskDefinition[];
   /* Task type that user dragged into center panel */
@@ -34,6 +43,15 @@ export const initState: DataDevelopmentModelState = {
   },
   displayType: 'LIST',
   taskDefinitions: [],
+  taskList: {
+    loading: false,
+    error: null,
+    pageNum: 1,
+    pageSize: 25,
+    totalCount: 0,
+    data: [],
+    isInit: false,
+  },
   dagTaskDefs: [],
   totalCount: 0,
   creatingTaskTemplate: null,
