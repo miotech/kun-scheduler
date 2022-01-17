@@ -2,7 +2,7 @@ import React, { FC, useCallback, useEffect } from 'react';
 import c from 'clsx';
 import { LazyLog, ScrollFollow } from 'react-lazylog';
 import { Button, message, Pagination, Spin, Tooltip } from 'antd';
-import { CopyOutlined, DownloadOutlined } from '@ant-design/icons';
+import { CopyOutlined, DownloadOutlined, InfoCircleOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 import { useInterval } from 'ahooks';
 import { dayjs } from '@/utils/datetime-utils';
@@ -142,7 +142,11 @@ const PollingLogViewer: FC<PollingLogViewerProps> = function PollingLogViewer(pr
       >
         {presetLineLimit != null && lines >= presetLineLimit ? (
           <div className="lazylog-line-limit-hint">
-            {t('common.reactlazylog.showPartLinesOnly', { lines: presetLineLimit })}
+            <Tooltip title={t('common.reactlazylog.showPartLinesOnly', { lines: presetLineLimit })}>
+              <span className="notice">
+                <InfoCircleOutlined /> {t('common.reactlazylog.showPartLinesOnly', { lines: presetLineLimit })}
+              </span>
+            </Tooltip>
           </div>
         ) : (
           <></>
