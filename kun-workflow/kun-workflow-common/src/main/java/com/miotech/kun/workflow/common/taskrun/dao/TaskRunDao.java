@@ -153,11 +153,20 @@ public class TaskRunDao {
     }
 
     private List<Optional<TaskRun>> fetchTaskRunsByIds(Collection<Long> taskRunIds) {
-        List<Optional<TaskRun>> runs = new ArrayList<>();
-        for (Long id : taskRunIds) {
-            runs.add(fetchTaskRunById(id));
+        if (taskRunIds.isEmpty()) {
+            return Collections.singletonList(Optional.empty());
         }
-        return runs;
+        String sql = getTaskRunSQLBuilderWithDefaultConfig()
+                .where(TASK_RUN_MODEL_NAME + ".id IN (" + repeatJoin("?", ",", taskRunIds.size()) + ")")
+                .getSQL();
+        List<TaskRun> result = dbOperator.fetchAll(sql, taskRunMapperInstance, taskRunIds.toArray());
+
+        return result.stream()
+                .map(x -> x.cloneBuilder()
+                        .withDependentTaskRunIds(fetchTaskRunDependencies(x.getId()))
+                        .build())
+                .map(Optional::of)
+                .collect(Collectors.toList());
     }
 
     /**

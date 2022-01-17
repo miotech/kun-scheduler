@@ -235,7 +235,7 @@ public class TaskRunService {
         }
 
         List<TaskRunVO> nodes = result.stream()
-                .map(this::convertToVO)
+                .map(this::convertToVOWithoutAttempt)
                 .collect(Collectors.toList());
         List<TaskRunDependencyVO> edges = result.stream()
                 .flatMap(x -> x.getDependentTaskRunIds().stream()
@@ -296,6 +296,13 @@ public class TaskRunService {
 
         return taskRuns.stream().map(taskRun ->
                 buildTaskRunVO(taskRun, taskAttemptPropsMap.get(taskRun.getId()), new ArrayList<>())).collect(Collectors.toList());
+    }
+
+    public TaskRunVO convertToVOWithoutAttempt(TaskRun taskRun) {
+        List<TaskRun> failedUpstreamTaskRuns = taskRun.getStatus().isUpstreamFailed() ?
+                taskRunDao.fetchFailedUpstreamTaskRuns(taskRun.getId()) : Collections.emptyList();
+        logger.debug("ConvertToVO: failed upstream task runs {}", failedUpstreamTaskRuns.toString());
+        return buildTaskRunVO(taskRun, Collections.emptyList(), failedUpstreamTaskRuns);
     }
 
     public TaskRunVO convertToVO(TaskRun taskRun) {
