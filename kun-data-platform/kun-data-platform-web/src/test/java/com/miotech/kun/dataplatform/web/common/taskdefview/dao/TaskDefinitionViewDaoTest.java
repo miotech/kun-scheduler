@@ -74,6 +74,16 @@ public class TaskDefinitionViewDaoTest extends AppTestBase {
     }
 
     @Test
+    public void fetchByTaskViewName_shouldSuccess() {
+        for (int i = 0; i < 5; ++i) {
+            prepareTaskDefinitionViewInstanceAndInsert();
+        }
+        List<TaskDefinitionView> result1 = taskDefinitionViewDao.fetchByTaskDefinitionViewName("ew");
+        List<TaskDefinitionView> result2 = taskDefinitionViewDao.fetchByTaskDefinitionViewName("no");
+        assertThat(result1.size(), is(5));
+        assertThat(result2.size(), is(0));
+    }
+    @Test
     public void fetchBySearchParams_withPaginationConfig_shouldReturnPageList() {
         // Prepare: insert 50 task definition instances
         List<Long> insertedViewIds = new ArrayList<>();

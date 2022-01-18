@@ -78,6 +78,10 @@ public class TaskDefinitionViewDao {
         );
     }
 
+    public List<TaskDefinitionView> fetchByTaskDefinitionViewName(String keyword) {
+        String sql = getViewSelectSQL(TASK_DEF_VIEW_MODEL_NAME + ".name ILIKE CONCAT('%', CAST('" + keyword + "' AS TEXT), '%')");
+        return jdbcTemplate.query(sql, TaskDefinitionViewWithoutDefinitionMapper.INSTANCE);
+    }
     /**
      * Search and fetch list of task definition view value objects
      * @param searchParams search parameters in a value object
@@ -389,6 +393,25 @@ public class TaskDefinitionViewDao {
         jdbcTemplate.update(sql, taskDefinitionId);
         return new HashSet<>(affectedViewIds);
     }
+
+    public static class TaskDefinitionViewWithoutDefinitionMapper implements RowMapper<TaskDefinitionView> {
+        public static final TaskDefinitionViewWithoutDefinitionMapper INSTANCE = new TaskDefinitionViewWithoutDefinitionMapper();
+
+        @Override
+        public TaskDefinitionView mapRow(ResultSet rs, int rowNum) throws SQLException {
+            Long viewId = rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_id");
+            TaskDefinitionView.TaskDefinitionViewBuilder builder = TaskDefinitionView.newBuilder()
+                    .withId(viewId)
+                    .withName(rs.getString(TASK_DEF_VIEW_MODEL_NAME + "_name"))
+                    .withCreator(rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_creator"))
+                    .withLastModifier(rs.getLong(TASK_DEF_VIEW_MODEL_NAME + "_last_modifier"))
+                    .withCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_VIEW_MODEL_NAME + "_create_time")))
+                    .withUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp(TASK_DEF_VIEW_MODEL_NAME + "_update_time")));
+            builder.withIncludedTaskDefinitions(Collections.emptyList());
+            return builder.build();
+        }
+    }
+
 
     public static class TaskDefinitionViewMapper implements RowMapper<TaskDefinitionView> {
         private final TaskDefinitionViewDao taskDefinitionViewDao;

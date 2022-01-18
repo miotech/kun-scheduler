@@ -23,7 +23,7 @@ public class ApiController {
 
     @PostMapping("/auth")
     public RequestResult<Object> authenticate(@RequestBody UserRequest request) {
-        return RequestResult.success(JwtUtils.createToken(request.getUsername()));
+        return RequestResult.success(apiService.authenticate(request));
     }
 
     @PostMapping("/task-view/create")
@@ -33,8 +33,14 @@ public class ApiController {
     }
 
     @GetMapping("/task-view/list")
-    public RequestResult<PageResult<TaskViewVO>> getTaskViewList(@RequestBody PageRequest request) {
-        return RequestResult.success(apiService.getTaskViewList(request));
+    public RequestResult<PageResult<TaskViewVO>> getTaskViewList(@RequestParam Integer pageSize,
+                                                                 @RequestParam Integer pageNum) {
+        return RequestResult.success(apiService.getTaskViewList(pageNum, pageSize));
+    }
+
+    @GetMapping("/task-view/search")
+    public RequestResult<PageResult<TaskViewVO>> searchTaskView(@RequestParam String keyword) {
+        return RequestResult.success(apiService.searchTaskView(keyword));
     }
 
     @GetMapping("/task-template/list")
