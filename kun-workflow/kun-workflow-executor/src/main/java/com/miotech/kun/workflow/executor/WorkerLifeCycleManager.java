@@ -309,7 +309,7 @@ public abstract class WorkerLifeCycleManager implements LifeCycleManager, Initia
 
         @Override
         public void onReceivePollingSnapShot(WorkerSnapshot workerSnapshot) {
-            if (workerSnapshot.getStatus().equals(preStatus)) {
+            if (preStatus != null && workerSnapshot.getStatus().equals(preStatus)) {
                 return;
             }
             onReceiveSnapshot(workerSnapshot);
