@@ -5,7 +5,7 @@ import com.miotech.kun.monitor.sla.AppTestBase;
 import com.miotech.kun.monitor.sla.common.dao.TaskTimelineDao;
 import com.miotech.kun.monitor.sla.mocking.MockTaskTimelineFactory;
 import com.miotech.kun.monitor.sla.model.TaskTimeline;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;

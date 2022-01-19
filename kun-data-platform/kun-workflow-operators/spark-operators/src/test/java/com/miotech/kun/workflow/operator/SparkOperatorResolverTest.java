@@ -7,8 +7,8 @@ import com.miotech.kun.workflow.core.model.lineage.*;
 import com.miotech.kun.workflow.operator.resolver.SparkOperatorResolver;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import org.apache.commons.io.FileUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.io.File;
@@ -33,7 +33,7 @@ public class SparkOperatorResolverTest extends GuiceTestBase {
 
     private final String HDFS_CONF = "{\"spark.hadoop.spline.hdfs_dispatcher.address\":\"hdfs://localhost:9000/tmp\"}";
 
-    @Before
+    @BeforeEach
     public void init() {
         mockHdfsFileSystem = Mockito.mock(HdfsFileSystem.class);
         sparkOperatorResolver = new SparkOperatorResolver(mockHdfsFileSystem,1l);

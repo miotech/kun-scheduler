@@ -15,21 +15,20 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
-@RunWith(Parameterized.class)
 public class LatestTaskRunTest extends CommonTestBase {
 
     @Inject
@@ -41,10 +40,6 @@ public class LatestTaskRunTest extends CommonTestBase {
     @Inject
     private TaskRunDao taskRunDao;
 
-    private List<TaskRunStatus> filter;
-    private Integer limit;
-    private Integer expectSize;
-
     @Override
     protected void configuration() {
         bind(Scheduler.class, LocalScheduler.class);
@@ -53,8 +48,9 @@ public class LatestTaskRunTest extends CommonTestBase {
     }
 
 
-    @Test
-    public void fetchLatestTaskRunsWithFilterStatus() {
+    @ParameterizedTest
+    @MethodSource("latestTaskRunsProvider")
+    public void fetchLatestTaskRunsWithFilterStatus(List<TaskRunStatus> filter,Integer limit,Integer expectSize) {
         // Prepare
         Task task = MockTaskFactory.createTask();
         taskDao.create(task);
@@ -88,20 +84,14 @@ public class LatestTaskRunTest extends CommonTestBase {
 
     }
 
-    public LatestTaskRunTest(List<TaskRunStatus> filter, Integer limit, Integer expectSize) {
-        this.filter = filter;
-        this.limit = limit;
-        this.expectSize = expectSize;
-    }
 
-    @Parameterized.Parameters
-    public static Collection latestTaskRunsProvider() {
-        return Arrays.asList(new Object[][]{
-                {Arrays.asList(TaskRunStatus.FAILED, TaskRunStatus.SUCCESS, TaskRunStatus.ABORTED), 3, 2},
-                {Arrays.asList(TaskRunStatus.FAILED, TaskRunStatus.SUCCESS, TaskRunStatus.ABORTED), 1, 1},
-                {Arrays.asList(TaskRunStatus.FAILED, TaskRunStatus.SUCCESS, TaskRunStatus.ABORTED), 1, 1},
-                {Arrays.asList(TaskRunStatus.ABORTED), 1, 0},
-                {Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.CREATED), 2, 2}
-        });
+    public static Stream<Arguments> latestTaskRunsProvider() {
+        return Stream.of(
+                Arguments.of(Arrays.asList(TaskRunStatus.FAILED, TaskRunStatus.SUCCESS, TaskRunStatus.ABORTED), 3, 2),
+                Arguments.of(Arrays.asList(TaskRunStatus.FAILED, TaskRunStatus.SUCCESS, TaskRunStatus.ABORTED), 1, 1),
+                Arguments.of(Arrays.asList(TaskRunStatus.FAILED, TaskRunStatus.SUCCESS, TaskRunStatus.ABORTED), 1, 1),
+                Arguments.of(Arrays.asList(TaskRunStatus.ABORTED), 1, 0),
+                Arguments.of(Arrays.asList(TaskRunStatus.QUEUED, TaskRunStatus.CREATED), 2, 2)
+        );
     }
 }

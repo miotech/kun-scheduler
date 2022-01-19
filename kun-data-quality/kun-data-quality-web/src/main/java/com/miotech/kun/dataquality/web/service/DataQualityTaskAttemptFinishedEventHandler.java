@@ -3,6 +3,7 @@ package com.miotech.kun.dataquality.web.service;
 import com.miotech.kun.commons.pubsub.publish.EventPublisher;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.model.DataQualityStatus;
+import com.miotech.kun.dataquality.web.model.entity.CaseRun;
 import com.miotech.kun.dataquality.web.model.entity.DataQualityCaseBasic;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.workflow.core.event.CheckResultEvent;
@@ -36,9 +37,11 @@ public class DataQualityTaskAttemptFinishedEventHandler implements TaskAttemptFi
         }
         boolean caseStatus = taskAttemptFinishedEvent.getFinalStatus().isSuccess();
         long caseRunId = taskAttemptFinishedEvent.getTaskRunId();
-        Long taskRunId = expectationDao.fetchTaskRunIdByCase(caseRunId);
+        CaseRun caseRun = dataQualityRepository.fetchCaseRunByCaseRunId(caseRunId);
+        Long taskRunId = caseRun.getTaskRunId();
+        Long taskAttemptId = caseRun.getTaskAttemptId();
         if (caseStatus) {
-            DataQualityStatus checkStatus = expectationDao.validateTaskRunTestCase(taskRunId);
+            DataQualityStatus checkStatus = expectationDao.validateTaskAttemptTestCase(taskAttemptId);
             if (checkStatus.equals(DataQualityStatus.SUCCESS)) {
                 log.info("taskRunId = {} all test case has pass", taskRunId);
                 CheckResultEvent event = new CheckResultEvent(taskRunId, true);

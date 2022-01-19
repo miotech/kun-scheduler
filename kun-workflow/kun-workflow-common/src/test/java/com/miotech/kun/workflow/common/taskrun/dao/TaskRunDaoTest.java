@@ -21,8 +21,8 @@ import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.time.*;
@@ -91,7 +91,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         return Lists.newArrayList(taskRunA, taskRunB, taskRunC, taskRunD);
     }
 
-    @After
+    @AfterEach
     public void resetGlobalClock() {
         // Reset global clock after each test
         DateTimeUtils.resetClock();

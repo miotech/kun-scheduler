@@ -53,4 +53,9 @@ public class UserController {
     public RequestResult<User> getUser(@PathVariable("id") Long id) {
         return RequestResult.success(userService.getUser(id));
     }
+
+    @GetMapping("/name/{username}")
+    public RequestResult<User> getUserByName(@PathVariable("username") String username) {
+        return RequestResult.success(userService.getUserByName(username));
+    }
 }

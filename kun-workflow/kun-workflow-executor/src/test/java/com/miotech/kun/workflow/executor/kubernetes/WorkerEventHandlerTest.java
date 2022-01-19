@@ -16,9 +16,9 @@ import io.fabric8.kubernetes.api.model.PodList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 
-@Ignore
+@Disabled
 public class WorkerEventHandlerTest extends CommonTestBase {
 
     private PodEventMonitor podEventMonitor;
@@ -42,7 +42,7 @@ public class WorkerEventHandlerTest extends CommonTestBase {
     private TaskRunDao taskRunDao;
     private Props props;
 
-    @Before
+    @BeforeEach
     public void init() {
         props = new Props();
         props.put("executor.env.namespace","default");

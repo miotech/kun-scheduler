@@ -4,7 +4,6 @@ package com.miotech.kun.metadata.core.model.connection;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jdk.nashorn.internal.ir.annotations.Ignore;
 
 import java.util.Objects;
 
@@ -39,7 +38,7 @@ public class AthenaConnectionInfo extends JdbcConnectionInfo{
     }
 
     @Override
-    @Ignore
+    @JsonIgnore
     public String getJdbcUrl() {
         return athenaUrl;
     }

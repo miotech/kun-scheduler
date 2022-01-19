@@ -5,7 +5,7 @@ import com.miotech.kun.dataquality.mock.MockAbnormalDatasetFactory;
 import com.miotech.kun.dataquality.web.model.AbnormalDataset;
 import com.miotech.kun.dataquality.web.persistence.AbnormalDatasetRepository;
 import com.miotech.kun.dataquality.web.service.AbnormalDatasetService;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;

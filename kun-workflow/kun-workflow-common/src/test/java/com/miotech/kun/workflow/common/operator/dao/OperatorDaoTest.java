@@ -5,7 +5,7 @@ import com.miotech.kun.workflow.common.operator.filter.OperatorSearchFilter;
 import com.miotech.kun.workflow.core.model.operator.Operator;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -58,7 +58,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
         assertThat(result, samePropertyValuesAs(exampleOperator));
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void create_operatorsWithDuplicatedId_ExceptionThrown() {
         // Prepare
         Long id = WorkflowIdGenerator.nextOperatorId();
@@ -74,9 +74,7 @@ public class OperatorDaoTest extends DatabaseTestBase {
 
         // Process
         operatorDao.create(operator);
-        operatorDao.create(duplicatedOperator);
-
-        // should thrown exception
+        assertThrows(RuntimeException.class,() -> operatorDao.create(duplicatedOperator));
     }
 
     @Test

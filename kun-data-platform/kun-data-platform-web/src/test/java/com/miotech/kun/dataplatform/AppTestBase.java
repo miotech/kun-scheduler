@@ -6,18 +6,17 @@ import com.miotech.kun.dataplatform.web.common.tasktemplate.service.TaskTemplate
 import com.miotech.kun.dataplatform.web.config.TestOnlyController;
 import com.miotech.kun.dataplatform.web.config.TestWorkflowConfig;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -25,8 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(classes = AppTestBase.Configuration.class)
+@SpringBootTest(classes = AppTestBase.TestConfiguration.class)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Slf4j
@@ -43,12 +41,12 @@ public abstract class AppTestBase {
     @Autowired
     private TaskTemplateLoader taskTemplateLoader;
 
-    @Before
+    @BeforeEach
     public void init() {
         taskTemplateLoader.persistTemplates();
     }
 
-    @After
+    @AfterEach
     public void tearDown() {
         truncateAllTables();
     }
@@ -82,7 +80,7 @@ public abstract class AppTestBase {
         }
     }
 
-    @org.springframework.context.annotation.Configuration
+    @Configuration
     @EnableAutoConfiguration
     @ComponentScan(basePackages = {
             "com.miotech.kun.common",
@@ -91,7 +89,7 @@ public abstract class AppTestBase {
             "com.miotech.kun.monitor"
     })
     @Import({TestWorkflowConfig.class, TestOnlyController.class})
-    public static class Configuration {
+    public static class TestConfiguration {
 
     }
 }

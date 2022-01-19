@@ -1,7 +1,6 @@
 package com.miotech.kun.dataquality;
 
 import com.google.common.collect.ImmutableList;
-import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.core.ExpectationSpec;
 import com.miotech.kun.dataquality.core.ValidationResult;
 import com.miotech.kun.dataquality.mock.MockDatasetBasicFactory;
@@ -16,7 +15,7 @@ import com.miotech.kun.dataquality.web.service.DataQualityService;
 import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 

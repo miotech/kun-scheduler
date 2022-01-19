@@ -24,11 +24,9 @@ import com.miotech.kun.workflow.executor.local.MiscService;
 import com.miotech.kun.workflow.testing.event.EventCollector;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
@@ -77,9 +75,6 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
 
     @Inject
     private TaskRunStateMachine taskRunStateMachine;
-
-    @Rule
-    public ExpectedException expectedEx = ExpectedException.none();
 
     private EventCollector eventCollector;
 
@@ -270,7 +265,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
 
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         workerLifeCycleManager.afterPropertiesSet();
         eventCollector = new EventCollector();
@@ -290,7 +285,7 @@ public class KubernetesQueueManagerTest extends CommonTestBase {
         }).when(spyManager).getCapacity(ArgumentMatchers.any(TaskAttemptQueue.class));
     }
 
-    @After
+    @AfterEach
     public void teardown(){
         workerLifeCycleManager.shutdown();
     }

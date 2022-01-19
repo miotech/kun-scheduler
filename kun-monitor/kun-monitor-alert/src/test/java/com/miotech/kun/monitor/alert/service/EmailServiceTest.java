@@ -1,6 +1,6 @@
 package com.miotech.kun.monitor.alert.service;
 
-import com.icegreen.greenmail.junit4.GreenMailRule;
+import com.icegreen.greenmail.junit5.GreenMailExtension;
 import com.icegreen.greenmail.util.ServerSetupTest;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.web.common.backfill.service.BackfillService;
@@ -11,10 +11,10 @@ import com.miotech.kun.workflow.core.event.TaskAttemptStatusChangeEvent;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import org.assertj.core.util.Lists;
 import org.joor.Reflect;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -32,8 +32,9 @@ import static org.junit.Assert.*;
         "notify.email.enabled=true"
 })
 public class EmailServiceTest extends AppTestBase {
-    @Rule
-    public final GreenMailRule greenMail = new GreenMailRule(ServerSetupTest.ALL);
+
+    @RegisterExtension
+    public final GreenMailExtension greenMail = new GreenMailExtension(ServerSetupTest.ALL);
 
     @MockBean
     private DeployedTaskService deployedTaskService;
@@ -52,7 +53,7 @@ public class EmailServiceTest extends AppTestBase {
 
     private static final String TEST_EMAIL_FROM_NAME = "kun-robot";
 
-    @Before
+    @BeforeEach
     public void defineMockBehavior() {
         Mockito.doAnswer(invocation -> {
             return Optional.empty();
@@ -70,7 +71,7 @@ public class EmailServiceTest extends AppTestBase {
                 .set("smtpPort", greenMail.getSmtp().getPort());
     }
 
-    @After
+    @AfterEach
     public void teardown() {
         Reflect.on(emailService).set("smtpHost", "127.0.0.1").set("smtpPort", 25);
     }

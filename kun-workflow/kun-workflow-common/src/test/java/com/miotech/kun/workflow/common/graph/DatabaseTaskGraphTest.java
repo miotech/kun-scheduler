@@ -14,12 +14,8 @@ import com.miotech.kun.workflow.core.model.task.TaskGraph;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.utils.CronUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import javax.sql.DataSource;
 import java.time.OffsetDateTime;
@@ -33,7 +29,6 @@ import java.util.stream.Collectors;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.*;
 
-@RunWith(MockitoJUnitRunner.class)
 public class DatabaseTaskGraphTest extends DatabaseTestBase {
 
     @Inject
@@ -46,16 +41,11 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
     @Inject
     private DataSource dataSource;
 
-    @Rule
-    public ExpectedException thrown = ExpectedException.none();
 
-
-    @Before
+    @BeforeEach
     public void setup() {
         taskGraph = injector.getInstance(DatabaseTaskGraph.class);
     }
-
-
 
 
     @Test
@@ -78,12 +68,12 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
     public void taskTopoSortInDiffTick() {
         String upStreamTaskCron = "0 0 9 * * ?";
         Cron upStreamCron = CronUtils.convertStringToCron(upStreamTaskCron);
-        Task upTask = MockTaskFactory.createTaskWithUpstreams(new ArrayList<>(),new ScheduleConf(ScheduleType.SCHEDULED, upStreamTaskCron, ZoneOffset.UTC.getId()) );
+        Task upTask = MockTaskFactory.createTaskWithUpstreams(new ArrayList<>(), new ScheduleConf(ScheduleType.SCHEDULED, upStreamTaskCron, ZoneOffset.UTC.getId()));
         String cronExpression = "0 0 10 * * ?";
         Cron cron = CronUtils.convertStringToCron(cronExpression);
         Optional<OffsetDateTime> preScheduleTime = CronUtils.getNextExecutionTimeFromNow(upStreamCron);
         Optional<OffsetDateTime> scheduleTime = CronUtils.getNextExecutionTimeFromNow(cron);
-        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression,ZoneOffset.UTC.getId());
+        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression, ZoneOffset.UTC.getId());
         Task tickHead = MockTaskFactory.createTaskWithUpstreams(Lists.newArrayList(upTask.getId()), conf);
         List<Task> tickMid = new ArrayList<>();
         for (int i = 0; i < 2; i++) {
@@ -99,29 +89,29 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
         taskDao.create(upTask);
         Tick preTick = new Tick(preScheduleTime.get());
         Task preTask = taskGraph.tasksScheduledAt(preTick).get(0);
-        taskGraph.updateTasksNextExecutionTick(preTick,Lists.newArrayList(preTask));
+        taskGraph.updateTasksNextExecutionTick(preTick, Lists.newArrayList(preTask));
 
-        assertThat(preTask.getId(),is(upTask.getId()));
+        assertThat(preTask.getId(), is(upTask.getId()));
         Tick tick = new Tick(scheduleTime.get());
 
         List<Long> sortTaskIds = taskGraph.tasksScheduledAt(tick).stream().map(Task::getId).collect(Collectors.toList());
-        assertThat(sortTaskIds.get(0),is(tickHead.getId()));
-        assertArrayEquals(sortTaskIds.subList(1,3).toArray(),tickMidTaskIds.toArray());
-        assertThat(sortTaskIds.get(3),is(tickTail.getId()));
+        assertThat(sortTaskIds.get(0), is(tickHead.getId()));
+        assertArrayEquals(sortTaskIds.subList(1, 3).toArray(), tickMidTaskIds.toArray());
+        assertThat(sortTaskIds.get(3), is(tickTail.getId()));
     }
 
     @Test
     //任务依赖存在环
-    public void taskHasCycle(){
+    public void taskHasCycle() {
         String cronExpression = "0 0 10 * * ?";
         Cron cron = CronUtils.convertStringToCron(cronExpression);
         Optional<OffsetDateTime> scheduleTime = CronUtils.getNextExecutionTimeFromNow(cron);
         Tick tick = new Tick(scheduleTime.get());
-        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression,ZoneOffset.UTC.getId());
+        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression, ZoneOffset.UTC.getId());
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, WorkflowIdGenerator.nextOperatorId(), "1>>2;0>>1;2>>0", conf);
         saveTaskList(taskList);
-        thrown.expectMessage("has cycle in task dependencies");
-        List<Long> sortTaskIds = taskGraph.tasksScheduledAt(tick).stream().map(Task::getId).collect(Collectors.toList());
+        Exception ex = assertThrows(IllegalStateException.class, () -> taskGraph.tasksScheduledAt(tick).stream().map(Task::getId).collect(Collectors.toList()));
+        assertEquals("has cycle in task dependencies", ex.getMessage());
 
     }
 
@@ -132,7 +122,7 @@ public class DatabaseTaskGraphTest extends DatabaseTestBase {
         Cron cron = CronUtils.convertStringToCron(cronExpression);
         Optional<OffsetDateTime> scheduleTime = CronUtils.getNextExecutionTimeFromNow(cron);
         Tick tick = new Tick(scheduleTime.get());
-        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression,ZoneOffset.UTC.getId());
+        ScheduleConf conf = new ScheduleConf(ScheduleType.SCHEDULED, cronExpression, ZoneOffset.UTC.getId());
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(6, WorkflowIdGenerator.nextOperatorId(), "2>>1;2>>3;2>>4;1>>5;1>>0", conf);
         saveTaskList(taskList);
         List<Long> createTaskIds = taskList.stream().map(Task::getId).collect(Collectors.toList());

@@ -17,7 +17,7 @@ import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.execution.Config;
 import lombok.Data;
 import org.assertj.core.util.Lists;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -33,7 +33,7 @@ import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 @WithMockTestUser
 public class BackfillServiceTest extends AppTestBase {

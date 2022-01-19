@@ -12,7 +12,7 @@ import com.miotech.kun.metadata.core.model.connection.HiveServerConnectionInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.vo.DataSourceSearchFilter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.util.List;

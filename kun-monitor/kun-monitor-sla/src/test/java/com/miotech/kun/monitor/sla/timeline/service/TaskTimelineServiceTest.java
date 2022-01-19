@@ -17,7 +17,7 @@ import com.miotech.kun.monitor.sla.common.service.TaskTimelineService;
 import com.miotech.kun.monitor.sla.mocking.*;
 import com.miotech.kun.monitor.sla.model.TaskTimeline;
 import com.miotech.kun.workflow.core.event.TaskRunCreatedEvent;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.ZoneId;

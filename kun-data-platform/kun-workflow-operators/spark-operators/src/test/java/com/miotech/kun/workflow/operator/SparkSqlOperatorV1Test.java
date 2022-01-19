@@ -3,8 +3,8 @@ package com.miotech.kun.workflow.operator;
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.testing.executor.OperatorRunner;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
@@ -16,7 +16,7 @@ public class SparkSqlOperatorV1Test extends MockServerTestBase {
     private static final String DATASTORE_URL = "/test";
     private OperatorRunner operatorRunner;
 
-    @Before
+    @BeforeEach
     public void initSparkSqlOperator() {
         KunOperator operator = new SparkSqlOperatorV1();
         operatorRunner = new OperatorRunner(operator);

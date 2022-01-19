@@ -11,8 +11,8 @@ import com.miotech.kun.workflow.client.model.Task;
 import com.miotech.kun.workflow.client.model.TaskRun;
 import com.miotech.kun.workflow.core.model.task.CheckType;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -48,7 +48,7 @@ public class DataQualityControllerTest extends DataQualityTestBase {
     @MockBean
     private WorkflowClient workflowClient;
 
-    @Before
+    @BeforeEach
     public void mock() {
         doAnswer(invocation -> {
             Long taskId = invocation.getArgument(0,Long.class);

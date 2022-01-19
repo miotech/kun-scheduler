@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.miotech.kun.commons.utils.CustomDateTimeDeserializer;
 import com.miotech.kun.commons.utils.ExceptionUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -23,7 +23,7 @@ public class CustomDateTimeDeserializerTest {
     private ObjectMapper mapper;
     private CustomDateTimeDeserializer deserializer;
 
-    @Before
+    @BeforeEach
     public void setup() {
         mapper = new ObjectMapper();
         deserializer = new CustomDateTimeDeserializer();

@@ -3,16 +3,15 @@ package com.miotech.kun.dataplatform.web.common.commit.dao;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.taskdefinition.TaskDefinition;
+import com.miotech.kun.dataplatform.mocking.MockTaskCommitFactory;
 import com.miotech.kun.dataplatform.mocking.MockTaskDefinitionFactory;
 import com.miotech.kun.dataplatform.web.common.commit.service.TaskCommitService;
 import com.miotech.kun.dataplatform.web.common.commit.vo.CommitSearchRequest;
-import com.miotech.kun.dataplatform.mocking.MockTaskCommitFactory;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.dao.TaskDefinitionDao;
 import com.miotech.kun.security.testing.WithMockTestUser;
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import org.hamcrest.Matchers;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
@@ -23,9 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @WithMockTestUser
 public class TaskCommitDaoTest extends AppTestBase {

@@ -6,7 +6,7 @@ import com.miotech.kun.monitor.alert.AppTestBase;
 import com.miotech.kun.monitor.alert.mocking.MockTaskNotifyConfigFactory;
 import com.miotech.kun.monitor.facade.model.alert.TaskNotifyConfig;
 import com.miotech.kun.monitor.facade.model.alert.TaskStatusNotifyTrigger;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;

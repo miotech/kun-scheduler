@@ -3,16 +3,16 @@ package com.miotech.kun.dataplatform.web.common.tasktemplate.dao;
 import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.mocking.MockTaskTemplateFactory;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.TaskTemplate;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Optional;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TaskTemplateDaoTest extends AppTestBase {
 

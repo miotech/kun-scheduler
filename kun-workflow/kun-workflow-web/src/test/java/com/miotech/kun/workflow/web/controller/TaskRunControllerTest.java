@@ -21,8 +21,8 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatcher;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -44,7 +44,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
     @Inject
     private JsonSerializer jsonSerializer;
 
-    @Before
+    @BeforeEach
     public void defineBehaviors() {
         Mockito.doAnswer(invocation -> {
             TaskRun taskRun = invocation.getArgument(0);

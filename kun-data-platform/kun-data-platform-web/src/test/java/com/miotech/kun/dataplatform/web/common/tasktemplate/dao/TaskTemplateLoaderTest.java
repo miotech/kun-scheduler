@@ -4,14 +4,14 @@ import com.miotech.kun.dataplatform.AppTestBase;
 import com.miotech.kun.dataplatform.web.common.tasktemplate.service.TaskTemplateLoader;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.ParameterDefinition;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.TaskTemplate;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TaskTemplateLoaderTest extends AppTestBase {
 

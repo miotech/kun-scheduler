@@ -25,9 +25,9 @@ import io.fabric8.kubernetes.client.Config;
 import io.fabric8.kubernetes.client.ConfigBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +41,9 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
+import static org.junit.Assert.assertThrows;
 
-@Ignore
+@Disabled
 public class PodLifeCycleManagerTest extends CommonTestBase {
 
     private final Logger logger = LoggerFactory.getLogger(PodLifeCycleManager.class);
@@ -83,7 +84,7 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
         super.configuration();
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         eventCollector = new EventCollector();
         eventBus.register(eventCollector);
@@ -116,7 +117,7 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
                 TaskRunStatus.SUCCESS);
     }
 
-//    @Test(expected = IllegalStateException.class)
+    //    @Test(expected = IllegalStateException.class)
     public void startTaskAttemptHasRunningShouldThrowException() {
         TaskAttempt taskAttempt = prepareAttempt();
         podLifeCycleManager.start(taskAttempt);
@@ -152,7 +153,7 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
 
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void stopFinishedTaskAttemptShouldThrowException() {
         TaskAttempt taskAttempt = prepareAttempt();
         podLifeCycleManager.start(taskAttempt);
@@ -176,7 +177,7 @@ public class PodLifeCycleManagerTest extends CommonTestBase {
                 TaskRunStatus.SUCCESS);
 
         //stop pod
-        podLifeCycleManager.stop(taskAttempt.getId());
+        assertThrows(IllegalArgumentException.class, () -> podLifeCycleManager.stop(taskAttempt.getId()));
 
 
     }

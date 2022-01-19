@@ -26,8 +26,8 @@ import com.miotech.kun.workflow.testing.operator.NopOperator;
 import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
 import org.mockito.Mockito;
@@ -76,7 +76,7 @@ public class TaskManagerTest extends SchedulerTestBase {
         bind(LineageService.class, mock(LineageService.class));
     }
 
-    @Before
+    @BeforeEach
     public void init() {
         taskRunStateMachine.start();
     }

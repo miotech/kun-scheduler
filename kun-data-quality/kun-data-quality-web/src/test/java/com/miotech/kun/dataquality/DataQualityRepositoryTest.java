@@ -8,7 +8,7 @@ import com.miotech.kun.dataquality.web.model.entity.CaseRun;
 import com.miotech.kun.dataquality.web.model.entity.DataQualityCaseBasic;
 import com.miotech.kun.dataquality.web.persistence.DataQualityRepository;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
@@ -68,6 +68,7 @@ public class DataQualityRepositoryTest extends DataQualityTestBase {
     public void validateTaskRunTestCase_all_pass_should_return_ture() {
         //prepare
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
+        Long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId,1);
         List<CaseRun> caseRunList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             DataQualityRequest dataQualityRequest = MockDataQualityFactory.createRequest();
@@ -76,6 +77,7 @@ public class DataQualityRepositoryTest extends DataQualityTestBase {
             CaseRun caseRun = new CaseRun();
             caseRun.setCaseRunId(caseRunId);
             caseRun.setTaskRunId(taskRunId);
+            caseRun.setTaskAttemptId(taskAttemptId);
             caseRun.setCaseId(caseId);
             caseRunList.add(caseRun);
         }
@@ -97,6 +99,7 @@ public class DataQualityRepositoryTest extends DataQualityTestBase {
     public void validateTaskRunTestCase_any_not_success_should_return_false() {
         //prepare
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
+        Long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId,1);
         List<CaseRun> caseRunList = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
             DataQualityRequest dataQualityRequest = MockDataQualityFactory.createRequest();
@@ -105,6 +108,7 @@ public class DataQualityRepositoryTest extends DataQualityTestBase {
             CaseRun caseRun = new CaseRun();
             caseRun.setCaseRunId(caseRunId);
             caseRun.setTaskRunId(taskRunId);
+            caseRun.setTaskAttemptId(taskAttemptId);
             caseRun.setCaseId(caseId);
             caseRunList.add(caseRun);
         }
@@ -131,11 +135,13 @@ public class DataQualityRepositoryTest extends DataQualityTestBase {
         List<Long> caseRunIdList = new ArrayList<>();
         caseRunIdList.add(IdGenerator.getInstance().nextId());
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
+        Long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId,1);
         List<CaseRun> caseRunList = new ArrayList<>();
         for(int i = 0;i<caseRunIdList.size();i++){
             CaseRun caseRun = new CaseRun();
             caseRun.setCaseRunId(caseRunIdList.get(i));
             caseRun.setTaskRunId(taskRunId);
+            caseRun.setTaskAttemptId(taskAttemptId);
             caseRun.setCaseId(IdGenerator.getInstance().nextId());
             caseRunList.add(caseRun);
         }
@@ -166,11 +172,13 @@ public class DataQualityRepositoryTest extends DataQualityTestBase {
             caseRunIdList.add(IdGenerator.getInstance().nextId());
         }
         Long taskRunId = WorkflowIdGenerator.nextTaskRunId();
+        Long taskAttemptId = WorkflowIdGenerator.nextTaskAttemptId(taskRunId,1);
         List<CaseRun> caseRunList = new ArrayList<>();
         for(int i = 0;i<caseRunIdList.size();i++){
             CaseRun caseRun = new CaseRun();
             caseRun.setCaseRunId(caseRunIdList.get(i));
             caseRun.setTaskRunId(taskRunId);
+            caseRun.setTaskAttemptId(taskAttemptId);
             caseRun.setCaseId(IdGenerator.getInstance().nextId());
             caseRunList.add(caseRun);
         }

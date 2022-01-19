@@ -1,6 +1,5 @@
-import { useHistory } from 'umi';
 import React, { memo, useMemo, useState, useCallback } from 'react';
-import { Button, Dropdown, Menu, notification } from 'antd';
+import { Button, Dropdown, Menu, notification, Input } from 'antd';
 import { DownOutlined, PlusOutlined } from '@ant-design/icons';
 import { useMount } from 'ahooks';
 import useRedux from '@/hooks/useRedux';
@@ -31,46 +30,53 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
     loading: s.loading.effects.dataDevelopment.fetchTaskTemplates,
   }));
 
-  const history = useHistory();
-
   const t = useI18n();
 
   const [selectedTemplateName, setSelectedTemplateName] = useState<string | null>(null);
+  const [templateSearchValue, setTemplateSearchValue] = useState<string | null>(null);
 
   useMount(() => {
     dispatch.dataDevelopment.fetchTaskTemplates();
   });
-
+  const onChange = (e: any) => {
+    const { value } = e.target;
+    setTemplateSearchValue(value);
+  };
   const overlay = useMemo(() => {
     if (taskTemplates && taskTemplates.length) {
       return (
         <Menu
+          className={styles.menu}
           onClick={({ key }) => {
             setSelectedTemplateName(key as string);
           }}
         >
-          {taskTemplates.map(templateItem => (
-            <Menu.Item key={templateItem.name} title={templateItem.name}>
-              <span>
-                <TaskTemplateIcon name={templateItem.name} />
-              </span>
-              <span>{templateItem.name}</span>
-            </Menu.Item>
-          ))}
+          <div style={{ padding: '7px' }}>
+            <Input onChange={onChange} placeholder="search" allowClear />
+          </div>
+          {taskTemplates.map(templateItem => {
+            const rep = templateSearchValue
+              ? templateItem.name.toLowerCase().includes(templateSearchValue as string)
+              : true;
+            if (rep) {
+              return (
+                <Menu.Item key={templateItem.name} title={templateItem.name}>
+                  <span>
+                    <TaskTemplateIcon name={templateItem.name} />
+                    &nbsp;
+                  </span>
+                  <span>{templateItem.name}</span>
+                </Menu.Item>
+              );
+            }
+            return '';
+          })}
         </Menu>
       );
     }
     // else
     return <></>;
-  }, [taskTemplates]);
-
-  const handleClickTask = useCallback(
-    (id, e) => {
-      e.preventDefault();
-      history.push(`/data-development/task-definition/${id}`);
-    },
-    [history],
-  );
+  }, [taskTemplates, templateSearchValue]);
 
   const handleOk = useCallback(
     async (name1: string, createInCurrentView: boolean) => {
@@ -84,9 +90,7 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
           description: (
             <span>
               {t('taskTemplate.create.notification.desc')}{' '}
-              <a href={`/data-development/task-definition/${id}`} onClick={e => handleClickTask(id, e)}>
-                {name}
-              </a>
+              <a href={`/data-development/task-definition/${id}`}>{name}</a>
             </span>
           ),
         });
@@ -96,7 +100,7 @@ export const TaskTemplateCreateDropMenu: React.FC<Props> = memo(function TaskTem
         // do nothing
       }
     },
-    [handleClickTask, props, selectedTemplateName, t],
+    [props, selectedTemplateName, t],
   );
 
   return (

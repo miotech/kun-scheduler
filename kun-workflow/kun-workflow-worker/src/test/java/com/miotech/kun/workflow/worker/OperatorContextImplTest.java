@@ -12,8 +12,8 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class OperatorContextImplTest extends DatabaseTestBase {
     private TaskDao taskDao;
     private Map<String, Object> config;
 
-    @Before
+    @BeforeEach
     public void init(){
         config = new HashMap<>();
         config.put("args", "hello");

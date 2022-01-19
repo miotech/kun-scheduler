@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.workflow.core.model.variable.Variable;
 import com.miotech.kun.workflow.testing.factory.MockVariableFactory;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

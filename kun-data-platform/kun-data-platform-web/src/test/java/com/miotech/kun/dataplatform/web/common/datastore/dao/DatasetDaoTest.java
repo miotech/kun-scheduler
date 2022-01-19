@@ -1,18 +1,18 @@
 package com.miotech.kun.dataplatform.web.common.datastore.dao;
 
 import com.miotech.kun.dataplatform.AppTestBase;
-import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.mocking.MockDatasetFactory;
+import com.miotech.kun.dataplatform.web.common.utils.DataPlatformIdGenerator;
 import com.miotech.kun.dataplatform.web.model.datastore.TaskDataset;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
 
 
 public class DatasetDaoTest extends AppTestBase {

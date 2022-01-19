@@ -27,6 +27,7 @@ dependencies {
     implementation project(':kun-db-schema:kun-app-db-schema')
     implementation project(':kun-monitor')
     implementation project(':kun-data-quality')
+    implementation project(':kun-openapi')
 
     implementation 'com.fasterxml.jackson.core:jackson-core'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
@@ -45,9 +46,6 @@ dependencies {
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation "org.testcontainers:testcontainers"
-    testImplementation 'com.icegreen:greenmail'
-    testImplementation 'com.icegreen:greenmail-junit4'
-    testImplementation 'com.icegreen:greenmail-spring'
     testImplementation 'org.jooq:joor-java-8'
 }
 

@@ -5,7 +5,7 @@ import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.metadata.common.factory.MockDatasetSnapshotFactory;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
 import com.miotech.kun.metadata.core.model.dataset.DatasetSnapshot;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 

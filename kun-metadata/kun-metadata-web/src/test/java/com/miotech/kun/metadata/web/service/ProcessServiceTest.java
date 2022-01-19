@@ -10,9 +10,9 @@ import com.miotech.kun.workflow.facade.WorkflowServiceFacade;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import org.joor.Reflect;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.Random;
@@ -30,7 +30,7 @@ public class ProcessServiceTest {
     private Props props;
     private Random random;
 
-    @Before
+    @BeforeEach
     public void setUp() {
         this.workflowServiceFacade = Mockito.mock(WorkflowServiceFacade.class);
         this.props = initProperties();
@@ -48,7 +48,7 @@ public class ProcessServiceTest {
 
     // TODO: enable this test
     @Test
-    @Ignore
+    @Disabled
     public void testSubmit() {
         Long taskRunId = random.nextLong();
         Task task = MockTaskFactory.createTask();

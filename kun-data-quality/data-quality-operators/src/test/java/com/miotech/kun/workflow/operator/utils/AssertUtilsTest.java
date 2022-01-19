@@ -1,17 +1,15 @@
 package com.miotech.kun.workflow.operator.utils;
 
 import com.miotech.kun.workflow.operator.model.FieldType;
-import org.junit.Rule;
-import org.junit.Test;
 import org.junit.experimental.theories.DataPoints;
 import org.junit.experimental.theories.FromDataPoints;
 import org.junit.experimental.theories.Theories;
 import org.junit.experimental.theories.Theory;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import org.junit.runner.RunWith;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 @RunWith(Theories.class)
 public class AssertUtilsTest {
@@ -29,8 +27,6 @@ public class AssertUtilsTest {
 
     private static final String LTE = "<=";
 
-    @Rule
-    public ExpectedException expectedEx = ExpectedException.none();
 
     @DataPoints("intValue")
     public static Integer[] intValues() {
@@ -232,11 +228,8 @@ public class AssertUtilsTest {
         Integer originalValue = 8;
 
         // 2. Validate
-        expectedEx.expect(RuntimeException.class);
-        expectedEx.expectMessage("Unsupported operator: op for type:" + FieldType.NUMBER.name());
-
-        AssertUtils.doAssert(FieldType.NUMBER.name(), "op", originalValue, expectedValue);
-
+        Exception ex = assertThrows(RuntimeException.class,() -> AssertUtils.doAssert(FieldType.NUMBER.name(), "op", originalValue, expectedValue));
+        assertEquals("Unsupported operator: op for type:" + FieldType.NUMBER.name(),ex.getMessage());
     }
 
     @Theory

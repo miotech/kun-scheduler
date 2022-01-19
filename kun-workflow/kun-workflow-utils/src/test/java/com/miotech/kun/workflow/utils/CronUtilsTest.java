@@ -1,23 +1,19 @@
 package com.miotech.kun.workflow.utils;
 
 import com.cronutils.model.Cron;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 
 public class CronUtilsTest {
 
-
-    @Rule
-    public ExpectedException expectedEx = ExpectedException.none();
 
     @Test
     public void testSecondSchedule_should_throws_exception() throws IllegalStateException {
@@ -25,10 +21,8 @@ public class CronUtilsTest {
         Cron cron = CronUtils.convertStringToCron(cronExp);
 
         //verify
-        expectedEx.expect(IllegalArgumentException.class);
-        expectedEx.expectMessage("config seconds in cron is not supported yet");
-
-        CronUtils.validateCron(cron);
+        Exception ex = assertThrows(IllegalArgumentException.class,() -> CronUtils.validateCron(cron));
+        assertEquals("config seconds in cron is not supported yet",ex.getMessage());
 
     }
 

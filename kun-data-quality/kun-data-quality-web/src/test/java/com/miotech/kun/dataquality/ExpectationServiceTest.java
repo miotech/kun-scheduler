@@ -5,7 +5,7 @@ import com.miotech.kun.dataquality.core.ExpectationSpec;
 import com.miotech.kun.dataquality.mock.MockExpectationSpecFactory;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.common.service.ExpectationService;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import static org.hamcrest.MatcherAssert.assertThat;

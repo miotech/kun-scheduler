@@ -2,7 +2,7 @@ package com.miotech.kun.metadata.databuilder.extract.tool;
 
 import org.hamcrest.MatcherAssert;
 import org.hamcrest.Matchers;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class TableOrFieldNameEscapeUtilTest {
 

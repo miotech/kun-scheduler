@@ -5,16 +5,16 @@ import com.miotech.kun.dataplatform.web.common.tasktemplate.vo.TaskTemplateReqeu
 import com.miotech.kun.dataplatform.web.common.tasktemplate.vo.TaskTemplateVO;
 import com.miotech.kun.dataplatform.web.model.tasktemplate.TaskTemplate;
 import com.miotech.kun.workflow.client.WorkflowApiException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 
 import static com.miotech.kun.dataplatform.web.common.tasktemplate.dao.TaskTemplateDaoTest.TEST_TEMPLATE;
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class TaskTemplateServiceTest extends AppTestBase {
 

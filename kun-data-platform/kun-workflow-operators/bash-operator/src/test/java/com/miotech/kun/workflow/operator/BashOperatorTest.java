@@ -2,15 +2,15 @@ package com.miotech.kun.workflow.operator;
 
 import com.miotech.kun.workflow.core.execution.KunOperator;
 import com.miotech.kun.workflow.testing.executor.OperatorRunner;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertTrue;
 
 public class BashOperatorTest {
     private OperatorRunner operatorRunner;
 
-    @Before
+    @BeforeEach
     public void init(){
         KunOperator operator = new BashOperator();
         operatorRunner = new OperatorRunner(operator);

@@ -2,7 +2,11 @@ dependencies {
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-commons:kun-commons-utils")
     implementation "com.zaxxer:HikariCP"
-    implementation "junit:junit:4.12"
+    implementation 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+    implementation 'org.junit.jupiter:junit-jupiter-params:5.7.0'
+    implementation 'org.junit.vintage:junit-vintage-engine:5.7.0'
+    implementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    implementation 'org.testcontainers:junit-jupiter:1.16.2'
     implementation "org.mockito:mockito-core:3.3.3"
     implementation "com.h2database:h2"
     implementation ("org.mock-server:mockserver-netty:3.10.8") {

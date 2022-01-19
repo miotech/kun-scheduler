@@ -4,25 +4,23 @@ import com.miotech.kun.workflow.testing.executor.OperatorRunner;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.batch.JobBuilder;
 import io.fabric8.kubernetes.client.server.mock.KubernetesServer;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import static com.miotech.kun.workflow.operator.DockerConfiguration.*;
 import static org.junit.Assert.assertTrue;
 
 // TODO: fix this testcase
-@Ignore
+@Disabled
 public class KubernetesOperatorTest {
     private static final String TEST_JOB_NAME = "test-job";
 
     private OperatorRunner operatorRunner;
 
-    @Rule
     public KubernetesServer server = new KubernetesServer();
 
-    @Before
+    @BeforeEach
     public void init(){
         KubernetesOperator operator = new KubernetesOperator();
         operator.setClient(server.getClient());

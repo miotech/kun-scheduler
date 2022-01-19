@@ -10,8 +10,8 @@ import com.miotech.kun.commons.testing.GuiceTestBase;
 import com.miotech.kun.commons.web.annotation.BasePackageScan;
 import com.miotech.kun.commons.web.mock.*;
 import com.miotech.kun.commons.web.serializer.JsonSerializer;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -36,7 +36,7 @@ public class DispatchServletTest extends GuiceTestBase {
         addModules(new RouterModule());
     }
 
-    @Before
+    @BeforeEach
     public void injectRouter() {
         dispatchServlet = injector.getInstance(DispatchServlet.class);
         dispatchServlet.init();

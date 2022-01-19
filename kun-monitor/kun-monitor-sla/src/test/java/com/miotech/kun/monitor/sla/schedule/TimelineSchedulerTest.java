@@ -1,7 +1,7 @@
 package com.miotech.kun.monitor.sla.schedule;
 
 import com.miotech.kun.monitor.sla.AppTestBase;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.time.Duration;

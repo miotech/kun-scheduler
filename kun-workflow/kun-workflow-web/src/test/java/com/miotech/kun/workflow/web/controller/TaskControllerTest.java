@@ -23,8 +23,8 @@ import com.miotech.kun.workflow.testing.operator.OperatorCompiler;
 import com.miotech.kun.workflow.utils.JSONUtils;
 import com.miotech.kun.workflow.web.KunWebServerTestBase;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,7 +52,7 @@ public class TaskControllerTest extends KunWebServerTestBase {
     @Inject
     private OperatorDao operatorDao;
 
-    @Before
+    @BeforeEach
     public void preapreData() {
         String generatedString = RandomStringUtils.randomAlphabetic(10);
         Operator operator = MockOperatorFactory.createOperator()

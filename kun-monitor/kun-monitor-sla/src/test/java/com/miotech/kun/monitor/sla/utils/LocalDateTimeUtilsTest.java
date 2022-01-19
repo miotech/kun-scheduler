@@ -1,6 +1,6 @@
 package com.miotech.kun.monitor.sla.utils;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
 
