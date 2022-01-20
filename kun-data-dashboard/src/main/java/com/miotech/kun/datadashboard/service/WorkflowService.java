@@ -46,6 +46,10 @@ public class WorkflowService {
 
     private static final List<String> SCHEDULE_TYPE_FILTER = Lists.newArrayList("SCHEDULED");
 
+    private final Set<TaskRunStatus> finalStatusOfOngoing = ImmutableSet.of(TaskRunStatus.SUCCESS, TaskRunStatus.FAILED,
+            TaskRunStatus.CHECK_FAILED, TaskRunStatus.UPSTREAM_FAILED, TaskRunStatus.ABORTED,
+            TaskRunStatus.RUNNING, TaskRunStatus.QUEUED, TaskRunStatus.CREATED, TaskRunStatus.BLOCKED);
+
     // we set 9 am as the start of a day in task statistic
     private final Integer RESET_HOUR = 9;
     private final Integer STATISTIC_DAYS = 8;
@@ -171,7 +175,7 @@ public class WorkflowService {
             Integer count;
             //count finished tasks at reset hour
             List<TaskRunStatus> terminatedStatus = ImmutableList.of(TaskRunStatus.SUCCESS, TaskRunStatus.FAILED,
-                    TaskRunStatus.UPSTREAM_FAILED, TaskRunStatus.ABORTED);
+                    TaskRunStatus.CHECK_FAILED, TaskRunStatus.UPSTREAM_FAILED, TaskRunStatus.ABORTED);
             for (TaskRunStatus status : terminatedStatus) {
                 request = buildTaskRunSearchRequest(start, end, ImmutableSet.of(status), null, end);
                 count = workflowClient.countTaskRun(request);
@@ -180,10 +184,7 @@ public class WorkflowService {
             }
 
             //count tasks unfinished at reset hour with current status
-            List<TaskRunStatus> finalStatus = ImmutableList.of(TaskRunStatus.FAILED, TaskRunStatus.UPSTREAM_FAILED,
-                    TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, TaskRunStatus.ABORTED, TaskRunStatus.CREATED, TaskRunStatus.BLOCKED);
-
-            for (TaskRunStatus status : finalStatus) {
+            for (TaskRunStatus status : finalStatusOfOngoing) {
                 request = buildTaskRunSearchRequest(start, end, ImmutableSet.of(status), end, null);
                 count = workflowClient.countTaskRun(request);
                 totalCount += count;
@@ -253,8 +254,7 @@ public class WorkflowService {
             TaskRunStatus finalStatus = tasksRequest.getFinalStatus();
             statusToSearch = ImmutableSet.of(finalStatus);
         } else {
-            statusToSearch = ImmutableSet.of(TaskRunStatus.FAILED, TaskRunStatus.UPSTREAM_FAILED,
-                    TaskRunStatus.RUNNING, TaskRunStatus.SUCCESS, TaskRunStatus.ABORTED, TaskRunStatus.CREATED, TaskRunStatus.BLOCKED);
+            statusToSearch = finalStatusOfOngoing;
         }
         Integer timezoneOffset = tasksRequest.getTimezoneOffset();
         OffsetDateTime targetTime = DateUtils.millisToOffsetDateTime(tasksRequest.getTargetTime().toInstant().toEpochMilli(), ZoneOffset.ofHours(timezoneOffset));
