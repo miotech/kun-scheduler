@@ -17,11 +17,13 @@ import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.CreateTaskDefin
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.TaskDefinitionSearchRequest;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.TaskDefinitionVO;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.UpdateTaskDefinitionRequest;
+import com.miotech.kun.dataplatform.web.common.taskdefview.dao.TaskDefinitionViewDao;
 import com.miotech.kun.dataplatform.web.common.taskdefview.service.TaskDefinitionViewService;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.CreateTaskDefViewRequest;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewSearchParams;
 import com.miotech.kun.dataplatform.web.common.taskdefview.vo.TaskDefinitionViewVO;
 import com.miotech.kun.dataplatform.web.common.tasktemplate.service.TaskTemplateService;
+import com.miotech.kun.dataplatform.web.model.taskdefview.TaskDefinitionView;
 import com.miotech.kun.openapi.model.*;
 import com.miotech.kun.security.model.UserInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
@@ -29,10 +31,7 @@ import com.miotech.kun.workflow.client.model.PaginationResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,10 +47,20 @@ public class ApiService extends BaseSecurityService {
     private TaskDefinitionDao taskDefinitionDao;
 
     @Autowired
+    private TaskDefinitionViewDao taskDefinitionViewDao;
+
+    @Autowired
     private TaskDefinitionService taskDefinitionService;
 
     @Autowired
     private DeployService deployService;
+
+    public String authenticate(UserRequest request) {
+        UserInfo userInfo = getUserByUsername(request.getUsername());
+        Preconditions.checkNotNull(userInfo, "User does not exist. Please check username");
+        Preconditions.checkNotNull(userInfo.getId(), "User does not exist. Please check username");
+        return JwtUtils.createToken(request.getUsername());
+    }
 
     public TaskViewVO createTaskView(TaskViewCreateRequest request, String token) {
         setUserByToken(token);
@@ -62,16 +71,22 @@ public class ApiService extends BaseSecurityService {
 
     }
 
-    public PageResult<TaskViewVO> getTaskViewList(PageRequest request) {
+    public PageResult<TaskViewVO> getTaskViewList(Integer pageNum, Integer pageSize) {
         TaskDefinitionViewSearchParams searchParams = TaskDefinitionViewSearchParams.builder()
-                .pageNum(request.getPageNum())
-                .pageSize(request.getPageSize())
+                .pageNum(pageNum)
+                .pageSize(pageSize)
                 .build();
         PageResult<TaskDefinitionViewVO> result = taskDefinitionViewService.searchPage(searchParams);
         return new PageResult<>(result.getPageSize(),
                 result.getPageNumber(),
                 result.getTotalCount(),
                 result.getRecords().stream().map(TaskViewVO::from).collect(Collectors.toList()));
+    }
+
+    public PageResult<TaskViewVO> searchTaskView(String keyword) {
+        List<TaskDefinitionView> result = taskDefinitionViewDao.fetchByTaskDefinitionViewName(keyword);
+        return new PageResult<>(result.size(), 1, result.size(),
+                result.stream().map(TaskViewVO::from).collect(Collectors.toList()));
     }
 
     public List<TaskTemplateVO> getTaskTemplateList() {
