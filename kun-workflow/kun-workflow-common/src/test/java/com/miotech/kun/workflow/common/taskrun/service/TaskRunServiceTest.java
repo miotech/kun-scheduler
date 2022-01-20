@@ -30,6 +30,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import com.miotech.kun.workflow.utils.WorkflowIdGenerator;
 import org.apache.commons.lang3.tuple.Triple;
+import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -691,6 +692,35 @@ public class TaskRunServiceTest extends CommonTestBase {
 
         assertThat(taskRunVO2.getTask().getId(), is(task2.getId()));
         assertThat(taskRunVO2.getFailedUpstreamTaskRuns().get(0).getId(), is(taskRun1.getId()));
+    }
+
+    @Test
+    public void taskRunConvertToVoWithoutAttempt_success() {
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        Task task1 = tasks.get(0);
+        Task task2 = tasks.get(1);
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task1)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.FAILED)
+                .build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task2)
+                .cloneBuilder()
+                .withStatus(TaskRunStatus.UPSTREAM_FAILED)
+                .withFailedUpstreamTaskRunIds(Arrays.asList(taskRun1.getId()))
+                .build();
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        TaskAttempt taskAttempt2 = MockTaskAttemptFactory.createTaskAttempt(taskRun2);
+        taskDao.create(task1);
+        taskDao.create(task2);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.createAttempt(taskAttempt2);
+
+        TaskRunVO taskRunVO2WithoutAttempt = taskRunService.convertToVOWithoutAttempt(taskRun2);
+
+        MatcherAssert.assertThat(taskRunVO2WithoutAttempt.getTask().getId(), is(task2.getId()));
+        MatcherAssert.assertThat(taskRunVO2WithoutAttempt.getAttempts().isEmpty(), is(true));
     }
 
     @Test
