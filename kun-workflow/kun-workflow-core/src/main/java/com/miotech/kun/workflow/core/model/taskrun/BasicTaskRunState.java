@@ -71,7 +71,7 @@ public class BasicTaskRunState implements TaskRunState{
     }
 
     protected TaskRunStatus onRunning(){
-        throw new IllegalStateException("Submit is not support for status : " + taskRunStatus);
+        throw new IllegalStateException("Running is not support for status : " + taskRunStatus);
     }
 
     protected TaskRunStatus onCheck(){
