@@ -112,6 +112,9 @@ class ParameterResolver {
             case "long":
             case "java.lang.Long":
                 return Long.parseLong(variable);
+            case "boolean":
+            case "java.lang.Boolean":
+                return Boolean.parseBoolean(variable);
             case "java.util.List":
                 return toParameterListValues(parameter, variable);
             default:

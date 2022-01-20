@@ -92,7 +92,7 @@ public class TaskRunServiceTest extends CommonTestBase {
                 scheduler,
                 eventBus
         ));
-        taskRunStateMachine = new TaskRunStateMachine(taskRunDao,eventBus,mock(LineageService.class));
+        taskRunStateMachine = new TaskRunStateMachine(taskRunDao, eventBus, mock(LineageService.class));
         taskRunStateMachine.start();
     }
 
@@ -316,7 +316,7 @@ public class TaskRunServiceTest extends CommonTestBase {
 
         // Process
         List<Long> taskIdsToQuery = Lists.newArrayList(task1Id, task2Id, task3Id);
-        Map<Long, List<TaskRunVO>> mappings = taskRunService.fetchLatestTaskRuns(taskIdsToQuery, 10);
+        Map<Long, List<TaskRunVO>> mappings = taskRunService.fetchLatestTaskRuns(taskIdsToQuery, 10, false);
 
         // Validate
         assertThat(mappings.size(), is(3));
@@ -331,7 +331,7 @@ public class TaskRunServiceTest extends CommonTestBase {
     public void fetchLatestTaskRunsOrderByCreateTime() {
         prepareTaskRuns();
         List<Long> taskIdsToQuery = Lists.newArrayList(22L);
-        Map<Long, List<TaskRunVO>> mappings = taskRunService.fetchLatestTaskRuns(taskIdsToQuery, 10);
+        Map<Long, List<TaskRunVO>> mappings = taskRunService.fetchLatestTaskRuns(taskIdsToQuery, 10,false);
         List<TaskRunVO> taskRunVOS = mappings.get(22L);
         assertThat(taskRunVOS, hasSize(2));
         assertThat(taskRunVOS.get(0).getId(), is(2L));
@@ -751,12 +751,12 @@ public class TaskRunServiceTest extends CommonTestBase {
     }
 
     @Test
-    public void removeAllTaskRunDependency_should_make_it_able_to_run(){
+    public void removeAllTaskRunDependency_should_make_it_able_to_run() {
         //prepare
         List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
         Task task1 = tasks.get(0);
         Task task2 = tasks.get(1);
-        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(tasks,"0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1");
         TaskRun taskRun1 = taskRunList.get(0);
         TaskRun taskRun2 = taskRunList.get(1);
         TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
@@ -768,20 +768,20 @@ public class TaskRunServiceTest extends CommonTestBase {
         taskRunDao.createAttempt(taskAttempt1);
         taskRunDao.createAttempt(taskAttempt2);
 
-        taskRunService.removeDependency(taskRun2.getId(),Lists.newArrayList(taskRun1.getId()));
+        taskRunService.removeDependency(taskRun2.getId(), Lists.newArrayList(taskRun1.getId()));
 
         //verify
         List<Long> satisfyTaskRunIds = taskRunDao.fetchAllSatisfyTaskRunId();
-        assertThat(satisfyTaskRunIds,containsInAnyOrder(taskRun1.getId(),taskRun2.getId()));
+        assertThat(satisfyTaskRunIds, containsInAnyOrder(taskRun1.getId(), taskRun2.getId()));
     }
 
     @Test
-    public void removeUpstreamFailedTaskRunDependency_should_change_status_to_created(){
+    public void removeUpstreamFailedTaskRunDependency_should_change_status_to_created() {
         //prepare
         List<Task> tasks = MockTaskFactory.createTasksWithRelations(2, "0>>1");
         Task task1 = tasks.get(0);
         Task task2 = tasks.get(1);
-        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(tasks,"0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1");
         TaskRun taskRun1 = taskRunList.get(0)
                 .cloneBuilder()
                 .withStatus(TaskRunStatus.FAILED)
@@ -801,21 +801,21 @@ public class TaskRunServiceTest extends CommonTestBase {
         taskRunDao.createAttempt(taskAttempt1);
         taskRunDao.createAttempt(taskAttempt2);
 
-        taskRunService.removeDependency(taskRun2.getId(),Lists.newArrayList(taskRun1.getId()));
+        taskRunService.removeDependency(taskRun2.getId(), Lists.newArrayList(taskRun1.getId()));
 
         //verify
         TaskRun savedTaskRun2 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
-        assertThat(savedTaskRun2.getStatus(),is(TaskRunStatus.CREATED));
+        assertThat(savedTaskRun2.getStatus(), is(TaskRunStatus.CREATED));
     }
 
     @Test
-    public void removePartOfTaskRunDependency_should_not_able_to_run(){
+    public void removePartOfTaskRunDependency_should_not_able_to_run() {
         //prepare
         List<Task> tasks = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2");
         Task task1 = tasks.get(0);
         Task task2 = tasks.get(1);
         Task task3 = tasks.get(2);
-        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(tasks,"0>>2;1>>2");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>2;1>>2");
         TaskRun taskRun1 = taskRunList.get(0)
                 .cloneBuilder()
                 .withStatus(TaskRunStatus.FAILED)
@@ -840,14 +840,14 @@ public class TaskRunServiceTest extends CommonTestBase {
         taskRunDao.createAttempt(taskAttempt2);
         taskRunDao.createAttempt(taskAttempt3);
 
-        taskRunService.removeDependency(taskRun3.getId(),Lists.newArrayList(taskRun1.getId()));
+        taskRunService.removeDependency(taskRun3.getId(), Lists.newArrayList(taskRun1.getId()));
 
         //verify
         TaskRun savedTaskRun3 = taskRunDao.fetchTaskRunById(taskRun3.getId()).get();
-        assertThat(savedTaskRun3.getStatus(),is(TaskRunStatus.CREATED));
+        assertThat(savedTaskRun3.getStatus(), is(TaskRunStatus.CREATED));
         List<Long> satisfyTaskRunIds = taskRunDao.fetchAllSatisfyTaskRunId();
-        assertThat(satisfyTaskRunIds,hasSize(1));
-        assertThat(satisfyTaskRunIds.get(0),is(taskRun2.getId()));
+        assertThat(satisfyTaskRunIds, hasSize(1));
+        assertThat(satisfyTaskRunIds.get(0), is(taskRun2.getId()));
     }
 
 

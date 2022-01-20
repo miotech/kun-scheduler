@@ -283,7 +283,18 @@ public class DefaultWorkflowClient implements WorkflowClient {
 
     @Override
     public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit) {
-        return wfApi.getLatestTaskRuns(taskIds, limit);
+        return wfApi.getLatestTaskRuns(taskIds, limit , true);
+    }
+
+    /**
+     * get latest TaskRun
+     * @param taskIds
+     * @param limit
+     * @param containsAttempt true:taskrun contains all taskAttempt info
+     * @return
+     */
+    public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit , boolean containsAttempt) {
+        return wfApi.getLatestTaskRuns(taskIds, limit , containsAttempt);
     }
 
     @Override
