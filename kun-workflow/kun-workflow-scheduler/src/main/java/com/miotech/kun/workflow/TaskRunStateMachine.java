@@ -118,7 +118,7 @@ public class TaskRunStateMachine implements InitializingBean {
         Long taskAttemptId = taskAttempt.getId();
         Long taskId = taskAttempt.getTaskId();
         TaskAttemptStatusChangeEvent event = new TaskAttemptStatusChangeEvent(taskAttemptId, currentStatus, nextStatus, taskAttempt.getTaskName(), taskId);
-        logger.info("Post taskAttemptCheckEvent. attemptId={}, event={}", taskAttemptId, event);
+        logger.info("Post taskAttemptStatusChangeEvent. attemptId={}, event={}", taskAttemptId, event);
         //send status change event
         eventBus.post(event);
     }
