@@ -94,6 +94,7 @@ export const reducers = {
   setTaskDetailsSelectedFilter: produce((draftState: ModelState, payload: DataDevelopmentBoardFilterCardType) => {
     draftState.dataDevelopmentBoardData.taskDetailsSelectedFilter = payload;
     draftState.dataDevelopmentBoardData.taskDetailsForWeekParams = null;
+    draftState.dataDevelopmentBoardData.clearBarChart = !draftState.dataDevelopmentBoardData.clearBarChart;
   }),
   setTaskDetailsDisplayStartedOnly: produce((draftState: ModelState, payload: boolean) => {
     draftState.dataDevelopmentBoardData.taskDetailsDisplayStartedOnly = payload;
@@ -103,8 +104,11 @@ export const reducers = {
     draftState.dataDevelopmentBoardData.taskDetailsDisplayLast24HoursOnly = payload;
     draftState.dataDevelopmentBoardData.taskDetailsForWeekParams = null;
   }),
-  setTaskDetailsForWeekParams: produce((draftState: ModelState, payload: boolean) => {
+  setTaskDetailsForWeekParams: produce((draftState: ModelState, payload: any) => {
     draftState.dataDevelopmentBoardData.taskDetailsForWeekParams = payload;
+    if(!payload.type){
+      draftState.dataDevelopmentBoardData.clearBarChart = !draftState.dataDevelopmentBoardData.clearBarChart;
+    }
     draftState.dataDevelopmentBoardData.taskDetails.pageNum = 1;
     draftState.dataDevelopmentBoardData.taskDetailsSelectedFilter = null;
   }),
@@ -113,6 +117,6 @@ export const reducers = {
     draftState.dataDevelopmentBoardData.dailyStatisticList = {
       ...draftState.dataDevelopmentBoardData.dailyStatisticList,
       ...payload,
-    }
+    };
   }),
 };

@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useMemo, useState } from 'react';
+import React, { memo, useMemo } from 'react';
 import { Table, Card, Checkbox, Space } from 'antd';
 import { dayjs } from '@/utils/datetime-utils';
 import isNil from 'lodash/isNil';
@@ -9,7 +9,6 @@ import { ColumnProps } from 'antd/es/table';
 import { DevTaskDetail } from '@/services/monitoring-dashboard';
 import { TableOnChangeCallback } from '@/definitions/common-types';
 import getUniqId from '@/utils/getUniqId';
-import { getTaskDefinitionIdByWorkflowIds } from '@/services/task-deployments/deployed-tasks';
 import { StatusText } from '@/components/StatusText';
 
 interface OwnProps {
@@ -28,17 +27,10 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-function getComputedLinkHref(taskDefIdsMap: Record<string, string | null>, taskId: string, taskRunId: string): string {
-  if (!taskDefIdsMap[taskId]) {
-    return '#';
-  }
-  // else
+function getComputedLinkHref(taskId: string, taskRunId: string): string {
   return SafeUrlAssembler()
-    .template('/operation-center/scheduled-tasks/:taskDefId')
+    .template('/operation-center/task-run-id/:taskRunId')
     .param({
-      taskDefId: taskDefIdsMap[taskId],
-    })
-    .query({
       taskRunId,
     })
     .toString();
@@ -59,32 +51,7 @@ function shouldDisplayEndTime(record: DevTaskDetail): boolean {
 
 export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(props) {
   const { data, pageNum, pageSize, total, onChange, loading } = props;
-
-  const [definitionIdsLoading, setDefinitionIdsLoading] = useState<boolean>(false);
-  const [workflowIdToTaskDefinitionIdMap, setWorkflowIdToTaskDefinitionIdMap] = useState<Record<string, string | null>>(
-    {},
-  );
-
   const t = useI18n();
-
-  const workflowIds = useMemo(() => {
-    return (data || []).map(datum => datum.taskId);
-  }, [data]);
-
-  useEffect(() => {
-    setDefinitionIdsLoading(true);
-    const effectAsync = async () => {
-      try {
-        if (workflowIds.length) {
-          const workflowIdToTaskDefIdMapPayload = await getTaskDefinitionIdByWorkflowIds(workflowIds);
-          setWorkflowIdToTaskDefinitionIdMap(workflowIdToTaskDefIdMapPayload);
-        }
-      } finally {
-        setDefinitionIdsLoading(false);
-      }
-    };
-    effectAsync();
-  }, [workflowIds]);
 
   const columns: ColumnProps<DevTaskDetail>[] = useMemo(
     () => [
@@ -100,7 +67,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         width: 280,
         title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.taskName'),
         render: (txt, record) => {
-          const linkHref = getComputedLinkHref(workflowIdToTaskDefinitionIdMap, record.taskId, record.taskRunId);
+          const linkHref = getComputedLinkHref(record.taskId, record.taskRunId);
           if (linkHref === '#') {
             return <span>{record.taskName}</span>;
           }
@@ -158,7 +125,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         ),
       },
     ],
-    [t, pageNum, pageSize, workflowIdToTaskDefinitionIdMap],
+    [t, pageNum, pageSize],
   );
 
   return (
@@ -197,7 +164,7 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         </span>
       </h3>
       <Table<DevTaskDetail>
-        loading={loading || definitionIdsLoading}
+        loading={loading}
         dataSource={data}
         tableLayout="fixed"
         size="small"
