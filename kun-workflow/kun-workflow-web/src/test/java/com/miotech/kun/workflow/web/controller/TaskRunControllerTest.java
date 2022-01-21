@@ -60,29 +60,30 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
             taskRunVO.setEndAt(taskRun.getEndAt());
             taskRunVO.setAttempts(new ArrayList<>());
             return taskRunVO;
-        }).when(taskRunService).convertToVO(any(TaskRun.class));
+        }).when(taskRunService).convertToVO(any(TaskRun.class), anyBoolean());
     }
 
     /**
      * A utility function to define search behaviors for taskrun service
+     *
      * @param filterToMatch
      * @param records
      * @param count
      */
     private void setupMockitoWithTaskRunSearchFilter(TaskRunSearchFilter filterToMatch, List<TaskRunVO> records, int count) {
         Mockito.when(taskRunService.searchTaskRunVOs(ArgumentMatchers.argThat(argument -> {
-            TaskRunSearchFilter filterToMatchEasyMatchProps = (filterToMatch != null) ?
-                    filterToMatch.cloneBuilder()
-                        .withStatus(null)
-                        .build()
-                    : null;
-            TaskRunSearchFilter argumentEasyMatchProps = (argument != null) ? argument.cloneBuilder().withStatus(null).build() : null;
-            return Objects.equals(filterToMatchEasyMatchProps, argumentEasyMatchProps) &&
-                    matchStatusFilter(
-                            filterToMatch != null ? filterToMatch.getStatus() : null,
-                            argument != null ? argument.getStatus() : null
-                    );
-        })))
+                    TaskRunSearchFilter filterToMatchEasyMatchProps = (filterToMatch != null) ?
+                            filterToMatch.cloneBuilder()
+                                    .withStatus(null)
+                                    .build()
+                            : null;
+                    TaskRunSearchFilter argumentEasyMatchProps = (argument != null) ? argument.cloneBuilder().withStatus(null).build() : null;
+                    return Objects.equals(filterToMatchEasyMatchProps, argumentEasyMatchProps) &&
+                            matchStatusFilter(
+                                    filterToMatch != null ? filterToMatch.getStatus() : null,
+                                    argument != null ? argument.getStatus() : null
+                            );
+                })))
                 .thenReturn(PaginationVO.<TaskRunVO>newBuilder()
                         .withPageNumber(filterToMatch.getPageNum())
                         .withPageSize(filterToMatch.getPageSize())
@@ -99,7 +100,8 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
     }
 
     private PaginationVO<TaskRunVO> jsonToPaginationVO(String json) {
-        return jsonSerializer.toObject(json, new TypeReference<PaginationVO<TaskRunVO>>() {});
+        return jsonSerializer.toObject(json, new TypeReference<PaginationVO<TaskRunVO>>() {
+        });
     }
 
     private void prepareMockTaskRunsWithStatus() {
@@ -249,15 +251,15 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
             TaskRun taskRun = MockTaskRunFactory.createTaskRun();
             if (i < 100) {
                 taskRun = taskRun.cloneBuilder().withTask(taskRun.getTask().cloneBuilder()
-                        .withTags(Lists.newArrayList(
-                                new Tag("version", "1.0")
-                        )).build())
+                                .withTags(Lists.newArrayList(
+                                        new Tag("version", "1.0")
+                                )).build())
                         .build();
             } else if (i < 150) {
                 taskRun = taskRun.cloneBuilder().withTask(taskRun.getTask().cloneBuilder()
-                        .withTags(Lists.newArrayList(
-                                new Tag("version", "2.0")
-                        )).build())
+                                .withTags(Lists.newArrayList(
+                                        new Tag("version", "2.0")
+                                )).build())
                         .build();
             }
             allTaskRunCollection.add(taskRun);
@@ -333,10 +335,10 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
 
         // provide parameter
         Mockito.when(taskRunService.getTaskRunLog(
-                testTaskRunId,
-                taskRunLogVO.getAttempt(),
-                taskRunLogVO.getStartLine(),
-                taskRunLogVO.getEndLine()))
+                        testTaskRunId,
+                        taskRunLogVO.getAttempt(),
+                        taskRunLogVO.getStartLine(),
+                        taskRunLogVO.getEndLine()))
                 .thenReturn(taskRunLogVO);
         response = get(String.format("/taskruns/%s/logs?attempt=%s&startLine=%s&endLine=%s",
                 testTaskRunId,
@@ -517,7 +519,7 @@ public class TaskRunControllerTest extends KunWebServerTestBase {
             invokeParams.setTaskIds(invocation.getArgument(0));
             invokeParams.setLimit(invocation.getArgument(1));
             return null;
-        }).when(taskRunService).fetchLatestTaskRuns(anyList(), anyInt());
+        }).when(taskRunService).fetchLatestTaskRuns(anyList(), anyInt(), anyBoolean());
     }
 
 

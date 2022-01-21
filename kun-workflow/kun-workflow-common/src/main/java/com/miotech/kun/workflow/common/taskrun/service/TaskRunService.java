@@ -121,7 +121,7 @@ public class TaskRunService {
         if (endLineIndex != null && endLineIndex == Integer.MAX_VALUE) {
             try {
                 logger.debug("trying to get worker log from executor");
-                Integer tailLines = startLineIndex == 0? Integer.MAX_VALUE : -startLineIndex;
+                Integer tailLines = startLineIndex == 0 ? Integer.MAX_VALUE : -startLineIndex;
                 String logs = executor.workerLog(taskAttempt.getId(), tailLines);
                 List<String> logList = coverLogsToList(logs);
                 lineCount = logList.size();
@@ -306,19 +306,33 @@ public class TaskRunService {
     }
 
     public TaskRunVO convertToVO(TaskRun taskRun) {
-        List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRun.getId())
-                .stream()
-                // Part of id properties are missing after fetched from storage
-                .map(attempt -> attempt.cloneBuilder()
-                        .withTaskRunId(taskRun.getId())
-                        .withTaskId(taskRun.getTask().getId())
-                        .withTaskName(taskRun.getTask().getName())
-                        .build())
-                .collect(Collectors.toList());
-        List<TaskRun> failedUpstreamTaskRuns = taskRun.getStatus().isUpstreamFailed() ?
-                taskRunDao.fetchFailedUpstreamTaskRuns(taskRun.getId()) : Collections.emptyList();
-        logger.debug("ConvertToVO: failed upstream task runs {}", failedUpstreamTaskRuns.toString());
-        return buildTaskRunVO(taskRun, attempts, failedUpstreamTaskRuns);
+        return convertToVO(taskRun, true);
+    }
+
+    /**
+     * convert taskrun to taskrunVO
+     *
+     * @param taskRun
+     * @param containsAttempt true:taskrunVo contains all taskAttempt info
+     * @return
+     */
+    public TaskRunVO convertToVO(TaskRun taskRun, boolean containsAttempt) {
+        if (containsAttempt) {
+            List<TaskAttemptProps> attempts = taskRunDao.fetchAttemptsPropByTaskRunId(taskRun.getId())
+                    .stream()
+                    // Part of id properties are missing after fetched from storage
+                    .map(attempt -> attempt.cloneBuilder()
+                            .withTaskRunId(taskRun.getId())
+                            .withTaskId(taskRun.getTask().getId())
+                            .withTaskName(taskRun.getTask().getName())
+                            .build())
+                    .collect(Collectors.toList());
+            List<TaskRun> failedUpstreamTaskRuns = taskRun.getStatus().isUpstreamFailed() ?
+                    taskRunDao.fetchFailedUpstreamTaskRuns(taskRun.getId()) : Collections.emptyList();
+            logger.debug("ConvertToVO: failed upstream task runs {}", failedUpstreamTaskRuns.toString());
+            return buildTaskRunVO(taskRun, attempts, failedUpstreamTaskRuns);
+        }
+        return buildTaskRunVO(taskRun, new ArrayList<>(), new ArrayList<>());
     }
 
     /**
@@ -363,7 +377,7 @@ public class TaskRunService {
         return taskRunDao.updateTaskAttemptLogPath(taskAttemptId, logPath);
     }
 
-    public Map<Long, List<TaskRunVO>> fetchLatestTaskRuns(List<Long> taskIds, int limit) {
+    public Map<Long, List<TaskRunVO>> fetchLatestTaskRuns(List<Long> taskIds, int limit, boolean containsAttempt) {
         Preconditions.checkNotNull(taskIds);
         Preconditions.checkArgument(limit > 0);
         Preconditions.checkArgument(limit <= 100);
@@ -373,9 +387,18 @@ public class TaskRunService {
         Map<Long, List<TaskRunVO>> mappings = new HashMap<>();
         for (Map.Entry<Long, List<TaskRun>> entry : taskIdToLatestTaskRunsMap.entrySet()) {
             List<TaskRun> runs = entry.getValue();
-            mappings.put(entry.getKey(), runs.stream().map(this::convertToVO).collect(Collectors.toList()));
+            mappings.put(entry.getKey(), runs.stream().map(taskRun -> convertToVO(taskRun, containsAttempt)).collect(Collectors.toList()));
         }
         return mappings;
+    }
+
+    public Map<Long, List<TaskRun>> fetchBasicLatestTaskRuns(List<Long> taskIds, int limit) {
+        Preconditions.checkNotNull(taskIds);
+        Preconditions.checkArgument(limit > 0);
+        Preconditions.checkArgument(limit <= 100);
+
+        return taskRunDao.fetchLatestTaskRunsByBatch(taskIds, limit);
+
     }
 
     public boolean changeTaskRunPriority(long taskRunId, Integer priority) {
@@ -399,14 +422,14 @@ public class TaskRunService {
         return taskRunList.stream().map(this::convertToVO).collect(Collectors.toList());
     }
 
-    public Boolean removeDependency(Long taskRunId, List<Long> upstreamTaskRunIds){
+    public Boolean removeDependency(Long taskRunId, List<Long> upstreamTaskRunIds) {
         //remove dependency in database
-        taskRunDao.removeTaskRunDependency(taskRunId,upstreamTaskRunIds);
+        taskRunDao.removeTaskRunDependency(taskRunId, upstreamTaskRunIds);
 
         //reschedule taskRun if necessary
         TaskAttemptProps taskAttempt = taskRunDao.fetchLatestTaskAttempt(taskRunId);
-        if(taskAttempt.getStatus().isUpstreamFailed()){
-            eventBus.post(new TaskRunTransitionEvent(TaskRunTransitionEventType.RESCHEDULE,taskAttempt.getId()));
+        if (taskAttempt.getStatus().isUpstreamFailed()) {
+            eventBus.post(new TaskRunTransitionEvent(TaskRunTransitionEventType.RESCHEDULE, taskAttempt.getId()));
         }
 
         //trigger runnable taskRun

@@ -384,13 +384,14 @@ public class WorkflowApi {
         return sendRequest(postRequest, Integer.class);
     }
 
-    public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit) {
+    public Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit , boolean containsAttempt) {
         String taskIdsQueryString = String.join(",",
                 taskIds.stream().map(Object::toString).collect(Collectors.toList())
         );
         HttpUrl url = buildUrl(API_TASK_RUNS + "/latest")
                 .addQueryParameter("taskIds", taskIdsQueryString)
                 .addQueryParameter("limit", String.valueOf(limit))
+                .addQueryParameter("containsAttempt",String.valueOf(containsAttempt))
                 .build();
         Request getRequest = new Request.Builder()
                 .url(url).get()
