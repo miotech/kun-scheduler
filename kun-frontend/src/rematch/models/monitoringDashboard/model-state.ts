@@ -61,6 +61,7 @@ export interface DataDevelopmentBoardData {
   taskDetailsDisplayStartedOnly: boolean;
   taskDetailsDisplayLast24HoursOnly: boolean;
   taskDetailsForWeekParams: any;
+  clearBarChart: boolean;
   taskDetails: {
     data: DevTaskDetail[];
     loading: boolean;
@@ -117,11 +118,6 @@ export const initState: MonitoringDashboardModelState = {
       upstreamFailedTaskCount: 0,
     },
     dataDevelopmentMetricsLoading: false,
-    dailyTaskFinish: {
-      data: [],
-      loading: false,
-      error: null,
-    },
     dailyStatisticList: {
       data: [],
       loading: false,
@@ -131,6 +127,7 @@ export const initState: MonitoringDashboardModelState = {
     taskDetailsDisplayStartedOnly: false,
     taskDetailsDisplayLast24HoursOnly: true,
     taskDetailsForWeekParams: false,
+    clearBarChart: true,
     taskDetails: {
       data: [],
       loading: false,

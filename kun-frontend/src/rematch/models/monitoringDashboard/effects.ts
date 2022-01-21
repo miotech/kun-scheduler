@@ -14,7 +14,6 @@ let loadTopDatasetsMaxRowCountChangeFlag = 0;
 let loadFailedTestCasesFlag = 0;
 let loadDatasetMetricsFlag = 0;
 let loadDataDevelopmentMetricsFlag = 0;
-let loadDailyTaskFinishFlag = 0;
 let loadTaskDetailsFlag = 0;
 
 // Data discovery board: fetch top metrics data
@@ -168,36 +167,6 @@ const loadDataDevelopmentMetrics = (dispatch: RootDispatch) => {
     });
 };
 
-// daily task finishes
-const loadDailyTaskFinish = (dispatch: RootDispatch) => {
-  dispatch.monitoringDashboard.updateDailyTaskFinish({
-    loading: true,
-  });
-
-  loadDailyTaskFinishFlag += 1;
-  const currentFlag = loadDailyTaskFinishFlag;
-
-  return services
-    .fetchDataDevelopmentDailyTaskCount()
-    .then(fetchedData => {
-      if (currentFlag === loadDailyTaskFinishFlag) {
-        dispatch.monitoringDashboard.setDailyTaskFinish({
-          loading: false,
-          data: fetchedData.taskCountList,
-          error: null,
-        });
-      }
-    })
-    .catch(e => {
-      if (currentFlag === loadDailyTaskFinishFlag) {
-        dispatch.monitoringDashboard.setDailyTaskFinish({
-          loading: false,
-          data: [],
-          error: e,
-        });
-      }
-    });
-};
 
 export interface LoadTaskDetailsParams extends PaginationReqBody {
   taskRunStatus?: string;
@@ -322,7 +291,6 @@ export const effects = (dispatch: RootDispatch) => ({
         dispatch,
       ),
       loadDataDevelopmentMetrics(dispatch),
-      loadDailyTaskFinish(dispatch),
       loadTaskDetails(
         {
           pageNumber: taskDetails.pageNum,
@@ -349,9 +317,6 @@ export const effects = (dispatch: RootDispatch) => ({
   },
   async reloadDataDevelopmentMetrics() {
     await loadDataDevelopmentMetrics(dispatch);
-  },
-  async reloadDailyTaskFinish() {
-    await loadDailyTaskFinish(dispatch);
   },
   async reloadTaskDetails(params: LoadTaskDetailsParams) {
     if (params.taskDetailsForWeekParams) {
