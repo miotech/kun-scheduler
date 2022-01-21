@@ -246,7 +246,7 @@ public class WorkflowApiTest extends MockServerTestBase {
                 JSONUtils.toJsonString(mockResult)
         );
 
-        Map<Long, List<TaskRun>> result = wfApi.getLatestTaskRuns(Lists.newArrayList(task.getId()), 10);
+        Map<Long, List<TaskRun>> result = wfApi.getLatestTaskRuns(Lists.newArrayList(task.getId()), 10 , true);
         assertThat(result, sameBeanAs(mockResult));
     }
 
