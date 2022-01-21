@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.model.entity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -10,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 public class Watermark {
     /* Epoch Unix timestamp in milliseconds */
     Double time;

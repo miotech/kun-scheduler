@@ -51,7 +51,6 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
 
   const {
     dataDevelopmentMetrics: metrics,
-    dailyTaskFinish,
     taskDetails,
     taskDetailsForWeekParams,
     dataDevelopmentMetricsLoading,
@@ -196,8 +195,6 @@ export const DataDevelopmentBoard: React.FC = memo(function DataDevelopmentBoard
       <Row gutter={[8, 8]}>
         <Col span={24}>
           <DailyTaskFinishCountChart
-            data={dailyTaskFinish.data}
-            loading={dailyTaskFinish.loading}
           />
         </Col>
         {/* <DailyTaskFinishCountTable data={dailyStatisticList.data} loading={dailyStatisticList.loading} /> */}

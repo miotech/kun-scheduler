@@ -4,6 +4,7 @@ dependencies {
     implementation project(":kun-metadata:kun-metadata-service-facade")
     implementation project(':kun-metadata:kun-metadata-core')
     implementation project(":kun-workflow:kun-workflow-core")
+    implementation "com.zaxxer:HikariCP"
     implementation 'com.google.guava:guava'
     implementation "org.mongodb:mongo-java-driver"
     implementation "com.amazonaws:aws-java-sdk-glue"

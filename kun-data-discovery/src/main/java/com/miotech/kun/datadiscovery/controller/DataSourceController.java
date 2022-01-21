@@ -4,11 +4,13 @@ import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DataSourceSearchRequest;
-import com.miotech.kun.datadiscovery.model.entity.*;
+import com.miotech.kun.datadiscovery.model.entity.DataSourceBasicPage;
+import com.miotech.kun.datadiscovery.model.entity.DataSourcePage;
+import com.miotech.kun.datadiscovery.model.entity.DataSourceTemplateVO;
+import com.miotech.kun.datadiscovery.model.entity.DataSourceVO;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
 import com.miotech.kun.datadiscovery.service.DataSourceService;
 import com.miotech.kun.datadiscovery.service.DatasetFieldService;
-import com.miotech.kun.datadiscovery.service.DatasetService;
 import com.miotech.kun.datadiscovery.service.MetadataService;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import lombok.extern.slf4j.Slf4j;
@@ -27,9 +29,6 @@ import java.util.Map;
 @RequestMapping("/kun/api/v1")
 @Slf4j
 public class DataSourceController {
-
-    @Autowired
-    DatasetService datasetService;
 
     @Autowired
     DatasetFieldService datasetFieldService;

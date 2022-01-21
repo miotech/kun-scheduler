@@ -63,7 +63,8 @@ public class ZhongdaService extends HttpApiClient {
      * @param event status change event object
      */
     public void sendMessage(TaskAttemptStatusChangeEvent event) {
-        String msg = buildMessage(event);
+        List<String> users = deployedTaskFacade.getUserByTaskId(event.getTaskId());
+        String msg = buildMessage(event, users);
         sendMessage(event.getTaskId(), msg);
     }
 
@@ -85,7 +86,7 @@ public class ZhongdaService extends HttpApiClient {
         post(api, payload.toString());
     }
 
-    private String buildMessage(TaskAttemptStatusChangeEvent event) {
+    private String buildMessage(TaskAttemptStatusChangeEvent event, List<String> users) {
         if (notifyLinkConfig.isEnabled()) {
             long taskRunId = event.getTaskRunId();
             Optional<Long> derivingBackfillId = backfillFacade.findDerivedFromBackfill(taskRunId);
@@ -93,9 +94,10 @@ public class ZhongdaService extends HttpApiClient {
             log.debug("Pushing status message with link. task run id = {}, backfill id = {}, task definition id = {}.", taskRunId, derivingBackfillId.orElse(null), taskDefinitionId.orElse(null));
             // If it is not a backfill task run, and corresponding deployment task is found, then it should be a scheduled task run
             if (taskDefinitionId.isPresent() && (!derivingBackfillId.isPresent())) {
-                return String.format("Deployed task: '%s' in state: %s%n%nSee link: %s",
+                return String.format("Deployed task: '%s' in state: %s%nTask owner : %s%nSee link: %s",
                         event.getTaskName(),
                         event.getToStatus().name(),
+                        String.join(",", users),
                         notifyLinkConfig.getScheduledTaskLinkURL(taskDefinitionId.get(), taskRunId)
                 );
             }

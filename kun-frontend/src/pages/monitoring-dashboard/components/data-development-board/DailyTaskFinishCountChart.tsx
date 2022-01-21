@@ -1,19 +1,15 @@
-import React, { memo, useMemo, useRef } from 'react';
-import { DailyTaskFinishCount } from '@/components/Monitoring/DailyTaskFinishLineChart/DailyTaskFinishLineChart';
+import React, { memo, useRef } from 'react';
 import { DailyTaskFinishBarChart } from '@/components/Monitoring/DailyTaskFinishLineChart';
 import { Card } from 'antd';
 import useRedux from '@/hooks/useRedux';
 import useI18n from '@/hooks/useI18n';
 import { KunSpin } from '@/components/KunSpin';
-import { dayjs } from '@/utils/datetime-utils';
 import { DailyTaskFinishCountTable } from './DailyTaskFinishCountTable';
 
 export const DailyTaskFinishCountChart: React.FC = memo(function DailyTaskFinishCountChart() {
   const t = useI18n();
 
   const chartWrapperRef: React.RefObject<any> = useRef<any>();
-
-  // const { width = 468, height = 468 } = useSize(chartWrapperRef);
   const {
     selector: {
       dataDevelopmentBoardData,
@@ -21,24 +17,13 @@ export const DailyTaskFinishCountChart: React.FC = memo(function DailyTaskFinish
   } = useRedux(s => ({
     dataDevelopmentBoardData: s.monitoringDashboard.dataDevelopmentBoardData,
   }));
+
   const {
     dailyStatisticList,
   } = dataDevelopmentBoardData;
 
   const { data, loading } = dailyStatisticList;
-  const normalizedData = useMemo(() => {
-    if (data && data.length) {
-      return data.map((datum: DailyTaskFinishCount) => ({
-        ...datum,
-        time: dayjs(datum.time)
-          .startOf('day')
-          .toDate()
-          .getTime(),
-      }));
-    }
-    // else
-    return [];
-  }, [data]);
+
 
   if (loading) {
     return (
@@ -51,7 +36,7 @@ export const DailyTaskFinishCountChart: React.FC = memo(function DailyTaskFinish
     );
   }
 
-  if (!normalizedData.length) {
+  if (!data.length) {
     return (
       <Card bodyStyle={{ padding: '8px' }}>
         <h3>{t('monitoringDashboard.dataDevelopment.dailyTaskFinishCountChart.title')}</h3>
@@ -75,7 +60,6 @@ export const DailyTaskFinishCountChart: React.FC = memo(function DailyTaskFinish
         </div>
         <DailyTaskFinishCountTable  data={data} />
       </div>
-      {/* <DailyTaskFinishCountTable data={dailyStatisticList} loading={loading} /> */}
     </Card>
   );
 });
