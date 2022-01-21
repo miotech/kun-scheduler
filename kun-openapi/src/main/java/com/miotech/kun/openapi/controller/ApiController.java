@@ -43,11 +43,21 @@ public class ApiController {
         return RequestResult.success(apiService.searchTaskView(keyword));
     }
 
+    @GetMapping("/task-view/get")
+    public RequestResult<TaskViewDetailVO> getTaskViewDetail(@RequestParam Long taskViewId) {
+        return RequestResult.success(apiService.getTaskViewDetail(taskViewId));
+    }
+
     @GetMapping("/task-template/list")
     public RequestResult<List<TaskTemplateVO>> getTaskTemplateList() {
         return RequestResult.success(apiService.getTaskTemplateList());
     }
 
+    @GetMapping("/task/get")
+    public RequestResult<TaskDefinitionVO> getTask(@RequestParam Long taskId) {
+        return RequestResult.success(apiService.getTask(taskId));
+    }
+    
     @PostMapping("/task/search")
     public RequestResult<PaginationResult<TaskDefinitionVO>> searchTask(@RequestBody TaskSearchRequest request) {
         return RequestResult.success(apiService.searchTask(request));
