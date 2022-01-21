@@ -248,6 +248,16 @@ public interface WorkflowClient {
      */
     Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit);
 
+
+    /**
+     * Get latest N task runs of given task ids.
+     * @param taskIds ids of the tasks for the query
+     * @param limit size of the task run list for each task
+     * @param containsAttempt true:taskrun contains all taskAttempt info
+     * @return
+     */
+    Map<Long, List<TaskRun>> getLatestTaskRuns(List<Long> taskIds, int limit , boolean containsAttempt);
+
     /**
      * Get neighbouring upstream / downstream lineage dataset nodes of specific dataset
      * @param datasetGid global id of dataset
