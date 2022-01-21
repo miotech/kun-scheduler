@@ -28,5 +28,5 @@ export function dateFormatter(value: number | string) {
   if (!value) {
     return '-';
   }
-  return dayjs(value).format('YYYY-MM-DD');
+  return dayjs(value).format('YYYY-MM-DD HH:mm');
 }
