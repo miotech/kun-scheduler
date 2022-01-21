@@ -25,9 +25,8 @@ if (!window.dayjs) {
 export const dayjs = window.dayjs as typeof _dayjs;
 
 export function dateFormatter(value: number | string) {
-  const numberValue = Number(value);
-  if (!value || Number.isNaN(numberValue)) {
+  if (!value) {
     return '-';
   }
-  return dayjs(numberValue).format('YYYY-MM-DD');
+  return dayjs(value).format('YYYY-MM-DD');
 }
