@@ -43,7 +43,7 @@ public class LineageAppServiceTest  extends  DiscoveryTestBase{
         lineageTasksRequest.setDestDatasetGid(destSetGid);
         lineageTasksRequest.setSourceDatasetGid(sourceSetGid);
         Mockito.when(workflowClient.getLineageEdgeInfo(sourceSetGid,destSetGid)).thenReturn(null);
-        List<LineageTask> taskList = lineageAppService.getLineageTasksResultBySourceDatasetGid(lineageTasksRequest);
+        List<LineageTask> taskList = lineageAppService.getLineageTasksByEdgeInfo(lineageTasksRequest);
         Assertions.assertTrue(CollectionUtils.isEmpty(taskList));
 
     }
@@ -57,7 +57,7 @@ public class LineageAppServiceTest  extends  DiscoveryTestBase{
         lineageTasksRequest.setDirection(lineageQueryDirection.name());
         Mockito.when(workflowClient.getLineageNeighbors(gid,lineageQueryDirection,1)).thenReturn(null);
         Mockito.when(workflowClient.getLatestTaskRuns(Mockito.mock(List.class),LATEST_TASK_LIMIT,false)).thenReturn(null);
-        List<LineageTask> taskList = lineageAppService.getLineageTasksResultByDatasetGid(lineageTasksRequest);
+        List<LineageTask> taskList = lineageAppService.getLineageTasksByNeighbors(lineageTasksRequest);
         Assertions.assertTrue(CollectionUtils.isEmpty(taskList));
     }
 

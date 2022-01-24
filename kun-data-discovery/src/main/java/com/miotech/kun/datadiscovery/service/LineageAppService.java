@@ -115,7 +115,7 @@ public class LineageAppService {
     }
 
 
-    public List<LineageTask> getLineageTasksResultBySourceDatasetGid(LineageTasksRequest request) {
+    public List<LineageTask> getLineageTasksByEdgeInfo(LineageTasksRequest request) {
         Long sourceDatasetGid = request.getSourceDatasetGid();
         Long destDatasetGid = request.getDestDatasetGid();
         Preconditions.checkNotNull(sourceDatasetGid, "Invalid argument `sourceDatasetGid`: null");
@@ -155,7 +155,7 @@ public class LineageAppService {
         return Lists.newArrayList(lineageTaskMap.values());
     }
 
-    public List<LineageTask> getLineageTasksResultByDatasetGid(LineageTasksRequest request) {
+    public List<LineageTask> getLineageTasksByNeighbors(LineageTasksRequest request) {
         Long datasetGid = request.getDatasetGid();
         Preconditions.checkNotNull(datasetGid, "Invalid argument `datasetGid`: null");
         Preconditions.checkNotNull(request.getDirection(), "Invalid argument `getDirection()`: null");
