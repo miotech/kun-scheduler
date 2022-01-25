@@ -185,8 +185,8 @@ public class LineageAppService {
         try {
             datasetLineageInfo = workflowClient.getLineageNeighbors(datasetGid, lineageQueryDirection, 1);
         } catch (WorkflowApiException e) {
-            log.error(e.getMessage());
-            throw new RuntimeException("error", e);
+            log.warn(e.getMessage());
+             return  Maps.newHashMap();
         }
         if (Objects.isNull(datasetLineageInfo)) {
             return Maps.newHashMap();
