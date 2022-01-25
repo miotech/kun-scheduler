@@ -1,6 +1,9 @@
 package com.miotech.kun.dataquality.web.model.bo;
 
+import com.miotech.kun.dataquality.web.model.entity.DataQualityRule;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * @author: Jie Chen
@@ -11,4 +14,7 @@ public class ValidateSqlRequest {
     String sqlText;
 
     Long datasetId;
+
+    List<DataQualityRule> validateRules;
+
 }

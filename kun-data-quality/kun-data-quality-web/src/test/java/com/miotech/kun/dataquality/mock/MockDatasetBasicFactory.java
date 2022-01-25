@@ -19,4 +19,15 @@ public class MockDatasetBasicFactory {
         return datasetBasic;
     }
 
+    public static DatasetBasic create(String database, String name, String type) {
+        DatasetBasic datasetBasic = new DatasetBasic();
+        datasetBasic.setGid(IdGenerator.getInstance().nextId());
+        datasetBasic.setName(name);
+        datasetBasic.setDatabase(database);
+        datasetBasic.setDatasource("hive");
+        datasetBasic.setDatasourceType(type);
+        datasetBasic.setIsPrimary(true);
+        return datasetBasic;
+    }
+
 }
