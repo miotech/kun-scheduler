@@ -1,14 +1,9 @@
 import React, { FunctionComponent, useEffect, useMemo } from 'react';
 import uniqueId from 'lodash/uniqueId';
-import get from 'lodash/get';
 import { useRequest } from 'ahooks';
 import { DAGTaskGraph } from '@/components/DAGGraph';
 import { KunSpin } from '@/components/KunSpin';
-import {
-  fetchTaskRunDAG,
-  FetchTaskRunDAGOptionParams,
-  getTaskDefinitionIdByWorkflowIds,
-} from '@/services/task-deployments/deployed-tasks';
+import { fetchTaskRunDAG, FetchTaskRunDAGOptionParams } from '@/services/task-deployments/deployed-tasks';
 
 import { TaskRun } from '@/definitions/TaskRun.type';
 import { TaskNode, TaskRelation } from '@/components/DAGGraph/typings';
@@ -27,12 +22,6 @@ export const TaskRunDAG: FunctionComponent<Props> = props => {
   const { data: dagData, loading, run: fetchDAGFromRemote } = useRequest(
     async (taskRunId: string, optionParams: FetchTaskRunDAGOptionParams = {}) => {
       const data = await fetchTaskRunDAG(taskRunId, optionParams);
-      if (data) {
-        const workflowTaskIdToTaskDefIdMap = await getTaskDefinitionIdByWorkflowIds(
-          data.nodes.map(n => `${n.task.id}` || '') || [],
-        );
-        data.nodes = data.nodes.map(n => ({ ...n, taskDefinitionId: workflowTaskIdToTaskDefIdMap[n.task.id] }));
-      }
       return data;
     },
     {
@@ -65,7 +54,6 @@ export const TaskRunDAG: FunctionComponent<Props> = props => {
             startTime: taskrun.startAt,
             endTime: taskrun.endAt,
             taskRunId: taskrun.id,
-            taskDefinitionId: get(taskrun, 'taskDefinitionId', null),
             failedUpstreamTaskRuns: taskrun?.failedUpstreamTaskRuns?.map(i => ({
               id: i.id,
               name: i.task.name,
