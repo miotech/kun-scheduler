@@ -83,6 +83,13 @@ public class ApiService extends BaseSecurityService {
                 result.getRecords().stream().map(TaskViewVO::from).collect(Collectors.toList()));
     }
 
+    public TaskViewDetailVO getTaskViewDetail(Long taskViewId) {
+        Optional<TaskDefinitionView> fetchedTaskView = taskDefinitionViewService.fetchById(taskViewId);
+        Preconditions.checkArgument(fetchedTaskView.isPresent(), "Task view not found. Please re-check task view id.");
+        TaskDefinitionView taskViewDetail = fetchedTaskView.get();
+        return TaskViewDetailVO.from(taskViewDetail);
+    }
+
     public PageResult<TaskViewVO> searchTaskView(String keyword) {
         List<TaskDefinitionView> result = taskDefinitionViewDao.fetchByTaskDefinitionViewName(keyword);
         return new PageResult<>(result.size(), 1, result.size(),
@@ -117,6 +124,9 @@ public class ApiService extends BaseSecurityService {
         return result;
     }
 
+    public TaskDefinitionVO getTask(Long taskId) {
+        return taskDefinitionService.convertToVO(taskDefinitionService.find(taskId));
+    }
 
     public TaskDefinitionVO createTask(TaskCreateRequest request, String token) {
         Long ownerId = setUserByToken(token);
