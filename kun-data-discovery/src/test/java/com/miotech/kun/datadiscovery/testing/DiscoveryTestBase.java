@@ -28,22 +28,7 @@ public class DiscoveryTestBase {
 
     @org.springframework.context.annotation.Configuration
     @EnableAutoConfiguration
-
     public static class Configuration {
-        //        private Operator getMockOperator() {
-//            ConfigKey configKey = new ConfigKey();
-//            configKey.setName("sparkSQL");
-//            configKey.setDisplayName("sql");
-//            configKey.setReconfigurable(true);
-//            configKey.setType(ConfigDef.Type.STRING);
-//            Operator operator = Operator.newBuilder()
-//                    .withId(WorkflowIdGenerator.nextOperatorId())
-//                    .withName("SparkSQL")
-//                    .withClassName("com.miotech.kun.dataplatform.mocking.TestSQLOperator")
-//                    .withConfigDef(Lists.newArrayList(configKey))
-//                    .withDescription("Spark SQL Operator")
-//                    .build();
-//            return operator;
 
     }
 

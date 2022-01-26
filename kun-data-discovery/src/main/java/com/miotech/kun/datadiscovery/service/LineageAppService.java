@@ -122,7 +122,7 @@ public class LineageAppService {
         Preconditions.checkNotNull(destDatasetGid, "Invalid argument `destDatasetGid`: null");
         EdgeInfo edgeInfo = workflowClient.getLineageEdgeInfo(sourceDatasetGid, destDatasetGid);
         if (Objects.isNull(edgeInfo) || CollectionUtils.isEmpty(edgeInfo.getTaskInfos())) {
-            log.info("edge info maybe is null or task info is empty ");
+            log.debug("edge info maybe is null or task info is empty, sourceDatasetGid:{} ,destDatasetGid:{}",sourceDatasetGid,destDatasetGid);
             return Lists.newArrayList();
         }
         Map<Long, LineageTask> lineageTaskMap = edgeInfo
@@ -136,7 +136,7 @@ public class LineageAppService {
                 })
                 .collect(Collectors.toMap(LineageTask::getTaskId, lineageTask -> lineageTask));
 
-        if (CollectionUtils.isNotEmpty(lineageTaskMap.keySet())) {
+        if (CollectionUtils.isEmpty(lineageTaskMap.keySet())) {
             return Lists.newArrayList();
         }
         return getLineageTasks(lineageTaskMap);
@@ -172,8 +172,7 @@ public class LineageAppService {
             default:
                 throw ExceptionUtils.wrapIfChecked(new RuntimeException("Unsupported lineage task direction " + request.getDirection()));
         }
-
-        if (org.springframework.util.CollectionUtils.isEmpty(taskMap)) {
+        if (CollectionUtils.sizeIsEmpty(taskMap)) {
             log.info(" task info is empty ");
             return resultLineageTaskList;
         }
