@@ -40,11 +40,8 @@ export interface DAGTaskNodeProps {
 function getLinkUrl(data: any) {
   if (data?.renderAsTaskRunDAG) {
     return SafeUrlAssembler()
-      .template('/operation-center/scheduled-tasks/:id')
+      .template('/operation-center/task-run-id/:taskRunId')
       .param({
-        id: data.taskDefinitionId,
-      })
-      .query({
         taskRunId: data.id,
       })
       .toString();
