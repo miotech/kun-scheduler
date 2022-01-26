@@ -39,22 +39,19 @@ interface Props {
   ruleKey: string;
   dimension: string | null;
   defaultRule?: ValidateRuleItem;
+  setIsUpdatedRule: () => void;
   // defaultSelectedField?: string;
 }
 
 const ValidateRule: RefForwardingComponent<ValidateRuleHandle, Props> = (
-  { ruleKey, defaultRule, dimension }: Props,
+  { ruleKey, defaultRule, dimension, setIsUpdatedRule }: Props,
   ref,
 ) => {
   const t = useI18n();
 
   const [fieldName, setFieldName] = useState('');
-  const [operator, setOperator] = useState<ValidateOperatorEnum | undefined>(
-    undefined,
-  );
-  const [fieldType, setFieldType] = useState<ValidateFieldType>(
-    ValidateFieldType.BOOLEAN,
-  );
+  const [operator, setOperator] = useState<ValidateOperatorEnum | undefined>(undefined);
+  const [fieldType, setFieldType] = useState<ValidateFieldType>(ValidateFieldType.BOOLEAN);
   const [fieldValue, setFieldValue] = useState<string | undefined>('true');
 
   useEffect(() => {
@@ -105,18 +102,23 @@ const ValidateRule: RefForwardingComponent<ValidateRuleHandle, Props> = (
           className={styles.validateRuleItem}
           placeholder={t('dataDetail.dataQuality.validate.field')}
           value={fieldName}
-          onChange={e => setFieldName(e.target.value)}
+          onChange={e => {
+            setIsUpdatedRule();
+            setFieldName(e.target.value);
+          }}
         />
       )}
 
       <Select
         className={c(styles.validateRuleItem, {
-          [styles.tableValidateRuleItem]:
-            dimension === 'TABLE' || dimension === 'FIELD',
+          [styles.tableValidateRuleItem]: dimension === 'TABLE' || dimension === 'FIELD',
         })}
         placeholder={t('dataDetail.dataQuality.validate.oprator')}
         value={operator}
-        onChange={setOperator}
+        onChange={value => {
+          setIsUpdatedRule();
+          setOperator(value);
+        }}
       >
         {Object.values(ValidateOperatorEnum).map(operatorItem => (
           <Option key={operatorItem} value={operatorItem}>
@@ -127,11 +129,13 @@ const ValidateRule: RefForwardingComponent<ValidateRuleHandle, Props> = (
 
       <Select
         className={c(styles.validateRuleItem, {
-          [styles.tableValidateRuleItem]:
-            dimension === 'TABLE' || dimension === 'FIELD',
+          [styles.tableValidateRuleItem]: dimension === 'TABLE' || dimension === 'FIELD',
         })}
         value={fieldType}
-        onChange={handleChangeFieldType}
+        onChange={value => {
+          setIsUpdatedRule();
+          handleChangeFieldType(value);
+        }}
       >
         {Object.values(ValidateFieldType).map(type => (
           <Option key={type} value={type}>
@@ -143,11 +147,13 @@ const ValidateRule: RefForwardingComponent<ValidateRuleHandle, Props> = (
       {fieldType === ValidateFieldType.BOOLEAN && (
         <Select
           className={c(styles.validateRuleItem, {
-            [styles.tableValidateRuleItem]:
-              dimension === 'TABLE' || dimension === 'FIELD',
+            [styles.tableValidateRuleItem]: dimension === 'TABLE' || dimension === 'FIELD',
           })}
           value={fieldValue}
-          onChange={setFieldValue}
+          onChange={value => {
+            setIsUpdatedRule();
+            setFieldValue(value);
+          }}
         >
           <Option value="true">True</Option>
           <Option value="false">False</Option>
@@ -157,11 +163,13 @@ const ValidateRule: RefForwardingComponent<ValidateRuleHandle, Props> = (
       {fieldType !== ValidateFieldType.BOOLEAN && (
         <Input
           className={c(styles.validateRuleItem, {
-            [styles.tableValidateRuleItem]:
-              dimension === 'TABLE' || dimension === 'FIELD',
+            [styles.tableValidateRuleItem]: dimension === 'TABLE' || dimension === 'FIELD',
           })}
           value={fieldValue}
-          onChange={e => setFieldValue(e.target.value)}
+          onChange={e => {
+            setIsUpdatedRule();
+            setFieldValue(e.target.value);
+          }}
         />
       )}
     </div>
