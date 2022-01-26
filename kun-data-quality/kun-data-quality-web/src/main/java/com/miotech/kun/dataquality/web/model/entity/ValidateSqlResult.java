@@ -20,6 +20,10 @@ public class ValidateSqlResult {
     @JsonProperty("validateMessage")
     private String message;
 
+    public static ValidateSqlResult success() {
+        return buildResult(ValidateSqlStatus.SUCCESS, null, "");
+    }
+
     public static ValidateSqlResult success(List<DatasetBasic> relatedTables) {
         return buildResult(ValidateSqlStatus.SUCCESS, relatedTables, "");
     }
@@ -37,4 +41,10 @@ public class ValidateSqlResult {
         result.setMessage(message);
         return result;
     }
+
+    public boolean isSuccess() {
+        ValidateSqlStatus status  = ValidateSqlStatus.convert(validateStatus);
+        return status == null ? false : status.equals(ValidateSqlStatus.SUCCESS);
+    }
+
 }

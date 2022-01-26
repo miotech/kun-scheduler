@@ -18,4 +18,15 @@ public enum ValidateSqlStatus {
     public Integer getFlag() {
         return flag;
     }
+
+    public static ValidateSqlStatus convert(Integer flag) {
+        for (ValidateSqlStatus value : values()) {
+            if (value.getFlag().equals(flag)) {
+                return value;
+            }
+        }
+
+        return null;
+    }
+
 }

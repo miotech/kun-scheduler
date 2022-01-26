@@ -1,14 +1,14 @@
 package com.miotech.kun.dataquality;
 
 import com.google.common.collect.ImmutableList;
+import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.dataquality.core.ExpectationSpec;
 import com.miotech.kun.dataquality.core.ValidationResult;
-import com.miotech.kun.dataquality.mock.MockDatasetBasicFactory;
-import com.miotech.kun.dataquality.mock.MockExpectationSpecFactory;
-import com.miotech.kun.dataquality.mock.MockValidationResultFactory;
+import com.miotech.kun.dataquality.mock.*;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationDao;
 import com.miotech.kun.dataquality.web.common.dao.ExpectationRunDao;
 import com.miotech.kun.dataquality.web.model.bo.DataQualitiesRequest;
+import com.miotech.kun.dataquality.web.model.bo.ValidateSqlRequest;
 import com.miotech.kun.dataquality.web.model.entity.*;
 import com.miotech.kun.dataquality.web.persistence.DatasetRepository;
 import com.miotech.kun.dataquality.web.service.DataQualityService;
@@ -109,6 +109,24 @@ public class DataQualityServiceTest extends DataQualityTestBase {
 
         ExpectationSpec specOfFetched = expectationDao.fetchById(spec.getExpectationId());
         assertThat(specOfFetched, nullValue());
+    }
+
+    @Test
+    public void testValidateSQL() {
+        String database = "test_db";
+        String table = "test_table";
+        String field = "id";
+        String type = "AWS";
+        DatasetBasic datasetBasic = MockDatasetBasicFactory.create(database, table, type);
+
+        Long datasetId = IdGenerator.getInstance().nextId();
+        String sqlText = String.format("select %s from %s.%s", field, database, table);
+        DataQualityRule dataQualityRule = MockDataQualityRuleFactory.create(field, "=", "number", "1", "1");
+        ValidateSqlRequest vsr = MockValidateSqlRequestFactory.create(datasetId, sqlText, ImmutableList.of(dataQualityRule));
+        doReturn(datasetBasic).when(datasetRepository).findBasic(vsr.getDatasetId());
+
+        ValidateSqlResult validateSqlResult = dataQualityService.validateSql(vsr);
+        assertThat(validateSqlResult.getValidateStatus(), is(0));
     }
 
 }
