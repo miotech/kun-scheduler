@@ -1,1 +1,0 @@
-CREATE INDEX kun_wf_task_attempt_task_run_id ON kun_wf_task_attempt (task_run_id);
