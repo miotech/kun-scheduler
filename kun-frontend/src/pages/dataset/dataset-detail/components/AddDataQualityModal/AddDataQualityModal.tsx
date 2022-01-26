@@ -83,10 +83,15 @@ export default memo(function AddDataQualityModal({
     relatedTables: [relatedTable],
   }));
 
+  const validateRuleRefs = useRef<ValidateRuleHandle[]>([]);
+
   // 记录是否改变了sql
   const [isUpdatedSQL, setIsUpdatedSQL] = useState(false);
+  const [isUpdatedRule, setIsUpdatedRule] = useState(false);
+
   useEffect(() => {
     setIsUpdatedSQL(false);
+    setIsUpdatedRule(false);
   }, [visible]);
 
   // 原始 dataquality 信息
@@ -340,10 +345,16 @@ export default memo(function AddDataQualityModal({
 
   const handleValidateSQL = useCallback(
     async (sql: string) => {
+      const shouldRuleKeys = validateRuleList.map(i => i.key);
+      const allRuleList = validateRuleRefs.current
+        .map(ruleRef => ruleRef.getValue())
+        .filter(i => !!i)
+        .filter(i => shouldRuleKeys.includes(i!.key))
+        .map(i => i!.value);
       setValidateSQLLoading(true);
       const validateSQLLoadingFunc = message.loading(t('common.loading'), 0);
       try {
-        const resp = await fetchValidateSQLService(sql, datasetId);
+        const resp = await fetchValidateSQLService(sql, datasetId, allRuleList);
         setValidateSQLLoading(false);
         validateSQLLoadingFunc();
         if (resp) {
@@ -367,7 +378,7 @@ export default memo(function AddDataQualityModal({
         setValidateSQLLoading(false);
       }
     },
-    [datasetId, t],
+    [datasetId, validateRuleList, validateRuleRefs, t],
   );
 
   const getCustomizeCompFunc = useCallback(
@@ -393,30 +404,12 @@ export default memo(function AddDataQualityModal({
                 }));
               }}
             />
-            <div className={styles.sqlValidateButtonRow}>
-              {validateSQLStatus === ValidateStatus.SUCCESS && (
-                <span className={styles.validateSQLSuccess}>
-                  {t('dataDetail.dataQuality.dimension.validate.success')}
-                </span>
-              )}
-              {validateSQLStatus === ValidateStatus.FAILED && (
-                <span className={styles.validateSQLFaild}>
-                  {t('dataDetail.dataQuality.dimension.validate.failed')}
-                  <Tooltip title={validateSQLErrorMsg}>
-                    <ExclamationCircleOutlined style={{ marginLeft: 4 }} />
-                  </Tooltip>
-                </span>
-              )}
-              <Button disabled={validateSQLLoading} onClick={() => handleValidateSQL(customizeInputtingObj[key])}>
-                {t('dataDetail.dataQuality.dimension.validate')}
-              </Button>
-            </div>
           </div>
         );
       }
       return null;
     },
-    [customizeInputtingObj, handleValidateSQL, t, validateSQLErrorMsg, validateSQLLoading, validateSQLStatus],
+    [customizeInputtingObj],
   );
 
   const dimensionView = useMemo(() => {
@@ -503,8 +496,6 @@ export default memo(function AddDataQualityModal({
     selectedTableTemplateId,
     t,
   ]);
-
-  const validateRuleRefs = useRef<ValidateRuleHandle[]>([]);
 
   const pushTovalidateRuleRefList = useCallback((ref: ValidateRuleHandle) => {
     if (ref) {
@@ -640,7 +631,7 @@ export default memo(function AddDataQualityModal({
       disabled = true;
     }
     // 更新的时候
-    if (dataQualityId && dimension === 'CUSTOMIZE' && isUpdatedSQL && noOrErrorValidate) {
+    if (dataQualityId && dimension === 'CUSTOMIZE' && (isUpdatedSQL || isUpdatedRule) && noOrErrorValidate) {
       disabled = true;
     }
 
@@ -660,6 +651,7 @@ export default memo(function AddDataQualityModal({
     data,
     dataQualityId,
     isUpdatedSQL,
+    isUpdatedRule,
     selectedApplyFieldIds,
     selectedFieldTemplateId,
     selectedTableTemplateId,
@@ -765,6 +757,10 @@ export default memo(function AddDataQualityModal({
                       ref={pushTovalidateRuleRefList}
                       ruleKey={validateRules.key}
                       dimension={data.dimension}
+                      setIsUpdatedRule={() => {
+                        setIsUpdatedRule(true);
+                        setValidateSQLStatus(ValidateStatus.NO_VALIDATE);
+                      }}
                       defaultRule={validateRules.rule}
                     />
                   </div>
@@ -775,7 +771,24 @@ export default memo(function AddDataQualityModal({
                 </div>
               ))}
               <Button onClick={handleClickAddRule}>{`+ ${t('dataDetail.dataQuality.validate.add')}`}</Button>
-
+              <div className={styles.sqlValidateButtonRow}>
+                {validateSQLStatus === ValidateStatus.SUCCESS && (
+                  <span className={styles.validateSQLSuccess}>
+                    {t('dataDetail.dataQuality.dimension.validate.success')}
+                  </span>
+                )}
+                {validateSQLStatus === ValidateStatus.FAILED && (
+                  <span className={styles.validateSQLFaild}>
+                    {t('dataDetail.dataQuality.dimension.validate.failed')}
+                    <Tooltip title={validateSQLErrorMsg}>
+                      <ExclamationCircleOutlined style={{ marginLeft: 4 }} />
+                    </Tooltip>
+                  </span>
+                )}
+                <Button disabled={validateSQLLoading} onClick={() => handleValidateSQL(customizeInputtingObj.sql)}>
+                  {t('dataDetail.dataQuality.dimension.validate')}
+                </Button>
+              </div>
               {validateRuleError && <span className={styles.validateRuleError}>{validateRuleError}</span>}
             </div>
           </div>

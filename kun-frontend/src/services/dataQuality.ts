@@ -19,10 +19,7 @@ export interface FetchDataAllQualitiesRespBody extends Pagination {
   dqCases: DataQualityItem[];
 }
 
-export async function fetchDataAllQualitiesService(
-  datasetId: string,
-  pagination: Pagination,
-) {
+export async function fetchDataAllQualitiesService(datasetId: string, pagination: Pagination) {
   const { pageSize, pageNumber } = pagination;
   const params = {
     gid: datasetId,
@@ -45,13 +42,10 @@ export async function fetchDataQualityService(id: string) {
 }
 
 export async function fetchDimensionConfig(datasourceType: string) {
-  return get<FetchDimensionConfigRespBody>(
-    '/data-quality/dimension/get-config',
-    {
-      query: { datasourceType },
-      prefix: DEFAULT_API_PREFIX,
-    },
-  );
+  return get<FetchDimensionConfigRespBody>('/data-quality/dimension/get-config', {
+    query: { datasourceType },
+    prefix: DEFAULT_API_PREFIX,
+  });
 }
 
 export interface FetchValidateSQLServiceRespBody {
@@ -60,14 +54,12 @@ export interface FetchValidateSQLServiceRespBody {
   validateMessage: string;
 }
 
-export async function fetchValidateSQLService(
-  sqlText: string,
-  datasetId: string,
-) {
+export async function fetchValidateSQLService(sqlText: string, datasetId: string, allRuleList: object[]) {
   const resp = await post<FetchValidateSQLServiceRespBody>('/sql/validate', {
     data: {
       sqlText,
       datasetId,
+      validateRules: allRuleList,
     },
     prefix: DEFAULT_API_PREFIX,
   });
