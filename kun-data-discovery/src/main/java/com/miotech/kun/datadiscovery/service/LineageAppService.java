@@ -49,10 +49,18 @@ public class LineageAppService {
 
 
     public LineageGraph getLineageGraph(LineageGraphRequest request) {
-        DatasetLineageInfo datasetLineageInfo = workflowClient.getLineageNeighbors(request.getDatasetGid(),
-                LineageQueryDirection.valueOf(request.getDirection()),
-                request.getDepth());
         LineageGraph lineageGraph = new LineageGraph();
+        DatasetLineageInfo datasetLineageInfo = null;
+        try {
+            datasetLineageInfo = workflowClient.getLineageNeighbors(request.getDatasetGid(),
+                    LineageQueryDirection.valueOf(request.getDirection()),
+                    request.getDepth());
+        } catch (WorkflowApiException e) {
+           throw  new RuntimeException("workflow api error:",e);
+        }
+        if (Objects.isNull(datasetLineageInfo)||Objects.isNull(datasetLineageInfo.getSourceNode())){
+            return lineageGraph;
+        }
         DatasetNodeInfo centerNode = datasetLineageInfo.getSourceNode();
         Map<Long, LineageVertex> vertexIdMap = new HashMap<>();
         LineageVertex centerVertex = new LineageVertex();
@@ -77,6 +85,9 @@ public class LineageAppService {
     }
 
     private void addDownstreamEdges(DatasetLineageInfo datasetLineageInfo, LineageGraph lineageGraph, DatasetNodeInfo centerNode, Map<Long, LineageVertex> vertexIdMap) {
+        if (CollectionUtils.isEmpty(datasetLineageInfo.getUpstreamNodes())){
+            return;
+        }
         List<LineageEdge> downstreamEdges = datasetLineageInfo.getDownstreamNodes().stream()
                 .map(datasetNodeInfo -> {
                     LineageEdge lineageEdge = new LineageEdge();
@@ -93,6 +104,9 @@ public class LineageAppService {
                                   LineageGraph lineageGraph,
                                   DatasetNodeInfo centerNode,
                                   Map<Long, LineageVertex> vertexIdMap) {
+        if (CollectionUtils.isEmpty(datasetLineageInfo.getUpstreamNodes())){
+            return;
+        }
         List<LineageEdge> upstreamEdges = datasetLineageInfo.getUpstreamNodes().stream()
                 .map(datasetNodeInfo -> {
                     LineageEdge lineageEdge = new LineageEdge();

@@ -1,20 +1,26 @@
 package com.miotech.kun.datadiscovery.testing;
 
+import com.miotech.kun.datadiscovery.model.bo.LineageGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
+import com.miotech.kun.datadiscovery.model.entity.LineageGraph;
 import com.miotech.kun.datadiscovery.model.entity.LineageTask;
+import com.miotech.kun.datadiscovery.service.DatasetService;
 import com.miotech.kun.datadiscovery.service.LineageAppService;
+import com.miotech.kun.datadiscovery.testing.mockdata.MockWorkFlowClientDataFactory;
 import com.miotech.kun.workflow.client.LineageQueryDirection;
 import com.miotech.kun.workflow.client.WorkflowClient;
-import org.junit.jupiter.api.Assertions;
+import org.apache.commons.collections4.CollectionUtils;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 
 import static com.miotech.kun.datadiscovery.service.LineageAppService.LATEST_TASK_LIMIT;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 /**
  * @program: kun
@@ -22,43 +28,90 @@ import static com.miotech.kun.datadiscovery.service.LineageAppService.LATEST_TAS
  * @author: zemin  huang
  * @create: 2022-01-24 09:20
  **/
-public class LineageAppServiceTest  extends  DiscoveryTestBase{
+public class LineageAppServiceTest extends DiscoveryTestBase {
 
     @Autowired
     LineageAppService lineageAppService;
 
-    @Test
-    void getLineageGraph() {
-
-    }
 
     @MockBean
     WorkflowClient workflowClient;
+    @MockBean
+    DatasetService datasetService;
 
-    @Test
-    void testGetLineageTasksResultBySourceDatasetGid_fetch_null() {
-        Long sourceSetGid=64277L;
-        Long destSetGid=6425L;
-        LineageTasksRequest lineageTasksRequest = new LineageTasksRequest();
-        lineageTasksRequest.setDestDatasetGid(destSetGid);
-        lineageTasksRequest.setSourceDatasetGid(sourceSetGid);
-        Mockito.when(workflowClient.getLineageEdgeInfo(sourceSetGid,destSetGid)).thenReturn(null);
-        List<LineageTask> taskList = lineageAppService.getLineageTasksByEdgeInfo(lineageTasksRequest);
-        Assertions.assertTrue(CollectionUtils.isEmpty(taskList));
 
-    }
 
-    @Test
-    void testGetLineageTasksResultByDatasetGid_UPSTREAM() {
-        Long gid=100000000L;
+    private LineageTasksRequest getLineageTasksRequest() {
         LineageQueryDirection lineageQueryDirection = LineageQueryDirection.UPSTREAM;
         LineageTasksRequest lineageTasksRequest = new LineageTasksRequest();
-        lineageTasksRequest.setDatasetGid(gid);
+        lineageTasksRequest.setDatasetGid(1L);
         lineageTasksRequest.setDirection(lineageQueryDirection.name());
-        Mockito.when(workflowClient.getLineageNeighbors(gid,lineageQueryDirection,1)).thenReturn(null);
-        Mockito.when(workflowClient.getLatestTaskRuns(Mockito.mock(List.class),LATEST_TASK_LIMIT,false)).thenReturn(null);
-        List<LineageTask> taskList = lineageAppService.getLineageTasksByNeighbors(lineageTasksRequest);
-        Assertions.assertTrue(CollectionUtils.isEmpty(taskList));
+        lineageTasksRequest.setDestDatasetGid(1L);
+        lineageTasksRequest.setSourceDatasetGid(1L);
+        return lineageTasksRequest;
     }
 
+    @Test
+    void testGetLineageTasksByEdgeInfo_fetch_null() {
+        LineageTasksRequest lineageTasksRequest = getLineageTasksRequest();
+        when(workflowClient.getLineageEdgeInfo(lineageTasksRequest.getSourceDatasetGid(), lineageTasksRequest.getDestDatasetGid())).thenReturn(null);
+        when(workflowClient.getLatestTaskRuns(mock(List.class), LATEST_TASK_LIMIT, false)).thenReturn(null);
+        List<LineageTask> taskList = lineageAppService.getLineageTasksByEdgeInfo(lineageTasksRequest);
+        Assert.assertTrue(CollectionUtils.isEmpty(taskList));
+
+    }
+
+    @Test
+    void testGetLineageTasksByEdgeInfo_fetch_entity() {
+        LineageTasksRequest lineageTasksRequest = getLineageTasksRequest();
+        doReturn(MockWorkFlowClientDataFactory.createEdgeInfo())
+                .when(workflowClient).getLineageEdgeInfo(anyLong(), anyLong());
+        doReturn(MockWorkFlowClientDataFactory.createLatestTaskRuns())
+                .when(workflowClient).getLatestTaskRuns(anyList(), anyInt(), anyBoolean());
+        List<LineageTask> taskList = lineageAppService.getLineageTasksByEdgeInfo(lineageTasksRequest);
+        Assert.assertTrue(CollectionUtils.isNotEmpty(taskList));
+
+    }
+
+
+    @Test
+    void testGetLineageTasksByNeighbors_fetch_null() {
+        LineageTasksRequest lineageTasksRequest = getLineageTasksRequest();
+        when(workflowClient.getLineageNeighbors(lineageTasksRequest.getDatasetGid(),
+                        LineageQueryDirection.valueOf(lineageTasksRequest.getDirection()), 1))
+                .thenReturn(null);
+        when(workflowClient.getLatestTaskRuns(mock(List.class), LATEST_TASK_LIMIT, false)).thenReturn(null);
+        List<LineageTask> taskList = lineageAppService.getLineageTasksByNeighbors(lineageTasksRequest);
+        Assert.assertTrue(CollectionUtils.isEmpty(taskList));
+    }
+
+
+    @Test
+    void testGetLineageTasksByNeighbors_fetch_entity() {
+        LineageTasksRequest lineageTasksRequest = getLineageTasksRequest();
+        doReturn(MockWorkFlowClientDataFactory.createLineageNeighbors())
+                .when(workflowClient).getLineageNeighbors(anyLong(), any(LineageQueryDirection.class),anyInt());
+        doReturn(MockWorkFlowClientDataFactory.createLatestTaskRuns())
+                .when(workflowClient).getLatestTaskRuns(anyList(), anyInt(), anyBoolean());
+        List<LineageTask> taskList = lineageAppService.getLineageTasksByNeighbors(lineageTasksRequest);
+        Assert.assertTrue(CollectionUtils.isNotEmpty(taskList));
+    }
+
+
+    @Test
+    void testGetLineageGraph_fetch_entity() {
+
+        LineageGraphRequest request =new LineageGraphRequest();
+        request.setDatasetGid(1L);
+        request.setDepth(1);
+        request.setDirection("UPSTREAM");
+        doReturn(MockWorkFlowClientDataFactory.createLineageNeighborsGraph())
+                .when(workflowClient).getLineageNeighbors(anyLong(), any(LineageQueryDirection.class),anyInt());
+        doReturn(MockWorkFlowClientDataFactory.createLineageDatasetBasicList()).when(datasetService).getDatasets(anyList());
+        LineageGraph lineageGraph = lineageAppService.getLineageGraph(request);
+        Assert.assertNotNull(lineageGraph);
+
+
+
+    }
 }
