@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.testing;
 
+import com.miotech.kun.commons.testing.SpringAPPTestBase;
 import com.miotech.kun.datadiscovery.model.bo.LineageGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
 import com.miotech.kun.datadiscovery.model.entity.LineageGraph;
@@ -12,7 +13,6 @@ import com.miotech.kun.workflow.client.WorkflowClient;
 import org.apache.commons.collections4.CollectionUtils;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
  * @author: zemin  huang
  * @create: 2022-01-24 09:20
  **/
-public class LineageAppServiceTest extends DiscoveryTestBase {
+public class LineageAppServiceTest extends SpringAPPTestBase {
 
     @Autowired
     LineageAppService lineageAppService;
@@ -38,8 +38,6 @@ public class LineageAppServiceTest extends DiscoveryTestBase {
     WorkflowClient workflowClient;
     @MockBean
     DatasetService datasetService;
-
-
 
     private LineageTasksRequest getLineageTasksRequest() {
         LineageQueryDirection lineageQueryDirection = LineageQueryDirection.UPSTREAM;
