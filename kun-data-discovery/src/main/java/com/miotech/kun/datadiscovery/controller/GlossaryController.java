@@ -45,7 +45,7 @@ public class GlossaryController {
 
     @GetMapping("/metadata/glossary/{id}/detail")
     public RequestResult<Glossary> getDetail(@PathVariable("id") Long id) {
-        return RequestResult.success(glossaryService.getGlossary(id));
+        return RequestResult.success(glossaryService.fetchGlossary(id));
     }
 
     @PostMapping("/metadata/glossary/{id}/update")

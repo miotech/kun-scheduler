@@ -590,7 +590,7 @@ public class MetadataDatasetDao {
                 "         left join kun_mt_dataset_stats kmds on kmd.gid = kmds.dataset_gid\n" +
                 "         left join (select dataset_gid, max(last_updated_time) as high_watermark, min(last_updated_time) as low_watermark from kun_mt_dataset_stats group by dataset_gid) watermark on watermark.dataset_gid = kmd.gid\n";
 
-        String whereClause = "where kmd.deleted =false and  kmd.gid in " + toColumnSql(idList.size());
+        String whereClause = "where   kmd.gid in " + toColumnSql(idList.size());
         String groupByClause = "group by kmd.gid, type, datasource_name, dataset_description, high_watermark, low_watermark";
 
         sql = sql + whereClause + groupByClause;

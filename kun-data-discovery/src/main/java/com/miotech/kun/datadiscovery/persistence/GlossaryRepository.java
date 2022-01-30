@@ -3,6 +3,7 @@ package com.miotech.kun.datadiscovery.persistence;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
@@ -144,9 +145,9 @@ public class GlossaryRepository extends BaseRepository {
                 glossaryRequest.getDescription(),
                 glossaryRequest.getParentId(),
                 glossaryRequest.getCreateUser(),
-                millisToTimestamp(glossaryRequest.getCreateTime()),
+                glossaryRequest.getCreateTime(),
                 glossaryRequest.getUpdateUser(),
-                millisToTimestamp(glossaryRequest.getUpdateTime()),
+                glossaryRequest.getUpdateTime(),
                 null
         );
 
@@ -228,7 +229,7 @@ public class GlossaryRepository extends BaseRepository {
 
         sql += "update_user = ?, update_time = ?\n";
         sqlParams.add(glossaryRequest.getUpdateUser());
-        sqlParams.add(millisToTimestamp(glossaryRequest.getUpdateTime()));
+        sqlParams.add(glossaryRequest.getUpdateTime());
 
         String whereClause = "where id = ?";
         sql += whereClause;
@@ -378,19 +379,7 @@ public class GlossaryRepository extends BaseRepository {
                 .select(COLUMN_KUN_MT_GLOSSARY).
                 from(TABLE_NAME_KUN_MT_GLOSSARY, ALIAS_KUN_MT_GLOSSARY)
                 .where("id=?").getSQL();
-        GlossaryBasicInfo glossaryBasicInfo = jdbcTemplate.queryForObject(sql, (rs, rowNum) -> {
-            GlossaryBasicInfo glossary = new GlossaryBasicInfo();
-            glossary.setId(rs.getLong("id"));
-            glossary.setName(rs.getString("name"));
-            glossary.setDescription(rs.getString("description"));
-            glossary.setParentId(rs.getLong("parent_id"));
-            glossary.setCreateUser(rs.getString("create_user"));
-            glossary.setCreateTime(timestampToOffsetDateTime(rs, "create_time"));
-            glossary.setUpdateUser(rs.getString("update_user"));
-            glossary.setUpdateTime(timestampToOffsetDateTime(rs, "update_time"));
-            return glossary;
-        }, id);
-        return glossaryBasicInfo;
+        return jdbcTemplate.queryForObject(sql, new GlossaryMapper(), id);
 
     }
 
@@ -401,6 +390,24 @@ public class GlossaryRepository extends BaseRepository {
                 .where("glossary_id=?").getSQL();
         return jdbcTemplate.queryForList(sql, Long.class, glossaryId);
 
+    }
+
+
+    private static class GlossaryMapper implements RowMapper<GlossaryBasicInfo> {
+
+        @Override
+        public GlossaryBasicInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
+            GlossaryBasicInfo glossaryBasicInfo = new GlossaryBasicInfo();
+            glossaryBasicInfo.setId(rs.getLong("id"));
+            glossaryBasicInfo.setName(rs.getString("name"));
+            glossaryBasicInfo.setDescription(rs.getString("description"));
+            glossaryBasicInfo.setParentId(rs.getLong("parent_id"));
+            glossaryBasicInfo.setCreateUser(rs.getString("create_user"));
+            glossaryBasicInfo.setCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("create_time")));
+            glossaryBasicInfo.setUpdateUser(rs.getString("update_user"));
+            glossaryBasicInfo.setUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")));
+            return glossaryBasicInfo;
+        }
     }
 
 }

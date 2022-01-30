@@ -1,6 +1,7 @@
 package com.miotech.kun.datadiscovery.service;
 
 import com.google.common.collect.Lists;
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
@@ -22,10 +23,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author: Jie Chen
@@ -40,6 +41,8 @@ public class GlossaryService extends BaseSecurityService {
     RestTemplate restTemplate;
     @Autowired
     GlossaryRepository glossaryRepository;
+    
+    public   static  final String  COPY_NAME_ENDWITH="-copy";
 
 
     public Long getParentId(Long id) {
@@ -59,13 +62,13 @@ public class GlossaryService extends BaseSecurityService {
     }
 
     public Glossary add(GlossaryRequest glossaryRequest) {
-        long timestamp = System.currentTimeMillis();
+        OffsetDateTime now = DateTimeUtils.now();
         glossaryRequest.setCreateUser(getCurrentUsername());
-        glossaryRequest.setCreateTime(timestamp);
+        glossaryRequest.setCreateTime(now);
         glossaryRequest.setUpdateUser(getCurrentUsername());
-        glossaryRequest.setUpdateTime(timestamp);
+        glossaryRequest.setUpdateTime(now);
         Long id = glossaryRepository.insert(glossaryRequest);
-        return getGlossary(id);
+        return fetchGlossary(id);
     }
 
     public GlossaryChildren getChildren(Long parentId) {
@@ -73,7 +76,7 @@ public class GlossaryService extends BaseSecurityService {
     }
 
 
-    public Glossary getGlossary(Long id) {
+    public Glossary fetchGlossary(Long id) {
         GlossaryBasicInfo glossaryBasicInfo = glossaryRepository.findGlossaryBaseInfo(id);
         if (Objects.isNull(glossaryBasicInfo)){
             throw  new RuntimeException("glossary does not exist");
@@ -95,10 +98,11 @@ public class GlossaryService extends BaseSecurityService {
 
 
     public Glossary update(Long id, GlossaryRequest glossaryRequest) {
+        OffsetDateTime now = DateTimeUtils.now();
         glossaryRequest.setUpdateUser(getCurrentUsername());
-        glossaryRequest.setUpdateTime(System.currentTimeMillis());
+        glossaryRequest.setUpdateTime(now);
         glossaryRepository.update(id, glossaryRequest);
-        return getGlossary(id);
+        return fetchGlossary(id);
     }
 
     public void delete(Long id) {
@@ -111,17 +115,20 @@ public class GlossaryService extends BaseSecurityService {
 
     @Transactional(rollbackFor = Exception.class)
     public Glossary copy(Long copyId) {
-        Glossary oldGlossary = getGlossary(copyId);
+        Glossary oldGlossary = fetchGlossary(copyId);
         Long newGlossaryId = copySelf(oldGlossary).getId();
-        return getGlossary(newGlossaryId);
+        return fetchGlossary(newGlossaryId);
     }
 
 
 
     private Glossary copySelf(Glossary oldGlossary) {
         GlossaryRequest glossaryRequest = new GlossaryRequest();
-        glossaryRequest.setName(oldGlossary.getName());
-        glossaryRequest.setParentId(oldGlossary.getParent().getId());
+        glossaryRequest.setName(getCopyName(oldGlossary));
+        if (Objects.nonNull(oldGlossary.getParent())){
+
+            glossaryRequest.setParentId(oldGlossary.getParent().getId());
+        }
         glossaryRequest.setDescription(oldGlossary.getDescription());
         List<Asset> assets = oldGlossary.getAssets();
         if (CollectionUtils.isNotEmpty(assets)) {
@@ -131,6 +138,9 @@ public class GlossaryService extends BaseSecurityService {
         return add(glossaryRequest);
     }
 
+    private String getCopyName(Glossary oldGlossary) {
+        return oldGlossary.getName() + COPY_NAME_ENDWITH;
+    }
 
 
     private  List<Asset> findAssets(List<Long> glossaryToDataSetIdList) {
