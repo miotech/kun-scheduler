@@ -570,6 +570,37 @@ public class MetadataDatasetDao {
         }, id);
     }
 
+    public List<DatasetBasicInfo> getDatasetBasicInfoList(List<Long> idList) {
+        String sql = "select kmd.*, " +
+                "kmdsrct.name as type, " +
+                "kmdsrca.name as datasource_name, " +
+                "kmda.description as dataset_description, " +
+                "string_agg(distinct(kmdo.owner), ',') as owners, " +
+                "string_agg(distinct(kmdt.tag), ',') as tags, " +
+                "watermark.high_watermark as high_watermark, " +
+                "watermark.low_watermark as low_watermark," +
+                "kmd.deleted as deleted\n" +
+                "from kun_mt_dataset kmd\n" +
+                "         inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
+                "         inner join kun_mt_datasource_type kmdsrct on kmdsrct.id = kmdsrc.type_id\n" +
+                "         inner join kun_mt_datasource_attrs kmdsrca on kmdsrca.datasource_id = kmdsrc.id\n" +
+                "         left join kun_mt_dataset_attrs kmda on kmd.gid = kmda.dataset_gid\n" +
+                "         left join kun_mt_dataset_owners kmdo on kmd.gid = kmdo.dataset_gid\n" +
+                "         left join kun_mt_dataset_tags kmdt on kmd.gid = kmdt.dataset_gid\n" +
+                "         left join kun_mt_dataset_stats kmds on kmd.gid = kmds.dataset_gid\n" +
+                "         left join (select dataset_gid, max(last_updated_time) as high_watermark, min(last_updated_time) as low_watermark from kun_mt_dataset_stats group by dataset_gid) watermark on watermark.dataset_gid = kmd.gid\n";
+
+        String whereClause = "where kmd.deleted =false and  kmd.gid in " + toColumnSql(idList.size());
+        String groupByClause = "group by kmd.gid, type, datasource_name, dataset_description, high_watermark, low_watermark";
+
+        sql = sql + whereClause + groupByClause;
+        return dbOperator.fetchAll(sql, rs -> {
+            DatasetBasicInfo dataset = new DatasetBasicInfo();
+            setDatasetBasicField(dataset, rs);
+            return dataset;
+        }, idList.toArray());
+    }
+
     /**
      * Database result set mapper for {@link Dataset} object
      */
