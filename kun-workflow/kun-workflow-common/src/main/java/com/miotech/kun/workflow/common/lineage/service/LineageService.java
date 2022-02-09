@@ -6,29 +6,35 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
+import com.miotech.kun.workflow.common.task.dao.TaskDao;
+import com.miotech.kun.workflow.core.model.common.Tag;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskInformation;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 import com.miotech.kun.workflow.core.model.task.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Singleton
 public class LineageService {
-    private static final Logger logger = LoggerFactory.getLogger(LineageService.class);
+    public static final String TAG_TASK_TYPE_NAME = "type";
 
     private final MetadataServiceFacade metadataFacade;
 
     private final LineageServiceFacade lineageFacade;
 
+    private final TaskDao taskDao;
+
     @Inject
-    public LineageService(MetadataServiceFacade metadataFacade,LineageServiceFacade lineageFacade) {
+    public LineageService(MetadataServiceFacade metadataFacade,LineageServiceFacade lineageFacade, TaskDao taskDao) {
         this.metadataFacade = metadataFacade;
         this.lineageFacade = lineageFacade;
+        this.taskDao = taskDao;
     }
 
     // ---------------- Public methods ----------------
@@ -144,4 +150,35 @@ public class LineageService {
         lineageFacade.updateTaskLineage(task, upstreamDatastore, downstreamDataStore);
     }
 
+
+    /**
+     * Batch query the output tasks corresponding to the dataset
+     * @param datasetGids
+     * @return
+     */
+    public List<UpstreamTaskInformation> fetchDirectUpstreamTask(List<Long> datasetGids) {
+        List<UpstreamTaskInformation> upstreamTaskInformationList = lineageFacade.fetchDirectUpstreamTask(datasetGids);
+        List<Long> taskIds = upstreamTaskInformationList.stream()
+                .map(UpstreamTaskInformation::getTaskInfos)
+                .flatMap(info -> info.stream())
+                .map(UpstreamTaskInformation.TaskInformation::getId)
+                .collect(Collectors.toList());
+        Map<Long, List<Tag>> taskTags = taskDao.fetchTaskTagsByTaskIds(taskIds);
+
+        // set scheduleMethod
+        upstreamTaskInformationList.stream()
+                .forEach(upstreamTaskInformation -> upstreamTaskInformation.getTaskInfos().stream().forEach(taskInformation -> {
+                    Long taskId = taskInformation.getId();
+                    List<Tag> tags = taskTags.get(taskId);
+                    Optional<Tag> tagOpt = tags.stream()
+                            .filter(tag -> tag.getKey().equals(TAG_TASK_TYPE_NAME))
+                            .findFirst();
+                    if (tagOpt.isPresent()) {
+                        String scheduleMethod = tagOpt.get().getValue();
+                        taskInformation.setScheduleMethod(scheduleMethod);
+                    }
+                }));
+
+        return upstreamTaskInformationList;
+    }
 }

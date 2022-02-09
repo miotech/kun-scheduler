@@ -1,6 +1,8 @@
 package com.miotech.kun.metadata.common.service;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.exception.EntityNotFoundException;
@@ -10,15 +12,19 @@ import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeTaskInfo;
+import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskInformation;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 import com.miotech.kun.workflow.core.model.task.Task;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.neo4j.ogm.session.Session;
 import org.neo4j.ogm.session.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Singleton
 public class LineageService implements LineageServiceFacade {
@@ -351,6 +357,26 @@ public class LineageService implements LineageServiceFacade {
         saveTaskNode(taskNode);
     }
 
+    @Override
+    public List<UpstreamTaskInformation> fetchDirectUpstreamTask(List<Long> datasetGids) {
+        if (CollectionUtils.isEmpty(datasetGids)) {
+            return Lists.newArrayList();
+        }
+
+        String gids = StringUtils.join(datasetGids, ",");
+        String cypher = String.format("MATCH (t:KUN_TASK) --> (d:KUN_DATASET) WHERE d.gid IN [%s] return t.taskId as taskId, t.taskName as taskName, t.description as description, d.gid as gid", gids);
+        Iterator<Map<String, Object>> iterator = getSession().query(cypher, Maps.newHashMap()).iterator();
+
+        Map<Long, List<EdgeTaskInfo>> datasetTasks = extractFetchedInformation(iterator);
+        return datasetTasks.entrySet().stream().map(datasetTask -> {
+            Long gid = datasetTask.getKey();
+            List<UpstreamTaskInformation.TaskInformation> taskInformationList = datasetTask.getValue().stream()
+                    .map(edgeTaskInfo -> new UpstreamTaskInformation.TaskInformation(edgeTaskInfo.getId(), edgeTaskInfo.getName(), edgeTaskInfo.getDescription(), null))
+                    .collect(Collectors.toList());
+            return new UpstreamTaskInformation(gid, taskInformationList);
+        }).collect(Collectors.toList());
+    }
+
     // ---------------- Private methods ----------------
 
     enum DirectionEnum {
@@ -443,5 +469,23 @@ public class LineageService implements LineageServiceFacade {
         }
 
         return resultSet;
+    }
+
+    private Map<Long, List<EdgeTaskInfo>> extractFetchedInformation(Iterator<Map<String, Object>> iterator) {
+        Map<Long, List<EdgeTaskInfo>> datasetTasks = Maps.newHashMap();
+        while (iterator.hasNext()) {
+            Map<String, Object> information = iterator.next();
+            Long gid = (Long) information.get("gid");
+            EdgeTaskInfo edgeTaskInfo = new EdgeTaskInfo((Long) information.get("taskId"), (String) information.get("taskName"), (String) information.get("description"));
+            if (datasetTasks.containsKey(gid)) {
+                datasetTasks.get(gid).add(edgeTaskInfo);
+            } else {
+                List<EdgeTaskInfo> taskInfos = Lists.newArrayList();
+                taskInfos.add(edgeTaskInfo);
+                datasetTasks.put(gid, taskInfos);
+            }
+        }
+
+        return datasetTasks;
     }
 }

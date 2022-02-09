@@ -2,13 +2,16 @@ package com.miotech.kun.datadiscovery.testing;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.miotech.kun.workflow.client.WorkflowClient;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -56,7 +59,10 @@ public class DiscoveryTestBase {
             "com.miotech.kun.datadiscovery"
     })
     public static class TestConfiguration {
-
+        @Bean
+        public WorkflowClient getWorkflowClient() {
+            return Mockito.mock(WorkflowClient.class);
+        }
     }
 
 }

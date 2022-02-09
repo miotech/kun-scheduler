@@ -1,5 +1,6 @@
 package com.miotech.kun.metadata.common.service;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.miotech.kun.commons.db.GraphDatabaseModule;
@@ -12,6 +13,7 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.workflow.core.execution.Config;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskInformation;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
@@ -34,10 +36,10 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 
@@ -525,4 +527,24 @@ public class LineageServiceTest extends DatabaseTestBase {
         assertThat(downstreamDataSet.getGid(),is(downstreamDataSetId));
         assertThat(downstreamDataSet.getDatasetName(),is(downstreamSet.getName()));
     }
+
+    @Test
+    public void testFetchDirectTask_empty() {
+        List<UpstreamTaskInformation> upstreamTaskInformationList = lineageService.fetchDirectUpstreamTask(ImmutableList.of());
+        assertThat(upstreamTaskInformationList, empty());
+    }
+
+    @Test
+    public void testFetchDirectTask() {
+        // Prepare
+        Pair<List<DatasetNode>, List<TaskNode>> graphNodes = prepareGraph();
+        List<Long> datasetGids = graphNodes.getLeft().stream().map(datasetNode -> datasetNode.getGid()).collect(Collectors.toList());
+
+        // Execute
+        List<UpstreamTaskInformation> upstreamTaskInformationList = lineageService.fetchDirectUpstreamTask(datasetGids);
+
+        // Verify
+        assertThat(upstreamTaskInformationList.size(), is(3));
+    }
+
 }
