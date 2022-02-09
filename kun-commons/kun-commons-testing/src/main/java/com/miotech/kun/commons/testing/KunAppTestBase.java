@@ -9,8 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
@@ -33,14 +31,14 @@ import java.util.List;
  * @author: zemin  huang
  * @create: 2022-01-28 17:36
  **/
-@SpringBootTest(classes = SpringAPPTestBase.TestConfiguration.class)
+@SpringBootTest(classes = KunAppTestBase.TestConfiguration.class)
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @ContextConfiguration
 @Testcontainers
-public class SpringAPPTestBase {
+public class KunAppTestBase{
 
-    private static final Logger logger = LoggerFactory.getLogger(SpringAPPTestBase.class);
+    private static final Logger logger = LoggerFactory.getLogger(KunAppTestBase.class);
 
     private static final String POSTGRES_IMAGE = "postgres:12.3";
 
@@ -117,7 +115,7 @@ public class SpringAPPTestBase {
             "com.miotech.kun.webapp",
             "com.miotech.kun.monitor",
             "com.miotech.kun.openapi"
-    }, exclude = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
+    })
     public static class TestConfiguration {
 
     }

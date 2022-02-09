@@ -1,6 +1,6 @@
 package com.miotech.kun.datadiscovery.testing;
 
-import com.miotech.kun.commons.testing.SpringAPPTestBase;
+import com.miotech.kun.commons.testing.KunAppTestBase;
 import com.miotech.kun.datadiscovery.model.bo.LineageGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
 import com.miotech.kun.datadiscovery.model.entity.LineageGraph;
@@ -28,7 +28,7 @@ import static org.mockito.Mockito.*;
  * @author: zemin  huang
  * @create: 2022-01-24 09:20
  **/
-public class LineageAppServiceTest extends SpringAPPTestBase {
+public class LineageAppServiceTest extends KunAppTestBase {
 
     @Autowired
     LineageAppService lineageAppService;
