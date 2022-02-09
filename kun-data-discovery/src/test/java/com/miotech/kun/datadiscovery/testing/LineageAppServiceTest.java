@@ -79,7 +79,7 @@ public class LineageAppServiceTest extends DiscoveryTestBase {
 
         Long taskId = 1L;
         String taskName = "taskInfoOne";
-        ArrayList<TaskRun> taskRunArrayList = org.apache.commons.compress.utils.Lists.newArrayList();
+        ArrayList<TaskRun> taskRunArrayList = Lists.newArrayList();
         TaskRun taskRun1 = getTaskRun(1L, "202201010000", TaskRunStatus.SUCCESS);
         TaskRun taskRun2 = getTaskRun(2L, "202201020000", TaskRunStatus.FAILED);
         TaskRun taskRun3 = getTaskRun(3L, "202201030000", TaskRunStatus.SUCCESS);
