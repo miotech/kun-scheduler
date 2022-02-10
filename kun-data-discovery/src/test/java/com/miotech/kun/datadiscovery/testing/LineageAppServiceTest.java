@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.testing;
 
+import com.miotech.kun.commons.testing.KunAppTestBase;
 import com.miotech.kun.datadiscovery.model.bo.LineageGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
@@ -17,7 +18,6 @@ import org.assertj.core.util.Lists;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -39,7 +39,7 @@ import static org.mockito.Mockito.*;
  * @author: zemin  huang
  * @create: 2022-01-24 09:20
  **/
-public class LineageAppServiceTest extends DiscoveryTestBase {
+public class LineageAppServiceTest extends KunAppTestBase {
 
     @Autowired
     LineageAppService lineageAppService;
@@ -125,7 +125,7 @@ public class LineageAppServiceTest extends DiscoveryTestBase {
         Task testDownTask = getTask(1L, "testDownTask");
         Task testUpTask = getTask(2L, "testUpTask");
         doReturn(createLineageNeighbors(Lists.newArrayList(testUpTask), Lists.newArrayList(testDownTask), dataSetId))
-                .when(workflowClient).getLineageNeighbors(anyLong(), Mockito.any(LineageQueryDirection.class), anyInt());
+                .when(workflowClient).getLineageNeighbors(anyLong(), any(LineageQueryDirection.class), anyInt());
         ArrayList<TaskRun> taskRunArrayList = org.apache.commons.compress.utils.Lists.newArrayList();
         TaskRun taskRun1 = getTaskRun(1L, "202201010000", TaskRunStatus.SUCCESS);
         TaskRun taskRun2 = getTaskRun(2L, "202201020000", TaskRunStatus.FAILED);
@@ -146,7 +146,7 @@ public class LineageAppServiceTest extends DiscoveryTestBase {
         assertThat(lineageTask.getHistoryList(), is(historyList));
         assertThat(lineageTask.getLastExecutedTime(), is(taskRun3.getStartAt()));
     }
-    
+
 
 
     @Test
@@ -163,7 +163,7 @@ public class LineageAppServiceTest extends DiscoveryTestBase {
         taskRunArrayList.add(taskRun2);
         taskRunArrayList.add(taskRun3);
         doReturn(createLineageNeighbors(Lists.newArrayList(testUpTask), Lists.newArrayList(testDownTask), lineageTasksRequest.getDatasetGid()))
-                .when(workflowClient).getLineageNeighbors(anyLong(), Mockito.any(LineageQueryDirection.class), anyInt());
+                .when(workflowClient).getLineageNeighbors(anyLong(), any(LineageQueryDirection.class), anyInt());
         doReturn(createLatestTaskRuns(testDownTask.getId(), taskRunArrayList))
                 .when(workflowClient).getLatestTaskRuns(anyList(), anyInt(), anyBoolean());
         List<LineageTask> taskList = lineageAppService.getLineageTasksByNeighbors(lineageTasksRequest);
@@ -189,7 +189,7 @@ public class LineageAppServiceTest extends DiscoveryTestBase {
 
         doReturn(createLineageNeighborsGraph(nodeInfo,
                 Lists.newArrayList(upNodeInfo), Lists.newArrayList(downNodeInfo)))
-                .when(workflowClient).getLineageNeighbors(anyLong(), Mockito.any(LineageQueryDirection.class), anyInt());
+                .when(workflowClient).getLineageNeighbors(anyLong(), any(LineageQueryDirection.class), anyInt());
         doReturn(createLineageDatasetBasicList(datasetNodeInfos)).when(datasetService).getDatasets(anyList());
         LineageGraph lineageGraph = lineageAppService.getLineageGraph(request);
         assertThat(lineageGraph, is(notNullValue()));

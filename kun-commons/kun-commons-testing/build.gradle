@@ -17,4 +17,5 @@ dependencies {
     implementation "org.testcontainers:testcontainers"
     implementation "org.testcontainers:postgresql"
     implementation 'org.postgresql:postgresql'
+    implementation 'org.springframework.boot:spring-boot-starter-test:2.4.2'
 }

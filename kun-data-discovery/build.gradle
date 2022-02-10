@@ -54,11 +54,13 @@ dependencies {
 	implementation 'com.google.code.gson:gson'
 	implementation 'org.flywaydb:flyway-core'
 	implementation 'org.springdoc:springdoc-openapi-ui'
+
+	testImplementation project(':kun-commons:kun-commons-testing')
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {
 		exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
 	}
-	testImplementation 'org.testcontainers:postgresql'
-	testImplementation 'com.h2database:h2'
+//	testImplementation 'org.testcontainers:postgresql'
+//	testImplementation 'com.h2database:h2'
 	// end::tests[]
 }
 
