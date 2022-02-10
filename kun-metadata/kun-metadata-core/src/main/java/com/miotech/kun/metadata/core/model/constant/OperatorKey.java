@@ -19,5 +19,7 @@ public class OperatorKey {
     public static final String BROKERS = "brokers";
     public static final String MSE_TOPIC = "mseTopic";
     public static final String MSE_URL = "mseUrl";
+    public static final String CATALOGER_BLACK_LIST = "catalogerBlackList";
+    public static final String CATALOGER_WHITE_LIST = "catalogerWhiteList";
 
 }

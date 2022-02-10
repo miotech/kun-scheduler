@@ -63,7 +63,7 @@ public class CatalogerTest extends DatabaseTestBase {
 
         DataSource aws = MockDataSourceFactory.createDataSource(1,"aws",connectionConfig,DatasourceType.HIVE,new ArrayList<>());
         dataSourceDao.create(aws);
-        Cataloger cataloger = catalogerFactory.generateCataloger(aws);
+        Cataloger cataloger = catalogerFactory.generateCataloger(aws,new CatalogerConfig(null,null));
         assertThat(cataloger,notNullValue());
     }
 }

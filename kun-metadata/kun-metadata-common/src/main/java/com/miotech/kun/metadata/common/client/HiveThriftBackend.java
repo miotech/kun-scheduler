@@ -1,8 +1,8 @@
 package com.miotech.kun.metadata.common.client;
 
-import com.google.common.collect.Iterators;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.service.FieldMappingService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.connection.HiveMetaStoreConnectionInfo;
@@ -26,12 +26,11 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.time.OffsetDateTime;
-import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
-public class HiveThriftBackend implements MetadataBackend, StorageBackend {
+public class HiveThriftBackend extends BaseMetadataBackend implements StorageBackend {
 
     private final Logger logger = LoggerFactory.getLogger(HiveThriftBackend.class);
 
@@ -43,7 +42,9 @@ public class HiveThriftBackend implements MetadataBackend, StorageBackend {
 
     private final ClientFactory clientFactory;
 
-    public HiveThriftBackend(HiveMetaStoreConnectionInfo connectionInfo, FieldMappingService fieldMappingService, ClientFactory clientFactory) {
+    public HiveThriftBackend(HiveMetaStoreConnectionInfo connectionInfo, FieldMappingService fieldMappingService,
+                             ClientFactory clientFactory, CatalogerConfig config) {
+        super(config);
         this.connectionInfo = connectionInfo;
         this.fieldMappingService = fieldMappingService;
         this.clientFactory = clientFactory;
@@ -86,16 +87,6 @@ public class HiveThriftBackend implements MetadataBackend, StorageBackend {
     }
 
     @Override
-    public Iterator<Dataset> extract(DataSource dataSource) {
-        try {
-            List<String> databases = client.getAllDatabases();
-            return Iterators.concat(databases.stream().map(database -> extract(dataSource.getId(), database)).iterator());
-        } catch (Exception e) {
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
-    }
-
-    @Override
     public Dataset extract(MetadataChangeEvent mce) {
         return extract(mce.getDataSourceId(), mce.getDatabaseName(), mce.getTableName());
     }
@@ -112,6 +103,12 @@ public class HiveThriftBackend implements MetadataBackend, StorageBackend {
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
+    }
+
+
+    @Override
+    public Long getTotalByteSize(Dataset dataset, String location) {
+        return null;
     }
 
     @Override
@@ -136,11 +133,6 @@ public class HiveThriftBackend implements MetadataBackend, StorageBackend {
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
-    }
-
-    private Iterator<Dataset> extract(Long datasourceId, String database) {
-        List<String> tablesOnMySQL = extractTables(database);
-        return tablesOnMySQL.stream().map(tableName -> extract(datasourceId, database, tableName)).iterator();
     }
 
     private List<String> extractTables(String dbName) {
@@ -185,8 +177,19 @@ public class HiveThriftBackend implements MetadataBackend, StorageBackend {
         return datasetBuilder.build();
     }
 
+
     @Override
-    public Long getTotalByteSize(Dataset dataset, String location) {
-        return null;
+    protected List<String> searchDatabase(DataSource dataSource) {
+        try {
+            return client.getAllDatabases();
+        } catch (Exception e) {
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
+    }
+
+    @Override
+    protected List<Dataset> searchDataset(Long datasourceId, String databaseName) {
+        List<String> tablesOnMySQL = extractTables(databaseName);
+        return tablesOnMySQL.stream().map(tableName -> extract(datasourceId, databaseName, tableName)).collect(Collectors.toList());
     }
 }

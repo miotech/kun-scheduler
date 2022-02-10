@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.databuilder.builder;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.cataloger.Cataloger;
+import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.cataloger.CatalogerFactory;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.service.DataSourceService;
@@ -58,7 +59,8 @@ public class MSEBuilder {
             return;
         }
         DataSource dataSource = dataSourceOptional.get();
-        Cataloger cataloger = catalogerFactory.generateCataloger(dataSource);
+        CatalogerConfig config = CatalogerConfig.newBuilder().build();
+        Cataloger cataloger = catalogerFactory.generateCataloger(dataSource, config);
         DatasetStatisticsExtractor extractor = DatasetStatisticsExtractorFactory.createExtractor(dataSource, dataset.get(), cataloger);
         boolean existed = extractor.judgeExistence(dataset.get(), DatasetExistenceJudgeMode.DATASET);
         if (!existed) {

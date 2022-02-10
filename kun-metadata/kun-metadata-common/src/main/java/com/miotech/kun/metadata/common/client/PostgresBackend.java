@@ -1,8 +1,8 @@
 package com.miotech.kun.metadata.common.client;
 
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.connector.Connector;
 import com.miotech.kun.metadata.common.connector.ConnectorFactory;
 import com.miotech.kun.metadata.common.connector.Query;
@@ -24,10 +24,10 @@ import org.slf4j.LoggerFactory;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
-public class PostgresBackend implements MetadataBackend, StorageBackend {
+public class PostgresBackend extends BaseMetadataBackend implements StorageBackend {
 
     private final static Logger logger = LoggerFactory.getLogger(PostgresBackend.class);
 
@@ -35,7 +35,9 @@ public class PostgresBackend implements MetadataBackend, StorageBackend {
     private final FieldMappingService fieldMappingService;
     private final Connector connector;
 
-    public PostgresBackend(PostgresConnectionInfo connectionInfo, FieldMappingService fieldMappingService) {
+    public PostgresBackend(PostgresConnectionInfo connectionInfo, FieldMappingService fieldMappingService,
+                           CatalogerConfig config) {
+        super(config);
         this.connectionInfo = connectionInfo;
         this.connector = ConnectorFactory.generateConnector(connectionInfo);
         this.fieldMappingService = fieldMappingService;
@@ -55,7 +57,7 @@ public class PostgresBackend implements MetadataBackend, StorageBackend {
 
         try {
             String sql = "SELECT COUNT(1) FROM pg_tables WHERE schemaname = '%s' and tablename = '%s'";
-            Query query = new Query(dbName,schemaName,String.format(sql,schemaName,dataset.getName()));
+            Query query = new Query(dbName, schemaName, String.format(sql, schemaName, dataset.getName()));
             resultSet = connector.query(query);
             long count = 0;
             while (resultSet.next()) {
@@ -75,26 +77,6 @@ public class PostgresBackend implements MetadataBackend, StorageBackend {
         String dbName = dataset.getDatabaseName().split("\\.")[0];
         String schemaName = dataset.getDatabaseName().split("\\.")[1];
         return extract(dbName, schemaName, dataset.getName());
-    }
-
-    @Override
-    public Iterator<Dataset> extract(DataSource dataSource) {
-        String showDatabases = "SELECT datname FROM pg_database WHERE datistemplate = FALSE";
-        Query query = new Query("postgres", null, showDatabases);
-        ResultSet resultSet = connector.query(query);
-        List<String> databases = Lists.newArrayList();
-        try {
-            while (resultSet.next()) {
-                String databaseName = resultSet.getString("datname");
-                databases.add(databaseName);
-            }
-        } catch (Exception e) {
-            throw ExceptionUtils.wrapIfChecked(e);
-        }
-
-
-        return Iterators.concat(databases.stream().map(databasesName ->
-                extract(dataSource.getId(), databasesName)).iterator());
     }
 
     @Override
@@ -133,11 +115,56 @@ public class PostgresBackend implements MetadataBackend, StorageBackend {
         }
     }
 
-    private Iterator<Dataset> extract(Long datasourceId, String database) {
+
+    /**
+     * use database.schema to represent database
+     *
+     * @param dataSource
+     * @return
+     */
+    @Override
+    protected List<String> searchDatabase(DataSource dataSource) {
+        String showDatabases = "SELECT datname FROM pg_database WHERE datistemplate = FALSE";
+        Query query = new Query("postgres", null, showDatabases);
+        ResultSet resultSet = connector.query(query);
+        List<String> databases = Lists.newArrayList();
+        try {
+            while (resultSet.next()) {
+                String databaseName = resultSet.getString("datname");
+                databases.add(databaseName);
+            }
+        } catch (Exception e) {
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
+        List<String> filteredDatabases = databases.stream().filter(database -> filter.filterDatabase(database))
+                .collect(Collectors.toList());
+        logger.debug("filtered databases:" + filteredDatabases.stream().collect(Collectors.joining(",")));
+        return filteredDatabases.stream().map(database -> {
+                    //append database and schema
+                    List<String> schemas = searchSchema(database);
+                    return schemas.stream().map(schema -> database + "." + schema).collect(Collectors.toList());
+                })
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    protected List<Dataset> searchDataset(Long datasourceId, String databaseName) {
+        try {
+            String[] databaseAndSchema = databaseName.split("\\.");
+            String database = databaseAndSchema[0];
+            String schema = databaseAndSchema[1];
+            return extract(datasourceId, database, schema);
+        } catch (Exception e) {
+            throw ExceptionUtils.wrapIfChecked(e);
+        }
+    }
+
+    private List<String> searchSchema(String databaseName) {
         ResultSet resultSet = null;
         try {
             String showSchemas = "SELECT schema_name FROM information_schema.schemata WHERE schema_name NOT LIKE 'pg_%' AND schema_name != 'information_schema'";
-            Query query = new Query(database, null, showSchemas);
+            Query query = new Query(databaseName, null, showSchemas);
             resultSet = connector.query(query);
             List<String> schemas = Lists.newArrayList();
             while (resultSet.next()) {
@@ -145,14 +172,13 @@ public class PostgresBackend implements MetadataBackend, StorageBackend {
                 schemas.add(schema);
             }
 
-            return Iterators.concat(schemas.stream().map(schema ->
-                    extract(datasourceId, database, schema)).iterator());
+            return schemas;
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }
     }
 
-    private Iterator<Dataset> extract(Long datasourceId, String database, String schema) {
+    private List<Dataset> extract(Long datasourceId, String database, String schema) {
         ResultSet resultSet = null;
         try {
             String showTables = "SELECT tablename FROM pg_tables WHERE schemaname = '%s'";
@@ -164,7 +190,7 @@ public class PostgresBackend implements MetadataBackend, StorageBackend {
                 tables.add(table);
             }
 
-            return tables.stream().map(table -> buildDataset(datasourceId, database, schema, table)).iterator();
+            return tables.stream().map(table -> buildDataset(datasourceId, database, schema, table)).collect(Collectors.toList());
         } catch (Exception e) {
             throw ExceptionUtils.wrapIfChecked(e);
         }

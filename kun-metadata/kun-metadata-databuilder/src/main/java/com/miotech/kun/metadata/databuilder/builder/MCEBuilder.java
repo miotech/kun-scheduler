@@ -5,9 +5,9 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.commons.utils.PropsUtils;
 import com.miotech.kun.commons.web.utils.HttpClientUtil;
-import com.miotech.kun.metadata.common.cataloger.Cataloger;
-import com.miotech.kun.metadata.common.cataloger.CatalogerFactory;
+import com.miotech.kun.metadata.common.cataloger.*;
 import com.miotech.kun.metadata.common.dao.MetadataDatasetDao;
 import com.miotech.kun.metadata.common.service.DataSourceService;
 import com.miotech.kun.metadata.core.model.constant.DatasetExistenceJudgeMode;
@@ -15,6 +15,7 @@ import com.miotech.kun.metadata.core.model.constant.DatasetLifecycleStatus;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.core.model.dataset.DatasetField;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
+import com.miotech.kun.metadata.core.model.datasource.DatasourceType;
 import com.miotech.kun.metadata.core.model.event.MetadataChangeEvent;
 import com.miotech.kun.metadata.core.model.event.MetadataStatisticsEvent;
 import com.miotech.kun.metadata.databuilder.load.Loader;
@@ -23,11 +24,10 @@ import com.miotech.kun.metadata.databuilder.utils.JSONUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
-import static com.miotech.kun.metadata.core.model.constant.OperatorKey.MSE_URL;
+import static com.miotech.kun.metadata.core.model.constant.OperatorKey.*;
 
 @Singleton
 public class MCEBuilder {
@@ -64,7 +64,8 @@ public class MCEBuilder {
             return;
         }
         DataSource dataSource = dataSourceOptional.get();
-        Cataloger cataloger = catalogerFactory.generateCataloger(dataSource);
+        CatalogerConfig config = generateCatalogerConfig(dataSource.getDatasourceType());
+        Cataloger cataloger = catalogerFactory.generateCataloger(dataSource, config);
         List<Long> gids = operator.fetchAll("SELECT gid FROM kun_mt_dataset WHERE datasource_id = ?",
                 rs -> rs.getLong("gid"), datasourceId);
         for (Long gid : gids) {
@@ -109,7 +110,8 @@ public class MCEBuilder {
             return;
         }
         DataSource dataSource = dataSourceOptional.get();
-        Cataloger cataloger = catalogerFactory.generateCataloger(dataSource);
+        CatalogerConfig config = generateCatalogerConfig(dataSource.getDatasourceType());
+        Cataloger cataloger = catalogerFactory.generateCataloger(dataSource, config);
         boolean existed = judgeDatasetExistence(dataset, cataloger, DatasetExistenceJudgeMode.DATASET);
         updateDatasetStatus(existed, gid);
         if (!existed) {
@@ -132,7 +134,9 @@ public class MCEBuilder {
             return;
         }
         Dataset dataset = datasetDao.fetchDataSet(mce.getDataSourceId(), mce.getDatabaseName(), mce.getTableName());
-        Cataloger cataloger = catalogerFactory.generateCataloger(fetchedDataSource.get());
+        DataSource dataSource = fetchedDataSource.get();
+        CatalogerConfig config = generateCatalogerConfig(dataSource.getDatasourceType());
+        Cataloger cataloger = catalogerFactory.generateCataloger(fetchedDataSource.get(), config);
         if (dataset != null) {
             extractSchemaOfDataset(dataset.getGid());
             return;
@@ -191,6 +195,52 @@ public class MCEBuilder {
                 operator.update("INSERT INTO kun_mt_dataset_lifecycle(dataset_gid, status, create_at) VALUES(?, ?, ?)", gid, DatasetLifecycleStatus.DELETED.name(), DateTimeUtils.now());
             }
         }
+    }
+
+    private CatalogerConfig generateCatalogerConfig(DatasourceType datasourceType) {
+        CatalogerWhiteList defaultWhiteList = loadDefaultWhiteList(datasourceType);
+        CatalogerBlackList defaultBlackList = loadDefaultBlackList(datasourceType);
+        CatalogerWhiteList whiteList = defaultWhiteList.merge(getWhiteListFromProps());
+        CatalogerBlackList blackList = defaultBlackList.merge(getBlackListFromProps());
+        return new CatalogerConfig(whiteList, blackList);
+    }
+
+    private CatalogerWhiteList loadDefaultWhiteList(DatasourceType datasourceType) {
+        logger.debug("load default whitelist...");
+        List<String> whiteList = new ArrayList<>();
+        try {
+            Props whiteListProps = PropsUtils.loadPropsFromResource("catalogerWhiteList.yaml");
+            whiteList = whiteListProps.getStringList(datasourceType.name());
+            logger.debug("default blacklist is : " + whiteList.stream().collect(Collectors.joining(",")));
+        } catch (Exception e) {
+            logger.debug("whitelist for {} not exits", datasourceType.name());
+        }
+        return new CatalogerWhiteList(new HashSet<>(whiteList));
+    }
+
+    private CatalogerBlackList loadDefaultBlackList(DatasourceType datasourceType) {
+        logger.debug("load default blacklist...");
+        List<String> blackList = new ArrayList<>();
+        try {
+            Props blackListProps = PropsUtils.loadPropsFromResource("catalogerBlackList.yaml");
+            blackList = blackListProps.getStringList(datasourceType.name());
+            logger.debug("default blacklist is : " + blackList.stream().collect(Collectors.joining(",")));
+        } catch (Exception e) {
+            logger.debug("blackList for {} not exits", datasourceType.name());
+        }
+        return new CatalogerBlackList(new HashSet<>(blackList));
+
+    }
+
+
+    private CatalogerWhiteList getWhiteListFromProps() {
+        List<String> whiteList = props.getStringList(CATALOGER_WHITE_LIST);
+        return new CatalogerWhiteList(new HashSet<>(whiteList));
+    }
+
+    private CatalogerBlackList getBlackListFromProps() {
+        List<String> blackList = props.getStringList(CATALOGER_BLACK_LIST);
+        return new CatalogerBlackList(new HashSet<>(blackList));
     }
 
 }
