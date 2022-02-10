@@ -125,7 +125,7 @@ public class LineageAppServiceTest extends KunAppTestBase {
         Task testDownTask = getTask(1L, "testDownTask");
         Task testUpTask = getTask(2L, "testUpTask");
         doReturn(createLineageNeighbors(Lists.newArrayList(testUpTask), Lists.newArrayList(testDownTask), dataSetId))
-                .when(workflowClient).getLineageNeighbors(anyLong(), Mockito.any(LineageQueryDirection.class), anyInt());
+                .when(workflowClient).getLineageNeighbors(anyLong(), any(LineageQueryDirection.class), anyInt());
         ArrayList<TaskRun> taskRunArrayList = org.apache.commons.compress.utils.Lists.newArrayList();
         TaskRun taskRun1 = getTaskRun(1L, "202201010000", TaskRunStatus.SUCCESS);
         TaskRun taskRun2 = getTaskRun(2L, "202201020000", TaskRunStatus.FAILED);
@@ -163,7 +163,7 @@ public class LineageAppServiceTest extends KunAppTestBase {
         taskRunArrayList.add(taskRun2);
         taskRunArrayList.add(taskRun3);
         doReturn(createLineageNeighbors(Lists.newArrayList(testUpTask), Lists.newArrayList(testDownTask), lineageTasksRequest.getDatasetGid()))
-                .when(workflowClient).getLineageNeighbors(anyLong(), Mockito.any(LineageQueryDirection.class), anyInt());
+                .when(workflowClient).getLineageNeighbors(anyLong(), any(LineageQueryDirection.class), anyInt());
         doReturn(createLatestTaskRuns(testDownTask.getId(), taskRunArrayList))
                 .when(workflowClient).getLatestTaskRuns(anyList(), anyInt(), anyBoolean());
         List<LineageTask> taskList = lineageAppService.getLineageTasksByNeighbors(lineageTasksRequest);
@@ -189,7 +189,7 @@ public class LineageAppServiceTest extends KunAppTestBase {
 
         doReturn(createLineageNeighborsGraph(nodeInfo,
                 Lists.newArrayList(upNodeInfo), Lists.newArrayList(downNodeInfo)))
-                .when(workflowClient).getLineageNeighbors(anyLong(), Mockito.any(LineageQueryDirection.class), anyInt());
+                .when(workflowClient).getLineageNeighbors(anyLong(), any(LineageQueryDirection.class), anyInt());
         doReturn(createLineageDatasetBasicList(datasetNodeInfos)).when(datasetService).getDatasets(anyList());
         LineageGraph lineageGraph = lineageAppService.getLineageGraph(request);
         assertThat(lineageGraph, is(notNullValue()));
