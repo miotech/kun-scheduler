@@ -5,16 +5,14 @@ import com.google.common.base.Strings;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.web.annotation.QueryParameter;
+import com.miotech.kun.commons.web.annotation.RequestBody;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
-import com.miotech.kun.workflow.core.model.lineage.TaskOutlets;
+import com.miotech.kun.workflow.common.lineage.service.LineageService;
+import com.miotech.kun.workflow.common.task.service.TaskService;
+import com.miotech.kun.workflow.core.model.lineage.*;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
-import com.miotech.kun.workflow.common.lineage.service.LineageService;
-import com.miotech.kun.workflow.common.task.service.TaskService;
-import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
-import com.miotech.kun.workflow.core.model.lineage.DatasetNodeInfo;
-import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.task.Task;
 
 import java.util.*;
@@ -41,6 +39,11 @@ public class LineageController {
         Preconditions.checkArgument(Objects.nonNull(depth) && (depth > 0), "Illegal query parameter `depth`: {}", depth);
 
         return searchLineageInfo(datasetGid, depth, direction);
+    }
+
+    @RouteMapping(url = "/lineage/datasets/upstream-task", method = "POST")
+    public List<UpstreamTaskInformation> getLineageTask(@RequestBody UpstreamTaskRequest upstreamTaskRequest) {
+        return lineageService.fetchDirectUpstreamTask(upstreamTaskRequest.getDatasetGids());
     }
 
     private DatasetLineageInfo searchLineageInfo(Long datasetGid, int depth, String direction) {

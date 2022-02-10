@@ -382,7 +382,7 @@ public class TaskDao {
      * @param taskIds list of task ids
      * @return
      */
-    private Map<Long, List<Tag>> fetchTaskTagsByTaskIds(List<Long> taskIds) {
+    public Map<Long, List<Tag>> fetchTaskTagsByTaskIds(List<Long> taskIds) {
         if (taskIds.isEmpty()) {
             return new HashMap<>();
         }

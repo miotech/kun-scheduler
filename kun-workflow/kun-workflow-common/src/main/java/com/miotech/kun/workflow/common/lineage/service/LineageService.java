@@ -6,29 +6,34 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
+import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskBasicInformation;
+import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskInformation;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 import com.miotech.kun.workflow.core.model.task.Task;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Singleton
 public class LineageService {
-    private static final Logger logger = LoggerFactory.getLogger(LineageService.class);
 
     private final MetadataServiceFacade metadataFacade;
 
     private final LineageServiceFacade lineageFacade;
 
+    private final TaskDao taskDao;
+
     @Inject
-    public LineageService(MetadataServiceFacade metadataFacade,LineageServiceFacade lineageFacade) {
+    public LineageService(MetadataServiceFacade metadataFacade, LineageServiceFacade lineageFacade, TaskDao taskDao) {
         this.metadataFacade = metadataFacade;
         this.lineageFacade = lineageFacade;
+        this.taskDao = taskDao;
     }
 
     // ---------------- Public methods ----------------
@@ -79,11 +84,12 @@ public class LineageService {
      * @param downstreamDatasetGid global id of downstream dataset
      */
     public EdgeInfo fetchEdgeInfo(Long upstreamDatasetGid, Long downstreamDatasetGid) {
-        return lineageFacade.fetchEdgeInfo(upstreamDatasetGid,downstreamDatasetGid);
+        return lineageFacade.fetchEdgeInfo(upstreamDatasetGid, downstreamDatasetGid);
     }
 
     /**
      * Delete task node
+     *
      * @param nodeId id of task node
      * @return <code>true</code> if operation successful, <code>false</code> if node not found
      */
@@ -144,4 +150,28 @@ public class LineageService {
         lineageFacade.updateTaskLineage(task, upstreamDatastore, downstreamDataStore);
     }
 
+
+    /**
+     * Batch query the upstream tasks corresponding to the dataset
+     *
+     * @param datasetGids
+     * @return
+     */
+    public List<UpstreamTaskInformation> fetchDirectUpstreamTask(List<Long> datasetGids) {
+        List<UpstreamTaskBasicInformation> upstreamTaskBasicInformationList = lineageFacade.fetchDirectUpstreamTask(datasetGids);
+        Set<Long> taskIds = upstreamTaskBasicInformationList.stream()
+                .flatMap(basicInfo -> basicInfo.getTaskIds().stream())
+                .collect(Collectors.toSet());
+        Map<Long, Optional<Task>> taskMap = taskDao.fetchByIds(taskIds);
+
+        return upstreamTaskBasicInformationList.stream().map(upstreamTaskInformation -> {
+            List<Task> taskList = upstreamTaskInformation.getTaskIds().stream()
+                    .filter(taskId -> taskMap.get(taskId).isPresent())
+                    .map(taskId -> {
+                        Optional<Task> taskOpt = taskMap.get(taskId);
+                        return taskOpt.get();
+                    }).collect(Collectors.toList());
+            return new UpstreamTaskInformation(upstreamTaskInformation.getDatasetGid(), taskList);
+        }).collect(Collectors.toList());
+    }
 }

@@ -45,4 +45,7 @@ public class DatasetBasic {
     private List<GlossaryBasic> glossaries;
 
     private Boolean deleted;
+
+    private List<UpstreamTask> upstreamTasks;
+
 }

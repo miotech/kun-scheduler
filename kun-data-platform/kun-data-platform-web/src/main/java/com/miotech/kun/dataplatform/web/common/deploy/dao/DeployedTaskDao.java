@@ -2,6 +2,7 @@ package com.miotech.kun.dataplatform.web.common.deploy.dao;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Maps;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.dataplatform.web.common.commit.dao.TaskCommitDao;
@@ -9,6 +10,7 @@ import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployedTaskSearchReque
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -18,6 +20,8 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.miotech.kun.dataplatform.web.common.commit.dao.TaskCommitDao.*;
 
@@ -195,6 +199,18 @@ public class DeployedTaskDao {
     public List<DeployedTask> fetchUnarchived() {
         String sql = getSelectSQL(String.format(" %s.is_archived is false", DEPLOYED_TASK_MODEL_NAME));
         return jdbcTemplate.query(sql, DeployedTaskMapper.INSTANCE);
+    }
+
+    public Map<Long, DeployedTask> fetchByWorkflowTaskIds(List<Long> taskIds) {
+        if (CollectionUtils.isEmpty(taskIds)) {
+            return Maps.newHashMap();
+        }
+
+        String idInClause = String.format("%s.%s in (%s)", DEPLOYED_TASK_MODEL_NAME, WORKFLOW_TASK_ID,
+                com.miotech.kun.commons.utils.StringUtils.repeatJoin("?", ",", taskIds.size()));
+        String sql = getSelectSQL(idInClause);
+        return jdbcTemplate.query(sql, DeployedTaskMapper.INSTANCE, taskIds.toArray()).stream()
+                .collect(Collectors.toMap(DeployedTask::getWorkflowTaskId, Function.identity()));
     }
 
     public static class DeployedTaskMapper implements RowMapper<DeployedTask> {

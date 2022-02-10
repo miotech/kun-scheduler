@@ -2,18 +2,25 @@ package com.miotech.kun.datadiscovery.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.miotech.kun.common.model.AcknowledgementVO;
 import com.miotech.kun.commons.utils.ExceptionUtils;
+import com.miotech.kun.datadiscovery.constant.Constants;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.*;
 import com.miotech.kun.datadiscovery.model.entity.Watermark;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.model.vo.PullProcessVO;
+import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
+import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 import com.miotech.kun.metadata.core.model.dataset.DatabaseBaseInfo;
 import com.miotech.kun.metadata.core.model.datasource.DataSource;
 import com.miotech.kun.metadata.core.model.vo.*;
+import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskInformation;
+import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskRequest;
+import com.miotech.kun.workflow.core.model.task.Task;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -48,6 +55,9 @@ public class MetadataService {
     @Autowired
     GlossaryService glossaryService;
 
+    @Autowired
+    private DeployedTaskFacade deployedTaskFacade;
+
     public List<Database> getDatabases(DatabaseRequest request) {
         String fullUrl = url + "/dataset/databases";
         log.info("Request url : " + fullUrl);
@@ -69,15 +79,22 @@ public class MetadataService {
     }
 
     public DatasetBasicPage searchDatasets(BasicSearchRequest basicSearchRequest) {
-        String suggestColumnUrl = url + "/dataset/search";
-        DatasetBasicSearch datasetBasicSearch = restTemplate.exchange(suggestColumnUrl, HttpMethod.POST, new HttpEntity<>(basicSearchRequest), DatasetBasicSearch.class).getBody();
+        String datasetSearchUrl = url + "/dataset/search";
+        DatasetBasicSearch datasetBasicSearch = restTemplate.exchange(datasetSearchUrl, HttpMethod.POST, new HttpEntity<>(basicSearchRequest), DatasetBasicSearch.class).getBody();
         return buildDatasetBasicPage(datasetBasicSearch);
     }
 
     public DatasetBasicPage fullTextSearch(DatasetSearchRequest searchRequests) {
-        String suggestColumnUrl = url + "/dataset/full-text/search";
-        DatasetBasicSearch datasetBasicSearch = restTemplate.exchange(suggestColumnUrl, HttpMethod.POST, new HttpEntity<>(searchRequests), DatasetBasicSearch.class).getBody();
-        return buildDatasetBasicPage(datasetBasicSearch);
+        String fullTextSearchUrl = url + "/dataset/full-text/search";
+        DatasetBasicSearch datasetBasicSearch = restTemplate.exchange(fullTextSearchUrl, HttpMethod.POST, new HttpEntity<>(searchRequests), DatasetBasicSearch.class).getBody();
+        List<Long> gids = datasetBasicSearch.getDatasets().stream().map(datasetBasicInfo -> datasetBasicInfo.getGid()).collect(Collectors.toList());
+        String upstreamTaskFetchUrl = url + "/lineage/datasets/upstream-task";
+        List<UpstreamTaskInformation> upstreamTaskInformationList = restTemplate.exchange(upstreamTaskFetchUrl, HttpMethod.POST,
+                new HttpEntity<>(new UpstreamTaskRequest(gids)), new ParameterizedTypeReference<List<UpstreamTaskInformation>>() {}).getBody();
+
+        List<Long> taskIds = upstreamTaskInformationList.stream().flatMap(taskInfo -> taskInfo.getTasks().stream()).map(Task::getId).collect(Collectors.toList());
+        Map<Long, DeployedTask> deployedTaskMap = deployedTaskFacade.findByWorkflowTaskIds(taskIds);
+        return buildDatasetBasicPage(datasetBasicSearch, upstreamTaskInformationList, deployedTaskMap);
     }
 
     public Dataset findById(Long id) {
@@ -221,7 +238,8 @@ public class MetadataService {
         return Arrays.asList(restTemplate.exchange(suggestColumnUrl, HttpMethod.POST, new HttpEntity<>(columnSuggestRequests), DatasetColumnSuggestResponse[].class).getBody());
     }
 
-    private DatasetBasic convertFromBasicInfo(DatasetBasicInfo datasetBasicInfo) {
+    private DatasetBasic convertFromBasicInfo(DatasetBasicInfo datasetBasicInfo, List<UpstreamTaskInformation> upstreamTaskInformationList,
+                                              Map<Long, DeployedTask> deployedTaskMap) {
         DatasetBasic datasetBasic = new DatasetBasic();
         datasetBasic.setGid(datasetBasicInfo.getGid());
         datasetBasic.setName(datasetBasicInfo.getName());
@@ -242,6 +260,21 @@ public class MetadataService {
 
         List<GlossaryBasic> glossaryBasics = glossaryService.getGlossariesByDataset(datasetBasicInfo.getGid());
         datasetBasic.setGlossaries(glossaryBasics);
+
+        Optional<UpstreamTaskInformation> upstreamTaskInformationOpt = upstreamTaskInformationList.stream()
+                .filter(info -> info.getDatasetGid().equals(datasetBasicInfo.getGid())).findFirst();
+        if (upstreamTaskInformationOpt.isPresent()) {
+            UpstreamTaskInformation upstreamTaskInformation = upstreamTaskInformationOpt.get();
+            List<UpstreamTask> upstreamTasks = upstreamTaskInformation.getTasks().stream()
+                    .filter(task -> !task.getTags().contains(Constants.TAG_TYPE_MANUAL_RUN))
+                    .map(taskInfo -> {
+                        DeployedTask deployedTask = deployedTaskMap.get(taskInfo.getId());
+                        Long definitionId = deployedTask == null ? null : deployedTask.getDefinitionId();
+                        return new UpstreamTask(taskInfo.getId(), taskInfo.getName(), taskInfo.getDescription(), definitionId);
+                    })
+                    .collect(Collectors.toList());
+            datasetBasic.setUpstreamTasks(upstreamTasks);
+        }
 
         return datasetBasic;
     }
@@ -284,7 +317,12 @@ public class MetadataService {
     }
 
     private DatasetBasicPage buildDatasetBasicPage(DatasetBasicSearch datasetBasicSearch) {
-        List<DatasetBasic> datasetBasics = datasetBasicSearch.getDatasets().stream().map(basicSearch -> convertFromBasicInfo(basicSearch)).collect(Collectors.toList());
+        return buildDatasetBasicPage(datasetBasicSearch, ImmutableList.of(), ImmutableMap.of());
+    }
+
+    private DatasetBasicPage buildDatasetBasicPage(DatasetBasicSearch datasetBasicSearch, List<UpstreamTaskInformation> upstreamTaskInformationList,
+                                                   Map<Long, DeployedTask> deployedTaskMap) {
+        List<DatasetBasic> datasetBasics = datasetBasicSearch.getDatasets().stream().map(basicSearch -> convertFromBasicInfo(basicSearch, upstreamTaskInformationList, deployedTaskMap)).collect(Collectors.toList());
         DatasetBasicPage datasetBasicPage = new DatasetBasicPage(datasetBasics);
         datasetBasicPage.setPageNumber(datasetBasicSearch.getPageNumber());
         datasetBasicPage.setPageSize(datasetBasicSearch.getPageSize());

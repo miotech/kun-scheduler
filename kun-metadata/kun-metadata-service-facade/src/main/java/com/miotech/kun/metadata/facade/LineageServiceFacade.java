@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.facade;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
+import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskBasicInformation;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 import com.miotech.kun.workflow.core.model.task.Task;
@@ -93,4 +94,12 @@ public interface LineageServiceFacade {
      * @return
      */
     void updateTaskLineage(Task task, List<DataStore> upstreamDatastore, List<DataStore> downstreamDataStore);
+
+
+    /**
+     * Batch query the upstream tasks corresponding to the dataset
+     * @param datasetGids
+     * @return
+     */
+    List<UpstreamTaskBasicInformation> fetchDirectUpstreamTask(List<Long> datasetGids);
 }
