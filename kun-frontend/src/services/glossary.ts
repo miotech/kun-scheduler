@@ -65,6 +65,16 @@ export async function editGlossaryService(
   });
 }
 
+export async function copyGlossaryServicey(
+  id: string,
+) {
+  return post<GlossaryDetail>('/metadata/glossary/copy/:id', {
+    pathParams: { id },
+    data: {id},
+    prefix: DEFAULT_API_PREFIX,
+  });
+}
+
 export async function addGlossaryService(params: EditGlossaryReqBody) {
   return post<GlossaryDetail>('/metadata/glossary/add', {
     data: params,

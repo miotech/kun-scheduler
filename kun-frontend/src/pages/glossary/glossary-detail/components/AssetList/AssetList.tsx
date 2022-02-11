@@ -85,21 +85,29 @@ export default memo(function AssetList({
           .map(asset => (
             <div className={styles.childItem} key={asset!.id}>
               <FileTextOutlined />
-              <Link to={getBackPath(`/data-discovery/dataset/${asset!.id}`)}>
-                <span className={styles.name}>
-                  {getAssetNameWithDatasource(asset)}
-                </span>
-              </Link>
-              {asset.database && (
-                <Tag className={styles.tag} color="gold">
-                  {asset.database}
-                </Tag>
-              )}
-              {asset.datasource && (
-                <Tag className={styles.tag} color="cyan">
-                  {asset.datasource}
-                </Tag>
-              )}
+              <div className={styles.right}>
+                <Link to={getBackPath(`/data-discovery/dataset/${asset!.id}`)}>
+                  <span className={styles.name}>
+                    {getAssetNameWithDatasource(asset)}
+                  </span>
+                </Link>
+                <div style={{ marginLeft: 8 }}>
+                  <span> {asset.owner?.[0]}</span>
+                  {asset.database && (
+                    <Tag className={styles.tag} color="gold">
+                      {asset.database}
+                    </Tag>
+                  )}
+                  {asset.datasource && (
+                    <Tag className={styles.tag} color="cyan">
+                      {asset.datasource}
+                    </Tag>
+                  )}
+                  <div>
+                    {asset.description}
+                  </div>
+                </div>
+              </div>
               <CloseOutlined
                 style={{ marginLeft: 4 }}
                 onClick={() => handleDeleteSingleAsset(asset.id)}
@@ -115,13 +123,15 @@ export default memo(function AssetList({
             disabledIdList={selectedIdList}
           />
         )}
-        <div
-          className={styles.addButton}
-          onClick={() => {
-            setIsAdding(true);
-          }}
-        >
-          <PlusOutlined />
+        <div className={styles.addButtonCon}>
+          <div
+            className={styles.addButton}
+            onClick={() => {
+              setIsAdding(true);
+            }}
+          >
+            <PlusOutlined />
+          </div>
         </div>
       </LineList>
     );
@@ -138,9 +148,11 @@ export default memo(function AssetList({
           disabledIdList={selectedIdList}
         />
       ))}
-      <div className={styles.addButton} onClick={handleClickAdd}>
-        <PlusOutlined />
+      <div className={styles.addButtonCon}>
+        <div className={styles.addButton} onClick={handleClickAdd}>
+          <PlusOutlined />
+        </div>
       </div>
-    </LineList>
+    </LineList >
   );
 });

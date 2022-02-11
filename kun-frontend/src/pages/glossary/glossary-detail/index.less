@@ -1,6 +1,6 @@
 .container {
   height: 100%;
-  padding: 20px;
+  padding:0 20px;
 
   .backButoonRow {
     margin-bottom: 16px;
@@ -15,44 +15,41 @@
     display: flex;
     align-items: center;
     padding: 24px 24px 24px 32px;
-    margin-bottom: 20px;
-    margin-top: 16px;
+    margin-bottom: 10px;
+    margin-top: 10px;
     border-radius: 3px;
     .title {
       font-weight: bold;
       .font(20px, 30px, @primary);
     }
   }
+  .descArea {
+    padding: 20px 32px 32px 32px;
+    border-radius: 3px;
+    flex: 0 0 320px;
+    height: 220px;
+    margin-bottom: 16px;
+    .descLabel {
+      margin-bottom: 12px;
+      font-weight: bold;
+      .font(14px, 20px, @primary);
+    }
+    .descInputContainer {
+      height: calc(100% - 32px);
+      overflow: auto;
 
+      .descInput {
+        height: 100%;
+        display: block;
+      }
+    }
+  }
   .contentArea {
     display: flex;
-    .leftArea {
+    .rightArea {
       flex: 1;
-      display: flex;
-      flex-direction: column;
       min-height: calc(100% - 168px);
-      margin-right: 16px;
-      .descArea {
-        padding: 20px 32px 32px 32px;
-        border-radius: 3px;
-        flex: 0 0 320px;
-        height: 320px;
-        margin-bottom: 16px;
-        .descLabel {
-          margin-bottom: 12px;
-          font-weight: bold;
-          .font(14px, 20px, @primary);
-        }
-        .descInputContainer {
-          height: calc(100% - 32px);
-          overflow: auto;
-
-          .descInput {
-            height: 100%;
-            display: block;
-          }
-        }
-      }
+      padding: 32px;
 
       .glossaryTreeContainer {
         flex: 1;
@@ -62,11 +59,11 @@
       }
     }
 
-    .rightArea {
-      flex: 0 0 450px;
+    .leftArea {
+      flex: 1;
       border-radius: 3px;
       padding: 32px;
-
+      margin-right: 10px;
       .inputBlock {
         margin-bottom: 20px;
         .label {

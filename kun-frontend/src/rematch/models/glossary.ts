@@ -18,6 +18,7 @@ export interface GlossaryChild {
   name: string;
   description: string;
   childrenCount?: number;
+  dataSetCount?: number;
   loading?: boolean;
   parentId?: string;
 }
@@ -43,6 +44,8 @@ export interface Asset {
   name: string;
   datasource: string;
   database: string;
+  description: string;
+  owner: string[]
 }
 
 export interface GlossaryDetail {
@@ -197,17 +200,6 @@ export const glossary = {
           const resp = await deleteGlossaryService(id);
 
           if (resp) {
-            if (resp.parentId) {
-              deleteNodeFromParent(id, resp.parentId, rootState.glossary.glossaryData);
-            } else if (rootState.glossary.glossaryData) {
-              if (rootState.glossary.glossaryData?.children) {
-                // eslint-disable-next-line no-param-reassign
-                rootState.glossary.glossaryData.children = rootState.glossary.glossaryData.children.filter(
-                  child => child.id !== id,
-                );
-                rootState.glossary.glossaryData.childrenCount = rootState.glossary.glossaryData.children.length;
-              }
-            }
             return resp;
           }
         } catch (e) {
@@ -273,27 +265,6 @@ export const glossary = {
               key: 'currentGlossaryDetail',
               value: resp,
             });
-
-            const { id, name, description, parent } = resp;
-            const newGlossary: GlossaryNode = {
-              id,
-              name,
-              description,
-              parentId: parent?.id,
-              depth: undefined,
-              verticalIndex: undefined,
-            };
-            if (parent && parent.id) {
-              addNodeToParent(newGlossary, parent.id, rootState.glossary.glossaryData);
-            } else if (rootState.glossary.glossaryData) {
-              if (rootState.glossary.glossaryData?.children) {
-                rootState.glossary.glossaryData.children = [newGlossary, ...rootState.glossary.glossaryData.children];
-                rootState.glossary.glossaryData.childrenCount = rootState.glossary.glossaryData.children.length;
-              } else {
-                rootState.glossary.glossaryData.children = [newGlossary];
-                rootState.glossary.glossaryData.childrenCount = rootState.glossary.glossaryData.children.length;
-              }
-            }
             return resp;
           }
         } catch (e) {

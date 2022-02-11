@@ -28,7 +28,7 @@ export default memo(function AutosuggestInput() {
 
   const handleSelect = useCallback(
     (v, option) => {
-      history.push(`/data-discovery/glossary/${option.id}`);
+      history.push(`/data-discovery/glossary?glossaryId=${option.id}`);
     },
     [history],
   );
