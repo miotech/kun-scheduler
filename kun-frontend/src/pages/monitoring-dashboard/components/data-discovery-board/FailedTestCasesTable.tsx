@@ -2,7 +2,7 @@ import React, { memo, useMemo, useState } from 'react';
 import moment from 'moment';
 import { ColumnProps } from 'antd/es/table';
 import { FailedTestCase, AbnormalDataset, Glossary } from '@/services/monitoring-dashboard';
-import { Card, Table, Tooltip, Tag,Select } from 'antd';
+import { Card, Table, Tooltip, Tag, Select } from 'antd';
 import { dayjs } from '@/utils/datetime-utils';
 import useI18n from '@/hooks/useI18n';
 import { TableOnChangeCallback } from '@/definitions/common-types';
@@ -43,20 +43,20 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
   const { data, pageNum, pageSize, total, onChange, loading } = props;
 
   const t = useI18n();
-  const [glossaryFilter,setGlossaryFilter] = useState<any>('')
+  const [glossaryFilter, setGlossaryFilter] = useState<any>('');
   const options = useMemo(
-    ()=>{
-      const res:string[] = []
-      data.forEach(item=> {
-        item.glossaries.forEach(idx=> {
-          if(!res.includes(idx.name)){
-            res.push(idx.name)
+    () => {
+      const res: string[] = [];
+      data.forEach(item => {
+        item.glossaries.forEach(idx => {
+          if (!res.includes(idx.name)) {
+            res.push(idx.name);
           }
-        })
-      })
-      return res
+        });
+      });
+      return res;
     }
-  ,[data])
+    , [data]);
   const childTableColumns: ColumnProps<FailedTestCase>[] = useMemo(
     () => [
       {
@@ -167,20 +167,20 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
     ],
     [t],
   );
-  const showData = useMemo(()=>{
-    let res:AbnormalDataset[] = []
-    if(glossaryFilter) {
-      data.forEach(item=> {
-        if(item.glossaries.find(idx=>idx.name === glossaryFilter)){
-          res.push(item)
+  const showData = useMemo(() => {
+    let res: AbnormalDataset[] = [];
+    if (glossaryFilter) {
+      data.forEach(item => {
+        if (item.glossaries.find(idx => idx.name === glossaryFilter)) {
+          res.push(item);
         }
-      })
-    }else{
-      res = data
+      });
+    } else {
+      res = data;
     }
-    return res
-   },
-  [glossaryFilter, data])
+    return res;
+  },
+    [glossaryFilter, data]);
   const expandedRowRender = (record: AbnormalDataset) => {
     const useableData = [
       ...record.tasks.map(i => ({
@@ -207,24 +207,24 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
   };
 
   const getColumnSearchProps = useMemo(() => ({
-    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }:FilterDropdownProps) => (
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: FilterDropdownProps) => (
       <div style={{ padding: 8 }}>
         <Select
-          allowClear={true}
-          showSearch={true}
+          allowClear
+          showSearch
           value={selectedKeys}
-          onChange={value => {setSelectedKeys(value);confirm();setGlossaryFilter(value)}}
-          style={{ marginBottom: 8, display: 'block' ,width:'200px'}}
+          onChange={value => { setSelectedKeys(value); confirm(); setGlossaryFilter(value); }}
+          style={{ marginBottom: 8, display: 'block', width: '200px' }}
         >
-          {options.map(item=>(
+          {options.map(item => (
             <Select.Option key={item} value={item}>{item}</Select.Option>
           ))
           }
         </Select>
       </div>
     ),
-    filterIcon: (filtered:boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
-  }),[options]);
+    filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
+  }), [options]);
   const columns: ColumnProps<AbnormalDataset>[] = useMemo(
     () => [
       {
@@ -273,7 +273,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
             <div className={styles.tag}>
               {v &&
                 v.map((item: Glossary) => (
-                  <Link key={item.id} to={`/data-discovery/glossary/${item.id}`} target="_blank">
+                  <Link key={item.id} to={`/data-discovery/glossary?glossaryId=${item.id}`} target="_blank">
                     <Tag className={styles.item} color="success">
                       {item.name}
                     </Tag>
@@ -316,7 +316,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
       <Table<AbnormalDataset>
         loading={loading}
         className={styles.table}
-        getPopupContainer={(triggerNode:any) => triggerNode.parentNode}
+        getPopupContainer={(triggerNode: any) => triggerNode.parentNode}
         expandable={{
           expandedRowRender,
           fixed: 'right',
@@ -337,7 +337,7 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
         pagination={{
           current: pageNum,
           pageSize,
-          total:showData.length,
+          total: showData.length,
           simple: true,
         }}
       />

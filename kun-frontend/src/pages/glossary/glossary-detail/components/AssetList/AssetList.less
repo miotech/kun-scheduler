@@ -1,18 +1,40 @@
-.addButton {
-  cursor: pointer;
-  height: 28px;
-  width: 28px;
-  border: 1px solid @borderColor;
-  background-color: rgba(231, 231, 231, 0.3);
-  border-radius: 3px;
-  .flexCenter();
+.addButtonCon{
+  height: 48px;
+  align-items: center;
+  display: flex;
+  .addButton {
+    cursor: pointer;
+    height: 28px;
+    width: 28px;
+    border: 1px solid @borderColor;
+    background-color: rgba(231, 231, 231, 0.3);
+    border-radius: 3px;
+    .flexCenter();
+  }
 }
 
-.name {
-  margin-left: 8px;
-  text-decoration: underline;
+.childItem {
+  display: flex;
+  align-items: center;
+  .right{
+    position: relative;
+    top:20px;
+    .name {
+      margin-left: 8px;
+      text-decoration: underline;
+      max-width: 230px;
+      display: block;
+    }
+    
+    .tag {
+      margin-left: 4px;
+      font-size: 12px;
+    }
+    .description{
+      width: 220px;
+      height: 23px;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap
+    }
+  }
 }
 
-.tag {
-  margin-left: 4px;
-}

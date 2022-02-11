@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef,useMemo } from 'react';
 import { history } from 'umi';
 import { Button } from 'antd';
 
@@ -14,7 +14,7 @@ import styles from './index.less';
 
 export default function Glossary() {
   const t = useI18n();
-
+  const childrenRef = useRef(null);
   const { selector, dispatch } = useRedux(state => state.glossary);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export default function Glossary() {
   }, [dispatch.glossary, selector.fetchRootLoading, selector.glossaryData]);
 
   const handleClickCreate = useCallback(() => {
-    history.push('/data-discovery/glossary/create');
+    childrenRef.current.create();
   }, []);
 
   return (
@@ -45,7 +45,7 @@ export default function Glossary() {
       </div>
 
       <Card className={styles.glossaryTreeContainer}>
-        <GlossaryTree rootNode={selector.glossaryData} />
+        <GlossaryTree ref={childrenRef} rootNode={selector.glossaryData} />
       </Card>
     </div>
   );

@@ -1,17 +1,15 @@
 import React, { memo } from 'react';
-import { Link } from 'umi';
 import { CopyOutlined } from '@ant-design/icons';
 import LineList from '@/components/LineList/LineList';
 import { GlossaryNode } from '@/rematch/models/glossary';
-import useBackPath from '@/hooks/useBackPath';
 import styles from './ChildrenGlossaryList.less';
 
 interface Props {
   childList: GlossaryNode[];
+  setCurrentId: (id: string) => void
 }
 
-export default memo(function ChildrenGlossaryList({ childList }: Props) {
-  const { getBackPath } = useBackPath();
+export default memo(function ChildrenGlossaryList({ childList, setCurrentId }: Props) {
 
   return (
     <LineList>
@@ -19,9 +17,10 @@ export default memo(function ChildrenGlossaryList({ childList }: Props) {
         <div className={styles.childItem} key={child.id}>
           {/* <FileTextOutlined /> */}
           <CopyOutlined />
-          <Link to={getBackPath(`/data-discovery/glossary/${child.id}`)}>
-            <span className={styles.name}>{child.name}</span>
-          </Link>
+          <div className={styles.right}>
+            <span className={styles.name} onClick={() => setCurrentId(child.id)}>{child.name} ({child.dataSetCount})</span>
+            <div className={styles.description}>{child.description}</div>
+          </div>
         </div>
       ))}
     </LineList>
