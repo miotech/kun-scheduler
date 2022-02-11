@@ -63,7 +63,7 @@ export default memo(function AssetAutoSuggest({ asset, onChange, onDelete, index
   }, [index, onDelete]);
 
   const options = assetList.map(item => ({
-    value: `${item.name}-${item.database}-${item.datasource}`,
+    value: `${item.name}`,
     asset: item,
     id: item.id,
   }));
