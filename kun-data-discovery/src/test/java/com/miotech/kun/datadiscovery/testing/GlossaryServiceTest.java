@@ -44,7 +44,8 @@ public class GlossaryServiceTest extends KunAppTestBase {
     @Test
     void test_getParentIdIsNull() {
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId);
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId,assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.add(glossaryRequest);
         Long reParentId = glossaryService.getParentId(glossary.getId());
@@ -53,28 +54,30 @@ public class GlossaryServiceTest extends KunAppTestBase {
     @Test
     void test_getParentIdNotNull() {
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId);
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId,assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.add(glossaryRequest);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId());
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(),assetList);
         Glossary glossaryChild = glossaryService.add(glossaryRequestChild);
         Long reChildParentId = glossaryService.getParentId(glossaryChild.getId());
         assertThat(reChildParentId, is(glossary.getId()));
 
     }
-    private GlossaryRequest createGlossaryRequestWithParent(Long parentId) {
+    private GlossaryRequest createGlossaryRequestWithParent(Long parentId, ImmutableList<Long> assetList) {
         GlossaryRequest glossaryRequest = new GlossaryRequest();
         glossaryRequest.setParentId(parentId);
         glossaryRequest.setName("glossary");
         glossaryRequest.setDescription("test  node");
-        glossaryRequest.setAssetIds(ImmutableList.of(1L, 2L, 3L));
+        glossaryRequest.setAssetIds(assetList);
         return glossaryRequest;
     }
 
 
     @Test
     void test_addGlossary() {
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(null);
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(null,assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.add(glossaryRequest);
 
@@ -110,7 +113,8 @@ public class GlossaryServiceTest extends KunAppTestBase {
     @Test
     void test_copy_parentIsNull() {
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId);
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId,assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.add(glossaryRequest);
 
@@ -127,15 +131,16 @@ public class GlossaryServiceTest extends KunAppTestBase {
     }
     @Test
     void test_copy() {
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId);
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId,assetList);
         mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
         Glossary glossary = glossaryService.add(glossaryRequest);
 
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId());
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(),assetList);
         Glossary glossaryChild = glossaryService.add(glossaryRequestChild);
 
-        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId());
+        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(),assetList);
         glossaryService.add(glossaryRequestSon);
         glossaryService.add(glossaryRequestSon);
 
@@ -155,10 +160,12 @@ public class GlossaryServiceTest extends KunAppTestBase {
     public void  test_getGlossaryChild(){
 //        load data
         Long id1 = null;
-        GlossaryRequest glossaryRequest1 = createGlossaryRequestWithParent(id1);
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        GlossaryRequest glossaryRequest1 = createGlossaryRequestWithParent(id1,assetList);
         mockDatasetBasicInfoList(glossaryRequest1.getAssetIds());
         Glossary glossary1 = glossaryService.add(glossaryRequest1);
-        GlossaryRequest glossaryRequest2 = createGlossaryRequestWithParent(glossary1.getId());
+        GlossaryRequest glossaryRequest2 = createGlossaryRequestWithParent(glossary1.getId(),assetList);
+        glossaryRequest2.setAssetIds(assetList);
         Glossary glossary2 = glossaryService.add(glossaryRequest2);
 
 //        testing function
@@ -169,7 +176,7 @@ public class GlossaryServiceTest extends KunAppTestBase {
         GlossaryBasic glossaryBasic2 = glossaryBasicList.get(0);
         assertThat(glossaryBasic2.getName(),is(glossary2.getName()));
         assertThat(glossaryBasic2.getChildrenCount(),is(1L));
-        assertThat(glossaryBasic2.getDataSetCount(),is(3L));
+        assertThat(glossaryBasic2.getDataSetCount(),is((long) assetList.size()));
 
 
     }
