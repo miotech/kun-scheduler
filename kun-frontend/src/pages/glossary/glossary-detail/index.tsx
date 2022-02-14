@@ -1,18 +1,15 @@
 import React, { useCallback, useEffect, useState, useMemo } from 'react';
-import { useHistory, Link } from 'umi';
+import { useHistory } from 'umi';
 import { RouteComponentProps } from 'react-router';
 
-import { Spin, Button, Input, Modal, message } from 'antd';
+import { Spin, Button, Input, Modal, message,Popconfirm } from 'antd';
 
 import Card from '@/components/Card/Card';
-import BackButton from '@/components/BackButton/BackButton';
-
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
-import useBackPath from '@/hooks/useBackPath';
-import useBackUrlFunc from '@/hooks/useBackUrlFunc';
+
 
 import {
   getInitGlossaryDetail,
@@ -20,38 +17,40 @@ import {
   GlossaryNode,
 } from '@/rematch/models/glossary';
 
-import GlossaryTree from '../components/GlossaryTree/GlossaryTree';
+import {
+  copyGlossaryServicey,
+} from '@/services/glossary';
 import ParentSearch from './components/ParentSearch/ParentSearch';
 import ChildrenGlossaryList from './components/ChildrenGlossaryList/ChildrenGlossaryList';
 import AssetList from './components/AssetList/AssetList';
-
 import styles from './index.less';
 
 interface MatchParams {
   glossaryId?: string;
 }
 
-interface Props extends RouteComponentProps<MatchParams> {}
+interface Props extends RouteComponentProps<MatchParams> {
+  currentId?: string,
+  setCurrentId: (id: string) => void,
+  onClose: () => void,
+}
 
 const { TextArea } = Input;
 const { confirm } = Modal;
 
-export default function GlossaryDetail({ match }: Props) {
+export default function GlossaryDetail({ currentId, setCurrentId, onClose, match }: Props) {
   const t = useI18n();
-
   const history = useHistory();
-
-  const { backUrl } = useBackUrlFunc();
 
   const query = useMemo(() => (history.location as any)?.query ?? {}, [
     history.location,
   ]);
 
-  const { getBackPath } = useBackPath();
-
   const { selector, dispatch } = useRedux(state => state.glossary);
 
   const [isEditing, setIsEditing] = useState(false);
+  const [preId, setPreId] = useState<string>();
+  const [pretName, setPreName] = useState<string>();
 
   const { currentGlossaryDetail, fetchCurrentGlossaryDetailLoading } = selector;
   const [inputtingDetail, setInputtingDetail] = useState<IGlossaryDetail>(
@@ -60,12 +59,12 @@ export default function GlossaryDetail({ match }: Props) {
   useEffect(() => {
     if (currentGlossaryDetail) {
       setInputtingDetail(currentGlossaryDetail);
-    } else if (query.parentId && query.parentName) {
+    } else if (preId && pretName) {
       setInputtingDetail(i => ({
         ...i,
         parent: {
-          id: query.parentId,
-          name: query.parentName,
+          id: preId,
+          name: pretName,
         },
       }));
     }
@@ -73,12 +72,13 @@ export default function GlossaryDetail({ match }: Props) {
     return () => {
       setInputtingDetail(getInitGlossaryDetail());
     };
-  }, [currentGlossaryDetail, query]);
+  }, [currentGlossaryDetail, pretName, preId, query]);
 
-  const currentId = match.params.glossaryId;
 
   const [glossaryNode, setGlossaryNode] = useState<GlossaryNode | null>(null);
   useEffect(() => {
+    setIsEditing(false);
+
     if (currentId) {
       dispatch.glossary.fetchGlossaryDetail(currentId).then(resp => {
         if (resp) {
@@ -101,7 +101,23 @@ export default function GlossaryDetail({ match }: Props) {
       });
     };
   }, [currentId, dispatch.glossary]);
+  const copyGlossary = async () => {
+    if (currentId) {
+      const res = await copyGlossaryServicey(currentId).catch(error => console.log(error));
+      if (res) {
+        message.success(t('common.operateSuccess'));
+        dispatch.glossary.fetchRootNodeChildGlossary();
+      }
 
+    }
+  };
+  const createChild = (name: string, id: string) => {
+    setIsEditing(false);
+    setCurrentId('');
+    setPreId(id);
+    setPreName(name);
+    setGlossaryNode(null);
+  };
   const updateInputtingDetail = (key: keyof IGlossaryDetail, value: any) => {
     setInputtingDetail(detail => ({
       ...detail,
@@ -130,11 +146,12 @@ export default function GlossaryDetail({ match }: Props) {
       dispatch.glossary.deleteGlossary(currentId).then(resp => {
         if (resp) {
           message.success(t('common.operateSuccess'));
-          history.push('/data-discovery/glossary');
+          dispatch.glossary.fetchRootNodeChildGlossary();
+          onClose();
         }
       });
     }
-  }, [currentId, dispatch.glossary, history, t]);
+  }, [currentId, dispatch.glossary, onClose, t]);
 
   const showConfirm = useCallback(() => {
     confirm({
@@ -184,8 +201,8 @@ export default function GlossaryDetail({ match }: Props) {
   }, [getParams, inputtingDetail, saveFunc]);
 
   const handleClickCreateCancel = useCallback(() => {
-    history.push('/data-discovery/glossary');
-  }, [history]);
+    onClose();
+  }, [onClose]);
 
   const handleClickCreate = useCallback(() => {
     const diss = message.loading(t('common.loading'), 0);
@@ -194,15 +211,13 @@ export default function GlossaryDetail({ match }: Props) {
     dispatch.glossary.addGlossary(params).then(resp => {
       diss();
       if (resp) {
+        setIsEditing(true);
+        setCurrentId(resp.id);
+        dispatch.glossary.fetchRootNodeChildGlossary();
         message.success(t('common.operateSuccess'));
-        setIsEditing(false);
-        const newUrl = backUrl
-          ? `/data-discovery/glossary/${resp.id}?backUrl=${backUrl}`
-          : `/data-discovery/glossary/${resp.id}`;
-        history.replace(newUrl);
       }
     });
-  }, [backUrl, dispatch.glossary, getParams, history, t]);
+  }, [dispatch.glossary, getParams, setCurrentId, t]);
 
   const buttonList = () => {
     if (isEditing) {
@@ -256,13 +271,22 @@ export default function GlossaryDetail({ match }: Props) {
       );
     }
     return (
-      <Button
-        style={{ marginLeft: 'auto' }}
-        size="large"
-        onClick={() => setIsEditing(true)}
-      >
-        {t('common.button.edit')}
-      </Button>
+      <>
+        <Button
+          style={{ marginLeft: 'auto' }}
+          size="large"
+          onClick={() => setIsEditing(true)}
+        >
+          {t('common.button.edit')}
+        </Button>
+        {!glossaryNode?.children?.length && <Popconfirm
+          title={t('glossary.copy.title')}
+          onConfirm={copyGlossary}
+          okText={t('common.button.confirm')}
+          cancelText={t('common.button.cancel')}
+        > <Button style={{ marginLeft: 10 }}
+          size="large">{t('common.button.copy')}</Button></Popconfirm>}
+      </>
     );
   };
 
@@ -295,8 +319,6 @@ export default function GlossaryDetail({ match }: Props) {
       wrapperClassName={styles.container}
       spinning={fetchCurrentGlossaryDetailLoading}
     >
-      <BackButton defaultUrl="/data-discovery/glossary" />
-
       <Card className={styles.titleArea}>
         {isEditing && !currentId && (
           <span style={{ marginRight: 8 }}>{t('glossary.nameLabel')}:</span>
@@ -314,35 +336,33 @@ export default function GlossaryDetail({ match }: Props) {
 
         {buttonList()}
       </Card>
-
-      <div className={styles.contentArea}>
-        <div className={styles.leftArea}>
-          <Card className={styles.descArea}>
-            <div className={styles.descLabel}>{t('glossary.desc')}</div>
-            <div className={styles.descInputContainer}>
-              {isEditing ? (
-                <TextArea
-                  className={styles.descInput}
-                  value={inputtingDetail.description}
-                  onChange={handleChangeDesc}
-                />
-              ) : (
-                <div>{inputtingDetail.description}</div>
-              )}
-            </div>
-          </Card>
-
-          <Card className={styles.glossaryTreeContainer}>
-            <GlossaryTree rootNode={glossaryNode} />
-          </Card>
+      <Card className={styles.descArea}>
+        <div className={styles.descLabel}>{t('glossary.desc')}</div>
+        <div className={styles.descInputContainer}>
+          {isEditing ? (
+            <TextArea
+              className={styles.descInput}
+              value={inputtingDetail.description}
+              onChange={handleChangeDesc}
+            />
+          ) : (
+            <div>{inputtingDetail.description}</div>
+          )}
         </div>
+      </Card>
+      <div className={styles.contentArea}>
+        {/* <div className={styles.leftArea}>
 
-        <Card className={styles.rightArea}>
+
+        </div> */}
+
+        <Card className={styles.leftArea}>
           {(inputtingDetail?.parent || isEditing) && (
             <div className={styles.inputBlock}>
               <div className={styles.label}>{t('glossary.parent')}</div>
               <div>
                 <ParentSearch
+                  setCurrentId={setCurrentId}
                   isEditting={isEditing}
                   selectedParent={inputtingDetail?.parent}
                   onChange={handleChangeParent}
@@ -359,24 +379,19 @@ export default function GlossaryDetail({ match }: Props) {
               </div>
 
               {!isEditing && (
-                <Link
-                  to={getBackPath(
-                    `/data-discovery/glossary/create?parentName=${inputtingDetail.name}&&parentId=${inputtingDetail.id}`,
-                  )}
-                >
-                  <Button size="small">
-                    {t('glossary.childGlossary.create')}
-                  </Button>
-                </Link>
+                <Button size="small" onClick={() => createChild(inputtingDetail.name, inputtingDetail.id)}>
+                  {t('glossary.childGlossary.create')}
+                </Button>
               )}
             </div>
             <div>
-              <ChildrenGlossaryList childList={glossaryNode?.children ?? []} />
+              <ChildrenGlossaryList setCurrentId={setCurrentId} childList={glossaryNode?.children ?? []} />
             </div>
           </div>
-
+        </Card>
+        <Card className={styles.rightArea}>
           <div className={styles.inputBlock}>
-            <div className={styles.label} style={{ marginBottom: 14 }}>
+            <div className={styles.label} style={{ marginBottom: isEditing ? 14 : 0 }}>
               {t('glossary.assets')}{' '}
               {(inputtingDetail?.assets || []).length > 0 && (
                 <span style={{ marginLeft: 4 }}>

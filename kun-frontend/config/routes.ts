@@ -112,22 +112,6 @@ export const appRoutes = [
                 wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
               },
               {
-                title: 'common.pageTitle.glossaryCreate',
-                path: '/data-discovery/glossary/create',
-                component: 'glossary/glossary-detail/index',
-                breadcrumbLink: true,
-                exact: true,
-                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
-              },
-              {
-                title: 'common.pageTitle.glossaryDetail',
-                path: '/data-discovery/glossary/:glossaryId',
-                component: 'glossary/glossary-detail/index',
-                breadcrumbLink: true,
-                exact: true,
-                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
-              },
-              {
                 component: 'error-page/Error404/index',
               },
             ],
