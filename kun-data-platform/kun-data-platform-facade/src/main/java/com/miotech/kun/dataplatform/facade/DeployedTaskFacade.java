@@ -3,6 +3,7 @@ package com.miotech.kun.dataplatform.facade;
 import com.miotech.kun.dataplatform.facade.model.deploy.DeployedTask;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -32,4 +33,10 @@ public interface DeployedTaskFacade {
      */
     List<String> getUserByTaskId(Long workflowTaskId);
 
+    /**
+     * Query by workflowTaskIds
+     * @param taskIds
+     * @return
+     */
+    Map<Long, DeployedTask> findByWorkflowTaskIds(List<Long> taskIds);
 }
