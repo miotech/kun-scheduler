@@ -41,7 +41,7 @@ public class GlossaryServiceTest extends KunAppTestBase {
     @Autowired
     GlossaryService glossaryService;
 
-    @Autowired
+    @MockBean
     private DeployedTaskFacade deployedTaskFacade;
     @Test
     void test_getParentIdIsNull() {
