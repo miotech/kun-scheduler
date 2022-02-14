@@ -84,7 +84,7 @@ public class GlossaryServiceTest extends KunAppTestBase {
         List<Long> assetIds = glossaryRequest.getAssetIds();
         List<Asset> assets = glossary.getAssets();
         assertThat(assets, is(notNullValue()));
-        assertThat(assets.size(), is(glossary.getAssets().size()));
+        assertThat(assetIds.size(), is(glossary.getAssets().size()));
         Assertions.assertTrue(assets.stream().map(Asset::getId).allMatch(assetIds::contains));
     }
 
