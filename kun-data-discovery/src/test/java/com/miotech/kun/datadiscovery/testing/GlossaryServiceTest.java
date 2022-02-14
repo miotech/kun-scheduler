@@ -154,22 +154,22 @@ public class GlossaryServiceTest extends KunAppTestBase {
     @Test
     public void  test_getGlossaryChild(){
 //        load data
-        Long parentId = null;
-        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId);
-        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
-        Glossary glossary = glossaryService.add(glossaryRequest);
-        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId());
-        Glossary glossaryChild = glossaryService.add(glossaryRequestChild);
+        Long id1 = null;
+        GlossaryRequest glossaryRequest1 = createGlossaryRequestWithParent(id1);
+        mockDatasetBasicInfoList(glossaryRequest1.getAssetIds());
+        Glossary glossary1 = glossaryService.add(glossaryRequest1);
+        GlossaryRequest glossaryRequest2 = createGlossaryRequestWithParent(glossary1.getId());
+        Glossary glossary2 = glossaryService.add(glossaryRequest2);
 
 //        testing function
-        GlossaryChildren children = glossaryService.getChildren(parentId);
-        assertThat(children.getParentId(),is(parentId));
-        List<GlossaryBasic> glossaryBasicList = children.getChildren();
+        GlossaryChildren glossary1Child = glossaryService.getChildren(id1);
+        assertThat(glossary1Child.getParentId(),is(id1));
+        List<GlossaryBasic> glossaryBasicList = glossary1Child.getChildren();
         assertThat(glossaryBasicList.size(),is(1));
-        GlossaryBasic glossaryBasic = glossaryBasicList.get(0);
-        assertThat(glossaryBasic.getName(),is(glossaryChild.getName()));
-        assertThat(glossaryBasic.getChildrenCount(),is(1L));
-        assertThat(glossaryBasic.getDataSetCount(),is(3L));
+        GlossaryBasic glossaryBasic2 = glossaryBasicList.get(0);
+        assertThat(glossaryBasic2.getName(),is(glossary2.getName()));
+        assertThat(glossaryBasic2.getChildrenCount(),is(1L));
+        assertThat(glossaryBasic2.getDataSetCount(),is(3L));
 
 
     }
