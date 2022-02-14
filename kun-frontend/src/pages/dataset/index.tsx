@@ -11,12 +11,13 @@ import {
   NumberParam,
   ArrayParam,
   ObjectParam,
-  withDefault, BooleanParam,
+  withDefault,
+  BooleanParam,
 } from 'use-query-params';
 import { CopyOutlined } from '@ant-design/icons';
 import { RootDispatch, RootState } from '@/rematch/store';
 import { Mode, SearchParams, QueryObj } from '@/rematch/models/dataDiscovery';
-import { Dataset, Watermark, GlossaryItem } from '@/definitions/Dataset.type';
+import { Dataset, Watermark, GlossaryItem, UpstreamTask } from '@/definitions/Dataset.type';
 
 import color from '@/styles/color';
 
@@ -43,8 +44,7 @@ const tableOrderMap = {
   asc: 'ascend',
 };
 
-const getOrder = (order: keyof typeof tableOrderMap | null) =>
-  order ? tableOrderMap[order] : undefined;
+const getOrder = (order: keyof typeof tableOrderMap | null) => (order ? tableOrderMap[order] : undefined);
 
 function computeRowClassname(record: Dataset): string {
   if (record.deleted) {
@@ -223,12 +223,8 @@ export default function DataDiscoveryListView() {
     () =>
       watermarkMode === Mode.ABSOLUTE
         ? {
-            startTime: watermarkAbsoluteValue?.startTime
-              ? Number(watermarkAbsoluteValue.startTime)
-              : null,
-            endTime: watermarkAbsoluteValue?.endTime
-              ? Number(watermarkAbsoluteValue.endTime)
-              : null,
+            startTime: watermarkAbsoluteValue?.startTime ? Number(watermarkAbsoluteValue.startTime) : null,
+            endTime: watermarkAbsoluteValue?.endTime ? Number(watermarkAbsoluteValue.endTime) : null,
           }
         : watermarkQuickeValue,
     [watermarkMode, watermarkAbsoluteValue, watermarkQuickeValue],
@@ -255,11 +251,8 @@ export default function DataDiscoveryListView() {
           key: 'name',
           sorter: true,
           width: 170,
-          defaultSortOrder:
-            sortKey === 'name' ? getOrder(sortOrder) : undefined,
-          render: (name: string) => (
-            <span className={styles.nameLink}>{name}</span>
-          ),
+          defaultSortOrder: sortKey === 'name' ? getOrder(sortOrder) : undefined,
+          render: (name: string) => <span className={styles.nameLink}>{name}</span>,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.database'),
@@ -267,8 +260,7 @@ export default function DataDiscoveryListView() {
           key: 'databaseName',
           sorter: true,
           width: 80,
-          defaultSortOrder:
-            sortKey === 'databaseName' ? getOrder(sortOrder) : undefined,
+          defaultSortOrder: sortKey === 'databaseName' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.datasource'),
@@ -276,8 +268,7 @@ export default function DataDiscoveryListView() {
           key: 'datasourceName',
           sorter: true,
           width: 120,
-          defaultSortOrder:
-            sortKey === 'datasourceName' ? getOrder(sortOrder) : undefined,
+          defaultSortOrder: sortKey === 'datasourceName' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.dbtype'),
@@ -285,16 +276,14 @@ export default function DataDiscoveryListView() {
           key: 'type',
           sorter: true,
           width: 80,
-          defaultSortOrder:
-            sortKey === 'type' ? getOrder(sortOrder) : undefined,
+          defaultSortOrder: sortKey === 'type' ? getOrder(sortOrder) : undefined,
         },
         {
           title: t('dataDiscovery.datasetsTable.header.watermark'),
           dataIndex: 'highWatermark',
           key: 'highWatermark',
           sorter: true,
-          defaultSortOrder:
-            sortKey === 'highWatermark' ? getOrder(sortOrder) : undefined,
+          defaultSortOrder: sortKey === 'highWatermark' ? getOrder(sortOrder) : undefined,
           width: 150,
           render: (watermark: Watermark) => watermarkFormatter(watermark.time),
         },
@@ -312,16 +301,10 @@ export default function DataDiscoveryListView() {
               {(glossaties || []).slice(0, 3).map(glossary => (
                 <div key={glossary.id} className={styles.glossaryItem}>
                   <CopyOutlined className={styles.glossaryIcon} />
-                  <Link
-                    to={getBackPath(`/data-discovery/glossary?glossaryId=${glossary.id}`)}
-                  >
-                    {glossary.name}
-                  </Link>
+                  <Link to={getBackPath(`/data-discovery/glossary?glossaryId=${glossary.id}`)}>{glossary.name}</Link>
                 </div>
               ))}
-              {glossaties && glossaties.length > 3 && (
-                <div className={styles.ellipsisItem}>...</div>
-              )}
+              {glossaties && glossaties.length > 3 && <div className={styles.ellipsisItem}>...</div>}
             </div>
           ),
         },
@@ -344,13 +327,28 @@ export default function DataDiscoveryListView() {
           render: (owners: string[]) => (
             <>
               {(owners || []).map(owner => (
-                <Tag
-                  key={owner}
-                  className="light-blue-tag"
-                  color={color.lightBlue}
-                >
+                <Tag key={owner} className="light-blue-tag" color={color.lightBlue}>
                   {owner}
                 </Tag>
+              ))}
+            </>
+          ),
+        },
+        {
+          title: t('dataDiscovery.datasetsTable.header.upstream'),
+          dataIndex: 'upstreamTasks',
+          key: 'upstreamTasks',
+          width: 300,
+          render: (upstreamTasks: UpstreamTask[]) => (
+            <>
+              {(upstreamTasks || []).map(upstreamTask => (
+                <div
+                  onClick={e => {
+                    e.stopPropagation();
+                  }}
+                >
+                  <Link to={`/data-development/task-definition/${upstreamTask.definitionId}`}>{upstreamTask.name}</Link>
+                </div>
               ))}
             </>
           ),
@@ -363,11 +361,7 @@ export default function DataDiscoveryListView() {
           render: (tags: string[]) => (
             <>
               {(tags || []).map(tag => (
-                <Tag
-                  key={tag}
-                  className="light-blue-tag"
-                  color={color.lightBlue}
-                >
+                <Tag key={tag} className="light-blue-tag" color={color.lightBlue}>
                   {tag}
                 </Tag>
               ))}
@@ -409,13 +403,7 @@ export default function DataDiscoveryListView() {
       onChange: handleChangePage,
       onShowSizeChange: handleChangePageSize,
     }),
-    [
-      handleChangePage,
-      handleChangePageSize,
-      pageNumber,
-      pageSize,
-      pagination.totalCount,
-    ],
+    [handleChangePage, handleChangePageSize, pageNumber, pageSize, pagination.totalCount],
   );
 
   const allDatabaseTypes = databaseTypes.map(item => ({
@@ -427,12 +415,7 @@ export default function DataDiscoveryListView() {
     (_pagination, _filters, sorter, extra) => {
       const { columnKey, order } = sorter;
       const { action } = extra;
-      if (
-        columnKey &&
-        order &&
-        (columnKey !== sortKey ||
-          orderMap[order as keyof typeof orderMap] !== sortOrder)
-      ) {
+      if (columnKey && order && (columnKey !== sortKey || orderMap[order as keyof typeof orderMap] !== sortOrder)) {
         setFilterQuery({
           sortKey: columnKey,
           sortOrder: order ? orderMap[order as 'descend' | 'ascend'] : null,
@@ -463,9 +446,7 @@ export default function DataDiscoveryListView() {
         <div className={styles.tableArea}>
           <div className={styles.filterRow}>
             <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.waterMark')}
-              </div>
+              <div className={styles.filterItemTitle}>{t('dataDiscovery.waterMark')}</div>
               <div>
                 <TimeSelect
                   mode={watermarkMode || Mode.ABSOLUTE}
@@ -477,9 +458,7 @@ export default function DataDiscoveryListView() {
             </div>
 
             <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.datasource')}
-              </div>
+              <div className={styles.filterItemTitle}>{t('dataDiscovery.datasource')}</div>
               <div className={styles.filterItemSelect}>
                 <Select
                   value={dsIdList}
@@ -502,9 +481,7 @@ export default function DataDiscoveryListView() {
             </div>
 
             <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.db')}
-              </div>
+              <div className={styles.filterItemTitle}>{t('dataDiscovery.db')}</div>
               <div className={styles.filterItemSelect}>
                 <Select
                   value={dbList}
@@ -527,9 +504,7 @@ export default function DataDiscoveryListView() {
             </div>
 
             <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.dbtype')}
-              </div>
+              <div className={styles.filterItemTitle}>{t('dataDiscovery.dbtype')}</div>
               <div className={styles.filterItemSelect}>
                 <Select
                   value={dsTypeList}
@@ -552,9 +527,7 @@ export default function DataDiscoveryListView() {
             </div>
 
             <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.glossary')}
-              </div>
+              <div className={styles.filterItemTitle}>{t('dataDiscovery.glossary')}</div>
               <div className={styles.filterItemSelect}>
                 <Select
                   value={glossaryIdList}
@@ -577,9 +550,7 @@ export default function DataDiscoveryListView() {
             </div>
 
             <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.owners')}
-              </div>
+              <div className={styles.filterItemTitle}>{t('dataDiscovery.owners')}</div>
               <div className={styles.filterItemSelect}>
                 <Select
                   value={ownerList}
@@ -601,9 +572,7 @@ export default function DataDiscoveryListView() {
             </div>
 
             <div className={styles.filterItem}>
-              <div className={styles.filterItemTitle}>
-                {t('dataDiscovery.tags')}
-              </div>
+              <div className={styles.filterItemTitle}>{t('dataDiscovery.tags')}</div>
               <div className={styles.filterItemSelect}>
                 <Select
                   value={tagList}
@@ -658,12 +627,8 @@ export default function DataDiscoveryListView() {
                 rowClassName={computeRowClassname}
                 onRow={record => ({
                   onClick: () => {
-                    const url = encodeURIComponent(
-                      `${history.location.pathname}${history.location.search}`,
-                    );
-                    history.push(
-                      `/data-discovery/dataset/${record.id}?backUrl=${url}`,
-                    );
+                    const url = encodeURIComponent(`${history.location.pathname}${history.location.search}`);
+                    history.push(`/data-discovery/dataset/${record.id}?backUrl=${url}`);
                   },
                   style: {
                     cursor: 'pointer',

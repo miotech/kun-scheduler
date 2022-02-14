@@ -138,6 +138,7 @@ export default {
   'dataDiscovery.datasetsTable.header.datasource': '数据源',
   'dataDiscovery.datasetsTable.header.description': '描述',
   'dataDiscovery.datasetsTable.header.owners': '所属人',
+  'dataDiscovery.datasetsTable.header.upstream': '上游任务',
   'dataDiscovery.datasetsTable.header.watermark': '最后更新',
   'dataDiscovery.datasetsTable.header.glossary': '标签集',
   'dataDiscovery.datasetsTable.header.lifecycle': '生命周期',
