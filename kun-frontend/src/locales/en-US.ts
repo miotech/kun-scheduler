@@ -139,6 +139,7 @@ export default {
   'dataDiscovery.datasetsTable.header.datasource': 'Datasource',
   'dataDiscovery.datasetsTable.header.description': 'Description',
   'dataDiscovery.datasetsTable.header.owners': 'Owners',
+  'dataDiscovery.datasetsTable.header.upstream': 'Upstream Task',
   'dataDiscovery.datasetsTable.header.watermark': 'Last Update',
   'dataDiscovery.datasetsTable.header.glossary': 'Glossary',
   'dataDiscovery.datasetsTable.header.lifecycle': 'Lifecycle',

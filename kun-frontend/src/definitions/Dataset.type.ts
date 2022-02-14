@@ -10,6 +10,7 @@ export interface Dataset {
   owners: string[];
   tags: string[];
   glossaries: GlossaryItem[];
+  upstreamTasks: UpstreamTask[];
   deleted: boolean;
 }
 
@@ -21,6 +22,13 @@ export interface Watermark {
 export interface GlossaryItem {
   id: string;
   name: string;
+}
+
+export interface UpstreamTask {
+  id: string;
+  name: string;
+  description: string;
+  definitionId: string;
 }
 
 export interface Edge {
