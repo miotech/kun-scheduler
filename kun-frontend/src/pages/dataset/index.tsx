@@ -313,7 +313,7 @@ export default function DataDiscoveryListView() {
                 <div key={glossary.id} className={styles.glossaryItem}>
                   <CopyOutlined className={styles.glossaryIcon} />
                   <Link
-                    to={getBackPath(`/data-discovery/glossary/${glossary.id}`)}
+                    to={getBackPath(`/data-discovery/glossary?glossaryId=${glossary.id}`)}
                   >
                     {glossary.name}
                   </Link>

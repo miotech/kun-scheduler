@@ -1,6 +1,5 @@
 import React, { memo, useCallback, useEffect, useState } from 'react';
 import { AutoComplete, Input } from 'antd';
-import { Link } from 'umi';
 import useI18n from '@/hooks/useI18n';
 import useDebounce from '@/hooks/useDebounce';
 import { SearchGlossaryItem } from '@/rematch/models/glossary';
@@ -14,6 +13,7 @@ interface Props {
   selectedParent?: SearchGlossaryItem | null;
   onChange: (value: SearchGlossaryItem) => void;
   disabledId?: string;
+  setCurrentId:(id:string)=>void
 }
 
 export default memo(function ParentSearch({
@@ -21,6 +21,7 @@ export default memo(function ParentSearch({
   selectedParent,
   onChange,
   disabledId,
+  setCurrentId
 }: Props) {
   const t = useI18n();
   const [keyword, setKeyword] = useState(
@@ -92,9 +93,7 @@ export default memo(function ParentSearch({
   return (
     <div className={styles.noEditName}>
       <CopyOutlined />
-      <Link to={`/data-discovery/glossary/${selectedParent!.id}`}>
-        <span className={styles.name}>{selectedParent!.name}</span>
-      </Link>
+        <span className={styles.name}onClick={()=>setCurrentId(selectedParent!.id)}>{selectedParent!.name}</span>
     </div>
   );
 });

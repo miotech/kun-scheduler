@@ -15,11 +15,9 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.util.Lists;
-import org.checkerframework.checker.units.qual.K;
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
@@ -148,7 +146,7 @@ public class LineageAppServiceTest extends KunAppTestBase {
         assertThat(lineageTask.getHistoryList(), is(historyList));
         assertThat(lineageTask.getLastExecutedTime(), is(taskRun3.getStartAt()));
     }
-    
+
 
 
     @Test

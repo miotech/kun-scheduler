@@ -1,19 +1,20 @@
 // @ts-nocheck
 /* eslint-disable no-underscore-dangle, no-inner-declarations, no-param-reassign */
-import { useHistory } from 'umi';
-import React, { memo, useEffect, useRef, useCallback } from 'react';
+import { useHistory,useLocation } from 'umi';
+import React, { useMemo, memo, useEffect, useRef, useCallback, useState, forwardRef, useImperativeHandle } from 'react';
+
+import { useUpdateEffect } from 'ahooks';
 import * as d3 from 'd3';
 import cloneDeep from 'lodash/cloneDeep';
 import { PlusOutlined, MinusOutlined } from '@ant-design/icons';
-
+import { Drawer } from 'antd';
 import { GlossaryNode } from '@/rematch/models/glossary';
 import useRedux from '@/hooks/useRedux';
 import moveArrayItem from '@/utils/moveArrayItem';
 import { updateGlossaryOrderService } from '@/services/glossary';
-
+import GlossaryDetail from '@/pages/glossary/glossary-detail/index';
 import glossarySvg from './glossary.svg';
 import minus from './minus.svg';
-import plus from './plus.svg';
 
 import styles from './GlossaryTree.less';
 
@@ -21,15 +22,26 @@ export interface Props {
   rootNode: GlossaryNode | null;
 }
 
-export default memo(function GlossaryTree({ rootNode }: Props) {
+export default memo(forwardRef(function GlossaryTree({ rootNode}: Props, ref) {
   const history = useHistory();
-
+  const location = useLocation();
   const svgContentRef = useRef(null);
   const svgRef = useRef(null);
 
   const thisZoom = useRef(null);
 
-  const { dispatch } = useRedux(() => {});
+  const { dispatch } = useRedux(() => { });
+
+  const [visible, setVisible] = useState(false);
+  const [currentId, setCurrentId] = useState();
+
+  const onClose = () => {
+    setVisible(false);
+    setCurrentId();
+  };
+  useImperativeHandle(ref, () => ({
+    create: () => { setVisible(true); setCurrentId(); }
+  }));
 
   const updateGlossaryOrderApi = useCallback(async (id, prevId) => {
     await updateGlossaryOrderService(id, prevId);
@@ -227,7 +239,6 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           });
 
         nodeEnter.call(drag);
-
         // 添加glossary外层方块
         nodeEnter
           .append('rect')
@@ -245,7 +256,9 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
 
               // 添加点击事件
               canNode.attr('class', styles.nodeText).on('click', n => {
-                history.push(`/data-discovery/glossary/${n.data.id}`);
+                setVisible(true);
+                setCurrentId(n.data.id);
+                click(d);
               });
             }
           });
@@ -274,16 +287,19 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             const canNode = d3.select(this);
 
             canNode.attr('class', styles.nodeText).on('click', n => {
-              history.push(`/data-discovery/glossary/${n.data.id}`);
+              setCurrentId(n.data.id);
+              setVisible(true);
+              click(d);
             });
+
           }
         });
 
         // 如果截断了, 需要在title中能hover出来
         nodeEnter.append('title').text(d => d.data.name);
 
-        // 添加加减按钮
-        nodeEnter.each(addButton);
+        // // 添加子节点数量
+        nodeEnter.each(addChildCount);
 
         // 动画挪动到自己应该在的位置
         svgContent
@@ -409,11 +425,6 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
             .append('image')
             .attr('xlink:href', minus)
             .attr('class', styles.minusPlusIcon);
-        } else {
-          buttonG
-            .append('image')
-            .attr('xlink:href', plus)
-            .attr('class', styles.minusPlusIcon);
         }
       }
 
@@ -426,6 +437,23 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           } else {
             addPlusMinusIcon(canNode, 'minus');
           }
+        }
+      }
+      function addChildCount(d) {
+        if (Number(d.data.childrenCount) && d.data.id !== 'root') {
+          const canNode = d3.select(this);
+          const buttonG = canNode
+            .append('g')
+            .attr('class', styles.buttonCount)
+            .attr('x', 140)
+            .attr('y', 10);
+          buttonG
+            .append('text')
+            .text(d.data.childrenCount)
+            .attr('rx', 3)
+            .attr('stroke', '#e0e0e0')
+            .attr('fill', 'white');
+
         }
       }
 
@@ -447,17 +475,8 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           return;
         }
         if (d.data.children) {
-          d.data.children = null;
-          thisNode
-            .append('image')
-            .attr('xlink:href', plus)
-            .attr('class', styles.minusPlusIcon);
           update(d);
         } else {
-          thisNode
-            .append('image')
-            .attr('xlink:href', minus)
-            .attr('class', styles.minusPlusIcon);
           dispatch.glossary.fetchNodeChildAndUpdateNode({ nodeData: d.data }).then(() => {
             update(d);
           });
@@ -473,6 +492,25 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
     };
   }, [dispatch.glossary, history, rootNode, updateGlossaryOrderApi]);
 
+  useEffect(()=>{
+    if(location?.query?.glossaryId){
+      setVisible(true);
+      setCurrentId(location?.query?.glossaryId);
+    }
+  },[location]);
+  useUpdateEffect(() => {
+    d3.selectAll('rect').each(function textfunc(d) {
+      if (d) {
+        const canNode = d3.select(this);
+        canNode.attr('stroke', 'rgba(224, 224, 224, 0.8)');
+        if (d.data.id === currentId) {
+          canNode.attr('stroke', '#1a73e8');
+        }
+      }
+
+    });
+
+  }, [currentId]);
   const handleClickAdd = useCallback(() => {
     svgRef.current
       .transition()
@@ -497,8 +535,10 @@ export default memo(function GlossaryTree({ rootNode }: Props) {
           <MinusOutlined className={styles.scaleButtonIcon} />
         </div>
       </div>
-
+      <Drawer title="" width={800} placement="right" destroyOnClose onClose={onClose} mask={false} visible={visible}>
+        <GlossaryDetail setCurrentId={setCurrentId}  onClose={onClose} currentId={currentId} />
+      </Drawer>
       <div id="tree" className={styles.treeContainer} />
     </div>
   );
-});
+}));

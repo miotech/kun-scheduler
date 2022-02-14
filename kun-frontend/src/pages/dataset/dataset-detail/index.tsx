@@ -475,7 +475,7 @@ export default function DatasetDetail({ match }: Props) {
                       {selector.glossaries.map(glossary => (
                         <div key={glossary.id} className={styles.glossaryItem}>
                           <FileTextOutlined style={{ marginRight: 4 }} />
-                          <Link to={getBackPath(`/data-discovery/glossary/${glossary.id}`)}>
+                          <Link to={getBackPath(`/data-discovery/glossary?glossaryId=${glossary.id}`)}>
                             <div className={styles.glossaryName}>{glossary.name}</div>
                           </Link>
                         </div>
