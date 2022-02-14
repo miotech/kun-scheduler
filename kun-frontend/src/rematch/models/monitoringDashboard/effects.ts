@@ -1,6 +1,5 @@
 import { RootDispatch } from '@/rematch/store';
 import * as services from '@/services/monitoring-dashboard';
-import { MonitoringDashboardModelState as ModelState } from '@/rematch/models/monitoringDashboard/model-state';
 import {
   DataDevelopmentMetrics,
   DatasetColumnMetricsInfo,
@@ -17,8 +16,10 @@ let loadDataDevelopmentMetricsFlag = 0;
 let loadTaskDetailsFlag = 0;
 
 // Data discovery board: fetch top metrics data
-const loadDataDiscoveryMetrics = (dispatch: RootDispatch) => {
-  dispatch.monitoringDashboard.setDataDiscoveryMetricsLoading(true);
+const loadDataDiscoveryMetrics = (dispatch: RootDispatch, showloading = true) => {
+  if (showloading) {
+    dispatch.monitoringDashboard.setDataDiscoveryMetricsLoading(true);
+  }
   loadDataDiscoveryMetricsFlag += 1;
   const currentFlag = loadDataDiscoveryMetricsFlag;
   return services
@@ -41,10 +42,12 @@ const loadDataDiscoveryMetrics = (dispatch: RootDispatch) => {
 };
 
 // Data discovery board: fetch top 10 datasets with Max Row Count Change
-const loadTopDatasetsMaxRowCountChange = (dispatch: RootDispatch) => {
-  dispatch.monitoringDashboard.updateTopDatasetsWithMaxRowChange({
-    loading: true,
-  });
+const loadTopDatasetsMaxRowCountChange = (dispatch: RootDispatch, showloading = true) => {
+  if (showloading) {
+    dispatch.monitoringDashboard.updateTopDatasetsWithMaxRowChange({
+      loading: true,
+    });
+  }
 
   loadTopDatasetsMaxRowCountChangeFlag += 1;
   const currentFlag = loadTopDatasetsMaxRowCountChangeFlag;
@@ -74,11 +77,16 @@ const loadTopDatasetsMaxRowCountChange = (dispatch: RootDispatch) => {
 };
 
 // Data discovery board: fetch failed test cases
-const loadFailedTestCases = (params: PaginationReqBody & Partial<SortReqBody>, dispatch: RootDispatch) => {
-  dispatch.monitoringDashboard.updateAbnormalDatasets({
-    loading: true,
-  });
-
+const loadFailedTestCases = (
+  params: PaginationReqBody & Partial<SortReqBody>,
+  dispatch: RootDispatch,
+  showloading = true,
+) => {
+  if (showloading) {
+    dispatch.monitoringDashboard.updateAbnormalDatasets({
+      loading: true,
+    });
+  }
   loadFailedTestCasesFlag += 1;
   const currentFlag = loadFailedTestCasesFlag;
 
@@ -111,10 +119,12 @@ const loadFailedTestCases = (params: PaginationReqBody & Partial<SortReqBody>, d
 };
 
 // Data discovery board: fetch datasets column metrics
-const loadDatasetMetrics = (params: PaginationReqBody, dispatch: RootDispatch) => {
-  dispatch.monitoringDashboard.updateDatasetMetrics({
-    loading: true,
-  });
+const loadDatasetMetrics = (params: PaginationReqBody, dispatch: RootDispatch, showloading = true) => {
+  if (showloading) {
+    dispatch.monitoringDashboard.updateDatasetMetrics({
+      loading: true,
+    });
+  }
 
   loadDatasetMetricsFlag += 1;
   const currentFlag = loadDatasetMetricsFlag;
@@ -146,9 +156,10 @@ const loadDatasetMetrics = (params: PaginationReqBody, dispatch: RootDispatch) =
 };
 
 // Data Development board
-const loadDataDevelopmentMetrics = (dispatch: RootDispatch) => {
-  dispatch.monitoringDashboard.setDataDevelopmentMetricsLoading(true);
-
+const loadDataDevelopmentMetrics = (dispatch: RootDispatch, showloading = true) => {
+  if (showloading) {
+    dispatch.monitoringDashboard.setDataDevelopmentMetricsLoading(true);
+  }
   loadDataDevelopmentMetricsFlag += 1;
   const currentFlag = loadDataDevelopmentMetricsFlag;
 
@@ -167,7 +178,6 @@ const loadDataDevelopmentMetrics = (dispatch: RootDispatch) => {
     });
 };
 
-
 export interface LoadTaskDetailsParams extends PaginationReqBody {
   taskRunStatus?: string;
   includeStartedOnly?: boolean;
@@ -176,10 +186,12 @@ export interface LoadTaskDetailsParams extends PaginationReqBody {
 }
 
 // task details
-const loadTaskDetails = (params: LoadTaskDetailsParams, dispatch: RootDispatch) => {
-  dispatch.monitoringDashboard.updateTaskDetails({
-    loading: true,
-  });
+const loadTaskDetails = (params: LoadTaskDetailsParams, dispatch: RootDispatch, showloading = true) => {
+  if (showloading) {
+    dispatch.monitoringDashboard.updateTaskDetails({
+      loading: true,
+    });
+  }
 
   loadTaskDetailsFlag += 1;
   const currentFlag = loadTaskDetailsFlag;
@@ -238,15 +250,17 @@ const loadChartTaskDetails = (params: LoadTaskDetailsParams, dispatch: RootDispa
       }
     });
 };
-const loadStatisticChartData = async (dispatch: RootDispatch) => {
+const loadStatisticChartData = async (dispatch: RootDispatch, showloading = true) => {
   let data = [];
   let error = null;
   const params = {
     timezoneOffset: 8,
   };
-  dispatch.monitoringDashboard.updateStatisticChartData({
-    loading: true,
-  });
+  if (showloading) {
+    dispatch.monitoringDashboard.updateStatisticChartData({
+      loading: true,
+    });
+  }
   const res = await services.fetchDataDevelopmentStatisticChart(params).catch(e => {
     error = e;
   });
@@ -264,24 +278,22 @@ const loadStatisticChartData = async (dispatch: RootDispatch) => {
  * @param dispatch
  */
 export const effects = (dispatch: RootDispatch) => ({
-  async reloadAll(modelState: ModelState) {
-    const { failedTestCases, datasetMetrics } = modelState.dataDiscoveryBoardData;
+  async reloadAll({ viewState, showloading = true }) {
+    const { datasetMetrics } = viewState.dataDiscoveryBoardData;
 
-    const { taskDetails, taskDetailsDisplayLast24HoursOnly } = modelState.dataDevelopmentBoardData;
-
+    const { taskDetails, taskDetailsDisplayLast24HoursOnly } = viewState.dataDevelopmentBoardData;
     dispatch.monitoringDashboard.setAllSettled(false);
     Promise.allSettled([
-      loadDataDiscoveryMetrics(dispatch),
-      loadStatisticChartData(dispatch),
-      loadTopDatasetsMaxRowCountChange(dispatch),
+      loadDataDiscoveryMetrics(dispatch, showloading),
+      loadStatisticChartData(dispatch, showloading),
+      loadTopDatasetsMaxRowCountChange(dispatch, showloading),
       loadFailedTestCases(
         {
-          pageNumber: failedTestCases.pageNum,
-          pageSize: failedTestCases.pageSize,
-          sortOrder: failedTestCases.sortOrder || undefined,
-          sortColumn: failedTestCases.sortColumn || undefined,
+          pageNumber: 1,
+          pageSize: 65535,
         },
         dispatch,
+        showloading,
       ),
       loadDatasetMetrics(
         {
@@ -289,8 +301,9 @@ export const effects = (dispatch: RootDispatch) => ({
           pageSize: datasetMetrics.pageSize,
         },
         dispatch,
+        showloading,
       ),
-      loadDataDevelopmentMetrics(dispatch),
+      loadDataDevelopmentMetrics(dispatch, showloading),
       loadTaskDetails(
         {
           pageNumber: taskDetails.pageNum,
@@ -298,6 +311,7 @@ export const effects = (dispatch: RootDispatch) => ({
           last24HoursOnly: taskDetailsDisplayLast24HoursOnly,
         },
         dispatch,
+        showloading,
       ),
     ]).finally(() => {
       dispatch.monitoringDashboard.setAllSettled(true);

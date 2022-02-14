@@ -31,14 +31,25 @@ export const effects = (dispatch: RootDispatch) => ({
     }
   },
 
-  async fetchTaskDefinitions(payload: SearchTaskDefinitionReqParams = {}) {
-    const taskDefsResp = await searchTaskDefinition(payload);
-    if (taskDefsResp) {
-      // dispatch.dataDevelopment.setTaskDefinitions(taskDefsResp.records || []);
-      // dispatch.dataDevelopment.setTotalCount(parseInt(`${taskDefsResp.totalCount}`, 10));
+  async fetchTaskList(payload: SearchTaskDefinitionReqParams = {}) {
+    dispatch.dataDevelopment.updateTasklist({
+      loading: true,
+    });
+    const res = await searchTaskDefinition(payload);
+    if (res) {
+      dispatch.dataDevelopment.updateTasklist({
+        data: res.records,
+        loading: false,
+        totalCount: res.totalCount,
+        pageNum: res.pageNum,
+        pageSize: res.pageSize,
+        isInit: true,
+      });
     }
+    dispatch.dataDevelopment.updateTasklist({
+      loading: false,
+    });
   },
-
   async fetchTaskTemplates() {
     try {
       const respData = await fetchTaskTemplates();
