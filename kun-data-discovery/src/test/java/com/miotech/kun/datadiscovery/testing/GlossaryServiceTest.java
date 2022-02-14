@@ -7,6 +7,7 @@ import com.miotech.kun.datadiscovery.model.entity.Glossary;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryBasic;
 import com.miotech.kun.datadiscovery.model.entity.GlossaryChildren;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
+import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import org.junit.jupiter.api.Assertions;
@@ -40,7 +41,8 @@ public class GlossaryServiceTest extends KunAppTestBase {
     @Autowired
     GlossaryService glossaryService;
 
-
+    @Autowired
+    private DeployedTaskFacade deployedTaskFacade;
     @Test
     void test_getParentIdIsNull() {
         Long parentId = null;
