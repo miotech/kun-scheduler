@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @author: Jie Chen
  * @created: 2020/6/17
@@ -21,4 +23,9 @@ public class Asset {
     private String datasource;
 
     private String database;
+
+    private List<String> owner;
+
+    private String description;
+
 }

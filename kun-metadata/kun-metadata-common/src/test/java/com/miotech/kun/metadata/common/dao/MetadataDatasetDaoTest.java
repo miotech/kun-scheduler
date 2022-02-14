@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -271,6 +272,48 @@ public class MetadataDatasetDaoTest extends DatabaseTestBase {
         assertThat(datasetDetail.getDatasource(), is(dataSource.getName()));
         assertThat(datasetDetail.getDatabase(), is(dataset1OfFetch.getDatabaseName()));
     }
+
+    @Test
+    public void testGetDatasetBasicInfoList() {
+        Long gid1 = IdGenerator.getInstance().nextId();
+        List<String> owners1 = ImmutableList.of("u1", "u2");
+        List<String> tags1 = ImmutableList.of("t1", "t2");
+        Long gid2 = IdGenerator.getInstance().nextId();
+        List<String> owners2 = ImmutableList.of("u2", "u3");
+        List<String> tags2 = ImmutableList.of("t2", "t3");
+        Dataset dataset1 = MockDatasetFactory.createDataset(gid1, "test1");
+        Dataset dataset2 = MockDatasetFactory.createDataset(gid2, "test2");
+        Dataset dataset1OfFetch = metadataDatasetDao.createDataset(dataset1);
+        Dataset dataset2OfFetch = metadataDatasetDao.createDataset(dataset2);
+
+        DataSource dataSource = MockDataSourceFactory.createDataSource(dataset1.getDatasourceId(), "test datasource", ConnectionConfig.newBuilder()
+                .withUserConnection(new AthenaConnectionInfo(ConnectionType.ATHENA, "jdbc:awsathena://...", "username", "password"))
+                .build(), DatasourceType.HIVE, ImmutableList.of());
+        dataSourceDao.create(dataSource);
+
+        metadataDatasetDao.overwriteOwners(dataset1OfFetch.getGid(), owners1);
+        metadataDatasetDao.overwriteOwners(dataset2OfFetch.getGid(), owners2);
+        tagDao.overwriteDatasetTags(dataset1OfFetch.getGid(), tags1);
+        tagDao.overwriteDatasetTags(dataset2OfFetch.getGid(), tags2);
+        List<Long> datasetIdList=new ArrayList<>();
+        datasetIdList.add(dataset1OfFetch.getGid());
+        datasetIdList.add(dataset2OfFetch.getGid());
+
+        List<DatasetBasicInfo> datasetBasicInfoList = metadataDatasetDao.getDatasetBasicInfoList(datasetIdList);
+        assertThat(datasetBasicInfoList, notNullValue());
+        assertThat(datasetBasicInfoList.size(), is(datasetIdList.size()));
+        DatasetBasicInfo datasetBasicInfo10 = datasetBasicInfoList.get(0);
+        assertThat(datasetBasicInfo10.getName(), is(dataset1OfFetch.getName()));
+        assertThat(datasetBasicInfo10.getDatasource(), is(dataSource.getName()));
+        assertThat(datasetBasicInfo10.getDatabase(), is(dataset1OfFetch.getDatabaseName()));
+
+        DatasetBasicInfo datasetBasicInfo20 = datasetBasicInfoList.get(1);
+        assertThat(datasetBasicInfo20.getName(), is(dataset2OfFetch.getName()));
+        assertThat(datasetBasicInfo20.getDatasource(), is(dataSource.getName()));
+        assertThat(datasetBasicInfo20.getDatabase(), is(dataset2OfFetch.getDatabaseName()));
+
+    }
+
 
     @Test
     public void testUpdateDataset() {

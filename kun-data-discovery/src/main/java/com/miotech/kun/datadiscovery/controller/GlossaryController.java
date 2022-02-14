@@ -45,7 +45,7 @@ public class GlossaryController {
 
     @GetMapping("/metadata/glossary/{id}/detail")
     public RequestResult<Glossary> getDetail(@PathVariable("id") Long id) {
-        return RequestResult.success(glossaryService.getDetail(id));
+        return RequestResult.success(glossaryService.fetchGlossary(id));
     }
 
     @PostMapping("/metadata/glossary/{id}/update")
@@ -66,5 +66,10 @@ public class GlossaryController {
     @GetMapping("/metadata/glossaries/search")
     public RequestResult<GlossaryPage> search(BasicSearchRequest basicSearchRequest) {
         return RequestResult.success(glossaryService.search(basicSearchRequest));
+    }
+
+    @PostMapping("/metadata/glossary/copy/{id}")
+    public RequestResult<Glossary> copy(@PathVariable("id") Long id) {
+        return RequestResult.success(glossaryService.copy(id));
     }
 }

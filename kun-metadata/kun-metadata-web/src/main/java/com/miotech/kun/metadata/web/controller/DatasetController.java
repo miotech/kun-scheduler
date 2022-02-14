@@ -169,6 +169,17 @@ public class DatasetController {
     }
 
     /**
+     * get dataset detail  list
+     * @param idList
+     * @return
+     */
+    @RouteMapping(url = "/dataset/id_list", method = "POST")
+    public List<DatasetBasicInfo> getDatasetBasicInfoList(@RequestBody List<Long> idList){
+
+        return datasetService.getDatasetBasicInfoList(idList);
+    }
+
+    /**
      * update dataset
      * @param id
      * @param updateRequest

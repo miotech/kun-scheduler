@@ -28,11 +28,7 @@ public class DatasetRepository extends BaseRepository {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    GlossaryRepository glossaryRepository;
 
-    @Autowired
-    TagRepository tagRepository;
 
     private static final Map<String, String> SORT_KEY_MAP = new HashMap<>();
     static {
@@ -43,29 +39,6 @@ public class DatasetRepository extends BaseRepository {
         SORT_KEY_MAP.put("highWatermark", "high_watermark");
     }
 
-    public DatasetBasic findBasic(Long gid) {
-        String sql = "select kmd.gid, " +
-                "kmd.name as dataset_name, " +
-                "kmd.database_name as database_name, " +
-                "kmdsrca.name as datasource_name " +
-                "from kun_mt_dataset kmd\n" +
-                "inner join kun_mt_datasource kmdsrc on kmd.datasource_id = kmdsrc.id\n" +
-                "inner join kun_mt_datasource_attrs kmdsrca on kmdsrc.id = kmdsrca.datasource_id\n";
-
-        String whereClause = "where kmd.gid = ?\n";
-        sql += whereClause;
-
-        return jdbcTemplate.query(sql, rs -> {
-            DatasetBasic basic = new DatasetBasic();
-            if (rs.next()) {
-                basic.setGid(rs.getLong("gid"));
-                basic.setName(rs.getString("dataset_name"));
-                basic.setDatabase(rs.getString("database_name"));
-                basic.setDatasource(rs.getString("datasource_name"));
-            }
-            return basic;
-        }, gid);
-    }
 
     public DatasetStats getLatestStats(Long gid) {
         String sql = DefaultSQLBuilder.newBuilder()
