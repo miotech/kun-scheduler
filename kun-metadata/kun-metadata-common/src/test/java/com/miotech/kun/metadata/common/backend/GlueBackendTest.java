@@ -5,6 +5,7 @@ import com.amazonaws.services.glue.model.*;
 import com.amazonaws.services.s3.AmazonS3;
 import com.miotech.kun.commons.testing.DatabaseTestBase;
 import com.miotech.kun.commons.utils.DateTimeUtils;
+import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.client.ClientFactory;
 import com.miotech.kun.metadata.common.client.GlueBackend;
 import com.miotech.kun.metadata.common.dao.DataSourceDao;
@@ -69,7 +70,7 @@ public class GlueBackendTest extends DatabaseTestBase {
     public void glueBackendExtractDataset() {
         //prepare
         GlueConnectionInfo connectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
-        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory);
+        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory, CatalogerConfig.newBuilder().build());
         List<DatasetField> datasetFields = new ArrayList<>();
         DatasetFieldType datasetFieldType = new DatasetFieldType(DatasetFieldType.Type.CHARACTER, "string");
         DatasetField datasetField = DatasetField.newBuilder()
@@ -95,7 +96,7 @@ public class GlueBackendTest extends DatabaseTestBase {
     public void glueBackendLastUpdatedTime() {
         //prepare
         GlueConnectionInfo connectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
-        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory);
+        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory, CatalogerConfig.newBuilder().build());
         List<DatasetField> datasetFields = new ArrayList<>();
         OffsetDateTime expectedTime = DateTimeUtils.fromISODateTimeString("2021-11-03T10:15:30+00:00");
         TableStatistics tableStatistics = TableStatistics
@@ -120,7 +121,7 @@ public class GlueBackendTest extends DatabaseTestBase {
     public void glueBackendJudgeExistence() {
         //prepare
         GlueConnectionInfo connectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
-        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory);
+        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory, CatalogerConfig.newBuilder().build());
         List<DatasetField> datasetFields = new ArrayList<>();
         OffsetDateTime expectedTime = DateTimeUtils.fromISODateTimeString("2021-11-03T10:15:30+00:00");
         TableStatistics tableStatistics = TableStatistics
@@ -145,7 +146,7 @@ public class GlueBackendTest extends DatabaseTestBase {
     public void glueBackendExtractMceEvent() {
         //prepare
         GlueConnectionInfo connectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
-        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory);
+        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory, CatalogerConfig.newBuilder().build());
         List<DatasetField> datasetFields = new ArrayList<>();
         OffsetDateTime expectedTime = DateTimeUtils.fromISODateTimeString("2021-11-03T10:15:30+00:00");
         TableStatistics tableStatistics = TableStatistics
@@ -180,7 +181,7 @@ public class GlueBackendTest extends DatabaseTestBase {
     public void glueBackendExtractDatasource() {
         //prepare
         GlueConnectionInfo connectionInfo = new GlueConnectionInfo(ConnectionType.GLUE, "asskey", "secretkey", "region");
-        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory);
+        GlueBackend glueBackend = new GlueBackend(connectionInfo, fieldMappingService, clientFactory, CatalogerConfig.newBuilder().build());
         ConnectionInfo athenaConnectionInfo = new AthenaConnectionInfo(ConnectionType.ATHENA, "jdbc:awsathena", "user", "password");
         DataSource hive = MockDataSourceFactory.createDataSource(1, "hive", athenaConnectionInfo, DatasourceType.HIVE, new ArrayList<>());
         dataSourceDao.create(hive);
@@ -238,7 +239,7 @@ public class GlueBackendTest extends DatabaseTestBase {
         return searchTablesResult;
     }
 
-    private Table datasetToGlueTable(Dataset dataset){
+    private Table datasetToGlueTable(Dataset dataset) {
         Table table = new Table();
         table.setName(dataset.getName());
         table.setDatabaseName(dataset.getDatabaseName());

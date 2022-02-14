@@ -1,6 +1,7 @@
 package com.miotech.kun.metadata.common.backend;
 
 import com.miotech.kun.commons.testing.DatabaseTestBase;
+import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.client.ClientFactory;
 import com.miotech.kun.metadata.common.client.HiveThriftBackend;
 import com.miotech.kun.metadata.common.dao.DataSourceDao;
@@ -61,7 +62,7 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
     public void HiveThriftBackendExtractDataset() throws TException {
         //prepare
         HiveMetaStoreConnectionInfo connectionInfo = new HiveMetaStoreConnectionInfo(ConnectionType.HIVE_THRIFT, "uri");
-        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend(connectionInfo, fieldMappingService, clientFactory);
+        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend(connectionInfo, fieldMappingService, clientFactory, CatalogerConfig.newBuilder().build());
         List<DatasetField> datasetFields = new ArrayList<>();
         DatasetFieldType datasetFieldType = new DatasetFieldType(DatasetFieldType.Type.CHARACTER, "string");
         DatasetField datasetField = DatasetField.newBuilder()
@@ -87,7 +88,7 @@ public class HiveThriftBackendTest extends DatabaseTestBase {
     public void hiveBackendExtractDatasource() throws TException {
         //prepare
         HiveMetaStoreConnectionInfo connectionInfo = new HiveMetaStoreConnectionInfo(ConnectionType.HIVE_THRIFT, "uri");
-        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend(connectionInfo, fieldMappingService, clientFactory);
+        HiveThriftBackend hiveThriftBackend = new HiveThriftBackend(connectionInfo, fieldMappingService, clientFactory, CatalogerConfig.newBuilder().build());
         DataSource hive = MockDataSourceFactory.createDataSource(1, "hive", connectionInfo, DatasourceType.HIVE, new ArrayList<>());
         dataSourceDao.create(hive);
         List<DatasetField> datasetFields = new ArrayList<>();

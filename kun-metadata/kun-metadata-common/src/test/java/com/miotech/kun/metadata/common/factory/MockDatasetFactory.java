@@ -22,6 +22,16 @@ public class MockDatasetFactory {
         return createDatasetWithName(dataSourceId, "dataset:" + random, fields);
     }
 
+    public static Dataset createDatasetWithDatabase(long dataSourceId, String name) {
+        String random = UUID.randomUUID().toString();
+        return createDataset(IdGenerator.getInstance().nextId(), "dataset:" + random, dataSourceId, name, null, "Hive");
+    }
+
+    public static Dataset createDatasetWithDatabase(long dataSourceId, String datasetName,String databaseName) {
+        String random = UUID.randomUUID().toString();
+        return createDataset(IdGenerator.getInstance().nextId(), datasetName, dataSourceId, databaseName, null, "Hive");
+    }
+
     public static Dataset createDatasetWithName(long dataSourceId, String name, List<DatasetField> fields) {
         return createDataset(IdGenerator.getInstance().nextId(), name, dataSourceId, "db", fields, "Hive");
     }
@@ -54,7 +64,7 @@ public class MockDatasetFactory {
     }
 
     public static Dataset createDataset(long gid, String name, long dataSourceId, String databaseName, List<DatasetField> fields, String dataStoreType) {
-        DataStore dataStore = createDataStore(dataStoreType, databaseName,"table");
+        DataStore dataStore = createDataStore(dataStoreType, databaseName, "table");
         return Dataset.newBuilder()
                 .withGid(gid)
                 .withDatasourceId(dataSourceId)
@@ -65,7 +75,7 @@ public class MockDatasetFactory {
                 .build();
     }
 
-    public static Dataset createDatasetWithDataStore(long gid, String name, long dataSourceId, List<DatasetField> fields,DataStore dataStore) {
+    public static Dataset createDatasetWithDataStore(long gid, String name, long dataSourceId, List<DatasetField> fields, DataStore dataStore) {
         return Dataset.newBuilder()
                 .withGid(gid)
                 .withDatasourceId(dataSourceId)
@@ -76,7 +86,7 @@ public class MockDatasetFactory {
                 .build();
     }
 
-    public static DataStore createDataStore(String dataStoreType, String databaseName,String tableName) {
+    public static DataStore createDataStore(String dataStoreType, String databaseName, String tableName) {
         Preconditions.checkArgument(StringUtils.isNotBlank(dataStoreType), "Param `dataStoreType` should not be empty");
 
         switch (dataStoreType) {
@@ -94,7 +104,6 @@ public class MockDatasetFactory {
                 throw new IllegalArgumentException("Invalid dataStoreType: " + dataStoreType);
         }
     }
-
 
 
 }
