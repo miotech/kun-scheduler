@@ -25,14 +25,15 @@ interface MatchParams {
 interface Props extends RouteComponentProps<MatchParams> {
   currentId?: string;
   setCurrentId: (id: string) => void;
-  changeChild: (parentId: string, id?: string) => void;
+  addChild: (child: {}, parentId: string, id?: string) => void;
+  deleteChild: (parentId: string, id: string) => void;
   onClose: () => void;
 }
 
 const { TextArea } = Input;
 const { confirm } = Modal;
 
-export default function GlossaryDetail({ currentId, changeChild, setCurrentId, onClose }: Props) {
+export default function GlossaryDetail({ currentId, addChild, deleteChild, setCurrentId, onClose }: Props) {
   const t = useI18n();
   const history = useHistory();
 
@@ -93,7 +94,7 @@ export default function GlossaryDetail({ currentId, changeChild, setCurrentId, o
       const res = await copyGlossaryServicey(currentId);
       if (res) {
         message.success(t('common.operateSuccess'));
-        changeChild(res?.parent?.id, res.id);
+        addChild(res, res?.parent?.id, res.id);
       }
     }
   };
@@ -131,13 +132,13 @@ export default function GlossaryDetail({ currentId, changeChild, setCurrentId, o
     if (currentId) {
       dispatch.glossary.deleteGlossary(currentId).then(resp => {
         if (resp) {
-          changeChild(resp.parentId);
+          deleteChild(resp.parentId, resp.id);
           message.success(t('common.operateSuccess'));
           onClose();
         }
       });
     }
-  }, [currentId, changeChild, dispatch.glossary, onClose, t]);
+  }, [currentId, deleteChild, dispatch.glossary, onClose, t]);
 
   const showConfirm = useCallback(() => {
     confirm({
@@ -196,11 +197,11 @@ export default function GlossaryDetail({ currentId, changeChild, setCurrentId, o
       diss();
       if (resp) {
         setIsEditing(true);
-        changeChild(resp?.parent?.id, resp.id);
+        addChild(resp, resp?.parent?.id, resp.id);
         message.success(t('common.operateSuccess'));
       }
     });
-  }, [dispatch.glossary, changeChild, getParams, t]);
+  }, [dispatch.glossary, addChild, getParams, t]);
 
   const buttonList = () => {
     if (isEditing) {
