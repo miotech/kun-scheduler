@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import { useHistory } from 'umi';
 import { RouteComponentProps } from 'react-router';
 
-import { Spin, Button, Input, Modal, message,Popconfirm } from 'antd';
+import { Spin, Button, Input, Modal, message, Popconfirm } from 'antd';
 
 import Card from '@/components/Card/Card';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
@@ -10,16 +10,9 @@ import { ExclamationCircleOutlined } from '@ant-design/icons';
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 
+import { getInitGlossaryDetail, GlossaryDetail as IGlossaryDetail, GlossaryNode } from '@/rematch/models/glossary';
 
-import {
-  getInitGlossaryDetail,
-  GlossaryDetail as IGlossaryDetail,
-  GlossaryNode,
-} from '@/rematch/models/glossary';
-
-import {
-  copyGlossaryServicey,
-} from '@/services/glossary';
+import { copyGlossaryServicey } from '@/services/glossary';
 import ParentSearch from './components/ParentSearch/ParentSearch';
 import ChildrenGlossaryList from './components/ChildrenGlossaryList/ChildrenGlossaryList';
 import AssetList from './components/AssetList/AssetList';
@@ -30,21 +23,20 @@ interface MatchParams {
 }
 
 interface Props extends RouteComponentProps<MatchParams> {
-  currentId?: string,
-  setCurrentId: (id: string) => void,
-  onClose: () => void,
+  currentId?: string;
+  setCurrentId: (id: string) => void;
+  changeChild: (parentId: string, id?: string) => void;
+  onClose: () => void;
 }
 
 const { TextArea } = Input;
 const { confirm } = Modal;
 
-export default function GlossaryDetail({ currentId, setCurrentId, onClose, match }: Props) {
+export default function GlossaryDetail({ currentId, changeChild, setCurrentId, onClose }: Props) {
   const t = useI18n();
   const history = useHistory();
 
-  const query = useMemo(() => (history.location as any)?.query ?? {}, [
-    history.location,
-  ]);
+  const query = useMemo(() => (history.location as any)?.query ?? {}, [history.location]);
 
   const { selector, dispatch } = useRedux(state => state.glossary);
 
@@ -53,9 +45,7 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
   const [pretName, setPreName] = useState<string>();
 
   const { currentGlossaryDetail, fetchCurrentGlossaryDetailLoading } = selector;
-  const [inputtingDetail, setInputtingDetail] = useState<IGlossaryDetail>(
-    getInitGlossaryDetail(),
-  );
+  const [inputtingDetail, setInputtingDetail] = useState<IGlossaryDetail>(getInitGlossaryDetail());
   useEffect(() => {
     if (currentGlossaryDetail) {
       setInputtingDetail(currentGlossaryDetail);
@@ -74,7 +64,6 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
     };
   }, [currentGlossaryDetail, pretName, preId, query]);
 
-
   const [glossaryNode, setGlossaryNode] = useState<GlossaryNode | null>(null);
   useEffect(() => {
     setIsEditing(false);
@@ -84,11 +73,9 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
         if (resp) {
           const { id, name, description } = resp;
           const newGlossaryNode = { id, name, description };
-          dispatch.glossary
-            .fetchNodeChildAndUpdateNode({ nodeData: newGlossaryNode })
-            .then(resp1 => {
-              setGlossaryNode(resp1);
-            });
+          dispatch.glossary.fetchNodeChildAndUpdateNode({ nodeData: newGlossaryNode }).then(resp1 => {
+            setGlossaryNode(resp1);
+          });
         }
       });
     } else {
@@ -103,12 +90,11 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
   }, [currentId, dispatch.glossary]);
   const copyGlossary = async () => {
     if (currentId) {
-      const res = await copyGlossaryServicey(currentId).catch(error => console.log(error));
+      const res = await copyGlossaryServicey(currentId);
       if (res) {
         message.success(t('common.operateSuccess'));
-        dispatch.glossary.fetchRootNodeChildGlossary();
+        changeChild(res?.parent?.id, res.id);
       }
-
     }
   };
   const createChild = (name: string, id: string) => {
@@ -145,22 +131,20 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
     if (currentId) {
       dispatch.glossary.deleteGlossary(currentId).then(resp => {
         if (resp) {
+          changeChild(resp.parentId);
           message.success(t('common.operateSuccess'));
-          dispatch.glossary.fetchRootNodeChildGlossary();
           onClose();
         }
       });
     }
-  }, [currentId, dispatch.glossary, onClose, t]);
+  }, [currentId, changeChild, dispatch.glossary, onClose, t]);
 
   const showConfirm = useCallback(() => {
     confirm({
       title: t('glossary.delete.title'),
       icon: <ExclamationCircleOutlined />,
       content:
-        (glossaryNode?.children?.length ?? 0) > 0
-          ? t('glossary.delete.content')
-          : t('glossary.delete.leafContent'),
+        (glossaryNode?.children?.length ?? 0) > 0 ? t('glossary.delete.content') : t('glossary.delete.leafContent'),
       onOk() {
         handleDeleteGlossary();
       },
@@ -212,31 +196,21 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
       diss();
       if (resp) {
         setIsEditing(true);
-        setCurrentId(resp.id);
-        dispatch.glossary.fetchRootNodeChildGlossary();
+        changeChild(resp?.parent?.id, resp.id);
         message.success(t('common.operateSuccess'));
       }
     });
-  }, [dispatch.glossary, getParams, setCurrentId, t]);
+  }, [dispatch.glossary, changeChild, getParams, t]);
 
   const buttonList = () => {
     if (isEditing) {
       if (currentId) {
         return (
           <>
-            <Button
-              style={{ marginLeft: 'auto', marginRight: 16 }}
-              size="large"
-              danger
-              onClick={showConfirm}
-            >
+            <Button style={{ marginLeft: 'auto', marginRight: 16 }} size="large" danger onClick={showConfirm}>
               {t('common.button.delete')}
             </Button>
-            <Button
-              style={{ marginRight: 16 }}
-              size="large"
-              onClick={handleClickCancel}
-            >
+            <Button style={{ marginRight: 16 }} size="large" onClick={handleClickCancel}>
               {t('common.button.cancel')}
             </Button>
             <Button
@@ -252,11 +226,7 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
       }
       return (
         <>
-          <Button
-            style={{ marginLeft: 'auto', marginRight: 16 }}
-            size="large"
-            onClick={handleClickCreateCancel}
-          >
+          <Button style={{ marginLeft: 'auto', marginRight: 16 }} size="large" onClick={handleClickCreateCancel}>
             {t('common.button.cancel')}
           </Button>
           <Button
@@ -272,20 +242,22 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
     }
     return (
       <>
-        <Button
-          style={{ marginLeft: 'auto' }}
-          size="large"
-          onClick={() => setIsEditing(true)}
-        >
+        <Button style={{ marginLeft: 'auto' }} size="large" onClick={() => setIsEditing(true)}>
           {t('common.button.edit')}
         </Button>
-        {!glossaryNode?.children?.length && <Popconfirm
-          title={t('glossary.copy.title')}
-          onConfirm={copyGlossary}
-          okText={t('common.button.confirm')}
-          cancelText={t('common.button.cancel')}
-        > <Button style={{ marginLeft: 10 }}
-          size="large">{t('common.button.copy')}</Button></Popconfirm>}
+        {!glossaryNode?.children?.length && (
+          <Popconfirm
+            title={t('glossary.copy.title')}
+            onConfirm={copyGlossary}
+            okText={t('common.button.confirm')}
+            cancelText={t('common.button.cancel')}
+          >
+            {' '}
+            <Button style={{ marginLeft: 10 }} size="large">
+              {t('common.button.copy')}
+            </Button>
+          </Popconfirm>
+        )}
       </>
     );
   };
@@ -315,21 +287,11 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
 
   // 渲染的地方都用 inputtingDetail 替代 currentGlossaryDetail
   return (
-    <Spin
-      wrapperClassName={styles.container}
-      spinning={fetchCurrentGlossaryDetailLoading}
-    >
+    <Spin wrapperClassName={styles.container} spinning={fetchCurrentGlossaryDetailLoading}>
       <Card className={styles.titleArea}>
-        {isEditing && !currentId && (
-          <span style={{ marginRight: 8 }}>{t('glossary.nameLabel')}:</span>
-        )}
+        {isEditing && !currentId && <span style={{ marginRight: 8 }}>{t('glossary.nameLabel')}:</span>}
         {isEditing ? (
-          <Input
-            size="large"
-            style={{ width: 384 }}
-            value={inputtingDetail.name}
-            onChange={handleChangeName}
-          />
+          <Input size="large" style={{ width: 384 }} value={inputtingDetail.name} onChange={handleChangeName} />
         ) : (
           <span className={styles.title}>{inputtingDetail.name}</span>
         )}
@@ -340,11 +302,7 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
         <div className={styles.descLabel}>{t('glossary.desc')}</div>
         <div className={styles.descInputContainer}>
           {isEditing ? (
-            <TextArea
-              className={styles.descInput}
-              value={inputtingDetail.description}
-              onChange={handleChangeDesc}
-            />
+            <TextArea className={styles.descInput} value={inputtingDetail.description} onChange={handleChangeDesc} />
           ) : (
             <div>{inputtingDetail.description}</div>
           )}
@@ -374,9 +332,7 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
 
           <div className={styles.inputBlock}>
             <div className={styles.funcTitleRow}>
-              <div className={styles.funcTitleRowlabel}>
-                {t('glossary.childGlossary')}
-              </div>
+              <div className={styles.funcTitleRowlabel}>{t('glossary.childGlossary')}</div>
 
               {!isEditing && (
                 <Button size="small" onClick={() => createChild(inputtingDetail.name, inputtingDetail.id)}>
@@ -394,9 +350,7 @@ export default function GlossaryDetail({ currentId, setCurrentId, onClose, match
             <div className={styles.label} style={{ marginBottom: isEditing ? 14 : 0 }}>
               {t('glossary.assets')}{' '}
               {(inputtingDetail?.assets || []).length > 0 && (
-                <span style={{ marginLeft: 4 }}>
-                  ({(inputtingDetail?.assets || []).length})
-                </span>
+                <span style={{ marginLeft: 4 }}>({(inputtingDetail?.assets || []).length})</span>
               )}
             </div>
             <div>
