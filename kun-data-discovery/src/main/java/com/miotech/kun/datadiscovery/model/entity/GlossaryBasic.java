@@ -22,4 +22,6 @@ public class GlossaryBasic {
     private String description;
 
     private Long childrenCount;
+
+    private Long  dataSetCount;
 }

@@ -2,9 +2,9 @@ package com.miotech.kun.metadata.common.client;
 
 import com.amazonaws.services.glue.AWSGlue;
 import com.amazonaws.services.glue.model.*;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.miotech.kun.metadata.common.cataloger.CatalogerConfig;
 import com.miotech.kun.metadata.common.service.FieldMappingService;
 import com.miotech.kun.metadata.common.utils.DataStoreJsonUtil;
 import com.miotech.kun.metadata.core.model.connection.GlueConnectionInfo;
@@ -23,14 +23,13 @@ import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-public class GlueBackend implements MetadataBackend {
+public class GlueBackend extends BaseMetadataBackend {
 
     private final Logger logger = LoggerFactory.getLogger(GlueBackend.class);
 
@@ -46,7 +45,8 @@ public class GlueBackend implements MetadataBackend {
     private Map<String, Table> tables = Maps.newHashMap();
     private AtomicBoolean initedCache = new AtomicBoolean(false);
 
-    public GlueBackend(GlueConnectionInfo glueConnectionInfo, FieldMappingService fieldMappingService,ClientFactory clientFactory) {
+    public GlueBackend(GlueConnectionInfo glueConnectionInfo, FieldMappingService fieldMappingService, ClientFactory clientFactory, CatalogerConfig config) {
+        super(config);
         this.glueConnectionInfo = glueConnectionInfo;
         this.fieldMappingService = fieldMappingService;
         this.clientFactory = clientFactory;
@@ -83,16 +83,9 @@ public class GlueBackend implements MetadataBackend {
     }
 
     @Override
-    public Iterator<Dataset> extract(DataSource dataSource) {
-        GetDatabasesResult databases = awsGlue.getDatabases(new GetDatabasesRequest());
-        List<String> databaseList = databases.getDatabaseList().stream().map(database -> database.getName()).collect(Collectors.toList());
-        return Iterators.concat(databaseList.stream().map(database -> extract(dataSource.getId(), database)).iterator());
-    }
-
-    @Override
     public Dataset extract(MetadataChangeEvent mce) {
         Table table = searchTable(mce.getDatabaseName(), mce.getTableName());
-        if(table == null){
+        if (table == null) {
             return null;
         }
         return extract(table, mce.getDataSourceId());
@@ -112,9 +105,16 @@ public class GlueBackend implements MetadataBackend {
         awsGlue.shutdown();
     }
 
-    private Iterator<Dataset> extract(Long datasourceId, String database) {
-        List<Table> tables = searchTables(database);
-        return tables.stream().map(table -> extract(table, datasourceId)).iterator();
+    @Override
+    protected List<String> searchDatabase(DataSource dataSource) {
+        GetDatabasesResult databases = awsGlue.getDatabases(new GetDatabasesRequest());
+        return databases.getDatabaseList().stream().map(database -> database.getName()).collect(Collectors.toList());
+    }
+
+    @Override
+    protected List<Dataset> searchDataset(Long datasourceId, String databaseName) {
+        List<Table> tables = searchTables(databaseName);
+        return tables.stream().map(table -> extract(table, datasourceId)).collect(Collectors.toList());
     }
 
     private Dataset extract(Table table, Long datasourceId) {

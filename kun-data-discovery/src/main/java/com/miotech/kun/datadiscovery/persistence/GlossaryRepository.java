@@ -3,20 +3,26 @@ package com.miotech.kun.datadiscovery.persistence;
 import com.miotech.kun.common.BaseRepository;
 import com.miotech.kun.common.utils.IdUtils;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.commons.utils.IdGenerator;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryBasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
+import com.miotech.kun.metadata.core.model.vo.DatasetFieldInfo;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Types;
 import java.util.*;
 
@@ -30,9 +36,13 @@ public class GlossaryRepository extends BaseRepository {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    @Lazy
-    DatasetRepository datasetRepository;
+
+    public static final String TABLE_NAME_KUN_MT_GLOSSARY = "kun_mt_glossary";
+    public static final String TABLE_KUN_MT_GLOSSARY_TO_DATASET_REF = "kun_mt_glossary_to_dataset_ref";
+    public static final String ALIAS_KUN_MT_GLOSSARY_TO_DATASET_REF = "kmgtdr";
+    public static final String ALIAS_KUN_MT_GLOSSARY = "kmg";
+    public static final String COLUMN_KUN_MT_GLOSSARY = "id,name,description,parent_id,create_user,create_time,update_user,update_time,prev_id";
+
 
     public List<GlossaryBasic> getGlossariesByDataset(Long datasetGid) {
         String sql = DefaultSQLBuilder.newBuilder()
@@ -114,54 +124,10 @@ public class GlossaryRepository extends BaseRepository {
         }, id);
     }
 
-    public Glossary find(Long id, int recursionTimes, boolean needRelation) {
-        String sql = "select kmg.*, kmgtdr.dataset_id as dataset_id\n" +
-                "     from kun_mt_glossary kmg\n" +
-                "         left join kun_mt_glossary_to_dataset_ref kmgtdr on kmg.id = kmgtdr.glossary_id\n";
-
-        String whereClause = "where kmg.id = ?";
-
-        return jdbcTemplate.query(sql + whereClause, ps -> ps.setLong(1, id), rs -> {
-            Glossary glossary = new Glossary();
-            if (rs.next()) {
-                glossary.setId(rs.getLong("id"));
-                glossary.setName(rs.getString("name"));
-                glossary.setDescription(rs.getString("description"));
-                if (recursionTimes >= 0 && rs.getLong(COLUMN_PARENT_ID) != 0) {
-                    glossary.setParent(find(rs.getLong(COLUMN_PARENT_ID), recursionTimes - 1, false));
-                }
-                glossary.setCreateUser(rs.getString("create_user"));
-                glossary.setCreateTime(timestampToOffsetDateTime(rs, "create_time"));
-                glossary.setUpdateUser(rs.getString("update_user"));
-                glossary.setUpdateTime(timestampToOffsetDateTime(rs, "update_time"));
-                if (needRelation) {
-                    List<Asset> assets = new ArrayList<>();
-                    if (rs.getLong("dataset_id") != 0) {
-                        do {
-                            DatasetBasic dataset = datasetRepository.findBasic(rs.getLong("dataset_id"));
-                            Asset asset = new Asset();
-                            asset.setId(dataset.getGid());
-                            asset.setType("dataset");
-                            asset.setName(dataset.getName());
-                            asset.setDatabase(dataset.getDatabase());
-                            asset.setDatasource(dataset.getDatasource());
-                            assets.add(asset);
-                        } while (rs.next());
-                    }
-                    glossary.setAssets(assets);
-                }
-            }
-            return glossary;
-        });
-    }
-
-    public Glossary find(Long id) {
-        return find(id, 0, true);
-    }
 
     @Transactional(rollbackFor = Exception.class)
-    public Glossary insert(GlossaryRequest glossaryRequest) {
-        String kmgSql = "insert into kun_mt_glossary values " + toValuesSql(1, 8);
+    public Long insert(GlossaryRequest glossaryRequest) {
+        String kmgSql = "insert into kun_mt_glossary values " + toValuesSql(1, 9);
         Long glossaryId = IdGenerator.getInstance().nextId();
 
         String updateOrderSql;
@@ -179,21 +145,27 @@ public class GlossaryRepository extends BaseRepository {
                 glossaryRequest.getDescription(),
                 glossaryRequest.getParentId(),
                 glossaryRequest.getCreateUser(),
-                millisToTimestamp(glossaryRequest.getCreateTime()),
+                glossaryRequest.getCreateTime(),
                 glossaryRequest.getUpdateUser(),
-                millisToTimestamp(glossaryRequest.getUpdateTime()));
+                glossaryRequest.getUpdateTime(),
+                null
+        );
 
         if (!CollectionUtils.isEmpty(glossaryRequest.getAssetIds())) {
-            String kmgtdrSql = "insert into kun_mt_glossary_to_dataset_ref values " + toValuesSql(1, 3);
-
-            for (Long assetId : glossaryRequest.getAssetIds()) {
-                jdbcTemplate.update(kmgtdrSql,
-                        IdGenerator.getInstance().nextId(),
-                        glossaryId,
-                        assetId);
-            }
+            insertGlossaryDatasetRef(glossaryRequest.getAssetIds(), glossaryId);
         }
-        return find(glossaryId);
+        return glossaryId;
+    }
+
+    public void insertGlossaryDatasetRef(List<Long> assetIds, Long glossaryId) {
+        String kmgtdrSql = "insert into kun_mt_glossary_to_dataset_ref values " + toValuesSql(1, 3);
+
+        for (Long assetId : assetIds) {
+            jdbcTemplate.update(kmgtdrSql,
+                    IdGenerator.getInstance().nextId(),
+                    glossaryId,
+                    assetId);
+        }
     }
 
     public GlossaryChildren findChildren(Long parentId) {
@@ -216,11 +188,17 @@ public class GlossaryRepository extends BaseRepository {
                 child.setName(rs.getString("name"));
                 child.setDescription(rs.getString("description"));
                 child.setChildrenCount(getChildrenCount(child.getId()));
+                child.setDataSetCount(getDatasetCount(child.getId()));
                 idMap.put(child.getPrevId(), child);
             }
             sortGlossary(0L, idMap, glossaryChildren);
             return glossaryChildren;
         });
+    }
+
+    private Long getDatasetCount(Long id) {
+        String sql = "select   count(dataset_id) dataset_id  from  kun_mt_glossary_to_dataset_ref kmgtdr  where glossary_id = " + id;
+        return jdbcTemplate.queryForObject(sql, Long.class);
     }
 
     private void sortGlossary(Long prevId,
@@ -235,7 +213,7 @@ public class GlossaryRepository extends BaseRepository {
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public Glossary update(Long id, GlossaryRequest glossaryRequest) {
+    public void update(Long id, GlossaryRequest glossaryRequest) {
         List<Object> sqlParams = new ArrayList<>();
         String sql = "update kun_mt_glossary set\n" +
                 "name = ?, " +
@@ -251,7 +229,7 @@ public class GlossaryRepository extends BaseRepository {
 
         sql += "update_user = ?, update_time = ?\n";
         sqlParams.add(glossaryRequest.getUpdateUser());
-        sqlParams.add(millisToTimestamp(glossaryRequest.getUpdateTime()));
+        sqlParams.add(glossaryRequest.getUpdateTime());
 
         String whereClause = "where id = ?";
         sql += whereClause;
@@ -259,7 +237,7 @@ public class GlossaryRepository extends BaseRepository {
 
         jdbcTemplate.update(sql, sqlParams.toArray());
         overwriteAssets(id, glossaryRequest.getAssetIds());
-        return find(id);
+
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -395,4 +373,41 @@ public class GlossaryRepository extends BaseRepository {
                     return page;
                 }, sqlArgs.toArray());
     }
+
+    public GlossaryBasicInfo findGlossaryBaseInfo(Long id) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select(COLUMN_KUN_MT_GLOSSARY).
+                from(TABLE_NAME_KUN_MT_GLOSSARY, ALIAS_KUN_MT_GLOSSARY)
+                .where("id=?").getSQL();
+        return jdbcTemplate.queryForObject(sql, new GlossaryMapper(), id);
+
+    }
+
+    public List<Long> findGlossaryToDataSetIdList(Long glossaryId) {
+        String sql = DefaultSQLBuilder.newBuilder()
+                .select("dataset_id").
+                from(TABLE_KUN_MT_GLOSSARY_TO_DATASET_REF, ALIAS_KUN_MT_GLOSSARY_TO_DATASET_REF)
+                .where("glossary_id=?").getSQL();
+        return jdbcTemplate.queryForList(sql, Long.class, glossaryId);
+
+    }
+
+
+    private static class GlossaryMapper implements RowMapper<GlossaryBasicInfo> {
+
+        @Override
+        public GlossaryBasicInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
+            GlossaryBasicInfo glossaryBasicInfo = new GlossaryBasicInfo();
+            glossaryBasicInfo.setId(rs.getLong("id"));
+            glossaryBasicInfo.setName(rs.getString("name"));
+            glossaryBasicInfo.setDescription(rs.getString("description"));
+            glossaryBasicInfo.setParentId(rs.getLong("parent_id"));
+            glossaryBasicInfo.setCreateUser(rs.getString("create_user"));
+            glossaryBasicInfo.setCreateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("create_time")));
+            glossaryBasicInfo.setUpdateUser(rs.getString("update_user"));
+            glossaryBasicInfo.setUpdateTime(DateTimeUtils.fromTimestamp(rs.getTimestamp("update_time")));
+            return glossaryBasicInfo;
+        }
+    }
+
 }

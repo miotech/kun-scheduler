@@ -8,15 +8,17 @@ import com.miotech.kun.dataplatform.web.common.deploy.vo.DeployedTaskSearchReque
 import com.miotech.kun.workflow.client.model.PaginationResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class DeployedTaskDaoTest extends AppTestBase {
@@ -140,6 +142,24 @@ public class DeployedTaskDaoTest extends AppTestBase {
 
         unarchived = deployedTaskDao.fetchUnarchived();
         assertThat(unarchived.size(), is(1));
+    }
+
+    @Test
+    public void testFetchByWorkflowTaskIds_empty() {
+        ImmutableList<Long> emptyTaskIds = ImmutableList.of();
+        Map<Long, DeployedTask> deployedTaskMap = deployedTaskDao.fetchByWorkflowTaskIds(emptyTaskIds);
+        assert(deployedTaskMap.isEmpty());
+    }
+
+    @Test
+    public void testFetchByWorkflowTaskIds() {
+        List<DeployedTask> deployedTasks = generateData(10);
+
+        Map<Long, DeployedTask> deployedTaskMap = deployedTaskDao.fetchByWorkflowTaskIds(
+                deployedTasks.stream()
+                        .map(DeployedTask::getWorkflowTaskId)
+                        .collect(Collectors.toList()));
+        assertThat(deployedTaskMap.size(), is(deployedTasks.size()));
     }
 
     private DeployedTask generateData() {

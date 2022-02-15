@@ -5,12 +5,7 @@ import {
   Models,
   RematchRootState,
 } from '@rematch/core';
-import {
-  Key,
-  SorterResult,
-  TableCurrentDataSource,
-  TablePaginationConfig,
-} from 'antd/es/table/interface';
+import { Key, SorterResult, TableCurrentDataSource, TablePaginationConfig } from 'antd/es/table/interface';
 
 /**
  * Common utility types
@@ -49,6 +44,9 @@ export interface PaginationRespBodyBase {
 
 export interface PaginationRespBody<T = any> extends PaginationRespBodyBase {
   records: T[];
+  pageNum: number;
+  pageSize: number;
+  totalCount: number;
 }
 
 export interface SingleColumnSorter<T extends Record<string, any>> {
@@ -101,21 +99,14 @@ export type Nullable<T extends Record<any, any>> = {
  * }
  * Please note that at this point, A extends B (A is a subset of B)
  */
-export type NullableExcept<
-  T extends Record<any, any>,
-  U extends keyof T
-> = Pick<T, U> & Nullable<Omit<T, U>>;
+export type NullableExcept<T extends Record<any, any>, U extends keyof T> = Pick<T, U> & Nullable<Omit<T, U>>;
 
-export type NullableExceptId<
-  T extends Record<any, any> & { id: any }
-> = NullableExcept<T, 'id'>;
+export type NullableExceptId<T extends Record<any, any> & { id: any }> = NullableExcept<T, 'id'>;
 
 /*
  * Type fixes for rematch loading plugin
  * */
-export type InferLoadingEffectsFromFunction<
-  EffectFunction extends (dispatch: any) => ModelEffects<any>
-> = {
+export type InferLoadingEffectsFromFunction<EffectFunction extends (dispatch: any) => ModelEffects<any>> = {
   [k in keyof ReturnType<EffectFunction>]: boolean;
 };
 
@@ -129,9 +120,7 @@ export type WithLoading<
       [modelName in keyof RootState]: boolean;
     };
     effects: {
-      [modelName in keyof RootModel]: RootModel[modelName]['effects'] extends (
-        dispatch: any,
-      ) => ModelEffects<any>
+      [modelName in keyof RootModel]: RootModel[modelName]['effects'] extends (dispatch: any) => ModelEffects<any>
         ? InferLoadingEffectsFromFunction<RootModel[modelName]['effects']>
         : {
             [effectName in keyof RootModel[modelName]['effects']]: boolean;
@@ -146,9 +135,7 @@ export interface LoadingState<M extends Models> {
     models: { [modelName in keyof M]: boolean };
     effects: {
       [modelName in keyof M]: {
-        [effectName in keyof ExtractRematchDispatchersFromEffects<
-          M[modelName]['effects']
-        >]: boolean;
+        [effectName in keyof ExtractRematchDispatchersFromEffects<M[modelName]['effects']>]: boolean;
       };
     };
   };

@@ -1,4 +1,5 @@
-import React, { memo, useMemo, useState } from 'react';
+import React, { memo, useCallback, useMemo } from 'react';
+import useRedux from '@/hooks/useRedux';
 import moment from 'moment';
 import { ColumnProps } from 'antd/es/table';
 import { FailedTestCase, AbnormalDataset, Glossary } from '@/services/monitoring-dashboard';
@@ -15,6 +16,7 @@ import TestCaseRuleTable from './TestCaseRuleTable';
 import styles from './FailedTestCasesTable.less';
 
 interface OwnProps {
+  glossaryFilter: string | null;
   data: AbnormalDataset[];
   pageNum: number;
   pageSize: number;
@@ -38,25 +40,21 @@ const sortFn = (a: any, b: any) => {
   return -1;
 };
 
-
 export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCasesTable(props) {
-  const { data, pageNum, pageSize, total, onChange, loading } = props;
-
+  const { glossaryFilter, data, pageNum, pageSize, total, onChange, loading } = props;
+  const { dispatch } = useRedux(() => {});
   const t = useI18n();
-  const [glossaryFilter, setGlossaryFilter] = useState<any>('');
-  const options = useMemo(
-    () => {
-      const res: string[] = [];
-      data.forEach(item => {
-        item.glossaries.forEach(idx => {
-          if (!res.includes(idx.name)) {
-            res.push(idx.name);
-          }
-        });
+  const options = useMemo(() => {
+    const res: string[] = [];
+    data.forEach(item => {
+      item.glossaries.forEach(idx => {
+        if (!res.includes(idx.name)) {
+          res.push(idx.name);
+        }
       });
-      return res;
-    }
-    , [data]);
+    });
+    return res;
+  }, [data]);
   const childTableColumns: ColumnProps<FailedTestCase>[] = useMemo(
     () => [
       {
@@ -179,8 +177,15 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
       res = data;
     }
     return res;
-  },
-    [glossaryFilter, data]);
+  }, [glossaryFilter, data]);
+  const setGlossaryFilter = useCallback(
+    (value: any) => {
+      dispatch.monitoringDashboard.updateAbnormalDatasets({
+        glossaryFilter: value,
+      });
+    },
+    [dispatch],
+  );
   const expandedRowRender = (record: AbnormalDataset) => {
     const useableData = [
       ...record.tasks.map(i => ({
@@ -206,25 +211,33 @@ export const FailedTestCasesTable: React.FC<Props> = memo(function FailedTestCas
     );
   };
 
-  const getColumnSearchProps = useMemo(() => ({
-    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm }: FilterDropdownProps) => (
-      <div style={{ padding: 8 }}>
-        <Select
-          allowClear
-          showSearch
-          value={selectedKeys}
-          onChange={value => { setSelectedKeys(value); confirm(); setGlossaryFilter(value); }}
-          style={{ marginBottom: 8, display: 'block', width: '200px' }}
-        >
-          {options.map(item => (
-            <Select.Option key={item} value={item}>{item}</Select.Option>
-          ))
-          }
-        </Select>
-      </div>
-    ),
-    filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />
-  }), [options]);
+  const getColumnSearchProps = useMemo(
+    () => ({
+      filterDropdown: ({ setSelectedKeys, confirm }: FilterDropdownProps) => (
+        <div style={{ padding: 8 }}>
+          <Select
+            allowClear
+            showSearch
+            value={glossaryFilter}
+            onChange={value => {
+              setSelectedKeys(value);
+              confirm();
+              setGlossaryFilter(value);
+            }}
+            style={{ marginBottom: 8, display: 'block', width: '200px' }}
+          >
+            {options.map(item => (
+              <Select.Option key={item} value={item}>
+                {item}
+              </Select.Option>
+            ))}
+          </Select>
+        </div>
+      ),
+      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1890ff' : undefined }} />,
+    }),
+    [options, glossaryFilter, setGlossaryFilter],
+  );
   const columns: ColumnProps<AbnormalDataset>[] = useMemo(
     () => [
       {

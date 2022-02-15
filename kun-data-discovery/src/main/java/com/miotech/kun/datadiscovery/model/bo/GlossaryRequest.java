@@ -2,6 +2,7 @@ package com.miotech.kun.datadiscovery.model.bo;
 
 import lombok.Data;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -21,9 +22,9 @@ public class GlossaryRequest {
 
     private String createUser;
 
-    private Long createTime;
+    private OffsetDateTime createTime;
 
     private String updateUser;
 
-    private Long updateTime;
+    private OffsetDateTime updateTime;
 }

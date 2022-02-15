@@ -3,6 +3,7 @@ package com.miotech.kun.dataplatform.web.common.deploy.service;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
@@ -31,6 +32,7 @@ import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
@@ -490,6 +492,15 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
                 userList.add(userInfo.getUsername());
         }
         return userList;
+    }
+
+    @Override
+    public Map<Long, DeployedTask> findByWorkflowTaskIds(List<Long> taskIds) {
+        if (CollectionUtils.isEmpty(taskIds)) {
+            return Maps.newHashMap();
+        }
+
+        return deployedTaskDao.fetchByWorkflowTaskIds(taskIds);
     }
 
     public Optional<DeployedTask> findByWorkflowTaskId(Long workflowTaskId) {

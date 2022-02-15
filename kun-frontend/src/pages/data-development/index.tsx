@@ -45,14 +45,12 @@ const DataDevelopmentPage: React.FC<any> = memo(function DataDevelopmentPage() {
     taskDefViewsList: TaskDefinitionViewBase[];
     loadingViews: boolean;
     selectedView: TaskDefinitionViewBase | null;
-    loadingTaskDefs: boolean;
   }>(s => ({
     filters: s.dataDevelopment.filters,
     displayType: s.dataDevelopment.displayType,
     taskDefViewsList: s.dataDevelopment.taskDefViewsList,
     loadingViews: s.loading.effects.dataDevelopment.fetchTaskDefViews,
     selectedView: s.dataDevelopment.selectedTaskDefView,
-    loadingTaskDefs: s.loading.effects.dataDevelopment.fetchTaskDefinitions,
   }));
 
   const [query, setQuery] = useQueryParams({

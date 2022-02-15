@@ -6,6 +6,7 @@ import com.miotech.kun.datadiscovery.model.bo.LineageTasksRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.service.DatasetService;
 import com.miotech.kun.datadiscovery.service.LineageAppService;
+import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.workflow.client.LineageQueryDirection;
 import com.miotech.kun.workflow.client.WorkflowClient;
 import com.miotech.kun.workflow.client.model.TaskRun;
@@ -49,6 +50,8 @@ public class LineageAppServiceTest extends KunAppTestBase {
     WorkflowClient workflowClient;
     @MockBean
     DatasetService datasetService;
+    @MockBean
+    private DeployedTaskFacade deployedTaskFacade;
 
 
     private LineageTasksRequest getLineageTasksRequest() {

@@ -5,6 +5,7 @@ import {
 import { TaskDefinition } from '@/definitions/TaskDefinition.type';
 import { TaskTemplate } from '@/definitions/TaskTemplate.type';
 import { TaskDefinitionViewBase } from '@/definitions/TaskDefinitionView.type';
+import produce from 'immer';
 
 export const reducers = {
   setDisplayType: (state: ModelState, payload: 'LIST' | 'DAG'): ModelState => {
@@ -75,4 +76,10 @@ export const reducers = {
       recordCount: payload,
     };
   },
+  updateTasklist: produce((draftState: ModelState, payload: ModelState['taskList']) => {
+    draftState.taskList = {
+      ...draftState.taskList,
+      ...payload,
+    };
+  }),
 };
