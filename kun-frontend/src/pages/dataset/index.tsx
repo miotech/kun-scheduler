@@ -249,6 +249,7 @@ export default function DataDiscoveryListView() {
           title: t('dataDiscovery.datasetsTable.header.name'),
           dataIndex: 'name',
           key: 'name',
+          fixed: 'left',
           sorter: true,
           width: 170,
           defaultSortOrder: sortKey === 'name' ? getOrder(sortOrder) : undefined,
