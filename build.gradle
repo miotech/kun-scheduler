@@ -102,6 +102,8 @@ subprojects {
                 implementation "org.testcontainers:postgresql:1.15.1"
                 implementation 'org.jgrapht:jgrapht-core:1.4.0'
                 implementation "org.projectlombok:lombok:1.18.12"
+                implementation 'org.freemarker:freemarker:2.3.30'
+                implementation 'com.alibaba:druid:1.1.23'
 
                 testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
                 testImplementation 'org.testcontainers:junit-jupiter:1.16.2'

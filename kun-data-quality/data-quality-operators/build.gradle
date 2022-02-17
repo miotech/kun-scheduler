@@ -19,7 +19,7 @@ dependencies {
     compile files('libs/simba-athena-jdbc-driver-2.0.2.jar')
     implementation 'org.postgresql:postgresql'
     implementation "commons-dbutils:commons-dbutils"
-    implementation 'org.freemarker:freemarker:2.3.30'
+    implementation 'org.freemarker:freemarker'
     implementation 'com.fasterxml.jackson.core:jackson-core'
 }
 
