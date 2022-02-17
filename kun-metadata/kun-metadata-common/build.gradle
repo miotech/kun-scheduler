@@ -8,7 +8,7 @@ dependencies {
     implementation 'com.google.guava:guava'
     implementation "org.mongodb:mongo-java-driver"
     implementation "com.amazonaws:aws-java-sdk-glue"
-    compile files('libs/simba-athena-jdbc-driver-2.0.2.jar')
+    implementation rootProject.files('libs/simba-athena-jdbc-driver-2.0.2.jar')
     implementation "com.arangodb:arangodb-java-driver"
     implementation "org.apache.kafka:kafka-clients"
     implementation "com.amazonaws:aws-java-sdk-s3"
