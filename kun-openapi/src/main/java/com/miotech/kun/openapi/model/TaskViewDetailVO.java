@@ -10,12 +10,12 @@ import java.util.stream.Collectors;
 public class TaskViewDetailVO {
     private final Long id;
     private final String taskViewName;
-    private final List<TaskVO> taskVOList;
+    private final List<TaskInViewDetailVO> taskList;
 
     public static TaskViewDetailVO from(TaskDefinitionView taskDefinitionView) {
         return new TaskViewDetailVO(taskDefinitionView.getId(), taskDefinitionView.getName(),
                 taskDefinitionView.getIncludedTaskDefinitions().stream()
-                        .map(TaskVO::from)
+                        .map(TaskInViewDetailVO::from)
                         .collect(Collectors.toList()));
     }
 }

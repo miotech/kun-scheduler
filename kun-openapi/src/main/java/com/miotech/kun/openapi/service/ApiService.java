@@ -103,7 +103,7 @@ public class ApiService extends BaseSecurityService {
     }
 
 
-    public PaginationResult<TaskDefinitionVO> searchTask(TaskSearchRequest request) {
+    public PaginationResult<TaskVO> searchTask(TaskSearchRequest request) {
         TaskDefinitionSearchRequest searchRequest = new TaskDefinitionSearchRequest(request.getPageSize(),
                 request.getPageNum(),
                 request.getTaskName(),
@@ -115,20 +115,22 @@ public class ApiService extends BaseSecurityService {
                 );
 
         PaginationResult<TaskDefinition> taskDefinitions = taskDefinitionService.search(searchRequest);
-        PaginationResult<TaskDefinitionVO> result = new PaginationResult<>(
+        PaginationResult<TaskVO> result = new PaginationResult<>(
                 taskDefinitions.getPageSize(),
                 taskDefinitions.getPageNum(),
                 taskDefinitions.getTotalCount(),
                 taskDefinitionService.convertToVOList(taskDefinitions.getRecords(), true)
-        );
+                        .stream()
+                        .map(this::convertToTaskVO)
+                        .collect(Collectors.toList()));
         return result;
     }
 
-    public TaskDefinitionVO getTask(Long taskId) {
-        return taskDefinitionService.convertToVO(taskDefinitionService.find(taskId));
+    public TaskVO getTask(Long taskId) {
+        return convertToTaskVO(taskDefinitionService.convertToVO(taskDefinitionService.find(taskId)));
     }
 
-    public TaskDefinitionVO createTask(TaskCreateRequest request, String token) {
+    public TaskVO createTask(TaskCreateRequest request, String token) {
         Long ownerId = setUserByToken(token);
         TaskDefinition taskDefinition = taskDefinitionService.create(new CreateTaskDefinitionRequest(request.getTaskName(),
                 request.getTaskTemplateName()));
@@ -141,11 +143,11 @@ public class ApiService extends BaseSecurityService {
                         request.getTaskPayload(),
                         ownerId
                 ));
-        return taskDefinitionService.convertToVO(taskDefinition);
+        return convertToTaskVO(taskDefinitionService.convertToVO(taskDefinition));
     }
 
 
-    public TaskDefinitionVO updateTask(TaskUpdateRequest request, String token) {
+    public TaskVO updateTask(TaskUpdateRequest request, String token) {
         Long ownerId = setUserByToken(token);
         TaskDefinition taskDefinition = taskDefinitionService.update(request.getTaskId(),
                 new UpdateTaskDefinitionRequest(request.getTaskId(),
@@ -153,7 +155,7 @@ public class ApiService extends BaseSecurityService {
                         request.getTaskPayload(),
                         ownerId
                 ));
-        return taskDefinitionService.convertToVO(taskDefinition);
+        return convertToTaskVO(taskDefinitionService.convertToVO(taskDefinition));
     }
 
     public DeployVO deployTask(TaskCommitRequest request, String token) {
@@ -169,5 +171,29 @@ public class ApiService extends BaseSecurityService {
         UserInfo userInfo = getUserByUsername(username);
         setCurrentUser(userInfo);
         return getCurrentUser().getId();
+    }
+
+    // TaskDefinitionVO is designed for web-frontend usage
+    // convert TaskDefinitionVO to TaskVO for openapi usage with customization
+    private TaskVO convertToTaskVO(TaskDefinitionVO taskDefinitionVO) {
+        List<Long> taskViewIds = taskDefinitionViewService.fetchAllByTaskDefinitionId(taskDefinitionVO.getId())
+                .stream()
+                .map(TaskDefinitionViewVO::getId)
+                .collect(Collectors.toList());
+        return new TaskVO(taskDefinitionVO.getId(),
+                taskDefinitionVO.getName(),
+                taskDefinitionVO.getTaskTemplateName(),
+                taskDefinitionVO.getTaskPayload(),
+                taskDefinitionVO.getCreator(),
+                taskDefinitionVO.isArchived(),
+                taskDefinitionVO.isDeployed(),
+                taskDefinitionVO.isUpdated(),
+                taskDefinitionVO.getOwner(),
+                taskDefinitionVO.getUpstreamTaskDefinitions(),
+                taskDefinitionVO.getLastModifier(),
+                taskDefinitionVO.getLastUpdateTime(),
+                taskDefinitionVO.getCreateTime(),
+                taskDefinitionVO.getTaskCommits(),
+                taskViewIds);
     }
 }
