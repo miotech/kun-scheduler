@@ -397,7 +397,7 @@ public class LineageServiceTest extends DatabaseTestBase {
         // Fetch upstream nodes of dataset 3
         DatasetNode datasetNode3 = datasetNodes.get(2);
         Set<DatasetNode> downstreamDepthDataNode3 = lineageService.fetchDownstreamDatasetNodes(datasetNode3.getGid(),5);
-        assertThat(downstreamDepthDataNode3.size(),is(1));
+        assertThat(downstreamDepthDataNode3.size(),is(2));
 
     }
 
