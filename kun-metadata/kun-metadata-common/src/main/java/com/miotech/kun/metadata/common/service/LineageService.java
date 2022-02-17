@@ -3,6 +3,7 @@ package com.miotech.kun.metadata.common.service;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.metadata.common.exception.EntityNotFoundException;
@@ -232,6 +233,7 @@ public class LineageService implements LineageServiceFacade {
 
     /**
      * Delete task node
+     *
      * @param nodeId id of task node
      * @return <code>true</code> if operation successful, <code>false</code> if node not found
      */
@@ -247,13 +249,6 @@ public class LineageService implements LineageServiceFacade {
         return true;
     }
 
-    /**
-     * @param datasetGlobalId
-     * @return
-     */
-    public Set<DatasetNode> fetchUpstreamDatasetNodes(Long datasetGlobalId) {
-        return fetchUpstreamDatasetNodes(datasetGlobalId, 1);
-    }
 
     /**
      * @param datasetGlobalId
@@ -262,16 +257,23 @@ public class LineageService implements LineageServiceFacade {
      */
     public Set<DatasetNode> fetchUpstreamDatasetNodes(Long datasetGlobalId, int depth) {
         Preconditions.checkArgument(depth > 0, "Depth field should be positive but got: %s", depth);
-        return searchAllRelatedDatasetNodesWithDepth(datasetGlobalId, DirectionEnum.UPSTREAM, depth);
+        Preconditions.checkArgument(datasetGlobalId > 0, "datasetGlobalId  should be positive but got: %s", datasetGlobalId);
+        Map<String, Object> paramsMap = new HashMap<>();
+        paramsMap.put("datasetGid", datasetGlobalId);
+        String cypherFormat = String.format(
+                " MATCH (dataset:KUN_DATASET)<-[r*%s..%s]-(res) WHERE dataset.gid={datasetGid}  return r,res", 1, (1 + depth * 2));
+        return getDepthRelatedDatasetNodes(paramsMap, cypherFormat);
     }
 
-    /**
-     * @param datasetGlobalId
-     * @return
-     */
-    public Set<DatasetNode> fetchDownstreamDatasetNodes(Long datasetGlobalId) {
-        return fetchDownstreamDatasetNodes(datasetGlobalId, 1);
+    private LinkedHashSet<DatasetNode> getDepthRelatedDatasetNodes(Map<String, Object> paramsMap, String cypherFormat) {
+        Iterable<DatasetNode> datasetNodes = getSession().query(
+                DatasetNode.class,
+                cypherFormat,
+                paramsMap
+        );
+        return Sets.newLinkedHashSet(datasetNodes);
     }
+
 
     /**
      * @param datasetGlobalId
@@ -280,7 +282,13 @@ public class LineageService implements LineageServiceFacade {
      */
     public Set<DatasetNode> fetchDownstreamDatasetNodes(Long datasetGlobalId, int depth) {
         Preconditions.checkArgument(depth > 0, "Depth field should be positive but got: %s", depth);
-        return searchAllRelatedDatasetNodesWithDepth(datasetGlobalId, DirectionEnum.DOWNSTREAM, depth);
+        Preconditions.checkArgument(datasetGlobalId > 0, "datasetGlobalId  should be positive but got: %s", datasetGlobalId);
+
+        String cypherFormat = String.format(" MATCH (dataset:KUN_DATASET)-[r*%s..%s]->(res)  WHERE dataset.gid={datasetGid}  return r,res", 1, (depth * 2 + 1));
+        Map<String, Object> paramsMap = new HashMap<>();
+        paramsMap.put("datasetGid", datasetGlobalId);
+        return getDepthRelatedDatasetNodes(paramsMap, cypherFormat);
+
     }
 
     /**
@@ -321,9 +329,7 @@ public class LineageService implements LineageServiceFacade {
      */
     public void updateTaskLineage(Task task, List<DataStore> upstreamDatastore, List<DataStore> downstreamDataStore) {
         Optional<TaskNode> taskNodeOptional = fetchTaskNodeById(task.getId());
-        if(taskNodeOptional.isPresent()){
-            deleteTaskNode(taskNodeOptional.get().getTaskId());
-        }
+        taskNodeOptional.ifPresent(taskNode -> deleteTaskNode(taskNode.getTaskId()));
 
         // Create a task node
         TaskNode taskNode = TaskNode.from(task);
@@ -387,87 +393,6 @@ public class LineageService implements LineageServiceFacade {
         return sessionFactory.openSession();
     }
 
-    private void appendToResultSetConditionally(DatasetNode dsNode, Queue<DatasetNode> searchQueue, Set<DatasetNode> resultSet, boolean shouldAddNextDepthToQueue) {
-        if (!resultSet.contains(dsNode)) {
-            resultSet.add(dsNode);
-            if (shouldAddNextDepthToQueue) {
-                searchQueue.add(dsNode);
-            }
-        }
-    }
-
-    private Queue<DatasetNode> searchNeighbors(DatasetNode ds, Set<DatasetNode> resultSet, DirectionEnum direction, boolean shouldAddNextDepthToQueue) {
-        Queue<DatasetNode> searchQueue = new LinkedList<>();
-        if (Objects.equals(direction, DirectionEnum.DOWNSTREAM)) {
-            Set<TaskNode> nextTaskNodeSet = ds.getDownstreamTasks();
-            nextTaskNodeSet.forEach(taskNodePartial -> {
-                Optional<TaskNode> taskNodeOptional = fetchTaskNodeById(taskNodePartial.getTaskId());
-                if (!taskNodeOptional.isPresent()) {
-                    throw new EntityNotFoundException(String.format("Cannot find task node with id: %s", taskNodePartial.getTaskId()));
-                }
-                taskNodeOptional.get()
-                        .getOutlets()
-                        .forEach(dsNodePartial -> {
-                            DatasetNode dsNode = fetchDatasetNodeById(dsNodePartial.getGid()).orElseThrow(
-                                    () -> new EntityNotFoundException(String.format("Cannot find dataset node with id: %s", dsNodePartial.getGid()))
-                            );
-                            appendToResultSetConditionally(dsNode, searchQueue, resultSet, shouldAddNextDepthToQueue);
-                        });
-            });
-        }
-        if (Objects.equals(direction, DirectionEnum.UPSTREAM)) {
-            Set<TaskNode> nextTaskNodeSet = ds.getUpstreamTasks();
-            nextTaskNodeSet.forEach(taskNodePartial -> {
-                Optional<TaskNode> taskNodeOptional = fetchTaskNodeById(taskNodePartial.getTaskId());
-                if (!taskNodeOptional.isPresent()) {
-                    throw new EntityNotFoundException(String.format("Cannot find task node with id: %s", taskNodePartial.getTaskId()));
-                }
-                taskNodeOptional.get()
-                        .getInlets()
-                        .forEach(dsNodePartial -> {
-                            DatasetNode dsNode = fetchDatasetNodeById(dsNodePartial.getGid()).orElseThrow(
-                                    () -> new EntityNotFoundException(String.format("Cannot find dataset node with id: %s", dsNodePartial.getGid()))
-                            );
-                            appendToResultSetConditionally(dsNode, searchQueue, resultSet, shouldAddNextDepthToQueue);
-                        });
-            });
-        }
-        return searchQueue;
-    }
-
-    private Set<DatasetNode> searchAllRelatedDatasetNodesWithDepth(Long datasetGlobalId, DirectionEnum direction, int depth) {
-        Preconditions.checkNotNull(datasetGlobalId, "Invalid argument `datasetGlobalId`: null");
-        Preconditions.checkNotNull(direction, "Invalid argument `direction`: null");
-        Preconditions.checkArgument(depth >= 1, "Invalid argument `depth`: %s; should be positive integer.", depth);
-
-        Session sess = getSession();
-        DatasetNode datasetNode = sess.load(DatasetNode.class, datasetGlobalId);
-        if (Objects.isNull(datasetNode)) {
-            throw new EntityNotFoundException(String.format("Cannot find dataset node with id: %s", datasetGlobalId));
-        }
-        Set<DatasetNode> resultSet = new LinkedHashSet<>();
-
-        Queue<DatasetNode> searchQueue = new LinkedList<>();
-        searchQueue.add(datasetNode);
-
-        for (int currentDepth = 1; currentDepth <= depth; currentDepth += 1) {
-            int depthElementsSize = searchQueue.size();
-            for (int i = 0; i < depthElementsSize; i += 1) {
-                DatasetNode ds = searchQueue.poll();
-                logger.debug(String.format("Searching dataset node with id = %s, currentDepth = %s, depth = %s", ds.getGid(), currentDepth, depth));
-                if (Objects.equals(direction, DirectionEnum.DOWNSTREAM) || Objects.equals(direction, DirectionEnum.BOTH)) {
-                    Queue<DatasetNode> nextSearchQueue = searchNeighbors(ds, resultSet, DirectionEnum.DOWNSTREAM, currentDepth < depth);
-                    searchQueue.addAll(nextSearchQueue);
-                }
-                if (Objects.equals(direction, DirectionEnum.UPSTREAM) || Objects.equals(direction, DirectionEnum.BOTH)) {
-                    Queue<DatasetNode> nextSearchQueue = searchNeighbors(ds, resultSet, DirectionEnum.UPSTREAM, currentDepth < depth);
-                    searchQueue.addAll(nextSearchQueue);
-                }
-            }
-        }
-
-        return resultSet;
-    }
 
     private Map<Long, List<Long>> extractFetchedInformation(Iterator<Map<String, Object>> iterator) {
         Map<Long, List<Long>> datasetTasks = Maps.newHashMap();
