@@ -57,6 +57,8 @@ management:
       enabled: false
     db:
       enabled: false
+    neo4j:
+      enabled: false
 
 # Notification configurations items
 notify:
