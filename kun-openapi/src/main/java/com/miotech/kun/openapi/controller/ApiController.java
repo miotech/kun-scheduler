@@ -54,23 +54,23 @@ public class ApiController {
     }
 
     @GetMapping("/task/get")
-    public RequestResult<TaskDefinitionVO> getTask(@RequestParam Long taskId) {
+    public RequestResult<TaskVO> getTask(@RequestParam Long taskId) {
         return RequestResult.success(apiService.getTask(taskId));
     }
     
     @PostMapping("/task/search")
-    public RequestResult<PaginationResult<TaskDefinitionVO>> searchTask(@RequestBody TaskSearchRequest request) {
+    public RequestResult<PaginationResult<TaskVO>> searchTask(@RequestBody TaskSearchRequest request) {
         return RequestResult.success(apiService.searchTask(request));
     }
 
     @PostMapping("/task/create")
-    public RequestResult<TaskDefinitionVO> createTask(@RequestBody TaskCreateRequest request,
+    public RequestResult<TaskVO> createTask(@RequestBody TaskCreateRequest request,
                                                       @RequestHeader("Authorization") String token) {
         return RequestResult.success(apiService.createTask(request, token));
     }
 
     @PutMapping("/task/update")
-    public RequestResult<TaskDefinitionVO> updateTask(@RequestBody TaskUpdateRequest request,
+    public RequestResult<TaskVO> updateTask(@RequestBody TaskUpdateRequest request,
                                                       @RequestHeader("Authorization") String token) {
         return RequestResult.success(apiService.updateTask(request, token));
     }
