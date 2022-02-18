@@ -421,8 +421,6 @@ export default memo(
         // 点击加减号事件
         function click(d) {
           const thisNode = d3.select(this);
-          thisNode.selectAll(`rect`).remove();
-
           thisNode
             .append('rect')
             .attr('stroke', '#e0e0e0')
@@ -435,13 +433,10 @@ export default memo(
           if (!Number(d.data.childrenCount)) {
             return;
           }
-          if (d.data.children) {
+
+          dispatch.glossary.fetchNodeChildAndUpdateNode({ nodeData: d.data }).then(() => {
             update(d);
-          } else {
-            dispatch.glossary.fetchNodeChildAndUpdateNode({ nodeData: d.data }).then(() => {
-              update(d);
-            });
-          }
+          });
         }
         updateCache = update;
       }
@@ -453,20 +448,37 @@ export default memo(
       };
     }, [dispatch.glossary, history, rootNode, updateGlossaryOrderApi]);
 
-    function changeChild(parentId, id) {
+    async function addChild(child, parentId, id) {
+      if (!parentId) {
+        await dispatch.glossary.fetchRootNodeChildGlossary();
+        setCurrentId(id);
+        return;
+      }
+      d3.selectAll('rect').each(function textfunc(d) {
+        if (d && d.data.id === parentId) {
+          if (d.data.children) {
+            d.data.children.push(child);
+          } else {
+            d.data.children = [child];
+          }
+          d3.select(`[id=count${parentId}]`).text(d.data.children.length);
+          updateCache(d);
+          if (id) {
+            setCurrentId(id);
+          }
+        }
+      });
+    }
+    function deleteChild(parentId, id) {
       if (!parentId) {
         dispatch.glossary.fetchRootNodeChildGlossary();
         return;
       }
       d3.selectAll('rect').each(function textfunc(d) {
         if (d && d.data.id === parentId) {
-          dispatch.glossary.fetchNodeChildAndUpdateNode({ nodeData: d.data }).then(res => {
-            d3.select(`[id=count${parentId}]`).text(res.children.length);
-            updateCache(d);
-            if (id) {
-              setCurrentId(id);
-            }
-          });
+          const deleteIndex = d.data.children.findIndex(item => item.id === id);
+          d.data.children.splice(deleteIndex, 1);
+          updateCache(d);
         }
       });
     }
@@ -514,7 +526,8 @@ export default memo(
         </div>
         <Drawer title="" width={800} placement="right" destroyOnClose onClose={onClose} mask={false} visible={visible}>
           <GlossaryDetail
-            changeChild={changeChild}
+            addChild={addChild}
+            deleteChild={deleteChild}
             setCurrentId={setCurrentId}
             onClose={onClose}
             currentId={currentId}
