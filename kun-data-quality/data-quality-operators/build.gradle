@@ -16,7 +16,7 @@ dependencies {
     implementation project(":kun-commons:kun-commons-db")
     implementation project(":kun-app-common")
     implementation project(":kun-data-quality:kun-data-quality-core")
-    compile files('libs/simba-athena-jdbc-driver-2.0.2.jar')
+    implementation rootProject.files('libs/simba-athena-jdbc-driver-2.0.2.jar')
     implementation 'org.postgresql:postgresql'
     implementation "commons-dbutils:commons-dbutils"
     implementation 'org.freemarker:freemarker:2.3.30'
