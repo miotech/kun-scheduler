@@ -7,9 +7,7 @@ import com.miotech.kun.datadiscovery.model.bo.GlossaryGraphRequest;
 import com.miotech.kun.datadiscovery.model.bo.GlossaryRequest;
 import com.miotech.kun.datadiscovery.model.entity.*;
 import com.miotech.kun.datadiscovery.persistence.GlossaryRepository;
-import com.miotech.kun.datadiscovery.util.convert.Converter;
-import com.miotech.kun.datadiscovery.util.convert.DatasetBasicInfoConvertFactory;
-import com.miotech.kun.datadiscovery.util.convert.GlossaryBaseInfoConvertFactory;
+import com.miotech.kun.datadiscovery.util.convert.AppBasicConversionService;
 import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
 import com.miotech.kun.security.service.BaseSecurityService;
 import org.apache.commons.collections4.CollectionUtils;
@@ -41,8 +39,8 @@ public class GlossaryService extends BaseSecurityService {
     RestTemplate restTemplate;
     @Autowired
     GlossaryRepository glossaryRepository;
-    
-    public   static  final String  COPY_NAME_ENDWITH="-copy";
+
+    public static final String COPY_PREFIX = "Copy of ";
 
 
     public Long getParentId(Long id) {
@@ -53,46 +51,59 @@ public class GlossaryService extends BaseSecurityService {
         return glossaryRepository.updateGraph(id, glossaryGraphRequest);
     }
 
-    public List<GlossaryBasic> getGlossariesByDataset(Long datasetGid) {
+    public List<GlossaryBasicInfo> getGlossariesByDataset(Long datasetGid) {
         if (datasetGid == null) {
             return Lists.newArrayList();
         }
-
         return glossaryRepository.getGlossariesByDataset(datasetGid);
     }
 
-    public Glossary add(GlossaryRequest glossaryRequest) {
+    public Glossary createGlossary(GlossaryRequest glossaryRequest) {
+        Long id = add(glossaryRequest);
+        return fetchGlossary(id);
+    }
+
+    public Long add(GlossaryRequest glossaryRequest) {
         OffsetDateTime now = DateTimeUtils.now();
         glossaryRequest.setCreateUser(getCurrentUsername());
         glossaryRequest.setCreateTime(now);
         glossaryRequest.setUpdateUser(getCurrentUsername());
         glossaryRequest.setUpdateTime(now);
-        Long id = glossaryRepository.insert(glossaryRequest);
-        return fetchGlossary(id);
+        return glossaryRepository.insert(glossaryRequest);
     }
 
-    public GlossaryChildren getChildren(Long parentId) {
+    public List<GlossaryBasicInfo> fetchChildrenBasicList(Long parentId) {
         return glossaryRepository.findChildren(parentId);
     }
 
+    public GlossaryChildren fetchGlossaryChildren(Long parentId) {
+        GlossaryChildren glossaryChildren = new GlossaryChildren();
+        glossaryChildren.setParentId(parentId);
+        glossaryChildren.setChildren(glossaryRepository.findChildrenCountList(parentId));
+        return glossaryChildren;
+    }
 
     public Glossary fetchGlossary(Long id) {
-        GlossaryBasicInfo glossaryBasicInfo = glossaryRepository.findGlossaryBaseInfo(id);
-        if (Objects.isNull(glossaryBasicInfo)){
-            throw  new RuntimeException("glossary does not exist");
+        GlossaryBasicInfo glossaryBasicInfo = getGlossaryBasicInfo(id);
+        if (Objects.isNull(glossaryBasicInfo)) {
+            throw new IllegalArgumentException("glossary does not exist,id:" + id);
         }
-        GlossaryBaseInfoConvertFactory glossaryBaseInfoToGlossary = new GlossaryBaseInfoConvertFactory();
-        Converter<GlossaryBasicInfo, Glossary> converter = glossaryBaseInfoToGlossary.getConverter(Glossary.class);
-        Glossary glossary = converter.convert(glossaryBasicInfo);
-        assert glossary != null;
-        if (Objects.nonNull(glossaryBasicInfo.getParentId())&&glossaryBasicInfo.getParentId() != 0) {
-            GlossaryBasicInfo parentGlossaryBasicInfo = glossaryRepository.findGlossaryBaseInfo(glossaryBasicInfo.getParentId());
-            Glossary parentGlossary = converter.convert(parentGlossaryBasicInfo);
-            glossary.setParent(parentGlossary);
+
+        Glossary glossary = AppBasicConversionService.getSharedInstance().convert(glossaryBasicInfo, Glossary.class);
+        if (Objects.nonNull(glossaryBasicInfo.getParentId()) && glossaryBasicInfo.getParentId() != 0) {
+            GlossaryBasicInfo parentGlossaryBasicInfo = getGlossaryBasicInfo(glossaryBasicInfo.getParentId());
+            glossary.setParent(parentGlossaryBasicInfo);
         }
         List<Long> glossaryToDataSetIdList = glossaryRepository.findGlossaryToDataSetIdList(id);
-
         glossary.setAssets(findAssets(glossaryToDataSetIdList));
+        List<GlossaryBasicInfo> ancestryGlossaryList = glossaryRepository.findAncestryGlossaryList(id);
+        glossary.setAncestryGlossaryList(ancestryGlossaryList);
+        List<GlossaryBasicInfoWithCount> children = fetchGlossaryChildren(id).getChildren();
+        if (CollectionUtils.isNotEmpty(children)) {
+            glossary.setChildrenCount(children.size());
+            glossary.setGlossaryCountList(children);
+        }
+
         return glossary;
     }
 
@@ -115,48 +126,61 @@ public class GlossaryService extends BaseSecurityService {
 
     @Transactional(rollbackFor = Exception.class)
     public Glossary copy(Long copyId) {
-        Glossary oldGlossary = fetchGlossary(copyId);
-        Long newGlossaryId = copySelf(oldGlossary).getId();
+        GlossaryBasicInfo oldGlossaryBasicInfo = getGlossaryBasicInfo(copyId);
+        Long newGlossaryId = copy(oldGlossaryBasicInfo);
         return fetchGlossary(newGlossaryId);
     }
 
-
-
-    private Glossary copySelf(Glossary oldGlossary) {
-        GlossaryRequest glossaryRequest = new GlossaryRequest();
-        glossaryRequest.setName(getCopyName(oldGlossary));
-        if (Objects.nonNull(oldGlossary.getParent())){
-
-            glossaryRequest.setParentId(oldGlossary.getParent().getId());
+    private Long copy(GlossaryBasicInfo oldGlossaryBasicInfo) {
+        Long newGlossaryId = copySelf(oldGlossaryBasicInfo);
+        List<GlossaryBasicInfo> oldChildren = fetchChildrenBasicList(oldGlossaryBasicInfo.getId());
+        if (CollectionUtils.isNotEmpty(oldChildren)) {
+            oldChildren.forEach(glossary -> {
+                glossary.setParentId(newGlossaryId);
+                copy(glossary);
+            });
         }
-        glossaryRequest.setDescription(oldGlossary.getDescription());
-        List<Asset> assets = oldGlossary.getAssets();
-        if (CollectionUtils.isNotEmpty(assets)) {
-            List<Long> assetIds = assets.stream().map(Asset::getId).collect(Collectors.toList());
-          glossaryRequest.setAssetIds(assetIds);
+        return newGlossaryId;
+    }
+
+
+    public GlossaryBasicInfo getGlossaryBasicInfo(Long id) {
+        return glossaryRepository.findGlossaryBaseInfo(id);
+
+    }
+
+    private Long copySelf(GlossaryBasicInfo oldGlossaryBasicInfo) {
+        GlossaryRequest glossaryRequest = new GlossaryRequest();
+        glossaryRequest.setName(getCopyName(oldGlossaryBasicInfo.getName()));
+        glossaryRequest.setParentId(oldGlossaryBasicInfo.getParentId());
+        glossaryRequest.setDescription(oldGlossaryBasicInfo.getDescription());
+        List<Long> glossaryToDataSetIdList = glossaryRepository.findGlossaryToDataSetIdList(oldGlossaryBasicInfo.getId());
+        if (CollectionUtils.isNotEmpty(glossaryToDataSetIdList)) {
+            glossaryRequest.setAssetIds(glossaryToDataSetIdList);
         }
         return add(glossaryRequest);
     }
 
-    private String getCopyName(Glossary oldGlossary) {
-        return oldGlossary.getName() + COPY_NAME_ENDWITH;
+    public static String getCopyName(String oldName) {
+        return COPY_PREFIX + oldName;
     }
 
 
-    private  List<Asset> findAssets(List<Long> glossaryToDataSetIdList) {
+    private List<Asset> findAssets(List<Long> glossaryToDataSetIdList) {
         if (CollectionUtils.isEmpty(glossaryToDataSetIdList)) {
             return Lists.newArrayList();
         }
         String suggestColumnUrl = url + "/dataset/id_list";
 
 
-        ParameterizedTypeReference<List<DatasetBasicInfo>> typeRef = new ParameterizedTypeReference<List<DatasetBasicInfo>>() {};
+        ParameterizedTypeReference<List<DatasetBasicInfo>> typeRef = new ParameterizedTypeReference<List<DatasetBasicInfo>>() {
+        };
         ResponseEntity<List<DatasetBasicInfo>> responseEntity = restTemplate.exchange(suggestColumnUrl, HttpMethod.POST, new HttpEntity<>(glossaryToDataSetIdList), typeRef);
-        List<DatasetBasicInfo> datasetBasicInfos= responseEntity.getBody();
-        Converter<DatasetBasicInfo, Asset> converter = new DatasetBasicInfoConvertFactory().getConverter(Asset.class);
-        assert datasetBasicInfos != null;
-        return datasetBasicInfos.stream()
-                .map(converter::convert)
+        List<DatasetBasicInfo> datasetBasicInfos = responseEntity.getBody();
+        return Objects.requireNonNull(datasetBasicInfos)
+                .stream()
+                .filter(Objects::nonNull)
+                .map(datasetBasicInfo -> AppBasicConversionService.getSharedInstance().convert(datasetBasicInfo, Asset.class))
                 .collect(Collectors.toList());
     }
 

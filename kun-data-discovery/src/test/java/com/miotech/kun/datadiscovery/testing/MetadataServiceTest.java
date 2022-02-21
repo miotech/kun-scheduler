@@ -6,7 +6,7 @@ import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
 import com.miotech.kun.datadiscovery.model.bo.DatasetSearchRequest;
 import com.miotech.kun.datadiscovery.model.entity.DatasetBasic;
 import com.miotech.kun.datadiscovery.model.entity.DatasetBasicPage;
-import com.miotech.kun.datadiscovery.model.entity.GlossaryBasic;
+import com.miotech.kun.datadiscovery.model.entity.GlossaryBasicInfoWithCount;
 import com.miotech.kun.datadiscovery.model.entity.UpstreamTask;
 import com.miotech.kun.datadiscovery.service.GlossaryService;
 import com.miotech.kun.datadiscovery.service.MetadataService;
@@ -74,7 +74,7 @@ public class MetadataServiceTest extends KunAppTestBase {
                 Mockito.any(Class.class))).willReturn(response);
 
         // mock glossary service
-        GlossaryBasic glossaryBasic = MockGlossaryBasicFactory.create();
+        GlossaryBasicInfoWithCount glossaryBasic = MockGlossaryBasicFactory.create();
         doReturn(ImmutableList.of(glossaryBasic)).when(glossaryService).getGlossariesByDataset(anyLong());
 
         BasicSearchRequest basicSearchRequest = new BasicSearchRequest();
@@ -111,7 +111,7 @@ public class MetadataServiceTest extends KunAppTestBase {
         doReturn(deployedTaskMap).when(deployedTaskFacade).findByWorkflowTaskIds(ImmutableList.of(task.getId()));
 
         // mock glossary service
-        GlossaryBasic glossaryBasic = MockGlossaryBasicFactory.create();
+        GlossaryBasicInfoWithCount glossaryBasic = MockGlossaryBasicFactory.create();
         doReturn(ImmutableList.of(glossaryBasic)).when(glossaryService).getGlossariesByDataset(anyLong());
 
         DatasetBasicPage datasetBasicPage = metadataService.fullTextSearch(new DatasetSearchRequest());

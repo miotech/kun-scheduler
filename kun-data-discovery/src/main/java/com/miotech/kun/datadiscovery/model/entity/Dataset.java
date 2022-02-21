@@ -20,5 +20,5 @@ public class Dataset extends DatasetBasic {
 
     private List<DataTask> flows;
 
-    private List<GlossaryBasic> glossaries;
+    private List<GlossaryBasicInfo> glossaries;
 }

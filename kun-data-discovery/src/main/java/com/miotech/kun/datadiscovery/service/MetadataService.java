@@ -258,7 +258,7 @@ public class MetadataService {
         datasetBasic.setTags(datasetBasicInfo.getTags());
         datasetBasic.setDeleted(datasetBasicInfo.getDeleted());
 
-        List<GlossaryBasic> glossaryBasics = glossaryService.getGlossariesByDataset(datasetBasicInfo.getGid());
+        List<GlossaryBasicInfo> glossaryBasics = glossaryService.getGlossariesByDataset(datasetBasicInfo.getGid());
         datasetBasic.setGlossaries(glossaryBasics);
 
         Optional<UpstreamTaskInformation> upstreamTaskInformationOpt = upstreamTaskInformationList.stream()
@@ -295,7 +295,7 @@ public class MetadataService {
         dataset.setDeleted(datasetDetail.getDeleted());
 
         dataset.setRowCount(datasetDetail.getRowCount());
-        List<GlossaryBasic> glossaryBasics = glossaryService.getGlossariesByDataset(datasetDetail.getGid());
+        List<GlossaryBasicInfo> glossaryBasics = glossaryService.getGlossariesByDataset(datasetDetail.getGid());
         dataset.setGlossaries(glossaryBasics);
 
         return dataset;
