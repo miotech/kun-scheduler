@@ -220,6 +220,22 @@ export const appRoutes = [
               },
             ],
           },
+          {
+            title: 'common.pageTitle.operationCenter.runningStatistics',
+            path: './running-statistics',
+            menuDisplay: true,
+            breadcrumbLink: true,
+            icon: 'HistoryOutlined',
+            routes: [
+              {
+                title: 'common.pageTitle.operationCenter.runningStatistics',
+                path: '.',
+                exact: true,
+                component: '@/pages/operation-center/running-statistics',
+                wrappers: ['@/wrappers/path', '@/wrappers/isLogin', '@/wrappers/permission'],
+              },
+            ],
+          },
         ],
       },
       {

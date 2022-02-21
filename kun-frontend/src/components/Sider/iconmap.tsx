@@ -7,6 +7,7 @@ import Icon, {
   SettingOutlined,
   SnippetsOutlined,
   ToolOutlined,
+  HistoryOutlined
 } from '@ant-design/icons';
 import { ReactComponent as TaskScheduledIcon } from '@/assets/icons/task-scheduled.svg';
 import { ReactComponent as TaskInstantIcon } from '@/assets/icons/task-instant.svg';
@@ -35,6 +36,7 @@ export const iconComponentMap: IconComponentMap = {
   ToolOutlined: <ToolOutlined />,
   ApartmentOutlined: <ApartmentOutlined />,
   LineChartOutlined: <LineChartOutlined />,
+  HistoryOutlined: <HistoryOutlined />,
   TaskScheduled,
   TaskInstant,
   DataDevelopment,
