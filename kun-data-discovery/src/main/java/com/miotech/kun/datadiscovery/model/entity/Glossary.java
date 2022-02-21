@@ -1,11 +1,8 @@
 package com.miotech.kun.datadiscovery.model.entity;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
-import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -13,26 +10,18 @@ import java.util.List;
  * @created: 2020/6/17
  */
 @Data
-public class Glossary {
+@EqualsAndHashCode(callSuper=true)
+public class Glossary extends GlossaryBasicInfo {
 
-    @JsonSerialize(using= ToStringSerializer.class)
-    private Long id;
+    private GlossaryBasicInfo parent;
 
-    private String name;
+    private List<Asset> assets;
 
-    private String description;
+    private List<GlossaryBasicInfo> ancestryGlossaryList;
 
-    private Glossary parent;
+    private List<GlossaryBasicInfoWithCount> glossaryCountList;
 
-    String createUser;
+    private Integer  childrenCount;
 
-    @JsonSerialize(using = CustomDateTimeSerializer.class)
-    OffsetDateTime createTime;
 
-    String updateUser;
-
-    @JsonSerialize(using = CustomDateTimeSerializer.class)
-    OffsetDateTime updateTime;
-
-    List<Asset> assets;
 }

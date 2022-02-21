@@ -17,9 +17,9 @@ public class GlossaryChildren {
     @JsonSerialize(using= ToStringSerializer.class)
     private Long parentId;
 
-    private List<GlossaryBasic> children = new ArrayList<>();
+    private List<GlossaryBasicInfoWithCount> children = new ArrayList<>();
 
-    public void add(GlossaryBasic child) {
+    public void add(GlossaryBasicInfoWithCount child) {
         children.add(child);
     }
 }

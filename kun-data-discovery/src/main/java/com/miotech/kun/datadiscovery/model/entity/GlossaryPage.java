@@ -12,9 +12,9 @@ import java.util.List;
 @Data
 public class GlossaryPage {
 
-    private List<GlossaryBasic> glossaries = new ArrayList<>();
+    private List<GlossaryBasicInfo> glossaries = new ArrayList<>();
 
-    public void add(GlossaryBasic glossary) {
+    public void add(GlossaryBasicInfo glossary) {
         glossaries.add(glossary);
     }
 }

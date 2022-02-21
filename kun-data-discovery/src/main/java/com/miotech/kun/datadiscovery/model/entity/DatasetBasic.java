@@ -42,7 +42,7 @@ public class DatasetBasic {
 
     private List<String> tags;
 
-    private List<GlossaryBasic> glossaries;
+    private List<GlossaryBasicInfo> glossaries;
 
     private Boolean deleted;
 
