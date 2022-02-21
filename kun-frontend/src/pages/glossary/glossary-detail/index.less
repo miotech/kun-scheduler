@@ -1,6 +1,5 @@
 .container {
   height: 100%;
-  padding:0 20px;
 
   .backButoonRow {
     margin-bottom: 16px;
@@ -10,25 +9,27 @@
       cursor: pointer;
     }
   }
-
+  .pathName {
+    cursor: pointer;
+    color: #9c9c9c;
+  }
   .titleArea {
     display: flex;
     align-items: center;
-    padding: 24px 24px 24px 32px;
-    margin-bottom: 10px;
-    margin-top: 10px;
+    padding: 10px 0 20px 0;
     border-radius: 3px;
+    border-bottom: 1px solid #ebebeb;
     .title {
       font-weight: bold;
       .font(20px, 30px, @primary);
     }
   }
   .descArea {
-    padding: 20px 32px 32px 32px;
+    padding: 20px 0;
     border-radius: 3px;
     flex: 0 0 320px;
-    height: 220px;
-    margin-bottom: 16px;
+    // height: 220px;
+    border-bottom: 1px solid #ebebeb;
     .descLabel {
       margin-bottom: 12px;
       font-weight: bold;
@@ -37,7 +38,7 @@
     .descInputContainer {
       height: calc(100% - 32px);
       overflow: auto;
-
+      color: #9c9c9c;
       .descInput {
         height: 100%;
         display: block;
@@ -49,7 +50,7 @@
     .rightArea {
       flex: 1;
       min-height: calc(100% - 168px);
-      padding: 32px;
+      padding: 20px 10px;
 
       .glossaryTreeContainer {
         flex: 1;
@@ -62,8 +63,8 @@
     .leftArea {
       flex: 1;
       border-radius: 3px;
-      padding: 32px;
-      margin-right: 10px;
+      padding: 20px 10px 20px 5px;
+      border-right: 1px solid #ebebeb;
       .inputBlock {
         margin-bottom: 20px;
         .label {

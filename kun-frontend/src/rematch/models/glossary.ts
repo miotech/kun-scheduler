@@ -45,7 +45,7 @@ export interface Asset {
   datasource: string;
   database: string;
   description: string;
-  owner: string[]
+  owner: string[];
 }
 
 export interface GlossaryDetail {
@@ -58,6 +58,7 @@ export interface GlossaryDetail {
   updateTime: number | null;
   parent: SearchGlossaryItem | null;
   assets: Asset[] | null;
+  ancestryGlossaryList: GlossaryChild[];
 }
 
 export const getInitGlossaryDetail: () => GlossaryDetail = () => ({
@@ -70,6 +71,7 @@ export const getInitGlossaryDetail: () => GlossaryDetail = () => ({
   updateTime: null,
   parent: null,
   assets: [],
+  ancestryGlossaryList: [],
 });
 
 export interface GlossaryState {
@@ -195,7 +197,7 @@ export const glossary = {
         return null;
       },
 
-      async deleteGlossary(id: string, rootState: RootState) {
+      async deleteGlossary(id: string) {
         try {
           const resp = await deleteGlossaryService(id);
 
@@ -257,7 +259,7 @@ export const glossary = {
         return null;
       },
 
-      async addGlossary(params: EditGlossaryReqBody, rootState: RootState) {
+      async addGlossary(params: EditGlossaryReqBody) {
         try {
           const resp = await addGlossaryService(params);
           if (resp) {
