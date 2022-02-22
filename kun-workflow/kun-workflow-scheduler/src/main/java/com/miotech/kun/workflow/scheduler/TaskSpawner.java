@@ -300,15 +300,25 @@ public class TaskSpawner implements InitializingBean {
                     new EventConsumer<Long, Event>() {
                         @Override
                         public void onReceive(Event event) {
-                            handleTickEvent((TickEvent) event);
+                            if (event instanceof TickEvent) {
+                                handleTickEvent((TickEvent) event);
+                            }
+                            if (event instanceof TaskRunCreatedEvent) {
+                                TaskRunCreatedEvent taskRunCreatedEvent = (TaskRunCreatedEvent) event;
+                                taskRunDao.updateTaskRunStat(taskRunCreatedEvent.getTaskRunId());
+                            }
                         }
-                    }
-            ));
+                    }));
         }
 
         @Subscribe
         public void onReceive(TickEvent event) {
             post(1L, event);
+        }
+
+        @Subscribe
+        public void onReceive(TaskRunCreatedEvent event) {
+            post(event.getTaskRunId(), event);
         }
     }
 

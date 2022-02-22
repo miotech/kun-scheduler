@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -309,6 +310,22 @@ public class WorkflowApi {
             url.addQueryParameter("downstreamLevel", Integer.toString(downstreamLevel));
         }
         return get(url.build(), TaskRunDAG.class);
+    }
+
+    public TaskRunGanttChart getTaskRunGantt(Long taskRunId) {
+        HttpUrl.Builder url = buildUrl(API_TASK_RUNS)
+                .addPathSegment(taskRunId.toString())
+                .addPathSegment("gantt");
+        return get(url.build(), TaskRunGanttChart.class);
+    }
+
+    public TaskRunGanttChart getGlobalTaskRunGantt(OffsetDateTime startTime, OffsetDateTime endTime, String timeType) {
+        HttpUrl.Builder url = buildUrl(API_TASK_RUNS)
+                .addPathSegment("gantt")
+                .addQueryParameter("startTime", startTime.toString())
+                .addQueryParameter("endTime", endTime.toString())
+                .addQueryParameter("timeType", timeType);
+        return get(url.build(), TaskRunGanttChart.class);
     }
 
     public TaskRunLog getTaskRunLog(TaskRunLogRequest logRequest) {

@@ -852,5 +852,13 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(satisfyTaskRunIds.get(0), is(taskRun2.getId()));
     }
 
+//    @Test
+//    public void getGlobalTaskRunGantt() {
+//        //prepare
+//        Of
+//        Task task = MockTaskFactory.createTask();
+//        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+//                .w
+//    }
 
 }

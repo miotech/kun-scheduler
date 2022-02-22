@@ -16,6 +16,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -198,6 +199,19 @@ public class TaskRunController {
                                       @QueryParameter(defaultValue = "1") int downstreamLevel
     ) {
         return taskRunService.getNeighbors(id, upstreamLevel, downstreamLevel);
+    }
+
+    @RouteMapping(url = "/taskruns/gantt", method = "GET")
+    public Object getGlobalTaskRunGantt(@QueryParameter String startTime,
+                                        @QueryParameter String endTime,
+                                        @QueryParameter(defaultValue = "createdAt") String timeType) {
+        return taskRunService.getGlobalTaskRunGantt(DateTimeUtils.fromISODateTimeString(startTime),
+                DateTimeUtils.fromISODateTimeString(endTime), timeType);
+    }
+
+    @RouteMapping(url = "/taskruns/{id}/gantt", method = "GET")
+    public Object getTaskRunGantt(@RouteVariable Long id) {
+        return taskRunService.getTaskRunGantt(id);
     }
 
     @RouteMapping(url = "/taskruns/latest", method = "GET")

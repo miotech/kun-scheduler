@@ -37,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -389,6 +390,16 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         Preconditions.checkArgument(upstreamLevel >=0 , "upstreamLevel should be non negative");
         Preconditions.checkArgument(downstreamLevel >=0 , "downstreamLevel should be non negative");
         return workflowClient.getTaskRunDAG(taskRunId, upstreamLevel, downstreamLevel);
+    }
+
+    //TODO: unit test
+    public TaskRunGanttChart getGlobalTaskRunGantt(OffsetDateTime startTime, OffsetDateTime endTime, String timeType) {
+        return workflowClient.getGlobalTaskRunGantt(startTime, endTime, timeType);
+    }
+
+    //TODO: unit test
+    public TaskRunGanttChart getTaskRunGantt(Long taskRunId) {
+        return workflowClient.getTaskRunGantt(taskRunId);
     }
 
     public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId) {

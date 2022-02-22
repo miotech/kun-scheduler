@@ -32,6 +32,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.shazam.shazamcrest.matcher.Matchers.sameBeanAs;
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.*;
 
@@ -496,6 +497,21 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         } catch (Exception e) {
             assertThat(e, instanceOf(EntityNotFoundException.class));
         }
+    }
+
+    @Test
+    public void fetchTaskRunByFilter_withEmptyFilter_shouldReturnTaskRun() {
+        //prepare
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+
+        // process
+        List<TaskRun> allTaskRuns = taskRunDao.fetchTaskRunsByFilterWithoutPagination(TaskRunSearchFilter.newBuilder().build());
+
+        // validate
+        assertThat(allTaskRuns.size(), is(1));
     }
 
     @Test
@@ -1119,6 +1135,36 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskRun taskRun2 = taskRunList.get(1);
         TaskRun taskRun3 = taskRunList.get(2);
         assertThat(fetchedIds,containsInAnyOrder(taskRun2.getId(),taskRun3.getId()));
+    }
+
+    @Test
+    public void updateAndFetchTaskRunStat_shouldSuccess() {
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withQueuedAt(DateTimeUtils.now().minusMinutes(1))
+                .withStartAt(DateTimeUtils.now())
+                .withEndAt(DateTimeUtils.now().plusMinutes(10))
+                .withStatus(TaskRunStatus.SUCCESS)
+                .withScheduleType(ScheduleType.SCHEDULED)
+                .build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withQueuedAt(DateTimeUtils.now().minusMinutes(3))
+                .withStartAt(DateTimeUtils.now())
+                .withEndAt(DateTimeUtils.now().plusMinutes(8))
+                .withStatus(TaskRunStatus.SUCCESS)
+                .withScheduleType(ScheduleType.SCHEDULED)
+                .build();
+        TaskRun taskRun3 = MockTaskRunFactory.createTaskRun(task);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.createTaskRun(taskRun3);
+        taskRunDao.updateTaskRunStat(taskRun3.getId());
+
+        List<TaskRunStat> taskRunStatusList = taskRunDao.fetchTaskRunStat(Collections.singletonList(taskRun3.getId()));
+        assertThat(taskRunStatusList.get(0).getAverageRunningTime(), is(540L));
+        assertThat(taskRunStatusList.get(0).getAverageQueuingTime(), is(120L));
+
     }
 
     @Test
