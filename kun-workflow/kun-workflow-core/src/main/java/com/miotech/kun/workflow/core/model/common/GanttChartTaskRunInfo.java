@@ -2,8 +2,10 @@ package com.miotech.kun.workflow.core.model.common;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.commons.utils.CustomDateTimeDeserializer;
 import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
+import com.miotech.kun.commons.utils.JsonLongFieldDeserializer;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 
 import java.time.OffsetDateTime;
@@ -11,8 +13,12 @@ import java.util.List;
 
 public class GanttChartTaskRunInfo {
 
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private Long taskRunId;
 
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private Long taskId;
 
     private String name;
@@ -39,6 +45,8 @@ public class GanttChartTaskRunInfo {
 
     private Long averageQueuingTime;
 
+    @JsonSerialize(using = ToStringSerializer.class)
+    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private List<Long> dependentTaskRunIds;
 
     public Long getTaskRunId() {
