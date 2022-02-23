@@ -1,11 +1,8 @@
 import {
-  ColumnMetrics,
-  DailyTaskCount,
   DailyStatistic,
   DataDevelopmentMetrics,
   DevTaskDetail,
   MetadataMetrics,
-  RowCountChange,
   AbnormalDataset,
 } from '@/services/monitoring-dashboard';
 
@@ -14,12 +11,6 @@ export type DataDevelopmentBoardFilterCardType = 'SUCCESS' | 'FAILED' | 'RUNNING
 export interface DataDiscoveryBoardData {
   metadataMetrics: MetadataMetrics | null;
   metadataMetricsLoading: boolean;
-  // Top 10 Datasets with Max Row Count Change table state
-  maxRowCountChange: {
-    loading: boolean;
-    error: Error | null;
-    data: RowCountChange[];
-  };
   // failed test cases table state
   failedTestCases: {
     loading: boolean;
@@ -33,26 +24,12 @@ export interface DataDiscoveryBoardData {
     glossaryFilter: string | null;
     total: number;
   };
-  // dataset metrics table state
-  datasetMetrics: {
-    loading: boolean;
-    error: Error | null;
-    data: ColumnMetrics[];
-    pageNum: number;
-    pageSize: number;
-    total: number;
-  };
 }
 
 export interface DataDevelopmentBoardData {
   // top metrics of data development
   dataDevelopmentMetrics: DataDevelopmentMetrics;
   dataDevelopmentMetricsLoading: boolean;
-  dailyTaskFinish: {
-    loading: boolean;
-    data: DailyTaskCount[];
-    error: Error | null;
-  };
   dailyStatisticList: {
     loading: boolean;
     data: DailyStatistic[];
@@ -84,11 +61,6 @@ export const initState: MonitoringDashboardModelState = {
   dataDiscoveryBoardData: {
     metadataMetrics: null,
     metadataMetricsLoading: false,
-    maxRowCountChange: {
-      loading: false,
-      error: null,
-      data: [],
-    },
     failedTestCases: {
       loading: false,
       error: null,
@@ -97,16 +69,8 @@ export const initState: MonitoringDashboardModelState = {
       sortOrder: null,
       pageNum: 1,
       pageSize: 65535,
-      showPageSize: 10,
+      showPageSize: 30,
       glossaryFilter: null,
-      total: 0,
-    },
-    datasetMetrics: {
-      loading: false,
-      error: null,
-      data: [],
-      pageNum: 1,
-      pageSize: 10,
       total: 0,
     },
   },

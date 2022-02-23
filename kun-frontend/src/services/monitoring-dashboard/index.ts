@@ -21,28 +21,8 @@ export function fetchMetadataMetrics() {
 // Get Max Row Count Change
 // GET /kun/api/v1/dashboard/metadata/max-row-count-change
 
-export interface RowCountChange {
-  datasetName: string;
-  database: string;
-  dataSource: string;
-  rowChange: number;
-  rowCount: number;
-  rowChangeRatio: number; // 0 <= rowChangeRatio <= 1.0
-}
-
-export interface MaxRowCountChange {
-  rowCountChanges: RowCountChange[];
-}
-
 export interface FetchMaxRowCountChangeReqParams {
   pageSize?: number;
-}
-
-export function fetchMaxRowCountChange(reqParams: FetchMaxRowCountChangeReqParams = {}) {
-  return get<MaxRowCountChange>('/dashboard/metadata/max-row-count-change', {
-    query: { ...reqParams },
-    mockCode: 'monitoring-dashboard.get-max-row-count-change',
-  });
 }
 
 // Get Failed Test Cases
