@@ -295,7 +295,13 @@ public class TaskRunService {
         Map<Long, List<TaskAttemptProps>> taskAttemptPropsMap = groupByTaskRunId(taskAttemptProps);
 
         return taskRuns.stream().map(taskRun ->
-                buildTaskRunVO(taskRun, taskAttemptPropsMap.get(taskRun.getId()), new ArrayList<>())).collect(Collectors.toList());
+                buildTaskRunVO(taskRun, taskAttemptPropsMap.get(taskRun.getId()), taskRun.getStatus().isUpstreamFailed() ?
+                        taskRunDao.fetchTaskRunsByIds(taskRun.getFailedUpstreamTaskRunIds())
+                                .stream()
+                                .map(tr -> tr.orElse(null))
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList()) : Collections.emptyList()))
+                .collect(Collectors.toList());
     }
 
     public TaskRunVO convertToVOWithoutAttempt(TaskRun taskRun) {

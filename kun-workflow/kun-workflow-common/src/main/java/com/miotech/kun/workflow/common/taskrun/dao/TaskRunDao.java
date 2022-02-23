@@ -152,7 +152,7 @@ public class TaskRunDao {
         return getTaskRunSQLBuilderWithDefaultConfig().where(whereClause).getSQL();
     }
 
-    private List<Optional<TaskRun>> fetchTaskRunsByIds(Collection<Long> taskRunIds) {
+    public List<Optional<TaskRun>> fetchTaskRunsByIds(Collection<Long> taskRunIds) {
         if (taskRunIds.isEmpty()) {
             return Collections.singletonList(Optional.empty());
         }

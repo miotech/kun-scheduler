@@ -22,6 +22,7 @@ import com.miotech.kun.workflow.testing.factory.MockTaskRunFactory;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import javax.inject.Inject;
@@ -1118,5 +1119,24 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         TaskRun taskRun2 = taskRunList.get(1);
         TaskRun taskRun3 = taskRunList.get(2);
         assertThat(fetchedIds,containsInAnyOrder(taskRun2.getId(),taskRun3.getId()));
+    }
+
+    @Test
+    public void fetchTaskRunsByIds_shouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(2, "0>>1");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1");
+        for(TaskRun taskRun : taskRunList) {
+            taskDao.create(taskRun.getTask());
+            taskRunDao.createTaskRun(taskRun);
+        }
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskRun taskRun2 = taskRunList.get(1);
+
+        List<TaskRun> fetchedTaskRunList = taskRunDao.fetchTaskRunsByIds(Arrays.asList(taskRun1.getId(), taskRun2.getId()))
+                .stream().map(Optional::get).collect(Collectors.toList());
+
+        Assertions.assertEquals(new HashSet<>(Arrays.asList(taskRun1.getId(), taskRun2.getId())),
+                new HashSet<>(fetchedTaskRunList.stream().map(TaskRun::getId).collect(Collectors.toList())));
+        Assertions.assertEquals(taskRun1.getId(), fetchedTaskRunList.get(1).getDependentTaskRunIds().get(0));
     }
 }
