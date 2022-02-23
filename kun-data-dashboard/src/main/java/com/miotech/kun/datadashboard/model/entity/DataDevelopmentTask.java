@@ -6,6 +6,7 @@ import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 /**
  * @author: Jie Chen
@@ -39,4 +40,6 @@ public class DataDevelopmentTask {
     OffsetDateTime updateTime;
 
     Long duration;
+
+    List<DataDevelopmentTask> rootFailedTasks;
 }
