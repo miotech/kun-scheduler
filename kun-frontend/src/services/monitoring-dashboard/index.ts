@@ -167,6 +167,7 @@ export interface DevTaskDetail {
   createTime: number | null;
   updateTime: number | null;
   duration: number | null;
+  rootFailedTasks: DevTaskDetail[];
 }
 
 export interface DevTaskDetailsInfo extends PaginationRespBodyBase {

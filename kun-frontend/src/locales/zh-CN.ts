@@ -491,7 +491,7 @@ export default {
   'monitoringDashboard.dataDevelopment.taskDetailsTable.title': '任务详情',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.taskName': '任务名称',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.taskStatus': '任务状态',
-  'monitoringDashboard.dataDevelopment.taskDetailsTable.errorMessage': '错误信息',
+  'monitoringDashboard.dataDevelopment.taskDetailsTable.failedTask': '失败任务',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.startTime': '开始时间',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.endTime': '结束时间',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.createTime': '创建时间',
