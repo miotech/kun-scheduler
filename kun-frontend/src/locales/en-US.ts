@@ -514,7 +514,7 @@ export default {
   'monitoringDashboard.dataDevelopment.taskDetailsTable.title': 'Task Details',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.taskName': 'Task Name',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.taskStatus': 'Task Status',
-  'monitoringDashboard.dataDevelopment.taskDetailsTable.errorMessage': 'Error Message',
+  'monitoringDashboard.dataDevelopment.taskDetailsTable.failedTask': 'Failed Task',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.startTime': 'Start Time',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.endTime': 'End Time',
   'monitoringDashboard.dataDevelopment.taskDetailsTable.createTime': 'Task Created',
