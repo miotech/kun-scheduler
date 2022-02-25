@@ -47,6 +47,7 @@ import java.util.concurrent.RunnableFuture;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.Matchers.*;
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -748,6 +749,7 @@ public class TaskRunServiceTest extends CommonTestBase {
         List<TaskRunVO> taskRunVOs = taskRunService.convertToVO(Arrays.asList(taskRun1, taskRun2));
         assertThat(taskRunVOs.size(), is(2));
         assertThat(taskRunVOs.get(0).getTask().getId(), is(task1.getId()));
+        assertThat(taskRunVOs.get(1).getFailedUpstreamTaskRuns().get(0).getId(), is(taskRun1.getId()));
     }
 
     @Test

@@ -34,6 +34,7 @@ import java.time.ZoneOffset;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 @Service("DashboardWorkflowService")
 public class WorkflowService {
@@ -283,20 +284,31 @@ public class WorkflowService {
         DataDevelopmentTasks dataDevelopmentTasks = new DataDevelopmentTasks();
         PaginationResult<TaskRun> taskRunResult = workflowClient.searchTaskRun(searchRequest);
         for (TaskRun taskRun : taskRunResult.getRecords()) {
-            DataDevelopmentTask task = new DataDevelopmentTask();
-            task.setTaskId(taskRun.getTask().getId());
-            task.setTaskRunId(taskRun.getId());
-            task.setTaskName(taskRun.getTask().getName());
-            task.setTaskStatus(taskRun.getStatus().name());
-            task.setStartTime(taskRun.getStartAt());
-            task.setEndTime(taskRun.getEndAt());
-            task.setCreateTime(taskRun.getCreatedAt());
-            task.setUpdateTime(taskRun.getUpdatedAt());
+            DataDevelopmentTask task = buildDataDevelopmentTask(taskRun);
+            if (taskRun.getStatus().isUpstreamFailed()) {
+                task.setRootFailedTasks(taskRun.getFailedUpstreamTaskRuns()
+                        .stream()
+                        .map(this::buildDataDevelopmentTask)
+                        .collect(Collectors.toList()));
+            }
             dataDevelopmentTasks.add(task);
         }
         dataDevelopmentTasks.setPageNumber(taskRunResult.getPageNum());
         dataDevelopmentTasks.setPageSize(taskRunResult.getPageSize());
         dataDevelopmentTasks.setTotalCount(taskRunResult.getTotalCount());
         return dataDevelopmentTasks;
+    }
+
+    private DataDevelopmentTask buildDataDevelopmentTask(TaskRun taskRun) {
+        DataDevelopmentTask task = new DataDevelopmentTask();
+        task.setTaskId(taskRun.getTask().getId());
+        task.setTaskRunId(taskRun.getId());
+        task.setTaskName(taskRun.getTask().getName());
+        task.setTaskStatus(taskRun.getStatus().name());
+        task.setStartTime(taskRun.getStartAt());
+        task.setEndTime(taskRun.getEndAt());
+        task.setCreateTime(taskRun.getCreatedAt());
+        task.setUpdateTime(taskRun.getUpdatedAt());
+        return task;
     }
 }
