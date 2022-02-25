@@ -22,6 +22,7 @@ export interface Props {
 }
 
 let updateCache = null;
+let currentIdCache = null;
 export default memo(
   forwardRef(function GlossaryTree({ rootNode }: Props, ref) {
     const history = useHistory();
@@ -36,14 +37,18 @@ export default memo(
     const [visible, setVisible] = useState(false);
     const [currentId, setCurrentId] = useState();
 
-    const onClose = () => {
-      setVisible(false);
-      setCurrentId();
+    const setCurrentIdCache = id => {
+      setCurrentId(id);
+      currentIdCache = id;
     };
+    const onClose = useCallback(() => {
+      setVisible(false);
+      setCurrentIdCache();
+    }, [setVisible]);
     useImperativeHandle(ref, () => ({
       create: () => {
         setVisible(true);
-        setCurrentId();
+        setCurrentIdCache();
       },
     }));
 
@@ -259,9 +264,7 @@ export default memo(
                 const canNode = d3.select(this);
 
                 // 添加点击事件
-                canNode.attr('class', styles.nodeText).on('click', n => {
-                  setVisible(true);
-                  setCurrentId(n.data.id);
+                canNode.attr('class', styles.nodeText).on('click', () => {
                   click(d);
                 });
               }
@@ -289,15 +292,11 @@ export default memo(
           textnode.each(function textfunc(d) {
             if (d.data.id !== 'root') {
               const canNode = d3.select(this);
-
-              canNode.attr('class', styles.nodeText).on('click', n => {
-                setCurrentId(n.data.id);
-                setVisible(true);
+              canNode.attr('class', styles.nodeText).on('click', () => {
                 click(d);
               });
             }
           });
-
           // 如果截断了, 需要在title中能hover出来
           nodeEnter.append('title').text(d => d.data.name);
 
@@ -406,13 +405,13 @@ export default memo(
         }
 
         function addChildCount(d) {
-          if (Number(d.data.childrenCount) && d.data.id !== 'root') {
+          if (d.data.id !== 'root') {
             const canNode = d3.select(this);
             canNode
               .append('text')
               .attr('class', styles.buttonCount)
               .attr('id', `count${d.data.id}`)
-              .text(d.data.childrenCount)
+              .text(d.data.childrenCount !== 0 ? d.data.childrenCount : '')
               .attr('stroke', '#e0e0e0')
               .attr('fill', 'white');
           }
@@ -429,14 +428,24 @@ export default memo(
             .attr('ry', 3)
             .attr('width', 20)
             .attr('height', 20);
-
+          if (currentIdCache === d.data.id && d.data.children) {
+            d.data.children = null;
+            update(d);
+            onClose();
+            return;
+          }
+          setVisible(true);
+          setCurrentIdCache(d.data.id);
           if (!Number(d.data.childrenCount)) {
             return;
           }
-
-          dispatch.glossary.fetchNodeChildAndUpdateNode({ nodeData: d.data }).then(() => {
-            update(d);
-          });
+          if (!d.data.children) {
+            dispatch.glossary.fetchNodeChildAndUpdateNode({ nodeData: d.data }).then(() => {
+              update(d);
+            });
+            return;
+          }
+          update(d);
         }
         updateCache = update;
       }
@@ -446,12 +455,12 @@ export default memo(
           treeElement.innerHTML = '';
         }
       };
-    }, [dispatch.glossary, history, rootNode, updateGlossaryOrderApi]);
+    }, [dispatch.glossary, history, rootNode, onClose, updateGlossaryOrderApi]);
 
     async function addChild(child, parentId, id) {
       if (!parentId) {
         await dispatch.glossary.fetchRootNodeChildGlossary();
-        setCurrentId(id);
+        setCurrentIdCache(id);
         return;
       }
       d3.selectAll('rect').each(function textfunc(d) {
@@ -459,12 +468,14 @@ export default memo(
           if (d.data.children) {
             d.data.children.push(child);
           } else {
+            d.data.childrenCount = 1;
             d.data.children = [child];
           }
-          d3.select(`[id=count${parentId}]`).text(d.data.children.length);
           updateCache(d);
+          d3.select(`[id=count${parentId}]`).text(d.data.children.length);
+
           if (id) {
-            setCurrentId(id);
+            setCurrentIdCache(id);
           }
         }
       });
@@ -478,6 +489,7 @@ export default memo(
         if (d && d.data.id === parentId) {
           const deleteIndex = d.data.children.findIndex(item => item.id === id);
           d.data.children.splice(deleteIndex, 1);
+          d3.select(`[id=count${parentId}]`).text(d.data.children.length !== 0 ? d.data.children.length : '');
           updateCache(d);
         }
       });
@@ -486,7 +498,7 @@ export default memo(
     useEffect(() => {
       if (location?.query?.glossaryId) {
         setVisible(true);
-        setCurrentId(location?.query?.glossaryId);
+        setCurrentIdCache(location?.query?.glossaryId);
       }
     }, [location]);
     useUpdateEffect(() => {
@@ -528,7 +540,7 @@ export default memo(
           <GlossaryDetail
             addChild={addChild}
             deleteChild={deleteChild}
-            setCurrentId={setCurrentId}
+            setCurrentId={setCurrentIdCache}
             onClose={onClose}
             currentId={currentId}
           />

@@ -4,13 +4,17 @@ import { RouteComponentProps } from 'react-router';
 
 import { Spin, Button, Input, Modal, message, Popconfirm } from 'antd';
 
-import Card from '@/components/Card/Card';
 import { ExclamationCircleOutlined } from '@ant-design/icons';
 
 import useI18n from '@/hooks/useI18n';
 import useRedux from '@/hooks/useRedux';
 
-import { getInitGlossaryDetail, GlossaryDetail as IGlossaryDetail, GlossaryNode } from '@/rematch/models/glossary';
+import {
+  getInitGlossaryDetail,
+  GlossaryDetail as IGlossaryDetail,
+  GlossaryNode,
+  GlossaryChild,
+} from '@/rematch/models/glossary';
 
 import { copyGlossaryServicey } from '@/services/glossary';
 import ParentSearch from './components/ParentSearch/ParentSearch';
@@ -93,8 +97,11 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
     if (currentId) {
       const res = await copyGlossaryServicey(currentId);
       if (res) {
+        const obj = {
+          children: res.glossaryCountList,
+        };
         message.success(t('common.operateSuccess'));
-        addChild(res, res?.parent?.id, res.id);
+        addChild({ ...obj, ...res }, res?.parent?.id, res.id);
       }
     }
   };
@@ -246,19 +253,17 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
         <Button style={{ marginLeft: 'auto' }} size="large" onClick={() => setIsEditing(true)}>
           {t('common.button.edit')}
         </Button>
-        {!glossaryNode?.children?.length && (
-          <Popconfirm
-            title={t('glossary.copy.title')}
-            onConfirm={copyGlossary}
-            okText={t('common.button.confirm')}
-            cancelText={t('common.button.cancel')}
-          >
-            {' '}
-            <Button style={{ marginLeft: 10 }} size="large">
-              {t('common.button.copy')}
-            </Button>
-          </Popconfirm>
-        )}
+        <Popconfirm
+          title={t('glossary.copy.title')}
+          onConfirm={copyGlossary}
+          okText={t('common.button.confirm')}
+          cancelText={t('common.button.cancel')}
+        >
+          {' '}
+          <Button style={{ marginLeft: 10 }} size="large">
+            {t('common.button.copy')}
+          </Button>
+        </Popconfirm>
       </>
     );
   };
@@ -289,7 +294,26 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
   // 渲染的地方都用 inputtingDetail 替代 currentGlossaryDetail
   return (
     <Spin wrapperClassName={styles.container} spinning={fetchCurrentGlossaryDetailLoading}>
-      <Card className={styles.titleArea}>
+      {inputtingDetail.ancestryGlossaryList && (
+        <div className={styles.path}>
+          {inputtingDetail.ancestryGlossaryList.map((item: GlossaryChild, index: number) => {
+            if (index !== 0) {
+              return (
+                <span className={styles.pathName} onClick={() => setCurrentId(item.id)}>
+                  {' '}
+                  -{'>'} {item.name}
+                </span>
+              );
+            }
+            return (
+              <span className={styles.pathName} onClick={() => setCurrentId(item.id)}>
+                {item.name}
+              </span>
+            );
+          })}
+        </div>
+      )}
+      <div className={styles.titleArea}>
         {isEditing && !currentId && <span style={{ marginRight: 8 }}>{t('glossary.nameLabel')}:</span>}
         {isEditing ? (
           <Input size="large" style={{ width: 384 }} value={inputtingDetail.name} onChange={handleChangeName} />
@@ -298,8 +322,8 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
         )}
 
         {buttonList()}
-      </Card>
-      <Card className={styles.descArea}>
+      </div>
+      <div className={styles.descArea}>
         <div className={styles.descLabel}>{t('glossary.desc')}</div>
         <div className={styles.descInputContainer}>
           {isEditing ? (
@@ -308,14 +332,14 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
             <div>{inputtingDetail.description}</div>
           )}
         </div>
-      </Card>
+      </div>
       <div className={styles.contentArea}>
         {/* <div className={styles.leftArea}>
 
 
         </div> */}
 
-        <Card className={styles.leftArea}>
+        <div className={styles.leftArea}>
           {(inputtingDetail?.parent || isEditing) && (
             <div className={styles.inputBlock}>
               <div className={styles.label}>{t('glossary.parent')}</div>
@@ -345,8 +369,8 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
               <ChildrenGlossaryList setCurrentId={setCurrentId} childList={glossaryNode?.children ?? []} />
             </div>
           </div>
-        </Card>
-        <Card className={styles.rightArea}>
+        </div>
+        <div className={styles.rightArea}>
           <div className={styles.inputBlock}>
             <div className={styles.label} style={{ marginBottom: isEditing ? 14 : 0 }}>
               {t('glossary.assets')}{' '}
@@ -364,7 +388,7 @@ export default function GlossaryDetail({ currentId, addChild, deleteChild, setCu
               />
             </div>
           </div>
-        </Card>
+        </div>
       </div>
     </Spin>
   );
