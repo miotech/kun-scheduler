@@ -282,7 +282,6 @@ public class TaskRunService {
         return buildTaskRunGanttChart(taskRunList, false);
     }
 
-    //TODO: unit test +1
     public TaskRunGanttChartVO getTaskRunGantt(Long taskRunId) {
         int traceTime_hours = 24;
         TaskRun taskRun = findTaskRun(taskRunId);
@@ -307,28 +306,42 @@ public class TaskRunService {
     }
 
     private TaskRunGanttChartVO buildTaskRunGanttChart(List<TaskRun> taskRunList, boolean withDependencies) {
+        int maxTraceDays = 7;
         if (taskRunList.isEmpty()) {
-            return new TaskRunGanttChartVO(Collections.emptyList());
+            return new TaskRunGanttChartVO(Collections.emptyList(), DateTimeUtils.now(), DateTimeUtils.now());
         }
         List<TaskRunStat> taskRunStatList = taskRunDao.fetchTaskRunStat(taskRunList.stream().map(TaskRun::getId).collect(Collectors.toList()));
         Map<Long, TaskRunStat> taskRunStatMap = taskRunStatList.stream()
                 .collect(Collectors.toMap(TaskRunStat::getId, Function.identity()));
-        List<GanttChartTaskRunInfo> infoList = taskRunList.stream()
-                .map(x -> GanttChartTaskRunInfo.newBuilder()
-                        .withTaskRunId(x.getId())
-                        .withTaskId(x.getTask().getId())
-                        .withName(x.getTask().getName())
-                        .withCreatedAt(x.getCreatedAt())
-                        .withQueuedAt(x.getQueuedAt())
-                        .withStartAt(x.getStartAt())
-                        .withEndAt(x.getEndAt())
-                        .withStatus(x.getStatus())
-                        .withAverageRunningTime(taskRunStatMap.containsKey(x.getId())? taskRunStatMap.get(x.getId()).getAverageRunningTime() : 0L)
-                        .withAverageQueuingTime(taskRunStatMap.containsKey(x.getId())? taskRunStatMap.get(x.getId()).getAverageQueuingTime() : 0L)
-                        .withDependentTaskRunIds(withDependencies? x.getDependentTaskRunIds() : Collections.emptyList())
-                        .build())
-                .collect(Collectors.toList());
-        return new TaskRunGanttChartVO(infoList);
+        OffsetDateTime earliestTime = DateTimeUtils.now();
+        OffsetDateTime latestTime = DateTimeUtils.now().minusDays(maxTraceDays);
+        boolean existRunning = false;
+        List<GanttChartTaskRunInfo> infoList = new ArrayList<>();
+        for (TaskRun taskRun : taskRunList) {
+            GanttChartTaskRunInfo info = GanttChartTaskRunInfo.newBuilder()
+                    .withTaskRunId(taskRun.getId())
+                    .withTaskId(taskRun.getTask().getId())
+                    .withName(taskRun.getTask().getName())
+                    .withCreatedAt(taskRun.getCreatedAt())
+                    .withQueuedAt(taskRun.getQueuedAt())
+                    .withStartAt(taskRun.getStartAt())
+                    .withEndAt(taskRun.getEndAt())
+                    .withStatus(taskRun.getStatus())
+                    .withAverageRunningTime(taskRunStatMap.containsKey(taskRun.getId())? taskRunStatMap.get(taskRun.getId()).getAverageRunningTime() : 0L)
+                    .withAverageQueuingTime(taskRunStatMap.containsKey(taskRun.getId())? taskRunStatMap.get(taskRun.getId()).getAverageQueuingTime() : 0L)
+                    .withDependentTaskRunIds(withDependencies? taskRun.getDependentTaskRunIds() : Collections.emptyList())
+                    .build();
+            earliestTime = DateTimeUtils.getEarlierTime(taskRun.getCreatedAt(), earliestTime);
+            latestTime = DateTimeUtils.getLatestTime(latestTime, taskRun.getCreatedAt(), taskRun.getEndAt());
+            if (taskRun.getStatus().isRunning()) {
+                existRunning = true;
+            }
+            infoList.add(info);
+        }
+        if (existRunning) {
+            latestTime = DateTimeUtils.now();
+        }
+        return new TaskRunGanttChartVO(infoList, earliestTime, latestTime);
     }
 
     public List<TaskRun> getUpstreamTaskRuns(TaskRun taskRun, int distance) {

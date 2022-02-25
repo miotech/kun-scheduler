@@ -901,10 +901,14 @@ public class TaskRunServiceTest extends CommonTestBase {
         //TODO: only for check serialization. Delete before merge
         JsonSerializer jsonSerializer = new JsonSerializer();
         System.out.println(jsonSerializer.toString(result1));
-        System.out.println(jsonSerializer.toString(result1.getInfoList().get(0)));
+        System.out.println(jsonSerializer.toString(result1.getInfoList().get(8)));
+
+        System.out.println(list.get(2).get(2));
 
         //verify
         assertThat(result1.getInfoList().size(), is(9));
+        assertThat(result1.getEarliestTime(), is(baseTime.minusDays(3)));
+        assertThat(result1.getLatestTime(), is(baseTime.minusDays(1).plusHours(11)));
         assertThat(result2.getInfoList().size(), is(6));
         assertThat(result3.getInfoList().size(), is(3));
     }

@@ -392,12 +392,10 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         return workflowClient.getTaskRunDAG(taskRunId, upstreamLevel, downstreamLevel);
     }
 
-    //TODO: unit test
     public TaskRunGanttChart getGlobalTaskRunGantt(OffsetDateTime startTime, OffsetDateTime endTime, String timeType) {
         return workflowClient.getGlobalTaskRunGantt(startTime, endTime, timeType);
     }
 
-    //TODO: unit test
     public TaskRunGanttChart getTaskRunGantt(Long taskRunId) {
         return workflowClient.getTaskRunGantt(taskRunId);
     }
