@@ -35,12 +35,12 @@ public class GlossaryController {
 
     @PostMapping("/metadata/glossary/add")
     public RequestResult<Glossary> add(@RequestBody GlossaryRequest request) {
-        return RequestResult.success(glossaryService.add(request));
+        return RequestResult.success(glossaryService.createGlossary(request));
     }
 
     @GetMapping("/metadata/glossary/children")
     public RequestResult<GlossaryChildren> getChildren(@RequestParam(value = "parentId", required = false) Long parentId) {
-        return RequestResult.success(glossaryService.getChildren(parentId));
+        return RequestResult.success(glossaryService.fetchGlossaryChildren(parentId));
     }
 
     @GetMapping("/metadata/glossary/{id}/detail")

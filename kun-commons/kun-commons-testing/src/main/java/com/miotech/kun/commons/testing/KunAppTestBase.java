@@ -3,6 +3,8 @@ package com.miotech.kun.commons.testing;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.miotech.kun.commons.db.DatabaseOperator;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.slf4j.Logger;
@@ -11,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
@@ -36,7 +39,7 @@ import java.util.List;
 @AutoConfigureMockMvc
 @ContextConfiguration
 @Testcontainers
-public class KunAppTestBase{
+public class KunAppTestBase {
 
     private static final Logger logger = LoggerFactory.getLogger(KunAppTestBase.class);
 
@@ -44,7 +47,6 @@ public class KunAppTestBase{
 
     @Autowired
     DataSource dataSource;
-
 
     @Container
     public static PostgreSQLContainer postgres = startPostgres();
@@ -65,7 +67,6 @@ public class KunAppTestBase{
     protected void subConfiguration() {
         // do nothing
     }
-
 
     public static PostgreSQLContainer startPostgres() {
         PostgreSQLContainer postgres = new PostgreSQLContainer<>(POSTGRES_IMAGE);
@@ -118,6 +119,15 @@ public class KunAppTestBase{
     })
     public static class TestConfiguration {
 
+        @Bean
+        public DataSource dataSource() {
+            HikariConfig config = new HikariConfig();
+            config.setUsername(postgres.getUsername());
+            config.setPassword(postgres.getPassword());
+            config.setJdbcUrl(postgres.getJdbcUrl() + "&stringtype=unspecified");
+            config.setDriverClassName("org.postgresql.Driver");
+            return new HikariDataSource(config);
+        }
     }
 
 

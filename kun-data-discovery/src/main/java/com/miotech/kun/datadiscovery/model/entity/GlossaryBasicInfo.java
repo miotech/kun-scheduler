@@ -1,9 +1,13 @@
 package com.miotech.kun.datadiscovery.model.entity;
 
+import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.NullSerializer;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.miotech.kun.commons.utils.CustomDateTimeSerializer;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.OffsetDateTime;
 
@@ -14,6 +18,8 @@ import java.time.OffsetDateTime;
  * @create: 2022-01-24 09:23
  **/
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class GlossaryBasicInfo {
 
     @JsonSerialize(using= ToStringSerializer.class)
@@ -23,7 +29,11 @@ public class GlossaryBasicInfo {
 
     private String description;
 
+    @JsonSerialize(using= ToStringSerializer.class)
     private Long parentId;
+
+    @JsonSerialize(using= ToStringSerializer.class)
+    private Long prevId;
 
     String createUser;
 
