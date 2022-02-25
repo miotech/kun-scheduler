@@ -539,6 +539,18 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 .withDateTo(DateTimeUtils.now().plusHours(1))
                 .build());
 
+        List<TaskRun> runsWithinQueueRange = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withQueueFrom(DateTimeUtils.now().plusHours(0))
+                .withQueueTo(DateTimeUtils.now().plusHours(1))
+                .build());
+
+        List<TaskRun> runsWithinStartRange = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
+                .newBuilder()
+                .withStartFrom(DateTimeUtils.now().plusHours(0))
+                .withStartTo(DateTimeUtils.now().plusHours(4))
+                .build());
+
         List<TaskRun> runsWithinTerminationRange = taskRunDao.fetchTaskRunsByFilter(TaskRunSearchFilter
                 .newBuilder()
                 .withEndAfter(DateTimeUtils.now().plusHours(2))
@@ -546,7 +558,8 @@ public class TaskRunDaoTest extends DatabaseTestBase {
                 .build());
         // validate
         assertThat(runsWithinCreationRange.size(), is(4));
-
+        assertThat(runsWithinQueueRange.size(), is(4));
+        assertThat(runsWithinStartRange.size(), is(2));
         //we use term_at to check termination time which is used only in database
         //test assertion is not supported in code
         //assertThat(runsWithinTerminationRange.size(), is(1));
@@ -1138,7 +1151,41 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void updateAndFetchTaskRunStat_shouldSuccess() {
+    public void updateAndFetchTaskRunStat_zeroPrevTaskRun_valueShouldBeZero() {
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.updateTaskRunStat(taskRun.getId());
+
+        List<TaskRunStat> taskRunStatusList = taskRunDao.fetchTaskRunStat(Collections.singletonList(taskRun.getId()));
+        assertThat(taskRunStatusList.get(0).getAverageRunningTime(), is(0L));
+        assertThat(taskRunStatusList.get(0).getAverageQueuingTime(), is(0L));
+    }
+
+    @Test
+    public void updateAndFetchTaskRunStat_singlePrevTaskRun_valueShouldBeZero() {
+        Task task = MockTaskFactory.createTask();
+        TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
+                .withQueuedAt(DateTimeUtils.now().minusMinutes(1))
+                .withStartAt(DateTimeUtils.now())
+                .withEndAt(DateTimeUtils.now().plusMinutes(10))
+                .withStatus(TaskRunStatus.SUCCESS)
+                .withScheduleType(ScheduleType.SCHEDULED)
+                .build();
+        TaskRun taskRun2 = MockTaskRunFactory.createTaskRun(task);
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createTaskRun(taskRun2);
+        taskRunDao.updateTaskRunStat(taskRun2.getId());
+
+        List<TaskRunStat> taskRunStatusList = taskRunDao.fetchTaskRunStat(Collections.singletonList(taskRun2.getId()));
+        assertThat(taskRunStatusList.get(0).getAverageRunningTime(), is(600L));
+        assertThat(taskRunStatusList.get(0).getAverageQueuingTime(), is(60L));
+    }
+
+    @Test
+    public void updateAndFetchTaskRunStat_multiPrevTaskRun_shouldSuccess() {
         Task task = MockTaskFactory.createTask();
         TaskRun taskRun1 = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
                 .withQueuedAt(DateTimeUtils.now().minusMinutes(1))
@@ -1164,7 +1211,34 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         List<TaskRunStat> taskRunStatusList = taskRunDao.fetchTaskRunStat(Collections.singletonList(taskRun3.getId()));
         assertThat(taskRunStatusList.get(0).getAverageRunningTime(), is(540L));
         assertThat(taskRunStatusList.get(0).getAverageQueuingTime(), is(120L));
+    }
 
+    @Test
+    public void fetchUpstreamTaskRunIds_shouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>2;1>>2");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>2;1>>2");
+        for(TaskRun taskRun : taskRunList) {
+            taskDao.create(taskRun.getTask());
+            taskRunDao.createTaskRun(taskRun);
+        }
+
+        List<Long> fetchedUpstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIds(Collections.singletonList(taskRunList.get(2).getId()));
+
+        assertThat(new HashSet<>(fetchedUpstreamTaskRunIds), is(new HashSet<>(Arrays.asList(taskRunList.get(0).getId(), taskRunList.get(1).getId()))));
+    }
+
+    @Test
+    public void fetchUpStreamTaskRunIdsRecursive_shouldSuccess() {
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>2");
+        for(TaskRun taskRun : taskRunList) {
+            taskDao.create(taskRun.getTask());
+            taskRunDao.createTaskRun(taskRun);
+        }
+
+        List<Long> fetchedUpstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIdsRecursive(taskRunList.get(2).getId(), false);
+
+        assertThat(new HashSet<>(fetchedUpstreamTaskRunIds), is(new HashSet<>(Arrays.asList(taskRunList.get(0).getId(), taskRunList.get(1).getId()))));
     }
 
     @Test

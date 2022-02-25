@@ -64,12 +64,14 @@ public class TaskRunService {
     private Props props;
 
     @Inject
-    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor, Scheduler scheduler, EventBus eventBus) {
+    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor, Scheduler scheduler,
+                          EventBus eventBus, Props props) {
         this.taskRunDao = taskRunDao;
         this.resourceLoader = resourceLoader;
         this.executor = executor;
         this.scheduler = scheduler;
         this.eventBus = eventBus;
+        this.props = props;
     }
 
     /* --------------------------------------- */
@@ -250,14 +252,13 @@ public class TaskRunService {
         return new TaskRunDAGVO(nodes, edges);
     }
 
-    //TODO: unit test
     public TaskRunGanttChartVO getGlobalTaskRunGantt(OffsetDateTime startTime, OffsetDateTime endTime, String timeType) {
         Set<TaskRunStatus> status = ImmutableSet.of(TaskRunStatus.SUCCESS, TaskRunStatus.FAILED, TaskRunStatus.ABORTED, TaskRunStatus.RUNNING);
         List<String> scheduleType = ImmutableList.of("SCHEDULED");
         TaskRunSearchFilter.Builder filterBuilder = TaskRunSearchFilter.newBuilder()
                 .withStatus(status)
                 .withScheduleType(scheduleType)
-                .withSortKey("start_at")
+                .withSortKey("startAt")
                 .withSortOrder("ASC");
         switch (timeType) {
             case "createdAt":
@@ -281,7 +282,7 @@ public class TaskRunService {
         return buildTaskRunGanttChart(taskRunList, false);
     }
 
-    //TODO: unit test
+    //TODO: unit test +1
     public TaskRunGanttChartVO getTaskRunGantt(Long taskRunId) {
         int traceTime_hours = 24;
         TaskRun taskRun = findTaskRun(taskRunId);
@@ -295,7 +296,7 @@ public class TaskRunService {
                 .collect(Collectors.toList());
         result.addAll(upstreamTaskRunList);
         result.add(taskRun);
-        List<Long> downstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIdsRecursive(taskRunId, postgresEnable());
+        List<Long> downstreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId, postgresEnable());
         List<TaskRun> downstreamTaskRunList = taskRunDao.fetchTaskRunsByIds(downstreamTaskRunIds)
                 .stream()
                 .map(Optional::get)
@@ -306,6 +307,9 @@ public class TaskRunService {
     }
 
     private TaskRunGanttChartVO buildTaskRunGanttChart(List<TaskRun> taskRunList, boolean withDependencies) {
+        if (taskRunList.isEmpty()) {
+            return new TaskRunGanttChartVO(Collections.emptyList());
+        }
         List<TaskRunStat> taskRunStatList = taskRunDao.fetchTaskRunStat(taskRunList.stream().map(TaskRun::getId).collect(Collectors.toList()));
         Map<Long, TaskRunStat> taskRunStatMap = taskRunStatList.stream()
                 .collect(Collectors.toMap(TaskRunStat::getId, Function.identity()));

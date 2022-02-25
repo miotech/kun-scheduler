@@ -11,6 +11,7 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import java.time.OffsetDateTime;
 import java.util.List;
 
+@JsonDeserialize(builder = GanttChartTaskRunInfo.GanttChartTaskRunInfoBuilder.class)
 public class GanttChartTaskRunInfo {
 
     @JsonSerialize(using = ToStringSerializer.class)
@@ -45,8 +46,6 @@ public class GanttChartTaskRunInfo {
 
     private Long averageQueuingTime;
 
-    @JsonSerialize(using = ToStringSerializer.class)
-    @JsonDeserialize(using = JsonLongFieldDeserializer.class)
     private List<Long> dependentTaskRunIds;
 
     public Long getTaskRunId() {
@@ -139,6 +138,23 @@ public class GanttChartTaskRunInfo {
 
     public static GanttChartTaskRunInfoBuilder newBuilder() {
         return new GanttChartTaskRunInfoBuilder();
+    }
+
+    @Override
+    public String toString() {
+        return "GanttChartTaskRunInfo{" +
+                "taskRunId=" + taskRunId +
+                ", taskId=" + taskId +
+                ", name='" + name + '\'' +
+                ", status=" + status +
+                ", queuedAt=" + queuedAt +
+                ", startAt=" + startAt +
+                ", endAt=" + endAt +
+                ", createdAt=" + createdAt +
+                ", averageRunningTime=" + averageRunningTime +
+                ", averageQueuingTime=" + averageQueuingTime +
+                ", dependentTaskRunIds=" + dependentTaskRunIds +
+                '}';
     }
 
     public static final class GanttChartTaskRunInfoBuilder {

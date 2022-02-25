@@ -9,6 +9,7 @@ import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.service.TaskRunService;
+import com.miotech.kun.workflow.common.taskrun.vo.TaskRunGanttChartVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
@@ -16,7 +17,6 @@ import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -201,16 +201,18 @@ public class TaskRunController {
         return taskRunService.getNeighbors(id, upstreamLevel, downstreamLevel);
     }
 
+    //TODO consider unit test
     @RouteMapping(url = "/taskruns/gantt", method = "GET")
-    public Object getGlobalTaskRunGantt(@QueryParameter String startTime,
-                                        @QueryParameter String endTime,
-                                        @QueryParameter(defaultValue = "createdAt") String timeType) {
+    public TaskRunGanttChartVO getGlobalTaskRunGantt(@QueryParameter String startTime,
+                                                     @QueryParameter String endTime,
+                                                     @QueryParameter(defaultValue = "createdAt") String timeType) {
         return taskRunService.getGlobalTaskRunGantt(DateTimeUtils.fromISODateTimeString(startTime),
                 DateTimeUtils.fromISODateTimeString(endTime), timeType);
     }
 
+    //TODO consider unit test
     @RouteMapping(url = "/taskruns/{id}/gantt", method = "GET")
-    public Object getTaskRunGantt(@RouteVariable Long id) {
+    public TaskRunGanttChartVO getTaskRunGantt(@RouteVariable Long id) {
         return taskRunService.getTaskRunGantt(id);
     }
 

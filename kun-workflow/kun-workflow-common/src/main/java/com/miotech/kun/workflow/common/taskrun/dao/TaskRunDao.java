@@ -5,13 +5,13 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import com.google.common.math.Stats;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.miotech.kun.commons.db.DatabaseOperator;
 import com.miotech.kun.commons.db.ResultSetMapper;
 import com.miotech.kun.commons.db.sql.DefaultSQLBuilder;
 import com.miotech.kun.commons.db.sql.SQLBuilder;
-import com.miotech.kun.commons.utils.CalculationUtils;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
@@ -686,6 +686,7 @@ public class TaskRunDao {
         List<TaskRun> previousTaskRuns = fetchLatestTaskRuns(taskRun.getTask().getId(), ImmutableList.of(TaskRunStatus.SUCCESS), 7);
         Long averageRunningTime;
         Long averageQueuingTime;
+        System.out.println("task Run " + taskRun.getId() + " previous size " + previousTaskRuns.size());
         if (previousTaskRuns.isEmpty()) {
             averageRunningTime = 0L;
             averageQueuingTime = 0L;
@@ -696,14 +697,10 @@ public class TaskRunDao {
             List<Long> queuingTime = previousTaskRuns.stream()
                     .map(x -> x.getQueuedAt().until(x.getStartAt(), ChronoUnit.SECONDS))
                     .collect(Collectors.toList());
-            if (runningTime.size() == 1) {
-                averageRunningTime = runningTime.get(0);
-                averageQueuingTime = queuingTime.get(0);
-            } else {
-                averageRunningTime = Math.round(CalculationUtils.getAverageWithoutOutliers(runningTime));
-                averageQueuingTime = Math.round(CalculationUtils.getAverageWithoutOutliers(queuingTime));
-            }
+            averageRunningTime = Math.round(Stats.meanOf(runningTime));
+            averageQueuingTime = Math.round(Stats.meanOf(queuingTime));
         }
+        System.out.println("task Run " + taskRun.getId() + " " + averageRunningTime + " " + averageQueuingTime);
         String sql = DefaultSQLBuilder.newBuilder()
                 .insert(taskRunStatCols.toArray(new String[0]))
                 .into(TASK_RUN_STAT_TABLE_NAME)
@@ -882,7 +879,7 @@ public class TaskRunDao {
                 .from(recursiveResult)
                 .getSQL();
         StringBuilder recursiveSqlBuilder = new StringBuilder();
-        String recursiveSql = recursiveSqlBuilder.append("WITH RECURSIVE fetch_upstream() AS (\n")
+        String recursiveSql = recursiveSqlBuilder.append("WITH RECURSIVE fetch_upstream AS (\n")
                 .append(unRecursiveSql + "\n")
                 .append("UNION\n")
                 .append(dependencySQL + "\n")

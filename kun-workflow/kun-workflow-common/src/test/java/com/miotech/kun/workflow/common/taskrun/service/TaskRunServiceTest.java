@@ -3,6 +3,8 @@ package com.miotech.kun.workflow.common.taskrun.service;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.miotech.kun.commons.utils.Props;
+import com.miotech.kun.commons.web.serializer.JsonSerializer;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.CommonTestBase;
@@ -12,6 +14,7 @@ import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.common.taskrun.vo.TaskRunGanttChartVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
 import com.miotech.kun.workflow.core.Executor;
@@ -34,15 +37,18 @@ import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
 import java.io.*;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -72,6 +78,9 @@ public class TaskRunServiceTest extends CommonTestBase {
     @Inject
     private EventBus eventBus;
 
+    @Inject
+    private Props props;
+
     private TaskRunStateMachine taskRunStateMachine;
 
     public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -91,7 +100,8 @@ public class TaskRunServiceTest extends CommonTestBase {
                 resourceLoader,
                 executor,
                 scheduler,
-                eventBus
+                eventBus,
+                props
         ));
         taskRunStateMachine = new TaskRunStateMachine(taskRunDao, eventBus, mock(LineageService.class));
         taskRunStateMachine.start();
@@ -852,13 +862,94 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(satisfyTaskRunIds.get(0), is(taskRun2.getId()));
     }
 
-//    @Test
-//    public void getGlobalTaskRunGantt() {
-//        //prepare
-//        Of
-//        Task task = MockTaskFactory.createTask();
-//        TaskRun taskRun = MockTaskRunFactory.createTaskRun(task).cloneBuilder()
-//                .w
-//    }
+    @Test
+    public void getGlobalTaskRunGantt_shouldSuccess() {
+        //prepare 9 taskruns success for 3 turns with different time point
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2")
+                .stream()
+                .map(t -> t.cloneBuilder()
+                        .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 0 0 * * ?", "Asia/Kuching"))
+                        .build())
+                .collect(Collectors.toList());
+        List<List<TaskRun>> list = new ArrayList<>();
+        for (Task task : tasks) {
+            taskDao.create(task);
+        }
+        OffsetDateTime baseTime = DateTimeUtils.now();
+        //prepare taskruns for three turns
+        for (int i = 0; i < 3; i++) {
+            List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1;1>>2");
+            for (int j = 0; j < 12;) {
+                TaskRun taskRun = taskRuns.get(j/4).cloneBuilder()
+                        .withCreatedAt(baseTime.minusDays(3-i).plusHours(j++)).build();
+                taskRunDao.createTaskRun(taskRun);
+                taskRunDao.updateTaskRunStat(taskRun.getId());
+                taskRun = taskRun.cloneBuilder()
+                        .withStatus(TaskRunStatus.SUCCESS)
+                        .withQueuedAt(baseTime.minusDays(3-i).plusHours(j++))
+                        .withStartAt(baseTime.minusDays(3-i).plusHours(j++))
+                        .withEndAt(baseTime.minusDays(3-i).plusHours(j++)).build();
+                taskRunDao.updateTaskRun(taskRun);
+            }
+            list.add(taskRuns);
+        }
+        //process
+        TaskRunGanttChartVO result1 = taskRunService.getGlobalTaskRunGantt(baseTime.minusDays(3), baseTime, "createdAt");
+        TaskRunGanttChartVO result2 = taskRunService.getGlobalTaskRunGantt(baseTime.minusDays(2), baseTime, "queuedAt");
+        TaskRunGanttChartVO result3 = taskRunService.getGlobalTaskRunGantt(baseTime.minusDays(1), baseTime, "startAt");
 
+        //TODO: only for check serialization. Delete before merge
+        JsonSerializer jsonSerializer = new JsonSerializer();
+        System.out.println(jsonSerializer.toString(result1));
+        System.out.println(jsonSerializer.toString(result1.getInfoList().get(0)));
+
+        //verify
+        assertThat(result1.getInfoList().size(), is(9));
+        assertThat(result2.getInfoList().size(), is(6));
+        assertThat(result3.getInfoList().size(), is(3));
+    }
+
+    //prepare 5 tasks with 15 hours created_time
+    // when fetch taskrun gantt for 3rd taskrun, get 4 result (1st is omitted > 24 h)
+    @Test
+    public void getSpecifiedTaskRunGanttChart_shouldSuccess() {
+
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(5, "0>>1;1>>2;2>>3;3>>4")
+                .stream()
+                .map(t -> t.cloneBuilder()
+                        .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 0 0 * * ?", "Asia/Kuching"))
+                        .build())
+                .collect(Collectors.toList());
+        List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1;1>>2;2>>3;3>>4");
+        OffsetDateTime baseTime = DateTimeUtils.now();
+        DateTimeUtils.freeze();
+        for (Task task : tasks) {
+            taskDao.create(task);
+        }
+        for (int i = 0; i < taskRuns.size(); i++) {
+            Long taskRunGap_hours = 15L;
+            TaskRun taskRun = taskRuns.get(i);
+            taskRunDao.createTaskRun(taskRun);
+            taskRun = taskRun.cloneBuilder()
+                    .withStatus(TaskRunStatus.SUCCESS)
+                    .withCreatedAt(baseTime.minusHours(taskRunGap_hours*(5-i)))
+                    .withQueuedAt(baseTime.minusHours(taskRunGap_hours*(5-i)-1))
+                    .withStartAt(baseTime.minusHours(taskRunGap_hours*(5-i)-3))
+                    .withEndAt(baseTime.minusHours(taskRunGap_hours*(5-i)-6))
+                    .build();
+            taskRunDao.updateTaskRun(taskRun);
+            taskRunDao.updateTaskRunStat(taskRun.getId());
+            System.out.println(taskRun.getId());
+        }
+
+        TaskRunGanttChartVO result1 = taskRunService.getTaskRunGantt(taskRuns.get(2).getId());
+
+        //TODO: only for check serialization. Delete before merge
+        JsonSerializer jsonSerializer = new JsonSerializer();
+        System.out.println(jsonSerializer.toString(result1));
+        System.out.println(jsonSerializer.toString(result1.getInfoList().get(0)));
+
+        assertThat(result1.getInfoList().size(), is(4));
+
+    }
 }

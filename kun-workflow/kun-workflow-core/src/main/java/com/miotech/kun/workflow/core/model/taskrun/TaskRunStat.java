@@ -25,7 +25,6 @@ public class TaskRunStat {
         return averageQueuingTime;
     }
 
-
     public static TaskRunStatBuilder newBuilder() {
         return new TaskRunStatBuilder();
     }

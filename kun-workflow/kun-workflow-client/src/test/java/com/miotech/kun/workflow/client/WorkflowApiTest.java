@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.miotech.kun.commons.testing.MockServerTestBase;
 import com.miotech.kun.workflow.client.model.*;
+import com.miotech.kun.workflow.core.model.common.GanttChartTaskRunInfo;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
@@ -326,5 +327,16 @@ public class WorkflowApiTest extends MockServerTestBase {
         mockPut("/taskruns/removeDependency?taskRunId=" + taskRunId + "&upstreamTaskRunIds=" + upstreamId, "", JSONUtils.toJsonString(true));
         Boolean result = wfApi.removeTaskRunDependency(taskRunId, Lists.newArrayList(upstreamId));
         assertThat(result, is(true));
+    }
+
+    //todo delete this before merge
+    @Test
+    public void getGantt() {
+        String testGanttChart = "{\"infoList\":[{\"taskRunId\":\"287478451399561216\",\"taskId\":\"287478451315675136\",\"name\":\"task_287478451315675136\",\"status\":\"SUCCESS\",\"queuedAt\":\"2022-02-22T19:56:43.911Z\",\"startAt\":\"2022-02-22T21:56:43.911Z\",\"endAt\":\"2022-02-23T00:56:43.911Z\",\"createdAt\":\"2022-02-22T18:56:43.911Z\",\"averageRunningTime\":10800,\"averageQueuingTime\":7200,\"dependentTaskRunIds\":[287478451399557120]},{\"taskRunId\":\"287478451399565312\",\"taskId\":\"287478451315679232\",\"name\":\"task_287478451315679232\",\"status\":\"SUCCESS\",\"queuedAt\":\"2022-02-23T10:56:43.911Z\",\"startAt\":\"2022-02-23T12:56:43.911Z\",\"endAt\":\"2022-02-23T15:56:43.911Z\",\"createdAt\":\"2022-02-23T09:56:43.911Z\",\"averageRunningTime\":10800,\"averageQueuingTime\":7200,\"dependentTaskRunIds\":[287478451399561216]},{\"taskRunId\":\"287478451399569408\",\"taskId\":\"287478451315683328\",\"name\":\"task_287478451315683328\",\"status\":\"SUCCESS\",\"queuedAt\":\"2022-02-24T01:56:43.911Z\",\"startAt\":\"2022-02-24T03:56:43.911Z\",\"endAt\":\"2022-02-24T06:56:43.911Z\",\"createdAt\":\"2022-02-24T00:56:43.911Z\",\"averageRunningTime\":10800,\"averageQueuingTime\":7200,\"dependentTaskRunIds\":[287478451399565312]},{\"taskRunId\":\"287478451399573504\",\"taskId\":\"287478451315687424\",\"name\":\"task_287478451315687424\",\"status\":\"SUCCESS\",\"queuedAt\":\"2022-02-24T16:56:43.911Z\",\"startAt\":\"2022-02-24T18:56:43.911Z\",\"endAt\":\"2022-02-24T21:56:43.911Z\",\"createdAt\":\"2022-02-24T15:56:43.911Z\",\"averageRunningTime\":10800,\"averageQueuingTime\":7200,\"dependentTaskRunIds\":[287478451399569408]}]}";
+        String testTaskRunInfo = "{\"taskRunId\":\"287478451399561216\",\"taskId\":\"287478451315675136\",\"name\":\"task_287478451315675136\",\"status\":\"SUCCESS\",\"queuedAt\":\"2022-02-22T19:56:43.911Z\",\"startAt\":\"2022-02-22T21:56:43.911Z\",\"endAt\":\"2022-02-23T00:56:43.911Z\",\"createdAt\":\"2022-02-22T18:56:43.911Z\",\"averageRunningTime\":10800,\"averageQueuingTime\":7200,\"dependentTaskRunIds\":[]}";
+        TaskRunGanttChart taskRunGanttChart = JSONUtils.jsonToObject(testGanttChart, TaskRunGanttChart.class);
+        GanttChartTaskRunInfo ganttChartTaskRunInfo = JSONUtils.jsonToObject(testTaskRunInfo, GanttChartTaskRunInfo.class);
+        System.out.println(taskRunGanttChart.toString());
+        System.out.println(ganttChartTaskRunInfo.toString());
     }
 }
