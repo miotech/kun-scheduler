@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from 'react';
-import { Table, Card, Checkbox, Space } from 'antd';
+import { Table, Card, Checkbox, Space, Tooltip } from 'antd';
 import { dayjs } from '@/utils/datetime-utils';
 import isNil from 'lodash/isNil';
 import useI18n from '@/hooks/useI18n';
@@ -53,8 +53,8 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
   const { data, pageNum, pageSize, total, onChange, loading } = props;
   const t = useI18n();
 
-  const columns: ColumnProps<DevTaskDetail>[] = useMemo(
-    () => [
+  const columns: ColumnProps<DevTaskDetail>[] = useMemo(() => {
+    const arr = [
       {
         key: 'ordinal',
         title: '#',
@@ -84,11 +84,6 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
         key: 'taskStatus',
         title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.taskStatus'),
         render: txt => <StatusText status={txt} />,
-      },
-      {
-        dataIndex: 'errorMessage',
-        key: 'errorMessage',
-        title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.errorMessage'),
       },
       {
         dataIndex: 'createTime',
@@ -124,9 +119,36 @@ export const TaskDetailsTable: React.FC<Props> = memo(function TaskDetailsTable(
           </span>
         ),
       },
-    ],
-    [t, pageNum, pageSize],
-  );
+    ];
+    if (data.findIndex(item => item.taskStatus === 'UPSTREAM_FAILED') > -1) {
+      const column = {
+        dataIndex: 'failedTask',
+        key: 'failedTask',
+        title: t('monitoringDashboard.dataDevelopment.taskDetailsTable.failedTask'),
+        render: (txt: any, record: DevTaskDetail) => (
+          <div>
+            {record?.rootFailedTasks?.map(item => {
+              const linkHref = getComputedLinkHref(item.taskId, item.taskRunId);
+              return (
+                <Tooltip title={item.taskName}>
+                  <a href={linkHref} rel="noopener nofollow">
+                    {item.taskName}
+                  </a>
+                  <br />
+                </Tooltip>
+              );
+            })}
+          </div>
+        ),
+      };
+      arr.splice(3, 0, column);
+    }
+    const upstreamArr = data.filter(item => item.taskStatus === 'UPSTREAM_FAILED');
+    if (upstreamArr.length === data.length) {
+      arr.splice(5, 2);
+    }
+    return arr;
+  }, [t, pageNum, pageSize, data]);
 
   return (
     <Card>
