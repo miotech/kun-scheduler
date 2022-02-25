@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import com.miotech.kun.commons.web.annotation.QueryParameter;
 import com.miotech.kun.commons.web.annotation.RequestBody;
 import com.miotech.kun.commons.web.annotation.RouteMapping;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.lineage.service.LineageService;
 import com.miotech.kun.workflow.common.task.service.TaskService;
 import com.miotech.kun.workflow.core.model.lineage.*;
@@ -116,6 +117,7 @@ public class LineageController {
         Set<DatasetNode> upstreamNodes = new LinkedHashSet<>();
         Set<DatasetNode> downstreamNodes = new LinkedHashSet<>();
         Optional<DatasetNode> sourceNode = lineageService.fetchDatasetNodeById(datasetGid);
+        sourceNode.orElseThrow(()->new EntityNotFoundException("dataset does not exists, id:"+datasetGid));
 
         switch (direction) {
             case "UPSTREAM":
