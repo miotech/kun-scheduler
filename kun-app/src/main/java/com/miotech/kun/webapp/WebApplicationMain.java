@@ -3,7 +3,9 @@ package com.miotech.kun.webapp;
 import com.miotech.kun.webapp.listener.KunAppPropertySourceListener;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.neo4j.Neo4jDataAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.autoconfigure.neo4j.Neo4jAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -28,7 +30,12 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         "com.miotech.kun.webapp",
         "com.miotech.kun.monitor",
         "com.miotech.kun.openapi"
-}, exclude = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
+}, exclude = {
+        MongoAutoConfiguration.class,
+        MongoDataAutoConfiguration.class,
+        Neo4jAutoConfiguration.class,
+        Neo4jDataAutoConfiguration.class
+})
 @EnableScheduling
 @EnableAsync
 public class WebApplicationMain {
