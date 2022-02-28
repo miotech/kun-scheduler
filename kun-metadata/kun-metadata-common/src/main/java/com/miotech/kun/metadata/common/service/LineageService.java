@@ -6,7 +6,6 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.miotech.kun.metadata.common.exception.EntityNotFoundException;
 import com.miotech.kun.metadata.common.utils.JSONUtils;
 import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
@@ -256,10 +255,15 @@ public class LineageService implements LineageServiceFacade {
      * @throws IllegalArgumentException when depth is not positive integer
      */
     public Set<DatasetNode> fetchUpstreamDatasetNodes(Long datasetGlobalId, int depth) {
-        return getDepthRelatedDatasetNodes(datasetGlobalId, depth,true);
+        return fetchDepthRelatedDatasetNodes(datasetGlobalId, depth,true);
     }
-
-    public Set<DatasetNode> getDepthRelatedDatasetNodes(Long datasetGlobalId, int depth, boolean upstream){
+    /**
+     * @param datasetGlobalId gid
+     * @param depth  search deep  Itself is 0
+     * @param  upstream
+     * @return set of  dataset nodes
+     */
+    public Set<DatasetNode> fetchDepthRelatedDatasetNodes(Long datasetGlobalId, int depth, boolean upstream){
         Preconditions.checkArgument(depth > 0, "Depth field should be positive but got: %s", depth);
         Preconditions.checkArgument(datasetGlobalId > 0, "datasetGlobalId  should be positive but got: %s", datasetGlobalId);
         Map<String, Object> paramsMap = new HashMap<>();
@@ -285,9 +289,10 @@ public class LineageService implements LineageServiceFacade {
      * @throws IllegalArgumentException when depth is not positive integer
      */
     public Set<DatasetNode> fetchDownstreamDatasetNodes(Long datasetGlobalId, int depth) {
-        return getDepthRelatedDatasetNodes(datasetGlobalId, depth,false);
+        return fetchDepthRelatedDatasetNodes(datasetGlobalId, depth,false);
 
     }
+
 
     /**
      * @param taskNodeId
