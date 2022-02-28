@@ -97,6 +97,20 @@ public class ScheduleConfig {
         return new Builder();
     }
 
+    public Builder cloneBuilder() {
+        return new Builder()
+                .withType(type)
+                .withBlockType(blockType)
+                .withInputNodes(inputNodes)
+                .withInputDatasets(inputDatasets)
+                .withOutputDatasets(outputDatasets)
+                .withCronExpr(cronExpr)
+                .withRetries(retries)
+                .withRetryDelay(retryDelay)
+                .withTimeZone(timeZone)
+                .withSlaConfig(slaConfig);
+    }
+
     public static final class Builder {
         private String type;
         private String cronExpr;

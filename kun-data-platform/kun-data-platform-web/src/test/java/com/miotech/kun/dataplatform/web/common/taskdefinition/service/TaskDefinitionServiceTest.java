@@ -198,7 +198,6 @@ public class TaskDefinitionServiceTest extends AppTestBase {
 
     }
 
-    @Disabled
     @Test
     public void test_update_withInputNodes() {
         // prepare with dependencies
@@ -210,7 +209,7 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         TaskPayload taskPayload = taskDefinition.getTaskPayload();
         Map<String, Object> taskConfig = taskPayload.getTaskConfig();
         taskConfig.put("sql", "select 2");
-        ScheduleConfig scheduleConfig = ScheduleConfig.newBuilder()
+        ScheduleConfig scheduleConfig = taskDefinition.getTaskPayload().getScheduleConfig().cloneBuilder()
                 .withInputNodes(Collections.singletonList(upstreamTaskDefinition.getDefinitionId()))
                 .build();
         TaskPayload updatedTaskPayload = taskPayload
@@ -239,6 +238,47 @@ public class TaskDefinitionServiceTest extends AppTestBase {
         TaskRelation taskRelation = taskRelationDao.fetchByDownstreamId(taskDefinition.getDefinitionId()).get(0);
         assertEquals(upstreamTaskDefinition.getDefinitionId(), taskRelation.getUpstreamId());
         assertEquals(taskDefinition.getDefinitionId(), taskRelation.getDownstreamId());
+    }
+
+    @Test
+    public void update_removeInputNode_relationShouldBeDeleted() {
+        //prepare task def with input nodes
+        TaskDefinition upstreamTaskDefinition = MockTaskDefinitionFactory.createTaskDefinition();
+        taskDefinitionDao.create(upstreamTaskDefinition);
+        TaskDefinition taskDefinition = MockTaskDefinitionFactory.createTaskDefinitions(1,
+                Collections.singletonList(upstreamTaskDefinition.getDefinitionId())).get(0);
+        taskDefinitionDao.create(taskDefinition);
+        UpdateTaskDefinitionRequest updateRequest0 = new UpdateTaskDefinitionRequest(
+                taskDefinition.getDefinitionId(),
+                taskDefinition.getName(),
+                taskDefinition.getTaskPayload(),
+                taskDefinition.getOwner()
+        );
+        taskDefinitionService.update(taskDefinition.getDefinitionId(), updateRequest0);
+        //process
+        ScheduleConfig scheduleConfig = taskDefinition.getTaskPayload().getScheduleConfig().cloneBuilder()
+                .withInputNodes(Collections.emptyList())
+                .build();
+        TaskPayload updatedTaskPayload = taskDefinition.getTaskPayload()
+                .cloneBuilder()
+                .withScheduleConfig(scheduleConfig)
+                .build();
+        UpdateTaskDefinitionRequest updateRequest = new UpdateTaskDefinitionRequest(
+                taskDefinition.getDefinitionId(),
+                taskDefinition.getName() + "_updated",
+                updatedTaskPayload,
+                1L
+        );
+        TaskDefinition updated = taskDefinitionService.update(updateRequest.getDefinitionId(),
+                updateRequest);
+        List<TaskRelation> taskRelations = taskRelationDao.fetchByDownstreamId(taskDefinition.getDefinitionId());
+        //valid
+        assertThat(updated.getDefinitionId(), is(taskDefinition.getDefinitionId()));
+        assertThat(updated.getTaskTemplateName(), is(taskDefinition.getTaskTemplateName()));
+        assertThat(updated.getName(), is(updateRequest.getName()));
+        assertThat(updated.getOwner(), is(updateRequest.getOwner()));
+        assertThat(updated.getTaskPayload(), sameBeanAs(updateRequest.getTaskPayload()));
+        assertThat(taskRelations.size(), is(0));
     }
 
     @Disabled

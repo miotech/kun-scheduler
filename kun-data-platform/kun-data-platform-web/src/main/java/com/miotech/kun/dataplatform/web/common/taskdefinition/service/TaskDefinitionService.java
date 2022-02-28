@@ -189,8 +189,6 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
         Preconditions.checkNotNull(request.getOwner(), "owner should not be `null`");
         Preconditions.checkNotNull(request.getTaskPayload(), "taskPayload should not be `null`");
 
-
-
         TaskDefinition taskDefinition = find(definitionId);
 
         //Check task name duplicate
@@ -224,8 +222,8 @@ public class TaskDefinitionService extends BaseSecurityService implements TaskDe
                 .collect(Collectors.toList())
         );
 
+        taskRelationDao.delete(definitionId);
         if (!upstream.isEmpty()) {
-            taskRelationDao.delete(definitionId);
             List<TaskRelation> taskRelations = upstream.stream().map(x -> new TaskRelation(x, definitionId, DateTimeUtils.now(), DateTimeUtils.now())).collect(Collectors.toList());
             taskRelationDao.create(taskRelations);
         }
