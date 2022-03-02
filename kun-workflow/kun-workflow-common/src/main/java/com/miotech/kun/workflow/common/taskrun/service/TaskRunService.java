@@ -1,6 +1,8 @@
 package com.miotech.kun.workflow.common.taskrun.service;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.eventbus.EventBus;
@@ -23,8 +25,11 @@ import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.annotation.Internal;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEvent;
 import com.miotech.kun.workflow.core.event.TaskRunTransitionEventType;
+import com.miotech.kun.workflow.core.model.common.GanttChartTaskRunInfo;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
+import com.miotech.kun.workflow.core.model.taskrun.TaskRunStat;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.TimeType;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.tuple.Triple;
@@ -35,8 +40,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
+import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -54,16 +61,22 @@ public class TaskRunService {
 
     private final EventBus eventBus;
 
+    private final Integer MAX_TRACE_DAYS = 7;
+
+    private final Integer UPSTREAM_TRACE_HOURS = 24;
+
     @Inject
     private Props props;
 
     @Inject
-    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor, Scheduler scheduler, EventBus eventBus) {
+    public TaskRunService(TaskRunDao taskRunDao, ResourceLoader resourceLoader, Executor executor, Scheduler scheduler,
+                          EventBus eventBus, Props props) {
         this.taskRunDao = taskRunDao;
         this.resourceLoader = resourceLoader;
         this.executor = executor;
         this.scheduler = scheduler;
         this.eventBus = eventBus;
+        this.props = props;
     }
 
     /* --------------------------------------- */
@@ -242,6 +255,106 @@ public class TaskRunService {
                         .map(t -> new TaskRunDependencyVO(x.getId(), t)))
                 .collect(Collectors.toList());
         return new TaskRunDAGVO(nodes, edges);
+    }
+
+    public TaskRunGanttChartVO getGlobalTaskRunGantt(OffsetDateTime startTime, OffsetDateTime endTime, TimeType timeType) {
+        Set<TaskRunStatus> status = ImmutableSet.of(TaskRunStatus.SUCCESS, TaskRunStatus.FAILED, TaskRunStatus.ABORTED, TaskRunStatus.RUNNING);
+        List<String> scheduleType = ImmutableList.of("SCHEDULED");
+        TaskRunSearchFilter.Builder filterBuilder = TaskRunSearchFilter.newBuilder()
+                .withStatus(status)
+                .withScheduleType(scheduleType)
+                .withSortKey("startAt")
+                .withSortOrder("ASC");
+        switch (timeType) {
+            case createdAt:
+                filterBuilder.withDateFrom(startTime)
+                        .withDateTo(endTime);
+                break;
+            case queuedAt:
+                filterBuilder.withQueueFrom(startTime)
+                        .withQueueTo(endTime);
+                break;
+            case startAt:
+                filterBuilder.withStartFrom(startTime)
+                        .withStartTo(endTime);
+                break;
+            case endAt:
+                filterBuilder.withEndAfter(startTime)
+                        .withEndBefore(endTime);
+                break;
+        }
+        List<TaskRun> taskRunList = taskRunDao.fetchTaskRunsByFilterWithoutPagination(filterBuilder.build());
+        return buildTaskRunGanttChart(taskRunList, false);
+    }
+
+    public TaskRunGanttChartVO getTaskRunGantt(Long taskRunId) {
+        //we only fetch upstream task run created within upstreamTraceTime_hours
+        return getTaskRunGantt(taskRunId, UPSTREAM_TRACE_HOURS);
+    }
+
+    public TaskRunGanttChartVO getTaskRunGantt(Long taskRunId, Integer upstreamTraceTime_hours) {
+        TaskRun taskRun = findTaskRun(taskRunId);
+        List<TaskRun> result = new ArrayList<>();
+        List<Long> upstreamTaskRunIds = taskRunDao.fetchUpStreamTaskRunIdsRecursive(taskRunId, postgresEnable());
+        if (!upstreamTaskRunIds.isEmpty()) {
+            List<TaskRun> upstreamTaskRunList = taskRunDao.fetchTaskRunsByIds(upstreamTaskRunIds)
+                    .stream()
+                    .map(Optional::get)
+                    .filter(x -> x.getCreatedAt().isAfter(taskRun.getCreatedAt().minusHours(upstreamTraceTime_hours)))
+                    .sorted(Comparator.nullsLast(Comparator.comparing(TaskRun::getStartAt)))
+                    .collect(Collectors.toList());
+            result.addAll(upstreamTaskRunList);
+        }
+        result.add(taskRun);
+        List<Long> downstreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId, postgresEnable());
+        if (!downstreamTaskRunIds.isEmpty()) {
+            List<TaskRun> downstreamTaskRunList = taskRunDao.fetchTaskRunsByIds(downstreamTaskRunIds)
+                    .stream()
+                    .map(Optional::get)
+                    .sorted(Comparator.nullsLast(Comparator.comparing(TaskRun::getStartAt)))
+                    .collect(Collectors.toList());
+            result.addAll(downstreamTaskRunList);
+        }
+        return buildTaskRunGanttChart(result, true);
+    }
+
+    private TaskRunGanttChartVO buildTaskRunGanttChart(List<TaskRun> taskRunList, boolean withDependencies) {
+        if (taskRunList.isEmpty()) {
+            return new TaskRunGanttChartVO(Collections.emptyList(), DateTimeUtils.now(), DateTimeUtils.now());
+        }
+        List<TaskRunStat> taskRunStatList = taskRunDao.fetchTaskRunStat(taskRunList.stream().map(TaskRun::getId).collect(Collectors.toList()));
+        Map<Long, TaskRunStat> taskRunStatMap = taskRunStatList.stream()
+                .collect(Collectors.toMap(TaskRunStat::getId, Function.identity()));
+        //set as start point, fetch final result by comparison
+        OffsetDateTime earliestTime = DateTimeUtils.now();
+        OffsetDateTime latestTime = DateTimeUtils.now().minusDays(MAX_TRACE_DAYS);
+        boolean existRunning = false;
+        List<GanttChartTaskRunInfo> infoList = new ArrayList<>();
+        for (TaskRun taskRun : taskRunList) {
+            GanttChartTaskRunInfo info = GanttChartTaskRunInfo.newBuilder()
+                    .withTaskRunId(taskRun.getId())
+                    .withTaskId(taskRun.getTask().getId())
+                    .withName(taskRun.getTask().getName())
+                    .withCreatedAt(taskRun.getCreatedAt())
+                    .withQueuedAt(taskRun.getQueuedAt())
+                    .withStartAt(taskRun.getStartAt())
+                    .withEndAt(taskRun.getEndAt())
+                    .withStatus(taskRun.getStatus())
+                    .withAverageRunningTime(taskRunStatMap.containsKey(taskRun.getId())? taskRunStatMap.get(taskRun.getId()).getAverageRunningTime() : 0L)
+                    .withAverageQueuingTime(taskRunStatMap.containsKey(taskRun.getId())? taskRunStatMap.get(taskRun.getId()).getAverageQueuingTime() : 0L)
+                    .withDependentTaskRunIds(withDependencies? taskRun.getDependentTaskRunIds() : Collections.emptyList())
+                    .build();
+            earliestTime = DateTimeUtils.getEarlierTime(taskRun.getCreatedAt(), earliestTime);
+            latestTime = DateTimeUtils.getLatestTime(latestTime, taskRun.getCreatedAt(), taskRun.getEndAt());
+            if (taskRun.getStatus().isRunning()) {
+                existRunning = true;
+            }
+            infoList.add(info);
+        }
+        if (existRunning) {
+            latestTime = DateTimeUtils.now();
+        }
+        return new TaskRunGanttChartVO(infoList, earliestTime, latestTime);
     }
 
     public List<TaskRun> getUpstreamTaskRuns(TaskRun taskRun, int distance) {
@@ -475,6 +588,11 @@ public class TaskRunService {
         vo.setAttempts(attempts);
         vo.setFailedUpstreamTaskRuns(failedUpstreamTaskRuns);
         return vo;
+    }
+
+    private boolean postgresEnable() {
+        String datasourceUrl = props.getString("datasource.jdbcUrl", "");
+        return datasourceUrl.contains("postgres");
     }
 
 }

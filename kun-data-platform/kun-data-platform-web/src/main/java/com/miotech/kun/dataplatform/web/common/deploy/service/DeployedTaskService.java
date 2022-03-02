@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import com.miotech.kun.commons.utils.DateTimeUtils;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskCommit;
 import com.miotech.kun.dataplatform.facade.model.commit.TaskSnapshot;
@@ -31,12 +32,14 @@ import com.miotech.kun.workflow.core.model.task.BlockType;
 import com.miotech.kun.workflow.core.model.task.ScheduleConf;
 import com.miotech.kun.workflow.core.model.task.ScheduleType;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.TimeType;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -389,6 +392,23 @@ public class DeployedTaskService extends BaseSecurityService implements Deployed
         Preconditions.checkArgument(upstreamLevel >=0 , "upstreamLevel should be non negative");
         Preconditions.checkArgument(downstreamLevel >=0 , "downstreamLevel should be non negative");
         return workflowClient.getTaskRunDAG(taskRunId, upstreamLevel, downstreamLevel);
+    }
+
+    public TaskRunGanttChart getTaskRunGantt(OffsetDateTime startTime, OffsetDateTime endTime,
+                                             TimeType timeType, Long taskRunId) {
+        if (startTime == null || endTime == null) {
+            endTime = DateTimeUtils.now();
+            startTime = endTime.minusDays(1);
+        }
+        if (timeType == null) {
+            timeType = TimeType.startAt;
+        }
+        Preconditions.checkArgument(endTime.minusDays(7).isBefore(startTime), "time interval should be no more 7 days");
+        if (taskRunId != null) {
+            return workflowClient.getTaskRunGantt(taskRunId);
+        } else {
+            return workflowClient.getGlobalTaskRunGantt(startTime, endTime, timeType);
+        }
     }
 
     public TaskRunLogVO getWorkFlowTaskRunLog(Long taskRunId) {

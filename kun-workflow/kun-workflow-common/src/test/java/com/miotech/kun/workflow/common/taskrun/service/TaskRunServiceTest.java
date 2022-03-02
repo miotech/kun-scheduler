@@ -3,6 +3,7 @@ package com.miotech.kun.workflow.common.taskrun.service;
 import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.inject.Inject;
+import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.TaskRunStateMachine;
 import com.miotech.kun.workflow.common.CommonTestBase;
@@ -12,6 +13,7 @@ import com.miotech.kun.workflow.common.resource.ResourceLoader;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskAttemptProps;
 import com.miotech.kun.workflow.common.taskrun.dao.TaskRunDao;
+import com.miotech.kun.workflow.common.taskrun.vo.TaskRunGanttChartVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
 import com.miotech.kun.workflow.core.Executor;
@@ -23,6 +25,7 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.core.model.taskrun.TaskAttempt;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRun;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.TimeType;
 import com.miotech.kun.workflow.core.resource.Resource;
 import com.miotech.kun.workflow.testing.factory.MockTaskAttemptFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
@@ -38,11 +41,13 @@ import org.junit.rules.TemporaryFolder;
 import org.mockito.Mockito;
 
 import java.io.*;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.RunnableFuture;
+import java.util.stream.Collectors;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
@@ -72,6 +77,9 @@ public class TaskRunServiceTest extends CommonTestBase {
     @Inject
     private EventBus eventBus;
 
+    @Inject
+    private Props props;
+
     private TaskRunStateMachine taskRunStateMachine;
 
     public TemporaryFolder tempFolder = new TemporaryFolder();
@@ -91,7 +99,8 @@ public class TaskRunServiceTest extends CommonTestBase {
                 resourceLoader,
                 executor,
                 scheduler,
-                eventBus
+                eventBus,
+                props
         ));
         taskRunStateMachine = new TaskRunStateMachine(taskRunDao, eventBus, mock(LineageService.class));
         taskRunStateMachine.start();
@@ -852,5 +861,109 @@ public class TaskRunServiceTest extends CommonTestBase {
         assertThat(satisfyTaskRunIds.get(0), is(taskRun2.getId()));
     }
 
+    @Test
+    public void getGlobalTaskRunGantt_shouldSuccess() {
+        //prepare 9 taskruns success for 3 turns with different time point
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(3, "0>>1;1>>2")
+                .stream()
+                .map(t -> t.cloneBuilder()
+                        .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 0 0 * * ?", "Asia/Kuching"))
+                        .build())
+                .collect(Collectors.toList());
+        for (Task task : tasks) {
+            taskDao.create(task);
+        }
+        OffsetDateTime baseTime = DateTimeUtils.now();
+        //prepare task runs for three turns
+        //every turn with 3 task runs have 1 day gap
+        for (int day = 0; day < 3; day++) {
+            List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1;1>>2");
+            // create 3 task runs for very turn, with 1 hour process gap
+            for (int task_index = 0; task_index < 3; task_index++) {
+                int processBase_hour = 1;
+                TaskRun taskRun = taskRuns.get(task_index).cloneBuilder()
+                        .withCreatedAt(baseTime.minusDays(3-day).plusHours(processBase_hour++)).build();
+                taskRunDao.createTaskRun(taskRun);
+                // average time is 0 when no prev success taskrun
+                if (day == 0) {
+                    taskRunDao.updateTaskRunStat(taskRun.getId(), 0L, 0L);
+                } else {
+                    taskRunDao.updateTaskRunStat(taskRun.getId(), 3600L, 3600L);
+                }
+                taskRun = taskRun.cloneBuilder()
+                        .withStatus(TaskRunStatus.SUCCESS)
+                        .withQueuedAt(baseTime.minusDays(3-day).plusHours(processBase_hour++))
+                        .withStartAt(baseTime.minusDays(3-day).plusHours(processBase_hour++))
+                        .withEndAt(baseTime.minusDays(3-day).plusHours(processBase_hour++)).build();
+                taskRunDao.updateTaskRun(taskRun);
+            }
+        }
 
+        //fetch gantt info for 3 days, contain 9 taskruns
+        TaskRunGanttChartVO result1 = taskRunService.getGlobalTaskRunGantt(baseTime.minusDays(3), baseTime, TimeType.createdAt);
+        assertThat(result1.getInfoList().size(), is(9));
+        assertThat(result1.getEarliestTime(), is(baseTime.minusDays(3).plusHours(1)));
+        assertThat(result1.getLatestTime(), is(baseTime.minusDays(1).plusHours(4)));
+
+        //fetch gantt info for 2 days, contain 6 taskruns
+        TaskRunGanttChartVO result2 = taskRunService.getGlobalTaskRunGantt(baseTime.minusDays(2), baseTime, TimeType.queuedAt);
+        assertThat(result2.getInfoList().size(), is(6));
+
+        //fetch gantt info for 1 days, contain 3 taskruns
+        TaskRunGanttChartVO result3 = taskRunService.getGlobalTaskRunGantt(baseTime.minusDays(1), baseTime, TimeType.startAt);
+        assertThat(result3.getInfoList().size(), is(3));
+    }
+
+    @Test
+    public void getSpecifiedTaskRunGanttChart_shouldSuccess() {
+
+        List<Task> tasks = MockTaskFactory.createTasksWithRelations(5, "0>>1;1>>2;2>>3;3>>4")
+                .stream()
+                .map(t -> t.cloneBuilder()
+                        .withScheduleConf(new ScheduleConf(ScheduleType.SCHEDULED, "0 0 0 * * ?", "Asia/Kuching"))
+                        .build())
+                .collect(Collectors.toList());
+        List<TaskRun> taskRuns = MockTaskRunFactory.createTaskRunsWithRelations(tasks, "0>>1;1>>2;2>>3;3>>4");
+        OffsetDateTime baseTime = DateTimeUtils.now();
+        DateTimeUtils.freeze();
+        for (Task task : tasks) {
+            taskDao.create(task);
+        }
+        // 5 taskruns 0>>1>>2>>3>>4
+        // task run 0 created 75h ago, queued 74h ago, start 72h ago, end 69h ago
+        // task run 1 created 60h ago, queued 59h ago, start 57h ago, end 54h ago
+        // task run 2 created 45h ago, queued 44h ago, start 42h ago, end 39h ago
+        // task run 3 created 30h ago, queued 29h ago, start 27h ago, end 24h ago
+        // task run 4 created 15h ago, queued 14h ago, start 12h ago, end 9h ago
+        for (int taskRun_index = 0; taskRun_index < taskRuns.size(); taskRun_index++) {
+            Long taskRunGap_hours = 15L;
+            TaskRun taskRun = taskRuns.get(taskRun_index);
+            taskRunDao.createTaskRun(taskRun);
+            taskRun = taskRun.cloneBuilder()
+                    .withStatus(TaskRunStatus.SUCCESS)
+                    .withCreatedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)))
+                    .withQueuedAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-1))
+                    .withStartAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-3))
+                    .withEndAt(baseTime.minusHours(taskRunGap_hours*(5-taskRun_index)-6))
+                    .build();
+            taskRunDao.updateTaskRun(taskRun);
+            if (taskRun_index == 0) {
+                taskRunDao.updateTaskRunStat(taskRun.getId(), 0L, 0L);
+            } else {
+                taskRunDao.updateTaskRunStat(taskRun.getId(), 3600L, 3600L);
+            }
+        }
+
+        //fetch the up&downstream for taskRun2, taskRun 0 is created 30h earlier > 24h, excluded
+        TaskRunGanttChartVO result1 = taskRunService.getTaskRunGantt(taskRuns.get(2).getId(), 24);
+        assertThat(result1.getInfoList().size(), is(4));
+
+        //fetch the up&downstream for taskRun0, all downstream included
+        TaskRunGanttChartVO result2 = taskRunService.getTaskRunGantt(taskRuns.get(0).getId(), 24);
+        assertThat(result2.getInfoList().size(), is(5));
+
+        //fetch the up&downstream for taskRun4, taskRun0,1,2 are created 24h before, excluded
+        TaskRunGanttChartVO result3 = taskRunService.getTaskRunGantt(taskRuns.get(4).getId(), 24);
+        assertThat(result3.getInfoList().size(), is(2));
+    }
 }

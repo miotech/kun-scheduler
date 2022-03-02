@@ -43,6 +43,14 @@ public class TaskRunSearchFilter {
 
     private final OffsetDateTime dateTo;
 
+    private final OffsetDateTime startFrom;
+
+    private final OffsetDateTime startTo;
+
+    private final OffsetDateTime queueFrom;
+
+    private final OffsetDateTime queueTo;
+
     private final OffsetDateTime endBefore;
 
     private final OffsetDateTime endAfter;
@@ -78,6 +86,10 @@ public class TaskRunSearchFilter {
         this.status = builder.status;
         this.dateFrom = builder.dateFrom;
         this.dateTo = builder.dateTo;
+        this.startFrom = builder.startFrom;
+        this.startTo = builder.startTo;
+        this.queueFrom = builder.queueFrom;
+        this.queueTo = builder.queueTo;
         this.endBefore = builder.endBefore;
         this.endAfter = builder.endAfter;
         this.pageNum = builder.pageNum;
@@ -104,6 +116,22 @@ public class TaskRunSearchFilter {
 
     public OffsetDateTime getDateTo() {
         return dateTo;
+    }
+
+    public OffsetDateTime getStartFrom() {
+        return startFrom;
+    }
+
+    public OffsetDateTime getStartTo() {
+        return startTo;
+    }
+
+    public OffsetDateTime getQueueFrom() {
+        return queueFrom;
+    }
+
+    public OffsetDateTime getQueueTo() {
+        return queueTo;
     }
 
     public OffsetDateTime getEndBefore() {
@@ -149,6 +177,10 @@ public class TaskRunSearchFilter {
                 .withTaskIds(taskIds)
                 .withDateFrom(dateFrom)
                 .withDateTo(dateTo)
+                .withStartFrom(startFrom)
+                .withStartTo(startTo)
+                .withQueueFrom(queueFrom)
+                .withQueueTo(queueTo)
                 .withEndBefore(endBefore)
                 .withEndAfter(endAfter)
                 .withStatus(status)
@@ -171,6 +203,10 @@ public class TaskRunSearchFilter {
                 Objects.equals(getStatus(), that.getStatus()) &&
                 Objects.equals(getDateFrom(), that.getDateFrom()) &&
                 Objects.equals(getDateTo(), that.getDateTo()) &&
+                Objects.equals(getStartFrom(), that.getStartFrom()) &&
+                Objects.equals(getStartTo(), that.getStartTo()) &&
+                Objects.equals(getQueueFrom(), that.getQueueFrom()) &&
+                Objects.equals(getQueueTo(), that.getQueueTo()) &&
                 Objects.equals(getEndBefore(), that.getEndBefore()) &&
                 Objects.equals(getEndAfter(), that.getEndAfter()) &&
                 Objects.equals(getScheduleTypes(), that.getScheduleTypes()) &&
@@ -184,8 +220,9 @@ public class TaskRunSearchFilter {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getTaskIds(), getTaskRunIds(), getStatus(), getDateFrom(), getDateTo(), getEndBefore(), getEndAfter(),
-                getScheduleTypes(), getPageNum(), getPageSize(), getTags(), getSortKey(), getSortOrder(), getIncludeStartedOnly());
+        return Objects.hash(getTaskIds(), getTaskRunIds(), getStatus(), getDateFrom(), getDateTo(), getStartFrom(),
+                getStartTo(), getQueueFrom(), getQueueTo(),getEndBefore(), getEndAfter(), getScheduleTypes(),
+                getPageNum(), getPageSize(), getTags(), getSortKey(), getSortOrder(), getIncludeStartedOnly());
     }
 
     @JsonPOJOBuilder
@@ -194,6 +231,10 @@ public class TaskRunSearchFilter {
         private Set<TaskRunStatus> status;
         private OffsetDateTime dateFrom;
         private OffsetDateTime dateTo;
+        private OffsetDateTime startFrom;
+        private OffsetDateTime startTo;
+        private OffsetDateTime queueFrom;
+        private OffsetDateTime queueTo;
         private OffsetDateTime endBefore;
         private OffsetDateTime endAfter;
         private Integer pageNum;
@@ -226,6 +267,26 @@ public class TaskRunSearchFilter {
 
         public Builder withDateTo(OffsetDateTime dateTo) {
             this.dateTo = dateTo;
+            return this;
+        }
+
+        public Builder withStartFrom(OffsetDateTime startFrom) {
+            this.startFrom = startFrom;
+            return this;
+        }
+
+        public Builder withStartTo(OffsetDateTime startTo) {
+            this.startTo = startTo;
+            return this;
+        }
+
+        public Builder withQueueFrom(OffsetDateTime queueFrom) {
+            this.queueFrom = queueFrom;
+            return this;
+        }
+
+        public Builder withQueueTo(OffsetDateTime queueTo) {
+            this.queueTo = queueTo;
             return this;
         }
 

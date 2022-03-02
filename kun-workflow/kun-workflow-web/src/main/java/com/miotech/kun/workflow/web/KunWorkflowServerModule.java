@@ -10,6 +10,7 @@ import com.miotech.kun.commons.utils.Props;
 import com.miotech.kun.commons.web.module.AppModule;
 import com.miotech.kun.workflow.LocalScheduler;
 import com.miotech.kun.workflow.common.graph.DatabaseTaskGraph;
+import com.miotech.kun.workflow.common.taskrun.service.TaskRunStatistic;
 import com.miotech.kun.workflow.core.Executor;
 import com.miotech.kun.workflow.core.Scheduler;
 import com.miotech.kun.workflow.core.model.task.TaskGraph;
@@ -74,6 +75,7 @@ public class KunWorkflowServerModule extends AppModule {
         bind(TaskGraph.class).to(DatabaseTaskGraph.class);
         bind(RecoverService.class);
         bind(TaskRunStateMachine.class);
+        bind(TaskRunStatistic.class);
         bind(WorkflowServiceFacade.class).to(WorkflowServiceFacadeImpl.class);
     }
 
