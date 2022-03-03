@@ -179,36 +179,56 @@ public class GlossaryRepository extends BaseRepository {
         return jdbcTemplate.query(sql, GlossaryMapper.GLOSSARY_MAPPER, paramsList.toArray());
     }
 
-    public Long findGlossaryDeepDatasetCount(Long id) {
-        String sql = "select   count(dataset_id) dataset_id  from  kun_mt_glossary_to_dataset_ref kmgtdr  where glossary_id = " + id;
-        return jdbcTemplate.queryForObject(sql, Long.class);
-    }
-
     @Transactional(rollbackFor = Exception.class)
     public void update(Long id, GlossaryRequest glossaryRequest) {
+        GlossaryBasicInfo glossaryBaseInfo = findGlossaryBaseInfo(id);
+        Optional.of(glossaryBaseInfo).orElseThrow(() -> new IllegalArgumentException("glossary does not exist,id:" + id));
+
         List<Object> sqlParams = new ArrayList<>();
-        String sql = "update kun_mt_glossary set\n" +
-                "name = ?, " +
-                "description = ?, ";
         sqlParams.add(glossaryRequest.getName());
         sqlParams.add(glossaryRequest.getDescription());
-        if (glossaryRequest.getParentId() != null) {
-            sql += "parent_id = ?, ";
-            sqlParams.add(glossaryRequest.getParentId());
-        } else {
-            sql += "parent_id = null, ";
-        }
-
-        sql += "update_user = ?, update_time = ?\n";
         sqlParams.add(glossaryRequest.getUpdateUser());
         sqlParams.add(glossaryRequest.getUpdateTime());
-
-        String whereClause = "where id = ?";
-        sql += whereClause;
         sqlParams.add(id);
-
-        jdbcTemplate.update(sql, sqlParams.toArray());
+        String basicUpdateSql = DefaultSQLBuilder.newBuilder()
+                .update(TABLE_NAME_KUN_MT_GLOSSARY)
+                .set("name=?", "description=?", "update_user=?", "update_time=?")
+                .where("id = ?").getSQL();
+        jdbcTemplate.update(basicUpdateSql, sqlParams.toArray());
         overwriteAssets(id, glossaryRequest.getAssetIds());
+        move(glossaryBaseInfo, glossaryRequest.getParentId());
+    }
+
+    public void move(GlossaryBasicInfo glossaryBasicInfo, Long newParentId) {
+        Long oldParentId = glossaryBasicInfo.getParentId();
+        Long id = glossaryBasicInfo.getId();
+        Long basicInfoPrevId = glossaryBasicInfo.getPrevId();
+        if (id.equals(newParentId)) {
+            throw new IllegalArgumentException(String.format("new parent id  should not be id,parent id:%s,id:%s", newParentId, id));
+        }
+        if (String.valueOf(newParentId).equals(String.valueOf(oldParentId))) {
+            return;
+        }
+        String updateSql;
+//        更新老parent节点下的child list
+//         首节点:查找到该节点的下一个节点 prev_id 置为 null
+//         中间节点 :将后面节点的 prev_id 更新成当前节点的 prev_id
+//         尾节点不用处理
+        updateSql = DefaultSQLBuilder.newBuilder().update(TABLE_NAME_KUN_MT_GLOSSARY).set("prev_id=?").where("prev_id = ?").getSQL();
+        jdbcTemplate.update(updateSql, basicInfoPrevId, id);
+
+//          更新新parent下的首节点为第二个节点
+        if (IdUtils.isNotEmpty(newParentId)) {
+            updateSql = DefaultSQLBuilder.newBuilder().update(TABLE_NAME_KUN_MT_GLOSSARY).set("prev_id=?").where("parent_id = ? and prev_id is null").getSQL();
+            jdbcTemplate.update(updateSql, id, newParentId);
+        } else {
+            updateSql = DefaultSQLBuilder.newBuilder().update(TABLE_NAME_KUN_MT_GLOSSARY).set("prev_id=?").where("parent_id is null and prev_id is null").getSQL();
+            jdbcTemplate.update(updateSql, id);
+        }
+//        更新节点 parent and prev_id =null
+        updateSql = DefaultSQLBuilder.newBuilder().update(TABLE_NAME_KUN_MT_GLOSSARY).set("parent_id=?", "prev_id=null").where("id=?").getSQL();
+        jdbcTemplate.update(updateSql, newParentId, id);
+
 
     }
 
@@ -395,10 +415,11 @@ public class GlossaryRepository extends BaseRepository {
         log.debug("findChildrenCountList-sqlTempLate:{}", sql);
         return jdbcTemplate.query(sql, (rs, rowNum) -> {
             GlossaryBasicInfoWithCount glossaryBasicInfoWithCount = new GlossaryBasicInfoWithCount();
-            glossaryBasicInfoWithCount.setId(rs.getLong("id"));
+            glossaryBasicInfoWithCount.setId(BasicMapper.zeroToNull(rs, "id", Long.class));
             glossaryBasicInfoWithCount.setName(rs.getString("name"));
+            glossaryBasicInfoWithCount.setPrevId(BasicMapper.zeroToNull(rs, "prev_id", Long.class));
             glossaryBasicInfoWithCount.setChildrenCount(rs.getInt(childCountName));
-            glossaryBasicInfoWithCount.setParentId(rs.getLong("parent_id"));
+            glossaryBasicInfoWithCount.setParentId(BasicMapper.zeroToNull(rs, "parent_id", Long.class));
             glossaryBasicInfoWithCount.setDescription(rs.getString("description"));
             glossaryBasicInfoWithCount.setDataSetCount(rs.getInt(datasetCountName));
             return glossaryBasicInfoWithCount;
