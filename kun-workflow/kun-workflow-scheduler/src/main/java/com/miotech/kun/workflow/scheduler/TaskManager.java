@@ -1,5 +1,6 @@
 package com.miotech.kun.workflow.scheduler;
 
+import com.google.common.collect.Lists;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import com.miotech.kun.commons.pubsub.event.Event;
@@ -77,7 +78,7 @@ public class TaskManager {
                 .map(taskRun -> createTaskAttempt(taskRun, true)).collect(Collectors.toList());
         logger.debug("TaskAttempts saved. total={}", taskAttempts.size());
         save(taskAttempts);
-        for(TaskAttempt taskAttempt : taskAttempts){
+        for (TaskAttempt taskAttempt : taskAttempts) {
             resolveTaskRunStatus(taskAttempt);
         }
         trigger();
@@ -98,7 +99,7 @@ public class TaskManager {
      * @param taskRun
      */
     public boolean retry(TaskRun taskRun) {
-        checkState(taskRun.getStatus().isFinished(), "taskRun status must be finished ");
+        checkState(taskRun.getStatus().isFailure(), "taskRun status must be failed ");
         // Does the same re-run request invoked in another threads?
         if (rerunningTaskRunIds.put(taskRun.getId(), Boolean.TRUE) != null) {
             logger.warn("Cannot rerun taskrun instance with id = {}. Reason: another thread is attempting to re-run the same task run.", taskRun.getId());
@@ -109,11 +110,11 @@ public class TaskManager {
             logger.info("save rerun taskAttempt, taskAttemptId = {}, attempt = {}", taskAttempt.getId(), taskAttempt.getAttempt());
             save(Arrays.asList(taskAttempt));
 
-            TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RESCHEDULE,taskAttempt.getId());
+            TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.RESCHEDULE, taskAttempt.getId());
             eventBus.post(taskRunTransitionEvent);
 
             //retry task run will change downstream status from upstream failed to created
-            List<Long> downstreamTaskRunIds = updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED);
+            List<Long> downstreamTaskRunIds = updateDownStreamStatus(taskRun.getId(), TaskRunStatus.CREATED, Lists.newArrayList(TaskRunStatus.UPSTREAM_FAILED));
             updateTaskRunConditions(downstreamTaskRunIds, TaskRunStatus.CREATED);
             updateRestrictedTaskRunsStatus(downstreamTaskRunIds);
             trigger();
@@ -193,7 +194,7 @@ public class TaskManager {
         for (TaskRunProps upstreamTaskRun : upstreamTaskRuns) {
             if (upstreamTaskRun.getStatus().isFailure()
                     || upstreamTaskRun.getStatus().equals(TaskRunStatus.UPSTREAM_FAILED)) {
-                TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.UPSTREAM_FAILED,taskAttempt.getId());
+                TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.UPSTREAM_FAILED, taskAttempt.getId());
                 eventBus.post(taskRunTransitionEvent);
             }
             if (!upstreamTaskRun.getStatus().isSuccess()) {
@@ -204,7 +205,7 @@ public class TaskManager {
         if (allUpstreamSuccess) {
             for (TaskRunCondition taskRunCondition : taskRunConditions) {
                 if (taskRunCondition.getType().equals(ConditionType.TASKRUN_PREDECESSOR_FINISH) && !taskRunCondition.getResult()) {
-                    TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.HANGUP,taskAttempt.getId());
+                    TaskRunTransitionEvent taskRunTransitionEvent = new TaskRunTransitionEvent(TaskRunTransitionEventType.HANGUP, taskAttempt.getId());
                     eventBus.post(taskRunTransitionEvent);
                 }
             }
@@ -236,7 +237,7 @@ public class TaskManager {
                     updateTaskRunConditions(ids, currentStatus);
                     List<Long> downstreamTaskRunIds;
                     if (currentStatus.isFailure()) {
-                        downstreamTaskRunIds = updateDownStreamStatus(taskRunId, TaskRunStatus.UPSTREAM_FAILED);
+                        downstreamTaskRunIds = updateDownStreamStatus(taskRunId, TaskRunStatus.UPSTREAM_FAILED, Lists.newArrayList(TaskRunStatus.CREATED));
                         updateTaskRunConditions(downstreamTaskRunIds, TaskRunStatus.UPSTREAM_FAILED);
                         ids.addAll(downstreamTaskRunIds);
                     }
@@ -286,18 +287,22 @@ public class TaskManager {
         }
     }
 
-    private List<Long> updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
+    private List<Long> updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus, List<TaskRunStatus> filterStatus) {
         boolean usePostgres = postgresEnable();
         List<Long> downStreamTaskRunIds = taskRunDao.fetchDownStreamTaskRunIdsRecursive(taskRunId, usePostgres);
         logger.debug("fetch downStream taskRunIds = {},taskRunId = {}", downStreamTaskRunIds, taskRunId);
         if (taskRunStatus.isTermState()) {
             OffsetDateTime termAt = DateTimeUtils.now();
-            taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus, termAt);
+            taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus, termAt, filterStatus);
         } else {
-            taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus);
+            taskRunDao.updateAttemptStatusByTaskRunIds(downStreamTaskRunIds, taskRunStatus, null, filterStatus);
         }
         taskRunDao.updateTaskRunWithFailedUpstream(taskRunId, downStreamTaskRunIds, taskRunStatus);
         return downStreamTaskRunIds;
+    }
+
+    private List<Long> updateDownStreamStatus(Long taskRunId, TaskRunStatus taskRunStatus) {
+        return updateDownStreamStatus(taskRunId, taskRunStatus, new ArrayList<>());
     }
 
     private boolean postgresEnable() {

@@ -1033,7 +1033,7 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         //prepare
         List<Task> taskList = MockTaskFactory.createTasksWithRelations(5, "0>>3;1>>3;2>>3;0>>4;1>>4;2>>4");
         List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>3;1>>3;2>>3;0>>4;1>>4;2>>4");
-        for(TaskRun taskRun : taskRunList) {
+        for (TaskRun taskRun : taskRunList) {
             taskDao.create(taskRun.getTask());
             taskRunDao.createTaskRun(taskRun);
         }
@@ -1099,14 +1099,14 @@ public class TaskRunDaoTest extends DatabaseTestBase {
     }
 
     @Test
-    public void fetchDirectUpstreamTaskRun_should_only_contains_direct_upstream(){
+    public void fetchDirectUpstreamTaskRun_should_only_contains_direct_upstream() {
         //prepare
-        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4,"0>>1;1>>3;2>>3");
-        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList,"0>>1;1>>3;2>>3");
-        for (Task task : taskList){
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;1>>3;2>>3");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>3;2>>3");
+        for (Task task : taskList) {
             taskDao.create(task);
         }
-        for(TaskRun taskRun : taskRunList){
+        for (TaskRun taskRun : taskRunList) {
             taskRunDao.createTaskRun(taskRun);
         }
         TaskRun srcTaskRun = taskRunList.get(3);
@@ -1114,11 +1114,49 @@ public class TaskRunDaoTest extends DatabaseTestBase {
         List<TaskRunProps> directUpstream = taskRunDao.fetchUpstreamTaskRunsById(srcTaskRun.getId());
 
         //verify
-        assertThat(directUpstream,hasSize(2));
+        assertThat(directUpstream, hasSize(2));
         List<Long> fetchedIds = directUpstream.stream().map(TaskRunProps::getId).collect(Collectors.toList());
         TaskRun taskRun2 = taskRunList.get(1);
         TaskRun taskRun3 = taskRunList.get(2);
-        assertThat(fetchedIds,containsInAnyOrder(taskRun2.getId(),taskRun3.getId()));
+        assertThat(fetchedIds, containsInAnyOrder(taskRun2.getId(), taskRun3.getId()));
+    }
+
+    @Test
+    public void updateAttemptStatusByTaskRunIds_with_filter_should_only_act_on_filter() {
+        //prepare
+        //init taskRun1 status = UPSTREAM_FAILED, other taskRun status = FAILED
+        List<TaskRunStatus> filterStatus = Lists.newArrayList(TaskRunStatus.UPSTREAM_FAILED);
+        List<Task> taskList = MockTaskFactory.createTasksWithRelations(4, "0>>1;1>>3;2>>3");
+        List<TaskRun> taskRunList = MockTaskRunFactory.createTaskRunsWithRelations(taskList, "0>>1;1>>3;2>>3");
+        for (Task task : taskList) {
+            taskDao.create(task);
+        }
+        TaskRun taskRun1 = taskRunList.get(0);
+        TaskAttempt taskAttempt1 = MockTaskAttemptFactory.createTaskAttempt(taskRun1);
+        taskRunDao.createTaskRun(taskRun1);
+        taskRunDao.createAttempt(taskAttempt1);
+        taskRunDao.updateTaskAttemptStatus(taskAttempt1.getId(),TaskRunStatus.UPSTREAM_FAILED);
+        for (int i = 1; i < taskRunList.size(); i++) {
+            TaskRun taskRun = taskRunList.get(i);
+            TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt(taskRun);
+            taskRunDao.createTaskRun(taskRun);
+            taskRunDao.createAttempt(taskAttempt);
+            taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(),TaskRunStatus.FAILED);
+        }
+        List<Long> taskRunIds = taskRunList.stream().map(TaskRun::getId).collect(Collectors.toList());
+
+        taskRunDao.updateAttemptStatusByTaskRunIds(taskRunIds, TaskRunStatus.CREATED, DateTimeUtils.now(), filterStatus);
+
+        //verify
+        TaskRun saved1 = taskRunDao.fetchTaskRunById(taskRun1.getId()).get();
+        TaskRun saved2 = taskRunDao.fetchTaskRunById(taskRunIds.get(1)).get();
+        TaskRun saved3 = taskRunDao.fetchTaskRunById(taskRunIds.get(2)).get();
+        TaskRun saved4 = taskRunDao.fetchTaskRunById(taskRunIds.get(3)).get();
+        assertThat(saved1.getStatus(),is(TaskRunStatus.CREATED));
+        assertThat(saved2.getStatus(),is(TaskRunStatus.FAILED));
+        assertThat(saved3.getStatus(),is(TaskRunStatus.FAILED));
+        assertThat(saved4.getStatus(),is(TaskRunStatus.FAILED));
+
     }
 
     @Test

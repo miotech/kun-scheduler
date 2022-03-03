@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.*;
 
 public class TaskManagerTest extends SchedulerTestBase {
@@ -1260,6 +1261,20 @@ public class TaskManagerTest extends SchedulerTestBase {
         TaskRun submitted3 = taskRunDao.fetchTaskRunById(taskRun2.getId()).get();
         assertThat(submitted3.getStatus(), is(TaskRunStatus.BLOCKED));
 
+    }
+
+    @Test
+    public void retrySuccessTaskRun_should_throws_exception(){
+        //prepare
+        TaskAttempt taskAttempt = MockTaskAttemptFactory.createTaskAttempt();
+        TaskRun taskRun = taskAttempt.getTaskRun();
+        Task task = taskRun.getTask();
+        taskDao.create(task);
+        taskRunDao.createTaskRun(taskRun);
+        taskRunDao.createAttempt(taskAttempt);
+        taskRunDao.updateTaskAttemptStatus(taskAttempt.getId(),TaskRunStatus.SUCCESS);
+
+        assertThrows("taskRun status must be failed ",IllegalStateException.class,() -> taskManager.retry(taskRun));
     }
 
     private TaskRunCondition createCondition(TaskRun taskRun, ConditionType conditionType, boolean result) {

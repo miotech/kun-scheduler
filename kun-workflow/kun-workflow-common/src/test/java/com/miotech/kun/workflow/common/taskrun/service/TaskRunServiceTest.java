@@ -501,7 +501,7 @@ public class TaskRunServiceTest extends CommonTestBase {
 
         // Process
         Exception ex = assertThrows(IllegalStateException.class, () -> taskRunService.rerunTaskRun(taskRunFailed.getId()));
-        assertEquals("taskRun status must be finished ", ex.getMessage());
+        assertEquals("taskRun status must be failed ", ex.getMessage());
     }
 
     @Test

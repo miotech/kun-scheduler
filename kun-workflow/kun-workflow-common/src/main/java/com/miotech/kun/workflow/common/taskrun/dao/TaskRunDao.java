@@ -565,29 +565,44 @@ public class TaskRunDao {
     }
 
     public void updateAttemptStatusByTaskRunIds(List<Long> taskRunIds, TaskRunStatus taskRunStatus, @Nullable OffsetDateTime termAt) {
+        updateAttemptStatusByTaskRunIds(taskRunIds, taskRunStatus, termAt, new ArrayList<>());
+    }
+
+    public void updateAttemptStatusByTaskRunIds(List<Long> taskRunIds, TaskRunStatus taskRunStatus,
+                                                @Nullable OffsetDateTime termAt, List<TaskRunStatus> filterStatusList) {
+        Preconditions.checkNotNull(taskRunIds,"taskRunIds should not be null");
+        Preconditions.checkNotNull(filterStatusList,"filterStatusList should not be null");
+
         if (taskRunIds.size() == 0) {
             return;
         }
 
-        String filterTaskRunId = taskRunIds.stream().map(x -> "?").collect(Collectors.joining(","));
+        List<Long> taskAttemptIds = fetchAllLatestTaskAttemptIds(taskRunIds);
+
         SQLBuilder updateTaskRun = DefaultSQLBuilder.newBuilder()
                 .update(TASK_RUN_TABLE_NAME)
                 .set("status=?");
         if (termAt != null) {
             updateTaskRun.set("term_at=?");
         }
-        updateTaskRun.where("id in " + "(" + filterTaskRunId + ")");
+        String taskRunWhereCase = "id in (" + repeatJoin("?", ",", taskRunIds.size()) + ")";
+        if ( filterStatusList.size() != 0) {
+            taskRunWhereCase += " and status in (" + repeatJoin("?", ",", filterStatusList.size()) + ")";
+        }
+        updateTaskRun.where(taskRunWhereCase);
 
-        List<Long> taskAttemptIds = fetchAllLatestTaskAttemptIds(taskRunIds);
-
-        String filterTaskAttemptIds = taskAttemptIds.stream().map(x -> "?").collect(Collectors.joining(","));
         SQLBuilder updateTaskAttempt = DefaultSQLBuilder.newBuilder()
                 .update(TASK_ATTEMPT_TABLE_NAME)
                 .set("status=?");
         if (termAt != null) {
             updateTaskAttempt.set("term_at=?");
         }
-        updateTaskAttempt.where("id in " + "(" + filterTaskAttemptIds + ")");
+        String taskAttemptWhereCase = "id in (" + repeatJoin("?", ",", taskAttemptIds.size()) + ")";
+        if (filterStatusList.size() != 0) {
+            taskAttemptWhereCase += " and status in (" + repeatJoin("?", ",", filterStatusList.size()) + ")";
+        }
+
+        updateTaskAttempt.where(taskAttemptWhereCase);
 
         dbOperator.transaction(() -> {
             List<Object> taskRunParams = new ArrayList<>();
@@ -596,6 +611,9 @@ public class TaskRunDao {
                 taskRunParams.add(termAt);
             }
             taskRunParams.addAll(taskRunIds);
+            if (filterStatusList.size() > 0) {
+                taskRunParams.addAll(filterStatusList.stream().map(Enum::name).collect(Collectors.toList()));
+            }
             dbOperator.update(updateTaskRun.getSQL(), taskRunParams.toArray());
             List<Object> taskAttemptParams = new ArrayList<>();
             taskAttemptParams.add(taskRunStatus.name());
@@ -603,6 +621,9 @@ public class TaskRunDao {
                 taskAttemptParams.add(termAt);
             }
             taskAttemptParams.addAll(taskAttemptIds);
+            if (filterStatusList.size() > 0) {
+                taskAttemptParams.addAll(filterStatusList.stream().map(Enum::name).collect(Collectors.toList()));
+            }
             dbOperator.update(updateTaskAttempt.getSQL(), taskAttemptParams.toArray());
 
             return null;
@@ -610,7 +631,7 @@ public class TaskRunDao {
     }
 
     public void updateTaskRunStatusByTaskRunId(List<Long> taskRunIds, TaskRunStatus taskRunStatus) {
-        updateTaskRunStatusByTaskRunId(taskRunIds, taskRunStatus, null);
+        updateTaskRunStatusByTaskRunId(taskRunIds, taskRunStatus, new ArrayList<>());
     }
 
     /**
@@ -623,35 +644,7 @@ public class TaskRunDao {
      */
     public void updateTaskRunStatusByTaskRunId(List<Long> taskRunIds, TaskRunStatus taskRunStatus,
                                                @Nullable List<TaskRunStatus> allowToChangeStatus) {
-        if (taskRunIds.isEmpty()) return;
-        List<Long> taskAttemptIds = fetchAllLatestTaskAttemptIds(taskRunIds);
-        List<Object> paramsTr = new ArrayList<>();
-        List<Object> paramsTa = new ArrayList<>();
-
-        SQLBuilder taskAttemptSql = DefaultSQLBuilder.newBuilder()
-                .update(TASK_ATTEMPT_TABLE_NAME)
-                .set("status");
-        SQLBuilder taskRunSql = DefaultSQLBuilder.newBuilder()
-                .update(TASK_RUN_TABLE_NAME)
-                .set("status");
-        paramsTa.add(taskRunStatus.name());
-        paramsTr.add(taskRunStatus.name());
-
-        String whereClause = "id IN (" + repeatJoin("?", ",", taskAttemptIds.size()) + ")";
-        paramsTa.addAll(taskAttemptIds);
-        paramsTr.addAll(taskRunIds);
-        if (allowToChangeStatus != null) {
-            whereClause += "AND status IN (" + repeatJoin("?", ",", allowToChangeStatus.size()) + ")";
-            paramsTa.addAll(allowToChangeStatus.stream().map(Enum::name).collect(Collectors.toList()));
-            paramsTr.addAll(allowToChangeStatus.stream().map(Enum::name).collect(Collectors.toList()));
-        }
-
-        String finalWhereClause = whereClause;
-        dbOperator.transaction(() -> {
-            dbOperator.update(taskRunSql.where(finalWhereClause).asPrepared().getSQL(), paramsTr.toArray());
-            dbOperator.update(taskAttemptSql.where(finalWhereClause).asPrepared().getSQL(), paramsTa.toArray());
-            return null;
-        });
+        updateAttemptStatusByTaskRunIds(taskRunIds, taskRunStatus, null, allowToChangeStatus);
 
     }
 
@@ -1602,7 +1595,7 @@ public class TaskRunDao {
     }
 
     public void removeTaskRunDependency(Long taskRunId, List<Long> dependencyTaskRunIds) {
-        if(dependencyTaskRunIds.size() == 0){
+        if (dependencyTaskRunIds.size() == 0) {
             return;
         }
         String upstreamFilter = repeatJoin("?", ",", dependencyTaskRunIds.size());
@@ -1628,10 +1621,10 @@ public class TaskRunDao {
         conditionParams.add(ConditionType.TASKRUN_DEPENDENCY_SUCCESS.name());
         dependencyTaskRunIds.forEach(x -> conditionParams.add(JSONUtils.toJsonString(new Condition(Collections.singletonMap("taskRunId", x.toString())))));
 
-        dbOperator.transaction(() ->{
+        dbOperator.transaction(() -> {
             dbOperator.update(removeDependencySql, dependencyParams.toArray());
-            dbOperator.update(removeConditionSql,conditionParams.toArray());
-            List<Long> conditions = dbOperator.fetchAll("select task_run_id from kun_wf_task_run_conditions",rs -> rs.getLong(1));
+            dbOperator.update(removeConditionSql, conditionParams.toArray());
+            List<Long> conditions = dbOperator.fetchAll("select task_run_id from kun_wf_task_run_conditions", rs -> rs.getLong(1));
             return conditions;
         });
 
