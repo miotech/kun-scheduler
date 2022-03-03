@@ -21,17 +21,13 @@ interface OwnProps {
 
 type Props = OwnProps;
 
-export const TaskDefinitionFilterToolbarComponent: React.FC<Props> = memo((props) => {
-  const {
-    dispatch,
-    filters,
-    displayType,
-  } = props;
+export const TaskDefinitionFilterToolbarComponent: React.FC<Props> = memo(props => {
+  const { dispatch, filters, displayType } = props;
   const t = useI18n();
-  const [ taskTemplates, setTaskTemplates ] = useState<TaskTemplate[]>([]);
+  const [taskTemplates, setTaskTemplates] = useState<TaskTemplate[]>([]);
 
   useMount(() => {
-    fetchTaskTemplates().then((templates) => {
+    fetchTaskTemplates().then(templates => {
       if (templates) {
         setTaskTemplates(templates);
       }
@@ -44,46 +40,47 @@ export const TaskDefinitionFilterToolbarComponent: React.FC<Props> = memo((props
         {taskTemplate.name}
       </Select.Option>
     ));
-  }, [
-    taskTemplates
-  ]);
+  }, [taskTemplates]);
 
-  const handleSearchNameChange: ChangeEventHandler<any> = useCallback((ev) => {
-    dispatch.dataDevelopment.updateFilter({
-      name: ev.target.value,
-    });
-  }, [
-    dispatch,
-  ]);
+  const handleSearchNameChange: ChangeEventHandler<any> = useCallback(
+    ev => {
+      dispatch.dataDevelopment.updateFilter({
+        name: ev.target.value,
+      });
+      dispatch.dataDevelopment.updateTasklist({
+        pageNum: 1,
+      });
+    },
+    [dispatch],
+  );
 
-  const handleTaskTemplateNameChange = useCallback((value?: string) => {
-    dispatch.dataDevelopment.updateFilter({
-      taskTemplateName: value || null,
-    });
-  }, [
-    dispatch,
-  ]);
+  const handleTaskTemplateNameChange = useCallback(
+    (value?: string) => {
+      dispatch.dataDevelopment.updateFilter({
+        taskTemplateName: value || null,
+      });
+    },
+    [dispatch],
+  );
 
-  const handleOwnerChange = useCallback((value?: string | string[]) => {
-    if (typeof value === 'string') {
-      return;
-    }
-    dispatch.dataDevelopment.updateFilter({
-      creatorIds: value || [],
-    });
-  }, [
-    dispatch,
-  ]);
+  const handleOwnerChange = useCallback(
+    (value?: string | string[]) => {
+      if (typeof value === 'string') {
+        return;
+      }
+      dispatch.dataDevelopment.updateFilter({
+        creatorIds: value || [],
+      });
+    },
+    [dispatch],
+  );
 
   return (
-    <div
-      data-tid="task-definition-filter-toolbar"
-      className={styles.Toolbar}
-    >
+    <div data-tid="task-definition-filter-toolbar" className={styles.Toolbar}>
       <div className={styles.ToolbarLeftGroup}>
         <DisplayTypeSwitch
           currentType={displayType}
-          onChange={(nextType) => {
+          onChange={nextType => {
             dispatch.dataDevelopment.setDisplayType(nextType);
           }}
         />
