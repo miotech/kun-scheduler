@@ -1,0 +1,89 @@
+.ViewFilters {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 50px;
+  background: #fff;
+  padding: 10px;
+}
+
+
+.filterOption {
+  position: relative;
+  margin-left: 15px;
+
+  .RangePickerWrapper {
+    display: inline-block;
+    width: 290px;
+
+    :global {
+      .ant-picker {
+        width: 100%;
+      }
+    }
+  }
+
+  .timeTypeWrapper {
+    display: inline-block;
+    margin-right: 15px;
+  }
+
+  .taskWrapper {
+    display: inline-block;
+    margin-left: 15px;
+  }
+}
+
+.right {
+  margin-right: 15px;
+  display: flex;
+
+  .tips {
+    display: flex;
+    align-items: center;
+
+    .tip {
+      margin-right: 10px;
+
+      &::before {
+        border-radius: 50%;
+        display: inline-block;
+        height: 10px;
+        width: 10px;
+        content: '';
+        margin-right: 5px;
+      }
+    }
+
+    :nth-child(1) {
+      &::before {
+        background: #ffbe3d;
+      }
+    }
+
+    :nth-child(2) {
+      &::before {
+        background: #9bc655;
+      }
+    }
+
+    :nth-child(3) {
+      &::before {
+        background: #ff6336;
+      }
+    }
+
+    :nth-child(4) {
+      &::before {
+        background: #49a9de;
+        opacity: 0.2;
+      }
+    }
+
+  }
+
+  .ReloadBtnWrapper {
+    display: inline-block;
+    position: relative;
+  }
+}
