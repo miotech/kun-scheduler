@@ -8,10 +8,9 @@ import com.miotech.kun.dataplatform.web.common.deploy.service.DeployedTaskServic
 import com.miotech.kun.dataplatform.web.common.deploy.vo.*;
 import com.miotech.kun.dataplatform.web.common.taskdefinition.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.client.WorkflowClient;
-import com.miotech.kun.workflow.client.model.PaginationResult;
-import com.miotech.kun.workflow.client.model.TaskRun;
-import com.miotech.kun.workflow.client.model.TaskRunDAG;
+import com.miotech.kun.workflow.client.model.*;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.TimeType;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/")
@@ -195,6 +193,18 @@ public class DeployedTaskController {
                                                            @RequestParam(defaultValue =  "1") int downstreamLevel
                                                            ) {
         return RequestResult.success(deployedTaskService.getWorkFlowTaskRunDag(id, upstreamLevel, downstreamLevel));
+    }
+
+    @GetMapping("/deployed-taskruns/gantt")
+    @ApiOperation("Get gantt of all scheduled task runs")
+    public RequestResult<TaskRunGanttChart> getTaskRunGantt(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime startTime,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) OffsetDateTime endTime,
+            @RequestParam(required = false) String timeType,
+            @RequestParam(required = false) Long taskRunId) {
+        return RequestResult.success(deployedTaskService.getTaskRunGantt(startTime, endTime, TimeType.resolve(timeType), taskRunId));
     }
 
     @GetMapping("/deployed-taskruns/{taskRunId}/definitionId")

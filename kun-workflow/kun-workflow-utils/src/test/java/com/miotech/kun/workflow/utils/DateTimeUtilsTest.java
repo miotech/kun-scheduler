@@ -6,7 +6,7 @@ import java.sql.Timestamp;
 import java.time.OffsetDateTime;
 
 import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertThat;
+import static com.shazam.shazamcrest.MatcherAssert.assertThat;
 
 public class DateTimeUtilsTest {
     @Test
@@ -39,5 +39,29 @@ public class DateTimeUtilsTest {
         assertThat(convertedDatetime.getMinute(), is(34));
         assertThat(convertedDatetime.getSecond(), is(32));
         assertThat(convertedDatetime.getNano(), is(903664124));
+    }
+
+    @Test
+    public void getEarlierTime_withNullInput_shouldReturnNonNullTime() {
+        OffsetDateTime now = DateTimeUtils.now();
+        OffsetDateTime result = DateTimeUtils.getEarlierTime(now, null);
+        assertThat(result, is(now));
+    }
+
+    @Test
+    public void getEarlierTime_shouldReturnEarlierTime() {
+        OffsetDateTime earlier = DateTimeUtils.now();
+        OffsetDateTime later = DateTimeUtils.now().plusMinutes(1);
+        OffsetDateTime result = DateTimeUtils.getEarlierTime(earlier, later);
+        assertThat(result, is(earlier));
+    }
+
+    @Test
+    public void getLatestTime_withMultiInput_shouldReturnEarlierNonNullTime() {
+        OffsetDateTime earlier = DateTimeUtils.now();
+        OffsetDateTime later = DateTimeUtils.now().plusHours(1);
+        OffsetDateTime latest = DateTimeUtils.now().plusHours(2);
+        OffsetDateTime result = DateTimeUtils.getLatestTime(earlier, later, latest, null);
+        assertThat(result, is(latest));
     }
 }

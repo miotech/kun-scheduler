@@ -7,8 +7,10 @@ import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.TimeType;
 
 import java.io.File;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -202,6 +204,21 @@ public interface WorkflowClient {
      * @return
      */
     TaskRunDAG getTaskRunDAG(Long taskRunId, int upstreamLevel, int downstreamLevel);
+
+    /**
+     * get gantt chart info of task run
+     * @param taskRunId specified task run
+     * @return
+     */
+    TaskRunGanttChart getTaskRunGantt(Long taskRunId);
+
+    /**
+     * get global gantt chart info within specified time range
+     * @param startTime
+     * @param endTime
+     * @return
+     */
+    TaskRunGanttChart getGlobalTaskRunGantt(OffsetDateTime startTime, OffsetDateTime endTime, TimeType timeType);
 
     /**
      * get task run log

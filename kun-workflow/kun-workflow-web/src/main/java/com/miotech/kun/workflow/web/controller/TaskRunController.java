@@ -9,10 +9,12 @@ import com.miotech.kun.workflow.common.task.vo.PaginationVO;
 import com.miotech.kun.workflow.common.taskrun.bo.TaskRunDailyStatisticInfo;
 import com.miotech.kun.workflow.common.taskrun.filter.TaskRunSearchFilter;
 import com.miotech.kun.workflow.common.taskrun.service.TaskRunService;
+import com.miotech.kun.workflow.common.taskrun.vo.TaskRunGanttChartVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunLogVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunStateVO;
 import com.miotech.kun.workflow.common.taskrun.vo.TaskRunVO;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.TimeType;
 import com.miotech.kun.workflow.utils.DateTimeUtils;
 import org.apache.commons.lang3.StringUtils;
 
@@ -198,6 +200,19 @@ public class TaskRunController {
                                       @QueryParameter(defaultValue = "1") int downstreamLevel
     ) {
         return taskRunService.getNeighbors(id, upstreamLevel, downstreamLevel);
+    }
+
+    @RouteMapping(url = "/taskruns/gantt", method = "GET")
+    public TaskRunGanttChartVO getGlobalTaskRunGantt(@QueryParameter String startTime,
+                                                     @QueryParameter String endTime,
+                                                     @QueryParameter(defaultValue = "createdAt") String timeType) {
+        return taskRunService.getGlobalTaskRunGantt(DateTimeUtils.fromISODateTimeString(startTime),
+                DateTimeUtils.fromISODateTimeString(endTime), TimeType.resolve(timeType));
+    }
+
+    @RouteMapping(url = "/taskruns/{id}/gantt", method = "GET")
+    public TaskRunGanttChartVO getTaskRunGantt(@RouteVariable Long id) {
+        return taskRunService.getTaskRunGantt(id);
     }
 
     @RouteMapping(url = "/taskruns/latest", method = "GET")

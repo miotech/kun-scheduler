@@ -108,4 +108,39 @@ public class DateTimeUtils {
         LocalDateTime localDateTime = LocalDateTime.of(LocalDate.now(),LocalTime.MIN);
         return OffsetDateTime.of(localDateTime,ZONE_OFFSET);
     }
+
+    /**
+     * Compare two OffsetDateTime and return earlier one
+     * accepts null value, return null for both null input, return non-null for single null input;
+     * @param t1
+     * @param t2
+     * @return
+     */
+    public static OffsetDateTime getEarlierTime(OffsetDateTime t1, OffsetDateTime t2) {
+        if (t1 == null && t2 == null) return null;
+        if (t1 == null) return t2;
+        if (t2 == null) return t1;
+        return t1.isBefore(t2)? t1 : t2;
+    }
+
+    /**
+     * Compare multi OffsetDateTime and return latest one
+     *
+     * @param times
+     * @return
+     */
+    public static OffsetDateTime getLatestTime(OffsetDateTime... times) {
+        OffsetDateTime latest = null;
+        for (OffsetDateTime time : times) {
+            latest = getLaterTime(latest, time);
+        }
+        return latest;
+    }
+
+    private static OffsetDateTime getLaterTime(OffsetDateTime t1, OffsetDateTime t2) {
+        if (t1 == null && t2 == null) return null;
+        if (t1 == null) return t2;
+        if (t2 == null) return t1;
+        return t1.isAfter(t2)? t1 : t2;
+    }
 }

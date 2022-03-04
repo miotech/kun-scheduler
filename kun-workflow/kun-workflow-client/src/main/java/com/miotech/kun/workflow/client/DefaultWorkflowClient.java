@@ -9,10 +9,12 @@ import com.miotech.kun.workflow.core.model.lineage.DatasetLineageInfo;
 import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetInfo;
 import com.miotech.kun.workflow.core.model.taskrun.TaskRunStatus;
+import com.miotech.kun.workflow.core.model.taskrun.TimeType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -250,6 +252,16 @@ public class DefaultWorkflowClient implements WorkflowClient {
     @Override
     public TaskRunDAG getTaskRunDAG(Long taskRunId, int upstreamLevel, int downstreamLevel) {
         return wfApi.getTaskRunDAG(taskRunId, upstreamLevel, downstreamLevel);
+    }
+
+    @Override
+    public TaskRunGanttChart getTaskRunGantt(Long taskRunId) {
+        return wfApi.getTaskRunGantt(taskRunId);
+    }
+
+    @Override
+    public TaskRunGanttChart getGlobalTaskRunGantt(OffsetDateTime startTime, OffsetDateTime endTime, TimeType timeType) {
+        return wfApi.getGlobalTaskRunGantt(startTime, endTime, timeType);
     }
 
     @Override
