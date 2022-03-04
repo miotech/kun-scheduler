@@ -6,18 +6,18 @@ import com.miotech.kun.metadata.core.model.dataset.DataStore;
 import com.miotech.kun.metadata.core.model.dataset.Dataset;
 import com.miotech.kun.metadata.facade.LineageServiceFacade;
 import com.miotech.kun.metadata.facade.MetadataServiceFacade;
+import com.miotech.kun.workflow.common.exception.EntityNotFoundException;
 import com.miotech.kun.workflow.common.task.dao.TaskDao;
-import com.miotech.kun.workflow.core.model.lineage.EdgeInfo;
-import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskBasicInformation;
-import com.miotech.kun.workflow.core.model.lineage.UpstreamTaskInformation;
+import com.miotech.kun.workflow.common.task.service.TaskService;
+import com.miotech.kun.workflow.core.model.lineage.*;
 import com.miotech.kun.workflow.core.model.lineage.node.DatasetNode;
 import com.miotech.kun.workflow.core.model.lineage.node.TaskNode;
 import com.miotech.kun.workflow.core.model.task.Task;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Singleton
@@ -27,14 +27,16 @@ public class LineageService {
 
     private final LineageServiceFacade lineageFacade;
 
-    private final TaskDao taskDao;
+
+    private  final TaskDao taskDao;
 
     @Inject
-    public LineageService(MetadataServiceFacade metadataFacade, LineageServiceFacade lineageFacade, TaskDao taskDao) {
+    public LineageService(MetadataServiceFacade metadataFacade, LineageServiceFacade lineageFacade,TaskDao taskDao) {
         this.metadataFacade = metadataFacade;
         this.lineageFacade = lineageFacade;
         this.taskDao = taskDao;
     }
+
 
     // ---------------- Public methods ----------------
 
@@ -115,6 +117,7 @@ public class LineageService {
     }
 
 
+
     /**
      * @param datasetGlobalId
      * @return set of downstream dataset nodes
@@ -173,5 +176,91 @@ public class LineageService {
                     }).collect(Collectors.toList());
             return new UpstreamTaskInformation(upstreamTaskInformation.getDatasetGid(), taskList);
         }).collect(Collectors.toList());
+    }
+
+    public DatasetLineageInfo searchLineageInfo(Long datasetGid, int depth, String direction) {
+        Set<DatasetNode> upstreamNodes = new LinkedHashSet<>();
+        Set<DatasetNode> downstreamNodes = new LinkedHashSet<>();
+        Optional<DatasetNode> sourceNode = fetchDatasetNodeById(datasetGid);
+        DatasetNode datasetNode = sourceNode.orElseThrow(() -> new EntityNotFoundException("dataset does not exists, id:" + datasetGid));
+
+        if (StringUtils.containsAny(direction, "UPSTREAM", "BOTH")) {
+            Set<DatasetNode> upstreamDatasetNodes = fetchUpstreamDatasetNodes(datasetGid, depth);
+            tileDataSetNodeSet(upstreamDatasetNodes, upstreamNodes, 1, depth, true);
+        }
+        if (StringUtils.containsAny(direction, "DOWNSTREAM", "BOTH")) {
+            Set<DatasetNode> downstreamDatasetNodes = fetchDownstreamDatasetNodes(datasetGid, depth);
+            tileDataSetNodeSet(downstreamDatasetNodes, downstreamNodes, 1, depth, false);
+        }
+        Map<Long, Optional<Task>> idToTaskMap = getIdToTaskMap(upstreamNodes, downstreamNodes, datasetNode);
+        return DatasetLineageInfo.newBuilder()
+                .withSourceNode(datasetNodeToInfo(datasetNode,idToTaskMap))
+                .withUpstreamNodes(datasetNodesToInfoList(upstreamNodes, idToTaskMap, direction))
+                .withDownstreamNodes(datasetNodesToInfoList(downstreamNodes, idToTaskMap, direction))
+                .withQueryDepth(depth)
+                .build();
+    }
+
+    private Map<Long, Optional<Task>> getIdToTaskMap(Set<DatasetNode> upstreamNodes,
+                                                     Set<DatasetNode> downstreamNodes,
+                                                     DatasetNode datasetNode) {
+        Set<Long> relatedTaskIds = new HashSet<>();
+        getRelatedTaskId(relatedTaskIds, datasetNode);
+        upstreamNodes.forEach(node -> getRelatedTaskId(relatedTaskIds, node));
+        downstreamNodes.forEach(node -> getRelatedTaskId(relatedTaskIds, node));
+        return taskDao.fetchByIds(relatedTaskIds);
+    }
+
+    private void getRelatedTaskId(Set<Long> relatedTaskIds, DatasetNode sourceNode) {
+        relatedTaskIds.addAll(sourceNode.getUpstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toSet()));
+        relatedTaskIds.addAll(sourceNode.getDownstreamTasks().stream().map(TaskNode::getTaskId).collect(Collectors.toSet()));
+    }
+
+    private List<DatasetNodeInfo> datasetNodesToInfoList(Set<DatasetNode> datasetNodes, Map<Long, Optional<Task>> idToTaskMap, String direction) {
+
+        return datasetNodes.stream()
+                .map(node -> this.datasetNodeToInfo(node, idToTaskMap))
+                .collect(Collectors.toList());
+    }
+
+
+    private static void tileDataSetNodeSet(Set<DatasetNode> rootDateSetNodeSet, Set<DatasetNode> datasetNodes, int currentDepth, int depth, Boolean isUp) {
+        if (currentDepth > depth) {
+            return;
+        }
+        if (CollectionUtils.isEmpty(rootDateSetNodeSet)) {
+            return;
+        }
+        currentDepth++;
+        for (DatasetNode datasetNode : rootDateSetNodeSet) {
+            datasetNodes.add(datasetNode);
+            for (TaskNode taskNode : isUp ? datasetNode.getUpstreamTasks() : datasetNode.getDownstreamTasks()) {
+                Set<DatasetNode> nodeSet = isUp ? taskNode.getInlets() : taskNode.getOutlets();
+                if (CollectionUtils.isEmpty(nodeSet)) {
+                    return;
+                }
+                tileDataSetNodeSet(nodeSet, datasetNodes, currentDepth, depth, isUp);
+            }
+        }
+    }
+
+    private DatasetNodeInfo datasetNodeToInfo(DatasetNode datasetNode, Map<Long, Optional<Task>> idToTaskMap) {
+        // Set upstream/downstream tasks to empty if direction is not matching
+        return DatasetNodeInfo.newBuilder()
+                .withGid(datasetNode.getGid())
+                .withDatasetName(datasetNode.getDatasetName())
+                .withUpstreamTasks(datasetNode.getUpstreamTasks().stream()
+                        .map(taskNode -> idToTaskMap.getOrDefault(taskNode.getTaskId(), Optional.empty()).orElse(null))
+                        .collect(Collectors.toList()))
+                .withDownstreamTasks(datasetNode.getDownstreamTasks().stream()
+                        .map(taskNode -> idToTaskMap.getOrDefault(taskNode.getTaskId(), Optional.empty()).orElse(null))
+                        .collect(Collectors.toList()))
+                .withUpstreamDatasetCount(getCount(datasetNode.getUpstreamTasks(), TaskNode::getInlets))
+                .withDownstreamDatasetCount(getCount(datasetNode.getDownstreamTasks(), TaskNode::getOutlets))
+                .build();
+    }
+
+    private int getCount(Set<TaskNode> upstreamTaskNodes, Function<TaskNode, Set<DatasetNode>> linkDatasetNode) {
+        return Math.toIntExact(upstreamTaskNodes.stream().map(linkDatasetNode).filter(Objects::nonNull).map(Set::size).count());
     }
 }
