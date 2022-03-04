@@ -79,7 +79,7 @@ export default memo(function AssetAutoSuggest({ asset, onChange, onDelete, index
         // options={options}
       >
         {options.map(option => (
-          <Option key={option.id} value={option.value} option={option}>
+          <Option key={option.id} value={option.id} option={option}>
             <div className={styles.autoOption}>
               {option.value}{' '}
               {option.asset.database && (
