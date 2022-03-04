@@ -8,6 +8,7 @@ import com.miotech.kun.datadiscovery.service.GlossaryService;
 import com.miotech.kun.dataplatform.facade.DeployedTaskFacade;
 import com.miotech.kun.metadata.core.model.vo.DatasetBasicInfo;
 import com.miotech.kun.workflow.client.WorkflowClient;
+import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableList;
 
+import javax.validation.constraints.AssertTrue;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -41,7 +43,6 @@ public class GlossaryServiceTest extends KunAppTestBase {
 
     @MockBean
     private DeployedTaskFacade deployedTaskFacade;
-
 
 
     @Test
@@ -158,15 +159,223 @@ public class GlossaryServiceTest extends KunAppTestBase {
 
     }
 
+    /**
+     * null->glossary
+     */
+    @Test
+    void test_update_basic_info() {
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        Long parentId = null;
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
+        Glossary glossary = glossaryService.createGlossary(glossaryRequest);
+//        update name
+//        update description
+        GlossaryRequest glossaryRequestUpdate = new GlossaryRequest();
+        glossaryRequestUpdate.setName("updateName");
+        glossaryRequestUpdate.setDescription("updateDescription");
+        List<Long> assetIds = glossary.getAssets().stream().map(Asset::getId).collect(Collectors.toList());
+        glossaryRequestUpdate.setAssetIds(assetIds);
+        glossaryRequestUpdate.setParentId(glossary.getParentId());
+        Glossary glossaryUpdate = glossaryService.update(glossary.getId(), glossaryRequestUpdate);
+        assertThat(glossaryUpdate.getId(), is(glossary.getId()));
+        assertThat(glossaryUpdate.getParentId(), is(glossaryRequestUpdate.getParentId()));
+        assertThat(glossaryUpdate.getAssets().size(), is(glossaryRequestUpdate.getAssetIds().size()));
+        assertThat(glossaryUpdate.getName(), is(glossaryRequestUpdate.getName()));
+        assertThat(glossaryUpdate.getDescription(), is(glossaryRequestUpdate.getDescription()));
+
+    }
+
+    @Test
+    void test_update_assetList() {
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        Long parentId = null;
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
+        Glossary glossary = glossaryService.createGlossary(glossaryRequest);
+//        update asset
+        GlossaryRequest glossaryRequestUpdate = new GlossaryRequest();
+        glossaryRequestUpdate.setName(glossary.getName());
+        glossaryRequestUpdate.setDescription(glossary.getDescription());
+        glossaryRequestUpdate.setParentId(glossary.getParentId());
+        List<Long> assetIds = glossary.getAssets().stream().map(Asset::getId).collect(Collectors.toList());
+        assetIds.add(4L);
+        assetIds.add(5L);
+        assetIds.remove(assetList.get(0));
+        glossaryRequestUpdate.setAssetIds(assetIds);
+        glossaryRequestUpdate.setAssetIds(assetIds);
+        glossaryRequestUpdate.setParentId(glossary.getParentId());
+        Glossary glossaryUpdate = glossaryService.update(glossary.getId(), glossaryRequestUpdate);
+        Assertions.assertTrue(glossaryUpdate.getAssets().stream().map(Asset::getId).anyMatch(assetIds::contains));
+
+
+    }
+
+    /**
+     * null --->glossary->glossaryChild
+     * ｜
+     * --->glossary2
+     */
+    @Test
+    void test_update_basic_move_parent_down() {
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        Long parentId = null;
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
+        Glossary glossary = glossaryService.createGlossary(glossaryRequest);
+        Glossary glossary2 = glossaryService.createGlossary(glossaryRequest);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
+
+        /**
+         *更新glossary2  parent null->glossary
+         */
+        /**
+         * result
+         *null --->glossary----->glossary2
+         *                  ｜
+         *                   --->glossaryChild
+         *
+         */
+        GlossaryRequest glossaryRequestUpdate = new GlossaryRequest();
+        glossaryRequestUpdate.setName(glossary2.getName());
+        glossaryRequestUpdate.setDescription(glossary2.getDescription());
+        List<Long> assetIds = glossary2.getAssets().stream().map(Asset::getId).collect(Collectors.toList());
+        glossaryRequestUpdate.setAssetIds(assetIds);
+        glossaryRequestUpdate.setParentId(glossary.getId());
+        Glossary updateGlossary2 = glossaryService.update(glossary2.getId(), glossaryRequestUpdate);
+        assertThat(updateGlossary2.getParentId(), is(glossary.getId()));
+        assertThat(updateGlossary2.getPrevId(), is(nullValue()));
+        GlossaryBasicInfo glossaryChildInfo = glossaryService.getGlossaryBasicInfo(glossaryChild.getId());
+        assertThat(glossaryChildInfo.getPrevId(), is(glossary2.getId()));
+        GlossaryChildren nullGlossaryChildren = glossaryService.fetchGlossaryChildren(null);
+        assertThat(nullGlossaryChildren.getChildren().size(), is(1));
+        GlossaryChildren glossary1Children = glossaryService.fetchGlossaryChildren(glossary.getId());
+        assertThat(glossary1Children.getChildren().size(), is(2));
+        assertThat(glossary1Children.getChildren().get(0).getId(), is(glossary2.getId()));
+        assertThat(glossary1Children.getChildren().get(1).getId(), is(glossaryChild.getId()));
+    }
+
+    /**
+     * null --->glossary->glossaryChild------->glossarySon3
+     * ｜                           ｜----> glossarySon2
+     * --->glossary2                ｜----> glossarySon1
+     * glossarySon2  parent glossaryChild->glossary2
+     */
+    @Test
+    void test_update_basic_move_parent_up() {
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        Long parentId = null;
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
+        Glossary glossary = glossaryService.createGlossary(glossaryRequest);
+        Glossary glossary2 = glossaryService.createGlossary(glossaryRequest);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
+        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), assetList);
+        Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon);
+        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon);
+        Glossary glossarySon3 = glossaryService.createGlossary(glossaryRequestSon);
+        GlossaryChildren glossaryChChildrenBefore = glossaryService.fetchGlossaryChildren(glossaryChild.getId());
+
+        assertThat(glossaryChChildrenBefore.getChildren().size(), is(3));
+        assertThat(glossaryChChildrenBefore.getChildren().get(0).getId(), is(glossarySon3.getId()));
+        assertThat(glossaryChChildrenBefore.getChildren().get(0).getPrevId(), is(nullValue()));
+        assertThat(glossaryChChildrenBefore.getChildren().get(1).getId(), is(glossarySon2.getId()));
+        assertThat(glossaryChChildrenBefore.getChildren().get(1).getPrevId(), is(glossarySon3.getId()));
+        assertThat(glossaryChChildrenBefore.getChildren().get(2).getId(), is(glossarySon1.getId()));
+        assertThat(glossaryChChildrenBefore.getChildren().get(2).getPrevId(), is(glossarySon2.getId()));
+        /**
+         * result
+         *null ----->glossary->glossaryChild------->glossarySon3
+         *      ｜                             |----> glossarySon1
+         *       --->glossary2----> glossarySon2
+         *   glossarySon2  parent glossaryChild->glossary2
+         */
+        GlossaryRequest glossaryRequestUpdate = new GlossaryRequest();
+        glossaryRequestUpdate.setName(glossarySon2.getName());
+        glossaryRequestUpdate.setDescription(glossarySon2.getDescription());
+        List<Long> assetIds = glossarySon2.getAssets().stream().map(Asset::getId).collect(Collectors.toList());
+        glossaryRequestUpdate.setAssetIds(assetIds);
+        glossaryRequestUpdate.setParentId(glossary2.getId());
+        Glossary glossarySon2Update = glossaryService.update(glossarySon2.getId(), glossaryRequestUpdate);
+        assertThat(glossarySon2Update.getParentId(), is(glossary2.getId()));
+        assertThat(glossarySon2Update.getPrevId(), is(nullValue()));
+        assertThat(glossarySon2Update.getId(), is(glossarySon2.getId()));
+        assertThat(glossarySon2Update.getAncestryGlossaryList().size(), is(1));
+        GlossaryChildren glossaryChChildrenAfter = glossaryService.fetchGlossaryChildren(glossaryChild.getId());
+        assertThat(glossaryChChildrenAfter.getChildren().size(), is(2));
+        assertThat(glossaryChChildrenAfter.getChildren().get(0).getId(), is(glossarySon3.getId()));
+        assertThat(glossaryChChildrenAfter.getChildren().get(0).getPrevId(), is(nullValue()));
+        assertThat(glossaryChChildrenAfter.getChildren().get(1).getId(), is(glossarySon1.getId()));
+        assertThat(glossaryChChildrenAfter.getChildren().get(1).getPrevId(), is(glossarySon3.getId()));
+    }
+
+    /**
+     * null --->glossary2->glossaryChild------->glossarySon3
+     * ｜                           ｜----> glossarySon2
+     * --->glossary                ｜----> glossarySon1
+     */
+    @Test
+    void test_update_basic_move_parent_null() {
+        ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
+        Long parentId = null;
+        GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
+        mockDatasetBasicInfoList(glossaryRequest.getAssetIds());
+        Glossary glossary = glossaryService.createGlossary(glossaryRequest);
+        Glossary glossary2 = glossaryService.createGlossary(glossaryRequest);
+        GlossaryRequest glossaryRequestChild = createGlossaryRequestWithParent(glossary.getId(), assetList);
+        Glossary glossaryChild = glossaryService.createGlossary(glossaryRequestChild);
+        GlossaryRequest glossaryRequestSon = createGlossaryRequestWithParent(glossaryChild.getId(), assetList);
+        Glossary glossarySon1 = glossaryService.createGlossary(glossaryRequestSon);
+        Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon);
+        Glossary glossarySon3 = glossaryService.createGlossary(glossaryRequestSon);
+        GlossaryChildren glossaryChChildrenBefore = glossaryService.fetchGlossaryChildren(null);
+
+        assertThat(glossaryChChildrenBefore.getChildren().size(), is(2));
+        assertThat(glossaryChChildrenBefore.getChildren().get(0).getId(), is(glossary2.getId()));
+        assertThat(glossaryChChildrenBefore.getChildren().get(0).getPrevId(), is(nullValue()));
+        assertThat(glossaryChChildrenBefore.getChildren().get(1).getId(), is(glossary.getId()));
+        assertThat(glossaryChChildrenBefore.getChildren().get(1).getPrevId(), is(glossary2.getId()));
+        /**
+         * result
+         *null ----->glossary2->glossaryChild------->glossarySon3
+         *      ｜                             |----> glossarySon1
+         *      ｜ --->glossary
+         *      ｜----> glossarySon2
+         *   glossarySon2  parent glossaryChild->null
+         */
+        GlossaryRequest glossaryRequestUpdate = new GlossaryRequest();
+        glossaryRequestUpdate.setName(glossarySon2.getName());
+        glossaryRequestUpdate.setDescription(glossarySon2.getDescription());
+        List<Long> assetIds = glossarySon2.getAssets().stream().map(Asset::getId).collect(Collectors.toList());
+        glossaryRequestUpdate.setAssetIds(assetIds);
+        glossaryRequestUpdate.setParentId(null);
+        Glossary glossarySon2Update = glossaryService.update(glossarySon2.getId(), glossaryRequestUpdate);
+        assertThat(glossarySon2Update.getParentId(), is(nullValue()));
+        assertThat(glossarySon2Update.getPrevId(), is(nullValue()));
+        assertThat(glossarySon2Update.getId(), is(glossarySon2.getId()));
+        assertThat(glossarySon2Update.getAncestryGlossaryList().size(), is(0));
+        GlossaryChildren glossaryChChildrenAfter = glossaryService.fetchGlossaryChildren(null);
+        assertThat(glossaryChChildrenAfter.getChildren().size(), is(3));
+        assertThat(glossaryChChildrenAfter.getChildren().get(0).getId(), is(glossarySon2.getId()));
+        assertThat(glossaryChChildrenAfter.getChildren().get(0).getPrevId(), is(nullValue()));
+        assertThat(glossaryChChildrenAfter.getChildren().get(1).getId(), is(glossary2.getId()));
+        assertThat(glossaryChChildrenAfter.getChildren().get(1).getPrevId(), is(glossarySon2.getId()));
+        assertThat(glossaryChChildrenAfter.getChildren().get(2).getId(), is(glossary.getId()));
+        assertThat(glossaryChChildrenAfter.getChildren().get(2).getPrevId(), is(glossary2.getId()));
+
+    }
+
+
     @Test
     void test_copy() {
-/**
- *null->glossary->glossaryChild--->glossarySon1
- *                           ｜
- *                           ｜---> glossarySon2
- */
+    /**
+     *null->glossary->glossaryChild--->glossarySon1
+     *                           ｜
+     *                           ｜---> glossarySon2
+     */
 
-//
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
         GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
@@ -205,8 +414,9 @@ public class GlossaryServiceTest extends KunAppTestBase {
 
 
     }
+
     @Test
-    public void  test_fetchChildrenBasicList_parent_null(){
+    public void test_fetchChildrenBasicList_parent_null() {
         ImmutableList<Long> assetList = ImmutableList.of(1L, 2L, 3L);
         Long parentId = null;
         GlossaryRequest glossaryRequest = createGlossaryRequestWithParent(parentId, assetList);
@@ -221,7 +431,7 @@ public class GlossaryServiceTest extends KunAppTestBase {
     }
 
     @Test
-    public  void  test_fetchGlossary_AncestryGlossaryList(){
+    public void test_fetchGlossary_AncestryGlossaryList() {
         /**
          *null->glossary->glossaryChild--->glossarySon1
          *                           ｜
@@ -239,11 +449,11 @@ public class GlossaryServiceTest extends KunAppTestBase {
         Glossary glossarySon2 = glossaryService.createGlossary(glossaryRequestSon);
 
         List<GlossaryBasicInfo> ancestryGlossaryList = glossarySon2.getAncestryGlossaryList();
-        assertThat(ancestryGlossaryList.size(),is(2));
-        assertThat(ancestryGlossaryList.get(0).getId(),is(glossary.getId()));
-        assertThat(ancestryGlossaryList.get(0).getName(),is(glossary.getName()));
-        assertThat(ancestryGlossaryList.get(1).getId(),is(glossaryChild.getId()));
-        assertThat(ancestryGlossaryList.get(1).getName(),is(glossaryChild.getName()));
+        assertThat(ancestryGlossaryList.size(), is(2));
+        assertThat(ancestryGlossaryList.get(0).getId(), is(glossary.getId()));
+        assertThat(ancestryGlossaryList.get(0).getName(), is(glossary.getName()));
+        assertThat(ancestryGlossaryList.get(1).getId(), is(glossaryChild.getId()));
+        assertThat(ancestryGlossaryList.get(1).getName(), is(glossaryChild.getName()));
 
 
     }
@@ -289,13 +499,13 @@ public class GlossaryServiceTest extends KunAppTestBase {
         depthDataset1.addAll(assetList2);
         depthDataset1.addAll(assetList3);
         depthDataset1.addAll(assetList4);
-        assertThat(glossaryBasic2.getDataSetCount(),is(depthDataset1.size()));
+        assertThat(glossaryBasic2.getDataSetCount(), is(depthDataset1.size()));
 
         GlossaryChildren glossary1Child = glossaryService.fetchGlossaryChildren(glossary1.getId());
         assertThat(glossary1Child.getParentId(), is(glossary1.getId()));
         List<GlossaryBasicInfoWithCount> glossary1BasicList = glossary1Child.getChildren();
         assertThat(glossary1BasicList.size(), is(1));
-        GlossaryBasicInfoWithCount glossary1Basic1= glossary1BasicList.get(0);
+        GlossaryBasicInfoWithCount glossary1Basic1 = glossary1BasicList.get(0);
         assertThat(glossary1Basic1.getName(), is(glossary2.getName()));
         assertThat(glossary1Basic1.getChildrenCount(), is(2));
         HashSet<Long> depthDataset2 = Sets.newHashSet(assetList2);
@@ -307,7 +517,7 @@ public class GlossaryServiceTest extends KunAppTestBase {
         assertThat(glossary2Child.getParentId(), is(glossary2.getId()));
         List<GlossaryBasicInfoWithCount> glossary2BasicList = glossary2Child.getChildren();
         assertThat(glossary2BasicList.size(), is(2));
-        GlossaryBasicInfoWithCount glossary2Basic1= glossary2BasicList.get(0);
+        GlossaryBasicInfoWithCount glossary2Basic1 = glossary2BasicList.get(0);
         assertThat(glossary2Basic1.getName(), is(glossarySon2.getName()));
         assertThat(glossary2Basic1.getChildrenCount(), is(0));
         assertThat(glossary2Basic1.getDataSetCount(), is(assetList4.size()));

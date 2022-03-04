@@ -1,5 +1,6 @@
 package com.miotech.kun.datadiscovery.controller;
 
+import com.google.common.base.Preconditions;
 import com.miotech.kun.common.model.RequestResult;
 import com.miotech.kun.common.model.vo.IdVO;
 import com.miotech.kun.datadiscovery.model.bo.BasicSearchRequest;
@@ -51,6 +52,8 @@ public class GlossaryController {
     @PostMapping("/metadata/glossary/{id}/update")
     public RequestResult<Glossary> update(@PathVariable("id") Long id,
                                           @RequestBody GlossaryRequest glossaryRequest) {
+        Preconditions.checkNotNull(id, "Invalid argument `id`: null");
+        Preconditions.checkNotNull(glossaryRequest, "Invalid argument `glossaryRequest`: null");
         return RequestResult.success(glossaryService.update(id, glossaryRequest));
     }
 
