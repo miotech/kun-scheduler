@@ -301,7 +301,17 @@ public class TaskRunService {
                     .stream()
                     .map(Optional::get)
                     .filter(x -> x.getCreatedAt().isAfter(taskRun.getCreatedAt().minusHours(upstreamTraceTime_hours)))
-                    .sorted(Comparator.nullsLast(Comparator.comparing(TaskRun::getStartAt)))
+                    .sorted((tr1, tr2) -> {
+                        if (tr1.getStartAt() == null && tr2.getStartAt() == null) {
+                            return tr1.getCreatedAt().compareTo(tr2.getCreatedAt());
+                        } else if (tr1.getStartAt() == null) {
+                            return 1;
+                        } else if (tr2.getStartAt() == null) {
+                            return -1;
+                        } else {
+                            return tr1.getStartAt().compareTo(tr2.getStartAt());
+                        }
+                    })
                     .collect(Collectors.toList());
             result.addAll(upstreamTaskRunList);
         }
@@ -311,7 +321,17 @@ public class TaskRunService {
             List<TaskRun> downstreamTaskRunList = taskRunDao.fetchTaskRunsByIds(downstreamTaskRunIds)
                     .stream()
                     .map(Optional::get)
-                    .sorted(Comparator.nullsLast(Comparator.comparing(TaskRun::getStartAt)))
+                    .sorted((tr1, tr2) -> {
+                        if (tr1.getStartAt() == null && tr2.getStartAt() == null) {
+                            return tr1.getCreatedAt().compareTo(tr2.getCreatedAt());
+                        } else if (tr1.getStartAt() == null) {
+                            return 1;
+                        } else if (tr2.getStartAt() == null) {
+                            return -1;
+                        } else {
+                            return tr1.getStartAt().compareTo(tr2.getStartAt());
+                        }
+                    })
                     .collect(Collectors.toList());
             result.addAll(downstreamTaskRunList);
         }
