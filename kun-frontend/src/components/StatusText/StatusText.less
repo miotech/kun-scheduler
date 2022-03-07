@@ -1,13 +1,3 @@
-@status-color-default: #9c9c9c;
-@status-color-queued: #f3d286;
-@status-color-created: #9c9c9c;
-@status-color-running: #9bc655;
-@status-color-success: #4e8b08;
-@status-color-aborting: #ff6336;
-@status-color-skipped: #9c9c9c;
-@status-color-aborted: #ff6336;
-@status-color-failed: #ff6336;
-@status-color-upstream-failed: #995720;
 
 .status-text {
   color: @status-color-default;
@@ -25,19 +15,15 @@
   }
 
   &--aborted {
-    color: @status-color-aborting;
+    color: @status-color-aborted;
   }
 
   &--failed {
-    color: @status-color-aborting;
+    color: @status-color-failed;
   }
 
   &--check_failed {
-    color: @status-color-aborting;
-  }
-
-  &--check_failed {
-    color: @status-color-aborting;
+    color: @status-color-check_failed;
   }
 
   &--skipped {

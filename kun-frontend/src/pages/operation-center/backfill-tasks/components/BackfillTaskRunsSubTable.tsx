@@ -6,7 +6,7 @@ import useI18n from '@/hooks/useI18n';
 import { Link } from 'umi';
 import { RunStatusEnum } from '@/definitions/StatEnums.type';
 import { dayjs } from '@/utils/datetime-utils';
-
+import { taskColorConfig } from '@/constants/colorConfig';
 import Icon, { FileSearchOutlined } from '@ant-design/icons';
 import { ReactComponent as StopIcon } from '@/assets/icons/stop.svg';
 import { ReactComponent as RerunIcon } from '@/assets/icons/rerun.svg';
@@ -23,23 +23,8 @@ interface OwnProps {
 type Props = OwnProps;
 
 function renderStatus(status: RunStatusEnum) {
-  switch (status) {
-    case 'RUNNING':
-      return <Badge status="processing" text={status} />;
-    case 'CREATED':
-    case 'QUEUED':
-    case 'UPSTREAM_FAILED':
-      return <Badge status="warning" text={status} />;
-    case 'ABORTED':
-    case 'ABORTING':
-    case 'FAILED':
-    case 'CHECK_FAILED':
-      return <Badge status="error" text={status} />;
-    case 'SUCCESS':
-      return <Badge status="success" text={status} />;
-    default:
-      return <Badge status="default" text={status} />;
-  }
+  const color:string = taskColorConfig[status] ? taskColorConfig[status] : taskColorConfig.DEFAULT;
+  return <Badge color={color} text={status} />;
 }
 
 function isStoppedStatus(status: RunStatusEnum): boolean {

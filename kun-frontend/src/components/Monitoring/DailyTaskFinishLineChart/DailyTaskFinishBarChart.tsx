@@ -3,6 +3,7 @@ import ReactEcharts, { EChartsInstance } from 'echarts-for-react';
 import { DailyStatistic } from '@/services/monitoring-dashboard';
 import { dayjs } from '@/utils/datetime-utils';
 import useRedux from '@/hooks/useRedux';
+import { taskColorConfig } from '@/constants/colorConfig';
 
 interface OwnProps {
   width: number;
@@ -146,7 +147,7 @@ export const DailyTaskFinishBarChart: React.FC<Props> = memo(function DailyTaskF
     textStyle: {
       color: '#9c9c9c'
     },
-    color: ['#9bc655', 'rgb(238,108,69)','rgba(238,108,69,0.5)', '#8f5a2c', '#ffb5cd', '#3ec3cb'],
+    color: [taskColorConfig.SUCCESS, taskColorConfig.FAILED,taskColorConfig.CHECK_FAILED, taskColorConfig.UPSTREAM_FAILED, taskColorConfig.ABORTED, '#3ec3cb'],
     legend: {},
     grid: {
       left: '3%',
