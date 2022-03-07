@@ -23,6 +23,7 @@ import com.miotech.kun.workflow.core.model.task.Task;
 import com.miotech.kun.workflow.testing.factory.MockOperatorFactory;
 import com.miotech.kun.workflow.testing.factory.MockTaskFactory;
 import org.apache.commons.compress.utils.Lists;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -165,6 +166,7 @@ public class LineageServiceTest extends CommonTestBase {
      * dataset1---                            ｜---->dataset4
      *
      */
+    @Disabled
     @Test
     public void test_searchLineageInfo_depth() {
         // mock
